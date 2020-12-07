@@ -23,6 +23,7 @@ import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.applications.responses import DocumentResponse
+from massgov.pfml.api.util.response import Issue, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
     Document,
@@ -58,27 +59,30 @@ def register_employee(
     if fineos_web_id_ext is not None:
         return fineos_web_id_ext.fineos_web_id
 
-    # Find FINEOS employer id using employer FEIN
-    employer_id = fineos.find_employer(employer_fein)
-    logger.info("fein %s: found employer_id %s", employer_fein, employer_id)
+    try:
+        # Find FINEOS employer id using employer FEIN
+        employer_id = fineos.find_employer(employer_fein)
+        logger.info("fein %s: found employer_id %s", employer_fein, employer_id)
 
-    # Generate external id
-    employee_external_id = "pfml_api_{}".format(str(uuid.uuid4()))
+        # Generate external id
+        employee_external_id = "pfml_api_{}".format(str(uuid.uuid4()))
 
-    employee_registration = massgov.pfml.fineos.models.EmployeeRegistration(
-        user_id=employee_external_id,
-        customer_number=None,
-        date_of_birth=datetime.date(1753, 1, 1),
-        email=None,
-        employer_id=employer_id,
-        first_name=None,
-        last_name=None,
-        national_insurance_no=employee_ssn,
-    )
+        employee_registration = massgov.pfml.fineos.models.EmployeeRegistration(
+            user_id=employee_external_id,
+            customer_number=None,
+            date_of_birth=datetime.date(1753, 1, 1),
+            email=None,
+            employer_id=employer_id,
+            first_name=None,
+            last_name=None,
+            national_insurance_no=employee_ssn,
+        )
 
-    fineos.register_api_user(employee_registration)
-
-    logger.info("registered as %s", employee_external_id)
+        fineos.register_api_user(employee_registration)
+        logger.info("registered as %s", employee_external_id)
+    except massgov.pfml.fineos.FINEOSClientError:
+        logger.exception("FINEOS API error while attempting to register employee/fineos api user.")
+        return None
 
     # If successful save ExternalIdentifier in the database
     fineos_web_id_ext = FINEOSWebIdExt()
@@ -90,8 +94,10 @@ def register_employee(
     return employee_external_id
 
 
-def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session) -> bool:
+def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session) -> List[Issue]:
     """Send an application to FINEOS for processing."""
+
+    issues = []
 
     if application.employer_fein is None:
         raise ValueError("application.employer_fein is None")
@@ -112,7 +118,11 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
 
         if fineos_user_id is None:
             logger.warning("register_employee did not find a match")
-            return False
+            return [
+                Issue(
+                    IssueType.fineos_case_creation_issues, "register_employee did not find a match"
+                )
+            ]
 
         fineos.update_customer_details(fineos_user_id, customer)
         new_case = fineos.start_absence(fineos_user_id, absence_case)
@@ -143,13 +153,15 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
 
     except massgov.pfml.fineos.FINEOSClientError:
         logger.exception("FINEOS API error")
-        return False
+        issues.append(Issue(IssueType.fineos_case_creation_issues, "FINEOS API error"))
 
-    return True
+    return issues
 
 
-def complete_intake(application: Application, db_session: massgov.pfml.db.Session) -> bool:
+def complete_intake(application: Application, db_session: massgov.pfml.db.Session) -> List[Issue]:
     """Send an application to FINEOS for completion."""
+
+    issues = []
 
     if application.employer_fein is None:
         raise ValueError("application.employer_fein is None")
@@ -166,18 +178,23 @@ def complete_intake(application: Application, db_session: massgov.pfml.db.Sessio
             fineos, tax_identifier, application.employer_fein, db_session
         )
 
-        if fineos_user_id is None:
+        if not fineos_user_id:
             logger.warning("register_employee did not find a match")
-            return False
+            return [
+                Issue(
+                    IssueType.fineos_case_creation_issues, "register_employee did not find a match"
+                )
+            ]
 
+        fineos_user_id = str(fineos_user_id)
         db_session.commit()
         fineos.complete_intake(fineos_user_id, str(application.fineos_notification_case_id))
 
     except massgov.pfml.fineos.FINEOSClientError:
         logger.exception("FINEOS API error")
-        return False
+        issues.append(Issue(IssueType.fineos_case_creation_issues, "FINEOS API error"))
 
-    return True
+    return issues
 
 
 DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE = (

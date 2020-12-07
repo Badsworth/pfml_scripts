@@ -181,17 +181,19 @@ def applications_submit(application_id):
         # Only send to fineos if fineos_absence_id isn't set. If it is set,
         # assume that just complete_intake needs to be reattempted.
         if not existing_application.fineos_absence_id:
-            if not send_to_fineos(existing_application, db_session):
+            send_to_fineos_issues = send_to_fineos(existing_application, db_session)
+            if len(send_to_fineos_issues) != 0:
                 return response_util.error_response(
                     status_code=ServiceUnavailable,
                     message="Application {} could not be submitted, try again later".format(
                         existing_application.application_id
                     ),
-                    errors=[],
+                    errors=send_to_fineos_issues,
                     data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
                 ).to_api_response()
 
-        if complete_intake(existing_application, db_session):
+        complete_intake_issues = complete_intake(existing_application, db_session)
+        if len(complete_intake_issues) == 0:
             existing_application.submitted_time = datetime_util.utcnow()
             db_session.add(existing_application)
         else:
@@ -200,7 +202,7 @@ def applications_submit(application_id):
                 message="Application {} could not be submitted, try again later".format(
                     existing_application.application_id
                 ),
-                errors=[],
+                errors=complete_intake_issues,
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             ).to_api_response()
 

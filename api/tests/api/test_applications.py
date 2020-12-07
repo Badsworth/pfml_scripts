@@ -2492,10 +2492,16 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token, te
         headers={"Authorization": f"Bearer {auth_token}"},
     )
     response_body = response.get_json()
+    fineos_issues = response_body.get("errors")
+    assert (
+        len(
+            list(
+                filter(lambda i: i["type"] == IssueType.fineos_case_creation_issues, fineos_issues)
+            )
+        )
+        > 0
+    )
 
-    # FINEOS errors are reported back as 503 Service Unavailable.
-    assert response.status_code == 503
-    assert response_body.get("errors") == []
     assert (
         response_body.get("message")
         == f"Application {str(application.application_id)} could not be submitted, try again later"
@@ -2532,13 +2538,18 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
         headers={"Authorization": f"Bearer {auth_token}"},
     )
     response_body = response.get_json()
-
-    # FINEOS errors are reported back as 503 Service Unavailable.
-    assert response.status_code == 503
-    assert response_body.get("errors") == []
     assert (
         response_body.get("message")
         == f"Application {str(application.application_id)} could not be submitted, try again later"
+    )
+    fineos_issues = response_body.get("errors")
+    assert (
+        len(
+            list(
+                filter(lambda i: i["type"] == IssueType.fineos_case_creation_issues, fineos_issues)
+            )
+        )
+        > 0
     )
     assert not response_body.get("warnings")
     # Simplified check to confirm Application was included in response:

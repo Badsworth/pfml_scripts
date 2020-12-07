@@ -72,6 +72,8 @@ class IssueType(str, Enum):
     required = "required"
     # Masked field is not allowed
     invalid_masked_field = "invalid_masked_field"
+    # FINEOS case creation issues
+    fineos_case_creation_issues = "fineos_case_creation_issues"
 
 
 @dataclass
