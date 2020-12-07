@@ -565,22 +565,18 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
 </div>
 `;
 
-exports[`PreviousLeaveList when all data are present renders all data fields 1`] = `
-<OtherLeaveEntry
-  dates="8/12/2021 – 12/30/2021"
+exports[`PreviousLeaveList renders review info for a previous leave entry 1`] = `
+<ReviewRow
   key="0"
   label="Previous leave 1"
-  reviewRowLevel="4"
-/>
-`;
-
-exports[`PreviousLeaveList when data are missing doesn't render missing data 1`] = `
-<OtherLeaveEntry
-  dates=""
-  key="0"
-  label="Previous leave 1"
-  reviewRowLevel="4"
-/>
+  level="4"
+>
+  Did not take leave from this employer.
+  <br />
+  Leave was for a pregnancy.
+  <br />
+  1/1/2020 – 2/1/2020
+</ReviewRow>
 `;
 
 exports[`Reduced leave renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed 1`] = `

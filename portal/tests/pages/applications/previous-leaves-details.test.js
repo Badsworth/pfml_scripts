@@ -26,7 +26,7 @@ describe("PreviousLeavesDetails", () => {
       claim = new MockClaimBuilder()
         .employed()
         .continuous()
-        .previousLeave()
+        .previousLeavePregnancyFromOtherEmployer()
         .create();
 
       ({ appLogic, wrapper } = renderWithAppLogic(PreviousLeaveDetails, {

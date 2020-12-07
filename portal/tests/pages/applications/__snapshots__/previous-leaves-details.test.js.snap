@@ -115,7 +115,7 @@ exports[`PreviousLeavesDetails when the user's claim has previous leaves renders
           "id": 1,
           "is_for_current_employer": false,
           "leave_end_date": "2020-02-01",
-          "leave_reason": "Serious Health Condition - Employee",
+          "leave_reason": "Pregnancy/Maternity",
           "leave_start_date": "2020-01-01",
         },
       ]

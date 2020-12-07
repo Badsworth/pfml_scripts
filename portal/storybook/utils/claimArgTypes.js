@@ -50,6 +50,17 @@ export const claimArgTypes = {
       options: ["continuous", "reduced", "intermittent", "hybrid"],
     },
   },
+  "Previous leave": {
+    defaultValue: "None",
+    control: {
+      type: "radio",
+      options: [
+        "None",
+        "Medical leave from current employer",
+        "Pregnancy leave from other employer",
+      ],
+    },
+  },
   Payment: {
     defaultValue: "Deposit",
     control: {
@@ -121,6 +132,18 @@ export function createClaimFromArgs(args) {
       break;
     case "hybrid":
       claim = claim.continuous().reducedSchedule();
+      break;
+  }
+
+  switch (args["Previous leave"]) {
+    case "Medical leave from current employer":
+      claim = claim.previousLeaveMedicalFromCurrentEmployer();
+      break;
+    case "Pregnancy leave from other employer":
+      claim = claim.previousLeavePregnancyFromOtherEmployer();
+      break;
+    default:
+      claim = claim.noPreviousLeave();
       break;
   }
 

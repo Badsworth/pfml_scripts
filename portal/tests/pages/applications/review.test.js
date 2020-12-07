@@ -15,7 +15,6 @@ import Review, {
   PreviousLeaveList,
 } from "../../../src/pages/applications/review";
 import { DateTime } from "luxon";
-import PreviousLeave from "../../../src/models/PreviousLeave";
 import React from "react";
 import { shallow } from "enzyme";
 
@@ -466,31 +465,19 @@ describe("OtherIncomeList", () => {
 });
 
 describe("PreviousLeaveList", () => {
-  describe("when all data are present", () => {
-    it("renders all data fields", () => {
-      const entries = [
-        new PreviousLeave({
-          leave_end_date: "2021-12-30",
-          leave_start_date: "2021-08-12",
-        }),
-      ];
-      const wrapper = shallow(
-        <PreviousLeaveList entries={entries} reviewRowLevel="4" />
-      );
+  it("renders review info for a previous leave entry", () => {
+    const claim = new MockClaimBuilder()
+      .previousLeavePregnancyFromOtherEmployer()
+      .create();
 
-      expect(wrapper).toMatchSnapshot();
-    });
-  });
+    const wrapper = shallow(
+      <PreviousLeaveList
+        previous_leaves={claim.previous_leaves}
+        reviewRowLevel="4"
+      />
+    );
 
-  describe("when data are missing", () => {
-    it("doesn't render missing data", () => {
-      const entries = [new PreviousLeave()];
-      const wrapper = shallow(
-        <PreviousLeaveList entries={entries} reviewRowLevel="4" />
-      );
-
-      expect(wrapper).toMatchSnapshot();
-    });
+    expect(wrapper).toMatchSnapshot();
   });
 });
 

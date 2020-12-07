@@ -16,6 +16,7 @@ import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
 import OtherIncome, { OtherIncomeType } from "../../models/OtherIncome";
+import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get, isUndefined } from "lodash";
 import Alert from "../../components/Alert";
@@ -25,7 +26,6 @@ import { DateTime } from "luxon";
 import Heading from "../../components/Heading";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import Lead from "../../components/Lead";
-import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../../components/ReviewHeading";
@@ -554,7 +554,7 @@ export const Review = (props) => {
 
           {get(claim, "temp.has_previous_leaves") && (
             <PreviousLeaveList
-              entries={get(claim, "previous_leaves")}
+              previous_leaves={get(claim, "previous_leaves")}
               reviewRowLevel={reviewRowLevel}
             />
           )}
@@ -808,27 +808,44 @@ OtherIncomeList.propTypes = {
  */
 export const PreviousLeaveList = (props) => {
   const { t } = useTranslation();
-  const { entries, reviewRowLevel } = props;
+  const { previous_leaves, reviewRowLevel } = props;
 
-  return entries.map((entry, index) => {
-    const label = t("pages.claimsReview.previousLeaveEntryLabel", {
-      count: index + 1,
-    });
-    const dates = formatDateRange(entry.leave_start_date, entry.leave_end_date);
-
+  return previous_leaves.map((previousLeave, index) => {
     return (
-      <OtherLeaveEntry
+      <ReviewRow
         key={index}
-        label={label}
-        dates={dates}
-        reviewRowLevel={reviewRowLevel}
-      />
+        level={reviewRowLevel}
+        label={t("pages.claimsReview.previousLeaveEntryLabel", {
+          count: index + 1,
+        })}
+      >
+        {t("pages.claimsReview.previousLeaveFromCurrentEmployer", {
+          context: previousLeave.is_for_current_employer ? "yes" : "no",
+        })}
+
+        <br />
+
+        {t("pages.claimsReview.previousLeaveReason", {
+          context: findKeyByValue(
+            PreviousLeaveReason,
+            previousLeave.leave_reason
+          ),
+        })}
+
+        <br />
+
+        {formatDateRange(
+          previousLeave.leave_start_date,
+          previousLeave.leave_end_date
+        )}
+      </ReviewRow>
     );
   });
 };
 
 PreviousLeaveList.propTypes = {
-  entries: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)).isRequired,
+  previous_leaves: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave))
+    .isRequired,
   reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
 };
 

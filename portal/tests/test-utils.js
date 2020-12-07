@@ -161,22 +161,29 @@ export class BaseMockClaimBuilder {
     return this;
   }
 
-  previousLeave(attrs) {
-    set(
-      this.claimAttrs,
-      "previous_leaves",
-      attrs
-        ? attrs.map((attr) => new PreviousLeave(attr))
-        : [
-            new PreviousLeave({
-              id: 1,
-              is_for_current_employer: false,
-              leave_end_date: "2020-02-01",
-              leave_reason: PreviousLeaveReason.medical,
-              leave_start_date: "2020-01-01",
-            }),
-          ]
-    );
+  previousLeavePregnancyFromOtherEmployer() {
+    set(this.claimAttrs, "previous_leaves", [
+      new PreviousLeave({
+        id: 1,
+        is_for_current_employer: false,
+        leave_end_date: "2020-02-01",
+        leave_reason: PreviousLeaveReason.pregnancy,
+        leave_start_date: "2020-01-01",
+      }),
+    ]);
+    return this;
+  }
+
+  previousLeaveMedicalFromCurrentEmployer() {
+    set(this.claimAttrs, "previous_leaves", [
+      new PreviousLeave({
+        id: 1,
+        is_for_current_employer: true,
+        leave_end_date: "2020-02-01",
+        leave_reason: PreviousLeaveReason.medical,
+        leave_start_date: "2020-01-01",
+      }),
+    ]);
     return this;
   }
 
@@ -229,7 +236,7 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
     this.address();
     this.continuous();
     this.reducedSchedule();
-    this.previousLeave();
+    this.previousLeavePregnancyFromOtherEmployer();
     this.employerBenefit();
     this.absenceId();
     set(this.claimAttrs, "leave_details.reason", FineosLeaveReason.medical);
@@ -429,6 +436,23 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
     set(this.claimAttrs, "temp.has_employer_benefits", false);
     set(this.claimAttrs, "temp.has_other_incomes", false);
     set(this.claimAttrs, "temp.has_previous_leaves", false);
+    return this;
+  }
+
+  noPreviousLeave() {
+    set(this.claimAttrs, "temp.has_previous_leaves", false);
+    return this;
+  }
+
+  previousLeavePregnancyFromOtherEmployer() {
+    super.previousLeavePregnancyFromOtherEmployer();
+    set(this.claimAttrs, "temp.has_previous_leaves", true);
+    return this;
+  }
+
+  previousLeaveMedicalFromCurrentEmployer() {
+    super.previousLeaveMedicalFromCurrentEmployer();
+    set(this.claimAttrs, "temp.has_previous_leaves", true);
     return this;
   }
 
