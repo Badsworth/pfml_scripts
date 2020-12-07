@@ -4,7 +4,6 @@ import {
 } from "../../models/PaymentPreference";
 import Claim, {
   EmploymentStatus,
-  LeaveReason,
   PhoneType,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
@@ -26,6 +25,7 @@ import { DateTime } from "luxon";
 import Heading from "../../components/Heading";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import Lead from "../../components/Lead";
+import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../../components/ReviewHeading";

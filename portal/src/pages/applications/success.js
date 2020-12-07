@@ -1,4 +1,4 @@
-import Claim, { LeaveReason, ReasonQualifier } from "../../models/Claim";
+import Claim, { ReasonQualifier } from "../../models/Claim";
 import {
   IconCalendar,
   IconCopy,
@@ -7,6 +7,7 @@ import {
 import Alert from "../../components/Alert";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
+import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";

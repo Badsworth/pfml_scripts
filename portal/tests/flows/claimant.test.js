@@ -1,12 +1,12 @@
 import Claim, {
   ClaimStatus,
   EmploymentStatus,
-  LeaveReason,
   WorkPatternType,
 } from "../../src/models/Claim";
 import { Machine, assign } from "xstate";
 import claimFlowStates, { guards } from "../../src/flows/claimant";
 import { get, merge } from "lodash";
+import LeaveReason from "../../src/models/LeaveReason";
 import User from "../../src/models/User";
 import { createModel } from "@xstate/test";
 import machineConfigs from "../../src/flows";

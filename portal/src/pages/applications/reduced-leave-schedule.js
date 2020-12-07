@@ -1,5 +1,4 @@
 import Claim, {
-  LeaveReason,
   OrderedDaysOfWeek,
   ReducedScheduleLeavePeriod,
   WorkPattern,
@@ -11,6 +10,7 @@ import Details from "../../components/Details";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
+import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";

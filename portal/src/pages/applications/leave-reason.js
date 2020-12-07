@@ -1,5 +1,4 @@
 import Claim, {
-  LeaveReason as LeaveReasonEnum,
   ReasonQualifier as ReasonQualifierEnum,
 } from "../../models/Claim";
 import { get, pick, set } from "lodash";
@@ -7,6 +6,7 @@ import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
+import LeaveReasonEnum from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";

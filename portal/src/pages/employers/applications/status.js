@@ -1,12 +1,11 @@
 import Document, { DocumentType } from "../../../models/Document";
-import EmployerClaim, {
-  FineosLeaveReason,
-} from "../../../models/EmployerClaim";
 import React, { useEffect } from "react";
 import BackButton from "../../../components/BackButton";
 import DocumentCollection from "../../../models/DocumentCollection";
+import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import Lead from "../../../components/Lead";
+import LeaveReason from "../../../models/LeaveReason";
 import PropTypes from "prop-types";
 import StatusRow from "../../../components/StatusRow";
 import StatusTag from "../../../components/StatusTag";
@@ -77,7 +76,7 @@ export const Status = (props) => {
       <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>
         {t("pages.employersClaimsStatus.leaveReasonValue", {
           context: findKeyByValue(
-            FineosLeaveReason,
+            LeaveReason,
             get(claim, "leave_details.reason")
           ),
         })}

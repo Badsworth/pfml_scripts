@@ -6,6 +6,7 @@ import { compact, get, isNil, merge, sum, sumBy, zip, zipObject } from "lodash";
 import BaseClaim from "./BaseClaim";
 import BaseModel from "./BaseModel";
 import { DateTime } from "luxon";
+import LeaveReason from "./LeaveReason";
 import assert from "assert";
 import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
 
@@ -134,19 +135,6 @@ export const EmploymentStatus = {
   employed: "Employed",
   selfEmployed: "Self-Employed",
   unemployed: "Unemployed",
-};
-
-/**
- * Enums for the Application's `leave_details.reason` field
- * @enum {string}
- */
-export const LeaveReason = {
-  // TODO (CP-534): Replace this placeholder with the actual value once it's implemented in the API
-  activeDutyFamily: "Active Duty Family Placeholder",
-  bonding: "Child Bonding",
-  medical: "Serious Health Condition - Employee",
-  // TODO (CP-534): Replace this placeholder with the actual value once it's implemented in the API
-  serviceMemberFamily: "Service Member Family Placeholder",
 };
 
 /**

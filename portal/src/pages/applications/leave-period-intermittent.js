@@ -1,12 +1,13 @@
-import Claim, { LeaveReason } from "../../models/Claim";
 import React, { useEffect } from "react";
 import { cloneDeep, get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
+import Claim from "../../models/Claim";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import Lead from "../../components/Lead";
+import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";

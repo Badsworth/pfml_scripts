@@ -1,8 +1,4 @@
-import Claim, {
-  ClaimStatus,
-  LeaveReason,
-  ReasonQualifier,
-} from "../../models/Claim";
+import Claim, { ClaimStatus, ReasonQualifier } from "../../models/Claim";
 import Document, { DocumentType } from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { filter, findIndex, get } from "lodash";
@@ -10,6 +6,7 @@ import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import HeadingPrefix from "../../components/HeadingPrefix";
+import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
 import Spinner from "../../components/Spinner";

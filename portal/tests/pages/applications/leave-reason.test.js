@@ -1,10 +1,11 @@
-import { LeaveReason, ReasonQualifier } from "../../../src/models/Claim";
 import {
   MockClaimBuilder,
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
+import LeaveReason from "../../../src/models/LeaveReason";
 import LeaveReasonPage from "../../../src/pages/applications/leave-reason";
+import { ReasonQualifier } from "../../../src/models/Claim";
 import { act } from "react-dom/test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");

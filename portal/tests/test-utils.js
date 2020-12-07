@@ -9,7 +9,6 @@ import Claim, {
   EmploymentStatus,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
-  LeaveReason,
   PhoneType,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
@@ -22,7 +21,6 @@ import EmployerBenefit, {
   EmployerBenefitType,
   IncomeFrequency,
 } from "../src/models/EmployerBenefit";
-import EmployerClaim, { FineosLeaveReason } from "../src/models/EmployerClaim";
 import OtherIncome, { OtherIncomeType } from "../src/models/OtherIncome";
 import PreviousLeave, {
   PreviousLeaveReason,
@@ -32,6 +30,8 @@ import Address from "../src/models/Address";
 import AppErrorInfo from "../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../src/models/AppErrorInfoCollection";
 import ClaimCollection from "../src/models/ClaimCollection";
+import EmployerClaim from "../src/models/EmployerClaim";
+import LeaveReason from "../src/models/LeaveReason";
 import React from "react";
 import User from "../src/models/User";
 import { act } from "react-dom/test-utils";
@@ -239,7 +239,7 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
     this.previousLeavePregnancyFromOtherEmployer();
     this.employerBenefit();
     this.absenceId();
-    set(this.claimAttrs, "leave_details.reason", FineosLeaveReason.medical);
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
     return this;
   }
 

@@ -1,4 +1,4 @@
-import Claim, { LeaveReason, ReasonQualifier } from "../../models/Claim";
+import Claim, { ReasonQualifier } from "../../models/Claim";
 import Document, { DocumentType } from "../../models/Document";
 import React, { useState } from "react";
 import Alert from "../../components/Alert";
@@ -7,6 +7,7 @@ import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
+import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import Spinner from "../../components/Spinner";

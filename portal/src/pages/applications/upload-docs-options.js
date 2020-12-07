@@ -1,7 +1,8 @@
-import Claim, { LeaveReason, ReasonQualifier } from "../../models/Claim";
+import Claim, { ReasonQualifier } from "../../models/Claim";
 import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
+import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
