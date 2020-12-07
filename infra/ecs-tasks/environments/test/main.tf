@@ -20,6 +20,7 @@ module "tasks" {
   service_docker_tag = local.service_docker_tag
   vpc_id             = data.aws_vpc.vpc.id
 
+  cognito_user_pool_id                       = "us-east-1_HhQSLYSIe"
   fineos_client_integration_services_api_url = "https://dt2-api.masspfml.fineos.com/integration-services/"
   fineos_client_group_client_api_url         = "https://dt2-api.masspfml.fineos.com/groupclientapi/"
   fineos_client_customer_api_url             = "https://dt2-api.masspfml.fineos.com/customerapi/"

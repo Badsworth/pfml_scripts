@@ -75,6 +75,7 @@ dor-generate = "massgov.pfml.dor.mock.generate:main"
 dor-import = "massgov.pfml.dor.importer.import_dor:handler"
 load-employers-to-fineos = "massgov.pfml.fineos.employer_load:handler"
 fineos-eligibility-feed-export = "massgov.pfml.fineos.eligibility_feed_export.eligibility_export:main"
+bulk-user-import = "massgov.pfml.user_import.process_csv:process"
 
 [tool.black]
 line-length = 100

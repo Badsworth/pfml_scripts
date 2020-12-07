@@ -78,3 +78,9 @@ variable "logging_level" {
   type        = string
   default     = ""
 }
+
+variable "cognito_user_pool_id" {
+  description = "Cognito User Pool ID"
+  type        = string
+  default     = ""
+}

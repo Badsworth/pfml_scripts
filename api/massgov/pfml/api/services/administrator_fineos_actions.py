@@ -188,6 +188,10 @@ def register_leave_admin_with_fineos(
     try:
         fineos = fineos_client if fineos_client else massgov.pfml.fineos.create_client()
         fineos_web_id = f"pfml_leave_admin_{str(uuid.uuid4())}"
+        logger.info(
+            "Calling FINEOS to Create Leave Admin",
+            extra={"email": admin_email, "fineos_web_id": fineos_web_id},
+        )
         leave_admin_create_payload = CreateOrUpdateLeaveAdmin(
             fineos_web_id=fineos_web_id,
             fineos_employer_id=str(employer.fineos_employer_id),

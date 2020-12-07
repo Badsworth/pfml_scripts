@@ -50,6 +50,22 @@ locals {
       task_role = aws_iam_role.task_adhoc_verification_task_role.arn
     },
 
+    "bulk-user-import" = {
+      command             = ["bulk-user-import"]
+      containers_template = "bulk_user_import_template.json"
+      task_role           = aws_iam_role.task_bulk_import_task_role.arn
+      vars = {
+        fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
+        fineos_client_customer_api_url             = var.fineos_client_customer_api_url
+        fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
+        fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
+        fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
+        fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
+        fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
+        cognito_user_pool_id                       = var.cognito_user_pool_id
+      }
+    },
+
     "dor-import" = {
       command             = ["dor-import"],
       task_role           = aws_iam_role.dor_import_task_role.arn,
