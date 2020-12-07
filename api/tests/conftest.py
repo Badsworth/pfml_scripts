@@ -211,7 +211,7 @@ def test_fs_path(tmp_path):
 
 
 @pytest.fixture
-def mock_s3_bucket():
+def mock_s3_bucket(reset_aws_env_vars):
     with moto.mock_s3():
         s3 = boto3.resource("s3")
         bucket_name = "test_bucket"

@@ -1,6 +1,7 @@
 import os
 
 import boto3
+import pytest
 
 import massgov.pfml.util.files as file_util
 
@@ -84,6 +85,58 @@ def test_list_files_in_folder_s3(mock_s3_bucket):
     folder_path = "s3://{}/{}".format(mock_s3_bucket, folder_name)
     files = file_util.list_files(folder_path)
     assert files == [file_name]
+
+
+def test_copy_file_s3(mock_s3_bucket):
+    # source variables
+    source_folder_name = "test_folder"
+    source_file_name = "test.txt"
+    source_key = "{}/{}".format(source_folder_name, source_file_name)
+
+    s3 = boto3.client("s3")
+    s3.put_object(Bucket=mock_s3_bucket, Key=source_key, Body="line1\nline2")
+    source_path = f"s3://{mock_s3_bucket}/{source_key}"
+
+    # Dest variables
+    dest_folder_name = "another_folder"
+    dest_file_name = "other.txt"
+    dest_key = "{}/{}".format(dest_folder_name, dest_file_name)
+    dest_path = f"s3://{mock_s3_bucket}/{dest_key}"
+
+    file_util.copy_file(source_path, dest_path)
+
+    # Verify we can then fetch the file
+    lines = list(file_util.read_file_lines(dest_path))
+    assert lines[0] == "line1"
+    assert lines[1] == "line2"
+
+
+def test_rename_file_s3(mock_s3_bucket):
+    # source variables
+    source_folder_name = "test_folder"
+    source_file_name = "test.txt"
+    source_key = "{}/{}".format(source_folder_name, source_file_name)
+
+    s3 = boto3.client("s3")
+    s3.put_object(Bucket=mock_s3_bucket, Key=source_key, Body="line1\nline2")
+    source_path = f"s3://{mock_s3_bucket}/{source_key}"
+
+    # Dest variables
+    dest_folder_name = "another_folder"
+    dest_file_name = "other.txt"
+    dest_key = "{}/{}".format(dest_folder_name, dest_file_name)
+    dest_path = f"s3://{mock_s3_bucket}/{dest_key}"
+
+    file_util.rename_file(source_path, dest_path)
+
+    # Verify we can then fetch the file
+    lines = list(file_util.read_file_lines(dest_path))
+    assert lines[0] == "line1"
+    assert lines[1] == "line2"
+
+    # Verify the original isn't present:
+    with pytest.raises(OSError, match=r"NoSuchKey"):
+        file_util.read_file_lines(source_path)
 
 
 def test_ebcdic_encoding(test_fs_path):

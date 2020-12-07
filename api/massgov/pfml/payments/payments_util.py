@@ -1,5 +1,6 @@
 import os
 import xml.dom.minidom as minidom
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
@@ -9,6 +10,35 @@ import pytz
 class Constants:
     COMPTROLLER_UNIT_CODE = "8770"
     COMPTROLLER_DEPT_CODE = "EOL"
+
+
+@dataclass
+class PaymentsS3Config:
+    # S3 paths (eg. s3://bucket/path/to/folder/)
+    # Vars prefixed with fineos are buckets owned by fineos
+    # Vars prefixed by pfml are owned by us
+
+    # FINEOS generates data export files for PFML API to pick up
+    # This is where FINEOS makes those files available to us
+    fineos_data_export_path: str
+    # PFML API stores a copy of all files that FINEOS generates for us
+    # This is where we store that copy
+    pfml_fineos_inbound_path: str
+    # PFML API generates files for FINEOS to process
+    # This is where FINEOS picks up files from us
+    fineos_data_import_path: str
+    ## PFML API stores a copy of all files that we generate for FINEOS
+    ## This is where we store that copy
+    pfml_fineos_outbound_path: str
+
+
+def get_s3_config() -> PaymentsS3Config:
+    return PaymentsS3Config(
+        fineos_data_export_path=str(os.environ.get("FINEOS_DATA_EXPORT_PATH")),
+        pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
+        fineos_data_import_path=str(os.environ.get("FINEOS_DATA_IMPORT_PATH")),
+        pfml_fineos_outbound_path=str(os.environ.get("PFML_FINEOS_OUTBOUND_PATH")),
+    )
 
 
 def get_now() -> datetime:
