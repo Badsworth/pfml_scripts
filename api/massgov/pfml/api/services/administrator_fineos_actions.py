@@ -117,6 +117,8 @@ def get_claim_as_leave_admin(
         absence_periods = fineos.get_absence_period_decisions(fineos_user_id, absence_id).dict()
         customer_id = absence_periods["decisions"][0]["employee"]["id"]
         customer_info = fineos.get_customer_info(fineos_user_id, customer_id).dict()
+        customer_occupations = fineos.get_customer_occupations(fineos_user_id, customer_id).dict()
+        hours_worked_per_week = customer_occupations["elements"][0]["hrsWorkedPerWeek"]
         eform_summaries = fineos.get_eform_summary(fineos_user_id, absence_id)
         managed_reqs = fineos.get_managed_requirements(fineos_user_id, absence_id)
         other_leaves: List[PreviousLeave] = []
@@ -156,6 +158,7 @@ def get_claim_as_leave_admin(
             employer_fein=employer_fein,
             fineos_absence_id=absence_id,
             first_name=customer_info["firstName"],
+            hours_worked_per_week=hours_worked_per_week,
             last_name=customer_info["lastName"],
             leave_details=leave_details,
             middle_name=customer_info["secondName"],
@@ -232,3 +235,24 @@ def register_leave_admin_with_fineos(
 def create_eform(user_id: str, absence_id: str, eform: EFormBody) -> None:
     fineos = massgov.pfml.fineos.create_client()
     fineos.create_eform(user_id, absence_id, eform)
+
+
+def complete_claim_review(user_id: str, absence_id: str) -> None:
+    fineos = massgov.pfml.fineos.create_client()
+
+    # FINEOS throws an error if we attempt to update outstanding information that is not needed.
+    # Determine if employer confirmation is outstanding and mark it as received if it is.
+    outstanding_information = fineos.get_outstanding_information(user_id, absence_id)
+
+    for information in outstanding_information:
+        if (
+            not information.infoReceived
+            and information.informationType == LEAVE_ADMIN_INFO_REQUEST_TYPE
+        ):
+            received_information = massgov.pfml.fineos.models.group_client_api.OutstandingInformationData(
+                informationType=LEAVE_ADMIN_INFO_REQUEST_TYPE
+            )
+            fineos.update_outstanding_information_as_received(
+                user_id, absence_id, received_information
+            )
+            break

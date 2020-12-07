@@ -10,6 +10,7 @@ import massgov.pfml.api.util.response as response_util
 from massgov.pfml.api.authorization.flask import READ, requires
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.services.administrator_fineos_actions import (
+    complete_claim_review,
     create_eform,
     download_document_as_leave_admin,
     get_claim_as_leave_admin,
@@ -93,6 +94,9 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
     user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
 
     create_eform(user_leave_admin.fineos_web_id, fineos_absence_id, transformed_eform)  # type: ignore
+
+    if claim_request.employer_decision == "Approve" and not claim_request.has_amendments:
+        complete_claim_review(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore
 
     claim_response = {"claim_id": fineos_absence_id}
 

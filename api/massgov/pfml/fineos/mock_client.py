@@ -11,7 +11,7 @@ import datetime
 import pathlib
 import typing
 from decimal import Decimal
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 import faker
 import requests
@@ -72,13 +72,14 @@ def mock_document(
     return mocked_document
 
 
-def mock_absence_periods():
+def mock_absence_periods(absence_id: str) -> Any:
+    type = "Time off period" if absence_id == "NTN-100-ABS-01" else "Reduced Schedule"
     return {
         "startDate": "2021-06-24",
         "endDate": "2021-10-28",
         "decisions": [
             {
-                "absence": {"id": "NTN-61-ABS-01", "caseReference": "NTN-61-ABS-01"},
+                "absence": {"id": absence_id, "caseReference": absence_id},
                 "employee": {"id": "1079", "name": "ZZ: Olaf Aufderhar"},
                 "period": {
                     "periodReference": "PL-14449-0000000152",
@@ -86,13 +87,13 @@ def mock_absence_periods():
                     "relatedToEpisodic": "false",
                     "startDate": "2021-06-24",
                     "endDate": "2021-06-25",
-                    "balanceDeduction": 0.4,
-                    "timeRequested": "16:00",
-                    "timeDeducted": "16:00",
+                    "balanceDeduction": 0,
+                    "timeRequested": "",
+                    "timeDeducted": "",
                     "timeDeductedBasis": "Hours",
                     "timeDecisionStatus": "Approved",
                     "timeDecisionReason": "Leave Request Approved",
-                    "type": "Time off period",
+                    "type": type,
                     "status": "Known",
                     "leavePlan": {
                         "id": "abdc368f-ace6-4d6a-b697-f1016fe8a314",
@@ -304,12 +305,50 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         self, user_id: str, absence_id: str
     ) -> models.group_client_api.PeriodDecisions:
         _capture_call("get_absence_period_decisions", user_id, absence_id=absence_id)
-        return models.group_client_api.PeriodDecisions.parse_obj(mock_absence_periods())
+        return models.group_client_api.PeriodDecisions.parse_obj(mock_absence_periods(absence_id))
 
     def get_customer_info(
         self, user_id: str, customer_id: str
     ) -> models.group_client_api.CustomerInfo:
         return models.group_client_api.CustomerInfo.parse_obj(mock_customer_info())
+
+    def get_customer_occupations(
+        self, user_id: str, customer_id: str
+    ) -> models.group_client_api.CustomerOccupations:
+        _capture_call("get_customer_occupations", user_id, customer_id=customer_id)
+
+        return models.group_client_api.CustomerOccupations(
+            elements=[models.group_client_api.CustomerOccupation(hrsWorkedPerWeek=40)]
+        )
+
+    def get_outstanding_information(
+        self, user_id: str, case_id: str
+    ) -> List[models.group_client_api.OutstandingInformationItem]:
+        """Get outstanding information"""
+        _capture_call("get_outstanding_information", user_id, case_id=case_id)
+
+        if case_id == "NTN-CASE-WITHOUT-OUTSTANDING-INFO":
+            return []
+
+        return [
+            models.group_client_api.OutstandingInformationItem(
+                informationType="Employer Confirmation of Leave Data", infoReceived=False
+            )
+        ]
+
+    def update_outstanding_information_as_received(
+        self,
+        user_id: str,
+        case_id: str,
+        outstanding_information: models.group_client_api.OutstandingInformationData,
+    ) -> None:
+        """Update outstanding information received"""
+        _capture_call(
+            "update_outstanding_information_as_received",
+            user_id,
+            outstanding_information=outstanding_information,
+            case_id=case_id,
+        )
 
     def get_eform_summary(
         self, user_id: str, absence_id: str

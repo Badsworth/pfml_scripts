@@ -3,6 +3,8 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../../test-utils";
+import EmployerBenefit from "../../../../src/models/EmployerBenefit";
+import PreviousLeave from "../../../../src/models/PreviousLeave";
 import Review from "../../../../src/pages/employers/applications/review";
 import { act } from "react-dom/test-utils";
 
@@ -56,6 +58,7 @@ describe("Review", () => {
       fraud: undefined, // undefined by default
       hours_worked_per_week: expect.any(Number),
       previous_leaves: expect.any(Array),
+      has_amendments: false,
     });
   });
 
@@ -100,6 +103,60 @@ describe("Review", () => {
     expect(appLogic.employers.submit).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
       expect.objectContaining({ fraud: "No" })
+    );
+  });
+
+  it("sets 'has_amendments' to false if nothing is amended", () => {
+    simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ has_amendments: false })
+    );
+  });
+
+  it("sets 'has_amendments' to true if benefits are amended", () => {
+    act(() => {
+      wrapper
+        .find("EmployerBenefits")
+        .props()
+        .onChange(new EmployerBenefit({ id: 1 }));
+    });
+
+    simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ has_amendments: true })
+    );
+  });
+
+  it("sets 'has_amendments' to true if leaves are amended", () => {
+    act(() => {
+      wrapper
+        .find("PreviousLeaves")
+        .props()
+        .onChange(new PreviousLeave({ id: 1 }));
+    });
+
+    simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ has_amendments: true })
+    );
+  });
+
+  it("sets 'has_amendments' to true if hours are amended", () => {
+    act(() => {
+      wrapper.find("SupportingWorkDetails").props().onChange(60);
+    });
+
+    simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ has_amendments: true })
     );
   });
 

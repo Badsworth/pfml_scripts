@@ -1126,6 +1126,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PreviousLeave"
+        has_amendments:
+          type: boolean
         hours_worked_per_week:
           type: integer
         employer_decision:
@@ -1172,6 +1174,8 @@ components:
           example: "NTN-111-ABS-01"
         first_name:
           type: string
+        hours_worked_per_week:
+          type: string
         last_name:
           type: string
         leave_details:
@@ -1181,7 +1185,7 @@ components:
         previous_leaves:
           type: array
           items:
-            $ref: "#/components/schemas/PreviousLeave"  
+            $ref: "#/components/schemas/PreviousLeave"
         residential_address:
           $ref: "#/components/schemas/Address"
         tax_identifier:
@@ -1802,7 +1806,7 @@ components:
           $ref: "#/components/schemas/Date"
         has_future_child_date:
           type: boolean
-          nullable: true 
+          nullable: true
           example: true
         employer_notified:
           type: boolean
@@ -2040,7 +2044,7 @@ components:
           type: string
           nullable: true
           enum:
-            - Per Day 
+            - Per Day
             - Per Week
             - Per Month
             - All At Once

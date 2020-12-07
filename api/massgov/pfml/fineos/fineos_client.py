@@ -438,6 +438,45 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         return models.group_client_api.CustomerInfo.parse_obj(json)
 
+    def get_customer_occupations(
+        self, user_id: str, customer_id: str
+    ) -> models.group_client_api.CustomerOccupations:
+        response = self._group_client_api(
+            "GET", f"groupClient/customers/{customer_id}/customer-occupations", user_id
+        )
+        json = response.json()
+        # Workaround empty strings in response instead of null. These cause parse_obj to fail.
+        for item in json["elements"]:
+            set_empty_dates_to_none(item, ["jobStartDate", "jobEndDate"])
+
+        return models.group_client_api.CustomerOccupations.parse_obj(json)
+
+    def get_outstanding_information(
+        self, user_id: str, case_id: str
+    ) -> List[models.group_client_api.OutstandingInformationItem]:
+        """Get outstanding information"""
+        response = self._group_client_api(
+            "GET", f"groupClient/cases/{case_id}/outstanding-information", user_id
+        )
+
+        return pydantic.parse_obj_as(
+            List[models.group_client_api.OutstandingInformationItem], response.json()
+        )
+
+    def update_outstanding_information_as_received(
+        self,
+        user_id: str,
+        case_id: str,
+        outstanding_information: models.group_client_api.OutstandingInformationData,
+    ) -> None:
+        """Update outstanding information received"""
+        self._group_client_api(
+            "POST",
+            f"groupClient/cases/{case_id}/outstanding-information-received",
+            user_id,
+            data=outstanding_information.json(exclude_none=True),
+        )
+
     def get_eform_summary(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.EFormSummary]:

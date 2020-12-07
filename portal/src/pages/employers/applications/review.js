@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { isEqual, pick } from "lodash";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
@@ -19,7 +20,6 @@ import SupportingWorkDetails from "../../../components/employers/SupportingWorkD
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import formatDateRange from "../../../utils/formatDateRange";
-import { pick } from "lodash";
 import updateAmendments from "../../../utils/updateAmendments";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
@@ -122,6 +122,13 @@ export const Review = (props) => {
       fraud: formState.fraud,
       hours_worked_per_week: parseInt(formState.amendedHours),
       previous_leaves,
+      has_amendments:
+        !isEqual(formState.amendedBenefits, formState.employerBenefits) ||
+        !isEqual(formState.amendedLeaves, formState.previousLeaves) ||
+        !isEqual(
+          formState.amendedHours,
+          claim.hours_worked_per_week || hoursWorkedPerWeek
+        ),
     };
     await props.appLogic.employers.submit(absenceId, payload);
   };

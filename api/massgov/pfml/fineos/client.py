@@ -84,6 +84,29 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def get_customer_occupations(
+        self, user_id: str, customer_id: str
+    ) -> models.group_client_api.CustomerOccupations:
+        pass
+
+    @abc.abstractmethod
+    def get_outstanding_information(
+        self, user_id: str, case_id: str
+    ) -> typing.List[models.group_client_api.OutstandingInformationItem]:
+        """Get outstanding information"""
+        pass
+
+    @abc.abstractmethod
+    def update_outstanding_information_as_received(
+        self,
+        user_id: str,
+        case_id: str,
+        outstanding_information: models.group_client_api.OutstandingInformationData,
+    ) -> None:
+        """Update outstanding information received"""
+        pass
+
+    @abc.abstractmethod
     def get_eform_summary(
         self, user_id: str, absence_id: str
     ) -> typing.List[models.group_client_api.EFormSummary]:

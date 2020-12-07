@@ -58,3 +58,4 @@ class EmployerClaimReview(PydanticBaseModel):
     previous_leaves: List[PreviousLeave]
     employer_decision: Optional[str]
     fraud: Optional[str]
+    has_amendments: bool = False

@@ -21,6 +21,7 @@ class ClaimReviewResponse(PydanticBaseModel):
     employer_fein: Optional[FEINFormattedStr]
     fineos_absence_id: Optional[str]
     first_name: Optional[str]
+    hours_worked_per_week: Optional[int]
     last_name: Optional[str]
     leave_details: Optional[LeaveDetails]
     middle_name: Optional[str]
