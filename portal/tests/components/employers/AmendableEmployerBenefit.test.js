@@ -1,4 +1,5 @@
 import EmployerBenefit, {
+  EmployerBenefitType,
   IncomeFrequency,
 } from "../../../src/models/EmployerBenefit";
 import AmendButton from "../../../src/components/employers/AmendButton";
@@ -6,7 +7,6 @@ import AmendableEmployerBenefit from "../../../src/components/employers/Amendabl
 import AmendmentForm from "../../../src/components/employers/AmendmentForm";
 import Button from "../../../src/components/Button";
 import Dropdown from "../../../src/components/Dropdown";
-import { FineosEmployerBenefitType } from "../../../src/models/EmployerClaim";
 import InputDate from "../../../src/components/InputDate";
 import InputText from "../../../src/components/InputText";
 import React from "react";
@@ -18,7 +18,7 @@ describe("AmendableEmployerBenefit", () => {
     benefit_amount_frequency: IncomeFrequency.monthly,
     benefit_end_date: "2021-03-01",
     benefit_start_date: "2021-02-01",
-    benefit_type: FineosEmployerBenefitType.shortTermDisability,
+    benefit_type: EmployerBenefitType.shortTermDisability,
   });
   const props = {
     onChange: jest.fn(),
@@ -73,7 +73,7 @@ describe("AmendableEmployerBenefit", () => {
       benefit_amount_frequency: "",
       benefit_end_date: "2021-03-01",
       benefit_start_date: "2021-02-01",
-      benefit_type: FineosEmployerBenefitType.paidLeave,
+      benefit_type: EmployerBenefitType.paidLeave,
     });
     const wrapper = shallow(
       <AmendableEmployerBenefit
@@ -85,7 +85,7 @@ describe("AmendableEmployerBenefit", () => {
     wrapper.find(AmendButton).simulate("click");
 
     expect(wrapper.find(InputDate)).toHaveLength(2);
-    expect(wrapper.find(InputText).exists()).toEqual(true);
+    expect(wrapper.find(InputText).exists()).toEqual(false);
   });
 
   it("updates start and end dates in the AmendmentForm", () => {

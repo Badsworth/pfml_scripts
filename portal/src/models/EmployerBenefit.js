@@ -20,14 +20,13 @@ class EmployerBenefit extends BaseModel {
 /**
  * Enums for the EmployerBenefit `benefit_type` field
  * @enum {string}
- * TODO (CP-567): make sure these enum strings match the API's values
  */
 export const EmployerBenefitType = {
   /* eslint-disable sort-keys */
-  paidLeave: "Accrued Paid Leave",
-  shortTermDisability: "Short Term Disability",
-  permanentDisability: "Permanent Disability Insurance",
-  familyOrMedicalLeave: "Family or Medical Leave Insurance",
+  paidLeave: "Accrued paid leave",
+  shortTermDisability: "Short-term disability insurance",
+  permanentDisability: "Permanent disability insurance",
+  familyOrMedicalLeave: "Family or medical leave insurance",
   // Unknown may be displayed to Leave Admins, but isn't
   // an option we display to Claimants
   unknown: "Unknown",
@@ -44,7 +43,7 @@ export const IncomeFrequency = {
   daily: "Per Day",
   weekly: "Per Week",
   monthly: "Per Month",
-  allAtOnce: "All At Once",
+  allAtOnce: "In Total",
 };
 
 export default EmployerBenefit;

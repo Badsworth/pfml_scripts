@@ -1,10 +1,12 @@
-import EmployerBenefit, { IncomeFrequency } from "../../models/EmployerBenefit";
+import EmployerBenefit, {
+  EmployerBenefitType,
+  IncomeFrequency,
+} from "../../models/EmployerBenefit";
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import ConditionalContent from "../ConditionalContent";
 import Dropdown from "../Dropdown";
-import FineosEmployerBenefitType from "../../models/EmployerClaim";
 import InputDate from "../InputDate";
 import InputText from "../InputText";
 import PropTypes from "prop-types";
@@ -35,7 +37,7 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
     onChange({ id, [field]: formattedValue });
   };
   const isPaidLeave =
-    employerBenefit.benefit_type === FineosEmployerBenefitType.paidLeave;
+    employerBenefit.benefit_type === EmployerBenefitType.paidLeave;
   const getBenefitAmountByType = () => {
     const {
       benefit_amount_dollars,

@@ -1,16 +1,12 @@
-import EmployerBenefit, {
-  EmployerBenefitType,
-} from "../../../models/EmployerBenefit";
-import EmployerClaim, {
-  FineosEmployerBenefitType,
-} from "../../../models/EmployerClaim";
 import React, { useEffect, useState } from "react";
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployeeNotice from "../../../components/employers/EmployeeNotice";
+import EmployerBenefit from "../../../models/EmployerBenefit";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
+import EmployerClaim from "../../../models/EmployerClaim";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
@@ -22,7 +18,6 @@ import PropTypes from "prop-types";
 import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDateRange from "../../../utils/formatDateRange";
 import { pick } from "lodash";
 import updateAmendments from "../../../utils/updateAmendments";
@@ -116,23 +111,13 @@ export const Review = (props) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const employer_benefits = formState.amendedBenefits.map((benefit) => {
-      const benefitKey = findKeyByValue(
-        FineosEmployerBenefitType,
-        benefit.benefit_type
-      );
-      return {
-        ...benefit,
-        benefit_type: EmployerBenefitType[benefitKey],
-      };
-    });
     const previous_leaves = formState.amendedLeaves.map((leave) =>
       pick(leave, ["leave_end_date", "leave_start_date"])
     );
 
     const payload = {
       comment: formState.comment,
-      employer_benefits,
+      employer_benefits: formState.employerBenefits,
       employer_decision: formState.employerDecision,
       fraud: formState.fraud,
       hours_worked_per_week: parseInt(formState.amendedHours),

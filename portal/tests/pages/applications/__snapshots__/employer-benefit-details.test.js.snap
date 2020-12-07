@@ -9,25 +9,25 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
           "checked": false,
           "hint": "For example, vacation time, sick leave, or personal time",
           "label": "Accrued paid leave",
-          "value": "Accrued Paid Leave",
+          "value": "Accrued paid leave",
         },
         Object {
           "checked": false,
           "hint": "Also known as temporary disability insurance",
           "label": "Short-term disability insurance",
-          "value": "Short Term Disability",
+          "value": "Short-term disability insurance",
         },
         Object {
           "checked": false,
           "hint": "Also known as a permanent disability policy",
           "label": "Permanent disability insurance",
-          "value": "Permanent Disability Insurance",
+          "value": "Permanent disability insurance",
         },
         Object {
           "checked": false,
           "hint": "For example, a paid maternity leave policy",
           "label": "Family or medical leave insurance",
-          "value": "Family or Medical Leave Insurance",
+          "value": "Family or medical leave insurance",
         },
       ]
     }
@@ -102,7 +102,7 @@ exports[`EmployerBenefitDetails when the user's claim has employer benefits rend
           "benefit_amount_frequency": "Per Week",
           "benefit_end_date": "2021-02-01",
           "benefit_start_date": "2021-01-01",
-          "benefit_type": "Family or Medical Leave Insurance",
+          "benefit_type": "Family or medical leave insurance",
           "id": 1,
         },
       ]
