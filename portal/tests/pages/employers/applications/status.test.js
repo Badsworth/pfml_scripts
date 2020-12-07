@@ -165,7 +165,7 @@ describe("Status", () => {
       expect(entries).toEqual([
         ["Approval notice (PDF)", "Posted 1/2/2020"],
         ["Denial notice (PDF)", "Posted 2/3/2020"],
-        ["Request for more information (PDF)", "Posted 3/4/2020"],
+        ["Request for more information", "Posted 3/4/2020"],
       ]);
     });
 

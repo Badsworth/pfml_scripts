@@ -239,6 +239,12 @@ function LegalNoticeListItem(props) {
   const { appLogic, document } = props;
   const { t } = useTranslation();
 
+  const documentContentType = document.content_type || "application/pdf";
+  const noticeNameTranslationKey =
+    documentContentType === "application/pdf"
+      ? "components.applicationCard.noticeName_pdf"
+      : "components.applicationCard.noticeName";
+
   const handleClick = async (event) => {
     event.preventDefault();
     const documentData = await appLogic.documents.download(document);
@@ -246,7 +252,7 @@ function LegalNoticeListItem(props) {
       download(
         documentData,
         document.name.trim() || document.document_type.trim(),
-        document.content_type || "application/pdf"
+        documentContentType
       );
     }
   };
@@ -254,7 +260,7 @@ function LegalNoticeListItem(props) {
   return (
     <li key={document.fineos_document_id} className="font-body-2xs">
       <a onClick={handleClick} className="text-medium" href="">
-        {t("components.applicationCard.noticeName", {
+        {t(noticeNameTranslationKey, {
           context: findKeyByValue(DocumentType, document.document_type),
         })}
       </a>

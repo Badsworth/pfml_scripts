@@ -193,12 +193,14 @@ describe("ApplicationCard", () => {
         }),
         new Document({
           application_id: claim.application_id,
+          content_type: "image/png",
           created_at: "2021-01-01",
           document_type: DocumentType.denialNotice,
           fineos_document_id: "mock-document-4",
         }),
         new Document({
           application_id: claim.application_id,
+          content_type: "application/pdf",
           created_at: "2021-01-01",
           document_type: DocumentType.requestForInfoNotice,
           fineos_document_id: "mock-document-5",

@@ -435,10 +435,15 @@ const shared = {
   networkError:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   noticeDate: "Posted {{date}}",
-  noticeName: "Other notice (PDF)", // it should fallback to this if we receive an unexpected or undefined enum
-  noticeName_approvalNotice: "Approval notice (PDF)",
-  noticeName_denialNotice: "Denial notice (PDF)",
-  noticeName_requestForInfoNotice: "Request for more information (PDF)",
+  noticeName: "Other notice", // it should fallback to this if we receive an unexpected or undefined enum
+  noticeName_approvalNotice: "Approval notice",
+  noticeName_denialNotice: "Denial notice",
+  noticeName_pdf: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
+  noticeName_pdf_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
+  noticeName_pdf_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
+  noticeName_pdf_requestForInfoNotice:
+    "Request for more information $t(shared.pdfNoticeSuffix)",
+  noticeName_requestForInfoNotice: "Request for more information",
   otherIncomeEntryPrefix: "Income",
   otherIncomeType_jonesAct: "Jones Act benefits",
   otherIncomeType_otherEmployer: "Earnings from another employer",
@@ -454,6 +459,7 @@ const shared = {
   passwordLabel: "Password",
   paymentMethodAch: "Direct deposit into my bank account",
   paymentMethodCheck: "Paper check",
+  pdfNoticeSuffix: "(PDF)",
   previousLeaveEntryPrefix: "Previous leave",
   qualifyingReasonDetailsLabel: "What counts as a qualifying reason?",
   resendVerificationCodeLink: "Resend the code",
@@ -1571,6 +1577,11 @@ const pages = {
     noticeName: "$t(shared.noticeName)",
     noticeName_approvalNotice: "$t(shared.noticeName_approvalNotice)",
     noticeName_denialNotice: "$t(shared.noticeName_denialNotice)",
+    noticeName_pdf: "$t(shared.noticeName_pdf)",
+    noticeName_pdf_approvalNotice: "$t(shared.noticeName_pdf_approvalNotice)",
+    noticeName_pdf_denialNotice: "$t(shared.noticeName_pdf_denialNotice)",
+    noticeName_pdf_requestForInfoNotice:
+      "$t(shared.noticeName_pdf_requestForInfoNotice)",
     noticeName_requestForInfoNotice:
       "$t(shared.noticeName_requestForInfoNotice)",
     noticesLabel: "Notices",
@@ -1692,6 +1703,11 @@ const components = {
     noticeName: "$t(shared.noticeName)",
     noticeName_approvalNotice: "$t(shared.noticeName_approvalNotice)",
     noticeName_denialNotice: "$t(shared.noticeName_denialNotice)",
+    noticeName_pdf: "$t(shared.noticeName_pdf)",
+    noticeName_pdf_approvalNotice: "$t(shared.noticeName_pdf_approvalNotice)",
+    noticeName_pdf_denialNotice: "$t(shared.noticeName_pdf_denialNotice)",
+    noticeName_pdf_requestForInfoNotice:
+      "$t(shared.noticeName_pdf_requestForInfoNotice)",
     noticeName_requestForInfoNotice:
       "$t(shared.noticeName_requestForInfoNotice)",
     noticesFallback:

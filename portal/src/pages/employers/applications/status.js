@@ -124,6 +124,12 @@ const DocumentListItem = (props) => {
   const { absenceId, appLogic, document } = props;
   const { t } = useTranslation();
 
+  const documentContentType = document.content_type || "application/pdf";
+  const noticeNameTranslationKey =
+    documentContentType === "application/pdf"
+      ? "components.applicationCard.noticeName_pdf"
+      : "components.applicationCard.noticeName";
+
   const handleClick = async (event) => {
     event.preventDefault();
     const documentData = await appLogic.employers.downloadDocument(
@@ -135,7 +141,7 @@ const DocumentListItem = (props) => {
       download(
         documentData,
         document.name.trim() || document.document_type.trim(),
-        document.content_type || "application/pdf"
+        documentContentType
       );
     }
   };
@@ -144,7 +150,7 @@ const DocumentListItem = (props) => {
     <li className="margin-bottom-2">
       <p>
         <a onClick={handleClick} href="">
-          {t("pages.employersClaimsStatus.noticeName", {
+          {t(noticeNameTranslationKey, {
             context: findKeyByValue(DocumentType, document.document_type),
           })}
         </a>

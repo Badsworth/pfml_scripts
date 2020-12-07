@@ -200,7 +200,7 @@ exports[`ApplicationCard when there are legal notices displays legal notices 2`]
     href=""
     onClick={[Function]}
   >
-    Denial notice (PDF)
+    Denial notice
   </a>
   <div
     className="text-base-dark"
