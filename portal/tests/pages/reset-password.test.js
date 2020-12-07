@@ -8,7 +8,7 @@ jest.mock("@aws-amplify/auth");
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("ResetPassword", () => {
-  let appLogic;
+  let appLogic, resolveResendCodeMock;
 
   function render(customProps = {}) {
     const props = Object.assign(
@@ -27,6 +27,12 @@ describe("ResetPassword", () => {
 
     testHook(() => {
       appLogic = useAppLogic();
+    });
+
+    appLogic.auth.resendForgotPasswordCode.mockImplementation(() => {
+      return new Promise((resolve) => {
+        resolveResendCodeMock = resolve;
+      });
     });
   });
 
@@ -99,35 +105,14 @@ describe("ResetPassword", () => {
   });
 
   describe("when query includes user-not-found", () => {
-    let resolveResendCodeMock, wrapper;
+    let wrapper;
 
     beforeEach(() => {
       wrapper = render({ query: { "user-not-found": "true" } });
-
-      appLogic.auth.resendForgotPasswordCode.mockImplementation(() => {
-        return new Promise((resolve) => {
-          resolveResendCodeMock = resolve;
-        });
-      });
     });
 
-    it("renders info alert", () => {
-      expect(wrapper.find("Alert[name='user-not-found-message']")).toHaveLength(
-        1
-      );
-      expect(
-        wrapper.find("Alert[name='user-not-found-message']")
-      ).toMatchSnapshot();
-    });
-
-    it("render EIN fields", () => {
-      expect(wrapper.find("InputChoice[name='isEmployer']")).toMatchSnapshot();
-      expect(wrapper.find("ConditionalContent")).toMatchSnapshot();
-    });
-
-    it("initially hides the lead text and code field", () => {
-      expect(wrapper.find("Lead").exists()).toBe(false);
-      expect(wrapper.find("InputText[name='code']").exists()).toBe(false);
+    it("renders different title and lead text, and initially hides all fields except for email", () => {
+      expect(wrapper).toMatchSnapshot();
     });
 
     it("initially uses primary styling for resend code button", () => {
@@ -156,10 +141,40 @@ describe("ResetPassword", () => {
       expect(wrapper.find("InputText[name='code']").exists()).toBe(true);
     });
 
+    it("prevents submission when isEmployer isn't set", async () => {
+      const {
+        changeField,
+        changeRadioGroup,
+        click,
+        submitForm,
+      } = simulateEvents(wrapper);
+
+      // Get page into a submittable state
+      changeField("username", "foo@example.com");
+      click({ name: "resend-code-button" });
+      await resolveResendCodeMock();
+
+      submitForm();
+
+      expect(appLogic.setAppErrors).toHaveBeenCalledTimes(1);
+      expect(appLogic.auth.resetPassword).not.toHaveBeenCalled();
+      expect(
+        appLogic.auth.resetEmployerPasswordAndCreateEmployerApiAccount
+      ).not.toHaveBeenCalled();
+
+      changeRadioGroup("isEmployer", "false");
+      submitForm();
+
+      expect(appLogic.auth.resetPassword).not.toHaveBeenCalled();
+    });
+
     it("calls resetEmployerPasswordAndCreateEmployerApiAccount when user indicates they're an employer", async () => {
-      const { changeCheckbox, changeField, click, submitForm } = simulateEvents(
-        wrapper
-      );
+      const {
+        changeRadioGroup,
+        changeField,
+        click,
+        submitForm,
+      } = simulateEvents(wrapper);
 
       const email = "email@test.com";
       const password = "abcdef12345678";
@@ -174,7 +189,7 @@ describe("ResetPassword", () => {
       // Fill out the remaining fields
       changeField("code", code);
       changeField("password", password);
-      changeCheckbox("isEmployer", true);
+      changeRadioGroup("isEmployer", "true");
       changeField("ein", ein);
 
       submitForm();
@@ -185,7 +200,12 @@ describe("ResetPassword", () => {
     });
 
     it("calls resetPassword when user doesn't indicate they're an employer", async () => {
-      const { changeField, click, submitForm } = simulateEvents(wrapper);
+      const {
+        changeField,
+        changeRadioGroup,
+        click,
+        submitForm,
+      } = simulateEvents(wrapper);
 
       const email = "email@test.com";
       const password = "abcdef12345678";
@@ -199,6 +219,7 @@ describe("ResetPassword", () => {
       // Fill out the remaining fields
       changeField("code", code);
       changeField("password", password);
+      changeRadioGroup("isEmployer", "false");
 
       submitForm();
 
@@ -218,8 +239,15 @@ describe("ResetPassword", () => {
       wrapper = render({ query: { "user-not-found": "true" } });
     });
 
-    it("render EIN field by default", () => {
-      expect(wrapper.find("InputChoice[name='isEmployer']").exists()).toBe(
+    it("render EIN field by default", async () => {
+      const { changeField, click } = simulateEvents(wrapper);
+
+      // Get page into a submittable state
+      changeField("username", "foo@example.com");
+      click({ name: "resend-code-button" });
+      await resolveResendCodeMock();
+
+      expect(wrapper.find("InputChoiceGroup[name='isEmployer']").exists()).toBe(
         false
       );
       expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);

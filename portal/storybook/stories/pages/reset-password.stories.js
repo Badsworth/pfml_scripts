@@ -35,6 +35,7 @@ export const Page = (args) => {
     auth: {
       authData,
       resetPassword: () => {},
+      resendForgotPasswordCode: () => {},
     },
     appErrors: new AppErrorInfoCollection(),
   };

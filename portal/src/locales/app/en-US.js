@@ -534,22 +534,24 @@ const pages = {
     codeResent:
       "We sent a new 6 digit verification code to your email address. Enter the new code to reset your password.",
     codeResentHeading: "New verification code sent",
-    einLabel: "Employer ID number",
+    einLabel: "Employer ID number (EIN)",
     employerAccountLabel:
-      "I need an employer account to manage leave for my team.",
-    fixUserNotFound:
-      "Your account needs to be reconfirmed. Enter your details below to receive a code, and then reset your$t(chars.nbsp)password.",
-    fixUserNotFoundHeading: "Reconfirm your account",
+      "Are you creating an employer account to manage leave for your company?",
+    employerChoiceNo: "$t(shared.choiceNo)",
+    employerChoiceYes: "$t(shared.choiceYes)",
     lead:
       "If an account exists for the email you provide, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
     lead_email:
       "If an account exists for {{emailAddress}}, we emailed a 6 digit verification code to it. Enter the code below to confirm your email and reset your password.",
+    lead_userNotFound:
+      "Our system timed out, so we need you to verify your account again. Enter your email address to receive a new verification code. Then create a new password.",
     logInLink: "$t(shared.backToLoginLink)",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "New password",
     resendCodeLink: "$t(shared.resendVerificationCodeLink)",
     submitButton: "Set new password",
     title: "Create a new password",
+    title_userNotFound: "Verify your account",
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authVerifyAccount: {

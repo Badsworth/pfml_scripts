@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import Alert from "../components/Alert";
+import AppErrorInfo from "../models/AppErrorInfo";
+import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
 import ConditionalContent from "../components/ConditionalContent";
-import InputChoice from "../components/InputChoice";
+import InputChoiceGroup from "../components/InputChoiceGroup";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
 import Link from "next/link";
@@ -21,7 +23,7 @@ export const ResetPassword = (props) => {
   const { appErrors, auth } = appLogic;
   const { t } = useTranslation();
 
-  const cachedEmail = get(auth, "authData.resetPasswordUsername", null);
+  const cachedEmail = get(auth, "authData.resetPasswordUsername", "");
   const userNotFound = query["user-not-found"] === "true";
   const [codeResent, setCodeResent] = useState(false);
 
@@ -34,24 +36,44 @@ export const ResetPassword = (props) => {
   // The EIN field is used to fix a UserNotFound error, and is needed so that an Employer
   // API user is created for Employers when their API user entry is created through this flow.
   // It would be confusing to display the EIN field for the normal password reset flow though.
-  const showEinFields = userNotFound;
-  // Temporarily hide the EIN toggle when only Employers can have accounts
-  // TODO (CP-1407): Remove this condition once claimants can also have accounts
-  const showEinToggle = isFeatureEnabled("claimantShowAuth");
+  const showEinFields = userNotFound && codeResent;
 
   const { clearField, formState, getField, updateFields } = useFormState({
     code: "",
     password: "",
-    username: cachedEmail || "",
+    username: cachedEmail,
     ein: showEinFields ? "" : undefined,
     // TODO (CP-1407): Once claimantShowAuth is removed, change the default to the following:
-    // isEmployer: showEinFields ? false : undefined,
-    isEmployer: showEinFields ? !showEinToggle : undefined,
+    // isEmployer: null,
+    isEmployer: isFeatureEnabled("claimantShowAuth") ? null : true,
   });
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
+
+    if (!showCodeAndPasswordFields) {
+      // User submitted the form prior to interacting with the "Send new code" button,
+      // likely by pressing the Enter key. In this case, we don't want to submit the form.
+      // It's not ideal to prevent keyboard submission like this, but this scenario is only
+      // for the UserNotFound error, which ideally is extremely rare and should become
+      // entirely obsolete after https://lwd.atlassian.net/browse/PFMLPB-498
+      return;
+    }
+
     const { code, ein, isEmployer, password, username } = formState;
+
+    if (showEinFields && isEmployer === null) {
+      appLogic.setAppErrors(
+        new AppErrorInfoCollection([
+          new AppErrorInfo({
+            field: "isEmployer",
+            message: t("errors.auth.isEmployer.required"),
+          }),
+        ])
+      );
+
+      return;
+    }
 
     if (isEmployer) {
       return await auth.resetEmployerPasswordAndCreateEmployerApiAccount(
@@ -78,6 +100,18 @@ export const ResetPassword = (props) => {
     updateFields,
   });
 
+  /**
+   * Three variations for the page's Lead:
+   * 1. email: User just came through reset password flow and we know their email
+   * 2. userNotFound: User was redirected to the page due to the UserNotFound error
+   * 3. null: User didn't encounter the UserNotFound error and we don't know their email
+   */
+  const leadContentContext = cachedEmail
+    ? "email"
+    : userNotFound
+    ? "userNotFound"
+    : null;
+
   return (
     <form className="usa-form" onSubmit={handleSubmit}>
       {codeResent && appErrors.isEmpty && (
@@ -92,36 +126,18 @@ export const ResetPassword = (props) => {
         </Alert>
       )}
 
-      {userNotFound && !codeResent && (
-        <Alert
-          className="margin-bottom-3"
-          heading={t("pages.authResetPassword.fixUserNotFoundHeading")}
-          name="user-not-found-message"
-          state="info"
-        >
-          {t("pages.authResetPassword.fixUserNotFound")}
-        </Alert>
-      )}
+      <Title>
+        {t("pages.authResetPassword.title", {
+          context: userNotFound ? "userNotFound" : null,
+        })}
+      </Title>
 
-      <Title>{t("pages.authResetPassword.title")}</Title>
-
-      {showCodeAndPasswordFields && (
-        <React.Fragment>
-          <Lead>
-            {t("pages.authResetPassword.lead", {
-              emailAddress: cachedEmail,
-              context: cachedEmail ? "email" : null,
-            })}
-          </Lead>
-          <InputText
-            {...getFunctionalInputProps("code")}
-            autoComplete="off"
-            inputMode="numeric"
-            label={t("pages.authResetPassword.codeLabel")}
-            smallLabel
-          />
-        </React.Fragment>
-      )}
+      <Lead>
+        {t("pages.authResetPassword.lead", {
+          emailAddress: cachedEmail,
+          context: leadContentContext,
+        })}
+      </Lead>
 
       {showEmailField && (
         <InputText
@@ -131,6 +147,28 @@ export const ResetPassword = (props) => {
           smallLabel
         />
       )}
+
+      {showCodeAndPasswordFields && (
+        <InputText
+          {...getFunctionalInputProps("code")}
+          autoComplete="off"
+          inputMode="numeric"
+          label={t("pages.authResetPassword.codeLabel")}
+          smallLabel
+        />
+      )}
+
+      <div>
+        <Button
+          className="margin-top-1"
+          name="resend-code-button"
+          onClick={handleResendCodeClick}
+          variation={showCodeAndPasswordFields ? "unstyled" : null}
+          loading={handleResendCodeClick.isThrottled}
+        >
+          {t("pages.authVerifyAccount.resendCodeLink")}
+        </Button>
+      </div>
 
       {showCodeAndPasswordFields && (
         <InputText
@@ -145,15 +183,26 @@ export const ResetPassword = (props) => {
 
       {showEinFields && (
         <React.Fragment>
-          {/* TODO (CP-1407): Remove showEinToggle condition once claimants can also have accounts */}
-          {showEinToggle && (
-            <div className="margin-top-4">
-              <InputChoice
-                label={t("pages.authResetPassword.employerAccountLabel")}
-                {...getFunctionalInputProps("isEmployer")}
-                value="true"
-              />
-            </div>
+          {/* TODO (CP-1407): Remove condition once claimants can also have accounts */}
+          {isFeatureEnabled("claimantShowAuth") && (
+            <InputChoiceGroup
+              {...getFunctionalInputProps("isEmployer")}
+              choices={[
+                {
+                  checked: formState.isEmployer === true,
+                  label: t("pages.authResetPassword.employerChoiceYes"),
+                  value: "true",
+                },
+                {
+                  checked: formState.isEmployer === false,
+                  label: t("pages.authResetPassword.employerChoiceNo"),
+                  value: "false",
+                },
+              ]}
+              label={t("pages.authResetPassword.employerAccountLabel")}
+              type="radio"
+              smallLabel
+            />
           )}
           <ConditionalContent
             fieldNamesClearedWhenHidden={["ein"]}
@@ -171,18 +220,6 @@ export const ResetPassword = (props) => {
           </ConditionalContent>
         </React.Fragment>
       )}
-
-      <div>
-        <Button
-          className="margin-top-4"
-          name="resend-code-button"
-          onClick={handleResendCodeClick}
-          variation={showCodeAndPasswordFields ? "unstyled" : null}
-          loading={handleResendCodeClick.isThrottled}
-        >
-          {t("pages.authVerifyAccount.resendCodeLink")}
-        </Button>
-      </div>
 
       {showCodeAndPasswordFields && (
         <Button type="submit" loading={handleSubmit.isThrottled}>
