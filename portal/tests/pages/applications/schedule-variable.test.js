@@ -29,6 +29,7 @@ describe("ScheduleVariable", () => {
 
   it("renders the form", () => {
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   it("creates an empty work pattern if work pattern has no days", () => {

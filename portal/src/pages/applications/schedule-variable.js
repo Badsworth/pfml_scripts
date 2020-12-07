@@ -6,6 +6,8 @@ import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
+import { Trans } from "react-i18next";
+import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -72,7 +74,18 @@ export const ScheduleVariable = (props) => {
 
       <Lead>{t("pages.claimsScheduleVariable.lead")}</Lead>
       <p className="usa-hint margin-top-0 text-base-darkest">
-        {t("pages.claimsScheduleVariable.hint")}
+        <Trans
+          i18nKey="pages.claimsScheduleVariable.hint"
+          components={{
+            "calculate-hours-link": (
+              <a
+                target="_blank"
+                rel="noopener"
+                href={routes.external.massgov.calculateHours}
+              />
+            ),
+          }}
+        />
       </p>
       <InputHours
         {...getFunctionalInputProps(

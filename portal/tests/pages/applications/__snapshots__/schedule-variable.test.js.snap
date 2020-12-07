@@ -17,7 +17,18 @@ exports[`ScheduleVariable renders the form 1`] = `
   <p
     className="usa-hint margin-top-0 text-base-darkest"
   >
-    We'll confirm your hours with your employer after you submit your application.
+    <Trans
+      components={
+        Object {
+          "calculate-hours-link": <a
+            href="http://www.mass.gov/pfml-calculate-hours"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="pages.claimsScheduleVariable.hint"
+    />
   </p>
   <InputHours
     hoursLabel="Hours"
@@ -30,4 +41,19 @@ exports[`ScheduleVariable renders the form 1`] = `
     value={3360}
   />
 </QuestionPage>
+`;
+
+exports[`ScheduleVariable renders the form 2`] = `
+Array [
+  "We'll confirm your hours with your employer after you submit your application. Learn more about ",
+  <a
+    href="http://www.mass.gov/pfml-calculate-hours"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    how we use this number
+  </a>,
+  ", and how to figure out your average on our website.",
+]
 `;
