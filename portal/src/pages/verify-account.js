@@ -59,7 +59,7 @@ export const VerifyAccount = (props) => {
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
 
-    if (formState.isEmployer === null) {
+    if (showEinFields && formState.isEmployer === null) {
       appLogic.setAppErrors(
         new AppErrorInfoCollection([
           new AppErrorInfo({

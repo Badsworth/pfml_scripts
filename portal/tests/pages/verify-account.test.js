@@ -49,7 +49,7 @@ describe("VerifyAccount", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("prevents submission when isEmployer isn't set", () => {
+  it("prevents submission when isEmployer isn't set when EIN fields are visible", () => {
     submitForm();
 
     expect(appLogic.setAppErrors).toHaveBeenCalledTimes(1);
@@ -201,6 +201,16 @@ describe("VerifyAccount", () => {
     it("does not render a checkbox for user to state whether they're an employer", () => {
       expect(wrapper.find("InputChoiceGroup[name='isEmployer']").exists()).toBe(
         false
+      );
+    });
+
+    it("calls verifyAccount when form is submitted", () => {
+      changeField("code", verificationCode);
+      submitForm();
+
+      expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith(
+        "test@example.com",
+        verificationCode
       );
     });
   });
