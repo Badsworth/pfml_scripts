@@ -151,7 +151,10 @@ describe("EmployerBenefitDetails", () => {
 });
 
 describe("EmployerBenefitCard", () => {
-  it("renders fields for an EmployerBenefit instance", () => {
+  let wrapper;
+  const index = 0;
+
+  beforeEach(() => {
     const entry = new EmployerBenefit();
     let getFunctionalInputProps;
 
@@ -163,14 +166,26 @@ describe("EmployerBenefitCard", () => {
       });
     });
 
-    const wrapper = shallow(
+    wrapper = shallow(
       <EmployerBenefitCard
         entry={entry}
-        index={0}
+        index={index}
         getFunctionalInputProps={getFunctionalInputProps}
       />
     );
+  });
 
+  it("renders fields for an EmployerBenefit instance", () => {
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("doesn't include Unknown as a benefit type option", () => {
+    const field = wrapper.find({
+      name: `employer_benefits[${index}].benefit_type`,
+    });
+
+    expect(field.prop("choices")).not.toContainEqual(
+      expect.objectContaining({ value: EmployerBenefitType.unknown })
+    );
   });
 });

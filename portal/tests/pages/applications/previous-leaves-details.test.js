@@ -3,11 +3,13 @@ import {
   renderWithAppLogic,
   testHook,
 } from "../../test-utils";
+import PreviousLeave, {
+  PreviousLeaveReason,
+} from "../../../src/models/PreviousLeave";
 import PreviousLeaveDetails, {
   PreviousLeaveCard,
 } from "../../../src/pages/applications/previous-leaves-details";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import PreviousLeave from "../../../src/models/PreviousLeave";
 import QuestionPage from "../../../src/components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../../src/components/RepeatableFieldset";
@@ -106,7 +108,10 @@ describe("PreviousLeavesDetails", () => {
     });
 
     describe("PreviousLeaveCard", () => {
-      it("renders fields for a PreviousLeave instance", () => {
+      let wrapper;
+      const index = 0;
+
+      beforeEach(() => {
         let getFunctionalInputProps;
 
         testHook(() => {
@@ -117,16 +122,28 @@ describe("PreviousLeavesDetails", () => {
           });
         });
 
-        const wrapper = shallow(
+        wrapper = shallow(
           <PreviousLeaveCard
             employer_fein="12-3456789"
             entry={new PreviousLeave()}
-            index={0}
+            index={index}
             getFunctionalInputProps={getFunctionalInputProps}
           />
         );
+      });
 
+      it("renders fields for a PreviousLeave instance", () => {
         expect(wrapper).toMatchSnapshot();
+      });
+
+      it("doesn't include Unknown as a benefit type option", () => {
+        const field = wrapper.find({
+          name: `previous_leaves[${index}].leave_reason`,
+        });
+
+        expect(field.prop("choices")).not.toContainEqual(
+          expect.objectContaining({ value: PreviousLeaveReason.unknown })
+        );
       });
     });
   });

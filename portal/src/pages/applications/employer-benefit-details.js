@@ -120,16 +120,21 @@ export const EmployerBenefitCard = (props) => {
     <React.Fragment>
       <InputChoiceGroup
         {...getFunctionalInputProps(`employer_benefits[${index}].benefit_type`)}
-        choices={Object.entries(EmployerBenefitType).map(([key, value]) => {
+        choices={[
+          "paidLeave",
+          "shortTermDisability",
+          "permanentDisability",
+          "familyOrMedicalLeave",
+        ].map((benefitTypeKey) => {
           return {
-            checked: selectedType === value,
+            checked: selectedType === EmployerBenefitType[benefitTypeKey],
             label: t("pages.claimsEmployerBenefitDetails.choiceLabel", {
-              context: key,
+              context: benefitTypeKey,
             }),
             hint: t("pages.claimsEmployerBenefitDetails.choiceHint", {
-              context: key,
+              context: benefitTypeKey,
             }),
-            value,
+            value: EmployerBenefitType[benefitTypeKey],
           };
         })}
         label={t("pages.claimsEmployerBenefitDetails.typeLabel")}

@@ -1454,6 +1454,7 @@ const pages = {
         "$t(shared.employerBenefitType_permanentDisability)",
       employerBenefitType_shortTermDisability:
         "$t(shared.employerBenefitType_shortTermDisability)",
+      employerBenefitType_unknown: "Unknown",
       header: "Employer benefits",
       tableName: "Employer-sponsored benefit details",
     },

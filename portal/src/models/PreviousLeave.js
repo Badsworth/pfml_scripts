@@ -27,6 +27,9 @@ export const PreviousLeaveReason = {
   medical: "Serious Health Condition - Employee",
   pregnancy: "Pregnancy/Maternity",
   serviceMemberFamily: "Military Caregiver",
+  // Unknown may be displayed to Leave Admins, but isn't
+  // an option we display to Claimants
+  unknown: "Unknown",
 };
 
 export default PreviousLeave;

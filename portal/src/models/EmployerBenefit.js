@@ -23,12 +23,14 @@ class EmployerBenefit extends BaseModel {
  * TODO (CP-567): make sure these enum strings match the API's values
  */
 export const EmployerBenefitType = {
-  // The ordering here defines the ordering of elements on the page so we override the linter rule
   /* eslint-disable sort-keys */
   paidLeave: "Accrued Paid Leave",
   shortTermDisability: "Short Term Disability",
   permanentDisability: "Permanent Disability Insurance",
   familyOrMedicalLeave: "Family or Medical Leave Insurance",
+  // Unknown may be displayed to Leave Admins, but isn't
+  // an option we display to Claimants
+  unknown: "Unknown",
   /* eslint-enable sort-keys */
 };
 

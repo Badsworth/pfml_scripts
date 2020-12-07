@@ -109,13 +109,22 @@ export const OtherIncomeCard = (props) => {
     <React.Fragment>
       <InputChoiceGroup
         {...getFunctionalInputProps(`other_incomes[${index}].income_type`)}
-        choices={Object.entries(OtherIncomeType).map(([key, value]) => {
+        choices={[
+          "workersCompensation",
+          "unemployment",
+          "ssdi",
+          "retirementDisability",
+          "jonesAct",
+          "railroadRetirement",
+          "otherEmployer",
+          "selfEmployment",
+        ].map((otherIncomeTypeKey) => {
           return {
-            checked: entry.income_type === value,
+            checked: entry.income_type === OtherIncomeType[otherIncomeTypeKey],
             label: t("pages.claimsOtherIncomesDetails.typeChoiceLabel", {
-              context: key,
+              context: otherIncomeTypeKey,
             }),
-            value,
+            value: OtherIncomeType[otherIncomeTypeKey],
           };
         })}
         label={t("pages.claimsOtherIncomesDetails.typeLabel")}

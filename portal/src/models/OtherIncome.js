@@ -22,7 +22,6 @@ class OtherIncome extends BaseModel {
  * TODO (CP-567): make sure these enum strings match the API's values
  */
 export const OtherIncomeType = {
-  // The ordering of these keys affects the order they're displayed to the user
   /* eslint-disable sort-keys */
   workersCompensation: "Workers Comp",
   unemployment: "Unemployment",
@@ -32,6 +31,9 @@ export const OtherIncomeType = {
   railroadRetirement: "Railroad Retirement",
   otherEmployer: "Other Employer",
   selfEmployment: "Self-Employment",
+  // Unknown may be displayed to Leave Admins, but isn't
+  // an option we display to Claimants
+  unknown: "Unknown",
   /* eslint-enable sort-keys */
 };
 

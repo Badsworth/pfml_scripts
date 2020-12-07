@@ -3,11 +3,11 @@ import {
   renderWithAppLogic,
   testHook,
 } from "../../test-utils";
+import OtherIncome, { OtherIncomeType } from "../../../src/models/OtherIncome";
 import OtherIncomesDetails, {
   OtherIncomeCard,
 } from "../../../src/pages/applications/other-incomes-details";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import OtherIncome from "../../../src/models/OtherIncome";
 import QuestionPage from "../../../src/components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../../src/components/RepeatableFieldset";
@@ -104,7 +104,10 @@ describe("OtherIncomesDetails", () => {
 });
 
 describe("OtherIncomeCard", () => {
-  it("renders fields for an OtherIncome instance", () => {
+  let wrapper;
+  const index = 0;
+
+  beforeEach(() => {
     const entry = new OtherIncome();
     let getFunctionalInputProps;
 
@@ -116,14 +119,26 @@ describe("OtherIncomeCard", () => {
       });
     });
 
-    const wrapper = shallow(
+    wrapper = shallow(
       <OtherIncomeCard
         entry={entry}
-        index={0}
+        index={index}
         getFunctionalInputProps={getFunctionalInputProps}
       />
     );
+  });
 
+  it("renders fields for an OtherIncome instance", () => {
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("doesn't include Unknown as a benefit type option", () => {
+    const field = wrapper.find({
+      name: `other_incomes[${index}].income_type`,
+    });
+
+    expect(field.prop("choices")).not.toContainEqual(
+      expect.objectContaining({ value: OtherIncomeType.unknown })
+    );
   });
 });
