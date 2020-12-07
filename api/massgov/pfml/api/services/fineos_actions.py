@@ -303,10 +303,6 @@ def build_contact_details(
         ]
     )
 
-    # TODO (CP-1447): Remove guard once phone number is no longer optional
-    if application.phone_id is None:
-        return contact_details
-
     phone_number = phonenumbers.parse(application.phone.phone_number)
 
     phone_number_type = application.phone.phone_type_instance.phone_type_description

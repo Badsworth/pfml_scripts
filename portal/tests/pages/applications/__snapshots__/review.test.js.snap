@@ -96,6 +96,14 @@ exports[`Final Review Page when all data is present renders Review page with fin
     Jane  Doe
   </ReviewRow>
   <ReviewRow
+    label="Phone number"
+    level="3"
+  >
+    Mobile
+    <br />
+    123-456-****
+  </ReviewRow>
+  <ReviewRow
     label="Residential address"
     level="3"
   >
@@ -400,6 +408,14 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     level="4"
   >
     Jane  Doe
+  </ReviewRow>
+  <ReviewRow
+    label="Phone number"
+    level="4"
+  >
+    Mobile
+    <br />
+    123-456-****
   </ReviewRow>
   <ReviewRow
     label="Residential address"

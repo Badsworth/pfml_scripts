@@ -60,8 +60,6 @@ export const guards = {
     claim.has_reduced_schedule_leave_periods === true,
   hasOtherIncomes: ({ claim }) => claim.temp.has_other_incomes === true,
   hasPreviousLeaves: ({ claim }) => claim.temp.has_previous_leaves === true,
-  // TODO (CP-1447): Remove this guard once the feature flag is obsolete
-  showPhone: () => isFeatureEnabled("claimantShowPhone"),
   // TODO (CP-1247): Show previous leaves related questions
   showPreviousLeaves: () => isFeatureEnabled("claimantShowPreviousLeaves"),
   isFixedWorkPattern: ({ claim }) =>
@@ -133,15 +131,7 @@ export default {
         fields: nameFields,
       },
       on: {
-        CONTINUE: [
-          {
-            target: routes.applications.phoneNumber,
-            cond: "showPhone",
-          },
-          {
-            target: routes.applications.address,
-          },
-        ],
+        CONTINUE: routes.applications.phoneNumber,
       },
     },
     [routes.applications.phoneNumber]: {
