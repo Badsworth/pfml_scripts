@@ -13,10 +13,19 @@ exports[`PaymentMethod renders the page 1`] = `
       Payment method
     </Title>
     <Alert
-      autoWidth={true}
+      neutral={true}
       state="info"
     >
-      If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved. You will be notified by email when your application is approved.
+      <Trans
+        components={
+          Object {
+            "tax-liability-link": <a
+              href="http://www.mass.gov/pfml-tax-liability"
+            />,
+          }
+        }
+        i18nKey="pages.claimsPaymentMethod.taxLiabilityAlert"
+      />
     </Alert>
     <InputChoiceGroup
       choices={
@@ -128,4 +137,17 @@ exports[`PaymentMethod renders the page 1`] = `
     </Button>
   </form>
 </Fragment>
+`;
+
+exports[`PaymentMethod renders the page 2`] = `
+Array [
+  "Learn more about the ",
+  <a
+    href="http://www.mass.gov/pfml-tax-liability"
+    key="1"
+  >
+    possible tax implications
+  </a>,
+  " of your paid leave benefits.",
+]
 `;

@@ -16,6 +16,8 @@ import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
+import { Trans } from "react-i18next";
+import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
@@ -70,8 +72,15 @@ export const PaymentMethod = (props) => {
       <BackButton />
       <form onSubmit={handleSubmit} className="usa-form">
         <Title small>{t("pages.claimsPaymentMethod.title")}</Title>
-        <Alert state="info" autoWidth>
-          {t("pages.claimsPaymentMethod.paymentTimelineAlert")}
+        <Alert state="info" neutral>
+          <Trans
+            i18nKey="pages.claimsPaymentMethod.taxLiabilityAlert"
+            components={{
+              "tax-liability-link": (
+                <a href={routes.external.massgov.taxLiability} />
+              ),
+            }}
+          />
         </Alert>
         <InputChoiceGroup
           {...getFunctionalInputProps("payment_preference.payment_method")}

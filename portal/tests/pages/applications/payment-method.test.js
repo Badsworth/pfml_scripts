@@ -15,6 +15,7 @@ describe("PaymentMethod", () => {
     ({ appLogic, claim, wrapper } = renderWithAppLogic(PaymentMethod));
 
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   describe("when ACH is selected as the payment method", () => {
