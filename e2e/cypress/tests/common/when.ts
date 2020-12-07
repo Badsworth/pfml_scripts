@@ -138,3 +138,18 @@ When("I have submitted all parts of the claim", function (
   const { paymentPreference } = this;
   portal.submitClaimPortal(application, paymentPreference);
 });
+
+When("I request additional information from the claimant", function (): void {
+  fineos.onTab("Evidence");
+  cy.get("input[type='submit'][value='Additional Information']").click();
+  cy.get(
+    "input[name*='healthcareProviderInformationIncompleteBoolean_CHECKBOX']"
+  ).click();
+  cy.get("input[name*='healthcareProviderInformationIncompleteText']").type(
+    "Wrote Physician requesting revised page 1."
+  );
+  cy.get("textarea[name*='missingInformationBox']").type(
+    "Please resubmit page 1 of the Healthcare Provider form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
+  );
+  fineos.clickBottomWidgetButton("OK");
+});

@@ -2,6 +2,7 @@ import { portal } from "./actions";
 import { Then } from "cypress-cucumber-preprocessor/steps";
 import { CypressStepThis } from "../../../src/types";
 import { fineos } from "./actions";
+import { format } from "date-fns";
 
 Then("I should be logged in", () => portal.assertLoggedIn());
 
@@ -257,4 +258,17 @@ Then("there should be {int} ID document(s) uploaded", function (
   cy.contains("form", "Upload your Massachusetts driver’s license or ID card")
     .find("h3")
     .should("have.length", count);
+});
+
+Then("I add a note", function (): void {
+  fineos.onTab("Notes");
+  cy.contains("span", "Create New").click();
+  cy.contains("a", "Leave Request Review").click();
+  const reviewDate = format(new Date(), "M/d/yy");
+  cy.get("table[class='WidgetPanelEditPopup']").within(() => {
+    cy.get("textarea[name*='Leave_Request_Review']").type(
+      `Requested revised HCP on ${reviewDate}`
+    );
+    cy.contains("input", "OK").click();
+  });
 });
