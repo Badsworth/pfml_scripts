@@ -95,8 +95,6 @@ const routes = {
         "https://www.mass.gov/info-details/finding-your-employers-federal-employer-identification-number-fein",
       feedbackClaimant: "https://www.mass.gov/paidleave-claimant-feedback",
       feedbackEmployer: "https://www.mass.gov/paidleave-employer-feedback",
-      gestationalParentOverview:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-",
       healthcareProviderForm: "https://www.mass.gov/hcp-form",
       identityProof:
         "https://www.mass.gov/info-details/identity-proof-for-paid-leave",

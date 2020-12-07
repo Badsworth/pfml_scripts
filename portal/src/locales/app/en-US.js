@@ -1242,10 +1242,10 @@ const pages = {
       "Your application ID is <strong>{{absence_id}}</strong>",
     exitLink: "Return to applications",
     familyLeaveToBond:
-      "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. You do not need to take this leave all at once. You must create a <gestational-parents-overview-link>separate leave application</gestational-parents-overview-link> if you want to take family leave.",
-    familyLeaveToBondHeading: "You can also apply for paid family leave",
+      "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at $t(shared.contactCenterPhoneNumber).",
+    familyLeaveToBondHeading: "You may also be eligible for paid family leave",
     medicalLeaveAfterBirth:
-      "You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. You'll need to fill out a <gestational-parents-overview-link>separate leave application</gestational-parents-overview-link> to take medical leave in addition to your family leave.",
+      "You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at $t(shared.contactCenterPhoneNumber) if you need <medical-bonding-link>medical leave after giving birth</medical-bonding-link>.",
     medicalLeaveAfterBirthHeading:
       "If you gave birth, you may also be eligible for paid medical leave",
     proofRequired_bondingAdoptFosterFuture:
@@ -1342,7 +1342,7 @@ const pages = {
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
     stepOneHeading: "1. Tell your employer that you need to take paid leave",
     stepThree:
-      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking medical leave for pregnancy or to recover from birth, <strong>and</strong> family leave to bond with your child. <medical-bonding-link>Learn more about taking paid leave if you are going to give birth</medical-bonding-link>.</li><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You'll need a separate application for the intermittent leave.</li></ul>",
+      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at $t(shared.contactCenterPhoneNumber).</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You'll need a separate application for the intermittent leave.</li></ul>",
     stepThreeHeading: "3. Apply",
     stepTwo:
       "<p>For medical leave your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child's date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",

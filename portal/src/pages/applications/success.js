@@ -135,10 +135,8 @@ export const Success = (props) => {
               <Trans
                 i18nKey="pages.claimsSuccess.familyLeaveToBond"
                 components={{
-                  "gestational-parents-overview-link": (
-                    <a
-                      href={routes.external.massgov.gestationalParentOverview}
-                    />
+                  "medical-bonding-link": (
+                    <a href={routes.external.massgov.medicalBonding} />
                   ),
                 }}
               />
@@ -158,10 +156,8 @@ export const Success = (props) => {
                 <Trans
                   i18nKey="pages.claimsSuccess.medicalLeaveAfterBirth"
                   components={{
-                    "gestational-parents-overview-link": (
-                      <a
-                        href={routes.external.massgov.gestationalParentOverview}
-                      />
+                    "medical-bonding-link": (
+                      <a href={routes.external.massgov.medicalBonding} />
                     ),
                   }}
                 />
