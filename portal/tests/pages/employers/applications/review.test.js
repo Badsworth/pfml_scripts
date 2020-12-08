@@ -10,14 +10,17 @@ import { act } from "react-dom/test-utils";
 jest.mock("../../../../src/hooks/useAppLogic");
 
 describe("Review", () => {
-  const claim = new MockEmployerClaimBuilder().completed().create();
+  const claim = new MockEmployerClaimBuilder()
+    .completed()
+    .reviewable()
+    .create();
   const query = { absence_id: "NTN-111-ABS-01" };
 
   let appLogic, wrapper;
 
-  const renderComponent = (render = "shallow") => {
+  const renderComponent = (render = "shallow", employerClaimAttrs = claim) => {
     return renderWithAppLogic(Review, {
-      employerClaimAttrs: claim,
+      employerClaimAttrs,
       props: {
         query,
       },
@@ -104,6 +107,41 @@ describe("Review", () => {
     );
   });
 
+  it.todo("sets 'employer_benefits' based on EmployerBenefits");
+  it.todo("sets 'hours_worked_per_week' based on SupportingWorkDetails");
+  it.todo("sets 'previous_leaves' based on PreviousLeaves");
+
+  it("does not redirect if is_reviewable is true", () => {
+    expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+  });
+
+  it("redirects to the status page if is_reviewable is false", () => {
+    const falseIsReviewableClaim = new MockEmployerClaimBuilder()
+      .completed()
+      .reviewable(false)
+      .create();
+
+    ({ appLogic } = renderComponent("shallow", falseIsReviewableClaim));
+
+    expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+      "/employers/applications/status",
+      {
+        absence_id: "NTN-111-ABS-01",
+      }
+    );
+  });
+
+  it("does not redirect to the status page if is_reviewable is null", () => {
+    const nullIsReviewableClaim = new MockEmployerClaimBuilder()
+      .completed()
+      .create();
+
+    ({ appLogic } = renderComponent("shallow", nullIsReviewableClaim));
+
+    expect(nullIsReviewableClaim.is_reviewable).toBe(null);
+    expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+  });
+
   it("sets 'has_amendments' to false if nothing is amended", () => {
     simulateEvents(wrapper).submitForm();
 
@@ -158,8 +196,4 @@ describe("Review", () => {
       expect.objectContaining({ has_amendments: true })
     );
   });
-
-  // TODO (EMPLOYER-596) implement test for employer_benefits
-  // TODO (EMPLOYER-596) implement test for hours_worked_per_week
-  // TODO (EMPLOYER-596) implement test for previous_leaves
 });

@@ -244,6 +244,14 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
+   * @returns {MockEmployerClaimBuilder}
+   */
+  reviewable(setting = true) {
+    set(this.claimAttrs, "is_reviewable", !!setting);
+    return this;
+  }
+
+  /**
    * @returns {EmployerClaim}
    */
   create() {

@@ -21,6 +21,7 @@ import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import formatDateRange from "../../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../../services/featureFlags";
+import routes from "../../../routes";
 import updateAmendments from "../../../utils/updateAmendments";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
@@ -34,6 +35,16 @@ export const Review = (props) => {
   const {
     employers: { claim },
   } = appLogic;
+
+  // explicitly check for false as opposed to falsy values.
+  // temporarily allows the redirect behavior to work even
+  // if the API has not been updated to populate the field.
+  if (claim.is_reviewable === false) {
+    appLogic.portalFlow.goTo(routes.employers.status, {
+      absence_id: absenceId,
+    });
+  }
+
   const { t } = useTranslation();
   const shouldShowPreviousLeaves = isFeatureEnabled(
     "employerShowPreviousLeaves"
@@ -206,6 +217,9 @@ Review.propTypes = {
       claim: PropTypes.instanceOf(EmployerClaim),
       submit: PropTypes.func.isRequired,
     }).isRequired,
+    portalFlow: PropTypes.shape({
+      goTo: PropTypes.func.isRequired,
+    }),
   }).isRequired,
   query: PropTypes.shape({
     absence_id: PropTypes.string.isRequired,
