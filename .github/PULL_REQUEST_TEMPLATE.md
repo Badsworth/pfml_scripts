@@ -1,6 +1,7 @@
 ## 🎫 Ticket
 
 https://lwd.atlassian.net/browse/{TICKET NUMBER}
+Subtask: https://lwd.atlassian.net/browse/{SUBTASK TICKET NUMBER}
 
 ## 🛠 Changes
 

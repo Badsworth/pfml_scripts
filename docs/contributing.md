@@ -99,7 +99,7 @@ Since the Portal engineering team includes those working on either the Claimant 
 
 ## Pull Request Titles
 
-Please title Pull Requests in GitHub as "API-nnn: summary", "CP-nnn: summary", etc.
+Please title Pull Requests in GitHub as "API-nnn: summary", "CP-nnn: summary", etc. For tickets that have subtasks, use the parent ticket's id in the title, and include the subtask in the PR description.
 When making a fix with no ticket, please use "API: summary" or "Portal: summary".
 
 This makes it easier to search for PRs and also links from JIRA tickets to GitHub PRs automatically.
