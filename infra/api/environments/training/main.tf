@@ -57,7 +57,7 @@ module "api" {
   fineos_client_integration_services_api_url       = "https://trn-api.masspfml.fineos.com/integration-services/"
   fineos_client_group_client_api_url               = "https://trn-api.masspfml.fineos.com/groupclientapi/"
   fineos_client_customer_api_url                   = "https://trn-api.masspfml.fineos.com/customerapi/"
-  fineos_client_wscomposer_api_url                 = "https://trn-claims-webapp.masspfml.fineos.com/wscomposer/"
+  fineos_client_wscomposer_api_url                 = "https://trn-api.masspfml.fineos.com/integration-services/wscomposer/"
   fineos_client_oauth2_url                         = "https://trn-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                   = "2jdpsthb76p5rfhfl9bdjem8gf"
   fineos_eligibility_transfer_lambda_build_s3_key  = local.fineos_eligibility_transfer_lambda_build_s3_key
