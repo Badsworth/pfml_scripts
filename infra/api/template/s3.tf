@@ -22,6 +22,17 @@ resource "aws_s3_bucket" "document_upload" {
   })
 }
 
+resource "aws_s3_bucket" "business_intelligence_tool" {
+  bucket = "massgov-pfml-${var.environment_name}-business-intelligence-tool"
+  acl    = "private"
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name],
+    public      = "no"
+    Name        = "massgov-pfml-${var.environment_name}-BI-tool"
+  })
+}
+
 resource "aws_kms_key" "id_proofing_document_upload_kms_key" {
   description = "Terraform generated KMS key for the massgov-pfml-${var.environment_name}-document bucket"
   policy      = data.aws_iam_policy_document.document_upload_kms_key.json
@@ -45,6 +56,15 @@ resource "aws_kms_alias" "certification_document_alias" {
 # NB: S3 docs recommend setting these flags at account level
 resource "aws_s3_bucket_public_access_block" "lambda_build_block_public_access" {
   bucket = aws_s3_bucket.document_upload.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_public_access_block" "business_intelligence_tool" {
+  bucket = aws_s3_bucket.business_intelligence_tool.id
 
   block_public_acls       = true
   block_public_policy     = true
