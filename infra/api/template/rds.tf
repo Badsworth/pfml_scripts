@@ -81,6 +81,11 @@ resource "aws_db_instance" "default" {
   storage_encrypted                   = true
   multi_az                            = var.db_multi_az
   iam_database_authentication_enabled = true
+  enabled_cloudwatch_logs_exports     = ["postgresql", "upgrade"]
+
+  depends_on = [
+    aws_cloudwatch_log_group.postgresql
+  ]
 
   name     = "massgov_pfml_${var.environment_name}"
   username = "pfml"
