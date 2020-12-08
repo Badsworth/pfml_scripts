@@ -9,14 +9,9 @@ exports[`ScheduleVariable renders the form 1`] = `
     level="2"
     size="1"
   >
-    Help us calculate your weekly hours.
+    How many hours do you work on average each week?
   </Heading>
   <Lead>
-    How many hours do you work on average each week?
-  </Lead>
-  <p
-    className="usa-hint margin-top-0 text-base-darkest"
-  >
     <Trans
       components={
         Object {
@@ -27,9 +22,9 @@ exports[`ScheduleVariable renders the form 1`] = `
           />,
         }
       }
-      i18nKey="pages.claimsScheduleVariable.hint"
+      i18nKey="pages.claimsScheduleVariable.lead"
     />
-  </p>
+  </Lead>
   <InputHours
     hoursLabel="Hours"
     label="Average weekly hours"

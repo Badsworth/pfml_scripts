@@ -1198,12 +1198,11 @@ const pages = {
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsScheduleVariable: {
-    heading: "Help us calculate your weekly hours.",
-    hint:
-      "We'll confirm your hours with your employer after you submit your application. Learn more about <calculate-hours-link>how we use this number</calculate-hours-link>, and how to figure out your average on our website.",
+    heading: "How many hours do you work on average each week?",
     hoursLabel: "$t(shared.hoursLabel)",
     inputHoursLabel: "Average weekly hours",
-    lead: "How many hours do you work on average each week?",
+    lead:
+      "We'll confirm your hours with your employer after you submit your application. Learn more about <calculate-hours-link>how we use this number</calculate-hours-link>, and how to figure out your average on our website.",
     minutesLabel: "$t(shared.minutesLabel)",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },

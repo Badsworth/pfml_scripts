@@ -72,10 +72,9 @@ export const ScheduleVariable = (props) => {
         {t("pages.claimsScheduleVariable.heading")}
       </Heading>
 
-      <Lead>{t("pages.claimsScheduleVariable.lead")}</Lead>
-      <p className="usa-hint margin-top-0 text-base-darkest">
+      <Lead>
         <Trans
-          i18nKey="pages.claimsScheduleVariable.hint"
+          i18nKey="pages.claimsScheduleVariable.lead"
           components={{
             "calculate-hours-link": (
               <a
@@ -86,7 +85,7 @@ export const ScheduleVariable = (props) => {
             ),
           }}
         />
-      </p>
+      </Lead>
       <InputHours
         {...getFunctionalInputProps(
           "work_pattern.work_pattern_days[0].minutes"
