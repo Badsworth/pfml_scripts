@@ -21,7 +21,7 @@ export default (
   let tasksDone = 0;
 
   const taskTypeElementSelectors: string[] = [];
-  for (const key in actions) {
+  for (const key of actions) {
     taskTypeElementSelectors.push(`td[title="${key}"]`);
   }
   let taskTypeElementLocator = taskTypeElementSelectors.join(", ");
@@ -38,12 +38,29 @@ export default (
     throw new Error("Agent doesn't have a user type!");
   }
 
+  let loginAttempts = 0;
+  const tryLogin = async (browser: Browser) => {
+    try {
+      await browser.visit(await getFineosBaseUrl(userType));
+    } catch (e) {
+      console.info(`\n${e.originalError}\n`);
+      if (loginAttempts < 5) {
+        loginAttempts++;
+        await tryLogin(browser);
+      } else {
+        console.info(
+          `\n\nCannot login with "${await getFineosBaseUrl(userType)}"!\n\n`
+        );
+        throw e;
+      }
+    }
+    return;
+  };
+
   const steps: StoredStep[] = [
     {
       name: "Login into fineos",
-      test: async (browser: Browser): Promise<void> => {
-        await browser.visit(await getFineosBaseUrl(userType));
-      },
+      test: tryLogin,
     },
     {
       name: "Do task",
@@ -65,24 +82,53 @@ export default (
     browser: Browser,
     data: LSTSimClaim
   ): Promise<void> {
-    // this is mostly for testing purposes,
-    // forces script to run the task type specified in claims.json
     // get next task
+    await browser.waitForNavigation();
     const getNextTask = await waitForElement(
       browser,
       By.css('a[title="Get Next Task"]')
     );
     await getNextTask.click();
+    await browser.waitForNavigation();
+
+    // if the agent navigated to the roles page
+    const agentRole = await browser.maybeFindElement(
+      By.visibleText("Choose Role and Work Subset")
+    );
+    if (agentRole) {
+      // set new agent's role
+      await browser.click(await waitForElement(browser, By.css("#node")));
+      await browser.waitForNavigation();
+      const selectAllPermissions = await waitForElement(
+        browser,
+        By.css("[title='Select All']")
+      );
+      const isChecked = await selectAllPermissions.getProperty("checked");
+      if (!isChecked) {
+        await browser.click(selectAllPermissions);
+      }
+      await browser.click(
+        await waitForElement(browser, By.css("input[value='OK']"))
+      );
+      await browser.waitForNavigation();
+      // try getting a task again
+      const getNextTask = await waitForElement(
+        browser,
+        By.css('a[title="Get Next Task"]')
+      );
+      await getNextTask.click();
+    }
 
     let nextTask;
     try {
+      // this is mostly for testing purposes
       if ("priorityTask" in data) {
         taskTypeElementLocator = `td[title="${data.priorityTask}"]`;
         await findClaimType(browser, data);
       }
       nextTask = await waitForElement(browser, By.css(taskTypeElementLocator));
     } catch (e) {
-      console.info("Agent could not find tasks to do!");
+      console.info("\n\n\nAgent could not find tasks to do!\n\n\n");
       return;
     }
 

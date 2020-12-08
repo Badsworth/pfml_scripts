@@ -8,7 +8,6 @@ import {
   documentUrl,
   LSTSimClaim,
   LSTScenario,
-  config,
 } from "../config";
 import {
   labelled,
@@ -19,6 +18,8 @@ import {
   waitForRealTimeSim,
   getDocumentType,
   getRequestOptions,
+  getMailVerifier,
+  TestMailVerificationFetcher,
 } from "../helpers";
 
 let authToken: string;
@@ -29,38 +30,17 @@ export { settings };
 export const scenario: LSTScenario = "PortalClaimSubmit";
 export const steps = [
   {
-    name: "Login in Portal",
-    test: async (browser: Browser): Promise<void> => {
-      // Fetch an auth token by performing a browser-based login.
-      await browser.page.setCookie({
-        name: "_ff",
-        value: JSON.stringify({
-          pfmlTerriyay: true,
-          claimantShowAuth: true,
-        }),
-        url: await PortalBaseUrl,
-      });
-      await browser.visit(await PortalBaseUrl);
-      await browser.click(await waitForElement(browser, By.linkText("Log in")));
-      await (await labelled(browser, "Email address")).type(
-        await config("E2E_PORTAL_USERNAME")
+    name: "Register and login",
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+      await setFeatureFlags(browser);
+      const emailVerifier = await getMailVerifier(browser);
+      const { username, password } = await emailVerifier.getCredentials();
+      authToken = await registerAndLogin(
+        browser,
+        emailVerifier,
+        username,
+        password
       );
-      await (await labelled(browser, "Password")).type(
-        await config("E2E_PORTAL_PASSWORD")
-      );
-      await (
-        await waitForElement(browser, By.css("button[type='submit']"))
-      ).click();
-      await waitForElement(browser, By.visibleText("Log out"));
-      const cookie = (await browser.page.cookies()).find((cookie) => {
-        return cookie.name.match(
-          /CognitoIdentityServiceProvider\..*\.accessToken/
-        );
-      });
-      if (!cookie) {
-        throw new Error("Unable to find accessToken cookie");
-      }
-      authToken = cookie.value;
     },
   },
   {
@@ -166,7 +146,11 @@ export const steps = [
               );
               if (!res.data || !res.data.application_id) {
                 throw new Error(
-                  `Unable to create application: ${JSON.stringify(res)}`
+                  `Unable to create application: ${JSON.stringify(
+                    res,
+                    null,
+                    2
+                  )}`
                 );
               }
               applicationId = res.data.application_id;
@@ -182,7 +166,11 @@ export const steps = [
               );
               if (res.status_code !== 201) {
                 throw new Error(
-                  `Unable to submit application: ${JSON.stringify(res)}`
+                  `Unable to submit application: ${JSON.stringify(
+                    res,
+                    null,
+                    2
+                  )}`
                 );
               }
               console.info("Submitted application", res.status_code);
@@ -207,7 +195,7 @@ export const steps = [
                 );
                 if (res.status_code !== 200) {
                   throw new Error(
-                    `Unable to upload document: ${JSON.stringify(res)}`
+                    `Unable to upload document: ${JSON.stringify(res, null, 2)}`
                   );
                 }
                 console.info("Uploaded document", res.status_code);
@@ -223,7 +211,11 @@ export const steps = [
               );
               if (res.status_code !== 200) {
                 throw new Error(
-                  `Unable to complete application: ${JSON.stringify(res)}`
+                  `Unable to complete application: ${JSON.stringify(
+                    res,
+                    null,
+                    2
+                  )}`
                 );
               }
               fineosId = res.data.fineos_absence_id;
@@ -251,7 +243,7 @@ export const steps = [
           );
           if (res.status_code !== 200) {
             throw new Error(
-              `Unable to update application: ${JSON.stringify(res)}`
+              `Unable to update application: ${JSON.stringify(res, null, 2)}`
             );
           }
           console.info("Updated application", res.status_code);
@@ -261,6 +253,65 @@ export const steps = [
     },
   },
 ];
+
+async function registerAndLogin(
+  browser: Browser,
+  verifier: TestMailVerificationFetcher,
+  username: string,
+  password: string
+) {
+  // go to registration page
+  await browser.visit(`${await PortalBaseUrl}/create-account/`);
+  // fill out the form
+  await (await labelled(browser, "Email address")).type(username);
+  await (await labelled(browser, "Password")).type(password);
+  // submit new user
+  await (
+    await waitForElement(browser, By.css("button[type='submit']"))
+  ).click();
+
+  const code = await verifier.getVerificationCodeForUser(username);
+  if (code.length === 0)
+    throw new Error("Couldn't getVerificationCodeForUser email!");
+  // type code
+  await (await labelled(browser, "6-digit code")).type(code);
+  // submit code
+  await (
+    await waitForElement(browser, By.css("button[type='submit']"))
+  ).click();
+  // wait for successful registration
+  await waitForElement(browser, By.visibleText("Email successfully verified"));
+
+  await browser.visit(`${await PortalBaseUrl}/login`);
+  await (await labelled(browser, "Email address")).type(username);
+  await (await labelled(browser, "Password")).type(password);
+  await (
+    await waitForElement(browser, By.css("button[type='submit']"))
+  ).click();
+  await (
+    await waitForElement(browser, By.visibleText("Agree and continue"))
+  ).click();
+  await waitForElement(browser, By.visibleText("Log out"));
+
+  const cookie = (await browser.page.cookies()).find((cookie) => {
+    return cookie.name.match(/CognitoIdentityServiceProvider\..*\.accessToken/);
+  });
+  if (!cookie) {
+    throw new Error("Unable to find accessToken cookie");
+  }
+  return cookie.value;
+}
+
+async function setFeatureFlags(browser: Browser) {
+  await browser.page.setCookie({
+    name: "_ff",
+    value: JSON.stringify({
+      pfmlTerriyay: true,
+      claimantShowAuth: true,
+    }),
+    url: await PortalBaseUrl,
+  });
+}
 
 export default (): void => {
   TestData.fromJSON<LSTSimClaim>(`../${dataBaseUrl}/claims.json`).filter(

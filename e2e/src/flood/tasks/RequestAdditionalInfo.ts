@@ -1,13 +1,19 @@
 import { Browser, By } from "@flood/element";
-import { StoredStep, LSTSimClaim } from "../config";
-import { waitForElement, labelled } from "../helpers";
+import { StoredStep, LSTSimClaim, TaskType } from "../config";
+import { waitForElement, waitForRealTimeSim, labelled } from "../helpers";
 
+export const taskName: TaskType = "_ReqAddInfo";
 export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+  data.agentTask = taskName;
   for (const step of steps) {
-    console.info(
-      `Request Additional Info - ${step.name} - ${data.missingDocument}`
-    );
-    await step.test(browser, data);
+    const stepName = `Request Additional Info - ${step.name} - ${data.missingDocument}`;
+    try {
+      console.info(stepName);
+      await step.test(browser, data);
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
+    } catch (e) {
+      throw new Error(`Failed to execute step "${stepName}": ${e}`);
+    }
   }
 };
 

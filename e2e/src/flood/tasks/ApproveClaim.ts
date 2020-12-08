@@ -269,9 +269,14 @@ export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
   const isEligible = await isFinanciallyEligible(browser);
   if (isEligible) {
     for (const step of steps) {
-      console.info(`Approve - ${step.name}`);
-      await step.test(browser, data);
-      await waitForRealTimeSim(browser, data, 1 / steps.length);
+      const stepName = `Approve - ${step.name}`;
+      try {
+        console.info(stepName);
+        await step.test(browser, data);
+        await waitForRealTimeSim(browser, data, 1 / steps.length);
+      } catch (e) {
+        throw new Error(`Failed to execute step "${stepName}": ${e}`);
+      }
     }
   } else {
     // Deny claim due to lack of Financial Eligibility

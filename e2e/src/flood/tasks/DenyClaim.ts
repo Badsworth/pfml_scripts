@@ -1,7 +1,8 @@
 import { Browser, By } from "@flood/element";
-import { StoredStep, LSTSimClaim } from "../config";
+import { StoredStep, LSTSimClaim, TaskType } from "../config";
 import { labelled, waitForElement, waitForRealTimeSim } from "../helpers";
 
+export const taskName: TaskType = "_DenyClaim";
 export const steps: StoredStep[] = [
   {
     name: "Reject leave plan",
@@ -38,15 +39,21 @@ export const steps: StoredStep[] = [
       );
       await okButton.click();
 
-      await waitForElement(browser, By.visibleText("Declined"));
+      await waitForElement(browser, By.visibleText("Closed"));
     },
   },
 ];
 
 export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+  data.agentTask = taskName;
   for (const step of steps) {
-    console.info(`Deny - ${step.name}`);
-    await step.test(browser, data);
-    await waitForRealTimeSim(browser, data, 1 / steps.length);
+    const stepName = `Deny - ${step.name}`;
+    try {
+      console.info(stepName);
+      await step.test(browser, data);
+      await waitForRealTimeSim(browser, data, 1 / steps.length);
+    } catch (e) {
+      throw new Error(`Failed to execute step "${stepName}": ${e}`);
+    }
   }
 };
