@@ -11,7 +11,6 @@ import pytest
 import massgov.pfml.fineos
 import massgov.pfml.fineos.eligibility_feed as ef
 from massgov.pfml.db.models.employees import (
-    Employee,
     EmployeeAddress,
     EmployeeLog,
     Employer,
@@ -766,28 +765,33 @@ def test_process_employee_updates_with_error(
 def test_process_employee_updates_with_recovery(
     test_db_session, tmp_path, initialize_factories_session, create_triggers, monkeypatch
 ):
-    WagesAndContributionsFactory.create_batch(size=2, employer=EmployerFactory.create())
+    wages = WagesAndContributionsFactory.create_batch(size=2, employer=EmployerFactory.create())
 
-    employees = test_db_session.query(Employee).all()
+    batch_output_dir = tmp_path / "absence-eligibility" / "upload"
+    batch_output_dir.mkdir(parents=True)
 
     # Simulate one recovery record
-    ef.update_batch_to_processing(test_db_session, [employees[0].employee_id], 1)
+    ef.update_batch_to_processing(test_db_session, [wages[0].employee.employee_id], 1)
+    test_db_session.commit()
 
-    process_results = ef.process_employee_updates(
-        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
-    )
+    employee_log_entries_before = test_db_session.query(EmployeeLog).all()
+    test_db_session.commit()
+    assert len(employee_log_entries_before) == 2
 
-    updated_employes = test_db_session.query(EmployeeLog).all()
+    process_results = call_process_employee_updates(monkeypatch, tmp_path)
+
+    employee_log_entries_after = test_db_session.query(EmployeeLog).all()
+    test_db_session.commit()
+    assert len(employee_log_entries_after) == 0
 
     assert process_results.started_at
     assert process_results.completed_at
-    assert process_results.employers_total_count == 2
-    assert process_results.employers_success_count == 2
+    assert process_results.employers_total_count == 1
+    assert process_results.employers_success_count == 1
     assert process_results.employers_error_count == 0
     assert process_results.employers_skipped_count == 0
     assert process_results.employee_and_employer_pairs_total_count == 2
-    assert_number_of_data_lines_in_each_file(tmp_path, 1)
-    assert len(updated_employes) == 0
+    assert_number_of_data_lines_in_each_file(batch_output_dir, 2)
 
 
 def test_open_and_write_to_eligibility_file_delete_on_exception(

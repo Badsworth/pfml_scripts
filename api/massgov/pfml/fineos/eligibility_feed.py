@@ -339,20 +339,50 @@ def update_report_with_result(
         report.employers_error_count += 1
 
 
+def finish_processing_update(
+    db_session: db.Session,
+    report: EligibilityFeedExportReport,
+    r: "concurrent.futures.Future[Tuple[TaskResultStatus, Optional[int], Optional[Tuple[str, List[str]]]]]",
+) -> None:
+    process_id = 1
+
+    status, count, employer_id_to_employee_ids = r.result()
+
+    report_future: "concurrent.futures.Future[Tuple[TaskResultStatus, Optional[int]]]" = concurrent.futures.Future()
+    report_future.set_result((status, count))
+    update_report_with_result(report, report_future)
+
+    if status is TaskResultStatus.SUCCESS:
+        if employer_id_to_employee_ids is None:
+            logger.error("Task reported success but returned employee ids")
+        else:
+            employer_id = employer_id_to_employee_ids[0]
+            employee_ids = employer_id_to_employee_ids[1]
+
+            # We successfully output the file, delete the log records for the
+            # Employees so we don't process the same updates again.
+            try:
+                delete_processed_batch(db_session, employee_ids, process_id)
+                db_session.commit()
+            except Exception:
+                logger.exeception(
+                    "Hit error when deleting log records, next time an export runs, the employees may be included again.",
+                    extra={"internal_employer_id": employer_id},
+                )
+
+
 def process_updates_worker(
     config: EligibilityFeedExportConfig,
-    employer_id_to_employee_ids: Tuple[str, List],
+    employer_id_to_employee_ids: Tuple[str, List[str]],
     index: int,
     total_employers_count: int,
-) -> Tuple[TaskResultStatus, Optional[int]]:
+) -> Tuple[TaskResultStatus, Optional[int], Optional[Tuple[str, List[str]]]]:
     global db_session, fineos, output_transport_params
     output_dir_path = config.output_directory_path
 
     if not db_session or not fineos:
         logger.error("Database session and FINEOS client not initialized for task")
-        return (TaskResultStatus.ERROR, None)
-
-    process_id = 1
+        return (TaskResultStatus.ERROR, None, None)
 
     employer_id = employer_id_to_employee_ids[0]
     employee_ids = employer_id_to_employee_ids[1]
@@ -360,8 +390,10 @@ def process_updates_worker(
     employer = db_session.query(Employer).get(employer_id)
 
     if not employer:
-        logger.error("Could not find employer in PFML database", extra={"employer_id": employer_id})
-        return (TaskResultStatus.ERROR, None)
+        logger.error(
+            "Could not find employer in PFML database", extra={"internal_employer_id": employer_id}
+        )
+        return (TaskResultStatus.ERROR, None, None)
 
     try:
         # Find FINEOS employer id using employer FEIN
@@ -371,7 +403,7 @@ def process_updates_worker(
                 "FINEOS employer id not in Portal DB. Continuing.",
                 extra={"account_key": employer.account_key},
             )
-            return (TaskResultStatus.SKIPPED, None)
+            return (TaskResultStatus.SKIPPED, None, None)
 
         number_of_employees = len(employee_ids)
 
@@ -398,23 +430,12 @@ def process_updates_worker(
             output_transport_params,
         )
 
-        # We successfully output the file, delete the log records for the
-        # Employees so we don't process the same updates again.
-        try:
-            with db_session.begin_nested():
-                delete_processed_batch(db_session, employee_ids, process_id)
-        except Exception:
-            logger.exeception(
-                "Hit error when deleting log records, next time an export runs, the employees may be included again.",
-                extra={"employer_id": employer.employer_id},
-            )
-
-        return (TaskResultStatus.SUCCESS, number_of_employees)
+        return (TaskResultStatus.SUCCESS, number_of_employees, employer_id_to_employee_ids)
     except Exception:
         logger.exception(
             "Error creating employer export", extra={"employer_id": employer.employer_id}
         )
-        return (TaskResultStatus.ERROR, None)
+        return (TaskResultStatus.ERROR, None, None)
     finally:
         db_session.close()
 
@@ -444,33 +465,34 @@ def process_employee_updates(
                 .distinct(EmployeeLog.employee_id)
             )
 
-            if updated_employee_ids_query.count() == 0:
+            update_batch_to_processing(db_session, updated_employee_ids_query, process_id)
+
+            # Grab the employee ids we've marked for processing
+            updated_employee_ids_for_process = (
+                db_session.query(EmployeeLog.employee_id)
+                .filter(EmployeeLog.process_id == process_id)
+                .group_by(EmployeeLog.employee_id)
+                .all()
+            )
+
+            if len(updated_employee_ids_for_process) == 0:
                 logger.info("Eligibility Feed: No updates to process.")
                 report.completed_at = utcnow().isoformat()
                 return report
 
-            update_batch_to_processing(db_session, updated_employee_ids_query, process_id)
-
-        # Grab the employee ids we've marked for processing
-        updated_employee_ids_for_process_query = (
-            db_session.query(EmployeeLog.employee_id)
-            .filter(EmployeeLog.process_id == process_id)
-            .group_by(EmployeeLog.employee_id)
-        )
-
-        # Get the latest wages record for modified employee to get
-        # employer associated with it.
-        employer_employee_pairs = (
-            db_session.query(
-                WagesAndContributions.employer_id,
-                WagesAndContributions.employee_id,
-                func.max(WagesAndContributions.filing_period).label("maxdate"),
+            # Get the latest wages record for modified employee to get
+            # employer associated with it.
+            employer_employee_pairs = (
+                db_session.query(
+                    WagesAndContributions.employer_id,
+                    WagesAndContributions.employee_id,
+                    func.max(WagesAndContributions.filing_period).label("maxdate"),
+                )
+                .filter(WagesAndContributions.employee_id.in_(updated_employee_ids_for_process))
+                .group_by(WagesAndContributions.employer_id, WagesAndContributions.employee_id)
+                .order_by(WagesAndContributions.employee_id, WagesAndContributions.employer_id)
+                .all()
             )
-            .filter(WagesAndContributions.employee_id.in_(updated_employee_ids_for_process_query))
-            .group_by(WagesAndContributions.employer_id, WagesAndContributions.employee_id)
-            .order_by(WagesAndContributions.employee_id, WagesAndContributions.employer_id)
-            .all()
-        )
 
         latest_employer_for_employee = get_latest_employer_for_updates(employer_employee_pairs)
 
@@ -500,7 +522,7 @@ def process_employee_updates(
             queue=employers_with_logging_and_index,
             process_worker=process_updates_worker,
             generate_process_worker_args=lambda q: (config, q[1], q[0], employers_count),
-            process_complete=lambda r: update_report_with_result(report, r),
+            process_complete=lambda r: finish_processing_update(db_session, report, r),
         )
 
     end_time = utcnow()
@@ -907,10 +929,6 @@ def update_batch_to_processing(
     )
 
 
-# TODO: is this worth mentioning?
-# Since this is the last thing we are doing here, we don't need to
-# update the session with the deleted objects, so for efficiency,
-# set `synchronize_session=False`
 def delete_processed_batch(
     db_session: db.Session, employee_ids: Iterable[str], process_id: int
 ) -> None:
