@@ -467,6 +467,32 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def group_client_get_documents(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.GroupClientDocument]:
+        # special case for testing all downloadable document types:
+        if absence_id == "leave_admin_mixed_allowable_doc_types":
+            # This should mirror the DOWNLOADABLE_DOC_TYPES in administrator_fineos_actions.py
+            DOWNLOADABLE_DOC_TYPES = [
+                "state managed paid leave confirmation",
+                "approval notice",
+                "request for more information",
+                "denial notice",
+                "employer response additional documentation",
+            ]
+            allowed_documents = [
+                mock_document(absence_id, document_type=document_type)
+                for document_type in DOWNLOADABLE_DOC_TYPES
+            ]
+            disallowed_documents = [
+                mock_document(absence_id, document_type="Identification Proof"),
+                mock_document(absence_id, document_type="Disallowed Doc Type"),
+            ]
+
+            return [
+                models.group_client_api.GroupClientDocument.parse_obj(
+                    fineos_client.fineos_document_empty_dates_to_none(document)
+                )
+                for document in allowed_documents + disallowed_documents
+            ]
+
         if absence_id == "leave_admin_allowable_doc_type":
             document = mock_document(absence_id)
         else:

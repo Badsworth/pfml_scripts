@@ -23,6 +23,17 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms import EFormBody
 
 LEAVE_ADMIN_INFO_REQUEST_TYPE = "Employer Confirmation of Leave Data"
 
+# Downloadable leave admin doc types: https://lwd.atlassian.net/wiki/spaces/DD/pages/691208493/Document+Categorization
+# Lower case to prevent casing discrepancies
+DOWNLOADABLE_DOC_TYPES = [
+    "state managed paid leave confirmation",
+    "approval notice",
+    "request for more information",
+    "denial notice",
+    "employer response additional documentation",
+]
+
+
 logger = logging.get_logger(__name__)
 
 
@@ -82,8 +93,15 @@ def get_documents_as_leave_admin(fineos_user_id: str, absence_id: str) -> List[D
     try:
         fineos = massgov.pfml.fineos.create_client()
         fineos_documents = fineos.group_client_get_documents(fineos_user_id, absence_id)
+        # FINEOS response uses the "name" field for what we call "document_type"
+        downloadable_documents = filter(
+            lambda fd: fd.name.lower() in DOWNLOADABLE_DOC_TYPES, fineos_documents
+        )
         document_responses = list(
-            map(lambda fd: fineos_document_response_to_document_response(fd), fineos_documents,)
+            map(
+                lambda fd: fineos_document_response_to_document_response(fd),
+                downloadable_documents,
+            )
         )
         return document_responses
     except massgov.pfml.fineos.FINEOSClientError as error:

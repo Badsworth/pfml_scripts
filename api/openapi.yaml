@@ -1526,15 +1526,12 @@ components:
         document_type:
           type: string
           enum:
-            - Passport
-            - Driver's License Mass
-            - Driver's License Other State
-            - Identification Proof
             - State managed Paid Leave Confirmation
             - Approval Notice
             - Request for More information
             - Denial Notice
-          example: "Passport"
+            - Employer Response Additional Documentation
+          example: "Denial Notice"
         content_type:
           type: string
           example: "image/png"

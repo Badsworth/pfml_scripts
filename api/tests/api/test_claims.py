@@ -1,4 +1,5 @@
 import massgov.pfml.fineos.mock_client
+from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import ClaimFactory, EmployerFactory
 
@@ -103,6 +104,32 @@ def test_employers_receive_200_from_get_documents(
     )
 
     assert response.status_code == 200
+
+
+def test_employers_receive_only_downloadable_documents_from_get_documents(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    test_absence_id = "leave_admin_mixed_allowable_doc_types"
+    employer = EmployerFactory.create()
+    ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id=test_absence_id)
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        f"/v1/employers/claims/{test_absence_id}/documents",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+    response_body = response.get_json()
+    document_data = response_body.get("data")
+
+    assert response.status_code == 200
+    for document in document_data:
+        assert document.get("document_type") in DOWNLOADABLE_DOC_TYPES
 
 
 def test_non_employers_cannot_access_get_claim_review(client, auth_token):

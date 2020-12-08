@@ -10,6 +10,7 @@ import massgov.pfml.api.util.response as response_util
 from massgov.pfml.api.authorization.flask import READ, requires
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.services.administrator_fineos_actions import (
+    DOWNLOADABLE_DOC_TYPES,
     complete_claim_review,
     create_eform,
     download_document_as_leave_admin,
@@ -21,15 +22,6 @@ from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministr
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms import TransformEmployerClaimReview
 from massgov.pfml.util.sqlalchemy import get_or_404
-
-# Downloadable leave admin doc types: https://lwd.atlassian.net/wiki/spaces/DD/pages/691208493/Document+Categorization
-DOWNLOADABLE_DOC_TYPES = [
-    "State managed Paid Leave Confirmation",
-    "Approval Notice",
-    "Request for more information",
-    "Denial Notice",
-    "Employer Response Additional Documentation",
-]
 
 
 def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdministrator:
@@ -159,7 +151,7 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
     if document is None:
         raise Forbidden(description="User does not have access to this document")
 
-    if document.document_type not in DOWNLOADABLE_DOC_TYPES:
+    if document.document_type and document.document_type.lower() not in DOWNLOADABLE_DOC_TYPES:
         raise Forbidden(description="User does not have access to this document")
 
     document_data: Base64EncodedFileData = download_document_as_leave_admin(
