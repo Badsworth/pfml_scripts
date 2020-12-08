@@ -2351,12 +2351,15 @@ components:
           type: string
           example: "1"
           pattern: "^[0-9]{1,3}"
+          nullable: true
         phone_number:
           type: string
           example: "224-705-2345"
           pattern: '^[0-9]{3}\-?[0-9]{3}\-?([0-9]|\*){4}$'
+          nullable: true
         phone_type:
           type: string
+          nullable: true
           enum:
             - Cell
             - Fax

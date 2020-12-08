@@ -69,6 +69,33 @@ def test_last_name_required(test_db_session, initialize_factories_session):
     ] == issues
 
 
+def test_phone_required(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        phone=None,
+        has_state_id=True,
+        employment_status=EmploymentStatus.get_instance(
+            test_db_session, template=EmploymentStatus.EMPLOYED
+        ),
+        hours_worked_per_week=70,
+        residential_address=AddressFactory.create(),
+        work_pattern=WorkPatternFixedFactory.create(),
+    )
+
+    issues = get_always_required_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="phone.phone_number is required",
+            field="phone.phone_number",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="phone.phone_type is required",
+            field="phone.phone_type",
+        ),
+    ] == issues
+
+
 def test_date_of_birth_required(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         date_of_birth=None,

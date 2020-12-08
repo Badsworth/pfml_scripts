@@ -800,17 +800,19 @@ def add_or_update_phone(
 
     # If Phone exists, update with what we have, otherwise, create a new Phone
     # if process_masked_phone_number did not remove the phone_number field, update the db
-    if application.phone:
-        application.phone.phone_type_id = PhoneType.get_id(phone.phone_type)
-        if internationalized_phone_number:
-            application.phone.phone_number = internationalized_phone_number
-    else:
-        new_phone = Phone(
-            phone_number=internationalized_phone_number,
-            phone_type_id=PhoneType.get_id(phone.phone_type),
-        )
-        db_session.add(new_phone)
-        application.phone = new_phone
+    if not application.phone:
+        application.phone = Phone()
+
+    application.phone.phone_type_id = (
+        PhoneType.get_id(phone.phone_type) if phone.phone_type else None
+    )
+    if internationalized_phone_number:
+        # This check is here because if the phone_number was removed by de-masking, this value would still be None
+        # As a result, this field can't be set to None, because there is ambiguity in whether a None is intentional or
+        # the result of de-masking. Investigate making fields like this nullable in TODO (CP-1530)
+        application.phone.phone_number = internationalized_phone_number
+
+    db_session.add(application.phone)
 
 
 def validate_work_pattern_days(

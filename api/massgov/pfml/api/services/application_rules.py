@@ -374,6 +374,8 @@ ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
     "hours_worked_per_week": "hours_worked_per_week",
     "last_name": "last_name",
     "leave_reason": "leave_details.reason",
+    "phone.phone_number": "phone.phone_number",  # TODO (CP-1467): phone_number here includes the int_code from the request, but int_code will eventually be removed
+    "phone.phone_type_instance": "phone.phone_type",
     "residential_address": "residential_address",
     "tax_identifier": "tax_identifier",
     "work_pattern.work_pattern_type": "work_pattern.work_pattern_type",
