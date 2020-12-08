@@ -110,7 +110,8 @@ const LeaveSchedule = ({ appLogic, claim }) => {
           {isReducedSchedule && (
             <tr>
               <th scope="row">
-                {formatDateRange(
+                {/* TODO (EMPLOYER-655): Update reduced leave details */}
+                {/* {formatDateRange(
                   get(
                     claim,
                     "leave_details.reduced_schedule_leave_periods[0].start_date"
@@ -119,7 +120,7 @@ const LeaveSchedule = ({ appLogic, claim }) => {
                     claim,
                     "leave_details.reduced_schedule_leave_periods[0].end_date"
                   )
-                )}
+                )} */}
               </th>
               <td>
                 {t(
@@ -127,14 +128,17 @@ const LeaveSchedule = ({ appLogic, claim }) => {
                 )}
               </td>
               <td>
-                {/* TODO (EMPLOYER-364): Remove hardcoded number of hours */}
                 {/* TODO (CP-1074): Update hours/day */}
+                {/* TODO (EMPLOYER-655): Update reduced leave details */}
                 {t(
+                  "pages.employersClaimsReview.leaveSchedule.downloadAttachments"
+                )}
+                {/* {t(
                   "pages.employersClaimsReview.leaveSchedule.reducedHoursPerWeek",
                   {
                     numOfHours: 10,
                   }
-                )}
+                )} */}
               </td>
             </tr>
           )}

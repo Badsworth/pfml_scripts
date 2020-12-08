@@ -90,9 +90,9 @@ describe("LeaveSchedule", () => {
       .map((cell) => cell.text());
 
     expect(cellValues).toEqual([
-      "2/1/2021 – 7/1/2021",
+      "",
       "Reduced leave schedule",
-      "Reduced by 10 hours per week",
+      "Download the documentation below or contact us at (833) 344‑7365 for details about the leave schedule.",
     ]);
     expect(wrapper).toMatchSnapshot();
   });

@@ -182,14 +182,12 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
       <tr>
         <th
           scope="row"
-        >
-          2/1/2021 – 7/1/2021
-        </th>
+        />
         <td>
           Reduced leave schedule
         </td>
         <td>
-          Reduced by 10 hours per week
+          Download the documentation below or contact us at (833) 344‑7365 for details about the leave schedule.
         </td>
       </tr>
     </tbody>

@@ -1523,6 +1523,8 @@ const pages = {
         "This is your employee’s expected leave schedule. Download the attached documentation for more details.",
       caption_intermittent_hasDocuments:
         "Download the attached documentation for details about the employee’s intermittent leave schedule.",
+      downloadAttachments:
+        "Download the documentation below or contact us at $t(shared.contactCenterPhoneNumber) for details about the leave schedule.",
       frequencyBasis_irregular: "Irregular over the next 6 months",
       frequencyBasis_months: "At least once a month",
       frequencyBasis_weeks: "At least once a week",
