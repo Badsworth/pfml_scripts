@@ -1,3 +1,4 @@
+import Alert from "../../components/Alert";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Button from "../../components/Button";
 import Details from "../../components/Details";
@@ -26,6 +27,10 @@ export const CreateAccount = (props) => {
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
+
+    // Hotfix: disable account creation
+    if (isFeatureEnabled("employerDisableCreateAccount")) return;
+
     await appLogic.auth.createEmployerAccount(
       formState.username,
       formState.password,
@@ -40,6 +45,15 @@ export const CreateAccount = (props) => {
   });
 
   const showClaimantAuth = isFeatureEnabled("claimantShowAuth");
+
+  if (isFeatureEnabled("employerDisableCreateAccount")) {
+    return (
+      <Alert state="warning" heading="We'll be back soon">
+        The site is currently down for maintenance but will be back online
+        shortly.
+      </Alert>
+    );
+  }
 
   return (
     <form className="usa-form" onSubmit={handleSubmit}>

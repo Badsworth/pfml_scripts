@@ -40,6 +40,8 @@ const flagsConfig = {
     // TODO (CP-1346): Show this step once it's been integrated w/ the API.
     claimantShowOtherLeaveStep: false,
 
+    employerDisableCreateAccount: false,
+
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this
     // flag in a cookie, you can rename this flag to something else (and also
@@ -55,6 +57,7 @@ const flagsConfig = {
     pfmlTerriyay: true,
   },
   prod: {
+    employerDisableCreateAccount: true,
     pfmlTerriyay: true,
   },
 };
