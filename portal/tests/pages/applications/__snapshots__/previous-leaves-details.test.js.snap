@@ -30,32 +30,32 @@ exports[`PreviousLeavesDetails when the user's claim has previous leaves Previou
         Object {
           "checked": false,
           "label": "An illness or injury",
-          "value": "Serious Health Condition - Employee",
+          "value": "Serious health condition",
         },
         Object {
           "checked": false,
           "label": "Pregnancy",
-          "value": "Pregnancy/Maternity",
+          "value": "Pregnancy / Maternity",
         },
         Object {
           "checked": false,
           "label": "Bonding with my child after birth or placement",
-          "value": "Child Bonding",
+          "value": "Child bonding",
         },
         Object {
           "checked": false,
           "label": "Caring for a family member",
-          "value": "Care For A Family Member",
+          "value": "Care for a family member",
         },
         Object {
           "checked": false,
           "label": "Managing family affairs while a family member was on active duty in the armed forces",
-          "value": "Military Exigency Family",
+          "value": "Military exigency family",
         },
         Object {
           "checked": false,
           "label": "Caring for a family member who serves in the armed forces",
-          "value": "Military Caregiver",
+          "value": "Military caregiver",
         },
       ]
     }
@@ -115,7 +115,7 @@ exports[`PreviousLeavesDetails when the user's claim has previous leaves renders
           "id": 1,
           "is_for_current_employer": false,
           "leave_end_date": "2020-02-01",
-          "leave_reason": "Pregnancy/Maternity",
+          "leave_reason": "Pregnancy / Maternity",
           "leave_start_date": "2020-01-01",
         },
       ]
