@@ -131,7 +131,7 @@ export const NewApplication = (props) => {
           <Heading level="2">
             {t("pages.employersClaimsNewApplication.truthAttestationHeading")}
           </Heading>
-          <p>{t("pages.employersClaimsNewApplication.instructions")}</p>
+          <Trans i18nKey="pages.employersClaimsNewApplication.instructions" />
           <Alert noIcon state="info">
             {t("pages.employersClaimsNewApplication.agreementBody")}
           </Alert>

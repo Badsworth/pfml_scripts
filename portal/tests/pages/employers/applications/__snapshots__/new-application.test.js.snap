@@ -42,7 +42,7 @@ exports[`NewApplication renders the page 1`] = `
         <ReviewHeading
           level="2"
         >
-          Are you the right person to respond to this leave application?
+          Are you the right person to respond to this application?
         </ReviewHeading>
       }
       name="hasReviewerVerified"
@@ -75,16 +75,16 @@ exports[`NewApplication renders the page 1`] = `
       <Heading
         level="2"
       >
-        Confirm and submit
+        Start the review process
       </Heading>
-      <p>
-        We need true answers to every question so that we can manage this program the way the law requires. Please confirm that you will answer as truthfully as you can.
-      </p>
+      <Trans
+        i18nKey="pages.employersClaimsNewApplication.instructions"
+      />
       <Alert
         noIcon={true}
         state="info"
       >
-        I certify under penalty of perjury that the above information is true and correct. I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachusetts employer.
+        I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachusetts employer. I certify under penalty of perjury that my answers will be complete and accurate.
       </Alert>
       <Button
         type="submit"

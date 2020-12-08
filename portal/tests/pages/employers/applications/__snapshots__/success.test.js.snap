@@ -14,7 +14,7 @@ exports[`Success renders Success page 1`] = `
     }
   />
   <p>
-    We’ll begin processing this application and your employee should hear from us within 14 calendar days. Once we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
+    We’ll begin processing this application and your employee should hear from us within 14 calendar days. Once we’ve made a decision, you’ll receive an email with a direct link to details about the decision.
   </p>
   <p>
     <Trans

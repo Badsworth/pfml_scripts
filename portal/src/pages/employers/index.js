@@ -46,7 +46,20 @@ export const Index = () => {
             <IconPdf {...iconProps} />
             {t("pages.employersDashboard.viewFormsTitle")}
           </Heading>
-          <p>{t("pages.employersDashboard.viewFormsBody")}</p>
+          <p>
+            <Trans
+              i18nKey="pages.employersDashboard.viewFormsBody"
+              components={{
+                "healthcare-provider-form-link": (
+                  <a
+                    href={routes.external.massgov.healthcareProviderForm}
+                    target="_blank"
+                    rel="noopener"
+                  />
+                ),
+              }}
+            />
+          </p>
         </div>
         <div className="grid-col-fill" />
         <aside className="desktop:grid-col-3 margin-top-7 desktop:margin-top-1">
