@@ -1,3 +1,5 @@
+from freezegun import freeze_time
+
 import massgov.pfml.fineos.mock_client
 from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
@@ -141,6 +143,7 @@ def test_non_employers_cannot_access_get_claim_review(client, auth_token):
     assert response.status_code == 403
 
 
+@freeze_time("2020-12-07")
 def test_employers_receive_200_from_get_claim_review(
     client, employer_user, employer_auth_token, test_db_session
 ):
@@ -169,6 +172,7 @@ def test_employers_receive_200_from_get_claim_review(
     # This field is set in mock_client.py::get_customer_occupations
     assert response_data["hours_worked_per_week"] == 40
     assert response_data["employer_fein"] == "99-9999999"
+    assert response_data["is_reviewable"]
     # The fields below are set in mock_client.py::mock_customer_info
     assert response_data["date_of_birth"] == "****-12-25"
     assert response_data["tax_identifier"] == "***-**-1234"

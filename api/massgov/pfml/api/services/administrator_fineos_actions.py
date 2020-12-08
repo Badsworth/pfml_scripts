@@ -1,5 +1,6 @@
 import mimetypes
 import uuid
+from datetime import date
 from typing import Dict, List, Optional
 
 import massgov.pfml.db
@@ -141,6 +142,7 @@ def get_claim_as_leave_admin(
         managed_reqs = fineos.get_managed_requirements(fineos_user_id, absence_id)
         other_leaves: List[PreviousLeave] = []
         other_incomes: List[EmployerBenefit] = []
+        is_reviewable = None
         follow_up_date = None
 
         for req in managed_reqs:
@@ -168,6 +170,9 @@ def get_claim_as_leave_admin(
         else:
             claimant_address = Address()
 
+        if follow_up_date is not None:
+            is_reviewable = date.today() < follow_up_date
+
         leave_details = get_leave_details(absence_periods)
 
         return ClaimReviewResponse(
@@ -186,6 +191,7 @@ def get_claim_as_leave_admin(
             if customer_info["idNumber"] is not None
             else "",
             follow_up_date=follow_up_date,
+            is_reviewable=is_reviewable,
         )
     except massgov.pfml.fineos.FINEOSClientError as error:
         logger.exception("FINEOS Client Exception", extra={"error": error})

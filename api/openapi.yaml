@@ -1176,6 +1176,8 @@ components:
           type: string
         hours_worked_per_week:
           type: string
+        is_reviewable:
+          type: boolean
         last_name:
           type: string
         leave_details:

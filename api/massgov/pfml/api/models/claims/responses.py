@@ -29,6 +29,7 @@ class ClaimReviewResponse(PydanticBaseModel):
     residential_address: Optional[Address]
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
     follow_up_date: Optional[date]
+    is_reviewable: Optional[bool]
 
 
 class DocumentResponse(PydanticBaseModel):
