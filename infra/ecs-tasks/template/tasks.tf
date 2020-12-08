@@ -40,7 +40,12 @@ locals {
     },
 
     "execute-sql" = {
-      command = ["execute-sql"]
+      command             = ["execute-sql"]
+      containers_template = "execute_sql_template.json"
+      task_role           = aws_iam_role.task_execute_sql_task_role.arn
+      vars = {
+        s3_export_bucket = "massgov-pfml-${var.environment_name}-execute-sql-export"
+      }
     },
 
     "ad-hoc-verification" = {
