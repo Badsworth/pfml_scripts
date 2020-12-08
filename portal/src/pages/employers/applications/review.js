@@ -20,6 +20,7 @@ import SupportingWorkDetails from "../../../components/employers/SupportingWorkD
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import formatDateRange from "../../../utils/formatDateRange";
+import { isFeatureEnabled } from "../../../services/featureFlags";
 import updateAmendments from "../../../utils/updateAmendments";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
@@ -34,6 +35,9 @@ export const Review = (props) => {
     employers: { claim },
   } = appLogic;
   const { t } = useTranslation();
+  const shouldShowPreviousLeaves = isFeatureEnabled(
+    "employerShowPreviousLeaves"
+  );
   const [formState, setFormState] = useState({
     employerBenefits: [],
     previousLeaves: [],
@@ -159,10 +163,13 @@ export const Review = (props) => {
           employerBenefits={formState.employerBenefits}
           onChange={handleBenefitInputChange}
         />
-        <PreviousLeaves
-          previousLeaves={formState.previousLeaves}
-          onChange={handlePreviousLeavesChange}
-        />
+        {/* TODO (EMPLOYER-656): Show previous leaves */}
+        {shouldShowPreviousLeaves && (
+          <PreviousLeaves
+            previousLeaves={formState.previousLeaves}
+            onChange={handlePreviousLeavesChange}
+          />
+        )}
         <FraudReport onChange={handleFraudInputChange} />
         <EmployeeNotice
           fraud={formState.fraud}

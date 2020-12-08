@@ -45,6 +45,10 @@ const flagsConfig = {
     // TODO (EMPLOYER-656): Show adjudication status once it is retrieved from FINEOS
     employerShowAdjudicationStatus: false,
 
+    // When this flag is enabled, the "Previous leaves" section on Review page is visible
+    // TODO (EMPLOYER-657): Show this section after 1/1
+    employerShowPreviousLeaves: false,
+
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this
     // flag in a cookie, you can rename this flag to something else (and also
