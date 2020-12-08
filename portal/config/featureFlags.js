@@ -41,6 +41,10 @@ const flagsConfig = {
     // TODO (CP-1346): Show this step once it's been integrated w/ the API.
     claimantShowOtherLeaveStep: false,
 
+    // When this flag is enabled, adjudication status is visible on the Status page
+    // TODO (EMPLOYER-656): Show adjudication status once it is retrieved from FINEOS
+    employerShowAdjudicationStatus: false,
+
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this
     // flag in a cookie, you can rename this flag to something else (and also

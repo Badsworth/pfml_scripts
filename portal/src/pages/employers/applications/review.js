@@ -24,9 +24,6 @@ import updateAmendments from "../../../utils/updateAmendments";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-// TODO (EMPLOYER-519): Remove `hoursWorkedPerWeek` when BE provides value
-const hoursWorkedPerWeek = 0;
-
 export const Review = (props) => {
   // TODO (EMPLOYER-583) add frontend validation
   const {
@@ -66,7 +63,7 @@ export const Review = (props) => {
         employerBenefits: indexedEmployerBenefits,
         amendedLeaves: indexedPreviousLeaves,
         previousLeaves: indexedPreviousLeaves,
-        amendedHours: claim.hours_worked_per_week || hoursWorkedPerWeek,
+        amendedHours: claim.hours_worked_per_week,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -111,6 +108,7 @@ export const Review = (props) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    const amendedHours = parseInt(formState.amendedHours);
     const previous_leaves = formState.amendedLeaves.map((leave) =>
       pick(leave, ["leave_end_date", "leave_start_date"])
     );
@@ -120,15 +118,12 @@ export const Review = (props) => {
       employer_benefits: formState.employerBenefits,
       employer_decision: formState.employerDecision,
       fraud: formState.fraud,
-      hours_worked_per_week: parseInt(formState.amendedHours),
+      hours_worked_per_week: amendedHours,
       previous_leaves,
       has_amendments:
         !isEqual(formState.amendedBenefits, formState.employerBenefits) ||
         !isEqual(formState.amendedLeaves, formState.previousLeaves) ||
-        !isEqual(
-          formState.amendedHours,
-          claim.hours_worked_per_week || hoursWorkedPerWeek
-        ),
+        !isEqual(amendedHours, claim.hours_worked_per_week),
     };
     await props.appLogic.employers.submit(absenceId, payload);
   };
@@ -157,8 +152,7 @@ export const Review = (props) => {
       <LeaveSchedule appLogic={appLogic} claim={claim} />
       <form id="employer-review-form" onSubmit={handleSubmit}>
         <SupportingWorkDetails
-          // TODO (EMPLOYER-519): Change `hoursWorkedPerWeek` to `claim.hours_worked_per_week` when BE provides value
-          hoursWorkedPerWeek={claim.hours_worked_per_week || hoursWorkedPerWeek}
+          hoursWorkedPerWeek={claim.hours_worked_per_week}
           onChange={handleHoursWorkedChange}
         />
         <EmployerBenefits

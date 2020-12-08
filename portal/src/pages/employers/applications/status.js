@@ -16,6 +16,7 @@ import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDateRange from "../../../utils/formatDateRange";
 import { get } from "lodash";
+import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../../src/routes";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
@@ -44,6 +45,10 @@ export const Status = (props) => {
     DocumentType.requestForInfoNotice,
   ]);
 
+  const shouldShowAdjudicationStatus = isFeatureEnabled(
+    "employerShowAdjudicationStatus"
+  );
+
   return (
     <React.Fragment>
       <BackButton />
@@ -70,9 +75,12 @@ export const Status = (props) => {
       <StatusRow label={t("pages.employersClaimsStatus.applicationIdLabel")}>
         {absenceId}
       </StatusRow>
-      <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
-        <StatusTag state="approved" />
-      </StatusRow>
+      {/* TODO (EMPLOYER-656): Display adjudication status */}
+      {shouldShowAdjudicationStatus && (
+        <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
+          <StatusTag state="approved" />
+        </StatusRow>
+      )}
       <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>
         {t("pages.employersClaimsStatus.leaveReasonValue", {
           context: findKeyByValue(

@@ -76,20 +76,21 @@ describe("Status", () => {
     expect(applicationIdRow.childAt(0).text()).toEqual("NTN-111-ABS-01");
   });
 
-  it("shows the status", () => {
-    const statusRow = wrapper.find("StatusRow").at(1);
-    expect(statusRow.prop("label")).toEqual("Status");
-    expect(statusRow.find("StatusTag").prop("state")).toEqual("approved");
-  });
+  // TODO (EMPLOYER-656): Display adjudication status
+  // it("shows the status", () => {
+  //   const statusRow = wrapper.find("StatusRow").at(1);
+  //   expect(statusRow.prop("label")).toEqual("Status");
+  //   expect(statusRow.find("StatusTag").prop("state")).toEqual("approved");
+  // });
 
   it("shows the leave type", () => {
-    const leaveTypeRow = wrapper.find("StatusRow").at(2);
+    const leaveTypeRow = wrapper.find("StatusRow").at(1);
     expect(leaveTypeRow.prop("label")).toEqual("Leave type");
     expect(leaveTypeRow.childAt(0).text()).toEqual("Medical leave");
   });
 
   it("shows the leave duration", () => {
-    const leaveDurationRow = wrapper.find("StatusRow").at(3);
+    const leaveDurationRow = wrapper.find("StatusRow").at(2);
     expect(leaveDurationRow.prop("label")).toEqual("Leave duration");
     expect(leaveDurationRow.childAt(0).text()).toEqual("1/1/2021 – 7/1/2021");
   });

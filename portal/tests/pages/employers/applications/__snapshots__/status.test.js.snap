@@ -31,13 +31,6 @@ exports[`Status renders the page and correct content in Trans component 1`] = `
     NTN-111-ABS-01
   </StatusRow>
   <StatusRow
-    label="Status"
-  >
-    <StatusTag
-      state="approved"
-    />
-  </StatusRow>
-  <StatusRow
     label="Leave type"
   >
     Medical leave
