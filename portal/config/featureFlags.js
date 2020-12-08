@@ -54,6 +54,19 @@ const flagsConfig = {
   development: {
     example: true,
     pfmlTerriyay: true,
+    claimantShowAuth: true,
+  },
+  test: {
+    claimantShowAuth: true,
+  },
+  stage: {
+    claimantShowAuth: true,
+  },
+  training: {
+    claimantShowAuth: true,
+  },
+  performance: {
+    claimantShowAuth: true,
   },
   prod: {
     pfmlTerriyay: true,
