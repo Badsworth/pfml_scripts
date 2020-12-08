@@ -1,10 +1,12 @@
+#
+# Tests for /v1/financial-eligibility API.
+#
+
 import re
 from datetime import date
 
 import pytest
 
-import massgov.pfml.api.eligibility.wage as wage
-from massgov.pfml.api.eligibility.eligibility_date import eligibility_date
 from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployerFactory,
@@ -20,17 +22,29 @@ def test_endpoint_with_employee_wages_data(
     employee = EmployeeFactory.create(tax_identifier=tax_id)
     employer = EmployerFactory.create(employer_fein="716779225")
 
-    wages_and_contribution1 = WagesAndContributionsFactory.create(
-        employee=employee, employer=employer, filing_period=date(2020, 6, 30)
-    )
-    wages_and_contribution2 = WagesAndContributionsFactory.create(
-        employee=employee, employer=employer, filing_period=date(2020, 3, 1)
-    )
-    wages_and_contribution3 = WagesAndContributionsFactory.create(
-        employee=employee, employer=employer, filing_period=date(2019, 12, 1)
+    WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=date(2020, 6, 30),
+        employee_qtr_wages=10000,
     )
     WagesAndContributionsFactory.create(
-        employee=employee, employer=employer, filing_period=date(2017, 12, 1)
+        employee=employee,
+        employer=employer,
+        filing_period=date(2020, 3, 1),
+        employee_qtr_wages=11000,
+    )
+    WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=date(2019, 12, 1),
+        employee_qtr_wages=10100,
+    )
+    WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=date(2017, 12, 1),
+        employee_qtr_wages=10010,
     )  # outside the base period
 
     body = {
@@ -46,32 +60,19 @@ def test_endpoint_with_employee_wages_data(
         json=body,
     )
 
-    assert response.get_json().get("data").get("description") == "Financially eligible"
-    assert response.get_json().get("data").get("total_wages") == float(
-        round(
-            wages_and_contribution1.employee_qtr_wages
-            + wages_and_contribution2.employee_qtr_wages
-            + wages_and_contribution3.employee_qtr_wages,
-            2,
-        )
-    )
-
-    def _get_employer_average_weekly_wage():
-        # no easy way to evaluate whether employer_average_weekly_wage is correct without doing
-        # the computation here
-        effective_date = eligibility_date(date(2020, 12, 30), date(2020, 12, 30))
-        wage_calculator = wage.get_wage_calculator(
-            employee.employee_id, effective_date, test_db_session
-        )
-        employer_avg_weekly_wage = float(
-            round(wage_calculator.compute_employer_average_weekly_wage(employer.employer_id), 2)
-        )
-        return employer_avg_weekly_wage
-
-    assert (
-        response.get_json().get("data").get("employer_average_weekly_wage")
-        == _get_employer_average_weekly_wage()
-    )
+    assert response.json == {
+        "data": {
+            "description": "Financially eligible",
+            "employer_average_weekly_wage": 811.54,  # = (11000 + 10100) / 26
+            "financially_eligible": True,
+            "state_average_weekly_wage": 1431,
+            "total_wages": 31100.0,
+            "unemployment_minimum": 5100,
+        },
+        "message": "Calculated financial eligibility",
+        "meta": {"method": "POST", "resource": "/v1/financial-eligibility"},
+        "status_code": 200,
+    }
 
 
 def test_endpoint_no_employee_wage_data(
