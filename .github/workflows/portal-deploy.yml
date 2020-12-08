@@ -168,7 +168,7 @@ jobs:
           role-duration-seconds: 3600
           role-to-assume: ci-run-deploys
 
-      - uses: hashicorp/setup-terraform@v1
+      - uses: hashicorp/setup-terraform@v1.2.1
         with:
           terraform_version: ${{ env.terraformVersion }}
           terraform_wrapper: false
