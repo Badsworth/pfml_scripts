@@ -244,7 +244,7 @@ def test_non_employees_cannot_access_employer_update_claim_review(client, auth_t
                 "benefit_amount_frequency": "Per Day",
                 "benefit_end_date": "1970-01-01",
                 "benefit_start_date": "1970-01-01",
-                "benefit_type": "Accrued Paid Leave",
+                "benefit_type": "Accrued paid leave",
             }
         ],
         "employer_decision": "Approve",
@@ -255,7 +255,7 @@ def test_non_employees_cannot_access_employer_update_claim_review(client, auth_t
             {
                 "leave_end_date": "1970-01-01",
                 "leave_start_date": "1970-01-01",
-                "leave_type": "Pregnancy/Maternity",
+                "leave_type": "Pregnancy / Maternity",
             }
         ],
     }
@@ -290,7 +290,7 @@ def test_employees_receive_200_from_employer_update_claim_review(
                 "benefit_amount_frequency": "Per Day",
                 "benefit_end_date": "1970-01-01",
                 "benefit_start_date": "1970-01-01",
-                "benefit_type": "Accrued Paid Leave",
+                "benefit_type": "Accrued paid leave",
             }
         ],
         "employer_decision": "Approve",
@@ -301,7 +301,7 @@ def test_employees_receive_200_from_employer_update_claim_review(
             {
                 "leave_end_date": "1970-01-01",
                 "leave_start_date": "1970-01-01",
-                "leave_type": "Pregnancy/Maternity",
+                "leave_type": "Pregnancy / Maternity",
             }
         ],
     }
@@ -336,7 +336,7 @@ def test_employer_confirmation_sent_with_employer_update_claim_review(
                 "benefit_amount_frequency": "Per Day",
                 "benefit_end_date": "1970-01-01",
                 "benefit_start_date": "1970-01-01",
-                "benefit_type": "Accrued Paid Leave",
+                "benefit_type": "Accrued paid leave",
             }
         ],
         "employer_decision": "Approve",
@@ -347,7 +347,7 @@ def test_employer_confirmation_sent_with_employer_update_claim_review(
             {
                 "leave_end_date": "1970-01-01",
                 "leave_start_date": "1970-01-01",
-                "leave_type": "Pregnancy/Maternity",
+                "leave_type": "Pregnancy / Maternity",
             }
         ],
     }
@@ -398,7 +398,7 @@ def test_employer_confirmation_is_not_sent(
                 "benefit_amount_frequency": "Per Day",
                 "benefit_end_date": "1970-01-01",
                 "benefit_start_date": "1970-01-01",
-                "benefit_type": "Accrued Paid Leave",
+                "benefit_type": "Accrued paid leave",
             }
         ],
         "employer_decision": "Approve",
@@ -409,7 +409,7 @@ def test_employer_confirmation_is_not_sent(
             {
                 "leave_end_date": "1970-01-01",
                 "leave_start_date": "1970-01-01",
-                "leave_type": "Pregnancy/Maternity",
+                "leave_type": "Pregnancy / Maternity",
             }
         ],
     }

@@ -1590,12 +1590,12 @@ def test_application_patch_add_employer_benefits(client, user, auth_token, test_
         json={
             "employer_benefits": [
                 {
-                    "benefit_type": "Accrued Paid Leave",
-                    "benefit_end_date": "2021-01-20",
+                    "benefit_type": "Accrued paid leave",
                     "benefit_start_date": "2021-01-10",
+                    "benefit_end_date": "2021-01-20",
                     "benefit_amount_dollars": 400,
                     "benefit_amount_frequency": "Per Month",
-                },
+                }
             ]
         },
     )
@@ -1608,7 +1608,7 @@ def test_application_patch_add_employer_benefits(client, user, auth_token, test_
     assert len(employer_benefits) == 1
     employer_benefit = employer_benefits[0]
     assert employer_benefit.get("employer_benefit_id") is not None
-    assert employer_benefit.get("benefit_type") == "Accrued Paid Leave"
+    assert employer_benefit.get("benefit_type") == "Accrued paid leave"
     assert employer_benefit.get("benefit_start_date") == "2021-01-10"
     assert employer_benefit.get("benefit_end_date") == "2021-01-20"
     assert employer_benefit.get("benefit_amount_dollars") == 400
@@ -1637,7 +1637,7 @@ def test_application_patch_update_employer_benefit(client, user, auth_token, tes
             "employer_benefits": [
                 {
                     "employer_benefit_id": employer_benefit_id,
-                    "benefit_type": "Accrued Paid Leave",
+                    "benefit_type": "Accrued paid leave",
                     "benefit_end_date": "2021-01-20",
                     "benefit_start_date": "2021-01-10",
                     "benefit_amount_dollars": 400,
@@ -1655,7 +1655,7 @@ def test_application_patch_update_employer_benefit(client, user, auth_token, tes
     assert len(employer_benefits) == 1
     employer_benefit = employer_benefits[0]
     assert employer_benefit.get("employer_benefit_id") == str(employer_benefit_id)
-    assert employer_benefit.get("benefit_type") == "Accrued Paid Leave"
+    assert employer_benefit.get("benefit_type") == "Accrued paid leave"
     assert employer_benefit.get("benefit_start_date") == "2021-01-10"
     assert employer_benefit.get("benefit_end_date") == "2021-01-20"
     assert employer_benefit.get("benefit_amount_dollars") == 400
@@ -1676,7 +1676,7 @@ def test_application_patch_update_non_existent_employer_benefit(
             "employer_benefits": [
                 {
                     "employer_benefit_id": "ad34ed9e-8a1a-4cfa-b6a1-93d2737c7a08",
-                    "benefit_type": "Accrued Paid Leave",
+                    "benefit_type": "Accrued paid leave",
                     "benefit_end_date": "2021-01-20",
                     "benefit_start_date": "2021-01-10",
                     "benefit_amount_dollars": 400,
@@ -1721,7 +1721,7 @@ def test_application_patch_update_other_users_employer_benefit(
             "employer_benefits": [
                 {
                     "employer_benefit_id": employer_benefit_id,
-                    "benefit_type": "Accrued Paid Leave",
+                    "benefit_type": "Accrued paid leave",
                     "benefit_end_date": "2021-01-20",
                     "benefit_start_date": "2021-01-10",
                     "benefit_amount_dollars": 400,
@@ -1758,7 +1758,7 @@ def test_application_patch_add_other_incomes(client, user, auth_token, test_db_s
         json={
             "other_incomes": [
                 {
-                    "income_type": "Unemployment",
+                    "income_type": "Unemployment Insurance",
                     "income_end_date": "2021-01-20",
                     "income_start_date": "2021-01-10",
                     "income_amount_dollars": 800,
@@ -1775,7 +1775,7 @@ def test_application_patch_add_other_incomes(client, user, auth_token, test_db_s
 
     assert len(other_incomes) == 1
     other_income = other_incomes[0]
-    assert other_income.get("income_type") == "Unemployment"
+    assert other_income.get("income_type") == "Unemployment Insurance"
     assert other_income.get("income_start_date") == "2021-01-10"
     assert other_income.get("income_end_date") == "2021-01-20"
     assert other_income.get("income_amount_dollars") == 800
@@ -1804,7 +1804,7 @@ def test_application_patch_update_other_income(client, user, auth_token, test_db
             "other_incomes": [
                 {
                     "other_income_id": other_income_id,
-                    "income_type": "Workers Comp",
+                    "income_type": "Workers Compensation",
                     "income_end_date": "2021-01-20",
                     "income_start_date": "2021-01-10",
                     "income_amount_dollars": 400,
@@ -1822,7 +1822,7 @@ def test_application_patch_update_other_income(client, user, auth_token, test_db
     assert len(other_incomes) == 1
     other_income = other_incomes[0]
     assert other_income.get("other_income_id") == str(other_income_id)
-    assert other_income.get("income_type") == "Workers Comp"
+    assert other_income.get("income_type") == "Workers Compensation"
     assert other_income.get("income_start_date") == "2021-01-10"
     assert other_income.get("income_end_date") == "2021-01-20"
     assert other_income.get("income_amount_dollars") == 400
@@ -1843,7 +1843,7 @@ def test_application_patch_update_non_existent_other_income(
             "other_incomes": [
                 {
                     "other_income_id": "ad34ed9e-8a1a-4cfa-b6a1-93d2737c7a08",
-                    "income_type": "Workers Comp",
+                    "income_type": "Workers Compensation",
                     "income_end_date": "2021-01-20",
                     "income_start_date": "2021-01-10",
                     "income_amount_dollars": 400,
@@ -1887,7 +1887,7 @@ def test_application_patch_update_other_users_other_income(
             "other_incomes": [
                 {
                     "other_income_id": other_income_id,
-                    "income_type": "Workers Comp",
+                    "income_type": "Workers Compensation",
                     "income_end_date": "2021-01-20",
                     "income_start_date": "2021-01-10",
                     "income_amount_dollars": 400,

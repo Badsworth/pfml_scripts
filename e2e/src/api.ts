@@ -337,8 +337,8 @@ export interface EmployerBenefit {
     benefit_start_date?: Date;
     benefit_end_date?: Date;
     benefit_amount_dollars?: number | null;
-    benefit_amount_frequency?: ("Per Day" | "Per Week" | "Per Month" | "All At Once") | null;
-    benefit_type?: ("Accrued Paid Leave" | "Short Term Disability" | "Permanent Disability Insurance" | "Family or Medical Leave Insurance") | null;
+    benefit_amount_frequency?: ("Per Day" | "Per Week" | "Per Month" | "In Total") | null;
+    benefit_type?: ("Accrued paid leave" | "Short-term disability insurance" | "Permanent disability insurance" | "Family or medical leave insurance" | "Unknown") | null;
 }
 export type Fein = string;
 export interface EmployerContinuousLeavePeriods {
@@ -484,8 +484,8 @@ export interface OtherIncome {
     income_start_date?: Date;
     income_end_date?: Date;
     income_amount_dollars?: number | null;
-    income_amount_frequency?: ("Per Day" | "Per Week" | "Per Month" | "All At Once") | null;
-    income_type?: ("Workers Comp" | "Unemployment" | "SSDI" | "Retirement Disability" | "Jones Act" | "Railroad Retirement" | "Other Employer") | null;
+    income_amount_frequency?: ("Per Day" | "Per Week" | "Per Month" | "In Total") | null;
+    income_type?: ("Workers Compensation" | "Unemployment Insurance" | "SSDI" | "Disability benefits under Gov't retirement plan" | "Jones Act benefits" | "Railroad Retirement benefits" | "Earnings from another employment/self-employment") | null;
 }
 export interface MaskedPhone {
     int_code?: string;

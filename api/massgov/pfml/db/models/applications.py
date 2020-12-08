@@ -544,32 +544,33 @@ class AmountFrequency(LookupTable):
     PER_DAY = LkAmountFrequency(1, "Per Day")
     PER_WEEK = LkAmountFrequency(2, "Per Week")
     PER_MONTH = LkAmountFrequency(3, "Per Month")
-    ALL_AT_ONCE = LkAmountFrequency(4, "All At Once")
+    ALL_AT_ONCE = LkAmountFrequency(4, "In Total")
 
 
 class EmployerBenefitType(LookupTable):
     model = LkEmployerBenefitType
     column_names = ("employer_benefit_type_id", "employer_benefit_type_description")
 
-    ACCRUED_PAID_LEAVE = LkEmployerBenefitType(1, "Accrued Paid Leave")
-    SHORT_TERM_DISABILITY = LkEmployerBenefitType(2, "Short Term Disability")
-    PERMANENT_DISABILITY_INSURANCE = LkEmployerBenefitType(3, "Permanent Disability Insurance")
+    ACCRUED_PAID_LEAVE = LkEmployerBenefitType(1, "Accrued paid leave")
+    SHORT_TERM_DISABILITY = LkEmployerBenefitType(2, "Short-term disability insurance")
+    PERMANENT_DISABILITY_INSURANCE = LkEmployerBenefitType(3, "Permanent disability insurance")
     FAMILY_OR_MEDICAL_LEAVE_INSURANCE = LkEmployerBenefitType(
-        4, "Family or Medical Leave Insurance"
+        4, "Family or medical leave insurance"
     )
+    UNKNOWN = LkEmployerBenefitType(5, "Unknown")
 
 
 class OtherIncomeType(LookupTable):
     model = LkOtherIncomeType
     column_names = ("other_income_type_id", "other_income_type_description")
 
-    WORKERS_COMP = LkOtherIncomeType(1, "Workers Comp")
-    UNEMPLOYMENT = LkOtherIncomeType(2, "Unemployment")
+    WORKERS_COMP = LkOtherIncomeType(1, "Workers Compensation")
+    UNEMPLOYMENT = LkOtherIncomeType(2, "Unemployment Insurance")
     SSDI = LkOtherIncomeType(3, "SSDI")
-    RETIREMENT_DISABILITY = LkOtherIncomeType(4, "Retirement Disability")
-    JONES_ACT = LkOtherIncomeType(5, "Jones Act")
-    RAILROAD_RETIREMENT = LkOtherIncomeType(6, "Railroad Retirement")
-    OTHER_EMPLOYER = LkOtherIncomeType(7, "Other Employer")
+    RETIREMENT_DISABILITY = LkOtherIncomeType(4, "Disability benefits under Gov't retirement plan")
+    JONES_ACT = LkOtherIncomeType(5, "Jones Act benefits")
+    RAILROAD_RETIREMENT = LkOtherIncomeType(6, "Railroad Retirement benefits")
+    OTHER_EMPLOYER = LkOtherIncomeType(7, "Earnings from another employment/self-employment")
 
 
 class FINEOSWebIdExt(Base):

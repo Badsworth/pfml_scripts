@@ -26,6 +26,8 @@ class TransformEformAttributes:
     }
     """
 
+    ADDITIONAL_OBJECT: EFormAttribute
+
     @classmethod
     def to_attributes(cls, target: Any, suffix: Optional[str] = "") -> List[EFormAttribute]:
         transformed = []
@@ -38,6 +40,11 @@ class TransformEformAttributes:
                 attribute_value = attribute_value.strftime("%Y-%m-%d")
             setattr(attribute, attribute_type, attribute_value)
             transformed.append(attribute)
+        if suffix:
+            attribute = cls.ADDITIONAL_OBJECT
+            attribute_name = f"{attribute.name}{suffix}"
+            attribute_value = attribute.enumValue
+            transformed.append(EFormAttribute(name=attribute_name, enumValue=attribute_value))
         return transformed
 
     @classmethod

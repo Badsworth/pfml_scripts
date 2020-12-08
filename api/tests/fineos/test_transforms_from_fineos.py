@@ -50,7 +50,7 @@ def other_income_eform():
                     "name": "WRT3",
                     "enumValue": {
                         "domainName": "WageReplacementType",
-                        "instanceValue": "Short Term Disability",
+                        "instanceValue": "Short term disability",
                     },
                 },
                 {
@@ -132,7 +132,7 @@ class TestTransformEformBody:
         assert benefit_2["benefit_amount_frequency"] == "Per Month"
         assert benefit_2["benefit_start_date"] == date(2021, 10, 1)
         assert benefit_2["benefit_end_date"] == date(2021, 11, 1)
-        assert benefit_2["benefit_type"] == "Short Term Disability"
+        assert benefit_2["benefit_type"] == "Short term disability"
         assert benefit_2["program_type"] == "Employer"
 
     def test_transform_other_leave_eform(self, other_leave_eform):

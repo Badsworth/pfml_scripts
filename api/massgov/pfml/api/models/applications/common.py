@@ -311,7 +311,7 @@ class AmountFrequency(str, LookupEnum):
     per_day = "Per Day"
     per_week = "Per Week"
     per_month = "Per Month"
-    all_at_once = "All At Once"
+    all_at_once = "In Total"
 
     @classmethod
     def get_lookup_model(cls):
@@ -319,10 +319,11 @@ class AmountFrequency(str, LookupEnum):
 
 
 class EmployerBenefitType(str, LookupEnum):
-    accrued_paid_leave = "Accrued Paid Leave"
-    short_term_disability = "Short Term Disability"
-    permanent_disability_insurance = "Permanent Disability Insurance"
-    family_or_medical_leave_insurance = "Family or Medical Leave Insurance"
+    accrued_paid_leave = "Accrued paid leave"
+    short_term_disability = "Short-term disability insurance"
+    permanent_disability_insurance = "Permanent disability insurance"
+    family_or_medical_leave_insurance = "Family or medical leave insurance"
+    unknown = "Unknown"
 
     @classmethod
     def get_lookup_model(cls):
@@ -330,13 +331,13 @@ class EmployerBenefitType(str, LookupEnum):
 
 
 class OtherIncomeType(str, LookupEnum):
-    workers_comp = "Workers Comp"
-    unemployment = "Unemployment"
+    workers_comp = "Workers Compensation"
+    unemployment = "Unemployment Insurance"
     ssdi = "SSDI"
-    retirement_disability = "Retirement Disability"
-    jones_act = "Jones Act"
-    railroad_retirement = "Railroad Retirement"
-    other_employer = "Other Employer"
+    retirement_disability = "Disability benefits under Gov't retirement plan"
+    jones_act = "Jones Act benefits"
+    railroad_retirement = "Railroad Retirement benefits"
+    other_employer = "Earnings from another employment/self-employment"
 
     @classmethod
     def get_lookup_model(cls):

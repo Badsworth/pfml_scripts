@@ -4,7 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
-from massgov.pfml.fineos.models.group_client_api import EFormAttribute
+from massgov.pfml.fineos.models.group_client_api import EFormAttribute, ModelEnum
 from massgov.pfml.fineos.transforms.to_fineos.base import TransformEformAttributes
 
 
@@ -23,16 +23,26 @@ class TransformEmployerBenefit(TransformEformAttributes):
         "benefit_amount_frequency": {"name": "Frequency", "type": "stringValue"},
         "benefit_start_date": {"name": "EmployerBenefitStartDate", "type": "dateValue"},
         "benefit_end_date": {"name": "EmployerBenefitEndDate", "type": "dateValue"},
-        "benefit_type": {"name": "EmployerBenefitType", "type": "stringValue"},
+        "benefit_type": {"name": "BenefitType", "type": "stringValue"},
     }
+
+    ADDITIONAL_OBJECT = EFormAttribute(
+        name="ReceiveWageReplacement",
+        enumValue=ModelEnum(domainName="PleaseSelectYesNoUnknown", instanceValue="Yes"),
+    )
 
 
 class TransformPreviousLeave(TransformEformAttributes):
     ATTRIBUTE_MAP = {
         "leave_start_date": {"name": "PastLeaveStartDate", "type": "dateValue"},
         "leave_end_date": {"name": "PastLeaveEndDate", "type": "dateValue"},
-        "leave_type": {"name": "NatureofLeave", "type": "stringValue"},
+        "leave_type": {"name": "QualifyingReason", "type": "stringValue"},
     }
+
+    ADDITIONAL_OBJECT = EFormAttribute(
+        name="Applies",
+        enumValue=ModelEnum(domainName="PleaseSelectYesNoUnknown", instanceValue="Yes"),
+    )
 
 
 class TransformOtherInfo(TransformEformAttributes):

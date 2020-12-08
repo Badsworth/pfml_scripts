@@ -23,7 +23,7 @@ def employer_benefit():
         benefit_amount_frequency="Per Week",
         benefit_start_date="2020-04-01",
         benefit_end_date="2020-05-01",
-        benefit_type="Short Term Disability",
+        benefit_type="Short term disability",
     )
 
 
@@ -70,13 +70,14 @@ class TestTransformEformAttributes:
 
     def test_transform_previous_leave_list(self, previous_leave):
         result = TransformPreviousLeave.list_to_attributes([previous_leave, previous_leave])
-        assert len(result) == 6
-        start, end, l_type, start2, end2, l_type2 = result
+        assert len(result) == 7
+        start, end, l_type, start2, end2, l_type2, addition_object2 = result
         assert start2.name == "PastLeaveStartDate2"
         assert end2.name == "PastLeaveEndDate2"
-        assert l_type2.name == "NatureofLeave2"
+        assert l_type2.name == "QualifyingReason2"
         assert start.dateValue == start2.dateValue
         assert end.dateValue == end2.dateValue
+        assert addition_object2.name == "Applies2"
 
     def test_transform_other_info(self, employer_claim_review):
         result = TransformOtherInfo.to_attributes(employer_claim_review)

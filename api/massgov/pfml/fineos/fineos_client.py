@@ -21,6 +21,7 @@ import requests_oauthlib
 import xmlschema
 
 import massgov.pfml.util.logging
+from massgov.pfml.fineos.models.group_client_api import ModelEnum
 from massgov.pfml.fineos.transforms.to_fineos.eforms import EFormBody
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
@@ -498,10 +499,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         eform_json = []
+
         for eformAttribute in eform.eformAttributes:
             cleanedEformAttribute = dict()
             for key, value in dict(eformAttribute).items():
-                if value is not None:
+                if value is not None and isinstance(value, ModelEnum):
+                    cleanedEformAttribute[key] = dict(value)
+                elif value is not None:
                     cleanedEformAttribute[key] = value
             if len(cleanedEformAttribute) > 1:
                 eform_json.append(cleanedEformAttribute)

@@ -1204,12 +1204,13 @@ components:
         leave_type:
           type: string
           enum:
-            - Pregnancy/Maternity
-            - Serious Health Condition
-            - Care of Family Member
-            - Child Bonding
-            - Military Caregiver
-            - Military Exigency Family
+            - Pregnancy / Maternity
+            - Serious health condition
+            - Care for a family member
+            - Child bonding
+            - Military caregiver
+            - Military exigency family
+            - Unknown
 
     ApplicationRequestBody:
       allOf:
@@ -2044,17 +2045,17 @@ components:
             - Per Day
             - Per Week
             - Per Month
-            - All At Once
+            - In Total
           example: "Per Month"
         benefit_type:
           type: string
           nullable: true
           enum:
-            - Accrued Paid Leave
-            - Short Term Disability
-            - Permanent Disability Insurance
-            - Family or Medical Leave Insurance
-          example: "Accrued Paid Leave"
+            - Accrued paid leave
+            - Short-term disability insurance
+            - Permanent disability insurance
+            - Family or medical leave insurance
+            - Unknown
 
 
     OtherIncome:
@@ -2079,19 +2080,19 @@ components:
             - Per Day
             - Per Week
             - Per Month
-            - All At Once
+            - In Total
           example: "Per Month"
         income_type:
           type: string
           nullable: true
           enum:
-            - Workers Comp
-            - Unemployment
+            - Workers Compensation
+            - Unemployment Insurance
             - SSDI
-            - Retirement Disability
-            - Jones Act
-            - Railroad Retirement
-            - Other Employer
+            - Disability benefits under Gov't retirement plan
+            - Jones Act benefits
+            - Railroad Retirement benefits
+            - Earnings from another employment/self-employment
           example: "SSDI"
 
     ApplicationSearchResults:
