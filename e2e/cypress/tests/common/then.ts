@@ -283,7 +283,7 @@ Then("I should receive a {string} notification", function (
               if (typeof dob !== "string") {
                 throw new Error("FEIN must be a string");
               }
-              dob = dob.replace(/-/g, "/");
+              dob = dob.replace(/-/g, "/").slice(5) + "/****";
               expect(emailContent.name).to.equal(firstName + " " + lastName);
               expect(emailContent.dob).to.equal(dob);
               expect(emailContent.applicationId).to.equal(claimNumber);
