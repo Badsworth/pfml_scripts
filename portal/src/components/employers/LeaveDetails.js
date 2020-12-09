@@ -18,6 +18,7 @@ const LeaveDetails = (props) => {
   const {
     claim: {
       fineos_absence_id,
+      isIntermittent,
       leave_details: { reason },
     },
   } = props;
@@ -45,7 +46,12 @@ const LeaveDetails = (props) => {
         level="3"
         label={t("pages.employersClaimsReview.leaveDetails.leaveDurationLabel")}
       >
-        {formatDateRange(props.claim.leaveStartDate, props.claim.leaveEndDate)}
+        {isIntermittent
+          ? "—"
+          : formatDateRange(
+              props.claim.leaveStartDate,
+              props.claim.leaveEndDate
+            )}
       </ReviewRow>
     </React.Fragment>
   );

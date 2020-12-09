@@ -27,4 +27,16 @@ describe("LeaveDetails", () => {
       "1/1/2021 – 7/1/2021"
     );
   });
+
+  it("renders dash for leave duration if intermittent leave", () => {
+    const claimWithIntermittentLeave = new MockEmployerClaimBuilder()
+      .completed(true)
+      .create();
+    const wrapper = shallow(
+      <LeaveDetails claim={claimWithIntermittentLeave} />
+    );
+    expect(wrapper.find(ReviewRow).last().children().first().text()).toEqual(
+      "—"
+    );
+  });
 });

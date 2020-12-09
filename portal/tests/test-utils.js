@@ -231,11 +231,15 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
   /**
    * @returns {MockEmployerClaimBuilder}
    */
-  completed() {
+  completed(isIntermittent = false) {
     this.employed();
     this.address();
-    this.continuous();
-    this.reducedSchedule();
+    if (isIntermittent) {
+      this.intermittent();
+    } else {
+      this.continuous();
+      this.reducedSchedule();
+    }
     this.previousLeavePregnancyFromOtherEmployer();
     this.employerBenefit();
     this.absenceId();
