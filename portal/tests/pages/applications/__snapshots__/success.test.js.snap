@@ -159,7 +159,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 4`] = `
   <li
     key="5"
   >
-    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
+    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.
   </li>
   <li
     key="6"
@@ -690,7 +690,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 4`] = `
   <li
     key="5"
   >
-    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
+    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.
   </li>
   <li
     key="6"
@@ -859,7 +859,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 4`] = `
   <li
     key="5"
   >
-    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
+    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.
   </li>
   <li
     key="6"
@@ -1055,7 +1055,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 4`] = `
   <li
     key="5"
   >
-    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
+    After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.
   </li>
   <li
     key="6"

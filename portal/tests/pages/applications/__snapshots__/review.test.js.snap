@@ -241,6 +241,9 @@ exports[`Final Review Page when all data is present renders Review page with fin
       aria-valuetext="Loading"
     />
   </div>
+  <Trans
+    i18nKey="pages.claimsReview.employerWarning"
+  />
   <Button
     className="margin-top-3"
     loading={false}

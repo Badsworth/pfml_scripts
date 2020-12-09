@@ -626,17 +626,17 @@ const pages = {
     stepHTMLDescription_bondingAdoptFoster:
       "You need to provide a statement confirming the placement and the date of placement.",
     stepHTMLDescription_bondingAdoptFosterFuture:
-      "After your child arrives in your home, you will need to provide a statement confirming the placement and the date of placement.",
+      "<p>You need to provide a statement confirming the child’s placement and the date of placement.</p><p>Your certification documents will be shared with your employer as part of your application.</p>",
     stepHTMLDescription_bondingNewborn:
       "You need to provide your child's birth certificate or a document from a health care provider that shows the child’s date of birth.",
     stepHTMLDescription_bondingNewbornFuture:
-      "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.",
+      "<p>You need to provide your child's birth certificate or a document from a health care provider that shows the child’s date of birth.</p><p>Your certification documents will be shared with your employer as part of your application.</p>",
     stepHTMLDescription_employerInformation:
       "You will need to know:<ul><li>Your employer’s 9 digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
       "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider complete a <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking family leave to bond with a child, you will need to know:</p><ul><li>The child's date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
     stepHTMLDescription_medical:
-      "You need to provide your completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. ",
+      "<p>You need to provide your completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
     stepHTMLDescription_otherLeave:
       "You will need to know:<ul><li>If you will use any benefits from your employer because you are taking leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any leave you’ve taken since January 1, 2021 for a condition that is covered by Paid Family and Medical Leave.</li></ul>",
     stepHTMLDescription_payment:
@@ -644,7 +644,7 @@ const pages = {
     stepHTMLDescription_reviewAndConfirm:
       "<p>Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish the following three steps and submit.</p><p>If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at $t(shared.contactCenterPhoneNumber).</p>",
     stepHTMLDescription_uploadId:
-      "<p>Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID.</p><p>For other IDs, follow the instructions for acceptable proof of identity on the upload page.</p>",
+      "<p>Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same$t(chars.nbsp)ID.</p><p>For other IDs, follow the instructions for acceptable proof of identity on the upload page.</p>",
     stepHTMLDescription_verifyId:
       "<p>You can use a variety of documents to verify your identity, but it’s easiest if you have a Massachusetts driver’s license or Massachusetts Identification Card.</p><p>You will need to provide:</p><ul><li>Your name as it appears on your ID.</li><li>Your driver’s license number or Mass ID number, if you have one.</li><li>Your Social Security Number or Individual Taxpayer Identification Number.</li></ul>",
     stepListDescription_1:
@@ -1033,6 +1033,8 @@ const pages = {
     employerNotifiedLabel: "Notified employer",
     employerNotifiedValue: "No",
     employerNotifiedValue_true: "Notified employer on {{date}}",
+    employerWarning:
+      "<p>Once you review and submit your application, we will send a copy of your application to your employer. In addition to details about your leave and employment information, your employer will see the last 4 digits of your Social Security Number or ITIN and your mailing address. They will also get a copy of the certification documents.</p>",
     employmentStatusLabel: "Employment status",
     employmentStatusValue_employed: "Currently employed",
     employmentStatusValue_selfEmployed: "Self-employed",
@@ -1233,7 +1235,7 @@ const pages = {
   },
   claimsSuccess: {
     adjudicationProcess:
-      "<ul> <li>Your employer has 10 days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
+      "<ul> <li>Your employer has 10 days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
     adjudicationProcessHeading: "What happens next",
     adjudicationProcess_bondingAdoptFosterFuture:
       "<ul> <li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of placement, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at $t(shared.contactCenterPhoneNumber).</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",

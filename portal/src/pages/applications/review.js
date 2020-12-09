@@ -675,6 +675,7 @@ export const Review = (props) => {
               )}
             </React.Fragment>
           )}
+          <Trans i18nKey="pages.claimsReview.employerWarning" />
         </React.Fragment>
       )}
 
