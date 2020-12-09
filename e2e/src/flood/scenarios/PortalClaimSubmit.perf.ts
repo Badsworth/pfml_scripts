@@ -31,7 +31,7 @@ export const scenario: LSTScenario = "PortalClaimSubmit";
 export const steps = [
   {
     name: "Register and login",
-    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+    test: async (browser: Browser): Promise<void> => {
       await setFeatureFlags(browser);
       const emailVerifier = await getMailVerifier(browser);
       const { username, password } = await emailVerifier.getCredentials();

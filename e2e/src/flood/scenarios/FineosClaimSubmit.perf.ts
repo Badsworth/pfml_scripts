@@ -33,7 +33,7 @@ export const steps: StoredStep[] = [
   {
     name: "Login into fineos",
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
-      await browser.visit(await getFineosBaseUrl());
+      await browser.visit(await getFineosBaseUrl("SAVILINX"));
       await waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
