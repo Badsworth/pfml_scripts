@@ -1,5 +1,5 @@
 import TestMailClient from "./TestMailClient";
-import { notificationRequestData } from "./../../src/types";
+import { notificationRequest } from "./../../src/types";
 
 export default class TestMailNotificationFetcher {
   namespace: string;
@@ -12,9 +12,9 @@ export default class TestMailNotificationFetcher {
   }
 
   async getNotificationContent(
-    notificationRequestData: notificationRequestData
+    notificationRequestData: notificationRequest
   ): Promise<{ [key: string]: string }> {
-    let {
+    const {
       notificationType,
       employeeName,
       recipientEmail,

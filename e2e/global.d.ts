@@ -41,7 +41,7 @@ declare namespace Cypress {
     ): Chainable<SimulationClaim>;
     task(
       event: "getNotification",
-      notificationRequestData: notificationRequestData
+      notificationRequestData: notificationRequest
     ): Chainable<{ [key: string]: string }>;
     task(event: "getAuthVerification", mail: string): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;

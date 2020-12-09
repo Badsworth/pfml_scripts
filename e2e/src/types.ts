@@ -32,7 +32,7 @@ export type LeavePeriods = Pick<
   | "intermittent_leave_periods"
 >;
 
-export type notificationRequestData = {
+export type notificationRequest = {
   notificationType: string;
   employeeName: string;
   recipientEmail: string;

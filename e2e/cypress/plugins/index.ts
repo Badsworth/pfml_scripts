@@ -21,7 +21,7 @@ import {
   Employer,
   EmployeeRecord,
 } from "../../src/simulation/types";
-import { Credentials, notificationRequestData } from "../../src/types";
+import { Credentials, notificationRequest } from "../../src/types";
 import {
   SimulationGenerator,
   generateLeaveDates,
@@ -56,7 +56,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       );
       return client.getVerificationCodeForUser(toAddress);
     },
-    getNotification: (notificationRequestData: notificationRequestData) => {
+    getNotification: (notificationRequestData: notificationRequest) => {
       const client = new TestMailNotificationFetcher(
         config("TESTMAIL_APIKEY"),
         config("TESTMAIL_NAMESPACE")
