@@ -4,6 +4,15 @@
  */
 
 /**
+ * Module level global variable keeping track of custom attributes that should be added to all events within a single page,
+ * including errors, events, and browser interactions.
+ * @type {object.<string, string|number>}
+ */
+const moduleGlobal = {
+  customPageAttributes: {},
+};
+
+/**
  * Configure our monitoring services with environment-specific key/ids
  */
 function initialize() {
@@ -47,6 +56,7 @@ function newrelicReady() {
 function noticeError(error, customAttributes) {
   if (newrelicReady()) {
     newrelic.noticeError(error, {
+      ...moduleGlobal.customPageAttributes,
       ...customAttributes,
       environment: process.env.buildEnv,
     });
@@ -57,14 +67,18 @@ function noticeError(error, customAttributes) {
  * Track Single Page App (SPA) route changes in New Relic and give them more accurate names.
  * @see https://docs.newrelic.com/docs/browser/new-relic-browser/guides/guide-using-browser-spa-apis
  * @see https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/spa-set-current-route-name
- * @param {string} routeName - Route names should represent a routing pattern
+ * @param {string} routeName Route names should represent a routing pattern
+ * @param {object.<string, string|number>} [customPageAttributes] Optional custom attributes to set for the page and for subsequent events on the same page
  *  rather than a specific resource. For example /claims/:id rather than /claims/123
  */
-function startPageView(routeName) {
+function startPageView(routeName, customPageAttributes) {
   if (newrelicReady()) {
     // First end previous interaction if that's still in progress
     newrelic.interaction().end();
+
+    moduleGlobal.customPageAttributes = customPageAttributes || {};
     newrelic.interaction();
+    setPageAttributesOnInteraction();
     newrelic.setCurrentRouteName(routeName);
   }
 }
@@ -78,6 +92,7 @@ function startPageView(routeName) {
 function trackEvent(name, customAttributes) {
   if (newrelicReady()) {
     newrelic.addPageAction(name, {
+      ...moduleGlobal.customPageAttributes,
       ...customAttributes,
       environment: process.env.buildEnv,
     });
@@ -98,7 +113,22 @@ function trackFetchRequest(requestName) {
     newrelic.interaction().end();
 
     const trackedName = requestName.replace("https://", "");
-    newrelic.interaction().setName(`fetch: ${trackedName}`).save();
+    newrelic.interaction().setName(`fetch: ${trackedName}`);
+    setPageAttributesOnInteraction();
+    newrelic.interaction().save();
+  }
+}
+
+/**
+ * @private
+ */
+function setPageAttributesOnInteraction() {
+  if (newrelicReady()) {
+    for (const [name, value] of Object.entries(
+      moduleGlobal.customPageAttributes
+    )) {
+      newrelic.interaction().setAttribute(name, value);
+    }
   }
 }
 

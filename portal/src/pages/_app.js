@@ -10,6 +10,7 @@ import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import dynamic from "next/dynamic";
 import { isFeatureEnabled } from "../services/featureFlags";
+import { snakeCase } from "lodash";
 import tracker from "../services/tracker";
 import useAppLogic from "../hooks/useAppLogic";
 import useFeatureFlagsFromQueryEffect from "../hooks/useFeatureFlagsFromQueryEffect";
@@ -76,8 +77,10 @@ export const App = ({ Component, pageProps }) => {
    * Event handler for when a page route is transitioning
    */
   const handleRouteChangeStart = (url = "") => {
-    const routeName = url.split("?")[0];
-    tracker.startPageView(routeName);
+    const [routeName, queryString] = url.split("?");
+
+    const pageAttributes = getPageAttributesFromQueryString(queryString);
+    tracker.startPageView(routeName, pageAttributes);
 
     appLogic.clearErrors();
     setUI({ ...ui, isLoading: true });
@@ -176,5 +179,23 @@ App.propTypes = {
   // Next.js sets pageProps for us
   pageProps: PropTypes.object,
 };
+
+/**
+ * Given a query string, returns an object containing custom attributes to send to New Relic.
+ * For each query string key the object will contain a key of the form "page_[query_string_key]"
+ * where query_string_key is a snake cased version of the query string key. The value will be
+ * the query string value. We should never put PII in query strings, so we should also be comfortable
+ * sending all of these values to New Relic as custom attributes.
+ * @param {string} [queryString] Optional query string
+ * @returns {object}
+ */
+function getPageAttributesFromQueryString(queryString) {
+  const pageAttributes = {};
+  // note that URLSearchParams accepts null/undefined in its constructor
+  for (const [key, value] of new URLSearchParams(queryString)) {
+    pageAttributes[`query_${snakeCase(key)}`] = value;
+  }
+  return pageAttributes;
+}
 
 export default App;
