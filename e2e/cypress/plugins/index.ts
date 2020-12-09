@@ -14,6 +14,7 @@ import faker from "faker";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import { CypressStepThis } from "../../src/types";
 import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
+import TestMailNotificationFetcher from "./TestMailNotificationFetcher";
 import PortalSubmitter from "../../src/simulation/PortalSubmitter";
 import employerPool from "../../src/simulation/fixtures/employerPool";
 import {
@@ -21,7 +22,7 @@ import {
   Employer,
   EmployeeRecord,
 } from "../../src/simulation/types";
-import { Credentials } from "../../src/types";
+import { Credentials, notificationRequestData } from "../../src/types";
 import {
   SimulationGenerator,
   generateLeaveDates,
@@ -55,6 +56,13 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
         config("TESTMAIL_NAMESPACE")
       );
       return client.getVerificationCodeForUser(toAddress);
+    },
+    getNotification: (notificationRequestData: notificationRequestData) => {
+      const client = new TestMailNotificationFetcher(
+        config("TESTMAIL_APIKEY"),
+        config("TESTMAIL_NAMESPACE")
+      );
+      return client.getNotificationContent(notificationRequestData);
     },
     async generateCredentials(
       isEmployer: boolean

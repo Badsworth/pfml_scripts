@@ -260,6 +260,62 @@ Then("there should be {int} ID document(s) uploaded", function (
     .should("have.length", count);
 });
 
+Then("I should receive a {string} notification", function (
+  notificationType: string
+): void {
+  cy.unstash("firstName").then((firstName) => {
+    cy.unstash("lastName").then((lastName) => {
+      cy.unstash("dob").then((dob) => {
+        cy.unstash("claimNumber").then((claimNumber) => {
+          if (
+            !(typeof firstName === "string" && typeof lastName === "string")
+          ) {
+            throw new Error("First and last name must be of type string");
+          }
+          const notificationRequestData = {
+            notificationType: notificationType,
+            recipientEmail: "gqzap.jkyu2emq@inbox.testmail.app",
+            employeeName: firstName + " " + lastName,
+          };
+          cy.wait(180000);
+          cy.task("getNotification", notificationRequestData).then(
+            (emailContent) => {
+              if (typeof dob !== "string") {
+                throw new Error("FEIN must be a string");
+              }
+              dob = dob.replace(/-/g, "/");
+              expect(emailContent.name).to.equal(firstName + " " + lastName);
+              expect(emailContent.dob).to.equal(dob);
+              expect(emailContent.applicationId).to.equal(claimNumber);
+            }
+          );
+        });
+      });
+    });
+  });
+});
+
+Then(
+  "I should be able to retrive a notification from testmail",
+  function (): void {
+    const firstName = "Cristian";
+    const lastName = "Wyman";
+    if (!(typeof firstName === "string" && typeof lastName === "string")) {
+      throw new Error("First and last name must be of type string");
+    }
+    const notificationRequestData = {
+      notificationType: "application started",
+      recipientEmail: "gqzap.jkyu2emq@inbox.testmail.app",
+      employeeName: firstName + " " + lastName,
+    };
+    cy.task("getNotification", notificationRequestData).then((emailContent) => {
+      expect(emailContent.name).to.equal(firstName + " " + lastName);
+      expect(emailContent.dob).to.equal("1971/02/23");
+      expect(emailContent.applicationId).to.equal("NTN-3863-ABS-01");
+    });
+  }
+);
+
 Then("I add a note", function (): void {
   fineos.onTab("Notes");
   cy.contains("span", "Create New").click();

@@ -31,3 +31,9 @@ export type LeavePeriods = Pick<
   | "continuous_leave_periods"
   | "intermittent_leave_periods"
 >;
+
+export type notificationRequestData = {
+  notificationType: string;
+  employeeName: string;
+  recipientEmail: string;
+};

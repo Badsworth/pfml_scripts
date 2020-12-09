@@ -35,7 +35,14 @@ declare namespace Cypress {
     unstash(key: string): Chainable<unknown>;
     // Declare our custom tasks.
     stashLog(key: string, value: string | null | undefined): null;
-    task(event: "generateClaim", {claimType: string, employeeType: string}): Chainable<SimulationClaim>
+    task(
+      event: "generateClaim",
+      { claimType: string, employeeType: string }
+    ): Chainable<SimulationClaim>;
+    task(
+      event: "getNotification",
+      notificationRequestData: notificationRequestData
+    ): Chainable<{ [key: string]: string }>;
     task(event: "getAuthVerification", mail: string): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;
     task(
@@ -60,4 +67,3 @@ declare module "@cypress/webpack-preprocessor" {
   ) => CypressWebpackPreProcessor.FilePreprocessor;
   export = CypressWebpackPreProcessor;
 }
-

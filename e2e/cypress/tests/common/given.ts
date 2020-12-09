@@ -54,6 +54,7 @@ Given("Part One of the claim has been submitted", function (
   }
   const { application } = this;
   portal.submitClaimPartOne(application);
+  cy.stashLog("employerFEIN", application.employer_fein);
 });
 
 Given("I complete claim Denial for {string}", function (reason: string): void {

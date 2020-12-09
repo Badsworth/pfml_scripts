@@ -114,6 +114,10 @@ export function verifyIdentity(
   if (leaveType === "normal") {
     cy.labelled("First name").type(application.first_name as string);
     cy.labelled("Last name").type(application.last_name as string);
+    cy.stashLog("firstName", application.first_name);
+    cy.stashLog("lastName", application.last_name);
+    cy.stashLog("employerFEIN", application.employer_fein);
+    cy.stashLog("dob", application.date_of_birth);
     cy.contains("button", "Save and continue").click();
   }
 
@@ -461,10 +465,8 @@ export function confirmInfo(): void {
       typeof xhr.response.body === "string"
         ? JSON.parse(xhr.response.body)
         : xhr.response.body;
-    cy.stash("claimNumber", body.data.fineos_absence_id);
-    cy.log("submitted", body.data.fineos_absence_id);
-    cy.stash("applicationId", body.data.application_id);
-    cy.log("submitted", body.data.application_id);
+    cy.stashLog("claimNumber", body.data.fineos_absence_id);
+    cy.stashLog("applicationId", body.data.application_id);
   });
 }
 
