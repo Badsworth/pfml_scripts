@@ -16,7 +16,6 @@ import { CypressStepThis } from "../../src/types";
 import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
 import TestMailNotificationFetcher from "./TestMailNotificationFetcher";
 import PortalSubmitter from "../../src/simulation/PortalSubmitter";
-import employerPool from "../../src/simulation/fixtures/employerPool";
 import {
   SimulationClaim,
   Employer,
@@ -112,13 +111,13 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
 
       // Get the employee record here (read JSON, map to identifier).
       const employee = await getEmployee(employeeType);
-      // Get the employer record here (read JSON, map to identifier).
-      const employer = await getEmployer(employee.employer_fein);
 
       const opts = {
         documentDirectory: "/tmp",
         employeeFactory: () => employee,
-        employerFactory: () => employer,
+        // Dummy employer factory. Doesn't return full employer objects, just
+        // the FEIN. In this case, we know we don't need other employer props.
+        employerFactory: () => ({ fein: employee.employer_fein } as Employer),
         shortClaim: true,
       };
 
@@ -177,17 +176,4 @@ async function getEmployee(employeeType: string): Promise<EmployeeRecord> {
     default:
       throw new Error(`Unknown employee type: ${employeeType}`);
   }
-}
-
-/**
- * Retrieves employer data for a specific employer.
- * @param fein
- */
-async function getEmployer(fein: string): Promise<Employer> {
-  const employers: Employer[] = employerPool;
-  const employer = employers.find((e) => e.fein === fein);
-  if (typeof employer === "undefined") {
-    throw new Error("Employer Not Found!");
-  }
-  return employer;
 }
