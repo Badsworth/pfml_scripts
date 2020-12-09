@@ -4,7 +4,7 @@
 # This is only needed if the API has changed. The output files should be committed to version control.
 #
 
-WSCOMPOSER_URL := https://idt-claims-webapp.masspfml.fineos.com/wscomposer/webservice?userid=CONTENT
+WSCOMPOSER_URL := https://idt-api.masspfml.fineos.com/integration-services/wscomposer/webservice?userid=CONTENT
 CURL := curl --fail
 TIDY := tidy -xml -indent -wrap 120
 

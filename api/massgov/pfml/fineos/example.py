@@ -34,7 +34,7 @@ def main():
         integration_services_api_url="https://dt2-api.masspfml.fineos.com/integration-services/",
         customer_api_url="https://dt2-api.masspfml.fineos.com/customerapi/",
         group_client_api_url="https://dt2-api.masspfml.fineos.com/groupclientapi/",
-        wscomposer_url="https://dt2-claims-webapp.masspfml.fineos.com/wscomposer/",
+        wscomposer_url="https://dt2-api.masspfml.fineos.com/integration-services/wscomposer/",
         wscomposer_user_id="CONTENT",
         oauth2_url="https://dt2-api.masspfml.fineos.com/oauth2/token",
         client_id="1ral5e957i0l9shul52bhk0037",
