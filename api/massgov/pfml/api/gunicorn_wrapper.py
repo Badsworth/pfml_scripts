@@ -38,6 +38,9 @@ class GunicornAppWrapper(gunicorn.app.base.BaseApplication):
             # Use the gthread class to enable multi-threading.
             "worker-class": "gthread",
             "log-level": "info",
+            # Set keepalive timeout to 355 seconds, a few seconds higher than the 350 seconds set by NLB.
+            # The NLB timeout is not adjustable, so adjust the target (API) timeout instead.
+            "keep-alive": 355,
         }
 
         self.application = app
