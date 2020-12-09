@@ -4,12 +4,13 @@
 locals {
   api_gateway_arn        = "arn:aws:apigateway:us-east-1::/restapis/${aws_api_gateway_rest_api.pfml.id}/stages/${var.environment_name}"
   api_gateway_deployment = "aws_api_gateway_deployment.${var.environment_name}"
+  acl_name               = "mass-pfml-${var.environment_name}-regional-rate-based-acl"
 }
 
 # Regional rate-based rule. This can be attached to the API Gateway
 # Default allow unless IP is sending under 1,000 requests per 5 minutes.
 resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
-  name  = "regional-rate-based-acl"
+  name  = local.acl_name
   scope = "REGIONAL"
 
   # No rate limiting in performance environment for now (4 Dec 2020)
@@ -24,7 +25,7 @@ resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
   }
 
   rule {
-    name     = "rate_based_acl"
+    name     = "mass-pfml-${var.environment_name}-rate-based-acl"
     priority = 0
 
     action {
@@ -40,14 +41,14 @@ resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "rate-limited"
+      metric_name                = "mass-pfml-${var.environment_name}-rate-limited"
       sampled_requests_enabled   = true
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = "rate-monitored"
+    metric_name                = "mass-pfml-${var.environment_name}-rate-monitored"
     sampled_requests_enabled   = true
   }
 }
