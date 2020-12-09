@@ -1,6 +1,6 @@
 import mimetypes
 import uuid
-from datetime import date
+from datetime import date, datetime
 from typing import Dict, List, Optional
 
 import massgov.pfml.db
@@ -9,6 +9,7 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.claims.common import (
     Address,
     EmployerBenefit,
+    IntermittentLeavePeriod,
     LeaveDetails,
     PreviousLeave,
     StandardLeavePeriod,
@@ -39,32 +40,56 @@ logger = logging.get_logger(__name__)
 
 
 def get_leave_details(absence_periods: Dict) -> LeaveDetails:
-    # TODO Currently only parsing absence periods for a single leave,
-    # but will need to support mixed schedule: https://lwd.atlassian.net/browse/EMPLOYER-449
     """ Extracts absence data based on a PeriodDecisions dict and returns a LeaveDetails """
     leave_details = {}
     leave_details["reason"] = absence_periods["decisions"][0]["period"]["leaveRequest"][
         "reasonName"
     ]
+    reduced_start_date: Optional[datetime] = None
+    reduced_end_date: Optional[datetime] = None
+    continuous_start_date: Optional[datetime] = None
+    continuous_end_date: Optional[datetime] = None
+    intermittent_start_date: Optional[datetime] = None
+    intermittent_end_date: Optional[datetime] = None
 
-    if absence_periods["decisions"][0]["period"]["type"] == "Time off period":
+    for decision in absence_periods["decisions"]:
+        start_date = decision["period"]["startDate"]
+        end_date = decision["period"]["endDate"]
+        if decision["period"]["type"] == "Time off period":
+            if continuous_start_date is None or start_date < continuous_start_date:
+                continuous_start_date = start_date
+
+            if continuous_end_date is None or end_date > continuous_end_date:
+                continuous_end_date = end_date
+
+        elif decision["period"]["type"] == "Reduced Schedule":
+            if reduced_start_date is None or start_date < reduced_start_date:
+                reduced_start_date = start_date
+
+            if reduced_end_date is None or end_date > reduced_end_date:
+                reduced_end_date = end_date
+
+        elif decision["period"]["type"] == "Episodic":
+            # FINEOS has yet to implement data for Episodic (intermittent) leaves
+            # TODO when this info is available https://lwd.atlassian.net/browse/EMPLOYER-448
+            # Send a static fake start and end date for recognition from the front end
+            intermittent_start_date = datetime(2021, 1, 1, 0, 0)
+            intermittent_end_date = datetime(2021, 2, 1, 0, 0)
+
+    if continuous_start_date is not None and continuous_end_date is not None:
         leave_details["continuous_leave_periods"] = [
-            StandardLeavePeriod(
-                start_date=absence_periods["startDate"], end_date=absence_periods["endDate"]
-            )
+            StandardLeavePeriod(start_date=continuous_start_date, end_date=continuous_end_date)
         ]
-    # FINEOS has yet to implement data for Episodic (intermittent) leaves
-    # TODO when this info is available https://lwd.atlassian.net/browse/EMPLOYER-448
-    #
-    # elif(absence_periods["decisions"][0]["period"]["type"] == "Episodic"):
-    #     leave_details["intermittent_leave_periods"] = IntermittentLeavePeriod(
-    #         start_date=absence_periods["startDate"],
-    #         end_date=absence_periods["endDate"]
-    #     )
-    elif absence_periods["decisions"][0]["period"]["type"] == "Reduced Schedule":
+
+    if reduced_start_date is not None and reduced_end_date is not None:
         leave_details["reduced_schedule_leave_periods"] = [
-            StandardLeavePeriod(
-                start_date=absence_periods["startDate"], end_date=absence_periods["endDate"]
+            StandardLeavePeriod(start_date=reduced_start_date, end_date=reduced_end_date)
+        ]
+
+    if intermittent_start_date is not None and intermittent_end_date is not None:
+        leave_details["intermittent_leave_periods"] = [
+            IntermittentLeavePeriod(
+                start_date=intermittent_start_date, end_date=intermittent_end_date
             )
         ]
 
