@@ -261,7 +261,7 @@ def create_eform(user_id: str, absence_id: str, eform: EFormBody) -> None:
     fineos.create_eform(user_id, absence_id, eform)
 
 
-def complete_claim_review(user_id: str, absence_id: str) -> None:
+def awaiting_leave_info(user_id: str, absence_id: str) -> bool:
     fineos = massgov.pfml.fineos.create_client()
 
     # FINEOS throws an error if we attempt to update outstanding information that is not needed.
@@ -273,10 +273,17 @@ def complete_claim_review(user_id: str, absence_id: str) -> None:
             not information.infoReceived
             and information.informationType == LEAVE_ADMIN_INFO_REQUEST_TYPE
         ):
-            received_information = massgov.pfml.fineos.models.group_client_api.OutstandingInformationData(
-                informationType=LEAVE_ADMIN_INFO_REQUEST_TYPE
-            )
-            fineos.update_outstanding_information_as_received(
-                user_id, absence_id, received_information
-            )
-            break
+            return True
+
+    return False
+
+
+def complete_claim_review(user_id: str, absence_id: str) -> None:
+    fineos = massgov.pfml.fineos.create_client()
+
+    # By time this function is called, we should
+    # have already checked that there is outstanding information.
+    received_information = massgov.pfml.fineos.models.group_client_api.OutstandingInformationData(
+        informationType=LEAVE_ADMIN_INFO_REQUEST_TYPE
+    )
+    fineos.update_outstanding_information_as_received(user_id, absence_id, received_information)

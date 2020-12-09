@@ -1,6 +1,7 @@
 from freezegun import freeze_time
 
 import massgov.pfml.fineos.mock_client
+import tests.api
 from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import ClaimFactory, EmployerFactory
@@ -273,7 +274,7 @@ def test_non_employees_cannot_access_employer_update_claim_review(client, auth_t
     assert response.status_code == 403
 
 
-def test_employees_receive_200_from_employer_update_claim_review(
+def test_employers_receive_200_from_employer_update_claim_review(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
@@ -381,6 +382,57 @@ def test_employer_confirmation_sent_with_employer_update_claim_review(
     ]
 
 
+def test_error_received_when_no_outstanding_requirements_with_employer_update_claim_review(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    ClaimFactory.create(
+        employer_id=employer.employer_id, fineos_absence_id="NTN-CASE-WITHOUT-OUTSTANDING-INFO"
+    )
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    update_request_body = {
+        "comment": "string",
+        "employer_benefits": [
+            {
+                "benefit_amount_dollars": 0,
+                "benefit_amount_frequency": "Per Day",
+                "benefit_end_date": "1970-01-01",
+                "benefit_start_date": "1970-01-01",
+                "benefit_type": "Accrued paid leave",
+            }
+        ],
+        "employer_decision": "Approve",
+        "fraud": "Yes",
+        "has_amendments": False,
+        "hours_worked_per_week": 0,
+        "previous_leaves": [
+            {
+                "leave_end_date": "1970-01-01",
+                "leave_start_date": "1970-01-01",
+                "leave_type": "Pregnancy / Maternity",
+            }
+        ],
+    }
+
+    response = client.patch(
+        "/v1/employers/claims/NTN-CASE-WITHOUT-OUTSTANDING-INFO/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=update_request_body,
+    )
+
+    assert response.status_code == 400
+    tests.api.validate_error_response(
+        response, 400, message="No outstanding information request for claim"
+    )
+
+
 def test_employer_confirmation_is_not_sent(
     client, employer_user, employer_auth_token, test_db_session
 ):
@@ -454,7 +506,9 @@ def test_employer_confirmation_is_not_sent(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture == []
+    assert capture == [
+        ("get_outstanding_information", "fake-fineos-web-id", {"case_id": "NTN-100-ABS-01"},),
+    ]
 
     # confirmation is not sent if the claim is not approved
     update_request_body["has_amendments"] = False
@@ -470,4 +524,6 @@ def test_employer_confirmation_is_not_sent(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture == []
+    assert capture == [
+        ("get_outstanding_information", "fake-fineos-web-id", {"case_id": "NTN-100-ABS-01"},),
+    ]
