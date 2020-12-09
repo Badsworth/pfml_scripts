@@ -60,7 +60,7 @@ class ApplicationRequestBody(PydanticBaseModel):
 
         error_list = []
         today = date.today()
-        if date_of_birth.year < today.year - 100 or today < date_of_birth:
+        if date_of_birth.year < today.year - 100:
             error_list.append(
                 ValidationErrorDetail(
                     message="Date of birth must be within the past 100 years",

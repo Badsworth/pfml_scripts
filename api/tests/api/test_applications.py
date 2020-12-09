@@ -2002,6 +2002,35 @@ def test_application_patch_date_of_birth_before_1900(client, user, auth_token):
     assert error_type == "invalid_year_range"
 
 
+@freeze_time("2020-01-01")
+def test_application_patch_date_of_birth_in_future(client, user, auth_token):
+    application = ApplicationFactory.create(user=user)
+    date_of_birth = "2022-01-01"
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"date_of_birth": date_of_birth},
+    )
+
+    assert response.status_code == 400
+
+    response_body = response.get_json()
+    errors = response_body.get("errors")
+    assert len(errors) == 1
+
+    error = errors[0]
+    field = error.get("field")
+    message = error.get("message")
+    rule = error.get("rule")
+    error_type = error.get("type")
+
+    assert field == "date_of_birth"
+    assert message == "The person taking leave must be at least 14 years old"
+    assert rule == "older_than_14"
+    assert error_type == "invalid_age"
+
+
 def test_application_patch_date_of_birth_invalid(client, user, auth_token):
     application = ApplicationFactory.create(user=user)
 
