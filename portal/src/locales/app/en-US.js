@@ -93,6 +93,8 @@ const errors = {
     employment_status: {
       required: "Enter your employment status.",
     },
+    fineos_case_creation_issues:
+      "We’re having trouble finding you in our database. Fill out the <mass-gov-form-link>form on Mass.gov</mass-gov-form-link> and we'll set up your application through our Contact Center.",
     first_name: {
       required: "Enter a first name.",
     },

@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from "react";
+import { groupBy, map } from "lodash";
 import Alert from "./Alert";
 import PropTypes from "prop-types";
-import { groupBy } from "lodash";
+import { Trans } from "react-i18next";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -31,8 +32,21 @@ function ErrorsSummary(props) {
     return null;
   }
 
+  // TODO (CP-1532): Remove once links in error messages are fully supported
+  const getUniqueMessageKey = (error) => {
+    if (error.message.type === Trans) {
+      return error.message.props.i18nKey;
+    }
+
+    return error.message;
+  };
+
   // Condense the list to only unique messages, combining any that are redundant
-  const visibleErrorMessages = Object.keys(groupBy(errors.items, "message"));
+  // TODO (CP-1532): Simplify once links in error messages are fully supported
+  const visibleErrorMessages = map(
+    groupBy(errors.items, getUniqueMessageKey),
+    (errors) => errors[0].message
+  );
 
   const errorMessages = () => {
     if (errors.items.length === 1) return <p>{errors.items[0].message}</p>;
@@ -40,7 +54,9 @@ function ErrorsSummary(props) {
     return (
       <ul className="usa-list">
         {visibleErrorMessages.map((message) => (
-          <li key={message}>{message}</li>
+          <li key={message.type ? message.props.i18nKey : message}>
+            {message}
+          </li>
         ))}
       </ul>
     );

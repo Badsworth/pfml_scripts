@@ -1,6 +1,8 @@
 import { DocumentsRequestError, ValidationError } from "../errors";
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
+import React from "react";
+import { Trans } from "react-i18next";
 import tracker from "../services/tracker";
 import useCollectionState from "./useCollectionState";
 import { useTranslation } from "../locales/i18n";
@@ -56,7 +58,7 @@ const useAppErrorsLogic = () => {
    * @param {string} issue.rule
    * @param {string} issue.type
    * @param {string} i18nPrefix - prefix used in the i18n key
-   * @returns {string} Internationalized error message
+   * @returns {string | Trans} Internationalized error message or Trans component
    * @example getMessageFromApiIssue(issue, "claims");
    */
   const getMessageFromApiIssue = (
@@ -76,6 +78,20 @@ const useAppErrorsLogic = () => {
       issueMessageKey = `errors.${i18nPrefix}.rules.${rule}`;
     } else if (type) {
       issueMessageKey = `errors.${i18nPrefix}.${type}`;
+    }
+
+    // TODO (CP-1532): Remove once links in error messages are fully supported
+    if (type === "fineos_case_creation_issues") {
+      return (
+        <Trans
+          i18nKey={issueMessageKey}
+          components={{
+            "mass-gov-form-link": (
+              <a href="https://www.mass.gov/forms/apply-for-paid-leave-if-you-received-an-error" />
+            ),
+          }}
+        />
+      );
     }
 
     // 1. Display a field or rule-level message if present:

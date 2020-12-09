@@ -3,6 +3,7 @@ import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import ErrorsSummary from "../../src/components/ErrorsSummary";
 import React from "react";
+import { Trans } from "react-i18next";
 import { act } from "react-dom/test-utils";
 
 function render(customProps = {}, mountComponent = false) {
@@ -59,6 +60,25 @@ describe("ErrorsSummary", () => {
         </Alert>
       `);
     });
+
+    it("renders a Trans component", () => {
+      const errors = new AppErrorInfoCollection([
+        new AppErrorInfo({ message: <Trans i18nKey="errors.caughtError" /> }),
+      ]);
+      const { wrapper } = render({ errors });
+
+      expect(wrapper.find("p")).toMatchInlineSnapshot(`
+        <p>
+          <Trans
+            i18nKey="errors.caughtError"
+          />
+        </p>
+      `);
+
+      expect(wrapper.find("Trans").dive()).toMatchInlineSnapshot(
+        `"Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365."`
+      );
+    });
   });
 
   describe("when more than one error exists", () => {
@@ -103,6 +123,45 @@ describe("ErrorsSummary", () => {
       );
       expect(wrapper.find(".usa-list li").last().text()).toBe(
         errors.items[2].message
+      );
+    });
+
+    it("renders Trans components", () => {
+      const errors = new AppErrorInfoCollection([
+        new AppErrorInfo({ message: <Trans i18nKey="errors.caughtError" /> }),
+        new AppErrorInfo({
+          message: <Trans i18nKey="errors.caughtError_NetworkError" />,
+        }),
+      ]);
+
+      const { wrapper } = render({ errors });
+
+      expect(wrapper.find("ul")).toMatchInlineSnapshot(`
+        <ul
+          className="usa-list"
+        >
+          <li
+            key="errors.caughtError"
+          >
+            <Trans
+              i18nKey="errors.caughtError"
+            />
+          </li>
+          <li
+            key="errors.caughtError_NetworkError"
+          >
+            <Trans
+              i18nKey="errors.caughtError_NetworkError"
+            />
+          </li>
+        </ul>
+      `);
+
+      expect(wrapper.find("Trans").first().dive()).toMatchInlineSnapshot(
+        `"Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365."`
+      );
+      expect(wrapper.find("Trans").last().dive()).toMatchInlineSnapshot(
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
       );
     });
   });

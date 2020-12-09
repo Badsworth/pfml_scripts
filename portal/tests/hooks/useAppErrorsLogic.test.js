@@ -317,6 +317,32 @@ describe("useAppErrorsLogic", () => {
         expect(console.error).toHaveBeenCalledTimes(2);
       });
     });
+
+    it("returns Trans component when error type is fineos_case_creation_issues", () => {
+      const issues = [
+        {
+          message: "register_employee did not find a match",
+          type: "fineos_case_creation_issues",
+        },
+      ];
+
+      act(() => {
+        appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+      });
+
+      expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(`
+        <Trans
+          components={
+            Object {
+              "mass-gov-form-link": <a
+                href="https://www.mass.gov/forms/apply-for-paid-leave-if-you-received-an-error"
+              />,
+            }
+          }
+          i18nKey="errors.claims.fineos_case_creation_issues"
+        />
+      `);
+    });
   });
 
   describe("clearErrors", () => {
