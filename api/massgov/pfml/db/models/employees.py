@@ -176,6 +176,16 @@ class LkReferenceFileType(Base):
         self.reference_file_type_description = reference_file_type_description
 
 
+class LkTitle(Base):
+    __tablename__ = "lk_title"
+    title_id = Column(Integer, primary_key=True, autoincrement=True)
+    title_description = Column(Text)
+
+    def __init__(self, title_id, title_description):
+        self.title_id = title_id
+        self.title_description = title_description
+
+
 class AuthorizedRepresentative(Base):
     __tablename__ = "authorized_representative"
     authorized_representative_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -213,6 +223,9 @@ class Employer(Base):
     )
     addresses: "Query[EmployerAddress]" = dynamic_loader(
         "EmployerAddress", back_populates="employer"
+    )
+    employer_occupations: "Query[EmployeeOccupation]" = dynamic_loader(
+        "EmployeeOccupation", back_populates="employer"
     )
 
 
@@ -274,14 +287,17 @@ class Employee(Base):
     tax_identifier_id = Column(
         UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"), index=True
     )
+    title_id = Column(Integer, ForeignKey("lk_title.title_id"))
     first_name = Column(Text, nullable=False)
     middle_name = Column(Text)
     last_name = Column(Text, nullable=False)
     other_name = Column(Text)
     email_address = Column(Text)
-    phone_number = Column(Text)
+    phone_number = Column(Text)  # Formatted in E.164
+    cell_phone_number = Column(Text)  # Formatted in E.164
     preferred_comm_method_type = Column(Text)
     date_of_birth = Column(Date)
+    date_of_death = Column(Date)
     race_id = Column(Integer, ForeignKey("lk_race.race_id"))
     marital_status_id = Column(Integer, ForeignKey("lk_marital_status.marital_status_id"))
     gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
@@ -291,9 +307,15 @@ class Employee(Base):
     mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), index=True)
     ctr_vendor_customer_code = Column(Text)
 
+    title = relationship(LkTitle)
     race = relationship(LkRace)
     marital_status = relationship(LkMaritalStatus)
     gender = relationship(LkGender)
+    # Note: We should move occupation to new EmployeeOccupation model
+    # if this field relates to the function employee performs in a
+    # specific employer. If it is a description of their profession
+    # it should stay here.
+    # Evaluate impact of change if it is appropriate to move.
     occupation = relationship(LkOccupation)
     education_level = relationship(LkEducationLevel)
     latest_import_log = relationship("ImportLog")
@@ -314,6 +336,9 @@ class Employee(Base):
     )
     addresses: "Query[EmployeeAddress]" = dynamic_loader(
         "EmployeeAddress", back_populates="employee"
+    )
+    employee_occupations: "Query[EmployeeOccupation]" = dynamic_loader(
+        "EmployeeOccupation", back_populates="employee"
     )
 
 
@@ -496,6 +521,30 @@ class WagesAndContributions(Base):
 
     employee = relationship("Employee", back_populates="wages_and_contributions")
     employer = relationship("Employer", back_populates="wages_and_contributions")
+
+
+class EmployeeOccupation(Base):
+    __tablename__ = "employee_occupation"
+    employee_occupation_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    employee_id = Column(
+        UUID(as_uuid=True), ForeignKey("employee.employee_id"), nullable=False, index=True
+    )
+    employer_id = Column(
+        UUID(as_uuid=True), ForeignKey("employer.employer_id"), nullable=False, index=True
+    )
+    job_title = Column(Text)
+    date_of_hire = Column(Date)
+    date_job_ended = Column(Date)
+    employment_status = Column(Text)
+    org_unit_name = Column(Text)
+    hours_worked_per_week = Column(Integer)
+    days_worked_per_week = Column(Integer)
+    manager_id = Column(Text)
+    worksite_id = Column(Text)
+    occupation_qualifier = Column(Text)
+
+    employee = relationship("Employee", back_populates="employee_occupations")
+    employer = relationship("Employer", back_populates="employer_occupations")
 
 
 class ImportLog(Base):
@@ -997,6 +1046,20 @@ class ReferenceFileType(LookupTable):
     VENDOR_CLAIM_EXTRACT = LkReferenceFileType(4, "Vendor claim extract")
 
 
+class Title(LookupTable):
+    model = LkTitle
+    column_names = ("title_id", "title_description")
+
+    UNKNOWN = LkTitle(1, "Unknown")
+    MR = LkTitle(2, "Mr")
+    MRS = LkTitle(3, "Mrs")
+    MISS = LkTitle(4, "Miss")
+    MS = LkTitle(5, "Ms")
+    DR = LkTitle(6, "Dr")
+    MADAM = LkTitle(7, "Madam")
+    SIR = LkTitle(8, "Sir")
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     AddressType.sync_to_database(db_session)
@@ -1010,4 +1073,5 @@ def sync_lookup_tables(db_session):
     Role.sync_to_database(db_session)
     PaymentMethod.sync_to_database(db_session)
     BankAccountType.sync_to_database(db_session)
+    Title.sync_to_database(db_session)
     db_session.commit()
