@@ -161,7 +161,7 @@ data "aws_iam_policy_document" "task_bulk_import_s3_policy_doc" {
 
 resource "aws_iam_policy" "task_bulk_import_s3_policy" {
   name        = "${local.app_name}-${var.environment_name}-ecs-tasks-bulk-import-task-s3-policy"
-  description = "Policy for accessing S3 files for ECS Ad-Hoc Verification Tasks"
+  description = "Policy for accessing S3 files for Bulk Import Tasks"
   policy      = data.aws_iam_policy_document.task_bulk_import_s3_policy_doc.json
 }
 
@@ -197,6 +197,41 @@ resource "aws_iam_role_policy_attachment" "task_import_cognito_policy_attachment
   policy_arn = aws_iam_policy.task_import_cognito_policy.arn
 }
 
+
+# ------------------------------------------------------------------------------------------------------
+# Execute SQL Export Task Stuff
+# ------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "task_execute_sql_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-execute-sql-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "task_sql_export_s3_policy_doc" {
+  # Allow Execute SQL task access to WRITE S3 files
+  statement {
+    actions = [
+      "s3:PutObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export/*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "task_execute_sql_s3_policy" {
+  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-execute-sql-s3-policy"
+  description = "Policy for accessing S3 files Execute SQL Tasks"
+  policy      = data.aws_iam_policy_document.task_sql_export_s3_policy_doc.json
+}
+
+resource "aws_iam_role_policy_attachment" "task_execute_sql_s3_attachment" {
+  role       = aws_iam_role.task_execute_sql_task_role.name
+  policy_arn = aws_iam_policy.task_execute_sql_s3_policy.arn
+}
 
 # ------------------------------------------------------------------------------------------------------
 # DOR Import task stuff

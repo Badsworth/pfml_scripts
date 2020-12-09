@@ -57,6 +57,26 @@ resource "aws_s3_bucket" "bulk_user_import" {
   })
 }
 
+resource "aws_s3_bucket" "execute_sql_export" {
+  for_each = toset(local.environments)
+  bucket   = "massgov-pfml-${each.key}-execute-sql-export"
+  acl      = "private"
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[each.key]
+    Name        = "massgov-pfml-${each.key}-execute-sql-export"
+    public      = "no"
+  })
+}
+
 resource "aws_s3_bucket_public_access_block" "verification_codes_block_public_access" {
   for_each = toset(local.environments)
   bucket   = aws_s3_bucket.ad_hoc_verification[each.key].id
@@ -70,6 +90,16 @@ resource "aws_s3_bucket_public_access_block" "verification_codes_block_public_ac
 resource "aws_s3_bucket_public_access_block" "user_import_block_public_access" {
   for_each = toset(local.environments)
   bucket   = aws_s3_bucket.bulk_user_import[each.key].id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_public_access_block" "sql_export_block_public_access" {
+  for_each = toset(local.environments)
+  bucket   = aws_s3_bucket.execute_sql_export[each.key].id
 
   block_public_acls       = true
   block_public_policy     = true
