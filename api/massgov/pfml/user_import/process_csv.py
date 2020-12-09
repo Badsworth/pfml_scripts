@@ -62,27 +62,42 @@ def clean_fein(fein: str) -> str:
     return fein.replace("-", "").zfill(9)
 
 
+def mask_fein(fein: str) -> str:
+    # Log only last 4 of FEIN
+    return f"**-***{fein[5:]}"
+
+
 def process_by_email(
     email: str,
     input_data: List[dict],
     db_session: db.Session,
     cognito_pool_id: str,
+    filename: Optional[str] = "",
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
     fineos_client: Optional[fineos.AbstractFINEOSClient] = None,
 ) -> int:
     processed = 0
     for employer_to_register in input_data:
         if employer_to_register.get("fein"):
-            create_or_update_user_record(
+            fein = clean_fein(employer_to_register["fein"])
+            registered = create_or_update_user_record(
                 db_session=db_session,
-                fein=clean_fein(employer_to_register["fein"]),
+                fein=fein,
                 email=email,
                 cognito_pool_id=cognito_pool_id,
                 verification_code=employer_to_register.get("verification_code"),
                 cognito_client=cognito_client,
                 fineos_client=fineos_client,
             )
-            processed += 1
+            if registered:
+                processed += 1
+            else:
+                logger.error(
+                    "Unable to complete registration for %s for employer %s in filename %s",
+                    email,
+                    mask_fein(fein),
+                    filename,
+                )
     return processed
 
 
@@ -112,6 +127,7 @@ def process_files(
                     input_data=employers,
                     db_session=db_session,
                     cognito_pool_id=cognito_pool_id,
+                    filename=input_file,
                     cognito_client=cognito_client,
                     fineos_client=fineos_client,
                 )

@@ -27,14 +27,14 @@ def create_or_update_user_record(
     consume_use: Optional[bool] = False,
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
     fineos_client: Optional[fineos.AbstractFINEOSClient] = None,
-) -> None:
+) -> bool:
     if not cognito_client:
         cognito_client = boto3.client("cognito-idp", region_name="us-east-1")
 
     requested_employer = lookup_employer(db_session=db_session, employer_fein=fein)
     if not requested_employer:
         logger.warning("No employer found %s", fein, extra={"FEIN": fein})
-        return
+        return False
 
     if verification_code:
         verify(
@@ -73,14 +73,23 @@ def create_or_update_user_record(
             cognito_user_pool_id=cognito_pool_id,
             cognito_client=cognito_client,
         )
-    register_leave_admin_with_fineos(
-        # TODO: Set a real admin full name - https://lwd.atlassian.net/browse/EMPLOYER-540
-        admin_full_name="Leave Administrator",
-        admin_email=email,
-        admin_area_code=None,
-        admin_phone_number=None,
-        employer=requested_employer,
-        user=user,
-        db_session=db_session,
-        fineos_client=fineos_client,
-    )
+    retry_count = 0
+    while retry_count < 3:
+        try:
+            register_leave_admin_with_fineos(
+                # TODO: Set a real admin full name - https://lwd.atlassian.net/browse/EMPLOYER-540
+                admin_full_name="Leave Administrator",
+                admin_email=email,
+                admin_area_code=None,
+                admin_phone_number=None,
+                employer=requested_employer,
+                user=user,
+                db_session=db_session,
+                fineos_client=fineos_client,
+            )
+        except ValueError as e:
+            logger.warning("Received an error processing FINEOS registration ", exc_info=e)
+            retry_count += 1
+        else:
+            return True
+    return False

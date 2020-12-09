@@ -37,6 +37,18 @@ class MockCognito:
 
 
 @pytest.fixture
+def mock_bogus_fineos():
+    def mock_create_or_update_leave_admin(
+        leave_admin_create_or_update: fineos.models.CreateOrUpdateLeaveAdmin,
+    ) -> None:
+        raise fineos.FINEOSClientError("OHNO")
+
+    mock_fineos = fineos.create_client()
+    mock_fineos.create_or_update_leave_admin = mock_create_or_update_leave_admin
+    return mock_fineos
+
+
+@pytest.fixture
 def test_file_location():
     return Path(__file__).parent / "test_users1.csv"
 
@@ -128,6 +140,34 @@ class TestProcessByEmail:
         assert len(user_leave_admins) == 5
         for user_leave_admin in user_leave_admins:
             assert user_leave_admin.fineos_web_id is not None
+
+    def test_process_by_email_bad_fineos(
+        self, test_file_location, test_db_session, create_employers, mock_bogus_fineos, caplog
+    ):
+        cognito_client = MockCognito()
+        pivoted = pivot_csv_file(test_file_location)
+        processed = 0
+        for email, employers in pivoted.items():
+            processed += process_by_email(
+                email=email,
+                input_data=employers,
+                db_session=test_db_session,
+                cognito_pool_id="fake_pool",
+                filename=test_file_location,
+                cognito_client=cognito_client,
+                fineos_client=mock_bogus_fineos,
+            )
+        # 5 records in this file
+        assert processed == 0
+        count_error_in_fineos = 0
+        count_unable_to_complete_reg = 0
+        for record in caplog.records:
+            if "Unable to complete registration" in record.getMessage():
+                count_unable_to_complete_reg += 1
+            elif "Received an error processing FINEOS registration" in record.getMessage():
+                count_error_in_fineos += 1
+        assert count_unable_to_complete_reg == 5
+        assert count_error_in_fineos == count_unable_to_complete_reg * 3  # 3 retries
 
     def test_process_files(self, test_file_location, test_db_session, create_employers, caplog):
         caplog.set_level(logging.INFO)  # noqa: B1
