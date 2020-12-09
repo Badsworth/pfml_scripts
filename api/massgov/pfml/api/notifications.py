@@ -38,34 +38,32 @@ def notifications_post():
 
         db_session.add(notification)
 
-        # We only need to create claims for leave admin notifications which all include FEINs.
-        if notification_request.fein:
-            # Find or create an associated claim
-            claim = (
-                db_session.query(Claim)
-                .filter(Claim.fineos_absence_id == notification_request.absence_case_id)
+        # Find or create an associated claim
+        claim = (
+            db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == notification_request.absence_case_id)
+            .one_or_none()
+        )
+
+        if claim is None:
+            employer = (
+                db_session.query(Employer)
+                .filter(Employer.employer_fein == notification_request.fein.replace("-", ""))
                 .one_or_none()
             )
 
-            if claim is None:
-                employer = (
-                    db_session.query(Employer)
-                    .filter(Employer.employer_fein == notification_request.fein.replace("-", ""))
-                    .one_or_none()
+            if employer is not None:
+                new_claim = Claim(
+                    employer_id=employer.employer_id,
+                    fineos_absence_id=notification_request.absence_case_id,
                 )
 
-                if employer is not None:
-                    new_claim = Claim(
-                        employer_id=employer.employer_id,
-                        fineos_absence_id=notification_request.absence_case_id,
-                    )
-
-                    db_session.add(new_claim)
-                    db_session.commit()
-                else:
-                    logger.error(
-                        "Failed to lookup the specified FEIN to add Claim record on Notification POST request"
-                    )
+                db_session.add(new_claim)
+                db_session.commit()
+            else:
+                logger.error(
+                    "Failed to lookup the specified FEIN to add Claim record on Notification POST request"
+                )
 
     return response_util.success_response(
         message="Successfully started notification process.", status_code=201, data={}
