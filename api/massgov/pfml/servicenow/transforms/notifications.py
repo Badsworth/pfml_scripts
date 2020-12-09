@@ -3,12 +3,18 @@ from typing import List
 
 from pydantic import BaseModel
 
+import massgov.pfml.util.logging
 from massgov.pfml.api.models.notifications.requests import NotificationRequest, RecipientDetails
+from massgov.pfml.api.services.administrator_fineos_actions import LEAVE_ADMIN_INFO_REQUEST_TYPE
 from massgov.pfml.servicenow.models import Claimant, OutboundMessage, Recipient
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 RECIPIENT_TYPE_MAPPING = {"Leave Administrator": "leave_administrator", "Claimant": "claimant"}
 
 SOURCE_MAPPING = {"Self-Service": "portal", "Call Center": "call_center"}
+
+PORTAL_BASE_URL = os.environ.get("PORTAL_BASE_URL")
 
 
 def is_leave_administrator(notification_request: NotificationRequest) -> bool:
@@ -51,13 +57,17 @@ def format_recipients(notification_request: NotificationRequest) -> List[str]:
 
 
 def format_link(notification_request: NotificationRequest) -> str:
-    if is_leave_administrator(notification_request):
-        return (
-            os.environ.get("PORTAL_ABSENCE_LEAVE_ADMIN_URL", "")
-            + notification_request.absence_case_id
-        )
+    if not PORTAL_BASE_URL:
+        logger.error("PORTAL_BASE_URL is not set")
+        return ""
 
-    return os.environ.get("PORTAL_ABSENCE_CLAIMANT_URL", "")
+    if is_leave_administrator(notification_request):
+        if notification_request.trigger == LEAVE_ADMIN_INFO_REQUEST_TYPE:
+            return f"{PORTAL_BASE_URL}/employers/applications/new-application/?absence_id={notification_request.absence_case_id}"
+
+        return f"{PORTAL_BASE_URL}/employers/applications/status/?absence_id={notification_request.absence_case_id}"
+
+    return f"{PORTAL_BASE_URL}/applications"
 
 
 def format_document_type(notification_request: NotificationRequest) -> str:
@@ -80,7 +90,7 @@ class TransformNotificationRequest(BaseModel):
             u_claimant_info=Claimant(
                 first_name=notification_request.claimant_info.first_name,
                 last_name=notification_request.claimant_info.last_name,
-                dob=notification_request.claimant_info.date_of_birth.strftime("%Y/%m/%d"),
+                dob=notification_request.claimant_info.date_of_birth.strftime("%m/%d/****"),
                 id=notification_request.claimant_info.customer_id,
             ).json(),
         )

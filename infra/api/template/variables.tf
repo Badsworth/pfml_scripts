@@ -241,14 +241,8 @@ variable "service_now_base_url" {
   default     = ""
 }
 
-variable "portal_absence_leave_admin_url" {
-  description = "Link in email notification for leave admin"
-  type        = string
-  default     = ""
-}
-
-variable "portal_absence_claimant_url" {
-  description = "Link in email notification for claimant"
+variable "portal_base_url" {
+  description = "Portal base URL to use when creating links"
   type        = string
   default     = ""
 }

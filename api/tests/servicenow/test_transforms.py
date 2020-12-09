@@ -128,14 +128,14 @@ class TestTransformNotificationRequest:
         assert result.u_trigger == "claim.approved"
         assert (
             result.u_link
-            == "https://paidleave.mass.gov/employers/applications/new-application/?absence_id=NTN-110-ABS-01"
+            == "https://paidleave.mass.gov/employers/applications/status/?absence_id=NTN-110-ABS-01"
         )
         assert result.u_recipients == [
             '{"first_name": "Jane", "last_name": "Doe", "id": "11", "email": "j.a.doe@gmail.com"}'
         ]
         assert (
             result.u_claimant_info
-            == '{"first_name": "John", "last_name": "Smith", "dob": "1970/01/01", "id": "1234"}'
+            == '{"first_name": "John", "last_name": "Smith", "dob": "01/01/****", "id": "1234"}'
         )
 
     def test_transform_leave_admin_notification_request_empty_doctype(
@@ -153,14 +153,14 @@ class TestTransformNotificationRequest:
         assert result.u_trigger == "claim.approved"
         assert (
             result.u_link
-            == "https://paidleave.mass.gov/employers/applications/new-application/?absence_id=NTN-110-ABS-01"
+            == "https://paidleave.mass.gov/employers/applications/status/?absence_id=NTN-110-ABS-01"
         )
         assert result.u_recipients == [
             '{"first_name": "Jane", "last_name": "Doe", "id": "11", "email": "j.a.doe@gmail.com"}'
         ]
         assert (
             result.u_claimant_info
-            == '{"first_name": "John", "last_name": "Smith", "dob": "1970/01/01", "id": "1234"}'
+            == '{"first_name": "John", "last_name": "Smith", "dob": "01/01/****", "id": "1234"}'
         )
 
     def test_transform_leave_admin_notification_request_no_doctype(
@@ -178,14 +178,14 @@ class TestTransformNotificationRequest:
         assert result.u_trigger == "claim.approved"
         assert (
             result.u_link
-            == "https://paidleave.mass.gov/employers/applications/new-application/?absence_id=NTN-110-ABS-01"
+            == "https://paidleave.mass.gov/employers/applications/status/?absence_id=NTN-110-ABS-01"
         )
         assert result.u_recipients == [
             '{"first_name": "Jane", "last_name": "Doe", "id": "11", "email": "j.a.doe@gmail.com"}'
         ]
         assert (
             result.u_claimant_info
-            == '{"first_name": "John", "last_name": "Smith", "dob": "1970/01/01", "id": "1234"}'
+            == '{"first_name": "John", "last_name": "Smith", "dob": "01/01/****", "id": "1234"}'
         )
 
     def test_transform_claimant_notification_request(self, claimant_notification_request):
@@ -203,7 +203,7 @@ class TestTransformNotificationRequest:
         ]
         assert (
             result.u_claimant_info
-            == '{"first_name": "John", "last_name": "Smith", "dob": "1970/01/01", "id": "1234"}'
+            == '{"first_name": "John", "last_name": "Smith", "dob": "01/01/****", "id": "1234"}'
         )
 
     def test_transform_multiple_recipients_notification_request(
@@ -221,7 +221,7 @@ class TestTransformNotificationRequest:
         assert result.u_trigger == "claim.approved"
         assert (
             result.u_link
-            == "https://paidleave.mass.gov/employers/applications/new-application/?absence_id=NTN-110-ABS-01"
+            == "https://paidleave.mass.gov/employers/applications/status/?absence_id=NTN-110-ABS-01"
         )
         assert result.u_recipients == [
             '{"first_name": "Ihave", "last_name": "Three Names", "id": "11", "email": "ihavethreenames@gmail.com"}',
@@ -229,5 +229,5 @@ class TestTransformNotificationRequest:
         ]
         assert (
             result.u_claimant_info
-            == '{"first_name": "John", "last_name": "Smith", "dob": "1970/01/01", "id": "1234"}'
+            == '{"first_name": "John", "last_name": "Smith", "dob": "01/01/****", "id": "1234"}'
         )

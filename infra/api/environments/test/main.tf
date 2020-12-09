@@ -80,7 +80,6 @@ module "api" {
   fineos_aws_iam_role_arn                          = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                  = "12345"
   service_now_base_url                             = "https://savilinxtest.servicenowservices.com"
-  portal_absence_leave_admin_url                   = "https://paidleave-test.mass.gov/employers/applications/new-application/?absence_id="
-  portal_absence_claimant_url                      = "https://paidleave-test.mass.gov/applications"
+  portal_base_url                                  = "https://paidleave-test.mass.gov"
   enable_application_fraud_check                   = "0"
 }
