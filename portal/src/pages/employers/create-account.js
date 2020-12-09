@@ -39,15 +39,18 @@ export const CreateAccount = (props) => {
     updateFields,
   });
 
+  // TODO (EMPLOYER-661): Remove feature flag checking after December 15
   const showClaimantAuth = isFeatureEnabled("claimantShowAuth");
 
   return (
     <form className="usa-form" onSubmit={handleSubmit}>
       <Title>{t("pages.employersAuthCreateAccount.title")}</Title>
-      <Lead>{t("pages.employersAuthCreateAccount.lead_background")}</Lead>
       <Lead>
-        {t("pages.employersAuthCreateAccount.lead_multipleCompanies")}
+        {t("pages.employersAuthCreateAccount.leadBackground", {
+          context: showClaimantAuth ? null : "prelaunch",
+        })}
       </Lead>
+      <Lead>{t("pages.employersAuthCreateAccount.leadMultipleCompanies")}</Lead>
       <Details label={t("pages.employersAuthCreateAccount.detailsLabel")}>
         <Trans
           i18nKey="pages.employersAuthCreateAccount.detailsList"

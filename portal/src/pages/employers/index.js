@@ -3,6 +3,7 @@ import Heading from "../../components/Heading";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
@@ -22,13 +23,19 @@ export const Index = () => {
     width: 30,
     fill: "currentColor",
   };
+  // TODO (EMPLOYER-661): Remove feature flag checking after December 15
+  const showClaimantAuth = isFeatureEnabled("claimantShowAuth");
 
   return (
     <div className="grid-container">
       <div className="grid-row">
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersDashboard.welcomeTitle")}</Title>
-          <p>{t("pages.employersDashboard.welcomeBody")}</p>
+          <p>
+            {t("pages.employersDashboard.welcomeBody", {
+              context: showClaimantAuth ? null : "prelaunch",
+            })}
+          </p>
 
           <Heading level="2">
             <IconMail {...iconProps} />

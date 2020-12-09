@@ -14,7 +14,7 @@ exports[`Employer index renders the page 1`] = `
         Welcome
       </Title>
       <p>
-        Thanks for joining the paid leave program. Massachusetts workers can now apply for family leave for bonding with a child, with more benefits available in 2021.
+        Thanks for joining the paid leave program. There’s no further action for you to take now, but you’ll be able to review applications online starting December 15, 2020.
       </p>
       <Heading
         level="2"
