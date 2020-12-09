@@ -4,7 +4,7 @@ exports[`Footer renders footer with default settings 1`] = `
 <FooterSlim
   contact={
     Object {
-      "address": "PO Box 838 Lawrence, MA 01843",
+      "address": "PO Box 838 Lawrence, MA 01842",
       "online": Object {
         "href": "https://mass.gov/dfml",
         "title": "Department of Family and Medical Leave (DFML)",

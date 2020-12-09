@@ -393,7 +393,7 @@ const shared = {
   claimsOtherLeaveTitle: "Other leave, income, and benefits",
   claimsVerifyIdTitle: "Your identity",
   contactCenterAddress:
-    "PO Box 838$t(chars.nbsp)Lawrence, MA$t(chars.nbsp)01843",
+    "PO Box 838$t(chars.nbsp)Lawrence, MA$t(chars.nbsp)01842",
   contactCenterFaxNumber: "(617)$t(chars.nbsp)855$t(chars.nbhyphen)6180",
   contactCenterPhoneNumber: "(833)$t(chars.nbsp)344$t(chars.nbhyphen)7365",
   day_Friday: "Friday",
@@ -1099,13 +1099,13 @@ const pages = {
     partHeading_2: "Review: Your payment information",
     partHeading_3: "Review: Upload document",
     partOneNextStepsLine1:
-      "Once you review and confirm Part 1, your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at $t(shared.contactCenterPhoneNumber).",
+      "Once you review and submit Part 1, your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at $t(shared.contactCenterPhoneNumber).",
     partOneNextStepsLine2:
       "We’ll also notify your employer that you’ve started an application for paid family and medical leave.",
     partOneNextStepsLine3:
       "Next, you’ll be able to work on Parts 2 and 3, and submit your application.",
     partTwoNextStepsLine1:
-      "Once you confirm Part 2, your payment information will be viewable by our Contact Center staff. To make edits to Part 2, you’ll need to call the Contact Center at $t(shared.contactCenterPhoneNumber).",
+      "Once you submit Part 2, your payment information will be viewable by our Contact Center staff. To make edits to Part 2, you’ll need to call the Contact Center at $t(shared.contactCenterPhoneNumber).",
     partTwoNextStepsLine2:
       "Next, you’ll work on Part 3, and submit your application.",
     paymentAccountNumLabel: "Account number",
@@ -1209,7 +1209,7 @@ const pages = {
     hoursLabel: "$t(shared.hoursLabel)",
     inputHoursLabel: "Average weekly hours",
     lead:
-      "We'll confirm your hours with your employer after you submit your application. Learn more about <calculate-hours-link>how we use this number</calculate-hours-link>, and how to figure out your average on our website.",
+      "We'll confirm your hours with your employer after you submit your application. Learn more about <calculate-hours-link>how we use this number</calculate-hours-link> and how to figure out your average.",
     minutesLabel: "$t(shared.minutesLabel)",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
@@ -1839,7 +1839,7 @@ const components = {
     description:
       "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
     logoTitle: "Go to PFML homepage",
-    orgAddress: "PO Box 838 Lawrence, MA 01843",
+    orgAddress: "PO Box 838 Lawrence, MA 01842",
     orgName: "Department of Family and Medical Leave (DFML)",
     orgPhoneNumber: "$t(shared.contactCenterPhoneNumber)",
     title: "Paid Family and Medical Leave (PFML)",

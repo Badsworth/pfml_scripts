@@ -121,7 +121,7 @@ exports[`PaymentMethod renders the page 1`] = `
       className="margin-top-6 margin-bottom-2"
     >
       <p>
-        Once you confirm Part 2, your payment information will be viewable by our Contact Center staff. To make edits to Part 2, you’ll need to call the Contact Center at (833) 344‑7365.
+        Once you submit Part 2, your payment information will be viewable by our Contact Center staff. To make edits to Part 2, you’ll need to call the Contact Center at (833) 344‑7365.
       </p>
       <p>
         Next, you’ll work on Part 3, and submit your application.
