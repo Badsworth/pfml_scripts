@@ -72,8 +72,10 @@ class IssueType(str, Enum):
     required = "required"
     # Masked field is not allowed
     invalid_masked_field = "invalid_masked_field"
-    # FINEOS case creation issues
+    # A claimant could not be created in FINEOS
     fineos_case_creation_issues = "fineos_case_creation_issues"
+    # An unspecified error related to creating/completing the absence case in fineos
+    fineos_case_error = "fineos_case_error"
 
 
 @dataclass

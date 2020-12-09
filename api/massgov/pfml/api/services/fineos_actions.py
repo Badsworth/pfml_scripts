@@ -155,7 +155,12 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
 
     except massgov.pfml.fineos.FINEOSClientError:
         logger.exception("FINEOS API error")
-        issues.append(Issue(IssueType.fineos_case_creation_issues, "FINEOS API error"))
+        issues.append(
+            Issue(
+                IssueType.fineos_case_error,
+                "Unexpected error encountered when submitting to the Claims Processing System",
+            )
+        )
 
     return issues
 
@@ -194,7 +199,12 @@ def complete_intake(application: Application, db_session: massgov.pfml.db.Sessio
 
     except massgov.pfml.fineos.FINEOSClientError:
         logger.exception("FINEOS API error")
-        issues.append(Issue(IssueType.fineos_case_creation_issues, "FINEOS API error"))
+        issues.append(
+            Issue(
+                IssueType.fineos_case_error,
+                "Unexpected error encountered when submitting to the Claims Processing System",
+            )
+        )
 
     return issues
 
