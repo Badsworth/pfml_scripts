@@ -308,9 +308,16 @@ def build_contact_details(
     phone_number_type = application.phone.phone_type_instance.phone_type_description
     int_code = phone_number.country_code
     telephone_no = phone_number.national_number
+    area_code = None
+
+    # For US numbers, set the area code separately
+    if int_code == 1:
+        area_code = str(telephone_no)[:3]
+        telephone_no = str(telephone_no)[-7:]
 
     contact_details.phoneNumbers = [
         massgov.pfml.fineos.models.customer_api.PhoneNumber(
+            areaCode=area_code,
             id=application.phone.fineos_phone_id,
             intCode=int_code,
             telephoneNo=telephone_no,

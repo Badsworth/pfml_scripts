@@ -272,7 +272,7 @@ def test_application_patch(client, user, auth_token, test_db_session):
     # Formatted / masked fields:
     assert response_body.get("data").get("employer_fein") == "22-7777777"
     assert response_body.get("data").get("tax_identifier") == "***-**-6789"
-    assert response_body.get("data").get("phone")["phone_number"] == "240-487-****"
+    assert response_body.get("data").get("phone")["phone_number"] == "***-***-9945"
 
 
 def test_application_patch_masking(client, user, auth_token, test_db_session):
@@ -326,7 +326,7 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
         response_body.get("data").get("leave_details").get("child_placement_date") == "****-05-13"
     )
     assert response_body.get("data").get("leave_details").get("child_birth_date") == "****-09-21"
-    assert response_body.get("data").get("phone")["phone_number"] == "240-487-****"
+    assert response_body.get("data").get("phone")["phone_number"] == "***-***-9945"
 
 
 def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_db_session):
@@ -377,7 +377,7 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
             "line_2": "*******",
             "zip": "12345-****",
         },
-        "phone": {"int_code": "1", "phone_number": "240-487-****", "phone_type": "Cell"},
+        "phone": {"int_code": "1", "phone_number": "***-***-9945", "phone_type": "Cell"},
     }
 
     response = client.patch(
@@ -450,7 +450,7 @@ def test_application_patch_masked_mismatch_fields(client, user, auth_token, test
             "line_2": "*******",
             "zip": "55555-****",
         },
-        "phone": {"int_code": "1", "phone_number": "240-123-****", "phone_type": "Cell",},
+        "phone": {"int_code": "1", "phone_number": "***-***-1234", "phone_type": "Cell",},
     }
 
     response = client.patch(
@@ -801,7 +801,7 @@ def test_application_patch_phone(client, user, auth_token, test_db_session):
     response_phone = response_body.get("data").get("phone")
     assert application.phone.phone_number == "+12404879945"
     assert application.phone.phone_type_id == 1  # Cell
-    assert response_phone["phone_number"] == "240-487-****"
+    assert response_phone["phone_number"] == "***-***-9945"
     assert response_phone["phone_type"] == update_request_body["phone"]["phone_type"]
     assert response_phone["int_code"] == update_request_body["phone"]["int_code"]
 
@@ -822,7 +822,7 @@ def test_application_patch_phone(client, user, auth_token, test_db_session):
     response_body = response.get_json()
     assert response.status_code == 200
     response_phone = response_body.get("data").get("phone")
-    assert response_phone["phone_number"] == "240-487-****"
+    assert response_phone["phone_number"] == "***-***-1234"
     assert response_phone["phone_type"] == update_request_body["phone"]["phone_type"]
 
     update_request_body_dob = {"date_of_birth": "1970-01-01"}
@@ -839,13 +839,13 @@ def test_application_patch_phone(client, user, auth_token, test_db_session):
     assert application.phone.phone_type_id == 3  # Phone
     response_body_new_update = response_new_update.get_json()
     response_phone = response_body_new_update.get("data").get("phone")
-    assert response_phone["phone_number"] == "240-487-****"
+    assert response_phone["phone_number"] == "***-***-1234"
     assert response_phone["phone_type"] == update_request_body["phone"]["phone_type"]
 
     # patching with a masked value doesn't change the existing database value
 
     update_request_masked_phone_number = {
-        "phone": {"phone_number": "240-487-****", "int_code": "1", "phone_type": "Cell"}
+        "phone": {"phone_number": "***-***-1234", "int_code": "1", "phone_type": "Cell"}
     }
 
     response_new_update = client.patch(
@@ -859,7 +859,7 @@ def test_application_patch_phone(client, user, auth_token, test_db_session):
     assert application.phone.phone_type_id == 1  # Cell
     response_body_new_update = response_new_update.get_json()
     response_phone = response_body_new_update.get("data").get("phone")
-    assert response_phone["phone_number"] == "240-487-****"
+    assert response_phone["phone_number"] == "***-***-1234"
     assert response_phone["phone_type"] == update_request_masked_phone_number["phone"]["phone_type"]
 
 
@@ -2188,8 +2188,8 @@ def test_application_patch_invalid_values(client, user, auth_token):
             },
             {
                 "field": "phone.phone_number",
-                "message": "'(555) 123-4567' does not match '^[0-9]{3}\\\\-?[0-9]{3}\\\\-?([0-9]|\\\\*){4}$'",
-                "rule": "^[0-9]{3}\\-?[0-9]{3}\\-?([0-9]|\\*){4}$",
+                "message": "'(555) 123-4567' does not match '^([0-9]|\\\\*){3}\\\\-([0-9]|\\\\*){3}\\\\-[0-9]{4}$'",
+                "rule": "^([0-9]|\\*){3}\\-([0-9]|\\*){3}\\-[0-9]{4}$",
                 "type": "pattern",
             },
         ],
@@ -2846,8 +2846,8 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                             preferred=None,
                             phoneNumberType="Cell",
                             intCode="1",
-                            areaCode=None,
-                            telephoneNo="2404879945",
+                            areaCode="240",
+                            telephoneNo="4879945",
                             classExtensionInformation=None,
                         )
                     ],

@@ -19,7 +19,7 @@ class Regexes:
     MASKED_ACCOUNT_NUMBER = re.compile(r"^\*{2,13}\d{4}$")
     DATE_OF_BIRTH = re.compile(r"^\*{4}-\d{2}-\d{2}$")
     MASKED_ZIP = re.compile(r"^[0-9]{5}-\*{4}$")
-    MASKED_PHONE = re.compile(r"^[0-9]{3}\-?[0-9]{3}\-?\*{4}$")
+    MASKED_PHONE = re.compile(r"^\*{3}\-?\*{3}\-?[0-9]{4}$")
 
 
 class TaxIdUnformattedStr(str):
