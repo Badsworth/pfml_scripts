@@ -13,7 +13,7 @@ exports[`AuthNav when a user is NOT authenticated doesn't render the logged-in s
       <ButtonLink
         className="width-auto"
         data-test-auth-nav="massgov_link"
-        href="https://www.mass.gov/"
+        href="https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts"
         inversed={true}
         variation="unstyled"
       >

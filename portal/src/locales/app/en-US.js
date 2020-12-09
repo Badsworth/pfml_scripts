@@ -475,6 +475,9 @@ const shared = {
 
 const pages = {
   app: {
+    betaBannerTag: "Beta",
+    betaBannerText:
+      "This is a new service. Help us improve it with <user-feedback-link>your feedback</user-feedback-link>.",
     siteDescription:
       "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
     siteTitle: "Paid Family and Medical Leave (PFML) | Mass.gov",

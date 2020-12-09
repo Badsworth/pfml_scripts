@@ -98,7 +98,8 @@ const routes = {
       healthcareProviderForm: "https://www.mass.gov/hcp-form",
       identityProof:
         "https://www.mass.gov/info-details/identity-proof-for-paid-leave",
-      index: "https://www.mass.gov/",
+      index:
+        "https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
       mailFaxInstructions: "https://www.mass.gov/pfmlsubmitinfo",
       medicalBonding: "https://www.mass.gov/pfml-medical-bonding",

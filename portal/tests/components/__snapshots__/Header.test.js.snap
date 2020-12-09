@@ -1,78 +1,107 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Header includes a Skip Nav link as its first link 1`] = `
-<HeaderSlim
-  siteLogo={
-    <SiteLogo
-      image={
-        Object {
-          "alt": "Massachusetts state seal",
-          "height": 45,
-          "src": "test-file-stub",
-          "width": 45,
+<Fragment>
+  <HeaderSlim
+    siteLogo={
+      <SiteLogo
+        image={
+          Object {
+            "alt": "Massachusetts state seal",
+            "height": 45,
+            "src": "test-file-stub",
+            "width": 45,
+          }
         }
-      }
-      siteName="Paid Family and Medical Leave"
-      url={
-        Object {
-          "domain": "/",
+        siteName="Paid Family and Medical Leave"
+        url={
+          Object {
+            "domain": "/",
+          }
         }
-      }
-    />
-  }
-  skipNav={
-    <a
-      className="usa-skipnav"
-      href="#main"
-    >
-      Skip to main content
-    </a>
-  }
-  utilityNav={
-    <AuthNav
-      onLogout={[MockFunction]}
-    />
-  }
-/>
+      />
+    }
+    skipNav={
+      <a
+        className="usa-skipnav"
+        href="#main"
+      >
+        Skip to main content
+      </a>
+    }
+    utilityNav={
+      <AuthNav
+        onLogout={[MockFunction]}
+      />
+    }
+  />
+</Fragment>
 `;
 
 exports[`Header passes the user into AuthNav 1`] = `
-<HeaderSlim
-  siteLogo={
-    <SiteLogo
-      image={
-        Object {
-          "alt": "Massachusetts state seal",
-          "height": 45,
-          "src": "test-file-stub",
-          "width": 45,
-        }
-      }
-      siteName="Paid Family and Medical Leave"
-      url={
-        Object {
-          "domain": "/",
-        }
-      }
-    />
-  }
-  skipNav={
-    <a
-      className="usa-skipnav"
-      href="#main"
+<Fragment>
+  <div
+    className="bg-base-lightest"
+  >
+    <div
+      className="c-beta-banner"
     >
-      Skip to main content
-    </a>
-  }
-  utilityNav={
-    <AuthNav
-      onLogout={[MockFunction]}
-      user={
-        Object {
-          "username": "Foo Bar",
+      <span
+        className="display-inline-block bg-secondary margin-right-1 padding-x-2 text-bold text-white"
+      >
+        Beta
+      </span>
+      <Trans
+        components={
+          Object {
+            "user-feedback-link": <a
+              href="https://www.mass.gov/paidleave-claimant-feedback"
+              rel="noopener"
+              target="_blank"
+            />,
+          }
         }
-      }
-    />
-  }
-/>
+        i18nKey="pages.app.betaBannerText"
+      />
+    </div>
+  </div>
+  <HeaderSlim
+    siteLogo={
+      <SiteLogo
+        image={
+          Object {
+            "alt": "Massachusetts state seal",
+            "height": 45,
+            "src": "test-file-stub",
+            "width": 45,
+          }
+        }
+        siteName="Paid Family and Medical Leave"
+        url={
+          Object {
+            "domain": "/",
+          }
+        }
+      />
+    }
+    skipNav={
+      <a
+        className="usa-skipnav"
+        href="#main"
+      >
+        Skip to main content
+      </a>
+    }
+    utilityNav={
+      <AuthNav
+        onLogout={[MockFunction]}
+        user={
+          Object {
+            "username": "Foo Bar",
+          }
+        }
+      />
+    }
+  />
+</Fragment>
 `;

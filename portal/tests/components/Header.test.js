@@ -7,7 +7,7 @@ describe("Header", () => {
     const wrapper = shallow(<Header onLogout={jest.fn()} />);
 
     expect(wrapper).toMatchSnapshot();
-    expect(wrapper.prop("skipNav").props.href).toBe("#main");
+    expect(wrapper.find("HeaderSlim").prop("skipNav").props.href).toBe("#main");
   });
 
   it("passes the user into AuthNav", () => {
@@ -18,6 +18,6 @@ describe("Header", () => {
     const wrapper = shallow(<Header user={user} onLogout={jest.fn()} />);
 
     expect(wrapper).toMatchSnapshot();
-    expect(wrapper.prop("utilityNav").props.user).toBe(user);
+    expect(wrapper.find("HeaderSlim").prop("utilityNav").props.user).toBe(user);
   });
 });
