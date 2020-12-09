@@ -119,6 +119,13 @@ export const steps = [
         {
           has_intermittent_leave_periods: claim.has_intermittent_leave_periods,
         },
+        {
+          phone: {
+            int_code: "1",
+            phone_number: "844-781-3163",
+            phone_type: "Cell",
+          },
+        },
         // { temp: { has_employer_benefits: false } },
         // { temp: { has_other_incomes: false } },
         // { temp: { has_previous_leaves: false } },
