@@ -122,14 +122,18 @@ resource "aws_db_instance" "default" {
   }
 
   tags = merge(module.constants.common_tags, {
-    "SMX:Asset"   = "v1:massgov_pfml_${var.environment_name}:${module.constants.smartronix_environment_tags[var.environment_name]}:RDS:PFML:Advanced:None"
-    environment   = module.constants.environment_tags[var.environment_name]
-    Name          = "massgov_pfml_${var.environment_name}"
-    backup        = var.environment_name == "prod" ? "prod" : "nonprod"
-    "Patch Group" = var.environment_name == "prod" ? "prod-linux1" : "nonprod-linux1"
-    schedulev2    = var.environment_name == "test" ? "0700_2400_weekdays" : "na"
+    "SMX:Asset"      = "v1:massgov_pfml_${var.environment_name}:${module.constants.smartronix_environment_tags[var.environment_name]}:RDS:PFML:Advanced:None"
+    environment      = module.constants.environment_tags[var.environment_name]
+    Name             = "massgov_pfml_${var.environment_name}"
+    backup           = var.environment_name == "prod" ? "prod" : "nonprod"
+    "Patch Group"    = var.environment_name == "prod" ? "prod-linux1" : "nonprod-linux1"
+    schedulev2       = "na"
+    expenddate       = "01/31/21"
+    expenddatedetail = "SCTASK0177777"
     # schedulev2 is an EOTSS-required custom tag. It configures a mandatory scheduled downtime
-    # period for test only.
+    # period for test only.*
+    #
+    # Test downtime is disabled until 01/31/2021 to account for launch activities.
     #
     # If you change this schedule, please update the ECS autoscaling policy in app_autoscaling.tf.
     #

@@ -30,8 +30,10 @@ resource "aws_appautoscaling_target" "ecs_target" {
 
 # Stop API service each weekday at midnight ET.
 # This should match the RDS downtime schedule in rds.tf.
+#
+# * NOTE: Currently off to support overtime activities.
 resource "aws_appautoscaling_scheduled_action" "ecs_api_stop" {
-  count              = var.environment_name == "test" ? 1 : 0
+  count              = 0
   name               = "${local.app_name}-${var.environment_name}-shutdown"
   resource_id        = aws_appautoscaling_target.ecs_target.resource_id
   scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
@@ -49,8 +51,10 @@ resource "aws_appautoscaling_scheduled_action" "ecs_api_stop" {
 
 # Start API service each weekday at 7am ET.
 # This should match the RDS downtime schedule in rds.tf.
+#
+# * NOTE: Currently off to support overtime activities.
 resource "aws_appautoscaling_scheduled_action" "ecs_api_start" {
-  count              = var.environment_name == "test" ? 1 : 0
+  count              = 0
   name               = "${local.app_name}-${var.environment_name}-start"
   resource_id        = aws_appautoscaling_target.ecs_target.resource_id
   scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
