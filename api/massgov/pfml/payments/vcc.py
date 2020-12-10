@@ -30,7 +30,7 @@ vcc_doc_ad_attributes = {
 # We add two of these sections with the only difference being static values
 vcc_doc_ad_attributes_pa = {"AD_TYP": "PA", "DOC_AD_LN_NO": "1"}
 
-vcc_doc_ad_attributes_pr = {"AD_TYPE": "PR", "DOC_AD_LN_NO": "2"}
+vcc_doc_ad_attributes_pr = {"AD_TYP": "PR", "DOC_AD_LN_NO": "2"}
 
 vcc_doc_1099_attributes = {"DOC_VCUST_LN_NO": "1", "DOC_1099_LN_NO": "1", "RPT_1099_FL": "True"}
 
