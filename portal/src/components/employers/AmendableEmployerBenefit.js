@@ -149,7 +149,6 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
                     label={t(
                       "components.amendmentForm.question_benefitFrequency"
                     )}
-                    labelWeight="bold"
                     name="benefit-frequency-amendment"
                     onChange={(e) =>
                       amendBenefit(

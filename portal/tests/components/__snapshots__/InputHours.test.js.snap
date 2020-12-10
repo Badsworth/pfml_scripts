@@ -14,7 +14,7 @@ exports[`InputHours renders component 1`] = `
     inputClassName=""
     inputMode="numeric"
     label="Hours Label"
-    labelWeight="normal"
+    labelClassName="text-normal"
     name="hours"
     onChange={[Function]}
     pattern="[0-9]*"
@@ -45,7 +45,7 @@ exports[`InputHours renders component 1`] = `
     }
     formGroupClassName="display-inline-block"
     label="Minutes Label"
-    labelWeight="normal"
+    labelClassName="text-normal"
     name="minutes"
     onChange={[Function]}
     selectClassName="width-15"

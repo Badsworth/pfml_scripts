@@ -38,7 +38,7 @@ function Dropdown(props) {
         inputId={inputId}
         optionalText={props.optionalText}
         small={props.smallLabel}
-        weight={props.labelWeight}
+        labelClassName={props.labelClassName}
       >
         {props.label}
       </FormLabel>
@@ -92,9 +92,9 @@ Dropdown.propTypes = {
    */
   selectClassName: PropTypes.string,
   /**
-   * Override the default label font weight
+   * Override the label's default text-bold class
    */
-  labelWeight: PropTypes.oneOf(["bold", "normal"]),
+  labelClassName: PropTypes.string,
   /**
    * Additional classes to include on the containing form group element
    */

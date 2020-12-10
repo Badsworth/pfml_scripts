@@ -23,7 +23,7 @@ Array [
       }
     }
     label="Test Month"
-    labelWeight="normal"
+    labelClassName="text-normal margin-top-05"
     maxLength="2"
     name="test-date-field_month"
     onBlur={[Function]}
@@ -41,7 +41,7 @@ Array [
       }
     }
     label="Test Day"
-    labelWeight="normal"
+    labelClassName="text-normal margin-top-05"
     maxLength="2"
     name="test-date-field_day"
     onBlur={[Function]}
@@ -59,7 +59,7 @@ Array [
       }
     }
     label="Test Year"
-    labelWeight="normal"
+    labelClassName="text-normal margin-top-05"
     maxLength="4"
     name="test-date-field_year"
     onBlur={[Function]}

@@ -11,14 +11,14 @@ import classnames from "classnames";
 function FormLabel({
   component = "label",
   small = false,
-  weight = "bold",
+  labelClassName = "text-bold",
   ...props
 }) {
   const LabelElement = component;
   const errorMsgId = props.inputId + "_error";
   const hasError = !!props.errorMsg;
 
-  const labelClasses = classnames(`usa-label text-${weight}`, {
+  const labelClasses = classnames(`usa-label ${labelClassName}`, {
     "usa-label--error": hasError,
     "usa-legend": component === "legend",
     "font-heading-xs measure-5": small,
@@ -100,8 +100,10 @@ FormLabel.propTypes = {
    * Defaults to false
    */
   small: PropTypes.bool,
-  /** Override the default label font weight */
-  weight: PropTypes.oneOf(["bold", "normal"]),
+  /**
+   * Override the label's default text-bold class
+   */
+  labelClassName: PropTypes.string,
 };
 
 export default FormLabel;

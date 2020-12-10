@@ -159,9 +159,9 @@ describe("FormLabel", () => {
     });
   });
 
-  describe("when weight prop is set to normal", () => {
-    it("renders label with text-normal class", () => {
-      const { wrapper } = render({ weight: "normal" });
+  describe("when `labelClassName` is set", () => {
+    it("overrides the .text-bold class", () => {
+      const { wrapper } = render({ labelClassName: "text-normal" });
       const label = wrapper.find(".usa-label");
 
       expect(label.hasClass("text-normal")).toBe(true);

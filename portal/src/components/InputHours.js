@@ -87,7 +87,7 @@ const InputHours = (props) => {
         small={props.smallLabel}
         example={props.example}
         hint={props.hint}
-        weight={props.labelWeight}
+        labelClassName={props.labelClassName}
         optionalText={props.optionalText}
       >
         {props.label}
@@ -99,7 +99,7 @@ const InputHours = (props) => {
         label={props.hoursLabel}
         smallLabel
         width="small"
-        labelWeight="normal"
+        labelClassName="text-normal"
         inputMode="numeric"
         pattern="[0-9]*"
         value={isNil(props.value) ? "" : hoursMinutes.hours}
@@ -111,7 +111,7 @@ const InputHours = (props) => {
         name="minutes"
         label={props.minutesLabel}
         smallLabel
-        labelWeight="normal"
+        labelClassName="text-normal"
         choices={minuteChoices}
         value={isNil(props.value) ? "" : hoursMinutes.minutes}
         onChange={handleMinutesChange}
@@ -134,9 +134,9 @@ InputHours.propTypes = {
    */
   label: PropTypes.node.isRequired,
   /**
-   * Override the default label font weight
+   * Override the label's default text-bold class
    */
-  labelWeight: PropTypes.oneOf(["bold", "normal"]),
+  labelClassName: PropTypes.string,
   /**
    * Enable the smaller label variant
    */

@@ -71,7 +71,7 @@ function InputText({ type = "text", ...props }) {
         inputId={inputId}
         optionalText={props.optionalText}
         small={props.smallLabel}
-        weight={props.labelWeight}
+        labelClassName={props.labelClassName}
       >
         {props.label}
       </FormLabel>
@@ -117,8 +117,10 @@ InputText.propTypes = {
    * Localized field label
    */
   label: PropTypes.node.isRequired,
-  /** Override the default label font weight */
-  labelWeight: PropTypes.oneOf(["bold", "normal"]),
+  /**
+   * Override the label's default text-bold class
+   */
+  labelClassName: PropTypes.string,
   /**
    * Apply formatting to the field that's unique to the value
    * you expect to be entered. Depending on the mask, the

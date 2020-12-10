@@ -137,12 +137,12 @@ describe("Dropdown", () => {
     });
   });
 
-  describe("when `labelWeight` is set", () => {
-    it("sets the FormLabel weight prop", () => {
-      const { wrapper } = render({ labelWeight: "normal" });
+  describe("when `labelClassName` is set", () => {
+    it("overrides the FormLabel .text-bold class", () => {
+      const { wrapper } = render({ labelClassName: "text-normal" });
       const label = wrapper.find("FormLabel");
 
-      expect(label.prop("weight")).toBe("normal");
+      expect(label.prop("labelClassName")).toBe("text-normal");
     });
   });
 
