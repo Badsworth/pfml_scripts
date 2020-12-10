@@ -32,6 +32,7 @@ exports[`Step renders component 1`] = `
       className="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"
     >
       <ButtonLink
+        ariaLabel="Start: Step Title"
         className="width-auto"
         href="/path-to-step-question"
       >

@@ -44,7 +44,11 @@ const Step = (props) => {
   );
 
   const startButton = (
-    <ButtonLink href={props.stepHref} className="width-auto">
+    <ButtonLink
+      href={props.stepHref}
+      className="width-auto"
+      ariaLabel={`${props.startText}: ${props.title}`}
+    >
       {props.startText}
     </ButtonLink>
   );
