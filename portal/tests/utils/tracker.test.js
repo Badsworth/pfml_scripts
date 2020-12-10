@@ -32,6 +32,7 @@ describe("tracker", () => {
       };
       interaction.end.mockReturnValue(interaction);
       interaction.save.mockReturnValue(interaction);
+      interaction.setAttribute.mockReturnValue(interaction);
       interaction.setName.mockReturnValue(interaction);
 
       // Our app relies on `newrelic` being exposed as a global variable,
@@ -52,12 +53,16 @@ describe("tracker", () => {
       });
     });
 
-    it("trackFetchRequest tracks interaction with the given URL", () => {
+    it("trackFetchRequest tracks interaction with the given URL and environment", () => {
       tracker.trackFetchRequest("https://example.com");
 
       expect(newrelic.interaction().end).toHaveBeenCalledTimes(1);
       expect(newrelic.interaction().setName).toHaveBeenCalledWith(
         "fetch: example.com"
+      );
+      expect(newrelic.interaction().setAttribute).toHaveBeenCalledWith(
+        "environment",
+        "mock-build-env"
       );
       expect(newrelic.interaction().save).toHaveBeenCalledTimes(1);
     });
@@ -229,7 +234,7 @@ describe("tracker", () => {
 
         newrelic.interaction().setAttribute.mockClear();
         tracker.trackFetchRequest("/test-api-call");
-        expect(newrelic.interaction().setAttribute).toHaveBeenCalledTimes(1);
+        expect(newrelic.interaction().setAttribute).toHaveBeenCalledTimes(2); // includes the environment setAttribute()
         expect(newrelic.interaction().setAttribute).not.toHaveBeenCalledWith(
           "numberAttribute",
           numberAttribute
@@ -244,7 +249,7 @@ describe("tracker", () => {
         expect(newrelic.interaction().setAttribute).not.toHaveBeenCalled();
 
         tracker.trackFetchRequest("/test-api-call");
-        expect(newrelic.interaction().setAttribute).not.toHaveBeenCalled();
+        expect(newrelic.interaction().setAttribute).toHaveBeenCalledTimes(1); // just the environment setAttribute()
       });
     });
   });

@@ -114,6 +114,7 @@ function trackFetchRequest(requestName) {
 
     const trackedName = requestName.replace("https://", "");
     newrelic.interaction().setName(`fetch: ${trackedName}`);
+    newrelic.interaction().setAttribute("environment", process.env.buildEnv);
     setPageAttributesOnInteraction();
     newrelic.interaction().save();
   }
