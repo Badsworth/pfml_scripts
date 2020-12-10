@@ -1,5 +1,6 @@
 import TestMailClient from "./TestMailClient";
 import { notificationRequest } from "./../../src/types";
+import { string } from "yargs";
 
 export default class TestMailNotificationFetcher {
   namespace: string;
@@ -21,10 +22,12 @@ export default class TestMailNotificationFetcher {
     } = notificationRequestData;
     const notificationSubjects: { [key: string]: string } = {
       "application started": `${employeeName} started a paid leave application with the Commonwealth of Massachusetts`,
+      "employer response": `Action required: Respond to ${employeeName}'s paid leave application`,
     };
 
     if (notificationType in notificationSubjects) {
       const subject = notificationSubjects[notificationType];
+      console.log(`SUBJECT: ${subject}`);
       const emails = await this.client.getEmailsBySubject(
         recipientEmail,
         subject
@@ -48,33 +51,40 @@ export default class TestMailNotificationFetcher {
     str: string,
     notificationType: string
   ): { [key: string]: string } {
-    const notificationDataTypes: {
-      [key: string]: { [key: string]: string };
-    } = {
-      "application started": {
-        name: "Employee name",
-        dob: "Date of birth",
-        applicationId: "Application ID",
-      },
+    const notificationData: { [key: string]: string } = {
+      name: "Employee name",
+      dob: "Date of birth",
+      applicationId: "Application ID",
     };
-
-    const notificationData = notificationDataTypes[notificationType];
 
     let field: keyof typeof notificationData;
     for (field in notificationData) {
       const fieldText = notificationData[field];
       notificationData[field] = this.getEmailDatum(str, fieldText);
     }
+    if (notificationType === "employer response") {
+      notificationData["url"] = this.getEmployerResponseURL(str);
+    }
     return notificationData;
   };
 
+  getEmployerResponseURL = function (str: string): string {
+    const match = str.match(new RegExp("View Details\n" + "(.*)" + "\n"));
+    if (match === null) {
+      throw new Error("Notification email must include");
+    } else {
+      const trimmed_match = match[1].slice(1, -1);
+      return trimmed_match;
+    }
+  };
+
   getEmailDatum = function (str: string, startText: string): string {
-    const matches = str.match(new RegExp(startText + ":" + "(.*)" + "\n"));
+    const match = str.match(new RegExp(startText + ":" + "(.*)" + "\n"));
     let dataString = "";
-    if (matches === null) {
+    if (match === null) {
       dataString = "";
     } else {
-      dataString = matches[1].trim();
+      dataString = match[1].trim();
     }
     return dataString;
   };

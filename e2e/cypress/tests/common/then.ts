@@ -287,6 +287,11 @@ Then("I should receive a {string} notification", function (
               expect(emailContent.name).to.equal(firstName + " " + lastName);
               expect(emailContent.dob).to.equal(dob);
               expect(emailContent.applicationId).to.equal(claimNumber);
+              if (notificationType === "employer response") {
+                expect(emailContent.url).to.equal(
+                  `https://paidleave-stage.mass.gov/employers/applications/new-application/?absence_id=${emailContent.applicationId}`
+                );
+              }
             }
           );
         });
@@ -296,22 +301,36 @@ Then("I should receive a {string} notification", function (
 });
 
 Then(
-  "I should be able to retrive a notification from testmail",
-  function (): void {
-    const firstName = "Cristian";
-    const lastName = "Wyman";
+  "I should be able to retrieve a {string} notification from testmail",
+  function (notificationType: string): void {
+    // this test uses notifications that have ALREADY been sent to testmail
+    // this allows us to test our ability to retrieve emails, and validate data
+    let firstName = "";
+    let lastName = "";
+    if (notificationType === "employer response") {
+      firstName = "Stanford";
+      lastName = "Thiel";
+    } else if (notificationType === "application started") {
+      firstName = "Cristian";
+      lastName = "Wyman";
+    } else {
+      throw new Error("Notification is not a recognized type");
+    }
     if (!(typeof firstName === "string" && typeof lastName === "string")) {
       throw new Error("First and last name must be of type string");
     }
     const notificationRequestData = {
-      notificationType: "application started",
+      notificationType: notificationType,
       recipientEmail: "gqzap.jkyu2emq@inbox.testmail.app",
       employeeName: firstName + " " + lastName,
     };
     cy.task("getNotification", notificationRequestData).then((emailContent) => {
       expect(emailContent.name).to.equal(firstName + " " + lastName);
-      expect(emailContent.dob).to.equal("1971/02/23");
-      expect(emailContent.applicationId).to.equal("NTN-3863-ABS-01");
+      if (notificationType === "employer response") {
+        expect(emailContent.url).to.equal(
+          `https://paidleave-stage.mass.gov/employers/applications/new-application/?absence_id=${emailContent.applicationId}`
+        );
+      }
     });
   }
 );
