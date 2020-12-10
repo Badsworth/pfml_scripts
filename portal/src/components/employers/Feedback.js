@@ -6,6 +6,7 @@ import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -47,6 +48,8 @@ const Feedback = ({
     if (!isDenyingRequest && isEmployeeNoticeInsufficient)
       return "employeeNotice";
   };
+
+  const shouldShowFileUpload = isFeatureEnabled("employerShowFileUpload");
 
   return (
     <React.Fragment>
@@ -98,25 +101,30 @@ const Feedback = ({
             name="comment"
             onChange={(event) => setComment(event.target.value)}
           />
-          <FormLabel small>
-            {t(
-              "pages.employersClaimsReview.feedback.supportingDocumentationLabel"
-            )}
-          </FormLabel>
-          <FileCardList
-            filesWithUniqueId={uploadedFiles}
-            setFiles={setUploadedFiles}
-            setAppErrors={appLogic.setAppErrors}
-            fileHeadingPrefix={t(
-              "pages.employersClaimsReview.feedback.fileHeadingPrefix"
-            )}
-            addFirstFileButtonText={t(
-              "pages.employersClaimsReview.feedback.addFirstFileButton"
-            )}
-            addAnotherFileButtonText={t(
-              "pages.employersClaimsReview.feedback.addAnotherFileButton"
-            )}
-          />
+          {/* TODO (EMPLOYER-665): Show file upload */}
+          {shouldShowFileUpload && (
+            <React.Fragment>
+              <FormLabel small>
+                {t(
+                  "pages.employersClaimsReview.feedback.supportingDocumentationLabel"
+                )}
+              </FormLabel>
+              <FileCardList
+                filesWithUniqueId={uploadedFiles}
+                setFiles={setUploadedFiles}
+                setAppErrors={appLogic.setAppErrors}
+                fileHeadingPrefix={t(
+                  "pages.employersClaimsReview.feedback.fileHeadingPrefix"
+                )}
+                addFirstFileButtonText={t(
+                  "pages.employersClaimsReview.feedback.addFirstFileButton"
+                )}
+                addAnotherFileButtonText={t(
+                  "pages.employersClaimsReview.feedback.addAnotherFileButton"
+                )}
+              />
+            </React.Fragment>
+          )}
         </React.Fragment>
       </ConditionalContent>
     </React.Fragment>

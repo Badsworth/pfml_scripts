@@ -55,19 +55,6 @@ exports[`Feedback renders the component 1`] = `
       name="comment"
       onChange={[Function]}
     />
-    <FormLabel
-      small={true}
-    >
-      If you have any supporting documentation, please attach it for review.
-    </FormLabel>
-    <FileCardList
-      addAnotherFileButtonText="Choose another file"
-      addFirstFileButtonText="Choose a file"
-      fileHeadingPrefix="File"
-      filesWithUniqueId={Array []}
-      setAppErrors={[MockFunction]}
-      setFiles={[Function]}
-    />
   </ConditionalContent>
 </Fragment>
 `;

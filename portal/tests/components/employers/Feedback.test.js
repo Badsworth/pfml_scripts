@@ -1,6 +1,5 @@
 import { mount, shallow } from "enzyme";
 import Feedback from "../../../src/components/employers/Feedback";
-import FileCardList from "../../../src/components/FileCardList";
 import React from "react";
 import { act } from "react-dom/test-utils";
 import { simulateEvents } from "../../test-utils";
@@ -191,12 +190,13 @@ describe("Feedback", () => {
   });
 
   describe("when user selects option to leave additional comments", () => {
-    it("shows comment box and file upload button", () => {
+    it("shows comment box", () => {
       const { changeRadioGroup } = simulateEvents(wrapper);
       changeRadioGroup("shouldShowCommentBox", "true");
 
       expect(wrapper.find("textarea").exists()).toEqual(true);
-      expect(wrapper.find(FileCardList).exists()).toEqual(true);
+      // TODO (EMPLOYER-665): Show file upload
+      // expect(wrapper.find(FileCardList).exists()).toEqual(true);
     });
   });
 });

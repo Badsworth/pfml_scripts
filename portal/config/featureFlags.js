@@ -45,6 +45,10 @@ const flagsConfig = {
     // TODO (EMPLOYER-656): Show adjudication status once it is retrieved from FINEOS
     employerShowAdjudicationStatus: false,
 
+    // When this flag is enabled, file upload is visible on the Review page
+    // TODO (EMPLOYER-665): Show file upload once the endpoint is available
+    employerShowFileUpload: false,
+
     // When this flag is enabled, the "Previous leaves" section on Review page is visible
     // TODO (EMPLOYER-657): Show this section after 1/1
     employerShowPreviousLeaves: false,
