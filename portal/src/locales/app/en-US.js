@@ -95,6 +95,8 @@ const errors = {
     },
     fineos_case_creation_issues:
       "We’re having trouble finding you in our database. Fill out the <mass-gov-form-link>form on Mass.gov</mass-gov-form-link> and we'll set up your application through our Contact Center.",
+    fineos_case_error:
+      "There was a problem when trying to send your information to our system. Try submitting this information again.",
     first_name: {
       required: "Enter a first name.",
     },
