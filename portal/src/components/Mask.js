@@ -173,7 +173,7 @@ function Mask(props) {
 
   const modifiedInputText = React.cloneElement(field, {
     defaultValue: undefined,
-    inputMode: "numeric",
+    inputMode: props.mask === "currency" ? "decimal" : "numeric",
     type: props.mask === "phone" ? "tel" : "text",
     value: field.props.value,
     onBlur: handleBlur,

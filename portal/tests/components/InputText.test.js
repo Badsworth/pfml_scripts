@@ -67,6 +67,15 @@ describe("InputText", () => {
     expect(label.prop("children")).toBe(props.label);
   });
 
+  it("prevents usage of HTML number type", () => {
+    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+    const { wrapper } = render({ type: "number" });
+    const field = wrapper.find(".usa-input");
+
+    expect(field.prop("type")).toBe("text");
+    expect(field.prop("inputMode")).toBe("numeric");
+  });
+
   describe("when autoComplete prop is set", () => {
     it("passes the autoComplete to input", () => {
       const { props, wrapper } = render({ autoComplete: "off" });

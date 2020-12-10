@@ -140,7 +140,6 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
                     name="benefit-amount-amendment"
                     value={amendment.benefit_amount_dollars}
                     label={t("components.amendmentForm.question_benefitAmount")}
-                    type="number"
                     mask="currency"
                     width="medium"
                     smallLabel

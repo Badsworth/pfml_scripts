@@ -60,7 +60,6 @@ exports[`AmendableEmployerBenefit renders the component 1`] = `
             name="benefit-amount-amendment"
             onChange={[Function]}
             smallLabel={true}
-            type="number"
             value={1000}
             width="medium"
           />

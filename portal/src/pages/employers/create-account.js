@@ -77,7 +77,7 @@ export const CreateAccount = (props) => {
       />
       <InputText
         {...getFunctionalInputProps("ein")}
-        type="numeric"
+        inputMode="numeric"
         mask="fein"
         hint={
           <Trans

@@ -63,12 +63,12 @@ exports[`CreateAccount renders the page 1`] = `
         i18nKey="pages.employersAuthCreateAccount.einHint"
       />
     }
+    inputMode="numeric"
     label="Employer ID number (EIN)"
     mask="fein"
     name="ein"
     onChange={[Function]}
     smallLabel={true}
-    type="numeric"
     value=""
   />
   <p>

@@ -30,11 +30,11 @@ exports[`SupportingWorkDetails renders the component 1`] = `
       >
         <InputText
           hint="If their schedule varies, tell us the average number of hours worked over the past 52 weeks."
+          inputMode="numeric"
           label="On average, how many hours does the employee work each week?"
           name="supporting-work-detail-amendment"
           onChange={[Function]}
           smallLabel={true}
-          type="number"
           value={30}
           width="small"
         />

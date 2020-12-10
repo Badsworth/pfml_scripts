@@ -58,6 +58,13 @@ describe("Mask", () => {
     expect(input.prop("inputMode")).toBe("numeric");
   });
 
+  it("adds `inputMode='decimal'` to the child element when mask is currency", () => {
+    const { wrapper } = render({ mask: "currency" }, { value: "123456789" });
+    const input = wrapper.find("input");
+
+    expect(input.prop("inputMode")).toBe("decimal");
+  });
+
   it("does not mask if an invalid mask value is passed in", () => {
     //   Suppress the console.error that otherwise gets logged in the test.
     jest.spyOn(console, "error").mockImplementation(jest.fn());

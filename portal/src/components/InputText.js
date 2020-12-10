@@ -16,6 +16,14 @@ import useUniqueId from "../hooks/useUniqueId";
 function InputText({ type = "text", ...props }) {
   const inputId = useUniqueId("InputText");
   const hasError = !!props.errorMsg;
+  let inputMode = props.inputMode;
+
+  if (type === "number") {
+    // Prevent usage of type="number"
+    // See: https://css-tricks.com/you-probably-dont-need-input-typenumber/
+    type = "text";
+    inputMode = "numeric";
+  }
 
   const fieldClasses = classnames("usa-input", props.inputClassName, {
     "usa-input--error": hasError,
@@ -37,7 +45,7 @@ function InputText({ type = "text", ...props }) {
       autoComplete={props.autoComplete}
       className={fieldClasses}
       id={inputId}
-      inputMode={props.inputMode}
+      inputMode={inputMode}
       pattern={props.pattern}
       maxLength={props.maxLength}
       name={props.name}
@@ -98,9 +106,9 @@ InputText.propTypes = {
    */
   inputClassName: PropTypes.string,
   /**
-   * HTML input `inputmode` attribute
+   * HTML input `inputmode` attribute. Defaults to "text"
    */
-  inputMode: PropTypes.string,
+  inputMode: PropTypes.oneOf(["decimal", "numeric", "text"]),
   /**
    * Add a `ref` to the input element
    */
@@ -156,9 +164,9 @@ InputText.propTypes = {
    */
   smallLabel: PropTypes.bool,
   /**
-   * HTML input `type` attribute
+   * HTML input `type` attribute. Defaults to "text".
    */
-  type: PropTypes.string,
+  type: PropTypes.oneOf(["email", "password", "tel", "text"]),
   /**
    * Change the width of the input field
    */

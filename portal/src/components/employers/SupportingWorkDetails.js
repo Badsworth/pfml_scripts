@@ -57,7 +57,7 @@ const SupportingWorkDetails = (props) => {
                 "components.amendmentForm.question_leavePeriodDuration_hint"
               )}
               name="supporting-work-detail-amendment"
-              type="number"
+              inputMode="numeric"
               width="small"
               smallLabel
             />

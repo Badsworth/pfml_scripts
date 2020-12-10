@@ -92,7 +92,7 @@ export const EmploymentStatus = (props) => {
       >
         <InputText
           {...getFunctionalInputProps("employer_fein")}
-          type="numeric"
+          inputMode="numeric"
           label={t("pages.claimsEmploymentStatus.feinLabel")}
           mask="fein"
           hint={t("pages.claimsEmploymentStatus.feinHint")}
