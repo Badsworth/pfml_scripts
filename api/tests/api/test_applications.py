@@ -2421,6 +2421,33 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     ]
 
 
+@freeze_time("2020-01-01")
+def test_application_post_submit_app_more_than_60_days_ahead(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2022, 1, 1), end_date=date(2022, 1, 30))
+    ]
+    application.has_continuous_leave_periods = True
+
+    test_db_session.commit()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    response_body = response.get_json()
+
+    assert response.status_code == 400
+
+    errors = response_body.get("errors")
+
+    assert {
+        "message": "Can't submit application more than 60 days in advance of the earliest leave period",
+        "rule": "disallow_submit_over_60_days_before_start_date",
+    } in errors
+
+
 def test_application_post_submit_fineos_forbidden(client, fineos_user, fineos_user_token):
     application = ApplicationFactory.create(user=fineos_user)
     response = client.post(
