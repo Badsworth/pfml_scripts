@@ -1,7 +1,14 @@
 locals {
   # you cannot lookup certs by a SAN, so we lookup based on the first domain
   # as specified in the infra/pfml-aws/acm.tf file.
-  cert_domain = var.environment_name == "prod" ? "paidleave.mass.gov" : "paidleave-test.mass.gov"
+  cert_domains = {
+    "test"        = "paidleave-test.mass.gov",
+    "stage"       = "paidleave-test.mass.gov",
+    "performance" = "paidleave-performance.mass.gov",
+    "training"    = "paidleave-performance.mass.gov",
+    "prod"        = "paidleave.mass.gov"
+  }
+  cert_domain = local.cert_domains[var.environment_name]
   api_domain  = var.environment_name == "prod" ? "paidleave-api.mass.gov" : "paidleave-api-${var.environment_name}.mass.gov"
 }
 
@@ -17,6 +24,11 @@ locals {
 // SANs: paidleave-stage.mass.gov,
 //       paidleave-api-test.mass.gov,
 //       paidleave-api-stage.mass.gov
+//
+// domain_name: paidleave-performance.mass.gov
+// SANs: paidleave-training.mass.gov,
+//       paidleave-api-performance.mass.gov,
+//       paidleave-api-training.mass.gov
 //
 data "aws_acm_certificate" "domain" {
   count       = var.enable_pretty_domain ? 1 : 0

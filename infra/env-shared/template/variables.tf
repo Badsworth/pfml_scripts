@@ -9,12 +9,6 @@ variable "environment_name" {
   type        = string
 }
 
-variable "forwarded_path" {
-  description = "Forwarded path configured in the API Gateway."
-  type        = string
-  default     = "'/api/'"
-}
-
 variable "nlb_name" {
   description = "Name of the NLB"
   type        = string

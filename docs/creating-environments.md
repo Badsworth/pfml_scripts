@@ -72,3 +72,36 @@ The easiest way to set up resources in a new environment is using the templates 
    - [Additional steps for new Portal environments](portal/creating-environments.md)
 
 1. Add the new environment to the [CI build matrix](/.github/workflows/infra-validate.yml) so it can be validated when it's changed.
+
+# Setting up Custom Domains
+
+If you need a custom mass.gov domain for your environment, please follow these steps:
+
+1. Request an ACM cert in the AWS Console, with Email Verification. Example:
+
+   |Domain Name|SANs|
+   |---|---|
+   |paidleave-api-performance.mass.gov|paidleave-api-training.mass.gov,<br>paidleave-training.mass.gov,<br>paidleave-performance.mass.gov|
+
+2. Send an email to Vijay with the domain name/SANs, so he can request approval from Sarah Bourne / Chris Velluto / Bill Cole.
+
+3. Once EOTSS has approved the certificate, update the cert_domains map in the following files:
+
+   * [infra/portal/template/acm.tf](/infra/portal/template/acm.tf)
+   * [infra/env-shared/template/acm.tf](/infra/env-shared/template/acm.tf)
+   
+   and flip enable\_pretty\_domains to `true` in infra/env-shared/environments/$ENV/main.tf.
+
+4. After merging and applying the changes, ask Vijay to create a ServiceNow request for CNAME entries for the Portal and Gateway. 
+
+   These should all be cloudfront URLs. Check the AWS Console under API Gateway > Custom Domain Names for the API Gateway Cloudfront URLs.
+   
+   |App|CNAME|URL|
+   |---|-----|---|
+   |API perf|paidleave-api-performance.mass.gov|https://abcd123.cloudfront.net|
+   |API training|paidleave-api-training.mass.gov|https://zaww123.cloudfront.net|
+   |Portal perf|paidleave-performance.mass.gov|https://vfcs123.cloudfront.net|
+   |Portal training|paidleave-training.mass.gov|https://qwer123.cloudfront.net|
+
+
+5. After they create the CNAME entries, the custom domains should direct to the appropriate applications.

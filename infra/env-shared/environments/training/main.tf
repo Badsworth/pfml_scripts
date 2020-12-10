@@ -27,13 +27,8 @@ terraform {
 module "pfml" {
   source = "../../template"
 
-  # For non-custom domain names, we're relying on the API Gateway-provided URL
-  # which prepends the "training" stage. This adds a header so Swagger UI knows
-  # where to find UI files on the server.
-  forwarded_path       = "'/training/api/'"
-  enable_pretty_domain = false
-  environment_name     = "training"
-  nlb_name             = "${local.vpc}-nlb"
-  nlb_vpc_link_name    = "${local.vpc}-nlb-vpc-link"
-  nlb_port             = 3502
+  environment_name  = "training"
+  nlb_name          = "${local.vpc}-nlb"
+  nlb_vpc_link_name = "${local.vpc}-nlb-vpc-link"
+  nlb_port          = 3502
 }

@@ -27,10 +27,11 @@ terraform {
 module "pfml" {
   source = "../../template"
 
-  # For non-custom domain names, we're relying on the API Gateway-provided URL
-  # which prepends the "$ENV_NAME" stage. This adds a header so Swagger UI knows
-  # where to find UI files on the server.
-  forwarded_path       = "'/$ENV_NAME/api/'"
+  # Disable custom domain names by default for a new environment.
+  #
+  # Follow the steps in /docs/creating-environments.md to
+  # set up custom mass.gov domain names.
+  #
   enable_pretty_domain = false
   environment_name     = "$ENV_NAME"
   nlb_name             = "\${local.vpc}-nlb"
