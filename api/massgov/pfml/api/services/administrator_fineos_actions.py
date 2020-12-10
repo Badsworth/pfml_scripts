@@ -232,12 +232,29 @@ def register_leave_admin_with_fineos(
     user: User,
     db_session: massgov.pfml.db.Session,
     fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient],
+    force_register: Optional[bool] = False,
 ) -> UserLeaveAdministrator:
     """
     Given information about a Leave administrator, create a FINEOS user for that leave admin
     and associate that user to the leave admin within the PFML DB
     """
     try:
+        leave_admin_record = (
+            db_session.query(UserLeaveAdministrator)
+            .filter(
+                UserLeaveAdministrator.user_id == user.user_id,
+                UserLeaveAdministrator.employer_id == employer.employer_id,
+            )
+            .one_or_none()
+        )
+        if leave_admin_record and leave_admin_record.fineos_web_id is not None:
+            if not force_register:
+                logger.info(
+                    "User previously registered in FINEOS and force_register off",
+                    extra={"email": admin_email, "fineos_web_id": leave_admin_record.fineos_web_id},
+                )
+                return leave_admin_record
+
         fineos = fineos_client if fineos_client else massgov.pfml.fineos.create_client()
         fineos_web_id = f"pfml_leave_admin_{str(uuid.uuid4())}"
         logger.info(
@@ -257,16 +274,11 @@ def register_leave_admin_with_fineos(
     except massgov.pfml.fineos.FINEOSClientError as error:
         logger.exception("FINEOS Client Exception", extra={"error": error})
         raise ValueError("FINEOS Client Exception")
+    except Exception as db_error:
+        logger.exception("Error looking up leave admin from DB", extra={"error": db_error})
+        raise ValueError("Error looking up leave admin from DB")
 
     try:
-        leave_admin_record = (
-            db_session.query(UserLeaveAdministrator)
-            .filter(
-                UserLeaveAdministrator.user_id == user.user_id,
-                UserLeaveAdministrator.employer_id == employer.employer_id,
-            )
-            .one_or_none()
-        )
         if leave_admin_record:
             leave_admin_record.fineos_web_id = fineos_web_id
         else:
