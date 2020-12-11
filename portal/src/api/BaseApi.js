@@ -226,12 +226,6 @@ export function handleError(error) {
  * @throws {Error} error
  */
 export function handleNotOkResponse(url, response, errors = [], i18nPrefix) {
-  // Request completed, but the response status code was outside the 2xx range
-  // Log the error response to track trends and surges
-  tracker.noticeError(
-    new Error(`Fetch request to ${url} returned status: ${response.status}`)
-  );
-
   if (isEmpty(errors)) {
     // Response didn't include any errors that we could use to
     // display user friendly error message(s) from, so throw

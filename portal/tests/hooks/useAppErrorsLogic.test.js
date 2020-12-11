@@ -69,6 +69,20 @@ describe("useAppErrorsLogic", () => {
           `"Sorry, an authorization error was encountered. Please log out and then log in to try again."`
         );
       });
+
+      it("tracks the error as an event in New Relic", () => {
+        const error = new ForbiddenError("Failed with forbidden error");
+
+        act(() => {
+          appErrorsLogic.catchError(error);
+        });
+
+        expect(tracker.trackEvent).toHaveBeenCalledWith("ApiRequestError", {
+          errorMessage: error.message,
+          errorName: "ForbiddenError",
+        });
+        expect(tracker.noticeError).not.toHaveBeenCalled();
+      });
     });
 
     describe("when NetworkError is thrown", () => {
@@ -81,6 +95,17 @@ describe("useAppErrorsLogic", () => {
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
           `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
         );
+      });
+
+      it("tracks the error as JavaScriptError in New Relic", () => {
+        const error = new NetworkError();
+
+        act(() => {
+          appErrorsLogic.catchError(error);
+        });
+
+        expect(tracker.noticeError).toHaveBeenCalledWith(error);
+        expect(tracker.trackEvent).not.toHaveBeenCalled();
       });
     });
 
@@ -305,15 +330,24 @@ describe("useAppErrorsLogic", () => {
       });
     });
 
-    describe("when multiple errors are caught", () => {
-      it("adds adds all errors to the app errors list", () => {
+    describe("when multiple Errors are caught", () => {
+      beforeEach(() => {
         act(() => {
           appErrorsLogic.catchError(new Error("error 1"));
           appErrorsLogic.catchError(new Error("error 2"));
         });
+      });
 
+      it("adds adds all errors to the app errors list", () => {
         expect(appErrorsLogic.appErrors.items).toHaveLength(2);
+      });
+
+      it("tracks the errors as JavaScriptError in New Relic", () => {
         expect(tracker.noticeError).toHaveBeenCalledTimes(2);
+        expect(tracker.trackEvent).not.toHaveBeenCalled();
+      });
+
+      it("logs the errors to the console", () => {
         expect(console.error).toHaveBeenCalledTimes(2);
       });
     });

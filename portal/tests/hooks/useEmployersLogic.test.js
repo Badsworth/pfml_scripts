@@ -15,6 +15,7 @@ import useEmployersLogic from "../../src/hooks/useEmployersLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/api/EmployersApi");
+jest.mock("../../src/services/tracker");
 
 describe("useEmployersLogic", () => {
   const absenceId = "mock-fineos-absence-id-1";

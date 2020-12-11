@@ -1,4 +1,8 @@
-import { DocumentsRequestError, ValidationError } from "../errors";
+import {
+  ApiRequestError,
+  DocumentsRequestError,
+  ValidationError,
+} from "../errors";
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import React from "react";
@@ -136,7 +140,14 @@ const useAppErrorsLogic = () => {
 
     addError(appError);
 
-    tracker.noticeError(error);
+    if (error instanceof ApiRequestError) {
+      tracker.trackEvent("ApiRequestError", {
+        errorMessage: error.message,
+        errorName: error.name,
+      });
+    } else {
+      tracker.noticeError(error);
+    }
   };
 
   /**
