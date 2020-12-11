@@ -1,4 +1,5 @@
 import base64
+from typing import Dict, Optional
 
 import connexion
 import puremagic
@@ -148,8 +149,13 @@ def applications_submit(application_id):
 
         ensure(EDIT, existing_application)
 
+        log_attributes = get_application_log_attributes(existing_application)
+
         issues = application_rules.get_application_issues(existing_application)
         if issues:
+            logger.info(
+                "applications_submit failure - application failed validation", extra=log_attributes
+            )
             return response_util.error_response(
                 status_code=BadRequest,
                 message="Application is not valid for submission",
@@ -164,6 +170,10 @@ def applications_submit(application_id):
                 existing_application, db_session
             )
             if meta_issues:
+                logger.info(
+                    "applications_submit failure - application flagged for fraud",
+                    extra=log_attributes,
+                )
                 return response_util.error_response(
                     status_code=Forbidden,
                     message="Application unable to be submitted by current user",
@@ -173,6 +183,9 @@ def applications_submit(application_id):
 
         # The presence of a submitted_time indicates that the application has already been submitted.
         if existing_application.submitted_time:
+            logger.info(
+                "applications_submit failure - application already submitted", extra=log_attributes
+            )
             return response_util.error_response(
                 status_code=Forbidden,
                 message="Application {} could not be submitted. Application already submitted on {}".format(
@@ -188,6 +201,10 @@ def applications_submit(application_id):
         if not existing_application.fineos_absence_id:
             send_to_fineos_issues = send_to_fineos(existing_application, db_session)
             if len(send_to_fineos_issues) != 0:
+                logger.error(
+                    "applications_submit failure - failure sending application to claims processing system",
+                    extra=log_attributes,
+                )
                 return response_util.error_response(
                     status_code=ServiceUnavailable,
                     message="Application {} could not be submitted, try again later".format(
@@ -197,11 +214,23 @@ def applications_submit(application_id):
                     data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
                 ).to_api_response()
 
+            logger.info(
+                "applications_submit - application sent to claims processing system",
+                extra=log_attributes,
+            )
+
         complete_intake_issues = complete_intake(existing_application, db_session)
         if len(complete_intake_issues) == 0:
             existing_application.submitted_time = datetime_util.utcnow()
             db_session.add(existing_application)
+            logger.info(
+                "applications_submit - application complete intake success", extra=log_attributes
+            )
         else:
+            logger.error(
+                "applications_submit failure - application complete intake failure",
+                extra=log_attributes,
+            )
             return response_util.error_response(
                 status_code=ServiceUnavailable,
                 message="Application {} could not be submitted, try again later".format(
@@ -210,6 +239,8 @@ def applications_submit(application_id):
                 errors=complete_intake_issues,
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             ).to_api_response()
+
+        logger.info("applications_submit success", extra=log_attributes)
 
     return response_util.success_response(
         message="Application {} submitted without errors".format(
@@ -226,8 +257,14 @@ def applications_complete(application_id):
 
         ensure(EDIT, existing_application)
 
+        log_attributes = get_application_log_attributes(existing_application)
+
         issues = application_rules.get_application_issues(existing_application)
         if issues:
+            logger.info(
+                "applications_complete failure - application failed validation",
+                extra=log_attributes,
+            )
             return response_util.error_response(
                 status_code=BadRequest,
                 message="Application is not valid for completion",
@@ -237,8 +274,15 @@ def applications_complete(application_id):
 
         if mark_documents_as_received(existing_application, db_session):
             existing_application.completed_time = datetime_util.utcnow()
-
+            logger.info(
+                "applications_complete - application documents marked as received",
+                extra=log_attributes,
+            )
         else:
+            logger.error(
+                "applications_complete failure - application documents failed to be marked as received",
+                extra=log_attributes,
+            )
             return response_util.error_response(
                 status_code=ServiceUnavailable,
                 message="Application {} could not be completed (failed to mark associated documents as received), try again later".format(
@@ -247,6 +291,8 @@ def applications_complete(application_id):
                 errors=[],
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             ).to_api_response()
+
+        logger.info("applications_complete success", extra=log_attributes)
 
     return response_util.success_response(
         message="Application {} completed without errors".format(
@@ -542,3 +588,44 @@ def payment_preference_submit(application_id: str) -> Response:
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             errors=[],
         ).to_api_response()
+
+
+def get_application_log_attributes(application: Application) -> Dict[str, Optional[str]]:
+    attributes_to_log = [
+        "application_id",
+        "employer_id",
+        "leave_type",
+        "leave_reason",
+        "leave_reason_qualifier",
+        "has_state_id",
+        "has_continuous_leave_periods",
+        "has_employer_benefits",
+        "has_future_child_date",
+        "has_intermittent_leave_periods",
+        "has_mailing_address",
+        "has_other_incomes",
+        "has_reduced_schedule_leave_periods",
+        "has_submitted_payment_preference",
+        "start_time",
+        "updated_time",
+        "completed_time",
+        "submitted_time",
+    ]
+
+    result = {}
+    for name in attributes_to_log:
+        value = getattr(application, name)
+        result[f"application.{name}"] = str(value) if value is not None else None
+
+    # Use a different attribute name for other_incomes_awaiting_approval to be consistent with other booleans
+    has_other_incomes_awaiting_approval = application.other_incomes_awaiting_approval
+    result["application.has_other_incomes_awaiting_approval"] = (
+        str(has_other_incomes_awaiting_approval)
+        if has_other_incomes_awaiting_approval is not None
+        else None
+    )
+
+    # Use a different attribute name for fineos_absence_id to avoid using vendor specific names
+    result["application.absence_case_id"] = application.fineos_absence_id
+
+    return result
