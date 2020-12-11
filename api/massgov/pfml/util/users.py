@@ -64,6 +64,7 @@ def create_or_update_user_record(
             )
         if not user.roles:
             db_session.add(UserRole(user=user, role_id=Role.EMPLOYER.role_id))
+            db_session.commit()
     else:
         logger.debug("Creating new Cognito user", extra={"email": email})
         user = create_cognito_leave_admin_account(

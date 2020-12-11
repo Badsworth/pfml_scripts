@@ -286,7 +286,7 @@ def register_leave_admin_with_fineos(
                 user=user, employer=employer, fineos_web_id=fineos_web_id
             )
         db_session.add(leave_admin_record)
-
+        db_session.commit()
         return leave_admin_record
     except Exception as db_error:
         logger.exception("Error adding leave admin to DB", extra={"error": db_error})

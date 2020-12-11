@@ -129,6 +129,8 @@ class TestProcessByEmail:
         # Ensure all emails in pivoted file were created in cognito
         assert set(cognito_client._memo.keys()) == set(pivoted.keys())
 
+        # Ensure ALL changes are committed by the process_by_email flow with intentional rollback
+        test_db_session.rollback()
         users_created = test_db_session.query(User).all()
         assert len(users_created) == 3
         user_roles_created = test_db_session.query(UserRole).all()
