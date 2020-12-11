@@ -15,7 +15,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, TextIO, Tuple,
 
 import boto3
 import smart_open
-from pydantic import BaseSettings, Field
+from pydantic import BaseSettings, Field, PositiveInt
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Query
 
@@ -42,6 +42,7 @@ class EligibilityFeedExportConfig(BaseSettings):
     mode: EligibilityFeedExportMode = Field(
         EligibilityFeedExportMode.FULL, env="ELIGIBILITY_FEED_MODE"
     )
+    bundle_count: PositiveInt = PositiveInt(1)  # Only applies to "full" mode currently
 
 
 DEFAULT_DATE = date(1753, 1, 1)
@@ -313,12 +314,16 @@ def process_employee_updates(
 
     if len(unprocessed_employees) > 0:
         recovery_employee_ids = process_employee_batch(
-            db_session, fineos, output_dir_path, unprocessed_employees, report
+            db_session,
+            fineos,
+            output_dir_path,
+            unprocessed_employees,
+            report,
+            output_transport_params,
         )
 
-        db_session.begin_nested()
-        delete_processed_batch(db_session, recovery_employee_ids, process_id)
-        db_session.commit()
+        with db_session.begin_nested():
+            delete_processed_batch(db_session, recovery_employee_ids, process_id)
 
     # After recovery proceed with normal flow.
     while "batch not empty":
@@ -339,7 +344,12 @@ def process_employee_updates(
             update_batch_to_processing(db_session, updated_employee_ids, process_id)
 
         successfully_processed_employee_ids = process_employee_batch(
-            db_session, fineos, output_dir_path, updated_employee_ids, report
+            db_session,
+            fineos,
+            output_dir_path,
+            updated_employee_ids,
+            report,
+            output_transport_params,
         )
 
         with db_session.begin_nested():
@@ -359,6 +369,7 @@ def process_employee_batch(
     output_dir_path: str,
     batch_of_employee_ids: Iterable,
     report: EligibilityFeedExportReport,
+    output_transport_params: Optional[OutputTransportParams] = None,
 ) -> List:
     # Get the latest wages record for modified employee to get
     # employer associated with it.
@@ -423,6 +434,7 @@ def process_employee_batch(
                 employer,
                 number_of_employees,
                 employees_and_most_recent_wages,
+                output_transport_params,
             )
 
             report.employers_success_count += 1
@@ -517,7 +529,7 @@ def process_all_worker(
         )
 
         output_bundle_dir_path = determine_bundle_path(
-            output_dir_path, index, total_employers_count
+            output_dir_path, index, total_employers_count, total_bundles=config.bundle_count
         )
 
         open_and_write_to_eligibility_file(
@@ -635,21 +647,24 @@ ELIGIBILITY_FEED_CSV_ENCODERS: csv_util.Encoders = {
 def determine_bundle_path(
     output_dir_path: str, index: int, total: int, total_bundles: int = 12
 ) -> str:
-    bundle_size_initial = 1000
-    bundle_size_after_initial = math.ceil((total - bundle_size_initial) / (total_bundles - 1))
-
-    if index >= total:
-        raise ValueError("Item count is greater than expected total")
-
-    if index < bundle_size_initial:
+    if total_bundles <= 1:
         bundle_num = 1
     else:
-        minus_initial = index - bundle_size_initial
-        bundle_num_calculated = (minus_initial // bundle_size_after_initial) + 2
-        # just in case something is off in the calculation, clamp it to a valid
-        # batch number, i.e., after the initial one and no more than the
-        # total_bundles limit
-        bundle_num = max(min(bundle_num_calculated, 12), 2)
+        bundle_size_initial = 1000
+        bundle_size_after_initial = math.ceil((total - bundle_size_initial) / (total_bundles - 1))
+
+        if index >= total:
+            raise ValueError("Item count is greater than expected total")
+
+        if index < bundle_size_initial:
+            bundle_num = 1
+        else:
+            minus_initial = index - bundle_size_initial
+            bundle_num_calculated = (minus_initial // bundle_size_after_initial) + 2
+            # just in case something is off in the calculation, clamp it to a valid
+            # batch number, i.e., after the initial one and no more than the
+            # total_bundles limit
+            bundle_num = max(min(bundle_num_calculated, total_bundles), 2)
 
     # the first bundle directory is not numbered
     bundle_num_path_part = "" if bundle_num == 1 else str(bundle_num)

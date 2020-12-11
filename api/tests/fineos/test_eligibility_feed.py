@@ -870,3 +870,41 @@ def test_determine_bundle_path():
     assert ef.determine_bundle_path("foo", 204733, total) == "foo/absence-eligibility11/upload"
     assert ef.determine_bundle_path("foo", 227370, total) == "foo/absence-eligibility12/upload"
     assert ef.determine_bundle_path("foo", 249999, total) == "foo/absence-eligibility12/upload"
+
+    # test different number of bundles from default of 12
+
+    total = 5000
+    bundle_count = 1
+    assert (
+        ef.determine_bundle_path("foo", 1, total, bundle_count) == "foo/absence-eligibility/upload"
+    )
+    assert (
+        ef.determine_bundle_path("foo", 2000, total, bundle_count)
+        == "foo/absence-eligibility/upload"
+    )
+    assert (
+        ef.determine_bundle_path("foo", 4000, total, bundle_count)
+        == "foo/absence-eligibility/upload"
+    )
+
+    total = 5000
+    bundle_count = 5
+    assert (
+        ef.determine_bundle_path("foo", 1, total, bundle_count) == "foo/absence-eligibility/upload"
+    )
+    assert (
+        ef.determine_bundle_path("foo", 1000, total, bundle_count)
+        == "foo/absence-eligibility2/upload"
+    )
+    assert (
+        ef.determine_bundle_path("foo", 2000, total, bundle_count)
+        == "foo/absence-eligibility3/upload"
+    )
+    assert (
+        ef.determine_bundle_path("foo", 3000, total, bundle_count)
+        == "foo/absence-eligibility4/upload"
+    )
+    assert (
+        ef.determine_bundle_path("foo", 4000, total, bundle_count)
+        == "foo/absence-eligibility5/upload"
+    )
