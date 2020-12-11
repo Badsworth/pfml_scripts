@@ -12,7 +12,7 @@ resource "aws_appautoscaling_policy" "ecs_scale_policy" {
     }
     scale_in_cooldown  = 300
     scale_out_cooldown = 300
-    target_value       = 60
+    target_value       = 60 # Leaving this at 60% to test in LST
   }
   depends_on = [
     aws_appautoscaling_target.ecs_target
