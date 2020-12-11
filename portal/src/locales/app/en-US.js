@@ -387,6 +387,14 @@ const errors = {
 const shared = {
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
+  amountFrequency_daily: "Daily",
+  amountFrequency_inTotal: "All at once",
+  amountFrequency_monthly: "Monthly",
+  amountFrequency_weekly: "Weekly",
+  amountPerFrequency_daily: "{{amount, currency}} per day",
+  amountPerFrequency_inTotal: "{{amount, currency}} all at once",
+  amountPerFrequency_monthly: "{{amount, currency}} per month",
+  amountPerFrequency_weekly: "{{amount, currency}} per week",
   backToLoginLink: "Back to log in",
   choiceNo: "No",
   choicePendingOtherIncomes:
@@ -418,10 +426,6 @@ const shared = {
   documentsRequestError:
     "An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   employerBenefitEntryPrefix: "Benefit",
-  employerBenefitFrequency_allAtOnce: "All at once",
-  employerBenefitFrequency_daily: "Daily",
-  employerBenefitFrequency_monthly: "Monthly",
-  employerBenefitFrequency_weekly: "Weekly",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid leave",
   employerBenefitType_permanentDisability: "Permanent disability insurance",
@@ -689,8 +693,13 @@ const pages = {
   },
   claimsEmployerBenefitDetails: {
     addButton: "Add another benefit",
-    amountExample: "For example, $250 every month",
-    amountLabel: "How much will you receive?",
+    amountFrequencyLabel: "Frequency",
+    amountFrequency_daily: "$t(shared.amountFrequency_daily)",
+    amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
+    amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
+    amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
+    amountLabel: "Amount",
+    amountLegend: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.employerBenefitEntryPrefix)",
     choiceHint_familyOrMedicalLeave:
       "For example, a paid maternity leave policy",
@@ -904,8 +913,13 @@ const pages = {
   },
   claimsOtherIncomesDetails: {
     addButton: "Add another income",
-    amountExample: "For example, $250 every month.",
-    amountLabel: "How much will you receive?",
+    amountFrequencyLabel: "Frequency",
+    amountFrequency_daily: "$t(shared.amountFrequency_daily)",
+    amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
+    amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
+    amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
+    amountLabel: "Amount",
+    amountLegend: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.otherIncomeEntryPrefix)",
     endDateLabel: "When will you stop receiving this income?",
     removeButton: "Remove income",
@@ -1027,6 +1041,10 @@ const pages = {
     achTypeLabel: "Account type",
     achType_checking: "$t(shared.achTypeChecking)",
     achType_savings: "$t(shared.achTypeSavings)",
+    amountPerFrequency_daily: "$t(shared.amountPerFrequency_daily)",
+    amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
+    amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",
+    amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
     childBirthDateLabel: "Child's date of birth",
     childPlacementDateLabel: "Child's placement date",
     documentsRequestError: "$t(shared.documentsRequestError)",
@@ -1096,8 +1114,7 @@ const pages = {
     otherLeaveChoiceNo: "$t(shared.choiceNo)",
     otherLeaveChoicePendingOtherIncomes: "$t(shared.choicePendingOtherIncomes)",
     otherLeaveChoiceYes: "$t(shared.choiceYes)",
-    // eslint-disable-next-line no-template-curly-in-string
-    otherLeaveDollarAmount: "${{amount}} every month",
+    otherLeaveDollarAmount: "{{amount, currency}}",
     partDescription_1:
       "If you need to make edits to Part 1, you’ll need to call our Contact Center at $t(shared.contactCenterPhoneNumber). Your application ID is <strong>{{absence_id}}</strong>",
     partHeadingPrefix: "Part {{number}}",
@@ -1449,24 +1466,22 @@ const pages = {
         "Did the employee give you at least 30 days notice about their leave?",
     },
     employerBenefits: {
-      amountValue_allAtOnce: "{{amount, currency}} all at once",
-      amountValue_daily: "{{amount, currency}} per day",
-      amountValue_monthly: "{{amount, currency}} per month",
-      amountValue_weekly: "{{amount, currency}} per week",
+      amountPerFrequency_daily: "$t(shared.amountPerFrequency_daily)",
+      amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
+      amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",
+      amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
       benefitTypeLabel: "Benefit type",
       caption:
         "Your employee is planning to use these benefits during their leave. Learn more about how paid leave works with <reductions-overview-link>other government and private benefit programs</reductions-overview-link>.",
       commentInstructions: "$t(shared.employerInstructions_addComment)",
       dateRangeLabel: "Date range",
       detailsLabel: "Details",
-      employerBenefitFrequencyValue_allAtOnce:
-        "$t(shared.employerBenefitFrequency_allAtOnce)",
-      employerBenefitFrequencyValue_daily:
-        "$t(shared.employerBenefitFrequency_daily)",
+      employerBenefitFrequencyValue_daily: "$t(shared.amountFrequency_daily)",
+      employerBenefitFrequencyValue_inTotal:
+        "$t(shared.amountFrequency_inTotal)",
       employerBenefitFrequencyValue_monthly:
-        "$t(shared.employerBenefitFrequency_monthly)",
-      employerBenefitFrequencyValue_weekly:
-        "$t(shared.employerBenefitFrequency_weekly)",
+        "$t(shared.amountFrequency_monthly)",
+      employerBenefitFrequencyValue_weekly: "$t(shared.amountFrequency_weekly)",
       employerBenefitType_familyOrMedicalLeave:
         "$t(shared.employerBenefitType_familyOrMedicalLeave)",
       employerBenefitType_paidLeave: "$t(shared.employerBenefitType_paidLeave)",

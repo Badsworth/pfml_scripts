@@ -71,16 +71,65 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
     value=""
     yearLabel="Year"
   />
-  <InputText
-    example="For example, $250 every month."
-    label="How much will you receive?"
-    mask="currency"
-    name="other_incomes[0].income_amount_dollars"
-    onChange={[Function]}
-    optionalText="(optional)"
-    smallLabel={true}
-    value=""
-  />
+  <Fieldset>
+    <FormLabel
+      component="legend"
+      optionalText="(optional)"
+      small={true}
+    >
+      How much will you receive?
+    </FormLabel>
+    <div
+      className="grid-row grid-gap"
+    >
+      <div
+        className="mobile-lg:grid-col-6"
+      >
+        <InputText
+          inputMode="numeric"
+          label="Amount"
+          labelClassName="text-normal margin-top-05"
+          mask="currency"
+          name="other_incomes[0].income_amount_dollars"
+          onChange={[Function]}
+          smallLabel={true}
+          value=""
+        />
+      </div>
+      <div
+        className="mobile-lg:grid-col-6"
+      >
+        <Dropdown
+          choices={
+            Array [
+              Object {
+                "label": "Daily",
+                "value": "Per Day",
+              },
+              Object {
+                "label": "Weekly",
+                "value": "Per Week",
+              },
+              Object {
+                "label": "Monthly",
+                "value": "Per Month",
+              },
+              Object {
+                "label": "All at once",
+                "value": "In Total",
+              },
+            ]
+          }
+          label="Frequency"
+          labelClassName="text-normal margin-top-05"
+          name="other_incomes[0].income_amount_frequency"
+          onChange={[Function]}
+          smallLabel={true}
+          value=""
+        />
+      </div>
+    </div>
+  </Fieldset>
 </Fragment>
 `;
 
@@ -106,7 +155,7 @@ exports[`OtherIncomesDetails when the user's claim has other income sources rend
       Array [
         OtherIncome {
           "income_amount_dollars": 125,
-          "income_amount_frequency": null,
+          "income_amount_frequency": "Per Week",
           "income_end_date": "2021-01-01",
           "income_start_date": "2021-01-30",
           "income_type": "Earnings from another employment/self-employment",

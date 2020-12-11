@@ -12,9 +12,13 @@ import Claim, {
 } from "../../models/Claim";
 import Document, { DocumentType } from "../../models/Document";
 import EmployerBenefit, {
+  EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
-import OtherIncome, { OtherIncomeType } from "../../models/OtherIncome";
+import OtherIncome, {
+  OtherIncomeFrequency,
+  OtherIncomeType,
+} from "../../models/OtherIncome";
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get, isUndefined } from "lodash";
@@ -719,6 +723,7 @@ export const EmployerBenefitList = (props) => {
     const label = t("pages.claimsReview.employerBenefitEntryLabel", {
       count: index + 1,
     });
+
     // TODO (CP-567): remove this ternary operator once we begin saving other leave to
     // the API. We'll always have a type then
     const type = entry.benefit_type
@@ -726,15 +731,21 @@ export const EmployerBenefitList = (props) => {
           context: findKeyByValue(EmployerBenefitType, entry.benefit_type),
         })
       : null;
+
     const dates = formatDateRange(
       entry.benefit_start_date,
       entry.benefit_end_date
     );
-    const amount =
-      entry.benefit_amount_dollars &&
-      t("pages.claimsReview.otherLeaveDollarAmount", {
-        amount: entry.benefit_amount_dollars,
-      });
+
+    const amount = entry.benefit_amount_dollars
+      ? t("pages.claimsReview.amountPerFrequency", {
+          context: findKeyByValue(
+            EmployerBenefitFrequency,
+            entry.benefit_amount_frequency
+          ),
+          amount: entry.benefit_amount_dollars,
+        })
+      : null;
 
     return (
       <OtherLeaveEntry
@@ -766,6 +777,7 @@ export const OtherIncomeList = (props) => {
     const label = t("pages.claimsReview.otherIncomeEntryLabel", {
       count: index + 1,
     });
+
     // TODO (CP-567): remove this ternary operator once we begin saving other leave to
     // the API. We'll always have a type then
     const type = entry.income_type
@@ -773,15 +785,21 @@ export const OtherIncomeList = (props) => {
           context: findKeyByValue(OtherIncomeType, entry.income_type),
         })
       : null;
+
     const dates = formatDateRange(
       entry.income_start_date,
       entry.income_end_date
     );
-    const amount =
-      entry.income_amount_dollars &&
-      t("pages.claimsReview.otherLeaveDollarAmount", {
-        amount: entry.income_amount_dollars,
-      });
+
+    const amount = entry.income_amount_dollars
+      ? t("pages.claimsReview.amountPerFrequency", {
+          context: findKeyByValue(
+            OtherIncomeFrequency,
+            entry.income_amount_frequency
+          ),
+          amount: entry.income_amount_dollars,
+        })
+      : null;
 
     return (
       <OtherLeaveEntry

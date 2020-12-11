@@ -1,5 +1,12 @@
-import OtherIncome, { OtherIncomeType } from "../../models/OtherIncome";
+import OtherIncome, {
+  OtherIncomeFrequency,
+  OtherIncomeType,
+} from "../../models/OtherIncome";
+import { cloneDeep, get, isFinite, pick } from "lodash";
 import Claim from "../../models/Claim";
+import Dropdown from "../../components/Dropdown";
+import Fieldset from "../../components/Fieldset";
+import FormLabel from "../../components/FormLabel";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
@@ -9,8 +16,6 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
-import get from "lodash/get";
-import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
@@ -31,8 +36,19 @@ export const OtherIncomesDetails = (props) => {
   const { formState, updateFields } = useFormState(initialEntries);
   const other_incomes = get(formState, "other_incomes");
 
-  const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+  const handleSave = async () => {
+    // Make sure income_amount_dollars is a number.
+    // TODO (CP-1528): Refactor Currency Masking
+    // There's a similar function in EmployerBenefitDetails.
+    const patchData = cloneDeep(formState);
+    patchData.other_incomes = patchData.other_incomes.map((income) => {
+      const val = income.income_amount_dollars;
+      const number =
+        isFinite(val) || val === null ? val : Number(val.replace(/,/g, ""));
+      return { ...income, income_amount_dollars: number };
+    });
+    await appLogic.claims.update(claim.application_id, patchData);
+  };
 
   const handleAddClick = () => {
     // Add a new blank entry
@@ -105,6 +121,17 @@ export const OtherIncomeCard = (props) => {
   const { t } = useTranslation();
   const { entry, getFunctionalInputProps, index } = props;
 
+  const incomeFrequencyChoices = Object.entries(OtherIncomeFrequency).map(
+    ([frequencyKey, frequency]) => {
+      return {
+        label: t("pages.claimsOtherIncomesDetails.amountFrequency", {
+          context: frequencyKey,
+        }),
+        value: frequency,
+      };
+    }
+  );
+
   return (
     <React.Fragment>
       <InputChoiceGroup
@@ -150,23 +177,47 @@ export const OtherIncomeCard = (props) => {
         yearLabel={t("components.form.dateInputYearLabel")}
         smallLabel
       />
-      <InputText
-        {...getFunctionalInputProps(
-          `other_incomes[${index}].income_amount_dollars`
-        )}
-        label={t("pages.claimsOtherIncomesDetails.amountLabel")}
-        example={t("pages.claimsOtherIncomesDetails.amountExample")}
-        mask="currency"
-        optionalText={t("components.form.optional")}
-        smallLabel
-      />
+      <Fieldset>
+        <FormLabel
+          component="legend"
+          small
+          optionalText={t("components.form.optional")}
+        >
+          {t("pages.claimsOtherIncomesDetails.amountLegend")}
+        </FormLabel>
+        <div className="grid-row grid-gap">
+          <div className="mobile-lg:grid-col-6">
+            <InputText
+              {...getFunctionalInputProps(
+                `other_incomes[${index}].income_amount_dollars`
+              )}
+              inputMode="numeric"
+              label={t("pages.claimsOtherIncomesDetails.amountLabel")}
+              labelClassName="text-normal margin-top-05"
+              mask="currency"
+              smallLabel
+            />
+          </div>
+          <div className="mobile-lg:grid-col-6">
+            <Dropdown
+              {...getFunctionalInputProps(
+                `other_incomes[${index}].income_amount_frequency`
+              )}
+              choices={incomeFrequencyChoices}
+              label={t("pages.claimsOtherIncomesDetails.amountFrequencyLabel")}
+              labelClassName="text-normal margin-top-05"
+              smallLabel
+            />
+          </div>
+        </div>
+      </Fieldset>
     </React.Fragment>
   );
 };
 
 OtherIncomeCard.propTypes = {
   index: PropTypes.number.isRequired,
-  entry: PropTypes.instanceOf(OtherIncome).isRequired,
+  entry: PropTypes.object.isRequired,
   getFunctionalInputProps: PropTypes.func.isRequired,
 };
 

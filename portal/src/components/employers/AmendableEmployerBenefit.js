@@ -1,6 +1,6 @@
 import EmployerBenefit, {
+  EmployerBenefitFrequency,
   EmployerBenefitType,
-  IncomeFrequency,
 } from "../../models/EmployerBenefit";
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
@@ -47,18 +47,21 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
       benefit_amount_dollars && benefit_amount_frequency;
     return isPaidLeave || !hasBenefitAmountDetails
       ? t("pages.employersClaimsReview.notApplicable")
-      : t("pages.employersClaimsReview.employerBenefits.amountValue", {
-          context: findKeyByValue(IncomeFrequency, benefit_amount_frequency),
+      : t("pages.employersClaimsReview.employerBenefits.amountPerFrequency", {
+          context: findKeyByValue(
+            EmployerBenefitFrequency,
+            benefit_amount_frequency
+          ),
           amount: benefit_amount_dollars,
         });
   };
   const getAllBenefitFrequencies = () => {
-    return Object.values(IncomeFrequency).map((frequency) => {
+    return Object.values(EmployerBenefitFrequency).map((frequency) => {
       return {
         label: t(
           "pages.employersClaimsReview.employerBenefits.employerBenefitFrequencyValue",
           {
-            context: findKeyByValue(IncomeFrequency, frequency),
+            context: findKeyByValue(EmployerBenefitFrequency, frequency),
           }
         ),
         value: frequency,

@@ -3,7 +3,7 @@
 exports[`EmployerBenefitList when all data are present renders all data fields 1`] = `
 Array [
   <OtherLeaveEntry
-    amount="$250 every month"
+    amount="$250.00 per month"
     dates="8/12/2021 – 12/30/2021"
     key="0"
     label="Benefit 1"
@@ -11,7 +11,7 @@ Array [
     type="Accrued paid leave"
   />,
   <OtherLeaveEntry
-    amount="$250 every month"
+    amount="$250.00 per month"
     dates="8/12/2021 – 12/30/2021"
     key="1"
     label="Benefit 2"
@@ -19,7 +19,7 @@ Array [
     type="Short-term disability insurance"
   />,
   <OtherLeaveEntry
-    amount="$250 every month"
+    amount="$250.00 per month"
     dates="8/12/2021 – 12/30/2021"
     key="2"
     label="Benefit 3"
@@ -27,7 +27,7 @@ Array [
     type="Permanent disability insurance"
   />,
   <OtherLeaveEntry
-    amount="$250 every month"
+    amount="$250.00 per month"
     dates="8/12/2021 – 12/30/2021"
     key="3"
     label="Benefit 4"
@@ -282,7 +282,7 @@ exports[`Intermittent leave frequency renders the leave frequency and duration i
 exports[`OtherIncomeList when all data are present renders all data fields 1`] = `
 Array [
   <OtherLeaveEntry
-    amount="$250 every month"
+    amount="$250.00 per month"
     dates="8/12/2021 – 12/30/2021"
     key="0"
     label="Income 1"
@@ -290,7 +290,7 @@ Array [
     type="Workers Compensation"
   />,
   <OtherLeaveEntry
-    amount="$250 every month"
+    amount="$250.00 per month"
     dates="8/12/2021 – 12/30/2021"
     key="1"
     label="Income 2"
@@ -298,7 +298,7 @@ Array [
     type="Unemployment Insurance"
   />,
   <OtherLeaveEntry
-    amount="$250 every month"
+    amount="$250.00 per month"
     dates="8/12/2021 – 12/30/2021"
     key="2"
     label="Income 3"
@@ -306,7 +306,7 @@ Array [
     type="Social Security Disability Insurance"
   />,
   <OtherLeaveEntry
-    amount="$250 every month"
+    amount="$250.00 per month"
     dates="8/12/2021 – 12/30/2021"
     key="3"
     label="Income 4"
@@ -314,7 +314,7 @@ Array [
     type="Disability benefits under a governmental retirement plan"
   />,
   <OtherLeaveEntry
-    amount="$250 every month"
+    amount="$250.00 per month"
     dates="8/12/2021 – 12/30/2021"
     key="4"
     label="Income 5"
@@ -322,7 +322,7 @@ Array [
     type="Jones Act benefits"
   />,
   <OtherLeaveEntry
-    amount="$250 every month"
+    amount="$250.00 per month"
     dates="8/12/2021 – 12/30/2021"
     key="5"
     label="Income 6"
@@ -330,7 +330,7 @@ Array [
     type="Railroad Retirement benefits"
   />,
   <OtherLeaveEntry
-    amount="$250 every month"
+    amount="$250.00 per month"
     dates="8/12/2021 – 12/30/2021"
     key="6"
     label="Income 7"
