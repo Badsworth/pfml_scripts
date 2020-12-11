@@ -61,3 +61,16 @@ output "nonprod_admin_roles" {
     "arn:aws:iam::498823821309:role/AWS-498823821309-NonPROD-Admins",
   ]
 }
+
+output "cert_domains" {
+  # you cannot lookup certs by a SAN, so we lookup based on the first domain
+  # as specified in the infra/pfml-aws/acm.tf file.
+  value = {
+    "test"        = "paidleave-test.mass.gov",
+    "stage"       = "paidleave-test.mass.gov",
+    "performance" = "paidleave-performance.mass.gov",
+    "training"    = "paidleave-performance.mass.gov",
+    "prod"        = "paidleave.mass.gov"
+  }
+
+}
