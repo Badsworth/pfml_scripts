@@ -1,5 +1,5 @@
 import yargs, { CommandModule } from "yargs";
-import PortalPuppeteerSubmitter from "../PortalPuppeteerSubmitter";
+import PortalSubmitter from "../PortalSubmitter";
 import SimulationRunner from "../SimulationRunner";
 import SimulationStorage from "../SimulationStorage";
 import {
@@ -42,16 +42,13 @@ const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
   async handler(args) {
     const storage = new SimulationStorage(args.directory);
     args.logger.info(`Executing simulation plan from ${storage.claimFile}`);
-    const submitter = new PortalPuppeteerSubmitter(
-      {
-        UserPoolId: config("COGNITO_POOL"),
-        ClientId: config("COGNITO_CLIENTID"),
-        Username: config("PORTAL_USERNAME"),
-        Password: config("PORTAL_PASSWORD"),
-        ApiBaseUrl: config("API_BASEURL"),
-      },
-      getFineosBaseUrl()
-    );
+    const submitter = new PortalSubmitter({
+      UserPoolId: config("COGNITO_POOL"),
+      ClientId: config("COGNITO_CLIENTID"),
+      Username: config("PORTAL_USERNAME"),
+      Password: config("PORTAL_PASSWORD"),
+      ApiBaseUrl: config("API_BASEURL"),
+    });
     const tracker = args.track
       ? new SimulationStateFileTracker(storage.stateFile)
       : new SimulationStateNullTracker();

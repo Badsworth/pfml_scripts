@@ -420,7 +420,7 @@ export function describeWorkSchedule(
     application?.work_pattern?.work_pattern_days;
 
   for (const workDay of workSchedule) {
-    if (!workDay?.minutes || !workDay?.day_of_week) {
+    if (!(typeof workDay?.minutes === "number") || !workDay?.day_of_week) {
       throw new Error("Minutes and day of week must be specified");
     }
     if (workDay.minutes % 15 !== 0) {

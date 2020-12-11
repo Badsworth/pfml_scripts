@@ -30,6 +30,7 @@ describe("Documents", function () {
       state: "MA",
       zip: "01000",
     },
+    has_continuous_leave_periods: true,
     leave_details: {
       child_birth_date: "2020-08-01",
       child_placement_date: "2020-08-05",
@@ -37,6 +38,42 @@ describe("Documents", function () {
         {
           start_date: "2020-08-01",
           end_date: "2020-09-01",
+        },
+      ],
+    },
+  };
+  const intermittentAdditions: Partial<ApplicationRequestBody> = {
+    has_continuous_leave_periods: false,
+    has_intermittent_leave_periods: true,
+    leave_details: {
+      intermittent_leave_periods: [
+        {
+          start_date: "2020-08-01",
+          end_date: "2020-08-15",
+          duration: 1,
+          duration_basis: "Days",
+          frequency: 1,
+          frequency_interval: 1,
+          frequency_interval_basis: "Weeks",
+        },
+      ],
+    },
+  };
+  const reducedAdditions: Partial<ApplicationRequestBody> = {
+    has_continuous_leave_periods: false,
+    has_reduced_schedule_leave_periods: true,
+    leave_details: {
+      reduced_schedule_leave_periods: [
+        {
+          start_date: "2020-08-01",
+          end_date: "2020-08-15",
+          sunday_off_minutes: 0,
+          monday_off_minutes: 4 * 60,
+          tuesday_off_minutes: 0,
+          wednesday_off_minutes: 4 * 60,
+          thursday_off_minutes: 0,
+          friday_off_minutes: 4 * 60,
+          saturday_off_minutes: 0,
         },
       ],
     },
@@ -100,6 +137,53 @@ describe("Documents", function () {
       untitled6: undefined, // DOB Year.
     });
     expect(values).toMatchSnapshot();
+  });
+
+  it("Should generate a valid HCP form for a continuous leave claim", async function () {
+    const bytes = await generators.HCP(claim, { invalid: true });
+    const values = await parsePDF(bytes);
+    expect(values).toMatchObject({
+      untitled72: true,
+      untitled73: false,
+      untitled74: false,
+      untitled84: true,
+      untitled31: "4",
+      untitled88: true, // No intermittent leave.
+    });
+  });
+
+  it("Should generate a valid HCP form for an intermittent leave claim", async function () {
+    const bytes = await generators.HCP(
+      { ...claim, ...intermittentAdditions },
+      { invalid: true }
+    );
+    const values = await parsePDF(bytes);
+    expect(values).toMatchObject({
+      untitled72: false,
+      untitled73: false,
+      untitled74: true,
+      untitled85: true, // No continouus leave.
+      untitled93: true, // More than one day
+      untitled38: "1", // one day.
+    });
+  });
+
+  it("Should generate a valid HCP form for an reduced leave claim", async function () {
+    const bytes = await generators.HCP(
+      { ...claim, ...reducedAdditions },
+      { invalid: true }
+    );
+    const values = await parsePDF(bytes);
+    expect(values).toMatchObject({
+      untitled72: false,
+      untitled73: true,
+      untitled74: false,
+      untitled85: true, // No continuous leave.
+      untitled88: true, // No intermittent leave.
+      untitled86: true, // Reduced leave - yep.
+      untitled32: "2", // Weeks of leave.
+      untitled33: "12", // Hours/week off.
+    });
   });
 
   it("Should generate an ID front", async function () {

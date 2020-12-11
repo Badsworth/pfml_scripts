@@ -33,3 +33,13 @@ export const BGBM1 = scenario("MGBM1", {
     MASSID: {},
   },
 });
+
+export const MBIRTH = scenario("MBIRTH", {
+  reason: "Serious Health Condition - Employee",
+  residence: "MA-proofed",
+  pregnant_or_recent_birth: true,
+  docs: {
+    HCP: {},
+    MASSID: {},
+  },
+});

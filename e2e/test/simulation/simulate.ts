@@ -157,14 +157,26 @@ describe("Simulation Generator", () => {
   });
 
   it("Should have has_ properties that match its leave periods", async () => {
-    const claim = await scenario("TEST", {
-      ...medical,
-      financiallyIneligible: true,
-    })(opts);
-    expect(claim.claim).toMatchObject({
-      has_continuous_leave_periods: true,
-      has_intermittent_leave_periods: false,
-      has_reduced_schedule_leave_periods: false,
+    await expect(scenario("TEST", medical)(opts)).resolves.toMatchObject({
+      claim: {
+        has_continuous_leave_periods: true,
+        has_intermittent_leave_periods: false,
+        has_reduced_schedule_leave_periods: false,
+      },
+    });
+    await expect(scenario("TEST", intermittent)(opts)).resolves.toMatchObject({
+      claim: {
+        has_continuous_leave_periods: false,
+        has_intermittent_leave_periods: true,
+        has_reduced_schedule_leave_periods: false,
+      },
+    });
+    await expect(scenario("TEST", reduced)(opts)).resolves.toMatchObject({
+      claim: {
+        has_continuous_leave_periods: false,
+        has_intermittent_leave_periods: false,
+        has_reduced_schedule_leave_periods: true,
+      },
     });
   });
 
@@ -348,6 +360,67 @@ describe("Simulation Generator", () => {
       "reduced_schedule_leave_periods"
     );
     expect(start.getTime()).toBeLessThan(end.getTime());
+    expect(claim.leave_details?.reduced_schedule_leave_periods).toEqual([
+      expect.objectContaining({
+        sunday_off_minutes: 0,
+        monday_off_minutes: 240,
+        tuesday_off_minutes: 240,
+        wednesday_off_minutes: 240,
+        thursday_off_minutes: 240,
+        friday_off_minutes: 240,
+        saturday_off_minutes: 0,
+      }),
+    ]);
+  });
+
+  it("Should create a reduced leave claim for a rotating shift pattern", async () => {
+    const { claim } = await scenario("TEST", {
+      ...reduced,
+      work_pattern_type: "rotating_shift",
+    })(opts);
+    const [start, end] = extractLeavePeriod(
+      claim,
+      "reduced_schedule_leave_periods"
+    );
+    expect(start.getTime()).toBeLessThan(end.getTime());
+    expect(claim.leave_details?.reduced_schedule_leave_periods).toEqual([
+      expect.objectContaining({
+        sunday_off_minutes: 0,
+        monday_off_minutes: 360,
+        tuesday_off_minutes: 0,
+        wednesday_off_minutes: 360,
+        thursday_off_minutes: 0,
+        friday_off_minutes: 360,
+        saturday_off_minutes: 0,
+      }),
+    ]);
+  });
+
+  it("Should create a claim with a rotating schedule", async () => {
+    const { claim } = await scenario("TEST", {
+      ...medical,
+      work_pattern_type: "rotating_shift",
+    })(opts);
+    expect(claim.work_pattern).toEqual({
+      work_pattern_type: "Rotating",
+      work_week_starts: "Monday",
+      work_pattern_days: [
+        { day_of_week: "Sunday", minutes: 0, week_number: 1 },
+        { day_of_week: "Monday", minutes: 720, week_number: 1 },
+        { day_of_week: "Tuesday", minutes: 0, week_number: 1 },
+        { day_of_week: "Wednesday", minutes: 720, week_number: 1 },
+        { day_of_week: "Thursday", minutes: 0, week_number: 1 },
+        { day_of_week: "Friday", minutes: 720, week_number: 1 },
+        { day_of_week: "Saturday", minutes: 0, week_number: 1 },
+        { day_of_week: "Sunday", minutes: 720, week_number: 2 },
+        { day_of_week: "Monday", minutes: 0, week_number: 2 },
+        { day_of_week: "Tuesday", minutes: 720, week_number: 2 },
+        { day_of_week: "Wednesday", minutes: 0, week_number: 2 },
+        { day_of_week: "Thursday", minutes: 720, week_number: 2 },
+        { day_of_week: "Friday", minutes: 0, week_number: 2 },
+        { day_of_week: "Saturday", minutes: 0, week_number: 2 },
+      ],
+    });
   });
 
   it("Should create an intermittent leave claim", async () => {
@@ -357,6 +430,27 @@ describe("Simulation Generator", () => {
       "intermittent_leave_periods"
     );
     expect(start.getTime()).toBeLessThan(end.getTime());
+  });
+
+  it("Should not set pregnant_or_given_birth unless requested to do so", async () => {
+    const { claim } = await scenario("TEST", medical)(opts);
+    expect(claim).toMatchObject({
+      leave_details: expect.objectContaining({
+        pregnant_or_recent_birth: false,
+      }),
+    });
+  });
+
+  it("Should allow for medical pre-birth claims to be created", async () => {
+    const { claim } = await scenario("TEST", {
+      ...medical,
+      pregnant_or_recent_birth: true,
+    })(opts);
+    expect(claim).toMatchObject({
+      leave_details: expect.objectContaining({
+        pregnant_or_recent_birth: true,
+      }),
+    });
   });
 });
 

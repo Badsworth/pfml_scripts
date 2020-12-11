@@ -25,6 +25,7 @@ import {
   addDays,
   max as maxDate,
   min as minDate,
+  differenceInDays,
 } from "date-fns";
 import { v4 as uuid } from "uuid";
 
@@ -83,7 +84,9 @@ export type ScenarioOpts = {
   has_continuous_leave_periods?: boolean;
   has_reduced_schedule_leave_periods?: boolean;
   has_intermittent_leave_periods?: boolean;
+  pregnant_or_recent_birth?: boolean;
   bondingDate?: "far-past" | "past" | "future";
+  work_pattern_type?: "standard" | "rotating_shift";
   // Makes a claim for an extremely short time period (1 day).
   shortClaim?: boolean;
 };
@@ -111,6 +114,7 @@ export function scenario(
       zip: faker.address.zipCode(),
     };
 
+    const workPattern = generateWorkPattern(_config.work_pattern_type);
     const claim: ApplicationRequestBody = {
       // These fields are brought directly over from the employee record.
       employment_status: "Employed",
@@ -126,14 +130,14 @@ export function scenario(
       mailing_address: address,
       residential_address: address,
       hours_worked_per_week: 40,
-      work_pattern: generateWorkPattern(),
+      work_pattern: workPattern,
       phone: {
         int_code: "1",
         phone_number: "844-781-3163",
         phone_type: "Cell",
       },
     };
-    claim.leave_details = generateLeaveDetails(_config);
+    claim.leave_details = generateLeaveDetails(_config, workPattern);
     claim.has_continuous_leave_periods =
       (claim.leave_details?.continuous_leave_periods?.length ?? 0) > 0;
     claim.has_reduced_schedule_leave_periods =
@@ -231,62 +235,60 @@ async function generateDocuments(
   return Promise.all(promises);
 }
 
-function generateWorkPattern(): WorkPattern {
-  const days = [
-    "Sunday" as const,
-    "Monday" as const,
-    "Tuesday" as const,
-    "Wednesday" as const,
-    "Thursday" as const,
-    "Friday" as const,
-    "Saturday" as const,
-  ];
-  return {
-    work_pattern_type: "Fixed",
-    work_week_starts: "Monday",
-    work_pattern_days: days.map((day) => ({
-      day_of_week: day,
-      minutes: 6 * 60,
-      week_number: 1,
-    })),
-  };
+const daysOfWeek = [
+  "Sunday" as const,
+  "Monday" as const,
+  "Tuesday" as const,
+  "Wednesday" as const,
+  "Thursday" as const,
+  "Friday" as const,
+  "Saturday" as const,
+];
+function makeWeeklySchedule(week_number: number, ...hoursByDay: number[]) {
+  return daysOfWeek.map((day_of_week, i) => ({
+    day_of_week,
+    minutes: (hoursByDay[i] ?? 0) * 60,
+    week_number,
+  }));
+}
+function generateWorkPattern(
+  type: ScenarioOpts["work_pattern_type"] = "standard"
+): WorkPattern {
+  switch (type) {
+    case "standard":
+      return {
+        work_pattern_type: "Fixed",
+        work_week_starts: "Monday",
+        work_pattern_days: makeWeeklySchedule(1, 0, 8, 8, 8, 8, 8, 0),
+      };
+    case "rotating_shift":
+      return {
+        work_pattern_type: "Rotating",
+        work_week_starts: "Monday",
+        work_pattern_days: [
+          ...makeWeeklySchedule(1, 0, 12, 0, 12, 0, 12),
+          ...makeWeeklySchedule(2, 12, 0, 12, 0, 12),
+        ],
+      };
+    default:
+      throw new Error(
+        `Unsure of how to generate a work pattern for ${type} type.`
+      );
+  }
 }
 
-function generateLeavePeriods(
-  leaveType: "continuous" | "reduced" | "intermittent",
+function generateContinuousLeavePeriods(
   shortLeave: boolean
-):
-  | ContinuousLeavePeriods[]
-  | ReducedScheduleLeavePeriods[]
-  | IntermittentLeavePeriods[] {
+): ContinuousLeavePeriods[] {
   const [startDate, endDate] = generateLeaveDates(
     shortLeave ? { days: 1 } : undefined
   );
-  switch (leaveType) {
-    case "continuous":
-      return [
-        {
-          start_date: formatISO(startDate, { representation: "date" }),
-          end_date: formatISO(endDate, { representation: "date" }),
-        },
-      ];
-    case "intermittent":
-      return generateIntermittentLeavePeriods(shortLeave);
-    case "reduced":
-      return [
-        {
-          start_date: formatISO(startDate, { representation: "date" }),
-          end_date: formatISO(endDate, { representation: "date" }),
-          sunday_off_minutes: 0,
-          monday_off_minutes: 4 * 60,
-          tuesday_off_minutes: 0,
-          wednesday_off_minutes: 4 * 60,
-          thursday_off_minutes: 0,
-          friday_off_minutes: 4 * 60,
-          saturday_off_minutes: 0,
-        },
-      ];
-  }
+  return [
+    {
+      start_date: formatISO(startDate, { representation: "date" }),
+      end_date: formatISO(endDate, { representation: "date" }),
+    },
+  ];
 }
 
 function generateIntermittentLeavePeriods(
@@ -295,15 +297,45 @@ function generateIntermittentLeavePeriods(
   const [startDate, endDate] = generateLeaveDates(
     shortLeave ? { days: 7 } : undefined
   );
+  const diffInDays = differenceInDays(endDate, startDate);
+
   return [
     {
       start_date: formatISO(startDate, { representation: "date" }),
       end_date: formatISO(endDate, { representation: "date" }),
-      duration: 1,
+      duration: faker.random.number({ min: 1, max: Math.min(diffInDays, 7) }),
       duration_basis: "Days",
       frequency: 1,
       frequency_interval: 1,
       frequency_interval_basis: "Weeks",
+    },
+  ];
+}
+
+function generateReducedLeavePeriods(
+  shortLeave: boolean,
+  work_pattern: WorkPattern
+): ReducedScheduleLeavePeriods[] {
+  const [startDate, endDate] = generateLeaveDates(
+    shortLeave ? { days: 1 } : undefined
+  );
+  function getDayOffMinutes(dayName: string): number {
+    const dayObj = (work_pattern.work_pattern_days ?? [])
+      .filter((day) => day.day_of_week == dayName && day.week_number === 1)
+      .pop();
+    return dayObj && dayObj.minutes ? dayObj.minutes / 2 : 0;
+  }
+  return [
+    {
+      start_date: formatISO(startDate, { representation: "date" }),
+      end_date: formatISO(endDate, { representation: "date" }),
+      sunday_off_minutes: getDayOffMinutes("Sunday"),
+      monday_off_minutes: getDayOffMinutes("Monday"),
+      tuesday_off_minutes: getDayOffMinutes("Tuesday"),
+      wednesday_off_minutes: getDayOffMinutes("Wednesday"),
+      thursday_off_minutes: getDayOffMinutes("Thursday"),
+      friday_off_minutes: getDayOffMinutes("Friday"),
+      saturday_off_minutes: getDayOffMinutes("Saturday"),
     },
   ];
 }
@@ -327,21 +359,24 @@ function getEarliestStartDate(details: ApplicationLeaveDetails): Date {
   return minDate(leaveDates);
 }
 
-function generateLeaveDetails(config: ScenarioOpts): ApplicationLeaveDetails {
+function generateLeaveDetails(
+  config: ScenarioOpts,
+  work_pattern: WorkPattern
+): ApplicationLeaveDetails {
   const { reason, reason_qualifier } = config;
   const details: ApplicationLeaveDetails = {
     continuous_leave_periods:
       !config.has_reduced_schedule_leave_periods &&
       !config.has_intermittent_leave_periods
-        ? generateLeavePeriods("continuous", !!config.shortClaim)
+        ? generateContinuousLeavePeriods(!!config.shortClaim)
         : [],
     reduced_schedule_leave_periods: config.has_reduced_schedule_leave_periods
-      ? generateLeavePeriods("reduced", !!config.shortClaim)
+      ? generateReducedLeavePeriods(!!config.shortClaim, work_pattern)
       : [],
     intermittent_leave_periods: config.has_intermittent_leave_periods
-      ? generateLeavePeriods("intermittent", !!config.shortClaim)
+      ? generateIntermittentLeavePeriods(!!config.shortClaim)
       : [],
-    pregnant_or_recent_birth: false,
+    pregnant_or_recent_birth: !!config.pregnant_or_recent_birth,
     employer_notified: true,
     reason,
     reason_qualifier,
