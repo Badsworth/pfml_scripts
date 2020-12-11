@@ -1,14 +1,5 @@
 locals {
-  # you cannot lookup certs by a SAN, so we lookup based on the first domain
-  # as specified in the infra/pfml-aws/acm.tf file.
-  cert_domains = {
-    "test"        = "paidleave-test.mass.gov",
-    "stage"       = "paidleave-test.mass.gov",
-    "performance" = "paidleave-performance.mass.gov",
-    "training"    = "paidleave-performance.mass.gov",
-    "prod"        = "paidleave.mass.gov"
-  }
-  cert_domain = local.cert_domains[var.environment_name]
+  cert_domain = module.constants.cert_domains[var.environment_name]
   api_domain  = var.environment_name == "prod" ? "paidleave-api.mass.gov" : "paidleave-api-${var.environment_name}.mass.gov"
 }
 

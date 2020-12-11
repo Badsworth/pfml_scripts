@@ -1,13 +1,9 @@
 locals {
   domains = {
     "${var.environment_name}" = "paidleave-${var.environment_name}.mass.gov"
-    "prod"                    = "paidleave.mass.gov",
-    "training"                = null
-    "performance"             = null
+    "prod"                    = "paidleave.mass.gov"
   }
-  # you cannot lookup certs by a SAN, so we lookup based on the first domain
-  # as specified in the infra/pfml-aws/acm.tf file.
-  cert_domain = var.environment_name == "prod" ? "paidleave.mass.gov" : "paidleave-test.mass.gov"
+  cert_domain = module.constants.cert_domains[var.environment_name]
   domain      = lookup(local.domains, var.environment_name)
 }
 
