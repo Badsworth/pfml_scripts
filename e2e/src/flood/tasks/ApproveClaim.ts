@@ -5,40 +5,25 @@ import {
   waitForElement,
   waitForRealTimeSim,
   isFinanciallyEligible,
+  getFamilyLeavePlanProp,
 } from "../helpers";
 import Tasks from "./index";
 
-let evidenceApproved: boolean;
+let evidenceApproved = false;
 
 export const steps: StoredStep[] = [
-  {
-    name: "Check if claim is ready for approval",
-    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
-      // if evidence has not been reviewed yet,
-      // approve all evidence
-      const evidence = await waitForElement(
-        browser,
-        By.css("td[id*='EvidenceStatusIcon0'] i")
-      );
-      const evidenceIcon = await evidence.getAttribute("class");
-      evidenceApproved = evidenceIcon === "icon-checkbox";
-
-      const adjudicateButton = await waitForElement(
-        browser,
-        By.css("input[type='submit'][value='Adjudicate']")
-      );
-      await browser.click(adjudicateButton);
-
-      if (evidenceIcon === "icon-unverified") {
-        await approveEvidence().test(browser, data);
-        await certifyEvidence.test(browser, data);
-        evidenceApproved = true;
-      }
-    },
-  },
+  checkApprovalReadiness(false),
   {
     name: "Paid Benefits",
     test: async (browser: Browser): Promise<void> => {
+      const adjudicateButton = await browser.maybeFindElement(
+        By.css("input[type='submit'][value='Adjudicate']")
+      );
+      if (adjudicateButton) {
+        await browser.click(adjudicateButton);
+        await browser.waitForNavigation();
+      }
+
       const paidBenefitsTab = await waitForElement(
         browser,
         By.visibleText("Paid Benefits")
@@ -67,7 +52,6 @@ export const steps: StoredStep[] = [
         await browser.clear(avgWeeklyWage);
         await browser.type(avgWeeklyWage, "1200");
 
-        // TODO: Benefit payment waiting period - Days
         const benefitPeriodSelect = await waitForElement(
           browser,
           By.css("select[id*='benefitWaitingPeriodBasis']")
@@ -90,14 +74,12 @@ export const steps: StoredStep[] = [
         By.visibleText("Manage Request")
       );
       await browser.click(manageRequestTab);
-
       // check if availability can still be approved
-      const availabilityStatus = await (
-        await waitForElement(
-          browser,
-          By.css("td[id*='LeaveRequestListviewWidgetAvailabilityStatus0']")
-        )
-      ).text();
+      const familyLeavePlanAvailability = await waitForElement(
+        browser,
+        getFamilyLeavePlanProp("AvailabilityStatus")
+      );
+      const availabilityStatus = await familyLeavePlanAvailability.text();
       // when it is Pending Certification, then we can make it pass
       if (availabilityStatus === "Pending Certification") {
         const evidenceTab = await waitForElement(
@@ -107,19 +89,20 @@ export const steps: StoredStep[] = [
         await evidenceTab.click();
         await certifyEvidence.test(browser, data);
       }
-
       // go back and try to approve leave plan
       manageRequestTab = await waitForElement(
         browser,
         By.visibleText("Manage Request")
       );
       await browser.click(manageRequestTab);
+      // select the right leave plan
+      await (await waitForElement(browser, getFamilyLeavePlanProp())).click();
+      // try accepting the leave plan
       const acceptButton = await waitForElement(
         browser,
         By.css("input[type='submit'][value='Accept']")
       );
       await browser.click(acceptButton);
-
       // exit adjudication
       const okButton = await waitForElement(
         browser,
@@ -133,10 +116,7 @@ export const steps: StoredStep[] = [
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       // check if leave has been accepted
       const leavePlanStatus = await (
-        await waitForElement(
-          browser,
-          By.css("td[id*='leavePlanAdjudicationListviewWidgetPlanDecision0']")
-        )
+        await waitForElement(browser, getFamilyLeavePlanProp("DecisionStatus"))
       ).text();
 
       // if leave plan has not been accepted, deny claim
@@ -156,6 +136,41 @@ export const steps: StoredStep[] = [
     },
   },
 ];
+
+export function checkApprovalReadiness(exitAdjudication = true): StoredStep {
+  return {
+    name: "Claim Approval Readiness Check",
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+      // we're looking for a specific plan
+      // because "Limit" leave plans break this flow
+      const evidenceStatus = await (
+        await waitForElement(browser, getFamilyLeavePlanProp("EvidenceStatus"))
+      ).text();
+      // if evidence has not been reviewed yet,
+      // approve all evidence
+      evidenceApproved = evidenceStatus.indexOf("Satisfied") === 0;
+      if (!evidenceApproved) {
+        const adjudicateButton = await waitForElement(
+          browser,
+          By.css("input[type='submit'][value='Adjudicate']")
+        );
+        await browser.click(adjudicateButton);
+
+        await approveEvidence().test(browser, data);
+        await certifyEvidence.test(browser, data);
+
+        if (exitAdjudication) {
+          const okButton = await waitForElement(
+            browser,
+            By.css("input[type='submit'][value='OK']")
+          );
+          await browser.click(okButton);
+          await browser.waitForNavigation();
+        }
+      }
+    },
+  };
+}
 
 export const approveEvidence = (
   specificDoc?: StandardDocumentType
@@ -181,6 +196,7 @@ export const approveEvidence = (
       for (let i = 0; i < documents.length; i++) {
         await approveDocumentEvidence(browser, i);
       }
+      evidenceApproved = true;
     }
   },
 });

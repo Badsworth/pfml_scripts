@@ -145,6 +145,7 @@ export const http = {
         const href = _.joinUrl(baseUrl, url);
         const res = await (customFetch || fetch)(href, {
             ...init,
+            // @ts-ignore
             headers: _.stripUndefined({ ...defaults.headers, ...headers }),
         });
         let text: string | undefined;
@@ -603,7 +604,7 @@ export interface DocumentUploadRequest {
     description?: string;
     mark_evidence_received?: boolean;
     // This type has been changed from Blob to unknown to facilitate uploading documents
-    file: unknown; 
+    file: unknown;
 }
 export interface POSTApplicationsByApplicationIdDocumentsResponse extends SuccessfulResponse {
     data?: DocumentResponse;

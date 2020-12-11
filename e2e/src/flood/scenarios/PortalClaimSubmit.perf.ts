@@ -14,6 +14,7 @@ import {
   readFile,
   evalFetch,
   assignTasks,
+  receiveDocuments,
   waitForElement,
   waitForRealTimeSim,
   getDocumentType,
@@ -136,6 +137,7 @@ export const steps = [
         "documents",
         "complete",
         "assignTasks",
+        "receiveDocuments",
       ];
       // Execute all claim steps in queue and in order
       for (const claimPart of claimParts) {
@@ -238,6 +240,13 @@ export const steps = [
                 await assignTasksStep.test(browser, data);
               }
               break;
+            case "receiveDocuments":
+              if (!ENV.FLOOD_LOAD_TEST) {
+                const receiveDocumentsStep = receiveDocuments(fineosId);
+                console.info(receiveDocumentsStep.name);
+                await receiveDocumentsStep.test(browser, data);
+              }
+              break;
             default:
               break;
           }
@@ -321,10 +330,16 @@ async function setFeatureFlags(browser: Browser) {
 }
 
 export default (): void => {
-  TestData.fromJSON<LSTSimClaim>(`../${dataBaseUrl}/claims.json`).filter(
-    (line) => line.scenario === scenario
-  );
+  TestData.fromJSON<LSTSimClaim>(`../${dataBaseUrl}/claims.json`)
+    .filter((line) => line.scenario === scenario)
+    .shuffle(true);
   steps.forEach((action) => {
     step(action.name, action.test as StepFunction<unknown>);
   });
+
+  /*
+  // Snippet to run Employer Response tests
+  const action = receiveDocuments("NTN-305072-ABS-01");
+  step(action.name, action.test as StepFunction<unknown>);
+  */
 };
