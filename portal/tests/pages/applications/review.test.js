@@ -4,10 +4,14 @@ import {
   IntermittentLeavePeriod,
 } from "../../../src/models/Claim";
 import EmployerBenefit, {
+  EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
 import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
-import OtherIncome, { OtherIncomeType } from "../../../src/models/OtherIncome";
+import OtherIncome, {
+  OtherIncomeFrequency,
+  OtherIncomeType,
+} from "../../../src/models/OtherIncome";
 import Review, {
   EmployerBenefitList,
   OtherIncomeList,
@@ -345,24 +349,28 @@ describe("EmployerBenefitList", () => {
   const entries = [
     new EmployerBenefit({
       benefit_amount_dollars: "250",
+      benefit_amount_frequency: EmployerBenefitFrequency.monthly,
       benefit_end_date: "2021-12-30",
       benefit_start_date: "2021-08-12",
       benefit_type: EmployerBenefitType.paidLeave,
     }),
     new EmployerBenefit({
       benefit_amount_dollars: "250",
+      benefit_amount_frequency: EmployerBenefitFrequency.monthly,
       benefit_end_date: "2021-12-30",
       benefit_start_date: "2021-08-12",
       benefit_type: EmployerBenefitType.shortTermDisability,
     }),
     new EmployerBenefit({
       benefit_amount_dollars: "250",
+      benefit_amount_frequency: EmployerBenefitFrequency.monthly,
       benefit_end_date: "2021-12-30",
       benefit_start_date: "2021-08-12",
       benefit_type: EmployerBenefitType.permanentDisability,
     }),
     new EmployerBenefit({
       benefit_amount_dollars: "250",
+      benefit_amount_frequency: EmployerBenefitFrequency.monthly,
       benefit_end_date: "2021-12-30",
       benefit_start_date: "2021-08-12",
       benefit_type: EmployerBenefitType.familyOrMedicalLeave,
@@ -397,42 +405,49 @@ describe("OtherIncomeList", () => {
       const entries = [
         new OtherIncome({
           income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
           income_end_date: "2021-12-30",
           income_start_date: "2021-08-12",
           income_type: OtherIncomeType.workersCompensation,
         }),
         new OtherIncome({
           income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
           income_end_date: "2021-12-30",
           income_start_date: "2021-08-12",
           income_type: OtherIncomeType.unemployment,
         }),
         new OtherIncome({
           income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
           income_end_date: "2021-12-30",
           income_start_date: "2021-08-12",
           income_type: OtherIncomeType.ssdi,
         }),
         new OtherIncome({
           income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
           income_end_date: "2021-12-30",
           income_start_date: "2021-08-12",
           income_type: OtherIncomeType.retirementDisability,
         }),
         new OtherIncome({
           income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
           income_end_date: "2021-12-30",
           income_start_date: "2021-08-12",
           income_type: OtherIncomeType.jonesAct,
         }),
         new OtherIncome({
           income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
           income_end_date: "2021-12-30",
           income_start_date: "2021-08-12",
           income_type: OtherIncomeType.railroadRetirement,
         }),
         new OtherIncome({
           income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
           income_end_date: "2021-12-30",
           income_start_date: "2021-08-12",
           income_type: OtherIncomeType.otherEmployer,

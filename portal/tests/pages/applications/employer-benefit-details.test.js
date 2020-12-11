@@ -46,6 +46,72 @@ describe("EmployerBenefitDetails", () => {
           }
         );
       });
+
+      it("calls claims.update with amount string changed to a number", async () => {
+        expect.assertions();
+
+        ({ appLogic, wrapper } = renderWithAppLogic(EmployerBenefitDetails, {
+          claimAttrs: claim,
+          render: "mount",
+        }));
+
+        await act(async () => {
+          wrapper
+            .find("input[name='employer_benefits[0].benefit_amount_dollars']")
+            .simulate("change", {
+              target: {
+                name: "employer_benefits[0].benefit_amount_dollars",
+                value: "1,000,000",
+              },
+            });
+
+          await wrapper.find("form").simulate("submit");
+        });
+
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
+          claim.application_id,
+          {
+            employer_benefits: expect.arrayContaining([
+              expect.objectContaining({
+                benefit_amount_dollars: 1000000,
+              }),
+            ]),
+          }
+        );
+      });
+
+      it("calls claims.update with empty amount string changed to null", async () => {
+        expect.assertions();
+
+        ({ appLogic, wrapper } = renderWithAppLogic(EmployerBenefitDetails, {
+          claimAttrs: claim,
+          render: "mount",
+        }));
+
+        await act(async () => {
+          wrapper
+            .find("input[name='employer_benefits[0].benefit_amount_dollars']")
+            .simulate("change", {
+              target: {
+                name: "employer_benefits[0].benefit_amount_dollars",
+                value: "",
+              },
+            });
+
+          await wrapper.find("form").simulate("submit");
+        });
+
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
+          claim.application_id,
+          {
+            employer_benefits: expect.arrayContaining([
+              expect.objectContaining({
+                benefit_amount_dollars: null,
+              }),
+            ]),
+          }
+        );
+      });
     });
 
     describe("when the user clicks 'Add another'", () => {
@@ -110,29 +176,6 @@ describe("EmployerBenefitDetails", () => {
           render: "mount",
         }
       ));
-    });
-
-    it("only renders the amount input text component for insurance benefit types", () => {
-      expect(
-        wrapper.find(
-          'InputText[name="employer_benefits[0].benefit_amount_dollars"]'
-        )
-      ).toHaveLength(0);
-      expect(
-        wrapper.find(
-          'InputText[name="employer_benefits[1].benefit_amount_dollars"]'
-        )
-      ).toHaveLength(1);
-      expect(
-        wrapper.find(
-          'InputText[name="employer_benefits[2].benefit_amount_dollars"]'
-        )
-      ).toHaveLength(1);
-      expect(
-        wrapper.find(
-          'InputText[name="employer_benefits[3].benefit_amount_dollars"]'
-        )
-      ).toHaveLength(1);
     });
   });
 

@@ -1,6 +1,6 @@
 import EmployerBenefit, {
+  EmployerBenefitFrequency,
   EmployerBenefitType,
-  IncomeFrequency,
 } from "../../../src/models/EmployerBenefit";
 import AmendButton from "../../../src/components/employers/AmendButton";
 import AmendableEmployerBenefit from "../../../src/components/employers/AmendableEmployerBenefit";
@@ -15,7 +15,7 @@ import { shallow } from "enzyme";
 describe("AmendableEmployerBenefit", () => {
   const shortTermDisability = new EmployerBenefit({
     benefit_amount_dollars: 1000,
-    benefit_amount_frequency: IncomeFrequency.monthly,
+    benefit_amount_frequency: EmployerBenefitFrequency.monthly,
     benefit_end_date: "2021-03-01",
     benefit_start_date: "2021-02-01",
     benefit_type: EmployerBenefitType.shortTermDisability,
@@ -116,11 +116,13 @@ describe("AmendableEmployerBenefit", () => {
     wrapper.find(AmendButton).simulate("click");
     wrapper
       .find(Dropdown)
-      .simulate("change", { target: { value: IncomeFrequency.weekly } });
+      .simulate("change", {
+        target: { value: EmployerBenefitFrequency.weekly },
+      });
 
     expect(props.onChange).toHaveBeenCalled();
     expect(wrapper.find(Dropdown).prop("value")).toEqual(
-      IncomeFrequency.weekly
+      EmployerBenefitFrequency.weekly
     );
   });
 

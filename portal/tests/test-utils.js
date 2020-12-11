@@ -18,10 +18,13 @@ import Claim, {
 } from "../src/models/Claim";
 import Document, { DocumentType } from "../src/models/Document";
 import EmployerBenefit, {
+  EmployerBenefitFrequency,
   EmployerBenefitType,
-  IncomeFrequency,
 } from "../src/models/EmployerBenefit";
-import OtherIncome, { OtherIncomeType } from "../src/models/OtherIncome";
+import OtherIncome, {
+  OtherIncomeFrequency,
+  OtherIncomeType,
+} from "../src/models/OtherIncome";
 import PreviousLeave, {
   PreviousLeaveReason,
 } from "../src/models/PreviousLeave";
@@ -151,6 +154,7 @@ export class BaseMockClaimBuilder {
     set(this.claimAttrs, "other_incomes", [
       new OtherIncome({
         income_amount_dollars: 125,
+        income_amount_frequency: OtherIncomeFrequency.weekly,
         income_end_date: "2021-01-01",
         income_start_date: "2021-01-30",
         income_type: OtherIncomeType.otherEmployer,
@@ -196,7 +200,7 @@ export class BaseMockClaimBuilder {
         : [
             new EmployerBenefit({
               benefit_amount_dollars: 500,
-              benefit_amount_frequency: IncomeFrequency.weekly,
+              benefit_amount_frequency: EmployerBenefitFrequency.weekly,
               benefit_end_date: "2021-02-01",
               benefit_start_date: "2021-01-01",
               benefit_type: EmployerBenefitType.familyOrMedicalLeave,

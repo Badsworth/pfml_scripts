@@ -1,8 +1,12 @@
 import EmployerBenefit, {
+  EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
+import { cloneDeep, get, isFinite, pick } from "lodash";
 import Claim from "../../models/Claim";
-import ConditionalContent from "../../components/ConditionalContent";
+import Dropdown from "../../components/Dropdown";
+import Fieldset from "../../components/Fieldset";
+import FormLabel from "../../components/FormLabel";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
@@ -12,8 +16,6 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
-import get from "lodash/get";
-import pick from "lodash/pick";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
@@ -34,8 +36,19 @@ export const EmployerBenefitDetails = (props) => {
   const { formState, updateFields } = useFormState(initialEntries);
   const employer_benefits = get(formState, "employer_benefits");
 
-  const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+  const handleSave = async () => {
+    // Make sure benefit_amount_dollars is a number.
+    // TODO (CP-1528): Refactor Currency Masking
+    // There's a similar function in OtherIncomedDetails.
+    const patchData = cloneDeep(formState);
+    patchData.employer_benefits = patchData.employer_benefits.map((benefit) => {
+      const val = benefit.benefit_amount_dollars;
+      const number =
+        isFinite(val) || val === null ? val : Number(val.replace(/,/g, ""));
+      return { ...benefit, benefit_amount_dollars: number };
+    });
+    await appLogic.claims.update(claim.application_id, patchData);
+  };
 
   const handleAddClick = () => {
     // Add a new blank entry
@@ -110,12 +123,18 @@ export const EmployerBenefitCard = (props) => {
   const { t } = useTranslation();
   const { entry, getFunctionalInputProps, index } = props;
   const selectedType = entry.benefit_type;
-  // TODO (CP-890): make sure that the amount gets removed if the input text is hidden
-  const showAmountInputText = [
-    EmployerBenefitType.shortTermDisability,
-    EmployerBenefitType.permanentDisability,
-    EmployerBenefitType.familyOrMedicalLeave,
-  ].includes(selectedType);
+
+  const benefitFrequencyChoices = Object.entries(EmployerBenefitFrequency).map(
+    ([frequencyKey, frequency]) => {
+      return {
+        label: t("pages.claimsEmployerBenefitDetails.amountFrequency", {
+          context: frequencyKey,
+        }),
+        value: frequency,
+      };
+    }
+  );
+
   return (
     <React.Fragment>
       <InputChoiceGroup
@@ -163,25 +182,49 @@ export const EmployerBenefitCard = (props) => {
         yearLabel={t("components.form.dateInputYearLabel")}
         smallLabel
       />
-      <ConditionalContent visible={showAmountInputText}>
-        <InputText
-          {...getFunctionalInputProps(
-            `employer_benefits[${index}].benefit_amount_dollars`
-          )}
-          label={t("pages.claimsEmployerBenefitDetails.amountLabel")}
-          example={t("pages.claimsEmployerBenefitDetails.amountExample")}
-          mask="currency"
+      <Fieldset>
+        <FormLabel
+          component="legend"
+          small
           optionalText={t("components.form.optional")}
-          smallLabel
-        />
-      </ConditionalContent>
+        >
+          {t("pages.claimsEmployerBenefitDetails.amountLegend")}
+        </FormLabel>
+        <div className="grid-row grid-gap">
+          <div className="mobile-lg:grid-col-6">
+            <InputText
+              {...getFunctionalInputProps(
+                `employer_benefits[${index}].benefit_amount_dollars`
+              )}
+              inputMode="numeric"
+              label={t("pages.claimsEmployerBenefitDetails.amountLabel")}
+              labelClassName="text-normal margin-top-05"
+              mask="currency"
+              smallLabel
+            />
+          </div>
+          <div className="mobile-lg:grid-col-6">
+            <Dropdown
+              {...getFunctionalInputProps(
+                `employer_benefits[${index}].benefit_amount_frequency`
+              )}
+              choices={benefitFrequencyChoices}
+              label={t(
+                "pages.claimsEmployerBenefitDetails.amountFrequencyLabel"
+              )}
+              labelClassName="text-normal margin-top-05"
+              smallLabel
+            />
+          </div>
+        </div>
+      </Fieldset>
     </React.Fragment>
   );
 };
 
 EmployerBenefitCard.propTypes = {
   index: PropTypes.number.isRequired,
-  entry: PropTypes.instanceOf(EmployerBenefit).isRequired,
+  entry: PropTypes.object.isRequired,
   getFunctionalInputProps: PropTypes.func.isRequired,
 };
 

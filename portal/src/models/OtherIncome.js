@@ -35,4 +35,17 @@ export const OtherIncomeType = {
   /* eslint-enable sort-keys */
 };
 
+/**
+ * Enums for the OtherIncome `income_amount_frequency` field
+ * @enum {string}
+ */
+export const OtherIncomeFrequency = {
+  // The ordering here defines the ordering of elements on the page so we override the linter rule
+  /* eslint-disable sort-keys */
+  daily: "Per Day",
+  weekly: "Per Week",
+  monthly: "Per Month",
+  inTotal: "In Total",
+};
+
 export default OtherIncome;

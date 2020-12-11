@@ -37,13 +37,79 @@ describe("OtherIncomesDetails", () => {
     describe("when user clicks continue", () => {
       it("calls claims.update", () => {
         act(() => {
-          wrapper.find(QuestionPage).simulate("save");
+          wrapper.find("QuestionPage").simulate("save");
         });
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             other_incomes: claim.other_incomes,
+          }
+        );
+      });
+
+      it("calls claims.update with amount string changed to a number", async () => {
+        expect.assertions();
+
+        ({ appLogic, wrapper } = renderWithAppLogic(OtherIncomesDetails, {
+          claimAttrs: claim,
+          render: "mount",
+        }));
+
+        await act(async () => {
+          wrapper
+            .find("input[name='other_incomes[0].income_amount_dollars']")
+            .simulate("change", {
+              target: {
+                name: "other_incomes[0].income_amount_dollars",
+                value: "1,000,000",
+              },
+            });
+
+          await wrapper.find("form").simulate("submit");
+        });
+
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
+          claim.application_id,
+          {
+            other_incomes: expect.arrayContaining([
+              expect.objectContaining({
+                income_amount_dollars: 1000000,
+              }),
+            ]),
+          }
+        );
+      });
+
+      it("calls claims.update with empty amount string changed to null", async () => {
+        expect.assertions();
+
+        ({ appLogic, wrapper } = renderWithAppLogic(OtherIncomesDetails, {
+          claimAttrs: claim,
+          render: "mount",
+        }));
+
+        await act(async () => {
+          wrapper
+            .find("input[name='other_incomes[0].income_amount_dollars']")
+            .simulate("change", {
+              target: {
+                name: "other_incomes[0].income_amount_dollars",
+                value: "",
+              },
+            });
+
+          await wrapper.find("form").simulate("submit");
+        });
+
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
+          claim.application_id,
+          {
+            other_incomes: expect.arrayContaining([
+              expect.objectContaining({
+                income_amount_dollars: null,
+              }),
+            ]),
           }
         );
       });
