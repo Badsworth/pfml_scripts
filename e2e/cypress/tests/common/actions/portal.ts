@@ -1,4 +1,5 @@
 import { SimulationClaim } from "../../../../src/simulation/types";
+import { Credentials } from "../../../../src/types";
 import {
   ApplicationResponse,
   WorkPattern,
@@ -63,6 +64,17 @@ export function login(credentials: Credentials): void {
   cy.url().should("not.include", "login");
 }
 
+export function portalRegister(credentials: Credentials): void {
+  cy.visit("/create-account");
+  cy.labelled("Email address").type(credentials.username);
+  cy.labelled("Password").type(credentials.password);
+  cy.contains("button", "Create account").click();
+  cy.task("getAuthVerification", credentials.username).then((code) => {
+    cy.labelled("6-digit code").type(code as string);
+    cy.contains("button", "Submit").click();
+  });
+}
+
 export function employerLogin(credentials: Credentials): void {
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").typeMasked(credentials.password);
@@ -86,19 +98,19 @@ export function hasClaimId(): void {
   cy.url().should("include", "claim_id");
 }
 
-export function startSubmit(
-  credentials: Credentials,
-  scenario: string,
-  employeeType: string
-): void {
-  submittingClaimType(scenario, employeeType);
-  login(credentials);
-  startClaim();
-  onPage("start");
-  agreeToStart();
-  hasClaimId();
-  onPage("checklist");
-}
+// export function startSubmit(
+//   // credentials: Credentials,
+//   scenario: string,
+//   employeeType: string
+// ): void {
+//   submittingClaimType(scenario, employeeType);
+//   // login(credentials); // remove ...
+//   // startClaim();
+//   // onPage("start");
+//   // agreeToStart();
+//   // hasClaimId();
+//   // onPage("checklist");
+// }
 
 export function clickChecklistButton(label: string): void {
   cy.contains(label)

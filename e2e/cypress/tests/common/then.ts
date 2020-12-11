@@ -260,6 +260,17 @@ Then("there should be {int} ID document(s) uploaded", function (
     .should("have.length", count);
 });
 
+Then("I should confirm the {string} notice is valid", function (
+  noticeType: string
+) {
+  cy.unstash("claimNumber").then((id) => {
+    cy.task("noticeReader", noticeType).then((data: Result) => {
+      expect(data.text).to.contain(id);
+    });
+  });
+  cy.task("deleteNoticePDF").should("equal", "Deleted Succesfully");
+});
+
 Then("I should receive a {string} notification", function (
   notificationType: string
 ): void {
@@ -353,4 +364,12 @@ Then("I add a note", function (): void {
     );
     cy.contains("input", "OK").click();
   });
+});
+
+Then("I continue creating the claim", function (): void {
+  portal.startClaim();
+  portal.onPage("start");
+  portal.agreeToStart();
+  portal.hasClaimId();
+  portal.onPage("checklist");
 });

@@ -12,6 +12,7 @@ type Application = import("./src/types").Application;
 type Credentials = import("./src/types").Credentials;
 type SimulationClaim = import("./src/simulation/types").SimulationClaim;
 type ApplicationRequestBody = import("./src/api").ApplicationRequestBody;
+type Result = import("pdf-parse").Result;
 
 declare namespace Cypress {
   interface Cypress {
@@ -44,7 +45,8 @@ declare namespace Cypress {
       notificationRequestData: notificationRequest
     ): Chainable<{ [key: string]: string }>;
     task(event: "getAuthVerification", mail: string): Chainable<string>;
-    task(event: "generateCredentials"): Chainable<Credentials>;
+    task(event: "generateCredentials", isEmployer: boolean): Chainable<Credentials>;
+    task(event: "noticeReader", noticeType: string): Chainable<Result>;
     task(event: "generateEmployerUsername"): Chainable<string>;
     task(
       event: "submitClaimToAPI",

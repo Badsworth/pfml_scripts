@@ -16,11 +16,7 @@ Given("I begin to submit a {string} claim as a {string} employee", function (
   scenario: string,
   employeeType: string
 ) {
-  const credentials = {
-    username: Cypress.env("E2E_PORTAL_USERNAME"),
-    password: Cypress.env("E2E_PORTAL_PASSWORD"),
-  };
-  portal.startSubmit(credentials, scenario, employeeType);
+  portal.submittingClaimType(scenario, employeeType);
 });
 
 Given("I search for the proper claim in Fineos", function () {
@@ -55,10 +51,6 @@ Given("Part One of the claim has been submitted", function (
   const { application } = this;
   portal.submitClaimPartOne(application);
   cy.stashLog("employerFEIN", application.employer_fein);
-});
-
-Given("I complete claim Denial for {string}", function (reason: string): void {
-  fineos.denialReason(reason);
 });
 
 Given("I start an application", function (): void {
@@ -115,7 +107,9 @@ Given("I have added payment information", function (
   portal.addPaymentInfo(paymentPreference);
 });
 
-Given("I return to the portal", function () {
+Given("I return to the portal as the {string} claimant", function (
+  loginType: string
+) {
   const portalBaseUrl = Cypress.env("E2E_PORTAL_BASEURL");
   if (!portalBaseUrl) {
     throw new Error("Portal base URL must be set");
@@ -125,7 +119,34 @@ Given("I return to the portal", function () {
     username: Cypress.env("E2E_PORTAL_USERNAME"),
     password: Cypress.env("E2E_PORTAL_PASSWORD"),
   };
-  portal.login(credentials);
+  if (loginType === "new") {
+    cy.unstash("username").as("username");
+    cy.unstash("password").as("password");
+    cy.visit("/login");
+    cy.get<string>("@username").then((username) =>
+      cy.labelled("Email address").type(username)
+    );
+    cy.get<string>("@password").then((password) =>
+      cy.labelled("Password").typeMasked(password)
+    );
+    cy.contains("button", "Log in").click();
+    cy.url().should("not.include", "login");
+    // portal.login(this.credentials as Credentials)
+  } else {
+    portal.login(credentials);
+  }
+});
+
+Given("I find my application card", function () {
+  cy.wait(90000);
+  cy.contains("a", "View your applications").click();
+  cy.wait(5000);
+  cy.wait("@documentClaimResponse");
+
+  cy.unstash("claimNumber").then((id) => {
+    cy.log(id as string);
+    cy.get('article[class*="border"]').should("contain.text", id);
+  });
 });
 
 Given("I am a Leave Admin for the submitted applications", function () {

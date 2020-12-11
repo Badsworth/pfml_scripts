@@ -228,23 +228,20 @@ export function validateEvidence(label: string): void {
 }
 
 export function denialReason(reason: string): void {
-  let reasonText = "";
+  let reasonSelection = "";
   switch (reason) {
-    case "Ineligible":
-      reasonText =
-        "This leave claim was denied due to financial ineligibility.";
+    case "Financial Ineligibility":
+      reasonSelection = "Claimant wages failed 30x rule";
       break;
     case "Insufficient Certification":
-      reasonText =
-        "This leave claim was denied due to invalid out-of-state ID.";
+      reasonSelection = "ID documents fail requirements";
       break;
     default:
       throw new Error("Denial reason not set or not recognized.");
   }
   cy.get('span[id="leaveRequestDenialDetailsWidget"]')
     .find("select")
-    .select(reason);
-  cy.labelled("Notes").type(reasonText);
+    .select(reasonSelection);
   cy.get('input[type="submit"][value="OK"]').click();
 }
 

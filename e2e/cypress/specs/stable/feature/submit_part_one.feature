@@ -3,6 +3,8 @@ Feature: Submit Part One of a claim, without documents, and then find in FINEOS
   @portal
   Scenario: As a claimant, I submit a claim through the portal (part one only)
     Given I begin to submit a "BHAP1" claim as a "financially eligible" employee
+    When I am the "existing" claimant visiting the portal
+    Then I continue creating the claim
     And Part One of the claim has been submitted
 
   @fineos

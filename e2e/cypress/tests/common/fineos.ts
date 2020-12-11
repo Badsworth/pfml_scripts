@@ -11,6 +11,9 @@ Given("I am logged into Fineos as a Savilinx user", () => {
 Then("I should be able to find claim in Adjudication", () => {
   cy.unstash("claimNumber").as("claimNumber");
   cy.get<string>("@claimNumber").then(fineos.visitClaim);
+
+  // For Testing
+  // fineos.visitClaim("NTN-7720-ABS-01")
 });
 
 Then("I should be able to find employer page", () => {
@@ -40,6 +43,20 @@ Given("I am viewing claim {string}", (claimId: string) => {
 When("I start adjudication for the claim", () => {
   fineos.assertOnClaimPage();
   cy.get("input[type='submit'][value='Adjudicate']").click();
+});
+
+Then("I should reject the plan", () => {
+  fineos.assertOnClaimPage();
+  cy.get("input[type='submit'][value='Adjudicate']").click();
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  cy.get("input[type='submit'][value='Reject']").click();
+  fineos.clickBottomWidgetButton();
+});
+
+Given("I complete claim Denial for {string}", function (reason: string): void {
+  fineos.clickDeny();
+  fineos.denialReason(reason);
 });
 
 When("I add paid benefits to the current case", () => {

@@ -1,6 +1,6 @@
 import { When } from "cypress-cucumber-preprocessor/steps";
 import { fineos, portal } from "./actions";
-import { CypressStepThis } from "../../../src/types";
+import { CypressStepThis, Credentials } from "../../../src/types";
 
 /**
  * Continous of prevous claim
@@ -110,15 +110,10 @@ When("I submit the claimant registration form", function (
   if (!this.credentials) {
     throw new Error("Credentials not properly set");
   }
-  cy.visit("/create-account");
-  cy.labelled("Email address").type(this.credentials.username);
-  cy.labelled("Password").type(this.credentials.password);
-  cy.contains("button", "Create account").click();
-  cy.task("getAuthVerification", this.credentials.username).then((code) => {
-    cy.labelled("6-digit code").type(code);
-    cy.contains("button", "Submit").click();
-  });
+
+  portal.portalRegister(this.credentials);
 });
+
 When("I accept the terms of service", function () {
   // this action is forced because of trivial error: "this element is detached from the DOM"
   cy.contains("Agree and continue").click({ force: true });
@@ -139,6 +134,17 @@ When("I have submitted all parts of the claim", function (
   portal.submitClaimPortal(application, paymentPreference);
 });
 
+When("I see a pdf {string} notice to download", function (noticeType: string) {
+  cy.unstash("claimNumber").then((id) => {
+    cy.contains("article", id as string).within(() => {
+      cy.get(".usa-list .text-medium").should("contain.text", noticeType);
+      // @ToDo Will add later, currently just checking notice link
+      //   .click();
+      // cy.wait(15000);
+    });
+  });
+});
+
 When("I request additional information from the claimant", function (): void {
   fineos.onTab("Evidence");
   cy.get("input[type='submit'][value='Additional Information']").click();
@@ -152,4 +158,26 @@ When("I request additional information from the claimant", function (): void {
     "Please resubmit page 1 of the Healthcare Provider form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
   );
   fineos.clickBottomWidgetButton("OK");
+});
+
+When("I am the {string} claimant visiting the portal", function (
+  loginType: string
+): void {
+  const credentials: Credentials = {
+    username: Cypress.env("E2E_PORTAL_USERNAME"),
+    password: Cypress.env("E2E_PORTAL_PASSWORD"),
+  };
+  if (loginType === "new") {
+    cy.task("generateCredentials", false)
+      .then((creds: Credentials) => {
+        cy.stash("username", creds.username);
+        cy.stash("password", creds.password);
+        portal.portalRegister(creds as Credentials);
+        portal.login(creds as Credentials);
+        cy.contains("Agree and continue").click({ force: true });
+      })
+      .as("credentials");
+  } else {
+    portal.login(credentials);
+  }
 });

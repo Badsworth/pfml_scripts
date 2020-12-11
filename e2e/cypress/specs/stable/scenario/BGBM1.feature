@@ -3,6 +3,8 @@ Feature: Submit a Bonding Claim in which the claimant mails their HCP form at la
   @portal
   Scenario: As a claimant, I should be able to start submitting a BGBM1 claim through the portal
     Given I begin to submit a "BGBM1" claim as a "financially eligible" employee
+    When I am the "existing" claimant visiting the portal
+    Then I continue creating the claim
     And Part One of the claim has been submitted
     And I have added payment information
     And I am on the claims "checklist" page

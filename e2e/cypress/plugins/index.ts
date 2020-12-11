@@ -11,6 +11,7 @@
 
 import config from "../../src/config";
 import faker from "faker";
+import path from "path";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import { CypressStepThis } from "../../src/types";
 import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
@@ -34,6 +35,8 @@ import * as pilot4 from "../../src/simulation/scenarios/pilot4";
 import * as integrationScenarios from "../../src/simulation/scenarios/integrationScenarios";
 
 import fs from "fs";
+import pdf from "pdf-parse";
+import { Result } from "pdf-parse";
 
 const scenarioFunctions: Record<string, SimulationGenerator> = {
   ...pilot3,
@@ -134,6 +137,21 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     async createContinuousLeaveDates(): Promise<Date[]> {
       return generateLeaveDates({ days: 1 });
     },
+    async noticeReader(noticeType: string): Promise<Result> {
+      const PDFdataBuffer = fs.readFileSync(
+        `./cypress/downloads-notices/${noticeType} Notice.pdf`
+      );
+
+      return pdf(PDFdataBuffer) as Promise<Result>;
+    },
+    deleteNoticePDF(): string {
+      try {
+        fs.unlinkSync("./cypress/downloads-notices/Denial Notice.pdf");
+      } catch (err) {
+        console.error(err);
+      }
+      return "Deleted Succesfully";
+    },
   });
 
   // @see https://github.com/TheBrainFamily/cypress-cucumber-webpack-typescript-example
@@ -142,6 +160,18 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     webpackOptions: require("../../webpack.config.ts"),
   };
   on("file:preprocessor", webpackPreprocessor(options));
+
+  on("before:browser:launch", (browser, options) => {
+    const downloadDirectory = path.join(__dirname, "..", "downloads-notices");
+
+    if (browser.family === "chromium" && browser.name !== "electron") {
+      options.preferences.default["download"] = {
+        default_directory: downloadDirectory,
+      };
+
+      return options;
+    }
+  });
 
   return {
     baseUrl: config("PORTAL_BASEURL"),

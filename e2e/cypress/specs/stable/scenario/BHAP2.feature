@@ -3,6 +3,8 @@ Feature: Submit a bonding (Out of State) claim and assert adjucation
   @portal
   Scenario: As an OUT OF STATE claimant, I should be able to submit a BONDING claim (BHAP2) through the portal
     Given I begin to submit a "BHAP2" claim as a "financially eligible" employee
+    When I am the "existing" claimant visiting the portal
+    Then I continue creating the claim
     And Part One of the claim has been submitted
     And I have added payment information
     And I am on the claims "checklist" page

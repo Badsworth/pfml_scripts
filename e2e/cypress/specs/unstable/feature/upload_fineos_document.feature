@@ -3,6 +3,8 @@ Feature: Upload a document in FINEOS and see it has been uploaded in the portal
   @portal
   Scenario: I upload Part One and Payment information of a HAP1 claim
     Given I begin to submit a "BHAP1" claim as a "financially eligible" employee
+    When I am the "existing" claimant visiting the portal
+    Then I continue creating the claim
     And Part One of the claim has been submitted
     And I have added payment information
 
@@ -16,7 +18,7 @@ Feature: Upload a document in FINEOS and see it has been uploaded in the portal
 
   @portal
   Scenario: I should be able to see that a document has been uploaded in the portal
-    Given I return to the portal
+    Given I return to the portal as the "existing" claimant
     And I go directly to the ID upload page
     Then there should be 1 ID document uploaded
 
