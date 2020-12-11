@@ -55,10 +55,15 @@ def application_get(application_id):
 
 
 def applications_get():
-    with app.db_session() as db_session:
-        applications = db_session.query(Application).all()
+    if user := app.current_user():
+        user_id = user.user_id
+    else:
+        raise Unauthorized
 
-    filtered_applications = filter(lambda a: can(READ, a), applications)
+    with app.db_session() as db_session:
+        applications = db_session.query(Application).filter(Application.user_id == user_id).all()
+
+        filtered_applications = filter(lambda a: can(READ, a), applications)
 
     applications_response = list(
         map(
