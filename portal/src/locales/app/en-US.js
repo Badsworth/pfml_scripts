@@ -159,6 +159,10 @@ const errors = {
       },
       intermittent_leave_periods: {
         duration: {
+          days_absent_per_intermittent_interval_maximum:
+            "The total amount of time you may be absent is greater than the length of the frequency interval you have selected. Check the frequency and duration.",
+          intermittent_duration_hours_maximum:
+            "An absence should be 23 hours or fewer. For absences that are 24 hours or longer, select that the absence will last at least a full day.",
           required: "Enter how long each absence may last.",
         },
         duration_basis: {
@@ -175,6 +179,8 @@ const errors = {
           required: "Enter how often absences may occur.",
         },
         frequency_interval_basis: {
+          intermittent_interval_maximum:
+            "The number of days between your first and last day of intermittent leave must be more than the frequency interval you select. Select a shorter frequency interval. If you continue to get this error, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
           required: "Select how often absences may occur.",
         },
         start_date: {
@@ -753,7 +759,8 @@ const pages = {
     frequencyBasisChoice_weeks: "At least once a week",
     frequencyBasisHint_medical:
       "Refer to Question 35 in the Certification of a Serious Health Condition form (page 8).",
-    frequencyBasisLabel: "How often might you need to be absent from work?",
+    frequencyBasisLabel:
+      "How often might you need to be absent from work (frequency interval)?",
     frequencyHint_medical:
       "Refer to Question 35 in the Certification of a Serious Health Condition form (page 8).",
     frequencyLabel_irregular:

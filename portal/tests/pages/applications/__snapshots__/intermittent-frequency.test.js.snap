@@ -26,3 +26,100 @@ exports[`IntermittentFrequency displays hint text with medical form context when
 exports[`IntermittentFrequency displays hint text with medical form context when claim is for Medical leave 3`] = `"Refer to Question 36 in the Certification of a Serious Health Condition form (page 8)."`;
 
 exports[`IntermittentFrequency displays hint text with medical form context when claim is for Medical leave 4`] = `"Refer to Question 36 in the Certification of a Serious Health Condition form (page 8)."`;
+
+exports[`IntermittentFrequency renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Leave details"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Tell us the estimated frequency and duration of your intermittent leave.
+  </Heading>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "At least once a week",
+          "value": "Weeks",
+        },
+        Object {
+          "checked": false,
+          "label": "At least once a month",
+          "value": "Months",
+        },
+        Object {
+          "checked": false,
+          "id": "irregularOver6Months",
+          "key": "irregularOver6Months",
+          "label": "Irregular over the next 6 months",
+          "value": "Months",
+        },
+      ]
+    }
+    hint={null}
+    label="How often might you need to be absent from work (frequency interval)?"
+    name="leave_details.intermittent_leave_periods[0].frequency_interval_basis"
+    onChange={[Function]}
+    smallLabel={true}
+    type="radio"
+    value=""
+  />
+  <ConditionalContent
+    visible={false}
+  >
+    <InputText
+      hint={null}
+      inputMode="numeric"
+      label="pages.claimsIntermittentFrequency.frequencyLabel"
+      name="leave_details.intermittent_leave_periods[0].frequency"
+      onChange={[Function]}
+      pattern="[0-9]*"
+      smallLabel={true}
+      value=""
+      width="small"
+    />
+    <InputChoiceGroup
+      choices={
+        Array [
+          Object {
+            "checked": false,
+            "label": "At least a day",
+            "value": "Days",
+          },
+          Object {
+            "checked": false,
+            "label": "Less than a full work day",
+            "value": "Hours",
+          },
+        ]
+      }
+      hint={null}
+      label="How long will an absence typically last?"
+      name="leave_details.intermittent_leave_periods[0].duration_basis"
+      onChange={[Function]}
+      smallLabel={true}
+      type="radio"
+      value=""
+    />
+  </ConditionalContent>
+  <ConditionalContent
+    visible={false}
+  >
+    <InputText
+      hint={null}
+      inputMode="numeric"
+      label="pages.claimsIntermittentFrequency.durationLabel"
+      name="leave_details.intermittent_leave_periods[0].duration"
+      onChange={[Function]}
+      pattern="[0-9]*"
+      smallLabel={true}
+      value=""
+      width="small"
+    />
+  </ConditionalContent>
+</QuestionPage>
+`;

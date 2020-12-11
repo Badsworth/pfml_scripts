@@ -18,6 +18,12 @@ describe("IntermittentFrequency", () => {
     },
   });
 
+  it("renders the page", () => {
+    const { wrapper } = renderWithAppLogic(IntermittentFrequency);
+
+    expect(wrapper).toMatchSnapshot();
+  });
+
   it("it displays frequency and duration_basis questions when a frequency_interval_basis is selected", () => {
     const { wrapper: blankClaimWrapper } = renderWithAppLogic(
       IntermittentFrequency
