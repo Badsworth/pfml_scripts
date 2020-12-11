@@ -88,7 +88,7 @@ def other_leave_eform():
                     "name": "QualifyingReasonPrimary",
                     "enumValue": {
                         "domainName": "NotificationReason",
-                        "instanceValue": "Accident or treatment required for an injury",
+                        "instanceValue": "Pregnancy / Maternity",
                     },
                 },
                 {"name": "BeginDate", "dateValue": "2020-04-01"},
@@ -96,7 +96,7 @@ def other_leave_eform():
                     "name": "QualifyingReasonPrimary2",
                     "enumValue": {
                         "domainName": "NotificationReason",
-                        "instanceValue": "Out of work for another reason",
+                        "instanceValue": "Care for a family member",
                     },
                 },
                 {"name": "SecondaryQualifyingReason2", "stringValue": "Military caregiver"},
@@ -108,7 +108,7 @@ def other_leave_eform():
 @pytest.fixture
 def previous_leave():
     return PreviousLeave(
-        leave_start_date="2020-05-15", leave_end_date="2020-06-01", leave_type="Medical"
+        leave_start_date="2020-05-15", leave_end_date="2020-06-01", leave_reason="Medical"
     )
 
 
@@ -143,10 +143,10 @@ class TestTransformEformBody:
         other_leave_1 = other_leaves_list[0].dict()
         assert other_leave_1["leave_start_date"] == date(2020, 4, 1)
         assert other_leave_1["leave_end_date"] == date(2020, 5, 31)
-        assert other_leave_1["leave_type"] == "Accident or treatment required for an injury"
+        assert other_leave_1["leave_reason"] == "Pregnancy / Maternity"
 
         assert type(other_leaves_list[1]) is PreviousLeave
         other_leave_2 = other_leaves_list[1].dict()
         assert other_leave_2["leave_start_date"] == date(2019, 12, 4)
         assert other_leave_2["leave_end_date"] == date(2019, 12, 27)
-        assert other_leave_2["leave_type"] == "Out of work for another reason"
+        assert other_leave_2["leave_reason"] == "Care for a family member"

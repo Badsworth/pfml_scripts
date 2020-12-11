@@ -14,7 +14,7 @@ class TransformOtherLeaveAttributes(TransformEformAttributes):
         "BeginDate": {"name": "leave_start_date", "type": "dateValue"},
         "EndDate": {"name": "leave_end_date", "type": "dateValue"},
         "QualifyingReasonPrimary": {
-            "name": "leave_type",
+            "name": "leave_reason",
             "type": "enumValue",
             "embeddedProperty": "instanceValue",
         },

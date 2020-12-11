@@ -17,6 +17,7 @@ from massgov.pfml.api.models.applications.common import (
     PaymentMethod,
     WorkPattern,
 )
+from massgov.pfml.api.models.claims.common import PreviousLeave
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
@@ -67,6 +68,8 @@ class ApplicationResponse(PydanticBaseModel):
     other_incomes_awaiting_approval: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
     phone: Optional[MaskedPhone]
+    previous_leaves: Optional[List[PreviousLeave]]
+    has_previous_leaves: Optional[bool]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":

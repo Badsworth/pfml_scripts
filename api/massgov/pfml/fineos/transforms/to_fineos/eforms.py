@@ -36,7 +36,7 @@ class TransformPreviousLeave(TransformEformAttributes):
     ATTRIBUTE_MAP = {
         "leave_start_date": {"name": "PastLeaveStartDate", "type": "dateValue"},
         "leave_end_date": {"name": "PastLeaveEndDate", "type": "dateValue"},
-        "leave_type": {"name": "QualifyingReason", "type": "stringValue"},
+        "leave_reason": {"name": "QualifyingReason", "type": "stringValue"},
     }
 
     ADDITIONAL_OBJECT = EFormAttribute(

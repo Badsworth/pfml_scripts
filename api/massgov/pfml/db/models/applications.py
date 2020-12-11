@@ -158,6 +158,20 @@ class LkOtherIncomeType(Base):
         self.other_income_type_description = other_income_type_description
 
 
+class LkPreviousLeaveQualifyingReason(Base):
+    __tablename__ = "lk_previous_leave_qualifying_reason"
+    previous_leave_qualifying_reason_id = Column(Integer, primary_key=True, autoincrement=True)
+    previous_leave_qualifying_reason_description = Column(Text)
+
+    def __init__(
+        self, previous_leave_qualifying_reason_id, previous_leave_qualifying_reason_description
+    ):
+        self.previous_leave_qualifying_reason_id = previous_leave_qualifying_reason_id
+        self.previous_leave_qualifying_reason_description = (
+            previous_leave_qualifying_reason_description
+        )
+
+
 class LkPhoneType(Base):
     __tablename__ = "lk_phone_type"
     phone_type_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -176,6 +190,23 @@ class Phone(Base):
     phone_number = Column(Text)  # Formatted in E.164
     phone_type_id = Column(Integer, ForeignKey("lk_phone_type.phone_type_id"))
     phone_type_instance = relationship(LkPhoneType)
+
+
+class PreviousLeave(Base):
+    __tablename__ = "previous_leave"
+    previous_leave_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    application_id = Column(
+        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True, nullable=False
+    )
+    leave_start_date = Column(Date)
+    leave_end_date = Column(Date)
+    is_for_current_employer = Column(Boolean)
+    leave_reason_id = Column(
+        Integer,
+        ForeignKey("lk_previous_leave_qualifying_reason.previous_leave_qualifying_reason_id"),
+    )
+    leave_reason = relationship(LkPreviousLeaveQualifyingReason)
+    application = relationship("Application", back_populates="previous_leaves")
 
 
 class Application(Base):
@@ -242,6 +273,7 @@ class Application(Base):
     has_other_incomes = Column(Boolean)
     other_incomes_awaiting_approval = Column(Boolean)
     has_submitted_payment_preference = Column(Boolean)
+    has_previous_leaves = Column(Boolean)
 
     user = relationship(User)
     employer = relationship(Employer)
@@ -277,6 +309,7 @@ class Application(Base):
     )
     employer_benefits = relationship("EmployerBenefit", back_populates="application", uselist=True)
     other_incomes = relationship("OtherIncome", back_populates="application", uselist=True)
+    previous_leaves = relationship("PreviousLeave", back_populates="application", uselist=True)
 
 
 class ApplicationPaymentPreference(Base):
@@ -764,6 +797,22 @@ class PhoneType(LookupTable):
     PHONE = LkPhoneType(3, "Phone")
 
 
+# TODO (CP-1554): investigate whether this model can be merged with LeaveReason
+class PreviousLeaveQualifyingReason(LookupTable):
+    model = LkPreviousLeaveQualifyingReason
+    column_names = (
+        "previous_leave_qualifying_reason_id",
+        "previous_leave_qualifying_reason_description",
+    )
+
+    PREGNANCY_MATERNITY = LkPreviousLeaveQualifyingReason(1, "Pregnancy / Maternity")
+    SERIOUS_HEALTH_CONDITION = LkPreviousLeaveQualifyingReason(2, "Serious health condition")
+    CARE_FOR_A_FAMILY_MEMBER = LkPreviousLeaveQualifyingReason(3, "Care for a family member")
+    CHILD_BONDING = LkPreviousLeaveQualifyingReason(4, "Child bonding")
+    MILITARY_CAREGIVER = LkPreviousLeaveQualifyingReason(5, "Military caregiver")
+    MILITARY_EXIGENCY_FAMILY = LkPreviousLeaveQualifyingReason(6, "Military exigency family")
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     LeaveReason.sync_to_database(db_session)
@@ -782,4 +831,5 @@ def sync_lookup_tables(db_session):
     DayOfWeek.sync_to_database(db_session)
     WorkPatternType.sync_to_database(db_session)
     PhoneType.sync_to_database(db_session)
+    PreviousLeaveQualifyingReason.sync_to_database(db_session)
     db_session.commit()

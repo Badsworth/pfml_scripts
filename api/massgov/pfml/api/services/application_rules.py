@@ -12,9 +12,12 @@ from massgov.pfml.api.services.applications import (
 from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
+    EmployerBenefit,
     EmploymentStatus,
     LeaveReason,
     LeaveReasonQualifier,
+    OtherIncome,
+    PreviousLeave,
 )
 from massgov.pfml.db.models.employees import PaymentMethod
 
@@ -61,21 +64,18 @@ def get_address_issues(application: Application, address_field_name: str) -> Lis
     return issues
 
 
-def get_employer_benefits_issues(application: Application) -> List[Issue]:
-    employer_benefit_fields = [
-        "benefit_amount_dollars",
-        "benefit_amount_frequency",
-        "benefit_end_date",
-        "benefit_start_date",
-        "benefit_type",
-    ]
+def check_required_fields_in_list_items(
+    list_name: str,
+    list_items: Union[Iterable[EmployerBenefit], Iterable[OtherIncome], Iterable[PreviousLeave]],
+    required_fields: List[str],
+) -> List[Issue]:
     issues = []
 
-    for index, benefit in enumerate(application.employer_benefits, 0):
-        for field in employer_benefit_fields:
-            val = getattr(benefit, field)
+    for index, list_item in enumerate(list_items, 0):
+        for field in required_fields:
+            val = getattr(list_item, field)
             if val is None:
-                field_name = f"employer_benefits[{index}].{field}"
+                field_name = f"{list_name}[{index}].{field}"
                 issues.append(
                     Issue(
                         type=IssueType.required,
@@ -87,6 +87,20 @@ def get_employer_benefits_issues(application: Application) -> List[Issue]:
     return issues
 
 
+def get_employer_benefits_issues(application: Application) -> List[Issue]:
+    employer_benefit_fields = [
+        "benefit_amount_dollars",
+        "benefit_amount_frequency",
+        "benefit_end_date",
+        "benefit_start_date",
+        "benefit_type",
+    ]
+
+    return check_required_fields_in_list_items(
+        "employer_benefits", application.employer_benefits, employer_benefit_fields
+    )
+
+
 def get_other_incomes_issues(application: Application) -> List[Issue]:
     other_income_fields = [
         "income_amount_dollars",
@@ -95,20 +109,22 @@ def get_other_incomes_issues(application: Application) -> List[Issue]:
         "income_start_date",
         "income_type",
     ]
-    issues = []
+    return check_required_fields_in_list_items(
+        "other_incomes", application.other_incomes, other_income_fields
+    )
 
-    for index, income in enumerate(application.other_incomes, 0):
-        for field in other_income_fields:
-            val = getattr(income, field)
-            if val is None:
-                field_name = f"other_incomes[{index}].{field}"
-                issues.append(
-                    Issue(
-                        type=IssueType.required,
-                        message=f"{field_name} is required",
-                        field=field_name,
-                    )
-                )
+
+def get_previous_leave_issues(application: Application) -> List[Issue]:
+    previous_leave_fields = [
+        "leave_start_date",
+        "leave_end_date",
+        "is_for_current_employer",
+        "leave_reason",
+    ]
+
+    issues = check_required_fields_in_list_items(
+        "previous_leaves", application.previous_leaves, previous_leave_fields
+    )
 
     return issues
 
@@ -229,6 +245,9 @@ def get_conditional_issues(application: Application) -> List[Issue]:
 
     if application.other_incomes:
         issues += get_other_incomes_issues(application)
+
+    if application.previous_leaves:
+        issues += get_previous_leave_issues(application)
 
     # Fields involved in Part 3 of the progressive application
     # TODO: (API-515) Document and certification validations can be called here

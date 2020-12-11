@@ -17,6 +17,7 @@ from massgov.pfml.api.models.applications.common import (
     Phone,
     WorkPattern,
 )
+from massgov.pfml.api.models.common import PreviousLeave
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import FEINUnformattedStr, MassIdStr, TaxIdUnformattedStr
@@ -50,6 +51,8 @@ class ApplicationRequestBody(PydanticBaseModel):
     other_incomes_awaiting_approval: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
     phone: Optional[Phone]
+    previous_leaves: Optional[List[PreviousLeave]]
+    has_previous_leaves: Optional[bool]
 
     @validator("date_of_birth")
     def date_of_birth_in_valid_range(cls, date_of_birth):  # noqa: B902

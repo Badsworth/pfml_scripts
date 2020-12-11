@@ -22,6 +22,7 @@ from massgov.pfml.db.models.applications import (
     LeaveReason,
     LeaveReasonQualifier,
     OtherIncome,
+    PreviousLeave,
     WorkPatternDay,
 )
 from massgov.pfml.db.models.employees import PaymentMethod
@@ -1727,4 +1728,31 @@ def test_has_other_incomes_required(test_db_session, initialize_factories_sessio
             message="has_other_incomes must be false if other_incomes_awaiting_approval is set",
             field="has_other_incomes",
         )
+    ] == issues
+
+
+def test_previous_leave_missing_fields(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(previous_leaves=[PreviousLeave()])
+    issues = get_conditional_issues(test_app)
+    assert [
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves[0].leave_start_date is required",
+            field="previous_leaves[0].leave_start_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves[0].leave_end_date is required",
+            field="previous_leaves[0].leave_end_date",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves[0].is_for_current_employer is required",
+            field="previous_leaves[0].is_for_current_employer",
+        ),
+        Issue(
+            type=IssueType.required,
+            message="previous_leaves[0].leave_reason is required",
+            field="previous_leaves[0].leave_reason",
+        ),
     ] == issues

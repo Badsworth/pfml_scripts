@@ -1,6 +1,7 @@
 from datetime import date
 from typing import List, Optional
 
+from massgov.pfml.api.models.common import PreviousLeave
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -41,12 +42,6 @@ class EmployerBenefit(PydanticBaseModel):
     benefit_end_date: date
     benefit_type: Optional[str]
     program_type: Optional[str]
-
-
-class PreviousLeave(PydanticBaseModel):
-    leave_start_date: date
-    leave_end_date: date
-    leave_type: Optional[str]
 
 
 class EmployerClaimReview(PydanticBaseModel):

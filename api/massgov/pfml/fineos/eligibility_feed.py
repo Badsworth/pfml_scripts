@@ -24,6 +24,7 @@ import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Employee, EmployeeLog, Employer, WagesAndContributions
+from massgov.pfml.fineos import AbstractFINEOSClient
 from massgov.pfml.fineos.exception import FINEOSNotFound
 from massgov.pfml.util.datetime import utcnow
 
@@ -273,9 +274,7 @@ def get_latest_employer_for_updates(employer_employee_list: List) -> List:
 # this value in the fineos_employer_id field in the employer model.
 # The fineos_employer_id is the value that should be used to identify
 # an employer in the Eligibility Feed.
-def get_fineos_employer_id(
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient, employer: Employer
-) -> Optional[int]:
+def get_fineos_employer_id(fineos: AbstractFINEOSClient, employer: Employer) -> Optional[int]:
     if employer.fineos_employer_id:
         return employer.fineos_employer_id
 
@@ -288,7 +287,7 @@ def get_fineos_employer_id(
 
 def process_employee_updates(
     db_session: db.Session,
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    fineos: AbstractFINEOSClient,
     output_dir_path: str,
     output_transport_params: Optional[OutputTransportParams] = None,
 ) -> EligibilityFeedExportReport:
@@ -365,7 +364,7 @@ def process_employee_updates(
 
 def process_employee_batch(
     db_session: db.Session,
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    fineos: AbstractFINEOSClient,
     output_dir_path: str,
     batch_of_employee_ids: Iterable,
     report: EligibilityFeedExportReport,
@@ -470,7 +469,7 @@ class TaskResultStatus(Enum):
 
 # per-process globals for concurrent runs
 db_session: Optional[db.Session] = None
-fineos: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None
+fineos: Optional[AbstractFINEOSClient] = None
 output_transport_params: Optional[Dict[str, Any]] = None
 
 
@@ -480,7 +479,7 @@ def is_fineos_output_location(path: str) -> bool:
 
 def process_all_worker_initializer(
     make_db_session: Callable[[], db.Session],
-    make_fineos_client: Callable[[], massgov.pfml.fineos.AbstractFINEOSClient],
+    make_fineos_client: Callable[[], AbstractFINEOSClient],
     make_fineos_boto_session: Callable[[EligibilityFeedExportConfig], boto3.Session],
     config: EligibilityFeedExportConfig,
 ) -> None:
@@ -552,7 +551,7 @@ def process_all_worker(
 
 def process_all_employers(
     make_db_session: Callable[[], db.Session],
-    make_fineos_client: Callable[[], massgov.pfml.fineos.AbstractFINEOSClient],
+    make_fineos_client: Callable[[], AbstractFINEOSClient],
     make_fineos_boto_session: Callable[[EligibilityFeedExportConfig], boto3.Session],
     config: EligibilityFeedExportConfig,
 ) -> EligibilityFeedExportReport:

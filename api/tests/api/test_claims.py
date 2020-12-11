@@ -260,7 +260,7 @@ def test_non_employees_cannot_access_employer_update_claim_review(client, auth_t
             {
                 "leave_end_date": "1970-01-01",
                 "leave_start_date": "1970-01-01",
-                "leave_type": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy / Maternity",
             }
         ],
     }
@@ -306,7 +306,7 @@ def test_employers_receive_200_from_employer_update_claim_review(
             {
                 "leave_end_date": "1970-01-01",
                 "leave_start_date": "1970-01-01",
-                "leave_type": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy / Maternity",
             }
         ],
     }
@@ -352,7 +352,7 @@ def test_employer_confirmation_sent_with_employer_update_claim_review(
             {
                 "leave_end_date": "1970-01-01",
                 "leave_start_date": "1970-01-01",
-                "leave_type": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy / Maternity",
             }
         ],
     }
@@ -465,7 +465,7 @@ def test_employer_confirmation_is_not_sent(
             {
                 "leave_end_date": "1970-01-01",
                 "leave_start_date": "1970-01-01",
-                "leave_type": "Pregnancy / Maternity",
+                "leave_reason": "Pregnancy / Maternity",
             }
         ],
     }

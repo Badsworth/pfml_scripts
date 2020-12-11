@@ -29,6 +29,8 @@ from massgov.pfml.db.models.applications import (
     OtherIncome,
     OtherIncomeType,
     Phone,
+    PreviousLeave,
+    PreviousLeaveQualifyingReason,
     RelationshipQualifier,
     RelationshipToCaregiver,
     WorkPattern,
@@ -1892,6 +1894,163 @@ def test_application_patch_update_other_users_other_income(
                     "income_start_date": "2021-01-10",
                     "income_amount_dollars": 400,
                     "income_amount_frequency": "Per Month",
+                },
+            ]
+        },
+    )
+
+    tests.api.validate_error_response(response, 403)
+
+
+def test_application_patch_has_previous_leaves(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"has_previous_leaves": True,},
+    )
+
+    assert response.status_code == 200
+    data = response.get_json().get("data")
+
+    assert data.get("has_previous_leaves") is True
+
+
+def test_application_patch_add_previous_leaves(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "previous_leaves": [
+                {
+                    "is_for_current_employer": True,
+                    "leave_start_date": "2021-01-01",
+                    "leave_end_date": "2021-05-01",
+                    "leave_reason": "Pregnancy / Maternity",
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    previous_leaves = response_body.get("previous_leaves")
+
+    assert len(previous_leaves) == 1
+    previous_leave = previous_leaves[0]
+    assert previous_leave.get("is_for_current_employer") is True
+    assert previous_leave.get("leave_start_date") == "2021-01-01"
+    assert previous_leave.get("leave_end_date") == "2021-05-01"
+    assert previous_leave.get("leave_reason") == "Pregnancy / Maternity"
+    assert previous_leave.get("previous_leave_id") is not None
+
+
+def test_application_patch_update_previous_leave(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    previous_leave = PreviousLeave(
+        leave_start_date="2021-01-01",
+        leave_end_date="2021-05-01",
+        is_for_current_employer=False,
+        leave_reason_id=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_id,
+    )
+
+    application.previous_leaves = [previous_leave]
+    test_db_session.add(application)
+    test_db_session.commit()
+    previous_leave_id = application.previous_leaves[0].previous_leave_id
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "previous_leaves": [
+                {
+                    "previous_leave_id": previous_leave_id,
+                    "is_for_current_employer": False,
+                    "leave_start_date": "2021-02-01",
+                    "leave_end_date": "2021-06-01",
+                    "leave_reason": "Pregnancy / Maternity",
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    previous_leaves = response_body.get("previous_leaves")
+
+    assert len(previous_leaves) == 1
+    previous_leave = previous_leaves[0]
+    assert previous_leave.get("is_for_current_employer") is False
+    assert previous_leave.get("leave_start_date") == "2021-02-01"
+    assert previous_leave.get("leave_end_date") == "2021-06-01"
+    assert previous_leave.get("leave_reason") == "Pregnancy / Maternity"
+
+
+def test_application_patch_update_non_existent_previous_leave(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "previous_leaves": [
+                {
+                    "previous_leave_id": "ad34ed9e-8a1a-4cfa-b6a1-93d2737c7a08",
+                    "leave_start_date": "2021-02-01",
+                    "leave_end_date": "2021-05-01",
+                    "is_for_current_employer": True,
+                },
+            ]
+        },
+    )
+
+    tests.api.validate_error_response(response, 404)
+    message = response.get_json().get("message")
+    assert message == "PreviousLeave with id ad34ed9e-8a1a-4cfa-b6a1-93d2737c7a08 not found"
+
+
+def test_application_patch_update_other_users_previous_leave(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    test_db_session.add(application)
+
+    # Create a leave which belongs to some other user and some other application
+    other_user = UserFactory.create()
+    other_application = ApplicationFactory.create(user=other_user)
+    previous_leave = PreviousLeave(
+        leave_start_date="2021-01-01",
+        leave_end_date="2021-05-01",
+        is_for_current_employer=False,
+        leave_reason_id=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_id,
+    )
+    other_application.previous_leaves = [previous_leave]
+
+    test_db_session.commit()
+
+    # Try to modify the other user's previous leave
+    other_previous_leave_id = other_application.previous_leaves[0].previous_leave_id
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "previous_leaves": [
+                {
+                    "previous_leave_id": other_previous_leave_id,
+                    "leave_start_date": "2021-02-01",
+                    "leave_end_date": "2021-05-01",
+                    "is_for_current_employer": True,
                 },
             ]
         },

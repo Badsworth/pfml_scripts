@@ -7,6 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 import massgov.pfml.api.models.applications.common as apps_common_io
+import massgov.pfml.api.models.claims.common as claims_common_io
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
 import massgov.pfml.util.datetime as datetime_util
@@ -34,6 +35,8 @@ from massgov.pfml.db.models.applications import (
     OtherIncomeType,
     Phone,
     PhoneType,
+    PreviousLeave,
+    PreviousLeaveQualifyingReason,
     ReducedScheduleLeavePeriod,
     TaxIdentifier,
     WorkPattern,
@@ -328,6 +331,10 @@ def update_from_request(
 
         if key == "other_incomes":
             add_or_update_other_incomes(db_session, body.other_incomes, application)
+            continue
+
+        if key == "previous_leaves":
+            add_or_update_previous_leaves(db_session, body.previous_leaves, application)
             continue
 
         if key == "application_nickname":
@@ -778,6 +785,64 @@ def add_or_update_other_incomes(
         if api_other_income.income_amount_frequency:
             db_existing_other_income.income_amount_frequency_id = AmountFrequency.get_id(
                 api_other_income.income_amount_frequency.value
+            )
+
+
+def add_or_update_previous_leaves(
+    db_session: db.Session,
+    api_previous_leaves: Optional[List[claims_common_io.PreviousLeave]],
+    application: Application,
+) -> None:
+
+    assert api_previous_leaves is not None
+    previous_leaves_to_create = []
+    previous_leaves_to_update = []
+
+    for api_previous_leave in api_previous_leaves:
+        if api_previous_leave.previous_leave_id:
+            previous_leaves_to_update.append(api_previous_leave)
+        else:
+            previous_leaves_to_create.append(api_previous_leave)
+
+    for api_previous_leave in previous_leaves_to_create:
+        # Create new previous_leave
+        new_previous_leave = PreviousLeave(
+            application_id=application.application_id,
+            leave_start_date=api_previous_leave.leave_start_date,
+            leave_end_date=api_previous_leave.leave_end_date,
+            is_for_current_employer=api_previous_leave.is_for_current_employer,
+            leave_reason_id=PreviousLeaveQualifyingReason.get_id(api_previous_leave.leave_reason),
+        )
+
+        db_session.add(new_previous_leave)
+
+    for api_previous_leave in previous_leaves_to_update:
+        db_previous_leave = (
+            db_session.query(PreviousLeave)
+            .filter(PreviousLeave.previous_leave_id == api_previous_leave.previous_leave_id,)
+            .one_or_none()
+        )
+
+        if db_previous_leave is None:
+            raise NotFound(
+                f"PreviousLeave with id {api_previous_leave.previous_leave_id} not found"
+            )
+
+        # Don't allow users to change previous leave records for an application other than the one
+        # they're updating
+        if db_previous_leave.application_id != application.application_id:
+            # TODO: Using the same pattern as for other_income
+            # should we provide a better, more detailed message?
+            raise Forbidden()
+
+        # Update each field
+        db_previous_leave.leave_start_date = api_previous_leave.leave_start_date
+        db_previous_leave.leave_end_date = api_previous_leave.leave_end_date
+        db_previous_leave.is_for_current_employer = api_previous_leave.is_for_current_employer
+
+        if api_previous_leave.leave_reason:
+            db_previous_leave.leave_reason_id = PreviousLeaveQualifyingReason.get_id(
+                api_previous_leave.leave_reason.value
             )
 
 
