@@ -76,6 +76,7 @@ module "api" {
   fineos_client_oauth2_url                         = "https://prd-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                   = "5qcd2h1qlv4gpiqgugn2mrttkg"
   fineos_eligibility_transfer_lambda_build_s3_key  = local.fineos_eligibility_transfer_lambda_build_s3_key
+  service_now_base_url                             = "https://savilinx.servicenowservices.com"
   portal_base_url                                  = "https://paidleave.mass.gov"
   enable_application_fraud_check                   = "1"
 
