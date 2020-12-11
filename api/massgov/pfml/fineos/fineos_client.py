@@ -17,7 +17,6 @@ import newrelic.agent
 import oauthlib.oauth2
 import pydantic
 import requests
-import requests_oauthlib
 import xmlschema
 
 import massgov.pfml.util.logging
@@ -95,7 +94,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
     client_id: str
     client_secret: str
     request_count: int
-    oauth_session: requests_oauthlib.OAuth2Session
+    oauth_session: Any
 
     def __init__(
         self,
@@ -107,6 +106,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         oauth2_url,
         client_id,
         client_secret,
+        oauth_session,
     ):
         self.integration_services_api_url = integration_services_api_url
         self.group_client_api_url = group_client_api_url
@@ -116,8 +116,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
         self.oauth2_url = oauth2_url
         self.client_id = client_id
         self.client_secret = client_secret
+        self.oauth_session = oauth_session
         self.request_count = 0
-        self.oauth_session = None
         logger.info(
             "customer_api_url %s, wscomposer_url %s, group_client_api_url %s, "
             "integration_services_api_url %s",
@@ -130,12 +130,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     def _init_oauth_session(self):
         """Set up an OAuth session and get a token."""
-        if self.oauth_session is None:
-            backend = oauthlib.oauth2.BackendApplicationClient(client_id=self.client_id)
-            self.oauth_session = requests_oauthlib.OAuth2Session(
-                client=backend, scope="service-gateway/all"
-            )
-
         try:
             token = self.oauth_session.fetch_token(
                 token_url=self.oauth2_url,
@@ -266,7 +260,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         method: str,
         path: str,
         user_id: str,
-        header_content_type: Optional[str] = "application/xml",
+        header_content_type: Optional[str] = "application/xml; charset=utf-8",
         **args: Any,
     ) -> requests.Response:
         """Make a request to the Integration Services API."""
@@ -284,8 +278,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
         query_with_user_id["userid"] = self.wscomposer_user_id
         path_with_query = path + "?" + urllib.parse.urlencode(query_with_user_id)
         url = urllib.parse.urljoin(self.wscomposer_url, path_with_query)
-        headers = {"Content-Type": "application/xml"}
-        return self._request(method, url, headers, data=xml_data)
+        headers = {"Content-Type": "application/xml; charset=utf-8"}
+        return self._request(method, url, headers, data=xml_data.encode("utf-8"))
 
     def find_employer(self, employer_fein: str) -> str:
         response = self._wscomposer_request(
@@ -809,7 +803,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "POST",
             "rest/externalUserProvisioningService/createOrUpdateEmployerViewpointUser",
             self.wscomposer_user_id,
-            data=xml_body,
+            data=xml_body.encode("utf-8"),
         )
 
     def create_or_update_employer(

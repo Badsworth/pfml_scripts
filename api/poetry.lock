@@ -1257,6 +1257,21 @@ testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xm
 
 [[package]]
 category = "dev"
+description = "pytest-httpserver is a httpserver for pytest"
+name = "pytest-httpserver"
+optional = false
+python-versions = ">=3.4"
+version = "0.3.6"
+
+[package.dependencies]
+werkzeug = "*"
+
+[package.extras]
+dev = ["flake8", "wheel", "rope", "pytest", "pytest-cov", "coverage", "ipdb", "requests", "sphinx", "sphinx-rtd-theme", "reno", "autopep8"]
+test = ["pytest", "pytest-cov", "coverage", "requests"]
+
+[[package]]
+category = "dev"
 description = "Thin-wrapper around the mock package for easier use with pytest"
 name = "pytest-mock"
 optional = false
@@ -1773,7 +1788,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "97dcef71984857427b6a3efd19c04ba9d6235684e3742c4743dd5853691bbc27"
+content-hash = "2ab107b977301f78931e1ce1f4ae9a406125ea414efa4e9632aca27a1c993455"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -2396,6 +2411,10 @@ pysnooper = [
 pytest = [
     {file = "pytest-5.4.3-py3-none-any.whl", hash = "sha256:5c0db86b698e8f170ba4582a492248919255fcd4c79b1ee64ace34301fb589a1"},
     {file = "pytest-5.4.3.tar.gz", hash = "sha256:7979331bfcba207414f5e1263b5a0f8f521d0f457318836a7355531ed1a4c7d8"},
+]
+pytest-httpserver = [
+    {file = "pytest_httpserver-0.3.6-py3-none-any.whl", hash = "sha256:8cdab4bb68be0ed7bc6894d08bd043270ce0bb52ecdedc3955be1b86119984e5"},
+    {file = "pytest_httpserver-0.3.6.tar.gz", hash = "sha256:896e93bc191a2e887f906e07b312a4b753c2803185e9c7b1c6648b6ef65fb0f1"},
 ]
 pytest-mock = [
     {file = "pytest-mock-3.3.1.tar.gz", hash = "sha256:a4d6d37329e4a893e77d9ffa89e838dd2b45d5dc099984cf03c703ac8411bb82"},
