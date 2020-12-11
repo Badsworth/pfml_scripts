@@ -1,6 +1,5 @@
 import TestMailClient from "./TestMailClient";
 import { notificationRequest } from "./../../src/types";
-import { string } from "yargs";
 
 export default class TestMailNotificationFetcher {
   namespace: string;

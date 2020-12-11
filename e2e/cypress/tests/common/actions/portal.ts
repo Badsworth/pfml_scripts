@@ -638,10 +638,7 @@ export function completeDateForm(
 export function completeIntermittentLeaveDetails(
   leave: IntermittentLeavePeriods
 ): void {
-  cy.contains(
-    "fieldset",
-    "How often might you need to be absent from work?"
-  ).within(() => {
+  cy.contains("fieldset", "How often might you need").within(() => {
     cy.get(
       `input[name='leave_details.intermittent_leave_periods[0].frequency_interval_basis'][value="${leave.frequency_interval_basis}"]`
     ).click({ force: true });
