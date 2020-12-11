@@ -116,7 +116,7 @@ pages: {
 
 #### Using markup in values
 
-Sometimes content necessitates the use of specific HTML tags. However, markup should only include tag names and not tag attributes. A tag's `class`, `href`, and other attributes should be set by the page or component that renders the key (see usage example below).
+Sometimes content necessitates the use of specific HTML tags. However, markup should only include tag names and not tag attributes. A tag's `className`, `href`, and other attributes should be set by the page or component that renders the key (see usage example below).
 
 Using markup in content strings can be useful but it can also make them more difficult to read and edit without introducing errors. Markup should be used sparingly. Some of the reasons for using markup in content strings include answering yes to any of these questions:
 
@@ -125,7 +125,11 @@ Using markup in content strings can be useful but it can also make them more dif
 - Is it helpful to edit this content as one key? (e.g. two paragraphs that serve one purpose for the user, or list items with an explicit order)
 - Would breaking this content into multiple keys make them more difficult to name semantically or add unnecessary structure?
 
-### Basic usage with hook
+### Rendering values in pages and components
+
+#### Using the `useTranslation` hook
+
+With simple values, you only need to get the `t` function to render values in the functional component:
 
 ```js
 import React from "react";
@@ -138,12 +142,24 @@ export function MyComponent() {
 }
 ```
 
-When a key is set to a value that includes markup, it requires a different rendering method in pages and components:
+#### The `Trans` component
+
+Since the `t` function can't be used for values that include markup, the `Trans` component is used to interpolate or translate complex react elements.
+
+Set the key in the language file, excluding all tag attributes:
 
 ```
 htmlKey:
-  "<ul><li>List item one</li><li>List item two has <external-link>a link</external-link></li></ul>",
+  "<ul><li>List item one</li><li>List item two has <my-link>a link</my-link></li></ul>",
 ```
+
+Anchors are given a unique tag name in the language file, and the corresponding `href` value is defined in `routes.js`:
+
+```js
+myLink: "http://www.example.com",
+```
+
+The `Trans` component renders the basic tags, `br`, `strong`, `i`, and `p`. However, other tags must be explicitly defined. The `components` object is where attributes such as `className`, `href` can be set:
 
 ```js
 import React from "react";
@@ -152,11 +168,11 @@ import { Trans } from "react-i18next";
 <Trans
   i18nKey="htmlKey"
   components={{
-    "external-link": (
+    "my-link": (
       <a
         target="_blank"
         rel="noopener"
-        href={routes.external.externalLink}
+        href={routes.external.myLink}
       />
     ),
     ul: <ul className="usa-list" />,
