@@ -2,6 +2,7 @@ import multiprocessing
 import os
 import platform
 import pwd
+import threading
 
 import connexion
 import gunicorn.app.base
@@ -23,11 +24,11 @@ class GunicornAppWrapper(gunicorn.app.base.BaseApplication):
     def __init__(self, app: connexion.FlaskApp, port: int):
         # Run Gunicorn with the recommended default of (2 * num_cores) + 1.
         #
-        # Also provide twice the number of threads, so each worker could
+        # Also provide more than 1 thread per worker, so each worker could
         # potentially handle multiple requests using its CPU if it is waiting
         # for a database (I/O) transaction to complete.
         workers = (multiprocessing.cpu_count() * 2) + 1
-        threads = 2 * workers
+        threads = 4
 
         self.options = {
             # Bind the API to the provided port on 0.0.0.0 instead of 127.0.0.1.
@@ -41,7 +42,9 @@ class GunicornAppWrapper(gunicorn.app.base.BaseApplication):
             # Set keepalive timeout to 355 seconds, a few seconds higher than the 350 seconds set by NLB.
             # The NLB timeout is not adjustable, so adjust the target (API) timeout instead.
             "keep-alive": 355,
+            "post_request": post_request_hook,
         }
+        logger.info("workers %i, threads %i", workers, threads, extra={"options": self.options})
 
         self.application = app
         super().__init__()
@@ -69,3 +72,23 @@ class GunicornAppWrapper(gunicorn.app.base.BaseApplication):
             extra={"hostname": platform.node()},
         )
         return self.application
+
+
+post_request_hook_lock = threading.Lock()
+total_request_count = 0
+
+
+def post_request_hook(_worker, _req, _environ, _resp):
+    """Log some statistics for this worker process."""
+    global total_request_count
+    with post_request_hook_lock:
+        total_request_count += 1
+        request_count = total_request_count
+    if (request_count % 1000) == 0:
+        logger.info(
+            "worker status: pid %i, request count %i, threads %i (%s)",
+            os.getpid(),
+            total_request_count,
+            threading.active_count(),
+            " ".join(thr.name for thr in threading.enumerate()),
+        )

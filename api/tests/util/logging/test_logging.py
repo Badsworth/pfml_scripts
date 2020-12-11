@@ -187,7 +187,15 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
     )
 
     user = UserFactory.build()
-    monkeypatch.setattr(flask, "g", {"current_user": user})
+    monkeypatch.setattr(
+        flask,
+        "g",
+        {
+            "current_user_user_id": str(user.user_id),
+            "current_user_auth_id": str(user.active_directory_id),
+            "current_user_role_ids": ",".join(str(role.role_id) for role in user.roles),
+        },
+    )
 
     logger = massgov.pfml.util.logging.get_logger("massgov.pfml.test.logging")
     logger.info("test request context")

@@ -55,13 +55,15 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
 
         # Inject user metadata without PII masking
         if flask.has_request_context():
-            user = flask.g.get("current_user")
-            if user:
+            # Warning: do not access current_user as that may result in SQLAlchemy calls, but this
+            # logging call may have happened due to a database failure.
+            user_id = flask.g.get("current_user_user_id")
+            if user_id:
                 output.update(
                     {
-                        "current_user.user_id": str(user.user_id),
-                        "current_user.auth_id": user.active_directory_id,
-                        "current_user.role_ids": [role.role_id for role in user.roles],
+                        "current_user.user_id": user_id,
+                        "current_user.auth_id": flask.g.get("current_user_auth_id", ""),
+                        "current_user.role_ids": flask.g.get("current_user_role_ids", ""),
                     }
                 )
 

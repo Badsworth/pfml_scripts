@@ -60,6 +60,11 @@ def decode_cognito_token(token):
 
             flask.g.current_user = user
 
+            # Read attributes for logging, so that db calls are not made during logging.
+            flask.g.current_user_user_id = str(user.user_id)
+            flask.g.current_user_auth_id = str(user.active_directory_id)
+            flask.g.current_user_role_ids = ",".join(str(role.role_id) for role in user.roles)
+
         logger.info("auth token decode succeeded", extra={"current_user.auth_id": auth_id})
         return decoded_token
     except jose.JOSEError as e:

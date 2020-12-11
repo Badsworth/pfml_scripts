@@ -86,7 +86,7 @@ def create_engine(config: Optional[DbConfig] = None) -> Engine:
     def get_conn():
         return psycopg2.connect(**get_connection_parameters(db_config))
 
-    conn_pool = pool.QueuePool(get_conn, max_overflow=10, pool_size=5)
+    conn_pool = pool.QueuePool(get_conn, max_overflow=10, pool_size=20, timeout=2)
 
     # The URL only needs to specify the dialect, since the connection pool
     # handles the actual connections.
