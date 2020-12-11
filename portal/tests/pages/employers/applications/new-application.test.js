@@ -12,7 +12,10 @@ import useAppLogic from "../../../../src/hooks/useAppLogic";
 jest.mock("../../../../src/hooks/useAppLogic");
 
 describe("NewApplication", () => {
-  const claim = new MockEmployerClaimBuilder().completed().create();
+  const claim = new MockEmployerClaimBuilder()
+    .completed()
+    .reviewable(true)
+    .create();
   const query = { absence_id: "mock-absence-id" };
   let appLogic, wrapper;
 
@@ -35,6 +38,29 @@ describe("NewApplication", () => {
 
   it("renders the page", () => {
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("does not redirect if is_reviewable is true", () => {
+    expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+  });
+
+  it("redirects to the status page if is_reviewable is false", () => {
+    ({ appLogic } = renderWithAppLogic(NewApplication, {
+      employerClaimAttrs: new MockEmployerClaimBuilder()
+        .completed()
+        .reviewable(false)
+        .create(),
+      props: {
+        query,
+      },
+    }));
+
+    expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+      "/employers/applications/status",
+      {
+        absence_id: "mock-absence-id",
+      }
+    );
   });
 
   describe("when user responds to question", () => {

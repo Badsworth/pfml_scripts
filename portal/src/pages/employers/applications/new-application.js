@@ -13,6 +13,7 @@ import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import formatDateRange from "../../../utils/formatDateRange";
 import { get } from "lodash";
+import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
@@ -24,6 +25,15 @@ export const NewApplication = (props) => {
     },
     query: { absence_id: absenceId },
   } = props;
+
+  // explicitly check for false as opposed to falsy values.
+  // temporarily allows the redirect behavior to work even
+  // if the API has not been updated to populate the field.
+  if (claim.is_reviewable === false) {
+    props.appLogic.portalFlow.goTo(routes.employers.status, {
+      absence_id: absenceId,
+    });
+  }
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -150,6 +160,7 @@ NewApplication.propTypes = {
       claim: PropTypes.instanceOf(EmployerClaim),
     }).isRequired,
     portalFlow: PropTypes.shape({
+      goTo: PropTypes.func.isRequired,
       goToNextPage: PropTypes.func.isRequired,
       goToPageFor: PropTypes.func.isRequired,
     }).isRequired,
