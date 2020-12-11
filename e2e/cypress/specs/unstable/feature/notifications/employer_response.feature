@@ -39,21 +39,14 @@ Feature: Mark evidence received on a claim in FINEOS and employer responds by de
     Then I should have agreed and successfully submitted the claim
     And I should be able to confirm claim was submitted successfully
 
-  @fineos
-  Scenario: I want to confirm "claim has started" notification has been triggered
-    Given I search for the proper claim in Fineos
-    And I am on the tab "Documents"
-    Then I should find the "MA ID" document
-    And I should find the "FOSTER" document
-    Given I am on the tab "Absence Hub"
-    When I start adjudication for the claim
-    And I mark "BHAP1" "State managed Paid Leave Confirmation" documentation as satisfactory
-    And I mark "BHAP1" "Identification Proof" documentation as satisfactory
-    Then I should see that the claim's "Evidence" is "Satisfied"
-    Then I accept claim updates
-    Given I am on the tab "Outstanding Requirements"
-    Then I should find the "Employer Confirmation" document
+    When I log out
+    Given I am a Leave Admin for the submitted applications
+    And I am on the New Application page
+    And I confirm I am the right person to respond
+    And I review the application: I "do not" suspect fraud, employee gave "insufficient" notice, and I "deny" the claim
 
-  @portal
-  Scenario: An employer should receive a notification to respond to claim and be able to deny it
-    Then I should receive a "employer response" notification
+  # @portal
+  # Temporarily suspending notification testing until mailbox is whitelisted
+  # Scenario: An employer should receive a notification to respond to claim and be able to deny it
+  #   Then I should receive a "employer response" notification
+

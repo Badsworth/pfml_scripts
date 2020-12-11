@@ -127,3 +127,105 @@ Given("I return to the portal", function () {
   };
   portal.login(credentials);
 });
+
+Given("I am a Leave Admin for the submitted applications", function () {
+  cy.unstash("employerFEIN").then((employerFEIN) => {
+    cy.task("generateEmployerUsername", employerFEIN).as("employerUsername");
+  });
+});
+
+Given("I am on the New Application page", function (this: CypressStepThis) {
+  cy.unstash("claimNumber").then((claimNumber) => {
+    cy.unstash("employerFEIN").then((employerFEIN) => {
+      if (this.employerUsername === undefined) {
+        throw new Error("Employer username not properly set");
+      }
+      cy.visit(
+        `/employers/applications/new-application/?absence_id=${claimNumber}`
+      );
+      if (typeof employerFEIN !== "string") {
+        throw new Error("Employer username not properly set");
+      }
+      let password = "";
+      if (employerFEIN === "84-7847847") {
+        password = "WaynePassword#1";
+      } else if (employerFEIN === "99-9999999") {
+        password = "UmbrellaPassword#1";
+      } else {
+        throw new Error("Employer not recognized");
+      }
+      const credentials: Credentials = {
+        username: this.employerUsername,
+        password: password,
+      };
+      portal.employerLogin(credentials);
+    });
+  });
+});
+
+Given("I confirm I am the right person to respond", function () {
+  cy.contains("Are you the right person to respond to this application?");
+  cy.contains("Yes").click();
+  cy.contains("Agree and submit").click();
+});
+
+Given(
+  "I review the application: I {string} suspect fraud, employee gave {string} notice, and I {string} the claim",
+  function (suspectFraud: string, gaveNotice: string, determination: string) {
+    switch (suspectFraud) {
+      case "do":
+        suspectFraud = "Yes (explain below)";
+        break;
+      case "do not":
+        suspectFraud = "No";
+        break;
+    }
+    cy.contains(
+      "fieldset",
+      "Do you have any reason to suspect this is fraud?"
+    ).within(() => {
+      cy.contains("label", suspectFraud).click();
+    });
+    switch (gaveNotice) {
+      case "sufficient":
+        gaveNotice = "Yes";
+        break;
+      case "insufficient":
+        gaveNotice = "No (explain below)";
+        break;
+    }
+    cy.contains(
+      "fieldset",
+      "Did the employee give you at least 30 days notice about their leave?"
+    ).within(() => {
+      cy.contains("label", gaveNotice).click();
+    });
+    switch (determination) {
+      case "approve":
+        determination = "Approve";
+        break;
+      case "deny":
+        determination = "Deny (explain below)";
+        break;
+    }
+    cy.contains(
+      "fieldset",
+      "Have you approved or denied this leave request?"
+    ).within(() => {
+      cy.contains("label", determination).click();
+    });
+    if (
+      !(
+        suspectFraud === "No" &&
+        gaveNotice === "Yes" &&
+        determination === "Approve"
+      )
+    ) {
+      cy.get('textarea[name="comment"]').type(
+        "This is a comment explaning my determination"
+      );
+    }
+    cy.contains("button", "Submit").click();
+    cy.contains("Thanks for reviewing the application");
+  }
+);

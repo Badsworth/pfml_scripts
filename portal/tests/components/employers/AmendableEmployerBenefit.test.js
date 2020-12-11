@@ -114,11 +114,9 @@ describe("AmendableEmployerBenefit", () => {
 
   it("updates frequency in the AmendmentForm", () => {
     wrapper.find(AmendButton).simulate("click");
-    wrapper
-      .find(Dropdown)
-      .simulate("change", {
-        target: { value: EmployerBenefitFrequency.weekly },
-      });
+    wrapper.find(Dropdown).simulate("change", {
+      target: { value: EmployerBenefitFrequency.weekly },
+    });
 
     expect(props.onChange).toHaveBeenCalled();
     expect(wrapper.find(Dropdown).prop("value")).toEqual(

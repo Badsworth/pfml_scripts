@@ -45,6 +45,7 @@ declare namespace Cypress {
     ): Chainable<{ [key: string]: string }>;
     task(event: "getAuthVerification", mail: string): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;
+    task(event: "generateEmployerUsername"): Chainable<string>;
     task(
       event: "submitClaimToAPI",
       options: ApplicationRequestBody

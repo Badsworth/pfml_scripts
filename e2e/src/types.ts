@@ -21,6 +21,7 @@ export type Credentials = {
  */
 export type CypressStepThis = {
   credentials?: Credentials;
+  employerUsername?: string;
   application?: ApplicationRequestBody;
   paymentPreference: PaymentPreference;
 };

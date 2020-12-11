@@ -267,33 +267,40 @@ Then("I should receive a {string} notification", function (
     cy.unstash("lastName").then((lastName) => {
       cy.unstash("dob").then((dob) => {
         cy.unstash("claimNumber").then((claimNumber) => {
-          if (
-            !(typeof firstName === "string" && typeof lastName === "string")
-          ) {
-            throw new Error("First and last name must be of type string");
-          }
-          const notificationRequestData = {
-            notificationType: notificationType,
-            recipientEmail: "gqzap.jkyu2emq@inbox.testmail.app",
-            employeeName: firstName + " " + lastName,
-          };
-          cy.wait(180000);
-          cy.task("getNotification", notificationRequestData).then(
-            (emailContent) => {
-              if (typeof dob !== "string") {
-                throw new Error("FEIN must be a string");
-              }
-              dob = dob.replace(/-/g, "/").slice(5) + "/****";
-              expect(emailContent.name).to.equal(firstName + " " + lastName);
-              expect(emailContent.dob).to.equal(dob);
-              expect(emailContent.applicationId).to.equal(claimNumber);
-              if (notificationType === "employer response") {
-                expect(emailContent.url).to.equal(
-                  `https://paidleave-stage.mass.gov/employers/applications/new-application/?absence_id=${emailContent.applicationId}`
-                );
-              }
+          cy.unstash("employerFEIN").then((employerFEIN) => {
+            if (
+              !(
+                typeof firstName === "string" &&
+                typeof lastName === "string" &&
+                typeof employerFEIN === "string"
+              )
+            ) {
+              throw new Error("First and last name must be of type string");
             }
-          );
+            const tag = "employer." + employerFEIN.replace("-", "");
+            const notificationRequestData = {
+              notificationType: notificationType,
+              recipientEmail: `gqzap.${tag}@inbox.testmail.app`,
+              employeeName: firstName + " " + lastName,
+            };
+            cy.wait(180000);
+            cy.task("getNotification", notificationRequestData).then(
+              (emailContent) => {
+                if (typeof dob !== "string") {
+                  throw new Error("DOB must be a string");
+                }
+                dob = dob.replace(/-/g, "/").slice(5) + "/****";
+                expect(emailContent.name).to.equal(firstName + " " + lastName);
+                expect(emailContent.dob).to.equal(dob);
+                expect(emailContent.applicationId).to.equal(claimNumber);
+                if (notificationType === "employer response") {
+                  expect(emailContent.url).to.equal(
+                    `https://paidleave-stage.mass.gov/employers/applications/new-application/?absence_id=${claimNumber}`
+                  );
+                }
+              }
+            );
+          });
         });
       });
     });
