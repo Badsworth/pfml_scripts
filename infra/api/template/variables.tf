@@ -251,3 +251,20 @@ variable "enable_application_fraud_check" {
   description = "Enable the fraud check for application submission"
   type        = string
 }
+
+variable "dor_fineos_etl_definition" {
+  description = "Step function definition for DOR FINEOS ETL"
+  type        = string
+  default     = <<-END
+    {
+      "StartAt": "nothing",
+      "States": {"nothing": {"Type": "Pass", "End": true}}
+    }
+    END
+}
+
+variable "dor_fineos_etl_schedule_expression" {
+  description = "EventBridge schedule for DOR FINEOS ETL"
+  type        = string
+  default     = "cron(30 4 * * ? *)"
+}
