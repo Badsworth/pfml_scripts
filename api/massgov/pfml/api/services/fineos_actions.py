@@ -873,13 +873,12 @@ def resolve_leave_plans(family_exemption: bool, medical_exemption: bool) -> Set[
         if medical_exemption:
             leave_plans: set = set("")
         else:
-            leave_plans = {"MA PFML - Limit", "MA PFML - Employee"}
+            leave_plans = {"MA PFML - Employee"}
     else:
         if medical_exemption:
-            leave_plans = {"MA PFML - Limit", "MA PFML - Family", "MA PFML - Military Care"}
+            leave_plans = {"MA PFML - Family", "MA PFML - Military Care"}
         else:
             leave_plans = {
-                "MA PFML - Limit",
                 "MA PFML - Employee",
                 "MA PFML - Family",
                 "MA PFML - Military Care",

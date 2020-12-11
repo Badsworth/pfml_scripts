@@ -554,7 +554,7 @@ def test_create_service_agreement_for_employer(test_db_session):
 # at top of file
 def test_create_service_agreement_payload():
     payload = FINEOSClient._create_service_agreement_payload(
-        123, "MA PFML - Limit, MA PFML - Employee"
+        123, "MA PFML - Family, MA PFML - Military Care"
     )
 
     assert payload is not None
@@ -562,7 +562,7 @@ def test_create_service_agreement_payload():
     assert payload.__contains__("<name>CustomerNumber</name>")
     assert payload.__contains__("<value>123</value>")
     assert payload.__contains__("<name>LeavePlans</name>")
-    assert payload.__contains__("<value>MA PFML - Limit, MA PFML - Employee</value>")
+    assert payload.__contains__("<value>MA PFML - Family, MA PFML - Military Care</value>")
 
 
 # not an integration test, but marked as such by global pytest.mark.integration
@@ -570,30 +570,27 @@ def test_create_service_agreement_payload():
 def test_resolve_leave_plans():
     # Family Exemption = false
     # Medical Exemption = false
-    # Assign: MA PFML - Limit, MA PFML Employee, MA PFML Family, MA PFML - Military Care
+    # Assign: MA PFML Employee, MA PFML Family, MA PFML - Military Care
     leave_plans = fineos_actions.resolve_leave_plans(False, False)
-    assert len(leave_plans) == 4
+    assert len(leave_plans) == 3
     leave_plans_str = ", ".join(leave_plans)
-    assert leave_plans_str.__contains__("MA PFML - Limit")
     assert leave_plans_str.__contains__("MA PFML - Employee")
     assert leave_plans_str.__contains__("MA PFML - Family")
     assert leave_plans_str.__contains__("MA PFML - Military Care")
 
     # Family Exemption = false
     # Medical Exemption = true
-    # Assign: MA PFML - Limit, MA PFML Family, MA PFML - Military Care
+    # Assign: MA PFML Family, MA PFML - Military Care
     leave_plans = fineos_actions.resolve_leave_plans(False, True)
-    assert len(leave_plans) == 3
-    assert leave_plans_str.__contains__("MA PFML - Limit")
+    assert len(leave_plans) == 2
     assert leave_plans_str.__contains__("MA PFML - Family")
     assert leave_plans_str.__contains__("MA PFML - Military Care")
 
     # Family Exemption = true
     # Medical Exemption = false
-    # Assign: MA PFML - Limit, MA PFML Employee
+    # Assign: MA PFML Employee
     leave_plans = fineos_actions.resolve_leave_plans(True, False)
-    assert len(leave_plans) == 2
-    assert leave_plans_str.__contains__("MA PFML - Limit")
+    assert len(leave_plans) == 1
     assert leave_plans_str.__contains__("MA PFML - Employee")
 
     # Family Exemption = true
