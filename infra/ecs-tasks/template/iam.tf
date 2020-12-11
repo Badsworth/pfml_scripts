@@ -107,8 +107,7 @@ data "aws_iam_policy_document" "task_adhoc_executor_s3_policy_doc" {
     actions = [
       "s3:PutObject",
       "s3:GetObject",
-      "s3:ListBucket",
-      "s3:DeleteObject"
+      "s3:ListBucket"
     ]
 
     resources = [
@@ -260,7 +259,8 @@ data "aws_iam_policy_document" "dor_import_task_role_extras" {
     actions = [
       "s3:PutObject",
       "s3:GetObject",
-      "s3:ListBucket"
+      "s3:ListBucket",
+      "s3:DeleteObject"
     ]
     resources = [
       data.aws_s3_bucket.agency_transfer.arn,
