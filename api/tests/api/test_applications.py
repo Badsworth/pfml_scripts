@@ -2986,12 +2986,12 @@ def test_application_post_submit_to_fineos_intermittent_leave(
     leave_period = IntermittentLeavePeriodFactory.create(
         application_id=application.application_id,
         start_date=date(2021, 1, 1),
-        end_date=date(2021, 2, 9),
-        frequency_interval=4,
-        frequency_interval_basis=FrequencyIntervalBasis.months.value,
-        frequency=6,
-        duration_basis=DurationBasis.days.value,
+        end_date=date(2021, 3, 2),
         duration=3,
+        duration_basis=DurationBasis.days.value,
+        frequency=6,
+        frequency_interval=2,
+        frequency_interval_basis=FrequencyIntervalBasis.months.value,
     )
 
     application.intermittent_leave_periods = [leave_period]
@@ -3019,12 +3019,12 @@ def test_application_post_submit_to_fineos_intermittent_leave(
     assert capture[3][2]["absence_case"].episodicLeavePeriods == [
         massgov.pfml.fineos.models.customer_api.EpisodicLeavePeriod(
             startDate=date(2021, 1, 1),
-            endDate=date(2021, 2, 9),
-            frequency=6,
-            frequencyInterval=4,
-            frequencyIntervalBasis="Months",
+            endDate=date(2021, 3, 2),
             duration=3,
             durationBasis="Days",
+            frequency=6,
+            frequencyInterval=2,
+            frequencyIntervalBasis="Months",
         )
     ]
 

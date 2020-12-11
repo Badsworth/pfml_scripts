@@ -1,5 +1,6 @@
 from datetime import date
 
+import pytest
 from freezegun import freeze_time
 
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
@@ -17,6 +18,7 @@ from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     EmployerBenefit,
     EmploymentStatus,
+    IntermittentLeavePeriod,
     LeaveReason,
     LeaveReasonQualifier,
     OtherIncome,
@@ -657,11 +659,11 @@ def test_leave_period_end_date_before_start_date(test_db_session, initialize_fac
             IntermittentLeavePeriodFactory.create(
                 start_date=date(2021, 2, 1),
                 end_date=date(2021, 1, 1),
+                duration=1,
+                duration_basis=DurationBasis.days.value,
+                frequency=1,
                 frequency_interval=1,
                 frequency_interval_basis=FrequencyIntervalBasis.months.value,
-                frequency=6,
-                duration_basis=DurationBasis.days.value,
-                duration=3,
             )
         ]
     )
@@ -747,18 +749,17 @@ def test_leave_period_allows_same_start_end_date(test_db_session, initialize_fac
 
 
 def test_intermittent_leave_period(test_db_session, initialize_factories_session):
-    test_leave_periods = (
-        [
-            IntermittentLeavePeriodFactory.create(
-                start_date=None,
-                end_date=None,
-                duration=None,
-                duration_basis=None,
-                frequency=None,
-                frequency_interval_basis=None,
-            )
-        ],
-    )
+    test_leave_periods = [
+        IntermittentLeavePeriodFactory.create(
+            start_date=None,
+            end_date=None,
+            duration=None,
+            duration_basis=None,
+            frequency=None,
+            frequency_interval_basis=None,
+        )
+    ]
+
     issues = get_intermittent_leave_issues(test_leave_periods)
 
     assert [
@@ -798,6 +799,276 @@ def test_intermittent_leave_period(test_db_session, initialize_factories_session
             field="leave_details.intermittent_leave_periods[0].start_date",
         ),
     ] == issues
+
+
+@pytest.mark.parametrize(
+    "test_leave_periods,expected_issues",
+    [
+        (
+            [
+                IntermittentLeavePeriod(
+                    start_date=date(2021, 1, 1),
+                    end_date=date(2021, 1, 15),
+                    duration=24,
+                    duration_basis="Hours",
+                    frequency=1,
+                    frequency_interval=1,
+                    frequency_interval_basis="Weeks",
+                )
+            ],
+            [
+                Issue(
+                    type=IssueType.intermittent_duration_hours_maximum,
+                    message="leave_details.intermittent_leave_periods[0].duration must be less than 24 if the duration_basis is hours",
+                    field="leave_details.intermittent_leave_periods[0].duration",
+                )
+            ],
+        ),
+        (
+            [
+                IntermittentLeavePeriod(
+                    start_date=date(2021, 1, 1),
+                    end_date=date(2021, 1, 15),
+                    duration=30,
+                    duration_basis="Hours",
+                    frequency=1,
+                    frequency_interval=1,
+                    frequency_interval_basis="Weeks",
+                )
+            ],
+            [
+                Issue(
+                    type=IssueType.intermittent_duration_hours_maximum,
+                    message="leave_details.intermittent_leave_periods[0].duration must be less than 24 if the duration_basis is hours",
+                    field="leave_details.intermittent_leave_periods[0].duration",
+                )
+            ],
+        ),
+    ],
+)
+def test_intermittent_hours_less_than_24(test_leave_periods, expected_issues):
+    issues = get_intermittent_leave_issues(test_leave_periods)
+    assert issues == expected_issues
+
+
+@pytest.mark.parametrize(
+    "test_leave_periods, expected_issues",
+    [
+        (
+            # 30 days in period and 30 days (1 month) interval
+            # this should pass
+            [
+                IntermittentLeavePeriod(
+                    start_date=date(2021, 1, 1),
+                    end_date=date(2021, 1, 31),
+                    duration=1,
+                    duration_basis="Days",
+                    frequency=1,
+                    frequency_interval=1,
+                    frequency_interval_basis="Months",
+                )
+            ],
+            [],
+        ),
+        (
+            # 29 days in period but 30 days in interval
+            [
+                IntermittentLeavePeriod(
+                    start_date=date(2021, 1, 1),
+                    end_date=date(2021, 1, 29),
+                    duration=1,
+                    duration_basis="Days",
+                    frequency=1,
+                    frequency_interval=1,
+                    frequency_interval_basis="Months",
+                )
+            ],
+            [
+                Issue(
+                    type=IssueType.intermittent_interval_maximum,
+                    message="the total days in the interval (frequency_interval * the number of days in frequency_interval_basis) cannot exceed the total days between the start and end dates of the leave period",
+                    field="leave_details.intermittent_leave_periods[0].frequency_interval_basis",
+                )
+            ],
+        ),
+        (
+            # 13 days in period but 14 days in interval
+            [
+                IntermittentLeavePeriod(
+                    start_date=date(2021, 1, 1),
+                    end_date=date(2021, 1, 13),
+                    duration=1,
+                    duration_basis="Days",
+                    frequency=1,
+                    frequency_interval=2,
+                    frequency_interval_basis="Weeks",
+                )
+            ],
+            [
+                Issue(
+                    type=IssueType.intermittent_interval_maximum,
+                    message="the total days in the interval (frequency_interval * the number of days in frequency_interval_basis) cannot exceed the total days between the start and end dates of the leave period",
+                    field="leave_details.intermittent_leave_periods[0].frequency_interval_basis",
+                )
+            ],
+        ),
+        (
+            # 59 days in period but 180 days in interval
+            [
+                IntermittentLeavePeriod(
+                    start_date=date(2021, 1, 1),
+                    end_date=date(2021, 2, 28),
+                    duration=1,
+                    duration_basis="Days",
+                    frequency=1,
+                    frequency_interval=6,
+                    frequency_interval_basis="Months",
+                )
+            ],
+            [
+                Issue(
+                    type=IssueType.intermittent_interval_maximum,
+                    message="the total days in the interval (frequency_interval * the number of days in frequency_interval_basis) cannot exceed the total days between the start and end dates of the leave period",
+                    field="leave_details.intermittent_leave_periods[0].frequency_interval_basis",
+                )
+            ],
+        ),
+        (
+            # 5 days in period but 7 days in interval
+            [
+                IntermittentLeavePeriod(
+                    start_date=date(2021, 1, 1),
+                    end_date=date(2021, 1, 5),
+                    duration=1,
+                    duration_basis="Days",
+                    frequency=1,
+                    frequency_interval=1,
+                    frequency_interval_basis="Weeks",
+                )
+            ],
+            [
+                Issue(
+                    type=IssueType.intermittent_interval_maximum,
+                    message="the total days in the interval (frequency_interval * the number of days in frequency_interval_basis) cannot exceed the total days between the start and end dates of the leave period",
+                    field="leave_details.intermittent_leave_periods[0].frequency_interval_basis",
+                )
+            ],
+        ),
+        (
+            # 5 days in period but 10 days in interval
+            [
+                IntermittentLeavePeriod(
+                    start_date=date(2021, 1, 1),
+                    end_date=date(2021, 1, 5),
+                    duration=1,
+                    duration_basis="Days",
+                    frequency=1,
+                    frequency_interval=10,
+                    frequency_interval_basis="Days",
+                )
+            ],
+            [
+                Issue(
+                    type=IssueType.intermittent_interval_maximum,
+                    message="the total days in the interval (frequency_interval * the number of days in frequency_interval_basis) cannot exceed the total days between the start and end dates of the leave period",
+                    field="leave_details.intermittent_leave_periods[0].frequency_interval_basis",
+                )
+            ],
+        ),
+    ],
+)
+def test_intermittent_interval_less_than_leave_period_length(test_leave_periods, expected_issues):
+    issues = get_intermittent_leave_issues(test_leave_periods)
+    assert issues == expected_issues
+
+
+@pytest.mark.parametrize(
+    "test_leave_periods,expected_issues",
+    [
+        (
+            # 5 days twice a week is less than 2 weeks
+            # this should pass
+            [
+                IntermittentLeavePeriod(
+                    start_date=date(2021, 1, 1),
+                    end_date=date(2021, 3, 1),
+                    duration=5,
+                    duration_basis="Days",
+                    frequency=2,
+                    frequency_interval=2,
+                    frequency_interval_basis="Weeks",
+                )
+            ],
+            [],
+        ),
+        (
+            # 5 days twice a week exceeds 1 week
+            [
+                IntermittentLeavePeriod(
+                    start_date=date(2021, 1, 1),
+                    end_date=date(2021, 3, 1),
+                    duration=5,
+                    duration_basis="Days",
+                    frequency=2,
+                    frequency_interval=1,
+                    frequency_interval_basis="Weeks",
+                )
+            ],
+            [
+                Issue(
+                    type=IssueType.days_absent_per_intermittent_interval_maximum,
+                    message="The total days absent per interval (frequency * duration) cannot exceed the total days in the interval",
+                    field="leave_details.intermittent_leave_periods[0].duration",
+                )
+            ],
+        ),
+        (
+            # 100 days 3 times over 6 months exceeds 6 months
+            [
+                IntermittentLeavePeriod(
+                    start_date=date(2021, 1, 1),
+                    end_date=date(2021, 8, 1),
+                    duration=100,
+                    duration_basis="Days",
+                    frequency=3,
+                    frequency_interval=6,
+                    frequency_interval_basis="Months",
+                )
+            ],
+            [
+                Issue(
+                    type=IssueType.days_absent_per_intermittent_interval_maximum,
+                    message="The total days absent per interval (frequency * duration) cannot exceed the total days in the interval",
+                    field="leave_details.intermittent_leave_periods[0].duration",
+                )
+            ],
+        ),
+        (
+            # 2 days three times exceeds 3 days
+            [
+                IntermittentLeavePeriod(
+                    start_date=date(2021, 1, 1),
+                    end_date=date(2021, 3, 1),
+                    duration=2,
+                    duration_basis="Days",
+                    frequency=3,
+                    frequency_interval=3,
+                    frequency_interval_basis="Days",
+                )
+            ],
+            [
+                Issue(
+                    type=IssueType.days_absent_per_intermittent_interval_maximum,
+                    message="The total days absent per interval (frequency * duration) cannot exceed the total days in the interval",
+                    field="leave_details.intermittent_leave_periods[0].duration",
+                )
+            ],
+        ),
+    ],
+)
+def test_intermittent_absence_days_less_than_interval_length(test_leave_periods, expected_issues):
+    issues = get_intermittent_leave_issues(test_leave_periods)
+    assert issues == expected_issues
 
 
 def test_reduced_leave_period_required_fields(test_db_session, initialize_factories_session):

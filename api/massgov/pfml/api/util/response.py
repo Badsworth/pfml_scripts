@@ -76,6 +76,16 @@ class IssueType(str, Enum):
     fineos_case_creation_issues = "fineos_case_creation_issues"
     # An unspecified error related to creating/completing the absence case in fineos
     fineos_case_error = "fineos_case_error"
+    # If duration of intermittent leave is in hours, hours must be less than a day (24)
+    intermittent_duration_hours_maximum = "intermittent_duration_hours_maximum"
+    # Total days in an intermittent interval cannot exceed total days in the leave period
+    # e.g. You cannot have a leave interval of every 6 months if the start and end
+    # date of the leave period is only 2 months
+    intermittent_interval_maximum = "intermittent_interval_maximum"
+    # Total days absent cannot exceed total days in the interval
+    # e.g. You can not request 5 days off 2 times in a week as that would
+    # exceed the 7 days in a week
+    days_absent_per_intermittent_interval_maximum = "days_absent_per_intermittent_interval_maximum"
 
 
 @dataclass

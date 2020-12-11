@@ -3,6 +3,7 @@ from itertools import chain, combinations
 from typing import Iterable, List, Optional, Union
 
 import massgov.pfml.db as db
+from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.services.applications import (
     ContinuousLeavePeriod,
     IntermittentLeavePeriod,
@@ -591,6 +592,62 @@ def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePerio
                         field=f"{leave_period_path}.{field}",
                     )
                 )
+
+        if (
+            current_period.duration_basis == DurationBasis.hours.value
+            and (current_period.duration or 0) >= 24
+        ):
+            issues.append(
+                Issue(
+                    type=IssueType.intermittent_duration_hours_maximum,
+                    message=f"{leave_period_path}.duration must be less than 24 if the duration_basis is hours",
+                    field=f"{leave_period_path}.duration",
+                )
+            )
+
+        if (
+            current_period.duration is not None
+            and current_period.duration_basis is not None
+            and current_period.frequency is not None
+            and current_period.frequency_interval is not None
+            and current_period.frequency_interval_basis is not None
+            and current_period.start_date is not None
+            and current_period.end_date is not None
+            and current_period.end_date > current_period.start_date
+        ):
+            days_in_leave = (current_period.end_date - current_period.start_date).days + 1
+
+            days_in_frequency_interval_basis = {
+                FrequencyIntervalBasis.days.value: 1,
+                FrequencyIntervalBasis.weeks.value: 7,
+                FrequencyIntervalBasis.months.value: 30,
+            }[current_period.frequency_interval_basis]
+            # e.g. every 6 (frequency_interval) weeks (frequency_interval_basis) = 6 * 7 = 42
+            days_in_request_interval = (
+                current_period.frequency_interval * days_in_frequency_interval_basis
+            )
+
+            if days_in_request_interval > days_in_leave:
+                issues.append(
+                    Issue(
+                        type=IssueType.intermittent_interval_maximum,
+                        message="the total days in the interval (frequency_interval * the number of days in frequency_interval_basis) cannot exceed the total days between the start and end dates of the leave period",
+                        field=f"{leave_period_path}.frequency_interval_basis",
+                    )
+                )
+
+            if current_period.duration_basis == DurationBasis.days.value:
+                # e.g. 3 days (duration) 2 times (frequency) per week = 3 * 2 = 6
+                days_requested_per_interval = current_period.duration * current_period.frequency
+
+                if days_requested_per_interval > days_in_request_interval:
+                    issues.append(
+                        Issue(
+                            type=IssueType.days_absent_per_intermittent_interval_maximum,
+                            message="The total days absent per interval (frequency * duration) cannot exceed the total days in the interval",
+                            field=f"{leave_period_path}.duration",
+                        )
+                    )
 
     return issues
 
