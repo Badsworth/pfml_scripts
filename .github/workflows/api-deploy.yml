@@ -59,7 +59,7 @@ jobs:
         with:
           query: |
             query {
-              organization(login:"${{ github.event.repository.owner.name }}"){
+              organization(login:"EOLWD"){
                 team(slug:"pfml-devops"){
                   members(membership: ALL, query:"${{ github.actor }}"){
                     nodes {
@@ -78,6 +78,10 @@ jobs:
 
   update-the-deploy-branch:
     name: Update archival branch
+    needs: prod-check
+    # if the prod-check job passses or is skipped, run the next jobs
+    if: ${{ always() }} && (needs.prod-check.result == 'skipped' || needs.prod-check.result == 'success')
+
     runs-on: ubuntu-latest
 
     outputs:
