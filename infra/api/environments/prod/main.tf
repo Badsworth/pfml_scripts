@@ -5,6 +5,11 @@
 # If adding new variables, it's recommended to update the bootstrap
 # templates so there's less manual work in creating new envs.
 #
+
+locals {
+  environment_name = "prod"
+}
+
 provider "aws" {
   region = "us-east-1"
 }
@@ -28,7 +33,7 @@ data "aws_ecs_cluster" "prod" {
 module "api" {
   source = "../../template"
 
-  environment_name                = "prod"
+  environment_name                = local.environment_name
   service_app_count               = 2
   service_max_app_count           = 10
   service_docker_tag              = local.service_docker_tag
@@ -78,4 +83,7 @@ module "api" {
   fineos_aws_iam_role_external_id = "8jFBtjr4UA@"
 
   fineos_eligibility_feed_output_directory_path = "s3://fin-somprod-data-import/PRD"
+
+  dor_fineos_etl_definition          = local.dor_fineos_etl_definition
+  dor_fineos_etl_schedule_expression = "cron(0 12 * * ? *)" # Daily at 12:00 UTC
 }

@@ -1,0 +1,53 @@
+{
+  "Comment": "DOR FINEOS ETL step function",
+  "StartAt": "dor_import",
+
+  "States": {
+    "dor_import": {
+      "Comment": "DOR import to RDS",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask.sync",
+      "TimeoutSeconds": 7200,
+      "Parameters": {
+        "LaunchType": "FARGATE",
+        "PlatformVersion": "1.4.0",
+        "Cluster": "${cluster_arn}",
+        "TaskDefinition": "pfml-api-${environment_name}-dor-import",
+        "Overrides": {
+          "ContainerOverrides": [
+            {
+              "Name": "dor-import",
+              "Environment": [
+                { "Name": "DECRYPT", "Value": "true" }
+              ]
+            }
+          ]
+        },
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "SecurityGroups": ["${security_group}"],
+            "Subnets": ["${subnet_1}", "${subnet_2}"],
+            "AssignPublicIp": "DISABLED"
+          }
+        }
+      },
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "failure"
+        }
+      ],
+      "Next": "success"
+    },
+
+    "success": {
+      "Comment": "Successful end state",
+      "Type": "Succeed"
+    },
+
+    "failure": {
+      "Comment": "Failure end state",
+      "Type": "Fail"
+    }
+  }
+}

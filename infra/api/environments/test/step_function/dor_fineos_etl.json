@@ -1,0 +1,189 @@
+{
+  "Comment": "DOR FINEOS ETL step function",
+  "StartAt": "dor_generate",
+
+  "States": {
+    "dor_generate": {
+      "Comment": "Generate fake DOR data to S3 (non-prod)",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask.sync",
+      "TimeoutSeconds": 300,
+      "Parameters": {
+        "LaunchType": "FARGATE",
+        "PlatformVersion": "1.4.0",
+        "Cluster": "${cluster_arn}",
+        "TaskDefinition": "pfml-api-${environment_name}-dor-import",
+        "Overrides": {
+          "ContainerOverrides": [
+            {
+              "Name": "dor-import",
+              "Command": [
+                "dor-generate",
+                "--folder=s3://massgov-pfml-test-agency-transfer/dor/received",
+                "--count=1000"
+              ]
+            }
+          ]
+        },
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "SecurityGroups": ["${security_group}"],
+            "Subnets": ["${subnet_1}", "${subnet_2}"],
+            "AssignPublicIp": "DISABLED"
+          }
+        }
+      },
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "failure"
+        }
+      ],
+      "Next": "dor_import"
+    },
+
+    "dor_import": {
+      "Comment": "DOR import to RDS",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask.sync",
+      "TimeoutSeconds": 1200,
+      "Parameters": {
+        "LaunchType": "FARGATE",
+        "PlatformVersion": "1.4.0",
+        "Cluster": "${cluster_arn}",
+        "TaskDefinition": "pfml-api-${environment_name}-dor-import",
+        "Overrides": {
+          "ContainerOverrides": [
+            {
+              "Name": "dor-import",
+              "Environment": [
+                { "Name": "DECRYPT", "Value": "false" }
+              ]
+            }
+          ]
+        },
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "SecurityGroups": ["${security_group}"],
+            "Subnets": ["${subnet_1}", "${subnet_2}"],
+            "AssignPublicIp": "DISABLED"
+          }
+        }
+      },
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "failure"
+        }
+      ],
+      "Next": "load_employers_to_fineos_init"
+    },
+
+    "load_employers_to_fineos_init": {
+      "Comment": "Set number of load_employers_to_fineos tasks",
+      "Type": "Pass",
+      "Parameters": {
+        "parallel": [1, 2, 3]
+      },
+      "ResultPath": "$.map",
+      "OutputPath": "$.map",
+      "Next": "load_employers_to_fineos_map"
+    },
+
+    "load_employers_to_fineos_map": {
+      "Comment": "Create employers in FINEOS using API calls",
+      "Type": "Map",
+      "ItemsPath": "$.parallel",
+
+      "Iterator": {
+        "StartAt": "load_employers_to_fineos",
+        "States": {
+          "load_employers_to_fineos": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::ecs:runTask.sync",
+            "TimeoutSeconds": 1200,
+            "Parameters": {
+              "LaunchType": "FARGATE",
+              "PlatformVersion": "1.4.0",
+              "Cluster": "${cluster_arn}",
+              "TaskDefinition": "pfml-api-${environment_name}-load-employers-to-fineos",
+              "Overrides": {
+                "ContainerOverrides": [
+                  {
+                    "Name": "load-employers-to-fineos",
+                    "Environment": [
+                      { "Name": "LOAD_EMPLOYERS_MODE", "Value": "updates" }
+                    ]
+                  }
+                ]
+              },
+              "NetworkConfiguration": {
+                "AwsvpcConfiguration": {
+                  "SecurityGroups": ["${security_group}"],
+                  "Subnets": ["${subnet_1}", "${subnet_2}"],
+                  "AssignPublicIp": "DISABLED"
+                }
+              }
+            },
+            "End": true
+          }
+        }
+      },
+
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "failure"
+        }
+      ],
+      "Next": "fineos_eligibility_feed_export"
+    },
+
+    "fineos_eligibility_feed_export": {
+      "Comment": "Generate eligibility files containing employees for FINEOS",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask.sync",
+      "TimeoutSeconds": 1200,
+      "Parameters": {
+        "LaunchType": "FARGATE",
+        "PlatformVersion": "1.4.0",
+        "Cluster": "${cluster_arn}",
+        "TaskDefinition": "pfml-api-${environment_name}-fineos-eligibility-feed-export",
+        "Overrides": {
+          "ContainerOverrides": [
+            {
+              "Name": "fineos-eligibility-feed-export",
+              "Environment": [
+                { "Name": "ELIGIBILITY_FEED_MODE", "Value": "updates" }
+              ]
+            }
+          ]
+        },
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "SecurityGroups": ["${security_group}"],
+            "Subnets": ["${subnet_1}", "${subnet_2}"],
+            "AssignPublicIp": "DISABLED"
+          }
+        }
+      },
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "failure"
+        }
+      ],
+      "Next": "success"
+    },
+
+    "success": {
+      "Comment": "Successful end state",
+      "Type": "Succeed"
+    },
+
+    "failure": {
+      "Comment": "Failure end state",
+      "Type": "Fail"
+    }
+  }
+}
