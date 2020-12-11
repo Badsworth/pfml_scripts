@@ -7,6 +7,7 @@ from werkzeug.exceptions import BadRequest, Forbidden, Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import READ, requires
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.services.administrator_fineos_actions import (
@@ -23,6 +24,8 @@ from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministr
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms import TransformEmployerClaimReview
 from massgov.pfml.util.sqlalchemy import get_or_404
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdministrator:
@@ -80,13 +83,28 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
 def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
     body = connexion.request.json
 
-    claim_request = EmployerClaimReview.parse_obj(body)
+    claim_request: EmployerClaimReview = EmployerClaimReview.parse_obj(body)
 
     transformed_eform = TransformEmployerClaimReview.to_fineos(claim_request)
 
     user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
 
-    if not awaiting_leave_info(user_leave_admin.fineos_web_id, fineos_absence_id):  # type: ignore
+    log_attributes = {
+        "absence_case_id": fineos_absence_id,
+        "user_leave_admin.employer_id": user_leave_admin.employer_id,
+        "claim_request.employer_decision": claim_request.employer_decision,
+        "claim_request.fraud": claim_request.fraud,
+        "claim_request.has_amendments": claim_request.has_amendments,
+    }
+
+    fineos_web_id = user_leave_admin.fineos_web_id
+
+    if fineos_web_id is None:
+        raise ValueError("User admin does not have a FINEOS user")
+
+    # can now use `fineos_web_id` as if it was non-None
+
+    if not awaiting_leave_info(fineos_web_id, fineos_absence_id):
         return response_util.error_response(
             status_code=BadRequest,
             message="No outstanding information request for claim",
@@ -98,12 +116,15 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
         ).to_api_response()
 
     if claim_request.employer_decision == "Approve" and not claim_request.has_amendments:
-        complete_claim_review(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore
+        complete_claim_review(fineos_web_id, fineos_absence_id)
+        logger.info("Completed claim review", extra=log_attributes)
     else:
-        create_eform(user_leave_admin.fineos_web_id, fineos_absence_id, transformed_eform)  # type: ignore
+        create_eform(fineos_web_id, fineos_absence_id, transformed_eform)
+        logger.info("Created eform", extra=log_attributes)
+
+    logger.info("Updated claim", extra=log_attributes)
 
     claim_response = {"claim_id": fineos_absence_id}
-
     return response_util.success_response(
         message="Successfully updated claim", data=claim_response,
     ).to_api_response()
