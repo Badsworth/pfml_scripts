@@ -167,7 +167,7 @@ def get_claim_as_leave_admin(
         managed_reqs = fineos.get_managed_requirements(fineos_user_id, absence_id)
         other_leaves: List[PreviousLeave] = []
         other_incomes: List[EmployerBenefit] = []
-        is_reviewable = None
+        is_reviewable = False
         follow_up_date = None
 
         for req in managed_reqs:
