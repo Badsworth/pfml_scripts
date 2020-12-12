@@ -39,6 +39,8 @@ parser.add_argument(
     "--folder", type=str, default="generated_files", help="Output folder for generated files"
 )
 
+parser.add_argument("--update", action="store_true", help="Generate daily update files")
+
 WAGE_CHANGE_RANDOM_POOL = (0, 0, 0, 0, 1000, 2500, 4400, 7800, -1200, -3500)
 
 
@@ -84,6 +86,7 @@ def main():
 
     args = parser.parse_args()
     employer_count = args.count
+    update_mode = args.update
 
     output_folder = args.folder
     if not output_folder.startswith("s3:"):
@@ -95,7 +98,7 @@ def main():
     employer_file = massgov.pfml.util.files.open_stream(employer_path, "w")
     employee_file = massgov.pfml.util.files.open_stream(employee_path, "w")
 
-    generate(employer_count, employer_file, employee_file)
+    generate(employer_count, employer_file, employee_file, update_mode)
 
     employer_file.close()
     employee_file.close()
@@ -108,9 +111,7 @@ def main():
 # == main processor ==
 
 
-def generate(
-    employer_count, employer_file, employee_file,
-):
+def generate(employer_count, employer_file, employee_file, update_mode=False):
     if employer_count <= 0 or employer_count % 100 != 0:
         raise RuntimeError("employer_count must be a multiple of 100")
 
@@ -123,7 +124,7 @@ def generate(
     employee_generate_id = 1
     for chunk in range(0, employer_count, 100):
         # Generate employers
-        employers = tuple(generate_employers(chunk + 1, 100))
+        employers = tuple(generate_employers(chunk + 1, 100, update_mode))
 
         total_employees = sum(employer["number_of_employees"] for employer in employers)
 
@@ -142,7 +143,7 @@ def generate(
         employee_wage_rows: List[Dict[str, Any]] = []
         for employee_id, employers_for_employee in employee_employers.items():
             employee_wage_rows += tuple(
-                generate_single_employee(employee_id, employers_for_employee)
+                generate_single_employee(employee_id, employers_for_employee, update_mode)
             )
 
         logger.info(
@@ -203,13 +204,13 @@ def write_employer_wage_row(employer_wage_row, employer_wage_row_file):
     employer_wage_row_file.write(line)
 
 
-def generate_employers(base_id, employer_count):
+def generate_employers(base_id, employer_count, update_mode=False):
     """Generate employer rows"""
     for index in range(employer_count):
-        yield generate_single_employer(base_id + index)
+        yield generate_single_employer(base_id + index, update_mode)
 
 
-def generate_single_employer(employer_generate_id):
+def generate_single_employer(employer_generate_id, update_mode=False):
     """Generate a single employer.
 
     This is intended to always generate the same fake values for a given employer_generate_id.
@@ -251,7 +252,26 @@ def generate_single_employer(employer_generate_id):
 
     updated_date = get_date_days_before(SIMULATED_TODAY, random.randrange(1, 90))
 
+    # random.seed(create_seed)  # keep number of employees the same
     number_of_employees = math.floor(random.paretovariate(1))
+
+    if update_mode:
+        if random.random() < 0.1:
+            employer_name = fake.company()
+
+        employer_dba = employer_name
+        if random.random() < 0.3:
+            employer_dba = fake.company()
+
+            (
+                employer_address_country,
+                employer_address_state,
+                employer_address_city,
+                employer_address_street,
+                employer_address_zip,
+            ) = generate_fake_address()
+
+            updated_date = get_date_days_after(updated_date, 1)
 
     employer = {
         "account_key": account_key,
@@ -337,7 +357,7 @@ def write_employee_line(employee_wage_info, employees_file):
     employees_file.write(line)
 
 
-def generate_single_employee(employee_generate_id, employers):
+def generate_single_employee(employee_generate_id, employers, update_mode=False):
     """Generate a single employee.
 
     This is intended to always generate the same fake values for a given employee_generate_id.
@@ -349,6 +369,9 @@ def generate_single_employee(employee_generate_id, employers):
 
     first_name = fake.first_name()
     last_name = fake.last_name()
+
+    if update_mode and random.random() < 0.5:
+        last_name = fake.last_name()
 
     # for each employer randomly chosen for this employee
     for employer in employers:
@@ -430,7 +453,8 @@ def generate_single_employee(employee_generate_id, employers):
                 "employee_family": contribution.employee_family,
             }
 
-            yield employee
+            if not update_mode or (random.random() < 0.1):
+                yield employee
 
             qtr_wages += random.choice(wage_change_random_pool)
             if qtr_wages <= 0:
