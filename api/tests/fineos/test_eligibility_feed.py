@@ -1,7 +1,5 @@
 import csv
 import os
-import uuid
-from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
@@ -683,45 +681,27 @@ def test_process_all_employers_skips_nonexistent_employer(
     assert_number_of_data_lines_in_each_file(batch_output_dir, 5)
 
 
-def test_get_latest_employer_for_updates():
-    @dataclass
-    class QueryRecord:
-        employer_id: uuid
-        employee_id: uuid
-        maxdate: date
+def test_get_most_recent_employer_to_employee_info_for_single_employee_different_employers(
+    test_db_session, tmp_path, initialize_factories_session
+):
+    employee = EmployeeFactory.create()
 
-    employee_with_two_employers = [
-        QueryRecord(
-            employer_id=uuid.UUID("64665f09-9e00-48d4-94da-a4f58f759012"),
-            employee_id=uuid.UUID("0009d8b3-cf7c-4ed2-85ff-acfefb017525"),
-            maxdate=date(2020, 9, 30),
-        ),
-        QueryRecord(
-            employer_id=uuid.UUID("64665f09-9e00-48d4-94da-a4f58f759012"),
-            employee_id=uuid.UUID("0009d8b3-cf7c-4ed2-85ff-acfefb017525"),
-            maxdate=date(2020, 6, 30),
-        ),
-        QueryRecord(
-            employer_id=uuid.UUID("64665f09-9e00-48d4-94da-a4f58f759012"),
-            employee_id=uuid.UUID("0009d8b3-cf7c-4ed2-85ff-acfefb017525"),
-            maxdate=date(2020, 3, 31),
-        ),
-        QueryRecord(
-            employer_id=uuid.UUID("0c0232c8-6741-42f9-9afa-bb7c42a3ca13"),
-            employee_id=uuid.UUID("0009d8b3-cf7c-4ed2-85ff-acfefb017525"),
-            maxdate=date(2019, 12, 31),
-        ),
-        QueryRecord(
-            employer_id=uuid.UUID("0c0232c8-6741-42f9-9afa-bb7c42a3ca13"),
-            employee_id=uuid.UUID("0009d8b3-cf7c-4ed2-85ff-acfefb017525"),
-            maxdate=date(2019, 9, 30),
-        ),
-    ]
+    wages_for_single_employee_different_employers = WagesAndContributionsFactory.create_batch(
+        size=5, employee=employee
+    )
 
-    latest_employer_for_employee = ef.get_latest_employer_for_updates(employee_with_two_employers)
+    most_recent_wages = sorted(
+        wages_for_single_employee_different_employers, key=lambda w: w.filing_period, reverse=True
+    )[0]
 
-    assert len(latest_employer_for_employee) == 1
-    assert latest_employer_for_employee[0].maxdate == date(2020, 9, 30)
+    most_recent_employer = most_recent_wages.employer
+
+    employer_id_to_employee_ids = ef.get_most_recent_employer_to_employee_info(
+        test_db_session, [employee.employee_id]
+    )
+
+    assert len(employer_id_to_employee_ids) == 1
+    assert employer_id_to_employee_ids[most_recent_employer.employer_id] == [employee.employee_id]
 
 
 def test_process_employee_updates_simple(
@@ -739,6 +719,22 @@ def test_process_employee_updates_simple(
     assert process_results.employers_success_count == 1
     assert process_results.employers_error_count == 0
     assert process_results.employers_skipped_count == 0
+    assert process_results.employee_and_employer_pairs_total_count == 1
+
+    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+
+
+def test_process_employee_updates_for_single_employee_different_employers(
+    test_db_session, tmp_path, initialize_factories_session, create_triggers
+):
+    # wages_for_single_employee_different_employers
+    WagesAndContributionsFactory.create_batch(size=5, employee=EmployeeFactory.create())
+
+    process_results = ef.process_employee_updates(
+        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
+
+    assert process_results.employers_total_count == 1
     assert process_results.employee_and_employer_pairs_total_count == 1
 
     assert_number_of_data_lines_in_each_file(tmp_path, 1)

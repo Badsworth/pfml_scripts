@@ -12,12 +12,13 @@ from decimal import Decimal
 from enum import Enum
 from functools import cached_property
 from typing import Any, Callable, Dict, Iterable, List, Optional, TextIO, Tuple, TypeVar, Union
+from uuid import UUID
 
 import boto3
 import phonenumbers
 import smart_open
 from pydantic import BaseSettings, Field, PositiveInt
-from sqlalchemy import and_, func
+from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Query
 
 import massgov.pfml.db as db
@@ -36,6 +37,9 @@ from massgov.pfml.fineos.exception import FINEOSNotFound
 from massgov.pfml.util.datetime import utcnow
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+EmployerId = UUID
+EmployeeId = UUID
 
 
 class EligibilityFeedExportMode(Enum):
@@ -269,6 +273,64 @@ def query_employees_for_employer(query: "Query[_T]", employer: Employer) -> "Que
     )
 
 
+class EmployerEmployeePairQueryResult(db.RowProxy):
+    employer_id: EmployerId
+    employee_id: EmployeeId
+    maxdate: date
+
+
+def get_most_recent_employer_to_employee_info(
+    db_session: db.Session, employee_ids: Iterable[EmployeeId]
+) -> Dict[EmployerId, List[EmployeeId]]:
+    employer_employee_pairs: List[EmployerEmployeePairQueryResult] = (
+        db_session.query(
+            WagesAndContributions.employer_id,
+            WagesAndContributions.employee_id,
+            func.max(WagesAndContributions.filing_period).label("maxdate"),
+        )
+        .filter(WagesAndContributions.employee_id.in_(employee_ids))
+        .group_by(WagesAndContributions.employer_id, WagesAndContributions.employee_id)
+        .order_by(
+            desc("maxdate"), WagesAndContributions.employee_id, WagesAndContributions.employer_id
+        )
+        .all()
+    )
+
+    # since the query is ordered first by maxdate, the first employer-employee
+    # pair will be the most recent one
+    most_recent_employer_employee_pairs = filter_to_first_employer_employee_pair(
+        employer_employee_pairs
+    )
+
+    # Organize pairs into the structure we want
+    employer_id_to_employee_ids: Dict[EmployerId, List[EmployeeId]] = {}
+    for employer_employee_pair in most_recent_employer_employee_pairs:
+        employer_id_to_employee_ids.setdefault(employer_employee_pair.employer_id, []).append(
+            employer_employee_pair.employee_id
+        )
+
+    return employer_id_to_employee_ids
+
+
+def filter_to_first_employer_employee_pair(
+    employer_employee_list: List[EmployerEmployeePairQueryResult],
+) -> List[EmployerEmployeePairQueryResult]:
+    """Filter input list to only contain the first reference for an employee.
+
+    This could be done in SQL, but isn't currently in order to keep core query
+    simple until there is a chance to focus on optimization.
+    """
+    seen_employee_ids = set()
+    first_employee_records = []
+
+    for employer_employee_pair in employer_employee_list:
+        if employer_employee_pair.employee_id not in seen_employee_ids:
+            seen_employee_ids.add(employer_employee_pair.employee_id)
+            first_employee_records.append(employer_employee_pair)
+
+    return first_employee_records
+
+
 def query_employees_and_most_recent_wages_for_employer(
     query: "Query[_T]", employer: Employer
 ) -> "Query[_T]":
@@ -283,20 +345,6 @@ def query_employees_and_most_recent_wages_for_employer(
         )
         .distinct(WagesAndContributions.employer_id, WagesAndContributions.employee_id)
     )
-
-
-def get_latest_employer_for_updates(employer_employee_list: List) -> List:
-    latest_employer_employee_list: List[Any] = []
-    employee_filing_dates: Dict[str, Optional[date]] = {}
-    for employer_employee_pair in employer_employee_list:
-        filing_date = employee_filing_dates.setdefault(employer_employee_pair.employee_id, None)
-        if filing_date is None:
-            employee_filing_dates[
-                employer_employee_pair.employee_id
-            ] = employer_employee_pair.maxdate
-            latest_employer_employee_list.append(employer_employee_pair)
-
-    return latest_employer_employee_list
 
 
 # When loading employers to FINEOS the API we use requires us to
@@ -402,35 +450,17 @@ def process_employee_batch(
     db_session: db.Session,
     fineos: AbstractFINEOSClient,
     output_dir_path: str,
-    batch_of_employee_ids: Iterable,
+    batch_of_employee_ids: Iterable[EmployeeId],
     report: EligibilityFeedExportReport,
     output_transport_params: Optional[OutputTransportParams] = None,
-) -> List:
-    # Get the latest wages record for modified employee to get
-    # employer associated with it.
-    employer_employee_pairs = (
-        db_session.query(
-            WagesAndContributions.employer_id,
-            WagesAndContributions.employee_id,
-            func.max(WagesAndContributions.filing_period).label("maxdate"),
-        )
-        .filter(WagesAndContributions.employee_id.in_(batch_of_employee_ids))
-        .group_by(WagesAndContributions.employer_id, WagesAndContributions.employee_id)
-        .order_by(WagesAndContributions.employee_id, WagesAndContributions.employer_id)
-        .all()
+) -> List[EmployeeId]:
+    # Want information for the only most recent Employer for a given Employee
+    employer_id_to_employee_ids = get_most_recent_employer_to_employee_info(
+        db_session, batch_of_employee_ids
     )
 
-    latest_employer_for_employee = get_latest_employer_for_updates(employer_employee_pairs)
-
-    # Organize pairs into a structured class
-    employer_id_to_employee_ids: Dict[str, List] = {}
-    for employer_employee_pair in latest_employer_for_employee:
-        employer_id_to_employee_ids.setdefault(employer_employee_pair.employer_id, []).append(
-            employer_employee_pair.employee_id
-        )
-
     # Process list of employers
-    successfully_processed_employee_ids: List = []
+    successfully_processed_employee_ids: List[EmployeeId] = []
     for employer_id, employee_ids in employer_id_to_employee_ids.items():
         try:
             report.employers_total_count += 1

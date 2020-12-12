@@ -7,6 +7,7 @@ import boto3
 import psycopg2
 import sqlalchemy
 import sqlalchemy.pool as pool
+from sqlalchemy.engine import RowProxy  # noqa: F401, just re-exporting
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.orm import Query, Session, scoped_session, sessionmaker
 
