@@ -275,14 +275,14 @@ def test_log_employees_with_new_employers(test_db_session):
 
     # Employee generate helper
     def generate_employee_and_wage_item(id, employer):
-        employee = next(generator.generate_single_employee(id, [employer["account_key"]], [1]))
+        employee = next(generator.generate_single_employee(id, [employer]))
         # convert quarter to date
         employee["filing_period"] = employee["filing_period"].as_date()
         return employee
 
     # Create two employers
-    employer1, employer_wage_rows = generator.generate_single_employer(1)
-    employer2, employer_wage_rows = generator.generate_single_employer(2)
+    employer1 = generator.generate_single_employer(1)
+    employer2 = generator.generate_single_employer(2)
     employers = [employer1, employer2]
 
     report, report_log_entry = get_new_import_report(test_db_session)

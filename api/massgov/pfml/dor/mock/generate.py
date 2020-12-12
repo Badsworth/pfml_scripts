@@ -140,8 +140,10 @@ def generate(
 
         # Generate employee rows
         employee_wage_rows: List[Dict[str, Any]] = []
-        for employee_id, employer_ids in employee_employers.items():
-            employee_wage_rows += tuple(generate_single_employee(employee_id, employer_ids))
+        for employee_id, employers_for_employee in employee_employers.items():
+            employee_wage_rows += tuple(
+                generate_single_employee(employee_id, employers_for_employee)
+            )
 
         logger.info(
             "chunk %i: %i employers, %i employees", chunk, len(employers), len(employee_employers)
