@@ -15,6 +15,10 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     """Abstract base class for a FINEOS API client."""
 
     @abc.abstractmethod
+    def read_employer(self, employer_fein: str) -> models.OCOrganisation:
+        pass
+
+    @abc.abstractmethod
     def find_employer(self, employer_fein: str) -> str:
         """Create the employee account registration."""
         pass
@@ -226,7 +230,9 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def create_or_update_employer(
-        self, employer_creation: models.CreateOrUpdateEmployer
+        self,
+        employer_creation: models.CreateOrUpdateEmployer,
+        existing_organization: typing.Optional[models.OCOrganisationItem] = None,
     ) -> typing.Tuple[str, int]:
         """Create or update an employer in FINEOS."""
         pass

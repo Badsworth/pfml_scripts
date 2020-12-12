@@ -35,6 +35,7 @@ from massgov.pfml.db.models.applications import (
     RelationshipToCaregiver,
 )
 from massgov.pfml.db.models.employees import Address, Country, Employer, PaymentMethod
+from massgov.pfml.fineos.exception import FINEOSNotFound
 from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
 
 logger = logging.get_logger(__name__)
@@ -813,11 +814,27 @@ def download_document(
 
 
 def create_or_update_employer(
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient, employer: Employer,
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient, employer: Employer
 ) -> int:
     # Determine if operation is create or update by seeing if the API Employer
     # record has a fineos_employer_id already.
     is_create = employer.fineos_employer_id is None
+
+    existing_fineos_record = None
+    if not is_create:
+        try:
+            read_employer_response = fineos.read_employer(employer.employer_fein)
+            existing_fineos_record = read_employer_response.OCOrganisation[0]
+        except FINEOSNotFound:
+            logger.exception(
+                "Did not find employer in FINEOS as expected. Continuing with update as create.",
+                extra={
+                    "internal_employer_id": employer.employer_id,
+                    "fineos_employer_id": employer.fineos_employer_id,
+                },
+            )
+            is_create = True
+            pass
 
     employer_request_body = massgov.pfml.fineos.models.CreateOrUpdateEmployer(
         # `fineos_customer_nbr` is used as the Organization's CustomerNo
@@ -830,7 +847,7 @@ def create_or_update_employer(
     )
 
     fineos_customer_nbr, fineos_employer_id = fineos.create_or_update_employer(
-        employer_request_body
+        employer_request_body, existing_fineos_record
     )
 
     logger.debug(

@@ -222,7 +222,7 @@ class OCOrganisationItem(pydantic.BaseModel):
     CorporateTaxNumber: str
     DateBusinessCommenced: str = "1753-01-01T00:00:00"
     DateOfIncorporation: str = "1753-01-01T00:00:00"
-    DoingBusinessAs: str
+    DoingBusinessAs: Optional[str]
     EndOfTrading: str = "1753-01-01T00:00:00"
     EOTReasonCode: InstanceDomainAndFullId = InstanceDomainAndFullId(
         InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
@@ -231,7 +231,7 @@ class OCOrganisationItem(pydantic.BaseModel):
     )
     EOTReasonInd: bool = False
     FinancialYearEnd: str = "1753-01-01T00:00:00"
-    LegalBusinessName: str
+    LegalBusinessName: Optional[str]
     LegalStatus: InstanceDomainAndFullId = InstanceDomainAndFullId(
         InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
             InstanceName="Unknown", DomainName="Legal Status", FullId=1408000
@@ -246,7 +246,7 @@ class OCOrganisationItem(pydantic.BaseModel):
     UpperRegisteredNumber: Any = None
     UpperShortName: Any = None
     VatNumber: Any = None
-    names: OCOrganisationName
+    names: Optional[OCOrganisationName]
 
 
 class OCOrganisation(pydantic.BaseModel):

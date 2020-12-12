@@ -11,7 +11,6 @@ import xml.etree.ElementTree
 from decimal import Decimal
 from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
-import defusedxml.ElementTree
 import flask
 import newrelic.agent
 import oauthlib.oauth2
@@ -59,6 +58,10 @@ occupation_detail_update_service_request_schema = xmlschema.XMLSchema(
     os.path.join(
         os.path.dirname(__file__), "wscomposer", "OccupationDetailUpdateService.Request.xsd"
     )
+)
+
+read_employer_response_schema = xmlschema.XMLSchema(
+    os.path.join(os.path.dirname(__file__), "wscomposer", "ReadEmployer.Response.xsd")
 )
 
 
@@ -281,16 +284,22 @@ class FINEOSClient(client.AbstractFINEOSClient):
         headers = {"Content-Type": "application/xml; charset=utf-8"}
         return self._request(method, url, headers, data=xml_data.encode("utf-8"))
 
-    def find_employer(self, employer_fein: str) -> str:
+    def read_employer(self, employer_fein: str) -> models.OCOrganisation:
         response = self._wscomposer_request(
             "GET", "ReadEmployer", {"param_str_taxId": employer_fein}, ""
         )
-        root = defusedxml.ElementTree.fromstring(response.text)
-        if len(root) > 0:
-            customer_nbr = str(root[0].find("CustomerNo").text)
-            return customer_nbr
-        else:
+        response_decoded = read_employer_response_schema.decode(response.text)
+
+        if "OCOrganisation" not in response_decoded:
             raise exception.FINEOSNotFound("Employer not found.")
+
+        return models.OCOrganisation.parse_obj(response_decoded)
+
+    def find_employer(self, employer_fein: str) -> str:
+        employer_response = self.read_employer(employer_fein)
+
+        customer_nbr = str(employer_response.OCOrganisation[0].CustomerNo)
+        return customer_nbr
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
         """Create the employee account registration."""
@@ -807,10 +816,14 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
 
     def create_or_update_employer(
-        self, employer_create_or_update: models.CreateOrUpdateEmployer
+        self,
+        employer_create_or_update: models.CreateOrUpdateEmployer,
+        existing_organization: Optional[models.OCOrganisationItem] = None,
     ) -> Tuple[str, int]:
         """Create or update an employer in FINEOS."""
-        xml_body = self._create_or_update_employer_payload(employer_create_or_update)
+        xml_body = self._create_or_update_employer_payload(
+            employer_create_or_update, existing_organization
+        )
         response = self._wscomposer_request(
             "POST", "webservice", {"config": "UpdateOrCreateParty"}, xml_body
         )
@@ -854,7 +867,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         else:
             fineos_employer_id_value = fineos_employer_id.get("value")
             logger.info(
-                f"Employer ID created is {fineos_employer_id_value} for "
+                f"Employer ID created or updated is {fineos_employer_id_value} for "
                 f"CustomerNo {employer_create_or_update.fineos_customer_nbr}"
             )
             fineos_employer_id_int = int(str(fineos_employer_id_value))
@@ -883,6 +896,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
     @staticmethod
     def _create_or_update_employer_payload(
         employer_create_or_update: models.CreateOrUpdateEmployer,
+        existing_organization: Optional[models.OCOrganisationItem] = None,
     ) -> str:
 
         organization_default = models.OCOrganisationDefaultItem(
@@ -893,6 +907,21 @@ class FINEOSClient(client.AbstractFINEOSClient):
             Name=employer_create_or_update.employer_legal_name,
         )
 
+        # The ReadEmployer endpoint doesn't return an OCOrganisationDefaultItem
+        # as a part of its response, so using the top-level attributes to
+        # populate the OCOrganisationDefaultItem in the update
+        if existing_organization:
+            organization_default.Name = existing_organization.Name
+            organization_default.PronouncedAs = existing_organization.PronouncedAs
+            organization_default.AccountingDate = existing_organization.AccountingDate
+            organization_default.FinancialYearEnd = existing_organization.FinancialYearEnd
+            organization_default.PartyType = existing_organization.PartyType
+            organization_default.DateBusinessCommenced = existing_organization.DateBusinessCommenced
+            organization_default.DateOfIncorporation = existing_organization.DateOfIncorporation
+            organization_default.GroupClient = existing_organization.GroupClient
+            organization_default.SecuredClient = existing_organization.SecuredClient
+            organization_default.NotificationIssued = existing_organization.NotificationIssued
+
         organization_name = models.OCOrganisationNameItem(
             DoingBusinessAs=employer_create_or_update.employer_dba,
             LegalBusinessName=employer_create_or_update.employer_legal_name,
@@ -902,6 +931,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
             ),
         )
 
+        # The ReadEmployer endpoint doesn't return an OCOrganisationName as a
+        # part of its response, so using the top-level attributes to populate
+        # the OCOrganisationName in the update
+        if existing_organization:
+            organization_name.Name = existing_organization.Name
+            organization_name.PronouncedAs = existing_organization.PronouncedAs
+
         organization = models.OCOrganisationItem(
             CustomerNo=employer_create_or_update.fineos_customer_nbr,
             CorporateTaxNumber=employer_create_or_update.employer_fein,
@@ -910,6 +946,18 @@ class FINEOSClient(client.AbstractFINEOSClient):
             Name=employer_create_or_update.employer_legal_name,
             names=models.OCOrganisationName(OCOrganisationName=[organization_name]),
         )
+
+        if existing_organization:
+            organization.Name = existing_organization.Name
+            organization.PronouncedAs = existing_organization.PronouncedAs
+            organization.AccountingDate = existing_organization.AccountingDate
+            organization.FinancialYearEnd = existing_organization.FinancialYearEnd
+            organization.PartyType = existing_organization.PartyType
+            organization.DateBusinessCommenced = existing_organization.DateBusinessCommenced
+            organization.DateOfIncorporation = existing_organization.DateOfIncorporation
+            organization.GroupClient = existing_organization.GroupClient
+            organization.SecuredClient = existing_organization.SecuredClient
+            organization.NotificationIssued = existing_organization.NotificationIssued
 
         party_dto = models.PartyIntegrationDTOItem(
             organisation=models.OCOrganisation(OCOrganisation=[organization])

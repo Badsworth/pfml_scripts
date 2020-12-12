@@ -2,6 +2,7 @@ import pytest
 
 import massgov.pfml.fineos
 import massgov.pfml.fineos.employers as fineos_employers
+from massgov.pfml.db.models.employees import EmployerLog
 from massgov.pfml.db.models.factories import EmployerOnlyDORDataFactory
 
 # every test in here requires real resources
@@ -75,6 +76,80 @@ def test_load_all_multiple(test_db_session, initialize_factories_session):
     employers = EmployerOnlyDORDataFactory.create_batch(size=10)
 
     result = fineos_employers.load_all(test_db_session, fineos_client)
+
+    assert result.total_employers_count == 10
+    assert result.loaded_employers_count == 10
+    assert result.errored_employers_count == 0
+
+    for employer in employers:
+        test_db_session.refresh(employer)
+        assert employer.fineos_employer_id is not None
+
+
+def test_load_updates_simple(test_db_session, initialize_factories_session, create_triggers):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+    employer = EmployerOnlyDORDataFactory.create()
+
+    assert employer.fineos_employer_id is None
+
+    employer_log_entries = (
+        test_db_session.query(EmployerLog)
+        .filter(EmployerLog.employer_id == employer.employer_id)
+        .all()
+    )
+    assert len(employer_log_entries) == 1
+
+    result = fineos_employers.load_updates(test_db_session, fineos_client)
+
+    assert result.total_employers_count == 1
+    assert result.loaded_employers_count == 1
+    assert result.errored_employers_count == 0
+
+    test_db_session.refresh(employer)
+
+    assert employer.fineos_employer_id is not None
+
+
+def test_load_updates_multiple_log_entries_only_run_once(
+    test_db_session, initialize_factories_session, create_triggers
+):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+    employer = EmployerOnlyDORDataFactory.create()
+
+    assert employer.fineos_employer_id is None
+
+    # make an update
+    employer.account_key = "foo"
+    test_db_session.commit()
+
+    # and ensure it was recorded in the log table
+    employer_log_entries = (
+        test_db_session.query(EmployerLog)
+        .filter(EmployerLog.employer_id == employer.employer_id)
+        .all()
+    )
+    assert len(employer_log_entries) == 2
+
+    # then test
+    result = fineos_employers.load_updates(test_db_session, fineos_client)
+
+    assert result.total_employers_count == 1
+    assert result.loaded_employers_count == 1
+    assert result.errored_employers_count == 0
+
+    test_db_session.refresh(employer)
+
+    assert employer.fineos_employer_id is not None
+
+
+def test_load_updates_multiple(test_db_session, initialize_factories_session, create_triggers):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+    employers = EmployerOnlyDORDataFactory.create_batch(size=10)
+
+    result = fineos_employers.load_updates(test_db_session, fineos_client)
 
     assert result.total_employers_count == 10
     assert result.loaded_employers_count == 10

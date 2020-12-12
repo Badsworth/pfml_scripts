@@ -241,3 +241,40 @@ def windowed_query(q: "Query[_T]", column: Any, window_size: int) -> Iterable[_T
                 yield row[0]
             else:
                 yield row[0:-1]
+
+
+def skip_locked_query(q: "Query[_T]", column: Any, of: Optional[Any] = None) -> Iterable[_T]:
+    """Generator that uses "SKIP LOCKED" to yield one row to work on.
+
+    This uses the PostgreSQL "SELECT ... FOR UPDATE SKIP LOCKED" feature to select the next
+    unprocessed row. Multiple processes can do this simultaneously and will never get the same row
+    as the row is locked until the end of the transaction.
+
+    After processing a row, the caller must commit or rollback to end the transaction and release
+    the lock on the row. (The lock will also be released if the process crashes and disconnects
+    from the PostgreSQL server.)
+
+    https://www.2ndquadrant.com/en/blog/what-is-select-skip-locked-for-in-postgresql-9-5/
+    """
+
+    is_single_entity = q.is_single_entity  # type: ignore
+    q_modified = q.add_columns(column).order_by(column).with_for_update(skip_locked=True, of=of)
+    last_id: Optional[Any] = None
+
+    while True:
+        subq = q_modified
+
+        if last_id is not None:
+            subq = subq.filter(column > last_id)
+
+        next_row = subq.first()
+
+        if not next_row:
+            break
+
+        last_id = next_row[-1]
+
+        if is_single_entity:
+            yield next_row[0]
+        else:
+            yield next_row[0:-1]

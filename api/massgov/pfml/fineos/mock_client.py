@@ -207,6 +207,20 @@ def mock_customer_info():
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 
+    def read_employer(self, employer_fein: str) -> models.OCOrganisation:
+        _capture_call("read_employer", None, employer_fein=employer_fein)
+
+        if employer_fein == "999999999":
+            raise exception.FINEOSNotFound("Employer not found.")
+
+        return models.OCOrganisation(
+            OCOrganisation=[
+                models.OCOrganisationItem(
+                    CustomerNo="999", CorporateTaxNumber=employer_fein, Name="Foo"
+                )
+            ]
+        )
+
     def find_employer(self, employer_fein: str) -> str:
         _capture_call("find_employer", None, employer_fein=employer_fein)
 
@@ -580,10 +594,15 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         return week_based_work_pattern
 
     def create_or_update_employer(
-        self, employer_create_or_update: models.CreateOrUpdateEmployer
+        self,
+        employer_create_or_update: models.CreateOrUpdateEmployer,
+        existing_organization: Optional[models.OCOrganisationItem] = None,
     ) -> typing.Tuple[str, int]:
         _capture_call(
-            "create_or_update_employer", None, employer_create_or_update=employer_create_or_update
+            "create_or_update_employer",
+            None,
+            employer_create_or_update=employer_create_or_update,
+            existing_organization=existing_organization,
         )
 
         if employer_create_or_update.employer_fein == "999999999":
