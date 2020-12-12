@@ -8,10 +8,12 @@
 import argparse
 import datetime as dt
 import decimal
+import math
 import os
 import random
 import string
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Tuple
 
 import faker
 
@@ -37,7 +39,6 @@ parser.add_argument(
     "--folder", type=str, default="generated_files", help="Output folder for generated files"
 )
 
-EMPLOYER_COUNT_RANDOM_POOL = (1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 4)
 WAGE_CHANGE_RANDOM_POOL = (0, 0, 0, 0, 1000, 2500, 4400, 7800, -1200, -3500)
 
 
@@ -108,10 +109,7 @@ def main():
 
 
 def generate(
-    employer_count,
-    employer_file,
-    employee_file,
-    employer_count_random_pool=EMPLOYER_COUNT_RANDOM_POOL,
+    employer_count, employer_file, employee_file,
 ):
     if employer_count <= 0 or employer_count % 100 != 0:
         raise RuntimeError("employer_count must be a multiple of 100")
@@ -122,34 +120,52 @@ def generate(
     #
     # (If we generated all employers then all employees, the possible employer_account_keys for an
     # employee would change depending on the employer_count.)
+    employee_generate_id = 1
     for chunk in range(0, employer_count, 100):
-        employer_account_keys = generate_employer_file(chunk + 1, 100, employer_file, employee_file)
-        generate_employee_file(
-            chunk * EMPLOYER_TO_EMPLOYEE_RATIO + 1,
-            100 * EMPLOYER_TO_EMPLOYEE_RATIO,
-            employer_account_keys,
-            employee_file,
-            employer_count_random_pool,
+        # Generate employers
+        employers = tuple(generate_employers(chunk + 1, 100))
+
+        total_employees = sum(employer["number_of_employees"] for employer in employers)
+
+        # Assign employees to employers according to number of employees
+        employee_ids = tuple(range(employee_generate_id, employee_generate_id + total_employees))
+        random.seed(chunk)
+        employee_employers: Dict[int, List[Dict[str, Any]]] = {}
+        for employer in employers:
+            employer_employee_ids = random.sample(employee_ids, employer["number_of_employees"])
+            for employee_id in employer_employee_ids:
+                if employee_id not in employee_employers:
+                    employee_employers[employee_id] = []
+                employee_employers[employee_id].append(employer)
+
+        # Generate employee rows
+        employee_wage_rows: List[Dict[str, Any]] = []
+        for employee_id, employer_ids in employee_employers.items():
+            employee_wage_rows += tuple(generate_single_employee(employee_id, employer_ids))
+
+        logger.info(
+            "chunk %i: %i employers, %i employees", chunk, len(employers), len(employee_employers)
         )
 
+        # Write files
+        write_employer_file(employers, employer_file)
 
-# == Employer ==
+        for employer in employers:
+            for employer_wage_row in generate_employer_wage_rows(employer):
+                write_employer_wage_row(employer_wage_row, employee_file)
+        for row in employee_wage_rows:
+            write_employee_line(row, employee_file)
 
-
-def generate_employer_file(base_id, employer_count, employers_file, employees_file):
-    """Generate employers, print rows to file"""
-    employer_account_keys = []
-
-    for employer, employer_wage_rows in generate_employers(base_id, employer_count):
-        write_employee_row(employer, employers_file)
-        for employer_wage_row in employer_wage_rows:
-            write_employer_wage_row(employer_wage_row, employees_file)
-        employer_account_keys.append(employer["account_key"])
-
-    return employer_account_keys
+        employee_generate_id += total_employees
 
 
-def write_employee_row(row, employers_file):
+def write_employer_file(employers, employers_file):
+    """Write employer rows to file"""
+    for employer in employers:
+        write_employer_row(employer, employers_file)
+
+
+def write_employer_row(row, employers_file):
     line = "{}{:255}{:14}{:255}{:30}{}{}{}{:255}{}{}{}{}{}\n".format(
         row["account_key"],
         row["employer_name"],
@@ -187,20 +203,8 @@ def write_employer_wage_row(employer_wage_row, employer_wage_row_file):
 
 def generate_employers(base_id, employer_count):
     """Generate employer rows"""
-    # TODO use better id generators to match DOR format when available
-    count = 0
-
-    logger.info("Generating employer information - count: %i", employer_count)
-
     for index in range(employer_count):
-        if count > 0 and (count % 1000) == 0:
-            logger.info("Generating employers, current count: %i", count)
-
         yield generate_single_employer(base_id + index)
-
-        count += 1
-
-    logger.info("Generated employers total: %i", count)
 
 
 def generate_single_employer(employer_generate_id):
@@ -215,7 +219,11 @@ def generate_single_employer(employer_generate_id):
     account_key = str(employer_generate_id).rjust(11, "0")
     fein = str(100000000 + employer_generate_id)
 
+    # occasionally generates a duplicate, but that's realistic as it happens in the real data
     employer_name = fake.company()
+
+    if employer_generate_id % 500 == 0:
+        employer_name += " “Company”"  # add some Unicode characters
 
     (
         employer_address_country,
@@ -241,8 +249,8 @@ def generate_single_employer(employer_generate_id):
 
     updated_date = get_date_days_before(SIMULATED_TODAY, random.randrange(1, 90))
 
-    # Generate an employer row for each quarter
-    # TODO randomize subset of quarters
+    number_of_employees = math.floor(random.paretovariate(1))
+
     employer = {
         "account_key": account_key,
         "employer_name": employer_name,
@@ -258,8 +266,13 @@ def generate_single_employer(employer_generate_id):
         "exemption_commence_date": exemption_commence_date,
         "exemption_cease_date": exemption_cease_date,
         "updated_date": updated_date,
+        "number_of_employees": number_of_employees,
     }
 
+    return employer
+
+
+def generate_employer_wage_rows(employer):
     employer_wage_rows = []
     for quarter in QUARTERS:
         # is the quarter information amended
@@ -282,7 +295,7 @@ def generate_single_employer(employer_generate_id):
         }
         employer_wage_rows.append(employer_row)
 
-    return employer, employer_wage_rows
+    return employer_wage_rows
 
 
 def generate_fake_address():
@@ -300,23 +313,6 @@ def generate_fake_address():
         postal_code = fake.zipcode_plus4().replace("-", "")
 
     return country, state, city, street, postal_code
-
-
-# == Employee ==
-
-
-def generate_employee_file(
-    base_id,
-    employee_count,
-    employer_account_keys,
-    employees_file,
-    employer_count_random_pool=EMPLOYER_COUNT_RANDOM_POOL,
-):
-    """Generate employees rows, print rows to file"""
-    for employee in generate_employee_employer_quarterly_wage_rows(
-        base_id, employee_count, employer_account_keys, employer_count_random_pool
-    ):
-        write_employee_line(employee, employees_file)
 
 
 def write_employee_line(employee_wage_info, employees_file):
@@ -339,34 +335,7 @@ def write_employee_line(employee_wage_info, employees_file):
     employees_file.write(line)
 
 
-def generate_employee_employer_quarterly_wage_rows(
-    base_id,
-    employee_count,
-    employer_account_keys,
-    employer_count_random_pool=EMPLOYER_COUNT_RANDOM_POOL,
-):
-    """Generate employee and employer quarterly wage information rows"""
-
-    logger.info("Generating employee rows ...")
-
-    count = 0
-
-    # for the number of employees we want to generate
-    for index in range(employee_count):
-        yield from generate_single_employee(
-            base_id + index, employer_account_keys, employer_count_random_pool
-        )
-
-        count += 1
-        if count > 0 and (count % 1000) == 0:
-            logger.info("Generating employee rows, current employee count: %i", count)
-
-    logger.info("Generated employees info - Employee count: %i", count)
-
-
-def generate_single_employee(
-    employee_generate_id, employer_account_keys, employer_count_random_pool
-):
+def generate_single_employee(employee_generate_id, employers):
     """Generate a single employee.
 
     This is intended to always generate the same fake values for a given employee_generate_id.
@@ -379,23 +348,60 @@ def generate_single_employee(
     first_name = fake.first_name()
     last_name = fake.last_name()
 
-    # randomly pick employers by random count
-    employer_count = random.choice(employer_count_random_pool)
-    employer_account_keys_for_employee = random.sample(employer_account_keys, employer_count)
-
-    # for each employer account key randomly chosen for an employee
-    for account_key in employer_account_keys_for_employee:
+    # for each employer randomly chosen for this employee
+    for employer in employers:
+        account_key = employer["account_key"]
 
         # information about the employees classification with this employer
         independent_contractor = fake.boolean()
         opt_in = fake.boolean()
 
-        # initial quarterly wage
-        qtr_wages = decimal.Decimal(random.randrange(6000000)) / 100
+        wage_change_random_pool: Tuple[int, ...] = WAGE_CHANGE_RANDOM_POOL
+        quarters: Tuple[Quarter, ...] = ()
 
-        # which quarters to generate?
-        start_quarter = random.choice(QUARTERS)
-        quarters = start_quarter.series(random.randint(1, 8))
+        if (employee_generate_id % 100) <= 5:
+            # Special scenario 1: one quarter, wage $4000 to $5000
+            # Financial eligibility: when 2 employers, fails 30x rule
+            qtr_wages = decimal.Decimal(4000 + random.randrange(1000))  # initial quarterly wage
+            quarters = (Quarter(2020, 4),)
+
+        elif (employee_generate_id % 100) <= 10:
+            # Special scenario 2: two quarters, wages $5000 and $10000
+            # Financial eligibility: fails 30x rule
+            qtr_wages = decimal.Decimal(5000)  # initial quarterly wage
+            quarters = (
+                Quarter(2020, 4),
+                Quarter(2021, 1),
+            )
+            wage_change_random_pool = (10000 - 5000,)
+
+        elif (employee_generate_id % 100) <= 13:
+            # Special scenario 3: two quarters, wages $2000 and $2000
+            # Financial eligibility: when 1 employer, not eligible / when 2 employers, eligible
+            qtr_wages = decimal.Decimal(2000)  # initial quarterly wage
+            quarters = (
+                Quarter(2020, 4),
+                Quarter(2021, 1),
+            )
+            wage_change_random_pool = (0,)
+
+        elif (employee_generate_id % 100) <= 15:
+            # Special scenario 4: two quarters, wages $5000 and $21000
+            # Financial eligibility: eligible in 2021, but not in 2022 (due to 2021 max benefit)
+            qtr_wages = decimal.Decimal(5000)  # initial quarterly wage
+            quarters = (
+                Quarter(2021, 3),
+                Quarter(2021, 4),
+            )
+            wage_change_random_pool = (21000 - 5000,)
+
+        else:
+            # General random scenario
+            qtr_wages = decimal.Decimal(random.randrange(6000000)) / 100  # initial quarterly wage
+
+            # which quarters to generate?
+            start_quarter = random.choice(QUARTERS)
+            quarters = start_quarter.series(random.randint(1, 8))
 
         # generate information for the selected quarters:
         ytd_wages = decimal.Decimal(0)
@@ -424,7 +430,7 @@ def generate_single_employee(
 
             yield employee
 
-            qtr_wages += random.choice(WAGE_CHANGE_RANDOM_POOL)
+            qtr_wages += random.choice(wage_change_random_pool)
             if qtr_wages <= 0:
                 qtr_wages = decimal.Decimal(1)
 

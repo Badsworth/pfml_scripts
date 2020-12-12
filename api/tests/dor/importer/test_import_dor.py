@@ -571,7 +571,6 @@ def test_parse_employer_file(test_fs_path):
 def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     # generate files for import
     employer_count = 100
-    employee_count = employer_count * generator.EMPLOYER_TO_EMPLOYEE_RATIO
 
     employer_file_path = get_temp_file_path()
     employee_file_path = get_temp_file_path()
@@ -579,7 +578,7 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     employer_file = open(employer_file_path, "w")
     employee_file = open(employee_file_path, "w")
 
-    generator.generate(employer_count, employer_file, employee_file, [1])
+    generator.generate(employer_count, employer_file, employee_file)
     employer_file.close()
     employee_file.close()
 
@@ -592,7 +591,7 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
 
     assert len(employee_a_lines) == employer_count * 4
     wages_contributions_count = len(employee_b_lines)
-    assert wages_contributions_count >= employee_count * 4
+    assert wages_contributions_count >= employer_count
 
     # import
     import_batches = [
@@ -612,7 +611,7 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     assert report_one.created_employers_count == employer_count
 
     report_two = reports[1]
-    assert report_two.created_employees_count == employee_count
+    assert report_two.created_employees_count >= employer_count
     assert report_two.created_wages_and_contributions_count == wages_contributions_count
 
     assert report_two.created_employer_quarters_count == len(employee_a_lines)

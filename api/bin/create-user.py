@@ -2,8 +2,11 @@
 import pprint
 import sys
 
+import massgov.pfml.db
 import massgov.pfml.db.models.employees as employee_models
 from massgov.pfml.db.models.factories import UserFactory
+
+massgov.pfml.db.init(sync_lookups=True)
 
 roles = []
 
