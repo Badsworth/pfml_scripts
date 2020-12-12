@@ -11,14 +11,14 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from functools import cached_property
-from typing import Any, Callable, Dict, Iterable, List, Optional, TextIO, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, TextIO, Tuple, TypeVar, Union
 from uuid import UUID
 
 import boto3
 import phonenumbers
 import smart_open
 from pydantic import BaseSettings, Field, PositiveInt
-from sqlalchemy import and_, desc, func
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Query
 
 import massgov.pfml.db as db
@@ -383,37 +383,15 @@ def process_employee_updates(
     # EmployeeLog.
     process_id = 1
 
-    # Recovery. Check for unprocessed rows. There should never be more than
-    # the batch size in normal processing.
-    unprocessed_employees = (
-        db_session.query(EmployeeLog.employee_id)
-        .filter(EmployeeLog.process_id == process_id)
-        .distinct(EmployeeLog.employee_id)
-        .all()
-    )
-
-    if len(unprocessed_employees) > 0:
-        recovery_employee_ids = process_employee_batch(
-            db_session,
-            fineos,
-            output_dir_path,
-            unprocessed_employees,
-            report,
-            output_transport_params,
-        )
-
-        with db_session.begin_nested():
-            delete_processed_batch(db_session, recovery_employee_ids, process_id)
-
-    # After recovery proceed with normal flow.
+    unsuccessful_employee_ids: Set[EmployeeId] = set()
     while "batch not empty":
-        updated_employee_ids = (
-            db_session.query(EmployeeLog.employee_id)
+        updated_employee_ids: Set[EmployeeId] = set(
+            row[0]
+            for row in db_session.query(EmployeeLog.employee_id)
             .filter(
-                and_(
-                    EmployeeLog.action.in_(["INSERT", "UPDATE", "UPDATE_NEW_EMPLOYER"]),
-                    EmployeeLog.process_id.is_(None),
-                )
+                EmployeeLog.action.in_(["INSERT", "UPDATE", "UPDATE_NEW_EMPLOYER"]),
+                or_(EmployeeLog.process_id.is_(None), EmployeeLog.process_id == process_id),
+                EmployeeLog.employee_id.notin_(unsuccessful_employee_ids),
             )
             .distinct(EmployeeLog.employee_id)
             .limit(1000)
@@ -435,6 +413,10 @@ def process_employee_updates(
             output_transport_params,
         )
 
+        unsuccessful_employee_ids.update(
+            updated_employee_ids.difference(successfully_processed_employee_ids)
+        )
+
         with db_session.begin_nested():
             delete_processed_batch(db_session, successfully_processed_employee_ids, process_id)
 
@@ -453,7 +435,7 @@ def process_employee_batch(
     batch_of_employee_ids: Iterable[EmployeeId],
     report: EligibilityFeedExportReport,
     output_transport_params: Optional[OutputTransportParams] = None,
-) -> List[EmployeeId]:
+) -> Set[EmployeeId]:
     # Want information for the only most recent Employer for a given Employee
     employer_id_to_employee_ids = get_most_recent_employer_to_employee_info(
         db_session, batch_of_employee_ids
@@ -512,7 +494,7 @@ def process_employee_batch(
             report.employers_error_count += 1
             continue
 
-    return successfully_processed_employee_ids
+    return set(successfully_processed_employee_ids)
 
 
 def update_batch_to_processing(db_session, employee_ids, process_id):
