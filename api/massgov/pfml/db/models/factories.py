@@ -138,7 +138,7 @@ class EmployeeFactory(BaseFactory):
     last_name = factory.Faker("last_name")
     other_name = None
     email_address = factory.Faker("email")
-    phone_number = "942-529-0727"
+    phone_number = "+19425290727"
 
 
 class VerificationTypeFactory(BaseFactory):

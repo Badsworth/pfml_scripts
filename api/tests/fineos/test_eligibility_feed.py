@@ -14,9 +14,11 @@ from massgov.pfml.db.models.employees import (
     Employee,
     EmployeeAddress,
     EmployeeLog,
+    EmployeeOccupation,
     Employer,
     GeoState,
     TaxIdentifier,
+    Title,
 )
 from massgov.pfml.db.models.factories import (
     AddressFactory,
@@ -72,11 +74,6 @@ def test_employee_to_eligibility_feed_record(initialize_factories_session):
     assert eligibility_feed_record.employeeNationalIDType == ef.NationalIdType.ssn
     assert eligibility_feed_record.employeeEmail == employee.email_address
 
-    if employee.phone_number:
-        assert eligibility_feed_record.telephoneIntCode == "1"
-        assert eligibility_feed_record.telephoneAreaCode == employee.phone_number[:3]
-        assert eligibility_feed_record.telephoneNumber == employee.phone_number[4:].replace("-", "")
-
     # fields that *should not* be set
     assert eligibility_feed_record.employeeEffectiveFromDate is None
     assert eligibility_feed_record.employeeSalary is None
@@ -113,6 +110,22 @@ def test_employee_to_eligibility_feed_record_with_date_of_birth(
     )
 
     assert eligibility_feed_record.employeeDateOfBirth == employee.date_of_birth
+
+
+def test_employee_to_eligibility_feed_record_with_date_of_death(
+    test_db_session, initialize_factories_session
+):
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employee = wages_and_contributions.employee
+    employer = wages_and_contributions.employer
+
+    employee.date_of_death = date(2020, 7, 6)
+
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
+        employee, wages_and_contributions, employer
+    )
+
+    assert eligibility_feed_record.employeeDateOfDeath == employee.date_of_death
 
 
 def test_employee_to_eligibility_feed_record_with_address(
@@ -152,6 +165,85 @@ def test_employee_to_eligibility_feed_record_with_no_tax_identifier(
 
     assert eligibility_feed_record.employeeNationalID is None
     assert eligibility_feed_record.employeeNationalIDType is None
+
+
+def test_employee_to_eligibility_feed_record_with_employee_title(
+    test_db_session, initialize_factories_session
+):
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employee = wages_and_contributions.employee
+    employer = wages_and_contributions.employer
+
+    employee.title_id = Title.DR.title_id
+
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
+        employee, wages_and_contributions, employer
+    )
+
+    assert eligibility_feed_record.employeeTitle == employee.title.title_description
+
+
+def test_employee_to_eligibility_feed_record_with_phone_numbers(
+    test_db_session, initialize_factories_session
+):
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employee = wages_and_contributions.employee
+    employer = wages_and_contributions.employer
+
+    employee.phone_number = "+12025555555"
+    employee.cell_phone_number = "+442083661177"
+
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
+        employee, wages_and_contributions, employer
+    )
+
+    assert eligibility_feed_record.telephoneIntCode == "1"
+    assert eligibility_feed_record.telephoneAreaCode == "202"
+    assert eligibility_feed_record.telephoneNumber == "5555555"
+
+    assert eligibility_feed_record.cellIntCode == "44"
+    assert eligibility_feed_record.cellAreaCode is None
+    assert eligibility_feed_record.cellNumber == "2083661177"
+
+
+def test_employee_to_eligibility_feed_record_with_occupation(
+    test_db_session, initialize_factories_session
+):
+    wages_and_contributions = WagesAndContributionsFactory.create()
+    employee = wages_and_contributions.employee
+    employer = wages_and_contributions.employer
+
+    occupation = EmployeeOccupation(
+        employee_id=employee.employee_id,
+        employer_id=employer.employer_id,
+        job_title="IT Support",
+        date_of_hire=date(2019, 1, 1),
+        date_job_ended=date(2020, 11, 30),
+        employment_status="Resigned",
+        org_unit_name="IT",
+        hours_worked_per_week=24,
+        days_worked_per_week=3,
+        manager_id="E9999",
+        worksite_id="A1234",
+        occupation_qualifier="Certificate",
+    )
+    test_db_session.add(occupation)
+    test_db_session.commit()
+
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
+        employee, wages_and_contributions, employer
+    )
+
+    assert eligibility_feed_record.employeeJobTitle == occupation.job_title
+    assert eligibility_feed_record.employeeDateOfHire == occupation.date_of_hire
+    assert eligibility_feed_record.employeeEndDate == occupation.date_job_ended
+    assert eligibility_feed_record.employmentStatus == occupation.employment_status
+    assert eligibility_feed_record.employeeOrgUnitName == occupation.org_unit_name
+    assert eligibility_feed_record.employeeHoursWorkedPerWeek == occupation.hours_worked_per_week
+    assert eligibility_feed_record.employeeDaysWorkedPerWeek == occupation.days_worked_per_week
+    assert eligibility_feed_record.managerIdentifier == occupation.manager_id
+    assert eligibility_feed_record.occupationQualifier == occupation.occupation_qualifier
+    assert eligibility_feed_record.employeeWorkSiteId == occupation.worksite_id
 
 
 def create_csv_dict(updates=None):
@@ -290,6 +382,8 @@ def test_write_employees_to_csv(
 
     employees = list(map(lambda ew: ew[0], employees_with_most_recent_wages))
 
+    phone_number = ef.parse_phone_number(employees[0].phone_number)
+
     expected_rows = [
         create_csv_dict(
             {
@@ -306,9 +400,9 @@ def test_write_employees_to_csv(
                 "employeeSecondName": employees[0].middle_name,
                 "employeeNationalID": employees[0].tax_identifier.tax_identifier,
                 "employeeNationalIDType": ef.NationalIdType.ssn.value,
-                "telephoneIntCode": "1",
-                "telephoneAreaCode": employees[0].phone_number[:3],
-                "telephoneNumber": employees[0].phone_number[4:].replace("-", ""),
+                "telephoneIntCode": phone_number.country_code,
+                "telephoneAreaCode": phone_number.area_code,
+                "telephoneNumber": phone_number.number,
                 "employeeEmail": employees[0].email_address,
                 "employmentWorkState": ef.DEFAULT_EMPLOYMENT_WORK_STATE,
             }

@@ -14,6 +14,7 @@ from functools import cached_property
 from typing import Any, Callable, Dict, Iterable, List, Optional, TextIO, Tuple, TypeVar, Union
 
 import boto3
+import phonenumbers
 import smart_open
 from pydantic import BaseSettings, Field, PositiveInt
 from sqlalchemy import and_, func
@@ -23,7 +24,13 @@ import massgov.pfml.db as db
 import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import Employee, EmployeeLog, Employer, WagesAndContributions
+from massgov.pfml.db.models.employees import (
+    Employee,
+    EmployeeLog,
+    EmployeeOccupation,
+    Employer,
+    WagesAndContributions,
+)
 from massgov.pfml.fineos import AbstractFINEOSClient
 from massgov.pfml.fineos.exception import FINEOSNotFound
 from massgov.pfml.util.datetime import utcnow
@@ -88,6 +95,32 @@ def determine_national_id_type(tax_id: str) -> NationalIdType:
         return NationalIdType.itin
 
     return NationalIdType.ssn
+
+
+@dataclass
+class PhoneNumber:
+    country_code: str
+    number: str
+    area_code: Optional[str] = None
+
+
+# parse E.164 format phone number
+def parse_phone_number(phone_number: str) -> Optional[PhoneNumber]:
+    try:
+        parsed_phone_number = phonenumbers.parse(phone_number)
+        national_number = str(parsed_phone_number.national_number)
+        if parsed_phone_number.country_code == 1:  # get area code for US number
+            return PhoneNumber(
+                country_code=str(parsed_phone_number.country_code),
+                number=national_number[3:],
+                area_code=national_number[0:3],
+            )
+        else:
+            return PhoneNumber(
+                country_code=str(parsed_phone_number.country_code), number=national_number
+            )
+    except phonenumbers.NumberParseException:
+        return None
 
 
 @dataclass
@@ -860,7 +893,32 @@ def employee_to_eligibility_feed_record(
             else None
         ),
         employeeEmail=employee.email_address,
+        employeeTitle=(employee.title.title_description if employee.title else None),
+        employeeDateOfDeath=employee.date_of_death,
     )
+
+    employee_occupation_for_employer: Optional[
+        EmployeeOccupation
+    ] = employee.employee_occupations.filter(
+        EmployeeOccupation.employer_id == employer.employer_id
+    ).one_or_none()
+
+    if employee_occupation_for_employer:
+        occupation: EmployeeOccupation = employee_occupation_for_employer
+        record.employeeJobTitle = occupation.job_title
+        record.employeeDateOfHire = occupation.date_of_hire
+        record.employeeEndDate = occupation.date_job_ended
+        record.employmentStatus = occupation.employment_status
+        record.employeeOrgUnitName = occupation.org_unit_name
+        record.employeeHoursWorkedPerWeek = (
+            float(occupation.hours_worked_per_week) if occupation.hours_worked_per_week else None
+        )
+        record.employeeDaysWorkedPerWeek = (
+            Decimal(occupation.days_worked_per_week) if occupation.days_worked_per_week else None
+        )
+        record.managerIdentifier = occupation.manager_id
+        record.occupationQualifier = occupation.occupation_qualifier
+        record.employeeWorkSiteId = occupation.worksite_id
 
     employee_address = employee.addresses.first()
     if employee_address:
@@ -872,17 +930,17 @@ def employee_to_eligibility_feed_record(
         record.addressZipCode = address.zip_code
 
     if employee.phone_number:
-        # TODO: pull in phonenumber lib to parse numbers properly here and in
-        # request handlers so values are stored in standard format in DB
-        phone_parts = employee.phone_number.split("-")
+        phone_number: Optional[PhoneNumber] = parse_phone_number(employee.phone_number)
+        if phone_number:
+            record.telephoneIntCode = phone_number.country_code
+            record.telephoneAreaCode = phone_number.area_code
+            record.telephoneNumber = phone_number.number
 
-        # TODO: if there's an indication that the number is a cell phone, set
-        # cell* attributes instead, unless it's the only number we have, then
-        # still set telephone* attrs? Both attribute sets seem to feed into the
-        # same place, OCPhone, but maybe extra flag is set if cell*
-        if len(phone_parts) == 3:
-            record.telephoneIntCode = "1"
-            record.telephoneAreaCode = phone_parts[0]
-            record.telephoneNumber = "".join(phone_parts[1:])
+    if employee.cell_phone_number:
+        cell_phone_number: Optional[PhoneNumber] = parse_phone_number(employee.cell_phone_number)
+        if cell_phone_number:
+            record.cellIntCode = cell_phone_number.country_code
+            record.cellAreaCode = cell_phone_number.area_code
+            record.cellNumber = cell_phone_number.number
 
     return record
