@@ -329,7 +329,10 @@ def process_employee_updates(
         updated_employee_ids = (
             db_session.query(EmployeeLog.employee_id)
             .filter(
-                and_(EmployeeLog.action.in_(["INSERT", "UPDATE"]), EmployeeLog.process_id.is_(None))
+                and_(
+                    EmployeeLog.action.in_(["INSERT", "UPDATE", "UPDATE_NEW_EMPLOYER"]),
+                    EmployeeLog.process_id.is_(None),
+                )
             )
             .distinct(EmployeeLog.employee_id)
             .limit(1000)

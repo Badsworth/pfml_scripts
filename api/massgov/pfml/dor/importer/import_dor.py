@@ -9,7 +9,7 @@ import sys
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 import boto3
 from sqlalchemy.exc import SQLAlchemyError
@@ -21,7 +21,7 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import ImportLog, WagesAndContributions
+from massgov.pfml.db.models.employees import EmployeeLog, ImportLog, WagesAndContributions
 from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYEE_FILE_ROW_LENGTH,
     EMPLOYEE_FORMAT,
@@ -68,6 +68,7 @@ class ImportReport:
     created_employees_count: int = 0
     updated_employees_count: int = 0
     unmodified_employees_count: int = 0
+    logged_employees_for_new_employer: int = 0
     created_wages_and_contributions_count: int = 0
     updated_wages_and_contributions_count: int = 0
     unmodified_wages_and_contributions_count: int = 0
@@ -279,13 +280,14 @@ class EmployeeWriter(object):
             + self.report.unmodified_employer_quarters_count,
         )
         logger.info(
-            "** Employee Import Progress - created: %i, updated: %i, unmodified: %i, total: %i",
+            "** Employee Import Progress - created: %i, updated: %i, unmodified: %i, total: %i, new employer log: %i",
             self.report.created_employees_count,
             self.report.updated_employees_count,
             self.report.unmodified_employees_count,
             self.report.unmodified_employees_count
             + self.report.created_employees_count
             + self.report.updated_employees_count,
+            self.report.logged_employees_for_new_employer,
         )
 
         logger.info(
@@ -882,24 +884,109 @@ def get_wage_composite_key(employer_id, employee_id, filing_period):
     return (employer_id, employee_id, filing_period)
 
 
-def import_wage_data(
+def log_employees_with_new_employers(
     db_session,
-    wage_info_list,
-    employee_ssns_to_id_created_in_current_import_run,
+    employee_wage_info_list,
+    account_key_to_employer_id_map,
     ssn_to_existing_employee_model,
     report,
     import_log_entry_id,
 ):
 
-    account_key_to_employer_id_map = {}
-    account_keys = []
-    for employee_info in wage_info_list:
-        account_keys.append(employee_info["account_key"])
+    logger.info("Check and log employees with new employers")
 
-    employer_models = dor_persistence_util.get_employers_account_key(db_session, account_keys)
-    for employer in employer_models:
-        account_key_to_employer_id_map[employer.account_key] = employer.employer_id
+    # Get existing wages for all existing employees in the current list
+    ssn_to_existing_employee_id = {}
+    for ssn in ssn_to_existing_employee_model:
+        ssn_to_existing_employee_id[ssn] = ssn_to_existing_employee_model[ssn].employee_id
 
+    existing_employee_ids = list(ssn_to_existing_employee_id.values())
+    existing_wages = dor_persistence_util.get_wages_and_contributions_by_employee_ids(
+        db_session, existing_employee_ids
+    )
+
+    # Group existing employer ids by employee id from existing wages
+    employee_id_to_employer_id_set: Dict[uuid.UUID, Set[uuid.UUID]] = {}
+    for existing_wage in existing_wages:
+        employer_id = account_key_to_employer_id_map.get(existing_wage.account_key, None)
+        if employer_id is None:
+            continue
+
+        employee_id = existing_wage.employee_id
+
+        employer_id_set = employee_id_to_employer_id_set.get(employee_id, None)
+        if employer_id_set:
+            employer_id_set.add(employer_id)
+        else:
+            employee_id_to_employer_id_set[employee_id] = {employer_id}
+
+    # Check current list for new employers
+    # Filter current list to existing employees only.
+    # New employees will have an insert log already, so no need to check here.
+    # Note: duplicate entries for the same employer may be created across batches
+    employee_wage_info_for_existing_employees = list(
+        filter(
+            lambda employee_wage_info: employee_wage_info["employee_ssn"]
+            in ssn_to_existing_employee_id,
+            employee_wage_info_list,
+        )
+    )
+
+    employee_new_employer_logs_to_create = []
+    modified_at = datetime.now()
+    already_logged_employee_id_employer_id_tuples = set()
+
+    for employee_wage_info in employee_wage_info_for_existing_employees:
+        account_key = employee_wage_info["account_key"]
+        employee_id = ssn_to_existing_employee_id[employee_wage_info["employee_ssn"]]
+        employer_id = account_key_to_employer_id_map.get(account_key, None)
+
+        if employer_id is None:
+            logger.warning(
+                "Attempted to check an employee wage row for unknown employer: %s",
+                account_key,
+                extra={"account_key": account_key},
+            )
+            continue
+
+        if (employee_id, employer_id) in already_logged_employee_id_employer_id_tuples:
+            continue
+
+        employer_id_set = employee_id_to_employer_id_set.get(employee_id, None)
+        if employer_id_set is None or employer_id not in employer_id_set:
+            employee_log = EmployeeLog(
+                employee_log_id=str(uuid.uuid4()),
+                employee_id=employee_id,
+                action="UPDATE_NEW_EMPLOYER",
+                modified_at=modified_at,
+                process_id=None,
+            )
+            employee_new_employer_logs_to_create.append(employee_log)
+            already_logged_employee_id_employer_id_tuples.add((employee_id, employer_id))
+
+    employee_logs_count = len(employee_new_employer_logs_to_create)
+    if employee_logs_count > 0:
+        logger.info("Logging employees as updated for new employer: %i", employee_logs_count)
+        bulk_save(
+            db_session,
+            employee_new_employer_logs_to_create,
+            "Employee Logs (New Employer Update)",
+            commit=True,
+        )
+
+    report.logged_employees_for_new_employer += employee_logs_count
+    logger.info("Done - Check and log employees with new employers: %i", employee_logs_count)
+
+
+def import_wage_data(
+    db_session,
+    wage_info_list,
+    account_key_to_employer_id_map,
+    employee_ssns_to_id_created_in_current_import_run,
+    ssn_to_existing_employee_model,
+    report,
+    import_log_entry_id,
+):
     # 1 - Create new wage data
     # For employees just created in the current run, we can avoid checking for existing wage rows
     wage_info_list_for_creation = list(
@@ -1209,7 +1296,17 @@ def import_employees_and_wage_data(
     report,
     import_log_entry_id,
 ):
-    # 1 - Create existing employee reference maps
+    # 1 - Create account key to existing employer id reference map
+    account_key_to_employer_id_map = {}
+    account_keys = []
+    for employee_info in employee_and_wage_info_list:
+        account_keys.append(employee_info["account_key"])
+
+    employer_models = dor_persistence_util.get_employers_account_key(db_session, account_keys)
+    for employer in employer_models:
+        account_key_to_employer_id_map[employer.account_key] = employer.employer_id
+
+    # 2 - Create existing employee reference maps
     logger.info(
         "Create existing employee reference maps, checking lines: %i",
         len(employee_and_wage_info_list),
@@ -1237,7 +1334,7 @@ def import_employees_and_wage_data(
         len(existing_employee_models),
     )
 
-    # 2 - Import employees
+    # 3 - Import employees
     import_employees(
         db_session,
         employee_and_wage_info_list,
@@ -1247,10 +1344,21 @@ def import_employees_and_wage_data(
         import_log_entry_id,
     )
 
-    # 3 - Import wages
+    # 4 - Log new employers for existing employees
+    log_employees_with_new_employers(
+        db_session,
+        employee_and_wage_info_list,
+        account_key_to_employer_id_map,
+        ssn_to_existing_employee_model,
+        report,
+        import_log_entry_id,
+    )
+
+    # 5 - Import wages
     import_wage_data(
         db_session,
         employee_and_wage_info_list,
+        account_key_to_employer_id_map,
         employee_ssns_created_in_current_import_run,
         ssn_to_existing_employee_model,
         report,

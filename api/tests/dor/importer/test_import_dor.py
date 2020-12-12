@@ -12,7 +12,15 @@ import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_uti
 import massgov.pfml.dor.importer.paths
 import massgov.pfml.dor.mock.generate as generator
 import massgov.pfml.util.batch.log
-from massgov.pfml.db.models.employees import AddressType, Country, Employee, Employer, GeoState
+from massgov.pfml.db.models.employees import (
+    AddressType,
+    Country,
+    Employee,
+    EmployeeLog,
+    Employer,
+    GeoState,
+    WagesAndContributions,
+)
 from massgov.pfml.dor.importer.import_dor import (
     PROCESSED_FOLDER,
     RECEIVED_FOLDER,
@@ -261,6 +269,80 @@ def test_employer_address(test_db_session):
     assert persisted_address.country_id == Country.get_id(
         employer_international_address["employer_address_country"]
     )
+
+
+def test_log_employees_with_new_employers(test_db_session):
+
+    # Employee generate helper
+    def generate_employee_and_wage_item(id, employer):
+        employee = next(generator.generate_single_employee(id, [employer["account_key"]], [1]))
+        # convert quarter to date
+        employee["filing_period"] = employee["filing_period"].as_date()
+        return employee
+
+    # Create two employers
+    employer1, employer_wage_rows = generator.generate_single_employer(1)
+    employer2, employer_wage_rows = generator.generate_single_employer(2)
+    employers = [employer1, employer2]
+
+    report, report_log_entry = get_new_import_report(test_db_session)
+    import_dor.import_employers(test_db_session, employers, report, report_log_entry.import_log_id)
+
+    created_employers = test_db_session.query(Employer).all()
+    assert len(created_employers) == 2
+
+    # Create two employees
+    employee1 = generate_employee_and_wage_item(1, employer1)
+    employee2 = generate_employee_and_wage_item(2, employer2)
+
+    employee_ssns_to_id_created_in_current_import_run = {}
+
+    report1, report_log_entry1 = get_new_import_report(test_db_session)
+    import_dor.import_employees_and_wage_data(
+        test_db_session,
+        [employee1, employee2],
+        employee_ssns_to_id_created_in_current_import_run,
+        report1,
+        report_log_entry1.import_log_id,
+    )
+
+    assert report1.created_employees_count == 2
+    assert report1.logged_employees_for_new_employer == 0
+
+    created_employees = test_db_session.query(Employee).all()
+    assert len(created_employees) == 2
+
+    created_wages = test_db_session.query(WagesAndContributions).all()
+    assert len(created_wages) == 2
+
+    # Simulate a wage entry for an existing employee with a new employer
+    employee2_employer1 = generate_employee_and_wage_item(2, employer1)
+    employee2_employer1_second_entry = generate_employee_and_wage_item(2, employer1)
+    employee3 = generate_employee_and_wage_item(3, employer1)
+    employee_ssns_to_id_created_in_current_import_run = {}
+
+    report2, report_log_entry2 = get_new_import_report(test_db_session)
+    import_dor.import_employees_and_wage_data(
+        test_db_session,
+        [employee1, employee2, employee2_employer1, employee2_employer1_second_entry, employee3],
+        employee_ssns_to_id_created_in_current_import_run,
+        report2,
+        report_log_entry2.import_log_id,
+    )
+
+    assert report2.unmodified_employees_count == 2
+    assert report2.created_employees_count == 1
+    assert report2.logged_employees_for_new_employer == 1
+
+    created_employee_logs = (
+        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE_NEW_EMPLOYER").all()
+    )
+    assert len(created_employee_logs) == 1
+
+    expected_logged_employee = dor_persistence_util.get_employees_by_ssn(
+        test_db_session, [employee2_employer1["employee_ssn"]]
+    )[0]
+    assert created_employee_logs[0].employee_id == expected_logged_employee.employee_id
 
 
 def get_new_import_report(test_db_session):
