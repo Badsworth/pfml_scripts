@@ -128,6 +128,9 @@ dor-generate: ## Generate fake DOR data
 dor-generate-for-update: ## Generate fake update DOR data (mutation of subset of data from `make dor-generate`)
 	$(PY_RUN_CMD) dor-generate --folder dor_mock --count 1000 --update $(DECODE_LOG)
 
+fineos-daily-generate: ## Generate fake FINEOS employee extract
+	$(PY_RUN_CMD) fineos-daily-generate --folder fineos_daily_mock --count 1000 $(DECODE_LOG)
+
 dor-import: ## Run a DOR import using fake data (see dor-generate)
 	FOLDER_PATH=dor_mock $(PY_RUN_CMD) dor-import $(DECODE_LOG)
 
