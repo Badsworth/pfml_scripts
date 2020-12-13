@@ -53,7 +53,7 @@ def handler(
 
     if user is not None:
         logger.info(
-            "User already already exists", extra={**log_attributes, "user_id": user.user_id,},
+            "User already exists", extra={**log_attributes, "user_id": user.user_id,},
         )
         return event
 
