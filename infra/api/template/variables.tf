@@ -223,6 +223,12 @@ variable "fineos_eligibility_feed_output_directory_path" {
   default     = null
 }
 
+variable "fineos_import_employee_updates_input_directory_path" {
+  description = "Location of the FINEOS extract to process into our DB."
+  type        = string
+  default     = null
+}
+
 variable "fineos_aws_iam_role_arn" {
   description = "ARN for role in the FINEOS AWS account that must be used to access resources inside of it"
   type        = string

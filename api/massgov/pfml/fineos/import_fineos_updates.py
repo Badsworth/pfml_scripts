@@ -1,0 +1,260 @@
+import os
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, Optional
+
+import massgov
+import massgov.pfml.util.batch.log
+import massgov.pfml.util.files as file_utils
+import massgov.pfml.util.logging as logging
+from massgov.pfml import db
+from massgov.pfml.db.models.employees import (
+    Employee,
+    EmployeeLog,
+    EmployeeOccupation,
+    Employer,
+    LkGender,
+    LkMaritalStatus,
+    LkOccupation,
+    LkTitle,
+)
+from massgov.pfml.util.datetime import utcnow
+from massgov.pfml.util.logging import audit
+from massgov.pfml.verification.generate_verification_codes import CSVSourceWrapper
+
+logger = logging.get_logger(__name__)
+
+
+@dataclass
+class ImportFineosEmployeeUpdatesReport:
+    start: str = utcnow().isoformat()
+    total_employees_received_count: int = 0
+    updated_employees_count: int = 0
+    errored_employees_count: int = 0
+    errored_employee_occupation_count: int = 0
+    end: Optional[str] = None
+    process_duration_in_seconds: float = 0
+
+
+def handler():
+    """ECS handler function."""
+    audit.init_security_logging()
+    logging.init(__name__)
+
+    db_session_raw = db.init(sync_lookups=True)
+
+    folder_path = os.environ["FINEOS_FOLDER_PATH"]
+
+    logger.info("Starting import of employee updates from FINEOS.")
+
+    with db.session_scope(db_session_raw, close=True) as db_session:
+        report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
+            db_session, "FINEOS Employee Update", ""
+        )
+
+        report = process_fineos_updates(db_session, folder_path)
+
+        massgov.pfml.util.batch.log.update_log_entry(
+            db_session, report_log_entry, "success", report
+        )
+
+    logger.info(
+        "Finished importing employee updates from FINEOS.", extra={"report": asdict(report)}
+    )
+
+
+def process_fineos_updates(
+    db_session: db.Session, folder_path: str
+) -> ImportFineosEmployeeUpdatesReport:
+    start_time = utcnow()
+    report = ImportFineosEmployeeUpdatesReport(start=start_time.isoformat())
+
+    files_for_import = file_utils.list_files(str(folder_path))
+
+    # Assumption is one extract file daily. Once file is processed we move the
+    # file to another folder.
+    if len(files_for_import) == 0:
+        logger.info("No daily FINEOS employee update file found.")
+        end_time = utcnow()
+        report.end = end_time.isoformat()
+        return report
+
+    if len(files_for_import) > 1:
+        logger.error(
+            "More than one FINEOS employee update extract file found in S3 bucket folder. Expect only one daily."
+        )
+        return report
+
+    file = files_for_import[0]
+    logger.info(f"Processing daily FINEOS employee update extract with filename: {file}")
+
+    file_path = f"{folder_path}/{file}"
+    csv_input = CSVSourceWrapper(file_path)
+
+    try:
+        for row in csv_input:
+            report.total_employees_received_count += 1
+            process_csv_row(db_session, row, report)
+    except Exception as ex:
+        logger.error("Could not process a row in the FINEOS extract.", ex)
+
+    end_time = utcnow()
+    report.end = end_time.isoformat()
+    report.process_duration_in_seconds = (end_time - start_time).total_seconds()
+
+    return report
+
+
+def process_csv_row(
+    db_session: db.Session, row: Dict[Any, Any], report: ImportFineosEmployeeUpdatesReport
+) -> None:
+    employee_id = row.get("EMPLOYEEIDENTIFIER")
+    # lint made me do it!
+    emp_id = str(employee_id)
+
+    employee: Optional[Employee] = db_session.query(Employee).get(emp_id)
+
+    if employee is None:
+        logger.info(f"Employee not found in PFML DB for employee_id {emp_id}")
+        report.errored_employees_count += 1
+        # Without employee cannot create occupation.
+        report.errored_employee_occupation_count += 1
+        return
+
+    title = row.get("EMPLOYEETITLE")
+    title_id = (
+        db_session.query(LkTitle.title_id).filter(LkTitle.title_description == title).one_or_none()
+    )
+    if title_id is not None:
+        employee.title_id = title_id
+
+    date_of_birth = row.get("EMPLOYEEDATEOFBIRTH")
+    if date_of_birth is not None and date_of_birth != "":
+        employee.date_of_birth = date_of_birth
+
+    gender = row.get("EMPLOYEEGENDER")
+    gender_id = (
+        db_session.query(LkGender.gender_id)
+        .filter(LkGender.gender_description == gender)
+        .one_or_none()
+    )
+    if gender_id is not None:
+        employee.gender_id = gender_id
+
+    marital_status = row.get("EMPLOYEEMARITALStatus")
+    marital_status_id = (
+        db_session.query(LkMaritalStatus.marital_status_id)
+        .filter(LkMaritalStatus.marital_status_description == marital_status)
+        .one_or_none()
+    )
+    if marital_status_id is not None:
+        employee.marital_status_id = marital_status_id
+
+    phone_intl_code = row.get("TELEPHONEINTCODE")
+    phone_area_code = row.get("TELEPHONEAREACODE")
+    phone_nbr = row.get("TELEPHONENUMBER")
+
+    if phone_area_code is None:
+        employee.phone_number = f"+{phone_intl_code}{phone_nbr}"
+    else:
+        employee.phone_number = f"+{phone_intl_code}{phone_area_code}{phone_nbr}"
+
+    cell_intl_code = row.get("CELLINTCODE")
+    cell_area_code = row.get("CELLAREACODE")
+    cell_nbr = row.get("CELLNUMBER")
+
+    if cell_area_code is None:
+        employee.cell_phone_number = f"+{cell_intl_code}{cell_nbr}"
+    else:
+        employee.cell_phone_number = f"+{cell_intl_code}{cell_area_code}{cell_nbr}"
+
+    employee_email = row.get("EMPLOYEEEMAIL")
+    if employee_email is not None:
+        employee.email_address = employee_email
+
+    # Map to employee.occupation??
+    employee_classification = row.get("EMPLOYEECLASSIFICATION")
+    employee_classification_id = (
+        db_session.query(LkOccupation.occupation_id)
+        .filter(LkOccupation.occupation_description == employee_classification)
+        .one_or_none()
+    )
+    if employee_classification_id is not None:
+        employee.occupation_id = employee_classification_id
+
+    employer_fineos_id = row.get("ORG_CUSTOMERNO")
+    employer_id: Optional[str] = (
+        db_session.query(Employer.employer_id)
+        .filter(Employer.fineos_employer_id == employer_fineos_id)
+        .one_or_none()
+    )
+
+    if employer_id is None:
+        fineos_employer_name = row.get("ORG_NAME")
+        logger.info(f"Cannot create EmployerOccupation record for employee_id {emp_id}.")
+        logger.info(
+            f"Employer with FINEOS Customer Nbr {employer_fineos_id} and Org Name of {fineos_employer_name} not found."
+        )
+        report.errored_employee_occupation_count += 1
+        return
+
+    employee_occupation: Optional[EmployeeOccupation] = db_session.query(EmployeeOccupation).filter(
+        EmployeeOccupation.employee_id == emp_id, EmployeeOccupation.employer_id == employer_id,
+    ).one_or_none()
+
+    if employee_occupation is None:
+        employee_occupation = EmployeeOccupation()
+        employee_occupation.employee_id = emp_id
+        employee_occupation.employer_id = employer_id
+
+    job_title = row.get("EMPLOYEEJOBTITLE")
+    if job_title is not None:
+        employee_occupation.job_title = job_title
+
+    date_of_hire = row.get("EMPLOYEEDATEOFHIRE")
+    if date_of_hire is not None and date_of_hire != "":
+        employee_occupation.date_of_hire = date_of_hire
+
+    end_date = row.get("EMPLOYEEENDDATE")
+    if end_date is not None and end_date != "":
+        employee_occupation.date_job_ended = end_date
+
+    emp_status = row.get("EMPLOYMENTSTATUS")
+    if emp_status is not None:
+        employee_occupation.employment_status = emp_status
+
+    org_unit_name = row.get("EMPLOYEEORGUNITNAME")
+    if org_unit_name is not None:
+        employee_occupation.org_unit_name = org_unit_name
+
+    hours_per_week = row.get("EMPLOYEEHOURSWORKEDPERWEEK")
+    if hours_per_week is not None:
+        employee_occupation.hours_worked_per_week = hours_per_week
+
+    days_per_week = row.get("EMPLOYEEDAYSWORKEDPERWEEK")
+    if days_per_week is not None:
+        employee_occupation.days_worked_per_week = days_per_week
+
+    manager_id = row.get("MANAGERIDENTIFIER")
+    if manager_id is not None:
+        employee_occupation.manager_id = manager_id
+
+    worksite_id = row.get("EMPLOYEEWORKSITEID")
+    if worksite_id is not None:
+        employee_occupation.worksite_id = worksite_id
+
+    occupation_qualifier = row.get("QUALIFIERDESCRIPTION")
+    if occupation_qualifier is not None:
+        employee_occupation.occupation_qualifier = occupation_qualifier
+
+    with db_session.begin_nested():
+        db_session.add(employee)
+        db_session.add(employee_occupation)
+
+    # Remove row from EmployeeLog table due to update trigger.
+    # These updates should not be included in the Eligibility Feed
+    # on their own.
+    db_session.query(EmployeeLog).filter(
+        EmployeeLog.employee_id == employee.employee_id, EmployeeLog.action == "UPDATE"
+    ).delete(synchronize_session=False)
+
+    report.updated_employees_count += 1

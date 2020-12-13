@@ -79,6 +79,7 @@ load-employers-to-fineos = "massgov.pfml.fineos.employer_load:handler"
 fineos-eligibility-feed-export = "massgov.pfml.fineos.eligibility_feed_export.eligibility_export:main"
 bulk-user-import = "massgov.pfml.user_import.process_csv:process"
 fineos-daily-generate = "massgov.pfml.fineos.mock.generate:main"
+fineos-import-employee-updates = "massgov.pfml.fineos.import_fineos_updates:handler"
 
 [tool.black]
 line-length = 100

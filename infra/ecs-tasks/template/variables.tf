@@ -73,6 +73,12 @@ variable "fineos_eligibility_feed_output_directory_path" {
   default     = ""
 }
 
+variable "fineos_import_employee_updates_input_directory_path" {
+  description = "Location of the FINEOS extract to process into our DB."
+  type        = string
+  default     = null
+}
+
 variable "logging_level" {
   description = "Logging level override"
   type        = string

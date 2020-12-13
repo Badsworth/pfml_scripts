@@ -80,6 +80,20 @@ locals {
       containers_template = "dor_import_template.json"
     },
 
+    "fineos-import-employee-updates" = {
+      command             = ["fineos-import-employee-updates"]
+      task_role           = aws_iam_role.fineos_import_employee_updates_task_role.arn
+      cpu                 = "2048"
+      memory              = "9216"
+      containers_template = "fineos_import_employee_updates_template.json"
+      vars = {
+        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
+        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
+
+        input_directory_path = var.fineos_import_employee_updates_input_directory_path
+      }
+    },
+
     "register-leave-admins-with-fineos" = {
       command             = ["register-leave-admins-with-fineos"]
       containers_template = "register_leave_admins_with_fineos.json"

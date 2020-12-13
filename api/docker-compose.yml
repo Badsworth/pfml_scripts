@@ -64,6 +64,7 @@ services:
       - LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG
       - ENABLE_EMPLOYEE_ENDPOINTS=1
       - FOLDER_PATH=dor_mock
+      - FINEOS_FOLDER_PATH=fineos_mock
       # Enable this variable after initial full load
       # - ELIGIBILITY_FEED_MODE=updates
       # Enable this variable to configure /rmv-check
