@@ -1,3 +1,7 @@
+#
+# Financial eligibility - main algorithm.
+#
+
 from decimal import Decimal
 from typing import Optional
 
@@ -17,17 +21,6 @@ class EligibilityResponse(PydanticBaseModel):
     employer_average_weekly_wage: Optional[Decimal]
 
 
-def calculate_effective_date(leave_start_date, application_submitted_date):
-    return eligibility_date(leave_start_date, application_submitted_date)
-
-
-def get_financially_eligible(description):
-    if description == "Financially eligible":
-        return True
-
-    return False
-
-
 def compute_financial_eligibility(
     db_session,
     employee_id,
@@ -37,7 +30,7 @@ def compute_financial_eligibility(
     application_submitted_date,
     employment_status,
 ):
-    effective_date = calculate_effective_date(leave_start_date, application_submitted_date)
+    effective_date = eligibility_date(leave_start_date, application_submitted_date)
     state_metric_data = eligibility_util.fetch_state_metric(db_session, effective_date)
     state_average_weekly_wage = state_metric_data.average_weekly_wage
     unemployment_minimum = state_metric_data.unemployment_minimum_earnings
@@ -57,6 +50,7 @@ def compute_financial_eligibility(
     )
 
     # Check various financial eligibility thresholds, set the description accordingly
+    financially_eligible = False
     if not unemployment_min_met:
         description = "Claimant wages under minimum"
 
@@ -67,12 +61,15 @@ def compute_financial_eligibility(
         description = "Opt-in quarterly contributions not met"
 
     else:
+        financially_eligible = True
         description = "Financially eligible"
 
-    financially_eligible = get_financially_eligible(description)
-    employer_average_weekly_wage = round(
-        wage_calculator.get_employer_average_weekly_wage(employer_id), 2
-    )
+    try:
+        employer_average_weekly_wage = round(
+            wage_calculator.get_employer_average_weekly_wage(employer_id), 2
+        )
+    except KeyError:
+        employer_average_weekly_wage = 0
 
     return EligibilityResponse(
         financially_eligible=financially_eligible,
