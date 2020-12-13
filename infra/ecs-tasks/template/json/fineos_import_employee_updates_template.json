@@ -34,7 +34,7 @@
       { "name": "FINEOS_FOLDER_PATH", "value": "${input_directory_path}" }
     ],
     "secrets": [
-      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
+      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }
     ]
   }
 ]
