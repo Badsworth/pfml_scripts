@@ -111,6 +111,22 @@ jobs:
           git push -f origin HEAD
           echo "::set-output name=commit_hash::$commit_hash"
 
+  start-deployment-status:
+    name: Start deployment status
+    needs: update-the-deploy-branch
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_id: ${{ steps.create-deployment.outputs.deployment_id }}
+
+    steps:
+      - uses: chrnorm/deployment-action@releases/v1
+        name: Create GitHub deployment
+        id: create-deployment
+        with:
+          token: "${{ github.token }}"
+          target_url: "https://paidleave-api-${{ env[github.ref] || 'test' }}.mass.gov/api/docs"
+          environment: "${{ env[github.ref] || 'test' }}"
+
   api-build:
     name: Build docker image
     needs: update-the-deploy-branch
@@ -486,6 +502,30 @@ jobs:
           SVC_ID=$(echo $TF_OUTPUT | jq -r '.ecs_service_id.value')
           (aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID ||
            aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
+
+  update-deployment-status:
+    name: Update deployment status
+    needs: [start-deployment-status, api-release]
+    if: always() && needs.start-deployment-status.result == 'success'    
+
+    steps:
+      - name: Set deploy-state Value to true
+        run: |
+          if [$RESULT == 'success']
+          then
+            echo "deploy-state=success" >> $GITHUB_ENV
+          else
+            echo "deploy-state=failure" >> $GITHUB_ENV
+          fi
+        env:
+          RESULT: ${{ needs.api-release.result }}
+      
+      - uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: ${{ github.token }}
+          target_url: "https://paidleave-api-${{ env[github.ref] || 'test' }}.mass.gov/api/docs"
+          state: ${{ env.deploy-state }}
+          deployment_id: ${{ needs.start-deployment-status.outputs.deploy_id }}
 
   end-to-end:
     name: End-to-End Test Deployment
