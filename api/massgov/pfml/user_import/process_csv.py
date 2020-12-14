@@ -80,7 +80,7 @@ def process_by_email(
     for employer_to_register in input_data:
         if employer_to_register.get("fein"):
             fein = clean_fein(employer_to_register["fein"])
-            registered = create_or_update_user_record(
+            registered, reg_msg = create_or_update_user_record(
                 db_session=db_session,
                 fein=fein,
                 email=email,
@@ -93,10 +93,11 @@ def process_by_email(
                 processed += 1
             else:
                 logger.error(
-                    "Unable to complete registration for %s for employer %s in filename %s",
+                    "Unable to complete registration for %s for employer %s in filename %s: %s",
                     email,
                     mask_fein(fein),
                     filename,
+                    reg_msg,
                 )
     return processed
 
