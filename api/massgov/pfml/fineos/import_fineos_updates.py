@@ -120,141 +120,161 @@ def process_csv_row(
         report.errored_employee_occupation_count += 1
         return
 
-    title = row.get("EMPLOYEETITLE")
-    title_id = (
-        db_session.query(LkTitle.title_id).filter(LkTitle.title_description == title).one_or_none()
-    )
-    if title_id is not None:
-        employee.title_id = title_id
-
-    date_of_birth = row.get("EMPLOYEEDATEOFBIRTH")
-    if date_of_birth is not None and date_of_birth != "":
-        employee.date_of_birth = date_of_birth
-
-    gender = row.get("EMPLOYEEGENDER")
-    gender_id = (
-        db_session.query(LkGender.gender_id)
-        .filter(LkGender.gender_description == gender)
-        .one_or_none()
-    )
-    if gender_id is not None:
-        employee.gender_id = gender_id
-
-    marital_status = row.get("EMPLOYEEMARITALStatus")
-    marital_status_id = (
-        db_session.query(LkMaritalStatus.marital_status_id)
-        .filter(LkMaritalStatus.marital_status_description == marital_status)
-        .one_or_none()
-    )
-    if marital_status_id is not None:
-        employee.marital_status_id = marital_status_id
-
-    phone_intl_code = row.get("TELEPHONEINTCODE")
-    phone_area_code = row.get("TELEPHONEAREACODE")
-    phone_nbr = row.get("TELEPHONENUMBER")
-
-    if phone_area_code is None:
-        employee.phone_number = f"+{phone_intl_code}{phone_nbr}"
-    else:
-        employee.phone_number = f"+{phone_intl_code}{phone_area_code}{phone_nbr}"
-
-    cell_intl_code = row.get("CELLINTCODE")
-    cell_area_code = row.get("CELLAREACODE")
-    cell_nbr = row.get("CELLNUMBER")
-
-    if cell_area_code is None:
-        employee.cell_phone_number = f"+{cell_intl_code}{cell_nbr}"
-    else:
-        employee.cell_phone_number = f"+{cell_intl_code}{cell_area_code}{cell_nbr}"
-
-    employee_email = row.get("EMPLOYEEEMAIL")
-    if employee_email is not None:
-        employee.email_address = employee_email
-
-    # Map to employee.occupation??
-    employee_classification = row.get("EMPLOYEECLASSIFICATION")
-    employee_classification_id = (
-        db_session.query(LkOccupation.occupation_id)
-        .filter(LkOccupation.occupation_description == employee_classification)
-        .one_or_none()
-    )
-    if employee_classification_id is not None:
-        employee.occupation_id = employee_classification_id
-
-    employer_fineos_id = row.get("ORG_CUSTOMERNO")
-    employer_id: Optional[str] = (
-        db_session.query(Employer.employer_id)
-        .filter(Employer.fineos_employer_id == employer_fineos_id)
-        .one_or_none()
-    )
-
-    if employer_id is None:
-        fineos_employer_name = row.get("ORG_NAME")
-        logger.info(f"Cannot create EmployerOccupation record for employee_id {emp_id}.")
-        logger.info(
-            f"Employer with FINEOS Customer Nbr {employer_fineos_id} and Org Name of {fineos_employer_name} not found."
+    # no_autoflush here so we do not push changes to DB until we have collected
+    # them all and can commit them all at once
+    with db_session.no_autoflush:
+        title = row.get("EMPLOYEETITLE")
+        title_id = (
+            db_session.query(LkTitle.title_id)
+            .filter(LkTitle.title_description == title)
+            .one_or_none()
         )
-        report.errored_employee_occupation_count += 1
-        return
+        if title_id is not None:
+            employee.title_id = title_id
 
-    employee_occupation: Optional[EmployeeOccupation] = db_session.query(EmployeeOccupation).filter(
-        EmployeeOccupation.employee_id == emp_id, EmployeeOccupation.employer_id == employer_id,
-    ).one_or_none()
+        date_of_birth = row.get("EMPLOYEEDATEOFBIRTH")
+        if date_of_birth is not None and date_of_birth != "":
+            employee.date_of_birth = date_of_birth
 
-    if employee_occupation is None:
-        employee_occupation = EmployeeOccupation()
-        employee_occupation.employee_id = emp_id
-        employee_occupation.employer_id = employer_id
+        gender = row.get("EMPLOYEEGENDER")
+        gender_id = (
+            db_session.query(LkGender.gender_id)
+            .filter(LkGender.gender_description == gender)
+            .one_or_none()
+        )
+        if gender_id is not None:
+            employee.gender_id = gender_id
 
-    job_title = row.get("EMPLOYEEJOBTITLE")
-    if job_title is not None:
-        employee_occupation.job_title = job_title
+        marital_status = row.get("EMPLOYEEMARITALStatus")
+        marital_status_id = (
+            db_session.query(LkMaritalStatus.marital_status_id)
+            .filter(LkMaritalStatus.marital_status_description == marital_status)
+            .one_or_none()
+        )
+        if marital_status_id is not None:
+            employee.marital_status_id = marital_status_id
 
-    date_of_hire = row.get("EMPLOYEEDATEOFHIRE")
-    if date_of_hire is not None and date_of_hire != "":
-        employee_occupation.date_of_hire = date_of_hire
+        phone_intl_code = row.get("TELEPHONEINTCODE")
+        phone_area_code = row.get("TELEPHONEAREACODE")
+        phone_nbr = row.get("TELEPHONENUMBER")
 
-    end_date = row.get("EMPLOYEEENDDATE")
-    if end_date is not None and end_date != "":
-        employee_occupation.date_job_ended = end_date
+        if phone_area_code is None:
+            employee.phone_number = f"+{phone_intl_code}{phone_nbr}"
+        else:
+            employee.phone_number = f"+{phone_intl_code}{phone_area_code}{phone_nbr}"
 
-    emp_status = row.get("EMPLOYMENTSTATUS")
-    if emp_status is not None:
-        employee_occupation.employment_status = emp_status
+        cell_intl_code = row.get("CELLINTCODE")
+        cell_area_code = row.get("CELLAREACODE")
+        cell_nbr = row.get("CELLNUMBER")
 
-    org_unit_name = row.get("EMPLOYEEORGUNITNAME")
-    if org_unit_name is not None:
-        employee_occupation.org_unit_name = org_unit_name
+        if cell_area_code is None:
+            employee.cell_phone_number = f"+{cell_intl_code}{cell_nbr}"
+        else:
+            employee.cell_phone_number = f"+{cell_intl_code}{cell_area_code}{cell_nbr}"
 
-    hours_per_week = row.get("EMPLOYEEHOURSWORKEDPERWEEK")
-    if hours_per_week is not None:
-        employee_occupation.hours_worked_per_week = hours_per_week
+        employee_email = row.get("EMPLOYEEEMAIL")
+        if employee_email is not None:
+            employee.email_address = employee_email
 
-    days_per_week = row.get("EMPLOYEEDAYSWORKEDPERWEEK")
-    if days_per_week is not None:
-        employee_occupation.days_worked_per_week = days_per_week
+        # Map to employee.occupation??
+        employee_classification = row.get("EMPLOYEECLASSIFICATION")
+        employee_classification_id = (
+            db_session.query(LkOccupation.occupation_id)
+            .filter(LkOccupation.occupation_description == employee_classification)
+            .one_or_none()
+        )
+        if employee_classification_id is not None:
+            employee.occupation_id = employee_classification_id
 
-    manager_id = row.get("MANAGERIDENTIFIER")
-    if manager_id is not None:
-        employee_occupation.manager_id = manager_id
+        employer_fineos_id = row.get("ORG_CUSTOMERNO")
+        employer_id: Optional[str] = (
+            db_session.query(Employer.employer_id)
+            .filter(Employer.fineos_employer_id == employer_fineos_id)
+            .one_or_none()
+        )
 
-    worksite_id = row.get("EMPLOYEEWORKSITEID")
-    if worksite_id is not None:
-        employee_occupation.worksite_id = worksite_id
+        if employer_id is None:
+            fineos_employer_name = row.get("ORG_NAME")
+            logger.info(f"Cannot create EmployerOccupation record for employee_id {emp_id}.")
+            logger.info(
+                f"Employer with FINEOS Customer Nbr {employer_fineos_id} and Org Name of {fineos_employer_name} not found."
+            )
+            report.errored_employee_occupation_count += 1
+            return
 
-    occupation_qualifier = row.get("QUALIFIERDESCRIPTION")
-    if occupation_qualifier is not None:
-        employee_occupation.occupation_qualifier = occupation_qualifier
+        employee_occupation: Optional[EmployeeOccupation] = db_session.query(
+            EmployeeOccupation
+        ).filter(
+            EmployeeOccupation.employee_id == emp_id, EmployeeOccupation.employer_id == employer_id,
+        ).one_or_none()
 
-    with db_session.begin_nested():
-        db_session.add(employee)
-        db_session.add(employee_occupation)
+        if employee_occupation is None:
+            employee_occupation = EmployeeOccupation()
+            employee_occupation.employee_id = emp_id
+            employee_occupation.employer_id = employer_id
 
-    # Remove row from EmployeeLog table due to update trigger.
+            db_session.add(employee_occupation)
+
+        job_title = row.get("EMPLOYEEJOBTITLE")
+        if job_title is not None:
+            employee_occupation.job_title = job_title
+
+        date_of_hire = row.get("EMPLOYEEDATEOFHIRE")
+        if date_of_hire is not None and date_of_hire != "":
+            employee_occupation.date_of_hire = date_of_hire
+
+        end_date = row.get("EMPLOYEEENDDATE")
+        if end_date is not None and end_date != "":
+            employee_occupation.date_job_ended = end_date
+
+        emp_status = row.get("EMPLOYMENTSTATUS")
+        if emp_status is not None:
+            employee_occupation.employment_status = emp_status
+
+        org_unit_name = row.get("EMPLOYEEORGUNITNAME")
+        if org_unit_name is not None:
+            employee_occupation.org_unit_name = org_unit_name
+
+        hours_per_week = row.get("EMPLOYEEHOURSWORKEDPERWEEK")
+        if hours_per_week is not None:
+            employee_occupation.hours_worked_per_week = hours_per_week
+
+        days_per_week = row.get("EMPLOYEEDAYSWORKEDPERWEEK")
+        if days_per_week is not None:
+            employee_occupation.days_worked_per_week = days_per_week
+
+        manager_id = row.get("MANAGERIDENTIFIER")
+        if manager_id is not None:
+            employee_occupation.manager_id = manager_id
+
+        worksite_id = row.get("EMPLOYEEWORKSITEID")
+        if worksite_id is not None:
+            employee_occupation.worksite_id = worksite_id
+
+        occupation_qualifier = row.get("QUALIFIERDESCRIPTION")
+        if occupation_qualifier is not None:
+            employee_occupation.occupation_qualifier = occupation_qualifier
+
+        is_employee_modified = db_session.is_modified(employee)
+
+        db_session.commit()
+
+    # Remove row from EmployeeLog table due to update trigger if there were
+    # changes to the Employee committed.
+    #
     # These updates should not be included in the Eligibility Feed
     # on their own.
-    db_session.query(EmployeeLog).filter(
-        EmployeeLog.employee_id == employee.employee_id, EmployeeLog.action == "UPDATE"
-    ).delete(synchronize_session=False)
+    if is_employee_modified:
+        db_session.query(EmployeeLog).filter(
+            EmployeeLog.employee_log_id
+            == (
+                db_session.query(EmployeeLog.employee_log_id)
+                .filter(
+                    EmployeeLog.employee_id == employee.employee_id, EmployeeLog.action == "UPDATE",
+                )
+                .order_by(EmployeeLog.modified_at.desc())
+                .limit(1)
+            )
+        ).delete(synchronize_session=False)
 
     report.updated_employees_count += 1

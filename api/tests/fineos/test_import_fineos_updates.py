@@ -32,6 +32,8 @@ def test_fineos_updates_happy_path(
         employer_name="Test Company",
     )
 
+    employee_log_rows_before = test_db_session.query(EmployeeLog).all()
+
     report = fineos_updates.process_fineos_updates(test_db_session, emp_updates_path)
 
     updated_employee_one = (
@@ -85,12 +87,10 @@ def test_fineos_updates_happy_path(
     assert report.errored_employee_occupation_count == 0
     assert report.total_employees_received_count == 2
 
-    # Confirm EmployeeLog table is empty.
-    employee_log_rows = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE").all()
-    )
+    # Confirm EmployeeLog did not pickup an additional entry from the process
+    employee_log_rows_after = test_db_session.query(EmployeeLog).all()
 
-    assert len(employee_log_rows) == 0
+    assert len(employee_log_rows_after) == len(employee_log_rows_before)
 
 
 def test_fineos_updates_no_employer(
@@ -137,6 +137,8 @@ def test_fineos_updates_missing_employee(
         employer_name="Test Company",
     )
 
+    employee_log_rows_before = test_db_session.query(EmployeeLog).all()
+
     report = fineos_updates.process_fineos_updates(test_db_session, emp_updates_path)
 
     updated_employee = (
@@ -165,9 +167,7 @@ def test_fineos_updates_missing_employee(
     assert report.errored_employee_occupation_count == 1
     assert report.total_employees_received_count == 2
 
-    # Confirm EmployeeLog table is empty.
-    employee_log_rows = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE").all()
-    )
+    # Confirm EmployeeLog did not pickup an additional entry from the process
+    employee_log_rows_after = test_db_session.query(EmployeeLog).all()
 
-    assert len(employee_log_rows) == 0
+    assert len(employee_log_rows_after) == len(employee_log_rows_before)
