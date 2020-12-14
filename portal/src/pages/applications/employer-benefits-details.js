@@ -2,7 +2,7 @@ import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
-import { cloneDeep, get, isFinite, pick } from "lodash";
+import { cloneDeep, get, isFinite, isNil, pick } from "lodash";
 import Claim from "../../models/Claim";
 import Dropdown from "../../components/Dropdown";
 import Fieldset from "../../components/Fieldset";
@@ -44,7 +44,7 @@ export const EmployerBenefitDetails = (props) => {
     patchData.employer_benefits = patchData.employer_benefits.map((benefit) => {
       const val = benefit.benefit_amount_dollars;
       const number =
-        isFinite(val) || val === null ? val : Number(val.replace(/,/g, ""));
+        isFinite(val) || isNil(val) ? val : Number(val.replace(/,/g, ""));
       return { ...benefit, benefit_amount_dollars: number };
     });
     await appLogic.claims.update(claim.application_id, patchData);

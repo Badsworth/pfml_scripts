@@ -2,7 +2,7 @@ import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../models/OtherIncome";
-import { cloneDeep, get, isFinite, pick } from "lodash";
+import { cloneDeep, get, isFinite, isNil, pick } from "lodash";
 import Claim from "../../models/Claim";
 import Dropdown from "../../components/Dropdown";
 import Fieldset from "../../components/Fieldset";
@@ -44,7 +44,7 @@ export const OtherIncomesDetails = (props) => {
     patchData.other_incomes = patchData.other_incomes.map((income) => {
       const val = income.income_amount_dollars;
       const number =
-        isFinite(val) || val === null ? val : Number(val.replace(/,/g, ""));
+        isFinite(val) || isNil(val) ? val : Number(val.replace(/,/g, ""));
       return { ...income, income_amount_dollars: number };
     });
     await appLogic.claims.update(claim.application_id, patchData);
