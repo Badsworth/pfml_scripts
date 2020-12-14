@@ -25,7 +25,7 @@ export default class TestMailNotificationFetcher {
     };
 
     if (notificationType in notificationSubjects) {
-      const subject = notificationSubjects[notificationType];
+      const subject = "*" + notificationSubjects[notificationType];
       console.log(`SUBJECT: ${subject}`);
       const emails = await this.client.getEmailsBySubject(
         recipientEmail,

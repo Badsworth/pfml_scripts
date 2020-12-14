@@ -103,7 +103,7 @@ const getEmailsBySubjectQuery = gql`
       tag: $tag
       livequery: true
       advanced_filters: [
-        { field: subject, match: exact, action: include, value: $subject }
+        { field: subject, match: wildcard, action: include, value: $subject }
       ]
     ) {
       result
