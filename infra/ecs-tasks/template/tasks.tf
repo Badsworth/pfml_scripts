@@ -96,6 +96,9 @@ locals {
 
     "register-leave-admins-with-fineos" = {
       command             = ["register-leave-admins-with-fineos"]
+      task_role           = aws_iam_role.register_admins_task_role.arn,
+      cpu                 = "4096",
+      memory              = "18432",
       containers_template = "register_leave_admins_with_fineos.json"
       vars = {
         fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url

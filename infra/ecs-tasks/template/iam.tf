@@ -234,6 +234,80 @@ resource "aws_iam_role_policy_attachment" "task_execute_sql_s3_attachment" {
 }
 
 # ------------------------------------------------------------------------------------------------------
+# Register Leave Admins with FINEOS
+# ------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "register_admins_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-register-admins-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "register_admins_task_role_policy_attachment" {
+  role       = aws_iam_role.register_admins_task_role.name
+  policy_arn = aws_iam_policy.register_admins_task_policy.arn
+}
+
+resource "aws_iam_policy" "register_admins_task_policy" {
+  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-register-admins-task-policy"
+  description = "A clone of the standard task role with extra SSM permissions for FINEOS auth keys."
+  policy      = data.aws_iam_policy_document.register_admins_task_role_policy_document.json
+}
+
+data "aws_iam_policy_document" "register_admins_task_role_policy_document" {
+  # Allow ECS to log to Cloudwatch.
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+
+    resources = [
+      "${aws_cloudwatch_log_group.ecs_tasks.arn}:*"
+    ]
+  }
+
+  # Allow ECS to authenticate with ECR and download images.
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+
+    # ECS Fargate doesn't like it when you restrict the access to a single
+    # repository. Instead, it needs access to all of them.
+    resources = [
+      "*"
+    ]
+  }
+
+  # Allow ECS to access secrets from parameter store.
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ssm:GetParametersByPath",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+    ]
+  }
+}
+
+
+# ------------------------------------------------------------------------------------------------------
 # DOR Import task stuff
 # ------------------------------------------------------------------------------------------------------
 
