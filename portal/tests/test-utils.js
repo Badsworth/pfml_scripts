@@ -160,7 +160,7 @@ export class BaseMockClaimBuilder {
         income_type: OtherIncomeType.otherEmployer,
       }),
     ]);
-    set(this.claimAttrs, "temp.has_other_incomes", true);
+    set(this.claimAttrs, "has_other_incomes", true);
     set(this.claimAttrs, "other_incomes_awaiting_approval", false);
     return this;
   }
@@ -168,7 +168,7 @@ export class BaseMockClaimBuilder {
   previousLeavePregnancyFromOtherEmployer() {
     set(this.claimAttrs, "previous_leaves", [
       new PreviousLeave({
-        id: 1,
+        previous_leave_id: 1,
         is_for_current_employer: false,
         leave_end_date: "2020-02-01",
         leave_reason: PreviousLeaveReason.pregnancy,
@@ -181,7 +181,7 @@ export class BaseMockClaimBuilder {
   previousLeaveMedicalFromCurrentEmployer() {
     set(this.claimAttrs, "previous_leaves", [
       new PreviousLeave({
-        id: 1,
+        previous_leave_id: 1,
         is_for_current_employer: true,
         leave_end_date: "2020-02-01",
         leave_reason: PreviousLeaveReason.medical,
@@ -204,7 +204,7 @@ export class BaseMockClaimBuilder {
               benefit_end_date: "2021-02-01",
               benefit_start_date: "2021-01-01",
               benefit_type: EmployerBenefitType.familyOrMedicalLeave,
-              id: 1,
+              employer_benefit_id: 1,
             }),
           ]
     );
@@ -449,8 +449,8 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
    * @returns {MockClaimBuilder}
    */
   noOtherLeave() {
-    set(this.claimAttrs, "temp.has_employer_benefits", false);
-    set(this.claimAttrs, "temp.has_other_incomes", false);
+    set(this.claimAttrs, "has_employer_benefits", false);
+    set(this.claimAttrs, "has_other_incomes", false);
     set(this.claimAttrs, "temp.has_previous_leaves", false);
     return this;
   }

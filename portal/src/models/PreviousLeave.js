@@ -7,11 +7,12 @@ import BaseModel from "./BaseModel";
 class PreviousLeave extends BaseModel {
   get defaults() {
     return {
-      id: null,
       is_for_current_employer: null,
       leave_end_date: null,
       leave_reason: null, // PreviousLeaveReason
       leave_start_date: null,
+      // this ID field is currently only used by the /applications API in the Claimant portal.
+      previous_leave_id: null,
     };
   }
 }

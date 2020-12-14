@@ -67,10 +67,12 @@ export const Review = (props) => {
 
   useEffect(() => {
     const indexedEmployerBenefits = claim.employer_benefits.map(
-      (benefit, index) => new EmployerBenefit({ id: index, ...benefit })
+      (benefit, index) =>
+        new EmployerBenefit({ employer_benefit_id: index, ...benefit })
     );
     const indexedPreviousLeaves = claim.previous_leaves.map(
-      (leave, index) => new PreviousLeave({ id: index, ...leave })
+      (leave, index) =>
+        new PreviousLeave({ previous_leave_id: index, ...leave })
     );
     if (claim) {
       updateFields({

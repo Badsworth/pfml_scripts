@@ -3,7 +3,7 @@ import EmployerBenefit, {
 } from "../../../src/models/EmployerBenefit";
 import EmployerBenefitDetails, {
   EmployerBenefitCard,
-} from "../../../src/pages/applications/employer-benefit-details";
+} from "../../../src/pages/applications/employer-benefits-details";
 import {
   MockClaimBuilder,
   renderWithAppLogic,

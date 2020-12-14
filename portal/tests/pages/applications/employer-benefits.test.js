@@ -27,7 +27,7 @@ describe("EmployerBenefits", () => {
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         claim.application_id,
         {
-          temp: { has_employer_benefits: claim.temp.has_employer_benefits },
+          has_employer_benefits: claim.has_employer_benefits,
         }
       );
     });

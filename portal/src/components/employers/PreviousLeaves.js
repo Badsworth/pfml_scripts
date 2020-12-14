@@ -115,7 +115,7 @@ const PreviousLeaves = (props) => {
                 return (
                   <AmendablePreviousLeave
                     leavePeriod={leavePeriod}
-                    key={leavePeriod.id}
+                    key={leavePeriod.previous_leave_id}
                     onChange={onChange}
                   />
                 );

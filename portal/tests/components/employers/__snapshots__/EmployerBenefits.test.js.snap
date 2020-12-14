@@ -60,7 +60,7 @@ exports[`EmployerBenefits renders the component 1`] = `
             "benefit_end_date": "2021-03-01",
             "benefit_start_date": "2021-02-01",
             "benefit_type": "Short-term disability insurance",
-            "id": null,
+            "employer_benefit_id": null,
           }
         }
         key="null"

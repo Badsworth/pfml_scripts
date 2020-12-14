@@ -11,7 +11,7 @@ describe("AmendablePreviousLeave", () => {
   const leavePeriod = new PreviousLeave({
     leave_start_date: "2020-03-01",
     leave_end_date: "2020-03-06",
-    id: 1,
+    previous_leave_id: 1,
   });
   const props = {
     onChange: jest.fn(),

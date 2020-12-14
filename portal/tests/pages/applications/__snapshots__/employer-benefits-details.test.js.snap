@@ -148,7 +148,7 @@ exports[`EmployerBenefitDetails when the user's claim has employer benefits rend
           "benefit_end_date": "2021-02-01",
           "benefit_start_date": "2021-01-01",
           "benefit_type": "Family or medical leave insurance",
-          "id": 1,
+          "employer_benefit_id": 1,
         },
       ]
     }

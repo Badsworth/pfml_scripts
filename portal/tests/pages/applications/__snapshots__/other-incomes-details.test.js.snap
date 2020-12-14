@@ -159,6 +159,7 @@ exports[`OtherIncomesDetails when the user's claim has other income sources rend
           "income_end_date": "2021-01-01",
           "income_start_date": "2021-01-30",
           "income_type": "Earnings from another employment/self-employment",
+          "other_income_id": null,
         },
       ]
     }

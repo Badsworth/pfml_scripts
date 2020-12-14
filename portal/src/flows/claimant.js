@@ -16,7 +16,7 @@ import { ClaimSteps } from "../models/Step";
 import { fields as addressFields } from "../pages/applications/address";
 import { fields as dateOfBirthFields } from "../pages/applications/date-of-birth";
 import { fields as dateOfChildFields } from "../pages/applications/date-of-child";
-import { fields as employerBenefitDetailsFields } from "../pages/applications/employer-benefit-details";
+import { fields as employerBenefitsDetailsFields } from "../pages/applications/employer-benefits-details";
 import { fields as employerBenefitsFields } from "../pages/applications/employer-benefits";
 import { fields as employmentStatusFields } from "../pages/applications/employment-status";
 import { get } from "lodash";
@@ -53,12 +53,12 @@ export const guards = {
     get(claim, "employment_status") === EmploymentStatus.employed,
   isCompleted: ({ claim }) => claim.isCompleted,
   hasStateId: ({ claim }) => claim.has_state_id === true,
-  hasEmployerBenefits: ({ claim }) => claim.temp.has_employer_benefits === true,
+  hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
   hasIntermittentLeavePeriods: ({ claim }) =>
     claim.has_intermittent_leave_periods === true,
   hasReducedScheduleLeavePeriods: ({ claim }) =>
     claim.has_reduced_schedule_leave_periods === true,
-  hasOtherIncomes: ({ claim }) => claim.temp.has_other_incomes === true,
+  hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
   hasPreviousLeaves: ({ claim }) => claim.temp.has_previous_leaves === true,
   // TODO (CP-1247): Show previous leaves related questions
   showPreviousLeaves: () => isFeatureEnabled("claimantShowPreviousLeaves"),
@@ -339,7 +339,7 @@ export default {
       on: {
         CONTINUE: [
           {
-            target: routes.applications.employerBenefitDetails,
+            target: routes.applications.employerBenefitsDetails,
             cond: "hasEmployerBenefits",
           },
           {
@@ -348,10 +348,10 @@ export default {
         ],
       },
     },
-    [routes.applications.employerBenefitDetails]: {
+    [routes.applications.employerBenefitsDetails]: {
       meta: {
         step: ClaimSteps.otherLeave,
-        fields: employerBenefitDetailsFields,
+        fields: employerBenefitsDetailsFields,
       },
       on: {
         CONTINUE: routes.applications.otherIncomes,
