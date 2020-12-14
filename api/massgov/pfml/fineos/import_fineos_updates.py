@@ -1,8 +1,11 @@
-import os
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
 
+import boto3
+from pydantic import BaseSettings, Field
+
 import massgov
+import massgov.pfml.util.aws.sts as aws_sts
 import massgov.pfml.util.batch.log
 import massgov.pfml.util.files as file_utils
 import massgov.pfml.util.logging as logging
@@ -18,10 +21,16 @@ from massgov.pfml.db.models.employees import (
     LkTitle,
 )
 from massgov.pfml.util.datetime import utcnow
-from massgov.pfml.util.logging import audit
+from massgov.pfml.util.logging import audit, log_every
 from massgov.pfml.verification.generate_verification_codes import CSVSourceWrapper
 
 logger = logging.get_logger(__name__)
+
+
+class ImportFineosEmployeeUpdatesConfig(BaseSettings):
+    fineos_folder_path: str = Field(..., min_length=1)
+    fineos_aws_iam_role_arn: str = Field(..., min_length=1)
+    fineos_aws_iam_role_external_id: str = Field(..., min_length=1)
 
 
 @dataclass
@@ -40,18 +49,26 @@ def handler():
     audit.init_security_logging()
     logging.init(__name__)
 
+    logger.info("Starting import of employee updates from FINEOS.")
+
     db_session_raw = db.init(sync_lookups=True)
 
-    folder_path = os.environ["FINEOS_FOLDER_PATH"]
+    config = ImportFineosEmployeeUpdatesConfig()
 
-    logger.info("Starting import of employee updates from FINEOS.")
+    if config.fineos_folder_path.startswith("s3://fin-som"):
+        fineos_boto_session = aws_sts.assume_session(
+            role_arn=config.fineos_aws_iam_role_arn,
+            external_id=config.fineos_aws_iam_role_external_id,
+            role_session_name="import_fineos_updates",
+            region_name="us-east-1",
+        )
 
     with db.session_scope(db_session_raw, close=True) as db_session:
         report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
             db_session, "FINEOS Employee Update", ""
         )
 
-        report = process_fineos_updates(db_session, folder_path)
+        report = process_fineos_updates(db_session, config.fineos_folder_path, fineos_boto_session)
 
         massgov.pfml.util.batch.log.update_log_entry(
             db_session, report_log_entry, "success", report
@@ -63,12 +80,12 @@ def handler():
 
 
 def process_fineos_updates(
-    db_session: db.Session, folder_path: str
+    db_session: db.Session, folder_path: str, boto_session: Optional[boto3.Session] = None
 ) -> ImportFineosEmployeeUpdatesReport:
     start_time = utcnow()
     report = ImportFineosEmployeeUpdatesReport(start=start_time.isoformat())
 
-    files_for_import = file_utils.list_files(str(folder_path))
+    files_for_import = file_utils.list_files(str(folder_path), boto_session=boto_session)
 
     # Assumption is one extract file daily. Once file is processed we move the
     # file to another folder.
@@ -88,10 +105,10 @@ def process_fineos_updates(
     logger.info(f"Processing daily FINEOS employee update extract with filename: {file}")
 
     file_path = f"{folder_path}/{file}"
-    csv_input = CSVSourceWrapper(file_path)
+    csv_input = CSVSourceWrapper(file_path, transport_params={"session": boto_session})
 
     try:
-        for row in csv_input:
+        for row in log_every(logger, csv_input, count=10, item_name="CSV row"):
             report.total_employees_received_count += 1
             process_csv_row(db_session, row, report)
     except Exception as ex:

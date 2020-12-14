@@ -4,6 +4,7 @@
 
 import os
 import shutil
+from typing import List, Optional
 from urllib.parse import urlparse
 
 import boto3
@@ -39,7 +40,9 @@ def split_s3_url(path):
     return (bucket_name, prefix)
 
 
-def list_files(path, delimiter=""):
+def list_files(
+    path: str, delimiter: str = "", boto_session: Optional[boto3.Session] = None
+) -> List[str]:
     if is_s3_path(path):
         bucket_name, prefix = split_s3_url(path)
         files = []
@@ -49,7 +52,7 @@ def list_files(path, delimiter=""):
         # for key, _content in smart_open.s3_iter_bucket(bucket_name, prefix=prefix, workers=1):
         #     files.append(get_file_name(key))
 
-        s3 = boto3.client("s3")
+        s3 = boto_session.client("s3") if boto_session else boto3.client("s3")
         for object in s3.list_objects(Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter)[
             "Contents"
         ]:

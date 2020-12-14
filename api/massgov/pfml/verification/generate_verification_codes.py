@@ -9,6 +9,7 @@ import csv
 import datetime
 import random
 import string
+from typing import Any, Dict, Generator, Optional
 
 import smart_open
 
@@ -24,11 +25,14 @@ DEFAULT_VALID_DAYS = 90
 class CSVSourceWrapper:
     """ Simple wrapper for reading dicts out of CSV files """
 
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, transport_params: Optional[Dict[str, Any]] = None):
         self._file_path = file_path
+        self._transport_params = transport_params
 
-    def __iter__(self):
-        with smart_open.open(self._file_path, "r") as csvfile:
+    def __iter__(self) -> Generator[Dict[Any, Any], Any, Any]:
+        with smart_open.open(
+            self._file_path, "r", transport_params=self._transport_params
+        ) as csvfile:
             dict_reader = csv.DictReader(csvfile, delimiter=",")
             for row in dict_reader:
                 yield row
