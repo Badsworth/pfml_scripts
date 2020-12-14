@@ -66,6 +66,7 @@ export const Review = (props) => {
     formState.employeeNotice === "No";
 
   useEffect(() => {
+    // Generate id based on index for employer benefit, previous leave (id is not provided by BE)
     const indexedEmployerBenefits = claim.employer_benefits.map(
       (benefit, index) =>
         new EmployerBenefit({ employer_benefit_id: index, ...benefit })

@@ -1,4 +1,5 @@
 import EmployerBenefit from "../models/EmployerBenefit";
+import PreviousLeave from "../models/PreviousLeave";
 import _ from "lodash";
 
 /**
@@ -10,19 +11,27 @@ import _ from "lodash";
  */
 const updateAmendment = (amendments, updatedValue) => {
   return amendments.map((amendment) => {
-    const idKey =
-      amendment instanceof EmployerBenefit
-        ? "employer_benefit_id"
-        : "previous_leave_id";
-    const amendmentId = _.get(amendment, idKey);
-    const updatedValueId = _.get(updatedValue, idKey);
+    const idKey = getIdKey(amendment);
 
-    if (amendmentId === updatedValueId) {
-      return _.merge(_.clone(amendment), updatedValue);
+    if (idKey) {
+      const amendmentId = _.get(amendment, idKey);
+      const updatedValueId = _.get(updatedValue, idKey);
+
+      if (amendmentId === updatedValueId) {
+        return _.merge(_.clone(amendment), updatedValue);
+      }
     }
 
     return amendment;
   });
+};
+
+const getIdKey = (amendment) => {
+  if (amendment instanceof EmployerBenefit) {
+    return "employer_benefit_id";
+  } else if (amendment instanceof PreviousLeave) {
+    return "previous_leave_id";
+  }
 };
 
 export default updateAmendment;
