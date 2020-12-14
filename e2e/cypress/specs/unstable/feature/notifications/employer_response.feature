@@ -3,6 +3,8 @@ Feature: Mark evidence received on a claim in FINEOS and employer responds by de
   @portal
   Scenario: As a claimant, I should be able to submit a claim (BHAP1) through the portal
     Given I begin to submit a "BHAP1" claim as a "financially eligible" employee
+    When I am the "existing" claimant visiting the portal
+    Then I continue creating the claim
     When I click on the checklist button called "Verify your identity"
     Then I have my identity verified "normal"
     Given I am on the claims "checklist" page
