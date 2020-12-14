@@ -37,8 +37,38 @@ env:
   refs/heads/deploy/portal/training: training
 
 jobs:
+  prod-check:
+    # run if environment is production
+    runs-on: ubuntu-latest
+    steps:
+      - name: check users
+        if: contains(github.ref, 'deploy/portal/prod')
+        id: get_teams
+        env:
+          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+        uses: octokit/graphql-action@v2.x
+        with:
+          query: |
+            query {
+              organization(login:"EOLWD"){
+                team(slug:"pfml-devops"){
+                  members(membership: ALL, query:"${{ github.actor }}"){
+                    nodes {
+                      login
+                    }
+                  }
+                }
+              }
+            }
+
+      - name: fail if not a member
+        if: contains(github.ref, 'deploy/portal/prod') && contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
+        run: |
+          echo "Not part of pfml-devops, cancelling workflow"
+          exit 1
   update-the-deploy-branch:
     name: Update archival branch
+    needs: prod-check
     runs-on: ubuntu-latest
 
     outputs:
