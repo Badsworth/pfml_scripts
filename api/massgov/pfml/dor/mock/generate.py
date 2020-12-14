@@ -31,6 +31,14 @@ SIMULATED_TODAY = datetime(2020, 12, 1, 23, 0, 0)
 
 TWOPLACES = decimal.Decimal(10) ** -2
 
+
+def fein_or_ssn(arg):
+    value = int(arg)
+    if value < 100000000:
+        raise argparse.ArgumentTypeError("must be at least 100000000")
+    return value
+
+
 parser = argparse.ArgumentParser(description="Generate fake DOR data")
 parser.add_argument(
     "--count", type=int, default=100, help="Number of employers to generate data for"
@@ -38,8 +46,9 @@ parser.add_argument(
 parser.add_argument(
     "--folder", type=str, default="generated_files", help="Output folder for generated files"
 )
-
 parser.add_argument("--update", action="store_true", help="Generate daily update files")
+parser.add_argument("--fein", type=fein_or_ssn, default=100000000, help="Base FEIN for employers")
+parser.add_argument("--ssn", type=fein_or_ssn, default=250000000, help="Base SSN for employees")
 
 WAGE_CHANGE_RANDOM_POOL = (0, 0, 0, 0, 1000, 2500, 4400, 7800, -1200, -3500)
 
@@ -92,13 +101,22 @@ def main():
     if not output_folder.startswith("s3:"):
         os.makedirs(output_folder, exist_ok=True)
 
+    logger.info(
+        "args: count %i, fein base %s %s, ssn base %s %s",
+        args.count,
+        str(args.fein)[:2],
+        str(args.fein)[2:],
+        str(args.ssn)[:3],
+        str(args.ssn)[3:],
+    )
+
     employer_path = "{}/{}".format(output_folder, employer_file_name)
     employee_path = "{}/{}".format(output_folder, employee_file_name)
 
     employer_file = massgov.pfml.util.files.open_stream(employer_path, "w")
     employee_file = massgov.pfml.util.files.open_stream(employee_path, "w")
 
-    generate(employer_count, employer_file, employee_file, update_mode)
+    generate(employer_count, employer_file, employee_file, update_mode, args.fein, args.ssn)
 
     employer_file.close()
     employee_file.close()
@@ -111,7 +129,14 @@ def main():
 # == main processor ==
 
 
-def generate(employer_count, employer_file, employee_file, update_mode=False):
+def generate(
+    employer_count,
+    employer_file,
+    employee_file,
+    update_mode=False,
+    fein_base=100000000,
+    ssn_base=250000000,
+):
     if employer_count <= 0 or employer_count % 100 != 0:
         raise RuntimeError("employer_count must be a multiple of 100")
 
@@ -124,7 +149,7 @@ def generate(employer_count, employer_file, employee_file, update_mode=False):
     employee_generate_id = 1
     for chunk in range(0, employer_count, 100):
         # Generate employers
-        employers = tuple(generate_employers(chunk + 1, 100, update_mode))
+        employers = tuple(generate_employers(chunk + 1, 100, update_mode, fein_base))
 
         total_employees = sum(employer["number_of_employees"] for employer in employers)
 
@@ -143,7 +168,7 @@ def generate(employer_count, employer_file, employee_file, update_mode=False):
         employee_wage_rows: List[Dict[str, Any]] = []
         for employee_id, employers_for_employee in employee_employers.items():
             employee_wage_rows += tuple(
-                generate_single_employee(employee_id, employers_for_employee, update_mode)
+                generate_single_employee(employee_id, employers_for_employee, update_mode, ssn_base)
             )
 
         logger.info(
@@ -204,13 +229,13 @@ def write_employer_wage_row(employer_wage_row, employer_wage_row_file):
     employer_wage_row_file.write(line)
 
 
-def generate_employers(base_id, employer_count, update_mode=False):
+def generate_employers(base_id, employer_count, update_mode=False, fein_base=100000000):
     """Generate employer rows"""
     for index in range(employer_count):
-        yield generate_single_employer(base_id + index, update_mode)
+        yield generate_single_employer(base_id + index, update_mode, fein_base)
 
 
-def generate_single_employer(employer_generate_id, update_mode=False):
+def generate_single_employer(employer_generate_id, update_mode=False, fein_base=100000000):
     """Generate a single employer.
 
     This is intended to always generate the same fake values for a given employer_generate_id.
@@ -219,8 +244,8 @@ def generate_single_employer(employer_generate_id, update_mode=False):
     random.seed(employer_generate_id)
 
     # employer details
-    account_key = str(employer_generate_id).rjust(11, "0")
-    fein = str(100000000 + employer_generate_id)
+    fein = str(fein_base + employer_generate_id)
+    account_key = fein.rjust(11, "4")
 
     # occasionally generates a duplicate, but that's realistic as it happens in the real data
     employer_name = fake.company()
@@ -357,7 +382,9 @@ def write_employee_line(employee_wage_info, employees_file):
     employees_file.write(line)
 
 
-def generate_single_employee(employee_generate_id, employers, update_mode=False):
+def generate_single_employee(
+    employee_generate_id, employers, update_mode=False, ssn_base=250000000
+):
     """Generate a single employee.
 
     This is intended to always generate the same fake values for a given employee_generate_id.
@@ -365,7 +392,7 @@ def generate_single_employee(employee_generate_id, employers, update_mode=False)
     fake.seed_instance(employee_generate_id)
     random.seed(employee_generate_id)
 
-    ssn = str(250000000 + employee_generate_id)
+    ssn = str(ssn_base + employee_generate_id)
 
     first_name = fake.first_name()
     last_name = fake.last_name()
