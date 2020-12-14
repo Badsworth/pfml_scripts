@@ -8,7 +8,7 @@ from massgov.pfml.util import datetime
 
 @pytest.fixture
 def emp_updates_path(tmp_path):
-    file_name = "employee_updates.txt"
+    file_name = "2020-12-10-23-10-11-EmployeeDataLoad_feed.csv"
     content_line_one = '"EMPLOYEEIDENTIFIER","EMPLOYEETITLE","EMPLOYEEDATEOFBIRTH","EMPLOYEEGENDER","EMPLOYEEMARITALSTATUS","TELEPHONEINTCODE","TELEPHONEAREACODE","TELEPHONENUMBER","CELLINTCODE","CELLAREACODE","CELLNUMBER","EMPLOYEEEMAIL","EMPLOYEEID","EMPLOYEECLASSIFICATION","EMPLOYEEJOBTITLE","EMPLOYEEDATEOFHIRE","EMPLOYEEENDDATE","EMPLOYMENTSTATUS","EMPLOYEEORGUNITNAME","EMPLOYEEHOURSWORKEDPERWEEK","EMPLOYEEDAYSWORKEDPERWEEK","MANAGERIDENTIFIER","QUALIFIERDESCRIPTION","EMPLOYEEWORKSITEID","ORG_CUSTOMERNO","ORG_NAME"'
     content_line_two = '"4376896b-596c-4c86-a653-1915cf997a84","Mr","1970-10-06 00:00:00","Male","Single","","","","","","","nona@comm.com","","Unknown","DEFAULT","2000-01-01 00:00:00","","Active","","40","0","","","","10","Test Company"'
     content_line_three = '"cb2f2d72-ac68-4402-a82f-6e32edd086b3","Unknown","1994-09-14 00:00:00","Unknown","Unknown","","","","","","","rob+pfml-cypress-gh3@lastcallmedia.com","","Unknown","DEFAULT","2020-01-01 00:00:00","","Active","","42","0","","","","10","Test Company"'
@@ -18,6 +18,12 @@ def emp_updates_path(tmp_path):
     test_folder.mkdir()
     test_file = test_folder / file_name
     test_file.write_text(content)
+
+    # Additional file to test file filter
+    file_name_two = "EmployeeExtract.csv"
+    test_file_two = test_folder / file_name_two
+    test_file_two.write_text("Just another file\nto Filter out.")
+
     return test_folder
 
 

@@ -79,30 +79,43 @@ def handler():
     )
 
 
+def get_file_to_process(
+    folder_path: str, boto_session: Optional[boto3.Session] = None
+) -> Optional[str]:
+    files_for_import = file_utils.list_files(str(folder_path), boto_session=boto_session)
+
+    update_files = []
+    for update_file in files_for_import:
+        if update_file.endswith("-EmployeeDataLoad_feed.csv"):
+            update_files.append(update_file)
+
+    if len(update_files) == 0:
+        logger.info("No daily FINEOS employee update file found.")
+        return None
+
+    if len(update_files) > 1:
+        logger.error(
+            "More than one FINEOS employee update extract file found in S3 bucket folder. Expect only one daily."
+        )
+        return None
+
+    return update_files[0]
+
+
 def process_fineos_updates(
     db_session: db.Session, folder_path: str, boto_session: Optional[boto3.Session] = None
 ) -> ImportFineosEmployeeUpdatesReport:
     start_time = utcnow()
     report = ImportFineosEmployeeUpdatesReport(start=start_time.isoformat())
 
-    files_for_import = file_utils.list_files(str(folder_path), boto_session=boto_session)
-
-    # Assumption is one extract file daily. Once file is processed we move the
-    # file to another folder.
-    if len(files_for_import) == 0:
-        logger.info("No daily FINEOS employee update file found.")
+    file = get_file_to_process(folder_path, boto_session)
+    if file is None:
         end_time = utcnow()
         report.end = end_time.isoformat()
+        report.process_duration_in_seconds = (end_time - start_time).total_seconds()
         return report
-
-    if len(files_for_import) > 1:
-        logger.error(
-            "More than one FINEOS employee update extract file found in S3 bucket folder. Expect only one daily."
-        )
-        return report
-
-    file = files_for_import[0]
-    logger.info(f"Processing daily FINEOS employee update extract with filename: {file}")
+    else:
+        logger.info(f"Processing daily FINEOS employee update extract with filename: {file}")
 
     file_path = f"{folder_path}/{file}"
     csv_input = CSVSourceWrapper(file_path, transport_params={"session": boto_session})
