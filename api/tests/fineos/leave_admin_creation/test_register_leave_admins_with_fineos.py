@@ -41,9 +41,7 @@ def test_find_user_and_register(test_db_session, employer_user):
     assert fineos_call_handler == "create_or_update_leave_admin"
 
 
-def test_main_registers_leave_admins_without_fineos_ids(
-    test_db_session, monkeypatch, employer_user
-):
+def test_registers_leave_admins_without_fineos_ids(test_db_session, monkeypatch, employer_user):
     def mocked_find_user_and_register(db_session, leave_admin, fineos_client):
         mocked_find_user_and_register.was_called = True
         assert leave_admin.user_id == employer_user.user_id
@@ -63,11 +61,11 @@ def test_main_registers_leave_admins_without_fineos_ids(
     test_db_session.add(leave_admin)
     test_db_session.commit()
 
-    register_leave_admins_with_fineos.main()
+    register_leave_admins_with_fineos.find_admins_without_registration(test_db_session)
     assert mocked_find_user_and_register.was_called is True
 
 
-def test_main_does_not_register_leave_admins_with_fineos_ids(
+def test_does_not_register_leave_admins_with_fineos_ids(
     test_db_session, monkeypatch, employer_user
 ):
     def mocked_find_user_and_register(db_session, leave_admin, fineos_client):
@@ -90,5 +88,31 @@ def test_main_does_not_register_leave_admins_with_fineos_ids(
     test_db_session.add(leave_admin)
     test_db_session.commit()
 
-    register_leave_admins_with_fineos.main()
+    register_leave_admins_with_fineos.find_admins_without_registration(test_db_session)
     assert mocked_find_user_and_register.was_called is False
+
+
+def test_does_not_register_las_linked_to_emps_without_fineos_employer_ids(
+    test_db_session, monkeypatch, employer_user
+):
+    fineos_client = fineos.create_client()
+    employer = EmployerFactory.create(fineos_employer_id=None)
+
+    leave_admin = UserLeaveAdministrator(
+        user_id=employer_user.user_id, employer_id=employer.employer_id, fineos_web_id=None,
+    )
+
+    test_db_session.add(leave_admin)
+    test_db_session.commit()
+
+    register_leave_admins_with_fineos.find_user_and_register(
+        test_db_session, leave_admin, fineos_client
+    )
+
+    leave_admin = (
+        test_db_session.query(UserLeaveAdministrator)
+        .filter(UserLeaveAdministrator.user_id == employer_user.user_id)
+        .one_or_none()
+    )
+
+    assert leave_admin.fineos_web_id is None
