@@ -13,8 +13,7 @@ Feature: Mark evidence received on a claim in FINEOS and employer responds by de
     And I confirm I am the right person to respond
     And I review the application: I "do not" suspect fraud, employee gave "insufficient" notice, and I "deny" the claim
 
-  # @portal
-  # Temporarily suspending notification testing until mailbox is whitelisted
-  # Scenario: An employer should receive a notification to respond to claim and be able to deny it
-  #   Then I should receive a "employer response" notification
+  @portal
+  Scenario: An employer should receive a notification to respond to claim and be able to deny it
+    Then I should receive a "employer response" notification
 

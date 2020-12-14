@@ -288,10 +288,11 @@ Then("I should receive a {string} notification", function (
             ) {
               throw new Error("First and last name must be of type string");
             }
-            const tag = "employer." + employerFEIN.replace("-", "");
+            // Restore this line once leave admin emails can be whitelisted
+            // const tag = "employer." + employerFEIN.replace("-", "");
             const notificationRequestData = {
               notificationType: notificationType,
-              recipientEmail: `gqzap.${tag}@inbox.testmail.app`,
+              recipientEmail: `gqzap.jkyu2emq@inbox.testmail.app`,
               employeeName: firstName + " " + lastName,
             };
             cy.wait(180000);

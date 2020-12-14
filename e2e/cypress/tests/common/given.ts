@@ -243,7 +243,7 @@ Given(
       )
     ) {
       cy.get('textarea[name="comment"]').type(
-        "This is a comment explaning my determination"
+        "This is a comment explaining my determination"
       );
     }
     cy.contains("button", "Submit").click();
