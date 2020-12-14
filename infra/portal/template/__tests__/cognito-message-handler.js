@@ -29,6 +29,10 @@ function simulateEvent(triggerSource) {
 }
 
 describe("Cognito Message Handler", () => {
+  beforeEach(() => {
+    process.env.PORTAL_DOMAIN = "paidleave-test.mass.gov";
+  });
+
   describe("when triggerSource is CustomMessage_SignUp", () => {
     it("sets a Account Verification email message and subject", () => {
       const triggerSource = "CustomMessage_SignUp";
