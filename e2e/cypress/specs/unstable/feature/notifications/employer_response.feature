@@ -3,41 +3,9 @@ Feature: Mark evidence received on a claim in FINEOS and employer responds by de
   @portal
   Scenario: As a claimant, I should be able to submit a claim (BHAP1) through the portal
     Given I begin to submit a "BHAP1" claim as a "financially eligible" employee
-    When I click on the checklist button called "Verify your identity"
-    Then I have my identity verified "normal"
-    Given I am on the claims "checklist" page
-    When I click on the checklist button called "Enter employment information"
-    Then I enter employer info
-    Given I am on the claims "checklist" page
-    When I click on the checklist button called "Enter leave details"
-    Then I start submitting the claim
-    And I enter "Foster Care" date
-    And I answer the continuous leave question
-    And I answer the reduced leave question
-    And I answer the intermittent leave question
-    # Note:
-    # Feature has been removed until soft launch (2nd Dec 2020)
-    # Given I am on the claims "checklist" page
-    # When I click on the checklist button called "Report other leave, income, and benefits"
-    # Then I report other benefits
-    Given I am on the claims "checklist" page
-    When I click on the checklist button called "Review and confirm"
-    And I confirm that I am an eligible parent
-    Given I am on the claims "review" page
-    Then I should have confirmed that information is correct
-    Given I am on the claims "checklist" page
-    When I click on the checklist button called "Add payment information"
-    Then I add payment info
-    Given I am on the claims "checklist" page
-    When I click on the checklist button called "Upload identity document"
-    Then I add my identity document "MA ID"
-    When I click on the checklist button called "Upload leave certification documents"
-    Then I add my leave certification document "FOSTER"
-    Given I am on the claims "checklist" page
-    Then I should review and submit the application
-    Given I am on the claims "review" page
-    Then I should have agreed and successfully submitted the claim
-    And I should be able to confirm claim was submitted successfully
+    When I am the "existing" claimant visiting the portal
+    Then I continue creating the claim
+    When I have submitted all parts of the claim
 
     When I log out
     Given I am a Leave Admin for the submitted applications
