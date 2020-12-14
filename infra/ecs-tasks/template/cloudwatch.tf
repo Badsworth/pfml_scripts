@@ -35,7 +35,7 @@ resource "aws_lambda_permission" "ecs_permission_tasks_logging" {
 resource "aws_cloudwatch_event_rule" "every_15_minutes" {
   name                = "register-admins-${var.environment_name}-every-15-minutes"
   description         = "Fires every 15 minutes"
-  schedule_expression = "cron(*/15 * * * *)"
+  schedule_expression = "cron(*/15 * * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "register_admins_event_target_ecs" {
