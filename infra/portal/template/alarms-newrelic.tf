@@ -128,62 +128,19 @@ resource "newrelic_alert_condition" "portal_page_rendering_time" {
 // NRQL Alerts //
 /////////////////
 
-resource "newrelic_nrql_alert_condition" "cognito_claimant_signUp_errors" {
-  enabled   = true
-  name      = "High claimant sign up error rate"
+module "newrelic_alert_cognito_claimant_sign_up_errors" {
+  source    = "../../modules/newrelic_baseline_error_rate"
   policy_id = newrelic_alert_policy.portal_alerts.id
+  name      = "High claimant sign up error rate"
+  query     = "SELECT percentage(count(*), WHERE httpResponseCode >= 400) FROM AjaxRequest WHERE browserInteractionName = 'fetch: cognito signUp' AND groupedPageUrl NOT LIKE '%/employers/create-account' AND hostname = 'cognito-idp.us-east-1.amazonaws.com' AND environment = '${var.environment_name}'"
 
-  type                 = "static"
-  value_function       = "single_value"
-  violation_time_limit = "TWENTY_FOUR_HOURS"
-
-  nrql {
-    query             = "SELECT percentage(count(*), WHERE httpResponseCode >= 400) FROM AjaxRequest WHERE browserInteractionName = 'fetch: cognito signUp' AND groupedPageUrl NOT LIKE '%/employers/create-account' AND hostname = 'cognito-idp.us-east-1.amazonaws.com' AND environment = '${var.environment_name}'"
-    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
-  }
-
-  warning {
-    threshold_duration    = 300
-    threshold             = 90
-    operator              = "above"
-    threshold_occurrences = "ALL"
-  }
-
-  critical {
-    threshold_duration    = 300
-    threshold             = 95
-    operator              = "above"
-    threshold_occurrences = "ALL"
-  }
 }
 
-resource "newrelic_nrql_alert_condition" "cognito_employer_signUp_errors" {
-  enabled   = true
-  name      = "High employer sign up error rate"
+module "newrelic_alert_cognito_employer_sign_up_errors" {
+  source    = "../../modules/newrelic_baseline_error_rate"
   policy_id = newrelic_alert_policy.portal_alerts.id
-
-  type                 = "static"
-  value_function       = "single_value"
-  violation_time_limit = "TWENTY_FOUR_HOURS"
-
-  nrql {
-    query             = "SELECT percentage(count(*), WHERE httpResponseCode >= 400) FROM AjaxRequest WHERE browserInteractionName = 'fetch: cognito signUp' AND groupedPageUrl LIKE '%/employers/create-account' AND hostname = 'cognito-idp.us-east-1.amazonaws.com' AND environment = '${var.environment_name}'"
-    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
-  }
-
-  warning {
-    threshold_duration    = 300
-    threshold             = 90
-    operator              = "above"
-    threshold_occurrences = "ALL"
-  }
-
-  critical {
-    threshold_duration    = 300
-    threshold             = 95
-    operator              = "above"
-    threshold_occurrences = "ALL"
-  }
+  name      = "High employer sign up error rate"
+  query     = "SELECT percentage(count(*), WHERE httpResponseCode >= 400) FROM AjaxRequest WHERE browserInteractionName = 'fetch: cognito signUp' AND groupedPageUrl LIKE '%/employers/create-account' AND hostname = 'cognito-idp.us-east-1.amazonaws.com' AND environment = '${var.environment_name}'"
 }
 
 resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
