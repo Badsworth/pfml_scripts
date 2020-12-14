@@ -17,3 +17,8 @@ Feature: Mark evidence received on a claim in FINEOS and employer responds by de
   Scenario: An employer should receive a notification to respond to claim and be able to deny it
     Then I should receive a "employer response" notification
 
+  @fineos
+  Scenario: A CSR should find the employer response in FINEOS
+    Given I am logged into Fineos as a Savilinx user
+    And I should be able to find claim in Adjudication
+    Then I should find the Employer Response to Leave Request

@@ -242,9 +242,9 @@ Given(
         determination === "Approve"
       )
     ) {
-      cy.get('textarea[name="comment"]').type(
-        "This is a comment explaining my determination"
-      );
+      const comment = "This is a comment explaining my determination";
+      cy.stashLog("employerResponseComment", comment);
+      cy.get('textarea[name="comment"]').type(comment);
     }
     cy.contains("button", "Submit").click();
     cy.contains("Thanks for reviewing the application");

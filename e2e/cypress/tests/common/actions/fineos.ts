@@ -364,3 +364,8 @@ export function approveClaim(): void {
   });
   cy.get(".key-info-bar .status").should("contain.text", "Approved");
 }
+
+export function findEmployerResponse(employerResponseComment: string): void {
+  cy.contains("a", "Employer Response to Leave Request").click();
+  cy.contains("textarea", employerResponseComment);
+}

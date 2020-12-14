@@ -374,3 +374,12 @@ Then("I continue creating the claim", function (): void {
   portal.hasClaimId();
   portal.onPage("checklist");
 });
+
+Then("I should find the Employer Response to Leave Request", function (): void {
+  cy.unstash("employerResponseComment").then((employerResponseComment) => {
+    if (typeof employerResponseComment !== "string") {
+      throw new Error("Comment must be a string");
+    }
+    fineos.findEmployerResponse(employerResponseComment);
+  });
+});
