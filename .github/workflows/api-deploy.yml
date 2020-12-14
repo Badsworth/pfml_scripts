@@ -48,10 +48,10 @@ env:
 jobs:
   prod-check:
     # run if environment is production
-    if: contains(github.ref, 'deploy/api/prod')
     runs-on: ubuntu-latest
     steps:
       - name: check users
+        if: contains(github.ref, 'deploy/api/prod')
         id: get_teams
         env:
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
@@ -71,7 +71,7 @@ jobs:
             }
 
       - name: fail if not a member
-        if: contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
+        if: contains(github.ref, 'deploy/api/prod') && contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
         run: |
           echo "Not part of pfml-devops, cancelling workflow"
           exit 1
@@ -79,9 +79,6 @@ jobs:
   update-the-deploy-branch:
     name: Update archival branch
     needs: prod-check
-    # if the prod-check job passses or is skipped, run the next jobs
-    if: ${{ always() }} && (needs.prod-check.result == 'skipped' || needs.prod-check.result == 'success')
-
     runs-on: ubuntu-latest
 
     outputs:
