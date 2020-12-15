@@ -13,7 +13,7 @@ Then("I should be able to find claim in Adjudication", () => {
   cy.get<string>("@claimNumber").then(fineos.visitClaim);
 
   // For Testing
-  // fineos.visitClaim("NTN-7720-ABS-01")
+  // fineos.visitClaim("NTN-4368-ABS-01")
 });
 
 Then("I should be able to find employer page", () => {
@@ -275,4 +275,40 @@ Then("I should confirm proper tasks have been created", function (): void {
     "ID Review"
   );
   fineos.onTab("Absence Hub");
+});
+
+Then("I confirm proper RMV ID status as {string}", function (
+  RMVStatus: string
+): void {
+  let statusText = "";
+  switch (RMVStatus) {
+    case "valid":
+      statusText = "Verification check passed";
+      cy.get("div[id*='identificationStatus']").should(
+        "contain.text",
+        statusText
+      );
+      break;
+
+    case "invalid":
+    case "fraud":
+      statusText =
+        "Verification failed because no record could be found for given ID information";
+      cy.get("div[id*='identificationStatus']").should(
+        "contain.text",
+        statusText
+      );
+      break;
+
+    case "mismatch":
+      statusText = "Verification failed because ID number mismatch";
+      cy.get("div[id*='identificationStatus']").should(
+        "contain.text",
+        statusText
+      );
+      break;
+
+    default:
+      throw new Error("RMV Status Type not found!");
+  }
 });
