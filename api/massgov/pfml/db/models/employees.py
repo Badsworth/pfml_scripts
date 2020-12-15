@@ -1075,6 +1075,7 @@ def sync_lookup_tables(db_session):
     Role.sync_to_database(db_session)
     PaymentMethod.sync_to_database(db_session)
     BankAccountType.sync_to_database(db_session)
+    ReferenceFileType.sync_to_database(db_session)
     Title.sync_to_database(db_session)
     ReferenceFileType.sync_to_database(db_session)
     State.sync_to_database(db_session)

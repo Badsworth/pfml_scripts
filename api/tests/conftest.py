@@ -220,6 +220,36 @@ def mock_s3_bucket(reset_aws_env_vars):
 
 
 @pytest.fixture
+def mock_sftp_dir_with_conflicts():
+    return "mock_sftp_dir_with_conflicts"
+
+
+@pytest.fixture
+def mock_sftp_filename_conflicts():
+    return ["file1.txt", "file2.txt"]
+
+
+@pytest.fixture
+def mock_sftp_client(mock_sftp_dir_with_conflicts, mock_sftp_filename_conflicts):
+    class MockSftpClient:
+        calls = []
+
+        def put(self, src: str, dest: str):
+            self.calls.append(("put", src, dest))
+
+        def remove(self, filename: str):
+            self.calls.append(("remove", filename))
+
+        def listdir(self, dir: str):
+            self.calls.append(("listdir", dir))
+            if dir == mock_sftp_dir_with_conflicts:
+                return mock_sftp_filename_conflicts
+            return []
+
+    return MockSftpClient()
+
+
+@pytest.fixture
 def test_db_schema(monkeypatch):
     """
     Create a test schema, if it doesn't already exist, and drop it after the

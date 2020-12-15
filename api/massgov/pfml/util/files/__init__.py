@@ -2,13 +2,16 @@
 # Utilities for handling files.
 #
 
+import io
 import os
 import shutil
+import tempfile
 from typing import List, Optional
 from urllib.parse import urlparse
 
 import boto3
 import ebcdic  # noqa: F401
+import paramiko
 import smart_open
 from botocore.config import Config
 
@@ -17,6 +20,10 @@ EBCDIC_ENCODING = "cp1140"  # See https://pypi.org/project/ebcdic/ for further d
 
 def is_s3_path(path):
     return path.startswith("s3://")
+
+
+def is_sftp_path(path):
+    return path.startswith("sftp://")
 
 
 def get_s3_bucket(path):
@@ -48,12 +55,17 @@ def split_s3_url(path):
     return (bucket_name, prefix)
 
 
+# "sftp://test_user@example.com:2222/" -> ("test_user", "example.com", 2222)
+def split_sftp_url(path):
+    parts = urlparse(path)
+    return (parts.username or "", parts.hostname, parts.port or 22)
+
+
 def list_files(
     path: str, delimiter: str = "", boto_session: Optional[boto3.Session] = None
 ) -> List[str]:
     if is_s3_path(path):
         bucket_name, prefix = split_s3_url(path)
-        files = []
 
         # TODO Use boto3 for now to address multithreading issue in lambda, revisit after pilot 2
         # https://github.com/RaRe-Technologies/smart_open/issues/340
@@ -61,13 +73,13 @@ def list_files(
         #     files.append(get_file_name(key))
 
         s3 = boto_session.client("s3") if boto_session else boto3.client("s3")
-        for object in s3.list_objects(Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter)[
-            "Contents"
-        ]:
-            key = object["Key"]
-            files.append(get_file_name(key))
+        object_contents = s3.list_objects(
+            Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter
+        ).get("Contents")
+        if object_contents:
+            return [get_file_name(object["Key"]) for object in object_contents]
 
-        return files
+        return []
 
     return os.listdir(path)
 
@@ -194,6 +206,35 @@ def write_file(path, mode="w", encoding=None):
 def read_file_lines(path, mode="r", encoding=None):
     stream = smart_open.open(path, mode, encoding=encoding)
     return map(lambda line: line.rstrip(), stream)
+
+
+def get_sftp_client(uri: str, ssh_key_password: str, ssh_key: str) -> paramiko.SFTPClient:
+    if not is_sftp_path(uri):
+        raise ValueError("uri must be an SFTP URI")
+
+    # Paramiko expects to receive the private key as a file-like object so we write the string
+    # to a StringIO object.
+    # https://docs.paramiko.org/en/stable/api/keys.html#paramiko.pkey.PKey.from_private_key
+    ssh_key_fileobj = io.StringIO(ssh_key)
+    pkey = paramiko.rsakey.RSAKey.from_private_key(ssh_key_fileobj, password=ssh_key_password)
+
+    user, host, port = split_sftp_url(uri)
+    t = paramiko.Transport((host, port))
+    t.connect(username=user, pkey=pkey)
+
+    return paramiko.SFTPClient.from_transport(t)
+
+
+def copy_file_from_s3_to_sftp(source: str, dest: str, sftp: paramiko.SFTPClient) -> None:
+    if not is_s3_path(source):
+        raise ValueError("source must be an S3 URI")
+
+    # Download file from S3 to a tempfile.
+    _handle, tempfile_path = tempfile.mkstemp()
+    download_from_s3(source, tempfile_path)
+
+    # Copy the file from local tempfile to destination.
+    sftp.put(tempfile_path, dest)
 
 
 def remove_if_exists(path: str) -> None:

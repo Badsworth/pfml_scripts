@@ -12,11 +12,50 @@ def test_is_s3_path():
     assert file_util.is_s3_path("http://example.com/test.txt") is False
 
 
+@pytest.mark.parametrize(
+    "path,result",
+    (
+        ("sftp://host/path/file", True),
+        ("sftp://username@host/path/file", True),
+        ("ssh://username@host/path/file", False),
+        ("http://example.com/test.txt", False),
+        ("s3://my_bucket/path/to/file.txt", False),
+    ),
+)
+def test_is_sftp_path(path, result):
+    assert file_util.is_sftp_path(path) is result
+
+
 def test_get_file_name(test_fs_path):
     file_name = "test.txt"
     full_path = "{}/{}".format(test_fs_path, file_name)
     file_name = file_util.get_file_name(full_path)
     assert file_name == "test.txt"
+
+
+@pytest.mark.parametrize(
+    "path,bucket,prefix",
+    (
+        ("s3://my_bucket/my_key", "my_bucket", "my_key"),
+        ("s3://my_bucket/path/to/directory/", "my_bucket", "path/to/directory/"),
+        ("s3://my_bucket/path/to/file.txt", "my_bucket", "path/to/file.txt"),
+    ),
+)
+def test_split_s3_url(path, bucket, prefix):
+    assert file_util.split_s3_url(path) == (bucket, prefix)
+
+
+@pytest.mark.parametrize(
+    "path,user,host,port",
+    (
+        ("sftp://host/path/file", "", "host", 22),
+        ("sftp://username@host:2345/path/file", "username", "host", 2345),
+        ("sftp://username@host/path/file", "username", "host", 22),
+        ("sftp://example.com/test.txt", "", "example.com", 22),
+    ),
+)
+def test_split_sftp_url(path, user, host, port):
+    assert file_util.split_sftp_url(path) == (user, host, port)
 
 
 def test_get_directory():
@@ -36,6 +75,26 @@ def test_read_fs_file(test_fs_path):
     assert lines[0] == "line 1 text"
     assert lines[1] == "line 2 text"
     assert lines[2] == "line 3 text"
+
+
+def test_copy_file_from_s3_to_sftp(mock_s3_bucket, mock_sftp_client):
+    folder = "path/to/my_directory"
+    file_name = "my_file.txt"
+    key = "{}/{}".format(folder, file_name)
+
+    # Put file in our mocked S3.
+    s3 = boto3.client("s3")
+    s3.put_object(Bucket=mock_s3_bucket, Key=key, Body="line 1 text\nline 2 text\nline 3 text")
+
+    source = "s3://{}/{}".format(mock_s3_bucket, key)
+    dest = "sftp://example.com/incoming/{}".format(key)
+
+    file_util.copy_file_from_s3_to_sftp(source, dest, mock_sftp_client)
+
+    # Expect to make one call to the SFTP client to upload a tempfile to our dest.
+    assert len(mock_sftp_client.calls) == 1
+    assert mock_sftp_client.calls[0][0] == "put"
+    assert mock_sftp_client.calls[0][2] == dest
 
 
 def test_read_s3_stream(mock_s3_bucket):
