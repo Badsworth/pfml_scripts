@@ -186,6 +186,16 @@ class LkTitle(Base):
         self.title_description = title_description
 
 
+class LkAgency(Base):
+    __tablename__ = "lk_agency"
+    agency_id = Column(Integer, primary_key=True, autoincrement=True)
+    agency_description = Column(Text)
+
+    def __init__(self, agency_id, agency_description):
+        self.agency_id = agency_id
+        self.agency_description = agency_description
+
+
 class AuthorizedRepresentative(Base):
     __tablename__ = "authorized_representative"
     authorized_representative_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -560,6 +570,29 @@ class ImportLog(Base):
     end = Column(TIMESTAMP(timezone=True))
 
 
+class AgencyReductionPayment(Base):
+    __tablename__ = "agency_reduction_payment"
+    agency_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    absence_case_id = Column(Text, index=True)
+    agency_id = Column(Integer, ForeignKey("lk_agency.agency_id"), nullable=False)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
+    payment_issued_date = Column(TIMESTAMP(timezone=True), index=True)
+    gross_benefit_amount_cents = Column(Numeric)
+    net_benefit_amount_cents = Column(Numeric)
+    has_fraud_indicator = Column(Boolean)
+    benefit_week_start_date = Column(TIMESTAMP(timezone=True), index=True)
+    benefit_week_end_date = Column(TIMESTAMP(timezone=True), index=True)
+    benefit_year_start_date = Column(TIMESTAMP(timezone=True), index=True)
+    benefit_year_end_date = Column(TIMESTAMP(timezone=True), index=True)
+    created_at = Column(TIMESTAMP(timezone=True), index=True)
+
+    agency = relationship(LkAgency)
+    claim = relationship(Claim)
+    reference_file = relationship(
+        "AgencyReductionPaymentReferenceFile", back_populates="agency_reduction_payment"
+    )
+
+
 class ReferenceFile(Base):
     __tablename__ = "reference_file"
     reference_file_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -572,6 +605,26 @@ class ReferenceFile(Base):
     payments = relationship("PaymentReferenceFile", back_populates="reference_file")
     employees = relationship("EmployeeReferenceFile", back_populates="reference_file")
     state_logs = relationship("StateLog", back_populates="reference_file")
+    agency_reduction_payment = relationship(
+        "AgencyReductionPaymentReferenceFile", back_populates="reference_file"
+    )
+
+
+class AgencyReductionPaymentReferenceFile(Base):
+    __tablename__ = "link_agency_reduction_payment_reference_file"
+    reference_file_id = Column(
+        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), primary_key=True
+    )
+    agency_reduction_payment_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("agency_reduction_payment.agency_reduction_payment_id"),
+        primary_key=True,
+    )
+
+    reference_file = relationship("ReferenceFile", back_populates="agency_reduction_payment")
+    agency_reduction_payment = relationship(
+        "AgencyReductionPayment", back_populates="reference_file"
+    )
 
 
 class PaymentReferenceFile(Base):
@@ -1029,13 +1082,24 @@ class Flow(LookupTable):
     column_names = ("flow_id", "flow_description")
 
     PAYMENT = LkFlow(1, "Payment")
+    DUA_CLAIMANT_LIST = LkFlow(2, "DUA claimant list")
+    DIA_CLAIMANT_LIST = LkFlow(3, "DIA claimant list")
+    DUA_PAYMENT_LIST = LkFlow(4, "DUA payment list")
+    DIA_PAYMENT_LIST = LkFlow(5, "DIA payment list")
+    DFML_AGENCY_REDUCTION_REPORT = LkFlow(6, "DFML agency reduction report")
 
 
 class State(LookupTable):
     model = LkState
     column_names = ("state_id", "state_description")
 
-    VERIFY_VENDOR_STATUS = LkFlow(1, "Verify vendor status")
+    VERIFY_VENDOR_STATUS = LkState(1, "Verify vendor status")
+    CLAIMANT_LIST_CREATED = LkState(2, "Create claimant list for DIA")
+    CLAIMANT_LIST_SUBMITTED = LkState(3, "Submit claimant list to DIA")
+    PAYMENTS_RETRIEVED = LkState(4, "Payments retrieved")
+    PAYMENTS_STORED_IN_DB = LkState(5, "Payments stored in db")
+    DFML_REPORT_CREATED = LkState(6, " Create DFML report")
+    DFML_REPORT_SUBMITTED = LkState(7, "Submit DFML report")
 
 
 class ReferenceFileType(LookupTable):
@@ -1046,6 +1110,11 @@ class ReferenceFileType(LookupTable):
     VCC = LkReferenceFileType(2, "VCC")
     PAYMENT_EXTRACT = LkReferenceFileType(3, "Payment extract")
     VENDOR_CLAIM_EXTRACT = LkReferenceFileType(4, "Vendor claim extract")
+    DUA_CLAIMANT_LIST = LkReferenceFileType(5, "DUA claimant list")
+    DIA_CLAIMANT_LIST = LkReferenceFileType(6, "DIA claimant list")
+    DUA_PAYMENT_LIST = LkReferenceFileType(7, "DUA payment list")
+    DIA_PAYMENT_LIST = LkReferenceFileType(8, "DIA payment list")
+    DFML_AGENCY_REDUCTION_REPORT = LkReferenceFileType(9, "DFML agency reduction report")
 
 
 class Title(LookupTable):
@@ -1060,6 +1129,14 @@ class Title(LookupTable):
     DR = LkTitle(6, "Dr")
     MADAM = LkTitle(7, "Madam")
     SIR = LkTitle(8, "Sir")
+
+
+class Agency(LookupTable):
+    model = LkAgency
+    column_names = ("agency_id", "agency_description")
+
+    DIA = LkAgency(1, "Department of Industrial Accidents")
+    DUA = LkAgency(2, "Department of Unemployment Assistance")
 
 
 def sync_lookup_tables(db_session):
