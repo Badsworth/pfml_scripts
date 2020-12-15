@@ -33,6 +33,14 @@ def get_file_name(path: str) -> str:
     return os.path.basename(path)
 
 
+def get_directory(path: str) -> str:
+    # This handles getting the "directory" of any path (local or S3)
+    # Grab everything in the path except the last X characters
+    # where X is the length of the file name
+    # This preserves the trailing /
+    return path[: -len(get_file_name(path))]
+
+
 def split_s3_url(path):
     parts = urlparse(path)
     bucket_name = parts.netloc

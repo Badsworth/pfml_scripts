@@ -19,6 +19,15 @@ def test_get_file_name(test_fs_path):
     assert file_name == "test.txt"
 
 
+def test_get_directory():
+    assert file_util.get_directory("s3://bucket/path/to/file.txt") == "s3://bucket/path/to/"
+    assert file_util.get_directory("./relative/path/to/file.txt") == "./relative/path/to/"
+    assert (
+        file_util.get_directory("http://example.com/path/to/file.txt")
+        == "http://example.com/path/to/"
+    )
+
+
 def test_read_fs_file(test_fs_path):
     file_name = "test.txt"
     full_path = "{}/{}".format(str(test_fs_path), file_name)

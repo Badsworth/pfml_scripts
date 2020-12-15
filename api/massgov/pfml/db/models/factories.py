@@ -125,6 +125,16 @@ class TaxIdentifierFactory(BaseFactory):
     tax_identifier = Generators.Tin
 
 
+class EftFactory(BaseFactory):
+    class Meta:
+        model = employee_models.EFT
+
+    eft_id = Generators.UuidObj
+    account_nbr = "123456789"
+    routing_nbr = "234567890"
+    bank_account_type_id = employee_models.BankAccountType.CHECKING.bank_account_type_id
+
+
 class EmployeeFactory(BaseFactory):
     class Meta:
         model = employee_models.Employee
@@ -222,6 +232,18 @@ class ClaimFactory(BaseFactory):
     benefit_amount = 100
     benefit_days = 60
     fineos_absence_id = "NTN-01-ABS-01"
+
+
+class PaymentFactory(BaseFactory):
+    class Meta:
+        model = employee_models.Payment
+
+    payment_id = Generators.UuidObj
+
+    payment_method_id = employee_models.PaymentMethod.ACH.payment_method_id
+    amount = 100.00
+    claim = factory.SubFactory(ClaimFactory)
+    claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
 
 
 class PhoneFactory(BaseFactory):
