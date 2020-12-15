@@ -290,7 +290,7 @@ Then("I should receive a {string} notification", function (
             // const tag = "employer." + employerFEIN.replace("-", "");
             const notificationRequestData = {
               notificationType: notificationType,
-              recipientEmail: `gqzap.jkyu2emq@inbox.testmail.app`,
+              recipientEmail: "gqzap.notifications@inbox.testmail.app",
               employeeName: firstName + " " + lastName,
             };
             cy.wait(180000);
@@ -338,7 +338,7 @@ Then(
     }
     const notificationRequestData = {
       notificationType: notificationType,
-      recipientEmail: "gqzap.jkyu2emq@inbox.testmail.app",
+      recipientEmail: "gqzap.notifications@inbox.testmail.app",
       employeeName: firstName + " " + lastName,
     };
     cy.task("getNotification", notificationRequestData).then((emailContent) => {
