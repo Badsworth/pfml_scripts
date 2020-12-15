@@ -7,28 +7,53 @@ import pytest
 from freezegun import freeze_time
 
 import massgov.pfml.payments.vcc as vcc
+from massgov.pfml.db.models.employees import BankAccountType, GeoState, PaymentMethod
+from massgov.pfml.db.models.factories import (
+    AddressFactory,
+    EftFactory,
+    EmployeeFactory,
+    TaxIdentifierFactory,
+)
 from tests.api.payments import validate_attributes, validate_elements
 
-base_data = {
-    "first_name": "Jane",
-    "middle_name": "Abigail",
-    "last_name": "Doe",
-    "payee_soc_number": "123456789",
-    "payee_aba_number": "345345345",
-    "payee_account_type": "Saving",
-    "payee_account_number": "000111222333",
-    "payment_address_1": "123 Foo St.",
-    "payment_address_2": "Apt #123",
-    "payment_address_4": "Chicago",
-    "payment_address_6": "IL",
-    "payment_post_code": "12345",
-    "payee_payment_method": "ACH",
-}
+
+def get_base_employee(add_eft=True, use_random_tin=False):
+    # Create a generic employee that tests can use
+
+    if use_random_tin:
+        tax_identifier = TaxIdentifierFactory()
+    else:
+        tax_identifier = TaxIdentifierFactory(tax_identifier="123456789")
+
+    eft = None
+    if add_eft:
+        eft = EftFactory.create(
+            routing_nbr="345345345",
+            account_nbr="000111222333",
+            bank_account_type_id=BankAccountType.SAVINGS.bank_account_type_id,
+        )
+    mailing_address = AddressFactory(
+        address_line_one="123 Foo St.",
+        address_line_two="Apt #123",
+        city="Chicago",
+        geo_state_id=GeoState.IL.geo_state_id,
+        zip_code="12345",
+    )
+    employee = EmployeeFactory.create(
+        first_name="Jane",
+        last_name="Doe",
+        tax_identifier=tax_identifier,
+        eft=eft,
+        mailing_address=mailing_address,
+        payment_method_id=PaymentMethod.ACH.payment_method_id,
+    )
+    return employee
 
 
 @freeze_time("2020-01-01 12:00:00")
-def test_build_individual_vcc_document():
-    document = vcc.build_individual_vcc_document(Document(), base_data.copy(), datetime.now(), 1)
+def test_build_individual_vcc_document(initialize_factories_session):
+    employee = get_base_employee()
+    document = vcc.build_individual_vcc_document(Document(), employee, datetime.now(), 1)
 
     # Doc ID is generated randomly every run, but appears in many sub values.
     doc_id = document._attrs["DOC_ID"].value
@@ -59,7 +84,6 @@ def test_build_individual_vcc_document():
     expected_vcust_subelements = {
         "DOC_ID": doc_id,
         "FRST_NM": "Jane",
-        "MID_NM": "Abigail",
         "LAST_NM": "Doe",
         "TIN": "123456789",
         "ABA_NO": "345345345",
@@ -159,13 +183,10 @@ def test_build_individual_vcc_document():
 
 
 @freeze_time("2020-01-01 12:00:00")
-def test_build_individual_vcc_document_no_eft():
-    data = base_data.copy()
-    del data["payee_aba_number"]
-    del data["payee_account_type"]
-    del data["payee_account_number"]
-    data["payee_payment_method"] = "Check"
-    document = vcc.build_individual_vcc_document(Document(), data, datetime.now(), 45)
+def test_build_individual_vcc_document_no_eft(initialize_factories_session):
+    employee = get_base_employee(add_eft=False)
+    employee.payment_method = PaymentMethod.CHECK
+    document = vcc.build_individual_vcc_document(Document(), employee, datetime.now(), 45)
     # Doc ID is generated randomly every run, but appears in many sub values.
     doc_id = document._attrs["DOC_ID"].value
     assert doc_id == "INTFDFML010120200045"
@@ -179,7 +200,6 @@ def test_build_individual_vcc_document_no_eft():
     expected_vcust_subelements = {
         "DOC_ID": doc_id,
         "FRST_NM": "Jane",
-        "MID_NM": "Abigail",
         "LAST_NM": "Doe",
         "TIN": "123456789",
         # Extra fields not present
@@ -196,16 +216,15 @@ def test_build_individual_vcc_document_no_eft():
     validate_elements(vcc_doc_bus_w9, expected_doc_bus_w9_subelements)
 
 
-def test_build_individual_vcc_document_truncated_values():
-    data = base_data.copy()
-    data["first_name"] = "a" * 20
-    data["middle_name"] = "b" * 20
-    data["last_name"] = "c" * 40
-    data["payment_address_1"] = "d" * 80  # Address 1
-    data["payment_address_2"] = "e" * 80  # Address 2
-    data["payment_address_4"] = "f" * 65  # City
+def test_build_individual_vcc_document_truncated_values(initialize_factories_session):
+    employee = get_base_employee()
+    employee.first_name = "a" * 20
+    employee.last_name = "c" * 40
+    employee.mailing_address.address_line_one = "d" * 80
+    employee.mailing_address.address_line_two = "e" * 80
+    employee.mailing_address.city = "f" * 65
 
-    document = vcc.build_individual_vcc_document(Document(), data, datetime.now(), 1)
+    document = vcc.build_individual_vcc_document(Document(), employee, datetime.now(), 1)
     doc_id = document._attrs["DOC_ID"].value
     # Just checking that the above values were properly truncated
 
@@ -216,7 +235,6 @@ def test_build_individual_vcc_document_truncated_values():
     expected_vcust_subelements = {
         "DOC_ID": doc_id,
         "FRST_NM": "a" * 14,
-        "MID_NM": "b" * 14,
         "LAST_NM": "c" * 30,
         "TIN": "123456789",
         "ABA_NO": "345345345",
@@ -262,8 +280,8 @@ def test_build_individual_vcc_document_truncated_values():
 
 
 @freeze_time("2020-01-01 12:00:00")
-def test_build_vcc_files():
-    data = [base_data, base_data]
+def test_build_vcc_files(initialize_factories_session):
+    data = [get_base_employee(), get_base_employee(use_random_tin=True)]
 
     with tempfile.TemporaryDirectory() as directory:
         (dat_filepath, inf_filepath) = vcc.build_vcc_files(data, directory, 11)
@@ -353,101 +371,77 @@ def test_small_count():
         vcc.build_vcc_files(None, "", 1)
 
 
-def test_build_individual_vcc_document_missing_required_values():
-    no_first_name_data = base_data.copy()
-    del no_first_name_data["first_name"]
+def test_build_individual_vcc_document_missing_required_values(initialize_factories_session):
+    no_first_name_data = get_base_employee(use_random_tin=True)
+    no_first_name_data.first_name = ""
     with pytest.raises(Exception, match="Value for first_name is required to generate document."):
         vcc.build_individual_vcc_document(Document(), no_first_name_data, datetime.now(), 1)
 
-    no_last_name_data = base_data.copy()
-    del no_last_name_data["last_name"]
+    no_last_name_data = get_base_employee(use_random_tin=True)
+    no_last_name_data.last_name = ""
     with pytest.raises(Exception, match="Value for last_name is required to generate document."):
         vcc.build_individual_vcc_document(Document(), no_last_name_data, datetime.now(), 1)
 
-    no_ssn_data = base_data.copy()
-    del no_ssn_data["payee_soc_number"]
+    no_ssn_data = get_base_employee(use_random_tin=True)
+    no_ssn_data.tax_identifier.tax_identifier = ""
     with pytest.raises(
-        Exception, match="Value for payee_soc_number is required to generate document."
+        Exception, match="Value for tax_identifier is required to generate document."
     ):
         vcc.build_individual_vcc_document(Document(), no_ssn_data, datetime.now(), 1)
 
-    no_address1_data = base_data.copy()
-    del no_address1_data["payment_address_1"]
+    no_address1_data = get_base_employee(use_random_tin=True)
+    no_address1_data.mailing_address.address_line_one = ""
     with pytest.raises(
-        Exception, match="Value for payment_address_1 is required to generate document."
+        Exception, match="Value for address_line_one is required to generate document."
     ):
         vcc.build_individual_vcc_document(Document(), no_address1_data, datetime.now(), 1)
 
-    no_city_data = base_data.copy()
-    del no_city_data["payment_address_4"]
-    with pytest.raises(
-        Exception, match="Value for payment_address_4 is required to generate document."
-    ):
+    no_city_data = get_base_employee(use_random_tin=True)
+    no_city_data.mailing_address.city = ""
+    with pytest.raises(Exception, match="Value for city is required to generate document."):
         vcc.build_individual_vcc_document(Document(), no_city_data, datetime.now(), 1)
 
-    no_state_data = base_data.copy()
-    del no_state_data["payment_address_6"]
-    with pytest.raises(
-        Exception, match="Value for payment_address_6 is required to generate document."
-    ):
+    no_state_data = get_base_employee(use_random_tin=True)
+    no_state_data.mailing_address.geo_state = None
+    with pytest.raises(Exception, match="Value for geo_state is required to generate document."):
         vcc.build_individual_vcc_document(Document(), no_state_data, datetime.now(), 1)
 
-    no_zip_data = base_data.copy()
-    del no_zip_data["payment_post_code"]
-    with pytest.raises(
-        Exception, match="Value for payment_post_code is required to generate document."
-    ):
+    no_zip_data = get_base_employee(use_random_tin=True)
+    no_zip_data.mailing_address.zip_code = ""
+    with pytest.raises(Exception, match="Value for zip_code is required to generate document."):
         vcc.build_individual_vcc_document(Document(), no_zip_data, datetime.now(), 1)
 
 
-def test_build_individual_vcc_document_too_long_values():
-    long_ssn_data = base_data.copy()
-    long_ssn_data["payee_soc_number"] = "0" * 25
+def test_build_individual_vcc_document_too_long_values(initialize_factories_session):
+    long_ssn_data = get_base_employee(use_random_tin=True)
+    long_ssn_data.tax_identifier.tax_identifier = "0" * 25
     with pytest.raises(
-        Exception, match="Value for payee_soc_number is longer than allowed length of 9."
+        Exception, match="Value for tax_identifier is longer than allowed length of 9."
     ):
         vcc.build_individual_vcc_document(Document(), long_ssn_data, datetime.now(), 1)
 
-    long_aba_num_data = base_data.copy()
-    long_aba_num_data["payee_aba_number"] = "0" * 25
+    long_aba_num_data = get_base_employee(use_random_tin=True)
+    long_aba_num_data.eft.routing_nbr = "0" * 25
     with pytest.raises(
-        Exception, match="Value for payee_aba_number is longer than allowed length of 9."
+        Exception, match="Value for routing_nbr is longer than allowed length of 9."
     ):
         vcc.build_individual_vcc_document(Document(), long_aba_num_data, datetime.now(), 1)
 
-    long_acct_num_data = base_data.copy()
-    long_acct_num_data["payee_account_number"] = "0" * 45
+    long_acct_num_data = get_base_employee(use_random_tin=True)
+    long_acct_num_data.eft.account_nbr = "0" * 45
     with pytest.raises(
-        Exception, match="Value for payee_account_number is longer than allowed length of 40."
+        Exception, match="Value for account_nbr is longer than allowed length of 40."
     ):
         vcc.build_individual_vcc_document(Document(), long_acct_num_data, datetime.now(), 1)
 
-    long_state_data = base_data.copy()
-    long_state_data["payment_address_6"] = "abc"
-    with pytest.raises(
-        Exception, match="Value for payment_address_6 is longer than allowed length of 2."
-    ):
-        vcc.build_individual_vcc_document(Document(), long_state_data, datetime.now(), 1)
-
-    long_zip_data = base_data.copy()
-    long_zip_data["payment_post_code"] = "01234-56789"
-    with pytest.raises(
-        Exception, match="Value for payment_post_code is longer than allowed length of 10."
-    ):
+    long_zip_data = get_base_employee(use_random_tin=True)
+    long_zip_data.mailing_address.zip_code = "01234-56789"
+    with pytest.raises(Exception, match="Value for zip_code is longer than allowed length of 10."):
         vcc.build_individual_vcc_document(Document(), long_zip_data, datetime.now(), 1)
 
 
-def test_build_individual_vcc_document_invalid_acct_type():
-    bad_acct_type_data = base_data.copy()
-    bad_acct_type_data["payee_account_type"] = "NotReal"
-    with pytest.raises(Exception, match="Account type NotReal not found"):
-        vcc.build_individual_vcc_document(Document(), bad_acct_type_data, datetime.now(), 1)
-
-
-def test_build_individual_vcc_document_missing_eft():
-    data = base_data.copy()
-    del data["payee_aba_number"]
-    del data["payee_account_type"]
-    del data["payee_account_number"]
+def test_build_individual_vcc_document_missing_eft(initialize_factories_session):
+    employee = get_base_employee(add_eft=False)
+    # Note that this employee has the employee method set to EFT still which is an issue
     with pytest.raises(Exception, match="ACH parameters missing when payment method is ACH"):
-        vcc.build_individual_vcc_document(Document(), data, datetime.now(), 1)
+        vcc.build_individual_vcc_document(Document(), employee, datetime.now(), 1)

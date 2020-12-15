@@ -305,6 +305,7 @@ class Employee(Base):
     education_level_id = Column(Integer, ForeignKey("lk_education_level.education_level_id"))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
     mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), index=True)
+    payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     ctr_vendor_customer_code = Column(Text)
 
     title = relationship(LkTitle)
@@ -324,6 +325,7 @@ class Employee(Base):
     mailing_address = relationship("Address")
     eft = relationship("EFT", back_populates="employee", uselist=False)
     reference_files = relationship("EmployeeReferenceFile", back_populates="employee")
+    payment_method = relationship(LkPaymentMethod, foreign_keys=payment_method_id)
     tax_identifier = cast(
         Optional[TaxIdentifier], relationship("TaxIdentifier", back_populates="employee")
     )

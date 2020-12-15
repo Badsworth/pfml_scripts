@@ -1,8 +1,9 @@
 import xml.dom.minidom as minidom
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Dict, List
 
 import massgov.pfml.payments.payments_util as payments_util
+from massgov.pfml.db.models.employees import Employee, LkGeoState, PaymentMethod
 from massgov.pfml.payments.payments_util import Constants
 
 generic_attributes = {
@@ -53,69 +54,82 @@ def get_doc_id(now: datetime, count: int) -> str:
     return f"INTFDFML{now.strftime('%d%m%Y')}{count:04}"
 
 
-def get_acct_type_num(acct_type: str) -> str:
-    if acct_type == "Saving":
-        return "1"
-    if acct_type == "Checking":
-        return "2"
-
-    raise Exception(f"Account type {acct_type} not found")
+def get_state_str(geo_state: LkGeoState) -> str:
+    return geo_state.geo_state_description
 
 
 def build_individual_vcc_document(
-    document: minidom.Document, doc_data: Dict[str, Any], now: datetime, document_count: int
+    document: minidom.Document, employee: Employee, now: datetime, document_count: int
 ) -> minidom.Element:
-    # Everything in this block will need to pull from the actual object models
-    # They have been conveniently sectioned together to make the switch easier.
-    first_name = payments_util.validate_input(
-        key="first_name", doc_data=doc_data, required=True, max_length=14, truncate=True
+
+    first_name = payments_util.validate_db_input(
+        key="first_name", db_object=employee, required=True, max_length=14, truncate=True
     )
-    middle_name = payments_util.validate_input(
-        key="middle_name", doc_data=doc_data, required=False, max_length=14, truncate=True
+    last_name = payments_util.validate_db_input(
+        key="last_name", db_object=employee, required=True, max_length=30, truncate=True
     )
-    last_name = payments_util.validate_input(
-        key="last_name", doc_data=doc_data, required=True, max_length=30, truncate=True
+    payee_ssn = payments_util.validate_db_input(
+        key="tax_identifier",
+        db_object=employee.tax_identifier,
+        required=True,
+        max_length=9,
+        truncate=False,
     )
-    payee_ssn = payments_util.validate_input(
-        key="payee_soc_number", doc_data=doc_data, required=True, max_length=9, truncate=False
+    payee_aba_num = payments_util.validate_db_input(
+        key="routing_nbr", db_object=employee.eft, required=False, max_length=9, truncate=False
     )
-    payee_aba_num = payments_util.validate_input(
-        key="payee_aba_number", doc_data=doc_data, required=False, max_length=9, truncate=False
-    )
-    payee_acct_type = payments_util.validate_input(
-        key="payee_account_type",
-        doc_data=doc_data,
+    payee_acct_type = payments_util.validate_db_input(
+        key="bank_account_type_id",  # Conveniently, the lookup IDs we already use are the right values for the VCC
+        db_object=employee.eft,
         required=False,
         max_length=1,
         truncate=False,
-        func=get_acct_type_num,
     )
-    payee_acct_num = payments_util.validate_input(
-        key="payee_account_number", doc_data=doc_data, required=False, max_length=40, truncate=False
+    payee_acct_num = payments_util.validate_db_input(
+        key="account_nbr", db_object=employee.eft, required=False, max_length=40, truncate=False
     )
-    payment_address_line_1 = payments_util.validate_input(
-        key="payment_address_1", doc_data=doc_data, required=True, max_length=75, truncate=True
+    payment_address_line_1 = payments_util.validate_db_input(
+        key="address_line_one",
+        db_object=employee.mailing_address,
+        required=True,
+        max_length=75,
+        truncate=True,
     )
-    payment_address_line_2 = payments_util.validate_input(
-        key="payment_address_2", doc_data=doc_data, required=False, max_length=75, truncate=True
+    payment_address_line_2 = payments_util.validate_db_input(
+        key="address_line_two",
+        db_object=employee.mailing_address,
+        required=False,
+        max_length=75,
+        truncate=True,
     )
-    city = payments_util.validate_input(
-        key="payment_address_4", doc_data=doc_data, required=True, max_length=60, truncate=True
+    city = payments_util.validate_db_input(
+        key="city", db_object=employee.mailing_address, required=True, max_length=60, truncate=True
     )
-    state = payments_util.validate_input(
-        key="payment_address_6", doc_data=doc_data, required=True, max_length=2, truncate=False
+    state = payments_util.validate_db_input(
+        key="geo_state",
+        db_object=employee.mailing_address,
+        required=True,
+        max_length=2,
+        truncate=False,
+        func=get_state_str,
     )
-    zip_code = payments_util.validate_input(
-        key="payment_post_code", doc_data=doc_data, required=True, max_length=10, truncate=False
+    zip_code = payments_util.validate_db_input(
+        key="zip_code",
+        db_object=employee.mailing_address,
+        required=True,
+        max_length=10,
+        truncate=False,
     )
-    payment_method = doc_data.get("payee_payment_method")
+    payment_method = employee.payment_method
 
     doc_id = get_doc_id(now, document_count)
 
     has_eft = payee_aba_num and payee_acct_type and payee_acct_num
 
     # If the payment method is ACH, all related params must be present
-    if payment_method == "ACH" and not (payee_aba_num or payee_acct_type or payee_acct_num):
+    if payment_method.payment_method_id == PaymentMethod.ACH.payment_method_id and not (
+        payee_aba_num or payee_acct_type or payee_acct_num
+    ):
         raise Exception("ACH parameters missing when payment method is ACH")
 
     # Create the root of the document
@@ -146,7 +160,6 @@ def build_individual_vcc_document(
     vcc_doc_vcust_elements = {
         "DOC_ID": doc_id,
         "FRST_NM": first_name,
-        "MID_NM": middle_name,
         "LAST_NM": last_name,
         "TIN": payee_ssn,
     }
@@ -263,7 +276,7 @@ def build_individual_vcc_document(
     return root
 
 
-def build_vcc_dat(doc_data: List[Dict[str, Any]], now: datetime) -> minidom.Document:
+def build_vcc_dat(employees: List[Employee], now: datetime) -> minidom.Document:
     # xml_document represents the overall XML object
     xml_document = minidom.Document()
 
@@ -272,15 +285,15 @@ def build_vcc_dat(doc_data: List[Dict[str, Any]], now: datetime) -> minidom.Docu
     payments_util.add_attributes(document_root, {"VERSION": "1.0"})
     xml_document.appendChild(document_root)
 
-    for count, data in enumerate(doc_data):
-        # vcc_document refers to individual documents which contain payment data
-        vcc_document = build_individual_vcc_document(xml_document, data, now, count)
+    for count, employee in enumerate(employees):
+        # vcc_document refers to individual documents which contain employee/payment data
+        vcc_document = build_individual_vcc_document(xml_document, employee, now, count)
         document_root.appendChild(vcc_document)
 
     return xml_document
 
 
-def build_vcc_inf(doc_data: List[Dict[str, Any]], now: datetime, count: int) -> Dict[str, str]:
+def build_vcc_inf(employees: List[Employee], now: datetime, count: int) -> Dict[str, str]:
     return {
         "NewMmarsBatchID": f"{Constants.COMPTROLLER_DEPT_CODE}{now.strftime('%m%d')}VCC{count}",  # eg. EOL0101VCC24
         "NewMmarsBatchDeptCode": Constants.COMPTROLLER_DEPT_CODE,
@@ -288,18 +301,18 @@ def build_vcc_inf(doc_data: List[Dict[str, Any]], now: datetime, count: int) -> 
         "NewMmarsImportDate": now.strftime("%Y-%m-%d"),
         "NewMmarsTransCode": "VCC",
         "NewMmarsTableName": "",
-        "NewMmarsTransCount": str(len(doc_data)),
+        "NewMmarsTransCount": str(len(employees)),
         "NewMmarsTransDollarAmount": "",
     }
 
 
-def build_vcc_files(doc_data: List[Dict[str, Any]], directory: str, count: int) -> (str, str):
+def build_vcc_files(employees: List[Employee], directory: str, count: int) -> (str, str):
     if count < 10:
         raise Exception("VCC file count must be greater than 10")
     now = payments_util.get_now()
 
     filename = f"{Constants.COMPTROLLER_DEPT_CODE}{now.strftime('%Y%m%d')}VCC{count}"
-    dat_xml_document = build_vcc_dat(doc_data, now)
-    inf_dict = build_vcc_inf(doc_data, now, count)
+    dat_xml_document = build_vcc_dat(employees, now)
+    inf_dict = build_vcc_inf(employees, now, count)
 
     return payments_util.create_files(directory, filename, dat_xml_document, inf_dict)

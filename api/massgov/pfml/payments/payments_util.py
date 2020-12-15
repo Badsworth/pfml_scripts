@@ -126,6 +126,35 @@ def get_now() -> datetime:
     return datetime.now(tz)
 
 
+def validate_db_input(
+    key: str,
+    db_object: Any,
+    required: bool,
+    max_length: int,
+    truncate: bool,
+    func: Optional[Callable[[Any], str]] = None,
+) -> str:
+    value = getattr(db_object, key, None)
+
+    if required and not value:
+        raise Exception(f"Value for {key} is required to generate document.")
+    elif not required and not value:
+        return None
+
+    if func is not None:
+        value_str = func(value)
+    else:
+        value_str = str(value)  # Everything else should be safe to convert to string
+
+    if len(value_str) > max_length:
+        if truncate:
+            return value_str[:max_length]
+        # Don't add the value itself, these can include SSNs and other PII
+        raise Exception(f"Value for {key} is longer than allowed length of {max_length}.")
+
+    return value_str
+
+
 def validate_input(
     key: str,
     doc_data: Dict[str, Any],
@@ -133,7 +162,7 @@ def validate_input(
     max_length: int,
     truncate: bool,
     func: Optional[Callable[[Any], str]] = None,
-) -> None:
+) -> str:
     # This will need to be adjusted to use getattr once doc_data is a db model
     value = doc_data.get(key)
 
@@ -153,7 +182,6 @@ def validate_input(
         # Don't add the value itself, these can include SSNs and other PII
         raise Exception(f"Value for {key} is longer than allowed length of {max_length}.")
 
-    # TODO - when switching this to use DB models, add the model ID to the errors
     return value_str
 
 
