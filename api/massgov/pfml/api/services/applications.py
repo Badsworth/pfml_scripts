@@ -846,6 +846,16 @@ def add_or_update_previous_leaves(
             )
 
 
+def remove_employer_benefit(db_session: db.Session, employer_benefit: EmployerBenefit,) -> None:
+    db_session.delete(employer_benefit)
+    db_session.commit()
+
+
+def remove_other_income(db_session: db.Session, other_income: OtherIncome,) -> None:
+    db_session.delete(other_income)
+    db_session.commit()
+
+
 def add_or_update_phone(
     db_session: db.Session, phone: Optional[apps_common_io.Phone], application: Application,
 ) -> None:
