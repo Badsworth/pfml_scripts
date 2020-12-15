@@ -31,11 +31,11 @@ export const realUserTimings: Record<
   Record<TaskType, number> | number
 > = {
   SavilinxAgent: {
-    "Adjudicate Absence": 3,
-    "ID Review": 1.5,
-    "Certification Review": 4.5,
-    _DenyClaim: 1.5,
-    _ReqAddInfo: 1.5,
+    "Adjudicate Absence": 0,
+    "ID Review": 0,
+    "Certification Review": 0,
+    _DenyClaim: 0,
+    _ReqAddInfo: 0,
   },
   DFMLOpsAgent: {
     "Adjudicate Absence": 0,
@@ -146,8 +146,8 @@ export async function getFineosBaseUrl(
       ENV.FLOOD_GRID_INDEX * MAX_NODES * MAX_BROWSERS +
       ENV.FLOOD_GRID_NODE_SEQUENCE_ID * MAX_BROWSERS +
       ENV.BROWSER_ID;
-    if (ENV.FLOOD_LOAD_TEST && uuid > 0) {
-      uuid += 9; // perf env test
+    if (ENV.FLOOD_LOAD_TEST) {
+      uuid += 10; // perf env test
       username = `${username}${uuid}`;
     }
   } else {

@@ -460,6 +460,8 @@ export const receiveDocuments = (
         By.css("tr td[title='Employer Confirmation of Leave Data']")
       );
     } catch (e) {
+      // workaround from ER Demo - adds ER manually
+      console.info("\nImplementing Employer Response workaround\n");
       const addButton = await waitForElement(browser, By.visibleText("Add"));
       await addButton.click();
       const categorySelect = await labelled(browser, "Selected category");

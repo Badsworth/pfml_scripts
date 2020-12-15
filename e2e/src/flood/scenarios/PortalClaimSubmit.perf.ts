@@ -35,7 +35,7 @@ export const steps = [
     test: async (browser: Browser): Promise<void> => {
       await setFeatureFlags(browser);
       const emailVerifier = await getMailVerifier(browser);
-      const { username, password } = await emailVerifier.getCredentials();
+      const { username, password } = emailVerifier.getCredentials();
       authToken = await registerAndLogin(
         browser,
         emailVerifier,

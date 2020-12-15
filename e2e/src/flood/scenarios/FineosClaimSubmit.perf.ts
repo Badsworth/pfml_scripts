@@ -375,40 +375,42 @@ export const steps: StoredStep[] = [
           "What is your Family Member's Gender?"
         );
         await browser.selectByText(genderSelect, "Not Provided");
-
-        if (leave_details?.child_placement_date) {
-          const dateOfPlacementInput = await labelled(
-            browser,
-            "What is the date of placement, if applicable?"
-          );
-          await browser.type(
-            dateOfPlacementInput,
-            formatDate(leave_details?.child_placement_date)
-          );
-        }
-
-        if (
-          leave_details?.continuous_leave_periods?.length &&
-          leave_details?.child_birth_date
-        ) {
-          const willBe18Select = await labelled(
-            browser,
-            "Will your family member be 18 years or older on the start date of the leave request?"
-          );
-          let startDate = new Date(
-            leave_details?.continuous_leave_periods[0].start_date as string
-          );
-          startDate = new Date(
-            startDate.getFullYear() - 18,
-            startDate.getMonth(),
-            startDate.getDate()
-          );
-          const willNotBe18 =
-            startDate <= new Date(leave_details?.child_birth_date);
-          await browser.selectByText(
-            willBe18Select,
-            willNotBe18 ? "No" : "Yes"
-          );
+        try {
+          if (leave_details?.child_placement_date) {
+            const dateOfPlacementInput = await labelled(
+              browser,
+              "What is the date of placement, if applicable?"
+            );
+            await browser.type(
+              dateOfPlacementInput,
+              formatDate(leave_details?.child_placement_date)
+            );
+          }
+          if (
+            leave_details?.continuous_leave_periods?.length &&
+            leave_details?.child_birth_date
+          ) {
+            const willBe18Select = await labelled(
+              browser,
+              "Will your family member be 18 years or older on the start date of the leave request?"
+            );
+            let startDate = new Date(
+              leave_details?.continuous_leave_periods[0].start_date as string
+            );
+            startDate = new Date(
+              startDate.getFullYear() - 18,
+              startDate.getMonth(),
+              startDate.getDate()
+            );
+            const willNotBe18 =
+              startDate <= new Date(leave_details?.child_birth_date);
+            await browser.selectByText(
+              willBe18Select,
+              willNotBe18 ? "No" : "Yes"
+            );
+          }
+        } catch (e) {
+          console.info("\nNo child placement fields found!\n");
         }
       }
       const nextButton = await waitForElement(

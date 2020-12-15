@@ -151,12 +151,12 @@ export const steps: StoredStep[] = [
       // open documents & review
       try {
         const document: Locator = By.css(`a[title='${docType}' i]`);
-        const popupPage = await browser.page;
-        await browser.click(document);
-        const documentPage = await browser.waitForNewPage();
-        await browser.wait(5000);
-        documentPage.close({ runBeforeUnload: true });
-        await browser.switchTo().page(popupPage);
+        // const popupPage = await browser.page;
+        await waitForElement(browser, document);
+        // const documentPage = await browser.waitForNewPage();
+        // await browser.wait(5000);
+        // documentPage.close({ runBeforeUnload: true });
+        // await browser.switchTo().page(popupPage);
       } catch (e) {
         breakStepFlow = true;
         data.missingDocument = docType;

@@ -103,6 +103,7 @@ export const steps: StoredStep[] = [
         By.css("input[type='submit'][value='Accept']")
       );
       await browser.click(acceptButton);
+      await browser.waitForNavigation();
       // exit adjudication
       const okButton = await waitForElement(
         browser,
@@ -278,6 +279,7 @@ export const certifyEvidence: StoredStep = {
       By.css(".popup_buttons input[type='submit'][value='Yes']")
     );
     await yesButton.click();
+    await browser.waitForNavigation();
   },
 };
 

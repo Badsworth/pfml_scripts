@@ -1,4 +1,5 @@
 import { Browser, By } from "@flood/element";
+import assert from "assert";
 import { StoredStep, LSTSimClaim, TaskType } from "../config";
 import { labelled, waitForElement, waitForRealTimeSim } from "../helpers";
 
@@ -13,12 +14,29 @@ export const steps: StoredStep[] = [
         By.css("[class^='TabO'][keytipnumber='6']")
       );
       await leaveDetailsTab.click();
-
-      const rejectPlan = await waitForElement(
-        browser,
-        By.css("input[type='submit'][value='Reject']")
+      // reject all undecided leave plans
+      await waitForElement(browser, By.css("table[id*='selectedLeavePlans']"));
+      const allLeavePlans = await browser.findElements(
+        By.css("table[id*='selectedLeavePlans'] tr")
       );
-      await rejectPlan.click();
+      for (const leavePlan in allLeavePlans) {
+        await (
+          await waitForElement(
+            browser,
+            By.css(
+              `table[id*='selectedLeavePlans'] tr:nth-child(${
+                parseInt(leavePlan) + 1
+              })`
+            )
+          )
+        ).click();
+        const rejectPlan = await waitForElement(
+          browser,
+          By.css("input[type='submit'][value='Reject']")
+        );
+        await rejectPlan.click();
+        await browser.waitForNavigation();
+      }
     },
   },
   {
@@ -38,8 +56,17 @@ export const steps: StoredStep[] = [
         By.css("[id*='Popup'] input[type='submit'][value='OK']")
       );
       await okButton.click();
+      await browser.waitForNavigation();
 
-      await waitForElement(browser, By.visibleText("Closed"));
+      const closed = await browser.maybeFindElement(By.visibleText("Closed"));
+      const denied = await browser.maybeFindElement(By.visibleText("Denied"));
+      const declined = await browser.maybeFindElement(
+        By.visibleText("Declined")
+      );
+      assert(
+        closed || denied || declined,
+        "Claim was not closed/denied properly"
+      );
     },
   },
 ];
