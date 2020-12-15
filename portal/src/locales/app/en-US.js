@@ -366,6 +366,10 @@ const errors = {
     fineos_client:
       "We encountered an error when uploading your file. Try uploading your file again. If you get this error again, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
   },
+  employers: {
+    outstanding_information_request_required:
+      "This application has already been reviewed.",
+  },
   invalidFile_size:
     "We could not upload: {{disallowedFileNames}}. Files must be smaller than 5 megabytes.",
   invalidFile_sizeAndType:
