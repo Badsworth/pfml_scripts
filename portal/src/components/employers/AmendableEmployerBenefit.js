@@ -162,6 +162,7 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
                     }
                     class="margin-top-0"
                     value={amendment.benefit_amount_frequency}
+                    hideEmptyChoice
                     smallLabel
                   />
                 </React.Fragment>

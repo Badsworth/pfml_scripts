@@ -50,8 +50,10 @@ function Dropdown(props) {
         onChange={props.onChange}
         value={props.value}
       >
-        {/* Include a blank initial option, which will be chosen if no option has been selected yet */}
-        <option value="">{props.emptyChoiceLabel}</option>
+        {/* Include a blank initial option which will be chosen if no option has been selected yet */}
+        {!props.hideEmptyChoice && (
+          <option value="">{props.emptyChoiceLabel}</option>
+        )}
 
         {props.choices.map((choice) => (
           <option key={choice.value} value={choice.value}>
@@ -119,6 +121,10 @@ Dropdown.propTypes = {
    * Enable the smaller label variant
    */
   smallLabel: PropTypes.bool,
+  /**
+   * Flag to hide empty choice as first option
+   */
+  hideEmptyChoice: PropTypes.bool,
   /** The `value` of the selected choice */
   value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
