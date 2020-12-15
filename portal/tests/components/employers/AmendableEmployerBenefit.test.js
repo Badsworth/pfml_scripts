@@ -109,7 +109,7 @@ describe("AmendableEmployerBenefit", () => {
     wrapper.find(InputText).simulate("change", { target: { value: "500" } });
 
     expect(props.onChange).toHaveBeenCalled();
-    expect(wrapper.find(InputText).prop("value")).toEqual("500");
+    expect(wrapper.find(InputText).prop("value")).toEqual(500);
   });
 
   it("updates frequency in the AmendmentForm", () => {
@@ -128,7 +128,7 @@ describe("AmendableEmployerBenefit", () => {
     wrapper.find(AmendButton).simulate("click");
     wrapper.find(InputText).simulate("change", { target: { value: "500" } });
 
-    expect(wrapper.find(InputText).prop("value")).toEqual("500");
+    expect(wrapper.find(InputText).prop("value")).toEqual(500);
 
     wrapper.find(AmendmentForm).dive().find(Button).simulate("click");
 

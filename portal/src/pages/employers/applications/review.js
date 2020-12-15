@@ -130,10 +130,18 @@ export const Review = (props) => {
     const previous_leaves = formState.amendedLeaves.map((leave) =>
       pick(leave, ["leave_end_date", "leave_start_date"])
     );
-
+    const employer_benefits = formState.amendedBenefits.map((benefit) =>
+      pick(benefit, [
+        "benefit_amount_dollars",
+        "benefit_amount_frequency",
+        "benefit_end_date",
+        "benefit_start_date",
+        "benefit_type",
+      ])
+    );
     const payload = {
       comment: formState.comment,
-      employer_benefits: formState.employerBenefits,
+      employer_benefits,
       employer_decision: formState.employerDecision,
       fraud: formState.fraud,
       hours_worked_per_week: amendedHours,

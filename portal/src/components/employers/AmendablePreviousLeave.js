@@ -25,7 +25,7 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
       ...amendment,
       [field]: value,
     });
-    onChange({ id, [field]: value });
+    onChange({ previous_leave_id: id, [field]: value });
   };
 
   return (
@@ -56,7 +56,11 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
             >
               <InputDate
                 onChange={(e) =>
-                  amendLeave(leavePeriod.id, "leave_start_date", e.target.value)
+                  amendLeave(
+                    leavePeriod.previous_leave_id,
+                    "leave_start_date",
+                    e.target.value
+                  )
                 }
                 value={amendment.leave_start_date}
                 label={t("components.amendmentForm.question_leaveStartDate")}
@@ -68,7 +72,11 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
               />
               <InputDate
                 onChange={(e) =>
-                  amendLeave(leavePeriod.id, "leave_end_date", e.target.value)
+                  amendLeave(
+                    leavePeriod.previous_leave_id,
+                    "leave_end_date",
+                    e.target.value
+                  )
                 }
                 value={amendment.leave_end_date}
                 label={t("components.amendmentForm.question_leaveEndDate")}

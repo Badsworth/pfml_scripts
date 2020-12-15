@@ -26,15 +26,15 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
     false
   );
   const amendBenefit = (id, field, value) => {
-    const formattedValue =
-      field === "benefit_amount_dollars"
-        ? parseInt(value.replace(/,/g, ""))
-        : value;
+    let formattedValue = value;
+    if (field === "benefit_amount_dollars") {
+      formattedValue = parseInt(value) ? parseInt(value.replace(/,/g, "")) : "";
+    }
     setAmendment({
       ...amendment,
-      [field]: value,
+      [field]: formattedValue,
     });
-    onChange({ id, [field]: formattedValue });
+    onChange({ employer_benefit_id: id, [field]: formattedValue });
   };
   const isPaidLeave =
     employerBenefit.benefit_type === EmployerBenefitType.paidLeave;
@@ -101,7 +101,7 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
               <InputDate
                 onChange={(e) =>
                   amendBenefit(
-                    employerBenefit.id,
+                    employerBenefit.employer_benefit_id,
                     "benefit_start_date",
                     e.target.value
                   )
@@ -117,7 +117,7 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
               <InputDate
                 onChange={(e) =>
                   amendBenefit(
-                    employerBenefit.id,
+                    employerBenefit.employer_benefit_id,
                     "benefit_end_date",
                     e.target.value
                   )
@@ -135,7 +135,7 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
                   <InputText
                     onChange={(e) =>
                       amendBenefit(
-                        employerBenefit.id,
+                        employerBenefit.employer_benefit_id,
                         "benefit_amount_dollars",
                         e.target.value
                       )
@@ -155,7 +155,7 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
                     name="benefit-frequency-amendment"
                     onChange={(e) =>
                       amendBenefit(
-                        employerBenefit.id,
+                        employerBenefit.employer_benefit_id,
                         "benefit_amount_frequency",
                         e.target.value
                       )
