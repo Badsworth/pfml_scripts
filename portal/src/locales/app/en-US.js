@@ -1401,7 +1401,7 @@ const pages = {
       "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for family leave for bonding with a child, with more benefits available in 2021.",
     // TODO (EMPLOYER-661): Remove string after December 15
     leadBackground_prelaunch:
-      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers will be able to apply for family leave for bonding with a child starting on December 15, 2020, with more benefits available in 2021.",
+      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers will be able to apply for family leave for bonding with a child soon, with more benefits available in 2021.",
     leadMultipleCompanies:
       "If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.",
     nextStep: "We'll send you a 6-digit code to verify your email address.",
@@ -1667,7 +1667,7 @@ const pages = {
       "Thanks for joining the paid leave program. Massachusetts workers can now apply for family leave for bonding with a child, with more benefits available in 2021.",
     // TODO (EMPLOYER-661): Remove string after December 15
     welcomeBody_prelaunch:
-      "Thanks for joining the paid leave program. There’s no further action for you to take now, but you’ll be able to review applications online starting December 15, 2020.",
+      "Thanks for joining the paid leave program. There’s no further action for you to take now, but you’ll be able to review applications online soon.",
     welcomeTitle: "Welcome",
   },
   index: {
@@ -1680,7 +1680,7 @@ const pages = {
     createAccountHeading: "Create an account",
     employerCardBody: "Register now so you can manage leave for your team.",
     employerCardBody_prelaunch:
-      "Register now so your team is ready for December 15, 2020, when workers can start requesting leave.",
+      "Register now so your team is ready for when workers can start requesting leave.",
     employerCreateAccountButton: "Create an employer account",
     employerHeading: "Employers",
     seoTitle: "Massachusetts Paid Family and Medical Leave",
