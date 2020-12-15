@@ -450,7 +450,7 @@ resource "aws_iam_role_policy" "fineos_import_employee_updates_task_fineos_role_
   count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
 
   name   = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-import-employee-updates-fineos-policy"
-  role   = aws_iam_role.fineos_eligibility_feed_export_task_role.id
+  role   = aws_iam_role.fineos_import_employee_updates_task_role.id
   policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
 }
 
