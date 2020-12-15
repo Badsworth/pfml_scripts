@@ -110,7 +110,8 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
             message="No outstanding information request for claim",
             errors=[
                 response_util.custom_issue(
-                    "fineos_client", "No outstanding information request for claim"
+                    "outstanding_information_request_required",
+                    "No outstanding information request for claim",
                 )
             ],
         ).to_api_response()
