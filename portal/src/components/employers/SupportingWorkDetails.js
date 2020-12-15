@@ -21,8 +21,9 @@ const SupportingWorkDetails = (props) => {
     false
   );
   const amendDuration = (value) => {
-    setAmendment(value);
-    onChange(value);
+    const numericValue = parseInt(value) || "";
+    setAmendment(numericValue);
+    onChange(numericValue);
   };
 
   return (
