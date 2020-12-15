@@ -35,11 +35,6 @@ def find_user_and_register(
         )
         return
 
-    logger.info(
-        "Creating Leave Admin FINEOS User for: ",
-        extra={"Leave admin email", leave_admin.user.email_address},
-    )
-
     register_leave_admin_with_fineos(
         # TODO: Set a real admin full name - https://lwd.atlassian.net/browse/EMPLOYER-540
         admin_full_name="Leave Administrator",
@@ -73,8 +68,23 @@ def find_admins_without_registration(db_session: db.Session):
 
         fineos_client = fineos.create_client(fineos_client_config)
 
+    logger.info(
+        "Leave admin records to process", extra={"To process": len(leave_admins_without_fineos)}
+    )
+
     for leave_admin in leave_admins_without_fineos:
         find_user_and_register(db_session, leave_admin, fineos_client)
+
+    leave_admins_without_fineos_count = (
+        db_session.query(UserLeaveAdministrator)
+        .filter(UserLeaveAdministrator.fineos_web_id == None)  # noqa: E711
+        .count()
+    )
+
+    logger.info(
+        "Leave admin records left unprocessed",
+        extra={"Left unprocessed": leave_admins_without_fineos_count},
+    )
 
     logger.info("Completed FINEOS Leave Admin Creation Script")
 
