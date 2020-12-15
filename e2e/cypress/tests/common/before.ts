@@ -1,6 +1,6 @@
 import { Before } from "cypress-cucumber-preprocessor/steps";
 
-Before({ tags: "@portal" }, () => {
+export function beforePortal(): void {
   // Set the feature flag necessary to see the portal.
   cy.setCookie(
     "_ff",
@@ -28,7 +28,9 @@ Before({ tags: "@portal" }, () => {
   cy.intercept("**/new-relic.js", (req) => {
     req.reply("console.log('Fake New Relic script loaded');");
   });
-});
+}
+
+Before({ tags: "@portal" }, beforePortal);
 
 Before({ tags: "@fineos" }, () => {
   // Supress known application errors in Fineos.

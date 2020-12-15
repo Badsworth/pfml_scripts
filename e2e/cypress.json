@@ -13,7 +13,7 @@
     "runMode": 1
   },
   "testFiles": [
-    "**/*.feature"
+    "**/*.{feature,ts}"
   ],
   "viewportWidth": 2000,
   "viewportHeight": 1320

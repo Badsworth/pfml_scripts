@@ -4,8 +4,6 @@ import { CypressStepThis } from "../../../src/types";
 import { fineos } from "./actions";
 import { format } from "date-fns";
 
-Then("I should be logged in", () => portal.assertLoggedIn());
-
 Then("I should see a success page confirming my claim submission", function () {
   cy.url({ timeout: 20000 }).should("include", "/applications/success");
 });

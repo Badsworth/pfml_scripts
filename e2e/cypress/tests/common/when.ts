@@ -103,21 +103,6 @@ When("I submit the employer registration form", function () {
     }
   );
 });
-/* Account creation */
-When("I submit the claimant registration form", function (
-  this: CypressStepThis
-) {
-  if (!this.credentials) {
-    throw new Error("Credentials not properly set");
-  }
-
-  portal.portalRegister(this.credentials);
-});
-
-When("I accept the terms of service", function () {
-  // this action is forced because of trivial error: "this element is detached from the DOM"
-  cy.contains("Agree and continue").click({ force: true });
-});
 
 When("I finish managing evidence", function () {
   fineos.clickBottomWidgetButton();
@@ -172,7 +157,7 @@ When("I am the {string} claimant visiting the portal", function (
       .then((creds: Credentials) => {
         cy.stash("username", creds.username);
         cy.stash("password", creds.password);
-        portal.portalRegister(creds as Credentials);
+        portal.registerAsClaimant(creds as Credentials);
         portal.login(creds as Credentials);
         cy.contains("Agree and continue").click({ force: true });
       })

@@ -64,7 +64,7 @@ export function login(credentials: Credentials): void {
   cy.url().should("not.include", "login");
 }
 
-export function portalRegister(credentials: Credentials): void {
+export function registerAsClaimant(credentials: Credentials): void {
   cy.visit("/create-account");
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").type(credentials.password);
@@ -73,6 +73,25 @@ export function portalRegister(credentials: Credentials): void {
     cy.labelled("6-digit code").type(code as string);
     cy.contains("button", "Submit").click();
   });
+}
+
+export function registerAsLeaveAdmin(credentials: Credentials): void {
+  if (!credentials.fein) {
+    throw new Error("Invalid Leave Admin credentials given - no FEIN");
+  }
+  cy.visit("/employers/create-account");
+  cy.labelled("Email address").type(credentials.username);
+  cy.labelled("Password").type(credentials.password);
+  cy.labelled("Employer ID number").type(credentials.fein);
+  cy.stashLog("leaveAdminEmail", credentials.username);
+  cy.stashLog("employerFEIN", credentials.fein);
+  cy.contains("button", "Create account").click();
+  cy.task("getAuthVerification", credentials.username as string).then(
+    (code: string) => {
+      cy.labelled("6-digit code").type(code as string);
+      cy.contains("button", "Submit").click();
+    }
+  );
 }
 
 export function employerLogin(credentials: Credentials): void {
