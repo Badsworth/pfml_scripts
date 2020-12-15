@@ -21,8 +21,10 @@ Given("I begin to submit a {string} claim as a {string} employee", function (
 
 Given("I search for the proper claim in Fineos", function () {
   fineos.loginSavilinx();
-  fineos.searchScenario();
-  fineos.findClaim();
+  cy.unstash<string>("claimNumber").then((claimNumber) => {
+    fineos.searchScenario(claimNumber);
+    fineos.findClaim(claimNumber);
+  });
   fineos.onPage("claims");
 });
 
@@ -88,11 +90,15 @@ Given("I click through the commence intake flow", function (): void {
 });
 
 Given("I am on the page for that claim", function (): void {
-  portal.viewClaim();
+  cy.unstash<string>("applicationId").then((applicationId) => {
+    portal.viewClaim(applicationId);
+  });
 });
 
 Given("I go directly to the ID upload page", function (): void {
-  portal.goToIdUploadPage();
+  cy.unstash<string>("applicationId").then((applicationId) => {
+    portal.goToIdUploadPage(applicationId);
+  });
 });
 
 Given("I have added payment information", function (

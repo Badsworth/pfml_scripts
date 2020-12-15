@@ -10,7 +10,7 @@ export function visitClaim(claimId: string): void {
   cy.get('td[keytipnumber="4"]').contains("Case").click();
   cy.labelled("Case Number").type(claimId);
   cy.get('input[type="submit"][value="Search"]').click();
-  assertOnClaimPage();
+  assertOnClaimPage(claimId);
 }
 
 export function visitEmployer(fein: string): void {
@@ -40,27 +40,16 @@ export function commenceIntake(claimId: string): void {
   cy.contains("Capture the following details in order to commence intake");
 }
 
-export function assertOnClaimPage(): void {
-  cy.unstash("claimNumber")
-    .then((claimNumber) => {
-      if (typeof claimNumber === "string") {
-        return claimNumber;
-      } else {
-        throw new Error("Claim number must be a string.");
-      }
-    })
-    .then((claimNumber) => {
-      cy.get("[id*='processPhaseEnum']").should("contain.text", "Adjudication");
-      cy.get(".case_pageheader_title").contains(claimNumber);
-    });
+export function assertOnClaimPage(claimNumber: string): void {
+  cy.get("[id*='processPhaseEnum']").should("contain.text", "Adjudication");
+  cy.get(".case_pageheader_title").contains(claimNumber);
 }
 
-export function assertOnClaimantPage(): void {
-  cy.unstash("firstName").then((firstName) => {
-    cy.unstash("lastName").then((lastName) => {
-      cy.contains("h2", firstName + " " + lastName);
-    });
-  });
+export function assertOnClaimantPage(
+  firstName: string,
+  lastName: string
+): void {
+  cy.contains("h2", `${firstName} ${lastName}`);
 }
 
 export function assertAdjudicatingClaim(claimId: string): void {
@@ -69,7 +58,6 @@ export function assertAdjudicatingClaim(claimId: string): void {
 }
 
 export function assertClaimApprovable(): void {
-  assertOnClaimPage();
   // Assert that we have all green checkboxes.
   cy.get(
     "[id*='leavePlanAdjudicationListviewWidgetApplicabilityStatus']"
@@ -101,41 +89,22 @@ export function assertClaimApprovable(): void {
   cy.contains(".menulink a", "Approve").should("be.visible");
 }
 
-export function searchScenario(): void {
-  cy.visit("/");
+export function searchScenario(claimNumber: string): void {
   cy.get('a[aria-label="Cases"]').click();
   cy.get('td[keytipnumber="4"]').contains("Case").click();
-
-  // For Testing (hard coded Claim Number)
-  // cy.labelled("Case Number").type("NTN-5390-ABS-01");
-
-  cy.unstash("claimNumber")
-    .as("claimNumber")
-    .then((claimNumber) => {
-      cy.labelled("Case Number").type(claimNumber as string);
-    });
+  cy.labelled("Case Number").type(claimNumber);
   cy.get('input[type="submit"][value="Search"]').click();
 }
 
-export function searchClaimant(): void {
-  cy.unstash("lastName").then((lastName) => {
-    cy.unstash("firstName").then((firstName) => {
-      cy.visit("/");
-      cy.get('a[aria-label="Parties"]').click();
-      cy.get("input[name*='First_Name']").type(firstName as string);
-      cy.get("input[name*='Last_Name']").type(lastName as string);
-      cy.get('input[type="submit"][value="Search"]').click();
-    });
-  });
+export function searchClaimant(firstName: string, lastName: string): void {
+  cy.get('a[aria-label="Parties"]').click();
+  cy.get("input[name*='First_Name']").type(firstName as string);
+  cy.get("input[name*='Last_Name']").type(lastName as string);
+  cy.get('input[type="submit"][value="Search"]').click();
 }
 
-export function findClaim(): void {
-  // For Testing (hard coded Claim Number)
-  // cy.get("h2 > span").should("contain.text", "NTN-5390-ABS-01");
-
-  cy.unstash("claimNumber").then((claimNumber) => {
-    cy.get("h2 > span").should("contain.text", claimNumber);
-  });
+export function findClaim(claimNumber: string): void {
+  cy.get("h2 > span").should("contain.text", claimNumber);
 }
 
 export function onPage(page: string): void {

@@ -622,26 +622,16 @@ export function confirmClaimSubmissionSucces(): void {
   cy.url().should("include", "/applications/success");
 }
 
-export function viewClaim(): void {
-  cy.unstash("applicationId").then((applicationId) => {
-    cy.visit(`/applications/checklist/?claim_id=${applicationId}`);
-    cy.url().should(
-      "include",
-      `/applications/checklist/?claim_id=${applicationId}`
-    );
-  });
+export function viewClaim(applicationId: string): void {
+  cy.visit(`/applications/checklist/?claim_id=${applicationId}`);
+  cy.url().should(
+    "include",
+    `/applications/checklist/?claim_id=${applicationId}`
+  );
 }
 
-export function goToIdUploadPage(): void {
-  cy.unstash("applicationId").then((applicationId) => {
-    cy.visit(`/applications/upload-id/?claim_id=${applicationId}`);
-  });
-}
-
-export function goToCertificationUploadPage(): void {
-  cy.unstash("applicationId").then((applicationId) => {
-    cy.visit(`/applications/certification-id/?claim_id=${applicationId}`);
-  });
+export function goToIdUploadPage(applicationId: string): void {
+  cy.visit(`/applications/upload-id/?claim_id=${applicationId}`);
 }
 
 export function completeDateForm(

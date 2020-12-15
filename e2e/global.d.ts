@@ -33,7 +33,7 @@ declare namespace Cypress {
       application: App
     ): Chainable<App & Pick<Application, claim>>;
     stash(key: string, value: unknown): null;
-    unstash(key: string): Chainable<unknown>;
+    unstash<T extends unknown>(key: string): Chainable<T>;
     // Declare our custom tasks.
     stashLog(key: string, value: string | null | undefined): null;
     task(

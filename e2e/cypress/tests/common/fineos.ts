@@ -41,12 +41,16 @@ Given("I am viewing claim {string}", (claimId: string) => {
 });
 
 When("I start adjudication for the claim", () => {
-  fineos.assertOnClaimPage();
+  cy.unstash<string>("claimNumber").then((claimNumber) => {
+    fineos.assertOnClaimPage(claimNumber);
+  });
   cy.get("input[type='submit'][value='Adjudicate']").click();
 });
 
 Then("I should reject the plan", () => {
-  fineos.assertOnClaimPage();
+  cy.unstash<string>("claimNumber").then((claimNumber) => {
+    fineos.assertOnClaimPage(claimNumber);
+  });
   cy.get("input[type='submit'][value='Adjudicate']").click();
   cy.wait("@ajaxRender");
   cy.wait(200);
@@ -154,9 +158,14 @@ Then(
   "I begin to submit a new claim on that employee in FINEOS",
   function (): void {
     fineos.loginSavilinx();
-    fineos.searchClaimant();
-    fineos.clickBottomWidgetButton("OK");
-    fineos.assertOnClaimantPage();
+
+    cy.unstash<string>("firstName").then((firstName) => {
+      cy.unstash<string>("lastName").then((lastName) => {
+        fineos.searchClaimant(firstName, lastName);
+        fineos.clickBottomWidgetButton("OK");
+        fineos.assertOnClaimantPage(firstName, lastName);
+      });
+    });
   }
 );
 
@@ -221,7 +230,7 @@ Then("I start create a new notification", function (): void {
 Then(
   "I should modify leave dates for the requested time off",
   function (): void {
-    cy.get<string>("@claimNumber").then(fineos.assertAdjudicatingClaim);
+    cy.unstash<string>("claimNumber").then(fineos.assertAdjudicatingClaim);
     cy.get("#leaveRequestDetailsWidget_un18_startDate").then((dateEl) => {
       cy.wrap(dateEl.text()).as("startDate");
     });
