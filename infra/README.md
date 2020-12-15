@@ -49,22 +49,22 @@ Then install PFML's CLI wrapper with the following script:
 ../bin/centrify/install-centrify-aws-cli.sh INSTALL_LOCATION
 ```
 
-Since this pulls down a git repository, it is recommended that the installation location you provide is your general git home, if you have one. For example:
+Since this pulls down a git repository, it is recommended that the installation location you provide is your general git home, if you have one. In other words, the dir that `pfml/` lives in. For example, if `pfml` lives in `/git`:
 
 ```sh
 ../bin/centrify/install-centrify-aws-cli.sh ~/code/git
 ```
 
-Once it is installed, you can run the login-aws command to generate a 1-hour AWS access key:
+Once it is installed, you can run the login-aws command to generate a 1-hour AWS access key. You can look up your AWS role (AWS-498823821309-NonPROD-Admins, AWS-498823821309-ViewOnly) through the web interface:
 
 ```sh
 login-aws
 ```
 
 <details>
-<summary>Example login:</summary>
+<summary>Example login for Infrastructure-Admin_profile. </summary>
 <p>
-
+    
 ```
 Logfile - centrify-python-aws.log
 Please enter your username : kevin.yeh
@@ -98,9 +98,11 @@ aws s3 ls --profile AWS-498823821309-Infrastructure-Admin_profile
 AWS_PROFILE is currently: default. Run the following command to set it:
 export AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
 ```
-
 </p>
 </details>
+
+
+If you have multiple roles in AWS, you may encounter a prompt to choose between the roles. This prompt will continue prompting you for a role choice even after you have entered it. It does not exit on its own so you will have to command interrupt (ctrl-c) out of the process. 
 
 For convenience, it is recommended that you export AWS_PROFILE or set an alias
 in your startup script to easily set/select the profile in any shell.
@@ -149,7 +151,7 @@ npm install
 
 ## Runbook
 
-To view pending changes to infrastructure within an environment directory:
+To view pending changes to infrastructure within an environment directory (i.e. `/test`, `/stage`):
 
 ```
 $ terraform init
@@ -297,6 +299,109 @@ S3
 ## Troubleshooting
 
 Sometimes, Terraform does things you might not expect it to do.
+
+### I am unable to login via login-aws
+
+If you are seeing `Error in calling https://eotss.my.centrify.com/Security/StartAuthentication - Please refer logs.` You can find the logs in `centrify-aws-cli-utilities/Python-AWS/centrify-python-aws.log`
+
+In the logs, if you are seeing errors related to the SSL cert, then replace the `cacerts_eotss.pem` file in the same dir with the one below.
+<details>
+<summary>SSL cert to replace cacerts_eotss.pem </summary>
+<p>
+    
+```
+-----BEGIN CERTIFICATE-----
+MIIGwTCCBamgAwIBAgIQBZLpXWteAA4fymzo4iR+UDANBgkqhkiG9w0BAQsFADBN
+MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMScwJQYDVQQDEx5E
+aWdpQ2VydCBTSEEyIFNlY3VyZSBTZXJ2ZXIgQ0EwHhcNMTgxMTI4MDAwMDAwWhcN
+MjAxMjAyMTIwMDAwWjB9MQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5p
+YTEUMBIGA1UEBxMLU2FudGEgQ2xhcmExFjAUBgNVBAoTDUlkYXB0aXZlLCBMTEMx
+DzANBgNVBAsTBkRldk9wczEaMBgGA1UEAwwRKi5teS5pZGFwdGl2ZS5hcHAwggEi
+MA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDWx9tWOAcSJznyf0NUwmGQJWoo
+Eq54Z2Z/8nlRxQk1i7oJmUdzEp+qtoQmkEY5STF6UVolZ/xwPNZN4GDjJ28G2bGh
+NyOwG7pmwFkIoKjcHX0VcyDluj7g0pv41gDNIdAZZXgha2RKieesYvaHCWMOlqhy
+hkTHa6R3w/QsVImg15wkajyR85VM4/8dpDQDbyyODcGIvS4qfbWppZPiHx+VruLK
+Bjnb4zA4x85JcQoky7ZINgc/9n3/LCZX0eJg0Spea5uh7BXiPnRO518GgMrvtjMb
+/DLJ8P6c9Y8Q90idzik7bmV72i+Xpb1xLp/eQuA49oN/bPFdtpEM5Ql45WvFAgMB
+AAGjggNrMIIDZzAfBgNVHSMEGDAWgBQPgGEcgjFh1S8o541GOLQs4cbZ4jAdBgNV
+HQ4EFgQUSYFXmEBesR9bKRXcTmv9SCc1iMMwLQYDVR0RBCYwJIIRKi5teS5pZGFw
+dGl2ZS5hcHCCD215LmlkYXB0aXZlLmFwcDAOBgNVHQ8BAf8EBAMCBaAwHQYDVR0l
+BBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMGsGA1UdHwRkMGIwL6AtoCuGKWh0dHA6
+Ly9jcmwzLmRpZ2ljZXJ0LmNvbS9zc2NhLXNoYTItZzYuY3JsMC+gLaArhilodHRw
+Oi8vY3JsNC5kaWdpY2VydC5jb20vc3NjYS1zaGEyLWc2LmNybDBMBgNVHSAERTBD
+MDcGCWCGSAGG/WwBATAqMCgGCCsGAQUFBwIBFhxodHRwczovL3d3dy5kaWdpY2Vy
+dC5jb20vQ1BTMAgGBmeBDAECAjB8BggrBgEFBQcBAQRwMG4wJAYIKwYBBQUHMAGG
+GGh0dHA6Ly9vY3NwLmRpZ2ljZXJ0LmNvbTBGBggrBgEFBQcwAoY6aHR0cDovL2Nh
+Y2VydHMuZGlnaWNlcnQuY29tL0RpZ2lDZXJ0U0hBMlNlY3VyZVNlcnZlckNBLmNy
+dDAMBgNVHRMBAf8EAjAAMIIBfgYKKwYBBAHWeQIEAgSCAW4EggFqAWgAdgCkuQmQ
+tBhYFIe7E6LMZ3AKPDWYBPkb37jjd80OyA3cEAAAAWdcMm4uAAAEAwBHMEUCIQCc
+tcUuk0iJ3zqb2pi23NIfR1+gqP12Hfhw/rci6jHZAwIgLWMWxoVxYX5BzrvDwFey
+EW1yIoQ38Et8yEVC55iiWWUAdgCHdb/nWXz4jEOZX73zbv9WjUdWNv9KtWDBtOr/
+XqCDDwAAAWdcMm8JAAAEAwBHMEUCIQDPYgDQvqKIHSmLHX3fy811iJ7vU6Li1zO1
+NMn+mTfjKgIgA8JHz/W0XcnHRYUdkboUz6K7Y52wmkgJMtn5Dyxx9+YAdgBvU3as
+MfAxGdiZAKRRFf93FRwR2QLBACkGjbIImjfZEwAAAWdcMm+OAAAEAwBHMEUCIQCB
+kChV9g+w9kInvvqPmsseDOmdwEE6MfQHoq/e82D/0QIgQc0mXnQHwlk72FlDYuYz
+C9JDcggCIB5NMBit9up5Be8wDQYJKoZIhvcNAQELBQADggEBAJ5ytUfKOrx7CK+P
+EQJ4Ld3qPYimduylIC1GAIgz9eQ5DEMowZfkhWHYF1reiOYOES4qqKd20LdGrsCb
+xSwctz+fqlIR/nQJgynAazPT+Tx2uBJ+LAK09lLrpSAPhE61SQEROsnhDefOKOH2
+Z6SI84Fvj9zAcyQ8QEHnDU+FObOVNtvQAdvQP7q+cpeS78TkKbRJYSL9JwsxX70U
+LpOPppGZdsqF04ZyrRE2THEKhIvwgDKat54r2XKwXfGy9NGMfDsafbdlQj4ECJOk
+9lphbgNmeDJtv7PBJPInEjB0TC+VnOXGYeiw5hR4Tc7lmJEQMQUuogBJIzS933Id
+ze3/ZuU=
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIElDCCA3ygAwIBAgIQAf2j627KdciIQ4tyS8+8kTANBgkqhkiG9w0BAQsFADBh
+MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
+d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
+QTAeFw0xMzAzMDgxMjAwMDBaFw0yMzAzMDgxMjAwMDBaME0xCzAJBgNVBAYTAlVT
+MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxJzAlBgNVBAMTHkRpZ2lDZXJ0IFNIQTIg
+U2VjdXJlIFNlcnZlciBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB
+ANyuWJBNwcQwFZA1W248ghX1LFy949v/cUP6ZCWA1O4Yok3wZtAKc24RmDYXZK83
+nf36QYSvx6+M/hpzTc8zl5CilodTgyu5pnVILR1WN3vaMTIa16yrBvSqXUu3R0bd
+KpPDkC55gIDvEwRqFDu1m5K+wgdlTvza/P96rtxcflUxDOg5B6TXvi/TC2rSsd9f
+/ld0Uzs1gN2ujkSYs58O09rg1/RrKatEp0tYhG2SS4HD2nOLEpdIkARFdRrdNzGX
+kujNVA075ME/OV4uuPNcfhCOhkEAjUVmR7ChZc6gqikJTvOX6+guqw9ypzAO+sf0
+/RR3w6RbKFfCs/mC/bdFWJsCAwEAAaOCAVowggFWMBIGA1UdEwEB/wQIMAYBAf8C
+AQAwDgYDVR0PAQH/BAQDAgGGMDQGCCsGAQUFBwEBBCgwJjAkBggrBgEFBQcwAYYY
+aHR0cDovL29jc3AuZGlnaWNlcnQuY29tMHsGA1UdHwR0MHIwN6A1oDOGMWh0dHA6
+Ly9jcmwzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydEdsb2JhbFJvb3RDQS5jcmwwN6A1
+oDOGMWh0dHA6Ly9jcmw0LmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydEdsb2JhbFJvb3RD
+QS5jcmwwPQYDVR0gBDYwNDAyBgRVHSAAMCowKAYIKwYBBQUHAgEWHGh0dHBzOi8v
+d3d3LmRpZ2ljZXJ0LmNvbS9DUFMwHQYDVR0OBBYEFA+AYRyCMWHVLyjnjUY4tCzh
+xtniMB8GA1UdIwQYMBaAFAPeUDVW0Uy7ZvCj4hsbw5eyPdFVMA0GCSqGSIb3DQEB
+CwUAA4IBAQAjPt9L0jFCpbZ+QlwaRMxp0Wi0XUvgBCFsS+JtzLHgl4+mUwnNqipl
+5TlPHoOlblyYoiQm5vuh7ZPHLgLGTUq/sELfeNqzqPlt/yGFUzZgTHbO7Djc1lGA
+8MXW5dRNJ2Srm8c+cftIl7gzbckTB+6WohsYFfZcTEDts8Ls/3HB40f/1LkAtDdC
+2iDJ6m6K7hQGrn2iWZiIqBtvLfTyyRRfJs8sjX7tN8Cp1Tm5gr8ZDOo0rwAhaPit
+c+LJMto4JQtV05od8GiG7S5BNO98pVAdvzr508EIDObtHopYJeS4d60tbvVS3bR0
+j6tJLp07kzQoH3jOlOrHvdPJbRzeXDLz
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
+MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
+d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
+QTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT
+MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j
+b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG
+9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB
+CSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97
+nh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt
+43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P
+T19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4
+gdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO
+BgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR
+TLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw
+DQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr
+hMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg
+06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF
+PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls
+YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
+CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
+-----END CERTIFICATE-----
+```
+
+</p>
+</details>
 
 ### I have an unexpected error not related to my change?
 
