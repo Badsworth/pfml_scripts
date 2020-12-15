@@ -30,9 +30,7 @@ export function beforePortal(): void {
   });
 }
 
-Before({ tags: "@portal" }, beforePortal);
-
-Before({ tags: "@fineos" }, () => {
+export function beforeFineos(): void {
   // Supress known application errors in Fineos.
   cy.on("uncaught:exception", (e) => {
     return !e.message.match(
@@ -41,4 +39,7 @@ Before({ tags: "@fineos" }, () => {
   });
   // Set up a route we can listen to wait on ajax rendering to complete.
   cy.intercept(/ajax\/pagerender\.jsp/).as("ajaxRender");
-});
+}
+
+Before({ tags: "@portal" }, beforePortal);
+Before({ tags: "@fineos" }, beforeFineos);

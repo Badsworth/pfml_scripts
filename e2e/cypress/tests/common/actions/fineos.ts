@@ -1,4 +1,5 @@
 import { getFineosBaseUrl } from "../../../config";
+import { formatDateString } from "../util";
 
 export function loginSavilinx(): void {
   Cypress.config("baseUrl", getFineosBaseUrl());
@@ -337,4 +338,61 @@ export function approveClaim(): void {
 export function findEmployerResponse(employerResponseComment: string): void {
   cy.contains("a", "Employer Response to Leave Request").click();
   cy.contains("textarea", employerResponseComment);
+}
+
+// @todo: This seems like it's doing a lot - is this really the whole claim workflow?
+// If so, we might want to name it submitClaim() to align with portal/API.
+export function createNotification(startDate: Date, endDate: Date): void {
+  cy.contains("span", "Create Notification").click();
+  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.contains(
+    "div",
+    "Bonding with a new child (adoption/ foster care/ newborn)"
+  )
+    .prev()
+    .find("input")
+    .click();
+  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.labelled("Qualifier 1").select("Foster Care");
+  cy.get("span[id='nextContainer']")
+    .first()
+    .find("input")
+    .click()
+    .wait("@ajaxRender");
+  cy.contains("div", "One or more fixed time off periods")
+    .prev()
+    .find("input[type='checkbox'][id*='continuousTimeToggle_CHECKBOX']")
+    .click({ force: true });
+  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.labelled("Absence status").select("Estimated");
+
+  cy.labelled("Absence start date").type(
+    `${formatDateString(startDate)}{enter}`
+  );
+  cy.labelled("Absence end date").type(`${formatDateString(endDate)}{enter}`, {
+    force: true,
+  });
+  cy.get(
+    "input[type='button'][id*='AddTimeOffAbsencePeriod'][value='Add']"
+  ).click();
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  cy.wait("@ajaxRender");
+  cy.get("span[id='nextContainer']")
+    .first()
+    .find("input")
+    .click()
+    .wait("@ajaxRender");
+  cy.get("span[id='nextContainer']")
+    .first()
+    .find("input")
+    .click()
+    .wait("@ajaxRender");
+  cy.get("span[id='nextContainer']")
+    .first()
+    .find("input")
+    .click()
+    .wait("@ajaxRender");
+  cy.contains("div", "Thank you. Your notification has been submitted.");
 }
