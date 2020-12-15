@@ -6,6 +6,7 @@ from pydantic import BaseModel
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.notifications.requests import NotificationRequest, RecipientDetails
 from massgov.pfml.api.services.administrator_fineos_actions import LEAVE_ADMIN_INFO_REQUEST_TYPE
+from massgov.pfml.db.models.employees import Employer
 from massgov.pfml.servicenow.models import Claimant, OutboundMessage, Recipient
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -77,7 +78,9 @@ def format_document_type(notification_request: NotificationRequest) -> str:
 
 class TransformNotificationRequest(BaseModel):
     @classmethod
-    def to_service_now(cls, notification_request: NotificationRequest) -> OutboundMessage:
+    def to_service_now(
+        cls, notification_request: NotificationRequest, employer: Employer
+    ) -> OutboundMessage:
         return OutboundMessage(
             u_absence_id=notification_request.absence_case_id,
             u_document_type=format_document_type(notification_request),
@@ -87,6 +90,7 @@ class TransformNotificationRequest(BaseModel):
             u_link=format_link(notification_request),
             u_recipients=format_recipients(notification_request),
             u_organization_name=notification_request.organization_name,
+            u_employer_customer_number=employer.fineos_employer_id,
             u_claimant_info=Claimant(
                 first_name=notification_request.claimant_info.first_name,
                 last_name=notification_request.claimant_info.last_name,

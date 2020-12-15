@@ -30,7 +30,7 @@ leave_admin_body = {
 claimant_body = {
     "absence_case_id": "NTN-111-ABS-01",
     "document_type": "Legal Notice",
-    "fein": "00-0000000",
+    "fein": "71-6779225",
     "organization_name": "Wayne Enterprises",
     "trigger": "claim.approved",
     "source": "Self-Service",
@@ -79,7 +79,7 @@ def test_notifications_post_leave_admin(client, test_db_session, fineos_user_tok
 
 
 def test_notifications_post_leave_admin_no_document_type(
-    client, test_db_session, fineos_user_token
+    client, test_db_session, fineos_user_token, employer
 ):
     leave_admin_body_no_document_type = copy.deepcopy(leave_admin_body)
     del leave_admin_body_no_document_type["document_type"]
@@ -99,7 +99,7 @@ def test_notifications_post_leave_admin_no_document_type(
 
 
 def test_notifications_post_leave_admin_empty_str_document_type(
-    client, test_db_session, fineos_user_token
+    client, test_db_session, fineos_user_token, employer
 ):
     leave_admin_body_empty_str_document_type = copy.deepcopy(leave_admin_body)
     leave_admin_body_empty_str_document_type["document_type"] = ""
@@ -118,7 +118,7 @@ def test_notifications_post_leave_admin_empty_str_document_type(
     assert request_json == leave_admin_body_empty_str_document_type
 
 
-def test_notifications_post_claimant(client, test_db_session, fineos_user_token):
+def test_notifications_post_claimant(client, test_db_session, fineos_user_token, employer):
     response = client.post(
         "/v1/notifications",
         headers={"Authorization": f"Bearer {fineos_user_token}"},
@@ -134,7 +134,9 @@ def test_notifications_post_claimant(client, test_db_session, fineos_user_token)
     assert request_json == claimant_body
 
 
-def test_notification_post_multiple_notifications(client, test_db_session, fineos_user_token):
+def test_notification_post_multiple_notifications(
+    client, test_db_session, fineos_user_token, employer
+):
     # Send the same notification twice, we don't do any sort of de-dupe
     response = client.post(
         "/v1/notifications",
@@ -153,7 +155,9 @@ def test_notification_post_multiple_notifications(client, test_db_session, fineo
     assert len(notifications) == 2
 
 
-def test_notification_post_missing_leave_admin_param(client, test_db_session, fineos_user_token):
+def test_notification_post_missing_leave_admin_param(
+    client, test_db_session, fineos_user_token, employer
+):
     bad_body = leave_admin_body.copy()
     bad_body["recipients"] = [{"email_address": "fake@website.com"}]
     response = client.post(
@@ -165,7 +169,9 @@ def test_notification_post_missing_leave_admin_param(client, test_db_session, fi
     assert len(response.get_json()["errors"]) == 2
 
 
-def test_notification_post_missing_claimant_param(client, test_db_session, fineos_user_token):
+def test_notification_post_missing_claimant_param(
+    client, test_db_session, fineos_user_token, employer
+):
     bad_body = claimant_body.copy()
     bad_body["recipients"] = [{"email_address": "fake@website.com"}]
     response = client.post(
@@ -177,7 +183,7 @@ def test_notification_post_missing_claimant_param(client, test_db_session, fineo
     assert len(response.get_json()["errors"]) == 2
 
 
-def test_notification_post_unauthorized(client, test_db_session, auth_token):
+def test_notification_post_unauthorized(client, test_db_session, auth_token, employer):
     response = client.post(
         "/v1/notifications",
         headers={"Authorization": f"Bearer {auth_token}"},

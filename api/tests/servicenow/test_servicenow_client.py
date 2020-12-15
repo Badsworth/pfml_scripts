@@ -47,6 +47,7 @@ def test_message(test_recipient, test_claimant):
         u_trigger="test.trigger",
         u_user_type="Leave Administrator",
         u_link="https://www.google.com",
+        u_employer_customer_number=10,
     )
 
 
