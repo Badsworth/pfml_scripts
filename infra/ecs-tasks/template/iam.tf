@@ -470,3 +470,49 @@ data "aws_iam_policy_document" "fineos_feeds_role_policy" {
     ]
   }
 }
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for Registering Admins to FINEOS scheduler
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "cloudwatch_events_register_admins_role" {
+  name               = "${local.app_name}-${var.environment_name}-register-admins-events-role"
+  assume_role_policy = data.aws_iam_policy_document.cloudwatch_events_register_admins_role_assume_policy.json
+}
+
+data "aws_iam_policy_document" "cloudwatch_events_register_admins_role_assume_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "cloudwatch_events_register_admins_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-register-admins-events-role-policy"
+  role   = aws_iam_role.cloudwatch_events_register_admins_role.id
+  policy = data.aws_iam_policy_document.cloudwatch_events_register_admins_role_policy.json
+}
+
+data "aws_iam_policy_document" "cloudwatch_events_register_admins_role_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["ecs:RunTask"]
+
+    resources = ["arn:aws:ecs:us-east-1:${data.aws_caller_identity.current.account_id}:task-definition/${aws_ecs_task_definition.ecs_tasks["register-leave-admins-with-fineos"].family}:*"]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["iam:PassRole"]
+
+    resources = [
+      aws_iam_role.task_executor.arn,
+      aws_iam_role.register_admins_task_role.arn
+    ]
+  }
+}

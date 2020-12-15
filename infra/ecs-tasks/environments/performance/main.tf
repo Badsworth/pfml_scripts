@@ -19,6 +19,7 @@ module "tasks" {
   environment_name   = "performance"
   service_docker_tag = local.service_docker_tag
   vpc_id             = data.aws_vpc.vpc.id
+  app_subnet_ids     = data.aws_subnet_ids.vpc_app.ids
 
   cognito_user_pool_id                       = "us-east-1_0jv6SlemT"
   fineos_client_customer_api_url             = "https://perf-api.masspfml.fineos.com/customerapi/"

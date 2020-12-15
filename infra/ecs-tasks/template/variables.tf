@@ -13,6 +13,10 @@ variable "vpc_id" {
   type        = string
 }
 
+variable "app_subnet_ids" {
+  description = "App subnet IDS."
+}
+
 variable "fineos_client_customer_api_url" {
   description = "URL of the FINEOS Customer API"
   type        = string
