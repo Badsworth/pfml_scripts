@@ -12,7 +12,6 @@
     "openMode": 0,
     "runMode": 1
   },
-  "ignoreTestFiles": "**/id-verifications/*",
   "testFiles": [
     "**/*.{feature,ts}"
   ],
