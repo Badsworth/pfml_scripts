@@ -46,7 +46,7 @@ exports[`Index renders index content 1`] = `
             Employers
           </Heading>
           <p>
-            Register now so your team is ready for December 15, 2020, when workers can start requesting leave.
+            Register now so your team is ready for when workers can start requesting leave.
           </p>
           <ButtonLink
             className="margin-top-3"

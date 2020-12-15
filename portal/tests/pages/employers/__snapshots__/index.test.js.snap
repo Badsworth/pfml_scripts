@@ -14,7 +14,7 @@ exports[`Employer index renders the page 1`] = `
         Welcome
       </Title>
       <p>
-        Thanks for joining the paid leave program. There’s no further action for you to take now, but you’ll be able to review applications online starting December 15, 2020.
+        Thanks for joining the paid leave program. There’s no further action for you to take now, but you’ll be able to review applications online soon.
       </p>
       <Heading
         level="2"
