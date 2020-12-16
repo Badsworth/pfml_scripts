@@ -596,9 +596,9 @@ class AgencyReductionPayment(Base):
 class ReferenceFile(Base):
     __tablename__ = "reference_file"
     reference_file_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    file_location = Column(Text, nullable=False)
+    file_location = Column(Text, index=True, unique=True, nullable=False)
     reference_file_type_id = Column(
-        Integer, ForeignKey("lk_reference_file_type.reference_file_type_id"), nullable=False
+        Integer, ForeignKey("lk_reference_file_type.reference_file_type_id"), nullable=True
     )
 
     reference_file_type = relationship(LkReferenceFileType)
