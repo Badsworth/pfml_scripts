@@ -4,11 +4,11 @@ import { extractLeavePeriod } from "../../../../src/utils";
 import { getFineosBaseUrl } from "../../../config";
 
 describe("Create a new continuous leave, bonding claim in FINEOS", () => {
-  before(beforeFineos);
   it(
     "Should be able to create a claim",
     { baseUrl: getFineosBaseUrl() },
     () => {
+      beforeFineos();
       cy.task("generateClaim", {
         claimType: "BHAP1",
         employeeType: "financially eligible",
