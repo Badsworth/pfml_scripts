@@ -932,15 +932,6 @@ def employee_to_eligibility_feed_record(
         record.occupationQualifier = occupation.occupation_qualifier
         record.employeeWorkSiteId = occupation.worksite_id
 
-    employee_address = employee.addresses.first()
-    if employee_address:
-        address = employee_address.address
-        record.addressType = AddressType(address.address_type.address_description)
-        record.addressAddressLine1 = address.address_line_one
-        record.addressCity = address.city
-        record.addressState = address.geo_state.geo_state_description
-        record.addressZipCode = address.zip_code
-
     if employee.phone_number:
         phone_number: Optional[PhoneNumber] = parse_phone_number(employee.phone_number)
         if phone_number:

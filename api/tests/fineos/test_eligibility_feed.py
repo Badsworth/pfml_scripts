@@ -141,11 +141,12 @@ def test_employee_to_eligibility_feed_record_with_address(
         employee, wages_and_contributions, employer
     )
 
-    assert eligibility_feed_record.addressType == ef.AddressType.home
-    assert eligibility_feed_record.addressAddressLine1 == address_model.address_line_one
-    assert eligibility_feed_record.addressCity == address_model.city
-    assert eligibility_feed_record.addressState == address_model.geo_state.geo_state_description
-    assert eligibility_feed_record.addressZipCode == address_model.zip_code
+    # at the moment, no address info should be included in export
+    assert eligibility_feed_record.addressType is None
+    assert eligibility_feed_record.addressAddressLine1 is None
+    assert eligibility_feed_record.addressCity is None
+    assert eligibility_feed_record.addressState is None
+    assert eligibility_feed_record.addressZipCode is None
 
 
 def test_employee_to_eligibility_feed_record_with_no_tax_identifier(
@@ -426,11 +427,11 @@ def test_write_employees_to_csv(
                 ),
                 "employeeNationalIDType": ef.NationalIdType.ssn.value,
                 "employeeEmail": employees[1].email_address,
-                "addressType": "Home",
-                "addressAddressLine1": employees[1].addresses[0].address.address_line_one,
-                "addressCity": employees[1].addresses[0].address.city,
-                "addressState": employees[1].addresses[0].address.geo_state.geo_state_description,
-                "addressZipCode": employees[1].addresses[0].address.zip_code,
+                "addressType": "",
+                "addressAddressLine1": "",
+                "addressCity": "",
+                "addressState": "",
+                "addressZipCode": "",
                 "employmentWorkState": ef.DEFAULT_EMPLOYMENT_WORK_STATE,
             }
         ),
