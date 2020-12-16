@@ -142,7 +142,8 @@ fineos-eligibility-feed-export: ## Run an eligibility feed export
 
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
-	ecr_login_cmd="$$(aws ecr get-login --no-include-email)" && $$ecr_login_cmd
+	aws ecr get-login-password --region 'us-east-1' | \
+	docker login --username AWS --password-stdin 498823821309.dkr.ecr.us-east-1.amazonaws.com
 
 format: ## Format code
 	$(PY_RUN_CMD) isort --atomic --apply
