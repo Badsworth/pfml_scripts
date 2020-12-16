@@ -9,14 +9,7 @@ import {
   LSTScenario,
   getFineosBaseUrl,
 } from "../config";
-import {
-  labelled,
-  formatDate,
-  assignTasks,
-  waitForElement,
-  waitForRealTimeSim,
-  getDocumentType,
-} from "../helpers";
+import * as H from "../helpers";
 import assert from "assert";
 
 let fineosId: string;
@@ -34,21 +27,21 @@ export const steps: StoredStep[] = [
     name: "Login into fineos",
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       await browser.visit(await getFineosBaseUrl("SAVILINX"));
-      await waitForRealTimeSim(browser, data, 1 / steps.length);
+      await H.waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
     name: "Search for a party",
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       const { claim } = data;
-      const linkParties = await waitForElement(
+      const linkParties = await H.waitForElement(
         browser,
         By.css('a[aria-label="Parties"]')
       );
       await linkParties.click();
 
       assert(claim.tax_identifier, "tax_identifier is not defined");
-      const identificationNum = await labelled(
+      const identificationNum = await H.labelled(
         browser,
         "Identification Number"
       );
@@ -57,44 +50,47 @@ export const steps: StoredStep[] = [
         claim.tax_identifier.split("-").join("")
       );
 
-      const search = await waitForElement(
+      const search = await H.waitForElement(
         browser,
         By.css('input[type="submit"][value="Search"]')
       );
       await search.click();
-      const okButton = await waitForElement(
+      const okButton = await H.waitForElement(
         browser,
         By.css('input[type="submit"][value="OK"]')
       );
       await okButton.click();
-      await waitForRealTimeSim(browser, data, 1 / steps.length);
+      await H.waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
     name: "Fill out Notification Details",
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       const { claim } = data;
-      const createNotif = await waitForElement(
+      const createNotif = await H.waitForElement(
         browser,
         By.visibleText("Create Notification")
       );
       await createNotif.click();
 
-      const notifSourceSelect = await labelled(browser, "Notification source");
+      const notifSourceSelect = await H.labelled(
+        browser,
+        "Notification source"
+      );
       await browser.selectByText(notifSourceSelect, "Self-Service");
       /* Date of claim submission, defaults to current date/time */
       assert(claim.leave_details, "claim.leave_details is not defined");
-      const notifDateInput = await labelled(browser, "Notification date");
+      const notifDateInput = await H.labelled(browser, "Notification date");
       await notifDateInput.clear();
       await notifDateInput.type(
-        formatDate(claim.leave_details.employer_notification_date)
+        H.formatDate(claim.leave_details.employer_notification_date)
       );
 
-      const notifiedBySelect = await labelled(browser, "Notified by");
+      const notifiedBySelect = await H.labelled(browser, "Notified by");
       await browser.selectByText(notifiedBySelect, "Requester");
 
-      await waitForRealTimeSim(browser, data, 1 / steps.length);
-      const nextButton = await waitForElement(
+      await H.waitForRealTimeSim(browser, data, 1 / steps.length);
+      const nextButton = await H.waitForElement(
         browser,
         By.css('input[type="submit"][value^="Next"]')
       );
@@ -104,8 +100,8 @@ export const steps: StoredStep[] = [
   {
     name: "Fill out Occupation Details",
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
-      await waitForRealTimeSim(browser, data, 1 / steps.length);
-      const nextButton = await waitForElement(
+      await H.waitForRealTimeSim(browser, data, 1 / steps.length);
+      const nextButton = await H.waitForElement(
         browser,
         By.css('input[type="submit"][value^="Next"]')
       );
@@ -133,7 +129,7 @@ export const steps: StoredStep[] = [
             `There is no claim type matching '${leave_details?.reason}'`
           );
       }
-      const claimTypeRadio = await waitForElement(
+      const claimTypeRadio = await H.waitForElement(
         browser,
         By.css(
           `[type='radio'][value*='notificationReasonRadio928000${claimType}']`
@@ -141,12 +137,12 @@ export const steps: StoredStep[] = [
       );
       await claimTypeRadio.click();
 
-      const nextButton = await waitForElement(
+      const nextButton = await H.waitForElement(
         browser,
         By.css('input[type="submit"][value^="Next"]')
       );
       await nextButton.click();
-      await waitForRealTimeSim(browser, data, 1 / steps.length);
+      await H.waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
@@ -155,7 +151,7 @@ export const steps: StoredStep[] = [
       const { claim } = data;
       const { leave_details } = claim;
 
-      const absenceRelatesToSelect = await labelled(
+      const absenceRelatesToSelect = await H.labelled(
         browser,
         "Absence relates to"
       );
@@ -168,14 +164,14 @@ export const steps: StoredStep[] = [
       await browser.selectByText(absenceRelatesToSelect, relatesTo);
 
       if (leave_details?.reason) {
-        const absenceReasonSelect = await labelled(browser, "Absence reason");
+        const absenceReasonSelect = await H.labelled(browser, "Absence reason");
         await browser.selectByText(absenceReasonSelect, leave_details?.reason);
         await browser.wait(1000);
         if (
           claimType === ClaimType.ACCIDENT ||
           leave_details?.reason_qualifier
         ) {
-          const firstQualifierSelect = await labelled(browser, "Qualifier 1");
+          const firstQualifierSelect = await H.labelled(browser, "Qualifier 1");
           await browser.selectByText(
             firstQualifierSelect,
             claimType === ClaimType.ACCIDENT
@@ -188,7 +184,7 @@ export const steps: StoredStep[] = [
 
       /* currently no longer necessary, but might be later
       if (claimType !== ClaimType.ACCIDENT && leave_details?.reason_qualifier) {
-        const secondQualifierSelect = await labelled(browser, "Qualifier 2");
+        const secondQualifierSelect = await H.labelled(browser, "Qualifier 2");
         await browser.selectByText(
           secondQualifierSelect,
           leave_details?.reason_qualifier
@@ -196,7 +192,7 @@ export const steps: StoredStep[] = [
       } */
 
       if (claimType === ClaimType.BONDING) {
-        const relationshipSelect = await labelled(
+        const relationshipSelect = await H.labelled(
           browser,
           "Primary Relationship to Employee"
         );
@@ -206,7 +202,7 @@ export const steps: StoredStep[] = [
         );
         await browser.wait(1000);
 
-        const relFirstQualifierSelect = await waitForElement(
+        const relFirstQualifierSelect = await H.waitForElement(
           browser,
           By.css(
             "#leaveRequestAbsenceRelationshipsWidget select[name*='selected-qualifier1']"
@@ -222,12 +218,12 @@ export const steps: StoredStep[] = [
         await browser.selectByText(relFirstQualifierSelect, relQualifier1);
         await browser.wait(1000);
       }
-      const nextButton = await waitForElement(
+      const nextButton = await H.waitForElement(
         browser,
         By.css('input[type="submit"][value^="Next"]')
       );
       await nextButton.click();
-      await waitForRealTimeSim(browser, data, 1 / steps.length);
+      await H.waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
@@ -240,7 +236,7 @@ export const steps: StoredStep[] = [
         "claim.leave_details.continuous_leave_periods is not defined"
       );
       if (claim.has_continuous_leave_periods) {
-        const continuousLeave = await waitForElement(
+        const continuousLeave = await H.waitForElement(
           browser,
           By.css("input[type='checkbox'][id*='continuousTimeToggle_CHECKBOX']")
         );
@@ -248,12 +244,12 @@ export const steps: StoredStep[] = [
         await fillContinuousLeavePeriods(browser, data);
       }
       await browser.wait(1000);
-      const nextButton = await waitForElement(
+      const nextButton = await H.waitForElement(
         browser,
         By.css('input[type="submit"][value^="Next"]')
       );
       await nextButton.click();
-      await waitForRealTimeSim(browser, data, 1 / steps.length);
+      await H.waitForRealTimeSim(browser, data, 1 / steps.length);
       // TODO: other types of leaves "Episodic / leave as needed", "Reduced work schedule"
     },
   },
@@ -263,7 +259,7 @@ export const steps: StoredStep[] = [
       const { claim } = data;
       const { work_pattern, leave_details } = claim;
       if (work_pattern?.work_pattern_type) {
-        const workPatternTypeSelect = await labelled(
+        const workPatternTypeSelect = await H.labelled(
           browser,
           "Work Pattern Type"
         );
@@ -273,7 +269,7 @@ export const steps: StoredStep[] = [
         );
       }
       if (work_pattern?.work_week_starts) {
-        const workWeekStartsSelect = await labelled(
+        const workWeekStartsSelect = await H.labelled(
           browser,
           "Work Week Starts"
         );
@@ -287,7 +283,7 @@ export const steps: StoredStep[] = [
         for (const day of work_pattern?.work_pattern_days) {
           dayIdx++;
           if (!day.minutes || day.minutes === 0) continue;
-          const hoursInput = await waitForElement(
+          const hoursInput = await H.waitForElement(
             browser,
             By.css(`.workPattern td:nth-child(${dayIdx}) input[id*='hours']`)
           );
@@ -297,7 +293,7 @@ export const steps: StoredStep[] = [
             Math.floor(day.minutes / 60).toString()
           );
           if (day.minutes % 60 > 0) {
-            const minutesInput = await waitForElement(
+            const minutesInput = await H.waitForElement(
               browser,
               By.css(
                 `.workPattern td:nth-child(${dayIdx}) input[id*='minutes']`
@@ -307,7 +303,7 @@ export const steps: StoredStep[] = [
             await browser.type(minutesInput, (day.minutes % 60).toString());
           }
         }
-        const applyWorkPatternButton = await waitForElement(
+        const applyWorkPatternButton = await H.waitForElement(
           browser,
           By.css('input[type="submit"][value="Apply to Calendar"]')
         );
@@ -315,20 +311,20 @@ export const steps: StoredStep[] = [
       }
 
       if (leave_details?.employer_notified) {
-        const hasBeenNotifiedCheckbox = await labelled(
+        const hasBeenNotifiedCheckbox = await H.labelled(
           browser,
           "Has the Employer been notified?"
         );
         await browser.click(hasBeenNotifiedCheckbox);
         await browser.wait(1500);
 
-        const notifDateInput = await labelled(browser, "Notification Date");
+        const notifDateInput = await H.labelled(browser, "Notification Date");
         await notifDateInput.type(
-          formatDate(leave_details?.employer_notification_date)
+          H.formatDate(leave_details?.employer_notification_date)
         );
 
         if (leave_details?.employer_notification_method) {
-          const notifMethodSelect = await labelled(
+          const notifMethodSelect = await H.labelled(
             browser,
             "Notification Method"
           );
@@ -338,12 +334,12 @@ export const steps: StoredStep[] = [
           );
         }
       }
-      const nextButton = await waitForElement(
+      const nextButton = await H.waitForElement(
         browser,
         By.css('input[type="submit"][value^="Next"]')
       );
       await nextButton.click();
-      await waitForRealTimeSim(browser, data, 1 / steps.length);
+      await H.waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
@@ -353,44 +349,44 @@ export const steps: StoredStep[] = [
       const { leave_details } = claim;
       if (claimType === ClaimType.BONDING) {
         // no Family member's First Name specified in SimulationClaim?
-        const firstNameInput = await labelled(browser, "First Name");
+        const firstNameInput = await H.labelled(browser, "First Name");
         await browser.type(firstNameInput, claim.first_name ?? "Thisis");
         // no Family member's Last Name specified in SimulationClaim?
-        const lastNameInput = await labelled(browser, "Last Name");
+        const lastNameInput = await H.labelled(browser, "Last Name");
         await browser.type(lastNameInput, claim.last_name ?? "Mychild");
 
         if (leave_details?.child_birth_date) {
-          const dateOfBirthInput = await labelled(
+          const dateOfBirthInput = await H.labelled(
             browser,
             "What is your Family Member's Date of Birth?"
           );
           await browser.type(
             dateOfBirthInput,
-            formatDate(leave_details?.child_birth_date)
+            H.formatDate(leave_details?.child_birth_date)
           );
         }
         // no Family member's gender specified in SimulationClaim?
-        const genderSelect = await labelled(
+        const genderSelect = await H.labelled(
           browser,
           "What is your Family Member's Gender?"
         );
         await browser.selectByText(genderSelect, "Not Provided");
         try {
           if (leave_details?.child_placement_date) {
-            const dateOfPlacementInput = await labelled(
+            const dateOfPlacementInput = await H.labelled(
               browser,
               "What is the date of placement, if applicable?"
             );
             await browser.type(
               dateOfPlacementInput,
-              formatDate(leave_details?.child_placement_date)
+              H.formatDate(leave_details?.child_placement_date)
             );
           }
           if (
             leave_details?.continuous_leave_periods?.length &&
             leave_details?.child_birth_date
           ) {
-            const willBe18Select = await labelled(
+            const willBe18Select = await H.labelled(
               browser,
               "Will your family member be 18 years or older on the start date of the leave request?"
             );
@@ -413,31 +409,31 @@ export const steps: StoredStep[] = [
           console.info("\nNo child placement fields found!\n");
         }
       }
-      const nextButton = await waitForElement(
+      const nextButton = await H.waitForElement(
         browser,
         By.css('input[type="submit"][value^="Next"]')
       );
       await nextButton.click();
-      await waitForRealTimeSim(browser, data, 1 / steps.length);
+      await H.waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
     name: "Complete Wrap up section",
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
-      const nextButton = await waitForElement(
+      const nextButton = await H.waitForElement(
         browser,
         By.css('input[type="submit"][value^="Next"]')
       );
       await nextButton.click();
 
       const notifStatus = await (
-        await waitForElement(browser, By.css("dl.status dd"))
+        await H.waitForElement(browser, By.css("dl.status dd"))
       ).text();
       assert(
         notifStatus.includes("Open"),
         `Notification Status is '${notifStatus}' instead of 'Open'.`
       );
-      await waitForRealTimeSim(browser, data, 1 / steps.length);
+      await H.waitForRealTimeSim(browser, data, 1 / steps.length);
     },
   },
   {
@@ -445,61 +441,66 @@ export const steps: StoredStep[] = [
     test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       const { documents } = data;
       fineosId = (await (
-        await waitForElement(
+        await H.waitForElement(
           browser,
           By.css(".sitemapNodeSelected + .sitemapNode")
         )
       ).getAttribute("id")) as string;
-      const gotoClaim = await waitForElement(
+      const gotoClaim = await H.waitForElement(
         browser,
         By.css(".sitemapNodeSelected + .sitemapNode a")
       );
       await browser.click(gotoClaim);
-      const documentsTab = await waitForElement(
+      const documentsTab = await H.waitForElement(
         browser,
         By.css("[class^='TabO'][keytipnumber='11']")
       );
       await browser.click(documentsTab);
       for (const doc of documents) {
-        const addDocument = await waitForElement(
+        const addDocument = await H.waitForElement(
           browser,
           By.css("input[type='submit'][title='Add Document']")
         );
         await browser.click(addDocument);
-        const searchTab = await waitForElement(
+        const searchTab = await H.waitForElement(
           browser,
           By.css("[class^='TabO'][keytipnumber='4']")
         );
         await browser.click(searchTab);
         // search for doc type
-        const docType = await labelled(browser, "Business Type");
-        await browser.type(docType, getDocumentType(doc));
-        const searchButton = await waitForElement(
+        const docType = await H.labelled(browser, "Business Type");
+        await browser.type(docType, H.getDocumentType(doc));
+        const searchButton = await H.waitForElement(
           browser,
           By.css("input[type='submit'][value='Search']")
         );
         await browser.click(searchButton);
-        const searchOkButton = await waitForElement(
+        const searchOkButton = await H.waitForElement(
           browser,
           By.css("input[type='submit'][value='OK']")
         );
         await browser.click(searchOkButton);
         // upload pdf
-        const uploadInput = await waitForElement(
+        const uploadInput = await H.waitForElement(
           browser,
           By.css("#uploadpath")
         );
         await uploadInput.uploadFile(
           `${isMain ? "../../../" : ""}${documentUrl}`
         );
-        const uploadOkButton = await waitForElement(
+        const uploadOkButton = await H.waitForElement(
           browser,
           By.css("input[type='submit'][value='OK']")
         );
         await browser.click(uploadOkButton);
       }
+    },
+  },
+  {
+    name: "Assign tasks to specific Agent",
+    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       if (!ENV.FLOOD_LOAD_TEST) {
-        const assignTasksStep = assignTasks(fineosId, false);
+        const assignTasksStep = H.assignTasks(fineosId);
         console.info(assignTasksStep.name);
         await assignTasksStep.test(browser, data);
       }
@@ -517,13 +518,13 @@ async function fillContinuousLeavePeriods(
   const continuousPeriods = data.claim.leave_details.continuous_leave_periods;
   if (period < continuousPeriods.length) {
     const leavePeriod = continuousPeriods[period];
-    const absenceStatusSelect = await labelled(browser, "Absence status");
+    const absenceStatusSelect = await H.labelled(browser, "Absence status");
     await browser.selectByText(absenceStatusSelect, "Estimated");
 
-    const startDateInput = await labelled(browser, "Absence start date");
-    await browser.type(startDateInput, formatDate(leavePeriod.start_date));
-    const endDateInput = await labelled(browser, "Absence end date");
-    await browser.type(endDateInput, formatDate(leavePeriod.end_date));
+    const startDateInput = await H.labelled(browser, "Absence start date");
+    await browser.type(startDateInput, H.formatDate(leavePeriod.start_date));
+    const endDateInput = await H.labelled(browser, "Absence end date");
+    await browser.type(endDateInput, H.formatDate(leavePeriod.end_date));
     // TODO: all day ?, last day worked ?, return to work date ?, Time absent ?
     const addButtonLocator = By.css(
       "input[type='button'][id*='AddTimeOffAbsencePeriod'][value='Add']"

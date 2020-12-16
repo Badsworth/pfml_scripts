@@ -1,11 +1,10 @@
-import { Browser, By, ElementHandle, Key } from "@flood/element";
+import { Browser, Locator, By, ElementHandle, Key } from "@flood/element";
 import { StoredStep, LSTSimClaim, StandardDocumentType } from "../config";
 import {
   labelled,
   waitForElement,
   waitForRealTimeSim,
   isFinanciallyEligible,
-  getFamilyLeavePlanProp,
 } from "../helpers";
 import Tasks from "./index";
 
@@ -304,3 +303,44 @@ export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
     await Tasks.Deny(browser, data);
   }
 };
+
+type FineosLeavePlanProps =
+  | "DecisionStatus"
+  | "EligibilityIcon"
+  | "AvailabilityStatus"
+  | "EvidenceIcon"
+  | "EvidenceStatus";
+
+export function getFamilyLeavePlanProp(
+  type: FineosLeavePlanProps = "DecisionStatus"
+): Locator {
+  return By.js((planProp) => {
+    const leavePlans = document.querySelectorAll("table[id*='leavePlan'] tr");
+    let myLeavePlan = 0;
+    Array.from(leavePlans).forEach((tr, i) => {
+      if (tr.textContent?.toString().includes("MA PFML - Family")) {
+        myLeavePlan = i;
+        return false;
+      }
+    });
+    myLeavePlan = myLeavePlan + 1;
+    let propertyColumn = 1;
+    if (planProp === "EligibilityIcon") {
+      propertyColumn = 3;
+    } else if (planProp === "EvidenceIcon") {
+      propertyColumn = 5;
+    } else if (planProp === "EvidenceStatus") {
+      propertyColumn = 6;
+    } else if (planProp === "AvailabilityStatus") {
+      propertyColumn = 8;
+    } else if (planProp === "DecisionStatus") {
+      propertyColumn = 14;
+    }
+    const icon = document.querySelector(
+      `tr:nth-child(${myLeavePlan}) td:nth-child(${propertyColumn})${
+        planProp.includes("Icon") ? " i" : ""
+      }`
+    );
+    return icon;
+  }, type);
+}

@@ -1,25 +1,18 @@
-import {
-  Locator,
-  Browser,
-  By,
-  ElementHandle,
-  Until,
-  ENV,
-} from "@flood/element";
+import { Locator, Browser, By, ElementHandle, Until } from "@flood/element";
 import {
   config,
-  getFineosBaseUrl,
-  TaskType,
-  StoredStep,
   LSTSimClaim,
+  realUserTimings,
   StandardDocumentType,
   SimulationSpeed,
-  realUserTimings,
+  TaskType,
+  StoredStep,
+  getFineosBaseUrl,
 } from "./config";
-import { ClaimDocument, FineosUserType } from "../simulation/types";
 import { DocumentUploadRequest } from "../api";
+import { ClaimDocument, FineosUserType } from "../simulation/types";
+import { getFamilyLeavePlanProp } from "./tasks/ApproveClaim";
 import { actions } from "./scenarios/SavilinxAgent.perf";
-import { checkApprovalReadiness } from "./tasks/ApproveClaim";
 
 export const formatDate = (d: string | null | undefined): string =>
   new Intl.DateTimeFormat("en-US", {
@@ -332,211 +325,88 @@ export const waitForRealTimeSim = async (
   await browser.wait(realTime);
 };
 
-export const assignTasks = (
+export function assignTasks(
   fineosId: string,
   search = true,
   agent: FineosUserType = "SAVILINX"
-): StoredStep => ({
-  name: `Assign ${fineosId}'s tasks to ${agent} Agent`,
-  test: async (browser: Browser): Promise<void> => {
-    if (search) {
-      await browser.visit(await getFineosBaseUrl());
-      // search for particular by id
-      const casesMenu = await waitForElement(
-        browser,
-        By.css("a[aria-label='Cases']")
-      );
-      await casesMenu.click();
-      const caseTab = await waitForElement(
-        browser,
-        By.css("[keytipnumber='4']")
-      );
-      await caseTab.click();
-      const caseNumberInput = await labelled(browser, "Case Number");
-      await browser.type(caseNumberInput, fineosId);
-      const searchButton = await waitForElement(
-        browser,
-        By.css("input[type='submit'][value*='Search']")
-      );
-      await searchButton.click();
-    }
-    // go to claim tasks tab
-    const tasksTab = await waitForElement(
-      browser,
-      By.css("[class^='TabO'][keytipnumber='9']")
-    );
-    await browser.click(tasksTab);
-    // assign each task to SAVILINX
-    for (const action of actions) {
-      const claimTask = await waitForElement(
-        browser,
-        By.css(`table[id*='TasksForCaseListView'] td[title='${action}']`)
-      );
-      await browser.click(claimTask);
-      const openTask = await waitForElement(
-        browser,
-        By.css("input[type='submit'][title='Open this task']")
-      );
-      await browser.click(openTask);
-
-      const transferDropdown = await waitForElement(
-        browser,
-        By.css("a[aria-label='Transfer']")
-      );
-      await browser.click(transferDropdown);
-      const transferToUser = await waitForElement(
-        browser,
-        By.css("a[aria-label='Transfer to User']")
-      );
-      await browser.click(transferToUser);
-      // the user tasks are transferred to can be changed
-      // under the "title='SAVILINX'" replace SAVILINX with the user you want
-      const pickSavilinxAgent = await waitForElement(
-        browser,
-        By.css(`table[id*='TransferUsersRolesListView'] td[title='${agent}']`)
-      );
-      await browser.click(pickSavilinxAgent);
-      const okButton = await waitForElement(
-        browser,
-        By.css("input[type='submit'][value='OK']")
-      );
-      await browser.click(okButton);
-
-      const closePopupButton = await waitForElement(
-        browser,
-        By.css("input[id*='UserTaskTransferRecord_ok'][value='OK']")
-      );
-      await browser.click(closePopupButton);
-      const closeTaskButton = await waitForElement(
-        browser,
-        By.css("input[type='submit'][value='Close']")
-      );
-      await browser.click(closeTaskButton);
-    }
-  },
-});
-
-export const receiveDocuments = (
-  fineosId: string,
-  search = true,
-  agent: FineosUserType = "SAVILINX"
-): StoredStep => ({
-  name: `Receive ${fineosId}'s documents as ${agent} Agent`,
-  test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
-    if (search) {
-      await browser.visit(await getFineosBaseUrl(agent));
-      await browser.setViewport({ width: 1920, height: 1080 });
-      // search for particular by id
-      const casesMenu = await waitForElement(
-        browser,
-        By.css("a[aria-label='Cases']")
-      );
-      await casesMenu.click();
-      const caseTab = await waitForElement(
-        browser,
-        By.css("[keytipnumber='4']")
-      );
-      await caseTab.click();
-      const caseNumberInput = await labelled(browser, "Case Number");
-      await browser.type(caseNumberInput, fineosId);
-      const searchButton = await waitForElement(
-        browser,
-        By.css("input[type='submit'][value*='Search']")
-      );
-      await searchButton.click();
-      await browser.waitForNavigation();
-    }
-    // Checks claim approval readiness and receive documents.
-    await checkApprovalReadiness().test(browser, data);
-    // Checks whether Employer Response has been requested.
-    const outstandingRequirementsTab = await waitForElement(
-      browser,
-      By.visibleText("Outstanding Requirements")
-    );
-    await browser.click(outstandingRequirementsTab);
-    try {
-      await waitForElement(
-        browser,
-        By.css("tr td[title='Employer Confirmation of Leave Data']")
-      );
-    } catch (e) {
-      // workaround from ER Demo - adds ER manually
-      console.info("\nImplementing Employer Response workaround\n");
-      const addButton = await waitForElement(browser, By.visibleText("Add"));
-      await addButton.click();
-      const categorySelect = await labelled(browser, "Selected category");
-      await browser.selectByText(categorySelect, "Employer Confirmation");
-      const typeSelect = await labelled(browser, "Selected type");
-      await browser.selectByText(
-        typeSelect,
-        "Employer Confirmation of Leave Data"
-      );
-      let okButton = await waitForElement(
-        browser,
-        By.css("input[type='submit'][value='Ok']")
-      );
-      await browser.click(okButton);
-      okButton = await waitForElement(
-        browser,
-        By.css("#footerButtonsBar input[type='submit'][value='OK']")
-      );
-    }
-  },
-});
-
-const isNode = !!(typeof process !== "undefined" && process.version);
-export async function readFile(filename: string): Promise<Buffer> {
-  if (!isNode) {
-    throw new Error("Cannot load the fs module API outside of Node.");
-  }
-  let fs;
-  fs = await import("fs");
-  if (!fs.promises) {
-    fs = fs.default;
-  }
-  if (ENV.FLOOD_LOAD_TEST) {
-    filename = `/data/flood/files/${filename}`;
-  }
-  console.info(`\n\n\nreadFile in "${filename}"\n\n\n`);
-  return fs.readFileSync(filename);
-}
-
-type FineosLeavePlanProps =
-  | "DecisionStatus"
-  | "EligibilityIcon"
-  | "AvailabilityStatus"
-  | "EvidenceIcon"
-  | "EvidenceStatus";
-export function getFamilyLeavePlanProp(
-  type: FineosLeavePlanProps = "DecisionStatus"
-): Locator {
-  return By.js((planProp) => {
-    const leavePlans = document.querySelectorAll("table[id*='leavePlan'] tr");
-    let myLeavePlan = 0;
-    Array.from(leavePlans).forEach((tr, i) => {
-      if (tr.textContent?.toString().includes("MA PFML - Family")) {
-        myLeavePlan = i;
-        return false;
+): StoredStep {
+  return {
+    name: `Assign ${fineosId}'s tasks to ${agent} Agent`,
+    test: async (browser: Browser): Promise<void> => {
+      if (search) {
+        await browser.visit(await getFineosBaseUrl());
+        // search for particular by id
+        const casesMenu = await waitForElement(
+          browser,
+          By.css("a[aria-label='Cases']")
+        );
+        await casesMenu.click();
+        const caseTab = await waitForElement(
+          browser,
+          By.css("[keytipnumber='4']")
+        );
+        await caseTab.click();
+        const caseNumberInput = await labelled(browser, "Case Number");
+        await browser.type(caseNumberInput, fineosId);
+        const searchButton = await waitForElement(
+          browser,
+          By.css("input[type='submit'][value*='Search']")
+        );
+        await searchButton.click();
       }
-    });
-    myLeavePlan = myLeavePlan + 1;
-    let propertyColumn = 1;
-    if (planProp === "EligibilityIcon") {
-      propertyColumn = 3;
-    } else if (planProp === "EvidenceIcon") {
-      propertyColumn = 5;
-    } else if (planProp === "EvidenceStatus") {
-      propertyColumn = 6;
-    } else if (planProp === "AvailabilityStatus") {
-      propertyColumn = 8;
-    } else if (planProp === "DecisionStatus") {
-      propertyColumn = 14;
-    }
-    const icon = document.querySelector(
-      `tr:nth-child(${myLeavePlan}) td:nth-child(${propertyColumn})${
-        planProp.includes("Icon") ? " i" : ""
-      }`
-    );
-    return icon;
-  }, type);
+      // go to claim tasks tab
+      const tasksTab = await waitForElement(
+        browser,
+        By.css("[class^='TabO'][keytipnumber='9']")
+      );
+      await browser.click(tasksTab);
+      // assign each task to SAVILINX
+      for (const action of actions) {
+        const claimTask = await waitForElement(
+          browser,
+          By.css(`table[id*='TasksForCaseListView'] td[title='${action}']`)
+        );
+        await browser.click(claimTask);
+        const openTask = await waitForElement(
+          browser,
+          By.css("input[type='submit'][title='Open this task']")
+        );
+        await browser.click(openTask);
+
+        const transferDropdown = await waitForElement(
+          browser,
+          By.css("a[aria-label='Transfer']")
+        );
+        await browser.click(transferDropdown);
+        const transferToUser = await waitForElement(
+          browser,
+          By.css("a[aria-label='Transfer to User']")
+        );
+        await browser.click(transferToUser);
+        // the user tasks are transferred to can be changed
+        // under the "title='SAVILINX'" replace SAVILINX with the user you want
+        const pickSavilinxAgent = await waitForElement(
+          browser,
+          By.css(`table[id*='TransferUsersRolesListView'] td[title='${agent}']`)
+        );
+        await browser.click(pickSavilinxAgent);
+        const okButton = await waitForElement(
+          browser,
+          By.css("input[type='submit'][value='OK']")
+        );
+        await browser.click(okButton);
+
+        const closePopupButton = await waitForElement(
+          browser,
+          By.css("input[id*='UserTaskTransferRecord_ok'][value='OK']")
+        );
+        await browser.click(closePopupButton);
+        const closeTaskButton = await waitForElement(
+          browser,
+          By.css("input[type='submit'][value='Close']")
+        );
+        await browser.click(closeTaskButton);
+      }
+    },
+  };
 }
