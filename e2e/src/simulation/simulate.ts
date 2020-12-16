@@ -14,6 +14,7 @@ import {
   WorkPattern,
   PaymentPreference,
   Address,
+  DayOfWeek,
 } from "../api";
 import generators from "./documents";
 import path from "path";
@@ -27,6 +28,7 @@ import {
   max as maxDate,
   min as minDate,
   differenceInDays,
+  format as formatDate,
 } from "date-fns";
 import { v4 as uuid } from "uuid";
 
@@ -386,9 +388,11 @@ function generateWorkPattern(
 }
 
 function generateContinuousLeavePeriods(
-  shortLeave: boolean
+  shortLeave: boolean,
+  work_pattern: WorkPattern
 ): ContinuousLeavePeriods[] {
   const [startDate, endDate] = generateLeaveDates(
+    work_pattern,
     shortLeave ? { days: 1 } : undefined
   );
   return [
@@ -400,9 +404,11 @@ function generateContinuousLeavePeriods(
 }
 
 function generateIntermittentLeavePeriods(
-  shortLeave: boolean
+  shortLeave: boolean,
+  work_pattern: WorkPattern
 ): IntermittentLeavePeriods[] {
   const [startDate, endDate] = generateLeaveDates(
+    work_pattern,
     shortLeave ? { days: 7 } : undefined
   );
   const diffInDays = differenceInDays(endDate, startDate);
@@ -425,6 +431,7 @@ function generateReducedLeavePeriods(
   work_pattern: WorkPattern
 ): ReducedScheduleLeavePeriods[] {
   const [startDate, endDate] = generateLeaveDates(
+    work_pattern,
     shortLeave ? { days: 1 } : undefined
   );
   function getDayOffMinutes(dayName: string): number {
@@ -472,17 +479,19 @@ function generateLeaveDetails(
   work_pattern: WorkPattern
 ): ApplicationLeaveDetails {
   const { reason, reason_qualifier } = config;
+  const has_continuous_leave_periods =
+    config.has_continuous_leave_periods ||
+    (!config.has_reduced_schedule_leave_periods &&
+      !config.has_intermittent_leave_periods);
   const details: ApplicationLeaveDetails = {
-    continuous_leave_periods:
-      !config.has_reduced_schedule_leave_periods &&
-      !config.has_intermittent_leave_periods
-        ? generateContinuousLeavePeriods(!!config.shortClaim)
-        : [],
+    continuous_leave_periods: has_continuous_leave_periods
+      ? generateContinuousLeavePeriods(!!config.shortClaim, work_pattern)
+      : [],
     reduced_schedule_leave_periods: config.has_reduced_schedule_leave_periods
       ? generateReducedLeavePeriods(!!config.shortClaim, work_pattern)
       : [],
     intermittent_leave_periods: config.has_intermittent_leave_periods
-      ? generateIntermittentLeavePeriods(!!config.shortClaim)
+      ? generateIntermittentLeavePeriods(!!config.shortClaim, work_pattern)
       : [],
     pregnant_or_recent_birth: !!config.pregnant_or_recent_birth,
     employer_notified: true,
@@ -572,21 +581,40 @@ function generateMassIDString(idProof: boolean, idCheck: string): string {
   ]);
 }
 
-// Generate start and end dates for a leave request, not to exceed 20 weeks, and with a minimum
-// start date of 2021-01-01.
-export function generateLeaveDates(duration?: Duration): [Date, Date] {
+/**
+ * Generate start and end dates for a leave request.
+ *
+ * Generated dates meet the following conditions:
+ *   * Start date > max(2021-01-01, today) and < today + 60 days
+ *   * End date < Start Date + 20 weeks.
+ *   * Start date will always fall on a work day for this employee.
+ */
+export function generateLeaveDates(
+  workPattern: WorkPattern,
+  duration?: Duration
+): [Date, Date] {
   // Start date must be greater than max(2021-01-01 or today).
   const minStartDate = maxDate([parseISO("2021-01-01"), new Date()]);
   // Start date must be < 60 days from the application date (now).
   const maxStartDate = addDays(new Date(), 60);
 
-  const startDate = faker.date.between(minStartDate, maxStartDate);
+  const workingDays = (workPattern.work_pattern_days || [])
+    .filter((day) => (day.minutes ?? 0) > 0)
+    .map((day) => day.day_of_week);
 
-  // If the claim is marked as "short leave", give it a 1 day length.
-  const addition = duration ?? {
-    weeks: faker.random.number({ min: 1, max: 11 }),
-  };
-  return [startDate, add(startDate, addition)];
+  let i = 0;
+  while (i++ < 100) {
+    const startDate = faker.date.between(minStartDate, maxStartDate);
+    // Leave dates MUST involve at least one day that falls in the work pattern.
+    if (workingDays.includes(formatDate(startDate, "iiii") as DayOfWeek)) {
+      // Allow duration overrides.
+      const addition = duration ?? {
+        weeks: faker.random.number({ min: 1, max: 11 }),
+      };
+      return [startDate, add(startDate, addition)];
+    }
+  }
+  throw new Error("Unable to generate leave dates for this employee");
 }
 
 // Generate an employer notification date based on the claim start date.

@@ -23,10 +23,7 @@ import {
   EmployeeRecord,
 } from "../../src/simulation/types";
 import { Credentials, notificationRequest } from "../../src/types";
-import {
-  SimulationGenerator,
-  generateLeaveDates,
-} from "../../src/simulation/simulate";
+import { SimulationGenerator } from "../../src/simulation/simulate";
 import { ApplicationResponse, DocumentUploadRequest } from "../../src/api";
 import { makeDocUploadBody } from "../../src/simulation/SimulationRunner";
 import { fromClaimsFactory } from "../../src/simulation/EmployeeFactory";
@@ -133,9 +130,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       };
 
       return scenarioFunctions[claimType](opts);
-    },
-    async createContinuousLeaveDates(): Promise<Date[]> {
-      return generateLeaveDates({ days: 1 });
     },
     async noticeReader(noticeType: string): Promise<Result> {
       const PDFdataBuffer = fs.readFileSync(

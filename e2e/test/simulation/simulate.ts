@@ -1,11 +1,18 @@
 import { describe, it, expect, jest } from "@jest/globals";
-import { scenario, chance, ScenarioOpts } from "../../src/simulation/simulate";
+import {
+  scenario,
+  chance,
+  ScenarioOpts,
+  generateLeaveDates,
+} from "../../src/simulation/simulate";
 import type { SimulationClaim } from "../../src/simulation/types";
 import generators from "../../src/simulation/documents";
 import fs from "fs";
 import { extractLeavePeriod } from "../../src/utils";
 import { fromEmployersFactory } from "../../src/simulation/EmployerFactory";
 import employerPool from "../../src/simulation/fixtures/employerPool";
+import { WorkPattern } from "../../src/api";
+import { format } from "date-fns";
 
 jest.mock("../../src/simulation/documents");
 
@@ -451,6 +458,18 @@ describe("Simulation Generator", () => {
         pregnant_or_recent_birth: true,
       }),
     });
+  });
+});
+
+describe("Leave date generator", () => {
+  it("Should always generate a correct date for a given work schedule.", () => {
+    const schedule: WorkPattern = {
+      work_pattern_days: [{ day_of_week: "Monday", minutes: 10 }],
+    };
+    for (let i = 0; i < 1000; i++) {
+      const [start] = generateLeaveDates(schedule);
+      expect(format(start, "iiii")).toEqual("Monday");
+    }
   });
 });
 

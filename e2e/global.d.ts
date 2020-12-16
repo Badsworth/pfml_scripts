@@ -52,7 +52,6 @@ declare namespace Cypress {
       event: "submitClaimToAPI",
       options: ApplicationRequestBody
     ): Chainable<PartialResponse>;
-    task(event: "createContinuousLeaveDates"): Chainable<Date[]>;
   }
 }
 
