@@ -40,6 +40,7 @@ from massgov.pfml.db.models.applications import (
     DocumentType,
     EmployerBenefit,
     OtherIncome,
+    PreviousLeave,
 )
 from massgov.pfml.util.sqlalchemy import get_or_404
 
@@ -549,6 +550,24 @@ def other_income_delete(application_id: str, other_income_id: str) -> Response:
 
     return response_util.success_response(
         message="OtherIncome removed.",
+        data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+    ).to_api_response()
+
+
+def previous_leave_delete(application_id: str, previous_leave_id: str) -> Response:
+    with app.db_session() as db_session:
+        existing_application = get_or_404(db_session, Application, application_id)
+
+        ensure(EDIT, existing_application)
+
+        existing_previous_leave = get_or_404(db_session, PreviousLeave, previous_leave_id)
+        if existing_previous_leave.application_id != existing_application.application_id:
+            raise NotFound(description=f"Could not find PreviousLeave with ID {previous_leave_id}")
+
+        applications_service.remove_previous_leave(db_session, existing_previous_leave)
+
+    return response_util.success_response(
+        message="PreviousLeave removed.",
         data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
     ).to_api_response()
 

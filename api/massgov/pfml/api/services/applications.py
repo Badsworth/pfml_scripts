@@ -849,13 +849,18 @@ def add_or_update_previous_leaves(
             )
 
 
-def remove_employer_benefit(db_session: db.Session, employer_benefit: EmployerBenefit,) -> None:
+def remove_employer_benefit(db_session: db.Session, employer_benefit: EmployerBenefit) -> None:
     db_session.delete(employer_benefit)
     db_session.commit()
 
 
-def remove_other_income(db_session: db.Session, other_income: OtherIncome,) -> None:
+def remove_other_income(db_session: db.Session, other_income: OtherIncome) -> None:
     db_session.delete(other_income)
+    db_session.commit()
+
+
+def remove_previous_leave(db_session: db.Session, previous_leave: PreviousLeave) -> None:
+    db_session.delete(previous_leave)
     db_session.commit()
 
 
