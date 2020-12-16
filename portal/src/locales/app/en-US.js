@@ -1887,6 +1887,11 @@ const components = {
   leaveDatesAlert: {
     heading: "Your leave dates for paid leave",
   },
+  maintenanceTakeover: {
+    lead:
+      "This page is currently unavailable while the site is undergoing maintenance. Please check back$t(chars.nbsp)shortly.",
+    title: "We're undergoing maintenance",
+  },
   signUp: {
     createAccountButton: "Create an account to apply for paid leave",
     haveAnAccountFooterLabel: "Have an account?",

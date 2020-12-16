@@ -1,6 +1,6 @@
 # Environment variables
 
-Environment variables include [feature flags](feature-flags.md), URLs and keys for external resources such as Cognito and the API.
+Environment variables include [feature flags](feature-flags.md), [maintenance pages](maintenance-pages.md), and URLs and keys for external resources such as Cognito and the API.
 
 ## Configuring environment variables
 

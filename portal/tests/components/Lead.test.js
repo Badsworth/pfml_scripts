@@ -14,4 +14,12 @@ describe("Lead", () => {
       </p>
     `);
   });
+
+  it("adds additional class names", () => {
+    const wrapper = shallow(<Lead className="margin-top-6">Hello world</Lead>);
+
+    expect(wrapper.hasClass("margin-top-6")).toBe(true);
+    // Still has default classes
+    expect(wrapper.hasClass("usa-intro")).toBe(true);
+  });
 });

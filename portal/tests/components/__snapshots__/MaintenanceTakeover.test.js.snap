@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`MaintenanceTakeover renders with the expected content 1`] = `
+<div
+  className="tablet:padding-y-10 text-center"
+>
+  <Title>
+    We're undergoing maintenance
+  </Title>
+  <Lead
+    className="margin-x-auto measure-2"
+  >
+    This page is currently unavailable while the site is undergoing maintenance. Please check back shortly.
+  </Lead>
+</div>
+`;
