@@ -254,3 +254,5 @@ jobs:
           target_environment: ${{ env[github.ref] || 'test' }}
           cypress_tags: "Deploy,Deploy-Portal"
           github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          # Limit to "stable" suite for any environment but test.
+          only_stable: ${{ (env[github.ref] || 'test') == 'test' && 'false' || 'true' }}

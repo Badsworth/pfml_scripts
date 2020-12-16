@@ -20,6 +20,10 @@ on:
         description: "Cypress Run Tags"
         required: false
         default: "Manual"
+      only_stable:
+        description: "Only run 'stable' tests? (true/false)"
+        required: false
+        default: "false"
   # E2E PRs that touch Cypress.
   pull_request:
     paths:
@@ -50,16 +54,19 @@ jobs:
           echo "cypress_tags=PR" >> $GITHUB_ENV
           echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
           echo "COMMIT_INFO_MESSAGE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
+          echo "only_stable=false" >> $GITHUB_ENV
       - name: Set variables for Nightly
         if: github.event_name == 'schedule'
         run: |
           echo "cypress_tags=Nightly" >> $GITHUB_ENV
           echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
+          echo "only_stable=false" >> $GITHUB_ENV
       - name: Set variables for manual run
         if: github.event_name == 'workflow_dispatch'
         run: |
           echo "cypress_tags=${{ github.event.inputs.cypress_tags }}" >> $GITHUB_ENV
           echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
+          echo "only_stable=${{github.event.inputs.only_stable }}" >> $GITHUB_ENV
 
       # Run Cypress tests.
       - name: Cypress Tests (Stable)
@@ -99,8 +106,8 @@ jobs:
           E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
           E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-        # Always run this step, even if 1.0 fails.
-        if: always()
+        # Always run this step if requested, even if stable tests fail.
+        if: env.only_stable == 'false' && always()
         # Do not allow this step to fail the job. It is informational, not mandatory.
         # This should be removed when we are ready to make 1.1 tests mandatory.
         continue-on-error: true
