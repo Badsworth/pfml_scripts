@@ -274,3 +274,9 @@ variable "dor_fineos_etl_schedule_expression" {
   type        = string
   default     = "cron(30 4 * * ? *)"
 }
+
+variable "cognito_enable_provisioned_concurrency" {
+  description = "Enable or disable provisioned concurrency (and new-version publishing) for Cognito lambdas."
+  type        = bool
+  default     = false
+}

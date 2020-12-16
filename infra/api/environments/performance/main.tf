@@ -56,6 +56,7 @@ module "api" {
   cognito_user_pool_keys_url                          = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_0jv6SlemT/.well-known/jwks.json"
   cognito_post_confirmation_lambda_artifact_s3_key    = local.cognito_post_confirmation_lambda_artifact_s3_key
   cognito_pre_signup_lambda_artifact_s3_key           = local.cognito_pre_signup_lambda_artifact_s3_key
+  cognito_enable_provisioned_concurrency              = true
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
   rmv_client_base_url                                 = "https://atlas-staging-gateway.massdot.state.ma.us"
   rmv_client_certificate_binary_arn                   = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-performance/rmv_client_certificate-fXNkdl"
