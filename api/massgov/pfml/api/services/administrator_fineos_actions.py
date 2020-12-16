@@ -156,7 +156,7 @@ def download_document_as_leave_admin(
 
 
 def get_claim_as_leave_admin(
-    fineos_user_id: str, absence_id: str, employer_fein: str
+    fineos_user_id: str, absence_id: str, employer: Employer
 ) -> ClaimReviewResponse:
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
@@ -208,7 +208,8 @@ def get_claim_as_leave_admin(
         return ClaimReviewResponse(
             date_of_birth=customer_info["dateOfBirth"],
             employer_benefits=other_incomes,
-            employer_fein=employer_fein,
+            employer_fein=employer.employer_fein,
+            employer_dba=employer.employer_dba,
             fineos_absence_id=absence_id,
             first_name=customer_info["firstName"],
             hours_worked_per_week=hours_worked_per_week,

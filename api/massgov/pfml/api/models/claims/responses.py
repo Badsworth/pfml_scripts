@@ -18,6 +18,7 @@ from massgov.pfml.util.pydantic.types import (
 class ClaimReviewResponse(PydanticBaseModel):
     date_of_birth: Optional[MaskedDateStr]
     employer_benefits: Optional[List[EmployerBenefit]]
+    employer_dba: str
     employer_fein: Optional[FEINFormattedStr]
     fineos_absence_id: Optional[str]
     first_name: Optional[str]

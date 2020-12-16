@@ -148,7 +148,7 @@ def test_non_employers_cannot_access_get_claim_review(client, auth_token):
 def test_employers_receive_200_from_get_claim_review(
     client, employer_user, employer_auth_token, test_db_session
 ):
-    employer = EmployerFactory.create(employer_fein="999999999")
+    employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
     ClaimFactory.create(
         employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01",
     )
@@ -172,6 +172,7 @@ def test_employers_receive_200_from_get_claim_review(
     assert response_data["follow_up_date"] == "2021-02-01"
     # This field is set in mock_client.py::get_customer_occupations
     assert response_data["hours_worked_per_week"] == 40
+    assert response_data["employer_dba"] == "Acme Co"
     assert response_data["employer_fein"] == "99-9999999"
     assert response_data["is_reviewable"]
     # The fields below are set in mock_client.py::mock_customer_info
