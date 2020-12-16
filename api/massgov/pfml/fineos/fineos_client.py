@@ -159,16 +159,33 @@ class FINEOSClient(client.AbstractFINEOSClient):
         self.request_count += 1
         has_flask_context = flask.has_request_context()
         logger.debug("%s %s start", method, url)
+
+        # /complete-intake takes longer than other endpoints, so increase the timeout
+        # drastically. Past 29 seconds, FINEOS returns a 504 timeout, so the request
+        # client should never actually time out on its own.
+        #
+        # Note that this is longer than our API Gateway timeout (also 29 seconds),
+        # so it's very plausible that an application_submit request times out on
+        # the API Gateway side, since it also includes other calls to the claims
+        # processing system (CPS).
+        #
+        # However, we're allowing the request to complete on the API
+        # even if the response never makes it to the claimant, to try and ensure
+        # a consistent CPS <--> Paid Leave API state and prevent additional
+        # long calls when the claimant retries.
+        #
+        request_timeout = 30 if "complete-intake" in url else 15
+
         try:
             try:
                 response = self.oauth_session.request(
-                    method, url, timeout=(6.1, 60), headers=headers, **args
+                    method, url, timeout=(6.1, request_timeout), headers=headers, **args
                 )
             except oauthlib.oauth2.TokenExpiredError:
                 logger.info("token expired, starting new OAuth session")
                 self._init_oauth_session()
                 response = self.oauth_session.request(
-                    method, url, timeout=(6.1, 60), headers=headers, **args
+                    method, url, timeout=(6.1, request_timeout), headers=headers, **args
                 )
         except requests.exceptions.RequestException as ex:
             logger.error("%s %s => %r", method, url, ex)
