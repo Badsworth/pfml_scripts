@@ -292,7 +292,7 @@ def download_and_parse_data(s3_path: str, download_directory: pathlib.Path) -> L
 
 def group_s3_files_by_date() -> Dict[str, List[str]]:
     s3_config = payments_util.get_s3_config()
-    s3_objects = file_util.list_files(s3_config.pfml_fineos_inbound_path, "/")
+    s3_objects = file_util.list_files(s3_config.pfml_fineos_inbound_path)
 
     date_to_full_path = {}
 

@@ -325,13 +325,11 @@ def test_process_extract_data(
     )
 
     # Make sure files were copied to the processed directory
-    moved_files = file_util.list_files(
-        f"s3://{mock_s3_bucket}/cps/inbound/processed/2020-01-01/", "/"
-    )
+    moved_files = file_util.list_files(f"s3://{mock_s3_bucket}/cps/inbound/processed/2020-01-01/")
     assert len(moved_files) == 3
 
     # Grab all files in the bucket, verify there are no more
-    all_files = file_util.list_files(f"s3://{mock_s3_bucket}/")
+    all_files = file_util.list_files(f"s3://{mock_s3_bucket}/", delimiter="")
     assert len(all_files) == 3
 
     # For simplicity of testing so much, the datasets we're reading from use numbers

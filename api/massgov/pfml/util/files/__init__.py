@@ -62,8 +62,28 @@ def split_sftp_url(path):
 
 
 def list_files(
-    path: str, delimiter: str = "", boto_session: Optional[boto3.Session] = None
+    path: str, delimiter: str = "/", boto_session: Optional[boto3.Session] = None
 ) -> List[str]:
+    """List the immediate files under path.
+
+    There is minor inconsistency between local path handling and S3 paths.
+    Directory names will be included for local paths, whereas they will not for
+    S3 paths.
+
+    Also, for S3 paths, only the first 1000 files will be returned.
+
+    Args:
+        path: Supports s3:// and local paths.
+        delimiter: Only applicable for S3 paths.
+
+            If set to "" will list all keys under path, but note only the
+            basename of the key will be included, so any directory structure to
+            the key will be lost. You probably do not want to use this for
+            getting all keys in a bucket.
+        boto_session: Boto session object to use for S3 access. Only necessary
+            if needing to access an S3 bucket with assumed credentials (e.g.,
+            cross-account bucket access).
+    """
     if is_s3_path(path):
         bucket_name, prefix = split_s3_url(path)
 
@@ -72,10 +92,17 @@ def list_files(
         # for key, _content in smart_open.s3_iter_bucket(bucket_name, prefix=prefix, workers=1):
         #     files.append(get_file_name(key))
 
+        # in order for s3.list_objects to only list the immediate "files" under
+        # the given path, the prefix should end in the path delimiter
+        if prefix and not prefix.endswith(delimiter):
+            prefix = prefix + delimiter
+
         s3 = boto_session.client("s3") if boto_session else boto3.client("s3")
-        object_contents = s3.list_objects(
+
+        object_contents = s3.list_objects_v2(
             Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter
         ).get("Contents")
+
         if object_contents:
             return [get_file_name(object["Key"]) for object in object_contents]
 
