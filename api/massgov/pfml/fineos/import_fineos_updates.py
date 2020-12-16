@@ -175,7 +175,7 @@ def process_csv_row(
         if gender_id is not None:
             employee.gender_id = gender_id
 
-        marital_status = row.get("EMPLOYEEMARITALStatus")
+        marital_status = row.get("EMPLOYEEMARITALSTATUS")
         marital_status_id = (
             db_session.query(LkMaritalStatus.marital_status_id)
             .filter(LkMaritalStatus.marital_status_description == marital_status)
