@@ -22,3 +22,21 @@ export function getFineosBaseUrl(): string {
   url.password = password;
   return url.toString();
 }
+
+const admins: Record<string, Credentials> = {
+  "84-7847847": {
+    username: "gqzap.employer.847847847@inbox.testmail.app",
+    password: "WaynePassword#1",
+  },
+  "99-9999999": {
+    username: "gqzap.employer.999999999@inbox.testmail.app",
+    password: "UmbrellaPassword#1",
+  },
+};
+
+export function getLeaveAdminCredentials(fein: string): Credentials {
+  if (!(fein in admins)) {
+    throw new Error(`Unable to determine Leave Admin credentials for ${fein}`);
+  }
+  return admins[fein];
+}

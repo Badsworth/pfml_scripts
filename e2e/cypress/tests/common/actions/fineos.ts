@@ -340,6 +340,10 @@ export function findEmployerResponse(employerResponseComment: string): void {
   cy.contains("textarea", employerResponseComment);
 }
 
+export function assertClaimHasLeaveAdminApproval(): void {
+  cy.contains("a[id^=nextActionsWidget]", "Employer Approval Received").click();
+}
+
 // @todo: This seems like it's doing a lot - is this really the whole claim workflow?
 // If so, we might want to name it submitClaim() to align with portal/API.
 export function createNotification(startDate: Date, endDate: Date): void {

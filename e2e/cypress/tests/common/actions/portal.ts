@@ -689,6 +689,46 @@ export function completeIntermittentLeaveDetails(
   cy.contains("button", "Save and continue").click();
 }
 
+export function respondToLeaveAdminRequest(
+  fineosAbsenceId: string,
+  suspectFraud: boolean,
+  gaveNotice: boolean,
+  approval: boolean
+): void {
+  cy.visit(
+    `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
+  );
+  cy.contains("Are you the right person to respond to this application?");
+  cy.contains("Yes").click();
+  cy.contains("Agree and submit").click();
+
+  cy.contains(
+    "fieldset",
+    "Do you have any reason to suspect this is fraud?"
+  ).within(() => {
+    cy.contains("label", suspectFraud ? "Yes (explain below)" : "No").click();
+  });
+  cy.contains(
+    "fieldset",
+    "Did the employee give you at least 30 days notice about their leave?"
+  ).within(() => {
+    cy.contains("label", gaveNotice ? "Yes" : "No (explain below)").click();
+  });
+  cy.contains(
+    "fieldset",
+    "Have you approved or denied this leave request?"
+  ).within(() => {
+    cy.contains("label", approval ? "Approve" : "Deny (explain below)").click();
+  });
+  if (suspectFraud || !gaveNotice || !approval) {
+    cy.get('textarea[name="comment"]').type(
+      "This is a generic explanation of the leave admin's response."
+    );
+  }
+  cy.contains("button", "Submit").click();
+  cy.contains("Thanks for reviewing the application");
+}
+
 export function confirmEligibleParent(): void {
   cy.contains("button", "I understand and agree").click();
 }

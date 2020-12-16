@@ -80,14 +80,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return credentials;
     },
 
-    async generateEmployerUsername(
-      employerFEIN: string
-    ): Promise<CypressStepThis["employerUsername"]> {
-      const namespace = config("TESTMAIL_NAMESPACE");
-      const tag = "employer." + employerFEIN.replace("-", "");
-      return `${namespace}.${tag}@inbox.testmail.app`;
-    },
-
     async submitClaimToAPI(
       application: SimulationClaim
     ): Promise<ApplicationResponse> {
