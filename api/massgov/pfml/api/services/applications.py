@@ -811,8 +811,11 @@ def add_or_update_previous_leaves(
             leave_start_date=api_previous_leave.leave_start_date,
             leave_end_date=api_previous_leave.leave_end_date,
             is_for_current_employer=api_previous_leave.is_for_current_employer,
-            leave_reason_id=PreviousLeaveQualifyingReason.get_id(api_previous_leave.leave_reason),
         )
+        if api_previous_leave.leave_reason:
+            new_previous_leave.leave_reason_id = PreviousLeaveQualifyingReason.get_id(
+                api_previous_leave.leave_reason
+            )
 
         db_session.add(new_previous_leave)
 

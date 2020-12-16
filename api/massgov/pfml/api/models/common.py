@@ -49,7 +49,7 @@ class PreviousLeaveQualifyingReason(str, LookupEnum):
 
 class PreviousLeave(PydanticBaseModel):
     is_for_current_employer: Optional[bool]
-    leave_start_date: date
-    leave_end_date: date
+    leave_start_date: Optional[date]
+    leave_end_date: Optional[date]
     leave_reason: Optional[PreviousLeaveQualifyingReason]
     previous_leave_id: Optional[UUID4]

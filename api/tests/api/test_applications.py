@@ -1617,6 +1617,40 @@ def test_application_patch_add_employer_benefits(client, user, auth_token, test_
     assert employer_benefit.get("benefit_amount_frequency") == "Per Month"
 
 
+def test_application_patch_add_empty_employer_benefits(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "employer_benefits": [
+                {
+                    "benefit_type": None,
+                    "benefit_end_date": None,
+                    "benefit_start_date": None,
+                    "benefit_amount_dollars": None,
+                    "benefit_amount_frequency": None,
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    employer_benefits = response_body.get("employer_benefits")
+
+    assert len(employer_benefits) == 1
+    employer_benefit = employer_benefits[0]
+    assert employer_benefit.get("benefit_type") is None
+    assert employer_benefit.get("benefit_start_date") is None
+    assert employer_benefit.get("benefit_end_date") is None
+    assert employer_benefit.get("benefit_amount_dollars") is None
+    assert employer_benefit.get("benefit_amount_frequency") is None
+    assert employer_benefit.get("employer_benefit_id") is not None
+
+
 def test_application_patch_update_employer_benefit(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
@@ -1786,6 +1820,40 @@ def test_application_patch_add_other_incomes(client, user, auth_token, test_db_s
     assert other_income.get("income_amount_frequency") == "Per Month"
 
 
+def test_application_patch_add_empty_other_incomes(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "other_incomes": [
+                {
+                    "income_type": None,
+                    "income_end_date": None,
+                    "income_start_date": None,
+                    "income_amount_dollars": None,
+                    "income_amount_frequency": None,
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    other_incomes = response_body.get("other_incomes")
+
+    assert len(other_incomes) == 1
+    other_income = other_incomes[0]
+    assert other_income.get("income_type") is None
+    assert other_income.get("income_start_date") is None
+    assert other_income.get("income_end_date") is None
+    assert other_income.get("income_amount_dollars") is None
+    assert other_income.get("income_amount_frequency") is None
+    assert other_income.get("other_income_id") is not None
+
+
 def test_application_patch_update_other_income(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
@@ -1950,6 +2018,37 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
     assert previous_leave.get("leave_start_date") == "2021-01-01"
     assert previous_leave.get("leave_end_date") == "2021-05-01"
     assert previous_leave.get("leave_reason") == "Pregnancy / Maternity"
+    assert previous_leave.get("previous_leave_id") is not None
+
+
+def test_application_patch_add_empty_previous_leaves(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "previous_leaves": [
+                {
+                    "is_for_current_employer": None,
+                    "leave_end_date": None,
+                    "leave_start_date": None,
+                    "leave_reason": None,
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    previous_leaves = response_body.get("previous_leaves")
+
+    assert len(previous_leaves) == 1
+    previous_leave = previous_leaves[0]
+    assert previous_leave.get("is_for_current_employer") is None
+    assert previous_leave.get("leave_start_date") is None
+    assert previous_leave.get("leave_reason") is None
     assert previous_leave.get("previous_leave_id") is not None
 
 
