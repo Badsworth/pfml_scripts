@@ -75,7 +75,7 @@ class LazyZeepApiCaller(LazyApiCaller[zeep.proxy.ServiceProxy]):
         )
 
     def get(self) -> ApiCaller[zeep.proxy.ServiceProxy]:
-        url = urllib.parse.urljoin(self.base_url, "/vs/gateway/VendorLicenseInquiry/?WSDL")
+        url = urllib.parse.urljoin(self.base_url, "/gateway/VendorLicenseInquiry/?WSDL")
         return zeep.Client(url, transport=Transport(session=self.session)).service
 
 

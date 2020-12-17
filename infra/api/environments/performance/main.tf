@@ -58,7 +58,7 @@ module "api" {
   cognito_pre_signup_lambda_artifact_s3_key           = local.cognito_pre_signup_lambda_artifact_s3_key
   cognito_enable_provisioned_concurrency              = true
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
-  rmv_client_base_url                                 = "https://atlas-staging-gateway.massdot.state.ma.us"
+  rmv_client_base_url                                 = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn                   = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-performance/rmv_client_certificate-fXNkdl"
   rmv_check_behavior                                  = "partially_mocked"
   rmv_check_mock_success                              = "1"
