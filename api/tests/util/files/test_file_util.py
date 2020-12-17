@@ -97,6 +97,31 @@ def test_copy_file_from_s3_to_sftp(mock_s3_bucket, mock_sftp_client):
     assert mock_sftp_client.calls[0][2] == dest
 
 
+def test_copy_file_from_sftp_to_s3(mock_s3_bucket, mock_sftp_client):
+    source_dir = "agency/outbox"
+    dest_dir = "pfml/inbox"
+    filename = "my_test_file.csv"
+
+    dest_filepath = os.path.join(dest_dir, filename)
+    dest = os.path.join("s3://" + mock_s3_bucket, dest_filepath)
+
+    source = os.path.join(source_dir, filename)
+    file_util.copy_file_from_sftp_to_s3(source, dest, mock_sftp_client)
+
+    # Expect to make one call to the SFTP client to download the source file.
+    assert len(mock_sftp_client.calls) == 1
+    assert mock_sftp_client.calls[0][0] == "get"
+    assert mock_sftp_client.calls[0][1] == source
+
+    # Expect that the file to appear in the mock_s3_bucket.
+    s3 = boto3.client("s3")
+    object_list = s3.list_objects(Bucket=mock_s3_bucket, Prefix=dest_dir)["Contents"]
+    assert object_list
+    if object_list:
+        assert len(object_list) == 1
+        assert object_list[0]["Key"] == dest_filepath
+
+
 def test_read_s3_stream(mock_s3_bucket):
     # path variables
     folder_name = "test_folder"
