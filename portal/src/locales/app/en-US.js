@@ -367,6 +367,14 @@ const errors = {
       "We encountered an error when uploading your file. Try uploading your file again. If you get this error again, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
   },
   employers: {
+    employer_benefits: {
+      benefit_end_date: {
+        date: "End date must include a day, month, and year.",
+      },
+      benefit_start_date: {
+        date: "Start date must include a day, month, and year.",
+      },
+    },
     outstanding_information_request_required:
       "This application has already been reviewed.",
   },
