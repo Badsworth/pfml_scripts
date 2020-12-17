@@ -32,3 +32,9 @@ Use `*` to match any string:
 ## Testing
 
 If you are testing the configuration locally, just note that you need to restart the local development server in order for new environment variables to kick in.
+
+## Bypassing maintenance pages
+
+It can be helpful to bypass a maintenance page to test the page itself. To do so, you can enable the `noMaintenance` [feature flag](feature-flags.md) in the browser.
+
+For example, to bypass the maintenance pages in the Test environment: `https://paidleave-test.mass.gov?_ff=noMaintenance:true`

@@ -48,6 +48,10 @@ const flagsConfig = {
     // TODO (EMPLOYER-657): Show this section after 1/1
     employerShowPreviousLeaves: false,
 
+    // When this flag true, you can BYPASS maintenance pages that are currently present.
+    // See docs/portal/maintenance-pages.md for more details.
+    noMaintenance: false,
+
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this
     // flag in a cookie, you can rename this flag to something else (and also

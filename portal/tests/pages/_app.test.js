@@ -270,6 +270,20 @@ describe("App", () => {
     );
   });
 
+  it("bypasses MaintenanceTakeover when noMaintenance feature flag is present", () => {
+    process.env.featureFlags = {
+      noMaintenance: true,
+      pfmlTerriyay: true,
+    };
+    process.env.maintenancePageRoutes = ["/login"];
+    mockRouter.pathname = "/login";
+    const { wrapper } = render();
+
+    expect(wrapper.find({ "data-test": "maintenance page" }).exists()).toBe(
+      false
+    );
+  });
+
   describe("displaying errors", () => {
     it("displays errors that child pages set", () => {
       const ChildPage = (props) => {

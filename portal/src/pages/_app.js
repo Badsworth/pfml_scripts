@@ -124,6 +124,14 @@ export const App = ({ Component, pageProps }) => {
    */
   const renderPageContent = () => {
     const maintenancePageRoutes = process.env.maintenancePageRoutes || [];
+    const pageIsUndergoingMaintenance =
+      maintenancePageRoutes.includes(router.pathname) || // specific page
+      maintenancePageRoutes.some(
+        // pages grouped by a wildcard (e.g /applications/* or /* for site-wide)
+        (maintenancePageRoute) =>
+          maintenancePageRoute.endsWith("*") &&
+          router.pathname.startsWith(maintenancePageRoute.split("*")[0])
+      );
 
     // Wait for page component to load
     if (ui.isLoading) {
@@ -136,15 +144,7 @@ export const App = ({ Component, pageProps }) => {
 
     // Render maintenance page in place of the page content?
     // pathname doesn't include a trailing slash
-    if (
-      maintenancePageRoutes.includes(router.pathname) || // specific page
-      maintenancePageRoutes.some(
-        // pages grouped by a wildcard (e.g /applications/* or /* for site-wide)
-        (maintenancePageRoute) =>
-          maintenancePageRoute.endsWith("*") &&
-          router.pathname.startsWith(maintenancePageRoute.split("*")[0])
-      )
-    ) {
+    if (!isFeatureEnabled("noMaintenance") && pageIsUndergoingMaintenance) {
       return (
         <section id="page" data-test="maintenance page">
           <MaintenanceTakeover />
