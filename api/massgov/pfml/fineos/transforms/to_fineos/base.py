@@ -1,5 +1,6 @@
 import abc
 from datetime import date
+from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
@@ -38,6 +39,8 @@ class TransformEformAttributes:
             attribute_value = getattr(target, key)
             if isinstance(attribute_value, date):
                 attribute_value = attribute_value.strftime("%Y-%m-%d")
+            elif isinstance(attribute_value, Decimal):
+                attribute_value = float(attribute_value)
             setattr(attribute, attribute_type, attribute_value)
             transformed.append(attribute)
         if suffix:
