@@ -173,7 +173,48 @@ def test_employers_receive_200_from_get_claim_review(
 
     assert response_data["follow_up_date"] == "2021-02-01"
     # This field is set in mock_client.py::get_customer_occupations
-    assert response_data["hours_worked_per_week"] == 40
+    assert response_data["hours_worked_per_week"] == 37.5
+    assert response_data["employer_dba"] == "Acme Co"
+    assert response_data["employer_fein"] == "99-9999999"
+    assert response_data["is_reviewable"]
+    # The fields below are set in mock_client.py::mock_customer_info
+    assert response_data["date_of_birth"] == "****-12-25"
+    assert response_data["tax_identifier"] == "***-**-1234"
+    assert response_data["residential_address"]["city"] == "Atlanta"
+    assert response_data["residential_address"]["line_1"] == "55 Trinity Ave."
+    assert response_data["residential_address"]["line_2"] == "Suite 3450"
+    assert response_data["residential_address"]["state"] == "GA"
+    assert response_data["residential_address"]["zip"] == "30303"
+
+
+@freeze_time("2020-12-07")
+def test_employers_with_int_hours_worked_per_week_receive_200_from_get_claim_review(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+    ClaimFactory.create(
+        employer_id=employer.employer_id, fineos_absence_id="int_fake_hours_worked_per_week",
+    )
+
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/employers/claims/int_fake_hours_worked_per_week/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+    response_data = response.get_json()["data"]
+
+    assert response.status_code == 200
+
+    assert response_data["follow_up_date"] == "2021-02-01"
+    # This field is set in mock_client.py::get_customer_occupations
+    assert response_data["hours_worked_per_week"] == 37
     assert response_data["employer_dba"] == "Acme Co"
     assert response_data["employer_fein"] == "99-9999999"
     assert response_data["is_reviewable"]
@@ -277,7 +318,7 @@ def test_non_employees_cannot_access_employer_update_claim_review(client, auth_t
     assert response.status_code == 403
 
 
-def test_employers_receive_200_from_employer_update_claim_review(
+def test_employers_with_decimal_hours_receive_200_from_employer_update_claim_review(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
@@ -304,7 +345,99 @@ def test_employers_receive_200_from_employer_update_claim_review(
         "employer_decision": "Approve",
         "fraud": "Yes",
         "has_amendments": False,
-        "hours_worked_per_week": 0,
+        "hours_worked_per_week": 16.5,
+        "previous_leaves": [
+            {
+                "leave_end_date": "1970-01-01",
+                "leave_start_date": "1970-01-01",
+                "leave_reason": "Pregnancy / Maternity",
+            }
+        ],
+    }
+
+    response = client.patch(
+        "/v1/employers/claims/NTN-100-ABS-01/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=update_request_body,
+    )
+
+    assert response.status_code == 200
+
+
+def test_employers_with_integer_hours_receive_200_from_employer_update_claim_review(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    update_request_body = {
+        "comment": "string",
+        "employer_benefits": [
+            {
+                "benefit_amount_dollars": 0,
+                "benefit_amount_frequency": "Per Day",
+                "benefit_end_date": "1970-01-01",
+                "benefit_start_date": "1970-01-01",
+                "benefit_type": "Accrued paid leave",
+            }
+        ],
+        "employer_decision": "Approve",
+        "fraud": "Yes",
+        "has_amendments": False,
+        "hours_worked_per_week": 16,
+        "previous_leaves": [
+            {
+                "leave_end_date": "1970-01-01",
+                "leave_start_date": "1970-01-01",
+                "leave_reason": "Pregnancy / Maternity",
+            }
+        ],
+    }
+
+    response = client.patch(
+        "/v1/employers/claims/NTN-100-ABS-01/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=update_request_body,
+    )
+
+    assert response.status_code == 200
+
+
+def test_employers_with_null_hours_receive_200_from_employer_update_claim_review(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    update_request_body = {
+        "comment": "string",
+        "employer_benefits": [
+            {
+                "benefit_amount_dollars": 0,
+                "benefit_amount_frequency": "Per Day",
+                "benefit_end_date": "1970-01-01",
+                "benefit_start_date": "1970-01-01",
+                "benefit_type": "Accrued paid leave",
+            }
+        ],
+        "employer_decision": "Approve",
+        "fraud": "Yes",
+        "has_amendments": False,
+        "hours_worked_per_week": None,
         "previous_leaves": [
             {
                 "leave_end_date": "1970-01-01",
