@@ -1215,7 +1215,9 @@ components:
         has_amendments:
           type: boolean
         hours_worked_per_week:
-          type: integer
+          type: number
+          nullable: true
+          example: 40.5
         employer_decision:
           type: string
           enum:

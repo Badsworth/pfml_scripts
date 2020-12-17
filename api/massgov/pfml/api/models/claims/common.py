@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 from typing import List, Optional
 
 from massgov.pfml.api.models.common import PreviousLeave
@@ -49,7 +50,7 @@ class EmployerClaimReview(PydanticBaseModel):
 
     comment: Optional[str]
     employer_benefits: List[EmployerBenefit]
-    hours_worked_per_week: Optional[int]
+    hours_worked_per_week: Optional[Decimal]
     previous_leaves: List[PreviousLeave]
     employer_decision: Optional[str]
     fraud: Optional[str]

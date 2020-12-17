@@ -73,6 +73,7 @@ def mock_document(
 
 
 def mock_absence_periods(absence_id: str) -> Any:
+    employee_id = "1000" if absence_id == "int_fake_hours_worked_per_week" else "1079"
     type = "Time off period" if absence_id == "NTN-100-ABS-01" else "Reduced Schedule"
     return {
         "startDate": "2021-06-24",
@@ -80,7 +81,7 @@ def mock_absence_periods(absence_id: str) -> Any:
         "decisions": [
             {
                 "absence": {"id": absence_id, "caseReference": absence_id},
-                "employee": {"id": "1079", "name": "ZZ: Olaf Aufderhar"},
+                "employee": {"id": employee_id, "name": "ZZ: Olaf Aufderhar"},
                 "period": {
                     "periodReference": "PL-14449-0000000152",
                     "parentPeriodReference": "",
@@ -331,8 +332,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     ) -> models.group_client_api.CustomerOccupations:
         _capture_call("get_customer_occupations", user_id, customer_id=customer_id)
 
+        hrsWorkedPerWeek = 37 if customer_id == "1000" else 37.5
         return models.group_client_api.CustomerOccupations(
-            elements=[models.group_client_api.CustomerOccupation(hrsWorkedPerWeek=40)]
+            elements=[models.group_client_api.CustomerOccupation(hrsWorkedPerWeek=hrsWorkedPerWeek)]
         )
 
     def get_outstanding_information(
