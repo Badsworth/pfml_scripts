@@ -116,13 +116,18 @@ export const NewApplication = (props) => {
           smallLabel
         />
         <StatusRow
-          label={t("pages.employersClaimsNewApplication.employeeNameLabel")}
+          label={t("pages.employersClaimsNewApplication.employerIdNumberLabel")}
           className="margin-top-2 padding-top-2"
+        >
+          {claim.employer_fein}
+        </StatusRow>
+        <StatusRow
+          label={t("pages.employersClaimsNewApplication.employeeNameLabel")}
         >
           {claim.fullName}
         </StatusRow>
         <StatusRow
-          label={t("pages.employersClaimsNewApplication.employerIdNumberLabel")}
+          label={t("pages.employersClaimsNewApplication.ssnOrItinLabel")}
         >
           {claim.tax_identifier}
         </StatusRow>

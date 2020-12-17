@@ -1449,12 +1449,14 @@ const pages = {
     choiceYes: "$t(shared.choiceYes)",
     dobLabel: "Date of birth",
     employeeNameLabel: "Employee name",
-    employerIdNumberLabel: "Employer ID number",
+    employerIdNumberLabel: "Employer ID number (EIN)",
     instructions:
       "<p>This takes about 10 minutes. We use the information you provide to determine the leave time and benefit amount your employee will receive.</p><p>We need true answers to every question so that we can manage the program the way the law requires. Please confirm that you will answer as truthfully as you can.</p>",
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
     instructionsLabel:
       "Are you the right person to respond to this application?",
+    ssnOrItinLabel:
+      "Social Security Number or Individual Taxpayer Identification Number",
     submitButton: "Agree and submit",
     title: "New application from {{name}}",
     truthAttestationHeading: "Start the review process",

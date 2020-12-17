@@ -52,12 +52,17 @@ exports[`NewApplication renders the page 1`] = `
     />
     <StatusRow
       className="margin-top-2 padding-top-2"
+      label="Employer ID number (EIN)"
+    >
+      12-3456789
+    </StatusRow>
+    <StatusRow
       label="Employee name"
     >
       Jane Doe
     </StatusRow>
     <StatusRow
-      label="Employer ID number"
+      label="Social Security Number or Individual Taxpayer Identification Number"
     >
       ***-**-1234
     </StatusRow>
