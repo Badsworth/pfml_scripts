@@ -230,27 +230,4 @@ describe("ResetPassword", () => {
       );
     });
   });
-
-  describe("when claimantShowAuth flag is disabled", () => {
-    let wrapper;
-
-    beforeEach(() => {
-      process.env.featureFlags = { claimantShowAuth: false };
-      wrapper = render({ query: { "user-not-found": "true" } });
-    });
-
-    it("render EIN field by default", async () => {
-      const { changeField, click } = simulateEvents(wrapper);
-
-      // Get page into a submittable state
-      changeField("username", "foo@example.com");
-      click({ name: "resend-code-button" });
-      await resolveResendCodeMock();
-
-      expect(wrapper.find("InputChoiceGroup[name='isEmployer']").exists()).toBe(
-        false
-      );
-      expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
-    });
-  });
 });
