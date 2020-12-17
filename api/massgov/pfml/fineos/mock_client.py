@@ -17,6 +17,7 @@ import faker
 import requests
 
 import massgov.pfml.util.logging
+from massgov.pfml.fineos.transforms.to_fineos.eforms import EFormBody
 
 from . import client, exception, fineos_client, models
 
@@ -377,6 +378,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         self, user_id: str, absence_id: str, eform_id: str
     ) -> models.group_client_api.EForm:
         return models.group_client_api.EForm(eformId=12345)
+
+    def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
+        _capture_call("create_eform", user_id, eform=eform, absence_id=absence_id)
 
     def get_case_occupations(
         self, user_id: str, case_id: str
