@@ -167,7 +167,7 @@ jobs:
         working-directory: ${{ env.working-dir }}
 
       - name: Install Lambda CLI Dependencies
-        run: pip install setuptools awscli aws-sam-cli
+        run: pip install boto3 setuptools awscli aws-sam-cli
         working-directory: ${{ env.infra-working-dir }}
 
       - name: Lambda Build, Package and Upload to S3
@@ -216,7 +216,7 @@ jobs:
         working-directory: ${{ env.working-dir }}
 
       - name: Install Lambda CLI Dependencies
-        run: pip install setuptools awscli aws-sam-cli
+        run: pip install boto3 setuptools awscli aws-sam-cli
         working-directory: ${{ env.infra-working-dir }}
 
       - name: Lambda Build, Package and Upload to S3
@@ -260,7 +260,7 @@ jobs:
         run: pip install wheel setuptools poetry
 
       - name: Install Lambda CLI Dependencies
-        run: pip install setuptools awscli aws-sam-cli
+        run: pip install boto3 setuptools awscli aws-sam-cli
 
       - name: Lambda Build, Package and Upload to S3
         run: make release
@@ -301,7 +301,7 @@ jobs:
         run: pip install wheel setuptools poetry
 
       - name: Install Lambda CLI Dependencies
-        run: pip install setuptools awscli aws-sam-cli
+        run: pip install boto3 setuptools awscli aws-sam-cli
 
       - name: Lambda Build, Package and Upload to S3
         run: make release
