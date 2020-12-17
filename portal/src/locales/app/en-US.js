@@ -643,13 +643,13 @@ const pages = {
     screenReaderNumberPrefix: "Step",
     start: "Start",
     stepHTMLDescription_bondingAdoptFoster:
-      "You need to provide a statement confirming the placement and the date of placement.",
+      "<p>You need to provide a statement confirming the placement and the date of placement.</p><p>Your certification documents will be shared with your employer as part of your application.</p>",
     stepHTMLDescription_bondingAdoptFosterFuture:
-      "<p>You need to provide a statement confirming the child’s placement and the date of placement.</p><p>Your certification documents will be shared with your employer as part of your application.</p>",
+      "After your child arrives in your home, you will need to provide a statement confirming the placement and the date of placement.",
     stepHTMLDescription_bondingNewborn:
-      "You need to provide your child's birth certificate or a document from a health care provider that shows the child’s date of birth.",
-    stepHTMLDescription_bondingNewbornFuture:
       "<p>You need to provide your child's birth certificate or a document from a health care provider that shows the child’s date of birth.</p><p>Your certification documents will be shared with your employer as part of your application.</p>",
+    stepHTMLDescription_bondingNewbornFuture:
+      "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.",
     stepHTMLDescription_employerInformation:
       "You will need to know:<ul><li>Your employer’s 9 digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
