@@ -51,6 +51,8 @@ declare namespace Cypress {
       event: "submitClaimToAPI",
       options: SimulationClaim
     ): Chainable<PartialResponse>;
+    task(event: "registerClaimant", options: Credentials): Chainable<true>;
+    task(event: "registerLeaveAdmin", options: Credentials & {fein: string}): Chainable<true>;
   }
 }
 
