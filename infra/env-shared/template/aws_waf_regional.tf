@@ -1,20 +1,24 @@
-# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl
-# managed and rate based rule examples at the URL above. 
+#------------------------------------------------------------------------------#
+#                        Rate-limiting AWS WAF rule                            #
+#------------------------------------------------------------------------------#
 
-locals {
-  api_gateway_arn        = "arn:aws:apigateway:us-east-1::/restapis/${aws_api_gateway_rest_api.pfml.id}/stages/${var.environment_name}"
-  api_gateway_deployment = "aws_api_gateway_deployment.${var.environment_name}"
-  acl_name               = "mass-pfml-${var.environment_name}-regional-rate-based-acl"
-}
+# Ref:
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl
 
 # Regional rate-based rule. This can be attached to the API Gateway
-# Default allow unless IP is sending under 1,000 requests per 5 minutes.
+# Default allow unless IP is sending under "limit" requests per 5 minutes.
+
+locals {
+  api_gateway_stage_arn  = "arn:aws:apigateway:us-east-1::/restapis/${aws_api_gateway_rest_api.pfml.id}/stages/${var.environment_name}"
+  api_gateway_deployment = "aws_api_gateway_deployment.${var.environment_name}"
+}
+
 resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
-  name  = local.acl_name
+  name  = "mass-pfml-${var.environment_name}-regional-rate-based-acl"
   scope = "REGIONAL"
 
-  # No rate limiting in performance environment for now (4 Dec 2020)
-  count = var.environment_name == "performance" ? 0 : 1
+  # Only apply this ACL if set to true in ../environments/<enviroment_name>/main.tf
+  count = var.enable_regional_rate_based_acl ? 1 : 0
 
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
@@ -54,12 +58,60 @@ resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
 }
 
 resource "aws_wafv2_web_acl_association" "rate_based_acl" {
-  # No rate limiting in performance environment for now (4 Dec 2020)
-  count = var.environment_name == "performance" ? 0 : 1
+  # Only apply this ACL if set to true in ../environments/<enviroment_name>/main.tf
+  count = var.enable_regional_rate_based_acl ? 1 : 0
 
   depends_on = [local.api_gateway_deployment]
   # must be an must be an ARN of an Application Load Balancer or an Amazon API Gateway stage.
   # resource_arn will need to be manually entered prior to 
-  resource_arn = local.api_gateway_arn
+  resource_arn = local.api_gateway_stage_arn
   web_acl_arn  = aws_wafv2_web_acl.regional_rate_based_acl[0].arn
+}
+
+#------------------------------------------------------------------------------#
+#                     Fortinet Managed AWS WAF Rules                           #
+#------------------------------------------------------------------------------#
+
+
+# Ref:
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafregional_web_acl
+
+locals {
+
+  # The Fortinet subscription is procured outside of terraform.
+  # To find the regional fortinet rule id use ```$ aws waf-regional list-subscribed-rule-groups```
+  # at the command line.
+  regional_fortinet_rule_id = "a9ae79c6-5ffa-4758-aca7-5a6862b26fa6"
+}
+
+resource "aws_wafregional_web_acl" "fortinet_managed_rules" {
+  name        = "mass-pfml-${var.environment_name}-regional-fortinet-acl"
+  metric_name = "FortinetAWSAPIGatewayRuleset"
+
+  # Only apply this ACL if set to true in ../environments/<enviroment_name>/main.tf
+  count = var.enable_fortinet_managed_rules ? 1 : 0
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
+
+  default_action {
+    type = "ALLOW"
+  }
+
+  rule {
+    priority = 1
+    rule_id  = local.regional_fortinet_rule_id
+    type     = "GROUP"
+
+    override_action {
+      type = "NONE" # None of the rules in the group will be overriden
+    }
+  }
+}
+
+resource "aws_wafregional_web_acl_association" "api_gateway" {
+  count        = var.enable_fortinet_managed_rules ? 1 : 0
+  resource_arn = local.api_gateway_stage_arn
+  web_acl_id   = aws_wafregional_web_acl.fortinet_managed_rules[0].id
 }
