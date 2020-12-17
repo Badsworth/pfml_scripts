@@ -34,6 +34,7 @@ module "tasks" {
 
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/IDT"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/IDT/dataexports"
+  enable_recurring_payments_schedule                  = false
 
   logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
 }

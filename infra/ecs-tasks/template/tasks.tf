@@ -146,6 +146,12 @@ locals {
         output_directory_path = var.fineos_eligibility_feed_output_directory_path
       }
     }
+
+    "payments-ctr-process" = {
+      command             = ["payments-ctr-process"]
+      containers_template = "payments_ctr_process_template.json"
+      vars                = {}
+    },
   }
 }
 

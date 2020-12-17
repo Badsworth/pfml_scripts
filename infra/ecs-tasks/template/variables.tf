@@ -94,3 +94,9 @@ variable "cognito_user_pool_id" {
   type        = string
   default     = ""
 }
+
+variable "enable_recurring_payments_schedule" {
+  description = "Enable scheduling for payments-ctr-process ECS task"
+  type        = bool
+  default     = false
+}

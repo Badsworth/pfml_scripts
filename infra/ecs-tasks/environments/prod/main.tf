@@ -36,4 +36,5 @@ module "tasks" {
 
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somprod-data-import/PRD"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somprod-data-export/PRD/dataexports"
+  enable_recurring_payments_schedule                  = false
 }

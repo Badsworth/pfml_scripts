@@ -59,3 +59,22 @@ resource "aws_cloudwatch_event_target" "register_admins_event_target_ecs" {
     }
   }
 }
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Payments ECS Task using Cloudwatch Events (Eventbridge)
+resource "aws_cloudwatch_event_target" "trigger_payments_ctr_process_ecs_task_daily_at_8_pm" {
+  rule      = aws_cloudwatch_event_rule.payments_ctr_process_ecs_task_daily_at_8_pm.name
+  arn       = aws_ecs_task_definition.ecs_tasks["process-payments"].arn
+  target_id = "payments_ctr_process_${var.environment_name}_cloudwatch_event_target"
+  count     = var.enable_recurring_payments_schedule == true ? 1 : 0
+}
+
+resource "aws_cloudwatch_event_rule" "payments_ctr_process_ecs_task_daily_at_8_pm" {
+  name        = "${var.environment_name}-payments-ctr-process-ecs-task-daily-at-8-pm"
+  description = "Fires the ${var.environment_name} Payments CTR Process ECS task daily at 8pm US EDT/1am UTC"
+  # The time of day can only be specified in UTC and will need to be updated when daylight savings changes occur, if the 2300 US ET is desired to be consistent.
+  schedule_expression = "cron(0 1 * * ? *)"
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
+}
