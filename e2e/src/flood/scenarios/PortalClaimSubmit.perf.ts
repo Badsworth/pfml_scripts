@@ -1,7 +1,7 @@
 import { StepFunction, TestData, Browser, step, By, ENV } from "@flood/element";
 import { DocumentUploadRequest } from "../../api";
-import { FineosUserType } from "../../simulation/types";
-import { checkApprovalReadiness } from "../tasks/ApproveClaim";
+// import { FineosUserType } from "../../simulation/types";
+// import { checkApprovalReadiness } from "../tasks/ApproveClaim";
 import * as Conf from "../config";
 import * as Util from "../helpers";
 
@@ -230,14 +230,14 @@ export const steps = [
       }
     },
   },
-  {
+  /* {
     name: "Verify that Outstanding Requirement was generated",
     test: async (browser: Browser, data: Conf.LSTSimClaim): Promise<void> => {
       const receiveDocumentsStep = receiveDocuments(fineosId);
       console.info(receiveDocumentsStep.name);
       await receiveDocumentsStep.test(browser, data);
     },
-  },
+  }, */
   {
     name: "Fill employer response as point of contact",
     test: async (browser: Browser, data: Conf.LSTSimClaim): Promise<void> => {
@@ -301,12 +301,12 @@ async function login(
   await (
     await Util.waitForElement(browser, By.css("button[type='submit']"))
   ).click();
-  await browser.waitForNavigation();
-  const agreeTerms = await browser.maybeFindElement(
+  const agreeTerms = await Util.maybeFindElement(
+    browser,
     By.visibleText("Agree and continue")
   );
   if (agreeTerms) {
-    agreeTerms.click();
+    await agreeTerms.click();
     await browser.waitForNavigation();
   }
   await Util.waitForElement(browser, By.visibleText("Log out"));
@@ -319,7 +319,7 @@ async function login(
   }
   return cookie.value;
 }
-
+/* 
 function receiveDocuments(
   fineosId: string,
   search = true,
@@ -395,12 +395,15 @@ function receiveDocuments(
     },
   };
 }
-
+*/
 function employerResponse(fineosId: string): Conf.StoredStep {
   return {
     name: `Point of Contact responds to "${fineosId}"`,
     test: async (browser: Browser, data: Conf.LSTSimClaim): Promise<void> => {
       await setFeatureFlags(browser);
+      await (
+        await Util.waitForElement(browser, By.visibleText("Log out"))
+      ).click();
       // Log in on Portal as Leave Admin
       authToken = await login(
         browser,

@@ -51,6 +51,22 @@ export const waitForElement = async (
   return browser.findElement(locator);
 };
 
+export const maybeFindElement = async (
+  browser: Browser,
+  locator: Locator,
+  retries = 5,
+  frequency = 1000
+): Promise<ElementHandle | null> => {
+  let element: ElementHandle | null = await browser.maybeFindElement(locator);
+  if (element) return element;
+  for (let i = 0; i < retries; i++) {
+    element = await browser.maybeFindElement(locator);
+    if (element !== null) break;
+    await browser.wait(frequency);
+  }
+  return element;
+};
+
 export const isFinanciallyEligible = async (
   browser: Browser
 ): Promise<boolean> => {
