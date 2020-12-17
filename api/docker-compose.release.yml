@@ -12,8 +12,4 @@ services:
     container_name: mass-pfml-api
     init: true
     volumes:
-      - app:/app
       - ./jwks.json:/app/jwks.json
-
-volumes:
-  app:

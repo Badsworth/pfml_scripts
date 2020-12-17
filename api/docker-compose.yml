@@ -33,14 +33,6 @@ services:
       - mass-pfml-db
     ports:
       - "1550:1550"
-    # We set `:z` on the bind mounts to support Linux systems with SELinux, on
-    # other platforms it has no effect.
-    #
-    # https://docs.docker.com/storage/bind-mounts/
-    volumes:
-      # To make local development easier, mount project code so that we don't
-      # have to rebuild the docker container every time we run
-      - .:/app:z
     environment:
       # Misc. non-app settings
       - TERM=${TERM:-xterm-256color}
