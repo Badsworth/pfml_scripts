@@ -402,8 +402,6 @@ def build_absence_case(
             massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
                 startDate=leave_period.start_date,
                 endDate=leave_period.end_date,
-                lastDayWorked=leave_period.start_date,
-                expectedReturnToWorkDate=leave_period.end_date,
                 startDateFullDay=True,
                 endDateFullDay=True,
                 status=absence_period_status,

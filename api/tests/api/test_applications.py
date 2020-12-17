@@ -3140,8 +3140,6 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                         massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
                             startDate=date(2021, 1, 1),
                             endDate=date(2021, 2, 9),
-                            lastDayWorked=date(2021, 1, 1),
-                            expectedReturnToWorkDate=date(2021, 2, 9),
                             startDateFullDay=True,
                             endDateFullDay=True,
                             status="known",
