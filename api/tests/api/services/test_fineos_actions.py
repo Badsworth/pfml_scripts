@@ -466,6 +466,29 @@ def test_creating_request_payload():
     assert payload.__contains__("<DoingBusinessAs>Test Organization DBA</DoingBusinessAs>")
 
 
+# not an integration test, but marked as such by global pytest.mark.integration
+# at top of file
+def test_creating_request_payload_with_other_names():
+    create_or_update_request = CreateOrUpdateEmployer(
+        fineos_customer_nbr="pfml_test_payload",
+        employer_fein="888997766",
+        employer_legal_name="Test Organization Name",
+        employer_dba="Test Organization DBA",
+    )
+    payload = FINEOSClient._create_or_update_employer_payload(create_or_update_request)
+
+    assert payload is not None
+    assert payload.__contains__("<Name>Test Organization Name</Name>")
+    assert payload.__contains__("<CustomerNo>pfml_test_payload</CustomerNo>")
+    assert payload.__contains__("<CorporateTaxNumber>888997766</CorporateTaxNumber>")
+    assert payload.__contains__("<LegalBusinessName>Test Organization Name</LegalBusinessName>")
+    assert payload.__contains__("<DoingBusinessAs>Test Organization DBA</DoingBusinessAs>")
+
+    assert payload.__contains__("<ShortName>Test Org</ShortName>")
+    assert payload.__contains__("<UpperName>TEST ORGANIZATION NAME</UpperName>")
+    assert payload.__contains__("<UpperShortName>TEST ORG</UpperShortName>")
+
+
 def test_build_bonding_date_reflexive_question_birth(user):
     application = ApplicationFactory.create(user=user)
     application.child_birth_date = date(2021, 2, 9)

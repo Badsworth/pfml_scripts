@@ -922,13 +922,16 @@ class FINEOSClient(client.AbstractFINEOSClient):
             DoingBusinessAs=employer_create_or_update.employer_dba,
             LegalBusinessName=employer_create_or_update.employer_legal_name,
             Name=employer_create_or_update.employer_legal_name,
+            ShortName=employer_create_or_update.employer_legal_name[0:8],
+            UpperName=employer_create_or_update.employer_legal_name.upper(),
+            UpperShortName=employer_create_or_update.employer_legal_name[0:8].upper(),
         )
 
         # The ReadEmployer endpoint doesn't return an OCOrganisationDefaultItem
         # as a part of its response, so using the top-level attributes to
         # populate the OCOrganisationDefaultItem in the update
+        # OAR Dec 18, 2020 - Removed Name from sync. DOR is source of truth for legal name.
         if existing_organization:
-            organization_default.Name = existing_organization.Name
             organization_default.PronouncedAs = existing_organization.PronouncedAs
             organization_default.AccountingDate = existing_organization.AccountingDate
             organization_default.FinancialYearEnd = existing_organization.FinancialYearEnd
@@ -943,6 +946,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
             DoingBusinessAs=employer_create_or_update.employer_dba,
             LegalBusinessName=employer_create_or_update.employer_legal_name,
             Name=employer_create_or_update.employer_legal_name,
+            ShortName=employer_create_or_update.employer_legal_name[0:8],
+            UpperName=employer_create_or_update.employer_legal_name.upper(),
+            UpperShortName=employer_create_or_update.employer_legal_name[0:8].upper(),
             organisationWithDefault=models.OCOrganisationWithDefault(
                 OCOrganisation=[organization_default]
             ),
@@ -951,8 +957,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
         # The ReadEmployer endpoint doesn't return an OCOrganisationName as a
         # part of its response, so using the top-level attributes to populate
         # the OCOrganisationName in the update
+        # OAR Dec 18, 2020 - Removed Name from sync. DOR is source of truth for legal name.
         if existing_organization:
-            organization_name.Name = existing_organization.Name
             organization_name.PronouncedAs = existing_organization.PronouncedAs
 
         organization = models.OCOrganisationItem(
@@ -961,11 +967,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
             DoingBusinessAs=employer_create_or_update.employer_dba,
             LegalBusinessName=employer_create_or_update.employer_legal_name,
             Name=employer_create_or_update.employer_legal_name,
+            ShortName=employer_create_or_update.employer_legal_name[0:8],
+            UpperName=employer_create_or_update.employer_legal_name.upper(),
+            UpperShortName=employer_create_or_update.employer_legal_name[0:8].upper(),
             names=models.OCOrganisationName(OCOrganisationName=[organization_name]),
         )
 
         if existing_organization:
-            organization.Name = existing_organization.Name
             organization.PronouncedAs = existing_organization.PronouncedAs
             organization.AccountingDate = existing_organization.AccountingDate
             organization.FinancialYearEnd = existing_organization.FinancialYearEnd

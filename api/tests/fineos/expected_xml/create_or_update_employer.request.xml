@@ -106,10 +106,10 @@
                     <PayeTaxDistrict/>
                     <PayeTaxNumber/>
                     <RegisteredNumber/>
-                    <ShortName/>
-                    <UpperName/>
+                    <ShortName>Test One</ShortName>
+                    <UpperName>TEST ONE CORP</UpperName>
                     <UpperRegisteredNumber/>
-                    <UpperShortName/>
+                    <UpperShortName>TEST ONE</UpperShortName>
                     <VatNumber/>
                     <names>
                         <OCOrganisationName>
@@ -128,9 +128,9 @@
                                 </InstanceDomainAndFullId>
                             </NameType>
                             <PronouncedAs/>
-                            <ShortName/>
-                            <UpperName/>
-                            <UpperShortName/>
+                            <ShortName>Test One</ShortName>
+                            <UpperName>TEST ONE CORP</UpperName>
+                            <UpperShortName>TEST ONE</UpperShortName>
                             <ValidFrom>1753-01-01T00:00:00</ValidFrom>
                             <ValidTo>1753-01-01T00:00:00</ValidTo>
                             <DefaultName>true</DefaultName>
@@ -219,10 +219,10 @@
                                     <PayeTaxDistrict/>
                                     <PayeTaxNumber/>
                                     <RegisteredNumber/>
-                                    <ShortName/>
-                                    <UpperName/>
+                                    <ShortName>Test One</ShortName>
+                                    <UpperName>TEST ONE CORP</UpperName>
                                     <UpperRegisteredNumber/>
-                                    <UpperShortName/>
+                                    <UpperShortName>TEST ONE</UpperShortName>
                                     <VatNumber/>
                                 </OCOrganisation>
                             </organisationWithDefault>
