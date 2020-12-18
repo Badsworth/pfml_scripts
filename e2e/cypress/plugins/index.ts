@@ -15,14 +15,13 @@ import path from "path";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import { CypressStepThis } from "../../src/types";
 import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
-import TestMailNotificationFetcher from "./TestMailNotificationFetcher";
 import PortalSubmitter from "../../src/simulation/PortalSubmitter";
 import {
   SimulationClaim,
   Employer,
   EmployeeRecord,
 } from "../../src/simulation/types";
-import { Credentials, notificationRequest } from "../../src/types";
+import { Credentials } from "../../src/types";
 import { SimulationGenerator } from "../../src/simulation/simulate";
 import { ApplicationResponse, DocumentUploadRequest } from "../../src/api";
 import { makeDocUploadBody } from "../../src/simulation/SimulationRunner";
@@ -34,6 +33,7 @@ import * as integrationScenarios from "../../src/simulation/scenarios/integratio
 import fs from "fs";
 import pdf from "pdf-parse";
 import { Result } from "pdf-parse";
+import TestMailClient, { Email, GetEmailsOpts } from "./TestMailClient";
 import AuthenticationManager from "../../src/simulation/AuthenticationManager";
 import { CognitoUserPool } from "amazon-cognito-identity-js";
 
@@ -73,12 +73,12 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     getAuthVerification: (toAddress: string) => {
       return verificationFetcher.getVerificationCodeForUser(toAddress);
     },
-    getNotification: (notificationRequestData: notificationRequest) => {
-      const client = new TestMailNotificationFetcher(
+    getEmails(opts: GetEmailsOpts): Promise<Email[]> {
+      const client = new TestMailClient(
         config("TESTMAIL_APIKEY"),
         config("TESTMAIL_NAMESPACE")
       );
-      return client.getNotificationContent(notificationRequestData);
+      return client.getEmails(opts);
     },
     async generateCredentials(
       isEmployer: boolean

@@ -19,19 +19,26 @@ const wrapFetchWithTimeout = (fetchProto: typeof fetch, timeout: number) => {
   };
 };
 
-type Email = {
+export type Email = {
   from: string;
   subject: string;
   text: string;
   html: string;
+  timestamp: number;
 };
+export type GetEmailsOpts = {
+  address: string;
+  subject?: string;
+  subjectWildcard?: string;
+  timestamp_from?: number;
+};
+type Filter = { field: string; match: string; action: string; value: string };
 
 export default class TestMailClient {
   namespace: string;
-  endpoint = "https://api.testmail.app/api/json";
   client: GraphQLClient;
 
-  constructor(apiKey: string, namespace: string, timeout = 60000) {
+  constructor(apiKey: string, namespace: string, timeout = 120000) {
     this.client = new GraphQLClient("https://api.testmail.app/api/graphql", {
       headers: { Authorization: `Bearer ${apiKey}` },
       // Limit the amount of time we'll wait for a response.
@@ -40,13 +47,31 @@ export default class TestMailClient {
     this.namespace = namespace;
   }
 
-  /**
-   * Fetch all emails matching a given tag.
-   */
-  async getEmails(address: string): Promise<Email[]> {
-    const response = await this.client.request(getEmailsQuery, {
-      tag: this.getTagFromAddress(address),
+  async getEmails(opts: GetEmailsOpts): Promise<Email[]> {
+    const filters: Filter[] = [];
+
+    if (opts.subject) {
+      filters.push({
+        field: "subject",
+        match: "exact",
+        action: "include",
+        value: opts.subject,
+      });
+    }
+    if (opts.subjectWildcard) {
+      filters.push({
+        field: "subject",
+        match: "wildcard",
+        action: "include",
+        value: opts.subjectWildcard,
+      });
+    }
+    const tag = this.getTagFromAddress(opts.address);
+    const response = await this.client.request(unifiedQuery, {
+      tag: tag,
       namespace: this.namespace,
+      advanced_filters: filters,
+      timestamp_from: opts.timestamp_from,
     });
     return response.inbox.emails;
   }
@@ -78,15 +103,28 @@ export default class TestMailClient {
 /**
  * GraphQL queries:
  */
-const getEmailsQuery = gql`
-  query getEmails($namespace: String!, $tag: String!) {
-    inbox(namespace: $namespace, tag: $tag, livequery: true) {
+const unifiedQuery = gql`
+  query getEmails(
+    $namespace: String!
+    $tag: String!
+    $advanced_filters: [AdvancedFilter]
+    $timestamp_from: Float
+  ) {
+    inbox(
+      namespace: $namespace
+      tag: $tag
+      advanced_filters: $advanced_filters
+      timestamp_from: $timestamp_from
+      livequery: true
+    ) {
       result
       message
       emails {
+        timestamp
         from
         subject
         text
+        html
       }
       count
     }
