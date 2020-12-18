@@ -61,7 +61,7 @@ describe("PaymentMethod", () => {
   });
 
   describe("when user clicks continue", () => {
-    it("submits payment preference fields and ID", () => {
+    it("submits payment preference fields for direct deposit", () => {
       ({ appLogic, claim, wrapper } = renderWithAppLogic(PaymentMethod, {
         claimAttrs: new MockClaimBuilder().directDeposit().create(),
       }));
@@ -77,6 +77,27 @@ describe("PaymentMethod", () => {
             bank_account_type: "Checking",
             routing_number: "1234567890",
             payment_method: "Elec Funds Transfer",
+          },
+        }
+      );
+    });
+
+    it("submits payment preference fields for check", () => {
+      ({ appLogic, claim, wrapper } = renderWithAppLogic(PaymentMethod, {
+        claimAttrs: new MockClaimBuilder().check().create(),
+      }));
+
+      const { submitForm } = simulateEvents(wrapper);
+      submitForm();
+
+      expect(appLogic.claims.submitPaymentPreference).toHaveBeenCalledWith(
+        claim.application_id,
+        {
+          payment_preference: {
+            account_number: null,
+            bank_account_type: null,
+            routing_number: null,
+            payment_method: "Check",
           },
         }
       );

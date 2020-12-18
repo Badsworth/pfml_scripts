@@ -23,11 +23,26 @@ describe("DateOfChild", () => {
   const child_placement_date = "leave_details.child_placement_date";
 
   describe("when the claim is for a newborn", () => {
-    it("shows the correct input question", () => {
+    beforeEach(() => {
       claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
+    });
+
+    it("shows the birth date input without hint text", () => {
       render();
       expect(wrapper.find({ name: child_birth_date }).exists()).toBeTruthy();
       expect(wrapper.find({ name: child_placement_date }).exists()).toBeFalsy();
+      expect(wrapper.find("InputDate").prop("hint")).toBeFalsy();
+    });
+
+    it("show the birth hint when claimantShowJan1ApplicationInstructions is true", () => {
+      process.env.featureFlags = {
+        claimantShowJan1ApplicationInstructions: true,
+      };
+
+      render();
+      expect(wrapper.find("InputDate").prop("hint")).toMatchInlineSnapshot(
+        `"If your child has not been born yet, enter the expected due date."`
+      );
     });
   });
 

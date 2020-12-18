@@ -61,3 +61,11 @@ exports[`FileCard when the FileCard receives a File renders 1`] = `
   </div>
 </div>
 `;
+
+exports[`FileCard when the FileCard receives a File renders the error message 1`] = `
+<p
+  className="text-error"
+>
+  error
+</p>
+`;

@@ -363,3 +363,154 @@ Array [
   </ul>,
 ]
 `;
+
+exports[`Dashboard renders post-launch content when when claimantShowJan1ApplicationInstructions is true 1`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    If you are currently employed in Massachusetts but not self-employed, you can apply online or by phone for the following types of paid leave:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      Medical leave due to your own illness, injury, or pregnancy
+    </li>
+    <li
+      key="1"
+    >
+      Family leave to bond with your child after birth, adoption, or foster placement — whether you are applying before or after the child arrives
+    </li>
+  </ul>,
+]
+`;
+
+exports[`Dashboard renders post-launch content when when claimantShowJan1ApplicationInstructions is true 2`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Apply by calling the Department of Family and Medical Leave Contact Center at (833) 344‑7365 if 
+    <strong
+      key="strong-1"
+    >
+      any
+    </strong>
+     of the following are true:
+  </p>,
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      You are self-employed or unemployed and you are applying for paid leave
+    </li>
+    <li
+      key="1"
+    >
+      You need paid family leave to care for a family member who serves in the armed forces
+    </li>
+    <li
+      key="2"
+    >
+      You need paid family leave to manage family affairs when a family member is on active duty in the armed forces
+    </li>
+  </ul>,
+]
+`;
+
+exports[`Dashboard renders post-launch content when when claimantShowJan1ApplicationInstructions is true 3`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.
+  </p>,
+  <p
+    key="p-1"
+  >
+    Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.
+  </p>,
+]
+`;
+
+exports[`Dashboard renders post-launch content when when claimantShowJan1ApplicationInstructions is true 4`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    For medical leave your health care provider must complete the 
+    <a
+      href="https://www.mass.gov/hcp-form"
+      key="1"
+    >
+      PFML Certification of a Serious Health Condition
+    </a>
+    .
+  </p>,
+  <p
+    key="p-1"
+  >
+    For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child's date of birth or placement.
+  </p>,
+  <p
+    key="p-2"
+  >
+    You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.
+  </p>,
+]
+`;
+
+exports[`Dashboard renders post-launch content when when claimantShowJan1ApplicationInstructions is true 5`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.
+  </p>,
+  <p
+    key="p-1"
+  >
+    If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be 
+    <a
+      href="https://www.mass.gov/pfml-medical-bonding"
+      key="1"
+    >
+      easily added to your claim
+    </a>
+     by calling our Contact Center at (833) 344‑7365.
+  </p>,
+  <p
+    key="p-2"
+  >
+    You need to create multiple leave applications if you are:
+  </p>,
+  <ul
+    className="usa-list"
+    key="3"
+  >
+    <li
+      key="0"
+    >
+      Taking leave from multiple employers.
+    </li>
+    <li
+      key="1"
+    >
+      Taking time off in uneven blocks of time (intermittent leave), 
+      <strong
+        key="strong-1"
+      >
+        and
+      </strong>
+       taking time off completely or on a reduced schedule. You'll need a separate application for the intermittent leave.
+    </li>
+  </ul>,
+]
+`;
