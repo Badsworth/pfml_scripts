@@ -74,6 +74,32 @@ export default class AuthenticationManager {
     await this.consentToDataSharing(session);
   }
 
+  async resetPassword(username: string, password: string): Promise<void> {
+    if (!this.verificationFetcher) {
+      throw new Error("Unable to reset password without verification fetcher");
+    }
+    const verificationFetcher = this.verificationFetcher;
+    const cognitoUser = new CognitoUser({
+      Username: username,
+      Pool: this.pool,
+    });
+    return new Promise(async (resolve, reject) => {
+      cognitoUser.forgotPassword({
+        onSuccess: () => console.log("Success was called"),
+        onFailure: () => console.log("Failure was called"),
+        inputVerificationCode: async () => {
+          const code = await verificationFetcher.getResetVerificationCodeForUser(
+            username
+          );
+          cognitoUser.confirmPassword(code, password, {
+            onSuccess: resolve,
+            onFailure: reject,
+          });
+        },
+      });
+    });
+  }
+
   private registerCognitoUser(
     username: string,
     password: string,

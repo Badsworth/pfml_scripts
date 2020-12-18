@@ -15,6 +15,7 @@ import {
   ApplicationResponse,
 } from "../api";
 import AuthenticationManager from "./AuthenticationManager";
+import { Credentials } from "../types";
 
 if (!global.FormData) {
   // @ts-ignore

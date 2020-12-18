@@ -7,6 +7,7 @@ import path from "path";
 import winston from "winston";
 import SimulationStateTracker from "./SimulationStateTracker";
 import delay from "delay";
+import { Credentials } from "../types";
 
 /**
  * This class is responsible for executing a business simulation.
