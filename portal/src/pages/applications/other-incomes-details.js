@@ -21,7 +21,14 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.other_incomes"];
+export const fields = [
+  "claim.other_incomes",
+  "claim.other_incomes[*].income_amount_dollars",
+  "claim.other_incomes[*].income_amount_frequency",
+  "claim.other_incomes[*].income_end_date",
+  "claim.other_incomes[*].income_start_date",
+  "claim.other_incomes[*].income_type",
+];
 
 export const OtherIncomesDetails = (props) => {
   const { appLogic, claim } = props;

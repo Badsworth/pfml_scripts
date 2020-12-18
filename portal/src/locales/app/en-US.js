@@ -81,6 +81,21 @@ const errors = {
       }.`,
       required: "Enter a date of birth.",
     },
+    employer_benefits: {
+      benefit_end_date: {
+        date:
+          "Date you stop receiving this benefit must include a day, month, and year.",
+        required: "Enter the date you will stop using this benefit.",
+      },
+      benefit_start_date: {
+        date:
+          "Date you start receiving this benefit must include a day, month, and year.",
+        required: "Enter the date you will start using this benefit.",
+      },
+      benefit_type: {
+        required: "Select the kind of benefit you will use.",
+      },
+    },
     employer_fein: {
       pattern:
         "Enter the Employer Identification Number in the correct format.",
@@ -103,11 +118,23 @@ const errors = {
     has_continuous_leave_periods: {
       required: "Select Yes if you are taking continuous leave.",
     },
+    has_employer_benefits: {
+      required:
+        "Select yes if you will you use any employer-sponsored benefits during your leave.",
+    },
     has_intermittent_leave_periods: {
       required: "Select Yes if you are taking intermittent leave.",
     },
     has_mailing_address: {
       required: "Select yes if you get your mail at this address.",
+    },
+    has_other_incomes: {
+      required:
+        "Select yes if you will receive income from any other sources during your leave.",
+    },
+    has_previous_leaves: {
+      required:
+        "Select yes if you have taken paid or unpaid leave since January 1, 2021 for a qualifying reason.",
     },
     has_reduced_schedule_leave_periods: {
       required: "Select Yes if you are working a reduced schedule.",
@@ -273,6 +300,21 @@ const errors = {
         "License or ID number must be 9 characters, and may begin with S or SA.",
       required: "Enter your license or ID number.",
     },
+    other_incomes: {
+      income_end_date: {
+        date:
+          "Date you stop receiving this income must include a day, month, and year.",
+        required: "Enter the date you will stop receiving this income.",
+      },
+      income_start_date: {
+        date:
+          "Date you start receiving this income must include a day, month, and year.",
+        required: "Enter the date you will start receiving this income.",
+      },
+      income_type: {
+        required: "Select the kind of income.",
+      },
+    },
     payment_preference: {
       account_number: {
         invalid_masked_field: "Enter the full account number to make a change.",
@@ -301,6 +343,22 @@ const errors = {
       },
       phone_type: {
         required: "Select a number type.",
+      },
+    },
+    previous_leaves: {
+      is_for_current_employer: {
+        required: "Select yes if your leave is from this employer.",
+      },
+      leave_end_date: {
+        date: "Date your leave ended must include a day, month, and year.",
+        required: "Enter the date your leave ended.",
+      },
+      leave_reason: {
+        required: "Select the qualifying reason for your leave.",
+      },
+      leave_start_date: {
+        date: "Date your leave began must include a day, month, and year.",
+        required: "Enter the date your leave began.",
       },
     },
     residential_address: {

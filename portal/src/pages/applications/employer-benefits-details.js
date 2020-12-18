@@ -21,7 +21,14 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.employer_benefits"];
+export const fields = [
+  "claim.employer_benefits",
+  "claim.employer_benefits[*].benefit_amount_dollars",
+  "claim.employer_benefits[*].benefit_amount_frequency",
+  "claim.employer_benefits[*].benefit_end_date",
+  "claim.employer_benefits[*].benefit_start_date",
+  "claim.employer_benefits[*].benefit_type",
+];
 
 export const EmployerBenefitDetails = (props) => {
   const { appLogic, claim } = props;
