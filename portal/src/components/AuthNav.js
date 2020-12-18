@@ -69,7 +69,7 @@ const AuthNav = (props) => {
 
 AuthNav.propTypes = {
   user: PropTypes.shape({
-    username: PropTypes.string,
+    email_address: PropTypes.string,
   }),
   onLogout: PropTypes.func.isRequired,
 };
