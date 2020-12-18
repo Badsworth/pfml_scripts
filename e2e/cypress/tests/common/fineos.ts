@@ -47,22 +47,6 @@ When("I start adjudication for the claim", () => {
   cy.get("input[type='submit'][value='Adjudicate']").click();
 });
 
-Then("I should reject the plan", () => {
-  cy.unstash<string>("claimNumber").then((claimNumber) => {
-    fineos.assertOnClaimPage(claimNumber);
-  });
-  cy.get("input[type='submit'][value='Adjudicate']").click();
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-  cy.get("input[type='submit'][value='Reject']").click();
-  fineos.clickBottomWidgetButton();
-});
-
-Given("I complete claim Denial for {string}", function (reason: string): void {
-  fineos.clickDeny();
-  fineos.denialReason(reason);
-});
-
 When("I add paid benefits to the current case", () => {
   cy.get<string>("@claimNumber").then(fineos.assertAdjudicatingClaim);
   fineos.onTab("Paid Benefits");

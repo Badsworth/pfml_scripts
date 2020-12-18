@@ -142,15 +142,3 @@ Given("I return to the portal as the {string} claimant", function (
     portal.login(credentials);
   }
 });
-
-Given("I find my application card", function () {
-  cy.wait(90000);
-  cy.contains("a", "View your applications").click();
-  cy.wait(5000);
-  cy.wait("@documentClaimResponse");
-
-  cy.unstash("claimNumber").then((id) => {
-    cy.log(id as string);
-    cy.get('article[class*="border"]').should("contain.text", id);
-  });
-});

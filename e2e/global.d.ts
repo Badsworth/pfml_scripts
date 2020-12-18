@@ -12,6 +12,7 @@ type Application = import("./src/types").Application;
 type Credentials = import("./src/types").Credentials;
 type SimulationClaim = import("./src/simulation/types").SimulationClaim;
 type ApplicationRequestBody = import("./src/api").ApplicationRequestBody;
+type waitForClaimDocuments = import("./cypress/plugins/DocumentWaiter").default["waitForClaimDocuments"];
 type Email = import("./cypress/plugins/TestMailClient").Email;
 type GetEmailsOpts = import("./cypress/plugins/TestMailClient").GetEmailsOpts;
 type Result = import("pdf-parse").Result;
@@ -57,6 +58,7 @@ declare namespace Cypress {
     task(event: "getEmails", opts: GetEmailsOpts): Chainable<Email[]>;
     task(event: "registerClaimant", options: Credentials): Chainable<true>;
     task(event: "registerLeaveAdmin", options: Credentials & {fein: string}): Chainable<true>;
+    task(event: "waitForClaimDocuments", options: Parameters<waitForClaimDocuments>[0]): Chainable<boolean>;
   }
 }
 

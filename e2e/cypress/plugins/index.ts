@@ -36,6 +36,7 @@ import { Result } from "pdf-parse";
 import TestMailClient, { Email, GetEmailsOpts } from "./TestMailClient";
 import AuthenticationManager from "../../src/simulation/AuthenticationManager";
 import { CognitoUserPool } from "amazon-cognito-identity-js";
+import DocumentWaiter from "./DocumentWaiter";
 
 const scenarioFunctions: Record<string, SimulationGenerator> = {
   ...pilot3,
@@ -67,6 +68,10 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     username: config("PORTAL_USERNAME"),
     password: config("PORTAL_PASSWORD"),
   };
+  const documentWaiter = new DocumentWaiter(
+    config("API_BASEURL"),
+    authenticator
+  );
 
   // Declare tasks here.
   on("task", {
@@ -129,6 +134,9 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
           throw new Error(err);
         });
     },
+    waitForClaimDocuments: documentWaiter.waitForClaimDocuments.bind(
+      documentWaiter
+    ),
 
     async generateClaim({ claimType, employeeType }): Promise<SimulationClaim> {
       if (!(claimType in scenarioFunctions)) {

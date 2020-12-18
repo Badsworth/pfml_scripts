@@ -119,17 +119,6 @@ When("I have submitted all parts of the claim", function (
   portal.submitClaimPortal(application, paymentPreference);
 });
 
-When("I see a pdf {string} notice to download", function (noticeType: string) {
-  cy.unstash("claimNumber").then((id) => {
-    cy.contains("article", id as string).within(() => {
-      cy.get(".usa-list .text-medium").should("contain.text", noticeType);
-      // @ToDo Will add later, currently just checking notice link
-      //   .click();
-      // cy.wait(15000);
-    });
-  });
-});
-
 When("I request additional information from the claimant", function (): void {
   fineos.onTab("Evidence");
   cy.get("input[type='submit'][value='Additional Information']").click();

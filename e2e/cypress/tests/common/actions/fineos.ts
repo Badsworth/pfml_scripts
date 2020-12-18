@@ -41,6 +41,22 @@ export function commenceIntake(claimId: string): void {
   cy.contains("Capture the following details in order to commence intake");
 }
 
+export function denyClaim(reason: string): void {
+  cy.get("input[type='submit'][value='Adjudicate']").click();
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  cy.get("input[type='submit'][value='Reject']").click({ force: true });
+  clickBottomWidgetButton("OK");
+
+  cy.get('a[title="Deny the Pending Leave Request"]').click();
+  cy.get('span[id="leaveRequestDenialDetailsWidget"]')
+    .find("select")
+    .select(reason);
+  cy.get('input[type="submit"][value="OK"]').click();
+  cy.get(".absenceProgressSummaryTitle").should("contain.text", "Completed");
+  cy.wait(200);
+}
+
 export function assertOnClaimPage(claimNumber: string): void {
   cy.get("[id*='processPhaseEnum']").should("contain.text", "Adjudication");
   cy.get(".case_pageheader_title").contains(claimNumber);
