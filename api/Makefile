@@ -339,6 +339,27 @@ test-watch-changed: ## Watch and run `make test-changed` on file changes
 test-watch-focus: ## Watch and run tests decorated with `@pytest.mark.dev_focus` on file changes
 	$(call run_test_watch,-m dev_focus $(args))
 
+API_PATHS := . ../infra/api ../infra/ecs-tasks ../infra/env-shared ../.github/workflows/api-*
+release-notes: refs=origin/deploy/api/stage..origin/master
+release-notes: ## Generate API release notes for $refs (defaults between stage and test)
+	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
+	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
+	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'
+
+API_RELEASE_BRANCHES := $(addprefix origin/, master deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training)
+where-ticket: ## Search release branches for $ticket
+	@for b in $(API_RELEASE_BRANCHES); do echo "## $$b ##"; \
+		git --no-pager log --oneline --decorate --grep=$(ticket) $$b; \
+		echo ""; \
+	done
+
+whats-released: ## List latest commit on release branches
+	@for b in $(API_RELEASE_BRANCHES); do echo "## $$b ##"; \
+		echo " * Closest tag: $$(git describe --tags --match api/v* $$b)"; \
+		echo " * Latest commit: $$(git --no-pager log --oneline --decorate --color -n 1 $$b)"; \
+		echo ""; \
+	done
+
 help: ## Displays this help screen
 	@grep -Eh '^[[:print:]]+:.*?##' $(MAKEFILE_LIST) | \
 	sort -d | \
