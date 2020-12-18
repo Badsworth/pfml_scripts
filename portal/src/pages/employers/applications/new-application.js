@@ -12,7 +12,6 @@ import StatusRow from "../../../components/StatusRow";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import formatDateRange from "../../../utils/formatDateRange";
-import { get } from "lodash";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
@@ -59,18 +58,8 @@ export const NewApplication = (props) => {
     hasReviewerVerified: "",
   });
 
-  const getField = (fieldName) => {
-    return get(formState, fieldName);
-  };
-
   const updateFields = (fields) => {
     setFormState({ ...formState, ...fields });
-  };
-
-  const clearField = () => {
-    setFormState({
-      hasReviewerVerified: "",
-    });
   };
 
   return (
@@ -135,23 +124,30 @@ export const NewApplication = (props) => {
           {formatDateRange(claim.date_of_birth)}
         </StatusRow>
         <ConditionalContent
-          getField={getField}
-          clearField={clearField}
           updateFields={updateFields}
           visible={
             formState.hasReviewerVerified === "true" ||
             formState.hasReviewerVerified === "false"
           }
         >
-          <Heading level="2">
-            {t("pages.employersClaimsNewApplication.truthAttestationHeading")}
-          </Heading>
-          <Trans i18nKey="pages.employersClaimsNewApplication.instructions" />
-          <Alert noIcon state="info">
-            {t("pages.employersClaimsNewApplication.agreementBody")}
-          </Alert>
+          {formState.hasReviewerVerified === "true" && (
+            <React.Fragment>
+              <Heading level="2">
+                {t(
+                  "pages.employersClaimsNewApplication.truthAttestationHeading"
+                )}
+              </Heading>
+              <Trans i18nKey="pages.employersClaimsNewApplication.instructions" />
+              <Alert noIcon state="info">
+                {t("pages.employersClaimsNewApplication.agreementBody")}
+              </Alert>
+            </React.Fragment>
+          )}
           <Button type="submit">
-            {t("pages.employersClaimsNewApplication.submitButton")}
+            {t("pages.employersClaimsNewApplication.submitButton", {
+              context:
+                formState.hasReviewerVerified === "true" ? "secondary" : null,
+            })}
           </Button>
         </ConditionalContent>
       </form>

@@ -1512,7 +1512,8 @@ const pages = {
       "Are you the right person to respond to this application?",
     ssnOrItinLabel:
       "Social Security Number or Individual Taxpayer Identification Number",
-    submitButton: "Agree and submit",
+    submitButton: "Submit",
+    submitButton_secondary: "Agree and submit",
     title: "New application from {{name}}",
     truthAttestationHeading: "Start the review process",
   },

@@ -72,29 +72,13 @@ exports[`NewApplication renders the page 1`] = `
       7/17/****
     </StatusRow>
     <ConditionalContent
-      clearField={[Function]}
-      getField={[Function]}
       updateFields={[Function]}
       visible={false}
     >
-      <Heading
-        level="2"
-      >
-        Start the review process
-      </Heading>
-      <Trans
-        i18nKey="pages.employersClaimsNewApplication.instructions"
-      />
-      <Alert
-        noIcon={true}
-        state="info"
-      >
-        I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachusetts employer. I certify under penalty of perjury that my answers will be complete and accurate.
-      </Alert>
       <Button
         type="submit"
       >
-        Agree and submit
+        Submit
       </Button>
     </ConditionalContent>
   </form>
