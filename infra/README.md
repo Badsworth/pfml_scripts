@@ -403,6 +403,8 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 </p>
 </details>
 
+If you are seeing an error like the following: `Access Denied. Please check.. An error occurred (InvalidIdentityToken) when calling the AssumeRoleWithSAML operation`, move your existing `~/.aws/credentials` file somewhere else (perhaps rename to something like `archived_credentials_yyyymmdd` in the same directory) and run `login-aws` again. This should succeed and create a new `~/.aws/credentials` file.
+
 ### I have an unexpected error not related to my change?
 
 If you see something like this message:
