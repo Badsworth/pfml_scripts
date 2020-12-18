@@ -71,7 +71,7 @@ module "api" {
   cognito_enable_provisioned_concurrency              = false
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
   formstack_import_lambda_build_s3_key                = local.formstack_lambda_artifact_s3_key
-  rmv_client_base_url                                 = "https://atlas-staging-gateway.massdot.state.ma.us"
+  rmv_client_base_url                                 = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn                   = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-test/rmv_client_certificate-zWimpc"
   rmv_check_behavior                                  = "fully_mocked"
   rmv_check_mock_success                              = "1"
