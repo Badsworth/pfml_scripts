@@ -132,6 +132,9 @@ When("I request additional information from the claimant", function (): void {
     "Please resubmit page 1 of the Healthcare Provider form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
   );
   fineos.clickBottomWidgetButton("OK");
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  fineos.clickBottomWidgetButton("OK");
 });
 
 When("I am the {string} claimant visiting the portal", function (

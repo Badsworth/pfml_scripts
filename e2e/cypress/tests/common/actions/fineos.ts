@@ -416,3 +416,32 @@ export function createNotification(startDate: Date, endDate: Date): void {
     .wait("@ajaxRender");
   cy.contains("div", "Thank you. Your notification has been submitted.");
 }
+
+export function additionalEvidenceRequest(claimNumber: string): void {
+  assertOnClaimPage(claimNumber as string);
+  cy.get("input[type='submit'][value='Adjudicate']").click();
+  onTab("Evidence");
+  cy.get("input[type='submit'][value='Additional Information']").click();
+  cy.get(
+    "input[name*='healthcareProviderInformationIncompleteBoolean_CHECKBOX']"
+  ).click();
+  cy.get("input[name*='healthcareProviderInformationIncompleteText']").type(
+    "Wrote Physician requesting revised page 1."
+  );
+  cy.get("textarea[name*='missingInformationBox']").type(
+    "Please resubmit page 1 of the Healthcare Provider form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
+  );
+  clickBottomWidgetButton("OK");
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  clickBottomWidgetButton("OK");
+  cy.wait(200);
+  // cy.wait(90000);
+  // onTab("Documents");
+  // cy.get("tbody").within(() => {
+  //   cy.get("td > a[title='Request for more Information']").should(
+  //     "contain.text",
+  //     "Request for more Information"
+  //   );
+  // });
+}
