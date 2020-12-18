@@ -17,7 +17,7 @@ To create these resources run `terraform apply` in
 
 ### Step 1: Name and source
 
-- Delivery stream name -  **aws-waf-logs-mass-pflml-\<environment name\>-firewall-to-newrelic**
+- Delivery stream name -  **aws-waf-logs-mass-pfml-\<environment name\>-firewall-to-newrelic**
   - **The* `aws-waf-logs-` *prefix is required by AWS*
 - Source -  **Direct PUT or other sources**
 - Enable encryption -  **yes**
@@ -54,11 +54,11 @@ To create these resources run `terraform apply` in
 ### Step 4. Configure settings
 
 - **New Relic buffer conditions** (AWS recommendations for New Relic HTTP endpoint)
-  - Buffer size -  **15**
-  - Buffer interval -  **600**
+  - Buffer size -  **1**
+  - Buffer interval -  **60**
 - **S3 buffer conditions**
-  - Buffer size -  **10**
-  - Buffer interval -  **400**
+  - Buffer size -  **5**
+  - Buffer interval -  **300**
 - **S3 compression and encryption**
   - S3 compression -  **GZIP**
   - S3 encryption -  **enabled**
