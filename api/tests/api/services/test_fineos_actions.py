@@ -33,7 +33,7 @@ from massgov.pfml.db.models.factories import (
     ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
 )
-from massgov.pfml.fineos import FINEOSClient
+from massgov.pfml.fineos import FINEOSClient, models
 from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSClientError, FINEOSNotFound
 from massgov.pfml.fineos.models import CreateOrUpdateEmployer, CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import Address as FineosAddress
@@ -114,6 +114,40 @@ def test_register_employee_bad_ssn(test_db_session):
         )
     except FINEOSClientBadResponse:
         assert True
+
+
+def test_register_employee_two_simultaneously(test_db_session, test_db_other_session):
+    # Before register_employee() was fixed to handle this race condition, this test case triggered
+    # a duplicate key violation:
+    #
+    #  sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) duplicate key value violates
+    #  unique constraint "link_fineos_web_id_ext_pkey"
+    #  [SQL: INSERT INTO link_fineos_web_id_ext (employee_tax_identifier, employer_fein,
+    #  fineos_web_id) VALUES (%(employee_tax_identifier)s, %(employer_fein)s, %(fineos_web_id)s)]
+
+    employer_fein = "179892886"
+    employee_ssn = "784569632"
+
+    def register_employee_1st_request():
+        fineos_client = TestFINEOSClient()
+        fineos_actions.register_employee(
+            fineos_client, employee_ssn, employer_fein, test_db_session
+        )
+        test_db_session.commit()
+
+    def register_employee_2nd_request():
+        fineos_client_2 = massgov.pfml.fineos.MockFINEOSClient()
+        fineos_actions.register_employee(
+            fineos_client_2, employee_ssn, employer_fein, test_db_other_session
+        )
+        test_db_other_session.commit()
+
+    class TestFINEOSClient(massgov.pfml.fineos.MockFINEOSClient):
+        def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
+            # Simulate a 2nd API request while the FINEOS call is still in progress.
+            register_employee_2nd_request()
+
+    register_employee_1st_request()
 
 
 def test_determine_absence_period_status_cont(user, test_db_session):
