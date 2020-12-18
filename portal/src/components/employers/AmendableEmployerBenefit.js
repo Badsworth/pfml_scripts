@@ -28,11 +28,15 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
   const amendBenefit = (id, field, value) => {
     let formattedValue = value;
     if (field === "benefit_amount_dollars") {
-      formattedValue = parseInt(value) ? parseInt(value.replace(/,/g, "")) : "";
+      // Same logic as SupportingWorkingDetails
+      // Invalid input will default to 0, validation error message is upcoming
+      const isInvalid = value === "0" || !parseFloat(value);
+      value = isInvalid ? 0 : value;
+      formattedValue = isInvalid ? 0 : parseFloat(value.replace(/,/g, ""));
     }
     setAmendment({
       ...amendment,
-      [field]: formattedValue,
+      [field]: value, // display commmas in field
     });
     onChange({ employer_benefit_id: id, [field]: formattedValue });
   };

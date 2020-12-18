@@ -21,9 +21,13 @@ const SupportingWorkDetails = (props) => {
     false
   );
   const amendDuration = (value) => {
-    const numericValue = parseInt(value) || "";
-    setAmendment(numericValue);
-    onChange(numericValue);
+    // Same logic as AmendableEmployerBenefit
+    // Invalid input will default to 0, validation error message is upcoming
+    const isInvalid = value === "0" || !parseFloat(value);
+    const displayValue = isInvalid ? 0 : value;
+    const formattedValue = isInvalid ? 0 : parseFloat(value.replace(/,/g, ""));
+    setAmendment(displayValue);
+    onChange(formattedValue);
   };
 
   return (
@@ -57,8 +61,8 @@ const SupportingWorkDetails = (props) => {
               hint={t(
                 "components.amendmentForm.question_leavePeriodDuration_hint"
               )}
+              mask="hours"
               name="supporting-work-detail-amendment"
-              inputMode="numeric"
               width="small"
               smallLabel
             />

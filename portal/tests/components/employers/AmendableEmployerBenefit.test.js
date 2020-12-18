@@ -19,6 +19,7 @@ describe("AmendableEmployerBenefit", () => {
     benefit_end_date: "2021-03-01",
     benefit_start_date: "2021-02-01",
     benefit_type: EmployerBenefitType.shortTermDisability,
+    employer_benefit_id: 1,
   });
   const props = {
     onChange: jest.fn(),
@@ -108,8 +109,52 @@ describe("AmendableEmployerBenefit", () => {
     wrapper.find(AmendButton).simulate("click");
     wrapper.find(InputText).simulate("change", { target: { value: "500" } });
 
-    expect(props.onChange).toHaveBeenCalled();
-    expect(wrapper.find(InputText).prop("value")).toEqual(500);
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ benefit_amount_dollars: 500 })
+    );
+    expect(wrapper.find(InputText).prop("value")).toEqual("500");
+  });
+
+  it("formats empty, zero, invalid amount values to 0", () => {
+    wrapper.find(AmendButton).simulate("click");
+    wrapper.find(InputText).simulate("change", { target: { value: "" } });
+
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ benefit_amount_dollars: 0 })
+    );
+    expect(wrapper.find(InputText).prop("value")).toEqual(0);
+
+    wrapper.find(InputText).simulate("change", { target: { value: "0" } });
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ benefit_amount_dollars: 0 })
+    );
+    expect(wrapper.find(InputText).prop("value")).toEqual(0);
+
+    wrapper.find(InputText).simulate("change", { target: { value: "hello" } });
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ benefit_amount_dollars: 0 })
+    );
+    expect(wrapper.find(InputText).prop("value")).toEqual(0);
+  });
+
+  it("formats decimal amount values", () => {
+    wrapper.find(AmendButton).simulate("click");
+    wrapper
+      .find(InputText)
+      .simulate("change", { target: { value: "100.5000" } });
+
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ benefit_amount_dollars: 100.5 })
+    );
+  });
+
+  it("formats amount values without commas", () => {
+    wrapper.find(AmendButton).simulate("click");
+    wrapper.find(InputText).simulate("change", { target: { value: "1000" } });
+
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ benefit_amount_dollars: 1000 })
+    );
   });
 
   it("updates frequency in the AmendmentForm", () => {
@@ -128,7 +173,10 @@ describe("AmendableEmployerBenefit", () => {
     wrapper.find(AmendButton).simulate("click");
     wrapper.find(InputText).simulate("change", { target: { value: "500" } });
 
-    expect(wrapper.find(InputText).prop("value")).toEqual(500);
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ benefit_amount_dollars: 500 })
+    );
+    expect(wrapper.find(InputText).prop("value")).toEqual("500");
 
     wrapper.find(AmendmentForm).dive().find(Button).simulate("click");
 

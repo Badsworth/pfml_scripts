@@ -126,7 +126,7 @@ export const Review = (props) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const amendedHours = parseInt(formState.amendedHours);
+    const amendedHours = formState.amendedHours;
     const previous_leaves = formState.amendedLeaves.map((leave) =>
       pick(leave, ["leave_end_date", "leave_start_date"])
     );

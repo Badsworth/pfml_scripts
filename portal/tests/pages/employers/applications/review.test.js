@@ -107,9 +107,25 @@ describe("Review", () => {
     );
   });
 
-  it.todo("sets 'employer_benefits' based on EmployerBenefits");
-  it.todo("sets 'hours_worked_per_week' based on SupportingWorkDetails");
+  it("sets 'hours_worked_per_week' based on SupportingWorkDetails", () => {
+    act(() => {
+      const setAmendedHours = wrapper
+        .find("SupportingWorkDetails")
+        .prop("onChange");
+      setAmendedHours(50.5);
+    });
+
+    simulateEvents(wrapper).submitForm();
+
+    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ hours_worked_per_week: 50.5 })
+    );
+  });
+
   it.todo("sets 'previous_leaves' based on PreviousLeaves");
+
+  it.todo("sets 'employer_benefits' based on EmployerBenefits");
 
   it("does not redirect if is_reviewable is true", () => {
     expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
