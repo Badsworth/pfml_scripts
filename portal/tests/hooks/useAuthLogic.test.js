@@ -128,7 +128,7 @@ describe("useAuthLogic", () => {
       expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
     });
 
-    it("sets app errors when username is empty", () => {
+    it("requires all fields to not be empty and tracks the errors", () => {
       username = "";
       act(() => {
         resendForgotPasswordCode(username);
@@ -137,6 +137,12 @@ describe("useAuthLogic", () => {
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Enter your email address"`
       );
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+
       expect(Auth.forgotPassword).not.toHaveBeenCalled();
     });
 
@@ -286,7 +292,7 @@ describe("useAuthLogic", () => {
       expect(Auth.signIn).toHaveBeenCalledWith(username, password);
     });
 
-    it("requires fields to not be empty", async () => {
+    it("requires fields to not be empty and tracks the errors", async () => {
       await act(async () => {
         await login();
       });
@@ -298,6 +304,16 @@ describe("useAuthLogic", () => {
           "Enter your password",
         ]
       `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "password",
+        issueType: "required",
+      });
+
       expect(Auth.signIn).not.toHaveBeenCalled();
     });
 
@@ -625,7 +641,7 @@ describe("useAuthLogic", () => {
       expect(Auth.signUp).toHaveBeenCalledWith({ username, password });
     });
 
-    it("requires fields to not be empty", () => {
+    it("requires fields to not be empty and tracks the errors", () => {
       act(() => {
         createAccount();
       });
@@ -637,6 +653,16 @@ describe("useAuthLogic", () => {
             "Enter your password",
           ]
         `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "password",
+        issueType: "required",
+      });
+
       expect(Auth.signUp).not.toHaveBeenCalled();
     });
 
@@ -844,7 +870,7 @@ describe("useAuthLogic", () => {
       });
     });
 
-    it("requires fields to not be empty", () => {
+    it("requires fields to not be empty and tracks the errors", () => {
       act(() => {
         createEmployerAccount();
       });
@@ -857,6 +883,20 @@ describe("useAuthLogic", () => {
           "Enter your 9-digit Employer Identification Number.",
         ]
       `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "password",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "ein",
+        issueType: "required",
+      });
+
       expect(Auth.signUp).not.toHaveBeenCalled();
     });
 
@@ -992,7 +1032,7 @@ describe("useAuthLogic", () => {
       expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
     });
 
-    it("sets app errors when username is empty", () => {
+    it("requires all fields to not be empty and tracks the errors", () => {
       username = "";
       act(() => {
         resendVerifyAccountCode(username);
@@ -1001,6 +1041,12 @@ describe("useAuthLogic", () => {
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Enter your email address"`
       );
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+
       expect(Auth.resendSignUp).not.toHaveBeenCalled();
     });
 
@@ -1074,7 +1120,7 @@ describe("useAuthLogic", () => {
       expect(spy).toHaveBeenCalledWith("SET_NEW_PASSWORD");
     });
 
-    it("requires all fields to not be empty", () => {
+    it("requires all fields to not be empty and tracks the errors", () => {
       act(() => {
         resetPassword();
       });
@@ -1087,6 +1133,20 @@ describe("useAuthLogic", () => {
           "Enter your password",
         ]
       `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "password",
+        issueType: "required",
+      });
+
       expect(Auth.forgotPasswordSubmit).not.toHaveBeenCalled();
     });
 
@@ -1265,7 +1325,7 @@ describe("useAuthLogic", () => {
   });
 
   describe("resetEmployerPasswordAndCreateEmployerApiAccount", () => {
-    it("requires all fields to not be empty", () => {
+    it("requires all fields to not be empty and tracks the errors", () => {
       act(() => {
         resetEmployerPasswordAndCreateEmployerApiAccount();
       });
@@ -1279,6 +1339,24 @@ describe("useAuthLogic", () => {
           "Enter your 9-digit Employer Identification Number.",
         ]
       `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "password",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "ein",
+        issueType: "required",
+      });
+
       expect(Auth.forgotPasswordSubmit).not.toHaveBeenCalled();
     });
 
@@ -1343,38 +1421,42 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("sets app errors when username is empty", () => {
+    it("requires all fields to not be empty and tracks the errors", () => {
       username = "";
-      act(() => {
-        verifyAccount(username, verificationCode);
-      });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter your email address"`
-      );
-      expect(Auth.confirmSignUp).not.toHaveBeenCalled();
-    });
-
-    it("sets app errors when verification code is empty", () => {
       verificationCode = "";
+
       act(() => {
         verifyAccount(username, verificationCode);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter the 6 digit code sent to your email"`
-      );
+
+      expect(appErrors.items).toHaveLength(2);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+        Array [
+          "Enter the 6 digit code sent to your email",
+          "Enter your email address",
+        ]
+      `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueType: "required",
+      });
+
       expect(Auth.confirmSignUp).not.toHaveBeenCalled();
     });
 
-    it("sets app errors when verification code is malformed", () => {
+    it("validates verification code format and tracks when it's invalid", () => {
       const malformedCodes = [
         "12345", // too short,
         "1234567", // too long,
         "123A5", // has digits
         "123.4", // has punctuation
       ];
-      expect.assertions(malformedCodes.length * 3);
+      expect.assertions(malformedCodes.length * 4);
       for (const code of malformedCodes) {
         act(() => {
           verifyAccount(username, code);
@@ -1383,6 +1465,12 @@ describe("useAuthLogic", () => {
         expect(appErrors.items[0].message).toEqual(
           "Enter the 6 digit code sent to your email and ensure it does not include any punctuation."
         );
+
+        expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+          issueField: "code",
+          issueType: "pattern",
+        });
+
         expect(Auth.confirmSignUp).not.toHaveBeenCalled();
       }
     });
@@ -1576,15 +1664,36 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("sets app errors ein is empty", () => {
+    it("requires all fields to not be empty and tracks the errors", () => {
+      username = "";
+      verificationCode = "";
       ein = "";
       act(() => {
         verifyEmployerAccount(username, verificationCode, ein);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter your 9-digit Employer Identification Number."`
-      );
+
+      expect(appErrors.items).toHaveLength(3);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+        Array [
+          "Enter the 6 digit code sent to your email",
+          "Enter your email address",
+          "Enter your 9-digit Employer Identification Number.",
+        ]
+      `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "ein",
+        issueType: "required",
+      });
+
       expect(Auth.confirmSignUp).not.toHaveBeenCalled();
     });
 

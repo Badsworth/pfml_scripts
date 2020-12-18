@@ -128,6 +128,31 @@ describe("useAppErrorsLogic", () => {
     });
 
     describe("when ValidationError is thrown", () => {
+      it("sets field, rule, and type properties of AppErrorInfo", () => {
+        const issues = [
+          {
+            field: "tax_identifier",
+            type: "pattern",
+            message: "This field should have a custom error message",
+            rule: "/d{9}",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        const appErrorInfo = appErrorsLogic.appErrors.items[0];
+
+        expect(appErrorInfo).toEqual(
+          expect.objectContaining({
+            field: "tax_identifier",
+            type: "pattern",
+            rule: "/d{9}",
+          })
+        );
+      });
+
       it("sets AppErrorInfo.message based on the issue's 'field' and 'type' properties", () => {
         const issues = [
           {

@@ -2,9 +2,11 @@ import { simulateEvents, testHook } from "../test-utils";
 import React from "react";
 import ResetPassword from "../../src/pages/reset-password";
 import { shallow } from "enzyme";
+import tracker from "../../src/services/tracker";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
 jest.mock("@aws-amplify/auth");
+jest.mock("../../src/services/tracker");
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("ResetPassword", () => {
@@ -157,6 +159,11 @@ describe("ResetPassword", () => {
       submitForm();
 
       expect(appLogic.setAppErrors).toHaveBeenCalledTimes(1);
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "isEmployer",
+        issueType: "required",
+      });
+
       expect(appLogic.auth.resetPassword).not.toHaveBeenCalled();
       expect(
         appLogic.auth.resetEmployerPasswordAndCreateEmployerApiAccount

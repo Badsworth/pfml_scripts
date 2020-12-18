@@ -182,6 +182,7 @@ const useAppErrorsLogic = () => {
         message: getMessageFromApiIssue(issue, error.i18nPrefix),
         name: error.name,
         rule: issue.rule,
+        type: issue.type,
       });
 
       addError(appError);

@@ -8,7 +8,8 @@ import uniqueId from "lodash/uniqueId";
  * @property {string} message - Internationalized message displayed to the user (like `Error#message`)
  * @property {string} [name] - Name of the error (like `Error#name`)
  * @property {object} [meta] - Additional error data, like the application_id associated with it
- * @property {string} [rule] - Name of validation rule that was not fulfilled, if caused by a validation issue
+ * @property {string} [rule] - Name of validation issue rule (e.g "min_leave_periods", "conditional", etc)
+ * @property {string} [type] - Name of validation issue type (e.g "required", "pattern", "date", etc)
  */
 class AppErrorInfo extends BaseModel {
   get defaults() {
@@ -19,6 +20,7 @@ class AppErrorInfo extends BaseModel {
       field: null,
       meta: null,
       rule: null,
+      type: null,
     };
   }
 }

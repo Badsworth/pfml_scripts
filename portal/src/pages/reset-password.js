@@ -12,6 +12,7 @@ import PropTypes from "prop-types";
 import Title from "../components/Title";
 import get from "lodash/get";
 import routes from "../routes";
+import tracker from "../services/tracker";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../hooks/useThrottledHandler";
@@ -63,14 +64,18 @@ export const ResetPassword = (props) => {
       // We need to do this validation prior to the API call
       // because we won't know which API call to make without
       // this field set (when claimant auth is enabled)
-      appLogic.setAppErrors(
-        new AppErrorInfoCollection([
-          new AppErrorInfo({
-            field: "isEmployer",
-            message: t("errors.auth.isEmployer.required"),
-          }),
-        ])
-      );
+      const appErrorInfo = new AppErrorInfo({
+        field: "isEmployer",
+        message: t("errors.auth.isEmployer.required"),
+        type: "required",
+      });
+
+      appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
+
+      tracker.trackEvent("ValidationError", {
+        issueField: appErrorInfo.field,
+        issueType: appErrorInfo.type,
+      });
 
       return;
     }

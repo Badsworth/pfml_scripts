@@ -36,6 +36,23 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(null);
 
   /**
+   * Show client-side validation errors to the user and tracks them
+   * @param {AppErrorInfoCollection} appErrorInfoCollection
+   */
+  function handleValidationErrors(appErrorInfoCollection) {
+    appErrorsLogic.setAppErrors(appErrorInfoCollection);
+
+    appErrorInfoCollection.items.forEach((appErrorInfo) => {
+      // Track authentication errors as validation errors
+      tracker.trackEvent("ValidationError", {
+        // Do not log the error message, since it's not guaranteed that it won't include PII.
+        issueField: appErrorInfo.field,
+        issueType: appErrorInfo.type,
+      });
+    });
+  }
+
+  /**
    * Initiate the Forgot Password flow, sending a verification code when user exists.
    * If there are any errors, sets app errors on the page.
    * @param {string} username Email address that is used as the username
@@ -68,11 +85,10 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     appErrorsLogic.clearErrors();
     username = username.trim();
 
-    if (!username) {
-      const validationErrors = [
-        new AppErrorInfo({ message: t("errors.auth.emailRequired") }),
-      ];
-      appErrorsLogic.setAppErrors(new AppErrorInfoCollection(validationErrors));
+    const validationErrors = validateUsername(username, t);
+
+    if (validationErrors) {
+      handleValidationErrors(validationErrors);
       return false;
     }
 
@@ -105,7 +121,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     ]);
 
     if (validationErrors) {
-      appErrorsLogic.setAppErrors(validationErrors);
+      handleValidationErrors(validationErrors);
       return;
     }
 
@@ -216,7 +232,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     ]);
 
     if (validationErrors) {
-      appErrorsLogic.setAppErrors(validationErrors);
+      handleValidationErrors(validationErrors);
       return;
     }
 
@@ -241,7 +257,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     ]);
 
     if (validationErrors) {
-      appErrorsLogic.setAppErrors(validationErrors);
+      handleValidationErrors(validationErrors);
       return;
     }
 
@@ -283,7 +299,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     const validationErrors = validateUsername(username, t);
 
     if (validationErrors) {
-      appErrorsLogic.setAppErrors(validationErrors);
+      handleValidationErrors(validationErrors);
       return;
     }
 
@@ -322,7 +338,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     ]);
 
     if (validationErrors) {
-      appErrorsLogic.setAppErrors(validationErrors);
+      handleValidationErrors(validationErrors);
       return;
     }
 
@@ -357,7 +373,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     ]);
 
     if (validationErrors) {
-      appErrorsLogic.setAppErrors(validationErrors);
+      handleValidationErrors(validationErrors);
       return;
     }
 
@@ -460,7 +476,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     ]);
 
     if (validationErrors) {
-      appErrorsLogic.setAppErrors(validationErrors);
+      handleValidationErrors(validationErrors);
       return;
     }
 
@@ -489,7 +505,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     ]);
 
     if (validationErrors) {
-      appErrorsLogic.setAppErrors(validationErrors);
+      handleValidationErrors(validationErrors);
       return;
     }
 
@@ -542,6 +558,7 @@ function validateVerificationCode(code, t) {
     validationErrors.push(
       new AppErrorInfo({
         field: "code",
+        type: "required",
         message: t("errors.auth.codeRequired"),
       })
     );
@@ -549,6 +566,7 @@ function validateVerificationCode(code, t) {
     validationErrors.push(
       new AppErrorInfo({
         field: "code",
+        type: "pattern", // matches same type as API regex pattern validations
         message: t("errors.auth.codeFormat"),
       })
     );
@@ -564,6 +582,7 @@ function validatePassword(password, t) {
     return new AppErrorInfoCollection([
       new AppErrorInfo({
         field: "password",
+        type: "required",
         message: t("errors.auth.passwordRequired"),
       }),
     ]);
@@ -575,6 +594,7 @@ function validateUsername(username, t) {
     return new AppErrorInfoCollection([
       new AppErrorInfo({
         field: "username",
+        type: "required",
         message: t("errors.auth.emailRequired"),
       }),
     ]);
@@ -586,6 +606,7 @@ function validateEmployerIdNumber(employerIdNumber, t) {
     return new AppErrorInfoCollection([
       new AppErrorInfo({
         field: "ein",
+        type: "required",
         message: t("errors.auth.employerIdNumberRequired"),
       }),
     ]);

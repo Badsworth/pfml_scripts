@@ -5,8 +5,10 @@ import VerifyAccount from "../../src/pages/verify-account";
 import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
 import { simulateEvents } from "../test-utils";
+import tracker from "../../src/services/tracker";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
+jest.mock("../../src/services/tracker");
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("VerifyAccount", () => {
@@ -53,6 +55,11 @@ describe("VerifyAccount", () => {
     submitForm();
 
     expect(appLogic.setAppErrors).toHaveBeenCalledTimes(1);
+    expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+      issueField: "isEmployer",
+      issueType: "required",
+    });
+
     expect(appLogic.auth.verifyAccount).not.toHaveBeenCalled();
     expect(appLogic.auth.verifyEmployerAccount).not.toHaveBeenCalled();
 

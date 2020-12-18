@@ -10,6 +10,7 @@ AppErrorInfoCollection {
       "meta": null,
       "name": null,
       "rule": null,
+      "type": null,
     },
   ],
   "itemsById": Object {
@@ -20,6 +21,7 @@ AppErrorInfoCollection {
       "meta": null,
       "name": null,
       "rule": null,
+      "type": null,
     },
   },
 }
