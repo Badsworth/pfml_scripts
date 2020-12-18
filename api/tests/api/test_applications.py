@@ -3118,6 +3118,9 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                         massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
                             name="Confirmed", booleanValue=True
                         ),
+                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+                            name="ConsenttoShareData", booleanValue=False
+                        ),
                     ],
                 )
             },

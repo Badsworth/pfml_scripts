@@ -153,6 +153,7 @@ def applications_update(application_id):
 
 def applications_submit(application_id):
     with app.db_session() as db_session:
+        current_user = app.current_user()
         existing_application = get_or_404(db_session, Application, application_id)
 
         ensure(EDIT, existing_application)
@@ -207,7 +208,7 @@ def applications_submit(application_id):
         # Only send to fineos if fineos_absence_id isn't set. If it is set,
         # assume that just complete_intake needs to be reattempted.
         if not existing_application.fineos_absence_id:
-            send_to_fineos_issues = send_to_fineos(existing_application, db_session)
+            send_to_fineos_issues = send_to_fineos(existing_application, db_session, current_user)
             if len(send_to_fineos_issues) != 0:
                 logger.error(
                     "applications_submit failure - failure sending application to claims processing system",

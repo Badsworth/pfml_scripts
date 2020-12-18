@@ -150,7 +150,7 @@ def test_send_to_fineos(user, test_db_session):
     assert application.fineos_absence_id is None
     assert application.fineos_notification_case_id is None
 
-    fineos_actions.send_to_fineos(application, test_db_session)
+    fineos_actions.send_to_fineos(application, test_db_session, user)
 
     updated_application = test_db_session.query(Application).get(application.application_id)
 
@@ -169,7 +169,7 @@ def test_document_upload(user, test_db_session):
     application.employer_fein = "179892886"
     application.tax_identifier.tax_identifier = "784569632"
 
-    fineos_actions.send_to_fineos(application, test_db_session)
+    fineos_actions.send_to_fineos(application, test_db_session, user)
     updated_application = test_db_session.query(Application).get(application.application_id)
 
     assert updated_application.fineos_absence_id is not None
@@ -510,7 +510,7 @@ def test_build_bonding_date_reflexive_question_foster(user):
 
 def test_build_customer_model_no_mass_id(user):
     application = ApplicationFactory.create(user=user)
-    customer_model = fineos_actions.build_customer_model(application)
+    customer_model = fineos_actions.build_customer_model(application, user)
 
     assert application.mass_id is None
 
