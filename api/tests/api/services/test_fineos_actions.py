@@ -1,5 +1,6 @@
 import io
 import re
+import threading
 from datetime import date, timedelta
 
 import pytest
@@ -116,7 +117,7 @@ def test_register_employee_bad_ssn(test_db_session):
         assert True
 
 
-def test_register_employee_two_simultaneously(test_db_session, test_db_other_session):
+def test_register_employee_two_simultaneously(test_db_session, test_db_other_session, reraise):
     # Before register_employee() was fixed to handle this race condition, this test case triggered
     # a duplicate key violation:
     #
@@ -127,27 +128,44 @@ def test_register_employee_two_simultaneously(test_db_session, test_db_other_ses
 
     employer_fein = "179892886"
     employee_ssn = "784569632"
+    lock_thread_1 = threading.Lock()
+    lock_thread_2 = threading.Lock()
+    lock_thread_1.acquire()
+    lock_thread_2.acquire()
 
+    # Thread 1
     def register_employee_1st_request():
-        fineos_client = TestFINEOSClient()
-        fineos_actions.register_employee(
-            fineos_client, employee_ssn, employer_fein, test_db_session
-        )
-        test_db_session.commit()
-
-    def register_employee_2nd_request():
-        fineos_client_2 = massgov.pfml.fineos.MockFINEOSClient()
-        fineos_actions.register_employee(
-            fineos_client_2, employee_ssn, employer_fein, test_db_other_session
-        )
-        test_db_other_session.commit()
+        with reraise:
+            fineos_client = TestFINEOSClient()
+            fineos_actions.register_employee(
+                fineos_client, employee_ssn, employer_fein, test_db_session
+            )
+            test_db_session.commit()
 
     class TestFINEOSClient(massgov.pfml.fineos.MockFINEOSClient):
         def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
-            # Simulate a 2nd API request while the FINEOS call is still in progress.
-            register_employee_2nd_request()
+            # Simulate a 2nd API request while this call is still in progress.
+            # Release thread 2 to run register_employee() and block until it's done.
+            lock_thread_2.release()  # [A] Release thread 2 at [C] below
+            lock_thread_1.acquire()  # [B] Block until thread 2 reaches [D]
 
-    register_employee_1st_request()
+    # Thread 2
+    def register_employee_2nd_request():
+        with reraise:
+            fineos_client_2 = massgov.pfml.fineos.MockFINEOSClient()
+            lock_thread_2.acquire()  # [C] Block here until thread 1 reaches [A]
+            fineos_actions.register_employee(
+                fineos_client_2, employee_ssn, employer_fein, test_db_other_session
+            )
+            lock_thread_1.release()  # [D] Release thread 1 at [B]
+            test_db_other_session.commit()
+
+    t1 = threading.Thread(target=register_employee_1st_request)
+    t2 = threading.Thread(target=register_employee_2nd_request)
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
 
 
 def test_determine_absence_period_status_cont(user, test_db_session):
