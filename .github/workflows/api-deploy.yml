@@ -130,6 +130,7 @@ jobs:
   update-deployment-status:
     name: Update deployment status
     needs: [start-deployment-status]
+    runs-on: ubuntu-latest
     if: always() && needs.start-deployment-status.result == 'success'
 
     steps:
