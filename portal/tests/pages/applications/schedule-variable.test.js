@@ -81,4 +81,20 @@ describe("ScheduleVariable", () => {
       changedMinutes
     );
   });
+
+  it("creates a blank work pattern when user doesn't enter a time amount", () => {
+    const claim = new MockClaimBuilder().continuous().create();
+
+    ({ appLogic, wrapper } = renderWithAppLogic(ScheduleVariable, {
+      claimAttrs: claim,
+    }));
+
+    act(() => {
+      wrapper.find("QuestionPage").simulate("save");
+    });
+
+    const { work_pattern } = appLogic.claims.update.mock.calls[0][1];
+
+    expect(work_pattern.work_pattern_days.length).toEqual(0);
+  });
 });

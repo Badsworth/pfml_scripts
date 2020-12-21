@@ -27,7 +27,8 @@ on:
 
 env:
   working-dir: ./api
-  terraform-dir: ./infra/api/environments
+  terraform-api-dir: ./infra/api/environments
+  terraform-env-shared-dir: ./infra/env-shared/environments
   terraform-ecs-tasks-dir: ./infra/ecs-tasks/environments
   terraform-version: 0.12.24
   python-version: 3.8
@@ -48,10 +49,10 @@ env:
 jobs:
   prod-check:
     # run if environment is production
-    if: contains(github.ref, 'deploy/api/prod')
     runs-on: ubuntu-latest
     steps:
       - name: check users
+        if: contains(github.ref, 'deploy/api/prod')
         id: get_teams
         env:
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
@@ -71,7 +72,7 @@ jobs:
             }
 
       - name: fail if not a member
-        if: contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
+        if: contains(github.ref, 'deploy/api/prod') && contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
         run: |
           echo "Not part of pfml-devops, cancelling workflow"
           exit 1
@@ -79,9 +80,6 @@ jobs:
   update-the-deploy-branch:
     name: Update archival branch
     needs: prod-check
-    # if the prod-check job passses or is skipped, run the next jobs
-    if: ${{ always() }} && (needs.prod-check.result == 'skipped' || needs.prod-check.result == 'success')
-
     runs-on: ubuntu-latest
 
     outputs:
@@ -125,7 +123,9 @@ jobs:
         with:
           token: "${{ github.token }}"
           target_url: "https://paidleave-api-${{ env[github.ref] || 'test' }}.mass.gov/api/docs"
+          description: "Test Environment"
           environment: "${{ env[github.ref] || 'test' }}"
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
   api-build:
     name: Build docker image
@@ -186,7 +186,7 @@ jobs:
         working-directory: ${{ env.working-dir }}
 
       - name: Install Lambda CLI Dependencies
-        run: pip install setuptools awscli aws-sam-cli
+        run: pip install boto3 setuptools awscli aws-sam-cli
         working-directory: ${{ env.infra-working-dir }}
 
       - name: Lambda Build, Package and Upload to S3
@@ -235,7 +235,7 @@ jobs:
         working-directory: ${{ env.working-dir }}
 
       - name: Install Lambda CLI Dependencies
-        run: pip install setuptools awscli aws-sam-cli
+        run: pip install boto3 setuptools awscli aws-sam-cli
         working-directory: ${{ env.infra-working-dir }}
 
       - name: Lambda Build, Package and Upload to S3
@@ -279,7 +279,7 @@ jobs:
         run: pip install wheel setuptools poetry
 
       - name: Install Lambda CLI Dependencies
-        run: pip install setuptools awscli aws-sam-cli
+        run: pip install boto3 setuptools awscli aws-sam-cli
 
       - name: Lambda Build, Package and Upload to S3
         run: make release
@@ -320,7 +320,7 @@ jobs:
         run: pip install wheel setuptools poetry
 
       - name: Install Lambda CLI Dependencies
-        run: pip install setuptools awscli aws-sam-cli
+        run: pip install boto3 setuptools awscli aws-sam-cli
 
       - name: Lambda Build, Package and Upload to S3
         run: make release
@@ -461,7 +461,7 @@ jobs:
           tf_actions_version: ${{ env.terraform-version }}
           tf_actions_subcommand: init
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
+          tf_actions_working_dir: ${{ env.terraform-api-dir }}/${{ env.api-env }}
 
       - name: Terraform Plan with new docker image
         id: terraform_plan
@@ -470,7 +470,7 @@ jobs:
           tf_actions_version: ${{ env.terraform-version }}
           tf_actions_subcommand: plan
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
+          tf_actions_working_dir: ${{ env.terraform-api-dir }}/${{ env.api-env }}
           args: "-out=plan.tfplan"
 
       - name: Terraform Apply from execution plan
@@ -480,7 +480,7 @@ jobs:
           tf_actions_version: ${{ env.terraform-version }}
           tf_actions_subcommand: apply
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
+          tf_actions_working_dir: ${{ env.terraform-api-dir }}/${{ env.api-env }}
           args: "plan.tfplan"
 
       - name: Terraform Output
@@ -489,7 +489,7 @@ jobs:
         with:
           tf_actions_version: ${{ env.terraform-version }}
           tf_actions_subcommand: output
-          tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
+          tf_actions_working_dir: ${{ env.terraform-api-dir }}/${{ env.api-env }}
 
       - name: Wait for stable ECS service
         env:
@@ -503,10 +503,69 @@ jobs:
           (aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID ||
            aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
 
+  api-gateway-release:
+    name: API Gateway Release
+    runs-on: ubuntu-latest
+    needs: [update-the-deploy-branch, api-build, cognito-post-confirmation-build, cognito-pre-signup-build, eligibility-feed-build, api-db-migrate-up, formstack-import-build]
+         
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
+      - name: Set api-env Value
+        run: echo "api-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Terraform Init
+        id: terraform_init
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: init
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ env.api-env }}
+
+      - name: Terraform Plan with new docker image
+        id: terraform_plan
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: plan
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ env.api-env }}
+          args: "-out=plan.tfplan"
+
+      - name: Terraform Apply from execution plan
+        id: terraform_apply
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: apply
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ env.api-env }}
+          args: "plan.tfplan"
+
+      - name: Terraform Output
+        id: terraform_output
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: output
+          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ env.api-env }}
+
   update-deployment-status:
     name: Update deployment status
-    needs: [start-deployment-status, api-release]
-    if: always() && needs.start-deployment-status.result == 'success'    
+    needs: [start-deployment-status, api-release, api-gateway-release]
+    if: always() && needs.start-deployment-status.result == 'success'
 
     steps:
       - name: Set deploy-state Value to true
@@ -530,7 +589,7 @@ jobs:
   end-to-end:
     name: End-to-End Test Deployment
     runs-on: ubuntu-latest
-    needs: [update-the-deploy-branch, api-release]
+    needs: [update-the-deploy-branch, api-release, api-gateway-release]
     if: github.ref != 'refs/heads/deploy/api/prod'
     steps:
       - uses: actions/checkout@v2
@@ -543,3 +602,5 @@ jobs:
           target_environment: ${{ env[github.ref] || 'test' }}
           cypress_tags: "Deploy,Deploy-API"
           github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          # Limit to "stable" suite for any environment but test.
+          only_stable: ${{ (env[github.ref] || 'test') == 'test' && 'false' || 'true' }}

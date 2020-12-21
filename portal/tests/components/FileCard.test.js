@@ -26,6 +26,11 @@ describe("FileCard", () => {
       wrapper.find("Button").simulate("click");
       expect(props.onRemoveClick).toHaveBeenCalledTimes(1);
     });
+
+    it("renders the error message", () => {
+      const wrapper = render({ ...props, errorMsg: "error" });
+      expect(wrapper.find("p.text-error")).toMatchSnapshot();
+    });
   });
 
   describe("when the FileCard receives a Document", () => {

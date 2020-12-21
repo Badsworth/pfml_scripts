@@ -20,6 +20,9 @@ import useSessionTimeout from "../hooks/useSessionTimeout";
 // Lazy-loaded components
 // https://nextjs.org/docs/advanced-features/dynamic-import
 const Footer = dynamic(() => import("../components/Footer"));
+const MaintenanceTakeover = dynamic(() =>
+  import("../components/MaintenanceTakeover")
+);
 
 // Configure Amplify for Auth behavior throughout the app
 Auth.configure({
@@ -120,6 +123,17 @@ export const App = ({ Component, pageProps }) => {
    * Render the page body based on the current state of the application
    */
   const renderPageContent = () => {
+    const maintenancePageRoutes = process.env.maintenancePageRoutes || [];
+    const pageIsUndergoingMaintenance =
+      maintenancePageRoutes.includes(router.pathname) || // specific page
+      maintenancePageRoutes.some(
+        // pages grouped by a wildcard (e.g /applications/* or /* for site-wide)
+        (maintenancePageRoute) =>
+          maintenancePageRoute.endsWith("*") &&
+          router.pathname.startsWith(maintenancePageRoute.split("*")[0])
+      );
+
+    // Wait for page component to load
     if (ui.isLoading) {
       return (
         <div className="margin-top-8 text-center">
@@ -128,6 +142,17 @@ export const App = ({ Component, pageProps }) => {
       );
     }
 
+    // Render maintenance page in place of the page content?
+    // pathname doesn't include a trailing slash
+    if (!isFeatureEnabled("noMaintenance") && pageIsUndergoingMaintenance) {
+      return (
+        <section id="page" data-test="maintenance page">
+          <MaintenanceTakeover />
+        </section>
+      );
+    }
+
+    // Render the actual page content
     return (
       <section id="page">
         <Component appLogic={appLogic} query={router.query} {...pageProps} />

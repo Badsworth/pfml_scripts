@@ -159,16 +159,33 @@ class FINEOSClient(client.AbstractFINEOSClient):
         self.request_count += 1
         has_flask_context = flask.has_request_context()
         logger.debug("%s %s start", method, url)
+
+        # /complete-intake takes longer than other endpoints, so increase the timeout
+        # drastically. Past 29 seconds, FINEOS returns a 504 timeout, so the request
+        # client should never actually time out on its own.
+        #
+        # Note that this is longer than our API Gateway timeout (also 29 seconds),
+        # so it's very plausible that an application_submit request times out on
+        # the API Gateway side, since it also includes other calls to the claims
+        # processing system (CPS).
+        #
+        # However, we're allowing the request to complete on the API
+        # even if the response never makes it to the claimant, to try and ensure
+        # a consistent CPS <--> Paid Leave API state and prevent additional
+        # long calls when the claimant retries.
+        #
+        request_timeout = 30 if "complete-intake" in url else 15
+
         try:
             try:
                 response = self.oauth_session.request(
-                    method, url, timeout=(6.1, 60), headers=headers, **args
+                    method, url, timeout=(6.1, request_timeout), headers=headers, **args
                 )
             except oauthlib.oauth2.TokenExpiredError:
                 logger.info("token expired, starting new OAuth session")
                 self._init_oauth_session()
                 response = self.oauth_session.request(
-                    method, url, timeout=(6.1, 60), headers=headers, **args
+                    method, url, timeout=(6.1, request_timeout), headers=headers, **args
                 )
         except requests.exceptions.RequestException as ex:
             logger.error("%s %s => %r", method, url, ex)
@@ -498,7 +515,12 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response = self._group_client_api(
             "GET", f"groupClient/cases/{absence_id}/eforms/{eform_id}/readEform", user_id
         )
-        return models.group_client_api.EForm.parse_obj(response.json())
+        json = response.json()
+
+        for eformAttribute in json["eformAttributes"]:
+            set_empty_dates_to_none(eformAttribute, ["dateValue"])
+
+        return models.group_client_api.EForm.parse_obj(json)
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         eform_json = []
@@ -905,13 +927,16 @@ class FINEOSClient(client.AbstractFINEOSClient):
             DoingBusinessAs=employer_create_or_update.employer_dba,
             LegalBusinessName=employer_create_or_update.employer_legal_name,
             Name=employer_create_or_update.employer_legal_name,
+            ShortName=employer_create_or_update.employer_legal_name[0:8],
+            UpperName=employer_create_or_update.employer_legal_name.upper(),
+            UpperShortName=employer_create_or_update.employer_legal_name[0:8].upper(),
         )
 
         # The ReadEmployer endpoint doesn't return an OCOrganisationDefaultItem
         # as a part of its response, so using the top-level attributes to
         # populate the OCOrganisationDefaultItem in the update
+        # OAR Dec 18, 2020 - Removed Name from sync. DOR is source of truth for legal name.
         if existing_organization:
-            organization_default.Name = existing_organization.Name
             organization_default.PronouncedAs = existing_organization.PronouncedAs
             organization_default.AccountingDate = existing_organization.AccountingDate
             organization_default.FinancialYearEnd = existing_organization.FinancialYearEnd
@@ -926,6 +951,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
             DoingBusinessAs=employer_create_or_update.employer_dba,
             LegalBusinessName=employer_create_or_update.employer_legal_name,
             Name=employer_create_or_update.employer_legal_name,
+            ShortName=employer_create_or_update.employer_legal_name[0:8],
+            UpperName=employer_create_or_update.employer_legal_name.upper(),
+            UpperShortName=employer_create_or_update.employer_legal_name[0:8].upper(),
             organisationWithDefault=models.OCOrganisationWithDefault(
                 OCOrganisation=[organization_default]
             ),
@@ -934,8 +962,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
         # The ReadEmployer endpoint doesn't return an OCOrganisationName as a
         # part of its response, so using the top-level attributes to populate
         # the OCOrganisationName in the update
+        # OAR Dec 18, 2020 - Removed Name from sync. DOR is source of truth for legal name.
         if existing_organization:
-            organization_name.Name = existing_organization.Name
             organization_name.PronouncedAs = existing_organization.PronouncedAs
 
         organization = models.OCOrganisationItem(
@@ -944,11 +972,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
             DoingBusinessAs=employer_create_or_update.employer_dba,
             LegalBusinessName=employer_create_or_update.employer_legal_name,
             Name=employer_create_or_update.employer_legal_name,
+            ShortName=employer_create_or_update.employer_legal_name[0:8],
+            UpperName=employer_create_or_update.employer_legal_name.upper(),
+            UpperShortName=employer_create_or_update.employer_legal_name[0:8].upper(),
             names=models.OCOrganisationName(OCOrganisationName=[organization_name]),
         )
 
         if existing_organization:
-            organization.Name = existing_organization.Name
             organization.PronouncedAs = existing_organization.PronouncedAs
             organization.AccountingDate = existing_organization.AccountingDate
             organization.FinancialYearEnd = existing_organization.FinancialYearEnd

@@ -11,8 +11,8 @@ import Link from "next/link";
 import PropTypes from "prop-types";
 import Title from "../components/Title";
 import get from "lodash/get";
-import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
+import tracker from "../services/tracker";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../hooks/useThrottledHandler";
@@ -43,9 +43,7 @@ export const ResetPassword = (props) => {
     password: "",
     username: cachedEmail,
     ein: showEinFields ? "" : undefined,
-    // TODO (CP-1407): Once claimantShowAuth is removed, change the default to the following:
-    // isEmployer: null,
-    isEmployer: isFeatureEnabled("claimantShowAuth") ? null : true,
+    isEmployer: null,
   });
 
   const handleSubmit = useThrottledHandler(async (event) => {
@@ -63,14 +61,21 @@ export const ResetPassword = (props) => {
     const { code, ein, isEmployer, password, username } = formState;
 
     if (showEinFields && isEmployer === null) {
-      appLogic.setAppErrors(
-        new AppErrorInfoCollection([
-          new AppErrorInfo({
-            field: "isEmployer",
-            message: t("errors.auth.isEmployer.required"),
-          }),
-        ])
-      );
+      // We need to do this validation prior to the API call
+      // because we won't know which API call to make without
+      // this field set (when claimant auth is enabled)
+      const appErrorInfo = new AppErrorInfo({
+        field: "isEmployer",
+        message: t("errors.auth.isEmployer.required"),
+        type: "required",
+      });
+
+      appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
+
+      tracker.trackEvent("ValidationError", {
+        issueField: appErrorInfo.field,
+        issueType: appErrorInfo.type,
+      });
 
       return;
     }
@@ -183,27 +188,25 @@ export const ResetPassword = (props) => {
 
       {showEinFields && (
         <React.Fragment>
-          {/* TODO (CP-1407): Remove condition once claimants can also have accounts */}
-          {isFeatureEnabled("claimantShowAuth") && (
-            <InputChoiceGroup
-              {...getFunctionalInputProps("isEmployer")}
-              choices={[
-                {
-                  checked: formState.isEmployer === true,
-                  label: t("pages.authResetPassword.employerChoiceYes"),
-                  value: "true",
-                },
-                {
-                  checked: formState.isEmployer === false,
-                  label: t("pages.authResetPassword.employerChoiceNo"),
-                  value: "false",
-                },
-              ]}
-              label={t("pages.authResetPassword.employerAccountLabel")}
-              type="radio"
-              smallLabel
-            />
-          )}
+          <InputChoiceGroup
+            {...getFunctionalInputProps("isEmployer")}
+            choices={[
+              {
+                checked: formState.isEmployer === true,
+                label: t("pages.authResetPassword.employerChoiceYes"),
+                value: "true",
+              },
+              {
+                checked: formState.isEmployer === false,
+                label: t("pages.authResetPassword.employerChoiceNo"),
+                value: "false",
+              },
+            ]}
+            label={t("pages.authResetPassword.employerAccountLabel")}
+            type="radio"
+            smallLabel
+          />
+
           <ConditionalContent
             fieldNamesClearedWhenHidden={["ein"]}
             getField={getField}

@@ -81,6 +81,21 @@ const errors = {
       }.`,
       required: "Enter a date of birth.",
     },
+    employer_benefits: {
+      benefit_end_date: {
+        date:
+          "Date you stop receiving this benefit must include a day, month, and year.",
+        required: "Enter the date you will stop using this benefit.",
+      },
+      benefit_start_date: {
+        date:
+          "Date you start receiving this benefit must include a day, month, and year.",
+        required: "Enter the date you will start using this benefit.",
+      },
+      benefit_type: {
+        required: "Select the kind of benefit you will use.",
+      },
+    },
     employer_fein: {
       pattern:
         "Enter the Employer Identification Number in the correct format.",
@@ -103,11 +118,23 @@ const errors = {
     has_continuous_leave_periods: {
       required: "Select Yes if you are taking continuous leave.",
     },
+    has_employer_benefits: {
+      required:
+        "Select yes if you will you use any employer-sponsored benefits during your leave.",
+    },
     has_intermittent_leave_periods: {
       required: "Select Yes if you are taking intermittent leave.",
     },
     has_mailing_address: {
       required: "Select yes if you get your mail at this address.",
+    },
+    has_other_incomes: {
+      required:
+        "Select yes if you will receive income from any other sources during your leave.",
+    },
+    has_previous_leaves: {
+      required:
+        "Select yes if you have taken paid or unpaid leave since January 1, 2021 for a qualifying reason.",
     },
     has_reduced_schedule_leave_periods: {
       required: "Select Yes if you are working a reduced schedule.",
@@ -273,6 +300,21 @@ const errors = {
         "License or ID number must be 9 characters, and may begin with S or SA.",
       required: "Enter your license or ID number.",
     },
+    other_incomes: {
+      income_end_date: {
+        date:
+          "Date you stop receiving this income must include a day, month, and year.",
+        required: "Enter the date you will stop receiving this income.",
+      },
+      income_start_date: {
+        date:
+          "Date you start receiving this income must include a day, month, and year.",
+        required: "Enter the date you will start receiving this income.",
+      },
+      income_type: {
+        required: "Select the kind of income.",
+      },
+    },
     payment_preference: {
       account_number: {
         invalid_masked_field: "Enter the full account number to make a change.",
@@ -301,6 +343,22 @@ const errors = {
       },
       phone_type: {
         required: "Select a number type.",
+      },
+    },
+    previous_leaves: {
+      is_for_current_employer: {
+        required: "Select yes if your leave is from this employer.",
+      },
+      leave_end_date: {
+        date: "Date your leave ended must include a day, month, and year.",
+        required: "Enter the date your leave ended.",
+      },
+      leave_reason: {
+        required: "Select the qualifying reason for your leave.",
+      },
+      leave_start_date: {
+        date: "Date your leave began must include a day, month, and year.",
+        required: "Enter the date your leave began.",
       },
     },
     residential_address: {
@@ -365,6 +423,18 @@ const errors = {
     },
     fineos_client:
       "We encountered an error when uploading your file. Try uploading your file again. If you get this error again, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
+  },
+  employers: {
+    employer_benefits: {
+      benefit_end_date: {
+        date: "End date must include a day, month, and year.",
+      },
+      benefit_start_date: {
+        date: "Start date must include a day, month, and year.",
+      },
+    },
+    outstanding_information_request_required:
+      "This application has already been reviewed.",
   },
   invalidFile_size:
     "We could not upload: {{disallowedFileNames}}. Files must be smaller than 5 megabytes.",
@@ -487,9 +557,6 @@ const shared = {
 
 const pages = {
   app: {
-    betaBannerTag: "Beta",
-    betaBannerText:
-      "This is a new service. Help us improve it with <user-feedback-link>your feedback</user-feedback-link>.",
     siteDescription:
       "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
     siteTitle: "Paid Family and Medical Leave (PFML) | Mass.gov",
@@ -639,13 +706,13 @@ const pages = {
     screenReaderNumberPrefix: "Step",
     start: "Start",
     stepHTMLDescription_bondingAdoptFoster:
-      "You need to provide a statement confirming the placement and the date of placement.",
+      "<p>You need to provide a statement confirming the placement and the date of placement.</p><p>Your certification documents will be shared with your employer as part of your application.</p>",
     stepHTMLDescription_bondingAdoptFosterFuture:
-      "<p>You need to provide a statement confirming the child’s placement and the date of placement.</p><p>Your certification documents will be shared with your employer as part of your application.</p>",
+      "After your child arrives in your home, you will need to provide a statement confirming the placement and the date of placement.",
     stepHTMLDescription_bondingNewborn:
-      "You need to provide your child's birth certificate or a document from a health care provider that shows the child’s date of birth.",
-    stepHTMLDescription_bondingNewbornFuture:
       "<p>You need to provide your child's birth certificate or a document from a health care provider that shows the child’s date of birth.</p><p>Your certification documents will be shared with your employer as part of your application.</p>",
+    stepHTMLDescription_bondingNewbornFuture:
+      "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.",
     stepHTMLDescription_employerInformation:
       "You will need to know:<ul><li>Your employer’s 9 digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
@@ -1401,7 +1468,7 @@ const pages = {
       "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for family leave for bonding with a child, with more benefits available in 2021.",
     // TODO (EMPLOYER-661): Remove string after December 15
     leadBackground_prelaunch:
-      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers will be able to apply for family leave for bonding with a child starting on December 15, 2020, with more benefits available in 2021.",
+      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers will be able to apply for family leave for bonding with a child soon, with more benefits available in 2021.",
     leadMultipleCompanies:
       "If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.",
     nextStep: "We'll send you a 6-digit code to verify your email address.",
@@ -1437,13 +1504,16 @@ const pages = {
     choiceYes: "$t(shared.choiceYes)",
     dobLabel: "Date of birth",
     employeeNameLabel: "Employee name",
-    employerIdNumberLabel: "Employer ID number",
+    employerIdNumberLabel: "Employer ID number (EIN)",
     instructions:
       "<p>This takes about 10 minutes. We use the information you provide to determine the leave time and benefit amount your employee will receive.</p><p>We need true answers to every question so that we can manage the program the way the law requires. Please confirm that you will answer as truthfully as you can.</p>",
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
     instructionsLabel:
       "Are you the right person to respond to this application?",
-    submitButton: "Agree and submit",
+    ssnOrItinLabel:
+      "Social Security Number or Individual Taxpayer Identification Number",
+    submitButton: "Submit",
+    submitButton_secondary: "Agree and submit",
     title: "New application from {{name}}",
     truthAttestationHeading: "Start the review process",
   },
@@ -1667,7 +1737,7 @@ const pages = {
       "Thanks for joining the paid leave program. Massachusetts workers can now apply for family leave for bonding with a child, with more benefits available in 2021.",
     // TODO (EMPLOYER-661): Remove string after December 15
     welcomeBody_prelaunch:
-      "Thanks for joining the paid leave program. There’s no further action for you to take now, but you’ll be able to review applications online starting December 15, 2020.",
+      "Thanks for joining the paid leave program. There’s no further action for you to take now, but you’ll be able to review applications online soon.",
     welcomeTitle: "Welcome",
   },
   index: {
@@ -1680,7 +1750,7 @@ const pages = {
     createAccountHeading: "Create an account",
     employerCardBody: "Register now so you can manage leave for your team.",
     employerCardBody_prelaunch:
-      "Register now so your team is ready for December 15, 2020, when workers can start requesting leave.",
+      "Register now so your team is ready for when workers can start requesting leave.",
     employerCreateAccountButton: "Create an employer account",
     employerHeading: "Employers",
     seoTitle: "Massachusetts Paid Family and Medical Leave",
@@ -1784,6 +1854,11 @@ const components = {
   backButton: {
     label: "Back",
   },
+  betaBanner: {
+    tag: "Beta",
+    message:
+      "This is a new service. Help us improve it with <user-feedback-link>your feedback</user-feedback-link>.",
+  },
   confirmSignUp: {
     codeLabel: "$t(shared.verificationCodeLabel)",
     confirmButton: "Submit",
@@ -1883,6 +1958,11 @@ const components = {
   leaveDatesAlert: {
     heading: "Your leave dates for paid leave",
   },
+  maintenanceTakeover: {
+    lead:
+      "This page is currently unavailable while the site is undergoing maintenance. Please check back$t(chars.nbsp)shortly.",
+    title: "We're undergoing maintenance",
+  },
   signUp: {
     createAccountButton: "Create an account to apply for paid leave",
     haveAnAccountFooterLabel: "Have an account?",
@@ -1902,6 +1982,10 @@ const components = {
   },
   tag: {
     state_approved: "Approved",
+  },
+  unsupportedBrowserBanner: {
+    message:
+      "<strong>Your browser is out of date</strong>. Please <update-link>update your browser</update-link> for more security, speed and the best experience on our site.",
   },
   userFeedback: {
     instructions:

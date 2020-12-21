@@ -128,6 +128,78 @@ resource "newrelic_alert_condition" "portal_page_rendering_time" {
 // NRQL Alerts //
 /////////////////
 
+module "newrelic_alert_cognito_password_reset_errors" {
+  source    = "../../modules/newrelic_baseline_error_rate"
+  policy_id = newrelic_alert_policy.portal_alerts.id
+
+  name  = "High password reset error rate"
+  query = "SELECT percentage(count(*), WHERE httpResponseCode >= 400) FROM AjaxRequest WHERE browserInteractionName = 'fetch: cognito forgotPasswordSubmit' AND hostname = 'cognito-idp.us-east-1.amazonaws.com' AND environment = '${var.environment_name}'"
+}
+
+module "newrelic_alert_cognito_sign_in_errors" {
+  source    = "../../modules/newrelic_baseline_error_rate"
+  policy_id = newrelic_alert_policy.portal_alerts.id
+
+  name  = "High log in error rate"
+  query = "SELECT percentage(count(*), WHERE httpResponseCode >= 400) FROM AjaxRequest WHERE browserInteractionName = 'fetch: cognito signIn' AND hostname = 'cognito-idp.us-east-1.amazonaws.com' AND environment = '${var.environment_name}'"
+}
+
+module "newrelic_alert_cognito_claimant_sign_up_errors" {
+  source    = "../../modules/newrelic_baseline_error_rate"
+  policy_id = newrelic_alert_policy.portal_alerts.id
+
+  name  = "High claimant sign up error rate"
+  query = "SELECT percentage(count(*), WHERE httpResponseCode >= 400) FROM AjaxRequest WHERE browserInteractionName = 'fetch: cognito signUp' AND groupedPageUrl NOT LIKE '%/employers/create-account' AND hostname = 'cognito-idp.us-east-1.amazonaws.com' AND environment = '${var.environment_name}'"
+}
+
+module "newrelic_alert_cognito_claimant_sign_up_verification_errors" {
+  source    = "../../modules/newrelic_baseline_error_rate"
+  policy_id = newrelic_alert_policy.portal_alerts.id
+
+  name  = "High sign up verification error rate"
+  query = "SELECT percentage(count(*), WHERE httpResponseCode >= 400) FROM AjaxRequest WHERE browserInteractionName = 'fetch: cognito confirmSignUp' AND groupedPageUrl NOT LIKE '%/employers/create-account' AND hostname = 'cognito-idp.us-east-1.amazonaws.com' AND environment = '${var.environment_name}'"
+}
+
+module "newrelic_alert_cognito_employer_sign_up_errors" {
+  source    = "../../modules/newrelic_baseline_error_rate"
+  policy_id = newrelic_alert_policy.portal_alerts.id
+
+  name  = "High employer sign up error rate"
+  query = "SELECT percentage(count(*), WHERE httpResponseCode >= 400) FROM AjaxRequest WHERE browserInteractionName = 'fetch: cognito signUp' AND groupedPageUrl LIKE '%/employers/create-account' AND hostname = 'cognito-idp.us-east-1.amazonaws.com' AND environment = '${var.environment_name}'"
+}
+
+module "newrelic_alert_application_complete_errors" {
+  source    = "../../modules/newrelic_baseline_error_rate"
+  policy_id = newrelic_alert_policy.portal_alerts.id
+
+  name  = "High application completion error rate"
+  query = "SELECT percentage(count(*), WHERE httpResponseCode >= 400) FROM AjaxRequest WHERE httpMethod = 'POST' AND groupedRequestUrl LIKE '%/applications/*/complete_application' AND environment = '${var.environment_name}'"
+}
+
+module "newrelic_alert_application_document_upload_errors" {
+  source    = "../../modules/newrelic_baseline_error_rate"
+  policy_id = newrelic_alert_policy.portal_alerts.id
+
+  name  = "High document upload error rate"
+  query = "SELECT percentage(count(*), WHERE httpResponseCode >= 400) FROM AjaxRequest WHERE httpMethod = 'POST' AND groupedRequestUrl LIKE '%/applications/*/documents' AND environment = '${var.environment_name}'"
+}
+
+module "newrelic_alert_application_submit_errors" {
+  source    = "../../modules/newrelic_baseline_error_rate"
+  policy_id = newrelic_alert_policy.portal_alerts.id
+
+  name  = "High application submission error rate"
+  query = "SELECT percentage(count(*), WHERE httpResponseCode >= 400) FROM AjaxRequest WHERE httpMethod = 'POST' AND groupedRequestUrl LIKE '%/applications/*/submit_application' AND environment = '${var.environment_name}'"
+}
+
+module "newrelic_alert_application_submit_payment_preference_errors" {
+  source    = "../../modules/newrelic_baseline_error_rate"
+  policy_id = newrelic_alert_policy.portal_alerts.id
+
+  name  = "High payment preference submission error rate"
+  query = "SELECT percentage(count(*), WHERE httpResponseCode >= 400) FROM AjaxRequest WHERE httpMethod = 'POST' AND groupedRequestUrl LIKE '%/applications/*/submit_payment_preference' AND environment = '${var.environment_name}'"
+}
+
 resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
   # WARN: JavaScriptError percentage (errors/pageView) above 2% for at least 5 minutes
   # CRIT: JavaScriptError percentage (errors/pageView) above 5% for at least 5 minutes

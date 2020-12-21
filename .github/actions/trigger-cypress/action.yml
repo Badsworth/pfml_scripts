@@ -14,6 +14,9 @@ inputs:
   workflow_id:
     description: "The ID of the E2E workflow"
     default: "e2e-cypress.yml"
+  only_stable:
+    description: "A flag indicating whether to run the unstable Cypress tests"
+    default: "false"
 
 runs:
   using: "composite"
@@ -38,7 +41,7 @@ runs:
         if [ "$RUN_ID" = "null" ]; then
           echo "Dispatching a new E2E test workflow..."
           curl -Ls -X POST "https://api.github.com/repos/${{ github.repository }}/actions/workflows/${{ inputs.workflow_id }}/dispatches" \
-            -d '{"ref": "'${REF}'", "inputs": { "target_environment": "${{ inputs.target_environment }}", "cypress_tags": "${{ inputs.cypress_tags }}" }}' \
+            -d '{"ref": "'${REF}'", "inputs": { "target_environment": "${{ inputs.target_environment }}", "cypress_tags": "${{ inputs.cypress_tags }}", "only_stable": "${{ inputs.only_stable }}" }}' \
             -H "Authorization: Bearer ${{ inputs.github_token }}" \
             -H "Accept: application/vnd.github.v3+json"
 

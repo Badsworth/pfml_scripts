@@ -1,11 +1,7 @@
 // Cross-fetch polyfill makes fetch available as a global.
 import "cross-fetch/polyfill";
 import FormData from "form-data";
-import {
-  AuthenticationDetails,
-  CognitoUser,
-  CognitoUserPool,
-} from "amazon-cognito-identity-js";
+import type { CognitoUserSession } from "amazon-cognito-identity-js";
 // Generated API Client courtesy of @spec2ts/openapi-client.
 import {
   postApplications,
@@ -18,76 +14,70 @@ import {
   postApplicationsByApplicationIdCompleteApplication,
   ApplicationResponse,
 } from "../api";
+import AuthenticationManager from "./AuthenticationManager";
+import { Credentials } from "../types";
 
 if (!global.FormData) {
   // @ts-ignore
   global.FormData = FormData;
 }
 
-export type PortalSubmitterOpts = {
-  UserPoolId: string;
-  ClientId: string;
-  Username: string;
-  Password: string;
-  ApiBaseUrl: string;
-};
-
 export default class PortalSubmitter {
-  private details: AuthenticationDetails;
-  private pool: CognitoUserPool;
-  private jwt?: string;
+  private authenticator: AuthenticationManager;
+  private sessions: Map<Credentials, CognitoUserSession>;
   private base: string;
 
-  constructor(opts: PortalSubmitterOpts) {
-    const { Username, Password, ClientId, UserPoolId, ApiBaseUrl } = opts;
-    this.pool = new CognitoUserPool({ ClientId, UserPoolId });
-    this.details = new AuthenticationDetails({ Username, Password });
-    this.base = ApiBaseUrl;
+  constructor(authenticator: AuthenticationManager, apiBaseUrl: string) {
+    this.base = apiBaseUrl;
+    this.sessions = new Map<Credentials, CognitoUserSession>();
+    this.authenticator = authenticator;
   }
 
-  async authenticate(): Promise<string> {
-    if (this.jwt) {
-      return this.jwt;
+  async getSession(credentials: Credentials): Promise<CognitoUserSession> {
+    let session = this.sessions.get(credentials);
+
+    if (!session || !session.isValid()) {
+      session = await this.authenticator.authenticate(
+        credentials.username,
+        credentials.password
+      );
+      this.sessions.set(credentials, session);
     }
-    this.jwt = await new Promise((resolve, reject) => {
-      const cognitoUser = new CognitoUser({
-        Username: this.details.getUsername(),
-        Pool: this.pool,
-      });
-      cognitoUser.authenticateUser(this.details, {
-        onSuccess(result) {
-          const token = result.getAccessToken().getJwtToken();
-          resolve(token);
-        },
-        onFailure(err) {
-          reject(`${err.code}: ${err.message}`);
-        },
-      });
-    });
-    return this.jwt as string;
+
+    return session;
   }
 
-  private async getOptions(): Promise<RequestOptions> {
-    await this.authenticate();
+  private async getOptions(credentials: Credentials): Promise<RequestOptions> {
+    const session = await this.getSession(credentials);
     return {
       baseUrl: this.base,
       headers: {
-        Authorization: `Bearer ${this.jwt}`,
+        Authorization: `Bearer ${session.getAccessToken().getJwtToken()}`,
         "User-Agent": "PFML Business Simulation Bot",
       },
     };
   }
 
   async submit(
+    credentials: Credentials,
     application: ApplicationRequestBody,
     documents: DocumentUploadRequest[] = []
   ): Promise<ApplicationResponse> {
-    const application_id = await this.createApplication();
-    await this.updateApplication(application_id, application);
-    const submitResponseData = await this.submitApplication(application_id);
+    const options = await this.getOptions(credentials);
+    const application_id = await this.createApplication(options);
+    await this.updateApplication(application_id, application, options);
+    const submitResponseData = await this.submitApplication(
+      application_id,
+      options
+    );
     const { fineos_absence_id, first_name, last_name } = submitResponseData;
-    await this.uploadDocuments(application_id, fineos_absence_id, documents);
-    await this.completeApplication(application_id);
+    await this.uploadDocuments(
+      application_id,
+      fineos_absence_id,
+      documents,
+      options
+    );
+    await this.completeApplication(application_id, options);
     return {
       fineos_absence_id: fineos_absence_id,
       application_id: application_id,
@@ -99,20 +89,21 @@ export default class PortalSubmitter {
   protected async uploadDocuments(
     applicationId: string,
     fineosId: string,
-    documents: DocumentUploadRequest[]
+    documents: DocumentUploadRequest[],
+    options?: RequestOptions
   ): Promise<void> {
     const promises = documents.map(async (document) => {
       return postApplicationsByApplicationIdDocuments(
         { applicationId },
         document,
-        await this.getOptions()
+        options
       );
     });
     await Promise.all(promises);
   }
 
-  private async createApplication(): Promise<string> {
-    const response = await postApplications(await this.getOptions());
+  private async createApplication(options?: RequestOptions): Promise<string> {
+    const response = await postApplications(options);
     if (response.data.data && response.data.data.application_id) {
       return response.data.data.application_id;
     }
@@ -121,19 +112,23 @@ export default class PortalSubmitter {
 
   private async updateApplication(
     applicationId: string,
-    application: ApplicationRequestBody
+    application: ApplicationRequestBody,
+    options: RequestOptions
   ) {
     return patchApplicationsByApplicationId(
       { applicationId },
       application,
-      await this.getOptions()
+      options
     );
   }
 
-  private async submitApplication(applicationId: string) {
+  private async submitApplication(
+    applicationId: string,
+    options?: RequestOptions
+  ) {
     const response = await postApplicationsByApplicationIdSubmitApplication(
       { applicationId },
-      await this.getOptions()
+      options
     );
     if (response.data.data && "fineos_absence_id" in response.data.data) {
       return response.data.data as {
@@ -145,11 +140,14 @@ export default class PortalSubmitter {
     throw new Error("Submit application data did not contain absence id");
   }
 
-  private async completeApplication(applicationId: string) {
+  private async completeApplication(
+    applicationId: string,
+    options?: RequestOptions
+  ) {
     try {
       return await postApplicationsByApplicationIdCompleteApplication(
         { applicationId },
-        await this.getOptions()
+        options
       );
     } catch (e) {
       // No-op.  Unfortunately, we're expecting the completion endpoint to throw

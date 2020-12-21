@@ -23,3 +23,15 @@ variable "nlb_port" {
   description = "Port of the NLB that will map to the appropriate API"
   type        = string
 }
+
+variable "enable_regional_rate_based_acl" {
+  description = "Test if current environment gets a rate-based acl on the API Gateway"
+  type        = bool
+  default     = false
+}
+
+variable "enable_fortinet_managed_rules" {
+  description = "Test if current environment gets the Fortinet Managed Rules ACL on the API Gateway"
+  type        = bool
+  default     = false
+}

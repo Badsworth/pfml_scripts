@@ -15,18 +15,14 @@ import path from "path";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import { CypressStepThis } from "../../src/types";
 import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
-import TestMailNotificationFetcher from "./TestMailNotificationFetcher";
 import PortalSubmitter from "../../src/simulation/PortalSubmitter";
 import {
   SimulationClaim,
   Employer,
   EmployeeRecord,
 } from "../../src/simulation/types";
-import { Credentials, notificationRequest } from "../../src/types";
-import {
-  SimulationGenerator,
-  generateLeaveDates,
-} from "../../src/simulation/simulate";
+import { Credentials } from "../../src/types";
+import { SimulationGenerator } from "../../src/simulation/simulate";
 import { ApplicationResponse, DocumentUploadRequest } from "../../src/api";
 import { makeDocUploadBody } from "../../src/simulation/SimulationRunner";
 import { fromClaimsFactory } from "../../src/simulation/EmployeeFactory";
@@ -37,6 +33,10 @@ import * as integrationScenarios from "../../src/simulation/scenarios/integratio
 import fs from "fs";
 import pdf from "pdf-parse";
 import { Result } from "pdf-parse";
+import TestMailClient, { Email, GetEmailsOpts } from "./TestMailClient";
+import AuthenticationManager from "../../src/simulation/AuthenticationManager";
+import { CognitoUserPool } from "amazon-cognito-identity-js";
+import DocumentWaiter from "./DocumentWaiter";
 
 const scenarioFunctions: Record<string, SimulationGenerator> = {
   ...pilot3,
@@ -50,21 +50,40 @@ const scenarioFunctions: Record<string, SimulationGenerator> = {
  * @type {Cypress.PluginConfig}
  */
 export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
+  const userPool = new CognitoUserPool({
+    ClientId: config("COGNITO_CLIENTID"),
+    UserPoolId: config("COGNITO_POOL"),
+  });
+  const verificationFetcher = new TestMailVerificationFetcher(
+    config("TESTMAIL_APIKEY"),
+    config("TESTMAIL_NAMESPACE")
+  );
+  const authenticator = new AuthenticationManager(
+    userPool,
+    config("API_BASEURL"),
+    verificationFetcher
+  );
+  const submitter = new PortalSubmitter(authenticator, config("API_BASEURL"));
+  const defaultClaimantCredentials = {
+    username: config("PORTAL_USERNAME"),
+    password: config("PORTAL_PASSWORD"),
+  };
+  const documentWaiter = new DocumentWaiter(
+    config("API_BASEURL"),
+    authenticator
+  );
+
   // Declare tasks here.
   on("task", {
     getAuthVerification: (toAddress: string) => {
-      const client = new TestMailVerificationFetcher(
-        config("TESTMAIL_APIKEY"),
-        config("TESTMAIL_NAMESPACE")
-      );
-      return client.getVerificationCodeForUser(toAddress);
+      return verificationFetcher.getVerificationCodeForUser(toAddress);
     },
-    getNotification: (notificationRequestData: notificationRequest) => {
-      const client = new TestMailNotificationFetcher(
+    getEmails(opts: GetEmailsOpts): Promise<Email[]> {
+      const client = new TestMailClient(
         config("TESTMAIL_APIKEY"),
         config("TESTMAIL_NAMESPACE")
       );
-      return client.getNotificationContent(notificationRequestData);
+      return client.getEmails(opts);
     },
     async generateCredentials(
       isEmployer: boolean
@@ -83,38 +102,42 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return credentials;
     },
 
-    async generateEmployerUsername(
-      employerFEIN: string
-    ): Promise<CypressStepThis["employerUsername"]> {
-      const namespace = config("TESTMAIL_NAMESPACE");
-      const tag = "employer." + employerFEIN.replace("-", "");
-      return `${namespace}.${tag}@inbox.testmail.app`;
+    async registerClaimant(options: Credentials): Promise<true> {
+      await authenticator.registerClaimant(options.username, options.password);
+      return true;
+    },
+
+    async registerLeaveAdmin(
+      options: Credentials & { fein: string }
+    ): Promise<true> {
+      await authenticator.registerLeaveAdmin(
+        options.username,
+        options.password,
+        options.fein
+      );
+      return true;
     },
 
     async submitClaimToAPI(
-      application: SimulationClaim
+      application: SimulationClaim & { credentials?: Credentials }
     ): Promise<ApplicationResponse> {
       if (!application.claim) throw new Error("Application missing!");
       if (!application.documents.length) throw new Error("Documents missing!");
-      const { claim, documents } = application;
+      const { claim, documents, credentials } = application;
       const newDocuments: DocumentUploadRequest[] = documents.map(
         makeDocUploadBody("/tmp", "Direct API Upload")
       );
-
-      return new PortalSubmitter({
-        ClientId: config("COGNITO_CLIENTID"),
-        UserPoolId: config("COGNITO_POOL"),
-        Username: config("PORTAL_USERNAME"),
-        Password: config("PORTAL_PASSWORD"),
-        ApiBaseUrl: config("API_BASEURL"),
-      })
-
-        .submit(claim, newDocuments)
+      return submitter
+        .submit(credentials ?? defaultClaimantCredentials, claim, newDocuments)
         .catch((err) => {
           console.error("Failed to submit claim:", err.data);
           throw new Error(err);
         });
     },
+    waitForClaimDocuments: documentWaiter.waitForClaimDocuments.bind(
+      documentWaiter
+    ),
+
     async generateClaim({ claimType, employeeType }): Promise<SimulationClaim> {
       if (!(claimType in scenarioFunctions)) {
         throw new Error(`Invalid claim type: ${claimType}`);
@@ -133,9 +156,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       };
 
       return scenarioFunctions[claimType](opts);
-    },
-    async createContinuousLeaveDates(): Promise<Date[]> {
-      return generateLeaveDates({ days: 1 });
     },
     async noticeReader(noticeType: string): Promise<Result> {
       const PDFdataBuffer = fs.readFileSync(

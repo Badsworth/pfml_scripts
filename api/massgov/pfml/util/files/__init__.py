@@ -2,12 +2,16 @@
 # Utilities for handling files.
 #
 
+import io
 import os
 import shutil
+import tempfile
+from typing import List, Optional
 from urllib.parse import urlparse
 
 import boto3
 import ebcdic  # noqa: F401
+import paramiko
 import smart_open
 from botocore.config import Config
 
@@ -16,6 +20,10 @@ EBCDIC_ENCODING = "cp1140"  # See https://pypi.org/project/ebcdic/ for further d
 
 def is_s3_path(path):
     return path.startswith("s3://")
+
+
+def is_sftp_path(path):
+    return path.startswith("sftp://")
 
 
 def get_s3_bucket(path):
@@ -32,6 +40,14 @@ def get_file_name(path: str) -> str:
     return os.path.basename(path)
 
 
+def get_directory(path: str) -> str:
+    # This handles getting the "directory" of any path (local or S3)
+    # Grab everything in the path except the last X characters
+    # where X is the length of the file name
+    # This preserves the trailing /
+    return path[: -len(get_file_name(path))]
+
+
 def split_s3_url(path):
     parts = urlparse(path)
     bucket_name = parts.netloc
@@ -39,24 +55,58 @@ def split_s3_url(path):
     return (bucket_name, prefix)
 
 
-def list_files(path, delimiter=""):
+# "sftp://test_user@example.com:2222/" -> ("test_user", "example.com", 2222)
+def split_sftp_url(path):
+    parts = urlparse(path)
+    return (parts.username or "", parts.hostname, parts.port or 22)
+
+
+def list_files(
+    path: str, delimiter: str = "/", boto_session: Optional[boto3.Session] = None
+) -> List[str]:
+    """List the immediate files under path.
+
+    There is minor inconsistency between local path handling and S3 paths.
+    Directory names will be included for local paths, whereas they will not for
+    S3 paths.
+
+    Also, for S3 paths, only the first 1000 files will be returned.
+
+    Args:
+        path: Supports s3:// and local paths.
+        delimiter: Only applicable for S3 paths.
+
+            If set to "" will list all keys under path, but note only the
+            basename of the key will be included, so any directory structure to
+            the key will be lost. You probably do not want to use this for
+            getting all keys in a bucket.
+        boto_session: Boto session object to use for S3 access. Only necessary
+            if needing to access an S3 bucket with assumed credentials (e.g.,
+            cross-account bucket access).
+    """
     if is_s3_path(path):
         bucket_name, prefix = split_s3_url(path)
-        files = []
 
         # TODO Use boto3 for now to address multithreading issue in lambda, revisit after pilot 2
         # https://github.com/RaRe-Technologies/smart_open/issues/340
         # for key, _content in smart_open.s3_iter_bucket(bucket_name, prefix=prefix, workers=1):
         #     files.append(get_file_name(key))
 
-        s3 = boto3.client("s3")
-        for object in s3.list_objects(Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter)[
-            "Contents"
-        ]:
-            key = object["Key"]
-            files.append(get_file_name(key))
+        # in order for s3.list_objects to only list the immediate "files" under
+        # the given path, the prefix should end in the path delimiter
+        if prefix and not prefix.endswith(delimiter):
+            prefix = prefix + delimiter
 
-        return files
+        s3 = boto_session.client("s3") if boto_session else boto3.client("s3")
+
+        object_contents = s3.list_objects_v2(
+            Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter
+        ).get("Contents")
+
+        if object_contents:
+            return [get_file_name(object["Key"]) for object in object_contents]
+
+        return []
 
     return os.listdir(path)
 
@@ -157,6 +207,19 @@ def download_from_s3(source, destination):
     s3.download_file(bucket, path, destination)
 
 
+def upload_to_s3(source, destination):
+    is_source_s3 = is_s3_path(source)
+    is_dest_s3 = is_s3_path(destination)
+
+    if is_source_s3 or not is_dest_s3:
+        raise Exception("Destination must be an S3 URI and source must not be")
+
+    bucket, path = split_s3_url(destination)
+
+    s3 = boto3.client("s3")
+    s3.upload_file(source, bucket, path)
+
+
 def open_stream(path, mode="r"):
     if is_s3_path(path):
         so_config = Config(
@@ -183,6 +246,49 @@ def write_file(path, mode="w", encoding=None):
 def read_file_lines(path, mode="r", encoding=None):
     stream = smart_open.open(path, mode, encoding=encoding)
     return map(lambda line: line.rstrip(), stream)
+
+
+def get_sftp_client(uri: str, ssh_key_password: str, ssh_key: str) -> paramiko.SFTPClient:
+    if not is_sftp_path(uri):
+        raise ValueError("uri must be an SFTP URI")
+
+    # Paramiko expects to receive the private key as a file-like object so we write the string
+    # to a StringIO object.
+    # https://docs.paramiko.org/en/stable/api/keys.html#paramiko.pkey.PKey.from_private_key
+    ssh_key_fileobj = io.StringIO(ssh_key)
+    pkey = paramiko.rsakey.RSAKey.from_private_key(ssh_key_fileobj, password=ssh_key_password)
+
+    user, host, port = split_sftp_url(uri)
+    t = paramiko.Transport((host, port))
+    t.connect(username=user, pkey=pkey)
+
+    return paramiko.SFTPClient.from_transport(t)
+
+
+def copy_file_from_s3_to_sftp(source: str, dest: str, sftp: paramiko.SFTPClient) -> None:
+    if not is_s3_path(source):
+        raise ValueError("source must be an S3 URI")
+
+    # Download file from S3 to a tempfile.
+    _handle, tempfile_path = tempfile.mkstemp()
+    download_from_s3(source, tempfile_path)
+
+    # Copy the file from local tempfile to destination.
+    sftp.put(tempfile_path, dest)
+
+
+# Copy the file through a local tempfile instead of streaming from SFTP directly to S3 to reduce the
+# number of network connections open at any given time (1 at a time instead of 2).
+def copy_file_from_sftp_to_s3(source: str, dest: str, sftp: paramiko.SFTPClient) -> None:
+    if not is_s3_path(dest):
+        raise ValueError("dest must be an S3 URI")
+
+    # Download file from SFTP to a tempfile.
+    _handle, tempfile_path = tempfile.mkstemp()
+    sftp.get(source, tempfile_path)
+
+    # Copy the file from the local tempfile to S3 destination.
+    upload_to_s3(tempfile_path, dest)
 
 
 def remove_if_exists(path: str) -> None:

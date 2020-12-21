@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
+import { mockRouter, mockRouterEvents } from "next/router";
 import { mount, shallow } from "enzyme";
 import { App } from "../../src/pages/_app";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { act } from "react-dom/test-utils";
-import { mockRouterEvents } from "next/router";
 import tracker from "../../src/services/tracker";
 
 // see https://github.com/vercel/next.js/issues/5416
@@ -227,6 +227,61 @@ describe("App", () => {
 
       expect(document.activeElement).toBe(h1);
     });
+  });
+
+  it("displays MaintenanceTakeover in place of the Page when maintenancePageRoutes includes the current page's route", () => {
+    process.env.maintenancePageRoutes = ["/login"];
+    mockRouter.pathname = "/login";
+    const { wrapper } = render();
+
+    // Need to use data-test attribute since the MaintenanceTakeover component
+    // is lazy-loaded, so won't be present on initial render
+    expect(wrapper.find({ "data-test": "maintenance page" }).exists()).toBe(
+      true
+    );
+  });
+
+  it("displays MaintenanceTakeover in place of the Page when maintenancePageRoutes includes a wildcard matching the current page's route", () => {
+    let wrapper;
+    process.env.maintenancePageRoutes = ["/employers/*"];
+
+    mockRouter.pathname = "/foo";
+    ({ wrapper } = render());
+
+    // Doesn't render for a page that doesn't match the wildcard
+    expect(wrapper.find({ "data-test": "maintenance page" }).exists()).toBe(
+      false
+    );
+
+    mockRouter.pathname = "/employers/";
+    ({ wrapper } = render());
+
+    // Matches base pathname
+    expect(wrapper.find({ "data-test": "maintenance page" }).exists()).toBe(
+      true
+    );
+
+    mockRouter.pathname = "/employers/create-account";
+    ({ wrapper } = render());
+
+    // Matches sub-pages
+    expect(wrapper.find({ "data-test": "maintenance page" }).exists()).toBe(
+      true
+    );
+  });
+
+  it("bypasses MaintenanceTakeover when noMaintenance feature flag is present", () => {
+    process.env.featureFlags = {
+      noMaintenance: true,
+      pfmlTerriyay: true,
+    };
+    process.env.maintenancePageRoutes = ["/login"];
+    mockRouter.pathname = "/login";
+    const { wrapper } = render();
+
+    expect(wrapper.find({ "data-test": "maintenance page" }).exists()).toBe(
+      false
+    );
   });
 
   describe("displaying errors", () => {

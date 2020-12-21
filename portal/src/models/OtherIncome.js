@@ -12,6 +12,7 @@ class OtherIncome extends BaseModel {
       income_end_date: null,
       income_start_date: null,
       income_type: null,
+      other_income_id: null,
     };
   }
 }

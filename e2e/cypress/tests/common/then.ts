@@ -4,8 +4,6 @@ import { CypressStepThis } from "../../../src/types";
 import { fineos } from "./actions";
 import { format } from "date-fns";
 
-Then("I should be logged in", () => portal.assertLoggedIn());
-
 Then("I should see a success page confirming my claim submission", function () {
   cy.url({ timeout: 20000 }).should("include", "/applications/success");
 });
@@ -270,88 +268,6 @@ Then("I should confirm the {string} notice is valid", function (
   });
   cy.task("deleteNoticePDF").should("equal", "Deleted Succesfully");
 });
-
-Then("I should receive a {string} notification", function (
-  notificationType: string
-): void {
-  cy.unstash("firstName").then((firstName) => {
-    cy.unstash("lastName").then((lastName) => {
-      cy.unstash("dob").then((dob) => {
-        cy.unstash("claimNumber").then((claimNumber) => {
-          cy.unstash("employerFEIN").then((employerFEIN) => {
-            if (
-              !(
-                typeof firstName === "string" &&
-                typeof lastName === "string" &&
-                typeof employerFEIN === "string"
-              )
-            ) {
-              throw new Error("First and last name must be of type string");
-            }
-            const tag = "employer." + employerFEIN.replace("-", "");
-            const notificationRequestData = {
-              notificationType: notificationType,
-              recipientEmail: `gqzap.${tag}@inbox.testmail.app`,
-              employeeName: firstName + " " + lastName,
-            };
-            cy.wait(180000);
-            cy.task("getNotification", notificationRequestData).then(
-              (emailContent) => {
-                if (typeof dob !== "string") {
-                  throw new Error("DOB must be a string");
-                }
-                dob = dob.replace(/-/g, "/").slice(5) + "/****";
-                expect(emailContent.name).to.equal(firstName + " " + lastName);
-                expect(emailContent.dob).to.equal(dob);
-                expect(emailContent.applicationId).to.equal(claimNumber);
-                if (notificationType === "employer response") {
-                  expect(emailContent.url).to.equal(
-                    `https://paidleave-stage.mass.gov/employers/applications/new-application/?absence_id=${claimNumber}`
-                  );
-                }
-              }
-            );
-          });
-        });
-      });
-    });
-  });
-});
-
-Then(
-  "I should be able to retrieve a {string} notification from testmail",
-  function (notificationType: string): void {
-    // this test uses notifications that have ALREADY been sent to testmail
-    // this allows us to test our ability to retrieve emails, and validate data
-    let firstName = "";
-    let lastName = "";
-    if (notificationType === "employer response") {
-      firstName = "Stanford";
-      lastName = "Thiel";
-    } else if (notificationType === "application started") {
-      firstName = "Cristian";
-      lastName = "Wyman";
-    } else {
-      throw new Error("Notification is not a recognized type");
-    }
-    if (!(typeof firstName === "string" && typeof lastName === "string")) {
-      throw new Error("First and last name must be of type string");
-    }
-    const notificationRequestData = {
-      notificationType: notificationType,
-      recipientEmail: "gqzap.jkyu2emq@inbox.testmail.app",
-      employeeName: firstName + " " + lastName,
-    };
-    cy.task("getNotification", notificationRequestData).then((emailContent) => {
-      expect(emailContent.name).to.equal(firstName + " " + lastName);
-      if (notificationType === "employer response") {
-        expect(emailContent.url).to.equal(
-          `https://paidleave-stage.mass.gov/employers/applications/new-application/?absence_id=${emailContent.applicationId}`
-        );
-      }
-    });
-  }
-);
 
 Then("I add a note", function (): void {
   fineos.onTab("Notes");

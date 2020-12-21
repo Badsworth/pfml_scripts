@@ -4,7 +4,9 @@ import uuid
 from pathlib import Path
 
 import pytest
+from botocore.exceptions import ClientError
 
+import massgov.pfml.cognito_post_confirmation_lambda.lib as lib
 from massgov.pfml import fineos
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
 from massgov.pfml.user_import.process_csv import (
@@ -34,6 +36,35 @@ class MockCognito:
         if sub:
             return {"Users": [{"Attributes": [{"Name": "sub", "Value": sub}]}]}
         return {"Users": []}
+
+
+class MockCognitoPasswordError(MockCognito):
+    def admin_set_user_password(self, *args, **kwargs):
+        raise ClientError(
+            {"Error": {"Code": "UserNotFoundException", "Message": "That thar user don't exist"}},
+            {...},
+        )
+
+
+class MockCognitoListRateLimit(MockCognito):
+    def __init__(self):
+        self._retries = 0
+        super().__init__()
+
+    def list_users(self, *args, UserPoolId="", Filter="", **kwargs):
+        self._retries += 1
+        if (self._retries % 2) == 0:
+            raise ClientError(
+                {
+                    "Error": {
+                        "Code": "TooManyRequestsException",
+                        "Message": "You are doing it too loud",
+                    }
+                },
+                {...},
+            )
+        else:
+            return super().list_users(*args, UserPoolId=UserPoolId, Filter=Filter, **kwargs)
 
 
 @pytest.fixture
@@ -171,6 +202,57 @@ class TestProcessByEmail:
         assert count_unable_to_complete_reg == 5
         assert count_error_in_fineos == count_unable_to_complete_reg * 3  # 3 retries
 
+    def test_process_by_email_bad_set_password(
+        self, test_file_location, test_db_session, create_employers, mock_bogus_fineos, caplog
+    ):
+        cognito_client = MockCognitoPasswordError()
+        pivoted = pivot_csv_file(test_file_location)
+        processed = 0
+        for email, employers in pivoted.items():
+            processed += process_by_email(
+                email=email,
+                input_data=employers,
+                db_session=test_db_session,
+                cognito_pool_id="fake_pool",
+                filename=test_file_location,
+                cognito_client=cognito_client,
+                fineos_client=mock_bogus_fineos,
+            )
+        # 5 records in this file
+        assert processed == 0
+        count_error_in_cognito = 0
+        for record in caplog.records:
+            if "Unable to set Cognito password for user" in record.getMessage():
+                count_error_in_cognito += 1
+
+        #  Only 3 emails in the file
+        assert count_error_in_cognito == 3
+
+    def test_process_by_email_flaky_list_users(
+        self, test_file_location, test_db_session, create_employers, caplog
+    ):
+        caplog.set_level(logging.INFO)  # noqa: B1
+        cognito_client = MockCognitoListRateLimit()
+        pivoted = pivot_csv_file(test_file_location)
+        processed = 0
+        for email, employers in pivoted.items():
+            processed += process_by_email(
+                email=email,
+                input_data=employers,
+                db_session=test_db_session,
+                cognito_pool_id="fake_pool",
+                filename=test_file_location,
+                cognito_client=cognito_client,
+            )
+        # 5 records in this file
+        assert processed == 5
+        count_error_in_cognito_list_users = 0
+        for record in caplog.records:
+            if "Too many requests error from Cognito" in record.getMessage():
+                count_error_in_cognito_list_users += 1
+
+        assert count_error_in_cognito_list_users == 4
+
     def test_process_files(self, test_file_location, test_db_session, create_employers, caplog):
         caplog.set_level(logging.INFO)  # noqa: B1
         cognito_client = MockCognito()
@@ -189,3 +271,56 @@ class TestProcessByEmail:
             in finished_file.getMessage()
         )
         assert "done processing files" in complete_log.getMessage()
+
+    def test_duplicate_ula(
+        self, test_file_location, test_db_session, create_employers, mock_bogus_fineos, caplog
+    ):
+        cognito_client = MockCognito()
+        email = "test_user@gmail.com"
+        fein = "111111111"
+        employer = (
+            test_db_session.query(Employer).filter(Employer.employer_fein == fein).one_or_none()
+        )
+        resp = cognito_client.admin_create_user(Username=email)
+        mock_active_directory_id = resp["User"]["Attributes"][0]["Value"]
+        user = lib.leave_admin_create(
+            test_db_session,
+            mock_active_directory_id,
+            email,
+            fein,
+            {"auth_id": mock_active_directory_id},
+        )
+        duplicate_ula = UserLeaveAdministrator(user=user, employer=employer)
+        test_db_session.add(duplicate_ula)
+        test_db_session.commit()
+
+        pivoted = pivot_csv_file(test_file_location)
+        processed = 0
+        for email, employers in pivoted.items():
+            processed += process_by_email(
+                email=email,
+                input_data=employers,
+                db_session=test_db_session,
+                cognito_pool_id="fake_pool",
+                filename=test_file_location,
+                cognito_client=cognito_client,
+            )
+        #  We won't process the combination of `test_user@gmail.com` and `111111111`
+        #  (as we intentionally created dupe ULAs)
+        assert processed == 4
+        count_error_db_lookup = 0
+        count_error_calling_fineos = 0
+        count_error_for_bad_email = 0
+        for record in caplog.records:
+            if "Duplicate records found for UserLeaveAdministrator" in record.getMessage():
+                count_error_db_lookup += 1
+            elif "Received an error processing FINEOS registration" in record.getMessage():
+                count_error_calling_fineos += 1
+            elif (
+                f"Unable to complete registration for {email} for employer " in record.getMessage()
+            ):
+                count_error_for_bad_email += 1
+
+        assert count_error_db_lookup == 1
+        assert count_error_calling_fineos == 0
+        assert count_error_for_bad_email == 0

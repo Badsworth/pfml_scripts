@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { get } from "lodash";
+import tracker from "../../services/tracker";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
@@ -46,14 +47,19 @@ export const UploadDocsOptions = (props) => {
 
   const handleSave = () => {
     if (!upload_docs_options) {
-      appLogic.setAppErrors(
-        new AppErrorInfoCollection([
-          new AppErrorInfo({
-            field: "upload_docs_options",
-            message: t("errors.claims.upload_docs_options.required"),
-          }),
-        ])
-      );
+      const appErrorInfo = new AppErrorInfo({
+        field: "upload_docs_options",
+        message: t("errors.claims.upload_docs_options.required"),
+        type: "required",
+      });
+
+      appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
+
+      tracker.trackEvent("ValidationError", {
+        issueField: appErrorInfo.field,
+        issueType: appErrorInfo.type,
+      });
+
       return;
     }
 

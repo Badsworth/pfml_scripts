@@ -1,10 +1,13 @@
 import os
 import xml.dom.minidom as minidom
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, Optional
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Type
 
 import pytz
+
+from massgov.pfml.db.lookup import LookupTable
 
 
 class Constants:
@@ -41,10 +44,115 @@ def get_s3_config() -> PaymentsS3Config:
     )
 
 
+class ValidationReason(Enum):
+    MISSING_FIELD = "MissingField"
+    MISSING_DATASET = "MissingDataset"
+    MISSING_IN_DB = "MissingInDB"
+    FIELD_TOO_SHORT = "FieldTooShort"
+    FIELD_TOO_LONG = "FieldTooLong"
+    INVALID_LOOKUP_VALUE = "InvalidLookupValue"
+
+
+@dataclass(frozen=True, eq=True)
+class ValidationIssue:
+    reason: ValidationReason
+    details: str
+
+
+@dataclass
+class ValidationContainer:
+    # Keeping this simple for now, will likely be expanded in the future.
+    record_key: str
+    validation_issues: List[ValidationIssue] = field(default_factory=list)
+    errors: List[str] = field(default_factory=list)
+
+    def add_validation_issue(self, reason: ValidationReason, details: str):
+        self.validation_issues.append(ValidationIssue(reason, details))
+
+    def add_error_msg(self, message: str):
+        self.errors.append(message)
+
+    def has_validation_issues(self) -> bool:
+        return len(self.validation_issues) != 0
+
+
+def lookup_validator(
+    lookup_table_clazz: Type[LookupTable],
+) -> Callable[[str], Optional[ValidationReason]]:
+    def validator_func(raw_value: str) -> Optional[str]:
+        # description_to_db_instance is used by the get_id method
+        # If the value passed into this method is set as a key in that, it's valid
+        if raw_value not in lookup_table_clazz.description_to_db_instance:
+            return ValidationReason.INVALID_LOOKUP_VALUE
+        return None
+
+    return validator_func
+
+
+def validate_csv_input(
+    key: str,
+    data: Dict[str, str],
+    errors: ValidationContainer,
+    required: Optional[bool] = False,
+    min_length: Optional[int] = None,
+    max_length: Optional[int] = None,
+    custom_validator_func: Optional[Callable[[str], Optional[ValidationReason]]] = None,
+) -> str:
+    # Don't write out the actual value in the messages, these can be SSNs, routing #s, and other PII
+    value = data.get(key)
+    if required and not value or value == "Unknown":
+        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
+        return None  # Effectively treating "" and "Unknown" the same
+
+    # Check the length only if it is defined
+    if value is not None:
+        if min_length and len(value) < min_length:
+            errors.add_validation_issue(ValidationReason.FIELD_TOO_SHORT, key)
+        if max_length and len(value) > max_length:
+            errors.add_validation_issue(ValidationReason.FIELD_TOO_LONG, key)
+
+        # Also only bother with custom validation if the value exists
+        if custom_validator_func:
+            reason = custom_validator_func(value)
+            if reason:
+                errors.add_validation_issue(reason, key)
+
+    return value
+
+
 def get_now() -> datetime:
     # Note that this uses Eastern time (not UTC)
     tz = pytz.timezone("America/New_York")
     return datetime.now(tz)
+
+
+def validate_db_input(
+    key: str,
+    db_object: Any,
+    required: bool,
+    max_length: int,
+    truncate: bool,
+    func: Optional[Callable[[Any], str]] = None,
+) -> str:
+    value = getattr(db_object, key, None)
+
+    if required and not value:
+        raise Exception(f"Value for {key} is required to generate document.")
+    elif not required and not value:
+        return None
+
+    if func is not None:
+        value_str = func(value)
+    else:
+        value_str = str(value)  # Everything else should be safe to convert to string
+
+    if len(value_str) > max_length:
+        if truncate:
+            return value_str[:max_length]
+        # Don't add the value itself, these can include SSNs and other PII
+        raise Exception(f"Value for {key} is longer than allowed length of {max_length}.")
+
+    return value_str
 
 
 def validate_input(
@@ -54,7 +162,7 @@ def validate_input(
     max_length: int,
     truncate: bool,
     func: Optional[Callable[[Any], str]] = None,
-) -> None:
+) -> str:
     # This will need to be adjusted to use getattr once doc_data is a db model
     value = doc_data.get(key)
 
@@ -74,7 +182,6 @@ def validate_input(
         # Don't add the value itself, these can include SSNs and other PII
         raise Exception(f"Value for {key} is longer than allowed length of {max_length}.")
 
-    # TODO - when switching this to use DB models, add the model ID to the errors
     return value_str
 
 

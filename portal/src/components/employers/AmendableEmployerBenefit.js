@@ -26,15 +26,19 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
     false
   );
   const amendBenefit = (id, field, value) => {
-    const formattedValue =
-      field === "benefit_amount_dollars"
-        ? parseInt(value.replace(/,/g, ""))
-        : value;
+    let formattedValue = value;
+    if (field === "benefit_amount_dollars") {
+      // Same logic as SupportingWorkingDetails
+      // Invalid input will default to 0, validation error message is upcoming
+      const isInvalid = value === "0" || !parseFloat(value);
+      value = isInvalid ? 0 : value;
+      formattedValue = isInvalid ? 0 : parseFloat(value.replace(/,/g, ""));
+    }
     setAmendment({
       ...amendment,
-      [field]: value,
+      [field]: value, // display commmas in field
     });
-    onChange({ id, [field]: formattedValue });
+    onChange({ employer_benefit_id: id, [field]: formattedValue });
   };
   const isPaidLeave =
     employerBenefit.benefit_type === EmployerBenefitType.paidLeave;
@@ -101,7 +105,7 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
               <InputDate
                 onChange={(e) =>
                   amendBenefit(
-                    employerBenefit.id,
+                    employerBenefit.employer_benefit_id,
                     "benefit_start_date",
                     e.target.value
                   )
@@ -117,7 +121,7 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
               <InputDate
                 onChange={(e) =>
                   amendBenefit(
-                    employerBenefit.id,
+                    employerBenefit.employer_benefit_id,
                     "benefit_end_date",
                     e.target.value
                   )
@@ -135,7 +139,7 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
                   <InputText
                     onChange={(e) =>
                       amendBenefit(
-                        employerBenefit.id,
+                        employerBenefit.employer_benefit_id,
                         "benefit_amount_dollars",
                         e.target.value
                       )
@@ -155,13 +159,14 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
                     name="benefit-frequency-amendment"
                     onChange={(e) =>
                       amendBenefit(
-                        employerBenefit.id,
+                        employerBenefit.employer_benefit_id,
                         "benefit_amount_frequency",
                         e.target.value
                       )
                     }
                     class="margin-top-0"
                     value={amendment.benefit_amount_frequency}
+                    hideEmptyChoice
                     smallLabel
                   />
                 </React.Fragment>

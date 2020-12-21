@@ -223,6 +223,12 @@ variable "fineos_eligibility_feed_output_directory_path" {
   default     = null
 }
 
+variable "fineos_import_employee_updates_input_directory_path" {
+  description = "Location of the FINEOS extract to process into our DB."
+  type        = string
+  default     = null
+}
+
 variable "fineos_aws_iam_role_arn" {
   description = "ARN for role in the FINEOS AWS account that must be used to access resources inside of it"
   type        = string
@@ -267,4 +273,10 @@ variable "dor_fineos_etl_schedule_expression" {
   description = "EventBridge schedule for DOR FINEOS ETL"
   type        = string
   default     = "cron(30 4 * * ? *)"
+}
+
+variable "cognito_enable_provisioned_concurrency" {
+  description = "Enable or disable provisioned concurrency (and new-version publishing) for Cognito lambdas."
+  type        = bool
+  default     = false
 }

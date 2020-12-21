@@ -527,21 +527,4 @@ describe("OtherLeaveEntry", () => {
       expect(wrapper).toMatchSnapshot();
     });
   });
-
-  describe("when claimantShowOtherLeaveStep and claimantShowPreviousLeaves is enabled", () => {
-    it("renders review row of previous leave", () => {
-      process.env.featureFlags = {
-        claimantShowOtherLeaveStep: true,
-        claimantShowPreviousLeaves: true,
-      };
-      const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: new MockClaimBuilder().part1Complete().create(),
-        diveLevels,
-      });
-
-      expect(wrapper.exists({ label: "Previous paid or unpaid leave?" })).toBe(
-        true
-      );
-    });
-  });
 });

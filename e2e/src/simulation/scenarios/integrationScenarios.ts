@@ -43,3 +43,52 @@ export const MBIRTH = scenario("MBIRTH", {
     MASSID: {},
   },
 });
+
+// Happy Path Foster (ID proofing)
+export const BHAP10ID = scenario("BHAP1ID", {
+  reason: "Child Bonding",
+  reason_qualifier: "Foster Care",
+  residence: "MA-proofed",
+  id_proof: true,
+  id_check: "valid",
+  docs: {
+    MASSID: {},
+    FOSTERPLACEMENT: {},
+  },
+});
+
+export const BHAP11ID = scenario("BHAP1ID", {
+  reason: "Child Bonding",
+  reason_qualifier: "Foster Care",
+  residence: "MA-proofed",
+  id_proof: true,
+  id_check: "fraud",
+  docs: {
+    MASSID: {},
+    FOSTERPLACEMENT: {},
+  },
+});
+
+export const BHAP12ID = scenario("BHAP1ID", {
+  reason: "Child Bonding",
+  reason_qualifier: "Foster Care",
+  residence: "MA-proofed",
+  id_proof: true,
+  id_check: "invalid",
+  docs: {
+    MASSID: {},
+    FOSTERPLACEMENT: {},
+  },
+});
+
+export const BHAP13ID = scenario("BHAP1ID", {
+  reason: "Child Bonding",
+  reason_qualifier: "Foster Care",
+  residence: "MA-proofed",
+  id_proof: true,
+  id_check: "mismatch",
+  docs: {
+    MASSID: {},
+    FOSTERPLACEMENT: {},
+  },
+});

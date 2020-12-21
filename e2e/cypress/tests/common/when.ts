@@ -103,21 +103,6 @@ When("I submit the employer registration form", function () {
     }
   );
 });
-/* Account creation */
-When("I submit the claimant registration form", function (
-  this: CypressStepThis
-) {
-  if (!this.credentials) {
-    throw new Error("Credentials not properly set");
-  }
-
-  portal.portalRegister(this.credentials);
-});
-
-When("I accept the terms of service", function () {
-  // this action is forced because of trivial error: "this element is detached from the DOM"
-  cy.contains("Agree and continue").click({ force: true });
-});
 
 When("I finish managing evidence", function () {
   fineos.clickBottomWidgetButton();
@@ -134,17 +119,6 @@ When("I have submitted all parts of the claim", function (
   portal.submitClaimPortal(application, paymentPreference);
 });
 
-When("I see a pdf {string} notice to download", function (noticeType: string) {
-  cy.unstash("claimNumber").then((id) => {
-    cy.contains("article", id as string).within(() => {
-      cy.get(".usa-list .text-medium").should("contain.text", noticeType);
-      // @ToDo Will add later, currently just checking notice link
-      //   .click();
-      // cy.wait(15000);
-    });
-  });
-});
-
 When("I request additional information from the claimant", function (): void {
   fineos.onTab("Evidence");
   cy.get("input[type='submit'][value='Additional Information']").click();
@@ -157,6 +131,9 @@ When("I request additional information from the claimant", function (): void {
   cy.get("textarea[name*='missingInformationBox']").type(
     "Please resubmit page 1 of the Healthcare Provider form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
   );
+  fineos.clickBottomWidgetButton("OK");
+  cy.wait("@ajaxRender");
+  cy.wait(200);
   fineos.clickBottomWidgetButton("OK");
 });
 
@@ -172,7 +149,7 @@ When("I am the {string} claimant visiting the portal", function (
       .then((creds: Credentials) => {
         cy.stash("username", creds.username);
         cy.stash("password", creds.password);
-        portal.portalRegister(creds as Credentials);
+        portal.registerAsClaimant(creds as Credentials);
         portal.login(creds as Credentials);
         cy.contains("Agree and continue").click({ force: true });
       })

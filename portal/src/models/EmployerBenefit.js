@@ -12,7 +12,8 @@ class EmployerBenefit extends BaseModel {
       benefit_end_date: null,
       benefit_start_date: null,
       benefit_type: null,
-      id: null,
+      // this ID field is currently only used by the /applications API in the Claimant portal
+      employer_benefit_id: null,
     };
   }
 }

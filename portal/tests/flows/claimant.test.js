@@ -140,12 +140,10 @@ const machineTests = {
       test: () => {},
     },
   },
-  [routes.applications.employerBenefitDetails]: {
+  [routes.applications.employerBenefitsDetails]: {
     meta: {
       test: (_, event) => {
-        expect(get(event.context.claim, "temp.has_employer_benefits")).toEqual(
-          true
-        );
+        expect(get(event.context.claim, "has_employer_benefits")).toEqual(true);
       },
     },
   },
@@ -157,9 +155,7 @@ const machineTests = {
   [routes.applications.otherIncomesDetails]: {
     meta: {
       test: (_, event) => {
-        expect(get(event.context.claim, "temp.has_other_incomes")).toEqual(
-          true
-        );
+        expect(get(event.context.claim, "has_other_incomes")).toEqual(true);
       },
     },
   },
@@ -265,14 +261,18 @@ describe("claimFlowConfigs", () => {
   const employed = {
     employment_status: EmploymentStatus.employed,
   };
-  const hasEmployerBenefits = { temp: { has_employer_benefits: true } };
   const hasIntermittentLeavePeriods = { has_intermittent_leave_periods: true };
   const hasReducedScheduleLeavePeriods = {
     has_reduced_schedule_leave_periods: true,
   };
-  const hasOtherIncomes = { temp: { has_other_incomes: true } };
+  const hasOtherLeavesAndIncomes = {
+    has_employer_benefits: true,
+    has_other_incomes: true,
+    temp: {
+      has_previous_leaves: true,
+    },
+  };
   const hasStateId = { has_state_id: true };
-  const hasPreviousLeaves = { temp: { has_previous_leaves: true } };
   const fixedWorkPattern = {
     work_pattern: { work_pattern_type: WorkPatternType.fixed },
   };
@@ -286,11 +286,9 @@ describe("claimFlowConfigs", () => {
     { claimData: hasStateId, userData: {} },
     { claimData: medicalClaim, userData: {} },
     { claimData: employed, userData: {} },
-    { claimData: hasEmployerBenefits, userData: {} },
     { claimData: hasIntermittentLeavePeriods, userData: {} },
     { claimData: hasReducedScheduleLeavePeriods, userData: {} },
-    { claimData: hasOtherIncomes, userData: {} },
-    { claimData: hasPreviousLeaves, userData: {} },
+    { claimData: hasOtherLeavesAndIncomes, userData: {} },
     { claimData: bondingClaim, userData: {} },
     { claimData: completed, userData: {} },
     { claimData: fixedWorkPattern, userData: {} },
@@ -315,8 +313,6 @@ describe("claimFlowConfigs", () => {
         ...guards,
         // TODO (CP-1447): Remove this guard once the feature flag is obsolete
         showPhone: () => true,
-        // TODO (CP-1247): Show previous leaves related questions
-        showPreviousLeaves: () => true,
       },
       actions: { assignTestDataToMachineContext },
     }

@@ -72,8 +72,16 @@ describe("NewApplication", () => {
       wrapper.update();
     });
 
-    it("displays truth attestation content whether user selects yes or no", () => {
+    it("displays conditional content with truth attestation and button when user selects yes", () => {
       expect(wrapper.find(ConditionalContent).props().visible).toBe(true);
+      expect(wrapper.find(ConditionalContent).children()).toHaveLength(4);
+    });
+
+    it("displays conditional content with button only when user selects no", () => {
+      changeRadioGroup("hasReviewerVerified", "false");
+
+      expect(wrapper.find(ConditionalContent).props().visible).toBe(true);
+      expect(wrapper.find(ConditionalContent).children()).toHaveLength(1);
     });
 
     it("navigates to claim review page when user selects yes and submits form", () => {

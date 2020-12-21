@@ -625,6 +625,93 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /applications/{application_id}/employer_benefits/{employer_benefit_id}:
+    delete:
+      summary: Remove an existing EmployerBenefit record from an application.
+      operationId: massgov.pfml.api.applications.employer_benefit_delete
+      tags:
+        - Applications
+      parameters:
+        - name: application_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of Application to update
+          required: true
+        - name: employer_benefit_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of EmployerBenefit to remove
+          required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/ApplicationResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /applications/{application_id}/other_incomes/{other_income_id}:
+    delete:
+      summary: Remove an existing OtherIncome record from an application.
+      operationId: massgov.pfml.api.applications.other_income_delete
+      tags:
+        - Applications
+      parameters:
+        - name: application_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of Application to update
+          required: true
+        - name: other_income_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of OtherIncome to remove
+          required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/ApplicationResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /applications/{application_id}/previous_leaves/{previous_leave_id}:
+    delete:
+      summary: Remove an existing PreviousLeave record from an application.
+      operationId: massgov.pfml.api.applications.previous_leave_delete
+      tags:
+        - Applications
+      parameters:
+        - name: application_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of Application to update
+          required: true
+        - name: previous_leave_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of PreviousLeave to remove
+          required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/ApplicationResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /financial-eligibility:
     post:
       security:
@@ -1128,7 +1215,9 @@ components:
         has_amendments:
           type: boolean
         hours_worked_per_week:
-          type: integer
+          type: number
+          nullable: true
+          example: 40.5
         employer_decision:
           type: string
           enum:
@@ -1166,6 +1255,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/EmployerBenefit"
+        employer_dba:
+          type: string
         employer_fein:
           $ref: "#/components/schemas/Fein"
         fineos_absence_id:
@@ -1209,10 +1300,13 @@ components:
           example: true
         leave_end_date:
           $ref: "#/components/schemas/Date"
+          nullable: true
         leave_start_date:
           $ref: "#/components/schemas/Date"
+          nullable: true
         leave_reason:
           type: string
+          nullable: true
           enum:
             - Pregnancy / Maternity
             - Serious health condition
@@ -2058,8 +2152,10 @@ components:
           nullable: true
         benefit_start_date:
           $ref: "#/components/schemas/Date"
+          nullable: true
         benefit_end_date:
           $ref: "#/components/schemas/Date"
+          nullable: true
         benefit_amount_dollars:
           type: number
           nullable: true
@@ -2093,8 +2189,10 @@ components:
           nullable: true
         income_start_date:
           $ref: "#/components/schemas/Date"
+          nullable: true
         income_end_date:
           $ref: "#/components/schemas/Date"
+          nullable: true
         income_amount_dollars:
           type: number
           nullable: true

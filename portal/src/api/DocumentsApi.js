@@ -60,9 +60,9 @@ export default class DocumentsApi extends BaseApi {
     formData.append("description", "Placeholder");
 
     assert(file);
-    formData.set("file", file);
-    formData.set("name", file.name);
-    formData.set("mark_evidence_received", mark_evidence_received);
+    formData.append("file", file);
+    formData.append("name", file.name);
+    formData.append("mark_evidence_received", mark_evidence_received);
 
     const { data, status, success } = await this.request(
       "POST",

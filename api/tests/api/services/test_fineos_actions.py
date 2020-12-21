@@ -150,7 +150,7 @@ def test_send_to_fineos(user, test_db_session):
     assert application.fineos_absence_id is None
     assert application.fineos_notification_case_id is None
 
-    fineos_actions.send_to_fineos(application, test_db_session)
+    fineos_actions.send_to_fineos(application, test_db_session, user)
 
     updated_application = test_db_session.query(Application).get(application.application_id)
 
@@ -169,7 +169,7 @@ def test_document_upload(user, test_db_session):
     application.employer_fein = "179892886"
     application.tax_identifier.tax_identifier = "784569632"
 
-    fineos_actions.send_to_fineos(application, test_db_session)
+    fineos_actions.send_to_fineos(application, test_db_session, user)
     updated_application = test_db_session.query(Application).get(application.application_id)
 
     assert updated_application.fineos_absence_id is not None
@@ -466,6 +466,29 @@ def test_creating_request_payload():
     assert payload.__contains__("<DoingBusinessAs>Test Organization DBA</DoingBusinessAs>")
 
 
+# not an integration test, but marked as such by global pytest.mark.integration
+# at top of file
+def test_creating_request_payload_with_other_names():
+    create_or_update_request = CreateOrUpdateEmployer(
+        fineos_customer_nbr="pfml_test_payload",
+        employer_fein="888997766",
+        employer_legal_name="Test Organization Name",
+        employer_dba="Test Organization DBA",
+    )
+    payload = FINEOSClient._create_or_update_employer_payload(create_or_update_request)
+
+    assert payload is not None
+    assert payload.__contains__("<Name>Test Organization Name</Name>")
+    assert payload.__contains__("<CustomerNo>pfml_test_payload</CustomerNo>")
+    assert payload.__contains__("<CorporateTaxNumber>888997766</CorporateTaxNumber>")
+    assert payload.__contains__("<LegalBusinessName>Test Organization Name</LegalBusinessName>")
+    assert payload.__contains__("<DoingBusinessAs>Test Organization DBA</DoingBusinessAs>")
+
+    assert payload.__contains__("<ShortName>Test Org</ShortName>")
+    assert payload.__contains__("<UpperName>TEST ORGANIZATION NAME</UpperName>")
+    assert payload.__contains__("<UpperShortName>TEST ORG</UpperShortName>")
+
+
 def test_build_bonding_date_reflexive_question_birth(user):
     application = ApplicationFactory.create(user=user)
     application.child_birth_date = date(2021, 2, 9)
@@ -510,7 +533,7 @@ def test_build_bonding_date_reflexive_question_foster(user):
 
 def test_build_customer_model_no_mass_id(user):
     application = ApplicationFactory.create(user=user)
-    customer_model = fineos_actions.build_customer_model(application)
+    customer_model = fineos_actions.build_customer_model(application, user)
 
     assert application.mass_id is None
 

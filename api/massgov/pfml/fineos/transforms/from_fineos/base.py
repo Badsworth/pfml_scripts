@@ -1,8 +1,11 @@
 import abc
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
+
+DEFAULT_ENUM_VALUE_UNSELECTED = "Please Select"
+DEFAULT_ENUM_REPLACEMENT_VALUE = "Unknown"
 
 
 class AbstractTransform(abc.ABC, metaclass=abc.ABCMeta):
@@ -18,6 +21,15 @@ class AbstractTransform(abc.ABC, metaclass=abc.ABCMeta):
 class TransformEformAttributes:
 
     PROP_MAP: Dict[str, Dict[str, str]] = {}
+
+    @classmethod
+    def sanitize_attribute(cls, item_value: Any) -> Optional[Any]:
+        # Remove instances of "Please Select" - EMPLOYER-640
+        return (
+            DEFAULT_ENUM_REPLACEMENT_VALUE
+            if item_value == DEFAULT_ENUM_VALUE_UNSELECTED
+            else item_value
+        )
 
     @classmethod
     def list_to_props(cls, attributes: List[Any]) -> List[Dict]:
@@ -42,7 +54,9 @@ class TransformEformAttributes:
                 else:
                     transformed_value = attribute[attr_type]
 
-                transformed[attr_number][transformed_name] = transformed_value
+                transformed[attr_number][transformed_name] = cls.sanitize_attribute(
+                    transformed_value
+                )
 
         # Sort to preserve FINEOS ordering
         transformed_sorted = sorted(transformed.items())

@@ -31,4 +31,8 @@ module "pfml" {
   nlb_name          = "${local.vpc}-nlb"
   nlb_vpc_link_name = "${local.vpc}-nlb-vpc-link"
   nlb_port          = 3500
+
+  # AWS WAF ACL settings
+  enable_regional_rate_based_acl = true
+  enable_fortinet_managed_rules  = false
 }

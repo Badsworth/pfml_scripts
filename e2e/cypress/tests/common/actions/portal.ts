@@ -57,14 +57,16 @@ export function submitClaimDirectlyToAPI(
 export function login(credentials: Credentials): void {
   // Alias the credentials for later use.
   cy.wrap(credentials).as("credentials");
-  cy.visit("/login");
+  cy.visit(`${Cypress.env("E2E_PORTAL_BASEURL")}/login`);
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").typeMasked(credentials.password);
+  cy.wait(1000);
   cy.contains("button", "Log in").click();
+  cy.wait(1000);
   cy.url().should("not.include", "login");
 }
 
-export function portalRegister(credentials: Credentials): void {
+export function registerAsClaimant(credentials: Credentials): void {
   cy.visit("/create-account");
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").type(credentials.password);
@@ -73,6 +75,25 @@ export function portalRegister(credentials: Credentials): void {
     cy.labelled("6-digit code").type(code as string);
     cy.contains("button", "Submit").click();
   });
+}
+
+export function registerAsLeaveAdmin(credentials: Credentials): void {
+  if (!credentials.fein) {
+    throw new Error("Invalid Leave Admin credentials given - no FEIN");
+  }
+  cy.visit("/employers/create-account");
+  cy.labelled("Email address").type(credentials.username);
+  cy.labelled("Password").type(credentials.password);
+  cy.labelled("Employer ID number").type(credentials.fein);
+  cy.stashLog("leaveAdminEmail", credentials.username);
+  cy.stashLog("employerFEIN", credentials.fein);
+  cy.contains("button", "Create account").click();
+  cy.task("getAuthVerification", credentials.username as string).then(
+    (code: string) => {
+      cy.labelled("6-digit code").type(code as string);
+      cy.contains("button", "Submit").click();
+    }
+  );
 }
 
 export function employerLogin(credentials: Credentials): void {
@@ -603,26 +624,16 @@ export function confirmClaimSubmissionSucces(): void {
   cy.url().should("include", "/applications/success");
 }
 
-export function viewClaim(): void {
-  cy.unstash("applicationId").then((applicationId) => {
-    cy.visit(`/applications/checklist/?claim_id=${applicationId}`);
-    cy.url().should(
-      "include",
-      `/applications/checklist/?claim_id=${applicationId}`
-    );
-  });
+export function viewClaim(applicationId: string): void {
+  cy.visit(`/applications/checklist/?claim_id=${applicationId}`);
+  cy.url().should(
+    "include",
+    `/applications/checklist/?claim_id=${applicationId}`
+  );
 }
 
-export function goToIdUploadPage(): void {
-  cy.unstash("applicationId").then((applicationId) => {
-    cy.visit(`/applications/upload-id/?claim_id=${applicationId}`);
-  });
-}
-
-export function goToCertificationUploadPage(): void {
-  cy.unstash("applicationId").then((applicationId) => {
-    cy.visit(`/applications/certification-id/?claim_id=${applicationId}`);
-  });
+export function goToIdUploadPage(applicationId: string): void {
+  cy.visit(`/applications/upload-id/?claim_id=${applicationId}`);
 }
 
 export function completeDateForm(
@@ -678,6 +689,46 @@ export function completeIntermittentLeaveDetails(
   ).type(leave.duration.toString());
 
   cy.contains("button", "Save and continue").click();
+}
+
+export function respondToLeaveAdminRequest(
+  fineosAbsenceId: string,
+  suspectFraud: boolean,
+  gaveNotice: boolean,
+  approval: boolean
+): void {
+  cy.visit(
+    `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
+  );
+  cy.contains("Are you the right person to respond to this application?");
+  cy.contains("Yes").click();
+  cy.contains("Agree and submit").click();
+
+  cy.contains(
+    "fieldset",
+    "Do you have any reason to suspect this is fraud?"
+  ).within(() => {
+    cy.contains("label", suspectFraud ? "Yes (explain below)" : "No").click();
+  });
+  cy.contains(
+    "fieldset",
+    "Did the employee give you at least 30 days notice about their leave?"
+  ).within(() => {
+    cy.contains("label", gaveNotice ? "Yes" : "No (explain below)").click();
+  });
+  cy.contains(
+    "fieldset",
+    "Have you approved or denied this leave request?"
+  ).within(() => {
+    cy.contains("label", approval ? "Approve" : "Deny (explain below)").click();
+  });
+  if (suspectFraud || !gaveNotice || !approval) {
+    cy.get('textarea[name="comment"]').type(
+      "This is a generic explanation of the leave admin's response."
+    );
+  }
+  cy.contains("button", "Submit").click();
+  cy.contains("Thanks for reviewing the application");
 }
 
 export function confirmEligibleParent(): void {

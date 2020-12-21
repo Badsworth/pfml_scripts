@@ -220,6 +220,59 @@ def mock_s3_bucket(reset_aws_env_vars):
 
 
 @pytest.fixture
+def mock_sftp_default_listdir_filenames():
+    return ["attleboro.txt", "beverly.csv", "chicopee.csv", "duxbury.txt"]
+
+
+@pytest.fixture
+def mock_sftp_dir_with_conflicts():
+    return "mock_sftp_dir_with_conflicts"
+
+
+@pytest.fixture
+def mock_sftp_filename_conflicts():
+    return ["file1.txt", "file2.txt"]
+
+
+@pytest.fixture
+def mock_sftp_dir_with_no_files():
+    return "mock_sftp_dir_with_no_files"
+
+
+@pytest.fixture
+def mock_sftp_client(
+    mock_sftp_dir_with_conflicts,
+    mock_sftp_filename_conflicts,
+    mock_sftp_default_listdir_filenames,
+    mock_sftp_dir_with_no_files,
+):
+    class MockSftpClient:
+        calls = []
+
+        def get(self, src: str, dest: str):
+            self.calls.append(("get", src, dest))
+
+        def put(self, src: str, dest: str):
+            self.calls.append(("put", src, dest))
+
+        def remove(self, filename: str):
+            self.calls.append(("remove", filename))
+
+        def rename(self, oldpath: str, newpath: str):
+            self.calls.append(("rename", oldpath, newpath))
+
+        def listdir(self, dir: str):
+            self.calls.append(("listdir", dir))
+            if dir == mock_sftp_dir_with_conflicts:
+                return mock_sftp_filename_conflicts
+            if dir == mock_sftp_dir_with_no_files:
+                return []
+            return mock_sftp_default_listdir_filenames
+
+    return MockSftpClient()
+
+
+@pytest.fixture
 def test_db_schema(monkeypatch):
     """
     Create a test schema, if it doesn't already exist, and drop it after the

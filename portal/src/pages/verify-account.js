@@ -13,6 +13,7 @@ import Title from "../components/Title";
 import get from "lodash/get";
 import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
+import tracker from "../services/tracker";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../hooks/useThrottledHandler";
@@ -60,14 +61,18 @@ export const VerifyAccount = (props) => {
     event.preventDefault();
 
     if (showEinFields && formState.isEmployer === null) {
-      appLogic.setAppErrors(
-        new AppErrorInfoCollection([
-          new AppErrorInfo({
-            field: "isEmployer",
-            message: t("errors.auth.isEmployer.required"),
-          }),
-        ])
-      );
+      const appErrorInfo = new AppErrorInfo({
+        field: "isEmployer",
+        message: t("errors.auth.isEmployer.required"),
+        type: "required",
+      });
+
+      appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
+
+      tracker.trackEvent("ValidationError", {
+        issueField: appErrorInfo.field,
+        issueType: appErrorInfo.type,
+      });
 
       return;
     }

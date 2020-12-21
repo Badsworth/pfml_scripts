@@ -234,6 +234,80 @@ resource "aws_iam_role_policy_attachment" "task_execute_sql_s3_attachment" {
 }
 
 # ------------------------------------------------------------------------------------------------------
+# Register Leave Admins with FINEOS
+# ------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "register_admins_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-register-admins-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "register_admins_task_role_policy_attachment" {
+  role       = aws_iam_role.register_admins_task_role.name
+  policy_arn = aws_iam_policy.register_admins_task_policy.arn
+}
+
+resource "aws_iam_policy" "register_admins_task_policy" {
+  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-register-admins-task-policy"
+  description = "A clone of the standard task role with extra SSM permissions for FINEOS auth keys."
+  policy      = data.aws_iam_policy_document.register_admins_task_role_policy_document.json
+}
+
+data "aws_iam_policy_document" "register_admins_task_role_policy_document" {
+  # Allow ECS to log to Cloudwatch.
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+
+    resources = [
+      "${aws_cloudwatch_log_group.ecs_tasks.arn}:*"
+    ]
+  }
+
+  # Allow ECS to authenticate with ECR and download images.
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+
+    # ECS Fargate doesn't like it when you restrict the access to a single
+    # repository. Instead, it needs access to all of them.
+    resources = [
+      "*"
+    ]
+  }
+
+  # Allow ECS to access secrets from parameter store.
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ssm:GetParametersByPath",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+    ]
+  }
+}
+
+
+# ------------------------------------------------------------------------------------------------------
 # DOR Import task stuff
 # ------------------------------------------------------------------------------------------------------
 
@@ -358,10 +432,29 @@ resource "aws_iam_role_policy" "fineos_eligibility_feed_task_fineos_role_policy"
 
   name   = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-eligibility-feed-export-fineos-policy"
   role   = aws_iam_role.fineos_eligibility_feed_export_task_role.id
-  policy = data.aws_iam_policy_document.fineos_eligibility_feed_export_fineos_role_policy[0].json
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
 }
 
-data "aws_iam_policy_document" "fineos_eligibility_feed_export_fineos_role_policy" {
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for FINEOS employee updates import
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "fineos_import_employee_updates_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-import-employee-updates"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "fineos_import_employee_updates_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-import-employee-updates-fineos-policy"
+  role   = aws_iam_role.fineos_import_employee_updates_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
+}
+
+data "aws_iam_policy_document" "fineos_feeds_role_policy" {
   count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
 
   statement {
@@ -374,6 +467,52 @@ data "aws_iam_policy_document" "fineos_eligibility_feed_export_fineos_role_polic
 
     resources = [
       var.fineos_aws_iam_role_arn,
+    ]
+  }
+}
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for Registering Admins to FINEOS scheduler
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "cloudwatch_events_register_admins_role" {
+  name               = "${local.app_name}-${var.environment_name}-register-admins-events-role"
+  assume_role_policy = data.aws_iam_policy_document.cloudwatch_events_register_admins_role_assume_policy.json
+}
+
+data "aws_iam_policy_document" "cloudwatch_events_register_admins_role_assume_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "cloudwatch_events_register_admins_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-register-admins-events-role-policy"
+  role   = aws_iam_role.cloudwatch_events_register_admins_role.id
+  policy = data.aws_iam_policy_document.cloudwatch_events_register_admins_role_policy.json
+}
+
+data "aws_iam_policy_document" "cloudwatch_events_register_admins_role_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["ecs:RunTask"]
+
+    resources = ["arn:aws:ecs:us-east-1:${data.aws_caller_identity.current.account_id}:task-definition/${aws_ecs_task_definition.ecs_tasks["register-leave-admins-with-fineos"].family}:*"]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["iam:PassRole"]
+
+    resources = [
+      aws_iam_role.task_executor.arn,
+      aws_iam_role.register_admins_task_role.arn
     ]
   }
 }

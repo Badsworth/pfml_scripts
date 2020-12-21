@@ -1,6 +1,7 @@
 import { renderWithAppLogic, simulateEvents } from "../../test-utils";
 import Address from "../../../src/pages/applications/address";
 import AddressModel from "../../../src/models/Address";
+import { act } from "react-dom/test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -71,6 +72,51 @@ describe("Address", () => {
             has_mailing_address: true,
           }
         );
+      });
+
+      describe("when user chooses they have a mailing address ", () => {
+        beforeEach(() => {
+          ({ appLogic, wrapper } = renderWithAppLogic(Address, {
+            claimAttrs: {
+              residential_address: null,
+              mailing_address: null,
+            },
+            render: "mount", // support useEffect
+          }));
+
+          ({ changeRadioGroup } = simulateEvents(wrapper));
+          changeRadioGroup("has_mailing_address", "true");
+        });
+
+        it("submits without mailing address info", async () => {
+          await act(async () => {
+            await wrapper.find("form").simulate("submit");
+          });
+
+          expect(appLogic.claims.update).toHaveBeenCalledWith(
+            expect.any(String),
+            {
+              mailing_address: {},
+              has_mailing_address: true,
+            }
+          );
+        });
+
+        it("submits when user changes the answer back to not have a mailing address", async () => {
+          changeRadioGroup("has_mailing_address", "false");
+
+          await act(async () => {
+            await wrapper.find("form").simulate("submit");
+          });
+
+          expect(appLogic.claims.update).toHaveBeenCalledWith(
+            expect.any(String),
+            {
+              mailing_address: null,
+              has_mailing_address: false,
+            }
+          );
+        });
       });
     });
   });

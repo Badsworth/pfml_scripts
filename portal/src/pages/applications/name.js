@@ -1,4 +1,5 @@
 import Claim from "../../models/Claim";
+import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
@@ -32,25 +33,27 @@ export const Name = (props) => {
 
   return (
     <QuestionPage title={t("pages.claimsName.title")} onSave={handleSave}>
-      <FormLabel component="legend" hint={t("pages.claimsName.lead")}>
-        {t("pages.claimsName.sectionLabel")}
-      </FormLabel>
-      <InputText
-        {...getFunctionalInputProps("first_name")}
-        label={t("pages.claimsName.firstNameLabel")}
-        smallLabel
-      />
-      <InputText
-        {...getFunctionalInputProps("middle_name")}
-        label={t("pages.claimsName.middleNameLabel")}
-        optionalText={t("components.form.optional")}
-        smallLabel
-      />
-      <InputText
-        {...getFunctionalInputProps("last_name")}
-        label={t("pages.claimsName.lastNameLabel")}
-        smallLabel
-      />
+      <Fieldset>
+        <FormLabel component="legend" hint={t("pages.claimsName.lead")}>
+          {t("pages.claimsName.sectionLabel")}
+        </FormLabel>
+        <InputText
+          {...getFunctionalInputProps("first_name")}
+          label={t("pages.claimsName.firstNameLabel")}
+          smallLabel
+        />
+        <InputText
+          {...getFunctionalInputProps("middle_name")}
+          label={t("pages.claimsName.middleNameLabel")}
+          optionalText={t("components.form.optional")}
+          smallLabel
+        />
+        <InputText
+          {...getFunctionalInputProps("last_name")}
+          label={t("pages.claimsName.lastNameLabel")}
+          smallLabel
+        />
+      </Fieldset>
     </QuestionPage>
   );
 };

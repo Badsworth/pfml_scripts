@@ -106,6 +106,48 @@ def other_leave_eform():
 
 
 @pytest.fixture
+def other_leave_eform_bad_values():
+    return EForm.parse_obj(
+        {
+            "eformType": "Other Leaves",
+            "eformId": 2230,
+            "eformAttributes": [
+                {"name": "PriorConcurrent", "stringValue": " Prior"},
+                {"name": "PriorConcurrent2", "stringValue": "Prior"},
+                {"name": "EndDate2", "dateValue": "2019-12-27"},
+                {"name": "SecondaryQualifyingReason", "stringValue": "Military caregiver"},
+                {"name": "BeginDate2", "dateValue": "2019-12-04"},
+                {
+                    "name": "Applies1",
+                    "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
+                },
+                {"name": "EndDate", "dateValue": "2020-05-31"},
+                {
+                    "name": "Applies2",
+                    "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
+                },
+                {
+                    "name": "QualifyingReasonPrimary",
+                    "enumValue": {
+                        "domainName": "NotificationReason",
+                        "instanceValue": "Please Select",
+                    },
+                },
+                {"name": "BeginDate", "dateValue": "2020-04-01"},
+                {
+                    "name": "QualifyingReasonPrimary2",
+                    "enumValue": {
+                        "domainName": "NotificationReason",
+                        "instanceValue": "Please Select",
+                    },
+                },
+                {"name": "SecondaryQualifyingReason2", "stringValue": "Military caregiver"},
+            ],
+        }
+    )
+
+
+@pytest.fixture
 def previous_leave():
     return PreviousLeave(
         leave_start_date="2020-05-15", leave_end_date="2020-06-01", leave_reason="Medical"
@@ -150,3 +192,19 @@ class TestTransformEformBody:
         assert other_leave_2["leave_start_date"] == date(2019, 12, 4)
         assert other_leave_2["leave_end_date"] == date(2019, 12, 27)
         assert other_leave_2["leave_reason"] == "Care for a family member"
+
+    def test_transform_eform_with_bad_values(self, other_leave_eform_bad_values):
+        other_leaves_list = TransformOtherLeaveEform.from_fineos(other_leave_eform_bad_values)
+        assert len(other_leaves_list) == 2
+
+        assert type(other_leaves_list[0]) is PreviousLeave
+        other_leave_1 = other_leaves_list[0].dict()
+        assert other_leave_1["leave_start_date"] == date(2020, 4, 1)
+        assert other_leave_1["leave_end_date"] == date(2020, 5, 31)
+        assert other_leave_1["leave_reason"] == "Unknown"
+
+        assert type(other_leaves_list[1]) is PreviousLeave
+        other_leave_2 = other_leaves_list[1].dict()
+        assert other_leave_2["leave_start_date"] == date(2019, 12, 4)
+        assert other_leave_2["leave_end_date"] == date(2019, 12, 27)
+        assert other_leave_2["leave_reason"] == "Unknown"

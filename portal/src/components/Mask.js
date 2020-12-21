@@ -92,7 +92,7 @@ function toNumber(value) {
  * @returns {string}
  */
 export function maskValue(value, mask) {
-  if (mask === "currency") {
+  if (mask === "currency" || mask === "hours") {
     // Format number with commas. If the number includes a decimal,
     // ensure it includes two decimal points
     const number = toNumber(value);
@@ -173,7 +173,10 @@ function Mask(props) {
 
   const modifiedInputText = React.cloneElement(field, {
     defaultValue: undefined,
-    inputMode: props.mask === "currency" ? "decimal" : "numeric",
+    inputMode:
+      props.mask === "currency" || props.mask === "hours"
+        ? "decimal"
+        : "numeric",
     type: props.mask === "phone" ? "tel" : "text",
     value: field.props.value,
     onBlur: handleBlur,
@@ -211,7 +214,7 @@ Mask.propTypes = {
   /**
    * The mask type to be applied.
    */
-  mask: PropTypes.oneOf(["currency", "fein", "phone", "ssn", "zip"]),
+  mask: PropTypes.oneOf(["currency", "fein", "hours", "phone", "ssn", "zip"]),
 };
 
 export default Mask;

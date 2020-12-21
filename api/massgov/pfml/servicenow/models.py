@@ -33,3 +33,4 @@ class OutboundMessage(BaseModel):
     u_trigger: str = Field(..., description="Status change that required notification")
     u_user_type: str = Field(..., description="Leave Administrator or Claimant")
     u_link: Optional[AnyHttpUrl] = Field(None, description="Link to portal")
+    u_employer_customer_number: int = Field(..., description="Fineos employer id")

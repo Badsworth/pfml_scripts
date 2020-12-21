@@ -63,11 +63,11 @@ module "api" {
   cognito_user_pool_keys_url                       = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_UwxnhD1cG/.well-known/jwks.json"
   cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
   cognito_pre_signup_lambda_artifact_s3_key        = local.cognito_pre_signup_lambda_artifact_s3_key
+  cognito_enable_provisioned_concurrency           = true
   formstack_import_lambda_build_s3_key             = local.formstack_lambda_artifact_s3_key
   rmv_client_base_url                              = "https://atlas-gateway.massdot.state.ma.us"
   rmv_client_certificate_binary_arn                = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-prod/rmv_client_certificate-Mo2HJu"
-  rmv_check_behavior                               = "partially_mocked"
-  rmv_check_mock_success                           = "1"
+  rmv_check_behavior                               = "not_mocked"
   fineos_client_customer_api_url                   = "https://prd-api.masspfml.fineos.com/customerapi/"
   fineos_client_integration_services_api_url       = "https://prd-api.masspfml.fineos.com/integration-services/"
   fineos_client_group_client_api_url               = "https://prd-api.masspfml.fineos.com/groupclientapi/"
@@ -83,7 +83,8 @@ module "api" {
   fineos_aws_iam_role_arn         = "arn:aws:iam::133945341851:role/somprod-IAMRoles-CustomerAccountAccessRole-83KBPT56FTQP"
   fineos_aws_iam_role_external_id = "8jFBtjr4UA@"
 
-  fineos_eligibility_feed_output_directory_path = "s3://fin-somprod-data-import/PRD"
+  fineos_eligibility_feed_output_directory_path       = "s3://fin-somprod-data-import/PRD"
+  fineos_import_employee_updates_input_directory_path = "s3://fin-somprod-data-export/PRD/dataexports"
 
   dor_fineos_etl_definition          = local.dor_fineos_etl_definition
   dor_fineos_etl_schedule_expression = "cron(0 12 * * ? *)" # Daily at 12:00 UTC

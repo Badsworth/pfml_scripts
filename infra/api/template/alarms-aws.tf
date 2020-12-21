@@ -54,7 +54,7 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_warn" {
   namespace         = "ECS/ContainerInsights"
   dimensions = {
     ClusterName          = var.environment_name
-    TaskDefinitionFamily = local.app_name
+    TaskDefinitionFamily = "${local.app_name}-${var.environment_name}-server"
   }
   extended_statistic  = "p95"
   metric_name         = "CpuUtilized"
@@ -78,7 +78,7 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
   namespace         = "ECS/ContainerInsights"
   dimensions = {
     ClusterName          = var.environment_name
-    TaskDefinitionFamily = local.app_name
+    TaskDefinitionFamily = "${local.app_name}-${var.environment_name}-server"
   }
   extended_statistic  = "p95"
   metric_name         = "CpuUtilized"
@@ -104,7 +104,7 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
   namespace         = "ECS/ContainerInsights"
   dimensions = {
     ClusterName          = var.environment_name
-    TaskDefinitionFamily = local.app_name
+    TaskDefinitionFamily = "${local.app_name}-${var.environment_name}-server"
   }
   extended_statistic  = "p95"
   metric_name         = "MemoryUtilized" # units: MiB
@@ -128,7 +128,7 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_crit" {
   namespace         = "ECS/ContainerInsights"
   dimensions = {
     ClusterName          = var.environment_name
-    TaskDefinitionFamily = local.app_name
+    TaskDefinitionFamily = "${local.app_name}-${var.environment_name}-server"
   }
   extended_statistic  = "p95"
   metric_name         = "MemoryUtilized" # units: MiB

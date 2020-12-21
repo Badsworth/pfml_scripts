@@ -7,7 +7,9 @@ import UploadDocsOptions, {
   UploadType,
 } from "../../../src/pages/applications/upload-docs-options";
 import { act } from "react-dom/test-utils";
+import tracker from "../../../src/services/tracker";
 
+jest.mock("../../../src/services/tracker");
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("UploadDocsOptions", () => {
@@ -128,6 +130,11 @@ describe("UploadDocsOptions", () => {
       });
 
       expect(appLogic.setAppErrors).toHaveBeenCalledTimes(1);
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "upload_docs_options",
+        issueType: "required",
+      });
+
       expect(appLogic.portalFlow.goToNextPage).not.toHaveBeenCalled();
     });
   });

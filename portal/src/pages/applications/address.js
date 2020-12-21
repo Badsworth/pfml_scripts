@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import AddressModel from "../../models/Address";
 import Claim from "../../models/Claim";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -5,7 +6,6 @@ import FieldsetAddress from "../../components/FieldsetAddress";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
-import React from "react";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -37,6 +37,17 @@ export const Address = (props) => {
   );
 
   const { has_mailing_address } = formState;
+
+  /**
+   * When user indicates they have a mailing address,
+   * add a blank mailing address so validations are ran against it
+   */
+  useEffect(() => {
+    const existingMailingAddress = formState.mailing_address;
+    if (formState.has_mailing_address && !existingMailingAddress) {
+      updateFields({ mailing_address: {} });
+    }
+  }, [formState, updateFields]);
 
   const handleSave = () =>
     appLogic.claims.update(claim.application_id, formState);

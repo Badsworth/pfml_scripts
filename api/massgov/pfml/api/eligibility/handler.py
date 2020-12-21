@@ -63,17 +63,34 @@ def eligibility_post():
         employee_id: UUID = UUID(str(employee.employee_id))
         employer_id: UUID = UUID(str(employer.employer_id))
 
-    wage_data_response = eligibility.compute_financial_eligibility(
-        db_session,
-        employee_id,
-        employer_id,
-        fein,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
+    try:
+        wage_data_response = eligibility.compute_financial_eligibility(
+            db_session,
+            employee_id,
+            employer_id,
+            fein,
+            leave_start_date,
+            application_submitted_date,
+            employment_status,
+        )
 
-    return response_util.success_response(
-        message="Calculated financial eligibility",
-        data=EligibilityResponse.from_orm(wage_data_response).dict(exclude_none=True),
-    ).to_api_response()
+        logger.info(
+            "Calculated financial eligibility",
+            extra={
+                "financially_eligible": wage_data_response.financially_eligible,
+                "description": wage_data_response.description,
+                "employee_id": employee_id,
+                "employer_id": employer_id,
+            },
+        )
+
+        return response_util.success_response(
+            message="Calculated financial eligibility",
+            data=EligibilityResponse.from_orm(wage_data_response).dict(exclude_none=True),
+        ).to_api_response()
+    except Exception:
+        logger.exception(
+            "Compute financial eligibility failed",
+            extra={"employee_id": employee_id, "employer_id": employer_id},
+        )
+        raise

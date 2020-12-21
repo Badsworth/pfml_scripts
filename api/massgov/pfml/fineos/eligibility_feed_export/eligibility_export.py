@@ -81,7 +81,11 @@ def main_with_return():
         fineos_client = make_fineos_client()
         with db.session_scope(make_db_session(), close=True) as db_session:
             process_result = eligibility_feed.process_employee_updates(
-                db_session, fineos_client, output_directory_path, output_transport_params
+                db_session,
+                fineos_client,
+                output_directory_path,
+                output_transport_params,
+                batch_size=config.update_batch_size,
             )
     else:
         process_result = eligibility_feed.process_all_employers(

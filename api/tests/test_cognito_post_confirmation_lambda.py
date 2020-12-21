@@ -297,7 +297,7 @@ def test_leave_admin_create_existing_user(test_db_session, caplog, leave_admin_e
     post_leave_admin_create_user_count = test_db_session.query(User).count()
 
     assert pre_leave_admin_create_user_count == post_leave_admin_create_user_count
-    assert "User already already exists" in caplog.text
+    assert "User already exists" in caplog.text
 
 
 def test_forgot_password_handler(test_db_session, forgot_password_event_dict):

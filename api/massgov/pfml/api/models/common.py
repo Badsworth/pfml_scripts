@@ -41,6 +41,7 @@ class PreviousLeaveQualifyingReason(str, LookupEnum):
     CHILD_BONDING = "Child bonding"
     MILITARY_CAREGIVER = "Military caregiver"
     MILITARY_EXIGENCY_FAMILY = "Military exigency family"
+    UNKNOWN = "Unknown"
 
     @classmethod
     def get_lookup_model(cls):
@@ -49,7 +50,7 @@ class PreviousLeaveQualifyingReason(str, LookupEnum):
 
 class PreviousLeave(PydanticBaseModel):
     is_for_current_employer: Optional[bool]
-    leave_start_date: date
-    leave_end_date: date
+    leave_start_date: Optional[date]
+    leave_end_date: Optional[date]
     leave_reason: Optional[PreviousLeaveQualifyingReason]
     previous_leave_id: Optional[UUID4]

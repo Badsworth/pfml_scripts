@@ -60,7 +60,7 @@ const EmployerBenefits = (props) => {
             employerBenefits.map((employerBenefit) => (
               <AmendableEmployerBenefit
                 employerBenefit={employerBenefit}
-                key={employerBenefit.id}
+                key={employerBenefit.employer_benefit_id}
                 onChange={onChange}
               />
             ))

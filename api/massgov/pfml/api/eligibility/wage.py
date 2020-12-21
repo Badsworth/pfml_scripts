@@ -104,8 +104,8 @@ class WageCalculator:
         self.effective_quarter = effective_quarter
 
     def get_employer_average_weekly_wage(self, employer_id):
-        employer_average_weekly_wage = self.employer_average_weekly_wage.get(employer_id)
-        return employer_average_weekly_wage
+        """Get average weekly wage for a specific employer, or raise KeyError if not found."""
+        return self.employer_average_weekly_wage[employer_id]
 
     def compute_average_weekly_wage(self) -> decimal.Decimal:
         """Compute the average weekly wage, summed across all employers."""

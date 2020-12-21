@@ -80,8 +80,25 @@ locals {
       containers_template = "dor_import_template.json"
     },
 
+    "fineos-import-employee-updates" = {
+      command             = ["fineos-import-employee-updates"]
+      task_role           = aws_iam_role.fineos_import_employee_updates_task_role.arn
+      cpu                 = "2048"
+      memory              = "9216"
+      containers_template = "fineos_import_employee_updates_template.json"
+      vars = {
+        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
+        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
+
+        input_directory_path = var.fineos_import_employee_updates_input_directory_path
+      }
+    },
+
     "register-leave-admins-with-fineos" = {
       command             = ["register-leave-admins-with-fineos"]
+      task_role           = aws_iam_role.register_admins_task_role.arn,
+      cpu                 = "4096",
+      memory              = "18432",
       containers_template = "register_leave_admins_with_fineos.json"
       vars = {
         fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
@@ -129,6 +146,12 @@ locals {
         output_directory_path = var.fineos_eligibility_feed_output_directory_path
       }
     }
+
+    "payments-ctr-process" = {
+      command             = ["payments-ctr-process"]
+      containers_template = "payments_ctr_process_template.json"
+      vars                = {}
+    },
   }
 }
 

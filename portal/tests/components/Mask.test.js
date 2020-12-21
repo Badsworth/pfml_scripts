@@ -2,7 +2,7 @@ import Mask, { maskValue } from "../../src/components/Mask";
 import { mount, shallow } from "enzyme";
 import React from "react";
 
-const masks = ["currency", "fein", "phone", "ssn", "zip"];
+const masks = ["currency", "fein", "hours", "phone", "ssn", "zip"];
 
 function render(customProps = {}, inputProps = {}, mountComponent = false) {
   const component = (
@@ -60,6 +60,22 @@ describe("Mask", () => {
 
   it("adds `inputMode='decimal'` to the child element when mask is currency", () => {
     const { wrapper } = render({ mask: "currency" }, { value: "123456789" });
+    const input = wrapper.find("input");
+
+    expect(input.prop("inputMode")).toBe("decimal");
+  });
+
+  it("applies overlay styling to the child element when mask is currency", () => {
+    const { wrapper } = render({ mask: "currency" }, { value: "123456789" });
+    const input = wrapper.find("div").last();
+
+    expect(input.prop("className")).toEqual(
+      "c-inputtext-mask__before--currency"
+    );
+  });
+
+  it("adds `inputMode='decimal'` to the child element when mask is hours", () => {
+    const { wrapper } = render({ mask: "hours" }, { value: "123456789" });
     const input = wrapper.find("input");
 
     expect(input.prop("inputMode")).toBe("decimal");
@@ -241,26 +257,32 @@ describe("Mask", () => {
     });
   });
 
-  describe("currency", () => {
+  describe("currency and hours", () => {
     it("inserts commas", () => {
       const originalValue = "12345.557";
-      const output = maskValue(originalValue, "currency");
+      const outputCurrency = maskValue(originalValue, "currency");
+      const outputHours = maskValue(originalValue, "hours");
 
-      expect(output).toBe("12,345.56");
+      expect(outputCurrency).toBe("12,345.56");
+      expect(outputHours).toBe("12,345.56");
     });
 
     it("rounds decimals", () => {
       const originalValue = "12345.557";
-      const output = maskValue(originalValue, "currency");
+      const outputCurrency = maskValue(originalValue, "currency");
+      const outputHours = maskValue(originalValue, "hours");
 
-      expect(output).toBe("12,345.56");
+      expect(outputCurrency).toBe("12,345.56");
+      expect(outputHours).toBe("12,345.56");
     });
 
     it("allows only numbers and decimals", () => {
       const originalValue = "abc12345.def557ghi";
-      const output = maskValue(originalValue, "currency");
+      const outputCurrency = maskValue(originalValue, "currency");
+      const outputHours = maskValue(originalValue, "hours");
 
-      expect(output).toBe("12,345.56");
+      expect(outputCurrency).toBe("12,345.56");
+      expect(outputHours).toBe("12,345.56");
     });
   });
 

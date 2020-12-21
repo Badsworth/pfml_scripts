@@ -28,8 +28,12 @@ lambda-s3-package.json
 # generated mock DOR files
 dor_mock/
 
+# Mock FINEOS files
+fineos_mock/
+
 # eligibility export files
 eligibility_export/
 
 # local authentication generated file
 jwks.json
+/fineos_mock/

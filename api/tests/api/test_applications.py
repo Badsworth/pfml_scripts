@@ -1617,10 +1617,45 @@ def test_application_patch_add_employer_benefits(client, user, auth_token, test_
     assert employer_benefit.get("benefit_amount_frequency") == "Per Month"
 
 
+def test_application_patch_add_empty_employer_benefits(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "employer_benefits": [
+                {
+                    "benefit_type": None,
+                    "benefit_end_date": None,
+                    "benefit_start_date": None,
+                    "benefit_amount_dollars": None,
+                    "benefit_amount_frequency": None,
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    employer_benefits = response_body.get("employer_benefits")
+
+    assert len(employer_benefits) == 1
+    employer_benefit = employer_benefits[0]
+    assert employer_benefit.get("benefit_type") is None
+    assert employer_benefit.get("benefit_start_date") is None
+    assert employer_benefit.get("benefit_end_date") is None
+    assert employer_benefit.get("benefit_amount_dollars") is None
+    assert employer_benefit.get("benefit_amount_frequency") is None
+    assert employer_benefit.get("employer_benefit_id") is not None
+
+
 def test_application_patch_update_employer_benefit(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
     benefit = EmployerBenefit(
+        application_id=application.application_id,
         benefit_start_date="2021-01-07",
         benefit_end_date="2021-01-14",
         benefit_amount_dollars=600,
@@ -1703,6 +1738,7 @@ def test_application_patch_update_other_users_employer_benefit(
     other_user = UserFactory.create()
     other_application = ApplicationFactory.create(user=other_user)
     benefit = EmployerBenefit(
+        application_id=other_application.application_id,
         benefit_start_date="2021-01-07",
         benefit_end_date="2021-01-14",
         benefit_amount_dollars=600,
@@ -1784,10 +1820,45 @@ def test_application_patch_add_other_incomes(client, user, auth_token, test_db_s
     assert other_income.get("income_amount_frequency") == "Per Month"
 
 
+def test_application_patch_add_empty_other_incomes(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "other_incomes": [
+                {
+                    "income_type": None,
+                    "income_end_date": None,
+                    "income_start_date": None,
+                    "income_amount_dollars": None,
+                    "income_amount_frequency": None,
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    other_incomes = response_body.get("other_incomes")
+
+    assert len(other_incomes) == 1
+    other_income = other_incomes[0]
+    assert other_income.get("income_type") is None
+    assert other_income.get("income_start_date") is None
+    assert other_income.get("income_end_date") is None
+    assert other_income.get("income_amount_dollars") is None
+    assert other_income.get("income_amount_frequency") is None
+    assert other_income.get("other_income_id") is not None
+
+
 def test_application_patch_update_other_income(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
     income = OtherIncome(
+        application_id=application.application_id,
         income_start_date="2021-01-07",
         income_end_date="2021-01-14",
         income_amount_dollars=600,
@@ -1870,6 +1941,7 @@ def test_application_patch_update_other_users_other_income(
     other_user = UserFactory.create()
     other_application = ApplicationFactory.create(user=other_user)
     income = OtherIncome(
+        application_id=other_application.application_id,
         income_start_date="2021-01-07",
         income_end_date="2021-01-14",
         income_amount_dollars=600,
@@ -1880,7 +1952,7 @@ def test_application_patch_update_other_users_other_income(
 
     test_db_session.commit()
 
-    # Try to modify the other user's employer benefit
+    # Try to modify the other user's other income
     other_income_id = other_application.other_incomes[0].other_income_id
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
@@ -1946,6 +2018,37 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
     assert previous_leave.get("leave_start_date") == "2021-01-01"
     assert previous_leave.get("leave_end_date") == "2021-05-01"
     assert previous_leave.get("leave_reason") == "Pregnancy / Maternity"
+    assert previous_leave.get("previous_leave_id") is not None
+
+
+def test_application_patch_add_empty_previous_leaves(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "previous_leaves": [
+                {
+                    "is_for_current_employer": None,
+                    "leave_end_date": None,
+                    "leave_start_date": None,
+                    "leave_reason": None,
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    previous_leaves = response_body.get("previous_leaves")
+
+    assert len(previous_leaves) == 1
+    previous_leave = previous_leaves[0]
+    assert previous_leave.get("is_for_current_employer") is None
+    assert previous_leave.get("leave_start_date") is None
+    assert previous_leave.get("leave_reason") is None
     assert previous_leave.get("previous_leave_id") is not None
 
 
@@ -3015,6 +3118,9 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                         massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
                             name="Confirmed", booleanValue=True
                         ),
+                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+                            name="ConsenttoShareData", booleanValue=False
+                        ),
                     ],
                 )
             },
@@ -3037,8 +3143,6 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                         massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
                             startDate=date(2021, 1, 1),
                             endDate=date(2021, 2, 9),
-                            lastDayWorked=date(2021, 1, 1),
-                            expectedReturnToWorkDate=date(2021, 2, 9),
                             startDateFullDay=True,
                             endDateFullDay=True,
                             status="known",
@@ -3697,3 +3801,370 @@ def test_application_complete_mark_document_received_fineos(
         "absence_id": application.fineos_absence_id,
         "fineos_document_id": id_proof.fineos_id,
     }
+
+
+def test_employer_benefit_delete(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    benefit = EmployerBenefit(
+        application_id=application.application_id,
+        benefit_start_date="2021-01-07",
+        benefit_end_date="2021-01-14",
+        benefit_amount_dollars=600,
+        benefit_type_id=EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id,
+        benefit_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
+    )
+    application.employer_benefits = [benefit]
+    test_db_session.add(application)
+    test_db_session.commit()
+    employer_benefit_id = application.employer_benefits[0].employer_benefit_id
+
+    response = client.delete(
+        "/v1/applications/{}/employer_benefits/{}".format(
+            application.application_id, employer_benefit_id
+        ),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+    response_body = response.get_json().get("data")
+
+    assert len(response_body.get("employer_benefits")) == 0
+
+
+def test_employer_benefit_delete_not_found_application(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    benefit = EmployerBenefit(
+        application_id=application.application_id,
+        benefit_start_date="2021-01-07",
+        benefit_end_date="2021-01-14",
+        benefit_amount_dollars=600,
+        benefit_type_id=EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id,
+        benefit_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
+    )
+    application.employer_benefits = [benefit]
+    test_db_session.add(application)
+    test_db_session.commit()
+    employer_benefit_id = application.employer_benefits[0].employer_benefit_id
+
+    nonexistent_application_id = "b26aa854-dd50-4aed-906b-c72b062f0275"
+    response = client.delete(
+        "/v1/applications/{}/employer_benefits/{}".format(
+            nonexistent_application_id, employer_benefit_id
+        ),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 404
+    message = response.get_json().get("message")
+    assert message == "Could not find Application with ID {}".format(nonexistent_application_id)
+
+
+def test_employer_benefit_delete_not_found(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    nonexistent_benefit_id = "b26aa854-dd50-4aed-906b-c72b062f0275"
+    response = client.delete(
+        "/v1/applications/{}/employer_benefits/{}".format(
+            application.application_id, nonexistent_benefit_id
+        ),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 404
+    message = response.get_json().get("message")
+    assert message == "Could not find EmployerBenefit with ID {}".format(nonexistent_benefit_id)
+
+
+def test_employer_benefit_delete_other_application(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    other_application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    benefit = EmployerBenefit(
+        application_id=application.application_id,
+        benefit_start_date="2021-01-07",
+        benefit_end_date="2021-01-14",
+        benefit_amount_dollars=600,
+        benefit_type_id=EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id,
+        benefit_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
+    )
+    application.employer_benefits = [benefit]
+    test_db_session.add(application)
+    test_db_session.commit()
+    employer_benefit_id = application.employer_benefits[0].employer_benefit_id
+
+    response = client.delete(
+        "/v1/applications/{}/employer_benefits/{}".format(
+            other_application.application_id, employer_benefit_id
+        ),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 404
+    message = response.get_json().get("message")
+    assert message == "Could not find EmployerBenefit with ID {}".format(employer_benefit_id)
+
+
+def test_employer_benefit_delete_other_users_application(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(updated_time=datetime.now())
+    benefit = EmployerBenefit(
+        application_id=application.application_id,
+        benefit_start_date="2021-01-07",
+        benefit_end_date="2021-01-14",
+        benefit_amount_dollars=600,
+        benefit_type_id=EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id,
+        benefit_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
+    )
+    application.employer_benefits = [benefit]
+    test_db_session.add(application)
+    test_db_session.commit()
+    employer_benefit_id = application.employer_benefits[0].employer_benefit_id
+
+    response = client.delete(
+        "/v1/applications/{}/employer_benefits/{}".format(
+            application.application_id, employer_benefit_id
+        ),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 403
+
+
+def test_other_income_delete(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    income = OtherIncome(
+        application_id=application.application_id,
+        income_start_date="2021-01-07",
+        income_end_date="2021-01-14",
+        income_amount_dollars=600,
+        income_type_id=OtherIncomeType.SSDI.other_income_type_id,
+        income_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
+    )
+    application.other_incomes = [income]
+    test_db_session.add(application)
+    test_db_session.commit()
+    other_income_id = application.other_incomes[0].other_income_id
+
+    response = client.delete(
+        "/v1/applications/{}/other_incomes/{}".format(application.application_id, other_income_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+    response_body = response.get_json().get("data")
+
+    assert len(response_body.get("other_incomes")) == 0
+
+
+def test_other_income_delete_not_found_application(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    income = OtherIncome(
+        application_id=application.application_id,
+        income_start_date="2021-01-07",
+        income_end_date="2021-01-14",
+        income_amount_dollars=600,
+        income_type_id=OtherIncomeType.SSDI.other_income_type_id,
+        income_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
+    )
+    application.other_incomes = [income]
+    test_db_session.add(application)
+    test_db_session.commit()
+    other_income_id = application.other_incomes[0].other_income_id
+
+    nonexistent_application_id = "b26aa854-dd50-4aed-906b-c72b062f0275"
+    response = client.delete(
+        "/v1/applications/{}/other_incomes/{}".format(nonexistent_application_id, other_income_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 404
+    message = response.get_json().get("message")
+    assert message == "Could not find Application with ID {}".format(nonexistent_application_id)
+
+
+def test_other_income_delete_not_found(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    nonexistent_income_id = "b26aa854-dd50-4aed-906b-c72b062f0275"
+    response = client.delete(
+        "/v1/applications/{}/other_incomes/{}".format(
+            application.application_id, nonexistent_income_id
+        ),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 404
+    message = response.get_json().get("message")
+    assert message == "Could not find OtherIncome with ID {}".format(nonexistent_income_id)
+
+
+def test_other_income_delete_other_application(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    other_application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    income = OtherIncome(
+        application_id=application.application_id,
+        income_start_date="2021-01-07",
+        income_end_date="2021-01-14",
+        income_amount_dollars=600,
+        income_type_id=OtherIncomeType.SSDI.other_income_type_id,
+        income_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
+    )
+    application.other_incomes = [income]
+    test_db_session.add(application)
+    test_db_session.commit()
+    other_income_id = application.other_incomes[0].other_income_id
+
+    response = client.delete(
+        "/v1/applications/{}/other_incomes/{}".format(
+            other_application.application_id, other_income_id
+        ),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 404
+    message = response.get_json().get("message")
+    assert message == "Could not find OtherIncome with ID {}".format(other_income_id)
+
+
+def test_other_income_delete_other_users_application(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(updated_time=datetime.now())
+    income = OtherIncome(
+        application_id=application.application_id,
+        income_start_date="2021-01-07",
+        income_end_date="2021-01-14",
+        income_amount_dollars=600,
+        income_type_id=OtherIncomeType.SSDI.other_income_type_id,
+        income_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
+    )
+    application.other_incomes = [income]
+    test_db_session.add(application)
+    test_db_session.commit()
+    other_income_id = application.other_incomes[0].other_income_id
+
+    response = client.delete(
+        "/v1/applications/{}/other_incomes/{}".format(application.application_id, other_income_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 403
+
+
+def test_previous_leave_delete(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    leave = PreviousLeave(
+        application_id=application.application_id,
+        leave_start_date="2021-01-07",
+        leave_end_date="2021-01-14",
+        leave_reason_id=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_id,
+    )
+    application.previous_leaves = [leave]
+    test_db_session.add(application)
+    test_db_session.commit()
+    previous_leave_id = application.previous_leaves[0].previous_leave_id
+
+    response = client.delete(
+        "/v1/applications/{}/previous_leaves/{}".format(
+            application.application_id, previous_leave_id
+        ),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+    response_body = response.get_json().get("data")
+
+    assert len(response_body.get("previous_leaves")) == 0
+
+
+def test_previous_leave_delete_not_found_application(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    leave = PreviousLeave(
+        application_id=application.application_id,
+        leave_start_date="2021-01-07",
+        leave_end_date="2021-01-14",
+        leave_reason_id=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_id,
+    )
+    application.previous_leaves = [leave]
+    test_db_session.add(application)
+    test_db_session.commit()
+    previous_leave_id = application.previous_leaves[0].previous_leave_id
+
+    nonexistent_application_id = "b26aa854-dd50-4aed-906b-c72b062f0275"
+    response = client.delete(
+        "/v1/applications/{}/previous_leaves/{}".format(
+            nonexistent_application_id, previous_leave_id
+        ),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 404
+    message = response.get_json().get("message")
+    assert message == "Could not find Application with ID {}".format(nonexistent_application_id)
+
+
+def test_previous_leave_delete_not_found(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    nonexistent_leave_id = "b26aa854-dd50-4aed-906b-c72b062f0275"
+    response = client.delete(
+        "/v1/applications/{}/previous_leaves/{}".format(
+            application.application_id, nonexistent_leave_id
+        ),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 404
+    message = response.get_json().get("message")
+    assert message == "Could not find PreviousLeave with ID {}".format(nonexistent_leave_id)
+
+
+def test_previous_leave_delete_other_application(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    other_application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    leave = PreviousLeave(
+        application_id=application.application_id,
+        leave_start_date="2021-01-07",
+        leave_end_date="2021-01-14",
+        leave_reason_id=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_id,
+    )
+    application.previous_leaves = [leave]
+    test_db_session.add(application)
+    test_db_session.commit()
+    previous_leave_id = application.previous_leaves[0].previous_leave_id
+
+    response = client.delete(
+        "/v1/applications/{}/previous_leaves/{}".format(
+            other_application.application_id, previous_leave_id
+        ),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 404
+    message = response.get_json().get("message")
+    assert message == "Could not find PreviousLeave with ID {}".format(previous_leave_id)
+
+
+def test_previous_leave_delete_other_users_application(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(updated_time=datetime.now())
+    leave = PreviousLeave(
+        application_id=application.application_id,
+        leave_start_date="2021-01-07",
+        leave_end_date="2021-01-14",
+        leave_reason_id=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_id,
+    )
+    application.previous_leaves = [leave]
+    test_db_session.add(application)
+    test_db_session.commit()
+    previous_leave_id = application.previous_leaves[0].previous_leave_id
+
+    response = client.delete(
+        "/v1/applications/{}/previous_leaves/{}".format(
+            application.application_id, previous_leave_id
+        ),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 403

@@ -2,14 +2,11 @@ import Document, { DocumentType } from "src/models/Document";
 import Step, { ClaimSteps } from "src/models/Step";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { Checklist } from "src/pages/applications/checklist";
-import { DateTime } from "luxon";
 import DocumentCollection from "src/models/DocumentCollection";
 import { MockClaimBuilder } from "tests/test-utils";
 import React from "react";
 import claimantConfig from "src/flows/claimant";
 import { find } from "lodash";
-
-const futureBirthDate = DateTime.local().plus({ days: 60 }).toISODate();
 
 /**
  * Checklist step states are based on presence of validation warnings,
@@ -32,62 +29,62 @@ function generateWarningsForStep(name) {
  * The various Checklist states our Storybook page will support previewing
  */
 const scenarios = {
-  "Identity step not started": {
+  "Verify Identity not started": {
     claim: new MockClaimBuilder().create(),
     warnings: generateWarningsForStep(ClaimSteps.verifyId),
   },
-  "Employer step not started": {
+  "Employment Information not started": {
     claim: new MockClaimBuilder().create(),
     warnings: generateWarningsForStep(ClaimSteps.employerInformation),
   },
-  "Leave step not started": {
+  "Leave Details not started": {
     claim: new MockClaimBuilder().create(),
     warnings: generateWarningsForStep(ClaimSteps.leaveDetails),
   },
-  "Part 1 ready for submit": {
+  "Part 1 ready for review": {
     claim: new MockClaimBuilder().noOtherLeave().create(),
   },
-  "Part 1 submitted": {
+  "Part 1 submitted, payments not started": {
     claim: new MockClaimBuilder().noOtherLeave().submitted().create(),
     query: {
       "part-one-submitted": "true",
     },
   },
-  "Payment preference not started": {
-    claim: new MockClaimBuilder().submitted().create(),
+  "Part 2 submitted, no medical docs uploaded": {
+    claim: new MockClaimBuilder().paymentPrefSubmitted().submitted().create(),
     warnings: generateWarningsForStep(ClaimSteps.payment),
   },
-  "Medical leave docs missing": {
-    claim: new MockClaimBuilder().submitted().medicalLeaveReason().create(),
-  },
-  "Bonding leave docs missing for future newborn": {
+  "Proof of birth not uploaded (newborn)": {
     claim: new MockClaimBuilder()
-      .submitted()
-      .bondingBirthLeaveReason(futureBirthDate)
-      .create(),
-  },
-  "Bonding leave docs missing for futre adoption/foster": {
-    claim: new MockClaimBuilder()
-      .submitted()
-      .bondingAdoptionLeaveReason(futureBirthDate)
-      .create(),
-  },
-  "Bonding leave docs missing for newborn": {
-    claim: new MockClaimBuilder()
+      .paymentPrefSubmitted()
       .submitted()
       .bondingBirthLeaveReason()
       .create(),
   },
-  "Bonding leave docs missing for adoption/foster": {
+  "Proof of placement not uploaded (adoption/foster)": {
     claim: new MockClaimBuilder()
+      .paymentPrefSubmitted()
       .submitted()
       .bondingAdoptionLeaveReason()
       .create(),
   },
-  "Part 2 submitted": {
-    claim: new MockClaimBuilder().paymentPrefSubmitted().create(),
+  "Proof of birth not uploaded (future newborn)": {
+    claim: new MockClaimBuilder()
+      .paymentPrefSubmitted()
+      .submitted()
+      .bondingBirthLeaveReason()
+      .hasFutureChild()
+      .create(),
   },
-  "Ready for completion": {
+  "Proof of placement not uploaded (future adoption/foster)": {
+    claim: new MockClaimBuilder()
+      .paymentPrefSubmitted()
+      .submitted()
+      .bondingAdoptionLeaveReason()
+      .hasFutureChild()
+      .create(),
+  },
+  "Docs uploaded, ready to submit": {
     claim: new MockClaimBuilder().complete().create(),
     documents: [
       new Document({

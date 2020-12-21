@@ -1,52 +1,95 @@
 import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../src/models/EmployerBenefit";
+import PreviousLeave, {
+  PreviousLeaveReason,
+} from "../../src/models/PreviousLeave";
 import updateAmendments from "../../src/utils/updateAmendments";
 
 describe("updateAmendments", () => {
-  const partialBenefit = { id: 1, benefit_start_date: "new-start-date" };
-  const existingBenefit = new EmployerBenefit({
+  const END_DATE = "end-date";
+  const START_DATE = "start-date";
+  const NEW_START_DATE = "new-start-date";
+  const employerBenefit = new EmployerBenefit({
     benefit_amount_dollars: 1000,
-    benefit_end_date: "end-date",
-    benefit_start_date: "start-date",
+    benefit_end_date: END_DATE,
+    benefit_start_date: START_DATE,
     benefit_type: EmployerBenefitType.shortTermDisability,
-    id: 1,
+    employer_benefit_id: 1,
+  });
+  const previousLeave = new PreviousLeave({
+    leave_end_date: END_DATE,
+    leave_reason: PreviousLeaveReason.medical,
+    leave_start_date: START_DATE,
+    previous_leave_id: 2,
+  });
+  const benefitAmendment = {
+    employer_benefit_id: 1,
+    benefit_amount_dollars: 5000,
+  };
+  const leaveAmendment = {
+    previous_leave_id: 2,
+    leave_start_date: NEW_START_DATE,
+  };
+
+  describe("when the amendment is a valid type", () => {
+    it("returns modified array for employer benefits", () => {
+      const updatedBenefits = updateAmendments(
+        [employerBenefit],
+        benefitAmendment
+      );
+      const benefit = updatedBenefits[0];
+
+      expect(benefit instanceof EmployerBenefit).toEqual(true);
+      expect(benefit).toEqual({
+        ...employerBenefit,
+        benefit_amount_dollars: 5000,
+      });
+    });
+
+    it("returns modified array for previous leaves", () => {
+      const updatedLeaves = updateAmendments([previousLeave], leaveAmendment);
+      const leave = updatedLeaves[0];
+
+      expect(leave instanceof PreviousLeave).toEqual(true);
+      expect(leave).toEqual({
+        ...previousLeave,
+        leave_start_date: NEW_START_DATE,
+      });
+    });
   });
 
-  it("returns an array with updated values", () => {
-    const expectedBenefits = updateAmendments(
-      [existingBenefit],
-      partialBenefit
+  it("returns unmodified array with existing amendments if no amendedments are provided", () => {
+    const updatedBenefits = updateAmendments([employerBenefit], {});
+
+    expect(updatedBenefits).toEqual([employerBenefit]);
+  });
+
+  it("returns unmodified array with existing amendments if amendment is not instance of PreviousLeave or EmployerBenefit", () => {
+    const leaveWithoutPreviousLeaveType = {
+      leave_end_date: END_DATE,
+      leave_reason: PreviousLeaveReason.activeDutyFamily,
+      leave_start_date: START_DATE,
+    };
+    const updatedLeaves = updateAmendments(
+      [leaveWithoutPreviousLeaveType],
+      leaveAmendment
     );
 
-    const {
-      id,
-      benefit_type,
-      benefit_amount_dollars,
-      benefit_end_date,
-      benefit_start_date,
-    } = expectedBenefits[0];
-    expect(id).toEqual(1);
-    expect(benefit_type).toEqual(EmployerBenefitType.shortTermDisability);
-    expect(benefit_amount_dollars).toEqual(1000);
-    expect(benefit_end_date).toEqual("end-date");
-    expect(benefit_start_date).toEqual("new-start-date");
+    expect(updatedLeaves).toEqual([leaveWithoutPreviousLeaveType]);
   });
 
-  it("returns an array with existing values if no amended values are provided", () => {
-    const expectedBenefits = updateAmendments([existingBenefit], {});
+  it("returns unmodified array with existing amendments if id does not match", () => {
+    const benefitAmendment = {
+      employer_benefit_id: 2,
+      benefit_start_date: NEW_START_DATE,
+    };
 
-    expect(expectedBenefits).toEqual([existingBenefit]);
-  });
-
-  it("returns an array with existing values if id of amended value does not match", () => {
-    const partialBenefit = { id: 2, benefit_start_date: "new-start-date" };
-
-    const expectedBenefits = updateAmendments(
-      [existingBenefit],
-      partialBenefit
+    const updatedBenefits = updateAmendments(
+      [employerBenefit],
+      benefitAmendment
     );
 
-    expect(expectedBenefits).toEqual([existingBenefit]);
+    expect(updatedBenefits).toEqual([employerBenefit]);
   });
 });

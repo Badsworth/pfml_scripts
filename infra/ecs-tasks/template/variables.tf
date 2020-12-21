@@ -13,6 +13,10 @@ variable "vpc_id" {
   type        = string
 }
 
+variable "app_subnet_ids" {
+  description = "App subnet IDS."
+}
+
 variable "fineos_client_customer_api_url" {
   description = "URL of the FINEOS Customer API"
   type        = string
@@ -73,6 +77,12 @@ variable "fineos_eligibility_feed_output_directory_path" {
   default     = ""
 }
 
+variable "fineos_import_employee_updates_input_directory_path" {
+  description = "Location of the FINEOS extract to process into our DB."
+  type        = string
+  default     = null
+}
+
 variable "logging_level" {
   description = "Logging level override"
   type        = string
@@ -83,4 +93,10 @@ variable "cognito_user_pool_id" {
   description = "Cognito User Pool ID"
   type        = string
   default     = ""
+}
+
+variable "enable_recurring_payments_schedule" {
+  description = "Enable scheduling for payments-ctr-process ECS task"
+  type        = bool
+  default     = false
 }

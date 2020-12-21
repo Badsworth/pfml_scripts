@@ -39,10 +39,10 @@ env:
 jobs:
   prod-check:
     # run if environment is production
-    if: contains(github.ref, 'deploy/portal/prod')
     runs-on: ubuntu-latest
     steps:
       - name: check users
+        if: contains(github.ref, 'deploy/portal/prod')
         id: get_teams
         env:
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
@@ -62,16 +62,13 @@ jobs:
             }
 
       - name: fail if not a member
-        if: contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
+        if: contains(github.ref, 'deploy/portal/prod') && contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
         run: |
           echo "Not part of pfml-devops, cancelling workflow"
           exit 1
   update-the-deploy-branch:
     name: Update archival branch
     needs: prod-check
-    # if the prod-check job passses or is skipped, run the next jobs
-    if: ${{ always() }} && (needs.prod-check.result == 'skipped' || needs.prod-check.result == 'success')
-    
     runs-on: ubuntu-latest
 
     outputs:
@@ -139,7 +136,7 @@ jobs:
       - name: Sync S3 Bucket
         env:
           BUCKET_NAME: massgov-pfml-${{ env.portal_env }}-portal-site-builds
-          RELEASE_HASH: ${{ github.sha }}
+          RELEASE_HASH: ${{ steps.commit_and_push.outputs.commit_hash || github.sha }}
           NEXT_OUTPUT_DIR: ./portal/out
         run: |
           aws s3 sync $NEXT_OUTPUT_DIR s3://$BUCKET_NAME/$RELEASE_HASH/ --exclude "*.html" --cache-control max-age=31536000,public &&
@@ -150,7 +147,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [update-the-deploy-branch, deploy]
     env:
-      TF_VAR_cloudfront_origin_path: /${{ github.sha }}
+      TF_VAR_cloudfront_origin_path: /${{ steps.commit_and_push.outputs.commit_hash || github.sha }}
 
     steps:
       - uses: actions/checkout@v2
@@ -257,3 +254,5 @@ jobs:
           target_environment: ${{ env[github.ref] || 'test' }}
           cypress_tags: "Deploy,Deploy-Portal"
           github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          # Limit to "stable" suite for any environment but test.
+          only_stable: ${{ (env[github.ref] || 'test') == 'test' && 'false' || 'true' }}

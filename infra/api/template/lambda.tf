@@ -15,6 +15,14 @@ data "aws_s3_bucket" "lambda_build" {
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+resource "aws_lambda_alias" "cognito_pre_signup__latest" {
+  count            = var.cognito_enable_provisioned_concurrency ? 1 : 0
+  name             = "most_recent"
+  description      = "Most recent version of ${aws_lambda_function.cognito_pre_signup.function_name}"
+  function_name    = aws_lambda_function.cognito_pre_signup.function_name
+  function_version = aws_lambda_function.cognito_pre_signup.version
+}
+
 resource "aws_lambda_function" "cognito_pre_signup" {
   s3_bucket = data.aws_s3_bucket.lambda_build.bucket
   s3_key    = "cognito-pre-signup/${var.cognito_pre_signup_lambda_artifact_s3_key}"
@@ -27,7 +35,10 @@ resource "aws_lambda_function" "cognito_pre_signup" {
   function_name = "massgov-pfml-${var.environment_name}-cognito_pre_signup"
   handler       = "newrelic_lambda_wrapper.handler" # the entrypoint of the newrelic instrumentation layer
   runtime       = var.runtime_py
-  publish       = "false"
+
+  # New version publishes are needed for provisioned concurrency, but only in envs where that feature is enabled.
+  # TODO (API-910): Remove obsolete lambda versions on a regular schedule so we don't run out of storage space.
+  publish = var.cognito_enable_provisioned_concurrency
 
   # Cognito will only wait 5 seconds, so match that timeout here for
   # consistency.
@@ -58,15 +69,42 @@ resource "aws_lambda_function" "cognito_pre_signup" {
   })
 }
 
+# TODO: Temporary addition to avoid portal downtime. Remove after API-544 has been deployed to both API and Portal prod.
 resource "aws_lambda_permission" "allow_cognito_pre_signup" {
-  statement_id  = "AllowExecutionFromCognito"
+  statement_id  = "AllowDirectExecutionFromCognito"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.cognito_pre_signup.function_name
   principal     = "cognito-idp.amazonaws.com"
   source_arn    = var.cognito_user_pool_arn
 }
 
+resource "aws_lambda_permission" "allow_cognito_pre_signup_alias" {
+  count         = var.cognito_enable_provisioned_concurrency ? 1 : 0
+  statement_id  = "AllowAliasExecutionFromCognito"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cognito_pre_signup.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = var.cognito_user_pool_arn
+  qualifier     = aws_lambda_alias.cognito_pre_signup__latest[0].name
+}
+
+# Keep five instances of this lambda 'hot' at all times, subject to autoscaling policies (TBI in API-1024)
+resource "aws_lambda_provisioned_concurrency_config" "cognito_pre_signup_concurrency_settings" {
+  count                             = var.cognito_enable_provisioned_concurrency ? 1 : 0
+  qualifier                         = aws_lambda_alias.cognito_pre_signup__latest[0].name
+  function_name                     = aws_lambda_alias.cognito_pre_signup__latest[0].function_name
+  provisioned_concurrent_executions = 5
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_lambda_alias" "cognito_post_confirmation__latest" {
+  count            = var.cognito_enable_provisioned_concurrency ? 1 : 0
+  name             = "most_recent"
+  description      = "Most recent version of ${aws_lambda_function.cognito_post_confirmation.function_name}"
+  function_name    = aws_lambda_function.cognito_post_confirmation.function_name
+  function_version = aws_lambda_function.cognito_post_confirmation.version
+}
 
 resource "aws_lambda_function" "cognito_post_confirmation" {
   s3_bucket = data.aws_s3_bucket.lambda_build.bucket
@@ -80,7 +118,10 @@ resource "aws_lambda_function" "cognito_post_confirmation" {
   function_name = "massgov-pfml-${var.environment_name}-cognito_post_confirmation"
   handler       = "newrelic_lambda_wrapper.handler" # the entrypoint of the newrelic instrumentation layer
   runtime       = var.runtime_py
-  publish       = "false"
+
+  # New version publishes are needed for provisioned concurrency, but only in envs where that feature is enabled.
+  # TODO (API-910): Remove obsolete lambda versions on a regular schedule so we don't run out of storage space.
+  publish = var.cognito_enable_provisioned_concurrency
 
   # Cognito will only wait 5 seconds, so match that timeout here for
   # consistency.
@@ -118,12 +159,31 @@ resource "aws_lambda_function" "cognito_post_confirmation" {
   })
 }
 
+# TODO: Temporary addition to avoid portal downtime. Remove after API-544 has been deployed to both API and Portal prod.
 resource "aws_lambda_permission" "allow_cognito_post_confirmation" {
-  statement_id  = "AllowExecutionFromCognito"
+  statement_id  = "AllowDirectExecutionFromCognito"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.cognito_post_confirmation.function_name
   principal     = "cognito-idp.amazonaws.com"
   source_arn    = var.cognito_user_pool_arn
+}
+
+resource "aws_lambda_permission" "allow_cognito_post_confirmation_alias" {
+  count         = var.cognito_enable_provisioned_concurrency ? 1 : 0
+  statement_id  = "AllowAliasExecutionFromCognito"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cognito_post_confirmation.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = var.cognito_user_pool_arn
+  qualifier     = aws_lambda_alias.cognito_post_confirmation__latest[0].name
+}
+
+# Keep five instances of this lambda 'hot' at all times, subject to autoscaling policies (TBI in API-1024).
+resource "aws_lambda_provisioned_concurrency_config" "cognito_post_confirmation_concurrency_settings" {
+  count                             = var.cognito_enable_provisioned_concurrency ? 1 : 0
+  qualifier                         = aws_lambda_alias.cognito_post_confirmation__latest[0].name
+  function_name                     = aws_lambda_alias.cognito_post_confirmation__latest[0].function_name
+  provisioned_concurrent_executions = 5
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

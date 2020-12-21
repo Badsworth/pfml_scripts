@@ -14,6 +14,8 @@ interface E2EConfig {
   COGNITO_CLIENTID: string;
   PORTAL_USERNAME: string;
   PORTAL_PASSWORD: string;
+  EMPLOYER_PORTAL_USERNAME: string;
+  EMPLOYER_PORTAL_PASSWORD: string;
   API_BASEURL: string;
   FINEOS_BASEURL: string;
   FINEOS_USERNAME: string;

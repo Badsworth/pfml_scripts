@@ -34,7 +34,7 @@ from massgov.pfml.db.models.applications import (
     RelationshipQualifier,
     RelationshipToCaregiver,
 )
-from massgov.pfml.db.models.employees import Address, Country, Employer, PaymentMethod
+from massgov.pfml.db.models.employees import Address, Country, Employer, PaymentMethod, User
 from massgov.pfml.fineos.exception import FINEOSNotFound
 from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
 
@@ -95,7 +95,9 @@ def register_employee(
     return employee_external_id
 
 
-def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session) -> List[Issue]:
+def send_to_fineos(
+    application: Application, db_session: massgov.pfml.db.Session, current_user: Optional[User]
+) -> List[Issue]:
     """Send an application to FINEOS for processing."""
 
     issues = []
@@ -103,7 +105,7 @@ def send_to_fineos(application: Application, db_session: massgov.pfml.db.Session
     if application.employer_fein is None:
         raise ValueError("application.employer_fein is None")
 
-    customer = build_customer_model(application)
+    customer = build_customer_model(application, current_user)
     absence_case = build_absence_case(application)
     contact_details = build_contact_details(application)
 
@@ -274,7 +276,7 @@ def mark_single_document_as_received(
         raise ValueError("FINEOS API error")
 
 
-def build_customer_model(application):
+def build_customer_model(application, current_user):
     """Convert an application to a FINEOS API Customer model."""
     tax_identifier = application.tax_identifier.tax_identifier
     mass_id = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
@@ -283,6 +285,16 @@ def build_customer_model(application):
     confirmed = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
         name="Confirmed", booleanValue=True
     )
+    class_ext_info = [
+        mass_id,
+        confirmed,
+    ]
+    if current_user is not None:
+        consented_to_data_sharing = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+            name="ConsenttoShareData", booleanValue=current_user.consented_to_data_sharing
+        )
+        class_ext_info.append(consented_to_data_sharing)
+
     customer = massgov.pfml.fineos.models.customer_api.Customer(
         firstName=application.first_name,
         secondName=application.middle_name,
@@ -290,7 +302,7 @@ def build_customer_model(application):
         dateOfBirth=application.date_of_birth,
         # We have to send back the SSN as FINEOS wipes it from the Customer otherwise.
         idNumber=tax_identifier,
-        classExtensionInformation=[mass_id, confirmed,],
+        classExtensionInformation=class_ext_info,
     )
 
     # API-394: Residential address is added using updateCustomerDetails endpoint,
@@ -402,8 +414,6 @@ def build_absence_case(
             massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
                 startDate=leave_period.start_date,
                 endDate=leave_period.end_date,
-                lastDayWorked=leave_period.start_date,
-                expectedReturnToWorkDate=leave_period.end_date,
                 startDateFullDay=True,
                 endDateFullDay=True,
                 status=absence_period_status,

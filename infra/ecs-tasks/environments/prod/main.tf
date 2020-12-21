@@ -20,6 +20,7 @@ module "tasks" {
   environment_name   = "prod"
   service_docker_tag = local.service_docker_tag
   vpc_id             = data.aws_vpc.vpc.id
+  app_subnet_ids     = data.aws_subnet_ids.vpc_app.ids
 
   cognito_user_pool_id                       = "us-east-1_UwxnhD1cG"
   fineos_client_customer_api_url             = "https://prd-api.masspfml.fineos.com/customerapi/"
@@ -33,5 +34,7 @@ module "tasks" {
   fineos_aws_iam_role_arn         = "arn:aws:iam::133945341851:role/somprod-IAMRoles-CustomerAccountAccessRole-83KBPT56FTQP"
   fineos_aws_iam_role_external_id = "8jFBtjr4UA@"
 
-  fineos_eligibility_feed_output_directory_path = "s3://fin-somprod-data-import/PRD"
+  fineos_eligibility_feed_output_directory_path       = "s3://fin-somprod-data-import/PRD"
+  fineos_import_employee_updates_input_directory_path = "s3://fin-somprod-data-export/PRD/dataexports"
+  enable_recurring_payments_schedule                  = false
 }

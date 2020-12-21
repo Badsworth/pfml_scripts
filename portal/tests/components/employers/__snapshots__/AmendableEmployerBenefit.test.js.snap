@@ -85,6 +85,7 @@ exports[`AmendableEmployerBenefit renders the component 1`] = `
               ]
             }
             class="margin-top-0"
+            hideEmptyChoice={true}
             label="How often will they receive the benefit?"
             name="benefit-frequency-amendment"
             onChange={[Function]}

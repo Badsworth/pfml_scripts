@@ -24,14 +24,14 @@ describe("OtherIncomes", () => {
   });
 
   // MockClaimBuilder sets defaults for other_incomes_awaiting_approval to
-  // false and temp.has_other_incomes to true. The following 3 tests ensure
+  // false and has_other_incomes to true. The following 3 tests ensure
   // that making a selection calls handleHasOtherIncomesChange() and updates
   // both fields to the expected values.
   describe("when user selects a radio and clicks continue", () => {
     it("calls claims.update with expected API fields when user selects Yes", () => {
       const { changeRadioGroup } = simulateEvents(wrapper);
 
-      changeRadioGroup("temp.has_other_incomes", "yes");
+      changeRadioGroup("has_other_incomes", "yes");
 
       act(() => {
         wrapper.find("QuestionPage").simulate("save");
@@ -41,7 +41,7 @@ describe("OtherIncomes", () => {
         claim.application_id,
         {
           other_incomes_awaiting_approval: false,
-          temp: { has_other_incomes: true },
+          has_other_incomes: true,
         }
       );
     });
@@ -49,7 +49,7 @@ describe("OtherIncomes", () => {
     it("calls claims.update with expected API fields when user selects No", () => {
       const { changeRadioGroup } = simulateEvents(wrapper);
 
-      changeRadioGroup("temp.has_other_incomes", "no");
+      changeRadioGroup("has_other_incomes", "no");
 
       act(() => {
         wrapper.find("QuestionPage").simulate("save");
@@ -59,7 +59,7 @@ describe("OtherIncomes", () => {
         claim.application_id,
         {
           other_incomes_awaiting_approval: false,
-          temp: { has_other_incomes: false },
+          has_other_incomes: false,
         }
       );
     });
@@ -67,7 +67,7 @@ describe("OtherIncomes", () => {
     it("calls claims.update with expected API fields when user selects Not Yet", () => {
       const { changeRadioGroup } = simulateEvents(wrapper);
 
-      changeRadioGroup("temp.has_other_incomes", "pending");
+      changeRadioGroup("has_other_incomes", "pending");
 
       act(() => {
         wrapper.find("QuestionPage").simulate("save");
@@ -77,7 +77,7 @@ describe("OtherIncomes", () => {
         claim.application_id,
         {
           other_incomes_awaiting_approval: true,
-          temp: { has_other_incomes: false },
+          has_other_incomes: false,
         }
       );
     });

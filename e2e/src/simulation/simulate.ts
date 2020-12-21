@@ -13,6 +13,8 @@ import {
   IntermittentLeavePeriods,
   WorkPattern,
   PaymentPreference,
+  Address,
+  DayOfWeek,
 } from "../api";
 import generators from "./documents";
 import path from "path";
@@ -26,6 +28,7 @@ import {
   max as maxDate,
   min as minDate,
   differenceInDays,
+  format as formatDate,
 } from "date-fns";
 import { v4 as uuid } from "uuid";
 
@@ -56,6 +59,14 @@ type ScenarioDocumentConfiguration = {
   [P in keyof DocumentGenerators]?: Parameters<DocumentGenerators[P]>[1] & {
     mailed?: boolean;
   };
+};
+type IDCheckData = {
+  first_name?: string;
+  last_name?: string;
+  tax_identifier?: string;
+  employer_fein?: string;
+  DOB?: string;
+  massID?: string;
 };
 
 /**
@@ -89,6 +100,9 @@ export type ScenarioOpts = {
   work_pattern_type?: "standard" | "rotating_shift";
   // Makes a claim for an extremely short time period (1 day).
   shortClaim?: boolean;
+  // For ID-proofing
+  id_proof?: boolean;
+  id_check?: string;
 };
 
 export function scenario(
@@ -101,13 +115,18 @@ export function scenario(
     const hasMassId =
       _config.residence === "MA-proofed" ||
       _config.residence === "MA-unproofed";
+    let IDData: IDCheckData = {};
+
+    if (config.id_proof) {
+      IDData = getIDData(config.id_check as string);
+    }
 
     const employee = opts.employeeFactory(
       !!_config.financiallyIneligible,
       opts.employerFactory
     );
 
-    const address = {
+    const address: Address = {
       city: faker.address.city(),
       line_1: faker.address.streetAddress(),
       state: faker.address.stateAbbr(),
@@ -119,16 +138,32 @@ export function scenario(
       // These fields are brought directly over from the employee record.
       employment_status: "Employed",
       occupation: "Administrative",
-      first_name: employee.first_name,
-      last_name: employee.last_name,
-      tax_identifier: employee.tax_identifier,
-      employer_fein: employee.employer_fein,
-      date_of_birth: formatISO(generateBirthDate(), { representation: "date" }),
+      first_name: config.id_proof ? IDData.first_name : employee.first_name,
+      last_name: config.id_proof ? IDData.last_name : employee.last_name,
+      tax_identifier: config.id_proof
+        ? IDData.tax_identifier
+        : employee.tax_identifier,
+      employer_fein: config.id_proof
+        ? IDData.employer_fein
+        : employee.employer_fein,
+      date_of_birth: config.id_proof
+        ? IDData.DOB
+        : formatISO(generateBirthDate(), { representation: "date" }),
       has_state_id: hasMassId,
-      mass_id: hasMassId ? generateMassIDString() : null,
+      mass_id:
+        hasMassId || config.id_proof
+          ? generateMassIDString(
+              config.id_proof as boolean,
+              config.id_check as string
+            )
+          : null,
       has_mailing_address: true,
-      mailing_address: address,
-      residential_address: address,
+      mailing_address: config.id_proof
+        ? getIDCheckAddress(config.id_check as string)
+        : address,
+      residential_address: config.id_proof
+        ? getIDCheckAddress(config.id_check as string)
+        : address,
       hours_worked_per_week: 40,
       work_pattern: workPattern,
       phone: {
@@ -169,6 +204,81 @@ export type AgentOpts = {
   priorityTask?: string;
   claim?: ApplicationRequestBody;
 };
+
+export function getIDData(idCheck: string): IDCheckData {
+  switch (idCheck) {
+    case "valid":
+    case "mismatch":
+      return {
+        first_name: "John",
+        last_name: "Pinkham",
+        tax_identifier: "020-52-0105",
+        employer_fein: "77-4586523",
+        DOB: "1973-10-30",
+        massID: "S46493908",
+      };
+
+    case "fraud":
+      return {
+        first_name: "Willis",
+        last_name: "Sierra",
+        tax_identifier: "646-85-9053",
+        employer_fein: "77-4586523",
+        DOB: "1975-06-02",
+        massID: "SA2600200",
+      };
+
+    case "invalid":
+      return {
+        first_name: "Steve",
+        last_name: "Tester",
+        tax_identifier: "291-81-2020",
+        employer_fein: "77-4586523",
+        DOB: "1965-09-16",
+        massID: "SA0010000",
+      };
+
+    default:
+      throw new Error("No ID check Found!");
+  }
+}
+
+export function getIDCheckAddress(idCheck: string): Address {
+  switch (idCheck) {
+    case "valid":
+      return {
+        city: "ashfield",
+        line_1: "83g bear mountain dr",
+        state: "MA",
+        zip: "01330",
+      };
+
+    case "fraud":
+      return {
+        city: "lynn",
+        line_1: "42 murray st",
+        state: "MA",
+        zip: "01905",
+      };
+
+    case "invalid":
+      return {
+        city: "quincy",
+        line_1: "25 newport avenue ext",
+        state: "MA",
+        zip: "02171",
+      };
+
+    default:
+      return {
+        city: faker.address.city(),
+        line_1: faker.address.streetAddress(),
+        state: faker.address.stateAbbr(),
+        zip: faker.address.zipCode(),
+      };
+  }
+}
+
 // For LST purposes, some scenarios do not need a claim or documents to be generated
 export function agentScenario(
   name: string,
@@ -278,9 +388,11 @@ function generateWorkPattern(
 }
 
 function generateContinuousLeavePeriods(
-  shortLeave: boolean
+  shortLeave: boolean,
+  work_pattern: WorkPattern
 ): ContinuousLeavePeriods[] {
   const [startDate, endDate] = generateLeaveDates(
+    work_pattern,
     shortLeave ? { days: 1 } : undefined
   );
   return [
@@ -292,9 +404,11 @@ function generateContinuousLeavePeriods(
 }
 
 function generateIntermittentLeavePeriods(
-  shortLeave: boolean
+  shortLeave: boolean,
+  work_pattern: WorkPattern
 ): IntermittentLeavePeriods[] {
   const [startDate, endDate] = generateLeaveDates(
+    work_pattern,
     shortLeave ? { days: 7 } : undefined
   );
   const diffInDays = differenceInDays(endDate, startDate);
@@ -317,6 +431,7 @@ function generateReducedLeavePeriods(
   work_pattern: WorkPattern
 ): ReducedScheduleLeavePeriods[] {
   const [startDate, endDate] = generateLeaveDates(
+    work_pattern,
     shortLeave ? { days: 1 } : undefined
   );
   function getDayOffMinutes(dayName: string): number {
@@ -364,17 +479,19 @@ function generateLeaveDetails(
   work_pattern: WorkPattern
 ): ApplicationLeaveDetails {
   const { reason, reason_qualifier } = config;
+  const has_continuous_leave_periods =
+    config.has_continuous_leave_periods ||
+    (!config.has_reduced_schedule_leave_periods &&
+      !config.has_intermittent_leave_periods);
   const details: ApplicationLeaveDetails = {
-    continuous_leave_periods:
-      !config.has_reduced_schedule_leave_periods &&
-      !config.has_intermittent_leave_periods
-        ? generateContinuousLeavePeriods(!!config.shortClaim)
-        : [],
+    continuous_leave_periods: has_continuous_leave_periods
+      ? generateContinuousLeavePeriods(!!config.shortClaim, work_pattern)
+      : [],
     reduced_schedule_leave_periods: config.has_reduced_schedule_leave_periods
       ? generateReducedLeavePeriods(!!config.shortClaim, work_pattern)
       : [],
     intermittent_leave_periods: config.has_intermittent_leave_periods
-      ? generateIntermittentLeavePeriods(!!config.shortClaim)
+      ? generateIntermittentLeavePeriods(!!config.shortClaim, work_pattern)
       : [],
     pregnant_or_recent_birth: !!config.pregnant_or_recent_birth,
     employer_notified: true,
@@ -451,28 +568,53 @@ function makeChildPlacementDate(
 }
 
 // Generate a Mass ID string.
-function generateMassIDString(): string {
+function generateMassIDString(idProof: boolean, idCheck: string): string {
+  if (idProof) {
+    switch (idCheck) {
+      case "valid":
+        return "S46493908";
+    }
+  }
   return faker.random.arrayElement([
     faker.phone.phoneNumber("S########"),
     faker.phone.phoneNumber("SA#######"),
   ]);
 }
 
-// Generate start and end dates for a leave request, not to exceed 20 weeks, and with a minimum
-// start date of 2021-01-01.
-export function generateLeaveDates(duration?: Duration): [Date, Date] {
+/**
+ * Generate start and end dates for a leave request.
+ *
+ * Generated dates meet the following conditions:
+ *   * Start date > max(2021-01-01, today) and < today + 60 days
+ *   * End date < Start Date + 20 weeks.
+ *   * Start date will always fall on a work day for this employee.
+ */
+export function generateLeaveDates(
+  workPattern: WorkPattern,
+  duration?: Duration
+): [Date, Date] {
   // Start date must be greater than max(2021-01-01 or today).
   const minStartDate = maxDate([parseISO("2021-01-01"), new Date()]);
   // Start date must be < 60 days from the application date (now).
   const maxStartDate = addDays(new Date(), 60);
 
-  const startDate = faker.date.between(minStartDate, maxStartDate);
+  const workingDays = (workPattern.work_pattern_days || [])
+    .filter((day) => (day.minutes ?? 0) > 0)
+    .map((day) => day.day_of_week);
 
-  // If the claim is marked as "short leave", give it a 1 day length.
-  const addition = duration ?? {
-    weeks: faker.random.number({ min: 1, max: 11 }),
-  };
-  return [startDate, add(startDate, addition)];
+  let i = 0;
+  while (i++ < 100) {
+    const startDate = faker.date.between(minStartDate, maxStartDate);
+    // Leave dates MUST involve at least one day that falls in the work pattern.
+    if (workingDays.includes(formatDate(startDate, "iiii") as DayOfWeek)) {
+      // Allow duration overrides.
+      const addition = duration ?? {
+        weeks: faker.random.number({ min: 1, max: 11 }),
+      };
+      return [startDate, add(startDate, addition)];
+    }
+  }
+  throw new Error("Unable to generate leave dates for this employee");
 }
 
 // Generate an employer notification date based on the claim start date.

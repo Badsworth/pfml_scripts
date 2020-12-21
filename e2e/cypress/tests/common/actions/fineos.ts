@@ -1,4 +1,5 @@
 import { getFineosBaseUrl } from "../../../config";
+import { formatDateString } from "../util";
 
 export function loginSavilinx(): void {
   Cypress.config("baseUrl", getFineosBaseUrl());
@@ -10,7 +11,7 @@ export function visitClaim(claimId: string): void {
   cy.get('td[keytipnumber="4"]').contains("Case").click();
   cy.labelled("Case Number").type(claimId);
   cy.get('input[type="submit"][value="Search"]').click();
-  assertOnClaimPage();
+  assertOnClaimPage(claimId);
 }
 
 export function visitEmployer(fein: string): void {
@@ -40,27 +41,33 @@ export function commenceIntake(claimId: string): void {
   cy.contains("Capture the following details in order to commence intake");
 }
 
-export function assertOnClaimPage(): void {
-  cy.unstash("claimNumber")
-    .then((claimNumber) => {
-      if (typeof claimNumber === "string") {
-        return claimNumber;
-      } else {
-        throw new Error("Claim number must be a string.");
-      }
-    })
-    .then((claimNumber) => {
-      cy.get("[id*='processPhaseEnum']").should("contain.text", "Adjudication");
-      cy.get(".case_pageheader_title").contains(claimNumber);
-    });
+export function denyClaim(reason: string): void {
+  cy.get("input[type='submit'][value='Adjudicate']").click();
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  cy.get("input[type='submit'][value='Reject']").click({ force: true });
+  clickBottomWidgetButton("OK");
+
+  cy.get('a[title="Deny the Pending Leave Request"]').click();
+  cy.get('span[id="leaveRequestDenialDetailsWidget"]')
+    .find("select")
+    .select(reason);
+  cy.get('input[type="submit"][value="OK"]').click();
+  cy.get(".absenceProgressSummaryTitle").should("contain.text", "Completed");
+  cy.wait("@ajaxRender");
+  cy.wait(200);
 }
 
-export function assertOnClaimantPage(): void {
-  cy.unstash("firstName").then((firstName) => {
-    cy.unstash("lastName").then((lastName) => {
-      cy.contains("h2", firstName + " " + lastName);
-    });
-  });
+export function assertOnClaimPage(claimNumber: string): void {
+  cy.get("[id*='processPhaseEnum']").should("contain.text", "Adjudication");
+  cy.get(".case_pageheader_title").contains(claimNumber);
+}
+
+export function assertOnClaimantPage(
+  firstName: string,
+  lastName: string
+): void {
+  cy.contains("h2", `${firstName} ${lastName}`);
 }
 
 export function assertAdjudicatingClaim(claimId: string): void {
@@ -69,7 +76,6 @@ export function assertAdjudicatingClaim(claimId: string): void {
 }
 
 export function assertClaimApprovable(): void {
-  assertOnClaimPage();
   // Assert that we have all green checkboxes.
   cy.get(
     "[id*='leavePlanAdjudicationListviewWidgetApplicabilityStatus']"
@@ -101,41 +107,22 @@ export function assertClaimApprovable(): void {
   cy.contains(".menulink a", "Approve").should("be.visible");
 }
 
-export function searchScenario(): void {
-  cy.visit("/");
+export function searchScenario(claimNumber: string): void {
   cy.get('a[aria-label="Cases"]').click();
   cy.get('td[keytipnumber="4"]').contains("Case").click();
-
-  // For Testing (hard coded Claim Number)
-  // cy.labelled("Case Number").type("NTN-5390-ABS-01");
-
-  cy.unstash("claimNumber")
-    .as("claimNumber")
-    .then((claimNumber) => {
-      cy.labelled("Case Number").type(claimNumber as string);
-    });
+  cy.labelled("Case Number").type(claimNumber);
   cy.get('input[type="submit"][value="Search"]').click();
 }
 
-export function searchClaimant(): void {
-  cy.unstash("lastName").then((lastName) => {
-    cy.unstash("firstName").then((firstName) => {
-      cy.visit("/");
-      cy.get('a[aria-label="Parties"]').click();
-      cy.get("input[name*='First_Name']").type(firstName as string);
-      cy.get("input[name*='Last_Name']").type(lastName as string);
-      cy.get('input[type="submit"][value="Search"]').click();
-    });
-  });
+export function searchClaimant(firstName: string, lastName: string): void {
+  cy.get('a[aria-label="Parties"]').click();
+  cy.get("input[name*='First_Name']").type(firstName as string);
+  cy.get("input[name*='Last_Name']").type(lastName as string);
+  cy.get('input[type="submit"][value="Search"]').click();
 }
 
-export function findClaim(): void {
-  // For Testing (hard coded Claim Number)
-  // cy.get("h2 > span").should("contain.text", "NTN-5390-ABS-01");
-
-  cy.unstash("claimNumber").then((claimNumber) => {
-    cy.get("h2 > span").should("contain.text", claimNumber);
-  });
+export function findClaim(claimNumber: string): void {
+  cy.get("h2 > span").should("contain.text", claimNumber);
 }
 
 export function onPage(page: string): void {
@@ -363,4 +350,99 @@ export function approveClaim(): void {
     force: true,
   });
   cy.get(".key-info-bar .status").should("contain.text", "Approved");
+}
+
+export function findEmployerResponse(employerResponseComment: string): void {
+  cy.contains("a", "Employer Response to Leave Request").click();
+  cy.contains("textarea", employerResponseComment);
+}
+
+export function assertClaimHasLeaveAdminApproval(): void {
+  cy.contains("a[id^=nextActionsWidget]", "Employer Approval Received").click();
+}
+
+// @todo: This seems like it's doing a lot - is this really the whole claim workflow?
+// If so, we might want to name it submitClaim() to align with portal/API.
+export function createNotification(startDate: Date, endDate: Date): void {
+  cy.contains("span", "Create Notification").click();
+  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.contains(
+    "div",
+    "Bonding with a new child (adoption/ foster care/ newborn)"
+  )
+    .prev()
+    .find("input")
+    .click();
+  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.labelled("Qualifier 1").select("Foster Care");
+  cy.get("span[id='nextContainer']")
+    .first()
+    .find("input")
+    .click()
+    .wait("@ajaxRender");
+  cy.contains("div", "One or more fixed time off periods")
+    .prev()
+    .find("input[type='checkbox'][id*='continuousTimeToggle_CHECKBOX']")
+    .click({ force: true });
+  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.labelled("Absence status").select("Estimated");
+
+  cy.labelled("Absence start date").type(
+    `${formatDateString(startDate)}{enter}`
+  );
+  cy.labelled("Absence end date").type(`${formatDateString(endDate)}{enter}`, {
+    force: true,
+  });
+  cy.get(
+    "input[type='button'][id*='AddTimeOffAbsencePeriod'][value='Add']"
+  ).click();
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  cy.wait("@ajaxRender");
+  cy.get("span[id='nextContainer']")
+    .first()
+    .find("input")
+    .click()
+    .wait("@ajaxRender");
+  cy.get("span[id='nextContainer']")
+    .first()
+    .find("input")
+    .click()
+    .wait("@ajaxRender");
+  cy.get("span[id='nextContainer']")
+    .first()
+    .find("input")
+    .click()
+    .wait("@ajaxRender");
+  cy.contains("div", "Thank you. Your notification has been submitted.");
+}
+
+export function additionalEvidenceRequest(claimNumber: string): void {
+  assertOnClaimPage(claimNumber as string);
+  cy.get("input[type='submit'][value='Adjudicate']").click();
+  onTab("Evidence");
+  cy.get("input[type='submit'][value='Additional Information']").click();
+  cy.get(
+    "input[name*='healthcareProviderInformationIncompleteBoolean_CHECKBOX']"
+  ).click();
+  cy.get("input[name*='healthcareProviderInformationIncompleteText']").type(
+    "Wrote Physician requesting revised page 1."
+  );
+  cy.get("textarea[name*='missingInformationBox']").type(
+    "Please resubmit page 1 of the Healthcare Provider form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
+  );
+  clickBottomWidgetButton("OK");
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  clickBottomWidgetButton("OK");
+  cy.wait(200);
+  // cy.wait(90000);
+  // onTab("Documents");
+  // cy.get("tbody").within(() => {
+  //   cy.get("td > a[title='Request for more Information']").should(
+  //     "contain.text",
+  //     "Request for more Information"
+  //   );
+  // });
 }

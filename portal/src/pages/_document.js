@@ -1,5 +1,6 @@
 import Document, { Head, Html, Main, NextScript } from "next/document";
 import React from "react";
+import UnsupportedBrowserBanner from "../components/UnsupportedBrowserBanner";
 
 /**
  * Overrides the default Next.js Document so that we can customize the
@@ -37,6 +38,7 @@ class MyDocument extends Document {
           <meta name="robots" content="noindex" />
         </Head>
         <body>
+          <UnsupportedBrowserBanner />
           <Main />
           <NextScript />
         </body>

@@ -32,11 +32,6 @@ const flagsConfig = {
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
     claimantShowMilitaryLeaveTypes: false,
 
-    // When this flag is enabled, the user can see the "Have you taken paid or unpaid leave since January 1,
-    // 2021 for a qualifying reason?" question.
-    // TODO (CP-1247): Show previous leaves related questions
-    claimantShowPreviousLeaves: false,
-
     // Hide the entire "Other leave, income, and benefits" step of the Claim flow.
     // TODO (CP-1346): Show this step once it's been integrated w/ the API.
     claimantShowOtherLeaveStep: false,
@@ -52,6 +47,10 @@ const flagsConfig = {
     // When this flag is enabled, the "Previous leaves" section on Review page is visible
     // TODO (EMPLOYER-657): Show this section after 1/1
     employerShowPreviousLeaves: false,
+
+    // When this flag true, you can BYPASS maintenance pages that are currently present.
+    // See docs/portal/maintenance-pages.md for more details.
+    noMaintenance: false,
 
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this

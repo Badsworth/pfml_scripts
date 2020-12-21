@@ -19,6 +19,7 @@ module "tasks" {
   environment_name   = "performance"
   service_docker_tag = local.service_docker_tag
   vpc_id             = data.aws_vpc.vpc.id
+  app_subnet_ids     = data.aws_subnet_ids.vpc_app.ids
 
   cognito_user_pool_id                       = "us-east-1_0jv6SlemT"
   fineos_client_customer_api_url             = "https://perf-api.masspfml.fineos.com/customerapi/"
@@ -31,7 +32,8 @@ module "tasks" {
   fineos_aws_iam_role_arn         = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id = "12345"
 
-  fineos_eligibility_feed_output_directory_path = "s3://fin-somdev-data-import/PERF"
+  fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/PERF"
+  fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/PERF/dataexports"
 
   logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
 }

@@ -126,7 +126,7 @@ InputText.propTypes = {
    * you expect to be entered. Depending on the mask, the
    * field's appearance and functionality may be affected.
    */
-  mask: PropTypes.oneOf(["currency", "fein", "phone", "ssn", "zip"]),
+  mask: PropTypes.oneOf(["currency", "fein", "hours", "phone", "ssn", "zip"]),
   /**
    * Include functionality specific to Personally identifiable information (PII).
    * This will clear initial masked values on focus and reset

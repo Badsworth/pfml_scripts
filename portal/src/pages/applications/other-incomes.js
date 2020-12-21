@@ -11,7 +11,7 @@ import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
 export const fields = [
-  "claim.temp.has_other_incomes",
+  "claim.has_other_incomes",
   "claim.other_incomes_awaiting_approval",
 ];
 
@@ -30,17 +30,17 @@ export const OtherIncomes = (props) => {
   const handleHasOtherIncomesChange = (event) => {
     if (event.target.value === "yes") {
       updateFields({
-        "temp.has_other_incomes": true,
+        has_other_incomes: true,
         other_incomes_awaiting_approval: false,
       });
     } else if (event.target.value === "no") {
       updateFields({
-        "temp.has_other_incomes": false,
+        has_other_incomes: false,
         other_incomes_awaiting_approval: false,
       });
     } else if (event.target.value === "pending") {
       updateFields({
-        "temp.has_other_incomes": false,
+        has_other_incomes: false,
         other_incomes_awaiting_approval: true,
       });
     }
@@ -64,26 +64,26 @@ export const OtherIncomes = (props) => {
       onSave={handleSave}
     >
       <InputChoiceGroup
-        {...getFunctionalInputProps("temp.has_other_incomes")}
+        {...getFunctionalInputProps("has_other_incomes")}
         onChange={handleHasOtherIncomesChange}
         choices={[
           {
             checked:
-              formState.temp.has_other_incomes === true &&
+              formState.has_other_incomes === true &&
               formState.other_incomes_awaiting_approval === false,
             label: t("pages.claimsOtherIncomes.choiceYes"),
             value: "yes",
           },
           {
             checked:
-              formState.temp.has_other_incomes === false &&
+              formState.has_other_incomes === false &&
               formState.other_incomes_awaiting_approval === false,
             label: t("pages.claimsOtherIncomes.choiceNo"),
             value: "no",
           },
           {
             checked:
-              formState.temp.has_other_incomes === false &&
+              formState.has_other_incomes === false &&
               formState.other_incomes_awaiting_approval === true,
             label: t("pages.claimsOtherIncomes.choicePendingOtherIncomes"),
             value: "pending",

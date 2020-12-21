@@ -5,6 +5,8 @@ import tests.api
 from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import ClaimFactory, EmployerFactory
+from massgov.pfml.fineos.models.group_client_api import EFormAttribute
+from massgov.pfml.fineos.transforms.to_fineos.eforms import EFormBody
 
 
 def test_non_employers_cannot_download_documents(client, auth_token):
@@ -148,7 +150,7 @@ def test_non_employers_cannot_access_get_claim_review(client, auth_token):
 def test_employers_receive_200_from_get_claim_review(
     client, employer_user, employer_auth_token, test_db_session
 ):
-    employer = EmployerFactory.create(employer_fein="999999999")
+    employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
     ClaimFactory.create(
         employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01",
     )
@@ -171,7 +173,49 @@ def test_employers_receive_200_from_get_claim_review(
 
     assert response_data["follow_up_date"] == "2021-02-01"
     # This field is set in mock_client.py::get_customer_occupations
-    assert response_data["hours_worked_per_week"] == 40
+    assert response_data["hours_worked_per_week"] == 37.5
+    assert response_data["employer_dba"] == "Acme Co"
+    assert response_data["employer_fein"] == "99-9999999"
+    assert response_data["is_reviewable"]
+    # The fields below are set in mock_client.py::mock_customer_info
+    assert response_data["date_of_birth"] == "****-12-25"
+    assert response_data["tax_identifier"] == "***-**-1234"
+    assert response_data["residential_address"]["city"] == "Atlanta"
+    assert response_data["residential_address"]["line_1"] == "55 Trinity Ave."
+    assert response_data["residential_address"]["line_2"] == "Suite 3450"
+    assert response_data["residential_address"]["state"] == "GA"
+    assert response_data["residential_address"]["zip"] == "30303"
+
+
+@freeze_time("2020-12-07")
+def test_employers_with_int_hours_worked_per_week_receive_200_from_get_claim_review(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+    ClaimFactory.create(
+        employer_id=employer.employer_id, fineos_absence_id="int_fake_hours_worked_per_week",
+    )
+
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/employers/claims/int_fake_hours_worked_per_week/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+    response_data = response.get_json()["data"]
+
+    assert response.status_code == 200
+
+    assert response_data["follow_up_date"] == "2021-02-01"
+    # This field is set in mock_client.py::get_customer_occupations
+    assert response_data["hours_worked_per_week"] == 37
+    assert response_data["employer_dba"] == "Acme Co"
     assert response_data["employer_fein"] == "99-9999999"
     assert response_data["is_reviewable"]
     # The fields below are set in mock_client.py::mock_customer_info
@@ -274,7 +318,7 @@ def test_non_employees_cannot_access_employer_update_claim_review(client, auth_t
     assert response.status_code == 403
 
 
-def test_employers_receive_200_from_employer_update_claim_review(
+def test_employers_with_decimal_hours_receive_200_from_employer_update_claim_review(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
@@ -301,7 +345,99 @@ def test_employers_receive_200_from_employer_update_claim_review(
         "employer_decision": "Approve",
         "fraud": "Yes",
         "has_amendments": False,
-        "hours_worked_per_week": 0,
+        "hours_worked_per_week": 16.5,
+        "previous_leaves": [
+            {
+                "leave_end_date": "1970-01-01",
+                "leave_start_date": "1970-01-01",
+                "leave_reason": "Pregnancy / Maternity",
+            }
+        ],
+    }
+
+    response = client.patch(
+        "/v1/employers/claims/NTN-100-ABS-01/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=update_request_body,
+    )
+
+    assert response.status_code == 200
+
+
+def test_employers_with_integer_hours_receive_200_from_employer_update_claim_review(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    update_request_body = {
+        "comment": "string",
+        "employer_benefits": [
+            {
+                "benefit_amount_dollars": 0,
+                "benefit_amount_frequency": "Per Day",
+                "benefit_end_date": "1970-01-01",
+                "benefit_start_date": "1970-01-01",
+                "benefit_type": "Accrued paid leave",
+            }
+        ],
+        "employer_decision": "Approve",
+        "fraud": "Yes",
+        "has_amendments": False,
+        "hours_worked_per_week": 16,
+        "previous_leaves": [
+            {
+                "leave_end_date": "1970-01-01",
+                "leave_start_date": "1970-01-01",
+                "leave_reason": "Pregnancy / Maternity",
+            }
+        ],
+    }
+
+    response = client.patch(
+        "/v1/employers/claims/NTN-100-ABS-01/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=update_request_body,
+    )
+
+    assert response.status_code == 200
+
+
+def test_employers_with_null_hours_receive_200_from_employer_update_claim_review(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    update_request_body = {
+        "comment": "string",
+        "employer_benefits": [
+            {
+                "benefit_amount_dollars": 0,
+                "benefit_amount_frequency": "Per Day",
+                "benefit_end_date": "1970-01-01",
+                "benefit_start_date": "1970-01-01",
+                "benefit_type": "Accrued paid leave",
+            }
+        ],
+        "employer_decision": "Approve",
+        "fraud": "Yes",
+        "has_amendments": False,
+        "hours_worked_per_week": None,
         "previous_leaves": [
             {
                 "leave_end_date": "1970-01-01",
@@ -334,27 +470,13 @@ def test_employer_confirmation_sent_with_employer_update_claim_review(
     test_db_session.commit()
 
     update_request_body = {
-        "comment": "string",
-        "employer_benefits": [
-            {
-                "benefit_amount_dollars": 0,
-                "benefit_amount_frequency": "Per Day",
-                "benefit_end_date": "1970-01-01",
-                "benefit_start_date": "1970-01-01",
-                "benefit_type": "Accrued paid leave",
-            }
-        ],
+        "comment": "",
+        "employer_benefits": [],
         "employer_decision": "Approve",
         "fraud": "Yes",
         "has_amendments": False,
         "hours_worked_per_week": 0,
-        "previous_leaves": [
-            {
-                "leave_end_date": "1970-01-01",
-                "leave_start_date": "1970-01-01",
-                "leave_reason": "Pregnancy / Maternity",
-            }
-        ],
+        "previous_leaves": [],
     }
 
     massgov.pfml.fineos.mock_client.start_capture()
@@ -377,6 +499,93 @@ def test_employer_confirmation_sent_with_employer_update_claim_review(
                     informationType="Employer Confirmation of Leave Data"
                 ),
                 "case_id": "NTN-100-ABS-01",
+            },
+        ),
+    ]
+
+
+def test_create_eform_for_comment_with_employer_update_claim_review(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    update_request_body = {
+        "comment": "comment",
+        "employer_benefits": [],
+        "employer_decision": "Approve",
+        "fraud": "No",
+        "has_amendments": False,
+        "hours_worked_per_week": 0,
+        "previous_leaves": [],
+    }
+
+    massgov.pfml.fineos.mock_client.start_capture()
+
+    client.patch(
+        "/v1/employers/claims/NTN-100-ABS-01/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=update_request_body,
+    )
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+
+    assert capture == [
+        ("get_outstanding_information", "fake-fineos-web-id", {"case_id": "NTN-100-ABS-01"}),
+        (
+            "create_eform",
+            "fake-fineos-web-id",
+            {
+                "eform": EFormBody(
+                    eformType="Employer Response to Leave Request",
+                    eformId=None,
+                    eformAttributes=[
+                        EFormAttribute(
+                            name="Comment",
+                            booleanValue=None,
+                            dateValue=None,
+                            decimalValue=None,
+                            integerValue=None,
+                            stringValue="comment",
+                            enumValue=None,
+                        ),
+                        EFormAttribute(
+                            name="AverageWeeklyHoursWorked",
+                            booleanValue=None,
+                            dateValue=None,
+                            decimalValue=0,
+                            integerValue=None,
+                            stringValue=None,
+                            enumValue=None,
+                        ),
+                        EFormAttribute(
+                            name="EmployerDecision",
+                            booleanValue=None,
+                            dateValue=None,
+                            decimalValue=None,
+                            integerValue=None,
+                            stringValue="Approve",
+                            enumValue=None,
+                        ),
+                        EFormAttribute(
+                            name="Fraud1",
+                            booleanValue=None,
+                            dateValue=None,
+                            decimalValue=None,
+                            integerValue=None,
+                            stringValue="No",
+                            enumValue=None,
+                        ),
+                    ],
+                ),
+                "absence_id": "NTN-100-ABS-01",
             },
         ),
     ]
@@ -447,7 +656,7 @@ def test_employer_confirmation_is_not_sent(
     test_db_session.commit()
 
     update_request_body = {
-        "comment": "string",
+        "comment": "",
         "employer_benefits": [
             {
                 "benefit_amount_dollars": 0,
@@ -506,9 +715,12 @@ def test_employer_confirmation_is_not_sent(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture == [
-        ("get_outstanding_information", "fake-fineos-web-id", {"case_id": "NTN-100-ABS-01"},),
-    ]
+    assert capture[0] == (
+        "get_outstanding_information",
+        "fake-fineos-web-id",
+        {"case_id": "NTN-100-ABS-01"},
+    )
+    assert capture[1][0] == "create_eform"
 
     # confirmation is not sent if the claim is not approved
     update_request_body["has_amendments"] = False
@@ -524,6 +736,9 @@ def test_employer_confirmation_is_not_sent(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture == [
-        ("get_outstanding_information", "fake-fineos-web-id", {"case_id": "NTN-100-ABS-01"},),
-    ]
+    assert capture[0] == (
+        "get_outstanding_information",
+        "fake-fineos-web-id",
+        {"case_id": "NTN-100-ABS-01"},
+    )
+    assert capture[1][0] == "create_eform"

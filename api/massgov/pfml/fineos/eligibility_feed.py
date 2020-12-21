@@ -54,6 +54,7 @@ class EligibilityFeedExportConfig(BaseSettings):
     mode: EligibilityFeedExportMode = Field(
         EligibilityFeedExportMode.FULL, env="ELIGIBILITY_FEED_MODE"
     )
+    update_batch_size: int = Field(1000, env="ELIGIBILITY_FEED_UPDATE_BATCH_SIZE")
     bundle_count: PositiveInt = PositiveInt(1)  # Only applies to "full" mode currently
 
 
@@ -371,6 +372,7 @@ def process_employee_updates(
     fineos: AbstractFINEOSClient,
     output_dir_path: str,
     output_transport_params: Optional[OutputTransportParams] = None,
+    batch_size: int = 1000,
 ) -> EligibilityFeedExportReport:
     report = EligibilityFeedExportReport(started_at=utcnow().isoformat())
 
@@ -394,15 +396,15 @@ def process_employee_updates(
                 EmployeeLog.employee_id.notin_(unsuccessful_employee_ids),
             )
             .distinct(EmployeeLog.employee_id)
-            .limit(1000)
+            .limit(batch_size)
             .all()
         )
 
         if not updated_employee_ids or len(updated_employee_ids) == 0:
             break
 
-        with db_session.begin_nested():
-            update_batch_to_processing(db_session, updated_employee_ids, process_id)
+        update_batch_to_processing(db_session, updated_employee_ids, process_id)
+        db_session.commit()
 
         successfully_processed_employee_ids = process_employee_batch(
             db_session,
@@ -417,8 +419,8 @@ def process_employee_updates(
             updated_employee_ids.difference(successfully_processed_employee_ids)
         )
 
-        with db_session.begin_nested():
-            delete_processed_batch(db_session, successfully_processed_employee_ids, process_id)
+        delete_processed_batch(db_session, successfully_processed_employee_ids, process_id)
+        db_session.commit()
 
     if report.employers_total_count == 0:
         logger.info("Eligibility Feed: No updates found to process.")
@@ -931,15 +933,6 @@ def employee_to_eligibility_feed_record(
         record.managerIdentifier = occupation.manager_id
         record.occupationQualifier = occupation.occupation_qualifier
         record.employeeWorkSiteId = occupation.worksite_id
-
-    employee_address = employee.addresses.first()
-    if employee_address:
-        address = employee_address.address
-        record.addressType = AddressType(address.address_type.address_description)
-        record.addressAddressLine1 = address.address_line_one
-        record.addressCity = address.city
-        record.addressState = address.geo_state.geo_state_description
-        record.addressZipCode = address.zip_code
 
     if employee.phone_number:
         phone_number: Optional[PhoneNumber] = parse_phone_number(employee.phone_number)

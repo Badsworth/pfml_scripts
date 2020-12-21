@@ -8,6 +8,8 @@ import {
 } from "../SimulationStateTracker";
 import { SystemWideArgs } from "../../cli";
 import config from "../../config";
+import AuthenticationManager from "../AuthenticationManager";
+import { CognitoUserPool } from "amazon-cognito-identity-js";
 
 type SimulateArgs = {
   directory: string;
@@ -42,13 +44,17 @@ const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
   async handler(args) {
     const storage = new SimulationStorage(args.directory);
     args.logger.info(`Executing simulation plan from ${storage.claimFile}`);
-    const submitter = new PortalSubmitter({
-      UserPoolId: config("COGNITO_POOL"),
-      ClientId: config("COGNITO_CLIENTID"),
-      Username: config("PORTAL_USERNAME"),
-      Password: config("PORTAL_PASSWORD"),
-      ApiBaseUrl: config("API_BASEURL"),
-    });
+    const authenticator = new AuthenticationManager(
+      new CognitoUserPool({
+        UserPoolId: config("COGNITO_POOL"),
+        ClientId: config("COGNITO_CLIENTID"),
+      })
+    );
+    const submitter = new PortalSubmitter(authenticator, config("API_BASEURL"));
+    const credentials = {
+      username: config("PORTAL_USERNAME"),
+      password: config("PORTAL_PASSWORD"),
+    };
     const tracker = args.track
       ? new SimulationStateFileTracker(storage.stateFile)
       : new SimulationStateNullTracker();
@@ -56,7 +62,8 @@ const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
       storage,
       submitter,
       tracker,
-      args.logger.child({ from: "runner" })
+      args.logger.child({ from: "runner" }),
+      credentials
     );
     const profile = args.logger.startTimer();
     try {

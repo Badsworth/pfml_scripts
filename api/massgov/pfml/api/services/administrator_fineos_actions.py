@@ -3,6 +3,8 @@ import uuid
 from datetime import date, datetime
 from typing import Dict, List, Optional
 
+from sqlalchemy.orm.exc import MultipleResultsFound
+
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
@@ -35,8 +37,11 @@ DOWNLOADABLE_DOC_TYPES = [
     "employer response additional documentation",
 ]
 
-
 logger = logging.get_logger(__name__)
+
+
+class RegisterFINEOSDuplicateRecord(Exception):
+    pass
 
 
 def get_leave_details(absence_periods: Dict) -> LeaveDetails:
@@ -151,7 +156,7 @@ def download_document_as_leave_admin(
 
 
 def get_claim_as_leave_admin(
-    fineos_user_id: str, absence_id: str, employer_fein: str
+    fineos_user_id: str, absence_id: str, employer: Employer
 ) -> ClaimReviewResponse:
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
@@ -203,7 +208,8 @@ def get_claim_as_leave_admin(
         return ClaimReviewResponse(
             date_of_birth=customer_info["dateOfBirth"],
             employer_benefits=other_incomes,
-            employer_fein=employer_fein,
+            employer_fein=employer.employer_fein,
+            employer_dba=employer.employer_dba,
             fineos_absence_id=absence_id,
             first_name=customer_info["firstName"],
             hours_worked_per_week=hours_worked_per_week,
@@ -274,6 +280,13 @@ def register_leave_admin_with_fineos(
     except massgov.pfml.fineos.FINEOSClientError as error:
         logger.exception("FINEOS Client Exception", extra={"error": error})
         raise ValueError("FINEOS Client Exception")
+    except MultipleResultsFound as error:
+        logger.exception(
+            "Duplicate records found for UserLeaveAdministrator user_id %s",
+            user.user_id,
+            exc_info=error,
+        )
+        raise RegisterFINEOSDuplicateRecord("Duplicate User Leave Administrator records in db")
     except Exception as db_error:
         logger.exception("Error looking up leave admin from DB", extra={"error": db_error})
         raise ValueError("Error looking up leave admin from DB")

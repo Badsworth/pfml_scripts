@@ -38,3 +38,8 @@ export type notificationRequest = {
   employeeName: string;
   recipientEmail: string;
 };
+export type Submission = {
+  application_id: string;
+  fineos_absence_id: string;
+  timestamp_from: Date;
+};

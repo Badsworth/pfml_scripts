@@ -16,8 +16,10 @@ class Claim extends BaseClaim {
       ...super.defaults,
       employment_status: null,
       has_continuous_leave_periods: null,
+      has_employer_benefits: null,
       has_intermittent_leave_periods: null,
       has_mailing_address: null,
+      has_other_incomes: null,
       has_reduced_schedule_leave_periods: null,
       has_state_id: null,
       has_submitted_payment_preference: null,
@@ -48,10 +50,6 @@ class Claim extends BaseClaim {
        * this temporary space.
        */
       temp: {
-        // TODO (CP-567): this field doesn't exist in the API yet
-        has_employer_benefits: null,
-        // TODO (CP-567): this field doesn't exist in the API yet
-        has_other_incomes: null,
         // TODO (CP-567): this field doesn't exist in the API yet
         has_previous_leaves: null,
       },

@@ -1,5 +1,4 @@
 import {
-  StepFunction,
   TestSettings,
   Browser,
   beforeEach,
@@ -18,8 +17,8 @@ export const settings: TestSettings = {
   ...globalElementSettings,
   // These overrides are essential to any Flood.io deployment
   loopCount: -1,
-  actionDelay: 1,
-  stepDelay: 1,
+  actionDelay: 1, // needs to be 3 if running agents
+  stepDelay: 1, // needs to be 8 if running agents
 };
 
 export default (): void => {
@@ -45,7 +44,20 @@ export default (): void => {
       step.if(
         () => curr === scenario,
         `${scenario}: ${stepDef.name}`,
-        stepDef.test as StepFunction<unknown>
+        async (browser: Browser, data: LSTSimClaim) => {
+          try {
+            await stepDef.test(browser, data);
+          } catch (e) {
+            // Catch and log failures so we can detect them in the logs.
+            console.log(
+              `\n\nDetected fatal failure while running ${curr}: ${stepDef.name}`,
+              e,
+              "\n\n"
+            );
+            await browser.takeScreenshot();
+            throw e;
+          }
+        }
       );
     });
   });

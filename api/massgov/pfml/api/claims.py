@@ -85,8 +85,6 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
 
     claim_request: EmployerClaimReview = EmployerClaimReview.parse_obj(body)
 
-    transformed_eform = TransformEmployerClaimReview.to_fineos(claim_request)
-
     user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
 
     log_attributes = {
@@ -95,6 +93,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
         "claim_request.employer_decision": claim_request.employer_decision,
         "claim_request.fraud": claim_request.fraud,
         "claim_request.has_amendments": claim_request.has_amendments,
+        "claim_request.has_comment": str(bool(claim_request.comment)),
     }
 
     fineos_web_id = user_leave_admin.fineos_web_id
@@ -105,20 +104,27 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
     # can now use `fineos_web_id` as if it was non-None
 
     if not awaiting_leave_info(fineos_web_id, fineos_absence_id):
+        logger.error("No outstanding information request for claim", extra=log_attributes)
         return response_util.error_response(
             status_code=BadRequest,
             message="No outstanding information request for claim",
             errors=[
                 response_util.custom_issue(
-                    "fineos_client", "No outstanding information request for claim"
+                    "outstanding_information_request_required",
+                    "No outstanding information request for claim",
                 )
             ],
         ).to_api_response()
 
-    if claim_request.employer_decision == "Approve" and not claim_request.has_amendments:
+    if (
+        claim_request.employer_decision == "Approve"
+        and not claim_request.has_amendments
+        and not claim_request.comment
+    ):
         complete_claim_review(fineos_web_id, fineos_absence_id)
         logger.info("Completed claim review", extra=log_attributes)
     else:
+        transformed_eform = TransformEmployerClaimReview.to_fineos(claim_request)
         create_eform(fineos_web_id, fineos_absence_id, transformed_eform)
         logger.info("Created eform", extra=log_attributes)
 
@@ -144,7 +150,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
 
         claim = get_claim_as_leave_admin(
-            user_leave_admin.fineos_web_id, fineos_absence_id, employer.employer_fein  # type: ignore
+            user_leave_admin.fineos_web_id, fineos_absence_id, employer  # type: ignore
         )
         return response_util.success_response(
             message="Successfully retrieved claim", data=claim.dict(), status_code=200

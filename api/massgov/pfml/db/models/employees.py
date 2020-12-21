@@ -14,6 +14,7 @@ from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Nu
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Query, dynamic_loader, relationship
 from sqlalchemy.sql.expression import func
+from sqlalchemy.types import JSON
 
 from ..lookup import LookupTable
 from .base import Base, utc_timestamp_gen, uuid_gen
@@ -24,6 +25,16 @@ if TYPE_CHECKING:
     typed_hybrid_property = property
 else:
     from sqlalchemy.ext.hybrid import hybrid_property as typed_hybrid_property
+
+
+class LkAbsenceStatus(Base):
+    __tablename__ = "lk_absence_status"
+    absence_status_id = Column(Integer, primary_key=True, autoincrement=True)
+    absence_status_description = Column(Text)
+
+    def __init__(self, absence_status_id, absence_status_description):
+        self.absence_status_id = absence_status_id
+        self.absence_status_description = absence_status_description
 
 
 class LkAddressType(Base):
@@ -186,6 +197,16 @@ class LkTitle(Base):
         self.title_description = title_description
 
 
+class LkAgency(Base):
+    __tablename__ = "lk_agency"
+    agency_id = Column(Integer, primary_key=True, autoincrement=True)
+    agency_description = Column(Text)
+
+    def __init__(self, agency_id, agency_description):
+        self.agency_id = agency_id
+        self.agency_description = agency_description
+
+
 class AuthorizedRepresentative(Base):
     __tablename__ = "authorized_representative"
     authorized_representative_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -298,6 +319,7 @@ class Employee(Base):
     preferred_comm_method_type = Column(Text)
     date_of_birth = Column(Date)
     date_of_death = Column(Date)
+    fineos_customer_number = Column(Text, nullable=True)
     race_id = Column(Integer, ForeignKey("lk_race.race_id"))
     marital_status_id = Column(Integer, ForeignKey("lk_marital_status.marital_status_id"))
     gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
@@ -305,6 +327,7 @@ class Employee(Base):
     education_level_id = Column(Integer, ForeignKey("lk_education_level.education_level_id"))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
     mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), index=True)
+    payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     ctr_vendor_customer_code = Column(Text)
 
     title = relationship(LkTitle)
@@ -324,6 +347,7 @@ class Employee(Base):
     mailing_address = relationship("Address")
     eft = relationship("EFT", back_populates="employee", uselist=False)
     reference_files = relationship("EmployeeReferenceFile", back_populates="employee")
+    payment_method = relationship(LkPaymentMethod, foreign_keys=payment_method_id)
     tax_identifier = cast(
         Optional[TaxIdentifier], relationship("TaxIdentifier", back_populates="employee")
     )
@@ -354,11 +378,15 @@ class EmployeeLog(Base):
 class Claim(Base):
     __tablename__ = "claim"
     claim_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
     employer_id = Column(UUID(as_uuid=True), index=True)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
-    fineos_absence_id = Column(Text, index=True)
-    fineos_claim_number = Column(Text)
-    claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
+    fineos_absence_id = Column(Text, index=True, unique=True)
+    fineos_absence_status_id = Column(Integer, ForeignKey("lk_absence_status.absence_status_id"))
+    absence_period_start_date = Column(Date)
+    absence_period_end_date = Column(Date)
+    fineos_notification_id = Column(Text)
+    is_id_proofed = Column(Boolean)
 
     # Not sure if these are currently used.
     authorized_representative_id = Column(UUID(as_uuid=True))
@@ -366,6 +394,7 @@ class Claim(Base):
     benefit_days = Column(Integer)
 
     claim_type = relationship(LkClaimType)
+    fineos_absence_status = relationship(LkAbsenceStatus)
     employee = relationship("Employee", back_populates="claims")
 
 
@@ -380,8 +409,9 @@ class Payment(Base):
     period_end_date = Column(Date)
     payment_date = Column(Date)
     amount = Column(Numeric(asdecimal=True), nullable=False)
-    fineos_pei_c_value = Column(Text)
-    fineos_pei_i_value = Column(Text)
+    fineos_pei_c_value = Column(Text, index=True)
+    fineos_pei_i_value = Column(Text, index=True)
+    fineos_extraction_date = Column(Date)
     disb_check_eft_number = Column(Text)
     disb_check_eft_issue_date = Column(Date)
     disb_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
@@ -431,6 +461,28 @@ class Address(Base):
     health_care_providers: "Query[HealthCareProviderAddress]" = dynamic_loader(
         "HealthCareProviderAddress", back_populates="address"
     )
+
+
+class CtrDocumentIdentifier(Base):
+    __tablename__ = "ctr_document_identifier"
+    ctr_document_identifier_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    ctr_document_identifier = Column(Text, unique=True, index=True)
+
+    payment_reference_files = relationship(
+        "PaymentReferenceFile", back_populates="ctr_document_identifier"
+    )
+    employee_reference_files = relationship(
+        "EmployeeReferenceFile", back_populates="ctr_document_identifier"
+    )
+
+
+class CtrBatchIdentifier(Base):
+    __tablename__ = "ctr_batch_identifier"
+    ctr_batch_identifier_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    ctr_batch_identifier = Column(Text, unique=True, index=True)
+    inf_data = Column(JSON)
+
+    reference_files = relationship("ReferenceFile", back_populates="ctr_batch_identifier")
 
 
 class EmployeeAddress(Base):
@@ -558,18 +610,65 @@ class ImportLog(Base):
     end = Column(TIMESTAMP(timezone=True))
 
 
+class AgencyReductionPayment(Base):
+    __tablename__ = "agency_reduction_payment"
+    agency_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    absence_case_id = Column(Text, index=True)
+    agency_id = Column(Integer, ForeignKey("lk_agency.agency_id"), nullable=False)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
+    payment_issued_date = Column(TIMESTAMP(timezone=True), index=True)
+    gross_benefit_amount_cents = Column(Numeric)
+    net_benefit_amount_cents = Column(Numeric)
+    has_fraud_indicator = Column(Boolean)
+    benefit_week_start_date = Column(TIMESTAMP(timezone=True), index=True)
+    benefit_week_end_date = Column(TIMESTAMP(timezone=True), index=True)
+    benefit_year_start_date = Column(TIMESTAMP(timezone=True), index=True)
+    benefit_year_end_date = Column(TIMESTAMP(timezone=True), index=True)
+    created_at = Column(TIMESTAMP(timezone=True), index=True)
+
+    agency = relationship(LkAgency)
+    claim = relationship(Claim)
+    reference_file = relationship(
+        "AgencyReductionPaymentReferenceFile", back_populates="agency_reduction_payment"
+    )
+
+
 class ReferenceFile(Base):
     __tablename__ = "reference_file"
     reference_file_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    file_location = Column(Text, nullable=False)
+    file_location = Column(Text, index=True, unique=True, nullable=False)
     reference_file_type_id = Column(
-        Integer, ForeignKey("lk_reference_file_type.reference_file_type_id"), nullable=False
+        Integer, ForeignKey("lk_reference_file_type.reference_file_type_id"), nullable=True
+    )
+    ctr_batch_identifier_id = Column(
+        UUID(as_uuid=True), ForeignKey("ctr_batch_identifier"), nullable=True, index=True
     )
 
     reference_file_type = relationship(LkReferenceFileType)
     payments = relationship("PaymentReferenceFile", back_populates="reference_file")
     employees = relationship("EmployeeReferenceFile", back_populates="reference_file")
     state_logs = relationship("StateLog", back_populates="reference_file")
+    ctr_batch_identifier = relationship("CtrBatchIdentifier", back_populates="reference_files")
+    agency_reduction_payment = relationship(
+        "AgencyReductionPaymentReferenceFile", back_populates="reference_file"
+    )
+
+
+class AgencyReductionPaymentReferenceFile(Base):
+    __tablename__ = "link_agency_reduction_payment_reference_file"
+    reference_file_id = Column(
+        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), primary_key=True
+    )
+    agency_reduction_payment_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("agency_reduction_payment.agency_reduction_payment_id"),
+        primary_key=True,
+    )
+
+    reference_file = relationship("ReferenceFile", back_populates="agency_reduction_payment")
+    agency_reduction_payment = relationship(
+        "AgencyReductionPayment", back_populates="reference_file"
+    )
 
 
 class PaymentReferenceFile(Base):
@@ -578,11 +677,17 @@ class PaymentReferenceFile(Base):
     reference_file_id = Column(
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), primary_key=True
     )
-    ctr_document_id = Column(Text, index=True)
-    ctr_batch_id = Column(Text)
+    ctr_document_identifier_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("ctr_document_identifier.ctr_document_identifier_id"),
+        index=True,
+    )
 
     payment = relationship("Payment", back_populates="reference_files")
     reference_file = relationship("ReferenceFile", back_populates="payments")
+    ctr_document_identifier = relationship(
+        "CtrDocumentIdentifier", back_populates="payment_reference_files"
+    )
 
 
 class EmployeeReferenceFile(Base):
@@ -591,11 +696,17 @@ class EmployeeReferenceFile(Base):
     reference_file_id = Column(
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), primary_key=True
     )
-    ctr_document_id = Column(Text, index=True)
-    ctr_batch_id = Column(Text)
+    ctr_document_identifier_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("ctr_document_identifier.ctr_document_identifier_id"),
+        index=True,
+    )
 
     employee = relationship("Employee", back_populates="reference_files")
     reference_file = relationship("ReferenceFile", back_populates="employees")
+    ctr_document_identifier = relationship(
+        "CtrDocumentIdentifier", back_populates="employee_reference_files"
+    )
 
 
 class StateLog(Base):
@@ -616,6 +727,19 @@ class StateLog(Base):
     payment = relationship("Payment", back_populates="state_logs")
     reference_file = relationship("ReferenceFile", back_populates="state_logs")
     employee = relationship("Employee", back_populates="state_logs")
+
+
+class AbsenceStatus(LookupTable):
+    model = LkAbsenceStatus
+    column_names = ("absence_status_id", "absence_status_description")
+
+    ADJUDICATION = LkAbsenceStatus(1, "Adjudication")
+    APPROVED = LkAbsenceStatus(2, "Approved")
+    CLOSED = LkAbsenceStatus(3, "Closed")
+    COMPLETED = LkAbsenceStatus(4, "Completed")
+    DECLINED = LkAbsenceStatus(5, "Declined")
+    IN_REVIEW = LkAbsenceStatus(6, "In Review")
+    INTAKE_IN_PROGRESS = LkAbsenceStatus(7, "Intake In Progress")
 
 
 class AddressType(LookupTable):
@@ -1027,13 +1151,24 @@ class Flow(LookupTable):
     column_names = ("flow_id", "flow_description")
 
     PAYMENT = LkFlow(1, "Payment")
+    DUA_CLAIMANT_LIST = LkFlow(2, "DUA claimant list")
+    DIA_CLAIMANT_LIST = LkFlow(3, "DIA claimant list")
+    DUA_PAYMENT_LIST = LkFlow(4, "DUA payment list")
+    DIA_PAYMENT_LIST = LkFlow(5, "DIA payment list")
+    DFML_AGENCY_REDUCTION_REPORT = LkFlow(6, "DFML agency reduction report")
 
 
 class State(LookupTable):
     model = LkState
     column_names = ("state_id", "state_description")
 
-    VERIFY_VENDOR_STATUS = LkFlow(1, "Verify vendor status")
+    VERIFY_VENDOR_STATUS = LkState(1, "Verify vendor status")
+    CLAIMANT_LIST_CREATED = LkState(2, "Create claimant list for DIA")
+    CLAIMANT_LIST_SUBMITTED = LkState(3, "Submit claimant list to DIA")
+    PAYMENTS_RETRIEVED = LkState(4, "Payments retrieved")
+    PAYMENTS_STORED_IN_DB = LkState(5, "Payments stored in db")
+    DFML_REPORT_CREATED = LkState(6, " Create DFML report")
+    DFML_REPORT_SUBMITTED = LkState(7, "Submit DFML report")
 
 
 class ReferenceFileType(LookupTable):
@@ -1044,6 +1179,11 @@ class ReferenceFileType(LookupTable):
     VCC = LkReferenceFileType(2, "VCC")
     PAYMENT_EXTRACT = LkReferenceFileType(3, "Payment extract")
     VENDOR_CLAIM_EXTRACT = LkReferenceFileType(4, "Vendor claim extract")
+    DUA_CLAIMANT_LIST = LkReferenceFileType(5, "DUA claimant list")
+    DIA_CLAIMANT_LIST = LkReferenceFileType(6, "DIA claimant list")
+    DUA_PAYMENT_LIST = LkReferenceFileType(7, "DUA payment list")
+    DIA_PAYMENT_LIST = LkReferenceFileType(8, "DIA payment list")
+    DFML_AGENCY_REDUCTION_REPORT = LkReferenceFileType(9, "DFML agency reduction report")
 
 
 class Title(LookupTable):
@@ -1060,8 +1200,17 @@ class Title(LookupTable):
     SIR = LkTitle(8, "Sir")
 
 
+class Agency(LookupTable):
+    model = LkAgency
+    column_names = ("agency_id", "agency_description")
+
+    DIA = LkAgency(1, "Department of Industrial Accidents")
+    DUA = LkAgency(2, "Department of Unemployment Assistance")
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
+    AbsenceStatus.sync_to_database(db_session)
     AddressType.sync_to_database(db_session)
     GeoState.sync_to_database(db_session)
     Country.sync_to_database(db_session)
@@ -1073,5 +1222,9 @@ def sync_lookup_tables(db_session):
     Role.sync_to_database(db_session)
     PaymentMethod.sync_to_database(db_session)
     BankAccountType.sync_to_database(db_session)
+    ReferenceFileType.sync_to_database(db_session)
     Title.sync_to_database(db_session)
+    ReferenceFileType.sync_to_database(db_session)
+    State.sync_to_database(db_session)
+    Flow.sync_to_database(db_session)
     db_session.commit()

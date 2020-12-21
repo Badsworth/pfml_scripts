@@ -33,7 +33,7 @@ rm -rf ../scripts/index.perf.ts
 
 # build `.zip` flood bundle
 cd flood/
-zip -r ../../scripts/floodBundle.zip * -x '*index.perf.ts' '*tmp*' '*.git*' '*.md' '*.DS_Store'
+zip -r ../../scripts/floodBundle.zip * -x '*index.perf.ts' '*tmp*' '*claims_*' '*.git*' '*.md' '*.DS_Store'
 cd ..
 
 # copy index.perf.ts into scripts/ folder

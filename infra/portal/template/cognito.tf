@@ -25,10 +25,11 @@ resource "aws_cognito_user_pool" "claimants_pool" {
 
   sms_authentication_message = "Your authentication code is {####}. "
 
+  # Use aliases (for provisioned concurrency) in perf and prod. Elsewhere, use the lambda's $LATEST version directly.
   lambda_config {
     custom_message    = aws_lambda_function.cognito_custom_message.arn
-    post_confirmation = var.cognito_post_confirmation_lambda_arn
-    pre_sign_up       = var.cognito_pre_signup_lambda_arn
+    post_confirmation = var.cognito_enable_provisioned_concurrency ? data.aws_lambda_alias.cognito_post_confirmation__latest[0].arn : data.aws_lambda_function.cognito_post_confirmation[0].arn
+    pre_sign_up       = var.cognito_enable_provisioned_concurrency ? data.aws_lambda_alias.cognito_pre_signup__latest[0].arn : data.aws_lambda_function.cognito_pre_signup[0].arn
   }
 
   password_policy {
@@ -41,6 +42,9 @@ resource "aws_cognito_user_pool" "claimants_pool" {
   }
 
   user_pool_add_ons {
+    # Enable behavior like pevention of passwords in data breaches, or blocking of high risk login attempts.
+    # This is a broad on/off switch. Granular configuration of features like adaptive authentication's
+    # block/allow settings are currently configured directly through the AWS Console.
     advanced_security_mode = "ENFORCED"
   }
 
@@ -156,6 +160,7 @@ resource "aws_lambda_function" "cognito_custom_message" {
       NEW_RELIC_TRUSTED_ACCOUNT_KEY         = "1606654"        # EOLWD parent account
       NEW_RELIC_LAMBDA_HANDLER              = "lambda.handler" # the actual lambda entrypoint
       NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
+      PORTAL_DOMAIN                         = module.constants.cert_domains[var.environment_name]
     }
   }
 

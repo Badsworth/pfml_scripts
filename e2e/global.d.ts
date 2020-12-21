@@ -12,6 +12,9 @@ type Application = import("./src/types").Application;
 type Credentials = import("./src/types").Credentials;
 type SimulationClaim = import("./src/simulation/types").SimulationClaim;
 type ApplicationRequestBody = import("./src/api").ApplicationRequestBody;
+type waitForClaimDocuments = import("./cypress/plugins/DocumentWaiter").default["waitForClaimDocuments"];
+type Email = import("./cypress/plugins/TestMailClient").Email;
+type GetEmailsOpts = import("./cypress/plugins/TestMailClient").GetEmailsOpts;
 type Result = import("pdf-parse").Result;
 
 declare namespace Cypress {
@@ -33,26 +36,29 @@ declare namespace Cypress {
       application: App
     ): Chainable<App & Pick<Application, claim>>;
     stash(key: string, value: unknown): null;
-    unstash(key: string): Chainable<unknown>;
+    unstash<T extends unknown>(key: string): Chainable<T>;
     // Declare our custom tasks.
     stashLog(key: string, value: string | null | undefined): null;
     task(
       event: "generateClaim",
       { claimType: string, employeeType: string }
     ): Chainable<SimulationClaim>;
-    task(
-      event: "getNotification",
-      notificationRequestData: notificationRequest
-    ): Chainable<{ [key: string]: string }>;
+
     task(event: "getAuthVerification", mail: string): Chainable<string>;
-    task(event: "generateCredentials", isEmployer: boolean): Chainable<Credentials>;
+    task(
+      event: "generateCredentials",
+      isEmployer: boolean
+    ): Chainable<Credentials>;
     task(event: "noticeReader", noticeType: string): Chainable<Result>;
-    task(event: "generateEmployerUsername"): Chainable<string>;
     task(
       event: "submitClaimToAPI",
-      options: ApplicationRequestBody
+      options: SimulationClaim
     ): Chainable<PartialResponse>;
     task(event: "createContinuousLeaveDates"): Chainable<Date[]>;
+    task(event: "getEmails", opts: GetEmailsOpts): Chainable<Email[]>;
+    task(event: "registerClaimant", options: Credentials): Chainable<true>;
+    task(event: "registerLeaveAdmin", options: Credentials & {fein: string}): Chainable<true>;
+    task(event: "waitForClaimDocuments", options: Parameters<waitForClaimDocuments>[0]): Chainable<boolean>;
   }
 }
 

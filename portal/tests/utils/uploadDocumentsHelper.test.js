@@ -43,4 +43,13 @@ describe("uploadDocumentsHelper", () => {
     );
     expect(result).toEqual({ success: true });
   });
+
+  it("returns success = false when uploadPromises is undefined", async () => {
+    const result = await uploadDocumentsHelper(
+      undefined,
+      filesWithUniqueId,
+      setFiles
+    );
+    expect(result).toEqual({ success: false });
+  });
 });

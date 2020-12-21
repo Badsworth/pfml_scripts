@@ -38,33 +38,11 @@ exports[`Header includes a Skip Nav link as its first link 1`] = `
 </Fragment>
 `;
 
-exports[`Header passes the user into AuthNav 1`] = `
+exports[`Header renders Header for logged in claimant 1`] = `
 <Fragment>
-  <div
-    className="bg-base-lightest"
-  >
-    <div
-      className="c-beta-banner"
-    >
-      <span
-        className="display-inline-block bg-secondary margin-right-1 padding-x-2 text-bold text-white"
-      >
-        Beta
-      </span>
-      <Trans
-        components={
-          Object {
-            "user-feedback-link": <a
-              href="https://www.mass.gov/paidleave-claimant-feedback"
-              rel="noopener"
-              target="_blank"
-            />,
-          }
-        }
-        i18nKey="pages.app.betaBannerText"
-      />
-    </div>
-  </div>
+  <BetaBanner
+    feedbackUrl="https://www.mass.gov/paidleave-claimant-feedback"
+  />
   <HeaderSlim
     siteLogo={
       <SiteLogo
@@ -96,8 +74,13 @@ exports[`Header passes the user into AuthNav 1`] = `
       <AuthNav
         onLogout={[MockFunction]}
         user={
-          Object {
-            "username": "Foo Bar",
+          User {
+            "auth_id": null,
+            "consented_to_data_sharing": null,
+            "email_address": "email@address.com",
+            "roles": Array [],
+            "status": null,
+            "user_id": "mock-user-id",
           }
         }
       />

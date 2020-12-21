@@ -66,11 +66,14 @@ export const Review = (props) => {
     formState.employeeNotice === "No";
 
   useEffect(() => {
+    // Generate id based on index for employer benefit, previous leave (id is not provided by BE)
     const indexedEmployerBenefits = claim.employer_benefits.map(
-      (benefit, index) => new EmployerBenefit({ id: index, ...benefit })
+      (benefit, index) =>
+        new EmployerBenefit({ employer_benefit_id: index, ...benefit })
     );
     const indexedPreviousLeaves = claim.previous_leaves.map(
-      (leave, index) => new PreviousLeave({ id: index, ...leave })
+      (leave, index) =>
+        new PreviousLeave({ previous_leave_id: index, ...leave })
     );
     if (claim) {
       updateFields({
@@ -123,14 +126,22 @@ export const Review = (props) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const amendedHours = parseInt(formState.amendedHours);
+    const amendedHours = formState.amendedHours;
     const previous_leaves = formState.amendedLeaves.map((leave) =>
       pick(leave, ["leave_end_date", "leave_start_date"])
     );
-
+    const employer_benefits = formState.amendedBenefits.map((benefit) =>
+      pick(benefit, [
+        "benefit_amount_dollars",
+        "benefit_amount_frequency",
+        "benefit_end_date",
+        "benefit_start_date",
+        "benefit_type",
+      ])
+    );
     const payload = {
       comment: formState.comment,
-      employer_benefits: formState.employerBenefits,
+      employer_benefits,
       employer_decision: formState.employerDecision,
       fraud: formState.fraud,
       hours_worked_per_week: amendedHours,

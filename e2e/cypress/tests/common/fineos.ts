@@ -13,7 +13,7 @@ Then("I should be able to find claim in Adjudication", () => {
   cy.get<string>("@claimNumber").then(fineos.visitClaim);
 
   // For Testing
-  // fineos.visitClaim("NTN-7720-ABS-01")
+  // fineos.visitClaim("NTN-4368-ABS-01")
 });
 
 Then("I should be able to find employer page", () => {
@@ -41,22 +41,10 @@ Given("I am viewing claim {string}", (claimId: string) => {
 });
 
 When("I start adjudication for the claim", () => {
-  fineos.assertOnClaimPage();
+  cy.unstash<string>("claimNumber").then((claimNumber) => {
+    fineos.assertOnClaimPage(claimNumber);
+  });
   cy.get("input[type='submit'][value='Adjudicate']").click();
-});
-
-Then("I should reject the plan", () => {
-  fineos.assertOnClaimPage();
-  cy.get("input[type='submit'][value='Adjudicate']").click();
-  cy.wait("@ajaxRender");
-  cy.wait(200);
-  cy.get("input[type='submit'][value='Reject']").click();
-  fineos.clickBottomWidgetButton();
-});
-
-Given("I complete claim Denial for {string}", function (reason: string): void {
-  fineos.clickDeny();
-  fineos.denialReason(reason);
 });
 
 When("I add paid benefits to the current case", () => {
@@ -133,95 +121,10 @@ Then("I can commence intake on that claim", () => {
   cy.get<string>("@claimNumber").then(fineos.commenceIntake);
 });
 
-Given(
-  "I find an employee in the FINEOS system",
-  (claimType = "BHAP1", employeeType = "financially eligible") => {
-    cy.task("generateClaim", {
-      claimType: claimType,
-      employeeType: employeeType,
-    }).then((claim?: SimulationClaim) => {
-      if (!claim) {
-        throw new Error("Claim Was Not Generated");
-      }
-      cy.log("generated claim", claim.claim);
-      cy.stashLog("firstName", claim.claim.first_name);
-      cy.stashLog("lastName", claim.claim.last_name);
-    });
-  }
-);
-
-Then(
-  "I begin to submit a new claim on that employee in FINEOS",
-  function (): void {
-    fineos.loginSavilinx();
-    fineos.searchClaimant();
-    fineos.clickBottomWidgetButton("OK");
-    fineos.assertOnClaimantPage();
-  }
-);
-
-Then("I start create a new notification", function (): void {
-  cy.contains("span", "Create Notification").click();
-  cy.get("span[id='nextContainer']").first().find("input").click();
-  cy.get("span[id='nextContainer']").first().find("input").click();
-  cy.contains(
-    "div",
-    "Bonding with a new child (adoption/ foster care/ newborn)"
-  )
-    .prev()
-    .find("input")
-    .click();
-  cy.get("span[id='nextContainer']").first().find("input").click();
-  cy.labelled("Qualifier 1").select("Foster Care");
-  cy.get("span[id='nextContainer']")
-    .first()
-    .find("input")
-    .click()
-    .wait("@ajaxRender");
-  cy.contains("div", "One or more fixed time off periods")
-    .prev()
-    .find("input[type='checkbox'][id*='continuousTimeToggle_CHECKBOX']")
-    .click({ force: true });
-  cy.get("span[id='nextContainer']").first().find("input").click();
-  cy.labelled("Absence status").select("Estimated");
-  cy.task("createContinuousLeaveDates").then((leaveDates?: Date[]) => {
-    if (!leaveDates) {
-      throw new Error("Leave dates are not defined.");
-    }
-    const [startdate, endDate] = leaveDates.map((date) =>
-      formatDateString(date)
-    );
-    cy.labelled("Absence start date").type(`${startdate}{enter}`);
-    cy.labelled("Absence end date").type(`${endDate}{enter}`, { force: true });
-    cy.get(
-      "input[type='button'][id*='AddTimeOffAbsencePeriod'][value='Add']"
-    ).click();
-    cy.wait("@ajaxRender");
-    cy.wait(200);
-    cy.wait("@ajaxRender");
-    cy.get("span[id='nextContainer']")
-      .first()
-      .find("input")
-      .click()
-      .wait("@ajaxRender");
-    cy.get("span[id='nextContainer']")
-      .first()
-      .find("input")
-      .click()
-      .wait("@ajaxRender");
-    cy.get("span[id='nextContainer']")
-      .first()
-      .find("input")
-      .click()
-      .wait("@ajaxRender");
-    cy.contains("div", "Thank you. Your notification has been submitted.");
-  });
-});
-
 Then(
   "I should modify leave dates for the requested time off",
   function (): void {
-    cy.get<string>("@claimNumber").then(fineos.assertAdjudicatingClaim);
+    cy.unstash<string>("claimNumber").then(fineos.assertAdjudicatingClaim);
     cy.get("#leaveRequestDetailsWidget_un18_startDate").then((dateEl) => {
       cy.wrap(dateEl.text()).as("startDate");
     });
@@ -275,4 +178,40 @@ Then("I should confirm proper tasks have been created", function (): void {
     "ID Review"
   );
   fineos.onTab("Absence Hub");
+});
+
+Then("I confirm proper RMV ID status as {string}", function (
+  RMVStatus: string
+): void {
+  let statusText = "";
+  switch (RMVStatus) {
+    case "valid":
+      statusText = "Verification check passed";
+      cy.get("div[id*='identificationStatus']").should(
+        "contain.text",
+        statusText
+      );
+      break;
+
+    case "invalid":
+    case "fraud":
+      statusText =
+        "Verification failed because no record could be found for given ID information";
+      cy.get("div[id*='identificationStatus']").should(
+        "contain.text",
+        statusText
+      );
+      break;
+
+    case "mismatch":
+      statusText = "Verification failed because ID number mismatch";
+      cy.get("div[id*='identificationStatus']").should(
+        "contain.text",
+        statusText
+      );
+      break;
+
+    default:
+      throw new Error("RMV Status Type not found!");
+  }
 });

@@ -7,6 +7,7 @@ import path from "path";
 import winston from "winston";
 import SimulationStateTracker from "./SimulationStateTracker";
 import delay from "delay";
+import { Credentials } from "../types";
 
 /**
  * This class is responsible for executing a business simulation.
@@ -16,17 +17,20 @@ export default class SimulationRunner {
   submitter: PortalSubmitter;
   logger: winston.Logger;
   tracker: SimulationStateTracker;
+  credentials: Credentials;
 
   constructor(
     storage: SimulationStorage,
     submitter: PortalSubmitter,
     tracker: SimulationStateTracker,
-    logger: winston.Logger
+    logger: winston.Logger,
+    credentials: Credentials
   ) {
     this.storage = storage;
     this.submitter = submitter;
     this.tracker = tracker;
     this.logger = logger;
+    this.credentials = credentials;
   }
 
   async run(delaySeconds = 0): Promise<void> {
@@ -95,6 +99,7 @@ export default class SimulationRunner {
         `Submitting claim with ${submittedDocuments.length} documents`
       );
       const responseIds = await this.submitter.submit(
+        this.credentials,
         claim.claim,
         submittedDocuments.map(
           makeDocUploadBody(this.storage.documentDirectory, "Automated Upload")

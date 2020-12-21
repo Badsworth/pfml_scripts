@@ -1,10 +1,5 @@
-# Set up a terraform bucket for each environment.
-#
-locals {
-  # When you need a new environment bucket, add your environment name here.
-  # The for_each logic below will automagically define your S3 bucket, so you
-  # can go straight to running terraform apply.
-  environments = ["test", "stage", "prod", "performance"]
+data "aws_s3_bucket" "agency_transfer" {
+  bucket = "massgov-pfml-${var.environment_name}-agency-transfer"
 }
 
 # Create S3 buckets to load / store ad-hoc verification files
@@ -12,15 +7,9 @@ locals {
 # This the location where files to be run in the ad-hoc verification process
 # ought to be sourced / loaded from and exported to
 #
-
-data "aws_s3_bucket" "agency_transfer" {
-  bucket = "massgov-pfml-${var.environment_name}-agency-transfer"
-}
-
 resource "aws_s3_bucket" "ad_hoc_verification" {
-  for_each = toset(local.environments)
-  bucket   = "massgov-pfml-${each.key}-verification-codes"
-  acl      = "private"
+  bucket = "massgov-pfml-${var.environment_name}-verification-codes"
+  acl    = "private"
 
   server_side_encryption_configuration {
     rule {
@@ -31,16 +20,15 @@ resource "aws_s3_bucket" "ad_hoc_verification" {
   }
 
   tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[each.key]
-    Name        = "massgov-pfml-${each.key}-verification-codes"
+    environment = module.constants.environment_tags[var.environment_name]
+    Name        = "massgov-pfml-${var.environment_name}-verification-codes"
     public      = "no"
   })
 }
 
 resource "aws_s3_bucket" "bulk_user_import" {
-  for_each = toset(local.environments)
-  bucket   = "massgov-pfml-${each.key}-bulk-user-import"
-  acl      = "private"
+  bucket = "massgov-pfml-${var.environment_name}-bulk-user-import"
+  acl    = "private"
 
   server_side_encryption_configuration {
     rule {
@@ -51,16 +39,15 @@ resource "aws_s3_bucket" "bulk_user_import" {
   }
 
   tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[each.key]
-    Name        = "massgov-pfml-${each.key}-bulk-user-import"
+    environment = module.constants.environment_tags[var.environment_name]
+    Name        = "massgov-pfml-${var.environment_name}-bulk-user-import"
     public      = "no"
   })
 }
 
 resource "aws_s3_bucket" "execute_sql_export" {
-  for_each = toset(local.environments)
-  bucket   = "massgov-pfml-${each.key}-execute-sql-export"
-  acl      = "private"
+  bucket = "massgov-pfml-${var.environment_name}-execute-sql-export"
+  acl    = "private"
 
   server_side_encryption_configuration {
     rule {
@@ -71,15 +58,14 @@ resource "aws_s3_bucket" "execute_sql_export" {
   }
 
   tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[each.key]
-    Name        = "massgov-pfml-${each.key}-execute-sql-export"
+    environment = module.constants.environment_tags[var.environment_name]
+    Name        = "massgov-pfml-${var.environment_name}-execute-sql-export"
     public      = "no"
   })
 }
 
 resource "aws_s3_bucket_public_access_block" "verification_codes_block_public_access" {
-  for_each = toset(local.environments)
-  bucket   = aws_s3_bucket.ad_hoc_verification[each.key].id
+  bucket = aws_s3_bucket.ad_hoc_verification.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -88,8 +74,7 @@ resource "aws_s3_bucket_public_access_block" "verification_codes_block_public_ac
 }
 
 resource "aws_s3_bucket_public_access_block" "user_import_block_public_access" {
-  for_each = toset(local.environments)
-  bucket   = aws_s3_bucket.bulk_user_import[each.key].id
+  bucket = aws_s3_bucket.bulk_user_import.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -98,8 +83,7 @@ resource "aws_s3_bucket_public_access_block" "user_import_block_public_access" {
 }
 
 resource "aws_s3_bucket_public_access_block" "sql_export_block_public_access" {
-  for_each = toset(local.environments)
-  bucket   = aws_s3_bucket.execute_sql_export[each.key].id
+  bucket = aws_s3_bucket.execute_sql_export.id
 
   block_public_acls       = true
   block_public_policy     = true

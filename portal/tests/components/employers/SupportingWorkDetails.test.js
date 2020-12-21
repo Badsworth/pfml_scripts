@@ -49,4 +49,32 @@ describe("SupportingWorkDetails", () => {
 
     expect(props.onChange).toHaveBeenCalledTimes(2);
   });
+
+  it("formats empty, zero, invalid amount values to 0", () => {
+    wrapper.find(ReviewRow).first().dive(3).find(AmendButton).simulate("click");
+    wrapper.find(InputText).simulate("change", { target: { value: "" } });
+    expect(props.onChange).toHaveBeenCalledWith(0);
+
+    wrapper.find(InputText).simulate("change", { target: { value: "0" } });
+    expect(props.onChange).toHaveBeenCalledWith(0);
+
+    wrapper.find(InputText).simulate("change", { target: { value: "hello" } });
+    expect(props.onChange).toHaveBeenCalledWith(0);
+  });
+
+  it("formats decimal amount values", () => {
+    wrapper.find(ReviewRow).first().dive(3).find(AmendButton).simulate("click");
+    wrapper
+      .find(InputText)
+      .simulate("change", { target: { value: "100.5000" } });
+
+    expect(props.onChange).toHaveBeenCalledWith(100.5);
+  });
+
+  it("formats amount values without commas", () => {
+    wrapper.find(ReviewRow).first().dive(3).find(AmendButton).simulate("click");
+    wrapper.find(InputText).simulate("change", { target: { value: "1000" } });
+
+    expect(props.onChange).toHaveBeenCalledWith(1000);
+  });
 });

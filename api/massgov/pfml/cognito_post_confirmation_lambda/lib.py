@@ -1,12 +1,18 @@
 import re
 from typing import Any, Dict, Literal, Optional
 
+from sqlalchemy.exc import SQLAlchemyError
+
 import massgov.pfml.util.aws_lambda as aws_lambda
 import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+
+class LeaveAdminCreationError(SQLAlchemyError):
+    pass
 
 
 class PostConfirmationEventRequest(aws_lambda.CognitoUserPoolEventRequest):
@@ -53,7 +59,7 @@ def handler(
 
     if user is not None:
         logger.info(
-            "User already already exists", extra={**log_attributes, "user_id": user.user_id,},
+            "User already exists", extra={**log_attributes, "user_id": user.user_id,},
         )
         return event
 
@@ -104,12 +110,15 @@ def leave_admin_create(
         raise ValueError("Invalid employer_fein")
 
     user = User(active_directory_id=auth_id, email_address=email,)
-
     user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
     user_leave_admin = UserLeaveAdministrator(user=user, employer=employer, fineos_web_id=None,)
-    db_session.add(user)
-    db_session.add(user_role)
-    db_session.add(user_leave_admin)
-    db_session.commit()
+    try:
+        db_session.add(user)
+        db_session.add(user_role)
+        db_session.add(user_leave_admin)
+        db_session.commit()
+    except SQLAlchemyError as exc:
+        logger.error("Unable to create records for user", exc_info=exc)
+        raise LeaveAdminCreationError("Unable to create records for user") from exc
 
     return user
