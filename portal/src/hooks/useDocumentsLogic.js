@@ -1,4 +1,8 @@
-import { DocumentsRequestError, ValidationError } from "../errors";
+import {
+  DocumentsLoadError,
+  DocumentsUploadError,
+  ValidationError,
+} from "../errors";
 import { useMemo, useState } from "react";
 import DocumentCollection from "../models/DocumentCollection";
 import DocumentsApi from "../api/DocumentsApi";
@@ -63,7 +67,7 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
         addDocuments(loadedDocuments.items);
       }
     } catch (error) {
-      appErrorsLogic.catchError(new DocumentsRequestError(application_id));
+      appErrorsLogic.catchError(new DocumentsLoadError(application_id));
     }
   };
 
@@ -114,7 +118,7 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
         }
       } catch (error) {
         appErrorsLogic.catchError(
-          new DocumentsRequestError(
+          new DocumentsUploadError(
             application_id,
             fileWithUniqueId.id,
             error.issues ? error.issues[0] : null

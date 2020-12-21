@@ -262,7 +262,7 @@ describe("ApplicationCard", () => {
       appErrors: new AppErrorInfoCollection([
         new AppErrorInfo({
           meta: { application_id: "mock_application_id" },
-          name: "DocumentsRequestError",
+          name: "DocumentsLoadError",
         }),
       ]),
     };

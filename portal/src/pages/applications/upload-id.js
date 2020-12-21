@@ -145,7 +145,7 @@ export const UploadId = (props) => {
 
         {hasLoadingDocumentsError && (
           <Alert className="margin-bottom-3" noIcon>
-            {t("pages.claimsUploadId.documentsRequestError")}
+            {t("pages.claimsUploadId.documentsLoadError")}
           </Alert>
         )}
 

@@ -632,7 +632,7 @@ export const Review = (props) => {
           </Heading>
           {hasLoadingDocumentsError && (
             <Alert className="margin-bottom-3" noIcon>
-              {t("pages.claimsReview.documentsRequestError")}
+              {t("pages.claimsReview.documentsLoadError")}
             </Alert>
           )}
           {isLoadingDocuments && !hasLoadingDocumentsError && (

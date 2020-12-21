@@ -202,7 +202,7 @@ function LegalNotices(props) {
 
       {hasLoadingDocumentsError && (
         <Alert noIcon>
-          {t("components.applicationCard.documentsRequestError")}
+          {t("components.applicationCard.documentsLoadError")}
         </Alert>
       )}
 

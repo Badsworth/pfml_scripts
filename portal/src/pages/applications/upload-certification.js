@@ -138,7 +138,7 @@ export const UploadCertification = (props) => {
 
       {hasLoadingDocumentsError && (
         <Alert className="margin-bottom-3" noIcon>
-          {t("pages.claimsUploadCertification.documentsRequestError")}
+          {t("pages.claimsUploadCertification.documentsLoadError")}
         </Alert>
       )}
       {isLoadingDocuments && !hasLoadingDocumentsError && (

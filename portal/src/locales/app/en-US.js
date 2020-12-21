@@ -64,7 +64,8 @@ const errors = {
   },
   caughtError:
     "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber).",
-  caughtError_DocumentsRequestError: "$t(shared.documentsRequestError)",
+  caughtError_DocumentsLoadError: "$t(shared.documentsLoadError)",
+  caughtError_DocumentsUploadError: "$t(shared.documentsUploadError)",
   caughtError_ForbiddenError:
     "Sorry, an authorization error was encountered. Please log out and then log in to try again.",
   caughtError_NetworkError: "$t(shared.networkError)",
@@ -421,8 +422,7 @@ const errors = {
     file: {
       required: "Upload at least one file to continue.",
     },
-    fineos_client:
-      "We encountered an error when uploading your file. Try uploading your file again. If you get this error again, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
+    fineos_client: "$t(shared.documentsUploadError)",
   },
   employers: {
     employer_benefits: {
@@ -493,8 +493,10 @@ const shared = {
   displayTime: "{{hours}}h {{minutes}}m",
   // TODO (CP-1335): Add i18next formatter for time
   displayTime_noMinutes: "{{hours}}h",
-  documentsRequestError:
+  documentsLoadError:
     "An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
+  documentsUploadError:
+    "We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
   employerBenefitEntryPrefix: "Benefit",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid leave",
@@ -692,7 +694,7 @@ const pages = {
     backButtonLabel: "Back to Dashboard",
     completed_editable: "Completed",
     completed_uneditable: "Confirmed",
-    documentsRequestError: "$t(shared.documentsRequestError)",
+    documentsLoadError: "$t(shared.documentsLoadError)",
     edit: "Edit",
     partOneSubmittedDescription:
       "Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you'll need to call our Contact Center at $t(shared.contactCenterPhoneNumber). Now, you can work on Parts 2 and 3, and submit your application.",
@@ -1114,7 +1116,7 @@ const pages = {
     amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
     childBirthDateLabel: "Child's date of birth",
     childPlacementDateLabel: "Child's placement date",
-    documentsRequestError: "$t(shared.documentsRequestError)",
+    documentsLoadError: "$t(shared.documentsLoadError)",
     editLink: "Edit",
     employerBenefitEntryLabel:
       "$t(shared.employerBenefitEntryPrefix) {{count}}",
@@ -1366,7 +1368,7 @@ const pages = {
     addAnotherFileButton: "Choose another file",
     addFirstFileButton: "Choose a file",
     certificationDocumentsCount: "$t(shared.filesUploaded)",
-    documentsRequestError: "$t(shared.documentsRequestError)",
+    documentsLoadError: "$t(shared.documentsLoadError)",
     fileHeadingPrefix: "File",
     leadListNewborn: [
       "Your child's birth certificate.",
@@ -1400,7 +1402,7 @@ const pages = {
     accordionHeading: "If you don't have any of those documents:",
     addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
     addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
-    documentsRequestError: "$t(shared.documentsRequestError)",
+    documentsLoadError: "$t(shared.documentsLoadError)",
     fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
     idDocumentsCount: "$t(shared.filesUploaded)",
     lead_mass:
@@ -1815,7 +1817,7 @@ const components = {
       "Once your child arrives, submit proof of placement so that we can make a decision.",
     bondingLeaveDocsRequired_newborn:
       "Once your child is born, submit proof of birth so that we can make a decision.",
-    documentsRequestError: "$t(shared.documentsRequestError)",
+    documentsLoadError: "$t(shared.documentsLoadError)",
     feinHeading: "Employer EIN",
     heading: "Application {{number}}",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
