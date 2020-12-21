@@ -103,7 +103,3 @@ You can also create a Mock function/spy using `jest.fn()`
 ### Test coverage
 
 Jest includes [built-in support for measuring test coverage](https://jestjs.io/docs/en/cli#coverage), using [Istanbul](https://istanbul.js.org/). The [`coverageReporters`](https://jestjs.io/docs/en/configuration#coveragereporters-array-string) Jest setting can be modified for more advanced test coverage use cases.
-
-## Manual testing in Internet Explorer 11
-
-To test the Portal locally using Internet Explorer in BrowserStack or Sauce Labs, you will need to temporarily disable Amplify's cookie storage config setting in `_app.js` by commenting out the `cookieStorage` object. This requirement seems unique to local development.

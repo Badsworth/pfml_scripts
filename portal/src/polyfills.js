@@ -1,5 +1,5 @@
 /**
- * Next.js supports browsers from IE10 to the latest. It adds polyfills as they need:
+ * Next.js supports IE11. It adds polyfills as they need:
  * https://github.com/zeit/next.js/blob/canary/packages/next-polyfill-nomodule/src/index.js
  *
  * But Next.js cannot add polyfills for code inside NPM modules. So sometimes,

@@ -1983,6 +1983,10 @@ const components = {
   tag: {
     state_approved: "Approved",
   },
+  unsupportedBrowserBanner: {
+    message:
+      "<strong>Your browser is out of date</strong>. Please <update-link>update your browser</update-link> for more security, speed and the best experience on our site.",
+  },
   userFeedback: {
     instructions:
       "We'd like to hear more about your experience on this site. Please take a few minutes to share your feedback.",
