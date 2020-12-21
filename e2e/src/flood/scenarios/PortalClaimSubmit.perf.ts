@@ -165,20 +165,33 @@ function employerResponse(fineosId: string): Cfg.StoredStep {
     name: `Point of Contact responds to "${fineosId}"`,
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       await setFeatureFlags(browser);
-      await (
-        await Util.waitForElement(browser, By.visibleText("Log out"))
-      ).click();
-      // Log in on Portal as Leave Admin
-      authToken = await login(
-        browser,
-        await Cfg.config("E2E_EMPLOYER_PORTAL_USERNAME"),
-        await Cfg.config("E2E_EMPLOYER_PORTAL_PASSWORD")
-      );
-
-      // Review submited application via direct link on Portal
-      await browser.visit(
-        `${await Cfg.PortalBaseUrl}/employers/applications/new-application/?absence_id=${fineosId}`
-      );
+      let error;
+      for (let i = 0; i < 6; i++) {
+        await (
+          await Util.waitForElement(browser, By.visibleText("Log out"))
+        ).click();
+        // Log in on Portal as Leave Admin
+        authToken = await login(
+          browser,
+          await Cfg.config("E2E_EMPLOYER_PORTAL_USERNAME"),
+          await Cfg.config("E2E_EMPLOYER_PORTAL_PASSWORD")
+        );
+        // Review submited application via direct link on Portal
+        await browser.visit(
+          `${await Cfg.PortalBaseUrl}/employers/applications/new-application/?absence_id=${fineosId}`
+        );
+        error = await Util.maybeFindElement(
+          browser,
+          By.visibleText("An error was encountered")
+        );
+        if (error) {
+          // Waits 20 seconds for FINEOS to catch up.
+          // Will wait 120 seconds total over entire For loop.
+          await browser.wait(20000);
+        } else {
+          break;
+        }
+      }
 
       // Are you the right person? true | false
       await (
