@@ -1837,9 +1837,11 @@ const components = {
       "$t(shared.noticeName_pdf_requestForInfoNotice)",
     noticeName_requestForInfoNotice:
       "$t(shared.noticeName_requestForInfoNotice)",
+    noticesDownload:
+      "When you click the notice link, the file will download to your device.",
     noticesFallback:
       "Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification.",
-    noticesHeading: "View your notices",
+    noticesHeading: "Download your notices",
     reductionsInstruction_1:
       "Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)",
     reductionsInstruction_2: "Income from any other sources during your leave",

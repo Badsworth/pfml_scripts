@@ -182,7 +182,7 @@ describe("ApplicationCard", () => {
   });
 
   describe("when there are legal notices", () => {
-    it("displays legal notices", () => {
+    it("displays legal notices and explains that notices download to the device", () => {
       const claim = new MockClaimBuilder().submitted().create();
       const documents = [
         new Document({
@@ -219,7 +219,8 @@ describe("ApplicationCard", () => {
 
       const listItems = legalNotices.find("LegalNoticeListItem");
 
-      expect.assertions(3);
+      expect.assertions(4);
+      expect(legalNotices.find("p")).toMatchSnapshot();
       listItems.forEach((listItem) =>
         expect(listItem.dive()).toMatchSnapshot()
       );
