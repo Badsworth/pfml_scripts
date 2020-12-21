@@ -4,13 +4,14 @@
 resource "newrelic_nrql_alert_condition" "newrelic_baseline_error_rate" {
   # WARN: Query value above 90% for at least 5 minutes
   # CRITICAL: Query value equal to 100% for at least 5 minutes
-  enabled   = true
-  name      = var.name
-  policy_id = var.policy_id
+  enabled     = true
+  name        = var.name
+  policy_id   = var.policy_id
+  runbook_url = "https://lwd.atlassian.net/l/c/6tXxK3DM"
 
-  # Collect data points for *10* minutes before running the function in the NRQL query.
-  # A longer window can smooth out choppy data.
-  aggregation_window = 600
+  # Fill empty aggregation windows with 0%
+  fill_option = "static"
+  fill_value  = 0
 
   type                 = "static"
   value_function       = "single_value"
