@@ -54,6 +54,7 @@ export function denyClaim(reason: string): void {
     .select(reason);
   cy.get('input[type="submit"][value="OK"]').click();
   cy.get(".absenceProgressSummaryTitle").should("contain.text", "Completed");
+  cy.wait("@ajaxRender");
   cy.wait(200);
 }
 

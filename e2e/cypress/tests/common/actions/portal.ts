@@ -57,10 +57,12 @@ export function submitClaimDirectlyToAPI(
 export function login(credentials: Credentials): void {
   // Alias the credentials for later use.
   cy.wrap(credentials).as("credentials");
-  cy.visit("/login");
+  cy.visit(`${Cypress.env("E2E_PORTAL_BASEURL")}/login`);
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").typeMasked(credentials.password);
+  cy.wait(1000);
   cy.contains("button", "Log in").click();
+  cy.wait(1000);
   cy.url().should("not.include", "login");
 }
 
