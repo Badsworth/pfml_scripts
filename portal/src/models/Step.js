@@ -151,8 +151,6 @@ export default class Step extends BaseModel {
           "claim.employer_benefits",
           "claim.other_incomes",
           "claim.previous_leaves",
-          // TODO (CP-1247): Show previous leaves related questions
-          "claim.temp.has_previous_leaves",
         ].some((ignoredFieldName) => field.includes(ignoredFieldName));
 
         const hasValue = fieldHasValue(field, this.context);

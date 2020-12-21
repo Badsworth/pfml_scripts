@@ -167,9 +167,7 @@ const machineTests = {
   [routes.applications.previousLeavesDetails]: {
     meta: {
       test: (_, event) => {
-        expect(get(event.context.claim, "temp.has_previous_leaves")).toEqual(
-          true
-        );
+        expect(get(event.context.claim, "has_previous_leaves")).toEqual(true);
       },
     },
   },
@@ -268,9 +266,7 @@ describe("claimFlowConfigs", () => {
   const hasOtherLeavesAndIncomes = {
     has_employer_benefits: true,
     has_other_incomes: true,
-    temp: {
-      has_previous_leaves: true,
-    },
+    has_previous_leaves: true,
   };
   const hasStateId = { has_state_id: true };
   const fixedWorkPattern = {

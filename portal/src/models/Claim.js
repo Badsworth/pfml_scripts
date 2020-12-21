@@ -20,6 +20,7 @@ class Claim extends BaseClaim {
       has_intermittent_leave_periods: null,
       has_mailing_address: null,
       has_other_incomes: null,
+      has_previous_leaves: null,
       has_reduced_schedule_leave_periods: null,
       has_state_id: null,
       has_submitted_payment_preference: null,
@@ -43,15 +44,6 @@ class Claim extends BaseClaim {
         int_code: null,
         phone_number: null,
         phone_type: null, // PhoneType
-      },
-      /**
-       * Fields within the `temp` object haven't been connected to the API yet, and
-       * should have a ticket in Jira related to eventually moving them out of
-       * this temporary space.
-       */
-      temp: {
-        // TODO (CP-567): this field doesn't exist in the API yet
-        has_previous_leaves: null,
       },
       work_pattern: null,
     });

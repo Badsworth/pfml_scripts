@@ -53,7 +53,7 @@ exports[`PreviousLeaves renders the page 1`] = `
       </div>
     }
     label="Have you taken paid or unpaid leave since January 1, 2021 for a qualifying reason?"
-    name="temp.has_previous_leaves"
+    name="has_previous_leaves"
     onChange={[Function]}
     type="radio"
     value=""

@@ -546,12 +546,12 @@ export const Review = (props) => {
             label={t("pages.claimsReview.previousLeaveLabel")}
             editText={t("pages.claimsReview.editLink")}
           >
-            {get(claim, "temp.has_previous_leaves") === true
+            {get(claim, "has_previous_leaves") === true
               ? t("pages.claimsReview.otherLeaveChoiceYes")
               : t("pages.claimsReview.otherLeaveChoiceNo")}
           </ReviewRow>
 
-          {get(claim, "temp.has_previous_leaves") && (
+          {get(claim, "has_previous_leaves") && (
             <PreviousLeaveList
               previous_leaves={get(claim, "previous_leaves")}
               reviewRowLevel={reviewRowLevel}

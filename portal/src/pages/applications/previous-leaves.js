@@ -13,7 +13,7 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 
-export const fields = ["claim.temp.has_previous_leaves"];
+export const fields = ["claim.has_previous_leaves"];
 
 export const PreviousLeaves = (props) => {
   const { appLogic, claim } = props;
@@ -36,15 +36,15 @@ export const PreviousLeaves = (props) => {
       onSave={handleSave}
     >
       <InputChoiceGroup
-        {...getFunctionalInputProps("temp.has_previous_leaves")}
+        {...getFunctionalInputProps("has_previous_leaves")}
         choices={[
           {
-            checked: formState.temp.has_previous_leaves === true,
+            checked: formState.has_previous_leaves === true,
             label: t("pages.claimsPreviousLeaves.choiceYes"),
             value: "true",
           },
           {
-            checked: formState.temp.has_previous_leaves === false,
+            checked: formState.has_previous_leaves === false,
             label: t("pages.claimsPreviousLeaves.choiceNo"),
             value: "false",
           },
