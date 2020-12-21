@@ -70,6 +70,7 @@ export const steps = [
   {
     name: "Point of Contact fills employer response",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
+      if (data.financiallyIneligible) return;
       const employerResponseStep = employerResponse(fineosId);
       console.info(employerResponseStep.name);
       await employerResponseStep.test(browser, data);
