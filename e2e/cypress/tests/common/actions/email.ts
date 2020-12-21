@@ -5,6 +5,10 @@ export const getNotificationSubject = function (
   const notificationSubjects: { [key: string]: string } = {
     "application started": `${employeeName} started a paid leave application with the Commonwealth of Massachusetts`,
     "employer response": `Action required: Respond to ${employeeName}'s paid leave application`,
+    "denial (employer)": `${employeeName}’s paid leave application was Denied`,
+    "approval (employer)": `${employeeName}’s paid leave application was Approved`,
+    "denial (claimant)": "Your paid leave application was Denied",
+    "approval (claimant)": "Your paid leave application was Approved",
   };
   if (notificationType in notificationSubjects) {
     return notificationSubjects[notificationType];
@@ -31,7 +35,10 @@ export const getNotificationData = function (
     applicationId: this.getTextBetween(cleanedString, "Application ID:", "\n"),
   };
 
-  if (notificationType === "employer response") {
+  if (
+    notificationType === "employer response" ||
+    notificationType === "denial (employer)"
+  ) {
     notificationData["url"] = this.getEmployerResponseURL(cleanedString);
   }
   return notificationData;
