@@ -42,6 +42,9 @@ resource "aws_cognito_user_pool" "claimants_pool" {
   }
 
   user_pool_add_ons {
+    # Enable behavior like pevention of passwords in data breaches, or blocking of high risk login attempts.
+    # This is a broad on/off switch. Granular configuration of features like adaptive authentication's
+    # block/allow settings are currently configured directly through the AWS Console.
     advanced_security_mode = "ENFORCED"
   }
 
