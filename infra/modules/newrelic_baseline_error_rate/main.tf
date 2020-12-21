@@ -2,12 +2,14 @@
 # high percentage value. Used for a number of alert policies, so that
 # we can identify when an endpoint begins to consistently fail.
 resource "newrelic_nrql_alert_condition" "newrelic_baseline_error_rate" {
-  # WARN: Query value above 90% for at least 5 minutes
-  # CRITICAL: Query value equal to 100% for at least 5 minutes
+  # WARN: Query value above 90% for at least 1 hour (4 aggregation windows)
+  # CRITICAL: Query value equal to 100% for at least 1 hour (4 aggregation windows)
   enabled     = true
   name        = var.name
   policy_id   = var.policy_id
   runbook_url = "https://lwd.atlassian.net/l/c/6tXxK3DM"
+
+  aggregation_window = 900 # max: 15 minutes
 
   # Fill empty aggregation windows with 0%
   fill_option = "static"
@@ -23,14 +25,14 @@ resource "newrelic_nrql_alert_condition" "newrelic_baseline_error_rate" {
   }
 
   warning {
-    threshold_duration    = 300
+    threshold_duration    = 3600
     threshold             = 90
     operator              = "above"
     threshold_occurrences = "ALL"
   }
 
   critical {
-    threshold_duration = 300
+    threshold_duration = 3600
     # This is as high as it goes since 95% was still triggering false alarms for
     # the Employer Sign Up endpoint. We may want to further tune this for other
     # endpoints in the future, but this should hopefully cover worst case
