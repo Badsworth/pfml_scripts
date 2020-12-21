@@ -446,3 +446,80 @@ export function additionalEvidenceRequest(claimNumber: string): void {
   //   );
   // });
 }
+
+export function checkStatus(
+  claimNumber: string,
+  section: string,
+  status: string
+): void {
+  assertAdjudicatingClaim(claimNumber);
+  onTab("Manage Request");
+  cy.get(".divListviewGrid .ListTable tr").should("have.length", 1);
+  cy.get(
+    `.divListviewGrid .ListTable td[id*='ListviewWidget${section}Status0']`
+  ).should("have.text", status);
+}
+
+export function checkTask(): void {
+  onTab("Task");
+  cy.get(`.divListviewGrid .ListTable td[title='Certification Review']`).should(
+    "have.text",
+    "Certification Review"
+  );
+  cy.get(`.divListviewGrid .ListTable td[title='ID Review']`).should(
+    "have.text",
+    "ID Review"
+  );
+  onTab("Absence Hub");
+}
+
+export function markEvidence(
+  claimNumber: string,
+  claimType: string,
+  evidenceType: string
+): void {
+  assertAdjudicatingClaim(claimNumber);
+  onTab("Evidence");
+  cy.contains(".ListTable td", evidenceType).click();
+  cy.get("input[type='submit'][value='Manage Evidence']").click();
+  // Focus inside popup.
+  cy.get(".WidgetPanel_PopupWidget").within(() => {
+    if (claimType === "BGBM1") {
+      cy.labelled("Evidence Receipt").select("Received");
+    }
+    cy.labelled("Evidence Decision").select("Satisfied");
+    cy.labelled("Evidence Decision Reason").type(
+      "{selectall}{backspace}Evidence has been reviewed and approved"
+    );
+    cy.get("input[type='button'][value='OK']").click();
+    // Wait till modal has fully closed before moving on.
+    cy.get("#disablingLayer").should("not.exist");
+  });
+}
+
+export function fillAbsencePeriod(claimNumber: string): void {
+  assertAdjudicatingClaim(claimNumber);
+  onTab("Evidence");
+  onTab("Certification Periods");
+  cy.get("input[value='Prefill with Requested Absence Periods']").click();
+  cy.get("#PopupContainer").within(() => {
+    cy.get("input[value='Yes']").click();
+  });
+}
+
+export function claimAdjudicationFlow(claimNumber: string): void {
+  visitClaim(claimNumber);
+  assertOnClaimPage(claimNumber);
+  checkTask();
+  cy.get("input[type='submit'][value='Adjudicate']").click();
+  checkStatus(claimNumber, "Eligibility", "Met");
+  markEvidence(claimNumber, "MHAP1", "State managed Paid Leave Confirmation");
+  markEvidence(claimNumber, "MHAP1", "Identification Proof");
+  checkStatus(claimNumber, "Evidence", "Satisfied");
+  fillAbsencePeriod(claimNumber);
+  checkStatus(claimNumber, "Availability", "Time Available");
+  // Complete Adjudication
+  assertAdjudicatingClaim(claimNumber);
+  clickBottomWidgetButton("OK");
+  assertClaimApprovable();
+}

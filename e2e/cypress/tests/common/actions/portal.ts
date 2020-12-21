@@ -748,7 +748,11 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
   onPage("checklist");
   clickChecklistButton("Enter leave details");
   selectClaimType(application);
-  enterBondingDateInfo(application);
+  if (reason === "Serious Health Condition - Employee") {
+    answerPregnancyQuestion(application);
+  } else {
+    enterBondingDateInfo(application);
+  }
   if (reasonQualifier === "Newborn") {
     answerPregnancyQuestion(application);
   }
@@ -775,6 +779,7 @@ export function submitClaimPortal(
   application: ApplicationRequestBody,
   paymentPreference: PaymentPreference
 ): void {
+  const reason = application.leave_details && application.leave_details.reason;
   submitClaimPartOne(application);
   clickChecklistButton("Add payment information");
   addPaymentInfo(paymentPreference);
@@ -783,7 +788,7 @@ export function submitClaimPortal(
   addId("MA ID");
   onPage("checklist");
   clickChecklistButton("Upload leave certification documents");
-  addId("FOSTER");
+  addId(reason === "Serious Health Condition - Employee" ? "HCP" : "FOSTER");
   onPage("checklist");
   reviewAndSubmit();
   onPage("review");
