@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { Trans } from "react-i18next";
+import classnames from "classnames";
 
 /**
  * Banner displayed at the top of the site to indicate the site
@@ -8,30 +9,24 @@ import { Trans } from "react-i18next";
  * using Internet Explorer versions 11 and below.
  */
 const UnsupportedBrowserBanner = (props) => {
-  const containerClassName = "c-unsupported-browser-banner";
+  const classes = classnames(
+    "c-unsupported-browser-banner bg-yellow padding-1 text-center",
+    {
+      "display-block": props.forceRender === true,
+    }
+  );
 
   /**
-   * Render inline css so there's never a flash of this banner on supported
-   * browsers while other CSS loads. The @media query will only work for IE 11 and below.
+   * The CSS @media query approach doesn't work for IE 9 and below, and conditional HTML
+   * comments don't work for IE10 and above, so we use a combination. IE9 and below doesn't
+   * support Content-Security-Policy, so we don't need to worry about that with this inline <style>:
    */
-  const inlineStyles = props.forceRender
-    ? null
-    : `.${containerClassName} { display: none } @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) { .${containerClassName} { display: block } }`;
-
-  /**
-   * The @media query approach above doesn't work for IE 9 and below, and conditional HTML
-   * comments don't work for IE10 and above, so we use a combination:
-   */
-  const conditionalHTMLComment = `<!--[if lte IE 9]><style>.${containerClassName} { display: block }</style><![endif]-->`;
+  const conditionalHTMLComment = `<!--[if lte IE 9]><style>.c-unsupported-browser-banner { display: block }</style><![endif]-->`;
 
   return (
     <React.Fragment>
-      <style>{inlineStyles}</style>
       <span dangerouslySetInnerHTML={{ __html: conditionalHTMLComment }} />
-      <div
-        role="alert"
-        className={`${containerClassName} bg-yellow padding-1 text-center`}
-      >
+      <div role="alert" className={classes}>
         <Trans
           i18nKey="components.unsupportedBrowserBanner.message"
           components={{
