@@ -26,6 +26,14 @@ resource "aws_api_gateway_deployment" "stage" {
   stage_name  = var.environment_name
   rest_api_id = aws_api_gateway_rest_api.pfml.id
 
+  triggers = {
+    always_run = sha1(timestamp())
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
   # A deployment requires at least one integration; we'll require
   # all of them to avoid any confusion with what's been deployed.
   depends_on = [
