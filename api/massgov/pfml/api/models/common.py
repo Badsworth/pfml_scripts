@@ -41,6 +41,7 @@ class PreviousLeaveQualifyingReason(str, LookupEnum):
     CHILD_BONDING = "Child bonding"
     MILITARY_CAREGIVER = "Military caregiver"
     MILITARY_EXIGENCY_FAMILY = "Military exigency family"
+    UNKNOWN = "Unknown"
 
     @classmethod
     def get_lookup_model(cls):
