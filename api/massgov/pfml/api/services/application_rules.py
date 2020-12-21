@@ -2,6 +2,8 @@ from datetime import date
 from itertools import chain, combinations
 from typing import Iterable, List, Optional, Union
 
+from dateutil.relativedelta import relativedelta
+
 import massgov.pfml.db as db
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.services.applications import (
@@ -172,15 +174,25 @@ def get_conditional_issues(application: Application) -> List[Issue]:
     ):
         issues += get_bonding_leave_issues(application)
 
-    if application.employer_notified and not application.employer_notification_date:
-        issues.append(
-            Issue(
-                type=IssueType.required,
-                rule=IssueRule.conditional,
-                message="employer_notification_date is required for leave_details if employer_notified is set",
-                field="leave_details.employer_notification_date",
+    if application.employer_notified:
+        if not application.employer_notification_date:
+            issues.append(
+                Issue(
+                    type=IssueType.required,
+                    rule=IssueRule.conditional,
+                    message="employer_notification_date is required for leave_details if employer_notified is set",
+                    field="leave_details.employer_notification_date",
+                )
             )
-        )
+        elif application.employer_notification_date < date.today() - relativedelta(years=2):
+            issues.append(
+                Issue(
+                    type=IssueType.minimum,
+                    rule=IssueRule.conditional,
+                    message="employer_notification_date year must be within the past 2 years",
+                    field="leave_details.employer_notification_date",
+                )
+            )
 
     if application.work_pattern:
         issues += get_work_pattern_issues(application)

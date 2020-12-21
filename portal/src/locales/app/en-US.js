@@ -179,6 +179,8 @@ const errors = {
       employer_notification_date: {
         date:
           "Date you notified your employer must include a day, month, and year.",
+        minimum:
+          "Year you notified your employer must be within the past two years.",
         required: "Enter the date you notified your employer.",
       },
       employer_notified: {
