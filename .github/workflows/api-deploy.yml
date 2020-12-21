@@ -127,6 +127,30 @@ jobs:
           environment: "${{ env[github.ref] || 'test' }}"
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
+  update-deployment-status:
+    name: Update deployment status
+    needs: [start-deployment-status]
+    if: always() && needs.start-deployment-status.result == 'success'
+
+    steps:
+      - name: Set deploy-state Value to true
+        run: |
+          if [$RESULT == 'success']
+          then
+            echo "deploy-state=success" >> $GITHUB_ENV
+          else
+            echo "deploy-state=failure" >> $GITHUB_ENV
+          fi
+        env:
+          RESULT: ${{ needs.start-deployment-status.result }}
+
+      - uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: ${{ github.token }}
+          target_url: "https://paidleave-api-${{ env[github.ref] || 'test' }}.mass.gov/api/docs"
+          state: ${{ env.deploy-state }}
+          deployment_id: ${{ needs.start-deployment-status.outputs.deploy_id }}
+
   api-build:
     name: Build docker image
     needs: update-the-deploy-branch
