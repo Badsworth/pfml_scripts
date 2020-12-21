@@ -2,6 +2,8 @@
 # Tests for massgov.pfml.fineos.fineos_client.
 #
 
+import datetime
+import json
 import pathlib
 import time
 import xml.etree.ElementTree
@@ -12,6 +14,7 @@ import requests
 
 import massgov.pfml.fineos.fineos_client
 import massgov.pfml.fineos.models
+from massgov.pfml.fineos.models.group_client_api import EForm, EFormAttribute, ModelEnum
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 
@@ -32,6 +35,76 @@ ws_update_response = """<?xml version='1.0' encoding='utf-8'?>
     </additional-data>
   </additional-data-set>
 </p:WSUpdateResponse>"""
+
+get_eform_response = json.dumps(
+    {
+        "eformType": "Other Income",
+        "eformId": 11132,
+        "eformAttributes": [
+            {"name": "StartDate", "dateValue": "2020-12-24"},
+            {"name": "Frequency3", "stringValue": "Please Select"},
+            {
+                "name": "ProgramType",
+                "enumValue": {"domainName": "Program Type", "instanceValue": "Employer"},
+            },
+            {"name": "Spacer4", "stringValue": ""},
+            {
+                "name": "ProgramType3",
+                "enumValue": {"domainName": "Program Type", "instanceValue": "Please Select"},
+            },
+            {
+                "name": "ReceiveWageReplacement",
+                "enumValue": {"domainName": "YesNoI'veApplied", "instanceValue": "Yes"},
+            },
+            {"name": "StartDate3", "dateValue": ""},
+            {"name": "Spacer1", "stringValue": ""},
+            {"name": "Spacer3", "stringValue": ""},
+            {"name": "Spacer2", "stringValue": ""},
+            {"name": "Spacer", "stringValue": ""},
+            {
+                "name": "WRT1",
+                "enumValue": {
+                    "domainName": "WageReplacementType",
+                    "instanceValue": "Short-term disability insurance",
+                },
+            },
+            {
+                "name": "WRT2",
+                "enumValue": {
+                    "domainName": "WageReplacementType2",
+                    "instanceValue": "Please Select",
+                },
+            },
+            {
+                "name": "WRT5",
+                "enumValue": {
+                    "domainName": "WageReplacementType",
+                    "instanceValue": "Please Select",
+                },
+            },
+            {
+                "name": "WRT6",
+                "enumValue": {
+                    "domainName": "WageReplacementType2",
+                    "instanceValue": "Please Select",
+                },
+            },
+            {"name": "EndDate3", "dateValue": ""},
+            {"name": "Amount", "decimalValue": 1000},
+            {"name": "EndDate", "dateValue": "2021-01-16"},
+            {"name": "Amount3", "decimalValue": 0},
+            {"name": "Frequency", "stringValue": "Per Week"},
+            {
+                "name": "ReceiveWageReplacement4",
+                "enumValue": {"domainName": "YesNoI'veApplied", "instanceValue": "Please Select"},
+            },
+            {
+                "name": "ReceiveWageReplacement2",
+                "enumValue": {"domainName": "YesNoI'veApplied", "instanceValue": "Please Select"},
+            },
+        ],
+    }
+)
 
 
 def xml_equal(actual_data, expected_name):
@@ -150,3 +223,227 @@ def test_create_or_update_employer_unicode_name(httpserver, fineos_client):
     )
     assert fineos_customer_nbr == "08eedafc-c591-4988-a099-b35b3e2b704f"
     assert fineos_employer_id == 5157438
+
+
+def test_get_eform(httpserver, fineos_client):
+
+    httpserver.expect_ordered_request(
+        "/groupclientapi/groupClient/cases/NTN-100-ABS-01/eforms/3333/readEform",
+        method="GET",
+        headers={"userid": "FINEOS_WEB_ID", "Content-Type": "application/json"},
+    ).respond_with_data(get_eform_response, content_type="application/json")
+
+    eform = fineos_client.get_eform("FINEOS_WEB_ID", "NTN-100-ABS-01", "3333")
+    assert eform == EForm(
+        eformType="Other Income",
+        eformId=11132,
+        eformAttributes=[
+            EFormAttribute(
+                name="StartDate",
+                booleanValue=None,
+                dateValue=datetime.date(2020, 12, 24),
+                decimalValue=None,
+                integerValue=None,
+                stringValue=None,
+                enumValue=None,
+            ),
+            EFormAttribute(
+                name="Frequency3",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue="Please Select",
+                enumValue=None,
+            ),
+            EFormAttribute(
+                name="ProgramType",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue=None,
+                enumValue=ModelEnum(domainName="Program Type", instanceValue="Employer"),
+            ),
+            EFormAttribute(
+                name="Spacer4",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue="",
+                enumValue=None,
+            ),
+            EFormAttribute(
+                name="ProgramType3",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue=None,
+                enumValue=ModelEnum(domainName="Program Type", instanceValue="Please Select"),
+            ),
+            EFormAttribute(
+                name="ReceiveWageReplacement",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue=None,
+                enumValue=ModelEnum(domainName="YesNoI'veApplied", instanceValue="Yes"),
+            ),
+            EFormAttribute(
+                name="StartDate3",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue=None,
+                enumValue=None,
+            ),
+            EFormAttribute(
+                name="Spacer1",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue="",
+                enumValue=None,
+            ),
+            EFormAttribute(
+                name="Spacer3",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue="",
+                enumValue=None,
+            ),
+            EFormAttribute(
+                name="Spacer2",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue="",
+                enumValue=None,
+            ),
+            EFormAttribute(
+                name="Spacer",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue="",
+                enumValue=None,
+            ),
+            EFormAttribute(
+                name="WRT1",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue=None,
+                enumValue=ModelEnum(
+                    domainName="WageReplacementType",
+                    instanceValue="Short-term disability insurance",
+                ),
+            ),
+            EFormAttribute(
+                name="WRT2",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue=None,
+                enumValue=ModelEnum(
+                    domainName="WageReplacementType2", instanceValue="Please Select"
+                ),
+            ),
+            EFormAttribute(
+                name="WRT5",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue=None,
+                enumValue=ModelEnum(
+                    domainName="WageReplacementType", instanceValue="Please Select"
+                ),
+            ),
+            EFormAttribute(
+                name="WRT6",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue=None,
+                enumValue=ModelEnum(
+                    domainName="WageReplacementType2", instanceValue="Please Select"
+                ),
+            ),
+            EFormAttribute(
+                name="EndDate3",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue=None,
+                enumValue=None,
+            ),
+            EFormAttribute(
+                name="Amount",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=1000.0,
+                integerValue=None,
+                stringValue=None,
+                enumValue=None,
+            ),
+            EFormAttribute(
+                name="EndDate",
+                booleanValue=None,
+                dateValue=datetime.date(2021, 1, 16),
+                decimalValue=None,
+                integerValue=None,
+                stringValue=None,
+                enumValue=None,
+            ),
+            EFormAttribute(
+                name="Amount3",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=0.0,
+                integerValue=None,
+                stringValue=None,
+                enumValue=None,
+            ),
+            EFormAttribute(
+                name="Frequency",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue="Per Week",
+                enumValue=None,
+            ),
+            EFormAttribute(
+                name="ReceiveWageReplacement4",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue=None,
+                enumValue=ModelEnum(domainName="YesNoI'veApplied", instanceValue="Please Select"),
+            ),
+            EFormAttribute(
+                name="ReceiveWageReplacement2",
+                booleanValue=None,
+                dateValue=None,
+                decimalValue=None,
+                integerValue=None,
+                stringValue=None,
+                enumValue=ModelEnum(domainName="YesNoI'veApplied", instanceValue="Please Select"),
+            ),
+        ],
+    )

@@ -515,7 +515,12 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response = self._group_client_api(
             "GET", f"groupClient/cases/{absence_id}/eforms/{eform_id}/readEform", user_id
         )
-        return models.group_client_api.EForm.parse_obj(response.json())
+        json = response.json()
+
+        for eformAttribute in json["eformAttributes"]:
+            set_empty_dates_to_none(eformAttribute, ["dateValue"])
+
+        return models.group_client_api.EForm.parse_obj(json)
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         eform_json = []
