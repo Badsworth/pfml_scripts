@@ -1,3 +1,5 @@
+version: "3.8"
+
 # Default override file for local development. This is used by default
 # alongside docker-compose.yml when running docker-compose without -f flags.
 #
