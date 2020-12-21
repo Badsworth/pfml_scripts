@@ -10,7 +10,7 @@
 #
 from typing import TYPE_CHECKING, Optional, cast
 
-from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
+from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Index, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Query, dynamic_loader, relationship
 from sqlalchemy.sql.expression import func
@@ -479,8 +479,13 @@ class CtrDocumentIdentifier(Base):
 class CtrBatchIdentifier(Base):
     __tablename__ = "ctr_batch_identifier"
     ctr_batch_identifier_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    ctr_batch_identifier = Column(Text, unique=True, index=True)
+    ctr_batch_identifier = Column(Text, nullable=False)
+    year = Column(Integer, nullable=False)
+    batch_date = Column(Date, nullable=False)
+    batch_counter = Column(Integer, nullable=False)
     inf_data = Column(JSON)
+
+    Index("ix_year_ctr_batch_identifier", year, ctr_batch_identifier, unique=True)
 
     reference_files = relationship("ReferenceFile", back_populates="ctr_batch_identifier")
 
