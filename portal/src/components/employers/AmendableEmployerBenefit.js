@@ -24,6 +24,15 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
     false
   );
+
+  const isFrequencyUnknown =
+    employerBenefit.benefit_amount_frequency === "Unknown" ||
+    !employerBenefit.benefit_amount_frequency;
+
+  /**
+   * Update amendment state and sends to `review.js` (dates, dollars, frequency)
+   * For benefit amount dollars, sets invalid input to 0
+   */
   const amendBenefit = (id, field, value) => {
     let formattedValue = value;
     if (field === "benefit_amount_dollars") {
@@ -39,14 +48,17 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
     });
     onChange({ employer_benefit_id: id, [field]: formattedValue });
   };
+
+  /**
+   * Get content based on dollars and frequency  (e.g. $10.00 per day)
+   * Displays dollar amount if frequency is null or "Unknown"
+   * @returns {string}
+   */
   const getBenefitAmountByType = () => {
     const {
       benefit_amount_dollars,
       benefit_amount_frequency,
     } = employerBenefit;
-    const isFrequencyUnknown =
-      benefit_amount_frequency === EmployerBenefitFrequency.unknown ||
-      !benefit_amount_frequency;
     return t(
       "pages.employersClaimsReview.employerBenefits.amountPerFrequency",
       {
@@ -57,18 +69,38 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
       }
     );
   };
+
+  /**
+   * Get benefit_amount_frequency options for the input's `choices` prop
+   * Includes an option if frequency is null or "Unknown"
+   * (e.g. [{ label: "", value: "" }])
+   * @returns {Array}
+   */
   const getAllBenefitFrequencies = () => {
-    return Object.values(EmployerBenefitFrequency).map((frequency) => {
-      return {
-        label: t(
-          "pages.employersClaimsReview.employerBenefits.employerBenefitFrequencyValue",
+    const unknownFrequency = isFrequencyUnknown
+      ? [
           {
-            context: findKeyByValue(EmployerBenefitFrequency, frequency),
-          }
-        ),
-        value: frequency,
-      };
-    });
+            label: t(
+              "pages.employersClaimsReview.employerBenefits.employerBenefitFrequencyValue"
+            ),
+            value: "Unknown",
+          },
+        ]
+      : [];
+    const frequencies = Object.values(EmployerBenefitFrequency).map(
+      (frequency) => {
+        return {
+          label: t(
+            "pages.employersClaimsReview.employerBenefits.employerBenefitFrequencyValue",
+            {
+              context: findKeyByValue(EmployerBenefitFrequency, frequency),
+            }
+          ),
+          value: frequency,
+        };
+      }
+    );
+    return unknownFrequency.concat(frequencies);
   };
 
   return (
@@ -81,7 +113,16 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
           )}
         </th>
         <td>{employerBenefit.benefit_type}</td>
-        <td>{getBenefitAmountByType()}</td>
+        <td>
+          {getBenefitAmountByType()}
+          {amendment.benefit_amount_frequency === "Unknown" && (
+            <span className="usa-error-message display-inline-block text-normal padding-left-1">
+              {t(
+                "pages.employersClaimsReview.employerBenefits.frequencyHelperText"
+              )}
+            </span>
+          )}
+        </td>
         <td>
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
         </td>

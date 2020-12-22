@@ -1556,6 +1556,7 @@ const pages = {
       commentInstructions: "$t(shared.employerInstructions_addComment)",
       dateRangeLabel: "Date range",
       detailsLabel: "Details",
+      employerBenefitFrequencyValue: "Select a frequency",
       employerBenefitFrequencyValue_daily: "$t(shared.amountFrequency_daily)",
       employerBenefitFrequencyValue_inTotal:
         "$t(shared.amountFrequency_inTotal)",
@@ -1570,6 +1571,7 @@ const pages = {
       employerBenefitType_shortTermDisability:
         "$t(shared.employerBenefitType_shortTermDisability)",
       employerBenefitType_unknown: "Unknown",
+      frequencyHelperText: "[Needs review]",
       header: "Employer benefits",
       tableName: "Employer-sponsored benefit details",
     },
