@@ -4,7 +4,6 @@
 
 import abc
 import os.path
-import urllib.parse
 
 import massgov.pfml.db
 import massgov.pfml.util.files
