@@ -1,4 +1,5 @@
 import argparse
+import json
 
 import massgov.pfml.db
 import massgov.pfml.payments.payments_util
@@ -32,6 +33,7 @@ def regenerate():
         with massgov.pfml.util.batch.log.log_entry(
             db_session, "Payments regenerate", ""
         ) as log_entry:
+            log_entry.report = json.dumps({"batch_id": args.batch})
             massgov.pfml.payments.regenerate.regenerate_batch(args.batch, config, db_session)
     except RuntimeError as ex:
         logger.error("%s", ex)
