@@ -34,6 +34,9 @@ class PaymentsS3Config:
     ## This is where we store that copy
     pfml_fineos_outbound_path: str
 
+    # Files for Comptroller (CTR). These are sent to CTR by MoveIT.
+    ctr_outbound_path: str
+
 
 def get_s3_config() -> PaymentsS3Config:
     return PaymentsS3Config(
@@ -41,6 +44,7 @@ def get_s3_config() -> PaymentsS3Config:
         pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
         fineos_data_import_path=str(os.environ.get("FINEOS_DATA_IMPORT_PATH")),
         pfml_fineos_outbound_path=str(os.environ.get("PFML_FINEOS_OUTBOUND_PATH")),
+        ctr_outbound_path=str(os.environ.get("CTR_OUTBOUND_PATH")),
     )
 
 
