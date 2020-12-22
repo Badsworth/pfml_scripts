@@ -179,3 +179,69 @@ resource "newrelic_nrql_alert_condition" "rds_low_storage_space" {
     threshold_occurrences = "ALL"
   }
 }
+
+///////////////////
+// FINEOS Alerts //
+///////////////////
+
+resource "newrelic_nrql_alert_condition" "fineos_error_rate_5XXs" {
+  # WARN: % FINEOS responses that are 5XXs exceed 10% for 5 minutes
+  # CRIT: % FINEOS responses that are 5XXs exceed 15% for 2 minutes
+  name           = "FINEOS 5XXs response rate too high"
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  type           = "static"
+  value_function = "single_value"
+  enabled        = true
+
+  nrql {
+    query             = "SELECT percentage(COUNT(*), WHERE http.statusCode >= 500) FROM Span WHERE name LIKE 'External/%-api.masspfml.fineos.com/requests/' AND appName = 'PFML-API-${upper(var.environment_name)}'"
+    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
+  }
+
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  warning {
+    threshold_duration    = 300
+    threshold             = 10
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 120
+    threshold             = 15
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "fineos_error_rate_4XXs" {
+  # WARN: % FINEOS responses that are 4XXs exceed 10% for 5 minutes
+  # CRIT: % FINEOS responses that are 4XXs exceed 15% for 2 minutes
+  name           = "FINEOS 4XXs response rate too high"
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  type           = "static"
+  value_function = "single_value"
+  enabled        = true
+
+  nrql {
+    query             = "SELECT percentage(COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500) FROM Span WHERE name LIKE 'External/%-api.masspfml.fineos.com/requests/' AND appName = 'PFML-API-${upper(var.environment_name)}'"
+    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
+  }
+
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  warning {
+    threshold             = 10
+    threshold_duration    = 300
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold             = 15
+    threshold_duration    = 120
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+}
