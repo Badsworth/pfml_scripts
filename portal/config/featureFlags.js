@@ -66,18 +66,23 @@ const flagsConfig = {
     example: true,
     pfmlTerriyay: true,
     claimantShowAuth: true,
+    claimantShowJan1ApplicationInstructions: true,
   },
   test: {
     claimantShowAuth: true,
+    claimantShowJan1ApplicationInstructions: true,
   },
   stage: {
     claimantShowAuth: true,
+    claimantShowJan1ApplicationInstructions: true,
   },
   training: {
     claimantShowAuth: true,
+    claimantShowJan1ApplicationInstructions: true,
   },
   performance: {
     claimantShowAuth: true,
+    claimantShowJan1ApplicationInstructions: true,
   },
   prod: {
     pfmlTerriyay: true,
