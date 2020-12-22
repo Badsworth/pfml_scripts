@@ -91,16 +91,19 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
     appErrorsLogic.clearErrors();
 
     if (!filesWithUniqueId.length) {
-      throw new ValidationError(
-        [
-          {
-            // field and type will be used for forming the internationalized error message
-            field: "file", // 'file' is the field name in the API
-            message: "Client requires at least one file before sending request",
-            type: "required",
-          },
-        ],
-        "documents"
+      appErrorsLogic.catchError(
+        new ValidationError(
+          [
+            {
+              // field and type will be used for forming the internationalized error message
+              field: "file", // 'file' is the field name in the API
+              message:
+                "Client requires at least one file before sending request",
+              type: "required",
+            },
+          ],
+          "documents"
+        )
       );
     }
 

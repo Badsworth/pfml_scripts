@@ -54,33 +54,24 @@ export const UploadId = (props) => {
       return;
     }
 
-    try {
-      const uploadPromises = appLogic.documents.attach(
-        claim.application_id,
-        stateIdFiles,
-        DocumentType.identityVerification, // TODO (CP-962): set based on leave reason
-        additionalDoc === "true"
-      );
+    const uploadPromises = appLogic.documents.attach(
+      claim.application_id,
+      stateIdFiles,
+      DocumentType.identityVerification, // TODO (CP-962): set based on leave reason
+      additionalDoc === "true"
+    );
 
-      const { success } = await uploadDocumentsHelper(
-        uploadPromises,
-        stateIdFiles,
-        setStateIdFiles
-      );
+    const { success } = await uploadDocumentsHelper(
+      uploadPromises,
+      stateIdFiles,
+      setStateIdFiles
+    );
 
-      if (success && claim.isCompleted) {
-        return portalFlow.goToNextPage(
-          { claim },
-          { claim_id: claim.application_id, uploadedAbsenceId: absence_id }
-        );
-      } else if (success) {
-        return portalFlow.goToNextPage(
-          { claim },
-          { claim_id: claim.application_id }
-        );
-      }
-    } catch (error) {
-      appLogic.catchError(error);
+    if (success) {
+      portalFlow.goToNextPage(
+        { claim },
+        { claim_id: claim.application_id, uploadedAbsenceId: absence_id }
+      );
     }
   };
 

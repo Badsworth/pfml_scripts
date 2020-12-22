@@ -240,12 +240,24 @@ describe("useDocumentsLogic", () => {
       jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
     });
 
-    it("throws ValidationError when no files are included in the request", () => {
+    it("throws ValidationError when no files are included in the request", async () => {
       const files = [];
-
-      expect(() =>
-        documentsLogic.attach(application_id, files, mockDocumentType, false)
-      ).toThrow(ValidationError);
+      await documentsLogic.attach(
+        application_id,
+        files,
+        mockDocumentType,
+        false
+      );
+      expect(appErrorsLogic.appErrors.items[0]).toEqual(
+        expect.objectContaining({
+          field: "file",
+          message: "Upload at least one file to continue.",
+          meta: null,
+          name: "ValidationError",
+          rule: null,
+          type: "required",
+        })
+      );
     });
 
     it("updates the app errors, and includes the claim + file ids", async () => {

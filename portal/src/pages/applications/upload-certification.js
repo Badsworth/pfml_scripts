@@ -64,22 +64,25 @@ export const UploadCertification = (props) => {
       portalFlow.goToNextPage({ claim }, { claim_id: claim.application_id });
       return;
     }
-    try {
-      const uploadPromises = appLogic.documents.attach(
-        claim.application_id,
-        files,
-        DocumentType.medicalCertification, // TODO (CP-962): set based on leave reason
-        query.additionalDoc === "true"
-      );
 
-      await uploadDocumentsHelper(uploadPromises, files, setFiles);
+    const uploadPromises = appLogic.documents.attach(
+      claim.application_id,
+      files,
+      DocumentType.medicalCertification, // TODO (CP-962): set based on leave reason
+      query.additionalDoc === "true"
+    );
+
+    const { success } = await uploadDocumentsHelper(
+      uploadPromises,
+      files,
+      setFiles
+    );
+    if (success) {
       const absence_id = get(claim, "fineos_absence_id");
-      return portalFlow.goToNextPage(
+      portalFlow.goToNextPage(
         { claim },
         { claim_id: claim.application_id, uploadedAbsenceId: absence_id }
       );
-    } catch (error) {
-      appLogic.catchError(error);
     }
   };
   const fileErrors = appErrors.items.filter(
