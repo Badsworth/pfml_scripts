@@ -67,22 +67,27 @@ const flagsConfig = {
     pfmlTerriyay: true,
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
+    claimantShowMedicalLeaveType: true,
   },
   test: {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
+    claimantShowMedicalLeaveType: true,
   },
   stage: {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
+    claimantShowMedicalLeaveType: true,
   },
   training: {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
+    claimantShowMedicalLeaveType: true,
   },
   performance: {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
+    claimantShowMedicalLeaveType: true,
   },
   prod: {
     pfmlTerriyay: true,
