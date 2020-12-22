@@ -5,6 +5,9 @@ exports[`Dashboard renders dashboard content 1`] = `
   <DashboardNavigation
     activeHref="/dashboard"
   />
+  <Title>
+    Get ready to apply
+  </Title>
   <Alert
     className="margin-bottom-3"
     heading="Only some people can apply online for now"
@@ -73,9 +76,6 @@ exports[`Dashboard renders dashboard content 1`] = `
   <div
     className="measure-6"
   >
-    <Title>
-      Get ready to apply
-    </Title>
     <Heading
       level="2"
     >
