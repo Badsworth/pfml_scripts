@@ -15,13 +15,15 @@ import massgov.pfml.db
 import massgov.pfml.db.models.factories
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
+    EFT,
     BankAccountType,
     CtrBatchIdentifier,
     Employee,
+    EmployeeReferenceFile,
     PaymentMethod,
     ReferenceFile,
     ReferenceFileType,
-    TaxIdentifier, EFT,
+    TaxIdentifier,
 )
 from massgov.pfml.payments import payments_util, vcc
 
@@ -44,8 +46,6 @@ def main():
 
     output_folder = args.folder
     logger.info("writing to %s", output_folder)
-    if not output_folder.startswith("s3:"):
-        os.makedirs(output_folder, exist_ok=True)
 
     generator = PaymentScenariosGenerator(db_session, output_folder)
     generator.run()
@@ -108,6 +108,11 @@ class PaymentScenariosGenerator:
         # etc. etc.
 
     def write_files(self):
+        if not self.output_folder.startswith("s3:"):
+            os.makedirs(self.output_folder, exist_ok=True)
+            os.makedirs(f"{self.output_folder}/ctr/outbound/ready", exist_ok=True)
+            os.makedirs(f"{self.output_folder}/ctr/outbound/error", exist_ok=True)
+
         self.write_vcc_files()
 
     def write_vcc_files(self):
@@ -115,15 +120,15 @@ class PaymentScenariosGenerator:
 
         count = 10
         for employee_chunk in (self.vcc_data[i : i + 10] for i in range(0, len(self.vcc_data), 10)):
-            directory = (
-                f"{self.output_folder}/ctr/outbound/ready/EOL{now.strftime('%Y%m%d')}VCC{count}"
-            )
+            batch_id = f"EOL{now.strftime('%m%d')}VCC{count}"
+            directory_name = f"EOL{now.strftime('%Y%m%d')}VCC{count}"
+            directory = f"{self.output_folder}/ctr/outbound/ready/{directory_name}"
             if not self.output_folder.startswith("s3:"):
                 os.makedirs(directory, exist_ok=True)
             (dat_filepath, inf_filepath) = vcc.build_vcc_files(employee_chunk, directory, count)
             logger.info("generated %s %s", dat_filepath, inf_filepath)
 
-            ctr_batch_identifier = CtrBatchIdentifier(ctr_batch_identifier=str(count))
+            ctr_batch_identifier = CtrBatchIdentifier(ctr_batch_identifier=batch_id)
             reference_file = ReferenceFile(
                 file_location=directory + "/",
                 reference_file_type_id=ReferenceFileType.VCC.reference_file_type_id,
@@ -131,6 +136,14 @@ class PaymentScenariosGenerator:
             )
             self.db_session.add(ctr_batch_identifier)
             self.db_session.add(reference_file)
+            for employee in employee_chunk:
+                self.db_session.add(
+                    EmployeeReferenceFile(
+                        employee=employee,
+                        reference_file=reference_file,
+                        ctr_document_identifier=None,  # TODO
+                    )
+                )
             self.db_session.commit()
 
             count += 1
