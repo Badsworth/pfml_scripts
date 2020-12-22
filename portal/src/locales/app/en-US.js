@@ -488,6 +488,10 @@ const shared = {
     "PO Box 838$t(chars.nbsp)Lawrence, MA$t(chars.nbsp)01842",
   contactCenterFaxNumber: "(617)$t(chars.nbsp)855$t(chars.nbhyphen)6180",
   contactCenterPhoneNumber: "(833)$t(chars.nbsp)344$t(chars.nbhyphen)7365",
+  dashboardTitles: {
+    view: "View your applications",
+    create: "Get ready to apply",
+  },
   day_Friday: "Friday",
   day_Monday: "Monday",
   day_Saturday: "Saturday",
@@ -575,7 +579,7 @@ const pages = {
     inProgressHeading: "In-progress applications",
     noClaims: "You don't have any applications yet.",
     submittedHeading: "Submitted applications",
-    title: "Your applications",
+    title: "$t(shared.dashboardTitles.view)",
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:
       "Our Contact Center staff will review your documents for {{absence_id}}.",
@@ -1459,7 +1463,7 @@ const pages = {
     // TODO (CP-1496): Remove string once Jan 1 content is always on
     stepTwo_prelaunch:
       "<p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child's date of birth or placement.</p>",
-    title: "Get ready to apply",
+    title: "$t(shared.dashboardTitles.create)",
   },
   employersAuthCreateAccount: {
     createAccountButton: "Create account",
@@ -1886,8 +1890,8 @@ const components = {
       "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
   },
   dashboardNavigation: {
-    applicationsLink: "View your applications",
-    createApplicationLink: "Create an application",
+    applicationsLink: "$t(shared.dashboardTitles.view)",
+    createApplicationLink: "$t(shared.dashboardTitles.create)",
   },
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",

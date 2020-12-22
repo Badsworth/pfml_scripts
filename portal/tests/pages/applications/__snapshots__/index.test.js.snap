@@ -8,7 +8,7 @@ exports[`Applications when no claims exist renders the empty page state 1`] = `
   <Title
     hidden={false}
   >
-    Your applications
+    View your applications
   </Title>
   <p>
     You don't have any applications yet.
