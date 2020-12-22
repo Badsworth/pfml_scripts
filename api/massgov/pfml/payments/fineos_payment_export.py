@@ -1,11 +1,12 @@
 import csv
+import decimal
 import io
 import os
 import pathlib
 import zipfile
 from collections import OrderedDict
-from dataclasses import dataclass
-from typing import Dict, List
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Tuple, cast
 
 import massgov.pfml.db as db
 import massgov.pfml.payments.payments_util as payments_util
@@ -48,7 +49,7 @@ class CiIndex:
 @dataclass
 class Extract:
     file_location: str
-    indexed_data: Dict[CiIndex, Dict[str, str]] = None
+    indexed_data: Dict[CiIndex, Dict[str, str]] = field(default_factory=dict)
 
 
 class ExtractData:
@@ -91,24 +92,24 @@ class PaymentData:
     i_value: str
     customer_no: str
 
-    tin: str
-    absence_case_number: str
+    tin: Optional[str]
+    absence_case_number: Optional[str]
 
-    address_line_one: str
-    address_line_two: str
-    city: str
-    state: str
-    zip_code: str
+    address_line_one: Optional[str]
+    address_line_two: Optional[str]
+    city: Optional[str]
+    state: Optional[str]
+    zip_code: Optional[str]
 
-    raw_payment_method: str
-    payment_start_period: str
-    payment_end_period: str
-    payment_date: str
-    payment_amount: str
+    raw_payment_method: Optional[str]
+    payment_start_period: Optional[str]
+    payment_end_period: Optional[str]
+    payment_date: Optional[str]
+    payment_amount: Optional[str]
 
-    routing_nbr: str
-    account_nbr: str
-    raw_account_type: str
+    routing_nbr: Optional[str]
+    account_nbr: Optional[str]
+    raw_account_type: Optional[str]
 
     def __init__(self, extract_data: ExtractData, index: CiIndex, pei_record: Dict[str, str]):
         self.validation_container = payments_util.ValidationContainer(str(index))
@@ -129,6 +130,9 @@ class PaymentData:
 
         if self.validation_container.has_validation_issues():
             return
+        # Cast these to non-optional values as we've validated them above (for linting)
+        payment_details = cast(Dict[str, str], payment_details)
+        claim_details = cast(Dict[str, str], claim_details)
 
         # Grab every value we might need out of the datasets
         self.tin = payments_util.validate_csv_input(
@@ -219,10 +223,8 @@ def download_and_process_data(extract_data: ExtractData, download_directory: pat
     # VPEI file
     pei_data = download_and_parse_data(extract_data.pei.file_location, download_directory)
     # This doesn't specifically need to be indexed, but it lets us be consistent
-    indexed_pei_data = {}
     for record in pei_data:
-        indexed_pei_data[CiIndex(record["C"], record["I"])] = record
-    extract_data.pei.indexed_data = indexed_pei_data
+        extract_data.pei.indexed_data[CiIndex(record["C"], record["I"])] = record
 
     # Payment details file
     payment_details = download_and_parse_data(
@@ -230,10 +232,10 @@ def download_and_process_data(extract_data: ExtractData, download_directory: pat
     )
     # claim details needs to be indexed on PECLASSID and PEINDEXID
     # which point to the vpei.C and vpei.I columns
-    indexed_payment_details = {}
     for record in payment_details:
-        indexed_payment_details[CiIndex(record["PECLASSID"], record["PEINDEXID"])] = record
-    extract_data.payment_details.indexed_data = indexed_payment_details
+        extract_data.payment_details.indexed_data[
+            CiIndex(record["PECLASSID"], record["PEINDEXID"])
+        ] = record
 
     # Claim details file
     claim_details = download_and_parse_data(
@@ -241,14 +243,14 @@ def download_and_process_data(extract_data: ExtractData, download_directory: pat
     )
     # claim details needs to be indexed on PECLASSID and PEINDEXID
     # which point to the vpei.C and vpei.I columns
-    indexed_claim_details = {}
     for record in claim_details:
-        indexed_claim_details[CiIndex(record["PECLASSID"], record["PEINDEXID"])] = record
-    extract_data.claim_details.indexed_data = indexed_claim_details
+        extract_data.claim_details.indexed_data[
+            CiIndex(record["PECLASSID"], record["PEINDEXID"])
+        ] = record
 
 
 def determine_field_names(zipf: zipfile.ZipFile, file_name: str) -> List[str]:
-    field_names = OrderedDict()
+    field_names: Dict[str, int] = OrderedDict()
     # Read the first line of the file and handle duplicate field names.
     with zipf.open(file_name[:-4]) as extract_file:
         text_wrapper = io.TextIOWrapper(extract_file, encoding="UTF-8")
@@ -264,7 +266,7 @@ def determine_field_names(zipf: zipfile.ZipFile, file_name: str) -> List[str]:
             else:
                 field_names[field_name] = 1
 
-    return field_names.keys()
+    return list(field_names.keys())
 
 
 def download_and_parse_data(s3_path: str, download_directory: pathlib.Path) -> List[Dict[str, str]]:
@@ -294,7 +296,7 @@ def group_s3_files_by_date() -> Dict[str, List[str]]:
     s3_config = payments_util.get_s3_config()
     s3_objects = file_util.list_files(s3_config.pfml_fineos_inbound_path)
 
-    date_to_full_path = {}
+    date_to_full_path: Dict[str, List[str]] = {}
 
     for s3_object in s3_objects:
         for expected_file_name in expected_file_names:
@@ -312,7 +314,9 @@ def group_s3_files_by_date() -> Dict[str, List[str]]:
     return date_to_full_path
 
 
-def get_employee_and_claim(payment_data: PaymentData, db_session: db.Session) -> (Employee, Claim):
+def get_employee_and_claim(
+    payment_data: PaymentData, db_session: db.Session
+) -> Tuple[Optional[Employee], Optional[Claim]]:
     # Get the TIN, employee and claim associated with the payment to be made
     tax_identifier = (
         db_session.query(TaxIdentifier).filter_by(tax_identifier=payment_data.tin).one_or_none()
@@ -391,10 +395,12 @@ def create_or_update_payment(
 
     payment.claim = claim
     payment.payment_method_id = PaymentMethod.get_id(payment_data.raw_payment_method)
-    payment.period_start_date = payment_data.payment_start_period
-    payment.period_end_date = payment_data.payment_end_period
-    payment.payment_date = payment_data.payment_date
-    payment.amount = payment_data.payment_amount
+    payment.period_start_date = payments_util.datetime_str_to_date(
+        payment_data.payment_start_period
+    )
+    payment.period_end_date = payments_util.datetime_str_to_date(payment_data.payment_end_period)
+    payment.payment_date = payments_util.datetime_str_to_date(payment_data.payment_date)
+    payment.amount = decimal.Decimal(cast(str, payment_data.payment_amount))
     payment.fineos_pei_c_value = payment_data.c_value
     payment.fineos_pei_i_value = payment_data.i_value
 
@@ -415,8 +421,11 @@ def update_eft(payment_data: PaymentData, employee: Employee, db_session: db.Ses
     if not eft:
         eft = EFT()
 
-    eft.routing_nbr = payment_data.routing_nbr
-    eft.account_nbr = payment_data.account_nbr
+    # Need to cast these values as str rather than Optional[str]
+    # as we've already validated they're not None
+    # for linting, but then make them ints for actually assigning them
+    eft.routing_nbr = int(cast(str, payment_data.routing_nbr))
+    eft.account_nbr = int(cast(str, payment_data.account_nbr))
     eft.bank_account_type_id = BankAccountType.get_id(payment_data.raw_account_type)
 
     employee.eft = eft
@@ -431,6 +440,9 @@ def process_payment_data_record(
     # We weren't able to find the employee and claim, can't properly associate it
     if payment_data.validation_container.has_validation_issues():
         return
+    # cast the types here so the linter doesn't think these are potentially None below
+    employee = cast(Employee, employee)
+    claim = cast(Claim, claim)
 
     # Update the mailing address with values from FINEOS
     update_mailing_address(payment_data, employee, db_session)

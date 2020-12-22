@@ -3,7 +3,7 @@ import random
 import string
 import xml.dom.minidom as minidom
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple, cast
 
 import massgov.pfml.payments.payments_util as payments_util
 from massgov.pfml.payments.payments_util import Constants
@@ -201,7 +201,9 @@ def build_gax_dat(doc_data: List[Dict[str, Any]]) -> minidom.Document:
 
 
 def build_gax_inf(doc_data: List[Dict[str, Any]], now: datetime, count: int) -> Dict[str, str]:
-    total_dollar_amount = sum(decimal.Decimal(data["amount_monamt"]) for data in doc_data)
+    total_dollar_amount = cast(
+        decimal.Decimal, sum(decimal.Decimal(data["amount_monamt"]) for data in doc_data)
+    )
 
     return {
         "NewMmarsBatchID": f"{Constants.COMPTROLLER_DEPT_CODE}{now.strftime('%m%d')}GAX{count}",  # eg. EOL0101GAX24
@@ -211,11 +213,11 @@ def build_gax_inf(doc_data: List[Dict[str, Any]], now: datetime, count: int) -> 
         "NewMmarsTransCode": "GAX",
         "NewMmarsTableName": "",
         "NewMmarsTransCount": str(len(doc_data)),
-        "NewMmarsTransDollarAmount": total_dollar_amount.quantize(TWOPLACES),
+        "NewMmarsTransDollarAmount": str(total_dollar_amount.quantize(TWOPLACES)),
     }
 
 
-def build_gax_files(doc_data: List[Dict[str, Any]], directory: str, count: int) -> (str, str):
+def build_gax_files(doc_data: List[Dict[str, Any]], directory: str, count: int) -> Tuple[str, str]:
     if count < 10:
         raise Exception("Gax file count must be greater than 10")
     now = payments_util.get_now()

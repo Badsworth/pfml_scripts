@@ -1,9 +1,9 @@
 import os
 import xml.dom.minidom as minidom
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import pytz
 
@@ -66,10 +66,10 @@ class ValidationContainer:
     validation_issues: List[ValidationIssue] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
 
-    def add_validation_issue(self, reason: ValidationReason, details: str):
+    def add_validation_issue(self, reason: ValidationReason, details: str) -> None:
         self.validation_issues.append(ValidationIssue(reason, details))
 
-    def add_error_msg(self, message: str):
+    def add_error_msg(self, message: str) -> None:
         self.errors.append(message)
 
     def has_validation_issues(self) -> bool:
@@ -79,7 +79,7 @@ class ValidationContainer:
 def lookup_validator(
     lookup_table_clazz: Type[LookupTable],
 ) -> Callable[[str], Optional[ValidationReason]]:
-    def validator_func(raw_value: str) -> Optional[str]:
+    def validator_func(raw_value: str) -> Optional[ValidationReason]:
         # description_to_db_instance is used by the get_id method
         # If the value passed into this method is set as a key in that, it's valid
         if raw_value not in lookup_table_clazz.description_to_db_instance:
@@ -97,7 +97,7 @@ def validate_csv_input(
     min_length: Optional[int] = None,
     max_length: Optional[int] = None,
     custom_validator_func: Optional[Callable[[str], Optional[ValidationReason]]] = None,
-) -> str:
+) -> Optional[str]:
     # Don't write out the actual value in the messages, these can be SSNs, routing #s, and other PII
     value = data.get(key)
     if required and not value or value == "Unknown":
@@ -132,8 +132,8 @@ def validate_db_input(
     required: bool,
     max_length: int,
     truncate: bool,
-    func: Optional[Callable[[Any], str]] = None,
-) -> str:
+    func: Optional[Callable[[Any], Optional[str]]] = None,
+) -> Optional[str]:
     value = getattr(db_object, key, None)
 
     if required and not value:
@@ -146,7 +146,7 @@ def validate_db_input(
     else:
         value_str = str(value)  # Everything else should be safe to convert to string
 
-    if len(value_str) > max_length:
+    if value_str and len(value_str) > max_length:
         if truncate:
             return value_str[:max_length]
         # Don't add the value itself, these can include SSNs and other PII
@@ -162,7 +162,7 @@ def validate_input(
     max_length: int,
     truncate: bool,
     func: Optional[Callable[[Any], str]] = None,
-) -> str:
+) -> Optional[str]:
     # This will need to be adjusted to use getattr once doc_data is a db model
     value = doc_data.get(key)
 
@@ -208,7 +208,7 @@ def add_cdata_elements(
 
 def create_files(
     directory: str, filename: str, dat_xml_document: minidom.Document, inf_dict: Dict[str, str]
-) -> str:
+) -> Tuple[str, str]:
     dat_filepath = os.path.join(directory, f"{filename}.DAT")
     inf_filepath = os.path.join(directory, f"{filename}.INF")
 
@@ -220,3 +220,9 @@ def create_files(
             inf_file.write(f"{k} = {v};\n")
 
     return (dat_filepath, inf_filepath)
+
+
+def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
+    if not datetime_str:
+        return None
+    return datetime.fromisoformat(datetime_str).date()
