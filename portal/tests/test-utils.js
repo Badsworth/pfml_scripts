@@ -223,6 +223,7 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
   constructor(middleName = "") {
     super();
     this.claimAttrs = {
+      employer_dba: "Work Inc.",
       first_name: "Jane",
       middle_name: middleName,
       last_name: "Doe",

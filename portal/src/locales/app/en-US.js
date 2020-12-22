@@ -1514,6 +1514,7 @@ const pages = {
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
     instructionsLabel:
       "Are you the right person to respond to this application?",
+    organizationNameLabel: "Organization",
     ssnOrItinLabel:
       "Social Security Number or Individual Taxpayer Identification Number",
     submitButton: "Submit",
@@ -1660,6 +1661,7 @@ const pages = {
     },
     noneReported: "None reported",
     notApplicable: "-",
+    organizationNameLabel: "Organization",
     previousLeaves: {
       commentInstructions: "$t(shared.employerInstructions_addComment)",
       detailsLabel: "$t(shared.qualifyingReasonDetailsLabel)",

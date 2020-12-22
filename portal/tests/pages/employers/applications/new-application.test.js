@@ -7,6 +7,7 @@ import {
 import ConditionalContent from "../../../../src/components/ConditionalContent";
 import NewApplication from "../../../../src/pages/employers/applications/new-application";
 import { act } from "react-dom/test-utils";
+import { clone } from "lodash";
 import useAppLogic from "../../../../src/hooks/useAppLogic";
 
 jest.mock("../../../../src/hooks/useAppLogic");
@@ -38,6 +39,32 @@ describe("NewApplication", () => {
 
   it("renders the page", () => {
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("shows organization name if employer_dba is populated", () => {
+    expect(wrapper.exists('StatusRow[label="Organization"]')).toBe(true);
+  });
+
+  it("hides organization name if 'employer_dba' is falsy", () => {
+    const employerClaimAttrs = clone(claim);
+    employerClaimAttrs.employer_dba = undefined;
+
+    act(() => {
+      testHook(() => {
+        appLogic = useAppLogic();
+      });
+      appLogic.employers.claim = employerClaimAttrs;
+
+      ({ wrapper } = renderWithAppLogic(NewApplication, {
+        employerClaimAttrs,
+        props: {
+          appLogic,
+          query,
+        },
+      }));
+    });
+
+    expect(wrapper.exists('StatusRow[label="Organization"]')).toBe(false);
   });
 
   it("does not redirect if is_reviewable is true", () => {
