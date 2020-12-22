@@ -1,6 +1,5 @@
 import EmployerBenefit, {
   EmployerBenefitFrequency,
-  EmployerBenefitType,
 } from "../../models/EmployerBenefit";
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
@@ -40,24 +39,23 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
     });
     onChange({ employer_benefit_id: id, [field]: formattedValue });
   };
-  const isPaidLeave =
-    employerBenefit.benefit_type === EmployerBenefitType.paidLeave;
   const getBenefitAmountByType = () => {
     const {
       benefit_amount_dollars,
       benefit_amount_frequency,
     } = employerBenefit;
-    const hasBenefitAmountDetails =
-      benefit_amount_dollars && benefit_amount_frequency;
-    return isPaidLeave || !hasBenefitAmountDetails
-      ? t("pages.employersClaimsReview.notApplicable")
-      : t("pages.employersClaimsReview.employerBenefits.amountPerFrequency", {
-          context: findKeyByValue(
-            EmployerBenefitFrequency,
-            benefit_amount_frequency
-          ),
-          amount: benefit_amount_dollars,
-        });
+    const isFrequencyUnknown =
+      benefit_amount_frequency === EmployerBenefitFrequency.unknown ||
+      !benefit_amount_frequency;
+    return t(
+      "pages.employersClaimsReview.employerBenefits.amountPerFrequency",
+      {
+        context: isFrequencyUnknown
+          ? null
+          : findKeyByValue(EmployerBenefitFrequency, benefit_amount_frequency),
+        amount: benefit_amount_dollars,
+      }
+    );
   };
   const getAllBenefitFrequencies = () => {
     return Object.values(EmployerBenefitFrequency).map((frequency) => {
@@ -134,43 +132,37 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
                 yearLabel={t("components.form.dateInputYearLabel")}
                 smallLabel
               />
-              {!isPaidLeave && (
-                <React.Fragment>
-                  <InputText
-                    onChange={(e) =>
-                      amendBenefit(
-                        employerBenefit.employer_benefit_id,
-                        "benefit_amount_dollars",
-                        e.target.value
-                      )
-                    }
-                    name="benefit-amount-amendment"
-                    value={amendment.benefit_amount_dollars}
-                    label={t("components.amendmentForm.question_benefitAmount")}
-                    mask="currency"
-                    width="medium"
-                    smallLabel
-                  />
-                  <Dropdown
-                    choices={getAllBenefitFrequencies()}
-                    label={t(
-                      "components.amendmentForm.question_benefitFrequency"
-                    )}
-                    name="benefit-frequency-amendment"
-                    onChange={(e) =>
-                      amendBenefit(
-                        employerBenefit.employer_benefit_id,
-                        "benefit_amount_frequency",
-                        e.target.value
-                      )
-                    }
-                    class="margin-top-0"
-                    value={amendment.benefit_amount_frequency}
-                    hideEmptyChoice
-                    smallLabel
-                  />
-                </React.Fragment>
-              )}
+              <InputText
+                onChange={(e) =>
+                  amendBenefit(
+                    employerBenefit.employer_benefit_id,
+                    "benefit_amount_dollars",
+                    e.target.value
+                  )
+                }
+                name="benefit-amount-amendment"
+                value={amendment.benefit_amount_dollars}
+                label={t("components.amendmentForm.question_benefitAmount")}
+                mask="currency"
+                width="medium"
+                smallLabel
+              />
+              <Dropdown
+                choices={getAllBenefitFrequencies()}
+                label={t("components.amendmentForm.question_benefitFrequency")}
+                name="benefit-frequency-amendment"
+                onChange={(e) =>
+                  amendBenefit(
+                    employerBenefit.employer_benefit_id,
+                    "benefit_amount_frequency",
+                    e.target.value
+                  )
+                }
+                class="margin-top-0"
+                value={amendment.benefit_amount_frequency}
+                hideEmptyChoice
+                smallLabel
+              />
             </AmendmentForm>
           </td>
         </tr>

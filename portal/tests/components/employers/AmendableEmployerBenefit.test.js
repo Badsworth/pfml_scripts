@@ -45,8 +45,26 @@ describe("AmendableEmployerBenefit", () => {
     );
   });
 
-  it("renders formatted benefit amount with dollar sign", () => {
+  it("renders formatted benefit amount with dollar sign and frequency", () => {
     expect(wrapper.find("td").at(1).text()).toEqual("$1,000.00 per month");
+  });
+
+  it("excludes frequency from benefit amount when frequency is 'Unknown'", () => {
+    const paidLeave = new EmployerBenefit({
+      benefit_amount_dollars: 0,
+      benefit_amount_frequency: "Unknown",
+      benefit_end_date: "2021-03-01",
+      benefit_start_date: "2021-02-01",
+      benefit_type: EmployerBenefitType.paidLeave,
+    });
+    const wrapper = shallow(
+      <AmendableEmployerBenefit
+        employerBenefit={paidLeave}
+        onChange={() => {}}
+      />
+    );
+
+    expect(wrapper.find("td").at(1).text()).toEqual("$0.00");
   });
 
   it("renders an AmendmentForm if user clicks on AmendButton", () => {
@@ -66,27 +84,6 @@ describe("AmendableEmployerBenefit", () => {
     wrapper.find(AmendButton).simulate("click");
 
     expect(wrapper.find(InputText).prop("mask")).toEqual("currency");
-  });
-
-  it("hides amount input field if the benefit is accrued paid leave", () => {
-    const paidLeave = new EmployerBenefit({
-      benefit_amount_dollars: 0,
-      benefit_amount_frequency: "",
-      benefit_end_date: "2021-03-01",
-      benefit_start_date: "2021-02-01",
-      benefit_type: EmployerBenefitType.paidLeave,
-    });
-    const wrapper = shallow(
-      <AmendableEmployerBenefit
-        employerBenefit={paidLeave}
-        onChange={() => {}}
-      />
-    );
-
-    wrapper.find(AmendButton).simulate("click");
-
-    expect(wrapper.find(InputDate)).toHaveLength(2);
-    expect(wrapper.find(InputText).exists()).toEqual(false);
   });
 
   it("updates start and end dates in the AmendmentForm", () => {

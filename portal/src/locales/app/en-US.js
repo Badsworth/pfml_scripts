@@ -428,6 +428,10 @@ const errors = {
   },
   employers: {
     employer_benefits: {
+      benefit_amount_frequency: {
+        enum:
+          "Select a frequency (daily, weekly, monthly, or all at once) for each employer benefit.",
+      },
       benefit_end_date: {
         date: "End date must include a day, month, and year.",
       },
@@ -1541,6 +1545,7 @@ const pages = {
         "Did the employee give you at least 30 days notice about their leave?",
     },
     employerBenefits: {
+      amountPerFrequency: "{{amount, currency}}",
       amountPerFrequency_daily: "$t(shared.amountPerFrequency_daily)",
       amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
       amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",
