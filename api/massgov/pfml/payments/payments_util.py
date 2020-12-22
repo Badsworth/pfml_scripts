@@ -44,7 +44,7 @@ def get_s3_config() -> PaymentsS3Config:
     )
 
 
-class ValidationReason(Enum):
+class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"
     MISSING_IN_DB = "MissingInDB"

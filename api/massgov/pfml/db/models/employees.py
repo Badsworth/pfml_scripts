@@ -718,20 +718,40 @@ class StateLog(Base):
     __tablename__ = "state_log"
     state_log_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     flow_id = Column(Integer, ForeignKey("lk_flow.flow_id"))
-    state_id = Column(Integer, ForeignKey("lk_state.state_id"), nullable=False)
+    start_state_id = Column(Integer, ForeignKey("lk_state.state_id"), nullable=False)
+    end_state_id = Column(Integer, ForeignKey("lk_state.state_id"))
     started_at = Column(TIMESTAMP(timezone=True))
     ended_at = Column(TIMESTAMP(timezone=True), index=True)
-    outcome = Column(Text)
-    success = Column(Boolean, index=True)
+    outcome = Column(JSON)
     payment_id = Column(UUID(as_uuid=True), ForeignKey("payment.payment_id"), index=True)
     reference_file_id = Column(
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
     )
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
+    prev_state_log_id = Column(UUID(as_uuid=True), ForeignKey("state_log.state_log_id"))
 
     payment = relationship("Payment", back_populates="state_logs")
     reference_file = relationship("ReferenceFile", back_populates="state_logs")
     employee = relationship("Employee", back_populates="state_logs")
+    prev_state_log = relationship("StateLog", uselist=False)
+
+
+class LatestStateLog(Base):
+    __tablename__ = "latest_state_log"
+    latest_state_log_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+
+    state_log_id = Column(UUID(as_uuid=True), ForeignKey("state_log.state_log_id"), index=True)
+    payment_id = Column(UUID(as_uuid=True), ForeignKey("payment.payment_id"), index=True)
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
+    reference_file_id = Column(
+        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    flow_id = Column(Integer, ForeignKey("lk_flow.flow_id"))
+
+    state_log = relationship("StateLog")
+    payment = relationship("Payment")
+    employee = relationship("Employee")
+    reference_file = relationship("ReferenceFile")
 
 
 class AbsenceStatus(LookupTable):
