@@ -113,10 +113,9 @@ resource "pagerduty_schedule" "mass_pfml_portal_delivery" {
 
 # High Priority:
 #
-#  Primary Engineer
-#  --> no acknowledgement after 5 min --> Primary Engineer (re-ping)
-#  --> no acknowledgement after 5 min --> Secondary Engineer
-#  --> no acknowledgement after 10 min --> Delivery Manager
+#  Primary Engineer + Delivery Manager
+#  --> no acknowledgement after 5 min --> Primary Engineer + Delivery Manager (re-ping)
+#  --> no acknowledgement after 10 min --> Secondary Engineer
 #  --> no acknowledgement after 10 min --> repeat
 #
 resource "pagerduty_escalation_policy" "mass_pfml_portal_high_priority" {
@@ -130,13 +129,21 @@ resource "pagerduty_escalation_policy" "mass_pfml_portal_high_priority" {
       type = "schedule_reference"
       id   = pagerduty_schedule.mass_pfml_portal_primary.id
     }
+    target {
+      type = "schedule_reference"
+      id   = pagerduty_schedule.mass_pfml_portal_delivery.id
+    }
   }
 
   rule {
-    escalation_delay_in_minutes = 5
+    escalation_delay_in_minutes = 10
     target {
       type = "schedule_reference"
       id   = pagerduty_schedule.mass_pfml_portal_primary.id
+    }
+    target {
+      type = "schedule_reference"
+      id   = pagerduty_schedule.mass_pfml_portal_delivery.id
     }
   }
 
@@ -145,14 +152,6 @@ resource "pagerduty_escalation_policy" "mass_pfml_portal_high_priority" {
     target {
       type = "schedule_reference"
       id   = pagerduty_schedule.mass_pfml_portal_secondary.id
-    }
-  }
-
-  rule {
-    escalation_delay_in_minutes = 10
-    target {
-      type = "schedule_reference"
-      id   = pagerduty_schedule.mass_pfml_portal_delivery.id
     }
   }
 }
