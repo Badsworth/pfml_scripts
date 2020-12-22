@@ -1636,6 +1636,8 @@ const pages = {
         "This is your employee’s expected leave schedule. Download the attached documentation for more details.",
       caption_intermittent_hasDocuments:
         "Download the attached documentation for details about the employee’s intermittent leave schedule.",
+      caption_recordkeeping_hasDocuments:
+        "To meet federal laws and regulations, you must keep medical records separate and confidential from any personnel files.",
       downloadAttachments:
         "Download the documentation below or contact us at $t(shared.contactCenterPhoneNumber) for details about the leave schedule.",
       frequencyBasis_irregular: "Irregular over the next 6 months",

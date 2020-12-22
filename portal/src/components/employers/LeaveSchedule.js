@@ -154,6 +154,7 @@ const LeaveSchedule = ({ appLogic, claim }) => {
           level="3"
           label={t("pages.employersClaimsReview.documentationLabel")}
         >
+        <p>{t("pages.employersClaimsReview.leaveSchedule.caption_recordkeeping_hasDocuments")}</p>
           {medicalDocuments.map((document) => (
             <HcpDocumentItem
               appLogic={appLogic}
