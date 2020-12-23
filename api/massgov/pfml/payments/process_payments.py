@@ -1,5 +1,6 @@
 import argparse
 import json
+import sys
 
 import massgov.pfml.db
 import massgov.pfml.payments.payments_util
@@ -35,18 +36,17 @@ def regenerate():
 
     args = regenerate_parse_args()
     config = payments_util.get_s3_config()
-    db_session = massgov.pfml.db.init()
+    db_session_raw = massgov.pfml.db.init()
 
     try:
         with massgov.pfml.util.batch.log.log_entry(
-            db_session, "Payments regenerate", ""
-        ) as log_entry:
+            db_session_raw, "Payments regenerate", ""
+        ) as log_entry, massgov.pfml.db.session_scope(db_session_raw) as db_session:
             log_entry.report = json.dumps({"batch_id": args.batch})
             massgov.pfml.payments.regenerate.regenerate_batch(args.batch, config, db_session)
-    except RuntimeError as ex:
-        logger.error("%s", ex)
     except Exception as ex:
         logger.exception("%s", ex)
+        sys.exit(1)
 
 
 def regenerate_parse_args():
