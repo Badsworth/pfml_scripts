@@ -35,6 +35,9 @@ export const Review = (props) => {
   const {
     employers: { claim },
   } = appLogic;
+  const { t } = useTranslation();
+  // TODO (EMPLOYER-718): Remove feature flag
+  const showPreviousLeaves = isFeatureEnabled("employerShowPreviousLeaves");
 
   // explicitly check for false as opposed to falsy values.
   // temporarily allows the redirect behavior to work even
@@ -45,10 +48,6 @@ export const Review = (props) => {
     });
   }
 
-  const { t } = useTranslation();
-  const shouldShowPreviousLeaves = isFeatureEnabled(
-    "employerShowPreviousLeaves"
-  );
   const [formState, setFormState] = useState({
     employerBenefits: [],
     previousLeaves: [],
@@ -128,7 +127,7 @@ export const Review = (props) => {
 
     const amendedHours = formState.amendedHours;
     const previous_leaves = formState.amendedLeaves.map((leave) =>
-      pick(leave, ["leave_end_date", "leave_start_date"])
+      pick(leave, ["leave_end_date", "leave_reason", "leave_start_date"])
     );
     const employer_benefits = formState.amendedBenefits.map((benefit) =>
       pick(benefit, [
@@ -193,8 +192,8 @@ export const Review = (props) => {
           employerBenefits={formState.employerBenefits}
           onChange={handleBenefitInputChange}
         />
-        {/* TODO (EMPLOYER-656): Show previous leaves */}
-        {shouldShowPreviousLeaves && (
+        {/* TODO (EMPLOYER-718): Remove feature flag  */}
+        {showPreviousLeaves && (
           <PreviousLeaves
             previousLeaves={formState.previousLeaves}
             onChange={handlePreviousLeavesChange}

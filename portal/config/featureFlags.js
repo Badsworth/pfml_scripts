@@ -45,7 +45,7 @@ const flagsConfig = {
     employerShowFileUpload: false,
 
     // When this flag is enabled, the "Previous leaves" section on Review page is visible
-    // TODO (EMPLOYER-657): Show this section after 1/1
+    // TODO (EMPLOYER-718): Remove flag
     employerShowPreviousLeaves: false,
 
     // When this flag true, you can BYPASS maintenance pages that are currently present.
@@ -68,26 +68,31 @@ const flagsConfig = {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
+    employerShowPreviousLeaves: true,
   },
   test: {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
+    employerShowPreviousLeaves: true,
   },
   stage: {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
+    employerShowPreviousLeaves: true,
   },
   training: {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
+    employerShowPreviousLeaves: true,
   },
   performance: {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
+    employerShowPreviousLeaves: true,
   },
   prod: {
     pfmlTerriyay: true,

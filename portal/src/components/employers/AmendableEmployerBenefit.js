@@ -6,6 +6,7 @@ import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import ConditionalContent from "../ConditionalContent";
 import Dropdown from "../Dropdown";
+import Heading from "../Heading";
 import InputDate from "../InputDate";
 import InputText from "../InputText";
 import PropTypes from "prop-types";
@@ -140,7 +141,7 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
                 onChange(employerBenefit);
               }}
             >
-              <p>{employerBenefit.benefit_type}</p>
+              <Heading level="4">{employerBenefit.benefit_type}</Heading>
               <InputDate
                 onChange={(e) =>
                   amendBenefit(

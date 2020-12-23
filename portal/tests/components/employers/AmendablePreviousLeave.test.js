@@ -1,9 +1,11 @@
+import PreviousLeave, {
+  PreviousLeaveReason,
+} from "../../../src/models/PreviousLeave";
 import AmendButton from "../../../src/components/employers/AmendButton";
 import AmendablePreviousLeave from "../../../src/components/employers/AmendablePreviousLeave";
 import AmendmentForm from "../../../src/components/employers/AmendmentForm";
 import Button from "../../../src/components/Button";
 import InputDate from "../../../src/components/InputDate";
-import PreviousLeave from "../../../src/models/PreviousLeave";
 import React from "react";
 import { shallow } from "enzyme";
 
@@ -11,6 +13,7 @@ describe("AmendablePreviousLeave", () => {
   const leavePeriod = new PreviousLeave({
     leave_start_date: "2020-03-01",
     leave_end_date: "2020-03-06",
+    leave_reason: PreviousLeaveReason.bonding,
     previous_leave_id: 1,
   });
   const props = {

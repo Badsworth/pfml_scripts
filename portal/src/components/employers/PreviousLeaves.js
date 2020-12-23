@@ -101,9 +101,14 @@ const PreviousLeaves = (props) => {
       <Table>
         <thead>
           <tr>
-            <th colSpan="3" scope="col">
+            <th scope="col">
               {t(
                 "pages.employersClaimsReview.previousLeaves.tableHeader_dateRange"
+              )}
+            </th>
+            <th scope="col" colSpan="2">
+              {t(
+                "pages.employersClaimsReview.previousLeaves.tableHeader_leaveType"
               )}
             </th>
           </tr>

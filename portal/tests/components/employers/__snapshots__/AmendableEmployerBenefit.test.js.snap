@@ -31,9 +31,11 @@ exports[`AmendableEmployerBenefit renders the component 1`] = `
         <AmendmentForm
           onCancel={[Function]}
         >
-          <p>
+          <Heading
+            level="4"
+          >
             Short-term disability insurance
-          </p>
+          </Heading>
           <InputDate
             dayLabel="Day"
             label="When will the employee start using the benefit?"

@@ -4,6 +4,7 @@ import {
   simulateEvents,
 } from "../../../test-utils";
 import EmployerBenefit from "../../../../src/models/EmployerBenefit";
+import PreviousLeave from "../../../../src/models/PreviousLeave";
 import Review from "../../../../src/pages/employers/applications/review";
 import { act } from "react-dom/test-utils";
 import { clone } from "lodash";
@@ -30,6 +31,10 @@ describe("Review", () => {
   };
 
   beforeEach(() => {
+    process.env.featureFlags = {
+      employerShowPreviousLeaves: true,
+    };
+
     ({ wrapper, appLogic } = renderComponent("mount"));
   });
 
@@ -213,22 +218,21 @@ describe("Review", () => {
     );
   });
 
-  // TODO (EMPLOYER-656): Show previous leaves
-  // it("sets 'has_amendments' to true if leaves are amended", () => {
-  //   act(() => {
-  //     wrapper
-  //       .find("PreviousLeaves")
-  //       .props()
-  //       .onChange(new PreviousLeave({ previous_leave_id: 1 }));
-  //   });
+  it("sets 'has_amendments' to true if leaves are amended", () => {
+    act(() => {
+      wrapper
+        .find("PreviousLeaves")
+        .props()
+        .onChange(new PreviousLeave({ previous_leave_id: 1 }));
+    });
 
-  //   simulateEvents(wrapper).submitForm();
+    simulateEvents(wrapper).submitForm();
 
-  //   expect(appLogic.employers.submit).toHaveBeenCalledWith(
-  //     "NTN-111-ABS-01",
-  //     expect.objectContaining({ has_amendments: true })
-  //   );
-  // });
+    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      expect.objectContaining({ has_amendments: true })
+    );
+  });
 
   it("sets 'has_amendments' to true if hours are amended", () => {
     act(() => {

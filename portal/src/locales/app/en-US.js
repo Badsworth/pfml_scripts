@@ -1682,6 +1682,14 @@ const pages = {
       explanation:
         "If your employee took any paid or unpaid leave for a qualifying reason since January 1, 2021, it may <calculate-reductions-link>affect their benefit amount</calculate-reductions-link>.",
       header: "Past leave",
+      leaveReasonValue_activeDutyFamily:
+        "$t(shared.leaveReasonActiveDutyFamily)",
+      leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+      leaveReasonValue_care: "$t(shared.leaveReasonMedical)",
+      leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+      leaveReasonValue_pregnancy: "$t(shared.leaveReasonBonding)",
+      leaveReasonValue_serviceMemberFamily:
+        "$t(shared.leaveReasonServiceMemberFamily)",
       qualifyingReasonContent:
         "An employee or contractor can take paid or unpaid leave to:",
       qualifyingReason_activeDuty:
@@ -1695,6 +1703,7 @@ const pages = {
       qualifyingReason_manageHealth:
         "Manage a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>, including illness, injury, or pregnancy",
       tableHeader_dateRange: "Date range",
+      tableHeader_leaveType: "Leave type",
     },
     submitButton: "Submit",
     supportingWorkDetails: {

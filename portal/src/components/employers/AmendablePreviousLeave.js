@@ -1,10 +1,12 @@
+import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import ConditionalContent from "../ConditionalContent";
+import Heading from "../Heading";
 import InputDate from "../InputDate";
-import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
+import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
 
@@ -38,6 +40,14 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
           )}
         </th>
         <td>
+          {t("pages.employersClaimsReview.previousLeaves.leaveReasonValue", {
+            context: findKeyByValue(
+              PreviousLeaveReason,
+              leavePeriod.leave_reason
+            ),
+          })}
+        </td>
+        <td>
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
         </td>
       </tr>
@@ -54,6 +64,17 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
                 onChange(leavePeriod);
               }}
             >
+              <Heading level="4">
+                {t(
+                  "pages.employersClaimsReview.previousLeaves.leaveReasonValue",
+                  {
+                    context: findKeyByValue(
+                      PreviousLeaveReason,
+                      leavePeriod.leave_reason
+                    ),
+                  }
+                )}
+              </Heading>
               <InputDate
                 onChange={(e) =>
                   amendLeave(
