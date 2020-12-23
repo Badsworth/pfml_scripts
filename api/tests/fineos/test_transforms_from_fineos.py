@@ -68,36 +68,46 @@ def other_leave_eform():
     return EForm.parse_obj(
         {
             "eformType": "Other Leaves",
-            "eformId": 2230,
+            "eformId": 11475,
             "eformAttributes": [
-                {"name": "PriorConcurrent", "stringValue": " Prior"},
-                {"name": "PriorConcurrent2", "stringValue": "Prior"},
-                {"name": "EndDate2", "dateValue": "2019-12-27"},
                 {"name": "SecondaryQualifyingReason", "stringValue": "Military caregiver"},
-                {"name": "BeginDate2", "dateValue": "2019-12-04"},
+                {
+                    "name": "QualifyingReason2",
+                    "enumValue": {
+                        "domainName": "QualifyingReasons",
+                        "instanceValue": "Child bonding",
+                    },
+                },
+                {
+                    "name": "QualifyingReason1",
+                    "enumValue": {
+                        "domainName": "QualifyingReasons",
+                        "instanceValue": "Pregnancy / Maternity",
+                    },
+                },
+                {"name": "EndDate2", "dateValue": "2020-12-15"},
+                {"name": "EndDate1", "dateValue": "2020-09-22"},
+                {"name": "BeginDate2", "dateValue": "2020-09-23"},
                 {
                     "name": "Applies1",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
-                {"name": "EndDate", "dateValue": "2020-05-31"},
+                {"name": "BeginDate1", "dateValue": "2020-09-01"},
                 {
                     "name": "Applies2",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
                 {
-                    "name": "QualifyingReasonPrimary",
-                    "enumValue": {
-                        "domainName": "NotificationReason",
-                        "instanceValue": "Pregnancy / Maternity",
-                    },
+                    "name": "Applies3",
+                    "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "No"},
                 },
-                {"name": "BeginDate", "dateValue": "2020-04-01"},
                 {
-                    "name": "QualifyingReasonPrimary2",
-                    "enumValue": {
-                        "domainName": "NotificationReason",
-                        "instanceValue": "Care for a family member",
-                    },
+                    "name": "LeaveFromEmployer2",
+                    "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
+                },
+                {
+                    "name": "LeaveFromEmployer1",
+                    "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
                 {"name": "SecondaryQualifyingReason2", "stringValue": "Military caregiver"},
             ],
@@ -110,36 +120,46 @@ def other_leave_eform_bad_values():
     return EForm.parse_obj(
         {
             "eformType": "Other Leaves",
-            "eformId": 2230,
+            "eformId": 11475,
             "eformAttributes": [
-                {"name": "PriorConcurrent", "stringValue": " Prior"},
-                {"name": "PriorConcurrent2", "stringValue": "Prior"},
-                {"name": "EndDate2", "dateValue": "2019-12-27"},
                 {"name": "SecondaryQualifyingReason", "stringValue": "Military caregiver"},
-                {"name": "BeginDate2", "dateValue": "2019-12-04"},
+                {
+                    "name": "QualifyingReason2",
+                    "enumValue": {
+                        "domainName": "QualifyingReasons",
+                        "instanceValue": "Please Select",
+                    },
+                },
+                {
+                    "name": "QualifyingReason1",
+                    "enumValue": {
+                        "domainName": "QualifyingReasons",
+                        "instanceValue": "Please Select",
+                    },
+                },
+                {"name": "EndDate2", "dateValue": "2020-12-15"},
+                {"name": "EndDate1", "dateValue": "2020-09-22"},
+                {"name": "BeginDate2", "dateValue": "2020-09-23"},
                 {
                     "name": "Applies1",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
-                {"name": "EndDate", "dateValue": "2020-05-31"},
+                {"name": "BeginDate1", "dateValue": "2020-09-01"},
                 {
                     "name": "Applies2",
                     "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
                 {
-                    "name": "QualifyingReasonPrimary",
-                    "enumValue": {
-                        "domainName": "NotificationReason",
-                        "instanceValue": "Please Select",
-                    },
+                    "name": "Applies3",
+                    "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "No"},
                 },
-                {"name": "BeginDate", "dateValue": "2020-04-01"},
                 {
-                    "name": "QualifyingReasonPrimary2",
-                    "enumValue": {
-                        "domainName": "NotificationReason",
-                        "instanceValue": "Please Select",
-                    },
+                    "name": "LeaveFromEmployer2",
+                    "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
+                },
+                {
+                    "name": "LeaveFromEmployer1",
+                    "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 },
                 {"name": "SecondaryQualifyingReason2", "stringValue": "Military caregiver"},
             ],
@@ -183,15 +203,15 @@ class TestTransformEformBody:
 
         assert type(other_leaves_list[0]) is PreviousLeave
         other_leave_1 = other_leaves_list[0].dict()
-        assert other_leave_1["leave_start_date"] == date(2020, 4, 1)
-        assert other_leave_1["leave_end_date"] == date(2020, 5, 31)
+        assert other_leave_1["leave_start_date"] == date(2020, 9, 1)
+        assert other_leave_1["leave_end_date"] == date(2020, 9, 22)
         assert other_leave_1["leave_reason"] == "Pregnancy / Maternity"
 
         assert type(other_leaves_list[1]) is PreviousLeave
         other_leave_2 = other_leaves_list[1].dict()
-        assert other_leave_2["leave_start_date"] == date(2019, 12, 4)
-        assert other_leave_2["leave_end_date"] == date(2019, 12, 27)
-        assert other_leave_2["leave_reason"] == "Care for a family member"
+        assert other_leave_2["leave_start_date"] == date(2020, 9, 23)
+        assert other_leave_2["leave_end_date"] == date(2020, 12, 15)
+        assert other_leave_2["leave_reason"] == "Child bonding"
 
     def test_transform_eform_with_bad_values(self, other_leave_eform_bad_values):
         other_leaves_list = TransformOtherLeaveEform.from_fineos(other_leave_eform_bad_values)
@@ -199,12 +219,12 @@ class TestTransformEformBody:
 
         assert type(other_leaves_list[0]) is PreviousLeave
         other_leave_1 = other_leaves_list[0].dict()
-        assert other_leave_1["leave_start_date"] == date(2020, 4, 1)
-        assert other_leave_1["leave_end_date"] == date(2020, 5, 31)
+        assert other_leave_1["leave_start_date"] == date(2020, 9, 1)
+        assert other_leave_1["leave_end_date"] == date(2020, 9, 22)
         assert other_leave_1["leave_reason"] == "Unknown"
 
         assert type(other_leaves_list[1]) is PreviousLeave
         other_leave_2 = other_leaves_list[1].dict()
-        assert other_leave_2["leave_start_date"] == date(2019, 12, 4)
-        assert other_leave_2["leave_end_date"] == date(2019, 12, 27)
+        assert other_leave_2["leave_start_date"] == date(2020, 9, 23)
+        assert other_leave_2["leave_end_date"] == date(2020, 12, 15)
         assert other_leave_2["leave_reason"] == "Unknown"

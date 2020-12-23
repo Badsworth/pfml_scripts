@@ -13,7 +13,7 @@ class TransformOtherLeaveAttributes(TransformEformAttributes):
     PROP_MAP = {
         "BeginDate": {"name": "leave_start_date", "type": "dateValue"},
         "EndDate": {"name": "leave_end_date", "type": "dateValue"},
-        "QualifyingReasonPrimary": {
+        "QualifyingReason": {
             "name": "leave_reason",
             "type": "enumValue",
             "embeddedProperty": "instanceValue",
