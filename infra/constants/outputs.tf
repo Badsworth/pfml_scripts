@@ -22,6 +22,7 @@ output "environment_tags" {
     "nonprod"     = "stage"
     "performance" = "qa"
     "training"    = "train"
+    "uat"         = "uat"
   }
 }
 
@@ -32,6 +33,7 @@ output "environment_shorthand" {
     "prod"        = "prod"
     "performance" = "perf"
     "training"    = "train"
+    "uat"         = "uat"
   }
 }
 
@@ -42,6 +44,7 @@ output "smartronix_environment_tags" {
     "prod"        = "Production"
     "performance" = "QA"
     "training"    = "Sandbox"
+    "uat"         = "UAT"
   }
 }
 
