@@ -68,11 +68,11 @@ export const Review = (props) => {
     // Generate id based on index for employer benefit, previous leave (id is not provided by BE)
     const indexedEmployerBenefits = claim.employer_benefits.map(
       (benefit, index) =>
-        new EmployerBenefit({ employer_benefit_id: index, ...benefit })
+        new EmployerBenefit({ ...benefit, employer_benefit_id: index })
     );
     const indexedPreviousLeaves = claim.previous_leaves.map(
       (leave, index) =>
-        new PreviousLeave({ previous_leave_id: index, ...leave })
+        new PreviousLeave({ ...leave, previous_leave_id: index })
     );
     if (claim) {
       updateFields({
