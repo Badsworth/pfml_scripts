@@ -721,7 +721,6 @@ class EmployeeReferenceFile(Base):
 class StateLog(Base):
     __tablename__ = "state_log"
     state_log_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    flow_id = Column(Integer, ForeignKey("lk_flow.flow_id"))
     start_state_id = Column(Integer, ForeignKey("lk_state.state_id"), nullable=False)
     end_state_id = Column(Integer, ForeignKey("lk_state.state_id"))
     started_at = Column(TIMESTAMP(timezone=True))
@@ -750,7 +749,6 @@ class LatestStateLog(Base):
     reference_file_id = Column(
         UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
     )
-    flow_id = Column(Integer, ForeignKey("lk_flow.flow_id"))
 
     state_log = relationship("StateLog")
     payment = relationship("Payment")
