@@ -245,3 +245,57 @@ resource "newrelic_nrql_alert_condition" "fineos_error_rate_4XXs" {
     threshold_occurrences = "at_least_once"
   }
 }
+
+resource "newrelic_nrql_alert_condition" "payments_errors_from_fineos" {
+  count                = (var.environment_name == "prod") ? 1 : 0
+  name                 = "Errors encountered by the payments-fineos-process task"
+  type                 = "static"
+  value_function       = "single_value"
+  enabled              = true
+  policy_id            = newrelic_alert_policy.api_alerts.id
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  nrql {
+    evaluation_offset = 3
+    query             = <<-NRQL
+      SELECT count(*) FROM Log
+      WHERE aws.logGroup = 'service/pfml-api-prod/ecs-tasks'
+      AND aws.logStream LIKE 'prod/payments-fineos-process/%'
+      AND levelname = 'ERROR'
+    NRQL
+  }
+
+  critical {
+    threshold             = 0
+    threshold_duration    = 120
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "payments_errors_from_comptroller" {
+  count                = (var.environment_name == "prod") ? 1 : 0
+  name                 = "Errors encountered by the payments-ctr-process task"
+  type                 = "static"
+  value_function       = "single_value"
+  enabled              = true
+  policy_id            = newrelic_alert_policy.api_alerts.id
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  nrql {
+    evaluation_offset = 3
+    query             = <<-NRQL
+      SELECT count(*) FROM Log
+      WHERE aws.logGroup = 'service/pfml-api-prod/ecs-tasks'
+      AND aws.logStream LIKE 'prod/payments-ctr-process/%'
+      AND levelname = 'ERROR'
+    NRQL
+  }
+
+  critical {
+    threshold             = 0
+    threshold_duration    = 120
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+}
