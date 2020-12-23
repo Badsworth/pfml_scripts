@@ -24,6 +24,7 @@ on:
     paths:
       - api/**
       - infra/api/**
+      - infra/env-shared/**
 
 env:
   working-dir: ./api
