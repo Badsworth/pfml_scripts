@@ -7,6 +7,7 @@ import {
   WorkPatternDay,
   ReducedScheduleLeavePeriods,
   PaymentPreference,
+  PaymentPreferenceRequestBody,
 } from "../../../../src/api";
 import { inFieldset } from "../actions"; // not used
 
@@ -511,7 +512,9 @@ export function confirmInfo(): void {
 // Payment Section Currently Removed
 // @Todo: Once this prop has been added back to ApplicationRequestBody
 
-export function addPaymentInfo(paymentPreference: PaymentPreference): void {
+export function addPaymentInfo(
+  paymentPreference: PaymentPreferenceRequestBody
+): void {
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Add payment information"
@@ -520,7 +523,7 @@ export function addPaymentInfo(paymentPreference: PaymentPreference): void {
     account_number,
     routing_number,
     bank_account_type,
-  } = paymentPreference;
+  } = paymentPreference.payment_preference as PaymentPreference;
 
   cy.contains("fieldset", "How do you want to get your weekly benefit?").within(
     () => {
@@ -812,7 +815,7 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
 
 export function submitClaimPortal(
   application: ApplicationRequestBody,
-  paymentPreference: PaymentPreference
+  paymentPreference: PaymentPreferenceRequestBody
 ): void {
   const reason = application.leave_details && application.leave_details.reason;
   submitClaimPartOne(application);
