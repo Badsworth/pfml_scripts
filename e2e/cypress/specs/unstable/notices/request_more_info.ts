@@ -1,5 +1,4 @@
-import * as portal from "../../../tests/common/actions/portal";
-import { fineos } from "../../../tests/common/actions";
+import { fineos, portal, email } from "../../../tests/common/actions";
 import { beforeFineos } from "../../../tests/common/before";
 import { beforePortal } from "../../../tests/common/before";
 import { getFineosBaseUrl } from "../../../config";
@@ -20,7 +19,7 @@ describe("Request for More Information (notificatins/notices)", () => {
             claimType: "BHAP1",
             employeeType: "financially eligible",
           }).then((claim: SimulationClaim) => {
-            cy.stash("claim", claim);
+            cy.stash("claim", claim.claim);
             cy.stash("timestamp_from", Date.now());
             cy.task("submitClaimToAPI", {
               ...claim,
@@ -71,32 +70,34 @@ describe("Request for More Information (notificatins/notices)", () => {
     });
   });
 
-  // ATT: Being commented out until Email Delivery is confirmed
   // Check for email notification in regards to providing additional information
-  // it("As a claimant, I should receive a notification requesting additional info", () => {
-  //   cy.unstash<SimulationClaim>("claim").then((claim) => {
-  //     if (
-  //       !claim.claim.employer_fein ||
-  //       !claim.claim.first_name ||
-  //       !claim.claim.last_name
-  //     ) {
-  //       throw new Error("This employer has no FEIN");
-  //     }
-  //     cy.unstash<string>("fineos_absence_id").then((caseNumber) => {
-  //       cy.unstash<number>("timestamp_from").then((timestamp_from) => {
-  //         cy.task("getEmails", {
-  //           address: "gqzap.notifications@inbox.testmail.app",
-  //           // subject: `Action required: Respond to ${claim.claim.first_name} ${claim.claim.last_name}'s paid leave application`,
-  //           subject: `Action required: Provide additional information for your paid leave application ${caseNumber}`,
-  //           timestamp_from,
-  //         }).then((emails) => {
-  //           expect(emails.length).to.be.greaterThan(0);
-  //           expect(emails[0].html).to.contain(
-  //             `/employers/applications/new-application/?absence_id=${caseNumber}`
-  //           );
-  //         });
-  //       });
-  //     });
-  //   });
-  // });
+  it("As a claimant, I should receive a notification requesting additional info", () => {
+    cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+      if (!claim.employer_fein || !claim.first_name || !claim.last_name) {
+        throw new Error("This employer has no FEIN");
+      }
+      cy.unstash<string>("fineos_absence_id").then((caseNumber) => {
+        cy.unstash<number>("timestamp_from").then((timestamp_from) => {
+          const employeeFullName = `${claim.first_name} ${claim.last_name}`;
+          const subjectClaimant = email.getNotificationSubject(
+            employeeFullName,
+            "request for additional info",
+            caseNumber
+          );
+          cy.log(subjectClaimant);
+
+          // Check email notification for claimant
+          cy.task("getEmails", {
+            address: "gqzap.notifications@inbox.testmail.app",
+            subject: subjectClaimant,
+            timestamp_from,
+          }).then((emails) => {
+            const emailContent = email.getNotificationData(emails[0].html);
+            expect(emails.length).to.be.greaterThan(0);
+            expect(emailContent.applicationId).to.contain(caseNumber);
+          });
+        });
+      });
+    });
+  });
 });

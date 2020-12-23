@@ -1,14 +1,16 @@
 export const getNotificationSubject = function (
   employeeName: string,
-  notificationType: string
+  notificationType: string,
+  caseNumber: string
 ): string {
   const notificationSubjects: { [key: string]: string } = {
     "application started": `${employeeName} started a paid leave application with the Commonwealth of Massachusetts`,
     "employer response": `Action required: Respond to ${employeeName}'s paid leave application`,
-    "denial (employer)": `${employeeName}’s paid leave application was Denied`,
-    "approval (employer)": `${employeeName}’s paid leave application was Approved`,
+    "denial (employer)": `${employeeName}'s paid leave application was Denied`,
+    "approval (employer)": `${employeeName}'s paid leave application was Approved`,
     "denial (claimant)": "Your paid leave application was Denied",
     "approval (claimant)": "Your paid leave application was Approved",
+    "request for additional info": `Action required: Provide additional information for your paid leave application ${caseNumber}`,
   };
   if (notificationType in notificationSubjects) {
     return notificationSubjects[notificationType];

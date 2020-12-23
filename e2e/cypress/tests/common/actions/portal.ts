@@ -66,6 +66,11 @@ export function login(credentials: Credentials): void {
   cy.url().should("not.include", "login");
 }
 
+export function logout(): void {
+  cy.contains("button", "Log out").click();
+  cy.url().should("contain", "/login");
+}
+
 export function registerAsClaimant(credentials: Credentials): void {
   cy.visit("/create-account");
   cy.labelled("Email address").type(credentials.username);
@@ -729,6 +734,36 @@ export function respondToLeaveAdminRequest(
   }
   cy.contains("button", "Submit").click();
   cy.contains("Thanks for reviewing the application");
+}
+
+export function checkNoticeForLeaveAdmin(
+  fineosAbsenceId: string,
+  claimantName: string,
+  noticeType: string
+): void {
+  cy.visit(
+    `https://paidleave-test.mass.gov/employers/applications/status/?absence_id=${fineosAbsenceId}`
+  );
+
+  switch (noticeType) {
+    case "approval":
+      cy.contains("h1", claimantName).should("be.visible");
+      cy.contains("a", "Approval notice").should("be.visible");
+      break;
+
+    case "denial":
+      cy.contains("h1", claimantName).should("be.visible");
+      cy.contains("a", "Denial notice").should("be.visible");
+      break;
+
+    case "request for info":
+      cy.contains("h1", claimantName).should("be.visible");
+      cy.contains("a", "Request for more information").should("be.visible");
+      break;
+
+    default:
+      throw new Error("Notice Type not Found!");
+  }
 }
 
 export function confirmEligibleParent(): void {

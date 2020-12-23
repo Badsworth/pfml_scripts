@@ -507,8 +507,15 @@ export function fillAbsencePeriod(claimNumber: string): void {
   });
 }
 
-export function claimAdjudicationFlow(claimNumber: string): void {
+export function claimAdjudicationFlow(
+  claimNumber: string,
+  ERresponse = false
+): void {
   visitClaim(claimNumber);
+  if (ERresponse) {
+    assertClaimHasLeaveAdminApproval();
+    clickBottomWidgetButton("Close");
+  }
   assertOnClaimPage(claimNumber);
   checkTask();
   cy.get("input[type='submit'][value='Adjudicate']").click();
@@ -522,4 +529,9 @@ export function claimAdjudicationFlow(claimNumber: string): void {
   assertAdjudicatingClaim(claimNumber);
   clickBottomWidgetButton("OK");
   assertClaimApprovable();
+  // Approve Claim
+  if (ERresponse) {
+    approveClaim();
+  }
+  cy.wait(200);
 }

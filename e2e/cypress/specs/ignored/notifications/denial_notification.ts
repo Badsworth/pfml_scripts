@@ -85,7 +85,8 @@ describe(
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           const subject = email.getNotificationSubject(
             employeeFullName,
-            "application started"
+            "application started",
+            submission.application_id
           );
           cy.task<Email[]>(
             "getEmails",
@@ -118,7 +119,8 @@ describe(
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           const subject = email.getNotificationSubject(
             employeeFullName,
-            "denial (employer)"
+            "denial (employer)",
+            submission.application_id
           );
           cy.log(subject);
           cy.task<Email[]>(
