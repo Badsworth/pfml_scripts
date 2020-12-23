@@ -192,8 +192,8 @@ def generate_single_employee(employee_generate_id: int, employee_row: Employee):
         EMPLOYEEDATEOFHIRE=fake.date_object().strftime("%Y-%m-%d %H:%M:%S"),
         EMPLOYEEENDDATE=fake.date_object().strftime("%Y-%m-%d %H:%M:%S"),
         EMPLOYMENTSTATUS="Active",
-        EMPLOYEEORGUNITNAME="",
-        EMPLOYEEHOURSWORKEDPERWEEK="40",
+        EMPLOYEEORGUNITNAME="Testing Department",
+        EMPLOYEEHOURSWORKEDPERWEEK="37.5",
         EMPLOYEEDAYSWORKEDPERWEEK="0",
         MANAGERIDENTIFIER="",
         QUALIFIERDESCRIPTION="",
@@ -220,8 +220,8 @@ def generate_single_employee(employee_generate_id: int, employee_row: Employee):
         EMPLOYEEHOURSWORKEDPERYEAR="0",
         EMPLOYEE50EMPLOYEESWITHIN75MILES="0",
         EMPLOYMENTWORKSTATE="MA",
-        ORG_CUSTOMERNO=98,
-        ORG_NAME="Umbrella",
+        ORG_CUSTOMERNO=144000055,
+        ORG_NAME="Sampson Inc",
     )
 
 

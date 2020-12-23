@@ -1,3 +1,5 @@
+import decimal
+
 import pytest
 
 import massgov.pfml.fineos.import_fineos_updates as fineos_updates
@@ -17,8 +19,8 @@ from massgov.pfml.util import datetime
 def emp_updates_path(tmp_path):
     file_name = "2020-12-10-23-10-11-EmployeeDataLoad_feed.csv"
     content_line_one = '"EMPLOYEEIDENTIFIER","EMPLOYEETITLE","EMPLOYEEDATEOFBIRTH","EMPLOYEEGENDER","EMPLOYEEMARITALSTATUS","TELEPHONEINTCODE","TELEPHONEAREACODE","TELEPHONENUMBER","CELLINTCODE","CELLAREACODE","CELLNUMBER","EMPLOYEEEMAIL","EMPLOYEEID","EMPLOYEECLASSIFICATION","EMPLOYEEJOBTITLE","EMPLOYEEDATEOFHIRE","EMPLOYEEENDDATE","EMPLOYMENTSTATUS","EMPLOYEEORGUNITNAME","EMPLOYEEHOURSWORKEDPERWEEK","EMPLOYEEDAYSWORKEDPERWEEK","MANAGERIDENTIFIER","QUALIFIERDESCRIPTION","EMPLOYEEWORKSITEID","ORG_CUSTOMERNO","ORG_NAME"'
-    content_line_two = '"4376896b-596c-4c86-a653-1915cf997a84","Mr","1970-10-06 00:00:00","Male","Single","","","","","","","nona@comm.com","","Unknown","DEFAULT","2000-01-01 00:00:00","","Active","","40","0","","","","10","Test Company"'
-    content_line_three = '"cb2f2d72-ac68-4402-a82f-6e32edd086b3","Unknown","1994-09-14 00:00:00","Unknown","Unknown","","","","","","","rob+pfml-cypress-gh3@lastcallmedia.com","","Unknown","DEFAULT","2020-01-01 00:00:00","","Active","","42","0","","","","10","Test Company"'
+    content_line_two = '"4376896b-596c-4c86-a653-1915cf997a84","Mr","1970-10-06 00:00:00","Male","Single","","","","","","","nona@comm.com","","Unknown","DEFAULT","2000-01-01 00:00:00","","Active","Testing Department","37.5","0","","","","10","Test Company"'
+    content_line_three = '"cb2f2d72-ac68-4402-a82f-6e32edd086b3","Unknown","1994-09-14 00:00:00","Unknown","Unknown","","","","","","","rob+pfml-cypress-gh3@lastcallmedia.com","","Unknown","DEFAULT","2020-01-01 00:00:00","","Active","","42","4.55","","","","10","Test Company"'
     content = f"{content_line_one}\n{content_line_two}\n{content_line_three}"
 
     test_folder = tmp_path / "test_folder"
@@ -96,10 +98,14 @@ def test_fineos_updates_happy_path(
     assert employee_occupation_one is not None
     assert employee_occupation_one.date_of_hire == datetime.date(2000, 1, 1)
     assert employee_occupation_one.employment_status == "Active"
+    assert employee_occupation_one.hours_worked_per_week == decimal.Decimal("37.5")
+    assert employee_occupation_one.days_worked_per_week == decimal.Decimal("0")
 
     assert employee_occupation_two is not None
     assert employee_occupation_two.date_of_hire == datetime.date(2020, 1, 1)
     assert employee_occupation_two.employment_status == "Active"
+    assert employee_occupation_two.hours_worked_per_week == decimal.Decimal("42")
+    assert employee_occupation_two.days_worked_per_week == decimal.Decimal("4.55")
 
     assert report.updated_employees_count == 2
     assert report.errored_employees_count == 0
