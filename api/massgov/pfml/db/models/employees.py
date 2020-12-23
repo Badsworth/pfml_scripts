@@ -171,20 +171,24 @@ class LkState(Base):
     __tablename__ = "lk_state"
     state_id = Column(Integer, primary_key=True, autoincrement=True)
     state_description = Column(Text)
+    flow_id = Column(Integer, ForeignKey("lk_flow.flow_id"))
 
-    def __init__(self, state_id, state_description):
+    def __init__(self, state_id, state_description, flow_id):
         self.state_id = state_id
         self.state_description = state_description
+        self.flow_id = flow_id
 
 
 class LkReferenceFileType(Base):
     __tablename__ = "lk_reference_file_type"
     reference_file_type_id = Column(Integer, primary_key=True, autoincrement=True)
     reference_file_type_description = Column(Text)
+    num_files_in_set = Column(Integer)
 
-    def __init__(self, reference_file_type_id, reference_file_type_description):
+    def __init__(self, reference_file_type_id, reference_file_type_description, num_files_in_set):
         self.reference_file_type_id = reference_file_type_id
         self.reference_file_type_description = reference_file_type_description
+        self.num_files_in_set = num_files_in_set
 
 
 class LkTitle(Base):
@@ -1181,34 +1185,116 @@ class Flow(LookupTable):
     DUA_PAYMENT_LIST = LkFlow(4, "DUA payment list")
     DIA_PAYMENT_LIST = LkFlow(5, "DIA payment list")
     DFML_AGENCY_REDUCTION_REPORT = LkFlow(6, "DFML agency reduction report")
+    VENDOR_CHECK = LkFlow(7, "Vendor check")
+    VENDOR_EFT = LkFlow(8, "Vendor EFT")
+    UNUSED = LkFlow(9, "Unused flow")
 
 
 class State(LookupTable):
     model = LkState
-    column_names = ("state_id", "state_description")
+    column_names = ("state_id", "state_description", "flow_id")
 
-    VERIFY_VENDOR_STATUS = LkState(1, "Verify vendor status")
-    CLAIMANT_LIST_CREATED = LkState(2, "Create claimant list for DIA")
-    CLAIMANT_LIST_SUBMITTED = LkState(3, "Submit claimant list to DIA")
-    PAYMENTS_RETRIEVED = LkState(4, "Payments retrieved")
-    PAYMENTS_STORED_IN_DB = LkState(5, "Payments stored in db")
-    DFML_REPORT_CREATED = LkState(6, " Create DFML report")
-    DFML_REPORT_SUBMITTED = LkState(7, "Submit DFML report")
+    VERIFY_VENDOR_STATUS = LkState(1, "Verify vendor status", Flow.UNUSED.flow_id)  # Not used
+    CLAIMANT_LIST_CREATED = LkState(
+        2, "Create claimant list for DIA", Flow.DIA_CLAIMANT_LIST.flow_id
+    )
+    CLAIMANT_LIST_SUBMITTED = LkState(
+        3, "Submit claimant list to DIA", Flow.DIA_CLAIMANT_LIST.flow_id
+    )
+    PAYMENTS_RETRIEVED = LkState(4, "Payments retrieved", Flow.UNUSED.flow_id)  # Not used
+    PAYMENTS_STORED_IN_DB = LkState(5, "Payments stored in db", Flow.UNUSED.flow_id)  # Not used
+    DFML_REPORT_CREATED = LkState(
+        6, "Create DFML report", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
+    )
+    DFML_REPORT_SUBMITTED = LkState(
+        7, "Submit DFML report", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
+    )
+
+    # Payments State Machine LucidChart: https://app.lucidchart.com/lucidchart/invitations/accept/8ae0d129-b21e-4678-8f98-0b0feafb9ace
+    # States for Payment flow
+    PAYMENT_PROCESS_INITIATED = LkState(8, "Payment process initiated", Flow.PAYMENT.flow_id)
+    ADD_TO_PAYMENT_EXPORT_ERROR_REPORT = LkState(
+        9, "Add to payment export error report", Flow.PAYMENT.flow_id
+    )
+    PAYMENT_EXPORT_ERROR_REPORT_SENT = LkState(
+        10, "Payment export error report sent", Flow.PAYMENT.flow_id
+    )
+    MARK_AS_EXTRACTED_IN_FINEOS = LkState(11, "Mark as extracted in FINEOS", Flow.PAYMENT.flow_id)
+    CONFIRM_VENDOR_STATUS_IN_MMARS = LkState(
+        12, "Confirm vendor status in MMARS", Flow.PAYMENT.flow_id
+    )
+    PAYMENT_ALLOWABLE_TIME_IN_STATE_EXCEEDED = LkState(
+        13, "Payment: allowable time in state exceeded", Flow.PAYMENT.flow_id
+    )
+    ADD_TO_GAX = LkState(14, "Add to GAX", Flow.PAYMENT.flow_id)
+    GAX_SENT = LkState(15, "GAX sent", Flow.PAYMENT.flow_id)
+    ADD_TO_GAX_ERROR_REPORT = LkState(16, "Add to GAX error report", Flow.PAYMENT.flow_id)
+    GAX_ERROR_REPORT_SENT = LkState(17, "GAX error report sent", Flow.PAYMENT.flow_id)
+    CONFIRM_PAYMENT = LkState(18, "Confirm payment", Flow.PAYMENT.flow_id)
+    SEND_PAYMENT_DETAILS_TO_FINEOS = LkState(
+        19, "Send payment details to FINEOS", Flow.PAYMENT.flow_id
+    )
+    PAYMENT_COMPLETE = LkState(20, "Payment complete", Flow.PAYMENT.flow_id)
+
+    # States for Vendor Check flow
+    VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT = LkState(
+        21, "Vendor check initiated by vendor export", Flow.VENDOR_CHECK.flow_id
+    )
+    ADD_TO_VENDOR_EXPORT_ERROR_REPORT = LkState(
+        22, "Add to vendor export error report", Flow.VENDOR_CHECK.flow_id
+    )
+    VENDOR_EXPORT_ERROR_REPORT_SENT = LkState(
+        23, "Vendor export error report sent", Flow.VENDOR_CHECK.flow_id
+    )
+    VENDOR_CHECK_INITIATED_BY_PAYMENT_EXPORT = LkState(
+        24, "Vendor check initiated by payment export", Flow.VENDOR_CHECK.flow_id
+    )
+    IDENTIFY_MMARS_STATUS = LkState(25, "Identify MMARS status", Flow.VENDOR_CHECK.flow_id)
+    ADD_TO_VCM_REPORT = LkState(26, "Add to VCM report", Flow.VENDOR_CHECK.flow_id)
+    VCM_REPORT_SENT = LkState(27, "VCM report sent", Flow.VENDOR_CHECK.flow_id)
+    VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED = LkState(
+        28, "Vendor: allowable time in state exceeded", Flow.VENDOR_CHECK.flow_id
+    )
+    ADD_TO_VCC = LkState(29, "Add to VCC", Flow.VENDOR_CHECK.flow_id)
+    VCC_SENT = LkState(30, "VCC sent", Flow.VENDOR_CHECK.flow_id)
+    ADD_TO_VCC_ERROR_REPORT = LkState(31, "Add to VCC error report", Flow.VENDOR_CHECK.flow_id)
+    VCC_ERROR_REPORT_SENT = LkState(32, "VCC error report sent", Flow.VENDOR_CHECK.flow_id)
+    MMARS_STATUS_CONFIRMED = LkState(33, "MMARS status confirmed", Flow.VENDOR_CHECK.flow_id)
+
+    # States for Vendor EFT flow
+    EFT_DETECTED_IN_VENDOR_EXPORT = LkState(
+        34, "EFT detected in vendor export", Flow.VENDOR_EFT.flow_id
+    )
+    EFT_DETECTED_IN_PAYMENT_EXPORT = LkState(
+        35, "EFT detected in payment export", Flow.VENDOR_EFT.flow_id
+    )
+    EFT_REQUEST_RECEIVED = LkState(36, "EFT request received", Flow.VENDOR_EFT.flow_id)
+    EFT_PENDING = LkState(37, "EFT pending", Flow.VENDOR_EFT.flow_id)
+    ADD_TO_EFT_ERROR_REPORT = LkState(38, "Add to EFT error report", Flow.VENDOR_EFT.flow_id)
+    EFT_ERROR_REPORT_SENT = LkState(39, "EFT error report sent", Flow.VENDOR_EFT.flow_id)
+    EFT_ALLOWABLE_TIME_IN_STATE_EXCEEDED = LkState(
+        40, "EFT: allowable time in state exceeded", Flow.VENDOR_EFT.flow_id
+    )
+    EFT_ELIGIBLE = LkState(41, "EFT eligible", Flow.VENDOR_EFT.flow_id)
 
 
 class ReferenceFileType(LookupTable):
     model = LkReferenceFileType
-    column_names = ("reference_file_type_id", "reference_file_type_description")
+    column_names = ("reference_file_type_id", "reference_file_type_description", "num_files_in_set")
 
-    GAX = LkReferenceFileType(1, "GAX")
-    VCC = LkReferenceFileType(2, "VCC")
-    PAYMENT_EXTRACT = LkReferenceFileType(3, "Payment extract")
-    VENDOR_CLAIM_EXTRACT = LkReferenceFileType(4, "Vendor claim extract")
-    DUA_CLAIMANT_LIST = LkReferenceFileType(5, "DUA claimant list")
-    DIA_CLAIMANT_LIST = LkReferenceFileType(6, "DIA claimant list")
-    DUA_PAYMENT_LIST = LkReferenceFileType(7, "DUA payment list")
-    DIA_PAYMENT_LIST = LkReferenceFileType(8, "DIA payment list")
-    DFML_AGENCY_REDUCTION_REPORT = LkReferenceFileType(9, "DFML agency reduction report")
+    GAX = LkReferenceFileType(1, "GAX", 2)
+    VCC = LkReferenceFileType(2, "VCC", 2)
+    PAYMENT_EXTRACT = LkReferenceFileType(3, "Payment extract", 3)
+    VENDOR_CLAIM_EXTRACT = LkReferenceFileType(4, "Vendor claim extract", 3)
+    DUA_CLAIMANT_LIST = LkReferenceFileType(5, "DUA claimant list", 1)
+    DIA_CLAIMANT_LIST = LkReferenceFileType(6, "DIA claimant list", 1)
+    DUA_PAYMENT_LIST = LkReferenceFileType(7, "DUA payment list", 1)
+    DIA_PAYMENT_LIST = LkReferenceFileType(8, "DIA payment list", 1)
+    DFML_AGENCY_REDUCTION_REPORT = LkReferenceFileType(9, "DFML agency reduction report", 1)
+    OUTBOUND_STATUS_RETURN = LkReferenceFileType(10, "Outbound Status Return", 1)
+    OUTBOUND_VENDOR_CUSTOMER_RETURN = LkReferenceFileType(11, "Outbound Vendor Customer Return", 1)
+    OUTBOUND_PAYMENT_RETURN = LkReferenceFileType(12, "Outbound Payment Return", 1)
+    PEI_WRITEBACK = LkReferenceFileType(13, "PEI Writeback", 1)
 
 
 class Title(LookupTable):
@@ -1250,6 +1336,9 @@ def sync_lookup_tables(db_session):
     ReferenceFileType.sync_to_database(db_session)
     Title.sync_to_database(db_session)
     ReferenceFileType.sync_to_database(db_session)
-    State.sync_to_database(db_session)
+
+    # Order of operations matters here:
+    # Flow must be synced before State.
     Flow.sync_to_database(db_session)
+    State.sync_to_database(db_session)
     db_session.commit()
