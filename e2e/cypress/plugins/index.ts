@@ -123,12 +123,17 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     ): Promise<ApplicationResponse> {
       if (!application.claim) throw new Error("Application missing!");
       if (!application.documents.length) throw new Error("Documents missing!");
-      const { claim, documents, credentials } = application;
+      const { claim, documents, credentials, paymentPreference } = application;
       const newDocuments: DocumentUploadRequest[] = documents.map(
         makeDocUploadBody("/tmp", "Direct API Upload")
       );
       return submitter
-        .submit(credentials ?? defaultClaimantCredentials, claim, newDocuments)
+        .submit(
+          credentials ?? defaultClaimantCredentials,
+          claim,
+          newDocuments,
+          paymentPreference
+        )
         .catch((err) => {
           console.error("Failed to submit claim:", err.data);
           throw new Error(err);

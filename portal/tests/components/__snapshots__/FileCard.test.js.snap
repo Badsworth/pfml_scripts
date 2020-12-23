@@ -23,7 +23,7 @@ exports[`FileCard when the FileCard receives a Document renders a FileCard compo
     <div
       className="text-italic"
     >
-      You can't remove files previously uploaded.
+      You can’t remove files previously uploaded.
     </div>
   </div>
 </div>

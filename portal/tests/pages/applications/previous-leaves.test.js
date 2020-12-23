@@ -31,7 +31,7 @@ describe("PreviousLeaves", () => {
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         claim.application_id,
         {
-          temp: { has_previous_leaves: claim.temp.has_previous_leaves },
+          has_previous_leaves: claim.has_previous_leaves,
         }
       );
     });

@@ -202,7 +202,7 @@ function LegalNotices(props) {
 
       {hasLoadingDocumentsError && (
         <Alert noIcon>
-          {t("components.applicationCard.documentsRequestError")}
+          {t("components.applicationCard.documentsLoadError")}
         </Alert>
       )}
 
@@ -211,15 +211,18 @@ function LegalNotices(props) {
       )}
 
       {legalNotices.length > 0 && (
-        <ul className="usa-list">
-          {legalNotices.map((notice) => (
-            <LegalNoticeListItem
-              key={notice.fineos_document_id}
-              document={notice}
-              {...props}
-            />
-          ))}
-        </ul>
+        <React.Fragment>
+          <p>{t("components.applicationCard.noticesDownload")}</p>
+          <ul className="usa-list">
+            {legalNotices.map((notice) => (
+              <LegalNoticeListItem
+                key={notice.fineos_document_id}
+                document={notice}
+                {...props}
+              />
+            ))}
+          </ul>
+        </React.Fragment>
       )}
     </div>
   );

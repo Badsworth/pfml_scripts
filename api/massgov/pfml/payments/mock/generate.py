@@ -128,7 +128,12 @@ class PaymentScenariosGenerator:
             (dat_filepath, inf_filepath) = vcc.build_vcc_files(employee_chunk, directory, count)
             logger.info("generated %s %s", dat_filepath, inf_filepath)
 
-            ctr_batch_identifier = CtrBatchIdentifier(ctr_batch_identifier=batch_id)
+            ctr_batch_identifier = CtrBatchIdentifier(
+                ctr_batch_identifier=batch_id,
+                year=now.year,
+                batch_date=now.date(),
+                batch_counter=count,
+            )
             reference_file = ReferenceFile(
                 file_location=directory + "/",
                 reference_file_type_id=ReferenceFileType.VCC.reference_file_type_id,

@@ -78,12 +78,12 @@ const routes = {
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-",
       benefitsTimeline_2020December2:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-",
-      calculateHours: "http://www.mass.gov/pfml-calculate-hours",
+      calculateHours: "https://www.mass.gov/pfml-calculate-hours",
       calculateReductions:
         "https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits#-calculate-any-reductions-",
       consentAgreement:
         "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement",
-      dfml: "https://mass.gov/dfml",
+      dfml: "https://www.mass.gov/orgs/department-of-family-and-medical-leave",
       dfmlRegulations:
         "https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1",
       employerOverview: "https://www.mass.gov/pmfl-leave-administrators",
@@ -111,7 +111,7 @@ const routes = {
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-",
       reductionsOverview:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions",
-      taxLiability: "http://www.mass.gov/pfml-tax-liability",
+      taxLiability: "https://www.mass.gov/pfml-tax-liability",
     },
     puertoRicanBirthCertificate: "https://prfaa.pr.gov/faqs",
     workVisa:

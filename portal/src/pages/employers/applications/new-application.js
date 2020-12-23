@@ -81,32 +81,42 @@ export const NewApplication = (props) => {
         onSubmit={handleSubmit}
         className="usa-form"
       >
-        <InputChoiceGroup
-          choices={[
-            {
-              checked: formState.hasReviewerVerified === "true",
-              label: t("pages.employersClaimsNewApplication.choiceYes"),
-              value: "true",
-            },
-            {
-              checked: formState.hasReviewerVerified === "false",
-              label: t("pages.employersClaimsNewApplication.choiceNo"),
-              value: "false",
-            },
-          ]}
-          label={
-            <ReviewHeading level="2">
-              {t("pages.employersClaimsNewApplication.instructionsLabel")}
-            </ReviewHeading>
-          }
-          name="hasReviewerVerified"
-          onChange={handleOnChange}
-          type="radio"
-          smallLabel
-        />
+        <div className="margin-bottom-2 padding-bottom-2">
+          <InputChoiceGroup
+            choices={[
+              {
+                checked: formState.hasReviewerVerified === "true",
+                label: t("pages.employersClaimsNewApplication.choiceYes"),
+                value: "true",
+              },
+              {
+                checked: formState.hasReviewerVerified === "false",
+                label: t("pages.employersClaimsNewApplication.choiceNo"),
+                value: "false",
+              },
+            ]}
+            label={
+              <ReviewHeading level="2">
+                {t("pages.employersClaimsNewApplication.instructionsLabel")}
+              </ReviewHeading>
+            }
+            name="hasReviewerVerified"
+            onChange={handleOnChange}
+            type="radio"
+            smallLabel
+          />
+        </div>
+        {!!claim.employer_dba && (
+          <StatusRow
+            label={t(
+              "pages.employersClaimsNewApplication.organizationNameLabel"
+            )}
+          >
+            {claim.employer_dba}
+          </StatusRow>
+        )}
         <StatusRow
           label={t("pages.employersClaimsNewApplication.employerIdNumberLabel")}
-          className="margin-top-2 padding-top-2"
         >
           {claim.employer_fein}
         </StatusRow>

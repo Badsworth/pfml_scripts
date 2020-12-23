@@ -13,6 +13,8 @@ import {
   DocumentUploadRequest,
   postApplicationsByApplicationIdCompleteApplication,
   ApplicationResponse,
+  postApplicationsByApplicationIdSubmitPaymentPreference,
+  PaymentPreferenceRequestBody,
 } from "../api";
 import AuthenticationManager from "./AuthenticationManager";
 import { Credentials } from "../types";
@@ -61,7 +63,8 @@ export default class PortalSubmitter {
   async submit(
     credentials: Credentials,
     application: ApplicationRequestBody,
-    documents: DocumentUploadRequest[] = []
+    documents: DocumentUploadRequest[] = [],
+    paymentPreference: PaymentPreferenceRequestBody = {}
   ): Promise<ApplicationResponse> {
     const options = await this.getOptions(credentials);
     const application_id = await this.createApplication(options);
@@ -75,6 +78,11 @@ export default class PortalSubmitter {
       application_id,
       fineos_absence_id,
       documents,
+      options
+    );
+    await this.uploadPaymentPreference(
+      application_id,
+      paymentPreference,
       options
     );
     await this.completeApplication(application_id, options);
@@ -162,5 +170,17 @@ export default class PortalSubmitter {
       }
       throw e;
     }
+  }
+
+  private async uploadPaymentPreference(
+    applicationId: string,
+    paymentPreference: PaymentPreferenceRequestBody,
+    options?: RequestOptions
+  ) {
+    return postApplicationsByApplicationIdSubmitPaymentPreference(
+      { applicationId },
+      paymentPreference,
+      options
+    );
   }
 }

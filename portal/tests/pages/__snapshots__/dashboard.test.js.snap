@@ -5,6 +5,9 @@ exports[`Dashboard renders dashboard content 1`] = `
   <DashboardNavigation
     activeHref="/dashboard"
   />
+  <Title>
+    Get ready to apply
+  </Title>
   <Alert
     className="margin-bottom-3"
     heading="Only some people can apply online for now"
@@ -73,9 +76,6 @@ exports[`Dashboard renders dashboard content 1`] = `
   <div
     className="measure-6"
   >
-    <Title>
-      Get ready to apply
-    </Title>
     <Heading
       level="2"
     >
@@ -312,7 +312,7 @@ exports[`Dashboard renders dashboard content 5`] = `
 <p
   key="p-0"
 >
-  For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child's date of birth or placement.
+  For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.
 </p>
 `;
 
@@ -358,7 +358,7 @@ Array [
       >
         and
       </strong>
-       taking time off completely or on a reduced schedule. You'll need a separate application for the intermittent leave.
+       taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.
     </li>
   </ul>,
 ]
@@ -457,7 +457,7 @@ Array [
   <p
     key="p-1"
   >
-    For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child's date of birth or placement.
+    For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.
   </p>,
   <p
     key="p-2"
@@ -509,7 +509,7 @@ Array [
       >
         and
       </strong>
-       taking time off completely or on a reduced schedule. You'll need a separate application for the intermittent leave.
+       taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.
     </li>
   </ul>,
 ]

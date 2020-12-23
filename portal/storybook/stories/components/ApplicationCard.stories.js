@@ -33,7 +33,7 @@ export default {
     },
     errors: {
       defaultValue: "None",
-      control: { type: "radio", options: ["DocumentsRequestError"] },
+      control: { type: "radio", options: ["DocumentsLoadError"] },
     },
   },
 };
@@ -122,14 +122,14 @@ export const Story = ({ claim, documents, ...args }) => {
     ];
   }
 
-  if (args.errors === "DocumentsRequestError") {
+  if (args.errors === "DocumentsLoadError") {
     // There wouldn't be documents in this case
     attachedDocuments = [];
 
     errors.push(
       new AppErrorInfo({
         meta: { application_id: claimAttrs.application_id },
-        name: "DocumentsRequestError",
+        name: "DocumentsLoadError",
       })
     );
   }

@@ -1,14 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`UnsupportedBrowserBanner renders inline styles and the banner message 1`] = `
-<style>
-  .c-unsupported-browser-banner { display: none } @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) { .c-unsupported-browser-banner { display: block } }
-</style>
-`;
+exports[`UnsupportedBrowserBanner renders conditional HTML comment and the banner message 1`] = `"<span><!--[if lte IE 9]><style>.c-unsupported-browser-banner { display: block }</style><![endif]--></span>"`;
 
-exports[`UnsupportedBrowserBanner renders inline styles and the banner message 2`] = `"<span><!--[if lte IE 9]><style>.c-unsupported-browser-banner { display: block }</style><![endif]--></span>"`;
-
-exports[`UnsupportedBrowserBanner renders inline styles and the banner message 3`] = `
+exports[`UnsupportedBrowserBanner renders conditional HTML comment and the banner message 2`] = `
 Array [
   <strong
     key="strong-0"

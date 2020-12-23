@@ -6,6 +6,7 @@ import {
 import EmployerBenefit from "../../../../src/models/EmployerBenefit";
 import Review from "../../../../src/pages/employers/applications/review";
 import { act } from "react-dom/test-utils";
+import { clone } from "lodash";
 
 jest.mock("../../../../src/hooks/useAppLogic");
 
@@ -47,6 +48,35 @@ describe("Review", () => {
     components.forEach((component) => {
       expect(wrapper.find(component).exists()).toEqual(true);
     });
+  });
+
+  it("displays organization/employer information", () => {
+    const organizationNameLabel = wrapper.find("p.text-bold").at(0);
+    const employerIdentifierNumberLabel = wrapper.find("p.text-bold").at(1);
+    const dataValues = wrapper.find("p.margin-top-0");
+    const organizationName = dataValues.at(0);
+    const ein = dataValues.at(1);
+
+    expect(organizationNameLabel.text()).toBe("Organization");
+    expect(organizationName.text()).toBe("Work Inc.");
+    expect(employerIdentifierNumberLabel.text()).toBe(
+      "Employer ID number (EIN)"
+    );
+    expect(ein.text()).toBe("12-3456789");
+  });
+
+  it("hides organization name if employer_dba is falsy", () => {
+    const noEmployerDba = clone(claim);
+    noEmployerDba.employer_dba = undefined;
+
+    act(() => {
+      ({ wrapper } = renderComponent("shallow", noEmployerDba));
+    });
+
+    const employerIdentifierNumberLabel = wrapper.find("p.text-bold").first();
+    expect(employerIdentifierNumberLabel.text()).toBe(
+      "Employer ID number (EIN)"
+    );
   });
 
   it("submits a claim with the correct options", () => {

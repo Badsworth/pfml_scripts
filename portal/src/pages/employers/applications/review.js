@@ -169,7 +169,15 @@ export const Review = (props) => {
         />
       </Alert>
       <p>{t("pages.employersClaimsReview.instructionsAmendment")}</p>
-      <p className="text-bold" aria-labelledby="employerIdentifierNumber">
+      {!!claim.employer_dba && (
+        <React.Fragment>
+          <p className="text-bold">
+            {t("pages.employersClaimsReview.organizationNameLabel")}
+          </p>
+          <p className="margin-top-0">{claim.employer_dba}</p>
+        </React.Fragment>
+      )}
+      <p className="text-bold">
         {t("pages.employersClaimsReview.employerIdentifierLabel")}
       </p>
       <p className="margin-top-0">{claim.employer_fein}</p>

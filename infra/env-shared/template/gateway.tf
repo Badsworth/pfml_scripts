@@ -26,11 +26,31 @@ resource "aws_api_gateway_deployment" "stage" {
   stage_name  = var.environment_name
   rest_api_id = aws_api_gateway_rest_api.pfml.id
 
+  triggers = {
+    always_run = sha1(timestamp())
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
   # A deployment requires at least one integration; we'll require
   # all of them to avoid any confusion with what's been deployed.
   depends_on = [
     aws_api_gateway_integration.integration_api_proxy,
     aws_api_gateway_integration.integration_ui,
-    aws_api_gateway_integration.integration_ui_proxy
+    aws_api_gateway_integration.integration_ui_proxy,
+    aws_cloudwatch_log_group.gateway_execution_log_group
   ]
+}
+
+resource "aws_api_gateway_method_settings" "full_stage_settings" {
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  stage_name  = aws_api_gateway_deployment.stage.stage_name
+  method_path = "*/*"
+
+  settings {
+    metrics_enabled = true
+    logging_level   = "INFO"
+  }
 }

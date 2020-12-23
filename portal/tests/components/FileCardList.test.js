@@ -269,7 +269,7 @@ describe("FileCardList", () => {
           });
 
           expect(tracker.trackEvent).toHaveBeenCalledWith(
-            "FileUploadError - Invalid type",
+            "ValidationError",
             expect.any(Object)
           );
         });
@@ -351,7 +351,7 @@ describe("FileCardList", () => {
           });
 
           expect(tracker.trackEvent).toHaveBeenCalledWith(
-            "FileUploadError - Invalid size",
+            "ValidationError",
             expect.any(Object)
           );
         });
@@ -433,7 +433,7 @@ describe("FileCardList", () => {
           });
 
           expect(tracker.trackEvent).toHaveBeenCalledWith(
-            "FileUploadError - Invalid size and type",
+            "ValidationError",
             expect.any(Object)
           );
         });

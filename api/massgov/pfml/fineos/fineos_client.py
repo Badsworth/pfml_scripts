@@ -160,21 +160,19 @@ class FINEOSClient(client.AbstractFINEOSClient):
         has_flask_context = flask.has_request_context()
         logger.debug("%s %s start", method, url)
 
-        # /complete-intake takes longer than other endpoints, so increase the timeout
-        # drastically. Past 29 seconds, FINEOS returns a 504 timeout, so the request
-        # client should never actually time out on its own.
+        # Increase the timeout drastically. Past 29 seconds, FINEOS returns a 504
+        # timeout, so the request client is really just waiting until the last second.
         #
         # Note that this is longer than our API Gateway timeout (also 29 seconds),
-        # so it's very plausible that an application_submit request times out on
-        # the API Gateway side, since it also includes other calls to the claims
-        # processing system (CPS).
+        # so it's very plausible that a request times out on the API Gateway side,
+        # especially for application submission since /complete-intake is long and
+        # there are other calls to the claims processing system (CPS) included in submission.
         #
-        # However, we're allowing the request to complete on the API
-        # even if the response never makes it to the claimant, to try and ensure
-        # a consistent CPS <--> Paid Leave API state and prevent additional
-        # long calls when the claimant retries.
+        # However, we're allowing the request to complete on the API (as long as it's under 29s)
+        # even if the response never makes it to the claimant, to try and ensure a consistent
+        # CPS <--> Paid Leave API state and prevent additional long calls when the claimant retries.
         #
-        request_timeout = 30 if "complete-intake" in url else 15
+        request_timeout = 29
 
         try:
             try:
@@ -515,7 +513,12 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response = self._group_client_api(
             "GET", f"groupClient/cases/{absence_id}/eforms/{eform_id}/readEform", user_id
         )
-        return models.group_client_api.EForm.parse_obj(response.json())
+        json = response.json()
+
+        for eformAttribute in json["eformAttributes"]:
+            set_empty_dates_to_none(eformAttribute, ["dateValue"])
+
+        return models.group_client_api.EForm.parse_obj(json)
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         eform_json = []

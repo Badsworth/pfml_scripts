@@ -29,7 +29,7 @@ const disallowedReasons = {
 
 /**
  * Filter a list of files into sets of allowed files and disallowed files based on file types and sizes.
- * Track disallowed files with a FileUploadError event.
+ * Track disallowed files with a ValidationError event.
  * @param {File[]} files Files to filter
  * @returns {Array.<Array.<File>>} Arrays of Files -- [allowedFiles, disallowedFilesForSize, disallowedFilesForType, disallowedFilesForSizeAndType]
  * @example const [allowedFiles, disallowedFilesForSize, disallowedFilesForType, disallowedFilesForSizeAndType] = filterAllowedFiles(files);
@@ -56,25 +56,34 @@ function filterAllowedFiles(files) {
       }
     }
 
-    const trackingData = {
-      size: file.size,
-      type: file.type,
+    const fileTrackingData = {
+      fileSize: file.size,
+      fileType: file.type,
     };
     if (disallowedForSizeAndType) {
       disallowedFilesForSizeAndType.push(file);
-      tracker.trackEvent(
-        "FileUploadError - Invalid size and type",
-        trackingData
-      );
+      tracker.trackEvent("ValidationError", {
+        ...fileTrackingData,
+        issueType: "invalid_size_and_type",
+        issueField: "file",
+      });
     } else if (disallowedForSize) {
       disallowedFilesForSize.push(file);
-      tracker.trackEvent("FileUploadError - Invalid size", trackingData);
+      tracker.trackEvent("ValidationError", {
+        ...fileTrackingData,
+        issueType: "invalid_size",
+        issueField: "file",
+      });
     } else if (disallowedForType) {
       disallowedFilesForType.push(file);
-      tracker.trackEvent("FileUploadError - Invalid type", trackingData);
+      tracker.trackEvent("ValidationError", {
+        ...fileTrackingData,
+        issueType: "invalid_type",
+        issueField: "file",
+      });
     } else {
       allowedFiles.push(file);
-      tracker.trackEvent("File selected", trackingData);
+      tracker.trackEvent("File selected", fileTrackingData);
     }
   });
 

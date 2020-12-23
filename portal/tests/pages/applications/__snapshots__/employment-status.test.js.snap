@@ -32,7 +32,7 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
     <InputText
       hint="This number is 9 digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W‑2 or 1099‑MISC. Ask your employer if you need help getting this information."
       inputMode="numeric"
-      label="What is your employer's Employer Identification Number (EIN)?"
+      label="What is your employer’s Employer Identification Number (EIN)?"
       mask="fein"
       name="employer_fein"
       onChange={[Function]}
@@ -67,26 +67,26 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
       Array [
         Object {
           "checked": false,
-          "label": "I'm employed in Massachusetts",
+          "label": "I’m employed in Massachusetts",
           "value": "Employed",
         },
         Object {
           "checked": false,
-          "label": "I'm unemployed",
+          "label": "I’m unemployed",
           "value": "Unemployed",
         },
         Object {
           "checked": false,
-          "label": "I'm self-employed",
+          "label": "I’m self-employed",
           "value": "Self-Employed",
         },
       ]
     }
     hint={
       <Details
-        label="What if I've been furloughed?"
+        label="What if I’ve been furloughed?"
       >
-        If your hours have been cut or significantly reduced but you have not been laid off, select "I'm employed in Massachusetts"
+        If your hours have been cut or significantly reduced but you have not been laid off, select "I’m employed in Massachusetts"
       </Details>
     }
     label="What is your employment status?"
@@ -109,7 +109,7 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
     <InputText
       hint="This number is 9 digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W‑2 or 1099‑MISC. Ask your employer if you need help getting this information."
       inputMode="numeric"
-      label="What is your employer's Employer Identification Number (EIN)?"
+      label="What is your employer’s Employer Identification Number (EIN)?"
       mask="fein"
       name="employer_fein"
       onChange={[Function]}

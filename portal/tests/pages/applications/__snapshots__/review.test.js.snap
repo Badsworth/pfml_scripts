@@ -110,7 +110,7 @@ exports[`Final Review Page when all data is present renders Review page with fin
     1234 My St., Boston, MA 00000
   </ReviewRow>
   <ReviewRow
-    label="Driver's License Number"
+    label="Driver’s License Number"
     level="3"
   >
     *********
@@ -134,7 +134,7 @@ exports[`Final Review Page when all data is present renders Review page with fin
     Employment information
   </ReviewHeading>
   <ReviewRow
-    label="Employer's EIN"
+    label="Employer’s EIN"
     level="3"
   >
     12-3456789
@@ -425,7 +425,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     124 My St., Boston, MA 00000
   </ReviewRow>
   <ReviewRow
-    label="Driver's License Number"
+    label="Driver’s License Number"
     level="4"
   >
     *********
@@ -450,7 +450,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     Employment information
   </ReviewHeading>
   <ReviewRow
-    label="Employer's EIN"
+    label="Employer’s EIN"
     level="4"
   >
     12-3456789

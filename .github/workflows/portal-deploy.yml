@@ -136,7 +136,7 @@ jobs:
       - name: Sync S3 Bucket
         env:
           BUCKET_NAME: massgov-pfml-${{ env.portal_env }}-portal-site-builds
-          RELEASE_HASH: ${{ steps.commit_and_push.outputs.commit_hash || github.sha }}
+          RELEASE_HASH: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
           NEXT_OUTPUT_DIR: ./portal/out
         run: |
           aws s3 sync $NEXT_OUTPUT_DIR s3://$BUCKET_NAME/$RELEASE_HASH/ --exclude "*.html" --cache-control max-age=31536000,public &&
@@ -147,7 +147,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [update-the-deploy-branch, deploy]
     env:
-      TF_VAR_cloudfront_origin_path: /${{ steps.commit_and_push.outputs.commit_hash || github.sha }}
+      TF_VAR_cloudfront_origin_path: /${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
     steps:
       - uses: actions/checkout@v2

@@ -1,4 +1,8 @@
-import { DocumentsRequestError, ValidationError } from "../errors";
+import {
+  DocumentsLoadError,
+  DocumentsUploadError,
+  ValidationError,
+} from "../errors";
 import { useMemo, useState } from "react";
 import DocumentCollection from "../models/DocumentCollection";
 import DocumentsApi from "../api/DocumentsApi";
@@ -63,7 +67,7 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
         addDocuments(loadedDocuments.items);
       }
     } catch (error) {
-      appErrorsLogic.catchError(new DocumentsRequestError(application_id));
+      appErrorsLogic.catchError(new DocumentsLoadError(application_id));
     }
   };
 
@@ -87,16 +91,19 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
     appErrorsLogic.clearErrors();
 
     if (!filesWithUniqueId.length) {
-      throw new ValidationError(
-        [
-          {
-            // field and type will be used for forming the internationalized error message
-            field: "file", // 'file' is the field name in the API
-            message: "Client requires at least one file before sending request",
-            type: "required",
-          },
-        ],
-        "documents"
+      appErrorsLogic.catchError(
+        new ValidationError(
+          [
+            {
+              // field and type will be used for forming the internationalized error message
+              field: "file", // 'file' is the field name in the API
+              message:
+                "Client requires at least one file before sending request",
+              type: "required",
+            },
+          ],
+          "documents"
+        )
       );
     }
 
@@ -114,7 +121,7 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
         }
       } catch (error) {
         appErrorsLogic.catchError(
-          new DocumentsRequestError(
+          new DocumentsUploadError(
             application_id,
             fileWithUniqueId.id,
             error.issues ? error.issues[0] : null

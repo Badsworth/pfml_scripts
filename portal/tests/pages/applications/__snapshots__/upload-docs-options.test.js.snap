@@ -4,7 +4,7 @@ exports[`UploadDocsOptions renders the appropriate cert option for adoption bond
 Array [
   Object {
     "checked": false,
-    "label": "Massachusetts driver's license or ID",
+    "label": "Massachusetts driver’s license or ID",
     "value": "UPLOAD_MASS_ID",
   },
   Object {
@@ -24,7 +24,7 @@ exports[`UploadDocsOptions renders the appropriate cert option for newborn bondi
 Array [
   Object {
     "checked": false,
-    "label": "Massachusetts driver's license or ID",
+    "label": "Massachusetts driver’s license or ID",
     "value": "UPLOAD_MASS_ID",
   },
   Object {
@@ -44,7 +44,7 @@ exports[`UploadDocsOptions renders the page for medical leave with HCP as cert o
 Array [
   Object {
     "checked": false,
-    "label": "Massachusetts driver's license or ID",
+    "label": "Massachusetts driver’s license or ID",
     "value": "UPLOAD_MASS_ID",
   },
   Object {

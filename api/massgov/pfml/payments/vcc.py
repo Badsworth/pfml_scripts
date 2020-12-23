@@ -1,6 +1,6 @@
 import xml.dom.minidom as minidom
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple, cast
 
 import massgov.pfml.payments.payments_util as payments_util
 from massgov.pfml.db.models.employees import Employee, LkGeoState, PaymentMethod
@@ -54,7 +54,7 @@ def get_doc_id(now: datetime, count: int) -> str:
     return f"INTFDFML{now.strftime('%d%m%Y')}{count:04}"
 
 
-def get_state_str(geo_state: LkGeoState) -> str:
+def get_state_str(geo_state: LkGeoState) -> Optional[str]:
     return geo_state.geo_state_description
 
 
@@ -105,6 +105,9 @@ def build_individual_vcc_document(
     city = payments_util.validate_db_input(
         key="city", db_object=employee.mailing_address, required=True, max_length=60, truncate=True
     )
+    city = cast(
+        str, city
+    )  # We've validated it's present, cast it to remove the Optional for linting
     state = payments_util.validate_db_input(
         key="geo_state",
         db_object=employee.mailing_address,
@@ -306,7 +309,7 @@ def build_vcc_inf(employees: List[Employee], now: datetime, count: int) -> Dict[
     }
 
 
-def build_vcc_files(employees: List[Employee], directory: str, count: int) -> (str, str):
+def build_vcc_files(employees: List[Employee], directory: str, count: int) -> Tuple[str, str]:
     if count < 10:
         raise Exception("VCC file count must be greater than 10")
     now = payments_util.get_now()

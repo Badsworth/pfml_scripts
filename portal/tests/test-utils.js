@@ -223,6 +223,7 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
   constructor(middleName = "") {
     super();
     this.claimAttrs = {
+      employer_dba: "Work Inc.",
       first_name: "Jane",
       middle_name: middleName,
       last_name: "Doe",
@@ -451,24 +452,24 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   noOtherLeave() {
     set(this.claimAttrs, "has_employer_benefits", false);
     set(this.claimAttrs, "has_other_incomes", false);
-    set(this.claimAttrs, "temp.has_previous_leaves", false);
+    set(this.claimAttrs, "has_previous_leaves", false);
     return this;
   }
 
   noPreviousLeave() {
-    set(this.claimAttrs, "temp.has_previous_leaves", false);
+    set(this.claimAttrs, "has_previous_leaves", false);
     return this;
   }
 
   previousLeavePregnancyFromOtherEmployer() {
     super.previousLeavePregnancyFromOtherEmployer();
-    set(this.claimAttrs, "temp.has_previous_leaves", true);
+    set(this.claimAttrs, "has_previous_leaves", true);
     return this;
   }
 
   previousLeaveMedicalFromCurrentEmployer() {
     super.previousLeaveMedicalFromCurrentEmployer();
-    set(this.claimAttrs, "temp.has_previous_leaves", true);
+    set(this.claimAttrs, "has_previous_leaves", true);
     return this;
   }
 
@@ -790,7 +791,7 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
     appLogic.appErrors = new AppErrorInfoCollection([
       new AppErrorInfo({
         meta: { application_id: "mock_application_id" },
-        name: "DocumentsRequestError",
+        name: "DocumentsLoadError",
       }),
     ]);
   }

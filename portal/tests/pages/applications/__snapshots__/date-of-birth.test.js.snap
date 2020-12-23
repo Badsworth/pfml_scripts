@@ -8,7 +8,7 @@ exports[`DateOfBirth renders the page 1`] = `
   <InputDate
     dayLabel="Day"
     example="mm / dd / yyyy"
-    label="What's your date of birth?"
+    label="What’s your date of birth?"
     monthLabel="Month"
     name="date_of_birth"
     onChange={[Function]}

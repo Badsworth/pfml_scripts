@@ -446,3 +446,153 @@ export function additionalEvidenceRequest(claimNumber: string): void {
   //   );
   // });
 }
+
+export function checkStatus(
+  claimNumber: string,
+  section: string,
+  status: string
+): void {
+  assertAdjudicatingClaim(claimNumber);
+  onTab("Manage Request");
+  cy.get(".divListviewGrid .ListTable tr").should("have.length", 1);
+  cy.get(
+    `.divListviewGrid .ListTable td[id*='ListviewWidget${section}Status0']`
+  ).should("have.text", status);
+}
+
+export function checkTask(): void {
+  onTab("Task");
+  cy.get(`.divListviewGrid .ListTable td[title='Certification Review']`).should(
+    "have.text",
+    "Certification Review"
+  );
+  cy.get(`.divListviewGrid .ListTable td[title='ID Review']`).should(
+    "have.text",
+    "ID Review"
+  );
+  onTab("Absence Hub");
+}
+
+export function markEvidence(
+  claimNumber: string,
+  claimType: string,
+  evidenceType: string
+): void {
+  assertAdjudicatingClaim(claimNumber);
+  onTab("Evidence");
+  cy.contains(".ListTable td", evidenceType).click();
+  cy.get("input[type='submit'][value='Manage Evidence']").click();
+  // Focus inside popup.
+  cy.get(".WidgetPanel_PopupWidget").within(() => {
+    if (claimType === "BGBM1") {
+      cy.labelled("Evidence Receipt").select("Received");
+    }
+    cy.labelled("Evidence Decision").select("Satisfied");
+    cy.labelled("Evidence Decision Reason").type(
+      "{selectall}{backspace}Evidence has been reviewed and approved"
+    );
+    cy.get("input[type='button'][value='OK']").click();
+    // Wait till modal has fully closed before moving on.
+    cy.get("#disablingLayer").should("not.exist");
+  });
+}
+
+export function fillAbsencePeriod(claimNumber: string): void {
+  assertAdjudicatingClaim(claimNumber);
+  onTab("Evidence");
+  onTab("Certification Periods");
+  cy.get("input[value='Prefill with Requested Absence Periods']").click();
+  cy.get("#PopupContainer").within(() => {
+    cy.get("input[value='Yes']").click();
+  });
+}
+
+export function claimAdjudicationFlow(
+  claimNumber: string,
+  ERresponse = false
+): void {
+  visitClaim(claimNumber);
+  if (ERresponse) {
+    assertClaimHasLeaveAdminApproval();
+    clickBottomWidgetButton("Close");
+  }
+  assertOnClaimPage(claimNumber);
+  checkTask();
+  cy.get("input[type='submit'][value='Adjudicate']").click();
+  checkStatus(claimNumber, "Eligibility", "Met");
+  markEvidence(claimNumber, "MHAP1", "State managed Paid Leave Confirmation");
+  markEvidence(claimNumber, "MHAP1", "Identification Proof");
+  checkStatus(claimNumber, "Evidence", "Satisfied");
+  fillAbsencePeriod(claimNumber);
+  checkStatus(claimNumber, "Availability", "Time Available");
+  // Complete Adjudication
+  assertAdjudicatingClaim(claimNumber);
+  clickBottomWidgetButton("OK");
+  assertClaimApprovable();
+  // Approve Claim
+  if (ERresponse) {
+    approveClaim();
+  }
+  cy.wait(200);
+}
+
+export function searchClaimantSSN(ssn: string): void {
+  ssn = ssn.replace(/-/g, "");
+  cy.get('a[aria-label="Parties"]').click();
+  cy.contains("td", "Identification Number")
+    .next()
+    .within(() => cy.get("input").type(ssn));
+
+  cy.get('input[type="submit"][value="Search"]').click();
+}
+
+export function checkPaymentPreference(simClaim: SimulationClaim): void {
+  const { claim, paymentPreference } = simClaim;
+  searchClaimantSSN(claim.tax_identifier as string);
+  clickBottomWidgetButton("OK");
+  onTab("Payment Preferences");
+  cy.contains("td", "Yes").click();
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  cy.get('input[type="submit"][value="View"]').click();
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+
+  // Check Name
+  cy.get('span[id*="accountName"]').should(
+    "contain",
+    `${claim.first_name} ${claim.last_name}`
+  );
+
+  // Check Payment Preference
+  cy.contains(
+    "span",
+    paymentPreference.payment_preference?.payment_method as string
+  ).should("be.visible");
+  cy.contains(
+    "span",
+    paymentPreference.payment_preference?.account_number as string
+  ).should("be.visible");
+  cy.contains(
+    "span",
+    paymentPreference.payment_preference?.bank_account_type as string
+  ).should("be.visible");
+  cy.contains(
+    "span",
+    paymentPreference.payment_preference?.routing_number as string
+  ).should("be.visible");
+
+  // Check Address
+  cy.contains("span", claim.mailing_address?.line_1 as string).should(
+    "be.visible"
+  );
+  cy.contains("span", claim.mailing_address?.city as string).should(
+    "be.visible"
+  );
+  cy.contains("span", claim.mailing_address?.state as string).should(
+    "be.visible"
+  );
+  cy.contains("span", claim.mailing_address?.zip as string).should(
+    "be.visible"
+  );
+}

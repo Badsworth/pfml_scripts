@@ -1,6 +1,7 @@
 import {
   ApiRequestError,
-  DocumentsRequestError,
+  DocumentsLoadError,
+  DocumentsUploadError,
   ValidationError,
 } from "../errors";
 import AppErrorInfo from "../models/AppErrorInfo";
@@ -37,8 +38,11 @@ const useAppErrorsLogic = () => {
   const catchError = (error) => {
     if (error instanceof ValidationError) {
       handleValidationError(error);
-    } else if (error instanceof DocumentsRequestError) {
-      handleDocumentsRequestError(error);
+    } else if (
+      error instanceof DocumentsLoadError ||
+      error instanceof DocumentsUploadError
+    ) {
+      handleDocumentsError(error);
     } else {
       console.error(error);
       handleError(error);
@@ -151,10 +155,10 @@ const useAppErrorsLogic = () => {
   };
 
   /**
-   * Add and track the Error
-   * @param {DocumentsRequestError} error
+   * Add and track documents-related error or issue
+   * @param {DocumentsLoadError|DocumentsUploadError} error
    */
-  const handleDocumentsRequestError = (error) => {
+  const handleDocumentsError = (error) => {
     const appError = new AppErrorInfo({
       name: error.name,
       message: error.issue
@@ -168,7 +172,11 @@ const useAppErrorsLogic = () => {
 
     addError(appError);
 
-    tracker.noticeError(error);
+    tracker.trackEvent(error.name, {
+      issueField: error.issue ? error.issue.field : null,
+      issueRule: error.issue ? error.issue.rule : null,
+      issueType: error.issue ? error.issue.type : null,
+    });
   };
 
   /**

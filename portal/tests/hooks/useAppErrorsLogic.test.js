@@ -1,5 +1,6 @@
 import {
-  DocumentsRequestError,
+  DocumentsLoadError,
+  DocumentsUploadError,
   ForbiddenError,
   NetworkError,
   ValidationError,
@@ -109,17 +110,35 @@ describe("useAppErrorsLogic", () => {
       });
     });
 
-    describe("when DocumentsRequestError is thrown", () => {
+    describe("when DocumentsLoadError is thrown", () => {
       it("displays an internationalized message", () => {
         act(() => {
           appErrorsLogic.catchError(
-            new DocumentsRequestError("mock-application-id")
+            new DocumentsLoadError("mock-application-id")
           );
         });
 
         expect(appErrorsLogic.appErrors.items).toHaveLength(1);
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
           `"An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
+        );
+        expect(appErrorsLogic.appErrors.items[0].meta).toEqual({
+          application_id: "mock-application-id",
+        });
+      });
+    });
+
+    describe("when DocumentsUploadError is thrown", () => {
+      it("displays an internationalized message", () => {
+        act(() => {
+          appErrorsLogic.catchError(
+            new DocumentsUploadError("mock-application-id")
+          );
+        });
+
+        expect(appErrorsLogic.appErrors.items).toHaveLength(1);
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at (833) 344‑7365."`
         );
         expect(appErrorsLogic.appErrors.items[0].meta).toEqual({
           application_id: "mock-application-id",
@@ -201,7 +220,7 @@ describe("useAppErrorsLogic", () => {
         });
 
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"We encountered an error when uploading your file. Try uploading your file again. If you get this error again, call the Contact Center at (833) 344‑7365."`
+          `"We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at (833) 344‑7365."`
         );
       });
 
@@ -242,7 +261,7 @@ describe("useAppErrorsLogic", () => {
         });
 
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Field (shop_name) didn't match expected format."`
+          `"Field (shop_name) didn’t match expected format."`
         );
       });
 

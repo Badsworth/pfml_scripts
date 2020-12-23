@@ -83,6 +83,60 @@ variable "fineos_import_employee_updates_input_directory_path" {
   default     = null
 }
 
+variable "payments_fineos_data_export_path" {
+  description = "FINEOS generates data export files for PFML API to pick up."
+  type        = string
+  default     = ""
+}
+
+variable "payments_pfml_fineos_inbound_path" {
+  description = "PFML API stores a copy of all files that FINEOS generates for us."
+  type        = string
+  default     = ""
+}
+
+variable "payments_fineos_data_import_path" {
+  description = "PFML API generates files for FINEOS to process"
+  type        = string
+  default     = ""
+}
+
+variable "payments_pfml_fineos_outbound_path" {
+  description = "PFML API stores a copy of all files that we generate for FINEOS"
+  type        = string
+  default     = ""
+}
+
+variable "payments_ctr_moveit_incoming_path" {
+  description = "CTR/MMARS generates Outbound Return files for PFML API to pick up (MOVEIT folder)"
+  type        = string
+  default     = ""
+}
+
+variable "payments_ctr_moveit_archive_path" {
+  description = "Once PFML API picks up files from CTR/MMARS MOVEit, we need to put them into the Archive folder."
+  type        = string
+  default     = ""
+}
+
+variable "payments_pfml_ctr_inbound_path" {
+  description = "PFML API stores a copy of all files that CTR/MMARS generates for us."
+  type        = string
+  default     = ""
+}
+
+variable "payments_ctr_moveit_outgoing_path" {
+  description = "PFML API generates files for CTR/MMARS to process"
+  type        = string
+  default     = ""
+}
+
+variable "payments_pfml_ctr_outbound_path" {
+  description = "PFML API stores a copy of all files that we generate for CTR/MMARS"
+  type        = string
+  default     = ""
+}
+
 variable "logging_level" {
   description = "Logging level override"
   type        = string
