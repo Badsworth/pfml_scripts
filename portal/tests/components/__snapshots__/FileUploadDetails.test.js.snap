@@ -37,10 +37,10 @@ exports[`FileUploadDetails renders the details with text 1`] = `
       key="2"
       list={
         Object {
-          "listHeading": "If you're taking a picture of your document:",
+          "listHeading": "If you’re taking a picture of your document:",
           "listItems": Array [
             "Take a picture of each document page and upload the pictures individually",
-            "If you're uploading an ID card, upload separate pictures for both the front and back of the card",
+            "If you’re uploading an ID card, upload separate pictures for both the front and back of the card",
             "Make sure the picture is clear and readable",
           ],
         }

@@ -261,7 +261,7 @@ describe("useAppErrorsLogic", () => {
         });
 
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Field (shop_name) didn't match expected format."`
+          `"Field (shop_name) didn’t match expected format."`
         );
       });
 

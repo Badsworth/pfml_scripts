@@ -20,7 +20,7 @@ exports[`OtherIncomes renders the page 1`] = `
         },
         Object {
           "checked": false,
-          "label": "I've applied for another benefit that hasn’t been approved yet.",
+          "label": "I’ve applied for another benefit that hasn’t been approved yet.",
           "value": "pending",
         },
       ]

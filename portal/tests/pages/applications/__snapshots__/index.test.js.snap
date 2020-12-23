@@ -11,7 +11,7 @@ exports[`Applications when no claims exist renders the empty page state 1`] = `
     View your applications
   </Title>
   <p>
-    You don't have any applications yet.
+    You don’t have any applications yet.
   </p>
 </Fragment>
 `;

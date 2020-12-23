@@ -23,7 +23,7 @@ const errors = {
     attemptBlocked:
       "Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at $t(shared.contactCenterPhoneNumber).",
     attemptBlocked_login:
-      "Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We've also sent you an email to confirm your identity.",
+      "Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We’ve also sent you an email to confirm your identity.",
     attemptsLimitExceeded_forgotPassword:
       "Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again.",
     attemptsLimitExceeded_login:
@@ -100,7 +100,7 @@ const errors = {
     employer_fein: {
       pattern:
         "Enter the Employer Identification Number in the correct format.",
-      required: "Enter your employer's Employer Identification Number.",
+      required: "Enter your employer’s Employer Identification Number.",
     },
     employer_notified: {
       required:
@@ -110,7 +110,7 @@ const errors = {
       required: "Enter your employment status.",
     },
     fineos_case_creation_issues:
-      "We’re having trouble finding you in our database. Fill out the <mass-gov-form-link>form on Mass.gov</mass-gov-form-link> and we'll set up your application through our Contact Center.",
+      "We’re having trouble finding you in our database. Fill out the <mass-gov-form-link>form on Mass.gov</mass-gov-form-link> and we’ll set up your application through our Contact Center.",
     fineos_case_error:
       "There was a problem when trying to send your information to our system. Try submitting this information again.",
     first_name: {
@@ -142,7 +142,7 @@ const errors = {
     },
     has_state_id: {
       required:
-        "Select yes if you have a Massachusetts driver's license or ID card.",
+        "Select yes if you have a Massachusetts driver’s license or ID card.",
     },
     hours_worked_per_week: {
       maximum: "The average hours you work each week must be less than 168.",
@@ -156,7 +156,7 @@ const errors = {
     leave_details: {
       child_birth_date: {
         date: "Date of birth must include a month, day, and year.",
-        required: "Enter your child's date of birth or due date.",
+        required: "Enter your child’s date of birth or due date.",
       },
       child_placement_date: {
         date: "Placement date must include a month, day, and year.",
@@ -456,7 +456,7 @@ const errors = {
     invalid: "Field ({{field}}) has invalid value.",
     invalid_masked_field: "Re-enter the full value to make a change.",
     // Field's value didn't match an expected regex pattern:
-    pattern: "Field ({{field}}) didn't match expected format.",
+    pattern: "Field ({{field}}) didn’t match expected format.",
   },
 };
 
@@ -474,7 +474,7 @@ const shared = {
   backToLoginLink: "Back to log in",
   choiceNo: "No",
   choicePendingOtherIncomes:
-    "I've applied for another benefit that hasn’t been approved$t(chars.nbsp)yet.",
+    "I’ve applied for another benefit that hasn’t been approved$t(chars.nbsp)yet.",
   choiceYes: "Yes",
   claimDurationTypeContinuous: "Continuous leave",
   claimDurationTypeIntermittent: "Intermittent leave",
@@ -577,7 +577,7 @@ const pages = {
     claimsReflectPortal:
       "Your applications only reflect what you entered using this website. Any changes you made through the Contact Center will not be shown here.",
     inProgressHeading: "In-progress applications",
-    noClaims: "You don't have any applications yet.",
+    noClaims: "You don’t have any applications yet.",
     submittedHeading: "Submitted applications",
     title: "$t(shared.dashboardTitles.view)",
     uploadSuccessHeading: "You successfully submitted your documents",
@@ -707,7 +707,7 @@ const pages = {
     documentsLoadError: "$t(shared.documentsLoadError)",
     edit: "Edit",
     partOneSubmittedDescription:
-      "Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you'll need to call our Contact Center at $t(shared.contactCenterPhoneNumber). Now, you can work on Parts 2 and 3, and submit your application.",
+      "Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at $t(shared.contactCenterPhoneNumber). Now, you can work on Parts 2 and 3, and submit your application.",
     partOneSubmittedHeading: "Part 1 of your application was confirmed.",
     partTwoSubmittedDescription:
       "Now, you can work on Part 3, and submit your application.",
@@ -722,13 +722,13 @@ const pages = {
     stepHTMLDescription_bondingAdoptFosterFuture:
       "After your child arrives in your home, you will need to provide a statement confirming the placement and the date of placement.",
     stepHTMLDescription_bondingNewborn:
-      "<p>You need to provide your child's birth certificate or a document from a health care provider that shows the child’s date of birth.</p><p>Your certification documents will be shared with your employer as part of your application.</p>",
+      "<p>You need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.</p><p>Your certification documents will be shared with your employer as part of your application.</p>",
     stepHTMLDescription_bondingNewbornFuture:
       "After your child is born you will need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.",
     stepHTMLDescription_employerInformation:
       "You will need to know:<ul><li>Your employer’s 9 digit federal employer identification number (FEIN or EIN). <br><strong>Where to find this: </strong>on your W$t(chars.nbhyphen)2 or 1099, or ask your employer’s finance department.</li><li>The date you told your employer you were taking leave.</li></ul><p>If you are taking leave from multiple employers, you must create separate applications for each job.</p>",
     stepHTMLDescription_leaveDetails:
-      "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider complete a <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking family leave to bond with a child, you will need to know:</p><ul><li>The child's date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
+      "<p>If you are taking medical leave due to injury, illness, or pregnancy, you need to have your health care provider complete a <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>. Some of the answers you will need for the online application will come from your health care provider’s answers on the certification form.</p><p>If you are taking family leave to bond with a child, you will need to know:</p><ul><li>The child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.</li><li>When you want your leave to begin and end.</li></ul>",
     stepHTMLDescription_medical:
       "<p>You need to provide your completed <healthcare-provider-form-link>Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
     stepHTMLDescription_otherLeave:
@@ -767,7 +767,7 @@ const pages = {
     title: "Checklist: Create a new application",
   },
   claimsDateOfBirth: {
-    sectionLabel: "What's your date of birth?",
+    sectionLabel: "What’s your date of birth?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsEmployerBenefitDetails: {
@@ -820,15 +820,15 @@ const pages = {
   claimsEmploymentStatus: {
     alertBody:
       "<p>If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at $t(shared.contactCenterPhoneNumber).</p><p>You can apply online if you’re currently employed in Massachusetts.</p>",
-    choiceLabel_employed: "I'm employed in Massachusetts",
-    choiceLabel_selfEmployed: "I'm self-employed",
-    choiceLabel_unemployed: "I'm unemployed",
+    choiceLabel_employed: "I’m employed in Massachusetts",
+    choiceLabel_selfEmployed: "I’m self-employed",
+    choiceLabel_unemployed: "I’m unemployed",
     feinHint:
       "This number is 9 digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W$t(chars.nbhyphen)2 or 1099$t(chars.nbhyphen)MISC. Ask your employer if you need help getting this information.",
-    feinLabel: "What is your employer's Employer Identification Number (EIN)?",
+    feinLabel: "What is your employer’s Employer Identification Number (EIN)?",
     furloughAnswer:
       'If your hours have been cut or significantly reduced but you have not been laid off, select "$t(pages.claimsEmploymentStatus.choiceLabel_employed)"',
-    furloughQuestion: "What if I've been furloughed?",
+    furloughQuestion: "What if I’ve been furloughed?",
     sectionLabel: "What is your employment status?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
@@ -864,7 +864,7 @@ const pages = {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
-      "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
+      "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
     datesLead_medical:
       "If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 29 in the Certification of a Serious Health Condition form (page 7).",
     datesSectionLabel:
@@ -882,7 +882,7 @@ const pages = {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
-      "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
+      "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
     datesLead_medical:
       "If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 34 in the Certification of a Serious Health Condition form (page 8).",
     datesSectionLabel:
@@ -906,7 +906,7 @@ const pages = {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
-      "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
+      "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
     datesLead_medical:
       "If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.<br /><br />Refer to Question 32 in the Certification of a Serious Health Condition form (page 8).",
     datesSectionLabel:
@@ -939,7 +939,7 @@ const pages = {
     bondingTypeLabel:
       "Will you take leave for a birth, an adoption, or a foster placement?",
     bondingTypeMultipleBirthsDetailsLabel:
-      "What if I've had multiple births or placements within one year?",
+      "What if I’ve had multiple births or placements within one year?",
     bondingTypeMultipleBirthsDetailsSummary:
       "Leave is determined based on benefit year (365 days from the start of the first week you take leave), not based on number of children. You have 1 year to take your family leave from the date of the birth/placement of the child. <multiple-births-link>Learn more about taking leave for multiple childbirths or placements</multiple-births-link>.",
     bondingTypeNewbornLabel: "Birth",
@@ -958,7 +958,7 @@ const pages = {
     lead:
       "Fill out your name as it appears on official documents like your driver’s license or W$t(chars.nbhyphen)2.",
     middleNameLabel: "Middle name",
-    sectionLabel: "What's your name?",
+    sectionLabel: "What’s your name?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsNotifiedEmployer: {
@@ -967,7 +967,7 @@ const pages = {
     employerNotificationDateHint: "This can be an approximate date.",
     employerNotificationLabel: "When did you tell them?",
     mustNotifyEmployerWarning:
-      "You can continue to enter information about your leave. Before you can submit your application, you must tell your employer that you're taking$t(chars.nbsp)leave. Notify your employer at least 30 days before the start of your leave if possible.",
+      "You can continue to enter information about your leave. Before you can submit your application, you must tell your employer that you’re taking$t(chars.nbsp)leave. Notify your employer at least 30 days before the start of your leave if possible.",
     sectionLabel:
       "Have you told your employer that you are taking$t(chars.nbsp)leave?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
@@ -1049,10 +1049,10 @@ const pages = {
     lead:
       "If we need to contact you, we will reach out by phone or mail. We will also use this number for any previous applications you have submitted.",
     phoneNumberHint:
-      "Don't have a personal phone number? Enter a number where we might be able to reach you (for example, a work phone number, or a friend's phone number).",
+      "Don’t have a personal phone number? Enter a number where we might be able to reach you (for example, a work phone number, or a friend’s phone number).",
     phoneNumberLabel: "Phone number",
     phoneTypeLabel: "Number type",
-    sectionLabel: "What's your phone number?",
+    sectionLabel: "What’s your phone number?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsPreviousLeaves: {
@@ -1062,7 +1062,7 @@ const pages = {
     hintHeader:
       "The following are qualifying reasons for taking paid or unpaid leave:",
     hintList:
-      "<li>You had a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>, including illness, injury, or pregnancy. If you were sick, you were out of work for at least 3 days and needed continuing care from your healthcare provider or needed inpatient care.</li><li>You bonded with your child after birth or placement.</li><li>You needed to manage family affairs while a family member is on active duty in the armed forces.</li><li>You needed to care for a family member who serves in the armed forces.</li><li>You needed to care for a family member with a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>.</li>",
+      "<li>You had a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>, including illness, injury, or pregnancy. If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.</li><li>You bonded with your child after birth or placement.</li><li>You needed to manage family affairs while a family member is on active duty in the armed forces.</li><li>You needed to care for a family member who serves in the armed forces.</li><li>You needed to care for a family member with a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>.</li>",
     sectionLabel:
       "Have you taken paid or unpaid leave since January 1, 2021 for a qualifying reason?",
     title: "$t(shared.claimsOtherLeaveTitle)",
@@ -1124,8 +1124,8 @@ const pages = {
     amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
     amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",
     amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
-    childBirthDateLabel: "Child's date of birth",
-    childPlacementDateLabel: "Child's placement date",
+    childBirthDateLabel: "Child’s date of birth",
+    childPlacementDateLabel: "Child’s placement date",
     documentsLoadError: "$t(shared.documentsLoadError)",
     editLink: "Edit",
     employerBenefitEntryLabel:
@@ -1138,7 +1138,7 @@ const pages = {
       "$t(shared.employerBenefitType_permanentDisability)",
     employerBenefitType_shortTermDisability:
       "$t(shared.employerBenefitType_shortTermDisability)",
-    employerFeinLabel: "Employer's EIN",
+    employerFeinLabel: "Employer’s EIN",
     employerNotifiedLabel: "Notified employer",
     employerNotifiedValue: "No",
     employerNotifiedValue_true: "Notified employer on {{date}}",
@@ -1257,7 +1257,7 @@ const pages = {
       "Check your answers before submitting your$t(chars.nbsp)application.",
     userDateOfBirthLabel: "Date of birth",
     userNameLabel: "Name",
-    userStateIdLabel: "Driver's License Number",
+    userStateIdLabel: "Driver’s License Number",
     userTaxIdLabel: "Social Security Number or ITIN",
     workPatternDaysFixedLabel: "Weekly work hours",
     workPatternDaysVariableLabel: "Average weekly hours",
@@ -1314,14 +1314,14 @@ const pages = {
     hoursLabel: "$t(shared.hoursLabel)",
     inputHoursLabel: "Average weekly hours",
     lead:
-      "We'll confirm your hours with your employer after you submit your application. Learn more about <calculate-hours-link>how we use this number</calculate-hours-link> and how to figure out your average.",
+      "We’ll confirm your hours with your employer after you submit your application. Learn more about <calculate-hours-link>how we use this number</calculate-hours-link> and how to figure out your average.",
     minutesLabel: "$t(shared.minutesLabel)",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsSsn: {
     lead:
       "Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number (ITIN).",
-    sectionLabel: "What's your Social Security Number?",
+    sectionLabel: "What’s your Social Security Number?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsStart: {
@@ -1335,7 +1335,7 @@ const pages = {
   claimsStateId: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
-    hasStateIdLabel: "Do you have a Massachusetts driver's license or ID card?",
+    hasStateIdLabel: "Do you have a Massachusetts driver’s license or ID card?",
     idHint:
       "This may be a 9 digit number or begin with an S or SA followed by numbers for a total of 9 characters.",
     idLabel: "Enter your license or ID number",
@@ -1358,7 +1358,7 @@ const pages = {
       "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at $t(shared.contactCenterPhoneNumber).",
     familyLeaveToBondHeading: "You may also be eligible for paid family leave",
     medicalLeaveAfterBirth:
-      "You can take up to 20 weeks of paid medical leave if you're unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at $t(shared.contactCenterPhoneNumber) if you need <medical-bonding-link>medical leave after giving birth</medical-bonding-link>.",
+      "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at $t(shared.contactCenterPhoneNumber) if you need <medical-bonding-link>medical leave after giving birth</medical-bonding-link>.",
     medicalLeaveAfterBirthHeading:
       "If you gave birth, you may also be eligible for paid medical leave",
     proofRequired_bondingAdoptFosterFuture:
@@ -1366,10 +1366,10 @@ const pages = {
     proofRequired_bondingNewbornFuture:
       "After your child is born, you will need to upload, mail, or fax a document that shows your child’s date of birth.",
     proofRequired_medicalPregnantFuture:
-      "You must call the DFML Contact Center at $t(shared.contactCenterPhoneNumber) once your medical leave begins. We can’t approve your application until we hear from you.",
+      "You must call the Contact Center at $t(shared.contactCenterPhoneNumber) once your medical leave begins to confirm that your leave has begun. We can’t approve your application until we hear from you.",
     reportReductionsHeading: "We may need more information from you",
     reportReductionsProcess:
-      "<p>Call the Contact Center at $t(shared.contactCenterPhoneNumber) if you'll receive:</p><ul><li>Any <reductions-employer-benefits-link>benefits from your employer</reductions-employer-benefits-link> that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from <reductions-overview-link>any other sources</reductions-overview-link> during your leave</li></ul>",
+      "<p>Call the Contact Center at $t(shared.contactCenterPhoneNumber) if you’ll receive:</p><ul><li>Any <reductions-employer-benefits-link>benefits from your employer</reductions-employer-benefits-link> that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from <reductions-overview-link>any other sources</reductions-overview-link> during your leave</li></ul>",
     title: "You submitted your leave application",
     title_bonding: "You submitted your family leave application",
     title_medical: "You submitted your medical leave application",
@@ -1381,18 +1381,19 @@ const pages = {
     documentsLoadError: "$t(shared.documentsLoadError)",
     fileHeadingPrefix: "File",
     leadListNewborn: [
-      "Your child's birth certificate.",
-      "A note from your child's health care provider stating your child's date of birth.",
-      "A note from the health care provider of the person who gave birth stating your child's date of birth.",
+      "Your child’s birth certificate.",
+      "A note from your child’s health care provider stating your child’s date of birth.",
+      "A note from the health care provider of the person who gave birth stating your child’s date of birth.",
     ],
     lead_bonding_adopt_foster:
-      "<p>It's faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.</p>",
+      "<p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.</p>",
     lead_bonding_newborn:
-      "<p>It's faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>You need to upload one of the following documents to confirm your child’s date of birth:</p>",
+      "<p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>You need to upload one of the following documents to confirm your child’s date of birth:</p>",
     lead_medical:
-      "<p>It's faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>You need to upload a completed <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link> to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled$t(chars.nbsp)one$t(chars.nbsp)out.</p>",
+      "<p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>You need to upload a completed <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link> to prove that you need to take medical leave.</p>",
     sectionLabel_bonding: "Upload your documentation",
-    sectionLabel_medical: "Upload your Healthcare Provider$t(chars.nbsp)form",
+    sectionLabel_medical:
+      "Upload your Certification of a Serious Health Condition",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsUploadDocsOptions: {
@@ -1403,22 +1404,22 @@ const pages = {
     sectionHint:
       "You only need to complete this if you received a notice from the Department of Family and Medical Leave asking you to provide additional documents or you need to provide proof of birth or placement. ",
     sectionLabel: "What kind of document are you uploading?",
-    stateIdLabel: "Massachusetts driver's license or ID",
+    stateIdLabel: "Massachusetts driver’s license or ID",
     title: "Additional documentation",
   },
   claimsUploadId: {
     accordionContent:
-      "<p><strong>If you don’t have any of those, you can provide one of the following plus proof of your Social Security Number or Individual Tax Identification Number:</strong></p><ul><li>Valid, unexpired U.S. State or Territory License or ID, both front and back</li><li>Certified copy of a birth certificate filed with a State Office of Vital Statistics or equivalent agency in the individual's state of birth. (You can only use a <puerto-rican-birth-certificate-link>Puerto Rican birth certificate</puerto-rican-birth-certificate-link> if it was issued on or after July 1, 2010.)</li><li>Certificate of Citizenship (Form N$t(chars.nbhyphen)560, or Form N$t(chars.nbhyphen)561)</li><li>Certificate of Naturalization (Form N$t(chars.nbhyphen)550 or N$t(chars.nbhyphen)570)</li></ul><p><strong>You can provide proof of your Social Security Number using one of the following documents displaying your complete Social Security Number:</strong></p><ul><li>Social Security card</li><li>W$t(chars.nbhyphen)2 Form</li><li>SSA$t(chars.nbhyphen)1099 Form</li><li>Non$t(chars.nbhyphen)SSA$t(chars.nbhyphen)1099 Form</li><li>Pay stub with your name on it</li></ul><p><identity-proof-link>Learn more about verifying your identity with different documents.</identity-proof-link></p>",
-    accordionHeading: "If you don't have any of those documents:",
+      "<p><strong>If you don’t have any of those, you can provide one of the following plus proof of your Social Security Number or Individual Tax Identification Number:</strong></p><ul><li>Valid, unexpired U.S. State or Territory License or ID, both front and back</li><li>Certified copy of a birth certificate filed with a State Office of Vital Statistics or equivalent agency in the individual’s state of birth. (You can only use a <puerto-rican-birth-certificate-link>Puerto Rican birth certificate</puerto-rican-birth-certificate-link> if it was issued on or after July 1, 2010.)</li><li>Certificate of Citizenship (Form N$t(chars.nbhyphen)560, or Form N$t(chars.nbhyphen)561)</li><li>Certificate of Naturalization (Form N$t(chars.nbhyphen)550 or N$t(chars.nbhyphen)570)</li></ul><p><strong>You can provide proof of your Social Security Number using one of the following documents displaying your complete Social Security Number:</strong></p><ul><li>Social Security card</li><li>W$t(chars.nbhyphen)2 Form</li><li>SSA$t(chars.nbhyphen)1099 Form</li><li>Non$t(chars.nbhyphen)SSA$t(chars.nbhyphen)1099 Form</li><li>Pay stub with your name on it</li></ul><p><identity-proof-link>Learn more about verifying your identity with different documents.</identity-proof-link></p>",
+    accordionHeading: "If you don’t have any of those documents:",
     addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
     addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
     documentsLoadError: "$t(shared.documentsLoadError)",
     fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
     idDocumentsCount: "$t(shared.filesUploaded)",
     lead_mass:
-      "<p>It's faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>To verify your identity, <strong>upload a color copy of both the front and back of your ID card.</strong></p>",
+      "<p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>To verify your identity, <strong>upload a color copy of both the front and back of your ID card.</strong></p>",
     lead_other:
-      "<p>It's faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>To verify your identity you will need valid, unexpired documentation issued by state or federal government.</p>",
+      "<p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>To verify your identity you will need valid, unexpired documentation issued by state or federal government.</p>",
     otherIdentityDocs:
       "<p><strong>You can use a color copy of one of the following documents:</strong></p><ul><li>U.S. State or Territory Real ID, both front and back</li><li>U.S. passport or passport card</li><li>Permanent Resident Card issued by DHS or INS</li><li>Employment Authorization Document (EAD) issued by DHS</li><li>Foreign passport <strong>and</strong> a <work-visa-link>work visa</work-visa-link></li></ul>",
     sectionLabel_mass: "Upload your Massachusetts driver’s license or ID card",
@@ -1455,14 +1456,14 @@ const pages = {
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
     stepOneHeading: "1. Tell your employer that you need to take paid leave",
     stepThree:
-      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at $t(shared.contactCenterPhoneNumber).</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You'll need a separate application for the intermittent leave.</li></ul>",
+      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at $t(shared.contactCenterPhoneNumber).</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul>",
     stepThreeHeading: "3. Apply",
     stepTwo:
-      "<p>For medical leave your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child's date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
+      "<p>For medical leave your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
     stepTwoHeading: "2. Get documentation that supports your leave request",
     // TODO (CP-1496): Remove string once Jan 1 content is always on
     stepTwo_prelaunch:
-      "<p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child's date of birth or placement.</p>",
+      "<p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p>",
     title: "$t(shared.dashboardTitles.create)",
   },
   employersAuthCreateAccount: {
@@ -1483,7 +1484,7 @@ const pages = {
       "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers will be able to apply for family leave for bonding with a child soon, with more benefits available in 2021.",
     leadMultipleCompanies:
       "If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.",
-    nextStep: "We'll send you a 6-digit code to verify your email address.",
+    nextStep: "We’ll send you a 6-digit code to verify your email address.",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "$t(shared.passwordLabel)",
     title: "Create an employer account",
@@ -1744,7 +1745,7 @@ const pages = {
       "When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.",
     checkEmailTitle: "Check your email regularly",
     learnMoreLinks:
-      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li><li><employer-pfml-guide-link>Employer's guide to Paid Family and Medical Leave (PFML)</employer-pfml-guide-link></li></ul>",
+      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li><li><employer-pfml-guide-link>Employer’s guide to Paid Family and Medical Leave (PFML)</employer-pfml-guide-link></li></ul>",
     learnMoreTitle: "Learn more",
     respondBody:
       "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
@@ -1913,7 +1914,7 @@ const components = {
     zipLabel: "ZIP",
   },
   fileCard: {
-    removalWarning: "You can't remove files previously uploaded.",
+    removalWarning: "You can’t remove files previously uploaded.",
     removeButton: "Remove file",
     uploadDate: "Date of upload: {{date}}",
   },
@@ -1939,10 +1940,10 @@ const components = {
         ],
       },
       {
-        listHeading: "If you're taking a picture of your document:",
+        listHeading: "If you’re taking a picture of your document:",
         listItems: [
           "Take a picture of each document page and upload the pictures individually",
-          "If you're uploading an ID card, upload separate pictures for both the front and back of the card",
+          "If you’re uploading an ID card, upload separate pictures for both the front and back of the card",
           "Make sure the picture is clear and readable",
         ],
       },
@@ -1982,7 +1983,7 @@ const components = {
   maintenanceTakeover: {
     lead:
       "This page is currently unavailable while the site is undergoing maintenance. Please check back$t(chars.nbsp)shortly.",
-    title: "We're undergoing maintenance",
+    title: "We’re undergoing maintenance",
   },
   signUp: {
     createAccountButton: "Create an account to apply for paid leave",
@@ -2010,7 +2011,7 @@ const components = {
   },
   userFeedback: {
     instructions:
-      "We'd like to hear more about your experience on this site. Please take a few minutes to share your feedback.",
+      "We’d like to hear more about your experience on this site. Please take a few minutes to share your feedback.",
     surveyLink: "<user-feedback-link>Take the survey</user-feedback-link>",
     title: "Help us improve this site",
   },

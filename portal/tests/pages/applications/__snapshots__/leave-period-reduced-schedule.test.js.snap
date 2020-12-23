@@ -80,7 +80,18 @@ exports[`LeavePeriodReducedSchedule renders the page with bonding leave content 
 </QuestionPage>
 `;
 
-exports[`LeavePeriodReducedSchedule renders the page with bonding leave content 2`] = `"If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave."`;
+exports[`LeavePeriodReducedSchedule renders the page with bonding leave content 2`] = `
+Array [
+  "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
+  <br
+    key="br-1"
+  />,
+  <br
+    key="br-2"
+  />,
+  "Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
+]
+`;
 
 exports[`LeavePeriodReducedSchedule renders the page with medical leave content 1`] = `
 <QuestionPage

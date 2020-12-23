@@ -20,7 +20,7 @@ exports[`StateId initially renders the page without an id field 1`] = `
         },
       ]
     }
-    label="Do you have a Massachusetts driver's license or ID card?"
+    label="Do you have a Massachusetts driver’s license or ID card?"
     name="has_state_id"
     onChange={[Function]}
     type="radio"

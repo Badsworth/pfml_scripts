@@ -52,7 +52,7 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
       />
       <Accordion>
         <AccordionItem
-          heading="If you don't have any of those documents:"
+          heading="If you don’t have any of those documents:"
         >
           <Trans
             components={

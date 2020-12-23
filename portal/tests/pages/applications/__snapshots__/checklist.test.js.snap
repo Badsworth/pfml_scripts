@@ -44,7 +44,7 @@ Array [
   <p
     key="p-0"
   >
-    You need to provide your child's birth certificate or a document from a health care provider that shows the child’s date of birth.
+    You need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.
   </p>,
   <p
     key="p-1"
@@ -154,7 +154,7 @@ Array [
     <li
       key="0"
     >
-      The child's date of birth, due date, or the date they arrived in your home for adoption or foster care.
+      The child’s date of birth, due date, or the date they arrived in your home for adoption or foster care.
     </li>
     <li
       key="1"
@@ -215,7 +215,7 @@ Array [
   <p
     key="p-0"
   >
-    You need to provide your child's birth certificate or a document from a health care provider that shows the child’s date of birth.
+    You need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth.
   </p>,
   <p
     key="p-1"
@@ -560,7 +560,7 @@ exports[`Checklist renders success message after submitting part one 1`] = `
   name="part-one-submitted-message"
   state="success"
 >
-  Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you'll need to call our Contact Center at (833) 344‑7365. Now, you can work on Parts 2 and 3, and submit your application.
+  Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at (833) 344‑7365. Now, you can work on Parts 2 and 3, and submit your application.
 </Alert>
 `;
 

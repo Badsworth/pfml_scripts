@@ -40,7 +40,7 @@ exports[`ScheduleVariable renders the form 1`] = `
 
 exports[`ScheduleVariable renders the form 2`] = `
 Array [
-  "We'll confirm your hours with your employer after you submit your application. Learn more about ",
+  "We’ll confirm your hours with your employer after you submit your application. Learn more about ",
   <a
     href="https://www.mass.gov/pfml-calculate-hours"
     key="1"
