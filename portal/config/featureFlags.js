@@ -96,6 +96,7 @@ const flagsConfig = {
   },
   prod: {
     pfmlTerriyay: true,
+    employerShowPreviousLeaves: true,
   },
 };
 
