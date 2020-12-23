@@ -2845,7 +2845,7 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token, te
 
     assert (
         response_body.get("message")
-        == f"Application {str(application.application_id)} could not be submitted, try again later"
+        == f"Application {str(application.application_id)} could not be submitted"
     )
     assert not response_body.get("warnings")
     # Simplified check to confirm Application was included in response:
@@ -2881,7 +2881,7 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
     response_body = response.get_json()
     assert (
         response_body.get("message")
-        == f"Application {str(application.application_id)} could not be submitted, try again later"
+        == f"Application {str(application.application_id)} could not be submitted"
     )
     fineos_issues = response_body.get("errors")
     assert (
