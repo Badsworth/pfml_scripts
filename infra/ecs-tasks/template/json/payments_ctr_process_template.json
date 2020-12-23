@@ -24,9 +24,21 @@
       },
       "environment": [
         { "name": "ENVIRONMENT", "value": "${environment_name}" },
-        { "name": "LOGGING_LEVEL", "value": "${logging_level}" }
+        { "name": "LOGGING_LEVEL", "value": "${logging_level}" },
+
+        { "name": "DB_HOST", "value": "${db_host}" },
+        { "name": "DB_NAME", "value": "${db_name}" },
+        { "name": "DB_USERNAME", "value": "${db_username}" },
+
+        { "name": "CTR_MOVEIT_INCOMING_PATH", "value": "${ctr_moveit_incoming_path}" },
+        { "name": "CTR_MOVEIT_ARCHIVE_PATH", "value": "${ctr_moveit_archive_path}" },
+        { "name": "PFML_CTR_INBOUND_PATH", "value": "${pfml_ctr_inbound_path}" },
+        { "name": "CTR_MOVEIT_OUTGOING_PATH", "value": "${ctr_moveit_outgoing_path}" },
+        { "name": "PFML_CTR_OUTBOUND_PATH", "value": "${pfml_ctr_outbound_path}" }
       ],
-      "secrets": []
+      "secrets": [
+        { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }
+      ]
     }
   ]
   

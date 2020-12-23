@@ -34,6 +34,5 @@ module "tasks" {
 
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/PERF"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/PERF/dataexports"
-
-  logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
+  logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
 }

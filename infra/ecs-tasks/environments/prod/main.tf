@@ -36,5 +36,16 @@ module "tasks" {
 
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somprod-data-import/PRD"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somprod-data-export/PRD/dataexports"
-  enable_recurring_payments_schedule                  = false
+
+  payments_fineos_data_export_path   = "s3://fin-somprod-data-export/PRD/dataexports"
+  payments_pfml_fineos_inbound_path  = "s3://massgov-pfml-prod-agency-transfer/cps/inbound"
+  payments_fineos_data_import_path   = "s3://fin-somprod-data-import/PRD/peiupdate"
+  payments_pfml_fineos_outbound_path = "s3://massgov-pfml-prod-agency-transfer/cps/outbound"
+  payments_ctr_moveit_incoming_path  = "sftp://transfer.eol.mass.gov/DMFL/Comptroller_Office/Incoming/nmmarsload"
+  payments_ctr_moveit_archive_path   = "sftp://transfer.eol.mass.gov/DMFL/Comptroller_Office/Archive"
+  payments_pfml_ctr_inbound_path     = "s3://massgov-pfml-prod-agency-transfer/ctr/inbound"
+  payments_ctr_moveit_outgoing_path  = "sftp://transfer.eol.mass.gov/DMFL/Comptroller_Office/Outgoing/nmmarsload"
+  payments_pfml_ctr_outbound_path    = "s3://massgov-pfml-prod-agency-transfer/ctr/outbound"
+
+  enable_recurring_payments_schedule = false
 }
