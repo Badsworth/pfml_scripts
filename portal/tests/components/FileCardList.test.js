@@ -281,7 +281,7 @@ describe("FileCardList", () => {
           const validFile = makeFileObject({ id, type: "application/pdf" });
           const invalidFile = makeFileObject({ id, type: "application/pdf" });
           Object.defineProperty(invalidFile.file, "size", {
-            get: () => 5000001,
+            get: () => 3500001,
           });
           jest.spyOn(_, "uniqueId").mockImplementation(() => id);
 
@@ -310,7 +310,7 @@ describe("FileCardList", () => {
             type: "application/pdf",
           });
           Object.defineProperty(invalidFile, "size", {
-            get: () => 5000001,
+            get: () => 3500001,
           });
 
           let appErrors, setAppErrors, wrapper;
@@ -329,7 +329,7 @@ describe("FileCardList", () => {
 
           expect(appErrors.items).toHaveLength(1);
           expect(appErrors.items[0].message).toMatchInlineSnapshot(
-            `"We could not upload: file.pdf. Files must be smaller than 5 megabytes."`
+            `"We could not upload: file.pdf. Files must be smaller than 3.5 MB."`
           );
         });
         it("tracks the error event", () => {
@@ -338,7 +338,7 @@ describe("FileCardList", () => {
             type: "application/pdf",
           });
           Object.defineProperty(invalidFile, "size", {
-            get: () => 5000001,
+            get: () => 3500001,
           });
 
           act(() => {
@@ -363,7 +363,7 @@ describe("FileCardList", () => {
           const validFile = makeFileObject({ id, type: "application/pdf" });
           const invalidFile = makeFileObject({ id, type: "application/exe" });
           Object.defineProperty(invalidFile.file, "size", {
-            get: () => 5000001,
+            get: () => 3500001,
           });
           jest.spyOn(_, "uniqueId").mockImplementation(() => id);
 
@@ -392,7 +392,7 @@ describe("FileCardList", () => {
             type: "application/exe",
           });
           Object.defineProperty(invalidFile, "size", {
-            get: () => 5000001,
+            get: () => 3500001,
           });
 
           let appErrors, setAppErrors, wrapper;
@@ -411,7 +411,7 @@ describe("FileCardList", () => {
 
           expect(appErrors.items).toHaveLength(1);
           expect(appErrors.items[0].message).toMatchInlineSnapshot(
-            `"We could not upload: file.exe. Choose a PDF or image file that is smaller than 5 megabytes."`
+            `"We could not upload: file.exe. Choose a PDF or image file that is smaller than 3.5 MB."`
           );
         });
         it("tracks the error event", () => {
@@ -420,7 +420,7 @@ describe("FileCardList", () => {
             type: "application/exe",
           });
           Object.defineProperty(invalidFile, "size", {
-            get: () => 5000001,
+            get: () => 3500001,
           });
 
           act(() => {
@@ -450,14 +450,14 @@ describe("FileCardList", () => {
           ];
 
           invalidSizeFiles.forEach((file) =>
-            Object.defineProperty(file, "size", { get: () => 5000001 })
+            Object.defineProperty(file, "size", { get: () => 3500001 })
           );
           const invalidSizeAndTypeFiles = [
             makeFile({ name: "sizeAndType1.exe", type: "application/exe" }),
             makeFile({ name: "sizeAndType2.gif", type: "application/gif" }),
           ];
           invalidSizeAndTypeFiles.forEach((file) =>
-            Object.defineProperty(file, "size", { get: () => 5000001 })
+            Object.defineProperty(file, "size", { get: () => 3500001 })
           );
 
           let appErrors, setAppErrors, wrapper;
@@ -490,14 +490,14 @@ describe("FileCardList", () => {
             appErrors.items.some(
               (item) =>
                 item.message ===
-                `We could not upload: size1.pdf, size2.pdf. Files must be smaller than 5 megabytes.`
+                `We could not upload: size1.pdf, size2.pdf. Files must be smaller than 3.5 MB.`
             )
           ).toBe(true);
           expect(
             appErrors.items.some(
               (item) =>
                 item.message ===
-                `We could not upload: sizeAndType1.exe, sizeAndType2.gif. Choose a PDF or image file that is smaller than 5 megabytes.`
+                `We could not upload: sizeAndType1.exe, sizeAndType2.gif. Choose a PDF or image file that is smaller than 3.5 MB.`
             )
           ).toBe(true);
         });
@@ -512,14 +512,14 @@ describe("FileCardList", () => {
           ];
 
           invalidSizeFiles.forEach((file) =>
-            Object.defineProperty(file, "size", { get: () => 5000001 })
+            Object.defineProperty(file, "size", { get: () => 3500001 })
           );
           const invalidSizeAndTypeFiles = [
             makeFile({ name: "sizeAndType1.exe", type: "application/exe" }),
             makeFile({ name: "sizeAndType2.gif", type: "application/gif" }),
           ];
           invalidSizeAndTypeFiles.forEach((file) =>
-            Object.defineProperty(file, "size", { get: () => 5000001 })
+            Object.defineProperty(file, "size", { get: () => 3500001 })
           );
 
           let appErrors, setAppErrors, wrapper;
