@@ -73,6 +73,7 @@ output "cert_domains" {
     "stage"       = "paidleave-test.mass.gov",
     "performance" = "paidleave-performance.mass.gov",
     "training"    = "paidleave-performance.mass.gov",
+    "uat"         = "paidleave-uat.mass.gov",
     "prod"        = "paidleave.mass.gov"
   }
 
