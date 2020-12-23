@@ -23,35 +23,43 @@ exports[`NewApplication renders the page 1`] = `
     id="employer-verification-form"
     onSubmit={[Function]}
   >
-    <InputChoiceGroup
-      choices={
-        Array [
-          Object {
-            "checked": false,
-            "label": "Yes",
-            "value": "true",
-          },
-          Object {
-            "checked": false,
-            "label": "No",
-            "value": "false",
-          },
-        ]
-      }
-      label={
-        <ReviewHeading
-          level="2"
-        >
-          Are you the right person to respond to this application?
-        </ReviewHeading>
-      }
-      name="hasReviewerVerified"
-      onChange={[Function]}
-      smallLabel={true}
-      type="radio"
-    />
+    <div
+      className="margin-bottom-2 padding-bottom-2"
+    >
+      <InputChoiceGroup
+        choices={
+          Array [
+            Object {
+              "checked": false,
+              "label": "Yes",
+              "value": "true",
+            },
+            Object {
+              "checked": false,
+              "label": "No",
+              "value": "false",
+            },
+          ]
+        }
+        label={
+          <ReviewHeading
+            level="2"
+          >
+            Are you the right person to respond to this application?
+          </ReviewHeading>
+        }
+        name="hasReviewerVerified"
+        onChange={[Function]}
+        smallLabel={true}
+        type="radio"
+      />
+    </div>
     <StatusRow
-      className="margin-top-2 padding-top-2"
+      label="Organization"
+    >
+      Work Inc.
+    </StatusRow>
+    <StatusRow
       label="Employer ID number (EIN)"
     >
       12-3456789

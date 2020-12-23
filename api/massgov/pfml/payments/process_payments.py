@@ -12,5 +12,13 @@ def ctr_process():
     logger.info("Payments CTR Process placeholder ECS task")
 
 
+def fineos_process():
+    """Process FINEOS Payment Exports"""
+    audit.init_security_logging()
+    logging.init(__name__)
+
+    logger.info("Payments FINEOS Process placeholder ECS task")
+
+
 if __name__ == "__main__":
     ctr_process()

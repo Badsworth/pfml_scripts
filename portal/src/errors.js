@@ -122,25 +122,40 @@ export class RequestTimeoutError extends ApiRequestError {
 }
 
 /**
- * A request to an Application's `/documents` endpoint failed
+ * A GET request to an Application's `/documents` endpoint failed
  */
-export class DocumentsRequestError extends BasePortalError {
+export class DocumentsLoadError extends BasePortalError {
   /**
-   * Since we construct DocumentsRequestError when we catch them in document logic,
+   * @param {string} application_id - ID of the Claim the documents are associated with
+   * @example new DocumentsLoadError('mock_application_id')
+   */
+  constructor(application_id, ...params) {
+    super(...params);
+    this.application_id = application_id;
+    this.name = "DocumentsLoadError";
+  }
+}
+
+/**
+ * A POST request to an Application's `/documents` endpoint failed
+ */
+export class DocumentsUploadError extends BasePortalError {
+  /**
+   * Since we construct DocumentsUploadError when we catch them in document logic,
    * the error could be a ValidationError or some other type of errors.
    * If it's a ValidationError, we need to pass the validation message.
    *
-   * @param {string} application_id - ID of the Claim
-   * @param {string} file_id - ID of the file causing errors
+   * @param {string} application_id - ID of the Claim the documents are associated with
+   * @param {string} file_id - ID of the file causing errors, so the issues can be displayed inline
    * @param {{ field: string, message: string, rule: string, type: string }} issue - the validation issue returned by the API
-   * @example new DocumentsRequestError('mock_application_id',[{ field: "", type: "fineos", message: "File size limit" }])
+   * @example new DocumentsUploadError('mock_application_id',[{ field: "", type: "fineos", message: "File size limit" }])
    */
   constructor(application_id, file_id, issue = null, ...params) {
     super(...params);
     this.application_id = application_id;
     this.file_id = file_id;
     this.issue = issue;
-    this.name = "DocumentsRequestError";
+    this.name = "DocumentsUploadError";
   }
 }
 

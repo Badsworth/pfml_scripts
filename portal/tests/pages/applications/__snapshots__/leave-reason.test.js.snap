@@ -83,7 +83,7 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
       }
       hint={
         <Details
-          label="What if I've had multiple births or placements within one year?"
+          label="What if I’ve had multiple births or placements within one year?"
         >
           <Trans
             components={

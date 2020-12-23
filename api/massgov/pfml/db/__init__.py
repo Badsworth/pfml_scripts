@@ -1,3 +1,4 @@
+import json
 import os
 import urllib.parse
 from contextlib import contextmanager
@@ -5,6 +6,7 @@ from typing import Any, Dict, Generator, Iterable, List, Optional, TypeVar, Unio
 
 import boto3
 import psycopg2
+import pydantic
 import sqlalchemy
 import sqlalchemy.pool as pool
 from sqlalchemy.engine import RowProxy  # noqa: F401, just re-exporting
@@ -98,6 +100,7 @@ def create_engine(config: Optional[DbConfig] = None) -> Engine:
         pool=conn_pool,
         executemany_mode="batch",
         hide_parameters=db_config.hide_sql_parameter_logs,
+        json_serializer=lambda o: json.dumps(o, default=pydantic.json.pydantic_encoder),
     )
 
 

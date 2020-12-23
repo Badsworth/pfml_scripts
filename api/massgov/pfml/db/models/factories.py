@@ -48,6 +48,7 @@ class Generators:
     UtcNow = factory.LazyFunction(datetime_util.utcnow)
     UuidObj = factory.Faker("uuid4", cast_to=None)
     VerificationCode = factory.Faker("pystr", max_chars=6, min_chars=6)
+    S3Path = factory.Sequence(lambda n: f"s3://bucket/path/to/file{n}.txt")
 
 
 class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -151,6 +152,17 @@ class EmployeeFactory(BaseFactory):
     phone_number = "+19425290727"
 
 
+class ReferenceFileFactory(BaseFactory):
+    class Meta:
+        model = employee_models.ReferenceFile
+
+    reference_file_id = Generators.UuidObj
+    file_location = Generators.S3Path
+    reference_file_type_id = (
+        employee_models.ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id
+    )
+
+
 class VerificationTypeFactory(BaseFactory):
     class Meta:
         model = verification_models.VerificationType
@@ -242,7 +254,10 @@ class PaymentFactory(BaseFactory):
 
     payment_method_id = employee_models.PaymentMethod.ACH.payment_method_id
     amount = 100.00
-    claim = factory.SubFactory(ClaimFactory)
+    # This is a workaround for claim which requires an employer_id, but
+    # doesn't actually set it as a foreign key. This doesn't actually
+    # point to any employer. This should be fixed post-MVP (in the claim model).
+    claim = factory.SubFactory(ClaimFactory, employer_id=Generators.UuidObj)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
 
 

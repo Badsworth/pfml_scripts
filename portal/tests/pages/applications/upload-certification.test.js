@@ -170,6 +170,8 @@ describe("UploadCertification", () => {
             expect.any(String),
             false
           );
+
+          expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledTimes(1);
         });
 
         it("displays successfully uploaded files as unremovable file cards", async () => {
@@ -356,6 +358,7 @@ describe("UploadCertification", () => {
             );
           expect(removableFileCards).toHaveLength(1);
           expect(unremovableFileCards).toHaveLength(2);
+          expect(appLogic.portalFlow.goToNextPage).not.toHaveBeenCalled();
 
           attachSpy.mockRestore();
         });

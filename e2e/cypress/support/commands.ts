@@ -89,23 +89,26 @@ Cypress.Commands.add("unstash", (key: string) => {
   const testId = Cypress.spec.name;
   const hash = simpleHash(`${runId}-${testId}`);
 
-  return cy
-    .readFile(`/tmp/${hash}/${key}`, { log: false })
-    .then(function (contents) {
-      const data = JSON.parse(contents);
-      Cypress.log({
-        name: "unstash",
-        message: key,
-        consoleProps() {
-          return {
-            hash: hash,
-            key: key,
-            data: data,
-          };
-        },
-      });
-      return data;
-    });
+  return (
+    cy
+      // Short timeout because by definition this file has to exist before unstash is called.
+      .readFile(`/tmp/${hash}/${key}`, { log: false, timeout: 1000 })
+      .then(function (contents) {
+        const data = JSON.parse(contents);
+        Cypress.log({
+          name: "unstash",
+          message: key,
+          consoleProps() {
+            return {
+              hash: hash,
+              key: key,
+              data: data,
+            };
+          },
+        });
+        return data;
+      })
+  );
 });
 
 Cypress.Commands.add(

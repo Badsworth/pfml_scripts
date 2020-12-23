@@ -1,8 +1,4 @@
-import {
-  BadRequestError,
-  DocumentsRequestError,
-  ValidationError,
-} from "../../src/errors";
+import { BadRequestError, ValidationError } from "../../src/errors";
 import {
   attachDocumentMock,
   downloadDocumentMock,
@@ -242,12 +238,38 @@ describe("useDocumentsLogic", () => {
     beforeEach(() => {
       // remove error logs
       jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+    });
+
+    it("throws ValidationError when no files are included in the request", async () => {
+      const files = [];
+      await documentsLogic.attach(
+        application_id,
+        files,
+        mockDocumentType,
+        false
+      );
+      expect(appErrorsLogic.appErrors.items[0]).toEqual(
+        expect.objectContaining({
+          field: "file",
+          message: "Upload at least one file to continue.",
+          meta: null,
+          name: "ValidationError",
+          rule: null,
+          type: "required",
+        })
+      );
+    });
+
+    it("updates the app errors, and includes the claim + file ids", async () => {
       attachDocumentMock
+        // file1 - success:
         .mockResolvedValueOnce({
           success: true,
           document: new Document({ fineos_document_id: uniqueId() }),
-        }) // file1 - success
-        .mockRejectedValueOnce(new Error("File 2 failed")) // file2 - random error
+        })
+        // file2 - JS exception
+        .mockRejectedValueOnce(new Error("File 2 failed"))
+        // file3 - fineos error
         .mockRejectedValueOnce(
           new ValidationError([
             {
@@ -257,24 +279,14 @@ describe("useDocumentsLogic", () => {
               type: "fineos_client",
             },
           ])
-        ); // file3 - fineos error
-    });
+        );
 
-    it("throws ValidationError when no files are included in the request", () => {
-      const files = [];
-
-      expect(() =>
-        documentsLogic.attach(application_id, files, mockDocumentType, false)
-      ).toThrow(ValidationError);
-    });
-
-    it("passes the error with file id into appErrorsLogic", async () => {
       const files = [
         { id: "1", file: makeFile({ name: "file1" }) },
         { id: "2", file: makeFile({ name: "file2" }) },
         { id: "3", file: makeFile({ name: "file3" }) },
       ];
-      const spy = jest.spyOn(appErrorsLogic, "catchError");
+
       await act(async () => {
         await documentsLogic.attach(
           application_id,
@@ -283,15 +295,20 @@ describe("useDocumentsLogic", () => {
           false
         );
       });
-      const fileErrorId = appErrorsLogic.appErrors.items[0].meta.file_id;
-      const fineosErrorMsg = appErrorsLogic.appErrors.items[1].message;
 
-      expect(spy).toHaveBeenCalledWith(new DocumentsRequestError());
-      expect(fileErrorId).toBe("2");
-      expect(fineosErrorMsg).toBe(
-        `We encountered an error when uploading your file. Try uploading your file again. If you get this error again, call the Contact Center at (833) 344‑7365.`
+      const appErrorInfos = appErrorsLogic.appErrors.items;
+
+      expect(appErrorInfos).toHaveLength(2);
+      expect(appErrorInfos[0].name).toBe("DocumentsUploadError");
+      expect(appErrorInfos[0].meta).toMatchInlineSnapshot(`
+        Object {
+          "application_id": "mock-application-id-1",
+          "file_id": "2",
+        }
+      `);
+      expect(appErrorInfos[0].message).toMatchInlineSnapshot(
+        `"We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at (833) 344‑7365."`
       );
-      expect(spy).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -435,7 +452,7 @@ describe("useDocumentsLogic", () => {
         });
 
         expect(appErrorsLogic.appErrors.items[0].name).toEqual(
-          "DocumentsRequestError"
+          "DocumentsLoadError"
         );
         expect(appErrorsLogic.appErrors.items[0].meta).toEqual({
           application_id,

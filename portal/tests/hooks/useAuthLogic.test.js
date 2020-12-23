@@ -371,7 +371,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We've also sent you an email to confirm your identity."`
+        `"Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We’ve also sent you an email to confirm your identity."`
       );
     });
 

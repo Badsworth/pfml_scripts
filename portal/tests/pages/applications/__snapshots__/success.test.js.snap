@@ -104,7 +104,7 @@ Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you'll receive:
+    Call the Contact Center at (833) 344‑7365 if you’ll receive:
   </p>,
   <ul
     className="usa-list"
@@ -279,7 +279,7 @@ Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you'll receive:
+    Call the Contact Center at (833) 344‑7365 if you’ll receive:
   </p>,
   <ul
     className="usa-list"
@@ -460,7 +460,7 @@ Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you'll receive:
+    Call the Contact Center at (833) 344‑7365 if you’ll receive:
   </p>,
   <ul
     className="usa-list"
@@ -635,7 +635,7 @@ Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you'll receive:
+    Call the Contact Center at (833) 344‑7365 if you’ll receive:
   </p>,
   <ul
     className="usa-list"
@@ -804,7 +804,7 @@ Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you'll receive:
+    Call the Contact Center at (833) 344‑7365 if you’ll receive:
   </p>,
   <ul
     className="usa-list"
@@ -1000,7 +1000,7 @@ Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you'll receive:
+    Call the Contact Center at (833) 344‑7365 if you’ll receive:
   </p>,
   <ul
     className="usa-list"
@@ -1102,7 +1102,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
       autoWidth={true}
       state="warning"
     >
-      You must call the DFML Contact Center at (833) 344‑7365 once your medical leave begins. We can’t approve your application until we hear from you.
+      You must call the Contact Center at (833) 344‑7365 once your medical leave begins to confirm that your leave has begun. We can’t approve your application until we hear from you.
     </Alert>
     <Heading
       level="2"
@@ -1215,7 +1215,7 @@ Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you'll receive:
+    Call the Contact Center at (833) 344‑7365 if you’ll receive:
   </p>,
   <ul
     className="usa-list"

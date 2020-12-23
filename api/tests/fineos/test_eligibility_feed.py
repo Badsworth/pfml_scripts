@@ -256,7 +256,7 @@ def create_csv_dict(updates=None):
         "employeeJobTitle": "DEFAULT",
         "employeeDateOfHire": ef.DEFAULT_HIRE_DATE.strftime("%m/%d/%Y"),
         "employmentStatus": "Active",
-        "employeeHoursWorkedPerWeek": "0",
+        "employeeHoursWorkedPerWeek": "0.00",
         # optional fields
         "employeeTitle": "",
         "employeeSecondName": "",

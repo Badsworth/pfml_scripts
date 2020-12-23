@@ -179,3 +179,127 @@ resource "newrelic_nrql_alert_condition" "rds_low_storage_space" {
     threshold_occurrences = "ALL"
   }
 }
+
+///////////////////
+// FINEOS Alerts //
+///////////////////
+
+resource "newrelic_nrql_alert_condition" "fineos_error_rate_5XXs" {
+  # WARN: FINEOS responses that are 5XXs exceed 10% at least once in the last 5 minutes
+  # CRIT: FINEOS responses that are 5XXs exceed 33% for all of the last 5 minutes
+  name           = "FINEOS 5XXs response rate too high"
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  type           = "static"
+  value_function = "single_value"
+  enabled        = true
+
+  nrql {
+    query             = <<-NRQL
+      SELECT percentage(COUNT(*), WHERE http.statusCode >= 500) FROM Span
+      WHERE name LIKE 'External/%-api.masspfml.fineos.com/requests/'
+      AND appName = 'PFML-API-${upper(var.environment_name)}'
+    NRQL
+    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
+  }
+
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  warning {
+    threshold_duration    = 300 # five minutes
+    threshold             = 10  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 300 # five minutes
+    threshold             = 33  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "all"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "fineos_error_rate_4XXs" {
+  # WARN: % FINEOS responses that are 4XXs exceed 10% for 5 minutes
+  # CRIT: % FINEOS responses that are 4XXs exceed 15% for 2 minutes
+  name           = "FINEOS 4XXs response rate too high"
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  type           = "static"
+  value_function = "single_value"
+  enabled        = true
+
+  nrql {
+    query             = "SELECT percentage(COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500) FROM Span WHERE name LIKE 'External/%-api.masspfml.fineos.com/requests/' AND appName = 'PFML-API-${upper(var.environment_name)}'"
+    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
+  }
+
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  warning {
+    threshold             = 10
+    threshold_duration    = 300
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold             = 15
+    threshold_duration    = 120
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "payments_errors_from_fineos" {
+  count                = (var.environment_name == "prod") ? 1 : 0
+  name                 = "Errors encountered by the payments-fineos-process task"
+  type                 = "static"
+  value_function       = "single_value"
+  enabled              = true
+  policy_id            = newrelic_alert_policy.api_alerts.id
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  nrql {
+    evaluation_offset = 3
+    query             = <<-NRQL
+      SELECT count(*) FROM Log
+      WHERE aws.logGroup = 'service/pfml-api-prod/ecs-tasks'
+      AND aws.logStream LIKE 'prod/payments-fineos-process/%'
+      AND levelname = 'ERROR'
+    NRQL
+  }
+
+  critical {
+    threshold             = 0
+    threshold_duration    = 120
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "payments_errors_from_comptroller" {
+  count                = (var.environment_name == "prod") ? 1 : 0
+  name                 = "Errors encountered by the payments-ctr-process task"
+  type                 = "static"
+  value_function       = "single_value"
+  enabled              = true
+  policy_id            = newrelic_alert_policy.api_alerts.id
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  nrql {
+    evaluation_offset = 3
+    query             = <<-NRQL
+      SELECT count(*) FROM Log
+      WHERE aws.logGroup = 'service/pfml-api-prod/ecs-tasks'
+      AND aws.logStream LIKE 'prod/payments-ctr-process/%'
+      AND levelname = 'ERROR'
+    NRQL
+  }
+
+  critical {
+    threshold             = 0
+    threshold_duration    = 120
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+}

@@ -1,5 +1,5 @@
 import base64
-from typing import Dict, Optional
+from typing import Dict, Optional, Type, Union
 
 import connexion
 import puremagic
@@ -151,6 +151,28 @@ def applications_update(application_id):
     ).to_api_response()
 
 
+def get_fineos_submit_issues_response(issues, existing_application):
+    status_code: Union[Type[BadRequest], Type[ServiceUnavailable]]
+
+    if issues[0].type == response_util.IssueType.fineos_case_creation_issues:
+        status_code = BadRequest
+        message = "Application {} could not be submitted".format(
+            existing_application.application_id
+        )
+    else:
+        status_code = ServiceUnavailable
+        message = "Application {} could not be submitted, try again later".format(
+            existing_application.application_id
+        )
+
+    return response_util.error_response(
+        status_code=status_code,
+        message=message,
+        errors=issues,
+        data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+    ).to_api_response()
+
+
 def applications_submit(application_id):
     with app.db_session() as db_session:
         current_user = app.current_user()
@@ -214,14 +236,10 @@ def applications_submit(application_id):
                     "applications_submit failure - failure sending application to claims processing system",
                     extra=log_attributes,
                 )
-                return response_util.error_response(
-                    status_code=ServiceUnavailable,
-                    message="Application {} could not be submitted, try again later".format(
-                        existing_application.application_id
-                    ),
-                    errors=send_to_fineos_issues,
-                    data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-                ).to_api_response()
+
+                return get_fineos_submit_issues_response(
+                    send_to_fineos_issues, existing_application
+                )
 
             logger.info(
                 "applications_submit - application sent to claims processing system",
@@ -240,14 +258,7 @@ def applications_submit(application_id):
                 "applications_submit failure - application complete intake failure",
                 extra=log_attributes,
             )
-            return response_util.error_response(
-                status_code=ServiceUnavailable,
-                message="Application {} could not be submitted, try again later".format(
-                    existing_application.application_id
-                ),
-                errors=complete_intake_issues,
-                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-            ).to_api_response()
+            return get_fineos_submit_issues_response(complete_intake_issues, existing_application)
 
         logger.info("applications_submit success", extra=log_attributes)
 

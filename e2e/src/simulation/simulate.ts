@@ -13,6 +13,7 @@ import {
   IntermittentLeavePeriods,
   WorkPattern,
   PaymentPreference,
+  PaymentPreferenceRequestBody,
   Address,
   DayOfWeek,
 } from "../api";
@@ -180,18 +181,22 @@ export function scenario(
     claim.has_intermittent_leave_periods =
       (claim.leave_details?.intermittent_leave_periods?.length ?? 0) > 0;
 
-    const paymentPreference: PaymentPreference = {
-      payment_method: "Debit",
+    const paymentPreferenceDetails: PaymentPreference = {
+      payment_method: "Elec Funds Transfer",
       account_number: "5555555555",
       routing_number: "011401533",
-      bank_account_type: "Savings",
+      bank_account_type: "Checking",
+    };
+
+    const paymentPreference: PaymentPreferenceRequestBody = {
+      payment_preference: paymentPreferenceDetails,
     };
 
     return {
       id: uuid(),
       scenario: name,
       claim,
-      paymentPreference: paymentPreference,
+      paymentPreference,
       documents: await generateDocuments(claim, _config, opts),
       financiallyIneligible: !!_config.financiallyIneligible,
       // Flag for skipSubmitClaim.

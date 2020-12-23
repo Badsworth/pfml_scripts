@@ -30,8 +30,8 @@ def employer_benefit():
 @pytest.fixture
 def previous_leave():
     return PreviousLeave(
-        leave_start_date="2020-05-15",
-        leave_end_date="2020-06-01",
+        leave_start_date="2021-05-15",
+        leave_end_date="2021-06-01",
         leave_reason="Pregnancy / Maternity",
     )
 

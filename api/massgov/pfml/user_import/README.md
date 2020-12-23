@@ -5,11 +5,11 @@ A tool to import Leave Admin users from one or more CSV files stored locally or 
 
 ## Running the tool
 
-The Poetry pyproject.toml has been updated to include the command `bulk-import`; this expects one or more paths to CSV files such as `"/Users/me/Desktop/test.csv"`
+The Poetry pyproject.toml has been updated to include the command `bulk-user-import`; this expects one or more paths to CSV files such as `"/Users/me/Desktop/test.csv"`
 
 For example:
 ```sh
-poetry run bulk-import "/Users/me/Desktop/test.csv"
+poetry run bulk-user-import "/Users/me/Desktop/test.csv"
 ```
 ### Running via ECS Tasks
 
@@ -18,7 +18,7 @@ A new ECS task has been created to run this in AWS
 How to run this in test:
 1. Upload your source file to `s3://massgov-pfml-test-bulk-user-import/source.csv`
 2. Tail the logs `saw watch --raw service/pfml-api-test/ecs-tasks | python3 massgov/pfml/util/logging/decodelog.py`
-3. Launch the task locally with `./bin/run-ecs-task/run-task.sh test bulk-import firstname.lastname bulk-import "s3://massgov-pfml-test-bulk-user-import/source.csv"`
+3. Launch the task locally with `./bin/run-ecs-task/run-task.sh test bulk-user-import firstname.lastname bulk-user-import "s3://massgov-pfml-test-bulk-user-import/source.csv"`
 4. Reset the password for your user and you can log in: https://paidleave-test.mass.gov/forgot-password/
 
 Note that this will create verification codes in the database for the appropriate environment

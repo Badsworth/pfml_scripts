@@ -57,7 +57,7 @@ exports[`NotifiedEmployer renders the page 1`] = `
       role="alert"
       state="warning"
     >
-      You can continue to enter information about your leave. Before you can submit your application, you must tell your employer that you're taking leave. Notify your employer at least 30 days before the start of your leave if possible.
+      You can continue to enter information about your leave. Before you can submit your application, you must tell your employer that you’re taking leave. Notify your employer at least 30 days before the start of your leave if possible.
     </Alert>
   </ConditionalContent>
 </QuestionPage>

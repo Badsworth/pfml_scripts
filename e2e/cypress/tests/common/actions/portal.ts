@@ -7,6 +7,7 @@ import {
   WorkPatternDay,
   ReducedScheduleLeavePeriods,
   PaymentPreference,
+  PaymentPreferenceRequestBody,
 } from "../../../../src/api";
 import { inFieldset } from "../actions"; // not used
 
@@ -64,6 +65,11 @@ export function login(credentials: Credentials): void {
   cy.contains("button", "Log in").click();
   cy.wait(1000);
   cy.url().should("not.include", "login");
+}
+
+export function logout(): void {
+  cy.contains("button", "Log out").click();
+  cy.url().should("contain", "/login");
 }
 
 export function registerAsClaimant(credentials: Credentials): void {
@@ -506,7 +512,9 @@ export function confirmInfo(): void {
 // Payment Section Currently Removed
 // @Todo: Once this prop has been added back to ApplicationRequestBody
 
-export function addPaymentInfo(paymentPreference: PaymentPreference): void {
+export function addPaymentInfo(
+  paymentPreference: PaymentPreferenceRequestBody
+): void {
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Add payment information"
@@ -515,7 +523,7 @@ export function addPaymentInfo(paymentPreference: PaymentPreference): void {
     account_number,
     routing_number,
     bank_account_type,
-  } = paymentPreference;
+  } = paymentPreference.payment_preference as PaymentPreference;
 
   cy.contains("fieldset", "How do you want to get your weekly benefit?").within(
     () => {
@@ -731,6 +739,36 @@ export function respondToLeaveAdminRequest(
   cy.contains("Thanks for reviewing the application");
 }
 
+export function checkNoticeForLeaveAdmin(
+  fineosAbsenceId: string,
+  claimantName: string,
+  noticeType: string
+): void {
+  cy.visit(
+    `https://paidleave-test.mass.gov/employers/applications/status/?absence_id=${fineosAbsenceId}`
+  );
+
+  switch (noticeType) {
+    case "approval":
+      cy.contains("h1", claimantName).should("be.visible");
+      cy.contains("a", "Approval notice").should("be.visible");
+      break;
+
+    case "denial":
+      cy.contains("h1", claimantName).should("be.visible");
+      cy.contains("a", "Denial notice").should("be.visible");
+      break;
+
+    case "request for info":
+      cy.contains("h1", claimantName).should("be.visible");
+      cy.contains("a", "Request for more information").should("be.visible");
+      break;
+
+    default:
+      throw new Error("Notice Type not Found!");
+  }
+}
+
 export function confirmEligibleParent(): void {
   cy.contains("button", "I understand and agree").click();
 }
@@ -748,7 +786,11 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
   onPage("checklist");
   clickChecklistButton("Enter leave details");
   selectClaimType(application);
-  enterBondingDateInfo(application);
+  if (reason === "Serious Health Condition - Employee") {
+    answerPregnancyQuestion(application);
+  } else {
+    enterBondingDateInfo(application);
+  }
   if (reasonQualifier === "Newborn") {
     answerPregnancyQuestion(application);
   }
@@ -773,8 +815,9 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
 
 export function submitClaimPortal(
   application: ApplicationRequestBody,
-  paymentPreference: PaymentPreference
+  paymentPreference: PaymentPreferenceRequestBody
 ): void {
+  const reason = application.leave_details && application.leave_details.reason;
   submitClaimPartOne(application);
   clickChecklistButton("Add payment information");
   addPaymentInfo(paymentPreference);
@@ -783,7 +826,7 @@ export function submitClaimPortal(
   addId("MA ID");
   onPage("checklist");
   clickChecklistButton("Upload leave certification documents");
-  addId("FOSTER");
+  addId(reason === "Serious Health Condition - Employee" ? "HCP" : "FOSTER");
   onPage("checklist");
   reviewAndSubmit();
   onPage("review");

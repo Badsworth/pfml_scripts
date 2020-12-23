@@ -20,7 +20,7 @@ exports[`PaymentMethod renders the page 1`] = `
         components={
           Object {
             "tax-liability-link": <a
-              href="http://www.mass.gov/pfml-tax-liability"
+              href="https://www.mass.gov/pfml-tax-liability"
             />,
           }
         }
@@ -143,7 +143,7 @@ exports[`PaymentMethod renders the page 2`] = `
 Array [
   "Learn more about the ",
   <a
-    href="http://www.mass.gov/pfml-tax-liability"
+    href="https://www.mass.gov/pfml-tax-liability"
     key="1"
   >
     possible tax implications

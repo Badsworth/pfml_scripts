@@ -46,6 +46,7 @@ describe(
         fineos.visitClaim(submission.fineos_absence_id);
       });
       fineos.denyClaim("Claimant wages failed 30x rule");
+      cy.wait(200);
     });
 
     it(
@@ -78,13 +79,14 @@ describe(
       }
     );
 
-    it("Should send a notification after I start an application in the portal", () => {
+    it("I should receive an 'application started' notification", () => {
       cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           const subject = email.getNotificationSubject(
             employeeFullName,
-            "application started"
+            "application started",
+            submission.application_id
           );
           cy.task<Email[]>(
             "getEmails",
@@ -106,7 +108,41 @@ describe(
             expect(emailContent.applicationId).to.equal(
               submission.fineos_absence_id
             );
-            expect(emails.length).to.be.greaterThan(0);
+          });
+        });
+      });
+    });
+
+    it("I should receive an 'denial (employer)' notification", () => {
+      cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          const employeeFullName = `${claim.first_name} ${claim.last_name}`;
+          const subject = email.getNotificationSubject(
+            employeeFullName,
+            "denial (employer)",
+            submission.application_id
+          );
+          cy.log(subject);
+          cy.task<Email[]>(
+            "getEmails",
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: subject,
+              timestamp_from: submission.timestamp_from,
+            },
+            { timeout: 180000 }
+          ).then((emails) => {
+            const emailContent = email.getNotificationData(emails[0].html);
+            if (typeof claim.date_of_birth !== "string") {
+              throw new Error("DOB must be a string");
+            }
+            const dob =
+              claim.date_of_birth.replace(/-/g, "/").slice(5) + "/****";
+            expect(emailContent.name).to.equal(employeeFullName);
+            expect(emailContent.dob).to.equal(dob);
+            expect(emailContent.applicationId).to.equal(
+              submission.fineos_absence_id
+            );
           });
         });
       });

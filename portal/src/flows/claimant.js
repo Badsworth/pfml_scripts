@@ -58,7 +58,7 @@ export const guards = {
   hasReducedScheduleLeavePeriods: ({ claim }) =>
     claim.has_reduced_schedule_leave_periods === true,
   hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
-  hasPreviousLeaves: ({ claim }) => claim.temp.has_previous_leaves === true,
+  hasPreviousLeaves: ({ claim }) => claim.has_previous_leaves === true,
   isFixedWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>

@@ -172,9 +172,9 @@ class EligibilityFeedRecord(NoneMeansDefault):
     employeeJobTitle: Union[str, None] = "DEFAULT"
     employeeDateOfHire: Union[date, None] = DEFAULT_HIRE_DATE
     employmentStatus: Union[str, None] = "Active"
-    # FINOES DB type is DECIMAL(5,2)
+    # FINEOS DB type is DECIMAL(5,2)
     # 5 digits of precision overall, 2 digits past the decimal if needed
-    employeeHoursWorkedPerWeek: Union[float, None] = 0
+    employeeHoursWorkedPerWeek: Union[Decimal, None] = Decimal(0)
 
     # all other fields are (usually) optional
     employeeTitle: Optional[str] = None
@@ -689,7 +689,7 @@ def process_all_employers(
 
 ELIGIBILITY_FEED_CSV_ENCODERS: csv_util.Encoders = {
     date: lambda d: d.strftime("%m/%d/%Y"),
-    Decimal: lambda n: str(round(n, 6)),
+    Decimal: lambda n: str(round(n, 2)),
 }
 
 
@@ -925,7 +925,7 @@ def employee_to_eligibility_feed_record(
         record.employmentStatus = occupation.employment_status
         record.employeeOrgUnitName = occupation.org_unit_name
         record.employeeHoursWorkedPerWeek = (
-            float(occupation.hours_worked_per_week) if occupation.hours_worked_per_week else None
+            Decimal(occupation.hours_worked_per_week) if occupation.hours_worked_per_week else None
         )
         record.employeeDaysWorkedPerWeek = (
             Decimal(occupation.days_worked_per_week) if occupation.days_worked_per_week else None

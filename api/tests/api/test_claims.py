@@ -299,11 +299,11 @@ def test_non_employees_cannot_access_employer_update_claim_review(client, auth_t
         "employer_decision": "Approve",
         "fraud": "Yes",
         "has_amendments": False,
-        "hours_worked_per_week": 0,
+        "hours_worked_per_week": 40,
         "previous_leaves": [
             {
-                "leave_end_date": "1970-01-01",
-                "leave_start_date": "1970-01-01",
+                "leave_end_date": "2021-02-06",
+                "leave_start_date": "2021-01-25",
                 "leave_reason": "Pregnancy / Maternity",
             }
         ],
@@ -348,8 +348,8 @@ def test_employers_with_decimal_hours_receive_200_from_employer_update_claim_rev
         "hours_worked_per_week": 16.5,
         "previous_leaves": [
             {
-                "leave_end_date": "1970-01-01",
-                "leave_start_date": "1970-01-01",
+                "leave_end_date": "2021-02-06",
+                "leave_start_date": "2021-01-25",
                 "leave_reason": "Pregnancy / Maternity",
             }
         ],
@@ -391,11 +391,11 @@ def test_employers_with_integer_hours_receive_200_from_employer_update_claim_rev
         "employer_decision": "Approve",
         "fraud": "Yes",
         "has_amendments": False,
-        "hours_worked_per_week": 16,
+        "hours_worked_per_week": 40,
         "previous_leaves": [
             {
-                "leave_end_date": "1970-01-01",
-                "leave_start_date": "1970-01-01",
+                "leave_end_date": "2021-02-06",
+                "leave_start_date": "2021-01-25",
                 "leave_reason": "Pregnancy / Maternity",
             }
         ],
@@ -410,8 +410,8 @@ def test_employers_with_integer_hours_receive_200_from_employer_update_claim_rev
     assert response.status_code == 200
 
 
-def test_employers_with_null_hours_receive_200_from_employer_update_claim_review(
-    client, employer_user, employer_auth_token, test_db_session
+def test_employer_update_claim_review_validates_hours_worked_per_week(
+    client, employer_user, employer_auth_token, test_db_session,
 ):
     employer = EmployerFactory.create()
     ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
@@ -423,37 +423,224 @@ def test_employers_with_null_hours_receive_200_from_employer_update_claim_review
     test_db_session.add(link)
     test_db_session.commit()
 
-    update_request_body = {
-        "comment": "string",
+    base_request = {
+        "comment": "comment",
         "employer_benefits": [
             {
                 "benefit_amount_dollars": 0,
                 "benefit_amount_frequency": "Per Day",
-                "benefit_end_date": "1970-01-01",
-                "benefit_start_date": "1970-01-01",
+                "benefit_end_date": "2021-04-10",
+                "benefit_start_date": "2021-03-16",
                 "benefit_type": "Accrued paid leave",
             }
         ],
         "employer_decision": "Approve",
         "fraud": "Yes",
         "has_amendments": False,
-        "hours_worked_per_week": None,
+        # hours_worked_per_week intentionally excluded
         "previous_leaves": [
             {
-                "leave_end_date": "1970-01-01",
-                "leave_start_date": "1970-01-01",
+                "leave_end_date": "2021-01-25",
+                "leave_start_date": "2021-02-06",
                 "leave_reason": "Pregnancy / Maternity",
             }
         ],
     }
 
+    request_without_hours = {**base_request, "hours_worked_per_week": None}
     response = client.patch(
         "/v1/employers/claims/NTN-100-ABS-01/review",
         headers={"Authorization": f"Bearer {employer_auth_token}"},
-        json=update_request_body,
+        json=request_without_hours,
     )
 
-    assert response.status_code == 200
+    errors = response.get_json().get("errors")
+    assert response.status_code == 400
+    assert len(errors) == 1
+    assert errors[0].get("message") == "hours_worked_per_week must be populated"
+    assert errors[0].get("type") == "missing_expected_field"
+    assert errors[0].get("field") == "hours_worked_per_week"
+
+    request_with_zero_hours = {**base_request, "hours_worked_per_week": 0}
+    response = client.patch(
+        "/v1/employers/claims/NTN-100-ABS-01/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=request_with_zero_hours,
+    )
+
+    errors = response.get_json().get("errors")
+    assert response.status_code == 400
+    assert len(errors) == 1
+    assert (
+        errors[0].get("message") == "hours_worked_per_week must be greater than 0 and less than 168"
+    )
+    assert errors[0].get("type") == "invalid_hours_worked_per_week"
+    assert errors[0].get("field") == "hours_worked_per_week"
+
+    request_with_negative_hours = {**base_request, "hours_worked_per_week": -1}
+    response = client.patch(
+        "/v1/employers/claims/NTN-100-ABS-01/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=request_with_negative_hours,
+    )
+
+    errors = response.get_json().get("errors")
+    assert response.status_code == 400
+    assert len(errors) == 1
+    assert (
+        errors[0].get("message") == "hours_worked_per_week must be greater than 0 and less than 168"
+    )
+    assert errors[0].get("type") == "invalid_hours_worked_per_week"
+    assert errors[0].get("field") == "hours_worked_per_week"
+
+    request_with_too_many_hours = {**base_request, "hours_worked_per_week": 170}
+    response = client.patch(
+        "/v1/employers/claims/NTN-100-ABS-01/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=request_with_too_many_hours,
+    )
+
+    errors = response.get_json().get("errors")
+    assert response.status_code == 400
+    assert len(errors) == 1
+    assert (
+        errors[0].get("message") == "hours_worked_per_week must be greater than 0 and less than 168"
+    )
+    assert errors[0].get("type") == "invalid_hours_worked_per_week"
+    assert errors[0].get("field") == "hours_worked_per_week"
+
+
+def test_employer_update_claim_review_validates_previous_leaves(
+    client, employer_user, employer_auth_token, test_db_session,
+):
+    employer = EmployerFactory.create()
+    ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    base_request = {
+        "comment": "comment",
+        "employer_benefits": [
+            {
+                "benefit_amount_dollars": 0,
+                "benefit_amount_frequency": "Per Day",
+                "benefit_end_date": "2021-04-10",
+                "benefit_start_date": "2021-03-16",
+                "benefit_type": "Accrued paid leave",
+            }
+        ],
+        "employer_decision": "Approve",
+        "fraud": "Yes",
+        "has_amendments": False,
+        "hours_worked_per_week": 40,
+        # previous_leaves intentionally excluded
+    }
+
+    request_with_start_date_before_2021 = {
+        **base_request,
+        "previous_leaves": [
+            {
+                "leave_end_date": "2021-01-05",
+                "leave_start_date": "2020-12-06",
+                "leave_reason": "Pregnancy / Maternity",
+            }
+        ],
+    }
+    response = client.patch(
+        "/v1/employers/claims/NTN-100-ABS-01/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=request_with_start_date_before_2021,
+    )
+
+    errors = response.get_json().get("errors")
+    assert response.status_code == 400
+    assert len(errors) == 1
+    assert errors[0].get("message") == "Previous leaves cannot start before 2021"
+    assert errors[0].get("type") == "invalid_previous_leave_start_date"
+    assert errors[0].get("field") == "previous_leaves[0].leave_start_date"
+
+    request_with_start_after_end = {
+        **base_request,
+        "previous_leaves": [
+            {
+                "leave_end_date": "2021-01-05",
+                "leave_start_date": "2021-02-06",
+                "leave_reason": "Pregnancy / Maternity",
+            }
+        ],
+    }
+    response = client.patch(
+        "/v1/employers/claims/NTN-100-ABS-01/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=request_with_start_after_end,
+    )
+
+    errors = response.get_json().get("errors")
+    assert response.status_code == 400
+    assert len(errors) == 1
+    assert errors[0].get("message") == "leave_end_date cannot be earlier than leave_start_date"
+    assert errors[0].get("type") == "minimum"
+    assert errors[0].get("field") == "previous_leaves[0].leave_end_date"
+
+
+def test_employer_update_claim_review_validates_employer_benefits(
+    client, employer_user, employer_auth_token, test_db_session,
+):
+    employer = EmployerFactory.create()
+    ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    base_request = {
+        "comment": "comment",
+        # employer_benefits intentionally excluded
+        "employer_decision": "Approve",
+        "fraud": "Yes",
+        "has_amendments": False,
+        "hours_worked_per_week": 40,
+        "previous_leaves": [
+            {
+                "leave_end_date": "2021-02-06",
+                "leave_start_date": "2021-01-25",
+                "leave_reason": "Pregnancy / Maternity",
+            }
+        ],
+    }
+
+    request_with_start_after_end = {
+        **base_request,
+        "employer_benefits": [
+            {
+                "benefit_amount_dollars": 0,
+                "benefit_amount_frequency": "Per Day",
+                "benefit_end_date": "2021-01-05",
+                "benefit_start_date": "2021-02-06",
+                "benefit_type": "Accrued paid leave",
+            }
+        ],
+    }
+    response = client.patch(
+        "/v1/employers/claims/NTN-100-ABS-01/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=request_with_start_after_end,
+    )
+
+    errors = response.get_json().get("errors")
+    assert response.status_code == 400
+    assert len(errors) == 1
+    assert errors[0].get("message") == "benefit_end_date cannot be earlier than benefit_start_date"
+    assert errors[0].get("type") == "minimum"
+    assert errors[0].get("field") == "employer_benefits[0].benefit_end_date"
 
 
 def test_employer_confirmation_sent_with_employer_update_claim_review(
@@ -475,7 +662,7 @@ def test_employer_confirmation_sent_with_employer_update_claim_review(
         "employer_decision": "Approve",
         "fraud": "Yes",
         "has_amendments": False,
-        "hours_worked_per_week": 0,
+        "hours_worked_per_week": 16,
         "previous_leaves": [],
     }
 
@@ -523,7 +710,7 @@ def test_create_eform_for_comment_with_employer_update_claim_review(
         "employer_decision": "Approve",
         "fraud": "No",
         "has_amendments": False,
-        "hours_worked_per_week": 0,
+        "hours_worked_per_week": 40,
         "previous_leaves": [],
     }
 
@@ -560,7 +747,7 @@ def test_create_eform_for_comment_with_employer_update_claim_review(
                             name="AverageWeeklyHoursWorked",
                             booleanValue=None,
                             dateValue=None,
-                            decimalValue=0,
+                            decimalValue=40,
                             integerValue=None,
                             stringValue=None,
                             enumValue=None,
@@ -620,11 +807,11 @@ def test_error_received_when_no_outstanding_requirements_with_employer_update_cl
         "employer_decision": "Approve",
         "fraud": "Yes",
         "has_amendments": False,
-        "hours_worked_per_week": 0,
+        "hours_worked_per_week": 40,
         "previous_leaves": [
             {
-                "leave_end_date": "1970-01-01",
-                "leave_start_date": "1970-01-01",
+                "leave_end_date": "2021-02-06",
+                "leave_start_date": "2021-01-25",
                 "leave_type": "Pregnancy / Maternity",
             }
         ],
@@ -669,11 +856,11 @@ def test_employer_confirmation_is_not_sent(
         "employer_decision": "Approve",
         "fraud": "Yes",
         "has_amendments": False,
-        "hours_worked_per_week": 0,
+        "hours_worked_per_week": 40,
         "previous_leaves": [
             {
-                "leave_end_date": "1970-01-01",
-                "leave_start_date": "1970-01-01",
+                "leave_end_date": "2021-02-06",
+                "leave_start_date": "2021-01-25",
                 "leave_reason": "Pregnancy / Maternity",
             }
         ],

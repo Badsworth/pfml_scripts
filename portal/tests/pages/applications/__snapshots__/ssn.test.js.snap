@@ -7,7 +7,7 @@ exports[`Ssn renders the form 1`] = `
 >
   <InputText
     hint="Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number (ITIN)."
-    label="What's your Social Security Number?"
+    label="What’s your Social Security Number?"
     mask="ssn"
     name="tax_identifier"
     onChange={[Function]}

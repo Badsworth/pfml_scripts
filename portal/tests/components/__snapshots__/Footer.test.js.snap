@@ -6,7 +6,7 @@ exports[`Footer renders footer with default settings 1`] = `
     Object {
       "address": "PO Box 838 Lawrence, MA 01842",
       "online": Object {
-        "href": "https://mass.gov/dfml",
+        "href": "https://www.mass.gov/orgs/department-of-family-and-medical-leave",
         "title": "Department of Family and Medical Leave (DFML)",
       },
       "phone": "(833) 344‑7365",

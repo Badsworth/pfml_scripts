@@ -278,7 +278,7 @@ export const Checklist = (props) => {
         >
           {stepGroup.number === 3 && hasLoadingDocumentsError ? (
             <Alert className="margin-bottom-3" noIcon>
-              {t("pages.claimsChecklist.documentsRequestError")}
+              {t("pages.claimsChecklist.documentsLoadError")}
             </Alert>
           ) : stepGroup.number === 3 && isLoadingDocuments ? (
             <Spinner aria-valuetext={t("components.spinner.label")} />

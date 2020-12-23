@@ -150,8 +150,29 @@ locals {
     "payments-ctr-process" = {
       command             = ["payments-ctr-process"]
       containers_template = "payments_ctr_process_template.json"
-      vars                = {}
+      vars = {
+        ctr_moveit_incoming_path = var.payments_ctr_moveit_incoming_path
+        ctr_moveit_archive_path  = var.payments_ctr_moveit_archive_path
+        pfml_ctr_inbound_path    = var.payments_pfml_ctr_inbound_path
+        ctr_moveit_outgoing_path = var.payments_ctr_moveit_outgoing_path
+        pfml_ctr_outbound_path   = var.payments_pfml_ctr_outbound_path
+      }
     },
+
+    "payments-fineos-process" = {
+      command             = ["payments-fineos-process"]
+      containers_template = "payments_fineos_process_template.json"
+      vars = {
+        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
+        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
+
+        fineos_data_export_path   = var.payments_fineos_data_export_path
+        pfml_fineos_inbound_path  = var.payments_pfml_fineos_inbound_path
+        fineos_data_import_path   = var.payments_fineos_data_import_path
+        pfml_fineos_outbound_path = var.payments_pfml_fineos_outbound_path
+      }
+    },
+
   }
 }
 

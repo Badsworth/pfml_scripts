@@ -1,3 +1,5 @@
+import json
+import sys
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
 
@@ -55,6 +57,7 @@ def handler():
 
     config = ImportFineosEmployeeUpdatesConfig()
 
+    fineos_boto_session = None
     if config.fineos_folder_path.startswith("s3://fin-som"):
         fineos_boto_session = aws_sts.assume_session(
             role_arn=config.fineos_aws_iam_role_arn,
@@ -63,16 +66,17 @@ def handler():
             region_name="us-east-1",
         )
 
-    with db.session_scope(db_session_raw, close=True) as db_session:
-        report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
-            db_session, "FINEOS Employee Update", ""
-        )
-
-        report = process_fineos_updates(db_session, config.fineos_folder_path, fineos_boto_session)
-
-        massgov.pfml.util.batch.log.update_log_entry(
-            db_session, report_log_entry, "success", report
-        )
+    try:
+        with massgov.pfml.util.batch.log.log_entry(
+            db_session_raw, "FINEOS Employee Update", ""
+        ) as log_entry, db.session_scope(db_session_raw) as db_session:
+            report = process_fineos_updates(
+                db_session, config.fineos_folder_path, fineos_boto_session
+            )
+            log_entry.report = json.dumps(asdict(report), indent=2)
+    except Exception as ex:
+        logger.exception("%s", ex)
+        sys.exit(1)
 
     logger.info(
         "Finished importing employee updates from FINEOS.", extra={"report": asdict(report)}
@@ -120,12 +124,9 @@ def process_fineos_updates(
     file_path = f"{folder_path}/{file}"
     csv_input = CSVSourceWrapper(file_path, transport_params={"session": boto_session})
 
-    try:
-        for row in log_every(logger, csv_input, count=10, item_name="CSV row"):
-            report.total_employees_received_count += 1
-            process_csv_row(db_session, row, report)
-    except Exception as ex:
-        logger.error("Could not process a row in the FINEOS extract.", ex)
+    for row in log_every(logger, csv_input, count=10, item_name="CSV row"):
+        report.total_employees_received_count += 1
+        process_csv_row(db_session, row, report)
 
     end_time = utcnow()
     report.end = end_time.isoformat()

@@ -210,6 +210,23 @@ def test_employer_notified_required(test_db_session, initialize_factories_sessio
     ] == issues
 
 
+@freeze_time("2021-01-01")
+def test_employer_notified_date_minimum(test_db_session, initialize_factories_session):
+    test_app = ApplicationFactory.create(
+        employer_notified=True, employer_notification_date=date(2018, 12, 31)
+    )
+    issues = get_conditional_issues(test_app)
+    assert (
+        Issue(
+            type=IssueType.minimum,
+            rule=IssueRule.conditional,
+            message="employer_notification_date year must be within the past 2 years",
+            field="leave_details.employer_notification_date",
+        )
+        in issues
+    )
+
+
 def test_hours_worked_per_week_required(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         employment_status=EmploymentStatus.get_instance(
@@ -257,7 +274,7 @@ def test_residential_address_fields_required(test_db_session, initialize_factori
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
-        employer_notification_date="2021-01-03",
+        employer_notification_date=date(2021, 1, 3),
         employer_notified=True,
     )
 
@@ -295,7 +312,7 @@ def test_mailing_address_fields_required(test_db_session, initialize_factories_s
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
-        employer_notification_date="2021-01-03",
+        employer_notification_date=date(2021, 1, 3),
         employer_notified=True,
     )
 
@@ -1548,7 +1565,7 @@ def test_employer_fein_required_for_employed_claimants(
         employment_status=EmploymentStatus.get_instance(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
-        employer_notification_date="2021-01-03",
+        employer_notification_date=date(2021, 1, 3),
         employer_notified=True,
     )
     issues = get_conditional_issues(test_app)

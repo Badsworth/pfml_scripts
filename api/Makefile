@@ -120,7 +120,7 @@ deps-check:
 distclean: ## Remove all artifacts that can be regenerated
 distclean: clean clean-node clean-venv
 	rm -f jwks.json
-	rm -rf dor_mock/ eligibility_export/
+	rm -rf dor_mock/ eligibility_export/ fineos_daily_mock/
 
 dor-generate: ## Generate fake DOR data
 	$(PY_RUN_CMD) dor-generate --folder dor_mock --count 1000 $(DECODE_LOG)
@@ -130,6 +130,9 @@ dor-generate-for-update: ## Generate fake update DOR data (mutation of subset of
 
 fineos-daily-generate: ## Generate fake FINEOS employee extract
 	$(PY_RUN_CMD) fineos-daily-generate --folder fineos_daily_mock --count 1000 $(DECODE_LOG)
+
+fineos-import-employee-updates: ## Generate fake FINEOS employee extract
+	FINEOS_FOLDER_PATH=fineos_daily_mock FINEOS_AWS_IAM_ROLE_ARN="arn" FINEOS_AWS_IAM_ROLE_EXTERNAL_ID="1" $(PY_RUN_CMD) fineos-import-employee-updates $(DECODE_LOG)
 
 dor-import: ## Run a DOR import using fake data (see dor-generate)
 	FOLDER_PATH=dor_mock $(PY_RUN_CMD) dor-import $(DECODE_LOG)

@@ -14,7 +14,7 @@ Array [
   <p
     key="p-0"
   >
-    It's faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
+    It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
     <a
       href="https://www.mass.gov/pfmlsubmitinfo"
       key="1"
@@ -51,7 +51,7 @@ exports[`UploadCertification after documents have been loaded when leave reason 
   level="2"
   size="1"
 >
-  Upload your Healthcare Provider form
+  Upload your Certification of a Serious Health Condition
 </Heading>
 `;
 
@@ -60,7 +60,7 @@ Array [
   <p
     key="p-0"
   >
-    It's faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
+    It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
     <a
       href="https://www.mass.gov/pfmlsubmitinfo"
       key="1"
@@ -83,7 +83,7 @@ Array [
     >
       PFML Certification of a Serious Health Condition
     </a>
-     to prove that you need to take medical leave. You can upload a completed Family and Medical Leave Act (FMLA) form instead if your provider filled one out.
+     to prove that you need to take medical leave.
   </p>,
 ]
 `;

@@ -67,13 +67,22 @@ export default class TestMailClient {
       });
     }
     const tag = this.getTagFromAddress(opts.address);
-    const response = await this.client.request(unifiedQuery, {
-      tag: tag,
-      namespace: this.namespace,
-      advanced_filters: filters,
-      timestamp_from: opts.timestamp_from,
-    });
-    return response.inbox.emails;
+    try {
+      const response = await this.client.request(unifiedQuery, {
+        tag: tag,
+        namespace: this.namespace,
+        advanced_filters: filters,
+        timestamp_from: opts.timestamp_from,
+      });
+      return response.inbox.emails;
+    } catch (e) {
+      if (e.name === "AbortError") {
+        throw new Error(
+          "Timed out while looking for e-mail. This can happen when an e-mail is taking a long time to arrive, the e-mail was never sent, or you're looking for the wrong message."
+        );
+      }
+      throw e;
+    }
   }
 
   /**

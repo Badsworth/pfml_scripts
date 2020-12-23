@@ -46,6 +46,8 @@ export const Dashboard = (props) => {
     <React.Fragment>
       <DashboardNavigation activeHref={appLogic.portalFlow.pathname} />
 
+      <Title>{t("pages.dashboard.title")}</Title>
+
       <Alert
         heading={t("pages.dashboard.alertHeading")}
         state="info"
@@ -91,8 +93,6 @@ export const Dashboard = (props) => {
       </Alert>
 
       <div className="measure-6">
-        <Title>{t("pages.dashboard.title")}</Title>
-
         <Heading level="2">
           <FontAwesomeIcon icon={faComments} {...iconProps} />
           {t("pages.dashboard.stepOneHeading")}

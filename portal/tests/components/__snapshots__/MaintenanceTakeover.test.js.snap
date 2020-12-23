@@ -5,7 +5,7 @@ exports[`MaintenanceTakeover renders with the expected content 1`] = `
   className="tablet:padding-y-10 text-center"
 >
   <Title>
-    We're undergoing maintenance
+    We’re undergoing maintenance
   </Title>
   <Lead
     className="margin-x-auto measure-2"

@@ -16,7 +16,7 @@ exports[`ScheduleVariable renders the form 1`] = `
       components={
         Object {
           "calculate-hours-link": <a
-            href="http://www.mass.gov/pfml-calculate-hours"
+            href="https://www.mass.gov/pfml-calculate-hours"
             rel="noopener"
             target="_blank"
           />,
@@ -40,9 +40,9 @@ exports[`ScheduleVariable renders the form 1`] = `
 
 exports[`ScheduleVariable renders the form 2`] = `
 Array [
-  "We'll confirm your hours with your employer after you submit your application. Learn more about ",
+  "We’ll confirm your hours with your employer after you submit your application. Learn more about ",
   <a
-    href="http://www.mass.gov/pfml-calculate-hours"
+    href="https://www.mass.gov/pfml-calculate-hours"
     key="1"
     rel="noopener"
     target="_blank"

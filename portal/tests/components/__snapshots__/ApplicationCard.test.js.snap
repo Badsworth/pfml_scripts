@@ -141,7 +141,7 @@ exports[`ApplicationCard when the claim status is Submitted renders legal notice
     level="3"
     weight="normal"
   >
-    View your notices
+    Download your notices
   </Heading>
   <p>
     Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification.
@@ -170,7 +170,13 @@ exports[`ApplicationCard when the claim status is Submitted uses the Case ID as 
 </header>
 `;
 
-exports[`ApplicationCard when there are legal notices displays legal notices 1`] = `
+exports[`ApplicationCard when there are legal notices displays legal notices and explains that notices download to the device 1`] = `
+<p>
+  When you click the notice link, the file will download to your device.
+</p>
+`;
+
+exports[`ApplicationCard when there are legal notices displays legal notices and explains that notices download to the device 2`] = `
 <li
   className="font-body-2xs"
   key="mock-document-3"
@@ -190,7 +196,7 @@ exports[`ApplicationCard when there are legal notices displays legal notices 1`]
 </li>
 `;
 
-exports[`ApplicationCard when there are legal notices displays legal notices 2`] = `
+exports[`ApplicationCard when there are legal notices displays legal notices and explains that notices download to the device 3`] = `
 <li
   className="font-body-2xs"
   key="mock-document-4"
@@ -210,7 +216,7 @@ exports[`ApplicationCard when there are legal notices displays legal notices 2`]
 </li>
 `;
 
-exports[`ApplicationCard when there are legal notices displays legal notices 3`] = `
+exports[`ApplicationCard when there are legal notices displays legal notices and explains that notices download to the device 4`] = `
 <li
   className="font-body-2xs"
   key="mock-document-5"
