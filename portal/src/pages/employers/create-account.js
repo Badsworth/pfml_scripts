@@ -7,7 +7,6 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -39,17 +38,10 @@ export const CreateAccount = (props) => {
     updateFields,
   });
 
-  // TODO (EMPLOYER-661): Remove feature flag checking after December 15
-  const showClaimantAuth = isFeatureEnabled("claimantShowAuth");
-
   return (
     <form className="usa-form" onSubmit={handleSubmit}>
       <Title>{t("pages.employersAuthCreateAccount.title")}</Title>
-      <Lead>
-        {t("pages.employersAuthCreateAccount.leadBackground", {
-          context: showClaimantAuth ? null : "prelaunch",
-        })}
-      </Lead>
+      <Lead>{t("pages.employersAuthCreateAccount.leadBackground")}</Lead>
       <Lead>{t("pages.employersAuthCreateAccount.leadMultipleCompanies")}</Lead>
       <Details label={t("pages.employersAuthCreateAccount.detailsLabel")}>
         <Trans
@@ -113,21 +105,19 @@ export const CreateAccount = (props) => {
           />
         </p>
 
-        {showClaimantAuth && (
-          <p>
-            <Trans
-              i18nKey="pages.employersAuthCreateAccount.createClaimantAccount"
-              components={{
-                "create-account-link": (
-                  <a
-                    className="display-inline-block"
-                    href={routes.auth.createAccount}
-                  />
-                ),
-              }}
-            />
-          </p>
-        )}
+        <p>
+          <Trans
+            i18nKey="pages.employersAuthCreateAccount.createClaimantAccount"
+            components={{
+              "create-account-link": (
+                <a
+                  className="display-inline-block"
+                  href={routes.auth.createAccount}
+                />
+              ),
+            }}
+          />
+        </p>
       </div>
     </form>
   );
