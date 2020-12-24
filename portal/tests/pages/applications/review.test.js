@@ -387,9 +387,15 @@ describe("EmployerBenefitList", () => {
     });
   });
 
-  describe("when data are missing", () => {
+  describe("when amount fields are missing", () => {
     it("doesn't render missing data", () => {
-      const entries = [new EmployerBenefit()];
+      const entries = [
+        new EmployerBenefit({
+          benefit_end_date: "2021-12-30",
+          benefit_start_date: "2021-08-12",
+          benefit_type: EmployerBenefitType.permanentDisability,
+        }),
+      ];
       const wrapper = shallow(
         <EmployerBenefitList entries={entries} reviewRowLevel="4" />
       );
@@ -461,9 +467,15 @@ describe("OtherIncomeList", () => {
     });
   });
 
-  describe("when data are missing", () => {
+  describe("when amount fields are missing", () => {
     it("doesn't render missing data", () => {
-      const entries = [new OtherIncome()];
+      const entries = [
+        new OtherIncome({
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.otherEmployer,
+        }),
+      ];
       const wrapper = shallow(
         <OtherIncomeList entries={entries} reviewRowLevel="4" />
       );
@@ -511,14 +523,16 @@ describe("OtherLeaveEntry", () => {
     });
   });
 
-  describe("when data are missing", () => {
+  describe("when amount is missing", () => {
     it("doesn't render missing data", () => {
       const label = "Benefit 1";
+      const type = "Medical or family leave";
+      const dates = "07-22-2020 - 09-22-2020";
       const wrapper = shallow(
         <OtherLeaveEntry
           label={label}
-          type={null}
-          dates=""
+          type={type}
+          dates={dates}
           amount={null}
           reviewRowLevel="4"
         />

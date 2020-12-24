@@ -37,14 +37,14 @@ Array [
 ]
 `;
 
-exports[`EmployerBenefitList when data are missing doesn't render missing data 1`] = `
+exports[`EmployerBenefitList when amount fields are missing doesn't render missing data 1`] = `
 <OtherLeaveEntry
   amount={null}
-  dates=""
+  dates="8/12/2021 – 12/30/2021"
   key="0"
   label="Benefit 1"
   reviewRowLevel="4"
-  type={null}
+  type="Permanent disability insurance"
 />
 `;
 
@@ -340,14 +340,14 @@ Array [
 ]
 `;
 
-exports[`OtherIncomeList when data are missing doesn't render missing data 1`] = `
+exports[`OtherIncomeList when amount fields are missing doesn't render missing data 1`] = `
 <OtherLeaveEntry
   amount={null}
-  dates=""
+  dates="8/12/2021 – 12/30/2021"
   key="0"
   label="Income 1"
   reviewRowLevel="4"
-  type={null}
+  type="Earnings from another employer or through self-employment"
 />
 `;
 
@@ -364,11 +364,16 @@ exports[`OtherLeaveEntry when all data are present renders all data fields 1`] =
 </ReviewRow>
 `;
 
-exports[`OtherLeaveEntry when data are missing doesn't render missing data 1`] = `
+exports[`OtherLeaveEntry when amount is missing doesn't render missing data 1`] = `
 <ReviewRow
   label="Benefit 1"
   level="4"
-/>
+>
+  Medical or family leave
+  <br />
+  07-22-2020 - 09-22-2020
+  <br />
+</ReviewRow>
 `;
 
 exports[`Part 1 Review Page when all data is present renders Review page with Part 1 content and edit links 1`] = `
