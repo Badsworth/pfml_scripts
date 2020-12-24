@@ -1,5 +1,6 @@
 import tempfile
 from datetime import datetime
+from typing import List
 from xml.dom.minidom import Document
 
 import defusedxml.ElementTree as ET
@@ -7,7 +8,63 @@ import pytest
 from freezegun import freeze_time
 
 import massgov.pfml.payments.gax as gax
+from massgov.pfml.db.models.employees import ClaimType, Payment
+from massgov.pfml.db.models.factories import (
+    ClaimFactory,
+    EmployeeFactory,
+    EmployerFactory,
+    PaymentFactory,
+)
 from tests.api.payments import validate_attributes, validate_elements
+
+
+def get_payment(
+    fineos_absence_id: str,
+    claim_type_id: int,
+    ctr_vendor_code: str,
+    amount: float,
+    payment_date: datetime,
+    start_date: datetime,
+    end_date: datetime,
+) -> Payment:
+    employee = EmployeeFactory(ctr_vendor_customer_code=ctr_vendor_code)
+    employer = EmployerFactory()
+
+    return PaymentFactory(
+        payment_date=payment_date,
+        period_start_date=start_date,
+        period_end_date=end_date,
+        amount=amount,
+        claim=ClaimFactory(
+            employee_id=employee.employee_id,
+            employer_id=employer.employer_id,
+            claim_type_id=claim_type_id,
+            fineos_absence_id=fineos_absence_id,
+        ),
+    )
+
+
+def get_payments() -> List[Payment]:
+    return [
+        get_payment(
+            fineos_absence_id="NTN-1234-ABS-01",
+            claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
+            ctr_vendor_code="abc1234",
+            amount=1200.00,
+            payment_date=datetime(2020, 7, 1),
+            start_date=datetime(2020, 8, 1),
+            end_date=datetime(2020, 12, 1),
+        ),
+        get_payment(
+            fineos_absence_id="NTN-1234-ABS-02",
+            claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
+            ctr_vendor_code="12345678",
+            amount=1300.00,
+            payment_date=datetime(2020, 1, 15),
+            start_date=datetime(2020, 2, 15),
+            end_date=datetime(2020, 4, 15),
+        ),
+    ]
 
 
 def test_get_fiscal_year():
@@ -54,19 +111,20 @@ def test_gax_doc_id():
     assert len(doc_id) == 20
 
 
-def test_build_individual_gax_document():
-    data = {
-        "leave_type": "Bonding Leave",
-        "payment_date": datetime(2020, 7, 1),
-        "vendor_customer_code": "abc1234",
-        "vendor_address_id": "xyz789",
-        "amount_monamt": "1200.00",
-        "absence_case_id": "NTN-1234-ABS-01",
-        "paymentstartp": datetime(2020, 8, 1),
-        "paymentendper": datetime(2020, 12, 1),
-        "payment_method": "ACH",
-    }
-    document = gax.build_individual_gax_document(Document(), data)
+def test_build_individual_gax_document(initialize_factories_session):
+
+    document = gax.build_individual_gax_document(
+        Document(),
+        get_payment(
+            fineos_absence_id="NTN-1234-ABS-01",
+            payment_date=datetime(2020, 7, 1),
+            ctr_vendor_code="abc1234",
+            amount=1200.00,
+            claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
+            start_date=datetime(2020, 8, 1),
+            end_date=datetime(2020, 12, 1),
+        ),
+    )
 
     # Doc ID is generated randomly every run, but appears in many sub values.
     doc_id = document._attrs["DOC_ID"].value
@@ -103,7 +161,7 @@ def test_build_individual_gax_document():
         "DOC_ID": doc_id,
         "VEND_CUST_CD": "abc1234",
         "AD_ID": "xyz789",
-        "DFLT_DISB_FRMT": "EFT",
+        # "DFLT_DISB_FRMT": "EFT", # TODO: uncomment this when disbursement_format is set
     }
     expected_vend_subelements.update(gax.generic_attributes.copy())
     expected_vend_subelements.update(gax.abs_doc_vend_attributes.copy())
@@ -132,44 +190,20 @@ def test_build_individual_gax_document():
     validate_elements(abs_doc_actg, expected_actg_subelements)
 
 
-@freeze_time("2020-01-01 12:00:00")
-def test_build_gax_files():
-    data = [
-        {
-            "leave_type": "Bonding Leave",
-            "payment_date": datetime(2020, 7, 1),
-            "vendor_customer_code": "abc1234",
-            "vendor_address_id": "xyz789",
-            "amount_monamt": "1200.00",
-            "absence_case_id": "NTN-1234-ABS-01",
-            "paymentstartp": datetime(2020, 8, 1),
-            "paymentendper": datetime(2020, 12, 1),
-            "payment_method": "ACH",
-        },
-        {
-            "leave_type": "Medical Leave",
-            "payment_date": datetime(2020, 1, 15),
-            "vendor_customer_code": "12345678",
-            "vendor_address_id": "00000000",
-            "amount_monamt": "1300.00",
-            "absence_case_id": "NTN-1234-ABS-01",
-            "paymentstartp": datetime(2020, 2, 15),
-            "paymentendper": datetime(2020, 4, 15),
-            "payment_method": "Check",
-        },
-    ]
+@freeze_time("2021-01-01 12:00:00")
+def test_build_gax_files(initialize_factories_session):
 
     with tempfile.TemporaryDirectory() as directory:
-        (dat_filepath, inf_filepath) = gax.build_gax_files(data, directory, 11)
+        (dat_filepath, inf_filepath) = gax.build_gax_files(get_payments(), directory, 11)
 
         with open(inf_filepath) as inf_file:
-            assert inf_filepath.split("/")[-1] == "EOL20200101GAX11.INF"
+            assert inf_filepath.split("/")[-1] == "EOL20210101GAX11.INF"
             inf_file_contents = "".join(line for line in inf_file)
             assert inf_file_contents == (
                 "NewMmarsBatchID = EOL0101GAX11;\n"
                 "NewMmarsBatchDeptCode = EOL;\n"
                 "NewMmarsUnitCode = 8770;\n"
-                "NewMmarsImportDate = 2020-01-01;\n"
+                "NewMmarsImportDate = 2021-01-01;\n"
                 "NewMmarsTransCode = GAX;\n"
                 "NewMmarsTableName = ;\n"
                 "NewMmarsTransCount = 2;\n"
@@ -177,7 +211,7 @@ def test_build_gax_files():
             )
 
         with open(dat_filepath) as dat_file:
-            assert dat_filepath.split("/")[-1] == "EOL20200101GAX11.DAT"
+            assert dat_filepath.split("/")[-1] == "EOL20210101GAX11.DAT"
             dat_file_contents = "".join(line for line in dat_file)
 
             # This bit doesn't get parsed into the XML objects
