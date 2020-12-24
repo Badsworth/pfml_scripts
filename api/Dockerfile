@@ -6,7 +6,15 @@ FROM python:3.8-slim as build
 
 # core project tools
 RUN pip install poetry
-RUN apt-get update && apt-get install --no-install-recommends --yes make postgresql build-essential git nodejs npm gnupg curl
+RUN apt-get update \
+ && apt-get install --no-install-recommends --yes \
+        make nodejs npm \
+        build-essential git curl \
+        postgresql gnupg \
+ && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+ && curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+ && apt-get update \
+ && ACCEPT_EULA=Y apt-get install --no-install-recommends --yes msodbcsql17 unixodbc-dev mssql-tools
 
 # setup user stuff
 ARG RUN_UID
@@ -42,6 +50,8 @@ RUN poetry install --no-root
 
 # grab the application
 COPY . ./
+
+ENV PATH="/opt/mssql-tools/bin:$PATH"
 
 # run the server
 CMD ["poetry", "run", "python", "-m", "massgov.pfml.api"]
@@ -84,7 +94,6 @@ COPY --from=app-build /app/.venv /app/.venv
 # Ideally this isn't included for every other ECS task/service, but we'll do it for now.
 COPY --from=app-build /usr/lib/gnupg/* /usr/lib/gnupg/
 COPY --from=app-build /usr/lib/gnupg2/* /usr/lib/gnupg2/
-COPY --from=app-build /usr/lib/x86_64-linux-gnu/* /usr/lib/x86_64-linux-gnu/
 COPY --from=app-build /usr/bin/gpg /usr/bin/gpg
 COPY --from=app-build /usr/bin/gpg-agent /usr/bin/gpg-agent
 
@@ -97,11 +106,16 @@ COPY --from=app-build /etc/ld.so.conf /etc/ld.so.cache /etc/
 COPY --from=app-build /etc/ld.so.conf.d/ /etc/ld.so.conf.d/
 
 # Include required libs
+COPY --from=app-build /usr/lib/x86_64-linux-gnu/ /usr/lib/x86_64-linux-gnu/
 COPY --from=app-build /lib/* /lib/
 COPY --from=app-build /usr/local/lib/ /usr/local/lib/
 COPY --from=app-build /usr/local/include/python* /usr/local/include/
 COPY --from=app-build /lib64/* /lib64/
 COPY --from=app-build --chown=${RUN_USER} /tmp/ /tmp/
+
+# Include ODBC/MS SQL Sever stuff
+COPY --from=app-build /opt/microsoft/ /opt/microsoft/
+COPY --from=app-build /etc/odbcinst.ini /etc/
 
 ENV PATH="/app/.venv/bin:$PATH"
 
