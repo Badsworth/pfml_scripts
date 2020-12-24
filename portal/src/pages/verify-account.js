@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import Alert from "../components/Alert";
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
+import BackButton from "../components/BackButton";
 import Button from "../components/Button";
 import ConditionalContent from "../components/ConditionalContent";
 import InputChoiceGroup from "../components/InputChoiceGroup";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
-import Link from "next/link";
 import PropTypes from "prop-types";
 import Title from "../components/Title";
 import get from "lodash/get";
@@ -102,10 +102,14 @@ export const VerifyAccount = (props) => {
   });
 
   return (
-    <React.Fragment>
+    <form className="usa-form" onSubmit={handleSubmit}>
+      <BackButton
+        label={t("pages.authVerifyAccount.backToLoginLink")}
+        href={routes.auth.login}
+      />
       {codeResent && appErrors.isEmpty && (
         <Alert
-          className="margin-bottom-3"
+          className="margin-bottom-3 margin-top-0"
           heading={t("pages.authVerifyAccount.codeResentHeading")}
           name="code-resent-message"
           role="alert"
@@ -115,95 +119,87 @@ export const VerifyAccount = (props) => {
         </Alert>
       )}
 
-      <form className="usa-form" onSubmit={handleSubmit}>
-        <Title>{t("pages.authVerifyAccount.title")}</Title>
-        <Lead>
-          {t("pages.authVerifyAccount.lead", {
-            context: createAccountUsername ? "email" : null,
-            emailAddress: createAccountUsername,
-          })}
-        </Lead>
+      <Title>{t("pages.authVerifyAccount.title")}</Title>
+      <Lead>
+        {t("pages.authVerifyAccount.lead", {
+          context: createAccountUsername ? "email" : null,
+          emailAddress: createAccountUsername,
+        })}
+      </Lead>
 
-        {showEmailField && (
-          <InputText
-            {...getFunctionalInputProps("username")}
-            type="email"
-            label={t("pages.authVerifyAccount.usernameLabel")}
-            smallLabel
-          />
-        )}
-
+      {showEmailField && (
         <InputText
-          {...getFunctionalInputProps("code")}
-          autoComplete="off"
-          inputMode="numeric"
-          label={t("pages.authVerifyAccount.codeLabel")}
+          {...getFunctionalInputProps("username")}
+          type="email"
+          label={t("pages.authVerifyAccount.usernameLabel")}
           smallLabel
         />
+      )}
 
-        <div>
-          <Button
-            className="margin-top-1"
-            name="resend-code-button"
-            onClick={handleResendCodeClick}
-            variation="unstyled"
-            loading={handleResendCodeClick.isThrottled}
-          >
-            {t("pages.authVerifyAccount.resendCodeLink")}
-          </Button>
-        </div>
+      <InputText
+        {...getFunctionalInputProps("code")}
+        autoComplete="off"
+        inputMode="numeric"
+        label={t("pages.authVerifyAccount.codeLabel")}
+        smallLabel
+      />
 
-        {showEinFields && (
-          <React.Fragment>
-            {/* TODO (CP-1407): Remove showEinToggle condition once claimants can also have accounts */}
-            {showEinToggle && (
-              <InputChoiceGroup
-                {...getFunctionalInputProps("isEmployer")}
-                choices={[
-                  {
-                    checked: formState.isEmployer === true,
-                    label: t("pages.authVerifyAccount.employerChoiceYes"),
-                    value: "true",
-                  },
-                  {
-                    checked: formState.isEmployer === false,
-                    label: t("pages.authVerifyAccount.employerChoiceNo"),
-                    value: "false",
-                  },
-                ]}
-                label={t("pages.authVerifyAccount.employerAccountLabel")}
-                type="radio"
-                smallLabel
-              />
-            )}
-            <ConditionalContent
-              fieldNamesClearedWhenHidden={["ein"]}
-              getField={getField}
-              clearField={clearField}
-              updateFields={updateFields}
-              visible={formState.isEmployer}
-            >
-              <InputText
-                {...getFunctionalInputProps("ein")}
-                label={t("pages.authVerifyAccount.einLabel")}
-                mask="fein"
-                smallLabel
-              />
-            </ConditionalContent>
-          </React.Fragment>
-        )}
-
-        <Button type="submit" loading={handleSubmit.isThrottled}>
-          {t("pages.authVerifyAccount.confirmButton")}
+      <div>
+        <Button
+          className="margin-top-1"
+          name="resend-code-button"
+          onClick={handleResendCodeClick}
+          variation="unstyled"
+          loading={handleResendCodeClick.isThrottled}
+        >
+          {t("pages.authVerifyAccount.resendCodeLink")}
         </Button>
+      </div>
 
-        <div className="margin-top-2 text-bold">
-          <Link href={routes.auth.login}>
-            <a>{t("pages.authVerifyAccount.logInFooterLink")}</a>
-          </Link>
-        </div>
-      </form>
-    </React.Fragment>
+      {showEinFields && (
+        <React.Fragment>
+          {/* TODO (CP-1407): Remove showEinToggle condition once claimants can also have accounts */}
+          {showEinToggle && (
+            <InputChoiceGroup
+              {...getFunctionalInputProps("isEmployer")}
+              choices={[
+                {
+                  checked: formState.isEmployer === true,
+                  label: t("pages.authVerifyAccount.employerChoiceYes"),
+                  value: "true",
+                },
+                {
+                  checked: formState.isEmployer === false,
+                  label: t("pages.authVerifyAccount.employerChoiceNo"),
+                  value: "false",
+                },
+              ]}
+              label={t("pages.authVerifyAccount.employerAccountLabel")}
+              type="radio"
+              smallLabel
+            />
+          )}
+          <ConditionalContent
+            fieldNamesClearedWhenHidden={["ein"]}
+            getField={getField}
+            clearField={clearField}
+            updateFields={updateFields}
+            visible={formState.isEmployer}
+          >
+            <InputText
+              {...getFunctionalInputProps("ein")}
+              label={t("pages.authVerifyAccount.einLabel")}
+              mask="fein"
+              smallLabel
+            />
+          </ConditionalContent>
+        </React.Fragment>
+      )}
+
+      <Button type="submit" loading={handleSubmit.isThrottled}>
+        {t("pages.authVerifyAccount.confirmButton")}
+      </Button>
+    </form>
   );
 };
 

@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import Alert from "../components/Alert";
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
+import BackButton from "../components/BackButton";
 import Button from "../components/Button";
 import ConditionalContent from "../components/ConditionalContent";
 import InputChoiceGroup from "../components/InputChoiceGroup";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
-import Link from "next/link";
 import PropTypes from "prop-types";
 import Title from "../components/Title";
 import get from "lodash/get";
@@ -119,9 +119,13 @@ export const ResetPassword = (props) => {
 
   return (
     <form className="usa-form" onSubmit={handleSubmit}>
+      <BackButton
+        label={t("pages.authResetPassword.backToLoginLink")}
+        href={routes.auth.login}
+      />
       {codeResent && appErrors.isEmpty && (
         <Alert
-          className="margin-bottom-3"
+          className="margin-bottom-3 margin-top-0"
           heading={t("pages.authResetPassword.codeResentHeading")}
           name="code-resent-message"
           role="alert"
@@ -229,12 +233,6 @@ export const ResetPassword = (props) => {
           {t("pages.authResetPassword.submitButton")}
         </Button>
       )}
-
-      <div className="margin-top-2">
-        <Link href={routes.auth.login}>
-          <a className="text-bold">{t("pages.authResetPassword.logInLink")}</a>
-        </Link>
-      </div>
     </form>
   );
 };

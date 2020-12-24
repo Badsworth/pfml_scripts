@@ -601,10 +601,10 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authForgotPassword: {
+    backToLoginLink: "$t(shared.backToLoginLink)",
     codeLabel: "$t(shared.verificationCodeLabel)",
     lead:
       "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
-    logInLink: "$t(shared.backToLoginLink)",
     submitButton: "Send code",
     title: "Forgot your password?",
     usernameLabel: "$t(shared.usernameLabel)",
@@ -626,6 +626,7 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authResetPassword: {
+    backToLoginLink: "$t(shared.backToLoginLink)",
     codeLabel: "$t(shared.verificationCodeLabel)",
     codeResent:
       "We sent a new 6 digit verification code to your email address. Enter the new code to reset your password.",
@@ -641,7 +642,6 @@ const pages = {
       "If an account exists for {{emailAddress}}, we emailed a 6 digit verification code to it. Enter the code below to confirm your email and reset your password.",
     lead_userNotFound:
       "Our system timed out, so we need you to verify your account again. Enter your email address to receive a new verification code. Then create a new password.",
-    logInLink: "$t(shared.backToLoginLink)",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "New password",
     resendCodeLink: "$t(shared.resendVerificationCodeLink)",
@@ -651,6 +651,7 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authVerifyAccount: {
+    backToLoginLink: "$t(shared.backToLoginLink)",
     codeLabel: "$t(shared.verificationCodeLabel)",
     codeResent:
       "We sent a new 6 digit verification code to your email address. Enter the new code to verify your email.",
@@ -665,7 +666,6 @@ const pages = {
       "We sent a 6 digit verification code to your email address. Enter the code to verify your email.",
     lead_email:
       "We sent a 6 digit verification code to {{emailAddress}}. Enter the code to verify your email.",
-    logInFooterLink: "$t(shared.backToLoginLink)",
     resendCodeLink: "Send a new code",
     title: "Verify your email address",
     usernameLabel: "$t(shared.usernameLabel)",

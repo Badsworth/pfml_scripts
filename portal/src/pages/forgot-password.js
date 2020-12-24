@@ -1,7 +1,7 @@
+import BackButton from "../components/BackButton";
 import Button from "../components/Button";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
-import Link from "next/link";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
@@ -32,6 +32,10 @@ export const ForgotPassword = (props) => {
 
   return (
     <form className="usa-form" onSubmit={handleSubmit}>
+      <BackButton
+        label={t("pages.authForgotPassword.backToLoginLink")}
+        href={routes.auth.login}
+      />
       <Title>{t("pages.authForgotPassword.title")}</Title>
       <Lead>{t("pages.authForgotPassword.lead")}</Lead>
 
@@ -45,12 +49,6 @@ export const ForgotPassword = (props) => {
       <Button type="submit" loading={handleSubmit.isThrottled}>
         {t("pages.authForgotPassword.submitButton")}
       </Button>
-
-      <div className="margin-top-2">
-        <Link href={routes.auth.login}>
-          <a className="text-bold">{t("pages.authForgotPassword.logInLink")}</a>
-        </Link>
-      </div>
     </form>
   );
 };
