@@ -141,6 +141,7 @@ load-employers-to-fineos: ## Send employers from our database to the FINEOS API
 	$(PY_RUN_CMD) load-employers-to-fineos $(DECODE_LOG)
 
 fineos-eligibility-feed-export: ## Run an eligibility feed export
+	mkdir -p eligibility_export/absence-eligibility/upload
 	OUTPUT_DIRECTORY_PATH=eligibility_export FINEOS_AWS_IAM_ROLE_ARN="arn" FINEOS_AWS_IAM_ROLE_EXTERNAL_ID="1" $(PY_RUN_CMD) fineos-eligibility-feed-export $(DECODE_LOG)
 
 ecr-login: ## Login to ECR for Docker
