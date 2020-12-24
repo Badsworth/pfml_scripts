@@ -35,54 +35,13 @@ exports[`Index renders post-launch index content when claimantShowAuth is true 1
       className="grid-row grid-gap"
     >
       <article
-        className="tablet:grid-col margin-bottom-3"
+        className="measure-3"
       >
         <div
           className="bg-base-lightest padding-3"
         >
-          <Heading
-            level="3"
-          >
-            Employers
-          </Heading>
           <p>
-            Register now so you can manage leave for your team.
-          </p>
-          <ButtonLink
-            className="margin-top-3"
-            href="/employers/create-account"
-          >
-            Create an employer account
-          </ButtonLink>
-          <div
-            className="margin-top-2 text-dark text-bold"
-          >
-            Have an account?
-            <Link
-              href="/login"
-            >
-              <a
-                className="display-inline-block margin-left-1"
-              >
-                Log in
-              </a>
-            </Link>
-          </div>
-        </div>
-      </article>
-      <article
-        className="tablet:grid-col"
-      >
-        <div
-          className="bg-base-lightest padding-3"
-        >
-          <Heading
-            level="3"
-          >
-            Workers
-          </Heading>
-          <p>
-            You can now create an account and apply for Paid Family and Medical Leave.
+            You can now apply for Paid Family and Medical Leave.
           </p>
           <ButtonLink
             className="margin-top-3"
@@ -161,58 +120,17 @@ exports[`Index renders pre-launch index content 1`] = `
       className="grid-row grid-gap"
     >
       <article
-        className="tablet:grid-col margin-bottom-3"
+        className="measure-3"
       >
         <div
           className="bg-base-lightest padding-3"
         >
-          <Heading
-            level="3"
-          >
-            Employers
-          </Heading>
-          <p>
-            Register now so your team is ready for when workers can start requesting leave.
-          </p>
-          <ButtonLink
-            className="margin-top-3"
-            href="/employers/create-account"
-          >
-            Create an employer account
-          </ButtonLink>
-          <div
-            className="margin-top-2 text-dark text-bold"
-          >
-            Have an account?
-            <Link
-              href="/login"
-            >
-              <a
-                className="display-inline-block margin-left-1"
-              >
-                Log in
-              </a>
-            </Link>
-          </div>
-        </div>
-      </article>
-      <article
-        className="tablet:grid-col"
-      >
-        <div
-          className="bg-base-lightest padding-3"
-        >
-          <Heading
-            level="3"
-          >
-            Workers
-          </Heading>
           <p>
             <Trans
               components={
                 Object {
-                  "mass-benefits-timeline-link": <a
-                    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
+                  "mass-how-to-apply-link": <a
+                    href="https://www.mass.gov/guides/what-is-paid-family-and-medical-leave#-how-can-i-apply-for-paid-leave-massachusetts-benefits?-"
                   />,
                 }
               }
@@ -226,16 +144,16 @@ exports[`Index renders pre-launch index content 1`] = `
 </Fragment>
 `;
 
-exports[`Index renders pre-launch index content 2`] = `"Massachusetts employers: Register now so you can manage leave for your team."`;
+exports[`Index renders pre-launch index content 2`] = `"Coming soon: Log into your Paid Family and Medical Leave account."`;
 
 exports[`Index renders pre-launch index content 3`] = `
 Array [
   "Later this month, you can create an account to apply for Paid Family and Medical Leave. ",
   <a
-    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
+    href="https://www.mass.gov/guides/what-is-paid-family-and-medical-leave#-how-can-i-apply-for-paid-leave-massachusetts-benefits?-"
     key="1"
   >
-    Learn more about the paid leave benefit timeline.
+    Learn more about how to apply.
   </a>,
 ]
 `;

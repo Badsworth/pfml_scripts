@@ -1,3 +1,4 @@
+import Alert from "../../components/Alert";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Button from "../../components/Button";
 import Details from "../../components/Details";
@@ -45,6 +46,15 @@ export const CreateAccount = (props) => {
   return (
     <form className="usa-form" onSubmit={handleSubmit}>
       <Title>{t("pages.employersAuthCreateAccount.title")}</Title>
+      <Alert state="info" className="margin-bottom-3" neutral>
+        <Trans
+          i18nKey="pages.employersAuthCreateAccount.alertHeading"
+          components={{
+            "create-account-link": <a href={routes.index} />,
+            p: <p />,
+          }}
+        />
+      </Alert>
       <Lead>
         {t("pages.employersAuthCreateAccount.leadBackground", {
           context: showClaimantAuth ? null : "prelaunch",

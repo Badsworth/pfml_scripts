@@ -8,6 +8,23 @@ exports[`CreateAccount renders the page 1`] = `
   <Title>
     Create an employer account
   </Title>
+  <Alert
+    className="margin-bottom-3"
+    neutral={true}
+    state="info"
+  >
+    <Trans
+      components={
+        Object {
+          "create-account-link": <a
+            href="/"
+          />,
+          "p": <p />,
+        }
+      }
+      i18nKey="pages.employersAuthCreateAccount.alertHeading"
+    />
+  </Alert>
   <Lead>
     Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers will be able to apply for family leave for bonding with a child soon, with more benefits available in 2021.
   </Lead>
@@ -102,6 +119,17 @@ exports[`CreateAccount renders the page 1`] = `
 
 exports[`CreateAccount renders the page 2`] = `
 Array [
+  <Trans
+    components={
+      Object {
+        "create-account-link": <a
+          href="/"
+        />,
+        "p": <p />,
+      }
+    }
+    i18nKey="pages.employersAuthCreateAccount.alertHeading"
+  />,
   <Trans
     components={
       Object {
