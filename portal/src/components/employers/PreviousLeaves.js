@@ -1,4 +1,5 @@
 import AmendablePreviousLeave from "./AmendablePreviousLeave";
+import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Details from "../Details";
 import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
@@ -16,7 +17,7 @@ import { useTranslation } from "../../locales/i18n";
 
 const PreviousLeaves = (props) => {
   const { t } = useTranslation();
-  const { previousLeaves, onChange } = props;
+  const { appErrors, previousLeaves, onChange } = props;
 
   return (
     <React.Fragment>
@@ -119,8 +120,9 @@ const PreviousLeaves = (props) => {
               {previousLeaves.map((leavePeriod) => {
                 return (
                   <AmendablePreviousLeave
-                    leavePeriod={leavePeriod}
+                    appErrors={appErrors}
                     key={leavePeriod.previous_leave_id}
+                    leavePeriod={leavePeriod}
                     onChange={onChange}
                   />
                 );
@@ -144,8 +146,9 @@ const PreviousLeaves = (props) => {
 };
 
 PreviousLeaves.propTypes = {
-  previousLeaves: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)),
+  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
   onChange: PropTypes.func.isRequired,
+  previousLeaves: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)),
 };
 
 export default PreviousLeaves;

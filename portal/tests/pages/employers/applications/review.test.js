@@ -207,7 +207,7 @@ describe("Review", () => {
       wrapper
         .find("EmployerBenefits")
         .props()
-        .onChange(new EmployerBenefit({ employer_benefit_id: 1 }));
+        .onChange(new EmployerBenefit({ employer_benefit_id: 0 }));
     });
 
     simulateEvents(wrapper).submitForm();
@@ -223,7 +223,7 @@ describe("Review", () => {
       wrapper
         .find("PreviousLeaves")
         .props()
-        .onChange(new PreviousLeave({ previous_leave_id: 1 }));
+        .onChange(new PreviousLeave({ previous_leave_id: 0 }));
     });
 
     simulateEvents(wrapper).submitForm();

@@ -33,6 +33,7 @@ export const Review = (props) => {
     query: { absence_id: absenceId },
   } = props;
   const {
+    appErrors,
     employers: { claim },
   } = appLogic;
   const { t } = useTranslation();
@@ -66,6 +67,9 @@ export const Review = (props) => {
 
   useEffect(() => {
     // Generate id based on index for employer benefit, previous leave (id is not provided by BE)
+    // Note: these indices are used to properly display inline errors and amend employer benefits and
+    // previous leaves. If employer_benefit_id and previous_leave_id no longer match the indices, then
+    // the functionality described above will need to be reimplemented.
     const indexedEmployerBenefits = claim.employer_benefits.map(
       (benefit, index) =>
         new EmployerBenefit({ ...benefit, employer_benefit_id: index })
@@ -185,18 +189,21 @@ export const Review = (props) => {
       <LeaveSchedule appLogic={appLogic} claim={claim} />
       <form id="employer-review-form" onSubmit={handleSubmit}>
         <SupportingWorkDetails
+          appErrors={appErrors}
           hoursWorkedPerWeek={claim.hours_worked_per_week}
           onChange={handleHoursWorkedChange}
         />
         <EmployerBenefits
+          appErrors={appErrors}
           employerBenefits={formState.employerBenefits}
           onChange={handleBenefitInputChange}
         />
         {/* TODO (EMPLOYER-718): Remove feature flag  */}
         {showPreviousLeaves && (
           <PreviousLeaves
-            previousLeaves={formState.previousLeaves}
+            appErrors={appErrors}
             onChange={handlePreviousLeavesChange}
+            previousLeaves={formState.previousLeaves}
           />
         )}
         <FraudReport onChange={handleFraudInputChange} />

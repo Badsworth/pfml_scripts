@@ -88,27 +88,39 @@ exports[`PreviousLeaves renders the component 1`] = `
     </thead>
     <tbody>
       <AmendablePreviousLeave
-        key="1"
+        appErrors={
+          AppErrorInfoCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          }
+        }
+        key="0"
         leavePeriod={
           PreviousLeave {
             "is_for_current_employer": null,
             "leave_end_date": "2020-03-06",
             "leave_reason": "Military caregiver",
             "leave_start_date": "2020-03-01",
-            "previous_leave_id": 1,
+            "previous_leave_id": 0,
           }
         }
         onChange={[Function]}
       />
       <AmendablePreviousLeave
-        key="2"
+        appErrors={
+          AppErrorInfoCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          }
+        }
+        key="1"
         leavePeriod={
           PreviousLeave {
             "is_for_current_employer": null,
             "leave_end_date": "2020-05-10",
             "leave_reason": "Child bonding",
             "leave_start_date": "2020-05-01",
-            "previous_leave_id": 2,
+            "previous_leave_id": 1,
           }
         }
         onChange={[Function]}

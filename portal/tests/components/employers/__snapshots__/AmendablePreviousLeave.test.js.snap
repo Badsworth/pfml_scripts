@@ -35,9 +35,10 @@ exports[`AmendablePreviousLeave renders the component 1`] = `
           </Heading>
           <InputDate
             dayLabel="Day"
+            errorMsg={null}
             label="When did the leave begin?"
             monthLabel="Month"
-            name="leave-start-date-amendment"
+            name="previous_leaves[0].leave_start_date"
             onChange={[Function]}
             smallLabel={true}
             value="2020-03-01"
@@ -45,9 +46,10 @@ exports[`AmendablePreviousLeave renders the component 1`] = `
           />
           <InputDate
             dayLabel="Day"
+            errorMsg={null}
             label="When did the leave end?"
             monthLabel="Month"
-            name="leave-end-date-amendment"
+            name="previous_leaves[0].leave_end_date"
             onChange={[Function]}
             smallLabel={true}
             value="2020-03-06"

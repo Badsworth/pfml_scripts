@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
+import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
 import InputText from "../InputText";
 import PropTypes from "prop-types";
@@ -15,7 +16,8 @@ import { useTranslation } from "../../locales/i18n";
 
 const SupportingWorkDetails = (props) => {
   const { t } = useTranslation();
-  const { hoursWorkedPerWeek, onChange } = props;
+  const { appErrors, hoursWorkedPerWeek, onChange } = props;
+  const errorMsg = appErrors.fieldErrorMessage("hours_worked_per_week");
   const [amendment, setAmendment] = useState(hoursWorkedPerWeek);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
     false
@@ -61,8 +63,9 @@ const SupportingWorkDetails = (props) => {
               hint={t(
                 "components.amendmentForm.question_leavePeriodDuration_hint"
               )}
+              errorMsg={errorMsg}
               mask="hours"
-              name="supporting-work-detail-amendment"
+              name="hours_worked_per_week"
               width="small"
               smallLabel
             />
@@ -74,6 +77,7 @@ const SupportingWorkDetails = (props) => {
 };
 
 SupportingWorkDetails.propTypes = {
+  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
   hoursWorkedPerWeek: PropTypes.number.isRequired,
   onChange: PropTypes.func,
 };
