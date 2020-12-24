@@ -434,13 +434,32 @@ const errors = {
       },
       benefit_end_date: {
         date: "End date must include a day, month, and year.",
+        minimum:
+          "Last day of benefit must be on or after the first day of benefit.",
       },
       benefit_start_date: {
         date: "Start date must include a day, month, and year.",
       },
     },
+    hours_worked_per_week: {
+      // TODO (EMPLOYER-723) remove this
+      invalid_hours_worked_per_week:
+        "Average weekly hours must be 168 or fewer.",
+      maximum: "Enter the average weekly hours.",
+      minimum: "Average weekly hours must be 168 or fewer.",
+    },
     outstanding_information_request_required:
       "This application has already been reviewed.",
+    previous_leaves: {
+      leave_start_date: {
+        invalid_previous_leave_start_date:
+          "Paid leave cannot be taken before January 1, 2021. Enter a date after December 31, 2020.",
+      },
+      leave_end_date: {
+        minimum:
+          "Last day of leave must be on or after the first day of leave.",
+      },
+    },
   },
   invalidFile_size:
     "We could not upload: {{disallowedFileNames}}. Files must be smaller than 3.5 MB.",
