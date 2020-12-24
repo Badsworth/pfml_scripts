@@ -318,7 +318,7 @@ jobs:
     # This step doesn't really depend on any steps except api-build,
     # but for good measure we should make sure everything builds before
     # we deploy any updates to ECS tasks or services.
-    needs: [update-the-deploy-branch, api-build, formstack-import-build, cognito-post-confirmation-build, eligibility-feed-build]
+    needs: [update-the-deploy-branch, api-build, formstack-import-build, cognito-pre-signup-build, cognito-post-confirmation-build, eligibility-feed-build]
 
     env:
       TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
