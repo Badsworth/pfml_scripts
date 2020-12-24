@@ -188,7 +188,7 @@ export function verifyIdentity(
 
   cy.contains("button", "Save and continue").click();
 
-  cy.contains("fieldset", "What's your date of birth?").within(() => {
+  cy.contains("fieldset", "What’s your date of birth?").within(() => {
     const DOB = new Date(application.date_of_birth as string);
 
     cy.contains("Month").type(String(DOB.getMonth() + 1) as string);
@@ -197,7 +197,7 @@ export function verifyIdentity(
   });
   cy.contains("button", "Save and continue").click();
 
-  cy.contains("Do you have a Massachusetts driver's license or ID card?");
+  cy.contains("Do you have a Massachusetts driver’s license or ID card?");
   if (application.has_state_id) {
     cy.contains("Yes").click();
     cy.contains("Enter your license or ID number").type(
@@ -208,7 +208,7 @@ export function verifyIdentity(
   }
   cy.contains("button", "Save and continue").click();
 
-  cy.contains("What's your Social Security Number?").type(
+  cy.contains("What’s your Social Security Number?").type(
     `{selectall}{backspace}${application.tax_identifier}`
   );
   cy.contains("button", "Save and continue").click();
@@ -389,7 +389,7 @@ export function enterEmployerInfo(application: ApplicationRequestBody): void {
   //                with the label "Enter employment information"
   if (application.employment_status === "Employed") {
     cy.labelled(
-      "What is your employer's Employer Identification Number (EIN)?"
+      "What is your employer’s Employer Identification Number (EIN)?"
     ).type(application.employer_fein as string);
   }
   cy.contains("button", "Save and continue").click();

@@ -68,6 +68,8 @@ class IssueType(str, Enum):
     maximum = "maximum"
     # Number or Date is less than the expected range
     minimum = "minimum"
+    # Date range is invalid, eg a start date occurs after an end date
+    invalid_date_range = "invalid_date_range"
     # Data is missing
     required = "required"
     # Masked field is not allowed

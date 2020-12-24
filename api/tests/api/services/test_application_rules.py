@@ -30,8 +30,11 @@ from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
     ContinuousLeavePeriodFactory,
+    EmployerBenefitFactory,
     IntermittentLeavePeriodFactory,
+    OtherIncomeFactory,
     PaymentPreferenceFactory,
+    PreviousLeaveFactory,
     ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
     WorkPatternVariableFactory,
@@ -1130,8 +1133,8 @@ def test_reduced_leave_period_required_fields(test_db_session, initialize_factor
 def test_reduced_leave_period_required_minutes_fields(
     test_db_session, initialize_factories_session
 ):
-    """Minutes fields are reported as missing when at least one is not None or 0
-    """
+    # Minutes fields are reported as missing when at least one is not None or 0
+    #
 
     test_leave_periods = [
         ReducedScheduleLeavePeriodFactory.create(
@@ -1650,20 +1653,38 @@ def test_employer_notification_date_not_required_when_self_employed(
     assert [] == issues
 
 
+def test_employer_benefit_no_issues(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    benefits = [EmployerBenefitFactory.create(application_id=application.application_id)]
+    application.employer_benefits = benefits
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [] == issues
+
+
+def test_employer_benefit_amount_fields_are_optional(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    benefits = [
+        EmployerBenefitFactory.create(
+            application_id=application.application_id,
+            benefit_amount_dollars=None,
+            benefit_amount_frequency=None,
+        )
+    ]
+    application.employer_benefits = benefits
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [] == issues
+
+
 def test_employer_benefit_missing_fields(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(employer_benefits=[EmployerBenefit()])
     issues = get_conditional_issues(test_app)
     assert [
-        Issue(
-            type=IssueType.required,
-            message="employer_benefits[0].benefit_amount_dollars is required",
-            field="employer_benefits[0].benefit_amount_dollars",
-        ),
-        Issue(
-            type=IssueType.required,
-            message="employer_benefits[0].benefit_amount_frequency is required",
-            field="employer_benefits[0].benefit_amount_frequency",
-        ),
         Issue(
             type=IssueType.required,
             message="employer_benefits[0].benefit_end_date is required",
@@ -1682,20 +1703,153 @@ def test_employer_benefit_missing_fields(test_db_session, initialize_factories_s
     ] == issues
 
 
+def test_employer_benefit_amount_dollars_required(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    benefits = [
+        EmployerBenefitFactory.create(
+            application_id=application.application_id, benefit_amount_dollars=None,
+        )
+    ]
+    application.employer_benefits = benefits
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [
+        Issue(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="employer_benefits[0].benefit_amount_dollars is required if employer_benefits[0].benefit_amount_frequency is set",
+            field="employer_benefits[0].benefit_amount_dollars",
+        ),
+    ] == issues
+
+
+def test_employer_benefit_amount_frequency_required(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    benefits = [
+        EmployerBenefitFactory.create(
+            application_id=application.application_id, benefit_amount_frequency=None,
+        )
+    ]
+    application.employer_benefits = benefits
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [
+        Issue(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="employer_benefits[0].benefit_amount_frequency is required if employer_benefits[0].benefit_amount_dollars is set",
+            field="employer_benefits[0].benefit_amount_frequency",
+        ),
+    ] == issues
+
+
+def test_employer_benefit_start_date_must_be_after_2020(
+    test_db_session, initialize_factories_session
+):
+    application = ApplicationFactory.create()
+    benefits = [
+        EmployerBenefitFactory.create(
+            application_id=application.application_id, benefit_start_date=date(2020, 12, 31),
+        )
+    ]
+    application.employer_benefits = benefits
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [
+        Issue(
+            type=IssueType.minimum,
+            message="employer_benefits[0].benefit_start_date cannot be earlier than 2021-01-01",
+            field="employer_benefits[0].benefit_start_date",
+        ),
+    ] == issues
+
+
+def test_employer_benefit_end_date_must_be_after_2020(
+    test_db_session, initialize_factories_session
+):
+    application = ApplicationFactory.create()
+    benefits = [
+        EmployerBenefitFactory.create(
+            application_id=application.application_id, benefit_end_date=date(2020, 12, 31),
+        )
+    ]
+    application.employer_benefits = benefits
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [
+        Issue(
+            type=IssueType.minimum,
+            message="employer_benefits[0].benefit_end_date cannot be earlier than 2021-01-01",
+            field="employer_benefits[0].benefit_end_date",
+        ),
+    ] == issues
+
+
+def test_employer_benefit_end_date_must_be_after_start_date(
+    test_db_session, initialize_factories_session
+):
+    application = ApplicationFactory.create()
+    benefits = [
+        EmployerBenefitFactory.create(
+            application_id=application.application_id,
+            benefit_start_date=date(2021, 1, 2),
+            benefit_end_date=date(2021, 1, 1),
+        )
+    ]
+    application.employer_benefits = benefits
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [
+        Issue(
+            type=IssueType.invalid_date_range,
+            message="employer_benefits[0].benefit_end_date cannot be earlier than employer_benefits[0].benefit_start_date",
+            field="employer_benefits[0].benefit_end_date",
+        ),
+    ] == issues
+
+
+def test_other_income_no_issues(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    incomes = [OtherIncomeFactory.create(application_id=application.application_id,)]
+    application.other_incomes = incomes
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [] == issues
+
+
+def test_other_income_amount_fields_are_optional(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    incomes = [
+        OtherIncomeFactory.create(
+            application_id=application.application_id,
+            income_amount_dollars=None,
+            income_amount_frequency=None,
+        )
+    ]
+    application.other_incomes = incomes
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [] == issues
+
+
 def test_other_income_missing_fields(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(other_incomes=[OtherIncome()])
     issues = get_conditional_issues(test_app)
     assert [
-        Issue(
-            type=IssueType.required,
-            message="other_incomes[0].income_amount_dollars is required",
-            field="other_incomes[0].income_amount_dollars",
-        ),
-        Issue(
-            type=IssueType.required,
-            message="other_incomes[0].income_amount_frequency is required",
-            field="other_incomes[0].income_amount_frequency",
-        ),
         Issue(
             type=IssueType.required,
             message="other_incomes[0].income_end_date is required",
@@ -1710,6 +1864,117 @@ def test_other_income_missing_fields(test_db_session, initialize_factories_sessi
             type=IssueType.required,
             message="other_incomes[0].income_type is required",
             field="other_incomes[0].income_type",
+        ),
+    ] == issues
+
+
+def test_other_income_amount_dollars_required(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    incomes = [
+        OtherIncomeFactory.create(
+            application_id=application.application_id, income_amount_dollars=None,
+        )
+    ]
+    application.other_incomes = incomes
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [
+        Issue(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="other_incomes[0].income_amount_dollars is required if other_incomes[0].income_amount_frequency is set",
+            field="other_incomes[0].income_amount_dollars",
+        ),
+    ] == issues
+
+
+def test_other_income_amount_frequency_required(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    incomes = [
+        OtherIncomeFactory.create(
+            application_id=application.application_id, income_amount_frequency=None,
+        )
+    ]
+    application.other_incomes = incomes
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [
+        Issue(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="other_incomes[0].income_amount_frequency is required if other_incomes[0].income_amount_dollars is set",
+            field="other_incomes[0].income_amount_frequency",
+        ),
+    ] == issues
+
+
+def test_other_income_start_date_must_be_after_2020(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    incomes = [
+        OtherIncomeFactory.create(
+            application_id=application.application_id, income_start_date=date(2020, 12, 31),
+        )
+    ]
+    application.other_incomes = incomes
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [
+        Issue(
+            type=IssueType.minimum,
+            message="other_incomes[0].income_start_date cannot be earlier than 2021-01-01",
+            field="other_incomes[0].income_start_date",
+        ),
+    ] == issues
+
+
+def test_other_income_end_date_must_be_after_2020(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    incomes = [
+        OtherIncomeFactory.create(
+            application_id=application.application_id, income_end_date=date(2020, 12, 31),
+        )
+    ]
+    application.other_incomes = incomes
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [
+        Issue(
+            type=IssueType.minimum,
+            message="other_incomes[0].income_end_date cannot be earlier than 2021-01-01",
+            field="other_incomes[0].income_end_date",
+        ),
+    ] == issues
+
+
+def test_other_income_end_date_must_be_after_start_date(
+    test_db_session, initialize_factories_session
+):
+    application = ApplicationFactory.create()
+    incomes = [
+        OtherIncomeFactory.create(
+            application_id=application.application_id,
+            income_start_date=date(2021, 1, 2),
+            income_end_date=date(2021, 1, 1),
+        )
+    ]
+    application.other_incomes = incomes
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [
+        Issue(
+            type=IssueType.invalid_date_range,
+            message="other_incomes[0].income_end_date cannot be earlier than other_incomes[0].income_start_date",
+            field="other_incomes[0].income_end_date",
         ),
     ] == issues
 
@@ -1748,6 +2013,17 @@ def test_has_other_incomes_required(test_db_session, initialize_factories_sessio
     ] == issues
 
 
+def test_previous_leave_no_issues(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    leaves = [PreviousLeaveFactory.create(application_id=application.application_id,)]
+    application.previous_leaves = leaves
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [] == issues
+
+
 def test_previous_leave_missing_fields(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(previous_leaves=[PreviousLeave()])
     issues = get_conditional_issues(test_app)
@@ -1771,5 +2047,74 @@ def test_previous_leave_missing_fields(test_db_session, initialize_factories_ses
             type=IssueType.required,
             message="previous_leaves[0].leave_reason is required",
             field="previous_leaves[0].leave_reason",
+        ),
+    ] == issues
+
+
+def test_previous_leave_start_date_must_be_after_2020(
+    test_db_session, initialize_factories_session
+):
+    application = ApplicationFactory.create()
+    leaves = [
+        PreviousLeaveFactory.create(
+            application_id=application.application_id, leave_start_date=date(2020, 12, 31),
+        )
+    ]
+    application.previous_leaves = leaves
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [
+        Issue(
+            type=IssueType.minimum,
+            message="previous_leaves[0].leave_start_date cannot be earlier than 2021-01-01",
+            field="previous_leaves[0].leave_start_date",
+        ),
+    ] == issues
+
+
+def test_previous_leave_end_date_must_be_after_2020(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    leaves = [
+        PreviousLeaveFactory.create(
+            application_id=application.application_id, leave_end_date=date(2020, 12, 31),
+        )
+    ]
+    application.previous_leaves = leaves
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [
+        Issue(
+            type=IssueType.minimum,
+            message="previous_leaves[0].leave_end_date cannot be earlier than 2021-01-01",
+            field="previous_leaves[0].leave_end_date",
+        ),
+    ] == issues
+
+
+def test_previous_leave_end_date_must_be_after_start_date(
+    test_db_session, initialize_factories_session
+):
+    application = ApplicationFactory.create()
+    leaves = [
+        PreviousLeaveFactory.create(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 1, 2),
+            leave_end_date=date(2021, 1, 1),
+        )
+    ]
+    application.previous_leaves = leaves
+    test_db_session.add(application)
+    test_db_session.commit()
+
+    issues = get_conditional_issues(application)
+    assert [
+        Issue(
+            type=IssueType.invalid_date_range,
+            message="previous_leaves[0].leave_end_date cannot be earlier than previous_leaves[0].leave_start_date",
+            field="previous_leaves[0].leave_end_date",
         ),
     ] == issues

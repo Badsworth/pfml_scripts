@@ -9,7 +9,6 @@ import massgov.pfml.util.datetime as datetime_util
 from massgov.pfml.db.models.employees import (
     Employee,
     LatestStateLog,
-    LkFlow,
     LkState,
     Payment,
     ReferenceFile,
@@ -31,7 +30,6 @@ def get_now() -> datetime:
 
 
 def create_state_log(
-    flow: LkFlow,
     start_state: LkState,
     associated_model: AssociatedModel,
     db_session: db.Session,
@@ -39,8 +37,8 @@ def create_state_log(
 ) -> StateLog:
     now = get_now()
 
-    state_log = StateLog(flow_id=flow.flow_id, start_state_id=start_state.state_id, started_at=now)
-    latest_query_params = [LatestStateLog.flow_id == flow.flow_id]
+    state_log = StateLog(start_state_id=start_state.state_id, started_at=now)
+    latest_query_params = []
 
     # Depending on whether it's a payment/employee/reference_file, need to setup
     # the object and query params differently
@@ -74,8 +72,6 @@ def create_state_log(
         latest_state_log.payment = state_log.payment
         latest_state_log.reference_file = state_log.reference_file
 
-        latest_state_log.flow_id = flow.flow_id
-
     latest_state_log.state_log = state_log
 
     db_session.add(state_log)
@@ -86,7 +82,11 @@ def create_state_log(
 
 
 def finish_state_log(
-    state_log: StateLog, end_state: LkState, outcome: Dict[str, str], db_session: db.Session
+    state_log: StateLog,
+    end_state: LkState,
+    outcome: Dict[str, str],
+    db_session: db.Session,
+    commit: bool = True,
 ) -> StateLog:
     now = get_now()
 
@@ -94,17 +94,15 @@ def finish_state_log(
     state_log.end_state_id = end_state.state_id
     state_log.outcome = outcome
 
-    db_session.commit()
+    if commit:
+        db_session.commit()
     return state_log
 
 
 def get_latest_state_log_in_end_state(
-    associated_model: AssociatedModel, end_state: LkState, flow: LkFlow, db_session: db.Session,
+    associated_model: AssociatedModel, end_state: LkState, db_session: db.Session,
 ) -> StateLog:
-    filter_params = [
-        StateLog.end_state_id == end_state.state_id,
-        LatestStateLog.flow_id == flow.flow_id,
-    ]
+    filter_params = [StateLog.end_state_id == end_state.state_id]
 
     if isinstance(associated_model, Employee):
         filter_params.append(LatestStateLog.employee_id == associated_model.employee_id)
@@ -117,19 +115,15 @@ def get_latest_state_log_in_end_state(
     #
     # SELECT * from state_log
     # WHERE state_log.end_state_id={end_state.state_id} AND
-    #       latest_state_log.flow_id={flow.flow_id} AND
     #       latest_state_log.employee_id={associated_model.employee_id}
     # JOIN latest_state_log ON (state_log.state_log_id = latest_state_log.state_log_id)
     return db_session.query(StateLog).join(LatestStateLog).filter(*filter_params).one_or_none()
 
 
 def get_all_latest_state_logs_in_end_state(
-    associated_class: AssociatedClass, end_state: LkState, flow: LkFlow, db_session: db.Session
+    associated_class: AssociatedClass, end_state: LkState, db_session: db.Session
 ) -> List[StateLog]:
-    filter_params = [
-        StateLog.end_state_id == end_state.state_id,
-        LatestStateLog.flow_id == flow.flow_id,
-    ]
+    filter_params = [StateLog.end_state_id == end_state.state_id]
 
     if associated_class is AssociatedClass.EMPLOYEE:
         filter_params.append(LatestStateLog.employee_id != None)  # noqa
@@ -142,7 +136,6 @@ def get_all_latest_state_logs_in_end_state(
     #
     # SELECT * from state_log
     # WHERE state_log.end_state_id={end_state.state_id} AND
-    #       latest_state_log.flow_id={flow.flow_id} AND
     #       latest_state_log.employee_id IS NOT NULL
     # JOIN latest_state_log ON (state_log.state_log_id = latest_state_log.state_log_id)
     return db_session.query(StateLog).join(LatestStateLog).filter(*filter_params).all()
@@ -151,13 +144,12 @@ def get_all_latest_state_logs_in_end_state(
 def get_state_logs_stuck_in_state(
     associated_class: AssociatedClass,
     end_state: LkState,
-    flow: LkFlow,
     days_stuck: int,
     db_session: db.Session,
     now: Optional[datetime] = None,
 ) -> List[StateLog]:
     state_logs = get_all_latest_state_logs_in_end_state(
-        associated_class=associated_class, end_state=end_state, flow=flow, db_session=db_session
+        associated_class=associated_class, end_state=end_state, db_session=db_session
     )
 
     stuck_state_logs = []

@@ -1,6 +1,6 @@
 from datetime import date
 from itertools import chain, combinations
-from typing import Iterable, List, Optional, Union
+from typing import Any, Iterable, List, Optional, Union
 
 from dateutil.relativedelta import relativedelta
 
@@ -66,66 +66,195 @@ def get_address_issues(application: Application, address_field_name: str) -> Lis
     return issues
 
 
-def check_required_fields_in_list_items(
-    list_name: str,
-    list_items: Union[Iterable[EmployerBenefit], Iterable[OtherIncome], Iterable[PreviousLeave]],
-    required_fields: List[str],
-) -> List[Issue]:
+def check_required_fields(path: str, item: Any, required_fields: List[str],) -> List[Issue]:
+    """
+    Check that a set of required fields are present on item. Returns an issue for each missing required field.
+    """
     issues = []
 
-    for index, list_item in enumerate(list_items, 0):
-        for field in required_fields:
-            val = getattr(list_item, field)
-            if val is None:
-                field_name = f"{list_name}[{index}].{field}"
-                issues.append(
-                    Issue(
-                        type=IssueType.required,
-                        message=f"{field_name} is required",
-                        field=field_name,
-                    )
+    for field in required_fields:
+        val = getattr(item, field)
+        if val is None:
+            field_name = f"{path}.{field}"
+            issues.append(
+                Issue(
+                    type=IssueType.required, message=f"{field_name} is required", field=field_name,
                 )
+            )
+
+    return issues
+
+
+def check_codependent_fields(path: str, item: Any, field_a: str, field_b: str,) -> List[Issue]:
+    """
+    Checks that neither or both of the specified fields (field_a and _field_b) are set on item. If only one
+    field is set then the returned issues will not be empty.
+    """
+    issues = []
+
+    val_a = getattr(item, field_a)
+    val_b = getattr(item, field_b)
+    field_a_path = f"{path}.{field_a}"
+    field_b_path = f"{path}.{field_b}"
+    if val_a and not val_b:
+        issues.append(
+            Issue(
+                type=IssueType.required,
+                rule=IssueRule.conditional,
+                message=f"{field_b_path} is required if {field_a_path} is set",
+                field=field_b_path,
+            )
+        )
+    elif val_b and not val_a:
+        issues.append(
+            Issue(
+                type=IssueType.required,
+                rule=IssueRule.conditional,
+                message=f"{field_a_path} is required if {field_b_path} is set",
+                field=field_a_path,
+            )
+        )
+
+    return issues
+
+
+def check_date_range(
+    start_date: Optional[date],
+    start_date_path: str,
+    end_date: Optional[date],
+    end_date_path: str,
+    minimum_date: date,
+) -> List[Issue]:
+    """
+    Checks if a start and end date are valid, if set. start_date is valid if it is greater than or equal to
+    minimum_date. end_date is valid if it is greater than or equal to minimum_date and start_date. A date is
+    not checked if it isn't set.
+    """
+    issues = []
+    if start_date and start_date < minimum_date:
+        issues.append(
+            Issue(
+                type=IssueType.minimum,
+                message=f"{start_date_path} cannot be earlier than {minimum_date.isoformat()}",
+                field=f"{start_date_path}",
+            )
+        )
+
+    if end_date and end_date < minimum_date:
+        issues.append(
+            Issue(
+                type=IssueType.minimum,
+                message=f"{end_date_path} cannot be earlier than {minimum_date.isoformat()}",
+                field=f"{end_date_path}",
+            )
+        )
+    elif start_date and end_date and start_date > end_date:
+        issues.append(
+            Issue(
+                type=IssueType.invalid_date_range,
+                message=f"{end_date_path} cannot be earlier than {start_date_path}",
+                field=f"{end_date_path}",
+            )
+        )
 
     return issues
 
 
 def get_employer_benefits_issues(application: Application) -> List[Issue]:
-    employer_benefit_fields = [
-        "benefit_amount_dollars",
-        "benefit_amount_frequency",
+    issues = []
+
+    for index, benefit in enumerate(application.employer_benefits, 0):
+        issues += get_employer_benefit_issues(benefit, index)
+
+    return issues
+
+
+def get_employer_benefit_issues(benefit: EmployerBenefit, index: int) -> List[Issue]:
+    benefit_path = f"employer_benefits[{index}]"
+    issues = []
+
+    required_fields = [
         "benefit_end_date",
         "benefit_start_date",
         "benefit_type",
     ]
-
-    return check_required_fields_in_list_items(
-        "employer_benefits", application.employer_benefits, employer_benefit_fields
+    issues += check_required_fields(benefit_path, benefit, required_fields)
+    issues += check_codependent_fields(
+        benefit_path, benefit, "benefit_amount_dollars", "benefit_amount_frequency"
     )
+
+    start_date = benefit.benefit_start_date
+    start_date_path = f"{benefit_path}.benefit_start_date"
+    end_date = benefit.benefit_end_date
+    end_date_path = f"{benefit_path}.benefit_end_date"
+    issues += check_date_range(
+        start_date, start_date_path, end_date, end_date_path, PFML_PROGRAM_LAUNCH_DATE
+    )
+
+    return issues
 
 
 def get_other_incomes_issues(application: Application) -> List[Issue]:
-    other_income_fields = [
-        "income_amount_dollars",
-        "income_amount_frequency",
+    issues = []
+
+    for index, income in enumerate(application.other_incomes, 0):
+        issues += get_other_income_issues(income, index)
+
+    return issues
+
+
+def get_other_income_issues(income: OtherIncome, index: int) -> List[Issue]:
+    income_path = f"other_incomes[{index}]"
+    issues = []
+
+    required_fields = [
         "income_end_date",
         "income_start_date",
         "income_type",
     ]
-    return check_required_fields_in_list_items(
-        "other_incomes", application.other_incomes, other_income_fields
+    issues += check_required_fields(income_path, income, required_fields)
+    issues += check_codependent_fields(
+        income_path, income, "income_amount_dollars", "income_amount_frequency"
     )
 
+    start_date = income.income_start_date
+    start_date_path = f"{income_path}.income_start_date"
+    end_date = income.income_end_date
+    end_date_path = f"{income_path}.income_end_date"
+    issues += check_date_range(
+        start_date, start_date_path, end_date, end_date_path, PFML_PROGRAM_LAUNCH_DATE
+    )
 
-def get_previous_leave_issues(application: Application) -> List[Issue]:
-    previous_leave_fields = [
+    return issues
+
+
+def get_previous_leaves_issues(application: Application) -> List[Issue]:
+    issues = []
+
+    for index, leave in enumerate(application.previous_leaves, 0):
+        issues += get_previous_leave_issues(leave, index)
+
+    return issues
+
+
+def get_previous_leave_issues(leave: PreviousLeave, index: int) -> List[Issue]:
+    leave_path = f"previous_leaves[{index}]"
+    issues = []
+
+    required_fields = [
         "leave_start_date",
         "leave_end_date",
         "is_for_current_employer",
         "leave_reason",
     ]
+    issues += check_required_fields(leave_path, leave, required_fields)
 
-    issues = check_required_fields_in_list_items(
-        "previous_leaves", application.previous_leaves, previous_leave_fields
+    start_date = leave.leave_start_date
+    start_date_path = f"{leave_path}.leave_start_date"
+    end_date = leave.leave_end_date
+    end_date_path = f"{leave_path}.leave_end_date"
+    issues += check_date_range(
+        start_date, start_date_path, end_date, end_date_path, PFML_PROGRAM_LAUNCH_DATE
     )
 
     return issues
@@ -259,7 +388,7 @@ def get_conditional_issues(application: Application) -> List[Issue]:
         issues += get_other_incomes_issues(application)
 
     if application.previous_leaves:
-        issues += get_previous_leave_issues(application)
+        issues += get_previous_leaves_issues(application)
 
     # Fields involved in Part 3 of the progressive application
     # TODO: (API-515) Document and certification validations can be called here

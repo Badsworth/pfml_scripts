@@ -15,22 +15,15 @@ from massgov.pfml.api.models.applications.common import DurationBasis, Frequency
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
 from massgov.pfml.api.util.response import IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
-    AmountFrequency,
     Application,
     ApplicationPaymentPreference,
     ContinuousLeavePeriod,
     DocumentType,
-    EmployerBenefit,
-    EmployerBenefitType,
     EmploymentStatus,
     FINEOSWebIdExt,
     LeaveReason,
     LeaveReasonQualifier,
-    OtherIncome,
-    OtherIncomeType,
     Phone,
-    PreviousLeave,
-    PreviousLeaveQualifyingReason,
     RelationshipQualifier,
     RelationshipToCaregiver,
     WorkPattern,
@@ -42,7 +35,10 @@ from massgov.pfml.db.models.factories import (
     ApplicationFactory,
     ContinuousLeavePeriodFactory,
     DocumentFactory,
+    EmployerBenefitFactory,
     IntermittentLeavePeriodFactory,
+    OtherIncomeFactory,
+    PreviousLeaveFactory,
     ReducedScheduleLeavePeriodFactory,
     UserFactory,
     WorkPatternFixedFactory,
@@ -1654,15 +1650,8 @@ def test_application_patch_add_empty_employer_benefits(client, user, auth_token,
 def test_application_patch_update_employer_benefit(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
-    benefit = EmployerBenefit(
-        application_id=application.application_id,
-        benefit_start_date="2021-01-07",
-        benefit_end_date="2021-01-14",
-        benefit_amount_dollars=600,
-        benefit_type_id=EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id,
-        benefit_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
-    )
-    application.employer_benefits = [benefit]
+    benefits = [EmployerBenefitFactory.create(application_id=application.application_id)]
+    application.employer_benefits = benefits
     test_db_session.add(application)
     test_db_session.commit()
     employer_benefit_id = application.employer_benefits[0].employer_benefit_id
@@ -1697,6 +1686,45 @@ def test_application_patch_update_employer_benefit(client, user, auth_token, tes
     assert employer_benefit.get("benefit_end_date") == "2021-01-20"
     assert employer_benefit.get("benefit_amount_dollars") == 400
     assert employer_benefit.get("benefit_amount_frequency") == "Per Month"
+
+
+def test_application_patch_update_employer_benefit_unset_enums(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    benefits = [EmployerBenefitFactory.create(application_id=application.application_id,)]
+    application.employer_benefits = benefits
+    test_db_session.add(application)
+    test_db_session.commit()
+    employer_benefit_id = application.employer_benefits[0].employer_benefit_id
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "employer_benefits": [
+                {
+                    "employer_benefit_id": employer_benefit_id,
+                    "benefit_type": None,
+                    "benefit_amount_dollars": None,
+                    "benefit_amount_frequency": None,
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    employer_benefits = response_body.get("employer_benefits")
+
+    assert len(employer_benefits) == 1
+    employer_benefit = employer_benefits[0]
+    assert employer_benefit.get("employer_benefit_id") == str(employer_benefit_id)
+    assert employer_benefit.get("benefit_type") is None
+    assert employer_benefit.get("benefit_amount_dollars") is None
+    assert employer_benefit.get("benefit_amount_frequency") is None
 
 
 def test_application_patch_update_non_existent_employer_benefit(
@@ -1737,15 +1765,8 @@ def test_application_patch_update_other_users_employer_benefit(
     # Create a benefit which belongs to some other user and some other application
     other_user = UserFactory.create()
     other_application = ApplicationFactory.create(user=other_user)
-    benefit = EmployerBenefit(
-        application_id=other_application.application_id,
-        benefit_start_date="2021-01-07",
-        benefit_end_date="2021-01-14",
-        benefit_amount_dollars=600,
-        benefit_type_id=EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id,
-        benefit_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
-    )
-    other_application.employer_benefits = [benefit]
+    benefits = [EmployerBenefitFactory.create(application_id=other_application.application_id,)]
+    other_application.employer_benefits = benefits
     test_db_session.add(other_application)
 
     test_db_session.commit()
@@ -1857,15 +1878,8 @@ def test_application_patch_add_empty_other_incomes(client, user, auth_token, tes
 def test_application_patch_update_other_income(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
-    income = OtherIncome(
-        application_id=application.application_id,
-        income_start_date="2021-01-07",
-        income_end_date="2021-01-14",
-        income_amount_dollars=600,
-        income_type_id=OtherIncomeType.SSDI.other_income_type_id,
-        income_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
-    )
-    application.other_incomes = [income]
+    incomes = [OtherIncomeFactory.create(application_id=application.application_id,)]
+    application.other_incomes = incomes
     test_db_session.add(application)
     test_db_session.commit()
     other_income_id = application.other_incomes[0].other_income_id
@@ -1900,6 +1914,45 @@ def test_application_patch_update_other_income(client, user, auth_token, test_db
     assert other_income.get("income_end_date") == "2021-01-20"
     assert other_income.get("income_amount_dollars") == 400
     assert other_income.get("income_amount_frequency") == "Per Month"
+
+
+def test_application_patch_update_other_income_unset_enums(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    incomes = [OtherIncomeFactory.create(application_id=application.application_id,)]
+    application.other_incomes = incomes
+    test_db_session.add(application)
+    test_db_session.commit()
+    other_income_id = application.other_incomes[0].other_income_id
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "other_incomes": [
+                {
+                    "other_income_id": other_income_id,
+                    "income_type": None,
+                    "income_amount_dollars": None,
+                    "income_amount_frequency": None,
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    other_incomes = response_body.get("other_incomes")
+
+    assert len(other_incomes) == 1
+    other_income = other_incomes[0]
+    assert other_income.get("other_income_id") == str(other_income_id)
+    assert other_income.get("income_type") is None
+    assert other_income.get("income_amount_dollars") is None
+    assert other_income.get("income_amount_frequency") is None
 
 
 def test_application_patch_update_non_existent_other_income(
@@ -1940,15 +1993,8 @@ def test_application_patch_update_other_users_other_income(
     # Create a benefit which belongs to some other user and some other application
     other_user = UserFactory.create()
     other_application = ApplicationFactory.create(user=other_user)
-    income = OtherIncome(
-        application_id=other_application.application_id,
-        income_start_date="2021-01-07",
-        income_end_date="2021-01-14",
-        income_amount_dollars=600,
-        income_type_id=OtherIncomeType.SSDI.other_income_type_id,
-        income_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
-    )
-    other_application.other_incomes = [income]
+    incomes = [OtherIncomeFactory.create(application_id=other_application.application_id,)]
+    other_application.other_incomes = incomes
 
     test_db_session.commit()
 
@@ -2055,14 +2101,9 @@ def test_application_patch_add_empty_previous_leaves(client, user, auth_token, t
 def test_application_patch_update_previous_leave(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
-    previous_leave = PreviousLeave(
-        leave_start_date="2021-01-01",
-        leave_end_date="2021-05-01",
-        is_for_current_employer=False,
-        leave_reason_id=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_id,
-    )
+    leaves = [PreviousLeaveFactory.create(application_id=application.application_id,)]
 
-    application.previous_leaves = [previous_leave]
+    application.previous_leaves = leaves
     test_db_session.add(application)
     test_db_session.commit()
     previous_leave_id = application.previous_leaves[0].previous_leave_id
@@ -2094,6 +2135,36 @@ def test_application_patch_update_previous_leave(client, user, auth_token, test_
     assert previous_leave.get("leave_start_date") == "2021-02-01"
     assert previous_leave.get("leave_end_date") == "2021-06-01"
     assert previous_leave.get("leave_reason") == "Pregnancy / Maternity"
+
+
+def test_application_patch_update_previous_leave_unset_enums(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+
+    leaves = [PreviousLeaveFactory.create(application_id=application.application_id,)]
+    application.previous_leaves = leaves
+    test_db_session.add(application)
+    test_db_session.commit()
+    previous_leave_id = application.previous_leaves[0].previous_leave_id
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "previous_leaves": [{"previous_leave_id": previous_leave_id, "leave_reason": None,},]
+        },
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    previous_leaves = response_body.get("previous_leaves")
+
+    assert len(previous_leaves) == 1
+    previous_leave = previous_leaves[0]
+    assert previous_leave.get("previous_leave_id") == str(previous_leave_id)
+    assert previous_leave.get("leave_reason") is None
 
 
 def test_application_patch_update_non_existent_previous_leave(
@@ -2132,13 +2203,8 @@ def test_application_patch_update_other_users_previous_leave(
     # Create a leave which belongs to some other user and some other application
     other_user = UserFactory.create()
     other_application = ApplicationFactory.create(user=other_user)
-    previous_leave = PreviousLeave(
-        leave_start_date="2021-01-01",
-        leave_end_date="2021-05-01",
-        is_for_current_employer=False,
-        leave_reason_id=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_id,
-    )
-    other_application.previous_leaves = [previous_leave]
+    leaves = [PreviousLeaveFactory.create(application_id=other_application.application_id,)]
+    other_application.previous_leaves = leaves
 
     test_db_session.commit()
 
@@ -3805,15 +3871,8 @@ def test_application_complete_mark_document_received_fineos(
 
 def test_employer_benefit_delete(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user, updated_time=datetime.now())
-    benefit = EmployerBenefit(
-        application_id=application.application_id,
-        benefit_start_date="2021-01-07",
-        benefit_end_date="2021-01-14",
-        benefit_amount_dollars=600,
-        benefit_type_id=EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id,
-        benefit_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
-    )
-    application.employer_benefits = [benefit]
+    benefits = [EmployerBenefitFactory.create(application_id=application.application_id,)]
+    application.employer_benefits = benefits
     test_db_session.add(application)
     test_db_session.commit()
     employer_benefit_id = application.employer_benefits[0].employer_benefit_id
@@ -3833,15 +3892,8 @@ def test_employer_benefit_delete(client, user, auth_token, test_db_session):
 
 def test_employer_benefit_delete_not_found_application(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user, updated_time=datetime.now())
-    benefit = EmployerBenefit(
-        application_id=application.application_id,
-        benefit_start_date="2021-01-07",
-        benefit_end_date="2021-01-14",
-        benefit_amount_dollars=600,
-        benefit_type_id=EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id,
-        benefit_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
-    )
-    application.employer_benefits = [benefit]
+    benefits = [EmployerBenefitFactory.create(application_id=application.application_id,)]
+    application.employer_benefits = benefits
     test_db_session.add(application)
     test_db_session.commit()
     employer_benefit_id = application.employer_benefits[0].employer_benefit_id
@@ -3880,15 +3932,8 @@ def test_employer_benefit_delete_not_found(client, user, auth_token, test_db_ses
 def test_employer_benefit_delete_other_application(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user, updated_time=datetime.now())
     other_application = ApplicationFactory.create(user=user, updated_time=datetime.now())
-    benefit = EmployerBenefit(
-        application_id=application.application_id,
-        benefit_start_date="2021-01-07",
-        benefit_end_date="2021-01-14",
-        benefit_amount_dollars=600,
-        benefit_type_id=EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id,
-        benefit_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
-    )
-    application.employer_benefits = [benefit]
+    benefits = [EmployerBenefitFactory.create(application_id=application.application_id,)]
+    application.employer_benefits = benefits
     test_db_session.add(application)
     test_db_session.commit()
     employer_benefit_id = application.employer_benefits[0].employer_benefit_id
@@ -3907,15 +3952,8 @@ def test_employer_benefit_delete_other_application(client, user, auth_token, tes
 
 def test_employer_benefit_delete_other_users_application(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(updated_time=datetime.now())
-    benefit = EmployerBenefit(
-        application_id=application.application_id,
-        benefit_start_date="2021-01-07",
-        benefit_end_date="2021-01-14",
-        benefit_amount_dollars=600,
-        benefit_type_id=EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id,
-        benefit_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
-    )
-    application.employer_benefits = [benefit]
+    benefits = [EmployerBenefitFactory.create(application_id=application.application_id,)]
+    application.employer_benefits = benefits
     test_db_session.add(application)
     test_db_session.commit()
     employer_benefit_id = application.employer_benefits[0].employer_benefit_id
@@ -3932,15 +3970,8 @@ def test_employer_benefit_delete_other_users_application(client, user, auth_toke
 
 def test_other_income_delete(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user, updated_time=datetime.now())
-    income = OtherIncome(
-        application_id=application.application_id,
-        income_start_date="2021-01-07",
-        income_end_date="2021-01-14",
-        income_amount_dollars=600,
-        income_type_id=OtherIncomeType.SSDI.other_income_type_id,
-        income_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
-    )
-    application.other_incomes = [income]
+    incomes = [OtherIncomeFactory.create(application_id=application.application_id,)]
+    application.other_incomes = incomes
     test_db_session.add(application)
     test_db_session.commit()
     other_income_id = application.other_incomes[0].other_income_id
@@ -3958,15 +3989,8 @@ def test_other_income_delete(client, user, auth_token, test_db_session):
 
 def test_other_income_delete_not_found_application(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user, updated_time=datetime.now())
-    income = OtherIncome(
-        application_id=application.application_id,
-        income_start_date="2021-01-07",
-        income_end_date="2021-01-14",
-        income_amount_dollars=600,
-        income_type_id=OtherIncomeType.SSDI.other_income_type_id,
-        income_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
-    )
-    application.other_incomes = [income]
+    incomes = [OtherIncomeFactory.create(application_id=application.application_id,)]
+    application.other_incomes = incomes
     test_db_session.add(application)
     test_db_session.commit()
     other_income_id = application.other_incomes[0].other_income_id
@@ -4003,15 +4027,8 @@ def test_other_income_delete_not_found(client, user, auth_token, test_db_session
 def test_other_income_delete_other_application(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user, updated_time=datetime.now())
     other_application = ApplicationFactory.create(user=user, updated_time=datetime.now())
-    income = OtherIncome(
-        application_id=application.application_id,
-        income_start_date="2021-01-07",
-        income_end_date="2021-01-14",
-        income_amount_dollars=600,
-        income_type_id=OtherIncomeType.SSDI.other_income_type_id,
-        income_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
-    )
-    application.other_incomes = [income]
+    incomes = [OtherIncomeFactory.create(application_id=application.application_id,)]
+    application.other_incomes = incomes
     test_db_session.add(application)
     test_db_session.commit()
     other_income_id = application.other_incomes[0].other_income_id
@@ -4030,15 +4047,8 @@ def test_other_income_delete_other_application(client, user, auth_token, test_db
 
 def test_other_income_delete_other_users_application(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(updated_time=datetime.now())
-    income = OtherIncome(
-        application_id=application.application_id,
-        income_start_date="2021-01-07",
-        income_end_date="2021-01-14",
-        income_amount_dollars=600,
-        income_type_id=OtherIncomeType.SSDI.other_income_type_id,
-        income_amount_frequency_id=AmountFrequency.PER_WEEK.amount_frequency_id,
-    )
-    application.other_incomes = [income]
+    incomes = [OtherIncomeFactory.create(application_id=application.application_id,)]
+    application.other_incomes = incomes
     test_db_session.add(application)
     test_db_session.commit()
     other_income_id = application.other_incomes[0].other_income_id
@@ -4053,13 +4063,8 @@ def test_other_income_delete_other_users_application(client, user, auth_token, t
 
 def test_previous_leave_delete(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user, updated_time=datetime.now())
-    leave = PreviousLeave(
-        application_id=application.application_id,
-        leave_start_date="2021-01-07",
-        leave_end_date="2021-01-14",
-        leave_reason_id=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_id,
-    )
-    application.previous_leaves = [leave]
+    leaves = [PreviousLeaveFactory.create(application_id=application.application_id,)]
+    application.previous_leaves = leaves
     test_db_session.add(application)
     test_db_session.commit()
     previous_leave_id = application.previous_leaves[0].previous_leave_id
@@ -4079,13 +4084,8 @@ def test_previous_leave_delete(client, user, auth_token, test_db_session):
 
 def test_previous_leave_delete_not_found_application(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user, updated_time=datetime.now())
-    leave = PreviousLeave(
-        application_id=application.application_id,
-        leave_start_date="2021-01-07",
-        leave_end_date="2021-01-14",
-        leave_reason_id=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_id,
-    )
-    application.previous_leaves = [leave]
+    leaves = [PreviousLeaveFactory.create(application_id=application.application_id,)]
+    application.previous_leaves = leaves
     test_db_session.add(application)
     test_db_session.commit()
     previous_leave_id = application.previous_leaves[0].previous_leave_id
@@ -4124,13 +4124,8 @@ def test_previous_leave_delete_not_found(client, user, auth_token, test_db_sessi
 def test_previous_leave_delete_other_application(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user, updated_time=datetime.now())
     other_application = ApplicationFactory.create(user=user, updated_time=datetime.now())
-    leave = PreviousLeave(
-        application_id=application.application_id,
-        leave_start_date="2021-01-07",
-        leave_end_date="2021-01-14",
-        leave_reason_id=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_id,
-    )
-    application.previous_leaves = [leave]
+    leaves = [PreviousLeaveFactory.create(application_id=application.application_id,)]
+    application.previous_leaves = leaves
     test_db_session.add(application)
     test_db_session.commit()
     previous_leave_id = application.previous_leaves[0].previous_leave_id
@@ -4149,13 +4144,8 @@ def test_previous_leave_delete_other_application(client, user, auth_token, test_
 
 def test_previous_leave_delete_other_users_application(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(updated_time=datetime.now())
-    leave = PreviousLeave(
-        application_id=application.application_id,
-        leave_start_date="2021-01-07",
-        leave_end_date="2021-01-14",
-        leave_reason_id=PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_id,
-    )
-    application.previous_leaves = [leave]
+    leaves = [PreviousLeaveFactory.create(application_id=application.application_id,)]
+    application.previous_leaves = leaves
     test_db_session.add(application)
     test_db_session.commit()
     previous_leave_id = application.previous_leaves[0].previous_leave_id

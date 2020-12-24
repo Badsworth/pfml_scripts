@@ -30,11 +30,39 @@ jobs:
         run: make deps
 
       - name: run Bandit
+        id: bandit
         run: make lint-security
     
       - name: run Safety
+        id: safety
         run: make deps-check
-    # TODO: Figure out where to send alerts
-    # - name: Alert if failed
-    #   if: ${{ failure() }}
-    #   run: <send an email to ma-pfml-alerts@mass.gov or something>
+  alert-if-failed:
+    runs-on: ubuntu-latest
+    needs: [check]
+    if: needs.check.failure
+    steps:
+    - name: send low priority page if scans fail
+      uses: fjogeleit/http-request-action@master
+      with:
+        url: 'https://events.pagerduty.com/v2/enqueue'
+        method: 'POST'
+        contentType: 'application/json'
+        data: "{
+          \"routing_key\": \"6b02445c7be347beab083af7544913eb\", 
+          \"event_action\": \"trigger\",
+          \"dedup_key\":\"bandit-safety-scan\",
+          \"payload\": {
+            \"summary\": \"API Vulnerability Detected (Stage/Prod)\",
+            \"severity\": \"warning\",
+            \"source\": \"Bandit and Safety Scan\",
+            \"custom_details\": {
+              \"description\": \"New medium or critical vulnerability found in stage/prod for a dependency or code pattern.\nPlease see the GitHub Actions run failure for details.\"
+              }
+            },
+            \"links\": [
+              {
+              \"href\":\"https://github.com/EOLWD/pfml/actions/runs/${{ github.run_id }}\",
+              \"text\": \"GitHub Actions run\"
+              }
+            ]
+          }"

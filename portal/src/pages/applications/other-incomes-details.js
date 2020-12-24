@@ -192,31 +192,28 @@ export const OtherIncomeCard = (props) => {
         >
           {t("pages.claimsOtherIncomesDetails.amountLegend")}
         </FormLabel>
-        <div className="grid-row grid-gap">
-          <div className="mobile-lg:grid-col-6">
-            <InputText
-              {...getFunctionalInputProps(
-                `other_incomes[${index}].income_amount_dollars`
-              )}
-              inputMode="numeric"
-              label={t("pages.claimsOtherIncomesDetails.amountLabel")}
-              labelClassName="text-normal margin-top-05"
-              mask="currency"
-              smallLabel
-            />
-          </div>
-          <div className="mobile-lg:grid-col-6">
-            <Dropdown
-              {...getFunctionalInputProps(
-                `other_incomes[${index}].income_amount_frequency`
-              )}
-              choices={incomeFrequencyChoices}
-              label={t("pages.claimsOtherIncomesDetails.amountFrequencyLabel")}
-              labelClassName="text-normal margin-top-05"
-              smallLabel
-            />
-          </div>
-        </div>
+        <InputText
+          {...getFunctionalInputProps(
+            `other_incomes[${index}].income_amount_dollars`
+          )}
+          inputMode="numeric"
+          label={t("pages.claimsOtherIncomesDetails.amountLabel")}
+          labelClassName="text-normal margin-top-0"
+          formGroupClassName="margin-top-05"
+          mask="currency"
+          width="medium"
+          smallLabel
+        />
+        <Dropdown
+          {...getFunctionalInputProps(
+            `other_incomes[${index}].income_amount_frequency`
+          )}
+          choices={incomeFrequencyChoices}
+          label={t("pages.claimsOtherIncomesDetails.amountFrequencyLabel")}
+          labelClassName="text-normal margin-top-0"
+          formGroupClassName="margin-top-1"
+          smallLabel
+        />
       </Fieldset>
     </React.Fragment>
   );

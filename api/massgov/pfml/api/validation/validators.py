@@ -101,6 +101,13 @@ class CustomRequestBodyValidator(RequestBodyValidator):
         if self.is_null_value_valid and is_null(data):
             return None
 
+        if not self.is_null_value_valid and is_null(data):
+            errors = [
+                ValidationErrorDetail(field="", message="Missing request body", type="required")
+            ]
+
+            raise ValidationException(errors=errors, message="Request Validation Error", data=data)
+
         validate_schema_util(self, data, "Request Validation Error")
 
 

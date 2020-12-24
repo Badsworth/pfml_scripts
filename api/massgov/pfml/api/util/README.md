@@ -5,7 +5,6 @@
 ### Creating a New State Log
 ```py
 state_log = state_log_util.create_state_log(
-    flow=Flow.RETRIEVE_CPS_VENDOR_EXPORT,
     start_state=State.VERIFY_VENDOR_STATUS,
     associated_model=employee, # Can be an employee/payment/reference_file DB object
     db_session=db_session,
@@ -39,7 +38,6 @@ are waiting to be processed for a given state.
 state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
   associated_class=state_log_util.AssociatedClass.EMPLOYEE,
   end_state=State.COMPLETE,
-  flow=Flow.RETRIEVE.CPS_VENDOR_EXPORT,
   db_session=db_session
 )
 ```
@@ -52,7 +50,6 @@ or continue to fail in the same state due to some issue.
 stuck_state_logs = state_log_util.get_state_logs_stuck_in_state(
   associated_class=state_log_util.AssociatedClass.EMPLOYEE,
   end_state=State.COMPLETE,
-  flow=Flow.RETRIEVE.CPS_VENDOR_EXPORT,
   days_stuck=10,
   now=datetime_util.utcnow(), # Optional if you want everything compared against the exact same time
   db_session=db_session

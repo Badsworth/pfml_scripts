@@ -46,6 +46,14 @@ def test_request_response_validation():
         request_validation_error_response, "/user", "Request Validation Error"
     )
 
+    request_validation_error_response_no_body = client.post("/user").get_json()
+
+    assert request_validation_error_response_no_body.get("message") == "Request Validation Error"
+    assert (
+        request_validation_error_response_no_body.get("errors")[0]["message"]
+        == "Missing request body"
+    )
+
     response_validation_error_response = client.post(
         "/user-invalid-response", json=VALID_USER,
     ).get_json()

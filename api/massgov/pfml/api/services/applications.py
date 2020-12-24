@@ -715,10 +715,15 @@ def add_or_update_employer_benefits(
             db_existing_employer_benefit.benefit_type_id = EmployerBenefitType.get_id(
                 api_employer_benefit.benefit_type.value
             )
+        else:
+            db_existing_employer_benefit.benefit_type_id = None
+
         if api_employer_benefit.benefit_amount_frequency:
             db_existing_employer_benefit.benefit_amount_frequency_id = AmountFrequency.get_id(
                 api_employer_benefit.benefit_amount_frequency.value
             )
+        else:
+            db_existing_employer_benefit.benefit_amount_frequency_id = None
 
 
 def add_or_update_other_incomes(
@@ -782,10 +787,15 @@ def add_or_update_other_incomes(
             db_existing_other_income.income_type_id = OtherIncomeType.get_id(
                 api_other_income.income_type.value
             )
+        else:
+            db_existing_other_income.income_type_id = None
+
         if api_other_income.income_amount_frequency:
             db_existing_other_income.income_amount_frequency_id = AmountFrequency.get_id(
                 api_other_income.income_amount_frequency.value
             )
+        else:
+            db_existing_other_income.income_amount_frequency_id = None
 
 
 def add_or_update_previous_leaves(
@@ -847,6 +857,8 @@ def add_or_update_previous_leaves(
             db_previous_leave.leave_reason_id = PreviousLeaveQualifyingReason.get_id(
                 api_previous_leave.leave_reason.value
             )
+        else:
+            db_previous_leave.leave_reason_id = None
 
 
 def remove_employer_benefit(db_session: db.Session, employer_benefit: EmployerBenefit) -> None:

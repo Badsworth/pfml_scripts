@@ -4,8 +4,10 @@ import EmployerBenefit, {
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
+import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
 import Dropdown from "../Dropdown";
+import Heading from "../Heading";
 import InputDate from "../InputDate";
 import InputText from "../InputText";
 import PropTypes from "prop-types";
@@ -18,7 +20,7 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
+const AmendableEmployerBenefit = ({ appErrors, employerBenefit, onChange }) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(employerBenefit);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
@@ -103,6 +105,13 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
     return unknownFrequency.concat(frequencies);
   };
 
+  const startDateErrMsg = appErrors.fieldErrorMessage(
+    `employer_benefits[${employerBenefit.employer_benefit_id}].benefit_start_date`
+  );
+  const leaveDateErrMsg = appErrors.fieldErrorMessage(
+    `employer_benefits[${employerBenefit.employer_benefit_id}].benefit_end_date`
+  );
+
   return (
     <React.Fragment>
       <tr>
@@ -140,7 +149,7 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
                 onChange(employerBenefit);
               }}
             >
-              <p>{employerBenefit.benefit_type}</p>
+              <Heading level="4">{employerBenefit.benefit_type}</Heading>
               <InputDate
                 onChange={(e) =>
                   amendBenefit(
@@ -151,7 +160,8 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
                 }
                 value={amendment.benefit_start_date}
                 label={t("components.amendmentForm.question_benefitStartDate")}
-                name="benefit-start-date-amendment"
+                errorMsg={startDateErrMsg}
+                name={`employer_benefits[${employerBenefit.employer_benefit_id}].benefit_start_date`}
                 dayLabel={t("components.form.dateInputDayLabel")}
                 monthLabel={t("components.form.dateInputMonthLabel")}
                 yearLabel={t("components.form.dateInputYearLabel")}
@@ -167,7 +177,8 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
                 }
                 value={amendment.benefit_end_date}
                 label={t("components.amendmentForm.question_benefitEndDate")}
-                name="benefit-end-date-amendment"
+                errorMsg={leaveDateErrMsg}
+                name={`employer_benefits[${employerBenefit.employer_benefit_id}].benefit_end_date`}
                 dayLabel={t("components.form.dateInputDayLabel")}
                 monthLabel={t("components.form.dateInputMonthLabel")}
                 yearLabel={t("components.form.dateInputYearLabel")}
@@ -213,6 +224,7 @@ const AmendableEmployerBenefit = ({ employerBenefit, onChange }) => {
 };
 
 AmendableEmployerBenefit.propTypes = {
+  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
   employerBenefit: PropTypes.instanceOf(EmployerBenefit).isRequired,
   onChange: PropTypes.func.isRequired,
 };

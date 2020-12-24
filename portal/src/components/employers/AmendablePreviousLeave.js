@@ -1,10 +1,13 @@
+import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
+import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
+import Heading from "../Heading";
 import InputDate from "../InputDate";
-import PreviousLeave from "../../models/PreviousLeave";
 import PropTypes from "prop-types";
+import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
 
@@ -13,7 +16,7 @@ import { useTranslation } from "../../locales/i18n";
  * in the Leave Admin claim review page.
  */
 
-const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
+const AmendablePreviousLeave = ({ appErrors, leavePeriod, onChange }) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(leavePeriod);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
@@ -28,6 +31,13 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
     onChange({ previous_leave_id: id, [field]: value });
   };
 
+  const startDateErrMsg = appErrors.fieldErrorMessage(
+    `previous_leaves[${leavePeriod.previous_leave_id}].leave_start_date`
+  );
+  const leaveDateErrMsg = appErrors.fieldErrorMessage(
+    `previous_leaves[${leavePeriod.previous_leave_id}].leave_end_date`
+  );
+
   return (
     <React.Fragment>
       <tr>
@@ -37,6 +47,14 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
             leavePeriod.leave_end_date
           )}
         </th>
+        <td>
+          {t("pages.employersClaimsReview.previousLeaves.leaveReasonValue", {
+            context: findKeyByValue(
+              PreviousLeaveReason,
+              leavePeriod.leave_reason
+            ),
+          })}
+        </td>
         <td>
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
         </td>
@@ -54,6 +72,17 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
                 onChange(leavePeriod);
               }}
             >
+              <Heading level="4">
+                {t(
+                  "pages.employersClaimsReview.previousLeaves.leaveReasonValue",
+                  {
+                    context: findKeyByValue(
+                      PreviousLeaveReason,
+                      leavePeriod.leave_reason
+                    ),
+                  }
+                )}
+              </Heading>
               <InputDate
                 onChange={(e) =>
                   amendLeave(
@@ -64,7 +93,8 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
                 }
                 value={amendment.leave_start_date}
                 label={t("components.amendmentForm.question_leaveStartDate")}
-                name="leave-start-date-amendment"
+                errorMsg={startDateErrMsg}
+                name={`previous_leaves[${leavePeriod.previous_leave_id}].leave_start_date`}
                 dayLabel={t("components.form.dateInputDayLabel")}
                 monthLabel={t("components.form.dateInputMonthLabel")}
                 yearLabel={t("components.form.dateInputYearLabel")}
@@ -80,7 +110,8 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
                 }
                 value={amendment.leave_end_date}
                 label={t("components.amendmentForm.question_leaveEndDate")}
-                name="leave-end-date-amendment"
+                errorMsg={leaveDateErrMsg}
+                name={`previous_leaves[${leavePeriod.previous_leave_id}].leave_end_date`}
                 dayLabel={t("components.form.dateInputDayLabel")}
                 monthLabel={t("components.form.dateInputMonthLabel")}
                 yearLabel={t("components.form.dateInputYearLabel")}
@@ -95,6 +126,7 @@ const AmendablePreviousLeave = ({ leavePeriod, onChange }) => {
 };
 
 AmendablePreviousLeave.propTypes = {
+  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
   leavePeriod: PropTypes.instanceOf(PreviousLeave).isRequired,
   onChange: PropTypes.func.isRequired,
 };

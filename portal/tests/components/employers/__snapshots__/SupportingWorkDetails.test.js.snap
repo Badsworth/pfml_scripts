@@ -29,10 +29,11 @@ exports[`SupportingWorkDetails renders the component 1`] = `
         onCancel={[Function]}
       >
         <InputText
+          errorMsg={null}
           hint="If their schedule varies, tell us the average number of hours worked over the past 52 weeks."
           label="On average, how many hours does the employee work each week?"
           mask="hours"
-          name="supporting-work-detail-amendment"
+          name="hours_worked_per_week"
           onChange={[Function]}
           smallLabel={true}
           value={30}
