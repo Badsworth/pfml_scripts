@@ -128,8 +128,21 @@ jobs:
           aws-region: us-east-1
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
+          
+      - name: Check if the image exist in ECR
+        id: ecr-check
+        run: |
+          make ecr-login
+          aws ecr describe-images --repository-name=pfml-api --image-ids=imageTag=${{ needs.update-the-deploy-branch.outputs.commit_hash }} --region us-east-1
+        continue-on-error: true
+        working-directory: ${{ env.working-dir }}
+        
+      - name: Echo message
+        if: steps.ecr-check.outcome == 'success'
+        run: echo "Docker image already built; skipping rebuild."
 
       - name: Build and upload docker image artifact
+        if: steps.ecr-check.outcome == 'failure'
         run: make release
         working-directory: ${{ env.working-dir }}
 
