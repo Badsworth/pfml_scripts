@@ -1486,6 +1486,8 @@ const pages = {
     title: "$t(shared.dashboardTitles.create)",
   },
   employersAuthCreateAccount: {
+    alertHeading:
+      "Workers who wish to apply for paid leave should follow <create-account-link>these instructions</create-account-link>.",
     createAccountButton: "Create account",
     createClaimantAccount:
       "Need to apply for paid leave? <create-account-link>Create an account</create-account-link>",
@@ -1783,10 +1785,9 @@ const pages = {
     welcomeTitle: "Welcome",
   },
   index: {
-    claimantCardBody:
-      "You can now create an account and apply for Paid Family and Medical Leave.",
+    claimantCardBody: "You can now apply for Paid Family and Medical Leave.",
     claimantCardBodyPrelaunch:
-      "Later this month, you can create an account to apply for Paid Family and Medical Leave. <mass-benefits-timeline-link>Learn more about the paid leave benefit timeline.</mass-benefits-timeline-link>",
+      "Later this month, you can create an account to apply for Paid Family and Medical Leave. <mass-how-to-apply-link>Learn more about how to apply.</mass-how-to-apply-link>",
     claimantCreateAccountButton: "Create an account",
     claimantHeading: "Workers",
     createAccountHeading: "Create an account",
@@ -1799,7 +1800,7 @@ const pages = {
     title:
       "Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this <mass-paid-leave-link>new paid leave program</mass-paid-leave-link>.",
     title_prelaunch:
-      "Massachusetts employers: Register now so you can manage leave for your team.",
+      "Coming soon: Log into your Paid Family and Medical Leave account.",
   },
   userConsentToDataSharing: {
     agreementBody:

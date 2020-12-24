@@ -96,6 +96,8 @@ const routes = {
       feedbackClaimant: "https://www.mass.gov/paidleave-claimant-feedback",
       feedbackEmployer: "https://www.mass.gov/paidleave-employer-feedback",
       healthcareProviderForm: "https://www.mass.gov/hcp-form",
+      howToApplyPaidLeave:
+        "https://www.mass.gov/guides/what-is-paid-family-and-medical-leave#-how-can-i-apply-for-paid-leave-massachusetts-benefits",
       identityProof:
         "https://www.mass.gov/info-details/identity-proof-for-paid-leave",
       index:
