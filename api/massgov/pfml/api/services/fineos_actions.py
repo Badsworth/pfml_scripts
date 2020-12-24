@@ -15,7 +15,7 @@
 import datetime
 import mimetypes
 import uuid
-from typing import List, Optional, Set
+from typing import Dict, List, Optional, Set
 
 import phonenumbers
 
@@ -607,27 +607,99 @@ def build_bonding_date_reflexive_question(
 def get_occupation(
     fineos_client: massgov.pfml.fineos.AbstractFINEOSClient, user_id: str, application: Application
 ) -> massgov.pfml.fineos.models.customer_api.ReadCustomerOccupation:
-    return fineos_client.get_case_occupations(
-        user_id, str(application.fineos_notification_case_id)
-    )[0]
+    logger.info("getting occupation for absence_case %s", application.fineos_absence_id)
+    try:
+        return fineos_client.get_case_occupations(
+            user_id, str(application.fineos_notification_case_id)
+        )[0]
+    except Exception as error:
+        logger.exception(
+            "get_occuption failure",
+            extra={
+                "application.absence_case_id": application.fineos_absence_id,
+                "application.application_id": application.application_id,
+                "status": getattr(error, "response_status", None),
+            },
+        )
+        raise error
 
 
 def upsert_week_based_work_pattern(fineos_client, user_id, application, occupation_id):
     """Add or update work pattern on an in progress absence case"""
     if occupation_id is None:
-        raise ValueError
+        raise ValueError("occupation_id is None")
+
+    week_based_work_pattern = build_week_based_work_pattern(application)
+    log_attributes = {
+        "application.absence_case_id": application.fineos_absence_id,
+        "application.application_id": application.application_id,
+        "occupation_id": occupation_id,
+    }
+    logger.info(
+        "upserting work_pattern for absence case %s",
+        application.fineos_absence_id,
+        extra=log_attributes,
+    )
 
     try:
-        week_based_work_pattern = build_week_based_work_pattern(application)
-        fineos_client.add_week_based_work_pattern(user_id, occupation_id, week_based_work_pattern)
+        add_week_based_work_pattern(
+            fineos_client, user_id, occupation_id, week_based_work_pattern, log_attributes
+        )
+        logger.info(
+            "added work_pattern successfully for absence case %s",
+            application.fineos_absence_id,
+            extra=log_attributes,
+        )
     except massgov.pfml.fineos.exception.FINEOSClientBadResponse as error:
         # FINEOS returns 403 when attempting to add a work pattern for an occupation when one already exists.
         if error.response_status == 403:
-            fineos_client.update_week_based_work_pattern(
-                user_id, occupation_id, week_based_work_pattern
+            update_week_based_work_pattern(
+                fineos_client, user_id, occupation_id, week_based_work_pattern, log_attributes
+            )
+            logger.info(
+                "updated work_pattern successfully for absence case %s",
+                application.fineos_absence_id,
+                extra=log_attributes,
             )
         else:
             raise error
+
+
+def add_week_based_work_pattern(
+    fineos_client: massgov.pfml.fineos.AbstractFINEOSClient,
+    user_id: str,
+    occupation_id: str,
+    week_based_work_pattern: massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern,
+    log_attributes: Optional[Dict] = None,
+) -> None:
+    try:
+        fineos_client.add_week_based_work_pattern(user_id, occupation_id, week_based_work_pattern)
+    except Exception as error:
+        extra = {} if log_attributes is None else log_attributes
+        extra.update({"status": getattr(error, "response_status", None)})
+        logger.exception(
+            "add_week_based_work_pattern failure", extra=extra,
+        )
+        raise error
+
+
+def update_week_based_work_pattern(
+    fineos_client: massgov.pfml.fineos.AbstractFINEOSClient,
+    user_id: str,
+    occupation_id: str,
+    week_based_work_pattern: massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern,
+    log_attributes: Optional[Dict] = None,
+) -> None:
+    try:
+        fineos_client.update_week_based_work_pattern(
+            user_id, occupation_id, week_based_work_pattern
+        )
+    except Exception as error:
+        extra = {} if log_attributes is None else log_attributes
+        extra.update({"status": getattr(error, "response_status", None)})
+        logger.exception(
+            "update_week_based_work_pattern failure", extra=extra,
+        )
 
 
 def update_occupation_details(

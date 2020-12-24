@@ -18,7 +18,7 @@ const allowedFileTypes = [
 ];
 
 // Max file size in bytes
-const maximumFileSize = 5000000;
+const maximumFileSize = 3500000;
 
 // Exclusion reasons reasons
 const disallowedReasons = {

@@ -712,4 +712,10 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
         else None
     )
 
+    result["work_pattern.work_pattern_type"] = (
+        application.work_pattern.work_pattern_type.work_pattern_type_description
+        if application.work_pattern and application.work_pattern.work_pattern_type
+        else None
+    )
+
     return result

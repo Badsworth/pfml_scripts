@@ -443,9 +443,9 @@ const errors = {
       "This application has already been reviewed.",
   },
   invalidFile_size:
-    "We could not upload: {{disallowedFileNames}}. Files must be smaller than 5 megabytes.",
+    "We could not upload: {{disallowedFileNames}}. Files must be smaller than 3.5 MB.",
   invalidFile_sizeAndType:
-    "We could not upload: {{disallowedFileNames}}. Choose a PDF or image file that is smaller than 5 megabytes.",
+    "We could not upload: {{disallowedFileNames}}. Choose a PDF or image file that is smaller than 3.5 MB.",
   invalidFile_type:
     "We could not upload: {{disallowedFileNames}}. Choose a PDF or image file.",
   network:
@@ -1479,9 +1479,6 @@ const pages = {
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     leadBackground:
       "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for family leave for bonding with a child, with more benefits available in 2021.",
-    // TODO (EMPLOYER-661): Remove string after December 15
-    leadBackground_prelaunch:
-      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers will be able to apply for family leave for bonding with a child soon, with more benefits available in 2021.",
     leadMultipleCompanies:
       "If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.",
     nextStep: "We’ll send you a 6-digit code to verify your email address.",
@@ -1682,6 +1679,14 @@ const pages = {
       explanation:
         "If your employee took any paid or unpaid leave for a qualifying reason since January 1, 2021, it may <calculate-reductions-link>affect their benefit amount</calculate-reductions-link>.",
       header: "Past leave",
+      leaveReasonValue_activeDutyFamily:
+        "$t(shared.leaveReasonActiveDutyFamily)",
+      leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+      leaveReasonValue_care: "$t(shared.leaveReasonMedical)",
+      leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+      leaveReasonValue_pregnancy: "$t(shared.leaveReasonBonding)",
+      leaveReasonValue_serviceMemberFamily:
+        "$t(shared.leaveReasonServiceMemberFamily)",
       qualifyingReasonContent:
         "An employee or contractor can take paid or unpaid leave to:",
       qualifyingReason_activeDuty:
@@ -1695,6 +1700,7 @@ const pages = {
       qualifyingReason_manageHealth:
         "Manage a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>, including illness, injury, or pregnancy",
       tableHeader_dateRange: "Date range",
+      tableHeader_leaveType: "Leave type",
     },
     submitButton: "Submit",
     supportingWorkDetails: {
@@ -1755,9 +1761,6 @@ const pages = {
     viewFormsTitle: "View forms and notices online",
     welcomeBody:
       "Thanks for joining the paid leave program. Massachusetts workers can now apply for family leave for bonding with a child, with more benefits available in 2021.",
-    // TODO (EMPLOYER-661): Remove string after December 15
-    welcomeBody_prelaunch:
-      "Thanks for joining the paid leave program. There’s no further action for you to take now, but you’ll be able to review applications online soon.",
     welcomeTitle: "Welcome",
   },
   index: {
@@ -1921,7 +1924,7 @@ const components = {
   fileUploadDetails: {
     label: "Some tips for uploading documents and images",
     sizeNotice:
-      "Files should be 5 MB or smaller. If your file is larger than 5 MB, try resizing it or splitting it into separate files.",
+      "Files should be 3.5 MB or smaller. If your file is larger than 3.5 MB, try resizing it or splitting it into separate files.",
     tips: [
       {
         listHeading: "This website only accepts:",

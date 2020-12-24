@@ -111,7 +111,8 @@ const routes = {
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-",
       reductionsOverview:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions",
-      taxLiability: "https://www.mass.gov/pfml-tax-liability",
+      taxLiability:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-benefit-payment-process",
     },
     puertoRicanBirthCertificate: "https://prfaa.pr.gov/faqs",
     workVisa:

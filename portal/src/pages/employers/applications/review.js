@@ -33,8 +33,12 @@ export const Review = (props) => {
     query: { absence_id: absenceId },
   } = props;
   const {
+    appErrors,
     employers: { claim },
   } = appLogic;
+  const { t } = useTranslation();
+  // TODO (EMPLOYER-718): Remove feature flag
+  const showPreviousLeaves = isFeatureEnabled("employerShowPreviousLeaves");
 
   // explicitly check for false as opposed to falsy values.
   // temporarily allows the redirect behavior to work even
@@ -45,10 +49,6 @@ export const Review = (props) => {
     });
   }
 
-  const { t } = useTranslation();
-  const shouldShowPreviousLeaves = isFeatureEnabled(
-    "employerShowPreviousLeaves"
-  );
   const [formState, setFormState] = useState({
     employerBenefits: [],
     previousLeaves: [],
@@ -67,13 +67,16 @@ export const Review = (props) => {
 
   useEffect(() => {
     // Generate id based on index for employer benefit, previous leave (id is not provided by BE)
+    // Note: these indices are used to properly display inline errors and amend employer benefits and
+    // previous leaves. If employer_benefit_id and previous_leave_id no longer match the indices, then
+    // the functionality described above will need to be reimplemented.
     const indexedEmployerBenefits = claim.employer_benefits.map(
       (benefit, index) =>
-        new EmployerBenefit({ employer_benefit_id: index, ...benefit })
+        new EmployerBenefit({ ...benefit, employer_benefit_id: index })
     );
     const indexedPreviousLeaves = claim.previous_leaves.map(
       (leave, index) =>
-        new PreviousLeave({ previous_leave_id: index, ...leave })
+        new PreviousLeave({ ...leave, previous_leave_id: index })
     );
     if (claim) {
       updateFields({
@@ -128,7 +131,7 @@ export const Review = (props) => {
 
     const amendedHours = formState.amendedHours;
     const previous_leaves = formState.amendedLeaves.map((leave) =>
-      pick(leave, ["leave_end_date", "leave_start_date"])
+      pick(leave, ["leave_end_date", "leave_reason", "leave_start_date"])
     );
     const employer_benefits = formState.amendedBenefits.map((benefit) =>
       pick(benefit, [
@@ -186,18 +189,21 @@ export const Review = (props) => {
       <LeaveSchedule appLogic={appLogic} claim={claim} />
       <form id="employer-review-form" onSubmit={handleSubmit}>
         <SupportingWorkDetails
+          appErrors={appErrors}
           hoursWorkedPerWeek={claim.hours_worked_per_week}
           onChange={handleHoursWorkedChange}
         />
         <EmployerBenefits
+          appErrors={appErrors}
           employerBenefits={formState.employerBenefits}
           onChange={handleBenefitInputChange}
         />
-        {/* TODO (EMPLOYER-656): Show previous leaves */}
-        {shouldShowPreviousLeaves && (
+        {/* TODO (EMPLOYER-718): Remove feature flag  */}
+        {showPreviousLeaves && (
           <PreviousLeaves
-            previousLeaves={formState.previousLeaves}
+            appErrors={appErrors}
             onChange={handlePreviousLeavesChange}
+            previousLeaves={formState.previousLeaves}
           />
         )}
         <FraudReport onChange={handleFraudInputChange} />

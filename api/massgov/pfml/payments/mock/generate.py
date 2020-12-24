@@ -64,7 +64,7 @@ class PaymentScenariosGenerator:
             self.db_session.query(Employee)
             .join(TaxIdentifier)
             .order_by(TaxIdentifier.tax_identifier)
-            .limit(500)
+            .limit(1000)
             .all()
         )
 
@@ -83,15 +83,20 @@ class PaymentScenariosGenerator:
         if employee.mailing_address is None:
             employee.mailing_address = massgov.pfml.db.models.factories.AddressFactory()
             self.db_session.commit()
-        if employee.payment_method is None or employee.eft is None:
-            eft = EFT(
-                routing_nbr="345345345",
-                account_nbr="000111222333",
-                bank_account_type_id=BankAccountType.SAVINGS.bank_account_type_id,
-            )
-            employee.eft = eft
-            employee.payment_method_id = PaymentMethod.ACH.payment_method_id
+        if employee.payment_method is None:
+            if int(employee.tax_identifier.tax_identifier) % 3 == 0:
+                employee.payment_method_id = PaymentMethod.CHECK.payment_method_id
+            else:
+                if employee.eft is None:
+                    eft = EFT(
+                        routing_nbr="345345345",
+                        account_nbr="000111222333",
+                        bank_account_type_id=BankAccountType.SAVINGS.bank_account_type_id,
+                    )
+                    employee.eft = eft
+                employee.payment_method_id = PaymentMethod.ACH.payment_method_id
             self.db_session.commit()
+            self.db_session.refresh(employee)  # To refresh employee.payment_method relationship
 
         if scenario == 1:
             # State = ...

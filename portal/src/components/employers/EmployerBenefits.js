@@ -1,4 +1,5 @@
 import AmendableEmployerBenefit from "./AmendableEmployerBenefit";
+import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import EmployerBenefit from "../../models/EmployerBenefit";
 import PropTypes from "prop-types";
 import React from "react";
@@ -15,7 +16,7 @@ import { useTranslation } from "../../locales/i18n";
 
 const EmployerBenefits = (props) => {
   const { t } = useTranslation();
-  const { employerBenefits, onChange } = props;
+  const { appErrors, employerBenefits, onChange } = props;
 
   return (
     <React.Fragment>
@@ -59,6 +60,7 @@ const EmployerBenefits = (props) => {
           {employerBenefits.length ? (
             employerBenefits.map((employerBenefit) => (
               <AmendableEmployerBenefit
+                appErrors={appErrors}
                 employerBenefit={employerBenefit}
                 key={employerBenefit.employer_benefit_id}
                 onChange={onChange}
@@ -82,6 +84,7 @@ const EmployerBenefits = (props) => {
 };
 
 EmployerBenefits.propTypes = {
+  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
   employerBenefits: PropTypes.arrayOf(PropTypes.instanceOf(EmployerBenefit)),
   onChange: PropTypes.func.isRequired,
 };

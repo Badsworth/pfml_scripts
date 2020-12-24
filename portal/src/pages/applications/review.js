@@ -493,9 +493,11 @@ export const Review = (props) => {
       )}
 
       {/* OTHER LEAVE */}
-      {/* TODO (CP-1346): Remove condition once "Other leave" step is out from behind feature flag */}
-      {isFeatureEnabled("claimantShowOtherLeaveStep") && (
-        <React.Fragment>
+      {/* Conditionally showing this section since it was added after launch, so some claims may not have this section yet. */}
+      {(get(claim, "has_employer_benefits") !== null ||
+        get(claim, "has_other_incomes") !== null ||
+        get(claim, "has_previous_leaves") !== null) && (
+        <div data-test="other-leave">
           <ReviewHeading
             editHref={getStepEditHref(ClaimSteps.otherLeave)}
             editText={t("pages.claimsReview.editLink")}
@@ -557,7 +559,7 @@ export const Review = (props) => {
               reviewRowLevel={reviewRowLevel}
             />
           )}
-        </React.Fragment>
+        </div>
       )}
 
       {usePartOneReview ? (
@@ -721,13 +723,9 @@ export const EmployerBenefitList = (props) => {
       count: index + 1,
     });
 
-    // TODO (CP-567): remove this ternary operator once we begin saving other leave to
-    // the API. We'll always have a type then
-    const type = entry.benefit_type
-      ? t("pages.claimsReview.employerBenefitType", {
-          context: findKeyByValue(EmployerBenefitType, entry.benefit_type),
-        })
-      : null;
+    const type = t("pages.claimsReview.employerBenefitType", {
+      context: findKeyByValue(EmployerBenefitType, entry.benefit_type),
+    });
 
     const dates = formatDateRange(
       entry.benefit_start_date,
@@ -775,13 +773,9 @@ export const OtherIncomeList = (props) => {
       count: index + 1,
     });
 
-    // TODO (CP-567): remove this ternary operator once we begin saving other leave to
-    // the API. We'll always have a type then
-    const type = entry.income_type
-      ? t("pages.claimsReview.otherIncomeType", {
-          context: findKeyByValue(OtherIncomeType, entry.income_type),
-        })
-      : null;
+    const type = t("pages.claimsReview.otherIncomeType", {
+      context: findKeyByValue(OtherIncomeType, entry.income_type),
+    });
 
     const dates = formatDateRange(
       entry.income_start_date,
@@ -879,14 +873,8 @@ export const OtherLeaveEntry = (props) => {
           <br />
         </React.Fragment>
       )}
-      {/* TODO (CP-567): once we're saving other leave to the api then we can remove
-          the conditional rendering here and instead always render the date string */}
-      {dates && (
-        <React.Fragment>
-          {dates}
-          <br />
-        </React.Fragment>
-      )}
+      {dates}
+      <br />
       {amount}
     </ReviewRow>
   );

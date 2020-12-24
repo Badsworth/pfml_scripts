@@ -1,26 +1,39 @@
+import PreviousLeave, {
+  PreviousLeaveReason,
+} from "../../../src/models/PreviousLeave";
 import AmendButton from "../../../src/components/employers/AmendButton";
 import AmendablePreviousLeave from "../../../src/components/employers/AmendablePreviousLeave";
 import AmendmentForm from "../../../src/components/employers/AmendmentForm";
 import Button from "../../../src/components/Button";
 import InputDate from "../../../src/components/InputDate";
-import PreviousLeave from "../../../src/models/PreviousLeave";
 import React from "react";
 import { shallow } from "enzyme";
+import { testHook } from "../../test-utils";
+import useAppLogic from "../../../src/hooks/useAppLogic";
 
 describe("AmendablePreviousLeave", () => {
   const leavePeriod = new PreviousLeave({
     leave_start_date: "2020-03-01",
     leave_end_date: "2020-03-06",
-    previous_leave_id: 1,
+    leave_reason: PreviousLeaveReason.bonding,
+    previous_leave_id: 0,
   });
-  const props = {
-    onChange: jest.fn(),
-    leavePeriod,
-  };
-  let wrapper;
+  const onChange = jest.fn();
+
+  let appLogic, wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<AmendablePreviousLeave {...props} />);
+    testHook(() => {
+      appLogic = useAppLogic();
+    });
+
+    wrapper = shallow(
+      <AmendablePreviousLeave
+        appErrors={appLogic.appErrors}
+        leavePeriod={leavePeriod}
+        onChange={onChange}
+      />
+    );
   });
 
   it("renders the component", () => {
@@ -44,7 +57,7 @@ describe("AmendablePreviousLeave", () => {
       .last()
       .simulate("change", { target: { value: "2020-10-20" } });
 
-    expect(props.onChange).toHaveBeenCalledTimes(2);
+    expect(onChange).toHaveBeenCalledTimes(2);
     expect(wrapper.find(InputDate).first().prop("value")).toEqual("2020-10-10");
     expect(wrapper.find(InputDate).last().prop("value")).toEqual("2020-10-20");
   });

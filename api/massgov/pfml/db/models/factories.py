@@ -418,6 +418,57 @@ class ReducedScheduleLeavePeriodFactory(BaseFactory):
     wednesday_off_minutes = 90
 
 
+class EmployerBenefitFactory(BaseFactory):
+    class Meta:
+        model = application_models.EmployerBenefit
+
+    # application_id must be passed into the create() call
+    benefit_type_id = (
+        application_models.EmployerBenefitType.ACCRUED_PAID_LEAVE.employer_benefit_type_id
+    )
+    benefit_amount_dollars = factory.Faker("random_int")
+    benefit_amount_frequency_id = application_models.AmountFrequency.PER_MONTH.amount_frequency_id
+    benefit_start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 3, 1), date_end=date(2021, 3, 15)
+    )
+    benefit_end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 3, 16), date_end=date(2021, 3, 28)
+    )
+
+
+class OtherIncomeFactory(BaseFactory):
+    class Meta:
+        model = application_models.OtherIncome
+
+    # application_id must be passed into the create() call
+    income_type_id = application_models.OtherIncomeType.SSDI.other_income_type_id
+    income_amount_dollars = factory.Faker("random_int")
+    income_amount_frequency_id = application_models.AmountFrequency.PER_MONTH.amount_frequency_id
+    income_start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 3, 1), date_end=date(2021, 3, 15)
+    )
+    income_end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 3, 16), date_end=date(2021, 3, 28)
+    )
+
+
+class PreviousLeaveFactory(BaseFactory):
+    class Meta:
+        model = application_models.PreviousLeave
+
+    # application_id must be passed into the create() call
+    leave_reason_id = (
+        application_models.PreviousLeaveQualifyingReason.PREGNANCY_MATERNITY.previous_leave_qualifying_reason_id
+    )
+    is_for_current_employer = factory.Faker("boolean")
+    leave_start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 3, 1), date_end=date(2021, 3, 15)
+    )
+    leave_end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 3, 16), date_end=date(2021, 3, 28)
+    )
+
+
 class StateMetricFactory(BaseFactory):
     class Meta:
         model = application_models.StateMetric

@@ -70,3 +70,9 @@ resource "pagerduty_service_integration" "cloudwatch_low_priority_notification" 
   service = pagerduty_service.mass_pfml_api_low_priority.id
   vendor  = data.pagerduty_vendor.cloudwatch.id
 }
+# Integration for Bandit and Safety
+resource "pagerduty_service_integration" "security_scan_notification_channel" {
+  name    = "Daily Security Scan for Bandit and Safety"
+  service = pagerduty_service.mass_pfml_api_low_priority.id
+  type    = "events_api_v2_inbound_integration"
+}

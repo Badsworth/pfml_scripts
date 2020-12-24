@@ -53,6 +53,12 @@ exports[`EmployerBenefits renders the component 1`] = `
     </thead>
     <tbody>
       <AmendableEmployerBenefit
+        appErrors={
+          AppErrorInfoCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          }
+        }
         employerBenefit={
           EmployerBenefit {
             "benefit_amount_dollars": 1000,
@@ -60,10 +66,10 @@ exports[`EmployerBenefits renders the component 1`] = `
             "benefit_end_date": "2021-03-01",
             "benefit_start_date": "2021-02-01",
             "benefit_type": "Short-term disability insurance",
-            "employer_benefit_id": null,
+            "employer_benefit_id": 0,
           }
         }
-        key="null"
+        key="0"
         onChange={[Function]}
       />
     </tbody>

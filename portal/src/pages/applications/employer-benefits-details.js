@@ -30,7 +30,7 @@ export const fields = [
   "claim.employer_benefits[*].benefit_type",
 ];
 
-export const EmployerBenefitDetails = (props) => {
+export const EmployerBenefitsDetails = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -115,7 +115,7 @@ export const EmployerBenefitDetails = (props) => {
   );
 };
 
-EmployerBenefitDetails.propTypes = {
+EmployerBenefitsDetails.propTypes = {
   claim: PropTypes.instanceOf(Claim),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
@@ -197,33 +197,28 @@ export const EmployerBenefitCard = (props) => {
         >
           {t("pages.claimsEmployerBenefitDetails.amountLegend")}
         </FormLabel>
-        <div className="grid-row grid-gap">
-          <div className="mobile-lg:grid-col-6">
-            <InputText
-              {...getFunctionalInputProps(
-                `employer_benefits[${index}].benefit_amount_dollars`
-              )}
-              inputMode="numeric"
-              label={t("pages.claimsEmployerBenefitDetails.amountLabel")}
-              labelClassName="text-normal margin-top-05"
-              mask="currency"
-              smallLabel
-            />
-          </div>
-          <div className="mobile-lg:grid-col-6">
-            <Dropdown
-              {...getFunctionalInputProps(
-                `employer_benefits[${index}].benefit_amount_frequency`
-              )}
-              choices={benefitFrequencyChoices}
-              label={t(
-                "pages.claimsEmployerBenefitDetails.amountFrequencyLabel"
-              )}
-              labelClassName="text-normal margin-top-05"
-              smallLabel
-            />
-          </div>
-        </div>
+        <InputText
+          {...getFunctionalInputProps(
+            `employer_benefits[${index}].benefit_amount_dollars`
+          )}
+          inputMode="numeric"
+          label={t("pages.claimsEmployerBenefitDetails.amountLabel")}
+          labelClassName="text-normal margin-top-0"
+          formGroupClassName="margin-top-05"
+          mask="currency"
+          width="medium"
+          smallLabel
+        />
+        <Dropdown
+          {...getFunctionalInputProps(
+            `employer_benefits[${index}].benefit_amount_frequency`
+          )}
+          choices={benefitFrequencyChoices}
+          label={t("pages.claimsEmployerBenefitDetails.amountFrequencyLabel")}
+          labelClassName="text-normal margin-top-0"
+          formGroupClassName="margin-top-1"
+          smallLabel
+        />
       </Fieldset>
     </React.Fragment>
   );
@@ -235,4 +230,4 @@ EmployerBenefitCard.propTypes = {
   getFunctionalInputProps: PropTypes.func.isRequired,
 };
 
-export default withClaim(EmployerBenefitDetails);
+export default withClaim(EmployerBenefitsDetails);

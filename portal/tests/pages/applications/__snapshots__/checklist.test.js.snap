@@ -283,7 +283,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       editable={true}
       key="verifyId"
       number={1}
-      status="not_started"
+      status="completed"
       stepHref="/applications/name?claim_id=mock_application_id"
       title="Verify your identity"
     >
@@ -314,7 +314,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       editable={true}
       key="employerInformation"
       number={2}
-      status="disabled"
+      status="completed"
       stepHref="/applications/employment-status?claim_id=mock_application_id"
       title="Enter employment information"
     >
@@ -345,7 +345,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       editable={true}
       key="leaveDetails"
       number={3}
-      status="disabled"
+      status="completed"
       stepHref="/applications/leave-reason?claim_id=mock_application_id"
       title="Enter leave details"
     >
@@ -376,7 +376,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       editable={true}
       key="reviewAndConfirm"
       number={4}
-      status="disabled"
+      status="not_started"
       stepHref="/applications/review?claim_id=mock_application_id"
       title="Review and confirm"
     >

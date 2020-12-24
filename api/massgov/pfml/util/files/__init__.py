@@ -10,6 +10,7 @@ from typing import List, Optional
 from urllib.parse import urlparse
 
 import boto3
+import botocore
 import ebcdic  # noqa: F401
 import paramiko
 import smart_open
@@ -264,7 +265,9 @@ def read_file(path, mode="r", encoding=None):
 
 
 def write_file(path, mode="w", encoding=None):
-    return smart_open.open(path, mode, encoding=encoding)
+    config = botocore.client.Config(retries={"max_attempts": 10, "mode": "standard"})
+    params = {"resource_kwargs": {"config": config}}
+    return smart_open.open(path, mode, encoding=encoding, transport_params=params)
 
 
 def read_file_lines(path, mode="r", encoding=None):

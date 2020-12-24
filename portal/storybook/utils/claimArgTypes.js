@@ -50,6 +50,13 @@ export const claimArgTypes = {
       options: ["continuous", "reduced", "intermittent", "hybrid"],
     },
   },
+  "Other incomes": {
+    defaultValue: "None",
+    control: {
+      type: "radio",
+      options: ["None", "Unemployment income"],
+    },
+  },
   "Previous leave": {
     defaultValue: "None",
     control: {
@@ -132,6 +139,15 @@ export function createClaimFromArgs(args) {
       break;
     case "hybrid":
       claim = claim.continuous().reducedSchedule();
+      break;
+  }
+
+  switch (args["Other incomes"]) {
+    case "Unemployment income":
+      claim = claim.otherIncomeFromUnemployment();
+      break;
+    default:
+      claim = claim.noOtherIncomes();
       break;
   }
 

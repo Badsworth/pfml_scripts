@@ -7,7 +7,10 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import pytz
 
+import massgov.pfml.util.logging as logging
 from massgov.pfml.db.lookup import LookupTable
+
+logger = logging.get_logger(__package__)
 
 
 class Constants:

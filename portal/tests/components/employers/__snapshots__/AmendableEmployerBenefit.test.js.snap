@@ -31,14 +31,17 @@ exports[`AmendableEmployerBenefit renders the component 1`] = `
         <AmendmentForm
           onCancel={[Function]}
         >
-          <p>
+          <Heading
+            level="4"
+          >
             Short-term disability insurance
-          </p>
+          </Heading>
           <InputDate
             dayLabel="Day"
+            errorMsg={null}
             label="When will the employee start using the benefit?"
             monthLabel="Month"
-            name="benefit-start-date-amendment"
+            name="employer_benefits[0].benefit_start_date"
             onChange={[Function]}
             smallLabel={true}
             value="2021-02-01"
@@ -46,9 +49,10 @@ exports[`AmendableEmployerBenefit renders the component 1`] = `
           />
           <InputDate
             dayLabel="Day"
+            errorMsg={null}
             label="When will the employee stop using the benefit?"
             monthLabel="Month"
-            name="benefit-end-date-amendment"
+            name="employer_benefits[0].benefit_end_date"
             onChange={[Function]}
             smallLabel={true}
             value="2021-03-01"

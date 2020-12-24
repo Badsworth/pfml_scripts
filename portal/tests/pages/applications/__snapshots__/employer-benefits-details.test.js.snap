@@ -68,56 +68,47 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
     >
       How much will you receive?
     </FormLabel>
-    <div
-      className="grid-row grid-gap"
-    >
-      <div
-        className="mobile-lg:grid-col-6"
-      >
-        <InputText
-          inputMode="numeric"
-          label="Amount"
-          labelClassName="text-normal margin-top-05"
-          mask="currency"
-          name="employer_benefits[0].benefit_amount_dollars"
-          onChange={[Function]}
-          smallLabel={true}
-          value=""
-        />
-      </div>
-      <div
-        className="mobile-lg:grid-col-6"
-      >
-        <Dropdown
-          choices={
-            Array [
-              Object {
-                "label": "Daily",
-                "value": "Per Day",
-              },
-              Object {
-                "label": "Weekly",
-                "value": "Per Week",
-              },
-              Object {
-                "label": "Monthly",
-                "value": "Per Month",
-              },
-              Object {
-                "label": "All at once",
-                "value": "In Total",
-              },
-            ]
-          }
-          label="Frequency"
-          labelClassName="text-normal margin-top-05"
-          name="employer_benefits[0].benefit_amount_frequency"
-          onChange={[Function]}
-          smallLabel={true}
-          value=""
-        />
-      </div>
-    </div>
+    <InputText
+      formGroupClassName="margin-top-05"
+      inputMode="numeric"
+      label="Amount"
+      labelClassName="text-normal margin-top-0"
+      mask="currency"
+      name="employer_benefits[0].benefit_amount_dollars"
+      onChange={[Function]}
+      smallLabel={true}
+      value=""
+      width="medium"
+    />
+    <Dropdown
+      choices={
+        Array [
+          Object {
+            "label": "Daily",
+            "value": "Per Day",
+          },
+          Object {
+            "label": "Weekly",
+            "value": "Per Week",
+          },
+          Object {
+            "label": "Monthly",
+            "value": "Per Month",
+          },
+          Object {
+            "label": "All at once",
+            "value": "In Total",
+          },
+        ]
+      }
+      formGroupClassName="margin-top-1"
+      label="Frequency"
+      labelClassName="text-normal margin-top-0"
+      name="employer_benefits[0].benefit_amount_frequency"
+      onChange={[Function]}
+      smallLabel={true}
+      value=""
+    />
   </Fieldset>
 </Fragment>
 `;

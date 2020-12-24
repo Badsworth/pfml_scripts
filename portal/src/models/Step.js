@@ -139,40 +139,8 @@ export default class Step extends BaseModel {
 
   get isComplete() {
     if (this.completeCond) return this.completeCond(this.context);
-    // TODO (CP-625): remove once api returns validations
-    // <WorkAround>
-    if (!this.warnings) {
-      return this.fields.every((field) => {
-        // Ignore optional and conditional questions for now,
-        // so that we can show a "Completed" checklist.
-        // Fields names can be partial, to ignore an array or object of fields.
-        const ignoredField = [
-          // TODO (CP-567): Remove reduction fields once the Reductions step utilizes the warnings
-          "claim.employer_benefits",
-          "claim.other_incomes",
-          "claim.previous_leaves",
-        ].some((ignoredFieldName) => field.includes(ignoredFieldName));
 
-        const hasValue = fieldHasValue(field, this.context);
-
-        if (
-          process.env.NODE_ENV === "development" &&
-          !hasValue &&
-          !ignoredField
-        ) {
-          // eslint-disable-next-line no-console
-          console.log(
-            `${field} missing value, received`,
-            get(this.context, field)
-          );
-        }
-
-        return hasValue || ignoredField;
-      });
-    }
-    // </WorkAround>
-
-    const issues = getRelevantIssues([], this.warnings, this.pages);
+    const issues = getRelevantIssues([], this.warnings || [], this.pages);
 
     if (process.env.NODE_ENV === "development" && issues.length) {
       // eslint-disable-next-line no-console
@@ -270,9 +238,7 @@ export default class Step extends BaseModel {
       pages: pagesByStep[ClaimSteps.otherLeave],
       dependsOn: [verifyId, leaveDetails, employerInformation],
       context,
-      // TODO (CP-567): Pass in warnings when at least one of this step's required fields are
-      // integrated with the API and has a validation rule
-      // warnings,
+      warnings,
     });
 
     const reviewAndConfirm = new Step({

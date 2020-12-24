@@ -38,11 +38,17 @@ data "aws_iam_role" "ecs_tasks_execution_role" {
   name = "${local.app_name}-${var.environment_name}-ecs-tasks-execution-role"
 }
 
+data "aws_iam_role" "fineos_import_employee_updates_task_role" {
+  name = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-import-employee-updates"
+}
+
+data "aws_iam_role" "fineos_eligibility_feed_export_task_role" {
+  name = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-eligibility-feed-export"
+}
 resource "aws_iam_role" "step_functions_execution" {
   name               = "${local.app_name}-${var.environment_name}-step-functions"
   assume_role_policy = data.aws_iam_policy_document.step_functions_execution.json
 }
-
 data "aws_iam_policy_document" "step_functions_execution" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -79,7 +85,9 @@ data "aws_iam_policy_document" "iam_policy_step_functions" {
       data.aws_iam_role.dor_import_task_role.arn,
       data.aws_iam_role.dor_import_execution_role.arn,
       data.aws_iam_role.ecs_tasks_task_role.arn,
-      data.aws_iam_role.ecs_tasks_execution_role.arn
+      data.aws_iam_role.ecs_tasks_execution_role.arn,
+      data.aws_iam_role.fineos_import_employee_updates_task_role.arn,
+      data.aws_iam_role.fineos_eligibility_feed_export_task_role.arn
     ]
   }
 

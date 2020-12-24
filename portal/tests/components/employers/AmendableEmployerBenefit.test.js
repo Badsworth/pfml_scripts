@@ -11,6 +11,8 @@ import InputDate from "../../../src/components/InputDate";
 import InputText from "../../../src/components/InputText";
 import React from "react";
 import { shallow } from "enzyme";
+import { testHook } from "../../test-utils";
+import useAppLogic from "../../../src/hooks/useAppLogic";
 
 describe("AmendableEmployerBenefit", () => {
   const shortTermDisability = new EmployerBenefit({
@@ -19,16 +21,25 @@ describe("AmendableEmployerBenefit", () => {
     benefit_end_date: "2021-03-01",
     benefit_start_date: "2021-02-01",
     benefit_type: EmployerBenefitType.shortTermDisability,
-    employer_benefit_id: 1,
+    employer_benefit_id: 0,
   });
-  const props = {
-    onChange: jest.fn(),
-    employerBenefit: shortTermDisability,
-  };
-  let wrapper;
+  const onChange = jest.fn();
+  const employerBenefit = shortTermDisability;
+
+  let appLogic, wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<AmendableEmployerBenefit {...props} />);
+    testHook(() => {
+      appLogic = useAppLogic();
+    });
+
+    wrapper = shallow(
+      <AmendableEmployerBenefit
+        appErrors={appLogic.appErrors}
+        employerBenefit={employerBenefit}
+        onChange={onChange}
+      />
+    );
   });
 
   it("renders the component", () => {
@@ -56,9 +67,11 @@ describe("AmendableEmployerBenefit", () => {
       benefit_end_date: "2021-03-01",
       benefit_start_date: "2021-02-01",
       benefit_type: EmployerBenefitType.paidLeave,
+      employer_benefit_id: 0,
     });
     const wrapper = shallow(
       <AmendableEmployerBenefit
+        appErrors={appLogic.appErrors}
         employerBenefit={paidLeave}
         onChange={() => {}}
       />
@@ -97,7 +110,7 @@ describe("AmendableEmployerBenefit", () => {
       .last()
       .simulate("change", { target: { value: "2020-10-20" } });
 
-    expect(props.onChange).toHaveBeenCalledTimes(2);
+    expect(onChange).toHaveBeenCalledTimes(2);
     expect(wrapper.find(InputDate).first().prop("value")).toEqual("2020-10-10");
     expect(wrapper.find(InputDate).last().prop("value")).toEqual("2020-10-20");
   });
@@ -106,7 +119,7 @@ describe("AmendableEmployerBenefit", () => {
     wrapper.find(AmendButton).simulate("click");
     wrapper.find(InputText).simulate("change", { target: { value: "500" } });
 
-    expect(props.onChange).toHaveBeenCalledWith(
+    expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({ benefit_amount_dollars: 500 })
     );
     expect(wrapper.find(InputText).prop("value")).toEqual("500");
@@ -116,19 +129,19 @@ describe("AmendableEmployerBenefit", () => {
     wrapper.find(AmendButton).simulate("click");
     wrapper.find(InputText).simulate("change", { target: { value: "" } });
 
-    expect(props.onChange).toHaveBeenCalledWith(
+    expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({ benefit_amount_dollars: 0 })
     );
     expect(wrapper.find(InputText).prop("value")).toEqual(0);
 
     wrapper.find(InputText).simulate("change", { target: { value: "0" } });
-    expect(props.onChange).toHaveBeenCalledWith(
+    expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({ benefit_amount_dollars: 0 })
     );
     expect(wrapper.find(InputText).prop("value")).toEqual(0);
 
     wrapper.find(InputText).simulate("change", { target: { value: "hello" } });
-    expect(props.onChange).toHaveBeenCalledWith(
+    expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({ benefit_amount_dollars: 0 })
     );
     expect(wrapper.find(InputText).prop("value")).toEqual(0);
@@ -140,7 +153,7 @@ describe("AmendableEmployerBenefit", () => {
       .find(InputText)
       .simulate("change", { target: { value: "100.5000" } });
 
-    expect(props.onChange).toHaveBeenCalledWith(
+    expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({ benefit_amount_dollars: 100.5 })
     );
   });
@@ -149,7 +162,7 @@ describe("AmendableEmployerBenefit", () => {
     wrapper.find(AmendButton).simulate("click");
     wrapper.find(InputText).simulate("change", { target: { value: "1000" } });
 
-    expect(props.onChange).toHaveBeenCalledWith(
+    expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({ benefit_amount_dollars: 1000 })
     );
   });
@@ -160,7 +173,7 @@ describe("AmendableEmployerBenefit", () => {
       target: { value: EmployerBenefitFrequency.weekly },
     });
 
-    expect(props.onChange).toHaveBeenCalled();
+    expect(onChange).toHaveBeenCalled();
     expect(wrapper.find(Dropdown).prop("value")).toEqual(
       EmployerBenefitFrequency.weekly
     );
@@ -173,10 +186,11 @@ describe("AmendableEmployerBenefit", () => {
       benefit_end_date: "2021-03-01",
       benefit_start_date: "2021-02-01",
       benefit_type: EmployerBenefitType.paidLeave,
-      employer_benefit_id: 1,
+      employer_benefit_id: 0,
     });
     const wrapper = shallow(
       <AmendableEmployerBenefit
+        appErrors={appLogic.appErrors}
         employerBenefit={paidLeave}
         onChange={() => {}}
       />
@@ -199,7 +213,7 @@ describe("AmendableEmployerBenefit", () => {
     wrapper.find(AmendButton).simulate("click");
     wrapper.find(InputText).simulate("change", { target: { value: "500" } });
 
-    expect(props.onChange).toHaveBeenCalledWith(
+    expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({ benefit_amount_dollars: 500 })
     );
     expect(wrapper.find(InputText).prop("value")).toEqual("500");

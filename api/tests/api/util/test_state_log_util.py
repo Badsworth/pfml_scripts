@@ -6,14 +6,7 @@ from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.payments_util as payments_util
-from massgov.pfml.db.models.employees import (
-    Employee,
-    Flow,
-    LatestStateLog,
-    Payment,
-    State,
-    StateLog,
-)
+from massgov.pfml.db.models.employees import Employee, LatestStateLog, Payment, State, StateLog
 from massgov.pfml.db.models.factories import EmployeeFactory, PaymentFactory, ReferenceFileFactory
 
 ### Setup methods for various state log scenarios ###
@@ -128,13 +121,10 @@ class StateLogSetupResult:
 def setup_state_log(associated_class, start_states, end_states, test_db_session):
     if associated_class == state_log_util.AssociatedClass.EMPLOYEE:
         associated_model = EmployeeFactory.create()
-        flow = Flow.DUA_CLAIMANT_LIST
     if associated_class == state_log_util.AssociatedClass.PAYMENT:
         associated_model = PaymentFactory.create()
-        flow = Flow.PAYMENT
     if associated_class == state_log_util.AssociatedClass.REFERENCE_FILE:
         associated_model = ReferenceFileFactory.create()
-        flow = Flow.DFML_AGENCY_REDUCTION_REPORT
 
     state_logs = []
 
@@ -143,7 +133,6 @@ def setup_state_log(associated_class, start_states, end_states, test_db_session)
 
         with freeze_time(f"2020-01-0{index + 1} 00:00:00"):
             state_log = state_log_util.create_state_log(
-                flow=flow,
                 start_state=start_state,
                 associated_model=associated_model,
                 db_session=test_db_session,
@@ -168,13 +157,11 @@ def test_create_state_log_employee(initialize_factories_session, test_db_session
     employee = EmployeeFactory.create()
 
     employee_state_log = state_log_util.create_state_log(
-        flow=Flow.DUA_CLAIMANT_LIST,
         start_state=State.VERIFY_VENDOR_STATUS,
         associated_model=employee,
         db_session=test_db_session,
     )
 
-    assert employee_state_log.flow_id == Flow.DUA_CLAIMANT_LIST.flow_id
     assert employee_state_log.start_state_id == State.VERIFY_VENDOR_STATUS.state_id
     assert employee_state_log.end_state_id is None
     assert employee_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
@@ -194,7 +181,6 @@ def test_create_state_log_employee(initialize_factories_session, test_db_session
 
     # Add another state_log to make sure the latest state log ID updates properly
     employee_state_log2 = state_log_util.create_state_log(
-        flow=Flow.DUA_CLAIMANT_LIST,
         start_state=State.CLAIMANT_LIST_CREATED,
         associated_model=employee,
         db_session=test_db_session,
@@ -209,13 +195,9 @@ def test_create_state_log_employee(initialize_factories_session, test_db_session
 def test_create_state_log_payment(initialize_factories_session, test_db_session):
     payment = PaymentFactory.create()
     payment_state_log = state_log_util.create_state_log(
-        flow=Flow.PAYMENT,
-        start_state=State.PAYMENTS_RETRIEVED,
-        associated_model=payment,
-        db_session=test_db_session,
+        start_state=State.PAYMENTS_RETRIEVED, associated_model=payment, db_session=test_db_session,
     )
 
-    assert payment_state_log.flow_id == Flow.PAYMENT.flow_id
     assert payment_state_log.start_state_id == State.PAYMENTS_RETRIEVED.state_id
     assert payment_state_log.end_state_id is None
     assert payment_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
@@ -235,7 +217,6 @@ def test_create_state_log_payment(initialize_factories_session, test_db_session)
 
     # Add another state_log to make sure the latest state log ID updates properly
     payment_state_log2 = state_log_util.create_state_log(
-        flow=Flow.PAYMENT,
         start_state=State.PAYMENTS_STORED_IN_DB,
         associated_model=payment,
         db_session=test_db_session,
@@ -251,13 +232,11 @@ def test_create_state_log_reference_file(initialize_factories_session, test_db_s
     reference_file = ReferenceFileFactory.create()
 
     reference_file_state_log = state_log_util.create_state_log(
-        flow=Flow.DFML_AGENCY_REDUCTION_REPORT,
         start_state=State.DFML_REPORT_CREATED,
         associated_model=reference_file,
         db_session=test_db_session,
     )
 
-    assert reference_file_state_log.flow_id == Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
     assert reference_file_state_log.start_state_id == State.DFML_REPORT_CREATED.state_id
     assert reference_file_state_log.end_state_id is None
     assert reference_file_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
@@ -277,7 +256,6 @@ def test_create_state_log_reference_file(initialize_factories_session, test_db_s
 
     # Add another state_log to make sure the latest state log ID updates properly
     reference_file_state_log2 = state_log_util.create_state_log(
-        flow=Flow.DFML_AGENCY_REDUCTION_REPORT,
         start_state=State.DFML_REPORT_SUBMITTED,
         associated_model=reference_file,
         db_session=test_db_session,
@@ -334,10 +312,7 @@ def test_get_latest_state_log_in_end_state(initialize_factories_session, test_db
     # A happy path where the last state log entry has an end state
     test_setup = simple_employee_with_end_state(test_db_session)
     state_log = state_log_util.get_latest_state_log_in_end_state(
-        test_setup.associated_model,
-        State.DFML_REPORT_SUBMITTED,
-        Flow.DUA_CLAIMANT_LIST,
-        test_db_session,
+        test_setup.associated_model, State.DFML_REPORT_SUBMITTED, test_db_session,
     )
     assert test_setup.state_logs[2].state_log_id == state_log.state_log_id
 
@@ -345,7 +320,7 @@ def test_get_latest_state_log_in_end_state(initialize_factories_session, test_db
     # Meaning it is still running and we shouldn't return a state log for this
     test_setup2 = simple_payment_without_end_state(test_db_session)
     state_log2 = state_log_util.get_latest_state_log_in_end_state(
-        test_setup2.associated_model, State.DFML_REPORT_CREATED, Flow.PAYMENT, test_db_session
+        test_setup2.associated_model, State.DFML_REPORT_CREATED, test_db_session
     )
     assert state_log2 is None
 
@@ -381,10 +356,7 @@ def test_get_all_latest_state_logs_in_end_state(initialize_factories_session, te
     )
 
     submitted_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE,
-        State.DFML_REPORT_SUBMITTED,
-        Flow.DUA_CLAIMANT_LIST,
-        test_db_session,
+        state_log_util.AssociatedClass.EMPLOYEE, State.DFML_REPORT_SUBMITTED, test_db_session,
     )
     assert len(submitted_state_logs) == 2
     submitted_state_log_ids = [state_log.state_log_id for state_log in submitted_state_logs]
@@ -393,10 +365,7 @@ def test_get_all_latest_state_logs_in_end_state(initialize_factories_session, te
 
     # Also verify that it does not return anything for non-latest state logs
     created_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE,
-        State.DFML_REPORT_CREATED,
-        Flow.DUA_CLAIMANT_LIST,
-        test_db_session,
+        state_log_util.AssociatedClass.EMPLOYEE, State.DFML_REPORT_CREATED, test_db_session,
     )
     assert created_state_logs == []
 
@@ -459,7 +428,6 @@ def test_get_state_logs_stuck_in_state(initialize_factories_session, test_db_ses
     stuck_state_logs = state_log_util.get_state_logs_stuck_in_state(
         state_log_util.AssociatedClass.EMPLOYEE,
         State.DFML_REPORT_SUBMITTED,
-        Flow.DUA_CLAIMANT_LIST,
         3,
         test_db_session,
         now,
@@ -471,7 +439,6 @@ def test_get_state_logs_stuck_in_state(initialize_factories_session, test_db_ses
     stuck_state_logs = state_log_util.get_state_logs_stuck_in_state(
         state_log_util.AssociatedClass.EMPLOYEE,
         State.DFML_REPORT_SUBMITTED,
-        Flow.DUA_CLAIMANT_LIST,
         0,
         test_db_session,
         now,
@@ -495,7 +462,6 @@ def test_build_outcome():
     )
     validation_container.add_validation_issue(payments_util.ValidationReason.MISSING_IN_DB, "DB1")
     complex_outcome = state_log_util.build_outcome("complex", validation_container)
-    print(complex_outcome)
     assert complex_outcome == {
         "message": "complex",
         "validation_container": {
