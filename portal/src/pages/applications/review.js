@@ -493,9 +493,11 @@ export const Review = (props) => {
       )}
 
       {/* OTHER LEAVE */}
-      {/* TODO (CP-1346): Remove condition once "Other leave" step is out from behind feature flag */}
-      {isFeatureEnabled("claimantShowOtherLeaveStep") && (
-        <React.Fragment>
+      {/* Conditionally showing this section since it was added after launch, so some claims may not have this section yet. */}
+      {(get(claim, "has_employer_benefits") !== null ||
+        get(claim, "has_other_incomes") !== null ||
+        get(claim, "has_previous_leaves") !== null) && (
+        <div data-test="other-leave">
           <ReviewHeading
             editHref={getStepEditHref(ClaimSteps.otherLeave)}
             editText={t("pages.claimsReview.editLink")}
@@ -557,7 +559,7 @@ export const Review = (props) => {
               reviewRowLevel={reviewRowLevel}
             />
           )}
-        </React.Fragment>
+        </div>
       )}
 
       {usePartOneReview ? (

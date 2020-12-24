@@ -70,13 +70,15 @@ describe("Part 1 Review Page", () => {
 
 describe("Final Review Page", () => {
   let appLogic, claim, wrapper;
-  beforeEach(() => {
-    ({ appLogic, claim, wrapper } = renderWithAppLogic(Review, {
-      claimAttrs: new MockClaimBuilder().complete().create(),
-      diveLevels,
-    }));
-  });
-  describe("when all data is present", () => {
+
+  describe("when the claim is complete", () => {
+    beforeEach(() => {
+      ({ appLogic, claim, wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: new MockClaimBuilder().complete().create(),
+        diveLevels,
+      }));
+    });
+
     it("renders Review page with final review page content and only edit links for Part 2/3 sections", () => {
       expect(wrapper).toMatchSnapshot();
       expect(
@@ -85,18 +87,47 @@ describe("Final Review Page", () => {
           .dive()
       ).toMatchSnapshot();
     });
+
+    it("completes the application when the user clicks Submit", () => {
+      wrapper.find("Button").simulate("click");
+
+      expect(appLogic.claims.submit).not.toHaveBeenCalled();
+      expect(appLogic.claims.complete).toHaveBeenCalledWith(
+        claim.application_id
+      );
+    });
+
+    it("renders a spinner for loading documents", () => {
+      expect(wrapper.find("Spinner")).toHaveLength(1);
+      expect(wrapper.exists({ label: "Number of files uploaded" })).toBe(false);
+    });
   });
 
-  it("completes the application when the user clicks Submit", () => {
-    wrapper.find("Button").simulate("click");
+  it("conditionally renders Other Leave section based on presence of Yes/No fields", () => {
+    const claimAttrs = new MockClaimBuilder().complete().create();
+    claimAttrs.has_previous_leaves = false;
+    claimAttrs.has_other_incomes = false;
+    claimAttrs.has_employer_benefits = false;
 
-    expect(appLogic.claims.submit).not.toHaveBeenCalled();
-    expect(appLogic.claims.complete).toHaveBeenCalledWith(claim.application_id);
-  });
+    // Renders when false
+    ({ wrapper } = renderWithAppLogic(Review, {
+      claimAttrs,
+      diveLevels,
+    }));
 
-  it("renders a spinner for loading documents", () => {
-    expect(wrapper.find("Spinner")).toHaveLength(1);
-    expect(wrapper.exists({ label: "Number of files uploaded" })).toBe(false);
+    expect(wrapper.exists("[data-test='other-leave']")).toBe(true);
+
+    // But doesn't render when null
+    delete claimAttrs.has_previous_leaves;
+    delete claimAttrs.has_other_incomes;
+    delete claimAttrs.has_employer_benefits;
+
+    ({ wrapper } = renderWithAppLogic(Review, {
+      claimAttrs,
+      diveLevels,
+    }));
+
+    expect(wrapper.exists("[data-test='other-leave']")).toBe(false);
   });
 });
 

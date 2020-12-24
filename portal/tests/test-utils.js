@@ -165,6 +165,21 @@ export class BaseMockClaimBuilder {
     return this;
   }
 
+  otherIncomeFromUnemployment() {
+    set(this.claimAttrs, "other_incomes", [
+      new OtherIncome({
+        income_amount_dollars: 125,
+        income_amount_frequency: OtherIncomeFrequency.weekly,
+        income_end_date: "2021-01-01",
+        income_start_date: "2021-01-30",
+        income_type: OtherIncomeType.unemployment,
+      }),
+    ]);
+    set(this.claimAttrs, "has_other_incomes", true);
+    set(this.claimAttrs, "other_incomes_awaiting_approval", false);
+    return this;
+  }
+
   previousLeavePregnancyFromOtherEmployer() {
     set(this.claimAttrs, "previous_leaves", [
       new PreviousLeave({
@@ -451,8 +466,14 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
    */
   noOtherLeave() {
     set(this.claimAttrs, "has_employer_benefits", false);
+    this.noOtherIncomes();
+    this.noPreviousLeave();
+    return this;
+  }
+
+  noOtherIncomes() {
     set(this.claimAttrs, "has_other_incomes", false);
-    set(this.claimAttrs, "has_previous_leaves", false);
+    set(this.claimAttrs, "other_incomes_awaiting_approval", false);
     return this;
   }
 

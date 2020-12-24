@@ -48,7 +48,7 @@ exports[`EmployerBenefitList when amount fields are missing doesn't render missi
 />
 `;
 
-exports[`Final Review Page when all data is present renders Review page with final review page content and only edit links for Part 2/3 sections 1`] = `
+exports[`Final Review Page when the claim is complete renders Review page with final review page content and only edit links for Part 2/3 sections 1`] = `
 <div
   className="measure-6"
 >
@@ -187,6 +187,35 @@ exports[`Final Review Page when all data is present renders Review page with fin
   >
     No
   </ReviewRow>
+  <div
+    data-test="other-leave"
+  >
+    <ReviewHeading
+      editText="Edit"
+      level="2"
+    >
+      Other leave, income, and benefits
+    </ReviewHeading>
+    <ReviewRow
+      label="Employer-sponsored benefits?"
+      level="3"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      label="Other sources of income?"
+      level="3"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      editText="Edit"
+      label="Previous paid or unpaid leave?"
+      level="3"
+    >
+      No
+    </ReviewRow>
+  </div>
   <Heading
     level="2"
     size="1"
@@ -256,7 +285,7 @@ exports[`Final Review Page when all data is present renders Review page with fin
 </div>
 `;
 
-exports[`Final Review Page when all data is present renders Review page with final review page content and only edit links for Part 2/3 sections 2`] = `
+exports[`Final Review Page when the claim is complete renders Review page with final review page content and only edit links for Part 2/3 sections 2`] = `
 Array [
   "If you need to make edits to Part 1, you’ll need to call our Contact Center at (833) 344‑7365. Your application ID is ",
   <strong
@@ -556,6 +585,35 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
   >
     No
   </ReviewRow>
+  <div
+    data-test="other-leave"
+  >
+    <ReviewHeading
+      editText="Edit"
+      level="3"
+    >
+      Other leave, income, and benefits
+    </ReviewHeading>
+    <ReviewRow
+      label="Employer-sponsored benefits?"
+      level="4"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      label="Other sources of income?"
+      level="4"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      editText="Edit"
+      label="Previous paid or unpaid leave?"
+      level="4"
+    >
+      No
+    </ReviewRow>
+  </div>
   <div
     className="margin-top-6 margin-bottom-2"
   >
