@@ -5,8 +5,12 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
+import boto3
+import botocore
 import pytz
+import smart_open
 
+import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.lookup import LookupTable
 
@@ -29,20 +33,24 @@ class PaymentsS3Config:
     fineos_data_export_path: str
     # PFML API stores a copy of all files that FINEOS generates for us
     # This is where we store that copy
+    fineos_data_import_path: str
+    ## PFML API stores a copy of all files that we generate for the office of the Comptroller
+    ## This is where we store that copy
+    pfml_ctr_outbound_path: str
+    ## PFML API stores a copy of all files that we generate for FINEOS
+    ## This is where we store that copy
     pfml_fineos_inbound_path: str
     # PFML API generates files for FINEOS to process
     # This is where FINEOS picks up files from us
-    fineos_data_import_path: str
-    ## PFML API stores a copy of all files that we generate for FINEOS
-    ## This is where we store that copy
     pfml_fineos_outbound_path: str
 
 
 def get_s3_config() -> PaymentsS3Config:
     return PaymentsS3Config(
         fineos_data_export_path=str(os.environ.get("FINEOS_DATA_EXPORT_PATH")),
-        pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
         fineos_data_import_path=str(os.environ.get("FINEOS_DATA_IMPORT_PATH")),
+        pfml_ctr_outbound_path=str(os.environ.get("PFML_CTR_OUTBOUND_PATH")),
+        pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
         pfml_fineos_outbound_path=str(os.environ.get("PFML_FINEOS_OUTBOUND_PATH")),
     )
 
@@ -219,6 +227,35 @@ def create_files(
         dat_file.write(dat_xml_document.toprettyxml(indent="   ", encoding="ISO-8859-1"))
 
     with open(inf_filepath, "w") as inf_file:
+        for k, v in inf_dict.items():
+            inf_file.write(f"{k} = {v};\n")
+
+    return (dat_filepath, inf_filepath)
+
+
+def create_vcc_files_in_s3(
+    s3_path: str,
+    filename: str,
+    dat_xml_document: minidom.Document,
+    inf_dict: Dict[str, str],
+    session: Optional[boto3.Session] = None,
+) -> Tuple[str, str]:
+    if not file_util.is_s3_path(s3_path):
+        raise Exception("Destination must be an S3 URI")
+
+    dat_filepath = os.path.join(s3_path, f"{filename}.DAT")
+    inf_filepath = os.path.join(s3_path, f"{filename}.INF")
+
+    config = botocore.client.Config(retries={"max_attempts": 10, "mode": "standard"})
+    transport_params = {
+        "session": session or boto3.Session(),
+        "resource_kwargs": {"config": config},
+    }
+
+    with smart_open.open(dat_filepath, "wb", transport_params=transport_params) as dat_file:
+        dat_file.write(dat_xml_document.toprettyxml(indent="   ", encoding="ISO-8859-1"))
+
+    with smart_open.open(inf_filepath, "w", transport_params=transport_params) as inf_file:
         for k, v in inf_dict.items():
             inf_file.write(f"{k} = {v};\n")
 
