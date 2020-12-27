@@ -233,7 +233,7 @@ def create_files(
     return (dat_filepath, inf_filepath)
 
 
-def create_vcc_files_in_s3(
+def write_vcc_files(
     s3_path: str,
     filename: str,
     dat_xml_document: minidom.Document,

@@ -449,6 +449,6 @@ def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
         logger.exception("Unable to create VCC:", str(e))
         db_session.rollback()
 
-    return payments_util.create_vcc_files_in_s3(
+    return payments_util.write_vcc_files(
         dir_path, ctr_batch_id.ctr_batch_identifier, dat_xml_document, inf_dict
     )

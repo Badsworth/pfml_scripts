@@ -12,7 +12,7 @@ def test_create_vcc_files_in_s3(mock_s3_bucket):
     dat_xml_document = minidom.Document()
     inf_dict = {"NewMmarsBatchDeptCode": payments_util.Constants.COMPTROLLER_DEPT_CODE}
 
-    payments_util.create_vcc_files_in_s3(bucket_path, filename, dat_xml_document, inf_dict)
+    payments_util.write_vcc_files(bucket_path, filename, dat_xml_document, inf_dict)
 
     # Expect the files to have been uploaded to S3.
     files_in_mock_s3_bucket = file_util.list_files(bucket_path)
