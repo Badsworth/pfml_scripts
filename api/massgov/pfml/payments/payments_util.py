@@ -234,17 +234,17 @@ def create_files(
 
 
 def write_vcc_files(
-    s3_path: str,
+    path: str,
     filename: str,
     dat_xml_document: minidom.Document,
     inf_dict: Dict[str, str],
     session: Optional[boto3.Session] = None,
 ) -> Tuple[str, str]:
-    if not s3_path.startswith("s3:"):
-        os.makedirs(s3_path, exist_ok=True)
+    if not path.startswith("s3:"):
+        os.makedirs(path, exist_ok=True)
 
-    dat_filepath = os.path.join(s3_path, f"{filename}.DAT")
-    inf_filepath = os.path.join(s3_path, f"{filename}.INF")
+    dat_filepath = os.path.join(path, f"{filename}.DAT")
+    inf_filepath = os.path.join(path, f"{filename}.INF")
 
     config = botocore.client.Config(retries={"max_attempts": 10, "mode": "standard"})
     transport_params = {
