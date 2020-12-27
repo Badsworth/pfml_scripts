@@ -2,28 +2,36 @@
 # Regenerate payments files - VCC specific methods.
 #
 
-import os
-
+import massgov.pfml.api.util.state_log_util
 import massgov.pfml.payments.vcc
+from massgov.pfml.db.models.employees import LatestStateLog, State, StateLog
 
 from . import base
 
 
 class RegeneratorVCC(base.ReferenceFileRegenerator):
     def update_entries(self):
-        # TODO: create a state log entry for each payment/employee to move them to <state TBD>
-        pass
+        """Create a state log entry for each payment/employee to move them to state ADD_TO_VCC"""
+        employees = [link.employee for link in self.reference_file.employees]
+        for employee in employees:
+            state_log = (
+                self.db_session.query(StateLog)
+                .join(LatestStateLog)
+                .filter(LatestStateLog.employee == employee)
+                .one()
+            )
+            # TODO how should this use start_state? Or end_state if present?
+            new_state_log = massgov.pfml.api.util.state_log_util.create_state_log(
+                state_log.start_state, employee, self.db_session, False
+            )
+            massgov.pfml.api.util.state_log_util.finish_state_log(
+                new_state_log, State.ADD_TO_VCC, {}, self.db_session, False
+            )
+        self.db_session.commit()
 
     def create_new_file(self):
-        # get list of employees (vendors) and update their state
-        employees = [link.employee for link in self.reference_file.employees]
-        # TODO: determine batch count to use here
-        # TODO: we shouldn't use the same directory_name, but a new name with the new batch count
-        # When #2364 is merged it will handle this part
-        destination_path = f"{self.outbound_path}/ready/{self.directory_name}/"
-        if not destination_path.startswith("s3:"):
-            os.makedirs(destination_path, exist_ok=True)
-        massgov.pfml.payments.vcc.build_vcc_files(employees, destination_path, 99)
+        """Build new VCC files."""
+        massgov.pfml.payments.vcc.build_vcc_files(self.db_session, self.outbound_path)
 
     def send_bie(self):
         # TODO: generate and send the appropriate BIE (API-783 for GAX and API-975 for VCC)

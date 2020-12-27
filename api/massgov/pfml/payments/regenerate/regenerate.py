@@ -20,9 +20,9 @@ def regenerate_batch(
 
     regenerator: base.ReferenceFileRegenerator
     if reference_file.reference_file_type_id == ReferenceFileType.VCC.reference_file_type_id:
-        regenerator = vcc.RegeneratorVCC(reference_file, config.ctr_outbound_path, db_session)
+        regenerator = vcc.RegeneratorVCC(reference_file, config.pfml_ctr_outbound_path, db_session)
     elif reference_file.reference_file_type_id == ReferenceFileType.GAX.reference_file_type_id:
-        regenerator = gax.RegeneratorGAX(reference_file, config.ctr_outbound_path, db_session)
+        regenerator = gax.RegeneratorGAX(reference_file, config.pfml_ctr_outbound_path, db_session)
     else:
         raise RuntimeError(
             "batch %s is not GAX or VCC (type is %s)"

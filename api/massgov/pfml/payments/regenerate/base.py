@@ -43,7 +43,7 @@ class ReferenceFileRegenerator(abc.ABC, metaclass=abc.ABCMeta):
 
     def move_to_error_directory(self):
         source_path = self.reference_file.file_location
-        destination_path = f"{self.outbound_path}/error/{self.directory_name}/"
+        destination_path = f"{self.outbound_path}/error/{self.directory_name}"
 
         logger.info("move %s to %s", source_path, destination_path)
         if source_path == destination_path:
