@@ -339,9 +339,7 @@ def test_build_individual_vcc_document_truncated_values(initialize_factories_ses
 
 
 @freeze_time("2020-01-01 12:00:00")
-def test_build_vcc_files(
-    monkeypatch, initialize_factories_session, test_db_session, mock_s3_bucket
-):
+def test_build_vcc_files(initialize_factories_session, test_db_session, mock_s3_bucket):
     employees = [get_base_employee(), get_base_employee(use_random_tin=True)]
     for employee in employees:
         state_log = state_log_util.create_state_log(
@@ -356,22 +354,15 @@ def test_build_vcc_files(
             db_session=test_db_session,
         )
 
-    mock_s3_config = PaymentsS3Config(
-        fineos_data_export_path="",
-        fineos_data_import_path="",
-        pfml_ctr_outbound_path=f"s3://{mock_s3_bucket}/path/to/dir",
-        pfml_fineos_inbound_path="",
-        pfml_fineos_outbound_path="",
-    )
-    monkeypatch.setattr(payments_util, "get_s3_config", lambda: mock_s3_config)
+    ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
 
-    (dat_filepath, inf_filepath) = vcc.build_vcc_files(test_db_session)
+    (dat_filepath, inf_filepath) = vcc.build_vcc_files(test_db_session, ctr_outbound_path)
 
     # Confirm that we created a database row for each employee we created a document for.
-    test_db_session.query(
+    assert test_db_session.query(
         func.count(CtrDocumentIdentifier.ctr_document_identifier_id)
     ).scalar() == len(employees)
-    test_db_session.query(
+    assert test_db_session.query(
         func.count(EmployeeReferenceFile.ctr_document_identifier_id)
     ).scalar() == len(employees)
 
