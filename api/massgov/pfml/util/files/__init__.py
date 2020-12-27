@@ -200,23 +200,18 @@ def rename_recursive(source, destination):
 
     Note: handles only one level of child objects on S3.
     """
-    is_source_s3 = is_s3_path(source)
-    is_dest_s3 = is_s3_path(destination)
+    if not is_s3_path(destination):
+        os.makedirs(destination, exist_ok=True)
 
-    if is_source_s3 != is_dest_s3:
-        raise ValueError("Cannot rename between disk and S3 using this method")
-
-    if is_source_s3:
-        if not source.endswith("/") or not destination.endswith("/"):
-            raise ValueError("source and destination must end in / when on S3")
-        files = list_files(source)
-        for file in files:
-            file_source = source + file
-            file_destination = destination + file
-            copy_file(file_source, file_destination)
-            delete_file(file_source)
-    else:
-        os.rename(source, destination)
+    if not source.endswith("/"):
+        source += "/"
+    if not destination.endswith("/"):
+        destination += "/"
+    files = list_files(source)
+    for file in files:
+        file_source = source + file
+        file_destination = destination + file
+        rename_file(file_source, file_destination)
 
 
 def download_from_s3(source, destination):
