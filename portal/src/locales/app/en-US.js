@@ -434,13 +434,32 @@ const errors = {
       },
       benefit_end_date: {
         date: "End date must include a day, month, and year.",
+        minimum:
+          "Last day of benefit must be on or after the first day of benefit.",
       },
       benefit_start_date: {
         date: "Start date must include a day, month, and year.",
       },
     },
+    hours_worked_per_week: {
+      // TODO (EMPLOYER-723) remove this
+      invalid_hours_worked_per_week:
+        "Average weekly hours must be 168 or fewer.",
+      maximum: "Enter the average weekly hours.",
+      minimum: "Average weekly hours must be 168 or fewer.",
+    },
     outstanding_information_request_required:
       "This application has already been reviewed.",
+    previous_leaves: {
+      leave_start_date: {
+        invalid_previous_leave_start_date:
+          "Paid leave cannot be taken before January 1, 2021. Enter a date after December 31, 2020.",
+      },
+      leave_end_date: {
+        minimum:
+          "Last day of leave must be on or after the first day of leave.",
+      },
+    },
   },
   invalidFile_size:
     "We could not upload: {{disallowedFileNames}}. Files must be smaller than 3.5 MB.",
@@ -601,10 +620,10 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authForgotPassword: {
+    backToLoginLink: "$t(shared.backToLoginLink)",
     codeLabel: "$t(shared.verificationCodeLabel)",
     lead:
       "If an account exists for the email you provide, we will email a 6-digit verification code to it.",
-    logInLink: "$t(shared.backToLoginLink)",
     submitButton: "Send code",
     title: "Forgot your password?",
     usernameLabel: "$t(shared.usernameLabel)",
@@ -626,6 +645,7 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authResetPassword: {
+    backToLoginLink: "$t(shared.backToLoginLink)",
     codeLabel: "$t(shared.verificationCodeLabel)",
     codeResent:
       "We sent a new 6 digit verification code to your email address. Enter the new code to reset your password.",
@@ -641,7 +661,6 @@ const pages = {
       "If an account exists for {{emailAddress}}, we emailed a 6 digit verification code to it. Enter the code below to confirm your email and reset your password.",
     lead_userNotFound:
       "Our system timed out, so we need you to verify your account again. Enter your email address to receive a new verification code. Then create a new password.",
-    logInLink: "$t(shared.backToLoginLink)",
     passwordHint: "$t(shared.passwordHint)",
     passwordLabel: "New password",
     resendCodeLink: "$t(shared.resendVerificationCodeLink)",
@@ -651,6 +670,7 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authVerifyAccount: {
+    backToLoginLink: "$t(shared.backToLoginLink)",
     codeLabel: "$t(shared.verificationCodeLabel)",
     codeResent:
       "We sent a new 6 digit verification code to your email address. Enter the new code to verify your email.",
@@ -665,7 +685,6 @@ const pages = {
       "We sent a 6 digit verification code to your email address. Enter the code to verify your email.",
     lead_email:
       "We sent a 6 digit verification code to {{emailAddress}}. Enter the code to verify your email.",
-    logInFooterLink: "$t(shared.backToLoginLink)",
     resendCodeLink: "Send a new code",
     title: "Verify your email address",
     usernameLabel: "$t(shared.usernameLabel)",
@@ -1467,6 +1486,8 @@ const pages = {
     title: "$t(shared.dashboardTitles.create)",
   },
   employersAuthCreateAccount: {
+    alertHeading:
+      "Workers who wish to apply for paid leave should follow <create-account-link>these instructions</create-account-link>.",
     createAccountButton: "Create account",
     createClaimantAccount:
       "Need to apply for paid leave? <create-account-link>Create an account</create-account-link>",
@@ -1764,10 +1785,9 @@ const pages = {
     welcomeTitle: "Welcome",
   },
   index: {
-    claimantCardBody:
-      "You can now create an account and apply for Paid Family and Medical Leave.",
+    claimantCardBody: "You can now apply for Paid Family and Medical Leave.",
     claimantCardBodyPrelaunch:
-      "Later this month, you can create an account to apply for Paid Family and Medical Leave. <mass-benefits-timeline-link>Learn more about the paid leave benefit timeline.</mass-benefits-timeline-link>",
+      "Later this month, you can create an account to apply for Paid Family and Medical Leave. <mass-how-to-apply-link>Learn more about how to apply.</mass-how-to-apply-link>",
     claimantCreateAccountButton: "Create an account",
     claimantHeading: "Workers",
     createAccountHeading: "Create an account",
@@ -1780,7 +1800,7 @@ const pages = {
     title:
       "Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this <mass-paid-leave-link>new paid leave program</mass-paid-leave-link>.",
     title_prelaunch:
-      "Massachusetts employers: Register now so you can manage leave for your team.",
+      "Coming soon: Log into your Paid Family and Medical Leave account.",
   },
   userConsentToDataSharing: {
     agreementBody:

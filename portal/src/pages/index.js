@@ -48,45 +48,15 @@ export const Index = (props) => {
         <Heading level="2">{t("pages.index.createAccountHeading")}</Heading>
 
         <div className="grid-row grid-gap">
-          <article className="tablet:grid-col margin-bottom-3">
+          <article className="measure-3">
             <div className="bg-base-lightest padding-3">
-              <Heading level="3">{t("pages.index.employerHeading")}</Heading>
-              <p>
-                {t("pages.index.employerCardBody", {
-                  context: showAuth ? null : "prelaunch",
-                })}
-              </p>
-              <ButtonLink
-                href={routes.employers.createAccount}
-                className="margin-top-3"
-              >
-                {t("pages.index.employerCreateAccountButton")}
-              </ButtonLink>
-              <div className="margin-top-2 text-dark text-bold">
-                {t("pages.authCreateAccount.haveAnAccountFooterLabel")}
-                <Link href={routes.auth.login}>
-                  <a className="display-inline-block margin-left-1">
-                    {t("pages.authCreateAccount.logInFooterLink")}
-                  </a>
-                </Link>
-              </div>
-            </div>
-          </article>
-          <article className="tablet:grid-col">
-            <div className="bg-base-lightest padding-3">
-              <Heading level="3">{t("pages.index.claimantHeading")}</Heading>
               {!showAuth && (
                 <p>
                   <Trans
                     i18nKey="pages.index.claimantCardBodyPrelaunch"
                     components={{
-                      "mass-benefits-timeline-link": (
-                        <a
-                          href={
-                            routes.external.massgov
-                              .benefitsTimeline_2020December2
-                          }
-                        />
+                      "mass-how-to-apply-link": (
+                        <a href={routes.external.massgov.howToApplyPaidLeave} />
                       ),
                     }}
                   />

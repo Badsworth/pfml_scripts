@@ -1,10 +1,28 @@
+import os
 import xml.dom.minidom as minidom
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple, cast
 
+from sqlalchemy import func
+
+import massgov.pfml.api.util.state_log_util as state_log_util
+import massgov.pfml.db as db
 import massgov.pfml.payments.payments_util as payments_util
-from massgov.pfml.db.models.employees import Employee, LkGeoState, PaymentMethod
+import massgov.pfml.util.logging
+from massgov.pfml.db.models.employees import (
+    CtrBatchIdentifier,
+    CtrDocumentIdentifier,
+    Employee,
+    EmployeeReferenceFile,
+    LkGeoState,
+    PaymentMethod,
+    ReferenceFile,
+    ReferenceFileType,
+    State,
+)
 from massgov.pfml.payments.payments_util import Constants
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 generic_attributes = {
     "DOC_CAT": "VCUST",
@@ -49,9 +67,13 @@ vcc_doc_cert_attributes = {
     "VEND_APRV_STA": "3",
 }
 
+MAX_VCC_DOCUMENTS_PER_DAY = 9999
+DOC_ID_TEMPLATE = "INTFDFML{}{}"  # INTFDFML121920200012 <- 13th document for December 19, 2020.
+BATCH_ID_TEMPLATE = Constants.COMPTROLLER_DEPT_CODE + "{}VCC{}"  # eg. EOL0101VCC24
+
 
 def get_doc_id(now: datetime, count: int) -> str:
-    return f"INTFDFML{now.strftime('%d%m%Y')}{count:04}"
+    return DOC_ID_TEMPLATE.format(now.strftime("%d%m%Y"), f"{count:04}")
 
 
 def get_state_str(geo_state: LkGeoState) -> Optional[str]:
@@ -59,7 +81,7 @@ def get_state_str(geo_state: LkGeoState) -> Optional[str]:
 
 
 def build_individual_vcc_document(
-    document: minidom.Document, employee: Employee, now: datetime, document_count: int
+    document: minidom.Document, employee: Employee, now: datetime, doc_id: str
 ) -> minidom.Element:
 
     first_name = payments_util.validate_db_input(
@@ -124,8 +146,6 @@ def build_individual_vcc_document(
         truncate=False,
     )
     payment_method = employee.payment_method
-
-    doc_id = get_doc_id(now, document_count)
 
     has_eft = payee_aba_num and payee_acct_type and payee_acct_num
 
@@ -279,7 +299,27 @@ def build_individual_vcc_document(
     return root
 
 
-def build_vcc_dat(employees: List[Employee], now: datetime) -> minidom.Document:
+def get_vcc_doc_counter_offset_for_today(now: datetime, db_session: db.Session) -> int:
+    max_doc_counter_today = (
+        db_session.query(func.max(CtrDocumentIdentifier.document_counter))
+        .join(CtrDocumentIdentifier.employee_reference_files)
+        .join(EmployeeReferenceFile.reference_file)
+        .filter(
+            CtrDocumentIdentifier.document_date == now.date(),
+            ReferenceFile.reference_file_type_id == ReferenceFileType.VCC.reference_file_type_id,
+        )
+        .scalar()
+    )
+
+    if max_doc_counter_today:
+        return max_doc_counter_today + 1
+
+    return 0
+
+
+def build_vcc_dat(
+    employees: List[Employee], now: datetime, ref_file: ReferenceFile, db_session: db.Session,
+) -> minidom.Document:
     # xml_document represents the overall XML object
     xml_document = minidom.Document()
 
@@ -288,17 +328,40 @@ def build_vcc_dat(employees: List[Employee], now: datetime) -> minidom.Document:
     payments_util.add_attributes(document_root, {"VERSION": "1.0"})
     xml_document.appendChild(document_root)
 
+    doc_count_offset = get_vcc_doc_counter_offset_for_today(now, db_session)
     for count, employee in enumerate(employees):
+        doc_count = count + doc_count_offset
+        if doc_count > MAX_VCC_DOCUMENTS_PER_DAY:
+            logger.error(
+                "Reached limit of %d VCC documents per day. Started current batch from offset %d. Made it through %d VCC documents in current batch before reaching daily limit",
+                MAX_VCC_DOCUMENTS_PER_DAY,
+                doc_count_offset,
+                count,
+            )
+            break
+
+        doc_id = get_doc_id(now, doc_count)
+        ctr_doc_id = CtrDocumentIdentifier(
+            ctr_document_identifier=doc_id, document_date=now.date(), document_counter=doc_count,
+        )
+        db_session.add(ctr_doc_id)
+
         # vcc_document refers to individual documents which contain employee/payment data
-        vcc_document = build_individual_vcc_document(xml_document, employee, now, count)
+        vcc_document = build_individual_vcc_document(xml_document, employee, now, doc_id)
         document_root.appendChild(vcc_document)
+
+        # Add records to the database for the document.
+        emp_ref_file = EmployeeReferenceFile(
+            employee=employee, reference_file=ref_file, ctr_document_identifier=ctr_doc_id,
+        )
+        db_session.add(emp_ref_file)
 
     return xml_document
 
 
-def build_vcc_inf(employees: List[Employee], now: datetime, count: int) -> Dict[str, str]:
+def build_vcc_inf(employees: List[Employee], now: datetime, batch_id: str) -> Dict[str, str]:
     return {
-        "NewMmarsBatchID": f"{Constants.COMPTROLLER_DEPT_CODE}{now.strftime('%m%d')}VCC{count}",  # eg. EOL0101VCC24
+        "NewMmarsBatchID": batch_id,
         "NewMmarsBatchDeptCode": Constants.COMPTROLLER_DEPT_CODE,
         "NewMmarsUnitCode": Constants.COMPTROLLER_UNIT_CODE,
         "NewMmarsImportDate": now.strftime("%Y-%m-%d"),
@@ -309,13 +372,83 @@ def build_vcc_inf(employees: List[Employee], now: datetime, count: int) -> Dict[
     }
 
 
-def build_vcc_files(employees: List[Employee], directory: str, count: int) -> Tuple[str, str]:
-    if count < 10:
-        raise Exception("VCC file count must be greater than 10")
-    now = payments_util.get_now()
+def create_next_batch_id(now: datetime, db_session: db.Session) -> CtrBatchIdentifier:
+    ctr_batch_id_pattern = BATCH_ID_TEMPLATE.format(now.strftime("%m%d"), "%")
+    max_batch_id_today = (
+        db_session.query(func.max(CtrBatchIdentifier.batch_counter))
+        .filter(
+            CtrBatchIdentifier.batch_date == now.date(),
+            CtrBatchIdentifier.ctr_batch_identifier.like(ctr_batch_id_pattern),
+        )
+        .scalar()
+    )
 
-    filename = f"{Constants.COMPTROLLER_DEPT_CODE}{now.strftime('%Y%m%d')}VCC{count}"
-    dat_xml_document = build_vcc_dat(employees, now)
-    inf_dict = build_vcc_inf(employees, now, count)
+    # Start batch counters at 10.
+    # Other agencies use suffixes 1-7 (for days of the week). We start our suffixes at 10 so we
+    # don't conflict with their batch IDs and have a logical starting point (10 instead of 8).
+    batch_counter = 10
+    if max_batch_id_today:
+        batch_counter = max_batch_id_today + 1
 
-    return payments_util.create_files(directory, filename, dat_xml_document, inf_dict)
+    ctr_batch_id = CtrBatchIdentifier(
+        ctr_batch_identifier=BATCH_ID_TEMPLATE.format(now.strftime("%m%d"), batch_counter),
+        year=now.year,
+        batch_date=now.date(),
+        batch_counter=batch_counter,
+    )
+    db_session.add(ctr_batch_id)
+
+    logger.info(
+        "creating batch %s %s %s %s",
+        ctr_batch_id.ctr_batch_identifier,
+        ctr_batch_id.year,
+        ctr_batch_id.batch_date,
+        ctr_batch_id.batch_counter,
+    )
+
+    return ctr_batch_id
+
+
+def get_eligible_employees(db_session: db.Session) -> List[Employee]:
+    state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        end_state=State.ADD_TO_VCC,
+        db_session=db_session,
+    )
+
+    return [state_log.employee for state_log in state_logs]
+
+
+def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str, str]:
+    try:
+        now = payments_util.get_now()
+
+        s3_path = os.path.join(ctr_outbound_path, "ready")
+
+        ctr_batch_id = create_next_batch_id(now, db_session)
+        batch_filename = BATCH_ID_TEMPLATE.format(
+            now.strftime("%Y%m%d"), ctr_batch_id.batch_counter
+        )
+        dir_path = os.path.join(s3_path, batch_filename)
+
+        ref_file = ReferenceFile(
+            file_location=dir_path,
+            reference_file_type_id=ReferenceFileType.VCC.reference_file_type_id,
+            ctr_batch_identifier=ctr_batch_id,
+        )
+        db_session.add(ref_file)
+
+        employees = get_eligible_employees(db_session)
+
+        dat_xml_document = build_vcc_dat(employees, now, ref_file, db_session)
+        inf_dict = build_vcc_inf(employees, now, ctr_batch_id.ctr_batch_identifier)
+        ctr_batch_id.inf_data = inf_dict
+
+        db_session.commit()
+    except Exception as e:
+        logger.exception("Unable to create VCC:", str(e))
+        db_session.rollback()
+
+    return payments_util.write_vcc_files(
+        dir_path, ctr_batch_id.ctr_batch_identifier, dat_xml_document, inf_dict
+    )
