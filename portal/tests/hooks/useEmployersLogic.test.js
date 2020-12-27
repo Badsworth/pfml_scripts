@@ -8,6 +8,7 @@ import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { BadRequestError } from "../../src/errors";
 import { act } from "react-dom/test-utils";
+import routes from "../../src/routes";
 import { testHook } from "../test-utils";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
@@ -231,6 +232,28 @@ describe("useEmployersLogic", () => {
         });
 
         expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+      });
+    });
+
+    it("redirects to login with next query if there is a 'No current user' error", async () => {
+      portalFlow.pathWithParams = `${routes.employers.review}?absence_id=${absenceId}`;
+      let spy;
+
+      act(() => {
+        spy = jest.spyOn(portalFlow, "goTo").mockImplementation(jest.fn());
+        submitClaimReviewMock.mockImplementationOnce(() => {
+          // eslint-disable-next-line no-throw-literal
+          throw "No current user";
+        });
+      });
+
+      await act(async () => {
+        await employersLogic.submit(absenceId, {});
+      });
+
+      expect(spy).toHaveBeenCalledWith(routes.auth.login, {
+        next:
+          "/employers/applications/review?absence_id=mock-fineos-absence-id-1",
       });
     });
 

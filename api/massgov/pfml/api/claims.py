@@ -6,6 +6,7 @@ import flask
 from werkzeug.exceptions import BadRequest, Forbidden, Unauthorized
 
 import massgov.pfml.api.app as app
+import massgov.pfml.api.services.claim_rules as claim_rules
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import READ, requires
@@ -84,6 +85,14 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
     body = connexion.request.json
 
     claim_request: EmployerClaimReview = EmployerClaimReview.parse_obj(body)
+
+    if issues := claim_rules.get_employer_claim_review_issues(claim_request):
+        return response_util.error_response(
+            status_code=BadRequest,
+            message="Invalid claim review body",
+            errors=[response_util.validation_issue(issue) for issue in issues],
+            data={},
+        ).to_api_response()
 
     user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
 

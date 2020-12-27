@@ -38,6 +38,7 @@ class Generators:
     Fein = Tin
     Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
     Now = factory.LazyFunction(datetime.now)
+    ThisYear = factory.LazyFunction(datetime.now().year)
     # A reproducible datetime that might represent a database creation, modification, or other
     # transaction datetime.
     TransactionDateTime = factory.Faker(
@@ -49,6 +50,14 @@ class Generators:
     UuidObj = factory.Faker("uuid4", cast_to=None)
     VerificationCode = factory.Faker("pystr", max_chars=6, min_chars=6)
     S3Path = factory.Sequence(lambda n: f"s3://bucket/path/to/file{n}.txt")
+
+    VccDocCounter = factory.Sequence(lambda n: n)
+    VccDocId = factory.Sequence(
+        lambda n: "INTFDFML{}{}".format(datetime.now().strftime("%d%m%Y"), f"{n:04}")
+    )
+
+    VccBatchCounter = factory.Sequence(lambda n: n)
+    VccBatchId = factory.Sequence(lambda n: "EOL{}VCC{}".format(datetime.now().strftime("%m%d"), n))
 
 
 class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -152,6 +161,27 @@ class EmployeeFactory(BaseFactory):
     phone_number = "+19425290727"
 
 
+class CtrBatchIdentifierFactory(BaseFactory):
+    class Meta:
+        model = employee_models.CtrBatchIdentifier
+
+    ctr_batch_identifier_id = Generators.UuidObj
+    ctr_batch_identifier = Generators.VccBatchId
+    year = (Generators.ThisYear,)
+    batch_date = (Generators.Now,)
+    batch_counter = Generators.VccBatchCounter
+
+
+class CtrDocumentIdentifierFactory(BaseFactory):
+    class Meta:
+        model = employee_models.CtrDocumentIdentifier
+
+    ctr_document_identifier_id = Generators.UuidObj
+    ctr_document_identifier = Generators.VccDocId
+    document_counter = Generators.VccDocCounter
+    document_date = Generators.Now
+
+
 class ReferenceFileFactory(BaseFactory):
     class Meta:
         model = employee_models.ReferenceFile
@@ -160,6 +190,22 @@ class ReferenceFileFactory(BaseFactory):
     file_location = Generators.S3Path
     reference_file_type_id = (
         employee_models.ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id
+    )
+
+
+class EmployeeReferenceFileFactory(BaseFactory):
+    class Meta:
+        model = employee_models.EmployeeReferenceFile
+
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda e: e.employee.employee_id)
+
+    reference_file = factory.SubFactory(ReferenceFileFactory)
+    reference_file_id = factory.LazyAttribute(lambda e: e.reference_file.reference_file_id)
+
+    ctr_document_identifier = (factory.SubFactory(CtrDocumentIdentifierFactory),)
+    ctr_document_identifier_id = factory.LazyAttribute(
+        lambda e: e.ctr_document_identifier.ctr_document_identifier_id
     )
 
 

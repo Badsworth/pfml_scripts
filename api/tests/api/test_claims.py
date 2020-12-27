@@ -440,8 +440,8 @@ def test_employer_update_claim_review_validates_hours_worked_per_week(
         # hours_worked_per_week intentionally excluded
         "previous_leaves": [
             {
-                "leave_end_date": "2021-01-25",
-                "leave_start_date": "2021-02-06",
+                "leave_end_date": "2021-02-06",
+                "leave_start_date": "2021-01-25",
                 "leave_reason": "Pregnancy / Maternity",
             }
         ],
@@ -471,10 +471,8 @@ def test_employer_update_claim_review_validates_hours_worked_per_week(
     errors = response.get_json().get("errors")
     assert response.status_code == 400
     assert len(errors) == 1
-    assert (
-        errors[0].get("message") == "hours_worked_per_week must be greater than 0 and less than 168"
-    )
-    assert errors[0].get("type") == "invalid_hours_worked_per_week"
+    assert errors[0].get("message") == "hours_worked_per_week must be greater than 0"
+    assert errors[0].get("type") == "minimum"
     assert errors[0].get("field") == "hours_worked_per_week"
 
     request_with_negative_hours = {**base_request, "hours_worked_per_week": -1}
@@ -487,10 +485,8 @@ def test_employer_update_claim_review_validates_hours_worked_per_week(
     errors = response.get_json().get("errors")
     assert response.status_code == 400
     assert len(errors) == 1
-    assert (
-        errors[0].get("message") == "hours_worked_per_week must be greater than 0 and less than 168"
-    )
-    assert errors[0].get("type") == "invalid_hours_worked_per_week"
+    assert errors[0].get("message") == "hours_worked_per_week must be greater than 0"
+    assert errors[0].get("type") == "minimum"
     assert errors[0].get("field") == "hours_worked_per_week"
 
     request_with_too_many_hours = {**base_request, "hours_worked_per_week": 170}
@@ -503,10 +499,8 @@ def test_employer_update_claim_review_validates_hours_worked_per_week(
     errors = response.get_json().get("errors")
     assert response.status_code == 400
     assert len(errors) == 1
-    assert (
-        errors[0].get("message") == "hours_worked_per_week must be greater than 0 and less than 168"
-    )
-    assert errors[0].get("type") == "invalid_hours_worked_per_week"
+    assert errors[0].get("message") == "hours_worked_per_week must be 168 or fewer"
+    assert errors[0].get("type") == "maximum"
     assert errors[0].get("field") == "hours_worked_per_week"
 
 
@@ -641,6 +635,57 @@ def test_employer_update_claim_review_validates_employer_benefits(
     assert errors[0].get("message") == "benefit_end_date cannot be earlier than benefit_start_date"
     assert errors[0].get("type") == "minimum"
     assert errors[0].get("field") == "employer_benefits[0].benefit_end_date"
+
+
+def test_employer_update_claim_review_validates_multiple_fields_at_once(
+    client, employer_user, employer_auth_token, test_db_session,
+):
+    employer = EmployerFactory.create()
+    ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    update_request_body = {
+        "comment": "comment",
+        "employer_benefits": [
+            {
+                "benefit_amount_dollars": 0,
+                "benefit_amount_frequency": "Per Day",
+                "benefit_end_date": "2021-03-16",
+                "benefit_start_date": "2021-04-10",
+                "benefit_type": "Accrued paid leave",
+            }
+        ],
+        "employer_decision": "Approve",
+        "fraud": "Yes",
+        "has_amendments": False,
+        "hours_worked_per_week": 190,
+        "previous_leaves": [
+            {
+                "leave_end_date": "2020-02-06",
+                "leave_start_date": "2020-01-25",
+                "leave_reason": "Pregnancy / Maternity",
+            }
+        ],
+    }
+
+    response = client.patch(
+        "/v1/employers/claims/NTN-100-ABS-01/review",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=update_request_body,
+    )
+
+    errors = response.get_json().get("errors")
+    assert response.status_code == 400
+    assert len(errors) == 3
+    assert errors[0].get("field") == "hours_worked_per_week"
+    assert errors[1].get("field") == "previous_leaves[0].leave_start_date"
+    assert errors[2].get("field") == "employer_benefits[0].benefit_end_date"
 
 
 def test_employer_confirmation_sent_with_employer_update_claim_review(

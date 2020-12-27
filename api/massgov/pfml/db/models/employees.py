@@ -471,6 +471,8 @@ class CtrDocumentIdentifier(Base):
     __tablename__ = "ctr_document_identifier"
     ctr_document_identifier_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     ctr_document_identifier = Column(Text, unique=True, index=True)
+    document_date = Column(Date, nullable=False, index=True)
+    document_counter = Column(Integer, nullable=False, index=True)
 
     payment_reference_files = relationship(
         "PaymentReferenceFile", back_populates="ctr_document_identifier"
