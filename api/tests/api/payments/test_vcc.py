@@ -10,7 +10,6 @@ from sqlalchemy import func
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
-import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.payments.vcc as vcc
 from massgov.pfml.db.models.employees import (
     BankAccountType,
@@ -33,7 +32,6 @@ from massgov.pfml.db.models.factories import (
     ReferenceFileFactory,
     TaxIdentifierFactory,
 )
-from massgov.pfml.payments.payments_util import PaymentsS3Config
 from tests.api.payments import validate_attributes, validate_elements
 
 
