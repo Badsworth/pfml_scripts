@@ -10,7 +10,6 @@ import botocore
 import pytz
 import smart_open
 
-import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.lookup import LookupTable
 
