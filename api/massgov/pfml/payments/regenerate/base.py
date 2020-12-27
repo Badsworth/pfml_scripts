@@ -32,18 +32,22 @@ class ReferenceFileRegenerator(abc.ABC, metaclass=abc.ABCMeta):
     def run(self):
         logger.info("move to error directory")
         self.move_to_error_directory()
+
         logger.info("update entries")
         self.update_entries()
+
         logger.info("create new file")
         self.create_new_file()
+
         logger.info("upload to MoveIT")
         self.upload_to_moveit()
+
         logger.info("send BIE")
         self.send_bie()
 
     def move_to_error_directory(self):
         source_path = self.reference_file.file_location
-        destination_path = f"{self.outbound_path}/error/{self.directory_name}"
+        destination_path = os.path.join(self.outbound_path, "error", self.directory_name)
 
         logger.info("move %s to %s", source_path, destination_path)
         if source_path == destination_path:
