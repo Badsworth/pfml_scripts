@@ -240,8 +240,8 @@ def create_vcc_files_in_s3(
     inf_dict: Dict[str, str],
     session: Optional[boto3.Session] = None,
 ) -> Tuple[str, str]:
-    if not file_util.is_s3_path(s3_path):
-        raise Exception("Destination must be an S3 URI")
+    if not s3_path.startswith("s3:"):
+        os.makedirs(s3_path, exist_ok=True)
 
     dat_filepath = os.path.join(s3_path, f"{filename}.DAT")
     inf_filepath = os.path.join(s3_path, f"{filename}.INF")

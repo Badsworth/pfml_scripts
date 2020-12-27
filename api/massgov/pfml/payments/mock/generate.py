@@ -11,21 +11,19 @@
 import argparse
 import os
 
+import massgov.pfml.api.util.state_log_util
 import massgov.pfml.db
 import massgov.pfml.db.models.factories
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
     EFT,
     BankAccountType,
-    CtrBatchIdentifier,
     Employee,
-    EmployeeReferenceFile,
     PaymentMethod,
-    ReferenceFile,
-    ReferenceFileType,
+    State,
     TaxIdentifier,
 )
-from massgov.pfml.payments import payments_util, vcc
+from massgov.pfml.payments import vcc
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -121,39 +119,27 @@ class PaymentScenariosGenerator:
         self.write_vcc_files()
 
     def write_vcc_files(self):
-        now = payments_util.get_now()
-
-        count = 10
+        """Write VCC files for employees in vcc_data, in chunks to simulate multiple VCC files."""
         for employee_chunk in (self.vcc_data[i : i + 10] for i in range(0, len(self.vcc_data), 10)):
-            batch_id = f"EOL{now.strftime('%m%d')}VCC{count}"
-            directory_name = f"EOL{now.strftime('%Y%m%d')}VCC{count}"
-            directory = f"{self.output_folder}/ctr/outbound/ready/{directory_name}"
-            if not self.output_folder.startswith("s3:"):
-                os.makedirs(directory, exist_ok=True)
-            (dat_filepath, inf_filepath) = vcc.build_vcc_files(employee_chunk, directory, count)
-            logger.info("generated %s %s", dat_filepath, inf_filepath)
-
-            ctr_batch_identifier = CtrBatchIdentifier(
-                ctr_batch_identifier=batch_id,
-                year=now.year,
-                batch_date=now.date(),
-                batch_counter=count,
-            )
-            reference_file = ReferenceFile(
-                file_location=directory + "/",
-                reference_file_type_id=ReferenceFileType.VCC.reference_file_type_id,
-                ctr_batch_identifier=ctr_batch_identifier,
-            )
-            self.db_session.add(ctr_batch_identifier)
-            self.db_session.add(reference_file)
+            # Set states to ADD_TO_VCC.
             for employee in employee_chunk:
-                self.db_session.add(
-                    EmployeeReferenceFile(
-                        employee=employee,
-                        reference_file=reference_file,
-                        ctr_document_identifier=None,  # TODO
-                    )
+                state_log = massgov.pfml.api.util.state_log_util.create_state_log(
+                    State.ADD_TO_VCC, employee, self.db_session, False
+                )
+                massgov.pfml.api.util.state_log_util.finish_state_log(
+                    state_log, State.ADD_TO_VCC, {}, self.db_session, False
                 )
             self.db_session.commit()
 
-            count += 1
+            directory = f"{self.output_folder}/ctr/outbound"
+            dat_filepath, inf_filepath = vcc.build_vcc_files(self.db_session, directory)
+            logger.info("generated %s %s", dat_filepath, inf_filepath)
+
+            for employee in employee_chunk:
+                state_log = massgov.pfml.api.util.state_log_util.create_state_log(
+                    State.ADD_TO_VCC, employee, self.db_session, False
+                )
+                massgov.pfml.api.util.state_log_util.finish_state_log(
+                    state_log, State.VCC_SENT, {}, self.db_session, False
+                )
+            self.db_session.commit()

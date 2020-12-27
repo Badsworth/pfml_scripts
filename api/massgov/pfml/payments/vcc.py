@@ -398,6 +398,14 @@ def create_next_batch_id(now: datetime, db_session: db.Session) -> CtrBatchIdent
     )
     db_session.add(ctr_batch_id)
 
+    logger.info(
+        "creating batch %s %s %s %s",
+        ctr_batch_id.ctr_batch_identifier,
+        ctr_batch_id.year,
+        ctr_batch_id.batch_date,
+        ctr_batch_id.batch_counter,
+    )
+
     return ctr_batch_id
 
 
@@ -411,12 +419,11 @@ def get_eligible_employees(db_session: db.Session) -> List[Employee]:
     return [state_log.employee for state_log in state_logs]
 
 
-def build_vcc_files(db_session: db.Session) -> Tuple[str, str]:
+def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str, str]:
     try:
         now = payments_util.get_now()
 
-        s3_config = payments_util.get_s3_config()
-        s3_path = os.path.join(s3_config.pfml_ctr_outbound_path, "ready")
+        s3_path = os.path.join(ctr_outbound_path, "ready")
 
         ctr_batch_id = create_next_batch_id(now, db_session)
         batch_filename = BATCH_ID_TEMPLATE.format(
