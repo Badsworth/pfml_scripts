@@ -55,6 +55,11 @@ def get_s3_config() -> PaymentsS3Config:
     )
 
 
+def get_dfml_operations_email() -> str:
+    # TODO - set this in the terraform as EOL-DL-DFML-GAXVCC_Confirmation@mass.gov
+    return str(os.environ.get("DFML_BUSINESS_OPERATIONS_EMAIL"))
+
+
 class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"
