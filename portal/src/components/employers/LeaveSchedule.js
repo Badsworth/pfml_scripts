@@ -12,6 +12,7 @@ import download from "downloadjs";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
+import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -154,7 +155,18 @@ const LeaveSchedule = ({ appLogic, claim }) => {
           level="3"
           label={t("pages.employersClaimsReview.documentationLabel")}
         >
-        <p>{t("pages.employersClaimsReview.leaveSchedule.caption_recordkeeping_hasDocuments")}</p>
+          <Trans
+            i18nKey="pages.employersClaimsReview.leaveSchedule.caption_recordkeeping_hasDocuments"
+            components={{
+              "mass-employer-role-link": (
+                <a
+                  href={routes.external.massgov.employersGuide}
+                  target="_blank"
+                  rel="noopener"
+                />
+              ),
+            }}
+          />
           {medicalDocuments.map((document) => (
             <HcpDocumentItem
               appLogic={appLogic}

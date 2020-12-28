@@ -45,7 +45,7 @@ const EmployerDecision = ({ fraud, onChange = () => {} }) => {
             i18nKey="pages.employersClaimsReview.employerDecision.explanation"
             className="font-heading-xs text-normal"
             components={{
-              "employer-pfml-guide-link": (
+              "mass-employer-role-link": (
                 <a
                   href={routes.external.massgov.employersGuide}
                   target="_blank"

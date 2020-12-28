@@ -1499,7 +1499,10 @@ const pages = {
     einLabel: "Employer ID number (EIN)",
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     leadBackground:
-      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for family leave for bonding with a child, with more benefits available in 2021.",
+      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave for bonding with a child, with more benefits available in 2021.",
+    // TODO (EMPLOYER-661): Remove string after December 15
+    leadBackground_prelaunch:
+      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers will be able to apply for family leave for bonding with a child soon, with more benefits available in 2021.",
     leadMultipleCompanies:
       "If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.",
     nextStep: "We’ll send you a 6-digit code to verify your email address.",
@@ -1602,7 +1605,7 @@ const pages = {
       choiceApprove: "Approve",
       choiceDeny: "Deny (explain below)",
       explanation:
-        "Answer based on your company policies and our <employer-pfml-guide-link>guidelines for employers</employer-pfml-guide-link>. Your recommendation is helpful to the Department in making its determination.",
+        "Answer based on your company policies and our <mass-employer-role-link>guidelines for employers</mass-employer-role-link>. Your recommendation is helpful to the Department in making its determination.",
       heading: "Have you approved or denied this leave request?",
     },
     employerIdentifierLabel: "Employer ID number (EIN)",
@@ -1662,7 +1665,7 @@ const pages = {
       caption_intermittent_hasDocuments:
         "Download the attached documentation for details about the employee’s intermittent leave schedule.",
       caption_recordkeeping_hasDocuments:
-        "To meet federal laws and regulations, you must keep medical records separate and confidential from any personnel files.",
+        "To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.",
       downloadAttachments:
         "Download the documentation below or contact us at $t(shared.contactCenterPhoneNumber) for details about the leave schedule.",
       frequencyBasis_irregular: "Irregular over the next 6 months",
@@ -1772,7 +1775,7 @@ const pages = {
       "When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.",
     checkEmailTitle: "Check your email regularly",
     learnMoreLinks:
-      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li><li><employer-pfml-guide-link>Employer’s guide to Paid Family and Medical Leave (PFML)</employer-pfml-guide-link></li></ul>",
+      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
     learnMoreTitle: "Learn more",
     respondBody:
       "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
