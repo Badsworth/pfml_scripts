@@ -99,21 +99,20 @@ describe("FieldsetAddress", () => {
       ]);
       wrapper = shallow(<FieldsetAddress {...props} />);
 
-      expect(wrapper.find({ name: "address.line_1" }).prop("errorMsg")).toBe(
-        "Address is required"
-      );
-      expect(wrapper.find({ name: "address.line_2" }).prop("errorMsg")).toBe(
-        "Address 2 is required"
-      );
-      expect(wrapper.find({ name: "address.city" }).prop("errorMsg")).toBe(
-        "City is required"
-      );
-      expect(wrapper.find({ name: "address.state" }).prop("errorMsg")).toBe(
-        "State is required"
-      );
-      expect(wrapper.find({ name: "address.zip" }).prop("errorMsg")).toBe(
-        "ZIP is required"
-      );
+      const renderErrorMsg = (name) => {
+        const Component = () => (
+          <React.Fragment>
+            {wrapper.find({ name }).prop("errorMsg")}
+          </React.Fragment>
+        );
+        return shallow(<Component />).html();
+      };
+
+      expect(renderErrorMsg("address.line_1")).toEqual("Address is required");
+      expect(renderErrorMsg("address.line_2")).toBe("Address 2 is required");
+      expect(renderErrorMsg("address.city")).toBe("City is required");
+      expect(renderErrorMsg("address.state")).toBe("State is required");
+      expect(renderErrorMsg("address.zip")).toBe("ZIP is required");
     });
   });
 

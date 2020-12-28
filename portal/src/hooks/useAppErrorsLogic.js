@@ -8,6 +8,7 @@ import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import React from "react";
 import { Trans } from "react-i18next";
+import routes from "../routes";
 import tracker from "../services/tracker";
 import useCollectionState from "./useCollectionState";
 import { useTranslation } from "../locales/i18n";
@@ -96,6 +97,20 @@ const useAppErrorsLogic = () => {
           components={{
             "mass-gov-form-link": (
               <a href="https://www.mass.gov/forms/apply-for-paid-leave-if-you-received-an-error" />
+            ),
+          }}
+        />
+      );
+    }
+
+    // TODO (CP-1532): Remove once links in error messages are fully supported
+    if (type === "intermittent_interval_maximum") {
+      return (
+        <Trans
+          i18nKey={issueMessageKey}
+          components={{
+            "intermittent-leave-guide": (
+              <a href={routes.external.massgov.intermittentLeaveGuide} />
             ),
           }}
         />

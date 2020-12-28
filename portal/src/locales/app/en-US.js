@@ -210,7 +210,7 @@ const errors = {
         },
         frequency_interval_basis: {
           intermittent_interval_maximum:
-            "The number of days between your first and last day of intermittent leave must be more than the frequency interval you select. Select a shorter frequency interval. If you continue to get this error, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
+            "Sorry, our intermittent leave request service is a work in progress. Use our <intermittent-leave-guide>step-by-step guide to intermittent leave</intermittent-leave-guide> to complete your application. You can also complete your application by calling our Contact Center at $t(shared.contactCenterPhoneNumber).",
           required: "Select how often absences may occur.",
         },
         start_date: {

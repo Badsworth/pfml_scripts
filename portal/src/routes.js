@@ -103,6 +103,8 @@ const routes = {
       index:
         "https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
+      intermittentLeaveGuide:
+        "https://www.mass.gov/intermittent-leave-instructions",
       mailFaxInstructions: "https://www.mass.gov/pfmlsubmitinfo",
       medicalBonding: "https://www.mass.gov/pfml-medical-bonding",
       multipleBirths: "https://www.mass.gov/pfml-multiple-births",
