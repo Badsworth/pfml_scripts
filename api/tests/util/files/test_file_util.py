@@ -211,6 +211,24 @@ def test_list_files_in_folder_s3_empty(mock_s3_bucket):
     assert files == []
 
 
+def test_list_s3_files_and_directories_by_level(mock_s3_bucket):
+    source_folder = "agency/outbound/ready"
+
+    expected_response = {
+        "a-stellar-testfile.txt": ["a-stellar-testfile.txt"],
+        "a-subfolder": ["a-subfolder/my-file.txt", "a-subfolder/second-file.txt"],
+    }
+
+    s3 = boto3.client("s3")
+    for files in expected_response.values():
+        for key in files:
+            s3.put_object(Bucket=mock_s3_bucket, Key=f"{source_folder}/{key}", Body="test")
+
+    path = f"s3://{mock_s3_bucket}/{source_folder}"
+    files_by_level = file_util.list_s3_files_and_directories_by_level(path)
+    assert expected_response == files_by_level
+
+
 def test_copy_file_s3(mock_s3_bucket):
     # source variables
     source_folder_name = "test_folder"

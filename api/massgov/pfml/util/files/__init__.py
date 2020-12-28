@@ -6,7 +6,7 @@ import io
 import os
 import shutil
 import tempfile
-from typing import List, Optional
+from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 import boto3
@@ -110,6 +110,52 @@ def list_files(
         return []
 
     return os.listdir(path)
+
+
+# Lists all files and directories in the path. Keys in the returned dict are equivalent to a
+# simple bash `ls`. Values of the returned dict are the relative path from the current path to the
+# contents of that directory.
+# Example response: {
+#     "a-stellar-testfile.txt": ["a-stellar-testfile.txt"],
+#     "a-subfolder": [
+#         "a-subfolder/my-file.txt",
+#         "a-subfolder/second-file.txt"
+#     ]
+# }
+def list_s3_files_and_directories_by_level(
+    path: str, boto_session: Optional[boto3.Session] = None
+) -> Dict[str, List[str]]:
+    if not is_s3_path(path):
+        return {}
+
+    # Add an empty string at the end of the prefix so it always ends in "/".
+    bucket_name, prefix = split_s3_url(path)
+    prefix = os.path.join(prefix, "")
+    s3 = boto_session.client("s3") if boto_session else boto3.client("s3")
+
+    contents_by_level: Dict[str, List[str]] = {}
+    contents = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix).get("Contents")
+    if contents is None:
+        return contents_by_level
+
+    for object in contents:
+        full_key = object["Key"]
+
+        # Exclude the directory itself from the list of files and directories within the directory.
+        if full_key == prefix:
+            continue
+
+        relative_path = full_key[len(prefix) :]
+        local_component = relative_path.split("/")[0]
+
+        if contents_by_level.get(local_component) is None:
+            contents_by_level[local_component] = []
+
+        # Exclude the subdirectories from the list of files and directories returned.
+        if not relative_path[-1:] == "/":
+            contents_by_level[local_component].append(relative_path)
+
+    return contents_by_level
 
 
 def copy_file(source, destination):
