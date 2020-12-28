@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
+from xml.etree.ElementTree import Element
 
 import boto3
 import botocore
@@ -20,6 +21,8 @@ logger = logging.get_logger(__package__)
 class Constants:
     COMPTROLLER_UNIT_CODE = "8770"
     COMPTROLLER_DEPT_CODE = "EOL"
+    COMPTROLLER_AD_ID = "AD010"
+    COMPTROLLER_AD_TYPE = "PA"
 
 
 @dataclass
@@ -67,6 +70,10 @@ class ValidationReason(str, Enum):
     FIELD_TOO_SHORT = "FieldTooShort"
     FIELD_TOO_LONG = "FieldTooLong"
     INVALID_LOOKUP_VALUE = "InvalidLookupValue"
+    INVALID_VALUE = "InvalidValue"
+    MULTIPLE_VALUES_FOUND = "MultipleValuesFound"
+    VALUE_NOT_FOUND = "ValueNotFound"
+    NON_NULLABLE = "NonNullable"
 
 
 @dataclass(frozen=True, eq=True)
@@ -271,3 +278,11 @@ def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
     if not datetime_str:
         return None
     return datetime.fromisoformat(datetime_str).date()
+
+
+def get_xml_attribute(elem: Element, attr_str: str) -> Optional[str]:
+    attr_val = elem.find(attr_str)
+    if attr_val is not None and attr_val.text != "null":
+        return attr_val.text
+    else:
+        return None
