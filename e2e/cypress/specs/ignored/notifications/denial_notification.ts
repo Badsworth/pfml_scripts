@@ -113,26 +113,36 @@ describe(
       });
     });
 
-    it("I should receive an 'denial (employer)' notification", () => {
+    it("I should receive an 'denial (employer)' and 'denial (claimant)' notification", () => {
       cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
-          const subject = email.getNotificationSubject(
+          const subjectEmployer = email.getNotificationSubject(
             employeeFullName,
             "denial (employer)",
             submission.application_id
           );
-          cy.log(subject);
+
+          const subjectClaimant = email.getNotificationSubject(
+            employeeFullName,
+            "denial (claimant)",
+            submission.application_id
+          );
+
+          cy.log(subjectEmployer);
           cy.task<Email[]>(
             "getEmails",
             {
               address: "gqzap.notifications@inbox.testmail.app",
-              subject: subject,
+              subject: subjectEmployer,
               timestamp_from: submission.timestamp_from,
             },
             { timeout: 180000 }
           ).then((emails) => {
-            const emailContent = email.getNotificationData(emails[0].html);
+            const emailContent = email.getNotificationData(
+              emails[0].html,
+              "denial (employer)"
+            );
             if (typeof claim.date_of_birth !== "string") {
               throw new Error("DOB must be a string");
             }
@@ -141,6 +151,30 @@ describe(
             expect(emailContent.name).to.equal(employeeFullName);
             expect(emailContent.dob).to.equal(dob);
             expect(emailContent.applicationId).to.equal(
+              submission.fineos_absence_id
+            );
+            expect(emails[0].html).to.include(
+              `https://paidleave-test.mass.gov/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
+            );
+          });
+          // Check email for Claimant
+          cy.task<Email[]>(
+            "getEmails",
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: subjectClaimant,
+              timestamp_from: submission.timestamp_from,
+            },
+            { timeout: 180000 }
+          ).then((emails) => {
+            const emailContent = email.getNotificationData(
+              emails[0].html,
+              "denial (claimant)"
+            );
+            if (emailContent === undefined) {
+              throw new Error("Denial (claimant) email not found");
+            }
+            expect(emailContent.applicationId).to.contain(
               submission.fineos_absence_id
             );
           });
