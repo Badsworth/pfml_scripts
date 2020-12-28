@@ -1727,6 +1727,7 @@ const pages = {
       tableHeader_leaveType: "Leave type",
     },
     submitButton: "Submit",
+    submitLoadingMessage: "Submitting… Do not refresh or go back.",
     supportingWorkDetails: {
       header: "Supporting work details",
       hoursWorkedLabel: "Weekly hours worked",
