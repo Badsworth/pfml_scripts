@@ -13,7 +13,9 @@ import smart_open
 
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
+from massgov.pfml import db
 from massgov.pfml.db.lookup import LookupTable
+from massgov.pfml.db.models.employees import ReferenceFile
 
 logger = logging.get_logger(__package__)
 
@@ -290,3 +292,10 @@ def get_xml_attribute(elem: Element, attr_str: str) -> Optional[str]:
         return attr_val.text
     else:
         return None
+
+
+def move_file_and_update_ref_file(
+    db_session: db.Session, destination: str, ref_file: ReferenceFile
+) -> None:
+    file_util.rename_file(ref_file.file_location, destination)
+    ref_file.file_location = destination
