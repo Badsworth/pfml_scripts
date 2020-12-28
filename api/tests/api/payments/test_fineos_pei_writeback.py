@@ -99,12 +99,12 @@ def test_pei_writeback_to_s3(test_db_session, set_exporter_env_vars, initialize_
 
     lines = list(file_util.read_file_lines(uploaded_filepath))
     assert lines[0] == ",".join([f.name for f in dataclasses.fields(writeback.PeiWritebackRecord)])
-    assert lines[1] == "123,456,Active,,Pending,,12/23/2020,,,"
-    assert lines[2] == "123,456,Active,,Pending,,12/22/2020,,,"
+    assert lines[1] == "123,456,Active,,,,12/23/2020,,Pending,"
+    assert lines[2] == "123,456,Active,,,,12/22/2020,,Pending,"
 
     file_name = "2020-12-21-12-00-01-pei_writeback.csv"
     fineos_filepath = os.path.join(payments_util.get_s3_config().fineos_data_import_path, file_name)
     lines = list(file_util.read_file_lines(fineos_filepath))
     assert lines[0] == ",".join([f.name for f in dataclasses.fields(writeback.PeiWritebackRecord)])
-    assert lines[1] == "123,456,Active,,Pending,,12/23/2020,,,"
-    assert lines[2] == "123,456,Active,,Pending,,12/22/2020,,,"
+    assert lines[1] == "123,456,Active,,,,12/23/2020,,Pending,"
+    assert lines[2] == "123,456,Active,,,,12/22/2020,,Pending,"

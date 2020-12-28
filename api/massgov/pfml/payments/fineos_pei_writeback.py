@@ -10,7 +10,6 @@ import massgov.pfml.db as db
 import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
-from massgov.pfml.db.models.base import uuid_gen
 from massgov.pfml.db.models.employees import (
     Payment,
     PaymentReferenceFile,
@@ -164,7 +163,6 @@ def write_to_s3_and_save_reference_files(
 
     try:
         ref_file = ReferenceFile(
-            reference_file_id=uuid_gen(),
             file_location=s3_dest,
             reference_file_type_id=ReferenceFileType.PEI_WRITEBACK.reference_file_type_id,
         )
@@ -175,9 +173,7 @@ def write_to_s3_and_save_reference_files(
 
     try:
         for payment in payments:
-            payment_ref_file = PaymentReferenceFile(
-                reference_file_id=ref_file.reference_file_id, payment_id=payment.payment_id
-            )
+            payment_ref_file = PaymentReferenceFile(reference_file=ref_file, payment=payment)
             db_session.add(payment_ref_file)
         db_session.commit()
     except Exception as e:
@@ -205,6 +201,6 @@ def _payment_to_pei_writeback_record(payment: Payment) -> PeiWritebackRecord:
         pei_C_value=payment.fineos_pei_c_value,
         pei_I_value=payment.fineos_pei_i_value,
         status="Active",
-        statusReason="Pending",
         extractionDate=payment.fineos_extraction_date,
+        transactionStatus="Pending",
     )
