@@ -516,3 +516,153 @@ data "aws_iam_policy_document" "cloudwatch_events_register_admins_role_policy" {
     ]
   }
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for payments-fineos-process
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "payments_fineos_process_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-payments-fineos-process"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "payments_fineos_process_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-payments-fineos-process-fineos-assume-policy"
+  role   = aws_iam_role.fineos_import_employee_updates_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
+}
+
+resource "aws_iam_role_policy" "payments_fineos_process_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-payments-fineos-process-extras"
+  role   = aws_iam_role.payments_fineos_process_task_role.id
+  policy = data.aws_iam_policy_document.payments_fineos_process_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "payments_fineos_process_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}"
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:prefix"
+      values = [
+        "cps/",
+        "cps/*"
+      ]
+    }
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3ReadOnBucket"
+    actions = [
+      "s3:Get*",
+      "s3:List*"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3WriteOnBucket"
+    actions = [
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+    ]
+
+    effect = "Allow"
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for payments-ctr-process
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "payments_ctr_process_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-payments-ctr-process"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "payments_ctr_process_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-payments-fineos-process-extras"
+  role   = aws_iam_role.payments_ctr_process_task_role.id
+  policy = data.aws_iam_policy_document.payments_ctr_process_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "payments_ctr_process_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}"
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:prefix"
+      values = [
+        "ctr/",
+        "ctr/*"
+      ]
+    }
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3ReadOnBucket"
+    actions = [
+      "s3:Get*",
+      "s3:List*"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/ctr",
+      "${data.aws_s3_bucket.agency_transfer.arn}/ctr/*",
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3WriteOnBucket"
+    actions = [
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/ctr",
+      "${data.aws_s3_bucket.agency_transfer.arn}/ctr/*",
+    ]
+
+    effect = "Allow"
+  }
+}
