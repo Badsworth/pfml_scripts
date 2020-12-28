@@ -2000,6 +2000,9 @@ const components = {
     skipToContent: "Skip to main content",
     appTitle: "Paid Family and Medical Leave",
   },
+  inputPassword: {
+    toggleLabel: "Show password",
+  },
   leaveDatesAlert: {
     heading: "Your leave dates for paid leave",
   },

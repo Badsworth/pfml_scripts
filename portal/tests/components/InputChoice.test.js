@@ -77,6 +77,15 @@ describe("InputChoice", () => {
     });
   });
 
+  describe("when ariaControls prop is set", () => {
+    it("renders an aria-controls attribute", () => {
+      const { wrapper } = render({ ariaControls: "my-element" });
+      const input = wrapper.find("input");
+
+      expect(input.prop("aria-controls")).toBe("my-element");
+    });
+  });
+
   describe("when the type prop isn't set", () => {
     it("defaults to a checkbox", () => {
       const { wrapper } = render();

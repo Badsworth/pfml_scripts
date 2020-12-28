@@ -2,6 +2,7 @@ import Alert from "../../components/Alert";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Button from "../../components/Button";
 import Details from "../../components/Details";
+import InputPassword from "../../components/InputPassword";
 import InputText from "../../components/InputText";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
@@ -69,10 +70,9 @@ export const CreateAccount = (props) => {
         label={t("pages.employersAuthCreateAccount.usernameLabel")}
         smallLabel
       />
-      <InputText
+      <InputPassword
         {...getFunctionalInputProps("password")}
         autoComplete="new-password"
-        type="password"
         hint={t("pages.employersAuthCreateAccount.passwordHint")}
         label={t("pages.employersAuthCreateAccount.passwordLabel")}
         smallLabel

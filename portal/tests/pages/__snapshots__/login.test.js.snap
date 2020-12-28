@@ -17,17 +17,14 @@ exports[`Login renders the empty page 1`] = `
       type="email"
       value=""
     />
-    <InputText
+    <InputPassword
       label="Password"
       name="password"
       onChange={[Function]}
       smallLabel={true}
-      type="password"
       value=""
     />
-    <div
-      className="margin-top-1"
-    >
+    <p>
       <Link
         href="/forgot-password"
       >
@@ -35,7 +32,7 @@ exports[`Login renders the empty page 1`] = `
           Forgot your password?
         </a>
       </Link>
-    </div>
+    </p>
     <Button
       loading={false}
       type="submit"

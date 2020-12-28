@@ -14,7 +14,9 @@ import useUniqueId from "../hooks/useUniqueId";
  * Masked field functionality copied from [CMS design system](https://design.cms.gov/components/masked-field)
  */
 function InputText({ type = "text", ...props }) {
-  const inputId = useUniqueId("InputText");
+  let inputId = useUniqueId("InputText");
+  inputId = props.inputId || inputId;
+
   const hasError = !!props.errorMsg;
   let inputMode = props.inputMode;
 
@@ -105,6 +107,10 @@ InputText.propTypes = {
    * Additional classes to include on the HTML input
    */
   inputClassName: PropTypes.string,
+  /**
+   * Unique HTML id attribute (created by useUniqueId if null)
+   */
+  inputId: PropTypes.string,
   /**
    * HTML input `inputmode` attribute. Defaults to "text"
    */

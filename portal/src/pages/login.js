@@ -1,6 +1,7 @@
 import Alert from "../components/Alert";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
+import InputPassword from "../components/InputPassword";
 import InputText from "../components/InputText";
 import Link from "next/link";
 import PropTypes from "prop-types";
@@ -77,17 +78,16 @@ export const Login = (props) => {
           label={t("pages.authLogin.usernameLabel")}
           smallLabel
         />
-        <InputText
+        <InputPassword
           {...getFunctionalInputProps("password")}
-          type="password"
           label={t("pages.authLogin.passwordLabel")}
           smallLabel
         />
-        <div className="margin-top-1">
+        <p>
           <Link href={routes.auth.forgotPassword}>
             <a>{t("pages.authLogin.forgotPasswordLink")}</a>
           </Link>
-        </div>
+        </p>
 
         <Button type="submit" loading={handleSubmit.isThrottled}>
           {t("pages.authLogin.loginButton")}
