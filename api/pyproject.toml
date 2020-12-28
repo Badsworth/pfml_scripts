@@ -28,6 +28,7 @@ psycopg2-binary = "^2.8.5"
 puremagic = "^1.10"
 pydantic = "^1.5.1"
 pydash = "^4.7.6"
+pyodbc = {version = "^4.0.30", optional = true}
 python = "^3.8"
 python-dateutil = "^2.8.1"
 python-gnupg = "^0.4.6"
@@ -64,6 +65,9 @@ pytest-timeout = "^1.4.1"
 pytest-watch = "^4.2.0"
 safety = "^1.9.0"
 sqlalchemy-stubs = {git = "https://github.com/dropbox/sqlalchemy-stubs", rev = "55470ceab8149db983411d5c094c9fe16343c58b"}
+
+[tool.poetry.extras]
+mssql-server = ["pyodbc"]
 
 [tool.poetry.scripts]
 massgov-pfml-api = "massgov.pfml.api.__main__:main"
