@@ -27,16 +27,10 @@ terraform {
 module "pfml" {
   source = "../../template"
 
-  # Disable custom domain names by default for a new environment.
-  #
-  # Follow the steps in /docs/creating-environments.md to
-  # set up custom mass.gov domain names.
-  #
-  enable_pretty_domain = false
-  environment_name     = "uat"
-  nlb_name             = "${local.vpc}-nlb"
-  nlb_vpc_link_name    = "${local.vpc}-nlb-vpc-link"
-  nlb_port             = 3503
+  environment_name  = "uat"
+  nlb_name          = "${local.vpc}-nlb"
+  nlb_vpc_link_name = "${local.vpc}-nlb-vpc-link"
+  nlb_port          = 3503
 
   # AWS WAF ACL settings
   enable_regional_rate_based_acl = true
