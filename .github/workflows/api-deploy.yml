@@ -110,6 +110,41 @@ jobs:
           git push -f origin HEAD
           echo "::set-output name=commit_hash::$commit_hash"
 
+  start-deployment-status:
+    name: Start deployment status
+    needs: update-the-deploy-branch
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_id: ${{ steps.create-deployment.outputs.deployment_id }}
+
+    steps:
+      - name: Set api-env Value
+        run: echo "api-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
+
+      - name: Set deployed-url Value
+        run: |
+          if [[ "${{ env.api-env }}" == 'prod' ]]; then
+            echo "deployed-url=https://paidleave-api.mass.gov/api/docs/" >> $GITHUB_ENV
+          else
+            echo "deployed-url=https://paidleave-api-${{ env.api-env }}.mass.gov/api/docs/" >> $GITHUB_ENV
+          fi
+
+      - uses: chrnorm/deployment-action@releases/v1
+        name: Create GitHub deployment
+        id: create-deployment
+        with:
+          # NOTE: If you are intending for this GitHub deployment to trigger another
+          #       workflow that's listening for on: [deployment], you need to update this
+          #       to secrets.PFML_DEVOPS_TOKEN (same for the update step at the end.)
+          #
+          #       This is intentionally using the github.token right now to avoid unintended
+          #       side-effects from happening off of the automated deployments.
+          #
+          token: "${{ github.token }}"
+          target_url: ${{ env.deployed-url }}
+          environment: "API (${{ env.api-env }})"
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
   api-build:
     name: Build docker image
     needs: update-the-deploy-branch
@@ -558,9 +593,44 @@ jobs:
           tf_actions_subcommand: output
           tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ env.api-env }}
 
+  update-deployment-status:
+    name: Update deployment status
+    needs: [start-deployment-status, api-release, api-gateway-release]
+    runs-on: ubuntu-latest
+    if: always() && needs.start-deployment-status.result == 'success'
 
+    steps:
+      - name: Set deploy-state Value to true
+        run: |
+          if [[ $API_RESULT == 'success' ]] && [[ $GATEWAY_RESULT == 'success' ]]
+          then
+            echo "deploy-state=success" >> $GITHUB_ENV
+          else
+            echo "deploy-state=failure" >> $GITHUB_ENV
+          fi
+        env:
+          API_RESULT: ${{ needs.api-release.result }}
+          GATEWAY_RESULT: ${{ needs.api-gateway-release.result }}
 
+      - name: Set api-env Value
+        run: echo "api-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
 
+      - name: Set deployed-url Value
+        run: |
+          if [[ "${{ env.api-env }}" == 'prod' ]]; then
+            echo "deployed-url=https://paidleave-api.mass.gov/api/docs/" >> $GITHUB_ENV
+          else
+            echo "deployed-url=https://paidleave-api-${{ env.api-env }}.mass.gov/api/docs/" >> $GITHUB_ENV
+          fi
+
+      - uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: ${{ github.token }}
+          # This should match target_url in start-deployment-status.
+          # see: https://github.com/chrnorm/deployment-status/issues/13#issuecomment-734731491
+          environment_url: ${{ env.deployed-url }}
+          state: ${{ env.deploy-state }}
+          deployment_id: ${{ needs.start-deployment-status.outputs.deploy_id }}
 
   end-to-end:
     name: End-to-End Test Deployment
