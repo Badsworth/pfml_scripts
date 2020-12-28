@@ -16,6 +16,8 @@ import paramiko
 import smart_open
 from botocore.config import Config
 
+import massgov.pfml.util.aws.sts as aws_sts
+
 EBCDIC_ENCODING = "cp1140"  # See https://pypi.org/project/ebcdic/ for further details
 
 
@@ -171,10 +173,46 @@ def copy_file(source, destination):
         source_bucket, source_path = split_s3_url(source)
         dest_bucket, dest_path = split_s3_url(destination)
 
-        # TODO - might need to do something with credentials here
-        s3 = boto3.client("s3")
-        copy_source = {"Bucket": source_bucket, "Key": source_path}
-        s3.copy(copy_source, dest_bucket, dest_path)
+        # TODO - switch back to this after FINEOS roles have the updated permissions.
+        # s3 = boto3.client("s3")
+        # copy_source = {"Bucket": source_bucket, "Key": source_path}
+        # s3.copy(copy_source, dest_bucket, dest_path)
+
+        # Simulate copy for now using independent download and upload.
+        source_boto3_session = boto3
+        dest_boto3_session = boto3
+
+        is_fineos_source = source_bucket.startswith("fin-som")
+        is_fineos_dest = dest_bucket.startswith("fin-som")
+
+        if is_fineos_source or is_fineos_dest:
+            # This should get passed in from the method but getting it
+            # directly from the environment due to time constraints.
+            fineos_boto_session = aws_sts.assume_session(
+                role_arn=os.environ["FINEOS_AWS_IAM_ROLE_ARN"],
+                external_id=os.environ["FINEOS_AWS_IAM_ROLE_EXTERNAL_ID"],
+                role_session_name="payments_copy_file",
+                region_name="us-east-1",
+            )
+
+            if is_fineos_source:
+                source_boto3_session = fineos_boto_session
+
+            if is_fineos_dest:
+                dest_boto3_session = fineos_boto_session
+
+        file_descriptor, tempfile_path = tempfile.mkstemp()
+
+        try:
+            source_s3 = source_boto3_session.client("s3")
+            source_s3.download_file(source_bucket, source_path, tempfile_path)
+
+            dest_s3 = dest_boto3_session.client("s3")
+            dest_s3.upload_file(tempfile_path, dest_bucket, dest_path)
+        finally:
+            os.close(file_descriptor)
+            os.remove(tempfile_path)
+
     else:
         shutil.copy2(source, destination)
 
