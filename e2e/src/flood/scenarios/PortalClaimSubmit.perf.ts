@@ -1,7 +1,7 @@
 import { StepFunction, TestData, Browser, step, By, ENV } from "@flood/element";
-import { DocumentUploadRequest } from "../../api";
 import * as Cfg from "../config";
 import * as Util from "../helpers";
+import { fetchFormData, fetchJSON } from "../fetch";
 
 let authToken: string;
 let newAccount: { username: string; password: string };
@@ -385,12 +385,15 @@ function getClaimParts(
 }
 
 async function createApplication(browser: Browser): Promise<void> {
-  const reqOptions = Util.getRequestOptions(authToken, "POST");
-  const res = await Util.evalFetch(
+  const res = await fetchJSON(
     browser,
+    authToken,
     `${await Cfg.APIBaseUrl}/applications`,
-    reqOptions
+    {
+      method: "POST",
+    }
   );
+
   if (!res.data || !res.data.application_id) {
     throw new Error(
       `Unable to create application: ${JSON.stringify(res, null, 2)}`
@@ -404,11 +407,14 @@ async function updateApplication(
   browser: Browser,
   claimPart: Partial<Cfg.LSTSimClaim["claim"]>
 ): Promise<void> {
-  const reqOptions = Util.getRequestOptions(authToken, "PATCH", claimPart);
-  const res = await Util.evalFetch(
+  const res = await fetchJSON(
     browser,
+    authToken,
     `${await Cfg.APIBaseUrl}/applications/${applicationId}`,
-    reqOptions
+    {
+      method: "PATCH",
+      body: JSON.stringify(claimPart),
+    }
   );
   if (res.status_code !== 200) {
     throw new Error(
@@ -419,11 +425,13 @@ async function updateApplication(
 }
 
 async function submitApplication(browser: Browser): Promise<void> {
-  const reqOptions = Util.getRequestOptions(authToken, "POST");
-  const res = await Util.evalFetch(
+  const res = await fetchJSON(
     browser,
+    authToken,
     `${await Cfg.APIBaseUrl}/applications/${applicationId}/submit_application`,
-    reqOptions
+    {
+      method: "POST",
+    }
   );
   if (res.status_code !== 201) {
     throw new Error(
@@ -438,20 +446,22 @@ async function uploadDocuments(
   data: Cfg.LSTSimClaim
 ): Promise<void> {
   for (const document of data.documents) {
-    // important: body & headers need to be empty objects
-    const reqOptions = Util.getRequestOptions(authToken, "POST", {}, {});
-    const docBody: DocumentUploadRequest = {
-      document_type: Util.getDocumentType(document),
-      description: "LST - Direct to API",
-      file: await readFile(Cfg.documentUrl),
-      mark_evidence_received: true,
-      name: `${document.type}.pdf`,
-    };
-    const res = await Util.evalFetch(
+    const data = await readFile(Cfg.documentUrl);
+    const document_type = Util.getDocumentType(document);
+    const name = `${document_type}.pdf`;
+    const res = await fetchFormData(
       browser,
+      authToken,
+      {
+        document_type,
+        description: "LST - Direct to API",
+        file: { data, name, type: "application/pdf" },
+        name,
+      },
       `${await Cfg.APIBaseUrl}/applications/${applicationId}/documents`,
-      reqOptions,
-      docBody
+      {
+        method: "POST",
+      }
     );
     if (res.status_code !== 200) {
       throw new Error(
@@ -464,11 +474,13 @@ async function uploadDocuments(
 }
 
 async function completeApplication(browser: Browser): Promise<void> {
-  const reqOptions = Util.getRequestOptions(authToken, "POST");
-  const res = await Util.evalFetch(
+  const res = await fetchJSON(
     browser,
+    authToken,
     `${await Cfg.APIBaseUrl}/applications/${applicationId}/complete_application`,
-    reqOptions
+    {
+      method: "POST",
+    }
   );
   if (res.status_code !== 200) {
     throw new Error(
