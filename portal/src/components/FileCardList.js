@@ -9,13 +9,7 @@ import { uniqueId } from "lodash";
 import { useTranslation } from "../locales/i18n";
 
 // Only image and pdf files are allowed to be uploaded
-const allowedFileTypes = [
-  "image/png",
-  "image/jpeg",
-  "image/tiff",
-  "image/heic",
-  "application/pdf",
-];
+const allowedFileTypes = ["image/png", "image/jpeg", "application/pdf"];
 
 // Max file size in bytes
 const maximumFileSize = 3500000;

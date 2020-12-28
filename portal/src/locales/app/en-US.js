@@ -464,9 +464,9 @@ const errors = {
   invalidFile_size:
     "We could not upload: {{disallowedFileNames}}. Files must be smaller than 3.5 MB.",
   invalidFile_sizeAndType:
-    "We could not upload: {{disallowedFileNames}}. Choose a PDF or image file that is smaller than 3.5 MB.",
+    "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 3.5 MB.",
   invalidFile_type:
-    "We could not upload: {{disallowedFileNames}}. Choose a PDF or image file.",
+    "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png).",
   network:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   // These fallbacks shouldn't normally render, but they may if a validation rule or
@@ -1948,10 +1948,7 @@ const components = {
     tips: [
       {
         listHeading: "This website only accepts:",
-        listItems: [
-          "PDF documents",
-          "Images (.jpg, .jpeg, .png, .tiff, .heic)",
-        ],
+        listItems: ["PDF documents", "Images (.jpg, .jpeg, .png)"],
       },
       {
         listHeading:
