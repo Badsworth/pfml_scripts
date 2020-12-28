@@ -359,6 +359,7 @@ def test_build_vcc_files(
     mock_s3_config = PaymentsS3Config(
         fineos_data_export_path="",
         fineos_data_import_path="",
+        pfml_ctr_inbound_path="",
         pfml_ctr_outbound_path=f"s3://{mock_s3_bucket}/path/to/dir",
         pfml_fineos_inbound_path="",
         pfml_fineos_outbound_path="",

@@ -37,6 +37,9 @@ class PaymentsS3Config:
     # PFML API stores a copy of all files that FINEOS generates for us
     # This is where we store that copy
     fineos_data_import_path: str
+    # PFML API stores a copy of all files that we retrieve from CTR
+    # This is where we store that copy
+    pfml_ctr_inbound_path: str
     ## PFML API stores a copy of all files that we generate for the office of the Comptroller
     ## This is where we store that copy
     pfml_ctr_outbound_path: str
@@ -52,6 +55,7 @@ def get_s3_config() -> PaymentsS3Config:
     return PaymentsS3Config(
         fineos_data_export_path=str(os.environ.get("FINEOS_DATA_EXPORT_PATH")),
         fineos_data_import_path=str(os.environ.get("FINEOS_DATA_IMPORT_PATH")),
+        pfml_ctr_inbound_path=str(os.environ.get("PFML_CTR_INBOUND_PATH")),
         pfml_ctr_outbound_path=str(os.environ.get("PFML_CTR_OUTBOUND_PATH")),
         pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
         pfml_fineos_outbound_path=str(os.environ.get("PFML_FINEOS_OUTBOUND_PATH")),

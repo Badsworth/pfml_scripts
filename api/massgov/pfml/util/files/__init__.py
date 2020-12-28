@@ -114,6 +114,13 @@ def list_files(
     return os.listdir(path)
 
 
+def list_files_without_folder(
+    path: str, delimiter: str = "/", boto_session: Optional[boto3.Session] = None
+) -> List[str]:
+    files = list_files(path, delimiter, boto_session)
+    return list(filter(lambda file: file != "", files))
+
+
 # Lists all files and directories in the path. Keys in the returned dict are equivalent to a
 # simple bash `ls`. Values of the returned dict are the relative path from the current path to the
 # contents of that directory.
