@@ -86,6 +86,7 @@ def add_db_records(
             fineos_absence_id=absence_case_id,
             employee_id=employee.employee_id,
         )
+
         # Payment needs to be attached to a claim
         if add_payment:
             PaymentFactory.create(claim=claim)
@@ -115,7 +116,7 @@ def setup_process_tests(
     add_db_records(
         test_db_session,
         "111111111",
-        "NTN-01-ABS-01",
+        "NTN-01-ABS-02",
         add_claim=add_claim,
         add_address=add_address,
         add_eft=add_eft,
@@ -126,7 +127,7 @@ def setup_process_tests(
     add_db_records(
         test_db_session,
         "222222222",
-        "NTN-02-ABS-02",
+        "NTN-02-ABS-03",
         add_claim=add_claim,
         add_address=add_address,
         add_eft=add_eft,
@@ -137,7 +138,7 @@ def setup_process_tests(
     add_db_records(
         test_db_session,
         "333333333",
-        "NTN-03-ABS-03",
+        "NTN-03-ABS-04",
         add_claim=add_claim,
         add_address=add_address,
         add_eft=add_eft,

@@ -55,12 +55,10 @@ class Generators:
         lambda: "INTFDFML" + "".join(random.choices(string.ascii_uppercase + string.digits, k=12))
     )
     FineosAbsenceId = factory.Sequence(lambda n: "NTN-{:02d}-ABS-01".format(n))
-
     VccDocCounter = factory.Sequence(lambda n: n)
     VccDocId = factory.Sequence(
         lambda n: "INTFDFML{}{}".format(datetime.now().strftime("%d%m%Y"), f"{n:04}")
     )
-
     VccBatchCounter = factory.Sequence(lambda n: n)
     VccBatchId = factory.Sequence(lambda n: "EOL{}VCC{}".format(datetime.now().strftime("%m%d"), n))
 
@@ -164,6 +162,7 @@ class EmployeeFactory(BaseFactory):
     other_name = None
     email_address = factory.Faker("email")
     phone_number = "+19425290727"
+    ctr_vendor_customer_code = "VC0001201168"
 
 
 class CtrBatchIdentifierFactory(BaseFactory):
@@ -294,8 +293,9 @@ class ClaimFactory(BaseFactory):
     claim_type_id = None
     benefit_amount = 100
     benefit_days = 60
-    # fineos_absence_id = "NTN-01-ABS-01"
     fineos_absence_id = Generators.FineosAbsenceId
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
 
 
 class PaymentFactory(BaseFactory):

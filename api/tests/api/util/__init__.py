@@ -52,7 +52,7 @@ def setup_state_log(
             claim = ClaimFactory.create(
                 employer_id=employer.employer_id,
                 fineos_absence_id=additional_params.fineos_absence_id,
-                employee_id=associated_model.employee_id,
+                employee=associated_model,
             )
             PaymentFactory.create(payment_date=date(2020, 1, 7), claim=claim)
 
@@ -65,7 +65,7 @@ def setup_state_log(
         claim = ClaimFactory.create(
             employer_id=employer.employer_id,
             fineos_absence_id=additional_params.fineos_absence_id,
-            employee_id=employee.employee_id,
+            employee=employee,
         )
         associated_model = PaymentFactory.create(payment_date=date(2020, 1, 7), claim=claim)
     if associated_class == state_log_util.AssociatedClass.REFERENCE_FILE:

@@ -36,7 +36,7 @@ def get_payment(
         period_end_date=end_date,
         amount=amount,
         claim=ClaimFactory(
-            employee_id=employee.employee_id,
+            employee=employee,
             employer_id=employer.employer_id,
             claim_type_id=claim_type_id,
             fineos_absence_id=fineos_absence_id,
@@ -112,7 +112,6 @@ def test_gax_doc_id():
 
 
 def test_build_individual_gax_document(initialize_factories_session):
-
     document = gax.build_individual_gax_document(
         Document(),
         get_payment(
@@ -125,7 +124,6 @@ def test_build_individual_gax_document(initialize_factories_session):
             end_date=datetime(2020, 12, 1),
         ),
     )
-
     # Doc ID is generated randomly every run, but appears in many sub values.
     doc_id = document._attrs["DOC_ID"].value
     assert doc_id
@@ -154,6 +152,7 @@ def test_build_individual_gax_document(initialize_factories_session):
 
     # Validate the ABS_DOC_VEND section
     abs_doc_vend = document.childNodes[1]
+
     assert abs_doc_vend.tagName == "ABS_DOC_VEND"
     validate_attributes(abs_doc_vend, {"AMSDataObject": "Y"})
 
