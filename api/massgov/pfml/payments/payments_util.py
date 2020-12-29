@@ -10,12 +10,13 @@ import boto3
 import botocore
 import pytz
 import smart_open
+from sqlalchemy import func
 
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.lookup import LookupTable
-from massgov.pfml.db.models.employees import ReferenceFile
+from massgov.pfml.db.models.employees import CtrBatchIdentifier, LkReferenceFileType, ReferenceFile
 
 logger = logging.get_logger(__package__)
 
@@ -26,6 +27,9 @@ class Constants:
     COMPTROLLER_AD_ID = "AD010"
     COMPTROLLER_AD_TYPE = "PA"
     DOC_PHASE_CD_FINAL_STATUS = "3 - Final"
+
+
+BATCH_ID_TEMPLATE = Constants.COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
 
 
 @dataclass
@@ -237,6 +241,63 @@ def add_cdata_elements(
         elem.appendChild(cdata)
 
 
+def create_next_batch_id(
+    now: datetime, file_type_descr: str, db_session: db.Session
+) -> CtrBatchIdentifier:
+    ctr_batch_id_pattern = BATCH_ID_TEMPLATE.format(now.strftime("%m%d"), file_type_descr, "%")
+    max_batch_id_today = (
+        db_session.query(func.max(CtrBatchIdentifier.batch_counter))
+        .filter(
+            CtrBatchIdentifier.batch_date == now.date(),
+            CtrBatchIdentifier.ctr_batch_identifier.like(ctr_batch_id_pattern),
+        )
+        .scalar()
+    )
+
+    # Start batch counters at 10.
+    # Other agencies use suffixes 1-7 (for days of the week). We start our suffixes at 10 so we
+    # don't conflict with their batch IDs and have a logical starting point (10 instead of 8).
+    batch_counter = 10
+    if max_batch_id_today:
+        batch_counter = max_batch_id_today + 1
+
+    batch_id = BATCH_ID_TEMPLATE.format(now.strftime("%m%d"), file_type_descr, batch_counter)
+    ctr_batch_id = CtrBatchIdentifier(
+        ctr_batch_identifier=batch_id,
+        year=now.year,
+        batch_date=now.date(),
+        batch_counter=batch_counter,
+    )
+    db_session.add(ctr_batch_id)
+
+    return ctr_batch_id
+
+
+def create_batch_id_and_reference_file(
+    now: datetime, file_type: LkReferenceFileType, db_session: db.Session, ctr_outbound_path: str
+) -> Tuple[CtrBatchIdentifier, ReferenceFile]:
+    ctr_batch_id = create_next_batch_id(
+        now, file_type.reference_file_type_description or "", db_session
+    )
+
+    s3_path = os.path.join(ctr_outbound_path, "ready")
+    batch_filename = BATCH_ID_TEMPLATE.format(
+        now.strftime("%Y%m%d"),
+        file_type.reference_file_type_description,
+        ctr_batch_id.batch_counter,
+    )
+    dir_path = os.path.join(s3_path, batch_filename)
+
+    ref_file = ReferenceFile(
+        file_location=dir_path,
+        reference_file_type_id=file_type.reference_file_type_id,
+        ctr_batch_identifier=ctr_batch_id,
+    )
+    db_session.add(ref_file)
+
+    return (ctr_batch_id, ref_file)
+
+
 def create_files(
     directory: str, filename: str, dat_xml_document: minidom.Document, inf_dict: Dict[str, str]
 ) -> Tuple[str, str]:
@@ -253,7 +314,7 @@ def create_files(
     return (dat_filepath, inf_filepath)
 
 
-def create_vcc_files_in_s3(
+def create_mmars_files_in_s3(
     s3_path: str,
     filename: str,
     dat_xml_document: minidom.Document,

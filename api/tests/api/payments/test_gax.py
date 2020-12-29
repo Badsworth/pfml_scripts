@@ -1,14 +1,26 @@
-import tempfile
+import decimal
+import xml.dom.minidom as minidom
 from datetime import datetime
 from typing import List
-from xml.dom.minidom import Document
 
 import defusedxml.ElementTree as ET
-import pytest
+import smart_open
 from freezegun import freeze_time
+from sqlalchemy import func
 
+import massgov.pfml.api.util.state_log_util as state_log_util
+import massgov.pfml.db as db
 import massgov.pfml.payments.gax as gax
-from massgov.pfml.db.models.employees import ClaimType, Payment
+import massgov.pfml.payments.payments_util as payments_util
+from massgov.pfml.db.models.employees import (
+    ClaimType,
+    CtrDocumentIdentifier,
+    Payment,
+    PaymentReferenceFile,
+    ReferenceFile,
+    ReferenceFileType,
+    State,
+)
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
     EmployeeFactory,
@@ -22,10 +34,10 @@ def get_payment(
     fineos_absence_id: str,
     claim_type_id: int,
     ctr_vendor_code: str,
-    amount: float,
-    payment_date: datetime,
-    start_date: datetime,
-    end_date: datetime,
+    amount: decimal.Decimal,
+    payment_date: datetime.date,
+    start_date: datetime.date,
+    end_date: datetime.date,
 ) -> Payment:
     employee = EmployeeFactory(ctr_vendor_customer_code=ctr_vendor_code)
     employer = EmployerFactory()
@@ -50,21 +62,35 @@ def get_payments() -> List[Payment]:
             fineos_absence_id="NTN-1234-ABS-01",
             claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
             ctr_vendor_code="abc1234",
-            amount=1200.00,
-            payment_date=datetime(2020, 7, 1),
-            start_date=datetime(2020, 8, 1),
-            end_date=datetime(2020, 12, 1),
+            amount=decimal.Decimal("1200.00"),
+            payment_date=datetime(2020, 7, 1).date(),
+            start_date=datetime(2020, 8, 1).date(),
+            end_date=datetime(2020, 12, 1).date(),
         ),
         get_payment(
             fineos_absence_id="NTN-1234-ABS-02",
             claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
             ctr_vendor_code="12345678",
-            amount=1300.00,
-            payment_date=datetime(2020, 1, 15),
-            start_date=datetime(2020, 2, 15),
-            end_date=datetime(2020, 4, 15),
+            amount=decimal.Decimal("1300.00"),
+            payment_date=datetime(2020, 1, 15).date(),
+            start_date=datetime(2020, 2, 15).date(),
+            end_date=datetime(2020, 4, 15).date(),
         ),
     ]
+
+
+def create_add_to_gax_state_log_for_payment(payment: Payment, db_session: db.Session) -> None:
+    state_log = state_log_util.create_state_log(
+        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        associated_model=payment,
+        db_session=db_session,
+    )
+    state_log_util.finish_state_log(
+        state_log=state_log,
+        end_state=State.ADD_TO_GAX,
+        outcome=state_log_util.build_outcome("success"),
+        db_session=db_session,
+    )
 
 
 def test_get_fiscal_year():
@@ -111,19 +137,26 @@ def test_gax_doc_id():
     assert len(doc_id) == 20
 
 
-def test_build_individual_gax_document(initialize_factories_session):
-    document = gax.build_individual_gax_document(
-        Document(),
-        get_payment(
-            fineos_absence_id="NTN-1234-ABS-01",
-            payment_date=datetime(2020, 7, 1),
-            ctr_vendor_code="abc1234",
-            amount=1200.00,
-            claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
-            start_date=datetime(2020, 8, 1),
-            end_date=datetime(2020, 12, 1),
-        ),
+def test_build_individual_gax_document(initialize_factories_session, test_db_session):
+    xml_document = minidom.Document()
+    document_root = xml_document.createElement("AMS_DOC_XML_IMPORT_FILE")
+    payments_util.add_attributes(document_root, {"VERSION": "1.0"})
+    xml_document.appendChild(document_root)
+
+    payment = get_payment(
+        fineos_absence_id="NTN-1234-ABS-01",
+        payment_date=datetime(2020, 7, 1).date(),
+        ctr_vendor_code="abc1234",
+        amount=decimal.Decimal("1200.00"),
+        claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
+        start_date=datetime(2020, 8, 1).date(),
+        end_date=datetime(2020, 12, 1).date(),
     )
+    test_db_session.add(payment)
+    test_db_session.commit()
+
+    document = gax.build_individual_gax_document(xml_document, payment, payments_util.get_now())
+
     # Doc ID is generated randomly every run, but appears in many sub values.
     doc_id = document._attrs["DOC_ID"].value
     assert doc_id
@@ -190,68 +223,94 @@ def test_build_individual_gax_document(initialize_factories_session):
 
 
 @freeze_time("2021-01-01 12:00:00")
-def test_build_gax_files(initialize_factories_session):
+def test_build_gax_files(initialize_factories_session, test_db_session, mock_s3_bucket):
+    payments = get_payments()
+    for payment in payments:
+        test_db_session.add(payment)
+        test_db_session.commit()
+        create_add_to_gax_state_log_for_payment(payment, test_db_session)
 
-    with tempfile.TemporaryDirectory() as directory:
-        (dat_filepath, inf_filepath) = gax.build_gax_files(get_payments(), directory, 11)
+    ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
+    (dat_filepath, inf_filepath) = gax.build_gax_files(test_db_session, ctr_outbound_path)
 
-        with open(inf_filepath) as inf_file:
-            assert inf_filepath.split("/")[-1] == "EOL20210101GAX11.INF"
-            inf_file_contents = "".join(line for line in inf_file)
-            assert inf_file_contents == (
-                "NewMmarsBatchID = EOL0101GAX11;\n"
-                "NewMmarsBatchDeptCode = EOL;\n"
-                "NewMmarsUnitCode = 8770;\n"
-                "NewMmarsImportDate = 2021-01-01;\n"
-                "NewMmarsTransCode = GAX;\n"
-                "NewMmarsTableName = ;\n"
-                "NewMmarsTransCount = 2;\n"
-                "NewMmarsTransDollarAmount = 2500.00;\n"
-            )
+    # Confirm that we created a database row for each payment we created a document for.
+    test_db_session.query(
+        func.count(CtrDocumentIdentifier.ctr_document_identifier_id)
+    ).scalar() == len(payments)
+    test_db_session.query(
+        func.count(PaymentReferenceFile.ctr_document_identifier_id)
+    ).scalar() == len(payments)
 
-        with open(dat_filepath) as dat_file:
-            assert dat_filepath.split("/")[-1] == "EOL20210101GAX11.DAT"
-            dat_file_contents = "".join(line for line in dat_file)
+    # Confirm that we created a single GAX record.
+    ref_files = (
+        test_db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.reference_file_type_id == ReferenceFileType.GAX.reference_file_type_id
+        )
+        .all()
+    )
+    assert len(ref_files) == 1
 
-            # This bit doesn't get parsed into the XML objects
-            assert dat_file_contents.startswith('<?xml version="1.0" encoding="ISO-8859-1"?>')
+    # Confirm that the ReferenceFile is correctly associated with Payment models through the
+    # PaymentReferenceFile table.
+    ref_file = ref_files[0]
+    assert len(ref_file.payments) == len(payments)
 
-            # Make sure cdata fields weren't mistakenly escaped
-            assert "&lt;" not in dat_file_contents
-            assert "&gt;" not in dat_file_contents
-            # Make sure cdata fields were created properly by looking for one
-            assert '<BFY Attribute="Y"><![CDATA[2021]]></BFY>' in dat_file_contents
+    # Confirm that the INF data is being saved to the database properly.
+    assert ref_file.ctr_batch_identifier.inf_data.get("NewMmarsTransCode") == "GAX"
 
-            # We use ET for parsing instead of minidom as minidom makes odd decisions
-            # when creating objects (new lines are child nodes?) that is complex.
-            # Note that this parser removes the CDATA tags when parsing.
-            root = ET.fromstring(dat_file_contents)
-            assert len(root) == 2  # For the two documents passed in
-            for document in root:
-                # Doc ID is generated randomly every run, but appears in many sub values.
-                doc_id = document.attrib["DOC_ID"]
-                assert doc_id
+    with smart_open.open(inf_filepath) as inf_file:
+        assert inf_filepath.split("/")[-1] == "EOL0101GAX10.INF"
+        inf_file_contents = "".join(line for line in inf_file)
+        assert inf_file_contents == (
+            "NewMmarsBatchID = EOL0101GAX10;\n"
+            "NewMmarsBatchDeptCode = EOL;\n"
+            "NewMmarsUnitCode = 8770;\n"
+            "NewMmarsImportDate = 2021-01-01;\n"
+            "NewMmarsTransCode = GAX;\n"
+            "NewMmarsTableName = ;\n"
+            "NewMmarsTransCount = 2;\n"
+            "NewMmarsTransDollarAmount = 2500.00;\n"
+        )
 
-                assert document.tag == "AMS_DOCUMENT"
-                expected_doc_attributes = {"DOC_ID": doc_id}
-                expected_doc_attributes.update(gax.ams_doc_attributes.copy())
-                expected_doc_attributes.update(gax.generic_attributes.copy())
-                assert document.attrib == expected_doc_attributes
-                assert len(document) == 3  # len of an element gives number of subelements
+    with smart_open.open(dat_filepath) as dat_file:
+        assert dat_filepath.split("/")[-1] == "EOL0101GAX10.DAT"
+        dat_file_contents = "".join(line for line in dat_file)
 
-                abs_doc_hdr = document[0]
-                assert abs_doc_hdr.tag == "ABS_DOC_HDR"
-                assert abs_doc_hdr.attrib == {"AMSDataObject": "Y"}
+        # This bit doesn't get parsed into the XML objects
+        assert dat_file_contents.startswith('<?xml version="1.0" encoding="ISO-8859-1"?>')
 
-                abs_doc_vend = document[1]
-                assert abs_doc_vend.tag == "ABS_DOC_VEND"
-                assert abs_doc_vend.attrib == {"AMSDataObject": "Y"}
+        # Make sure cdata fields weren't mistakenly escaped
+        assert "&lt;" not in dat_file_contents
+        assert "&gt;" not in dat_file_contents
+        # Make sure cdata fields were created properly by looking for one
+        assert '<BFY Attribute="Y"><![CDATA[2021]]></BFY>' in dat_file_contents
 
-                abs_doc_actg = document[2]
-                assert abs_doc_actg.tag == "ABS_DOC_ACTG"
-                assert abs_doc_actg.attrib == {"AMSDataObject": "Y"}
+        # We use ET for parsing instead of minidom as minidom makes odd decisions
+        # when creating objects (new lines are child nodes?) that is complex.
+        # Note that this parser removes the CDATA tags when parsing.
+        root = ET.fromstring(dat_file_contents)
+        assert len(root) == 2  # For the two documents passed in
+        for document in root:
+            # Doc ID is generated randomly every run, but appears in many sub values.
+            doc_id = document.attrib["DOC_ID"]
+            assert doc_id
 
+            assert document.tag == "AMS_DOCUMENT"
+            expected_doc_attributes = {"DOC_ID": doc_id}
+            expected_doc_attributes.update(gax.ams_doc_attributes.copy())
+            expected_doc_attributes.update(gax.generic_attributes.copy())
+            assert document.attrib == expected_doc_attributes
+            assert len(document) == 3  # len of an element gives number of subelements
 
-def test_small_count():
-    with pytest.raises(Exception, match="Gax file count must be greater than 10"):
-        gax.build_gax_files(None, "", 1)
+            abs_doc_hdr = document[0]
+            assert abs_doc_hdr.tag == "ABS_DOC_HDR"
+            assert abs_doc_hdr.attrib == {"AMSDataObject": "Y"}
+
+            abs_doc_vend = document[1]
+            assert abs_doc_vend.tag == "ABS_DOC_VEND"
+            assert abs_doc_vend.attrib == {"AMSDataObject": "Y"}
+
+            abs_doc_actg = document[2]
+            assert abs_doc_actg.tag == "ABS_DOC_ACTG"
+            assert abs_doc_actg.attrib == {"AMSDataObject": "Y"}

@@ -5,9 +5,22 @@ import xml.dom.minidom as minidom
 from datetime import datetime
 from typing import Dict, List, Tuple, cast
 
+import massgov.pfml.api.util.state_log_util as state_log_util
+import massgov.pfml.db as db
 import massgov.pfml.payments.payments_util as payments_util
-from massgov.pfml.db.models.employees import ClaimType, Payment
+import massgov.pfml.util.logging
+from massgov.pfml.db.models.employees import (
+    ClaimType,
+    CtrDocumentIdentifier,
+    Payment,
+    PaymentReferenceFile,
+    ReferenceFile,
+    ReferenceFileType,
+    State,
+)
 from massgov.pfml.payments.payments_util import Constants
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 TWOPLACES = decimal.Decimal(10) ** -2
 
@@ -102,7 +115,7 @@ def get_payment_amount(amount: decimal.Decimal) -> str:
 
 
 def build_individual_gax_document(
-    xml_document: minidom.Document, payment: Payment
+    xml_document: minidom.Document, payment: Payment, now: datetime
 ) -> minidom.Element:
     try:
         claim = payment.claim
@@ -140,12 +153,13 @@ def build_individual_gax_document(
         key="fineos_absence_id", db_object=claim, required=True, max_length=19, truncate=False
     )
 
-    now_datetime = datetime.now()
-    start_datetime = cast(datetime, payment.period_start_date)
-    end_datetime = cast(datetime, payment.period_end_date)
-    if end_datetime > now_datetime or start_datetime > end_datetime:
+    today = now.date()
+    start = cast(datetime, payment.period_start_date)
+    end = cast(datetime, payment.period_end_date)
+
+    if end > today or start > end:
         raise Exception(
-            f"Payment period start ({start_datetime}) and end ({end_datetime}) dates are invalid. Both need to be before now ({now_datetime})."
+            f"Payment period start ({start}) and end ({end}) dates are invalid. Both need to be before now ({today})."
         )
 
     start_date = payments_util.validate_db_input(
@@ -236,7 +250,9 @@ def build_individual_gax_document(
     return root
 
 
-def build_gax_dat(payments: List[Payment]) -> minidom.Document:
+def build_gax_dat(
+    payments: List[Payment], now: datetime, ref_file: ReferenceFile, db_session: db.Session
+) -> minidom.Document:
     # xml_document represents the overall XML object
     xml_document = minidom.Document()
 
@@ -245,19 +261,32 @@ def build_gax_dat(payments: List[Payment]) -> minidom.Document:
     payments_util.add_attributes(document_root, {"VERSION": "1.0"})
     xml_document.appendChild(document_root)
 
-    for payment in payments:
+    # Add the index so we can populate the non-nullable ctr_document_identifier.document_counter
+    # field with something useful.
+    for i, payment in enumerate(payments):
+        ctr_doc_id = CtrDocumentIdentifier(
+            ctr_document_identifier=get_doc_id(), document_date=now.date(), document_counter=i,
+        )
+        db_session.add(ctr_doc_id)
+
         # gax_document refers to individual documents which contain payment data
-        gax_document = build_individual_gax_document(xml_document, payment)
+        gax_document = build_individual_gax_document(xml_document, payment, now)
         document_root.appendChild(gax_document)
+
+        # Add records to the database for the document.
+        payment_ref_file = PaymentReferenceFile(
+            payment=payment, reference_file=ref_file, ctr_document_identifier=ctr_doc_id,
+        )
+        db_session.add(payment_ref_file)
 
     return xml_document
 
 
-def build_gax_inf(payments: List[Payment], now: datetime, count: int) -> Dict[str, str]:
+def build_gax_inf(payments: List[Payment], now: datetime, batch_id: str) -> Dict[str, str]:
     total_dollar_amount = decimal.Decimal(sum(payment.amount for payment in payments))
 
     return {
-        "NewMmarsBatchID": f"{Constants.COMPTROLLER_DEPT_CODE}{now.strftime('%m%d')}GAX{count}",  # eg. EOL0101GAX24
+        "NewMmarsBatchID": batch_id,
         "NewMmarsBatchDeptCode": Constants.COMPTROLLER_DEPT_CODE,
         "NewMmarsUnitCode": Constants.COMPTROLLER_UNIT_CODE,
         "NewMmarsImportDate": now.strftime("%Y-%m-%d"),
@@ -268,13 +297,41 @@ def build_gax_inf(payments: List[Payment], now: datetime, count: int) -> Dict[st
     }
 
 
-def build_gax_files(payments: List[Payment], directory: str, count: int) -> Tuple[str, str]:
-    if count < 10:
-        raise Exception("Gax file count must be greater than 10")
-    now = payments_util.get_now()
+def get_eligible_payments(db_session: db.Session) -> List[Payment]:
+    state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+        associated_class=state_log_util.AssociatedClass.PAYMENT,
+        end_state=State.ADD_TO_GAX,
+        db_session=db_session,
+    )
 
-    filename = f"{Constants.COMPTROLLER_DEPT_CODE}{now.strftime('%Y%m%d')}GAX{count}"
-    dat_xml_document = build_gax_dat(payments)
-    inf_dict = build_gax_inf(payments, now, count)
+    return [state_log.payment for state_log in state_logs]
 
-    return payments_util.create_files(directory, filename, dat_xml_document, inf_dict)
+
+def build_gax_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str, str]:
+    try:
+        now = payments_util.get_now()
+
+        ctr_batch_id, ref_file = payments_util.create_batch_id_and_reference_file(
+            now, ReferenceFileType.GAX, db_session, ctr_outbound_path
+        )
+
+        payments = get_eligible_payments(db_session)
+
+        dat_xml_document = build_gax_dat(payments, now, ref_file, db_session)
+        inf_dict = build_gax_inf(payments, now, ctr_batch_id.ctr_batch_identifier)
+        ctr_batch_id.inf_data = inf_dict
+
+        db_session.commit()
+
+        return payments_util.create_mmars_files_in_s3(
+            ref_file.file_location, ctr_batch_id.ctr_batch_identifier, dat_xml_document, inf_dict,
+        )
+    except Exception as e:
+        logger.exception("Unable to create GAX:", str(e))
+        db_session.rollback()
+
+    return ("", "")
+
+
+def build_gax_files_for_s3(db_session: db.Session) -> Tuple[str, str]:
+    return build_gax_files(db_session, payments_util.get_s3_config().pfml_ctr_outbound_path)
