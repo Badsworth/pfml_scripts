@@ -4,9 +4,12 @@
 
 import massgov.pfml.api.util.state_log_util
 import massgov.pfml.payments.vcc
+import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import LatestStateLog, State, StateLog
 
 from . import base
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class RegeneratorVCC(base.ReferenceFileRegenerator):
@@ -31,7 +34,10 @@ class RegeneratorVCC(base.ReferenceFileRegenerator):
 
     def create_new_file(self):
         """Build new VCC files."""
-        massgov.pfml.payments.vcc.build_vcc_files(self.db_session, self.outbound_path)
+        dat_filepath, inf_filepath = massgov.pfml.payments.vcc.build_vcc_files(
+            self.db_session, self.outbound_path
+        )
+        logger.info("generated new files %s %s", dat_filepath, inf_filepath)
 
     def send_bie(self):
         # TODO: generate and send the appropriate BIE (API-783 for GAX and API-975 for VCC)
