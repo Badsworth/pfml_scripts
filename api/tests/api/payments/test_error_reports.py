@@ -24,7 +24,6 @@ def setup_state_log_in_end_state(associated_class, end_state, test_db_session, a
     validation_container.add_validation_issue(
         payments_util.ValidationReason.MISSING_FIELD, "Field2"
     )
-    validation_container.add_error_msg("It real bad")
 
     additional_params.outcome = state_log_util.build_outcome(
         "This is a description of the problem", validation_container=validation_container
@@ -131,7 +130,6 @@ def test_parse_outcome(test_db_session, initialize_factories_session):
     validation_container.add_validation_issue(
         payments_util.ValidationReason.MISSING_FIELD, "Field2"
     )
-    validation_container.add_error_msg("It real bad")
     state_log.outcome = state_log_util.build_outcome("message again", validation_container)
     outcome = error_reports._parse_outcome(state_log)
 

@@ -734,6 +734,7 @@ class StateLog(Base):
     )
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
     prev_state_log_id = Column(UUID(as_uuid=True), ForeignKey("state_log.state_log_id"))
+    associated_type = Column(Text, index=True)
 
     payment = relationship("Payment", back_populates="state_logs")
     reference_file = relationship("ReferenceFile", back_populates="state_logs")

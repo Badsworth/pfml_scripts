@@ -64,7 +64,7 @@ def copy_to_sftp_and_archive_s3_files(
             raise e
 
         if not reference_file:
-            logger.warn(
+            logger.warning(
                 "Could not find ReferenceFile with file_location matching S3 file name. Skipping",
                 extra={"file_location": source_file_location},
             )
@@ -117,7 +117,7 @@ def _copy_files_in_set_for_reference_file(
         dest_filepath = os.path.join(config.dest_dir, basename)
 
         if basename in dest_dir_filenames:
-            logger.warn(
+            logger.warning(
                 "File already exists in destination directory. Skipping",
                 extra={"file_name": basename, "destination_directory": config.dest_dir},
             )

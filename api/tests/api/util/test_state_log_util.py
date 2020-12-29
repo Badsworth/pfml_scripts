@@ -127,6 +127,7 @@ def test_create_state_log_employee(initialize_factories_session, test_db_session
     assert employee_state_log.outcome is None
     assert employee_state_log.payment is None
     assert employee_state_log.reference_file_id is None
+    assert employee_state_log.associated_type == state_log_util.AssociatedClass.EMPLOYEE.value
     assert employee_state_log.employee_id == employee.employee_id
 
     latest_state_log = (
@@ -162,6 +163,7 @@ def test_create_state_log_payment(initialize_factories_session, test_db_session)
     assert payment_state_log.ended_at is None
     assert payment_state_log.outcome is None
     assert payment_state_log.payment_id == payment.payment_id
+    assert payment_state_log.associated_type == state_log_util.AssociatedClass.PAYMENT.value
     assert payment_state_log.reference_file_id is None
     assert payment_state_log.employee is None
 
@@ -202,6 +204,10 @@ def test_create_state_log_reference_file(initialize_factories_session, test_db_s
     assert reference_file_state_log.outcome is None
     assert reference_file_state_log.payment is None
     assert reference_file_state_log.reference_file_id == reference_file.reference_file_id
+    assert (
+        reference_file_state_log.associated_type
+        == state_log_util.AssociatedClass.REFERENCE_FILE.value
+    )
     assert reference_file_state_log.employee_id is None
 
     latest_state_log = (
@@ -222,6 +228,40 @@ def test_create_state_log_reference_file(initialize_factories_session, test_db_s
     # Verify the latest state log ID was properly updated
     test_db_session.refresh(latest_state_log)
     assert latest_state_log.state_log_id == reference_file_state_log2.state_log_id
+
+
+def create_state_log_without_associated_model(initialize_factories_session, test_db_session):
+    unattached_state_log = state_log_util.create_state_log_without_associated_model(
+        start_state=State.VERIFY_VENDOR_STATUS,
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        db_session=test_db_session,
+    )
+
+    assert unattached_state_log.start_state_id == State.VERIFY_VENDOR_STATUS.state_id
+    assert unattached_state_log.end_state_id is None
+    assert unattached_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
+    assert unattached_state_log.ended_at is None
+    assert unattached_state_log.outcome is None
+    assert unattached_state_log.payment is None
+    assert unattached_state_log.reference_file_id is None
+    assert unattached_state_log.associated_type == state_log_util.AssociatedClass.EMPLOYEE.value
+    assert unattached_state_log.employee_id is None
+
+    latest_state_logs = test_db_session.query(LatestStateLog).all()
+
+    assert len(latest_state_logs) == 1
+    assert latest_state_logs[0].state_log_id == unattached_state_log.state_log_id
+
+    # Note that this will always create a new latest state log as we
+    # have no object to index on in the latest state log table
+    # to find it. This is fine and expected
+    state_log_util.create_state_log(
+        start_state=State.PAYMENTS_RETRIEVED,
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        db_session=test_db_session,
+    )
+    latest_state_logs = test_db_session.query(LatestStateLog).all()
+    assert len(latest_state_logs) == 2
 
 
 @freeze_time("2020-01-01 12:00:00")
@@ -429,6 +469,5 @@ def test_build_outcome():
                 {"reason": "MissingField", "details": "FIELD1"},
                 {"reason": "MissingInDB", "details": "DB1"},
             ],
-            "errors": [],  # TODO - might not want to add these - Will figure out in API-677
         },
     }

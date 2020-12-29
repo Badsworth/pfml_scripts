@@ -190,7 +190,6 @@ def test_validate_ams_document_with_invalid_fields(test_db_session, initialize_f
         assert issue.reason == field_to_reason_mapping[issue.details]
 
     assert len(validation_container.validation_issues) == 12
-    assert len(validation_container.errors) == 0
 
 
 def test_validate_ams_document_with_missing_fields(test_db_session, initialize_factories_session):
@@ -224,7 +223,6 @@ def test_validate_ams_document_with_missing_fields(test_db_session, initialize_f
         assert issue.reason == field_to_reason_mapping[issue.details]
 
     assert len(validation_container.validation_issues) == 11
-    assert len(validation_container.errors) == 0
 
 
 def test_validate_ams_document_with_multiple_addresses(
@@ -243,7 +241,6 @@ def test_validate_ams_document_with_multiple_addresses(
     )
 
     assert len(validation_container.validation_issues) == 1
-    assert len(validation_container.errors) == 0
     validation_issue = validation_container.validation_issues[0]
     assert validation_issue.reason == ValidationReason.MULTIPLE_VALUES_FOUND
     assert validation_issue.details == "VC_DOC_AD"
@@ -580,7 +577,6 @@ def test_finish_state_log_with_validation_issues(
                 {"reason": "NonNullable", "details": "VEND_CUST_CD"},
                 {"reason": "NonNullable", "details": "ORG_VEND_CUST_CD"},
             ],
-            "errors": [],
         },
     }
     assert ovr_reference_file.file_location == PROCESSED_S3_PATH
@@ -619,14 +615,7 @@ def test_finish_state_log_with_no_validation_issues(
     assert state_log.start_state_id == State.VCC_SENT.state_id
     assert state_log.end_state_id == State.VCC_SENT.state_id
     assert state_log.employee_id == employee.employee_id
-    assert state_log.outcome == {
-        "message": "No validation issues found",
-        "validation_container": {
-            "record_key": "INTFDFML161220200010",
-            "validation_issues": [],
-            "errors": [],
-        },
-    }
+    assert state_log.outcome == {"message": "No validation issues found"}
 
     address = ams_document.find("VC_DOC_AD")
 

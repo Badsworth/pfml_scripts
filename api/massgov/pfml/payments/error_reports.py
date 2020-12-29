@@ -220,7 +220,7 @@ def _get_employee_claim_payment_from_state_log(
     # if associated_class==REFERENCE_FILE -> We don't use that in this file, shouldn't happen
     # if the state_log was created without using our utility which requires a Payment/Employee/ReferenceFile
     # In any case, log an error
-    logger.warn(
+    logger.warning(
         f"Error report generation encountered an unexpected scenario regarding State Log {state_log.state_log_id}"
     )
     return None, None, None
@@ -334,7 +334,7 @@ def _make_simple_report(
             # Yes, this is incredibly flimsy and hacky, but
             # this will only be used for VCC/GAX error cases
             if not outcome.key:
-                logger.warn(f"No MMARS doc ID present for state_log {state_log.state_log_id}")
+                logger.warning(f"No MMARS doc ID present for state_log {state_log.state_log_id}")
             mmars_document_id = outcome.key
 
         error_report = _build_error_report(

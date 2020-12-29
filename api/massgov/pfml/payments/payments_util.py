@@ -85,6 +85,7 @@ class ValidationReason(str, Enum):
     MULTIPLE_VALUES_FOUND = "MultipleValuesFound"
     VALUE_NOT_FOUND = "ValueNotFound"
     NON_NULLABLE = "NonNullable"
+    EXCEPTION_OCCURRED = "ExceptionOccurred"
     OUTBOUND_STATUS_ERROR = "OutboundStatusError"
 
 
@@ -99,13 +100,9 @@ class ValidationContainer:
     # Keeping this simple for now, will likely be expanded in the future.
     record_key: str
     validation_issues: List[ValidationIssue] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
 
     def add_validation_issue(self, reason: ValidationReason, details: str) -> None:
         self.validation_issues.append(ValidationIssue(reason, details))
-
-    def add_error_msg(self, message: str) -> None:
-        self.errors.append(message)
 
     def has_validation_issues(self) -> bool:
         return len(self.validation_issues) != 0

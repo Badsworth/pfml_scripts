@@ -61,7 +61,6 @@ def test_get_validation_issues_no_issues():
 
     assert validation_container.record_key == "INTFDFMLN50LINES0001"
     assert len(validation_container.validation_issues) == 0
-    assert len(validation_container.errors) == 0
 
     assert payment_return_doc_data.py_id == "INTFDFMLN50LINES0001"
     assert payment_return_doc_data.py_cd == "GAX"
@@ -129,7 +128,6 @@ def test_get_validation_issues_with_issues():
 
     assert validation_container.record_key is None
     assert len(validation_container.validation_issues) == 7
-    assert len(validation_container.errors) == 0
 
 
 def test_process_outbound_payment_return_success(
@@ -261,19 +259,15 @@ def test_process_outbound_payment_return_no_pay_ref(
     )
 
     validation_container_1 = result[0]
-    errors_1 = validation_container_1.errors
     issues_1 = validation_container_1.validation_issues
 
-    assert len(errors_1) == 0
     assert validation_container_1.record_key == "INTFDFMLN50LINES0001"
     assert issues_1[0].reason == ValidationReason.MISSING_IN_DB
     assert issues_1[0].details == "PaymentReferenceFile"
 
     validation_container_2 = result[1]
-    errors_2 = validation_container_2.errors
     issues_2 = validation_container_2.validation_issues
 
-    assert len(errors_2) == 0
     assert validation_container_2.record_key == "INTFDFMLGYLDEZWTZYCP"
     assert issues_2[0].reason == ValidationReason.MISSING_IN_DB
     assert issues_2[0].details == "PaymentReferenceFile"

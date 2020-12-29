@@ -1,14 +1,13 @@
 import csv
 import decimal
-import io
 import os
 import pathlib
 import re
-import zipfile
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple, cast
 
+import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
@@ -27,6 +26,7 @@ from massgov.pfml.db.models.employees import (
     PaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,
+    State,
     TaxIdentifier,
 )
 
@@ -37,9 +37,9 @@ RECEIVED_FOLDER = "received"
 PROCESSED_FOLDER = "processed"
 
 # Expected file names
-PEI_EXPECTED_FILE_NAME = "vpei.csv.zip"
-PAYMENT_DETAILS_EXPECTED_FILE_NAME = "vpeipaymentdetails.csv.zip"
-CLAIM_DETAILS_EXPECTED_FILE_NAME = "vpeiclaimdetails.csv.zip"
+PEI_EXPECTED_FILE_NAME = "vpei.csv"
+PAYMENT_DETAILS_EXPECTED_FILE_NAME = "vpeipaymentdetails.csv"
+CLAIM_DETAILS_EXPECTED_FILE_NAME = "vpeiclaimdetails.csv"
 
 expected_file_names = [
     PEI_EXPECTED_FILE_NAME,
@@ -324,12 +324,11 @@ def download_and_process_data(extract_data: ExtractData, download_directory: pat
         ] = record
 
 
-def determine_field_names(zipf: zipfile.ZipFile, file_name: str) -> List[str]:
+def determine_field_names(download_location: pathlib.Path) -> List[str]:
     field_names: Dict[str, int] = OrderedDict()
     # Read the first line of the file and handle duplicate field names.
-    with zipf.open(file_name[:-4]) as extract_file:
-        text_wrapper = io.TextIOWrapper(extract_file, encoding="UTF-8")
-        reader = csv.reader(text_wrapper, delimiter=",")
+    with open(download_location) as extract_file:
+        reader = csv.reader(extract_file, delimiter=",")
 
         # If duplicates are found, they'll be named
         # field_name_1, field_name_2,..
@@ -351,24 +350,20 @@ def download_and_parse_data(s3_path: str, download_directory: pathlib.Path) -> L
 
     raw_extract_data = []
 
-    with zipfile.ZipFile(download_location) as zipf:
-        field_names = determine_field_names(zipf, file_name)
-        # Open the file within the ZIP file (named the same, without .zip)
-        with zipf.open(file_name[:-4]) as extract_file:
-            # Need to wrap the file to convert it from bytes to string
-            text_wrapper = io.TextIOWrapper(extract_file, encoding="UTF-8")
-            dict_reader = csv.DictReader(text_wrapper, delimiter=",", fieldnames=field_names)
-            # Each data object represents a row from the CSV as a dictionary
-            # The keys are column headers
-            # The rows are the corresponding value in the row
-            next(dict_reader)  # Because we specify the fieldnames, skip the header row
-            raw_extract_data = list(dict_reader)
+    field_names = determine_field_names(download_location)
+    with open(download_location) as extract_file:
+        dict_reader = csv.DictReader(extract_file, delimiter=",", fieldnames=field_names)
+        # Each data object represents a row from the CSV as a dictionary
+        # The keys are column headers
+        # The rows are the corresponding value in the row
+        next(dict_reader)  # Because we specify the fieldnames, skip the header row
+        raw_extract_data = list(dict_reader)
 
     return raw_extract_data
 
 
 def get_date_group_str_from_path(path: str) -> Optional[str]:
-    # E.g. For a file path s3://bucket/folder/2020-12-01-file-name.zip return 2020-12-01
+    # E.g. For a file path s3://bucket/folder/2020-12-01-file-name.csv return 2020-12-01
     match = re.search("\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}-\\d{2}", path)
     date_group_str = match[0] if match else None
 
@@ -441,11 +436,8 @@ def get_employee_and_claim(
     )
     # claim might not exist because the employee used the call center, if so, create the claim now
     if not claim:
-        claim = Claim(
-            employee_id=employee.employee_id, fineos_absence_id=payment_data.absence_case_number,
-        )
+        claim = Claim(employee=employee, fineos_absence_id=payment_data.absence_case_number,)
         db_session.add(claim)
-        db_session.commit()
 
     return employee, claim
 
@@ -505,7 +497,6 @@ def create_or_update_payment(
     payment.fineos_extraction_date = payments_util.get_now().date()
 
     db_session.add(payment)
-    db_session.commit()  # Forces payment_id to be created and available
     return payment
 
 
@@ -534,12 +525,12 @@ def update_eft(payment_data: PaymentData, employee: Employee, db_session: db.Ses
 
 def process_payment_data_record(
     payment_data: PaymentData, reference_file: ReferenceFile, db_session: db.Session
-) -> None:
+) -> Optional[Payment]:
     employee, claim = get_employee_and_claim(payment_data, db_session)
 
     # We weren't able to find the employee and claim, can't properly associate it
     if payment_data.validation_container.has_validation_issues():
-        return
+        return None
     # cast the types here so the linter doesn't think these are potentially None below
     employee = cast(Employee, employee)
     claim = cast(Claim, claim)
@@ -552,21 +543,58 @@ def process_payment_data_record(
     payment = create_or_update_payment(payment_data, claim, db_session)
 
     # Link the payment object to the payment_reference_file
-    payment_reference_file = PaymentReferenceFile(
-        payment_id=payment.payment_id, reference_file_id=reference_file.reference_file_id,
-    )
+    payment_reference_file = PaymentReferenceFile(payment=payment, reference_file=reference_file,)
     db_session.add(payment_reference_file)
-    db_session.commit()
+
+    return payment
 
 
-def process_records_to_db(
-    extract_data: ExtractData, db_session: db.Session
-) -> List[payments_util.ValidationContainer]:
+def _setup_state_log(
+    payment: Optional[Payment],
+    was_successful: bool,
+    validation_container: payments_util.ValidationContainer,
+    db_session: db.Session,
+) -> None:
+    if payment:
+        new_state_log = state_log_util.create_state_log(
+            start_state=State.PAYMENT_PROCESS_INITIATED,
+            associated_model=payment,
+            db_session=db_session,
+            commit=False,
+        )
+    else:
+        # In the most problematic cases, the state log
+        # needs to be created before we've got a payment
+        # object to associate it with. Associate the type with payment
+        # but no actual payment.
+        new_state_log = state_log_util.create_state_log_without_associated_model(
+            start_state=State.PAYMENT_PROCESS_INITIATED,
+            associated_class=state_log_util.AssociatedClass.PAYMENT,
+            db_session=db_session,
+            commit=False,
+        )
+
+    # Immediately end the state log entry
+    # but don't add/commit it quite yet, only if all records can be processed
+    end_state = (
+        State.MARK_AS_EXTRACTED_IN_FINEOS
+        if was_successful
+        else State.ADD_TO_PAYMENT_EXPORT_ERROR_REPORT
+    )
+    message = "Success" if was_successful else "Error processing payment record"
+    state_log_util.finish_state_log(
+        state_log=new_state_log,
+        end_state=end_state,
+        db_session=db_session,
+        outcome=state_log_util.build_outcome(message, validation_container),
+        commit=False,
+    )
+
+
+def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> None:
     # Add the files to the DB
     # Note a single payment reference file is used for all files collectively
     db_session.add(extract_data.reference_file)
-
-    validation_issues = []
 
     for index, record in extract_data.pei.indexed_data.items():
         try:
@@ -575,16 +603,22 @@ def process_records_to_db(
 
             # Some required parameter is missing, can't continue processing the record
             if payment_data.validation_container.has_validation_issues():
-                validation_issues.append(payment_data.validation_container)
+                _setup_state_log(None, False, payment_data.validation_container, db_session)
                 continue
 
-            process_payment_data_record(payment_data, extract_data.reference_file, db_session)
+            payment = process_payment_data_record(
+                payment_data, extract_data.reference_file, db_session
+            )
 
-            # If there were any issues later in the processing, add the validation issue
-            if payment_data.validation_container.has_validation_issues():
-                validation_issues.append(payment_data.validation_container)
-                continue
-
+            # Create and finish the state log. If there were any issues, this'll set the
+            # record to an error state which'll send out a report to address it, otherwise
+            # it will move onto the next step in processing
+            _setup_state_log(
+                payment,
+                not payment_data.validation_container.has_validation_issues(),
+                payment_data.validation_container,
+                db_session,
+            )
         except Exception as e:
             # In the case of any error, add the error message to the validation
             # container, or create one and add it.
@@ -593,12 +627,11 @@ def process_records_to_db(
             else:
                 validation_container = payments_util.ValidationContainer(str(index))
 
-            validation_container.add_error_msg(str(e))
-            validation_issues.append(payment_data.validation_container)
-
-    db_session.flush()
-    db_session.commit()
-    return validation_issues
+            validation_container.add_validation_issue(
+                payments_util.ValidationReason.EXCEPTION_OCCURRED, str(e)
+            )
+            # Note if this errors, the whole process fails, if adding a DB record fails, that's probably desirable
+            _setup_state_log(payment, False, validation_container, db_session)
 
 
 def move_files_from_received_to_processed(
@@ -630,13 +663,43 @@ def move_files_from_received_to_processed(
     db_session.add(extract_data.reference_file)
 
 
-def process_extract_data(
-    download_directory: pathlib.Path, db_session: db.Session
-) -> List[payments_util.ValidationContainer]:
+def move_files_from_received_to_error(
+    extract_data: Optional[ExtractData], db_session: db.Session
+) -> None:
+    if not extract_data:
+        logger.error("Cannot move files to error directory, as path is not known")
+        return
+    # Effectively, this method will move a file of path:
+    # s3://bucket/path/to/received/2020-01-01-file.csv
+    # to
+    # s3://bucket/path/to/error/2020-01-01/2020-01-01-file.csv
+    new_pei_s3_path = extract_data.pei.file_location.replace(
+        "received", f"error/{extract_data.date_str}"
+    )
+    file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
+
+    new_payment_s3_path = extract_data.payment_details.file_location.replace(
+        "received", f"error/{extract_data.date_str}"
+    )
+    file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
+
+    new_claim_s3_path = extract_data.claim_details.file_location.replace(
+        "received", f"error/{extract_data.date_str}"
+    )
+    file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
+
+    # We still want to create the reference file, just use the one that is
+    # created in the __init__ of the extract data object and set the path.
+    # Note that this will not be attached to a payment
+    extract_data.reference_file.file_location = file_util.get_directory(new_pei_s3_path)
+    db_session.add(extract_data.reference_file)
+
+
+def process_extract_data(download_directory: pathlib.Path, db_session: db.Session) -> None:
+    data_by_date = group_s3_files_by_date()
     copy_fineos_data_to_archival_bucket(db_session)
     data_by_date = group_s3_files_by_date()
 
-    validation_issues = []
     previously_processed_date = set()
 
     for date_str, s3_file_locations in data_by_date.items():
@@ -651,15 +714,11 @@ def process_extract_data(
 
             extract_data = ExtractData(s3_file_locations, date_str)
             download_and_process_data(extract_data, download_directory)
-            issues = process_records_to_db(extract_data, db_session)
-            validation_issues.extend(issues)
+            process_records_to_db(extract_data, db_session)
             move_files_from_received_to_processed(extract_data, db_session)
+            db_session.commit()
         except Exception as e:
-            # If there was an exception anywhere in the processing, let's
-            # add it to the validation error object. The logic that runs
-            # this will determine what to do regarding the issue.
-            issue = payments_util.ValidationContainer("ProcessingError")
-            issue.add_error_msg(str(e))
-            validation_issues.append(issue)
-
-    return validation_issues
+            db_session.rollback()
+            logger.exception("Error processing FINEOS payment export")
+            move_files_from_received_to_error(extract_data, db_session)
+            raise e

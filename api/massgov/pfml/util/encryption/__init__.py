@@ -79,8 +79,8 @@ class GpgCrypt(Crypt):
             fingerprints=self.gpg_key_fingerprints, secret=True, passphrase=self.passphrase
         )
         if res.status != "ok":
-            logger.warn("Failed to delete keys")
-            logger.warn(res.stderr)
+            logger.warning("Failed to delete keys")
+            logger.warning(res.stderr)
 
 
 class Utf8Crypt(Crypt):

@@ -24,9 +24,51 @@ class AssociatedClass(Enum):
     PAYMENT = "payment"
     REFERENCE_FILE = "reference_file"
 
+    @staticmethod
+    def get_associated_type(associated_model: AssociatedModel) -> str:
+        if isinstance(associated_model, Payment):
+            return AssociatedClass.PAYMENT.value
+        elif isinstance(associated_model, Employee):
+            return AssociatedClass.EMPLOYEE.value
+        elif isinstance(associated_model, ReferenceFile):
+            return AssociatedClass.REFERENCE_FILE.value
+
 
 def get_now() -> datetime:
     return datetime_util.utcnow()
+
+
+def _create_or_update_latest_state_log(
+    state_log: StateLog, latest_query_params: Optional[List], db_session: db.Session
+) -> None:
+    # Grab the latest state log and if it exists
+    # add a pointer back to the previous most recent state log
+
+    latest_state_log = None
+    # In some cases, we know this is the first one (eg. from create_state_log_without_associated_model)
+    if latest_query_params is not None:
+        latest_state_log = (
+            db_session.query(LatestStateLog).filter(*latest_query_params).one_or_none()
+        )
+
+    if latest_state_log:
+        state_log.prev_state_log = latest_state_log.state_log
+
+    # If no existing latest state log entry exists, add it
+    if not latest_state_log:
+        latest_state_log = LatestStateLog()
+        # all values in this statement should only be set
+        # when the latest state log is initialized.
+
+        # Only one of the below models will not be None, but
+        # they default to None anyways
+        latest_state_log.employee = state_log.employee
+        latest_state_log.payment = state_log.payment
+        latest_state_log.reference_file = state_log.reference_file
+
+    latest_state_log.state_log = state_log
+
+    db_session.add(latest_state_log)
 
 
 def create_state_log(
@@ -53,29 +95,31 @@ def create_state_log(
         latest_query_params.append(
             LatestStateLog.reference_file_id == associated_model.reference_file_id
         )
-
-    # Grab the latest state log and if it exists
-    # add a pointer back to the previous most recent state log
-    latest_state_log = db_session.query(LatestStateLog).filter(*latest_query_params).one_or_none()
-    if latest_state_log:
-        state_log.prev_state_log = latest_state_log.state_log
-
-    # If no existing latest state log entry exists, add it
-    if not latest_state_log:
-        latest_state_log = LatestStateLog()
-        # all values in this statement should only be set
-        # when the latest state log is initialized.
-
-        # Only one of the below models will not be None, but
-        # they default to None anyways
-        latest_state_log.employee = state_log.employee
-        latest_state_log.payment = state_log.payment
-        latest_state_log.reference_file = state_log.reference_file
-
-    latest_state_log.state_log = state_log
-
+    state_log.associated_type = AssociatedClass.get_associated_type(associated_model)
     db_session.add(state_log)
-    db_session.add(latest_state_log)
+
+    _create_or_update_latest_state_log(state_log, latest_query_params, db_session)
+
+    if commit:
+        db_session.commit()
+    return state_log
+
+
+def create_state_log_without_associated_model(
+    start_state: LkState,
+    associated_class: AssociatedClass,
+    db_session: db.Session,
+    commit: bool = True,
+) -> StateLog:
+    now = get_now()
+
+    state_log = StateLog(
+        start_state_id=start_state.state_id, started_at=now, associated_type=associated_class.value
+    )
+    db_session.add(state_log)
+
+    _create_or_update_latest_state_log(state_log, None, db_session)
+
     if commit:
         db_session.commit()
     return state_log
@@ -123,20 +167,16 @@ def get_latest_state_log_in_end_state(
 def get_all_latest_state_logs_in_end_state(
     associated_class: AssociatedClass, end_state: LkState, db_session: db.Session
 ) -> List[StateLog]:
-    filter_params = [StateLog.end_state_id == end_state.state_id]
-
-    if associated_class is AssociatedClass.EMPLOYEE:
-        filter_params.append(LatestStateLog.employee_id != None)  # noqa
-    elif associated_class is AssociatedClass.PAYMENT:
-        filter_params.append(LatestStateLog.payment_id != None)  # noqa
-    elif associated_class is AssociatedClass.REFERENCE_FILE:
-        filter_params.append(LatestStateLog.reference_file_id != None)  # noqa
+    filter_params = [
+        StateLog.end_state_id == end_state.state_id,
+        StateLog.associated_type == associated_class.value,
+    ]
 
     # Example query (for employee scenario)
     #
     # SELECT * from state_log
     # WHERE state_log.end_state_id={end_state.state_id} AND
-    #       latest_state_log.employee_id IS NOT NULL
+    #       latest_state_log.associated_class = "employee"
     # JOIN latest_state_log ON (state_log.state_log_id = latest_state_log.state_log_id)
     return db_session.query(StateLog).join(LatestStateLog).filter(*filter_params).all()
 
@@ -208,6 +248,7 @@ def build_outcome(
     outcome: Dict[str, Any] = {}
     outcome["message"] = message
 
-    if validation_container:
+    # Only add a validation container if it had any issues (otherwise leave that empty)
+    if validation_container and validation_container.has_validation_issues():
         outcome["validation_container"] = asdict(validation_container)
     return outcome
