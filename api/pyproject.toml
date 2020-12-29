@@ -86,6 +86,7 @@ fineos-eligibility-feed-export = "massgov.pfml.fineos.eligibility_feed_export.el
 bulk-user-import = "massgov.pfml.user_import.process_csv:process"
 payments-ctr-process = "massgov.pfml.payments.process_payments:ctr_process"
 payments-fineos-process = "massgov.pfml.payments.process_payments:fineos_process"
+payments-mock-generate = "massgov.pfml.payments.mock.generate:main"
 fineos-daily-generate = "massgov.pfml.fineos.mock.generate:main"
 fineos-import-employee-updates = "massgov.pfml.fineos.import_fineos_updates:handler"
 fineos-bucket-tool = "massgov.pfml.fineos.tool.bucket:main"

@@ -315,17 +315,17 @@ def create_files(
 
 
 def create_mmars_files_in_s3(
-    s3_path: str,
+    path: str,
     filename: str,
     dat_xml_document: minidom.Document,
     inf_dict: Dict[str, str],
     session: Optional[boto3.Session] = None,
 ) -> Tuple[str, str]:
-    if not file_util.is_s3_path(s3_path):
-        raise Exception("Destination must be an S3 URI")
+    if not path.startswith("s3:"):
+        os.makedirs(path, exist_ok=True)
 
-    dat_filepath = os.path.join(s3_path, f"{filename}.DAT")
-    inf_filepath = os.path.join(s3_path, f"{filename}.INF")
+    dat_filepath = os.path.join(path, f"{filename}.DAT")
+    inf_filepath = os.path.join(path, f"{filename}.INF")
 
     config = botocore.client.Config(retries={"max_attempts": 10, "mode": "standard"})
     transport_params = {

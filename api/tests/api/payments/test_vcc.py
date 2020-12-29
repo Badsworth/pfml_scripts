@@ -344,10 +344,10 @@ def test_build_vcc_files(initialize_factories_session, test_db_session, mock_s3_
     (dat_filepath, inf_filepath) = vcc.build_vcc_files(test_db_session, ctr_outbound_path)
 
     # Confirm that we created a database row for each employee we created a document for.
-    test_db_session.query(
+    assert test_db_session.query(
         func.count(CtrDocumentIdentifier.ctr_document_identifier_id)
     ).scalar() == len(employees)
-    test_db_session.query(
+    assert test_db_session.query(
         func.count(EmployeeReferenceFile.ctr_document_identifier_id)
     ).scalar() == len(employees)
 
