@@ -417,6 +417,13 @@ def document_upload(application_id, body, file):
             file_description = document_details.description
         document_type = document_details.document_type.value
 
+        log_attributes = {
+            **get_application_log_attributes(existing_application),
+            "document.file_size": file_size,
+            "document.content_type": content_type,
+            "document.document_type": document_type,
+        }
+
         # Upload document to fineos
         try:
             fineos_document = upload_document(
@@ -428,7 +435,15 @@ def document_upload(application_id, body, file):
                 file_description,
                 db_session,
             ).dict()
+            logger.info(
+                "document_upload - document uploaded to claims processing system",
+                extra=log_attributes,
+            )
         except ValueError as ve:
+            logger.error(
+                "document_upload failure - failure uploading document to claims processing system",
+                extra=log_attributes,
+            )
             return response_util.error_response(
                 status_code=BadRequest,
                 message=str(ve),
@@ -454,7 +469,15 @@ def document_upload(application_id, body, file):
         try:
             if document_details.mark_evidence_received:
                 mark_single_document_as_received(existing_application, document, db_session)
+                logger.info(
+                    "document_upload - evidence marked as received", extra=log_attributes,
+                )
         except ValueError as ve:
+            logger.error(
+                "document_upload failure - failure marking evidence as received",
+                extra=log_attributes,
+            )
+
             # Do not save the document in the database if we failed to mark the associated evidence as received in
             # FINEOS because we want the claimant to have the opportunity to try again. This behaviour will create
             # mutliple documents in FINEOS but will also ensure that the evidence can eventually be marked as received.
@@ -468,6 +491,10 @@ def document_upload(application_id, body, file):
             ).to_api_response()
 
         db_session.commit()
+
+        logger.info(
+            "document_upload success", extra=log_attributes,
+        )
 
         # Return response
         return response_util.success_response(
