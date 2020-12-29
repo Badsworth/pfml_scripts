@@ -52,13 +52,13 @@ def test_create_next_batch_id_with_existing_values(initialize_factories_session,
     assert ctr_batch_id.batch_counter == next_batch_counter
 
 
-def test_create_mmars_files(mock_s3_bucket):
+def test_create_mmars_files_in_s3(mock_s3_bucket):
     bucket_path = f"s3://{mock_s3_bucket}"
     filename = "example_filename"
     dat_xml_document = minidom.Document()
     inf_dict = {"NewMmarsBatchDeptCode": payments_util.Constants.COMPTROLLER_DEPT_CODE}
 
-    payments_util.create_mmars_files(bucket_path, filename, dat_xml_document, inf_dict)
+    payments_util.create_mmars_files_in_s3(bucket_path, filename, dat_xml_document, inf_dict)
 
     # Expect the files to have been uploaded to S3.
     files_in_mock_s3_bucket = file_util.list_files(bucket_path)
