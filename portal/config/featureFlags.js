@@ -95,6 +95,7 @@ const flagsConfig = {
     employerShowPreviousLeaves: true,
   },
   prod: {
+    claimantShowAuth: true,
     pfmlTerriyay: true,
     employerShowPreviousLeaves: true,
   },
