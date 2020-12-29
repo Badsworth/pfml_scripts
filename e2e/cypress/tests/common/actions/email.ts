@@ -63,7 +63,7 @@ export const getNotificationData = function (
 export const getDenialURL = function (str: string): string {
   const match = this.getTextBetween(
     str,
-    "https://paidleave-test.mass.gov/employers/applications/status/?absence_id=",
+    "/employers/applications/status/?absence_id=",
     '"'
   );
   if (typeof match !== "string") {
