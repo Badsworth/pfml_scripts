@@ -1,4 +1,5 @@
 import BaseCollection from "./BaseCollection";
+import React from "react";
 
 export default class AppErrorInfoCollection extends BaseCollection {
   get idProperty() {
@@ -15,9 +16,16 @@ export default class AppErrorInfoCollection extends BaseCollection {
 
     const fieldErrors = this.items.filter((error) => error.field === field);
 
-    if (!fieldErrors.length) return null;
+    if (!fieldErrors.length) {
+      return null;
+    }
 
     // Combine all errors for this field into a single message to be rendered
-    return fieldErrors.map((error) => error.message).join(" ");
+    return fieldErrors.map((error, i) => (
+      <React.Fragment key={error.key}>
+        {error.message}
+        {i < fieldErrors.length - 1 && " "}
+      </React.Fragment>
+    ));
   }
 }

@@ -15,7 +15,7 @@ exports[`FileUploadDetails renders the details with text 1`] = `
           "listHeading": "This website only accepts:",
           "listItems": Array [
             "PDF documents",
-            "Images (.jpg, .jpeg, .png, .tiff, .heic)",
+            "Images (.jpg, .jpeg, .png)",
           ],
         }
       }

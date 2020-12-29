@@ -210,7 +210,7 @@ const errors = {
         },
         frequency_interval_basis: {
           intermittent_interval_maximum:
-            "The number of days between your first and last day of intermittent leave must be more than the frequency interval you select. Select a shorter frequency interval. If you continue to get this error, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
+            "Sorry, our intermittent leave request service is a work in progress. Use our <intermittent-leave-guide>step-by-step guide to intermittent leave</intermittent-leave-guide> to complete your application. You can also complete your application by calling our Contact Center at $t(shared.contactCenterPhoneNumber).",
           required: "Select how often absences may occur.",
         },
         start_date: {
@@ -452,10 +452,12 @@ const errors = {
       "This application has already been reviewed.",
     previous_leaves: {
       leave_start_date: {
+        date: "Start date must include a day, month, and year.",
         invalid_previous_leave_start_date:
           "Paid leave cannot be taken before January 1, 2021. Enter a date after December 31, 2020.",
       },
       leave_end_date: {
+        date: "End date must include a day, month, and year.",
         minimum:
           "Last day of leave must be on or after the first day of leave.",
       },
@@ -464,9 +466,9 @@ const errors = {
   invalidFile_size:
     "We could not upload: {{disallowedFileNames}}. Files must be smaller than 3.5 MB.",
   invalidFile_sizeAndType:
-    "We could not upload: {{disallowedFileNames}}. Choose a PDF or image file that is smaller than 3.5 MB.",
+    "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 3.5 MB.",
   invalidFile_type:
-    "We could not upload: {{disallowedFileNames}}. Choose a PDF or image file.",
+    "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png).",
   network:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
   // These fallbacks shouldn't normally render, but they may if a validation rule or
@@ -1499,6 +1501,8 @@ const pages = {
     einLabel: "Employer ID number (EIN)",
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     leadBackground:
+      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave for bonding with a child, with more benefits available in 2021.",
+    leadBackground_prelaunch:
       "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for family leave for bonding with a child, with more benefits available in 2021.",
     leadMultipleCompanies:
       "If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.",
@@ -1602,7 +1606,7 @@ const pages = {
       choiceApprove: "Approve",
       choiceDeny: "Deny (explain below)",
       explanation:
-        "Answer based on your company policies and our <employer-pfml-guide-link>guidelines for employers</employer-pfml-guide-link>. Your recommendation is helpful to the Department in making its determination.",
+        "Answer based on your company policies and our <mass-employer-role-link>guidelines for employers</mass-employer-role-link>. Your recommendation is helpful to the Department in making its determination.",
       heading: "Have you approved or denied this leave request?",
     },
     employerIdentifierLabel: "Employer ID number (EIN)",
@@ -1662,7 +1666,7 @@ const pages = {
       caption_intermittent_hasDocuments:
         "Download the attached documentation for details about the employee’s intermittent leave schedule.",
       caption_recordkeeping_hasDocuments:
-        "To meet federal laws and regulations, you must keep medical records separate and confidential from any personnel files.",
+        "To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.",
       downloadAttachments:
         "Download the documentation below or contact us at $t(shared.contactCenterPhoneNumber) for details about the leave schedule.",
       frequencyBasis_irregular: "Irregular over the next 6 months",
@@ -1724,6 +1728,7 @@ const pages = {
       tableHeader_leaveType: "Leave type",
     },
     submitButton: "Submit",
+    submitLoadingMessage: "Submitting… Do not refresh or go back.",
     supportingWorkDetails: {
       header: "Supporting work details",
       hoursWorkedLabel: "Weekly hours worked",
@@ -1772,7 +1777,7 @@ const pages = {
       "When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.",
     checkEmailTitle: "Check your email regularly",
     learnMoreLinks:
-      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li><li><employer-pfml-guide-link>Employer’s guide to Paid Family and Medical Leave (PFML)</employer-pfml-guide-link></li></ul>",
+      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
     learnMoreTitle: "Learn more",
     respondBody:
       "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
@@ -1948,10 +1953,7 @@ const components = {
     tips: [
       {
         listHeading: "This website only accepts:",
-        listItems: [
-          "PDF documents",
-          "Images (.jpg, .jpeg, .png, .tiff, .heic)",
-        ],
+        listItems: ["PDF documents", "Images (.jpg, .jpeg, .png)"],
       },
       {
         listHeading:
@@ -1999,6 +2001,9 @@ const components = {
   header: {
     skipToContent: "Skip to main content",
     appTitle: "Paid Family and Medical Leave",
+  },
+  inputPassword: {
+    toggleLabel: "Show password",
   },
   leaveDatesAlert: {
     heading: "Your leave dates for paid leave",

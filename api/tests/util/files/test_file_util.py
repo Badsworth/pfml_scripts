@@ -211,6 +211,48 @@ def test_list_files_in_folder_s3_empty(mock_s3_bucket):
     assert files == []
 
 
+def test_list_files_without_folder_s3(mock_s3_bucket):
+    # path variables
+    folder_name = "test_folder"
+    file_name = "test.txt"
+    key = "{}/{}".format(folder_name, file_name)
+
+    s3 = boto3.client("s3")
+    s3.put_object(Bucket=mock_s3_bucket, Key=key, Body="test")
+
+    # add "empty" "sub directory"
+    s3.put_object(Bucket=mock_s3_bucket, Key=f"{folder_name}/foo/", Body="test")
+
+    # add "sub directory" with a file
+    s3.put_object(Bucket=mock_s3_bucket, Key=f"{folder_name}/bar/baz.txt", Body="test")
+
+    # we should only see the test.txt file immediately inside test_folder
+    folder_path = "s3://{}/{}".format(mock_s3_bucket, folder_name)
+
+    # but if passed "" as delimiter for S3, returns list of all file basenames
+    # under path recursively, note that folder names come through as ""
+    files = file_util.list_files_without_folder(folder_path, delimiter="")
+    assert files == ["baz.txt", file_name]
+
+
+def test_list_s3_files_and_directories_by_level(mock_s3_bucket):
+    source_folder = "agency/outbound/ready"
+
+    expected_response = {
+        "a-stellar-testfile.txt": ["a-stellar-testfile.txt"],
+        "a-subfolder": ["a-subfolder/my-file.txt", "a-subfolder/second-file.txt"],
+    }
+
+    s3 = boto3.client("s3")
+    for files in expected_response.values():
+        for key in files:
+            s3.put_object(Bucket=mock_s3_bucket, Key=f"{source_folder}/{key}", Body="test")
+
+    path = f"s3://{mock_s3_bucket}/{source_folder}"
+    files_by_level = file_util.list_s3_files_and_directories_by_level(path)
+    assert expected_response == files_by_level
+
+
 def test_copy_file_s3(mock_s3_bucket):
     # source variables
     source_folder_name = "test_folder"

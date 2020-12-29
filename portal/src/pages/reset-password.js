@@ -6,6 +6,7 @@ import BackButton from "../components/BackButton";
 import Button from "../components/Button";
 import ConditionalContent from "../components/ConditionalContent";
 import InputChoiceGroup from "../components/InputChoiceGroup";
+import InputPassword from "../components/InputPassword";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
 import PropTypes from "prop-types";
@@ -180,12 +181,11 @@ export const ResetPassword = (props) => {
       </div>
 
       {showCodeAndPasswordFields && (
-        <InputText
+        <InputPassword
           {...getFunctionalInputProps("password")}
           autoComplete="new-password"
           label={t("pages.authResetPassword.passwordLabel")}
           hint={t("pages.authResetPassword.passwordHint")}
-          type="password"
           smallLabel
         />
       )}

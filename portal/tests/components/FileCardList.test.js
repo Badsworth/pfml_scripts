@@ -249,7 +249,7 @@ describe("FileCardList", () => {
 
           expect(appErrors.items).toHaveLength(1);
           expect(appErrors.items[0].message).toMatchInlineSnapshot(
-            `"We could not upload: file.exe. Choose a PDF or image file."`
+            `"We could not upload: file.exe. Choose a PDF or an image file (.jpg, .jpeg, .png)."`
           );
         });
 
@@ -411,7 +411,7 @@ describe("FileCardList", () => {
 
           expect(appErrors.items).toHaveLength(1);
           expect(appErrors.items[0].message).toMatchInlineSnapshot(
-            `"We could not upload: file.exe. Choose a PDF or image file that is smaller than 3.5 MB."`
+            `"We could not upload: file.exe. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 3.5 MB."`
           );
         });
         it("tracks the error event", () => {
@@ -479,27 +479,14 @@ describe("FileCardList", () => {
           });
 
           expect(appErrors.items).toHaveLength(3);
-          expect(
-            appErrors.items.some(
-              (item) =>
-                item.message ===
-                `We could not upload: type1.exe, type2.gif. Choose a PDF or image file.`
-            )
-          ).toBe(true);
-          expect(
-            appErrors.items.some(
-              (item) =>
-                item.message ===
-                `We could not upload: size1.pdf, size2.pdf. Files must be smaller than 3.5 MB.`
-            )
-          ).toBe(true);
-          expect(
-            appErrors.items.some(
-              (item) =>
-                item.message ===
-                `We could not upload: sizeAndType1.exe, sizeAndType2.gif. Choose a PDF or image file that is smaller than 3.5 MB.`
-            )
-          ).toBe(true);
+          expect(appErrors.items.map((item) => item.message))
+            .toMatchInlineSnapshot(`
+            Array [
+              "We could not upload: size1.pdf, size2.pdf. Files must be smaller than 3.5 MB.",
+              "We could not upload: type1.exe, type2.gif. Choose a PDF or an image file (.jpg, .jpeg, .png).",
+              "We could not upload: sizeAndType1.exe, sizeAndType2.gif. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 3.5 MB.",
+            ]
+          `);
         });
         it("tracks the event", () => {
           const invalidTypeFiles = [

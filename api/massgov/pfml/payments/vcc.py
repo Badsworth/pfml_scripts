@@ -1,4 +1,3 @@
-import os
 import xml.dom.minidom as minidom
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple, cast
@@ -10,7 +9,6 @@ import massgov.pfml.db as db
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
-    CtrBatchIdentifier,
     CtrDocumentIdentifier,
     Employee,
     EmployeeReferenceFile,
@@ -372,43 +370,6 @@ def build_vcc_inf(employees: List[Employee], now: datetime, batch_id: str) -> Di
     }
 
 
-def create_next_batch_id(now: datetime, db_session: db.Session) -> CtrBatchIdentifier:
-    ctr_batch_id_pattern = BATCH_ID_TEMPLATE.format(now.strftime("%m%d"), "%")
-    max_batch_id_today = (
-        db_session.query(func.max(CtrBatchIdentifier.batch_counter))
-        .filter(
-            CtrBatchIdentifier.batch_date == now.date(),
-            CtrBatchIdentifier.ctr_batch_identifier.like(ctr_batch_id_pattern),
-        )
-        .scalar()
-    )
-
-    # Start batch counters at 10.
-    # Other agencies use suffixes 1-7 (for days of the week). We start our suffixes at 10 so we
-    # don't conflict with their batch IDs and have a logical starting point (10 instead of 8).
-    batch_counter = 10
-    if max_batch_id_today:
-        batch_counter = max_batch_id_today + 1
-
-    ctr_batch_id = CtrBatchIdentifier(
-        ctr_batch_identifier=BATCH_ID_TEMPLATE.format(now.strftime("%m%d"), batch_counter),
-        year=now.year,
-        batch_date=now.date(),
-        batch_counter=batch_counter,
-    )
-    db_session.add(ctr_batch_id)
-
-    logger.info(
-        "creating batch %s %s %s %s",
-        ctr_batch_id.ctr_batch_identifier,
-        ctr_batch_id.year,
-        ctr_batch_id.batch_date,
-        ctr_batch_id.batch_counter,
-    )
-
-    return ctr_batch_id
-
-
 def get_eligible_employees(db_session: db.Session) -> List[Employee]:
     state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
@@ -423,20 +384,9 @@ def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
     try:
         now = payments_util.get_now()
 
-        s3_path = os.path.join(ctr_outbound_path, "ready")
-
-        ctr_batch_id = create_next_batch_id(now, db_session)
-        batch_filename = BATCH_ID_TEMPLATE.format(
-            now.strftime("%Y%m%d"), ctr_batch_id.batch_counter
+        ctr_batch_id, ref_file = payments_util.create_batch_id_and_reference_file(
+            now, ReferenceFileType.VCC, db_session, ctr_outbound_path
         )
-        dir_path = os.path.join(s3_path, batch_filename)
-
-        ref_file = ReferenceFile(
-            file_location=dir_path,
-            reference_file_type_id=ReferenceFileType.VCC.reference_file_type_id,
-            ctr_batch_identifier=ctr_batch_id,
-        )
-        db_session.add(ref_file)
 
         employees = get_eligible_employees(db_session)
 
@@ -449,6 +399,10 @@ def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
         logger.exception("Unable to create VCC:", str(e))
         db_session.rollback()
 
-    return payments_util.write_vcc_files(
-        dir_path, ctr_batch_id.ctr_batch_identifier, dat_xml_document, inf_dict
+    return payments_util.create_mmars_files_in_s3(
+        ref_file.file_location, ctr_batch_id.ctr_batch_identifier, dat_xml_document, inf_dict
     )
+
+
+def build_vcc_files_for_s3(db_session: db.Session) -> Tuple[str, str]:
+    return build_vcc_files(db_session, payments_util.get_s3_config().pfml_ctr_outbound_path)

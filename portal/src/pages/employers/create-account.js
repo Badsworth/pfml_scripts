@@ -2,12 +2,14 @@ import Alert from "../../components/Alert";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Button from "../../components/Button";
 import Details from "../../components/Details";
+import InputPassword from "../../components/InputPassword";
 import InputText from "../../components/InputText";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -39,6 +41,8 @@ export const CreateAccount = (props) => {
     updateFields,
   });
 
+  const showMedicalLeave = isFeatureEnabled("claimantShowMedicalLeaveType");
+
   return (
     <form className="usa-form" onSubmit={handleSubmit}>
       <Title>{t("pages.employersAuthCreateAccount.title")}</Title>
@@ -51,7 +55,11 @@ export const CreateAccount = (props) => {
           }}
         />
       </Alert>
-      <Lead>{t("pages.employersAuthCreateAccount.leadBackground")}</Lead>
+      <Lead>
+        {t("pages.employersAuthCreateAccount.leadBackground", {
+          context: showMedicalLeave ? null : "prelaunch",
+        })}
+      </Lead>
       <Lead>{t("pages.employersAuthCreateAccount.leadMultipleCompanies")}</Lead>
       <Details label={t("pages.employersAuthCreateAccount.detailsLabel")}>
         <Trans
@@ -69,10 +77,9 @@ export const CreateAccount = (props) => {
         label={t("pages.employersAuthCreateAccount.usernameLabel")}
         smallLabel
       />
-      <InputText
+      <InputPassword
         {...getFunctionalInputProps("password")}
         autoComplete="new-password"
-        type="password"
         hint={t("pages.employersAuthCreateAccount.passwordHint")}
         label={t("pages.employersAuthCreateAccount.passwordLabel")}
         smallLabel

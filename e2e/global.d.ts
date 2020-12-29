@@ -57,8 +57,14 @@ declare namespace Cypress {
     task(event: "createContinuousLeaveDates"): Chainable<Date[]>;
     task(event: "getEmails", opts: GetEmailsOpts): Chainable<Email[]>;
     task(event: "registerClaimant", options: Credentials): Chainable<true>;
-    task(event: "registerLeaveAdmin", options: Credentials & {fein: string}): Chainable<true>;
-    task(event: "waitForClaimDocuments", options: Parameters<waitForClaimDocuments>[0]): Chainable<boolean>;
+    task(
+      event: "registerLeaveAdmin",
+      options: Credentials & { fein: string }
+    ): Chainable<true>;
+    task(
+      event: "waitForClaimDocuments",
+      options: Parameters<waitForClaimDocuments>[0]
+    ): Chainable<boolean>;
   }
 }
 

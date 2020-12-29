@@ -150,6 +150,7 @@ locals {
     "payments-ctr-process" = {
       command             = ["payments-ctr-process"]
       containers_template = "payments_ctr_process_template.json"
+      task_role           = aws_iam_role.payments_ctr_process_task_role.arn
       vars = {
         ctr_moveit_incoming_path = var.payments_ctr_moveit_incoming_path
         ctr_moveit_archive_path  = var.payments_ctr_moveit_archive_path
@@ -162,6 +163,7 @@ locals {
     "payments-fineos-process" = {
       command             = ["payments-fineos-process"]
       containers_template = "payments_fineos_process_template.json"
+      task_role           = aws_iam_role.payments_fineos_process_task_role.arn
       vars = {
         fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
         fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id

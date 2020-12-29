@@ -1,6 +1,8 @@
 import os
 from dataclasses import dataclass
+from typing import List
 
+import paramiko
 from sqlalchemy.orm.exc import MultipleResultsFound
 from tenacity import retry, stop_after_attempt
 
@@ -32,8 +34,8 @@ def copy_to_sftp_and_archive_s3_files(
     config: SftpS3TransferConfig, db_session: db.Session,
 ) -> None:
     source_dir_path = os.path.join(config.s3_bucket_uri, config.source_dir)
-    s3_filenames = file_util.list_files(source_dir_path)
-    if len(s3_filenames) == 0:
+    s3_filenames = file_util.list_s3_files_and_directories_by_level(source_dir_path)
+    if len(s3_filenames.keys()) == 0:
         # If there are no new files in S3 return early to avoid the overhead of an SFTP connection.
         return
 
@@ -43,38 +45,83 @@ def copy_to_sftp_and_archive_s3_files(
 
     # List files so we can avoid overwriting a file in the destination directory.
     dest_dir_filenames = sftp_client.listdir(config.dest_dir)
-    for filename in s3_filenames:
-        if filename in dest_dir_filenames:
-            logger.error(
-                "Skipping file named '{}' because it already exists in destination directory '{}'".format(
-                    filename, config.dest_dir
-                ),
-            )
-            continue
-
-        source_filepath = os.path.join(source_dir_path, filename)
-        dest_filepath = os.path.join(config.dest_dir, filename)
+    for local_filename, files_in_set in s3_filenames.items():
+        source_file_location = os.path.join(source_dir_path, local_filename)
 
         try:
             reference_file = (
                 db_session.query(ReferenceFile)
-                .filter(ReferenceFile.file_location == source_filepath)
+                .filter(ReferenceFile.file_location == source_file_location)
                 .one_or_none()
             )
         except MultipleResultsFound:
-            logger.error(
-                "Found more than one ReferenceFile with the same file_location:", source_filepath,
+            logger.exception(
+                "Found more than one ReferenceFile with the same file_location. Skipping",
+                extra={"file_location": source_file_location},
             )
             continue
         except Exception as e:
             raise e
 
         if not reference_file:
-            logger.info(
-                "Could not find ReferenceFile record in database for file in S3 named:",
-                source_filepath,
+            logger.warn(
+                "Could not find ReferenceFile with file_location matching S3 file name. Skipping",
+                extra={"file_location": source_file_location},
             )
             continue
+
+        _copy_files_in_set_for_reference_file(
+            reference_file, files_in_set, dest_dir_filenames, config, sftp_client, db_session
+        )
+
+
+def _copy_files_in_set_for_reference_file(
+    reference_file: ReferenceFile,
+    files_in_set: List[str],
+    dest_dir_filenames: List[str],
+    config: SftpS3TransferConfig,
+    sftp_client: paramiko.SFTPClient,
+    db_session: db.Session,
+) -> None:
+    if reference_file.reference_file_type_id is None:
+        logger.error(
+            "ReferenceFile does not have associated ReferenceFileType",
+            extra={
+                "reference_file_id": reference_file.reference_file_id,
+                "reference_file_location": reference_file.file_location,
+            },
+        )
+        return
+
+    if not reference_file.reference_file_type.num_files_in_set == len(files_in_set):
+        logger.error(
+            "Incorrect number of files in set. Skipping",
+            extra={
+                "reference_file_id": reference_file.reference_file_id,
+                "correct_num_files_in_set": reference_file.reference_file_type.num_files_in_set,
+                "actual_num_files_in_set": len(files_in_set),
+                "reference_file_type": reference_file.reference_file_type.reference_file_type_description,
+                "reference_file_location": reference_file.file_location,
+            },
+        )
+        return
+
+    source_dir_path = os.path.join(config.s3_bucket_uri, config.source_dir)
+
+    sftp_files_to_rollback = []
+    s3_files_to_return = []
+    for subfile in files_in_set:
+        source_filepath = os.path.join(source_dir_path, subfile)
+
+        basename = os.path.basename(subfile)
+        dest_filepath = os.path.join(config.dest_dir, basename)
+
+        if basename in dest_dir_filenames:
+            logger.warn(
+                "File already exists in destination directory. Skipping",
+                extra={"file_name": basename, "destination_directory": config.dest_dir},
+            )
+            return
 
         # TODO: Create state_log entry.
 
@@ -83,32 +130,36 @@ def copy_to_sftp_and_archive_s3_files(
             _copy_file_from_s3_to_sftp_with_retry(
                 source=source_filepath, dest=dest_filepath, sftp=sftp_client
             )
-        except Exception as e:
-            # Capture and re-raise exceptions so we can update the database before allowing
-            # calling code to respond to unexpected failure.
+            sftp_files_to_rollback.append(dest_filepath)
 
-            # TODO: Update state_log entry to note failure to copy file from S3 to MoveIt.
-            raise e
-
-        # TODO: Update state_log entry to note successful transfer of file to MoveIt.
-
-        try:
             # Move from ready directory to sent directory.
-            archive_filepath = os.path.join(config.s3_bucket_uri, config.archive_dir, filename)
+            archive_filepath = os.path.join(config.s3_bucket_uri, config.archive_dir, subfile)
             file_util.rename_file(source_filepath, archive_filepath)
+            # Flip the arguments here to prepare for a potential rename back the other way.
+            s3_files_to_return.append((archive_filepath, source_filepath))
         except Exception as e:
             # Capture and re-raise exceptions so we can update the database before allowing
             # calling code to respond to unexpected failure.
+
+            for s3_rename_args in s3_files_to_return:
+                file_util.rename_file(*s3_rename_args)
 
             # "Roll back" the copy from S3 to MoveIt by removing the copied file from MoveIt if
             # archiving the file in S3 fails.
-            sftp_client.remove(dest_filepath)
+            for file_to_rollback in sftp_files_to_rollback:
+                sftp_client.remove(file_to_rollback)
 
-            # TODO: Update state_log entry to note failure to archive file in S3.
+            # TODO: Update state_log entry to note failure to copy file to MoveIt
+            # or archive file in S3.
             raise e
 
         # Update the filepath for the reference file since we moved it.
-        reference_file.file_location = archive_filepath
+        local_filename = os.path.basename(reference_file.file_location)
+        archive_file_location = os.path.join(
+            config.s3_bucket_uri, config.archive_dir, local_filename
+        )
+        reference_file.file_location = archive_file_location
+        db_session.add(reference_file)
         db_session.commit()
 
 
@@ -146,7 +197,7 @@ def copy_from_sftp_to_s3_and_archive_files(
                 .one_or_none()
             )
         except MultipleResultsFound:
-            logger.error(
+            logger.exception(
                 "Found more than one ReferenceFile with the same file_location:", source_filepath,
             )
             continue

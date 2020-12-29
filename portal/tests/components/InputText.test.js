@@ -60,6 +60,18 @@ describe("InputText", () => {
     expect(label1.prop("inputId")).toBe(input1.prop("id"));
   });
 
+  describe("when inputId prop is set", () => {
+    it("uses the passed id instead of the generated one", () => {
+      const { wrapper } = render({ inputId: "my-unique-id" });
+
+      const input = wrapper.find(".usa-input");
+      const label = wrapper.find("FormLabel");
+
+      expect(input.prop("id")).toBe("my-unique-id");
+      expect(label.prop("inputId")).toBe(input.prop("id"));
+    });
+  });
+
   it("renders a label component", () => {
     const { props, wrapper } = render();
     const label = wrapper.find("FormLabel");

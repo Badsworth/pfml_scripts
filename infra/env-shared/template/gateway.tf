@@ -50,7 +50,9 @@ resource "aws_api_gateway_method_settings" "full_stage_settings" {
   method_path = "*/*"
 
   settings {
-    metrics_enabled = true
-    logging_level   = "INFO"
+    metrics_enabled        = true
+    logging_level          = "INFO"
+    throttling_burst_limit = 5000
+    throttling_rate_limit  = 10000
   }
 }

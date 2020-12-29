@@ -8,7 +8,7 @@
 # This allows us to build mock data and insert them easily in the database for tests
 # and seeding.
 #
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, List, Optional, cast
 
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Index, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -346,7 +346,7 @@ class Employee(Base):
     occupation = relationship(LkOccupation)
     education_level = relationship(LkEducationLevel)
     latest_import_log = relationship("ImportLog")
-    claims = relationship("Claim", back_populates="employee")
+    claims = cast(Optional[List["Claim"]], relationship("Claim", back_populates="employee"))
     state_logs = relationship("StateLog", back_populates="employee")
     mailing_address = relationship("Address")
     eft = relationship("EFT", back_populates="employee", uselist=False)
@@ -745,7 +745,9 @@ class LatestStateLog(Base):
     __tablename__ = "latest_state_log"
     latest_state_log_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
-    state_log_id = Column(UUID(as_uuid=True), ForeignKey("state_log.state_log_id"), index=True)
+    state_log_id = Column(
+        UUID(as_uuid=True), ForeignKey("state_log.state_log_id"), index=True, nullable=False
+    )
     payment_id = Column(UUID(as_uuid=True), ForeignKey("payment.payment_id"), index=True)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
     reference_file_id = Column(

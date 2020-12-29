@@ -1,7 +1,14 @@
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import React from "react";
+import { Trans } from "react-i18next";
+import { shallow } from "enzyme";
 
 describe("AppErrorInfoCollection", () => {
+  // eslint-disable-next-line react/prop-types
+  const TestErrorComponent = ({ errors }) => {
+    return <React.Fragment>{errors}</React.Fragment>;
+  };
   describe("fieldErrorMessage", () => {
     it("returns null result if there are no errors", () => {
       const collection = new AppErrorInfoCollection();
@@ -21,7 +28,9 @@ describe("AppErrorInfoCollection", () => {
 
       const result = collection.fieldErrorMessage(field);
 
-      expect(result).toBeNull();
+      expect(
+        shallow(<TestErrorComponent errors={result} />).html()
+      ).toMatchInlineSnapshot(`""`);
     });
 
     it("returns merged string if multiple errors match the given field's path", () => {
@@ -39,8 +48,39 @@ describe("AppErrorInfoCollection", () => {
 
       const result = collection.fieldErrorMessage(field);
 
-      expect(result).toMatchInlineSnapshot(
+      expect(
+        shallow(<TestErrorComponent errors={result} />).html()
+      ).toMatchInlineSnapshot(
         `"Day must be less than 31. Year must be greater than 1900."`
+      );
+    });
+
+    it("returns merged string and components if multiple errors match the given field's path", () => {
+      const field = "birthdate";
+      const collection = new AppErrorInfoCollection([
+        new AppErrorInfo({
+          field,
+          message: (
+            <Trans
+              i18nKey="errors.claims.fineos_case_creation_issues"
+              components={{
+                "mass-gov-form-link": <a href="test/link" />,
+              }}
+            />
+          ),
+        }),
+        new AppErrorInfo({
+          field,
+          message: "Fineos issues happened.",
+        }),
+      ]);
+
+      const result = collection.fieldErrorMessage(field);
+
+      expect(
+        shallow(<TestErrorComponent errors={result} />).html()
+      ).toMatchInlineSnapshot(
+        `"We’re having trouble finding you in our database. Fill out the <a href=\\"test/link\\">form on Mass.gov</a> and we’ll set up your application through our Contact Center. Fineos issues happened."`
       );
     });
   });

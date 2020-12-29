@@ -23,6 +23,7 @@ import formatDateRange from "../../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import updateAmendments from "../../../utils/updateAmendments";
+import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
@@ -126,7 +127,7 @@ export const Review = (props) => {
     updateFields({ employerDecision: updatedEmployerDecision });
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
 
     const amendedHours = formState.amendedHours;
@@ -154,8 +155,9 @@ export const Review = (props) => {
         !isEqual(formState.amendedLeaves, formState.previousLeaves) ||
         !isEqual(amendedHours, claim.hours_worked_per_week),
     };
+
     await props.appLogic.employers.submit(absenceId, payload);
-  };
+  });
 
   return (
     <React.Fragment>
@@ -226,6 +228,8 @@ export const Review = (props) => {
         <Button
           className="margin-top-4"
           type="submit"
+          loading={handleSubmit.isThrottled}
+          loadingMessage={t("pages.employersClaimsReview.submitLoadingMessage")}
           disabled={isCommentRequired && formState.comment === ""}
         >
           {t("pages.employersClaimsReview.submitButton")}

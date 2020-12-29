@@ -23,7 +23,7 @@ exports[`EmployerDecision renders the component 1`] = `
         className="font-heading-xs text-normal"
         components={
           Object {
-            "employer-pfml-guide-link": <a
+            "mass-employer-role-link": <a
               href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
               rel="noopener"
               target="_blank"

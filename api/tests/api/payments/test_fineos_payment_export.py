@@ -1,9 +1,11 @@
 import os
 import tempfile
 import zipfile
+from datetime import date
 
 import boto3
 import pytest
+from freezegun import freeze_time
 
 import massgov.pfml.payments.fineos_payment_export as exporter
 import massgov.pfml.util.files as file_util
@@ -86,6 +88,7 @@ def add_db_records(
             fineos_absence_id=absence_case_id,
             employee_id=employee.employee_id,
         )
+
         # Payment needs to be attached to a claim
         if add_payment:
             PaymentFactory.create(claim=claim)
@@ -115,7 +118,7 @@ def setup_process_tests(
     add_db_records(
         test_db_session,
         "111111111",
-        "NTN-01-ABS-01",
+        "NTN-01-ABS-02",
         add_claim=add_claim,
         add_address=add_address,
         add_eft=add_eft,
@@ -126,7 +129,7 @@ def setup_process_tests(
     add_db_records(
         test_db_session,
         "222222222",
-        "NTN-02-ABS-02",
+        "NTN-02-ABS-03",
         add_claim=add_claim,
         add_address=add_address,
         add_eft=add_eft,
@@ -137,7 +140,7 @@ def setup_process_tests(
     add_db_records(
         test_db_session,
         "333333333",
-        "NTN-03-ABS-03",
+        "NTN-03-ABS-04",
         add_claim=add_claim,
         add_address=add_address,
         add_eft=add_eft,
@@ -280,8 +283,8 @@ def test_group_s3_files_by_date(mock_s3_bucket, set_exporter_env_vars):
 
     data_by_date = exporter.group_s3_files_by_date()
     assert set(data_by_date.keys()) == set(["2020-01-01", "2020-01-02", "2020-01-03"])
-    for date, paths in data_by_date.items():
-        expected_path_to_file = f"s3://{mock_s3_bucket}/{shared_prefix}{date}-"
+    for date_item, paths in data_by_date.items():
+        expected_path_to_file = f"s3://{mock_s3_bucket}/{shared_prefix}{date_item}-"
         assert set(paths) == set(
             [
                 f"{expected_path_to_file}vpei.csv.zip",
@@ -291,6 +294,7 @@ def test_group_s3_files_by_date(mock_s3_bucket, set_exporter_env_vars):
         )
 
 
+@freeze_time("2021-01-03 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data(
     mock_s3_bucket, set_exporter_env_vars, test_db_session, tmp_path, initialize_factories_session
 ):
@@ -330,6 +334,7 @@ def test_process_extract_data(
         assert payment.period_start_date.strftime("%Y-%m-%d") == f"2021-01-0{index}"
         assert payment.period_end_date.strftime("%Y-%m-%d") == f"2021-01-1{index}"
         assert payment.payment_date.strftime("%Y-%m-%d") == f"2021-01-0{index}"
+        assert payment.fineos_extraction_date == date(2021, 1, 3)
         assert str(payment.amount) == f"{index * 3}.99"  # eg. 111.99
 
         claim = payment.claim
@@ -433,6 +438,7 @@ def test_process_extract_data_no_existing_claim_address_eft(
             assert eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
 
 
+@freeze_time("2021-01-03 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_existing_payment(
     mock_s3_bucket, set_exporter_env_vars, test_db_session, tmp_path, initialize_factories_session
 ):
@@ -455,6 +461,7 @@ def test_process_extract_data_existing_payment(
         assert payment.period_start_date.strftime("%Y-%m-%d") == f"2021-01-0{index}"
         assert payment.period_end_date.strftime("%Y-%m-%d") == f"2021-01-1{index}"
         assert payment.payment_date.strftime("%Y-%m-%d") == f"2021-01-0{index}"
+        assert payment.fineos_extraction_date == date(2021, 1, 3)
         assert str(payment.amount) == f"{index * 3}.99"  # eg. 111.99
 
 
