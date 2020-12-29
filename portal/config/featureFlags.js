@@ -80,6 +80,7 @@ const flagsConfig = {
     claimantShowAuth: true,
   },
   prod: {
+    claimantShowAuth: true,
     pfmlTerriyay: true,
   },
 };
