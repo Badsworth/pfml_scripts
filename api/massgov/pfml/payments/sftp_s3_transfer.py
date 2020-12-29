@@ -123,8 +123,6 @@ def _copy_files_in_set_for_reference_file(
             )
             return
 
-        # TODO: Create state_log entry.
-
         try:
             # Copy to MoveIt.
             _copy_file_from_s3_to_sftp_with_retry(
@@ -149,8 +147,6 @@ def _copy_files_in_set_for_reference_file(
             for file_to_rollback in sftp_files_to_rollback:
                 sftp_client.remove(file_to_rollback)
 
-            # TODO: Update state_log entry to note failure to copy file to MoveIt
-            # or archive file in S3.
             raise e
 
         # Update the filepath for the reference file since we moved it.
@@ -177,7 +173,6 @@ def copy_from_sftp_to_s3_and_archive_files(
 
     source_filenames = sftp_client.listdir(config.source_dir)
     if len(source_filenames) == 0:
-        # TODO: Create a row in state_log noting that we did not find any files.
         logger.info("Did not find any files in source SFTP directory:", config.source_dir)
         return
 
@@ -222,7 +217,6 @@ def copy_from_sftp_to_s3_and_archive_files(
             reference_file = ReferenceFile(file_location=dest_filepath)
             db_session.add(reference_file)
             db_session.commit()
-            # TODO: Add row in StateLog table.
         except Exception as e:
             logger.error(
                 "Saved file '{}' into S3 but could not create a ReferenceFile record in database.".format(
