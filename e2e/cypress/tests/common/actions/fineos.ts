@@ -373,19 +373,35 @@ export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
 
 // @todo: This seems like it's doing a lot - is this really the whole claim workflow?
 // If so, we might want to name it submitClaim() to align with portal/API.
-export function createNotification(startDate: Date, endDate: Date): void {
+export function createNotification(
+  startDate: Date,
+  endDate: Date,
+  claimType?: string
+): void {
   cy.contains("span", "Create Notification").click();
   cy.get("span[id='nextContainer']").first().find("input").click();
   cy.get("span[id='nextContainer']").first().find("input").click();
-  cy.contains(
-    "div",
-    "Bonding with a new child (adoption/ foster care/ newborn)"
-  )
-    .prev()
-    .find("input")
-    .click();
-  cy.get("span[id='nextContainer']").first().find("input").click();
-  cy.labelled("Qualifier 1").select("Foster Care");
+  if (claimType === "military care leave") {
+    cy.contains("div", "Out of work for another reason")
+      .prev()
+      .find("input")
+      .click();
+    cy.get("span[id='nextContainer']").first().find("input").click();
+    cy.labelled("Absence relates to").select("Family");
+    cy.wait(1000);
+    cy.labelled("Absence reason").select("Military Caregiver");
+  } else {
+    cy.contains(
+      "div",
+      "Bonding with a new child (adoption/ foster care/ newborn)"
+    )
+      .prev()
+      .find("input")
+      .click();
+    cy.get("span[id='nextContainer']").first().find("input").click();
+    cy.labelled("Qualifier 1").select("Foster Care");
+  }
+
   cy.get("span[id='nextContainer']")
     .first()
     .find("input")
@@ -422,6 +438,11 @@ export function createNotification(startDate: Date, endDate: Date): void {
     .find("input")
     .click()
     .wait("@ajaxRender");
+  if (claimType === "military care leave") {
+    cy.labelled("Military Caregiver Description").type(
+      "I am a parent military caregiver."
+    );
+  }
   cy.get("span[id='nextContainer']")
     .first()
     .find("input")

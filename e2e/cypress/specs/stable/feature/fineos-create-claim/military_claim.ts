@@ -1,10 +1,10 @@
-import { fineos, email } from "../../../tests/common/actions";
-import { beforeFineos } from "../../../tests/common/before";
-import { extractLeavePeriod } from "../../../../src/utils";
-import { getFineosBaseUrl } from "../../../config";
-import { Submission } from "../../../../src/types";
+import { fineos, email } from "../../../../tests/common/actions";
+import { beforeFineos } from "../../../../tests/common/before";
+import { extractLeavePeriod } from "../../../../../src/utils";
+import { getFineosBaseUrl } from "../../../../config";
+import { Submission } from "../../../../../src/types";
 
-describe("Create a new continuous leave, bonding claim in FINEOS", () => {
+describe("Create a new continuous leave, military caregiver claim in FINEOS", () => {
   it(
     "Should be able to create a claim",
     { baseUrl: getFineosBaseUrl() },
@@ -28,7 +28,7 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
           claim.claim.last_name
         );
         const [startDate, endDate] = extractLeavePeriod(claim.claim);
-        fineos.createNotification(startDate, endDate);
+        fineos.createNotification(startDate, endDate, "military care leave");
         cy.get("a[name*='CaseMapWidget']")
           .invoke("text")
           .then((text) => {
@@ -42,7 +42,6 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
       });
     }
   );
-
   it("I should receive an 'application started' notification", () => {
     cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
@@ -53,6 +52,7 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
           "application started",
           submission.fineos_absence_id
         );
+        cy.log(subject);
         cy.task<Email[]>(
           "getEmails",
           {
@@ -60,7 +60,7 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
             subject: subject,
             timestamp_from: submission.timestamp_from,
           },
-          { timeout: 180000 }
+          { timeout: 360000 }
         ).then((emails) => {
           const emailContent = email.getNotificationData(emails[0].html);
           expect(emailContent.name).to.equal(employeeFullName);
