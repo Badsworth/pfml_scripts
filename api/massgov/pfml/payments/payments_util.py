@@ -25,6 +25,7 @@ class Constants:
     COMPTROLLER_DEPT_CODE = "EOL"
     COMPTROLLER_AD_ID = "AD010"
     COMPTROLLER_AD_TYPE = "PA"
+    DOC_PHASE_CD_FINAL_STATUS = "3 - Final"
 
 
 @dataclass
@@ -80,6 +81,7 @@ class ValidationReason(str, Enum):
     MULTIPLE_VALUES_FOUND = "MultipleValuesFound"
     VALUE_NOT_FOUND = "ValueNotFound"
     NON_NULLABLE = "NonNullable"
+    OUTBOUND_STATUS_ERROR = "OutboundStatusError"
 
 
 @dataclass(frozen=True, eq=True)

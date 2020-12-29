@@ -109,7 +109,7 @@ def test_get_validation_issues_with_issues():
     )
 
     assert validation_container.record_key is None
-    assert len(validation_container.validation_issues) == 5
+    assert len(validation_container.validation_issues) == 6
     assert len(validation_container.errors) == 0
 
 

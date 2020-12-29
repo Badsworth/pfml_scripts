@@ -1,4 +1,5 @@
 import os
+import pathlib
 from datetime import datetime, timedelta
 from xml.dom.minidom import Document
 
@@ -10,6 +11,7 @@ from sqlalchemy import func
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
+import massgov.pfml.payments.outbound_status_return as outbound_status_return
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.payments.vcc as vcc
 from massgov.pfml.db.models.employees import (
@@ -35,6 +37,8 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.payments.payments_util import PaymentsS3Config
 from tests.api.payments import validate_attributes, validate_elements
+
+TEST_FOLDER = pathlib.Path(__file__).parent
 
 
 def get_base_employee(add_eft=True, use_random_tin=False):
@@ -613,3 +617,59 @@ def test_create_next_batch_id_with_existing_values(initialize_factories_session,
 
     ctr_batch_id = vcc.create_next_batch_id(now, test_db_session)
     assert ctr_batch_id.batch_counter == next_batch_counter
+
+
+def get_validation_container(ams_doc):
+    if ams_doc.get("TRAN_CD") is None and ams_doc.find("DOC_ID") is None:
+        return outbound_status_return.get_payment_validation_issues(ams_doc, None, None)
+    elif ams_doc.get("TRAN_CD") is not None and ams_doc.find("DOC_ID") is None:
+        return outbound_status_return.get_payment_validation_issues(
+            ams_doc, None, ams_doc.get("TRAN_CD")
+        )
+    elif ams_doc.get("TRAN_CD") is not None and ams_doc.find("DOC_ID") is None:
+        return outbound_status_return.get_payment_validation_issues(
+            ams_doc, ams_doc.find("DOC_ID").text, None
+        )
+
+    tran_cd = ams_doc.get("TRAN_CD")
+    doc_id = ams_doc.find("DOC_ID").text
+
+    return outbound_status_return.get_payment_validation_issues(ams_doc, doc_id, tran_cd)
+
+
+def test_vcc_outbound_status_errors(initialize_factories_session):
+
+    file_path = os.path.join(TEST_FOLDER, "test_files", "test_vcc_status_return.xml")
+
+    root = ET.parse(file_path).getroot()
+
+    doc_count = 0
+    for ams_doc in root:
+        ams_doc_data = get_validation_container(ams_doc)
+        validation_container = ams_doc_data.validation_container
+
+        if doc_count == 0:  # Good doc
+            assert validation_container.has_validation_issues() is False
+        if doc_count == 1:  # Missing DOC_ID
+            assert validation_container.has_validation_issues() is True
+            assert (
+                validation_container.validation_issues[0].reason
+                == payments_util.ValidationReason.MISSING_FIELD
+                and validation_container.validation_issues[0].details == "DOC_ID"
+            )
+        elif doc_count == 2:  # Missing NO_ERRORS, default to '0', but bad DOC_PHASE_CD
+            assert validation_container.has_validation_issues() is True
+            assert (
+                validation_container.validation_issues[0].reason
+                == payments_util.ValidationReason.INVALID_VALUE
+                and validation_container.validation_issues[0].details
+                == "DOC_PHASE_CD (2 - Not Final)"
+            )
+        elif doc_count == 3:  # Has ERRORS set
+            assert validation_container.has_validation_issues() is True
+            assert (
+                validation_container.validation_issues[0].reason
+                == payments_util.ValidationReason.OUTBOUND_STATUS_ERROR
+            )
+
+        doc_count += 1

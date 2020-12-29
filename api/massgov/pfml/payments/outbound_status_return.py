@@ -16,23 +16,50 @@ from massgov.pfml.payments.payments_util import Constants
 logger = logging.get_logger(__name__)
 
 
+class DocError:
+    code: Optional[str]
+    text: Optional[str]
+
+    def __init__(self, code, text):
+        self.code = code
+        self.text = text
+
+
 class AmsDocData:
     doc_id: Optional[str]
     doc_cd: Optional[str]
     tran_cd: Optional[str]
     unit_cd: Optional[str]
     dept_cd: Optional[str]
+    doc_phase_cd: Optional[str]
+    number_of_errors: Optional[str]
+    errors: Optional[List[DocError]]
     validation_container: payments_util.ValidationContainer
 
     def __init__(self, ams_doc, doc_id_value, tran_cd_value):
         attributes = ams_doc.attrib
         doc_cd = ams_doc.find("DOC_CD")
 
+        self.number_of_errors = (
+            ams_doc.find("ERRORS").get("NO_OF_ERRORS", "0")
+            if ams_doc.find("ERRORS") is not None
+            else None
+        )
         self.doc_id = doc_id_value
         self.doc_cd = doc_cd.text if doc_cd is not None else None
         self.tran_cd = tran_cd_value
         self.unit_cd = attributes["UNIT_CD"] if "UNIT_CD" in attributes else None
         self.dept_cd = attributes["DEPT_CD"] if "DEPT_CD" in attributes else None
+        self.doc_phase_cd = (
+            ams_doc.find("DOC_PHASE_CD").text if ams_doc.find("DOC_PHASE_CD") is not None else None
+        )
+        self.errors = attributes["errors"] if "ERRORS" in attributes else None
+
+        if ams_doc.find("ERRORS") is not None:
+            self.errors = list()
+            for error in ams_doc.find("ERRORS"):
+                self.errors.append(DocError(code=error.get("ERROR_CD"), text=error.text))
+
         self.validation_container = payments_util.ValidationContainer(doc_id_value)
 
 
@@ -90,6 +117,32 @@ def get_payment_validation_issues(ams_doc, doc_id_value, tran_cd_value):
         validation_container.add_validation_issue(
             payments_util.ValidationReason.INVALID_VALUE, "TRAN_CD and DOC_CD"
         )
+
+    if (
+        ams_doc_data.tran_cd == "VCC"
+        and ams_doc_data.doc_phase_cd is not None
+        and ams_doc_data.doc_phase_cd != Constants.DOC_PHASE_CD_FINAL_STATUS
+    ):
+        validation_container.add_validation_issue(
+            payments_util.ValidationReason.INVALID_VALUE,
+            "DOC_PHASE_CD ({})".format(ams_doc_data.doc_phase_cd),
+        )
+
+    if ams_doc_data.errors is None:
+        validation_container.add_validation_issue(
+            payments_util.ValidationReason.MISSING_FIELD, "ERRORS"
+        )
+
+    if ams_doc_data.errors is not None and ams_doc_data.number_of_errors != "0":
+        for error in ams_doc_data.errors:
+            error_code = error.code
+            if not error_code:
+                error_code = "MISSING"
+
+            validation_container.add_validation_issue(
+                payments_util.ValidationReason.OUTBOUND_STATUS_ERROR,
+                "Code {} - {}".format(error_code, error.text),
+            )
 
     return ams_doc_data
 
