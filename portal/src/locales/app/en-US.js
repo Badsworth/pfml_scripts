@@ -452,10 +452,12 @@ const errors = {
       "This application has already been reviewed.",
     previous_leaves: {
       leave_start_date: {
+        date: "Start date must include a day, month, and year.",
         invalid_previous_leave_start_date:
           "Paid leave cannot be taken before January 1, 2021. Enter a date after December 31, 2020.",
       },
       leave_end_date: {
+        date: "End date must include a day, month, and year.",
         minimum:
           "Last day of leave must be on or after the first day of leave.",
       },
@@ -1500,9 +1502,8 @@ const pages = {
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     leadBackground:
       "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave for bonding with a child, with more benefits available in 2021.",
-    // TODO (EMPLOYER-661): Remove string after December 15
     leadBackground_prelaunch:
-      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers will be able to apply for family leave for bonding with a child soon, with more benefits available in 2021.",
+      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for family leave for bonding with a child, with more benefits available in 2021.",
     leadMultipleCompanies:
       "If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.",
     nextStep: "We’ll send you a 6-digit code to verify your email address.",

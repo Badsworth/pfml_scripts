@@ -9,6 +9,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -40,6 +41,8 @@ export const CreateAccount = (props) => {
     updateFields,
   });
 
+  const showMedicalLeave = isFeatureEnabled("claimantShowMedicalLeaveType");
+
   return (
     <form className="usa-form" onSubmit={handleSubmit}>
       <Title>{t("pages.employersAuthCreateAccount.title")}</Title>
@@ -52,7 +55,11 @@ export const CreateAccount = (props) => {
           }}
         />
       </Alert>
-      <Lead>{t("pages.employersAuthCreateAccount.leadBackground")}</Lead>
+      <Lead>
+        {t("pages.employersAuthCreateAccount.leadBackground", {
+          context: showMedicalLeave ? null : "prelaunch",
+        })}
+      </Lead>
       <Lead>{t("pages.employersAuthCreateAccount.leadMultipleCompanies")}</Lead>
       <Details label={t("pages.employersAuthCreateAccount.detailsLabel")}>
         <Trans
