@@ -32,7 +32,9 @@ def reference_file_by_ctr_batch(
     reference_file: ReferenceFile = (
         db_session.query(ReferenceFile)
         .join(CtrBatchIdentifier)
-        .filter(CtrBatchIdentifier.year == year, CtrBatchIdentifier.ctr_batch_identifier == batch_id)
+        .filter(
+            CtrBatchIdentifier.year == year, CtrBatchIdentifier.ctr_batch_identifier == batch_id
+        )
         .one_or_none()
     )
     if reference_file is None:
