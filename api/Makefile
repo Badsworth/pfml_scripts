@@ -209,7 +209,7 @@ payments-mock-generate: ## Generate mock payments data
 	$(PY_RUN_CMD) payments-mock-generate $(DECODE_LOG)
 
 payments-regenerate: ## Regenerate a GAX or VCC; use BATCH=EOL1222VCC12
-	CTR_OUTBOUND_PATH=payments_files/ctr/outbound $(PY_RUN_CMD) payments-regenerate $(BATCH) $(DECODE_LOG)
+	PFML_CTR_OUTBOUND_PATH=payments_files/ctr/outbound $(PY_RUN_CMD) payments-regenerate $(BATCH) $(DECODE_LOG)
 
 process-tpa-csv: ## Creates mailable CSVs per email address in input file
 	$(PY_RUN_CMD) python bin/process-tpa-csv.py \

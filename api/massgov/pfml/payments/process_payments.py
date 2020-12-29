@@ -43,7 +43,9 @@ def regenerate():
             db_session_raw, "Payments regenerate", ""
         ) as log_entry, massgov.pfml.db.session_scope(db_session_raw) as db_session:
             log_entry.report = json.dumps({"batch_id": args.batch})
-            massgov.pfml.payments.regenerate.regenerate_batch(args.batch, config, db_session)
+            massgov.pfml.payments.regenerate.regenerate_batch(
+                args.batch, config.pfml_ctr_outbound_path, db_session
+            )
     except Exception as ex:
         logger.exception("%s", ex)
         sys.exit(1)
