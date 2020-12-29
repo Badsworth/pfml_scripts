@@ -1501,9 +1501,9 @@ const pages = {
     einLabel: "Employer ID number (EIN)",
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     leadBackground:
-      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave for bonding with a child, with more benefits available in 2021.",
+      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave.",
     leadBackground_prelaunch:
-      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for family leave for bonding with a child, with more benefits available in 2021.",
+      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family leave for bonding with a child, with more benefits available in 2021.",
     leadMultipleCompanies:
       "If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.",
     nextStep: "We’ll send you a 6-digit code to verify your email address.",
@@ -1786,7 +1786,9 @@ const pages = {
       "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process.",
     viewFormsTitle: "View forms and notices online",
     welcomeBody:
-      "Thanks for joining the paid leave program. Massachusetts workers can now apply for family leave for bonding with a child, with more benefits available in 2021.",
+      "Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.",
+    welcomeBody_prelaunch:
+      "Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family leave for bonding with a child, with more benefits available in 2021.",
     welcomeTitle: "Welcome",
   },
   index: {

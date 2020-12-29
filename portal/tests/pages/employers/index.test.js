@@ -7,14 +7,29 @@ import useAppLogic from "../../../src/hooks/useAppLogic";
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("Employer index", () => {
-  let appLogic;
+  let appLogic, wrapper;
 
-  it("renders the page", () => {
+  beforeEach(() => {
     testHook(() => {
       appLogic = useAppLogic();
     });
-    const wrapper = shallow(<Index appLogic={appLogic} />);
 
-    expect(wrapper.dive()).toMatchSnapshot();
+    wrapper = shallow(<Index appLogic={appLogic} />);
+  });
+
+  it("renders pre-launch content when claimantShowMedicalLeaveType is false", () => {
+    process.env.featureFlags = {
+      claimantShowMedicalLeaveType: false,
+    };
+
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders post-launch content when claimantShowMedicalLeaveType is true", () => {
+    process.env.featureFlags = {
+      claimantShowMedicalLeaveType: true,
+    };
+
+    expect(wrapper).toMatchSnapshot();
   });
 });
