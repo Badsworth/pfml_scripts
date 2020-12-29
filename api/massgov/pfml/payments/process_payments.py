@@ -42,9 +42,9 @@ def regenerate():
         with massgov.pfml.util.batch.log.log_entry(
             db_session_raw, "Payments regenerate", ""
         ) as log_entry, massgov.pfml.db.session_scope(db_session_raw) as db_session:
-            log_entry.report = json.dumps({"batch_id": args.batch})
+            log_entry.report = json.dumps({"year": args.year, "batch_id": args.batch})
             massgov.pfml.payments.regenerate.regenerate_batch(
-                args.batch, config.pfml_ctr_outbound_path, db_session
+                args.year, args.batch, config.pfml_ctr_outbound_path, db_session
             )
     except Exception as ex:
         logger.exception("%s", ex)
@@ -54,8 +54,17 @@ def regenerate():
 def regenerate_parse_args():
     """Parse command line arguments for regenerate."""
     parser = argparse.ArgumentParser(description="Regenerate a payments file")
+    parser.add_argument("year", type=batch_year, help="Year of batch to regenerate")
     parser.add_argument("batch", type=str, help="Batch identifier to regenerate")
     return parser.parse_args()
+
+
+def batch_year(arg):
+    """Parse a batch year command line argument."""
+    value = int(arg)
+    if not 2020 <= value < 3000:
+        raise argparse.ArgumentTypeError("must be a valid year after 2020")
+    return value
 
 
 if __name__ == "__main__":

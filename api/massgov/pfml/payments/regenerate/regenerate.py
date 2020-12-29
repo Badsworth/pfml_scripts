@@ -14,10 +14,10 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def regenerate_batch(
-    batch_id: str, ctr_outbound_path: str, db_session: massgov.pfml.db.Session
+    year: int, batch_id: str, ctr_outbound_path: str, db_session: massgov.pfml.db.Session
 ) -> None:
     """Regenerate a VCC or GAX for the given Batch ID."""
-    reference_file = reference_file_by_ctr_batch(batch_id, db_session)
+    reference_file = reference_file_by_ctr_batch(year, batch_id, db_session)
 
     regenerator_class = regenerator_class_for_reference_file(reference_file)
     regenerator = regenerator_class(reference_file, ctr_outbound_path, db_session)
@@ -26,20 +26,21 @@ def regenerate_batch(
 
 
 def reference_file_by_ctr_batch(
-    batch_id: str, db_session: massgov.pfml.db.Session
+    year: int, batch_id: str, db_session: massgov.pfml.db.Session
 ) -> ReferenceFile:
     """Read a ReferenceFile from the database for the given Batch ID."""
     reference_file: ReferenceFile = (
         db_session.query(ReferenceFile)
         .join(CtrBatchIdentifier)
-        .filter(CtrBatchIdentifier.ctr_batch_identifier == batch_id)
+        .filter(CtrBatchIdentifier.year == year, CtrBatchIdentifier.ctr_batch_identifier == batch_id)
         .one_or_none()
     )
     if reference_file is None:
-        raise RuntimeError("batch %s not found in database" % batch_id)
+        raise RuntimeError("batch %i %s not found in database" % (year, batch_id))
 
     logger.info(
-        "batch %s: reference_file %s, type %s",
+        "batch %i %s: reference_file %s, type %s",
+        year,
         batch_id,
         reference_file.file_location,
         reference_file.reference_file_type.reference_file_type_description,
