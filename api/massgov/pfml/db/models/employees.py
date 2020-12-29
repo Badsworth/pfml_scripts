@@ -745,7 +745,9 @@ class LatestStateLog(Base):
     __tablename__ = "latest_state_log"
     latest_state_log_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
-    state_log_id = Column(UUID(as_uuid=True), ForeignKey("state_log.state_log_id"), index=True)
+    state_log_id = Column(
+        UUID(as_uuid=True), ForeignKey("state_log.state_log_id"), index=True, nullable=False
+    )
     payment_id = Column(UUID(as_uuid=True), ForeignKey("payment.payment_id"), index=True)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
     reference_file_id = Column(
