@@ -64,8 +64,41 @@ def split_sftp_url(path):
     return (parts.username or "", parts.hostname, parts.port or 22)
 
 
+def list_folders(folder_path: str, boto_session: Optional[boto3.Session] = None) -> List[str]:
+    """List immediate subfolders under folder path.
+    Returns a list of subfolders names (maximum of 1000).
+    Args:
+        folder_path: path to a folder.
+            If S3 this may be a folder under the bucket or just a path to the bucket.
+        boto_session: Boto session object to use for S3 access. Only necessary
+            if needing to access an S3 bucket with assumed credentials (e.g.,
+            cross-account bucket access).
+    """
+    if is_s3_path(folder_path):
+        bucket_name, prefix = split_s3_url(folder_path)
+
+        if prefix and not prefix.endswith("/"):
+            prefix = prefix + "/"
+
+        s3 = boto_session.client("s3") if boto_session else boto3.client("s3")
+        response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
+
+        subfolders = []
+        folder_details = response.get("CommonPrefixes")
+        if folder_details:
+            for folder_detail in folder_details:
+                subfolder = folder_detail["Prefix"]
+                start_index = subfolder.index(prefix) + len(prefix)
+                subfolders.append(subfolder[start_index:].strip("/"))
+
+        return subfolders
+
+    # Handle file system
+    return [f.name for f in os.scandir(folder_path) if f.is_dir()]
+
+
 def list_files(
-    path: str, delimiter: str = "/", boto_session: Optional[boto3.Session] = None
+    path: str, recursive: bool = False, boto_session: Optional[boto3.Session] = None
 ) -> List[str]:
     """List the immediate files under path.
 
@@ -77,12 +110,8 @@ def list_files(
 
     Args:
         path: Supports s3:// and local paths.
-        delimiter: Only applicable for S3 paths.
-
-            If set to "" will list all keys under path, but note only the
-            basename of the key will be included, so any directory structure to
-            the key will be lost. You probably do not want to use this for
-            getting all keys in a bucket.
+        recursive: Only applicable for S3 paths.
+            If set to True will recursively list all relative key paths under the prefix.
         boto_session: Boto session object to use for S3 access. Only necessary
             if needing to access an S3 bucket with assumed credentials (e.g.,
             cross-account bucket access).
@@ -97,17 +126,29 @@ def list_files(
 
         # in order for s3.list_objects to only list the immediate "files" under
         # the given path, the prefix should end in the path delimiter
-        if prefix and not prefix.endswith(delimiter):
-            prefix = prefix + delimiter
+        if prefix and not prefix.endswith("/"):
+            prefix = prefix + "/"
 
         s3 = boto_session.client("s3") if boto_session else boto3.client("s3")
+
+        # When the delimiter is provided, s3 knows to stop listing keys that contain it (starting after the prefix).
+        # https://docs.aws.amazon.com/AmazonS3/latest/dev/ListingKeysHierarchy.html
+        delimiter = "" if recursive else "/"
 
         object_contents = s3.list_objects_v2(
             Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter
         ).get("Contents")
 
         if object_contents:
-            return [get_file_name(object["Key"]) for object in object_contents]
+            if recursive:
+                partial_file_paths = []
+                for object in object_contents:
+                    key = object["Key"]
+                    start_index = key.index(prefix) + len(prefix)
+                    partial_file_paths.append(key[start_index:])
+                return partial_file_paths
+            else:
+                return [get_file_name(object["Key"]) for object in object_contents]
 
         return []
 
@@ -115,10 +156,10 @@ def list_files(
 
 
 def list_files_without_folder(
-    path: str, delimiter: str = "/", boto_session: Optional[boto3.Session] = None
+    path: str, recursive: bool = False, boto_session: Optional[boto3.Session] = None
 ) -> List[str]:
-    files = list_files(path, delimiter, boto_session)
-    return list(filter(lambda file: file != "", files))
+    files = list_files(path, recursive=recursive, boto_session=boto_session)
+    return list(filter(lambda file: file != "", [get_file_name(path) for path in files]))
 
 
 # Lists all files and directories in the path. Keys in the returned dict are equivalent to a
@@ -224,8 +265,8 @@ def copy_file(source, destination):
         shutil.copy2(source, destination)
 
 
-def copy_s3_files(source, destination, expected_file_names, delimeter="/"):
-    s3_objects = list_files(source, delimeter)
+def copy_s3_files(source, destination, expected_file_names, recursive=False):
+    s3_objects = list_files(source, recursive=recursive)
 
     # A dictionary of mapping from expected file names to the new S3 location
     file_mapping = dict.fromkeys(expected_file_names, "")

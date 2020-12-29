@@ -744,9 +744,7 @@ export function checkNoticeForLeaveAdmin(
   claimantName: string,
   noticeType: string
 ): void {
-  cy.visit(
-    `https://paidleave-test.mass.gov/employers/applications/status/?absence_id=${fineosAbsenceId}`
-  );
+  cy.visit(`/employers/applications/status/?absence_id=${fineosAbsenceId}`);
 
   switch (noticeType) {
     case "approval":

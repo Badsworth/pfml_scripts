@@ -119,6 +119,21 @@ resource "aws_db_instance" "default" {
 
   lifecycle {
     prevent_destroy = true # disallow by default to avoid unexpected data loss
+    ignore_changes = [
+      #-----------------forces configuration in AWS Console--------------------#
+      # 
+      # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Status.html 
+      #
+      # Changes to "instance_class" and "storage_type" cause a lock on 
+      # further configuration changes to be imposed by AWS while the db instance 
+      # goes into "storage-optimization" status, which can last anywhere from 
+      # minutes to hours. Plan changes to these configs with this in mind, and
+      # any changes must be made in AWS Console first, then in Terraform as a follow-up.
+      #
+      # -----------------------------------------------------------------------#
+      instance_class,
+      storage_type
+    ]
   }
 
   tags = merge(module.constants.common_tags, {

@@ -41,9 +41,9 @@ module "api" {
   nlb_port                        = 3501
   db_allocated_storage            = 100
   db_max_allocated_storage        = 400
-  db_instance_class               = "db.r5.large"
+  db_instance_class               = "db.r5.large" # For now, this must be changed in AWS Console. Modifications to this field will yield no result.
   db_iops                         = 1000
-  db_storage_type                 = "io1"
+  db_storage_type                 = "io1" # For now, this must be changed in AWS Console. Modifications to this field will yield no result.
 
   cors_origins = [
     # Allow requests from the API Gateway (Swagger) and Portal performance environments.
