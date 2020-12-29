@@ -45,9 +45,9 @@ module "api" {
   postgres_parameter_group_family = "postgres12"
   db_allocated_storage            = 100
   db_max_allocated_storage        = 400
-  db_instance_class               = "db.r5.large"
+  db_instance_class               = "db.r5.large" # For now, this must be changed in AWS Console. Modifications to this field will yield no result.
   db_iops                         = 1000
-  db_storage_type                 = "io1"
+  db_storage_type                 = "io1" # For now, this must be changed in AWS Console. Modifications to this field will yield no result.
   db_multi_az                     = true
   nlb_name                        = "${local.vpc}-nlb"
   nlb_port                        = 80

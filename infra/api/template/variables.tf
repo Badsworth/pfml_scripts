@@ -65,7 +65,7 @@ variable "db_max_allocated_storage" {
 variable "db_instance_class" {
   description = "The instance class of the database (RDS)."
   type        = string
-  default     = "db.t3.small"
+  default     = "db.t3.small" # For now, this must be changed in AWS Console. Modifications to this field will yield no result.
 }
 
 variable "db_iops" {
@@ -77,7 +77,7 @@ variable "db_iops" {
 variable "db_storage_type" {
   description = "Storage type, one of gp2 or io1."
   type        = string
-  default     = "gp2"
+  default     = "gp2" # For now, this must be changed in AWS Console. Modifications to this field will yield no result.
 }
 
 variable "db_multi_az" {
