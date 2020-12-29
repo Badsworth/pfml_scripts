@@ -26,8 +26,9 @@ from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployerFactory,
     PaymentFactory,
+    ReferenceFileFactory,
 )
-from massgov.pfml.payments.payments_util import ValidationIssue, ValidationReason
+from massgov.pfml.payments.payments_util import ValidationIssue, ValidationReason, get_s3_config
 
 ### UTILITY METHODS
 
@@ -105,7 +106,7 @@ def setup_process_tests(
     """ This is a utility method for setting up a lot of boiler plate in the
         process_extract_data tests
     """
-    s3_prefix = "cps/inbound/received/2020-01-01-"
+    s3_prefix = "cps/inbound/received/2020-01-01-11-30-00-"
     # Add the 3 expected files
     make_s3_zip_file(mock_s3_bucket, f"{s3_prefix}vpei.csv.zip", "vpei.csv")
     make_s3_zip_file(
@@ -153,46 +154,138 @@ def setup_process_tests(
 ### TESTS BEGIN
 
 
+def test_get_date_group_str_from_path():
+    assert (
+        exporter.get_date_group_str_from_path("2020-12-01-11-30-00-vpei.csv.zip")
+        == "2020-12-01-11-30-00"
+    )
+    assert (
+        exporter.get_date_group_str_from_path("/2020-12-01-11-30-00-vpei.csv.zip")
+        == "2020-12-01-11-30-00"
+    )
+    assert (
+        exporter.get_date_group_str_from_path("DT2/2020-12-01-11-30-00-vpei.csv.zip")
+        == "2020-12-01-11-30-00"
+    )
+    assert (
+        exporter.get_date_group_str_from_path("2020-12-01-11-30-00/2020-12-01-vpei.csv.zip")
+        == "2020-12-01-11-30-00"
+    )
+    assert (
+        exporter.get_date_group_str_from_path(
+            "2020-12-01-11-30-00/2020-12-01-11-30-00-vpei.csv.zip"
+        )
+        == "2020-12-01-11-30-00"
+    )
+    assert (
+        exporter.get_date_group_str_from_path(
+            "2020-12-01-11-30-00/2020-12-01-11-45-00-vpei.csv.zip"
+        )
+        == "2020-12-01-11-30-00"
+    )
+    assert (
+        exporter.get_date_group_str_from_path(
+            "2020-12-01-11-30-00/2020-12-02-11-30-00-vpei.csv.zip"
+        )
+        == "2020-12-01-11-30-00"
+    )
+
+    assert exporter.get_date_group_str_from_path("2020-12-01-vpei.csv.zip") is None
+    assert exporter.get_date_group_str_from_path("vpei.csv.zip") is None
+
+
 def test_copy_fineos_data_to_archival_bucket(
-    mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
 ):
-    s3_prefix = "DT2/dataexports/2020-01-01-"
-    # Add the 3 expected files
-    make_s3_zip_file(mock_fineos_s3_bucket, f"{s3_prefix}vpei.csv.zip", "vpei.csv")
+    date_prefix = "2020-01-02-11-30-00-"
+    s3_prefix = "DT2/dataexports/"
+    # Add 3 top level expected files
+    make_s3_zip_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpei.csv.zip", "vpei.csv")
     make_s3_zip_file(
-        mock_fineos_s3_bucket, f"{s3_prefix}vpeipaymentdetails.csv.zip", "vpei_payment_details.csv",
+        mock_fineos_s3_bucket,
+        f"{s3_prefix}{date_prefix}vpeipaymentdetails.csv.zip",
+        "vpei_payment_details.csv",
     )
     make_s3_zip_file(
-        mock_fineos_s3_bucket, f"{s3_prefix}vpeiclaimdetails.csv.zip", "vpei_claim_details.csv"
+        mock_fineos_s3_bucket,
+        f"{s3_prefix}{date_prefix}vpeiclaimdetails.csv.zip",
+        "vpei_claim_details.csv",
     )
 
     # Add a few other files in the same path with other names
-    make_s3_zip_file(mock_fineos_s3_bucket, f"{s3_prefix}vpeiclaimants.csv.zip", "small.csv")
-    make_s3_zip_file(mock_fineos_s3_bucket, f"{s3_prefix}vpeiother.csv.zip", "small.csv")
-    make_s3_zip_file(mock_fineos_s3_bucket, f"{s3_prefix}VBI_OTHER.csv.zip", "small.csv")
+    make_s3_zip_file(
+        mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpeiclaimants.csv.zip", "small.csv"
+    )
+    make_s3_zip_file(
+        mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpeiother.csv.zip", "small.csv"
+    )
+    make_s3_zip_file(
+        mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}VBI_OTHER.csv.zip", "small.csv"
+    )
 
-    # Add a few more files with the same suffix in other S3 "folders"
+    # Add 3 files in a date folder
+    date_prefix = "2020-01-01-11-30-00-"
+    s3_prefix = "DT2/dataexports/2020-01-01-11-30-00/"
+    # Add 3 subfolder expected files
+    make_s3_zip_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpei.csv.zip", "vpei.csv")
+    make_s3_zip_file(
+        mock_fineos_s3_bucket,
+        f"{s3_prefix}{date_prefix}vpeipaymentdetails.csv.zip",
+        "vpei_payment_details.csv",
+    )
+    make_s3_zip_file(
+        mock_fineos_s3_bucket,
+        f"{s3_prefix}{date_prefix}vpeiclaimdetails.csv.zip",
+        "vpei_claim_details.csv",
+    )
+
+    # Add a few more invalid files with the same suffix in other S3 "folders"
     make_s3_zip_file(mock_fineos_s3_bucket, f"{s3_prefix}yesterday/vpei.csv.zip", "vpei.csv")
     make_s3_zip_file(
         mock_fineos_s3_bucket,
-        f"{s3_prefix}2020-11-21/vpeipaymentdetails.csv.zip",
+        f"{s3_prefix}2020-11-21-11-30-00/vpeipaymentdetails.csv.zip",
         "vpei_payment_details.csv",
     )
     make_s3_zip_file(
         mock_fineos_s3_bucket, "DT2/vpeiclaimdetails.csv.zip", "vpei_claim_details.csv"
     )
     make_s3_zip_file(mock_fineos_s3_bucket, "IDT/dataexports/vpeiclaimdetails.csv.zip", "small.csv")
-    pei_data = exporter.copy_fineos_data_to_archival_bucket()
-    expected_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/2020-01-01-"
-    assert pei_data["vpei.csv.zip"] == f"{expected_prefix}vpei.csv.zip"
-    assert pei_data["vpeipaymentdetails.csv.zip"] == f"{expected_prefix}vpeipaymentdetails.csv.zip"
-    assert pei_data["vpeiclaimdetails.csv.zip"] == f"{expected_prefix}vpeiclaimdetails.csv.zip"
+    copied_file_mapping_by_date = exporter.copy_fineos_data_to_archival_bucket(test_db_session)
+
+    expected_prefix_1 = f"s3://{mock_s3_bucket}/cps/inbound/received/2020-01-02-11-30-00-"
+    assert (
+        copied_file_mapping_by_date["2020-01-02-11-30-00"]["vpei.csv.zip"]
+        == f"{expected_prefix_1}vpei.csv.zip"
+    )
+    assert (
+        copied_file_mapping_by_date["2020-01-02-11-30-00"]["vpeipaymentdetails.csv.zip"]
+        == f"{expected_prefix_1}vpeipaymentdetails.csv.zip"
+    )
+    assert (
+        copied_file_mapping_by_date["2020-01-02-11-30-00"]["vpeiclaimdetails.csv.zip"]
+        == f"{expected_prefix_1}vpeiclaimdetails.csv.zip"
+    )
+
+    expected_prefix_2 = f"s3://{mock_s3_bucket}/cps/inbound/received/2020-01-01-11-30-00-"
+    assert (
+        copied_file_mapping_by_date["2020-01-01-11-30-00"]["vpei.csv.zip"]
+        == f"{expected_prefix_2}vpei.csv.zip"
+    )
+    assert (
+        copied_file_mapping_by_date["2020-01-01-11-30-00"]["vpeipaymentdetails.csv.zip"]
+        == f"{expected_prefix_2}vpeipaymentdetails.csv.zip"
+    )
+    assert (
+        copied_file_mapping_by_date["2020-01-01-11-30-00"]["vpeiclaimdetails.csv.zip"]
+        == f"{expected_prefix_2}vpeiclaimdetails.csv.zip"
+    )
 
 
 def test_copy_fineos_data_to_archival_bucket_duplicate_suffix_error(
-    mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
 ):
-    s3_prefix = "DT2/dataexports/"
+    date_prefix = "2020-12-01-11-30-00-"
+    s3_prefix = f"DT2/dataexports/{date_prefix}"
     # Add the 3 expected files
     make_s3_zip_file(mock_fineos_s3_bucket, f"{s3_prefix}vpei.csv.zip", "vpei.csv")
     make_s3_zip_file(
@@ -207,23 +300,24 @@ def test_copy_fineos_data_to_archival_bucket_duplicate_suffix_error(
 
     with pytest.raises(
         Exception,
-        match="Duplicate files found for vpei.csv.zip: s3://test_bucket/cps/inbound/received/ANOTHER-vpei.csv.zip and s3://fineos_bucket/DT2/dataexports/vpei.csv.zip",
+        match=f"Duplicate files found for vpei.csv.zip: s3://test_bucket/cps/inbound/received/{date_prefix}ANOTHER-vpei.csv.zip and s3://fineos_bucket/DT2/dataexports/{date_prefix}vpei.csv.zip",
     ):
-        exporter.copy_fineos_data_to_archival_bucket()
+        exporter.copy_fineos_data_to_archival_bucket(test_db_session)
 
 
 def test_copy_fineos_data_to_archival_bucket_missing_file_error(
-    mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
 ):
-    s3_prefix = "DT2/dataexports/"
+    date_prefix = "2020-12-01-11-30-00-"
+    s3_prefix = f"DT2/dataexports/{date_prefix}"
     # Add only one file
     make_s3_zip_file(mock_fineos_s3_bucket, f"{s3_prefix}vpei.csv.zip", "vpei.csv")
 
     with pytest.raises(
         Exception,
-        match="The following files were not found in S3 vpeipaymentdetails.csv.zip,vpeiclaimdetails.csv.zip",
+        match=f"The following files were not found in S3 {date_prefix}vpeipaymentdetails.csv.zip,{date_prefix}vpeiclaimdetails.csv.zip",
     ):
-        exporter.copy_fineos_data_to_archival_bucket()
+        exporter.copy_fineos_data_to_archival_bucket(test_db_session)
 
 
 def test_download_and_parse_data(mock_s3_bucket, tmp_path):
@@ -264,9 +358,9 @@ def test_group_s3_files_by_date(mock_s3_bucket, set_exporter_env_vars):
     shared_prefix = "cps/inbound/received/"
 
     for prefix in [
-        f"{shared_prefix}2020-01-01-",
-        f"{shared_prefix}2020-01-02-",
-        f"{shared_prefix}2020-01-03-",
+        f"{shared_prefix}2020-01-01-11-30-00-",
+        f"{shared_prefix}2020-01-02-11-30-00-",
+        f"{shared_prefix}2020-01-03-11-30-00-",
     ]:
         # Add the 3 expected files
         make_s3_zip_file(mock_s3_bucket, f"{prefix}vpei.csv.zip", "vpei.csv")
@@ -282,7 +376,9 @@ def test_group_s3_files_by_date(mock_s3_bucket, set_exporter_env_vars):
         make_s3_zip_file(mock_s3_bucket, f"{prefix}secretrecipe.csv.zip", "small.csv")
 
     data_by_date = exporter.group_s3_files_by_date()
-    assert set(data_by_date.keys()) == set(["2020-01-01", "2020-01-02", "2020-01-03"])
+    assert set(data_by_date.keys()) == set(
+        ["2020-01-01-11-30-00", "2020-01-02-11-30-00", "2020-01-03-11-30-00"]
+    )
     for date_item, paths in data_by_date.items():
         expected_path_to_file = f"s3://{mock_s3_bucket}/{shared_prefix}{date_item}-"
         assert set(paths) == set(
@@ -307,15 +403,17 @@ def test_process_extract_data(
     downloaded_files = file_util.list_files(str(tmp_path))
     assert len(downloaded_files) == 3
     assert set(downloaded_files) == set(
-        ["2020-01-01-" + file_name for file_name in exporter.expected_file_names]
+        ["2020-01-01-11-30-00-" + file_name for file_name in exporter.expected_file_names]
     )
 
     # Make sure files were copied to the processed directory
-    moved_files = file_util.list_files(f"s3://{mock_s3_bucket}/cps/inbound/processed/2020-01-01/")
+    moved_files = file_util.list_files(
+        f"s3://{mock_s3_bucket}/cps/inbound/processed/2020-01-01-11-30-00/"
+    )
     assert len(moved_files) == 3
 
     # Grab all files in the bucket, verify there are no more
-    all_files = file_util.list_files(f"s3://{mock_s3_bucket}/", delimiter="")
+    all_files = file_util.list_files(f"s3://{mock_s3_bucket}/", recursive=True)
     assert len(all_files) == 3
 
     # For simplicity of testing so much, the datasets we're reading from use numbers
@@ -359,7 +457,10 @@ def test_process_extract_data(
         reference_files = payment.reference_files
         assert len(reference_files) == 1
         reference_file = reference_files[0].reference_file
-        assert reference_file.file_location == "s3://test_bucket/cps/inbound/processed/2020-01-01/"
+        assert (
+            reference_file.file_location
+            == "s3://test_bucket/cps/inbound/processed/2020-01-01-11-30-00"
+        )
         assert (
             reference_file.reference_file_type_id
             == ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id
@@ -379,6 +480,70 @@ def test_process_extract_data(
             assert str(eft.routing_nbr) == index * 9
             assert str(eft.account_nbr) == index * 9
             assert eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+
+
+def test_process_extract_unprocessed_folder_files(
+    mock_fineos_s3_bucket,
+    set_exporter_env_vars,
+    test_db_session,
+    tmp_path,
+    initialize_factories_session,
+):
+    def get_download_directory(directory_name):
+        directory = tmp_path / directory_name
+        directory.mkdir()
+        return directory
+
+    def add_s3_files(s3_prefix):
+        make_s3_zip_file(mock_fineos_s3_bucket, f"{s3_prefix}vpei.csv.zip", "vpei.csv")
+        make_s3_zip_file(
+            mock_fineos_s3_bucket,
+            f"{s3_prefix}vpeipaymentdetails.csv.zip",
+            "vpei_payment_details.csv",
+        )
+        make_s3_zip_file(
+            mock_fineos_s3_bucket, f"{s3_prefix}vpeiclaimdetails.csv.zip", "vpei_claim_details.csv"
+        )
+
+    # add files
+    add_s3_files("DT2/dataexports/2020-01-01-11-30-00/2020-01-01-11-30-00-")
+    add_s3_files("DT2/dataexports/2020-01-02-11-30-00/2020-01-02-11-30-00-")
+    add_s3_files("DT2/dataexports/2020-01-03-11-30-00/2020-01-03-11-30-00-")
+    add_s3_files("DT2/dataexports/2020-01-04-11-30-00-")
+
+    # add reference files for processed folders
+    ReferenceFileFactory.create(
+        file_location=os.path.join(
+            get_s3_config().pfml_fineos_inbound_path, "processed", "2020-01-01-11-30-00"
+        ),
+        reference_file_type_id=ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id,
+    )
+    ReferenceFileFactory.create(
+        file_location=os.path.join(
+            get_s3_config().pfml_fineos_inbound_path, "processed", "2020-01-03-11-30-00"
+        ),
+        reference_file_type_id=ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id,
+    )
+
+    # confirm all unprocessed files were downloaded
+    download_directory_1 = get_download_directory("directory_1")
+    exporter.process_extract_data(download_directory_1, test_db_session)
+    downloaded_files = file_util.list_files(str(download_directory_1))
+    assert len(downloaded_files) == 6
+
+    expected_file_names = []
+    for date_file in ["vpei.csv.zip", "vpeipaymentdetails.csv.zip", "vpeiclaimdetails.csv.zip"]:
+        for unprocessed_date in ["2020-01-02-11-30-00", "2020-01-04-11-30-00"]:
+            expected_file_names.append(f"{unprocessed_date}-{date_file}")
+
+    for downloaded_file in downloaded_files:
+        assert downloaded_file in expected_file_names
+
+    # confirm no files were downloaded on repeat run
+    download_directory_2 = get_download_directory("directory_2")
+    exporter.process_extract_data(download_directory_2, test_db_session)
+    downloaded_files = file_util.list_files(str(download_directory_2))
+    assert len(downloaded_files) == 0
 
 
 def test_process_extract_data_no_existing_claim_address_eft(
@@ -498,7 +663,7 @@ def test_validation_missing_fields(set_exporter_env_vars):
     # should subsequently be in the validation object
     # Note the isdata fields are just to avoid the dictionaries being empty
     ci_index = exporter.CiIndex("1", "1")
-    extract_data = exporter.ExtractData(exporter.expected_file_names, "2020-01-01")
+    extract_data = exporter.ExtractData(exporter.expected_file_names, "2020-01-01-11-30-00")
     extract_data.pei.indexed_data = {ci_index: {"PAYEECUSTOMER": "1234"}}
     extract_data.payment_details.indexed_data = {ci_index: {"isdata": "1"}}
     extract_data.claim_details.indexed_data = {ci_index: {"isdata": "1"}}
@@ -564,7 +729,7 @@ def test_validation_param_length(set_exporter_env_vars):
     # we are explicitly testing against here, the validation will have missing
     # errors as well, but we're not going to look at them.
     ci_index = exporter.CiIndex("1", "1")
-    extract_data = exporter.ExtractData(exporter.expected_file_names, "2020-01-01")
+    extract_data = exporter.ExtractData(exporter.expected_file_names, "2020-01-01-11-30-00")
     # First let's check if a field is too short
     extract_data.pei.indexed_data = {ci_index: {"PAYEEBANKCODE": "123", "PAYMENTPOSTCO": "123"}}
     extract_data.payment_details.indexed_data = {ci_index: {"isdata": "1"}}
@@ -603,7 +768,7 @@ def test_validation_lookup_validators(set_exporter_env_vars):
     # When doing the validation, we verify that the lookup values are
     # valid and will be convertable to their corresponding lookup values in the DB.
     ci_index = exporter.CiIndex("1", "1")
-    extract_data = exporter.ExtractData(exporter.expected_file_names, "2020-01-01")
+    extract_data = exporter.ExtractData(exporter.expected_file_names, "2020-01-01-11-30-00")
     extract_data.pei.indexed_data = {
         ci_index: {
             "PAYEECUSTOMER": "1234",

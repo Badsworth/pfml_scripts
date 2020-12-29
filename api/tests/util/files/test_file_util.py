@@ -1,4 +1,5 @@
 import os
+import tempfile
 
 import boto3
 import pytest
@@ -162,6 +163,68 @@ def test_read_s3_file(mock_s3_bucket):
     assert lines[2] == "line 3 text"
 
 
+def test_list_folders_fs():
+    # add top level folder
+    top_level_folder_path = os.path.join(tempfile.mkdtemp(), "folder")
+    os.mkdir(top_level_folder_path)
+
+    # add some top level files
+    with open(os.path.join(top_level_folder_path, "test1.csv"), "w"):
+        pass
+    with open(os.path.join(top_level_folder_path, "test2.csv"), "w"):
+        pass
+
+    assert file_util.list_folders(top_level_folder_path) == []
+
+    # add subfolders
+    expected_folders = []
+    for i in range(5):
+        subfolder_name = f"subfolder_{i}"
+        subfolder_path = os.path.join(top_level_folder_path, subfolder_name)
+        os.mkdir(subfolder_path)
+        expected_folders.append(subfolder_name)
+
+        # add sub-subfolders
+        sub_subfolder_path = os.path.join(subfolder_path, f"sub_subfolder_{i}")
+        os.mkdir(sub_subfolder_path)
+
+    subfolders = file_util.list_folders(top_level_folder_path)
+    assert len(subfolders) == 5
+    subfolders.sort()
+    assert subfolders == expected_folders
+
+
+def test_list_folders_s3(mock_s3_bucket):
+    s3_client = boto3.client("s3")
+
+    s3_client.put_object(Bucket=mock_s3_bucket, Key="folder/top1.csv", Body="test")
+    s3_client.put_object(Bucket=mock_s3_bucket, Key="folder/top2.csv", Body="test")
+
+    assert file_util.list_folders(f"s3://{mock_s3_bucket}/folder") == []
+
+    # Create 30 folders with enough files to surpass 1000 total key limit on list_objects_v2
+    expected_folders = []
+    for i in range(30):
+        subfolder_name = f"subfolder_{i}"
+        expected_folders.append(subfolder_name)
+        for j in range(25):
+            # add a file under subfolder
+            subfolder_file_path = os.path.join(f"folder/{subfolder_name}", f"test_{i}_{j}.csv")
+            s3_client.put_object(Bucket=mock_s3_bucket, Key=subfolder_file_path, Body="test")
+
+            # add a file under sub-subfolder
+            sub_subfolder_file_path = os.path.join(
+                f"folder/{subfolder_name}/sub_{subfolder_name}", f"sub_test_{i}_{j}.csv"
+            )
+            s3_client.put_object(Bucket=mock_s3_bucket, Key=sub_subfolder_file_path, Body="test")
+
+    subfolders = file_util.list_folders(f"s3://{mock_s3_bucket}/folder")
+    assert len(subfolders) == 30
+    subfolders.sort()
+    expected_folders.sort()
+    assert subfolders == expected_folders
+
+
 def test_list_files_in_folder_fs(test_fs_path):
     files = file_util.list_files(str(test_fs_path))
     assert files == ["test.txt"]
@@ -202,8 +265,8 @@ def test_list_files_in_folder_s3_does_not_recurse_by_default(mock_s3_bucket):
 
     # but if passed "" as delimiter for S3, returns list of all file basenames
     # under path recursively, note that folder names come through as ""
-    files = file_util.list_files(folder_path, delimiter="")
-    assert files == ["baz.txt", "", file_name]
+    files = file_util.list_files(folder_path, recursive=True)
+    assert files == ["bar/baz.txt", "foo/", file_name]
 
 
 def test_list_files_in_folder_s3_empty(mock_s3_bucket):
@@ -229,9 +292,8 @@ def test_list_files_without_folder_s3(mock_s3_bucket):
     # we should only see the test.txt file immediately inside test_folder
     folder_path = "s3://{}/{}".format(mock_s3_bucket, folder_name)
 
-    # but if passed "" as delimiter for S3, returns list of all file basenames
-    # under path recursively, note that folder names come through as ""
-    files = file_util.list_files_without_folder(folder_path, delimiter="")
+    # returns list of all file basenames under path recursively
+    files = file_util.list_files_without_folder(folder_path, recursive=True)
     assert files == ["baz.txt", file_name]
 
 
