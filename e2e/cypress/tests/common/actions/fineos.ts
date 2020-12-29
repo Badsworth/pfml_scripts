@@ -357,8 +357,18 @@ export function findEmployerResponse(employerResponseComment: string): void {
   cy.contains("textarea", employerResponseComment);
 }
 
-export function assertClaimHasLeaveAdminApproval(): void {
-  cy.contains("a[id^=nextActionsWidget]", "Employer Approval Received").click();
+export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
+  if (approval) {
+    cy.contains(
+      "a[id^=nextActionsWidget]",
+      `Employer Approval Received`
+    ).click();
+  } else {
+    cy.contains(
+      "a[id^=nextActionsWidget]",
+      `Employer Conflict Reported`
+    ).click();
+  }
 }
 
 // @todo: This seems like it's doing a lot - is this really the whole claim workflow?
@@ -513,7 +523,7 @@ export function claimAdjudicationFlow(
 ): void {
   visitClaim(claimNumber);
   if (ERresponse) {
-    assertClaimHasLeaveAdminApproval();
+    assertClaimHasLeaveAdminResponse(true);
     clickBottomWidgetButton("Close");
   }
   assertOnClaimPage(claimNumber);

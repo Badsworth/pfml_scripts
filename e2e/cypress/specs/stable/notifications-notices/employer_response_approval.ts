@@ -37,7 +37,7 @@ describe("Employer Responses", () => {
       cy.unstash<string>("fineos_absence_id").then((claimNumber) => {
         cy.visit("/");
         fineos.visitClaim(claimNumber);
-        fineos.assertClaimHasLeaveAdminApproval();
+        fineos.assertClaimHasLeaveAdminResponse(true);
       });
     }
   );
