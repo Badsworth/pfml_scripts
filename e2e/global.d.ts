@@ -54,7 +54,6 @@ declare namespace Cypress {
       event: "submitClaimToAPI",
       options: SimulationClaim
     ): Chainable<PartialResponse>;
-    task(event: "createContinuousLeaveDates"): Chainable<Date[]>;
     task(event: "getEmails", opts: GetEmailsOpts): Chainable<Email[]>;
     task(event: "registerClaimant", options: Credentials): Chainable<true>;
     task(
@@ -66,19 +65,4 @@ declare namespace Cypress {
       options: Parameters<waitForClaimDocuments>[0]
     ): Chainable<boolean>;
   }
-}
-
-// Override @cypress/webpack-preprocess to fix a typing error.
-// This is a recurrence of https://github.com/cypress-io/cypress-webpack-preprocessor/issues/76
-declare module "@cypress/webpack-preprocessor" {
-  namespace CypressWebpackPreProcessor {
-    export type Options = { webpackOptions: {} };
-    export type FilePreprocessor = (
-      file: Cypress.FileObject
-    ) => string | Promise<string>;
-  }
-  const CypressWebpackPreProcessor: (
-    options: CypressWebpackPreProcessor.Options
-  ) => CypressWebpackPreProcessor.FilePreprocessor;
-  export = CypressWebpackPreProcessor;
 }

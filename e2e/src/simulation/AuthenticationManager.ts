@@ -140,7 +140,7 @@ export default class AuthenticationManager {
     const code = await this.verificationFetcher.getVerificationCodeForUser(
       address
     );
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       cognitoUser.confirmRegistration(code, true, function (err) {
         if (err) {
           reject(err);
