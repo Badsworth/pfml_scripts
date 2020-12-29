@@ -401,9 +401,11 @@ export function createNotification(startDate: Date, endDate: Date): void {
   cy.labelled("Absence start date").type(
     `${formatDateString(startDate)}{enter}`
   );
+  cy.wait(1000);
   cy.labelled("Absence end date").type(`${formatDateString(endDate)}{enter}`, {
     force: true,
   });
+  cy.wait(1000);
   cy.get(
     "input[type='button'][id*='AddTimeOffAbsencePeriod'][value='Add']"
   ).click();
@@ -426,6 +428,7 @@ export function createNotification(startDate: Date, endDate: Date): void {
     .click()
     .wait("@ajaxRender");
   cy.contains("div", "Thank you. Your notification has been submitted.");
+  cy.get("span[id='nextContainer']").first().find("input").click();
 }
 
 export function additionalEvidenceRequest(claimNumber: string): void {

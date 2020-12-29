@@ -98,7 +98,7 @@ describe("Denial Notification and Notice", () => {
         const subject = email.getNotificationSubject(
           employeeFullName,
           "application started",
-          submission.application_id
+          submission.fineos_absence_id
         );
         cy.task<Email[]>(
           "getEmails",
