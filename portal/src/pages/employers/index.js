@@ -76,7 +76,7 @@ export const Index = () => {
               // TODO (EMPLOYER-555) Add links
               "mass-employer-role-link": (
                 <a
-                  href={routes.external.massgov.employerOverview}
+                  href={routes.external.massgov.employersGuide}
                   target="_blank"
                   rel="noopener"
                 />
@@ -84,13 +84,6 @@ export const Index = () => {
               "reimbursements-link": (
                 <a
                   href={routes.external.massgov.employerReimbursements}
-                  target="_blank"
-                  rel="noopener"
-                />
-              ),
-              "employer-pfml-guide-link": (
-                <a
-                  href={routes.external.massgov.employersGuide}
                   target="_blank"
                   rel="noopener"
                 />

@@ -6,7 +6,7 @@ import io
 import os
 import shutil
 import tempfile
-from typing import List, Optional
+from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 import boto3
@@ -15,6 +15,8 @@ import ebcdic  # noqa: F401
 import paramiko
 import smart_open
 from botocore.config import Config
+
+import massgov.pfml.util.aws.sts as aws_sts
 
 EBCDIC_ENCODING = "cp1140"  # See https://pypi.org/project/ebcdic/ for further details
 
@@ -112,6 +114,59 @@ def list_files(
     return os.listdir(path)
 
 
+def list_files_without_folder(
+    path: str, delimiter: str = "/", boto_session: Optional[boto3.Session] = None
+) -> List[str]:
+    files = list_files(path, delimiter, boto_session)
+    return list(filter(lambda file: file != "", files))
+
+
+# Lists all files and directories in the path. Keys in the returned dict are equivalent to a
+# simple bash `ls`. Values of the returned dict are the relative path from the current path to the
+# contents of that directory.
+# Example response: {
+#     "a-stellar-testfile.txt": ["a-stellar-testfile.txt"],
+#     "a-subfolder": [
+#         "a-subfolder/my-file.txt",
+#         "a-subfolder/second-file.txt"
+#     ]
+# }
+def list_s3_files_and_directories_by_level(
+    path: str, boto_session: Optional[boto3.Session] = None
+) -> Dict[str, List[str]]:
+    if not is_s3_path(path):
+        return {}
+
+    # Add an empty string at the end of the prefix so it always ends in "/".
+    bucket_name, prefix = split_s3_url(path)
+    prefix = os.path.join(prefix, "")
+    s3 = boto_session.client("s3") if boto_session else boto3.client("s3")
+
+    contents_by_level: Dict[str, List[str]] = {}
+    contents = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix).get("Contents")
+    if contents is None:
+        return contents_by_level
+
+    for object in contents:
+        full_key = object["Key"]
+
+        # Exclude the directory itself from the list of files and directories within the directory.
+        if full_key == prefix:
+            continue
+
+        relative_path = full_key[len(prefix) :]
+        local_component = relative_path.split("/")[0]
+
+        if contents_by_level.get(local_component) is None:
+            contents_by_level[local_component] = []
+
+        # Exclude the subdirectories from the list of files and directories returned.
+        if not relative_path[-1:] == "/":
+            contents_by_level[local_component].append(relative_path)
+
+    return contents_by_level
+
+
 def copy_file(source, destination):
     is_source_s3 = is_s3_path(source)
     is_dest_s3 = is_s3_path(destination)
@@ -125,10 +180,46 @@ def copy_file(source, destination):
         source_bucket, source_path = split_s3_url(source)
         dest_bucket, dest_path = split_s3_url(destination)
 
-        # TODO - might need to do something with credentials here
-        s3 = boto3.client("s3")
-        copy_source = {"Bucket": source_bucket, "Key": source_path}
-        s3.copy(copy_source, dest_bucket, dest_path)
+        # TODO - switch back to this after FINEOS roles have the updated permissions.
+        # s3 = boto3.client("s3")
+        # copy_source = {"Bucket": source_bucket, "Key": source_path}
+        # s3.copy(copy_source, dest_bucket, dest_path)
+
+        # Simulate copy for now using independent download and upload.
+        source_boto3_session = boto3
+        dest_boto3_session = boto3
+
+        is_fineos_source = source_bucket.startswith("fin-som")
+        is_fineos_dest = dest_bucket.startswith("fin-som")
+
+        if is_fineos_source or is_fineos_dest:
+            # This should get passed in from the method but getting it
+            # directly from the environment due to time constraints.
+            fineos_boto_session = aws_sts.assume_session(
+                role_arn=os.environ["FINEOS_AWS_IAM_ROLE_ARN"],
+                external_id=os.environ["FINEOS_AWS_IAM_ROLE_EXTERNAL_ID"],
+                role_session_name="payments_copy_file",
+                region_name="us-east-1",
+            )
+
+            if is_fineos_source:
+                source_boto3_session = fineos_boto_session
+
+            if is_fineos_dest:
+                dest_boto3_session = fineos_boto_session
+
+        file_descriptor, tempfile_path = tempfile.mkstemp()
+
+        try:
+            source_s3 = source_boto3_session.client("s3")
+            source_s3.download_file(source_bucket, source_path, tempfile_path)
+
+            dest_s3 = dest_boto3_session.client("s3")
+            dest_s3.upload_file(tempfile_path, dest_bucket, dest_path)
+        finally:
+            os.close(file_descriptor)
+            os.remove(tempfile_path)
+
     else:
         shutil.copy2(source, destination)
 

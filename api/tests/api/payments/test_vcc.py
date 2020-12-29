@@ -1,4 +1,5 @@
 import os
+import pathlib
 from datetime import datetime, timedelta
 from xml.dom.minidom import Document
 
@@ -10,10 +11,11 @@ from sqlalchemy import func
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
+import massgov.pfml.payments.outbound_status_return as outbound_status_return
+import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.payments.vcc as vcc
 from massgov.pfml.db.models.employees import (
     BankAccountType,
-    CtrBatchIdentifier,
     CtrDocumentIdentifier,
     EmployeeReferenceFile,
     GeoState,
@@ -24,7 +26,6 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.factories import (
     AddressFactory,
-    CtrBatchIdentifierFactory,
     CtrDocumentIdentifierFactory,
     EftFactory,
     EmployeeFactory,
@@ -33,6 +34,8 @@ from massgov.pfml.db.models.factories import (
     TaxIdentifierFactory,
 )
 from tests.api.payments import validate_attributes, validate_elements
+
+TEST_FOLDER = pathlib.Path(__file__).parent
 
 
 def get_base_employee(add_eft=True, use_random_tin=False):
@@ -86,21 +89,6 @@ def _create_ctr_document_identifier(
     db_session.commit()
 
     return ctr_doc_id
-
-
-def _create_ctr_batch_identifier(
-    now: datetime, batch_counter: int, db_session: db.Session
-) -> CtrBatchIdentifier:
-    ctr_batch_id = CtrBatchIdentifierFactory(
-        ctr_batch_identifier=vcc.BATCH_ID_TEMPLATE.format(now.strftime("%m%d"), batch_counter),
-        year=now.year,
-        batch_date=now.date(),
-        batch_counter=batch_counter,
-    )
-    db_session.add(ctr_batch_id)
-    db_session.commit()
-
-    return ctr_batch_id
 
 
 @freeze_time("2020-01-01 12:00:00")
@@ -353,7 +341,6 @@ def test_build_vcc_files(initialize_factories_session, test_db_session, mock_s3_
         )
 
     ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
-
     (dat_filepath, inf_filepath) = vcc.build_vcc_files(test_db_session, ctr_outbound_path)
 
     # Confirm that we created a database row for each employee we created a document for.
@@ -577,27 +564,57 @@ def test_get_vcc_doc_counter_offset_for_today_with_existing_values(
     assert offset == next_doc_counter
 
 
-def test_create_next_batch_id_first_batch_id(test_db_session):
-    ctr_batch_id = vcc.create_next_batch_id(datetime.now(), test_db_session)
-    assert (
-        ctr_batch_id.batch_counter == 10
-    ), "First batch ID today does not start with expected value"
+def get_validation_container(ams_doc):
+    if ams_doc.get("TRAN_CD") is None and ams_doc.find("DOC_ID") is None:
+        return outbound_status_return.get_payment_validation_issues(ams_doc, None, None)
+    elif ams_doc.get("TRAN_CD") is not None and ams_doc.find("DOC_ID") is None:
+        return outbound_status_return.get_payment_validation_issues(
+            ams_doc, None, ams_doc.get("TRAN_CD")
+        )
+    elif ams_doc.get("TRAN_CD") is not None and ams_doc.find("DOC_ID") is None:
+        return outbound_status_return.get_payment_validation_issues(
+            ams_doc, ams_doc.find("DOC_ID").text, None
+        )
+
+    tran_cd = ams_doc.get("TRAN_CD")
+    doc_id = ams_doc.find("DOC_ID").text
+
+    return outbound_status_return.get_payment_validation_issues(ams_doc, doc_id, tran_cd)
 
 
-def test_create_next_batch_id_with_existing_values(initialize_factories_session, test_db_session):
-    now = datetime.now()
-    yesterday = datetime.now() - timedelta(days=1)
+def test_vcc_outbound_status_errors(initialize_factories_session):
 
-    # Add several batches for today. range() does not include the stop value.
-    # https://docs.python.org/3.8/library/stdtypes.html#ranges
-    next_batch_counter = 13
-    for batch_counter in range(10, next_batch_counter):
-        _create_ctr_batch_identifier(now, batch_counter, test_db_session)
+    file_path = os.path.join(TEST_FOLDER, "test_files", "test_vcc_status_return.xml")
 
-    # Add more batches for yesterday so that there are batch_counters larger than the one we
-    # will be inserting.
-    for batch_counter in range(10, 2 * next_batch_counter):
-        _create_ctr_batch_identifier(yesterday, batch_counter, test_db_session)
+    root = ET.parse(file_path).getroot()
 
-    ctr_batch_id = vcc.create_next_batch_id(now, test_db_session)
-    assert ctr_batch_id.batch_counter == next_batch_counter
+    doc_count = 0
+    for ams_doc in root:
+        ams_doc_data = get_validation_container(ams_doc)
+        validation_container = ams_doc_data.validation_container
+
+        if doc_count == 0:  # Good doc
+            assert validation_container.has_validation_issues() is False
+        if doc_count == 1:  # Missing DOC_ID
+            assert validation_container.has_validation_issues() is True
+            assert (
+                validation_container.validation_issues[0].reason
+                == payments_util.ValidationReason.MISSING_FIELD
+                and validation_container.validation_issues[0].details == "DOC_ID"
+            )
+        elif doc_count == 2:  # Missing NO_ERRORS, default to '0', but bad DOC_PHASE_CD
+            assert validation_container.has_validation_issues() is True
+            assert (
+                validation_container.validation_issues[0].reason
+                == payments_util.ValidationReason.INVALID_VALUE
+                and validation_container.validation_issues[0].details
+                == "DOC_PHASE_CD (2 - Not Final)"
+            )
+        elif doc_count == 3:  # Has ERRORS set
+            assert validation_container.has_validation_issues() is True
+            assert (
+                validation_container.validation_issues[0].reason
+                == payments_util.ValidationReason.OUTBOUND_STATUS_ERROR
+            )
+
+        doc_count += 1

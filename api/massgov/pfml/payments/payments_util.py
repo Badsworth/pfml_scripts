@@ -4,14 +4,19 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
+from xml.etree.ElementTree import Element
 
 import boto3
 import botocore
 import pytz
 import smart_open
+from sqlalchemy import func
 
+import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
+from massgov.pfml import db
 from massgov.pfml.db.lookup import LookupTable
+from massgov.pfml.db.models.employees import CtrBatchIdentifier, LkReferenceFileType, ReferenceFile
 
 logger = logging.get_logger(__package__)
 
@@ -19,6 +24,12 @@ logger = logging.get_logger(__package__)
 class Constants:
     COMPTROLLER_UNIT_CODE = "8770"
     COMPTROLLER_DEPT_CODE = "EOL"
+    COMPTROLLER_AD_ID = "AD010"
+    COMPTROLLER_AD_TYPE = "PA"
+    DOC_PHASE_CD_FINAL_STATUS = "3 - Final"
+
+
+BATCH_ID_TEMPLATE = Constants.COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
 
 
 @dataclass
@@ -33,6 +44,9 @@ class PaymentsS3Config:
     # PFML API stores a copy of all files that FINEOS generates for us
     # This is where we store that copy
     fineos_data_import_path: str
+    # PFML API stores a copy of all files that we retrieve from CTR
+    # This is where we store that copy
+    pfml_ctr_inbound_path: str
     ## PFML API stores a copy of all files that we generate for the office of the Comptroller
     ## This is where we store that copy
     pfml_ctr_outbound_path: str
@@ -48,10 +62,16 @@ def get_s3_config() -> PaymentsS3Config:
     return PaymentsS3Config(
         fineos_data_export_path=str(os.environ.get("FINEOS_DATA_EXPORT_PATH")),
         fineos_data_import_path=str(os.environ.get("FINEOS_DATA_IMPORT_PATH")),
+        pfml_ctr_inbound_path=str(os.environ.get("PFML_CTR_INBOUND_PATH")),
         pfml_ctr_outbound_path=str(os.environ.get("PFML_CTR_OUTBOUND_PATH")),
         pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
         pfml_fineos_outbound_path=str(os.environ.get("PFML_FINEOS_OUTBOUND_PATH")),
     )
+
+
+def get_dfml_operations_email() -> str:
+    # TODO - set this in the terraform as EOL-DL-DFML-GAXVCC_Confirmation@mass.gov
+    return str(os.environ.get("DFML_BUSINESS_OPERATIONS_EMAIL"))
 
 
 class ValidationReason(str, Enum):
@@ -61,6 +81,11 @@ class ValidationReason(str, Enum):
     FIELD_TOO_SHORT = "FieldTooShort"
     FIELD_TOO_LONG = "FieldTooLong"
     INVALID_LOOKUP_VALUE = "InvalidLookupValue"
+    INVALID_VALUE = "InvalidValue"
+    MULTIPLE_VALUES_FOUND = "MultipleValuesFound"
+    VALUE_NOT_FOUND = "ValueNotFound"
+    NON_NULLABLE = "NonNullable"
+    OUTBOUND_STATUS_ERROR = "OutboundStatusError"
 
 
 @dataclass(frozen=True, eq=True)
@@ -216,6 +241,63 @@ def add_cdata_elements(
         elem.appendChild(cdata)
 
 
+def create_next_batch_id(
+    now: datetime, file_type_descr: str, db_session: db.Session
+) -> CtrBatchIdentifier:
+    ctr_batch_id_pattern = BATCH_ID_TEMPLATE.format(now.strftime("%m%d"), file_type_descr, "%")
+    max_batch_id_today = (
+        db_session.query(func.max(CtrBatchIdentifier.batch_counter))
+        .filter(
+            CtrBatchIdentifier.batch_date == now.date(),
+            CtrBatchIdentifier.ctr_batch_identifier.like(ctr_batch_id_pattern),
+        )
+        .scalar()
+    )
+
+    # Start batch counters at 10.
+    # Other agencies use suffixes 1-7 (for days of the week). We start our suffixes at 10 so we
+    # don't conflict with their batch IDs and have a logical starting point (10 instead of 8).
+    batch_counter = 10
+    if max_batch_id_today:
+        batch_counter = max_batch_id_today + 1
+
+    batch_id = BATCH_ID_TEMPLATE.format(now.strftime("%m%d"), file_type_descr, batch_counter)
+    ctr_batch_id = CtrBatchIdentifier(
+        ctr_batch_identifier=batch_id,
+        year=now.year,
+        batch_date=now.date(),
+        batch_counter=batch_counter,
+    )
+    db_session.add(ctr_batch_id)
+
+    return ctr_batch_id
+
+
+def create_batch_id_and_reference_file(
+    now: datetime, file_type: LkReferenceFileType, db_session: db.Session, ctr_outbound_path: str
+) -> Tuple[CtrBatchIdentifier, ReferenceFile]:
+    ctr_batch_id = create_next_batch_id(
+        now, file_type.reference_file_type_description or "", db_session
+    )
+
+    s3_path = os.path.join(ctr_outbound_path, "ready")
+    batch_filename = BATCH_ID_TEMPLATE.format(
+        now.strftime("%Y%m%d"),
+        file_type.reference_file_type_description,
+        ctr_batch_id.batch_counter,
+    )
+    dir_path = os.path.join(s3_path, batch_filename)
+
+    ref_file = ReferenceFile(
+        file_location=dir_path,
+        reference_file_type_id=file_type.reference_file_type_id,
+        ctr_batch_identifier=ctr_batch_id,
+    )
+    db_session.add(ref_file)
+
+    return (ctr_batch_id, ref_file)
+
+
 def create_files(
     directory: str, filename: str, dat_xml_document: minidom.Document, inf_dict: Dict[str, str]
 ) -> Tuple[str, str]:
@@ -232,7 +314,7 @@ def create_files(
     return (dat_filepath, inf_filepath)
 
 
-def write_vcc_files(
+def create_mmars_files_in_s3(
     path: str,
     filename: str,
     dat_xml_document: minidom.Document,
@@ -265,3 +347,18 @@ def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
     if not datetime_str:
         return None
     return datetime.fromisoformat(datetime_str).date()
+
+
+def get_xml_attribute(elem: Element, attr_str: str) -> Optional[str]:
+    attr_val = elem.find(attr_str)
+    if attr_val is not None and attr_val.text != "null":
+        return attr_val.text
+    else:
+        return None
+
+
+def move_file_and_update_ref_file(
+    db_session: db.Session, destination: str, ref_file: ReferenceFile
+) -> None:
+    file_util.rename_file(ref_file.file_location, destination)
+    ref_file.file_location = destination

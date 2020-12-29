@@ -37,24 +37,51 @@ export const getNotificationData = function (
     applicationId: this.getTextBetween(cleanedString, "Application ID:", "\n"),
   };
 
+  if (notificationType === "Denial (claimant)") {
+    notificationData.applicationId = this.getTextBetween(
+      cleanedString,
+      "Application ID:",
+      ", has been Denied."
+    );
+  } else {
+    notificationData.applicationId = this.getTextBetween(
+      cleanedString,
+      "Application ID:",
+      "\n"
+    );
+  }
+
   if (
-    notificationType === "employer response" ||
-    notificationType === "denial (employer)"
+    notificationType === "denial (employer)" ||
+    notificationType === "denial (claimant)"
   ) {
-    notificationData["url"] = this.getEmployerResponseURL(cleanedString);
+    notificationData["url"] = this.getDenialURL(str);
   }
   return notificationData;
 };
 
-export const getEmployerResponseURL = function (str: string): string {
-  const match = str.match(new RegExp("View Details\n" + "(.*)" + "\n"));
-  if (match === null) {
-    throw new Error("Notification email must include");
+export const getDenialURL = function (str: string): string {
+  const match = this.getTextBetween(
+    str,
+    "https://paidleave-test.mass.gov/employers/applications/status/?absence_id=",
+    '"'
+  );
+  if (typeof match !== "string") {
+    throw new Error("Denial (employer) notification must include URL");
   } else {
-    const trimmed_match = match[1].slice(1, -1);
-    return trimmed_match;
+    return match;
   }
 };
+
+// export const getEmployerResponseURL = function (str: string): string {
+//   const match = str.match(new RegExp("View Details\n" + "(.*)" + "\n"));
+//   if (typeof match !== "string") {
+//     throw new Error("Notification email must include");
+//   } else {
+//     const trimmed_match = match[1].slice(1, -1);
+//     return trimmed_match;
+//   }
+// };
 
 export const getTextBetween = function (
   str: string,

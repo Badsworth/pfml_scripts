@@ -403,6 +403,7 @@ def create_or_update_payment(
     payment.amount = decimal.Decimal(cast(str, payment_data.payment_amount))
     payment.fineos_pei_c_value = payment_data.c_value
     payment.fineos_pei_i_value = payment_data.i_value
+    payment.fineos_extraction_date = payments_util.get_now().date()
 
     db_session.add(payment)
     db_session.commit()  # Forces payment_id to be created and available

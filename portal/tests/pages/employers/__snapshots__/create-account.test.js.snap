@@ -1,5 +1,361 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 1`] = `
+<form
+  className="usa-form"
+  onSubmit={[Function]}
+>
+  <Title>
+    Create an employer account
+  </Title>
+  <Alert
+    className="margin-bottom-3"
+    neutral={true}
+    state="info"
+  >
+    <Trans
+      components={
+        Object {
+          "create-account-link": <a
+            href="/"
+          />,
+          "p": <p />,
+        }
+      }
+      i18nKey="pages.employersAuthCreateAccount.alertHeading"
+    />
+  </Alert>
+  <Lead>
+    Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave for bonding with a child, with more benefits available in 2021.
+  </Lead>
+  <Lead>
+    If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.
+  </Lead>
+  <Details
+    label="What you can do with this account"
+  >
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.employersAuthCreateAccount.detailsList"
+    />
+  </Details>
+  <InputText
+    hint="Use a secure work address. An email address can only be associated with one account."
+    label="Email address"
+    name="username"
+    onChange={[Function]}
+    smallLabel={true}
+    type="email"
+    value=""
+  />
+  <InputPassword
+    autoComplete="new-password"
+    hint="Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters."
+    label="Password"
+    name="password"
+    onChange={[Function]}
+    smallLabel={true}
+    value=""
+  />
+  <InputText
+    hint={
+      <Trans
+        components={
+          Object {
+            "ein-link": <a
+              href="https://www.mass.gov/info-details/finding-your-employers-federal-employer-identification-number-fein"
+              rel="noopener"
+              target="_blank"
+            />,
+          }
+        }
+        i18nKey="pages.employersAuthCreateAccount.einHint"
+      />
+    }
+    inputMode="numeric"
+    label="Employer ID number (EIN)"
+    mask="fein"
+    name="ein"
+    onChange={[Function]}
+    smallLabel={true}
+    value=""
+  />
+  <p>
+    We’ll send you a 6-digit code to verify your email address.
+  </p>
+  <Button
+    loading={false}
+    type="submit"
+  >
+    Create account
+  </Button>
+  <div
+    className="border-top-2px border-base-lighter margin-top-4 padding-top-4 text-base-dark text-bold"
+  >
+    <p>
+      <Trans
+        components={
+          Object {
+            "log-in-link": <a
+              className="display-inline-block"
+              href="/login"
+            />,
+          }
+        }
+        i18nKey="pages.employersAuthCreateAccount.haveAnAccount"
+      />
+    </p>
+    <p>
+      <Trans
+        components={
+          Object {
+            "create-account-link": <a
+              className="display-inline-block"
+              href="/create-account"
+            />,
+          }
+        }
+        i18nKey="pages.employersAuthCreateAccount.createClaimantAccount"
+      />
+    </p>
+  </div>
+</form>
+`;
+
+exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 2`] = `
+Array [
+  <Trans
+    components={
+      Object {
+        "create-account-link": <a
+          href="/"
+        />,
+        "p": <p />,
+      }
+    }
+    i18nKey="pages.employersAuthCreateAccount.alertHeading"
+  />,
+  <Trans
+    components={
+      Object {
+        "li": <li />,
+        "ul": <ul
+          className="usa-list"
+        />,
+      }
+    }
+    i18nKey="pages.employersAuthCreateAccount.detailsList"
+  />,
+  <Trans
+    components={
+      Object {
+        "log-in-link": <a
+          className="display-inline-block"
+          href="/login"
+        />,
+      }
+    }
+    i18nKey="pages.employersAuthCreateAccount.haveAnAccount"
+  />,
+  <Trans
+    components={
+      Object {
+        "create-account-link": <a
+          className="display-inline-block"
+          href="/create-account"
+        />,
+      }
+    }
+    i18nKey="pages.employersAuthCreateAccount.createClaimantAccount"
+  />,
+]
+`;
+
+exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 1`] = `
+<form
+  className="usa-form"
+  onSubmit={[Function]}
+>
+  <Title>
+    Create an employer account
+  </Title>
+  <Alert
+    className="margin-bottom-3"
+    neutral={true}
+    state="info"
+  >
+    <Trans
+      components={
+        Object {
+          "create-account-link": <a
+            href="/"
+          />,
+          "p": <p />,
+        }
+      }
+      i18nKey="pages.employersAuthCreateAccount.alertHeading"
+    />
+  </Alert>
+  <Lead>
+    Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for family leave for bonding with a child, with more benefits available in 2021.
+  </Lead>
+  <Lead>
+    If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.
+  </Lead>
+  <Details
+    label="What you can do with this account"
+  >
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.employersAuthCreateAccount.detailsList"
+    />
+  </Details>
+  <InputText
+    hint="Use a secure work address. An email address can only be associated with one account."
+    label="Email address"
+    name="username"
+    onChange={[Function]}
+    smallLabel={true}
+    type="email"
+    value=""
+  />
+  <InputPassword
+    autoComplete="new-password"
+    hint="Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters."
+    label="Password"
+    name="password"
+    onChange={[Function]}
+    smallLabel={true}
+    value=""
+  />
+  <InputText
+    hint={
+      <Trans
+        components={
+          Object {
+            "ein-link": <a
+              href="https://www.mass.gov/info-details/finding-your-employers-federal-employer-identification-number-fein"
+              rel="noopener"
+              target="_blank"
+            />,
+          }
+        }
+        i18nKey="pages.employersAuthCreateAccount.einHint"
+      />
+    }
+    inputMode="numeric"
+    label="Employer ID number (EIN)"
+    mask="fein"
+    name="ein"
+    onChange={[Function]}
+    smallLabel={true}
+    value=""
+  />
+  <p>
+    We’ll send you a 6-digit code to verify your email address.
+  </p>
+  <Button
+    loading={false}
+    type="submit"
+  >
+    Create account
+  </Button>
+  <div
+    className="border-top-2px border-base-lighter margin-top-4 padding-top-4 text-base-dark text-bold"
+  >
+    <p>
+      <Trans
+        components={
+          Object {
+            "log-in-link": <a
+              className="display-inline-block"
+              href="/login"
+            />,
+          }
+        }
+        i18nKey="pages.employersAuthCreateAccount.haveAnAccount"
+      />
+    </p>
+    <p>
+      <Trans
+        components={
+          Object {
+            "create-account-link": <a
+              className="display-inline-block"
+              href="/create-account"
+            />,
+          }
+        }
+        i18nKey="pages.employersAuthCreateAccount.createClaimantAccount"
+      />
+    </p>
+  </div>
+</form>
+`;
+
+exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 2`] = `
+Array [
+  <Trans
+    components={
+      Object {
+        "create-account-link": <a
+          href="/"
+        />,
+        "p": <p />,
+      }
+    }
+    i18nKey="pages.employersAuthCreateAccount.alertHeading"
+  />,
+  <Trans
+    components={
+      Object {
+        "li": <li />,
+        "ul": <ul
+          className="usa-list"
+        />,
+      }
+    }
+    i18nKey="pages.employersAuthCreateAccount.detailsList"
+  />,
+  <Trans
+    components={
+      Object {
+        "log-in-link": <a
+          className="display-inline-block"
+          href="/login"
+        />,
+      }
+    }
+    i18nKey="pages.employersAuthCreateAccount.haveAnAccount"
+  />,
+  <Trans
+    components={
+      Object {
+        "create-account-link": <a
+          className="display-inline-block"
+          href="/create-account"
+        />,
+      }
+    }
+    i18nKey="pages.employersAuthCreateAccount.createClaimantAccount"
+  />,
+]
+`;
+
 exports[`CreateAccount renders the page 1`] = `
 <form
   className="usa-form"
@@ -55,14 +411,13 @@ exports[`CreateAccount renders the page 1`] = `
     type="email"
     value=""
   />
-  <InputText
+  <InputPassword
     autoComplete="new-password"
     hint="Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters."
     label="Password"
     name="password"
     onChange={[Function]}
     smallLabel={true}
-    type="password"
     value=""
   />
   <InputText

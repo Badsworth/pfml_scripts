@@ -84,14 +84,9 @@ exports[`Employer index renders the page 1`] = `
       <Trans
         components={
           Object {
-            "employer-pfml-guide-link": <a
-              href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
-              rel="noopener"
-              target="_blank"
-            />,
             "li": <li />,
             "mass-employer-role-link": <a
-              href="https://www.mass.gov/pmfl-leave-administrators"
+              href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
               rel="noopener"
               target="_blank"
             />,

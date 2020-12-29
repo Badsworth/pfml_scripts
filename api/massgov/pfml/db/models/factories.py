@@ -3,6 +3,7 @@
 #
 
 import random
+import string
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from math import floor
@@ -50,12 +51,14 @@ class Generators:
     UuidObj = factory.Faker("uuid4", cast_to=None)
     VerificationCode = factory.Faker("pystr", max_chars=6, min_chars=6)
     S3Path = factory.Sequence(lambda n: f"s3://bucket/path/to/file{n}.txt")
-
+    CtrDocumentIdentifier = factory.LazyFunction(
+        lambda: "INTFDFML" + "".join(random.choices(string.ascii_uppercase + string.digits, k=12))
+    )
+    FineosAbsenceId = factory.Sequence(lambda n: "NTN-{:02d}-ABS-01".format(n))
     VccDocCounter = factory.Sequence(lambda n: n)
     VccDocId = factory.Sequence(
         lambda n: "INTFDFML{}{}".format(datetime.now().strftime("%d%m%Y"), f"{n:04}")
     )
-
     VccBatchCounter = factory.Sequence(lambda n: n)
     VccBatchId = factory.Sequence(lambda n: "EOL{}VCC{}".format(datetime.now().strftime("%m%d"), n))
 
@@ -159,6 +162,7 @@ class EmployeeFactory(BaseFactory):
     other_name = None
     email_address = factory.Faker("email")
     phone_number = "+19425290727"
+    ctr_vendor_customer_code = "VC0001201168"
 
 
 class CtrBatchIdentifierFactory(BaseFactory):
@@ -289,7 +293,9 @@ class ClaimFactory(BaseFactory):
     claim_type_id = None
     benefit_amount = 100
     benefit_days = 60
-    fineos_absence_id = "NTN-01-ABS-01"
+    fineos_absence_id = Generators.FineosAbsenceId
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
 
 
 class PaymentFactory(BaseFactory):
@@ -305,6 +311,22 @@ class PaymentFactory(BaseFactory):
     # point to any employer. This should be fixed post-MVP (in the claim model).
     claim = factory.SubFactory(ClaimFactory, employer_id=Generators.UuidObj)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
+
+
+class PaymentReferenceFileFactory(BaseFactory):
+    class Meta:
+        model = employee_models.PaymentReferenceFile
+
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda a: a.payment.payment_id)
+
+    reference_file = factory.SubFactory(ReferenceFileFactory)
+    reference_file_id = factory.LazyAttribute(lambda a: a.reference_file.reference_file_id)
+
+    ctr_document_identifier = factory.SubFactory(CtrDocumentIdentifierFactory)
+    ctr_document_identifier_id = factory.LazyAttribute(
+        lambda a: a.ctr_document_identifier.ctr_document_identifier_id
+    )
 
 
 class PhoneFactory(BaseFactory):

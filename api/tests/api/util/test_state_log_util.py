@@ -1,13 +1,12 @@
-from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import List, Union
 
 from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.payments_util as payments_util
-from massgov.pfml.db.models.employees import Employee, LatestStateLog, Payment, State, StateLog
+from massgov.pfml.db.models.employees import LatestStateLog, State
 from massgov.pfml.db.models.factories import EmployeeFactory, PaymentFactory, ReferenceFileFactory
+from tests.api.util import setup_state_log
 
 ### Setup methods for various state log scenarios ###
 
@@ -109,47 +108,6 @@ def employee_stuck_state_log(test_db_session):
 
 
 ### /end Setup methods for various state log scenarios ###
-
-# Container class for returning the created values for tests
-@dataclass
-class StateLogSetupResult:
-    state_logs: List[StateLog]
-    associated_model: Union[Employee, Payment]
-
-
-# Utility method for creating state logs
-def setup_state_log(associated_class, start_states, end_states, test_db_session):
-    if associated_class == state_log_util.AssociatedClass.EMPLOYEE:
-        associated_model = EmployeeFactory.create()
-    if associated_class == state_log_util.AssociatedClass.PAYMENT:
-        associated_model = PaymentFactory.create()
-    if associated_class == state_log_util.AssociatedClass.REFERENCE_FILE:
-        associated_model = ReferenceFileFactory.create()
-
-    state_logs = []
-
-    for index, start_state in enumerate(start_states):
-        end_state = end_states[index]
-
-        with freeze_time(f"2020-01-0{index + 1} 00:00:00"):
-            state_log = state_log_util.create_state_log(
-                start_state=start_state,
-                associated_model=associated_model,
-                db_session=test_db_session,
-            )
-            if end_state:
-                state_log_util.finish_state_log(
-                    state_log=state_log,
-                    end_state=end_state,
-                    outcome=state_log_util.build_outcome("success"),
-                    db_session=test_db_session,
-                )
-
-            state_logs.append(state_log)
-
-    test_db_session.flush()
-    test_db_session.commit()
-    return StateLogSetupResult(state_logs=state_logs, associated_model=associated_model)
 
 
 @freeze_time("2020-01-01 12:00:00")

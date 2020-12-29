@@ -86,7 +86,6 @@ const routes = {
       dfml: "https://www.mass.gov/orgs/department-of-family-and-medical-leave",
       dfmlRegulations:
         "https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1",
-      employerOverview: "https://www.mass.gov/pmfl-leave-administrators",
       employerReimbursements:
         "https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits",
       employersGuide:
@@ -103,6 +102,8 @@ const routes = {
       index:
         "https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
+      intermittentLeaveGuide:
+        "https://www.mass.gov/intermittent-leave-instructions",
       mailFaxInstructions: "https://www.mass.gov/pfmlsubmitinfo",
       medicalBonding: "https://www.mass.gov/pfml-medical-bonding",
       multipleBirths: "https://www.mass.gov/pfml-multiple-births",

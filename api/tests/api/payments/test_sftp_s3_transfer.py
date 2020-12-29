@@ -4,7 +4,8 @@ import boto3
 import pytest
 
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import ReferenceFile
+from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType
+from massgov.pfml.db.models.factories import ReferenceFileFactory
 from massgov.pfml.payments.sftp_s3_transfer import (
     SftpS3TransferConfig,
     copy_from_sftp_to_s3_and_archive_files,
@@ -21,7 +22,11 @@ def setup_mock_sftp_client(monkeypatch, mock_sftp_client):
 
 
 def test_copy_to_sftp_and_archive_s3_files_success(
-    mock_s3_bucket, setup_mock_sftp_client, mock_sftp_client, test_db_session
+    mock_s3_bucket,
+    setup_mock_sftp_client,
+    mock_sftp_client,
+    test_db_session,
+    initialize_factories_session,
 ):
     archive_dir = "archive/testing"
     source_dir = "api/outbox"
@@ -41,7 +46,10 @@ def test_copy_to_sftp_and_archive_s3_files_success(
 
         # Add ReferenceFile objects to the database for these files.
         file_location = "s3://" + os.path.join(mock_s3_bucket, key)
-        reference_file = ReferenceFile(file_location=file_location)
+        reference_file = ReferenceFileFactory(
+            file_location=file_location,
+            reference_file_type_id=ReferenceFileType.OUTBOUND_STATUS_RETURN.reference_file_type_id,
+        )
         test_db_session.add(reference_file)
 
         # Expect to find no ReferenceFiles with the archived file_location
@@ -93,6 +101,102 @@ def test_copy_to_sftp_and_archive_s3_files_success(
         assert call[0] == expected_sftp_calls[i]
 
 
+def test_multi_file_set_copy_to_sftp_and_archive_s3_files_success(
+    mock_s3_bucket,
+    setup_mock_sftp_client,
+    mock_sftp_client,
+    test_db_session,
+    initialize_factories_session,
+):
+    archive_dir = "archive/testing"
+    source_dir = "api/outbox"
+
+    test_vcc_files_by_level = {
+        "DFML_CLAIMANTS_FOR_DUA_20201122.csv": ["DFML_CLAIMANTS_FOR_DUA_20201122.csv"],
+        "EOL20201123VCC13": [
+            "EOL20201123VCC13/EOL20201123VCC13.DAT",
+            "EOL20201123VCC13/EOL20201123VCC13.INF",
+        ],
+        "EOL20201124VCC11": [
+            "EOL20201124VCC11/EOL20201124VCC11.DAT",
+            "EOL20201124VCC11/EOL20201124VCC11.INF",
+        ],
+        "EOL20201125VCC11": [
+            "EOL20201125VCC11/EOL20201125VCC11.DAT",
+            "EOL20201125VCC11/EOL20201125VCC11.INF",
+        ],
+    }
+
+    s3 = boto3.client("s3")
+    total_file_count = 0
+    for file_location, files_in_set in test_vcc_files_by_level.items():
+        total_file_count = total_file_count + len(files_in_set)
+        for setfile in files_in_set:
+            # Stock our mocked S3 bucket with the files.
+            key = os.path.join(source_dir, setfile)
+            s3.put_object(Bucket=mock_s3_bucket, Key=key, Body="test\n")
+
+        # For this test we're using 2 files as the signal that the type is VCC.
+        reference_file_type_id = ReferenceFileType.DUA_CLAIMANT_LIST.reference_file_type_id
+        if len(files_in_set) == 2:
+            reference_file_type_id = ReferenceFileType.VCC.reference_file_type_id
+
+        # Add ReferenceFile objects to the database for these files.
+        reference_file = ReferenceFileFactory(
+            file_location="s3://" + os.path.join(mock_s3_bucket, source_dir, file_location),
+            reference_file_type_id=reference_file_type_id,
+        )
+        test_db_session.add(reference_file)
+
+        # Expect to find no ReferenceFiles with the archived file_location
+        archived_file_location = "s3://" + os.path.join(mock_s3_bucket, archive_dir, file_location)
+        assert _first_ref_file(archived_file_location, test_db_session) is None
+
+    test_db_session.commit()
+
+    config = SftpS3TransferConfig(
+        s3_bucket_uri="s3://" + mock_s3_bucket,
+        source_dir=source_dir,
+        archive_dir=archive_dir,
+        # Following fields do not matter when mocking SFTP server. Included for completeness.
+        dest_dir="inbound/from_api",
+        sftp_uri="sftp://api_user@mass.gov",
+        ssh_key_password="No ssh_key_password used during mocked tests",
+        ssh_key="No ssh_key used during mocked tests",
+    )
+    copy_to_sftp_and_archive_s3_files(config=config, db_session=test_db_session)
+
+    # Collect the files in the source and dest directories after the function ran.
+    files_in_source_dir = file_util.list_s3_files_and_directories_by_level(
+        path="s3://" + os.path.join(mock_s3_bucket, source_dir)
+    ).keys()
+    files_in_archive_dir = file_util.list_s3_files_and_directories_by_level(
+        path="s3://" + os.path.join(mock_s3_bucket, archive_dir)
+    ).keys()
+
+    # Expect that the ReferenceFiles associated with the files in S3 updated their file_locations.
+    for filename in test_vcc_files_by_level.keys():
+        # Expect to find no ReferenceFiles with the source file_location
+        source_file_location = "s3://" + os.path.join(mock_s3_bucket, source_dir, filename)
+        assert _first_ref_file(source_file_location, test_db_session) is None
+
+        # Expect to find a single ReferenceFile with the archived file_location
+        archived_file_location = "s3://" + os.path.join(mock_s3_bucket, archive_dir, filename)
+        assert _first_ref_file(archived_file_location, test_db_session) is not None
+
+        # Expect to find file in S3 archive dir
+        assert filename in files_in_archive_dir
+
+        # Expect to find no file with this filename in the source dir.
+        assert filename not in files_in_source_dir
+
+    # List contents of destination directory, then copy each file in S3 to SFTP server.
+    expected_sftp_calls = ["listdir"] + ["put"] * total_file_count
+    assert len(mock_sftp_client.calls) == len(expected_sftp_calls)
+    for i, call in enumerate(mock_sftp_client.calls):
+        assert call[0] == expected_sftp_calls[i]
+
+
 def test_copy_to_sftp_and_archive_s3_files_no_files_in_s3(
     mock_s3_bucket, setup_mock_sftp_client, mock_sftp_client, test_db_session
 ):
@@ -117,6 +221,7 @@ def test_copy_to_sftp_and_archive_s3_files_file_exists_in_sftp_dest(
     test_db_session,
     mock_sftp_dir_with_conflicts,
     mock_sftp_filename_conflicts,
+    initialize_factories_session,
 ):
     archive_dir = "archive/testing"
     source_dir = "api/outbox"
@@ -129,7 +234,10 @@ def test_copy_to_sftp_and_archive_s3_files_file_exists_in_sftp_dest(
 
         # Add ReferenceFile objects to the database for these files.
         file_location = "s3://" + os.path.join(mock_s3_bucket, key)
-        reference_file = ReferenceFile(file_location=file_location)
+        reference_file = ReferenceFileFactory(
+            file_location=file_location,
+            reference_file_type_id=ReferenceFileType.OUTBOUND_STATUS_RETURN.reference_file_type_id,
+        )
         test_db_session.add(reference_file)
 
         # Expect to find no ReferenceFiles with the archived file_location
@@ -197,7 +305,12 @@ def test_copy_to_sftp_and_archive_s3_files_no_reference_file_row_in_database(
 
 
 def test_copy_to_sftp_and_archive_s3_files_s3_archive_failure(
-    mock_s3_bucket, monkeypatch, setup_mock_sftp_client, mock_sftp_client, test_db_session
+    mock_s3_bucket,
+    monkeypatch,
+    setup_mock_sftp_client,
+    mock_sftp_client,
+    test_db_session,
+    initialize_factories_session,
 ):
     # Raise an Exception when we attempt to move the file in S3.
     monkeypatch.setattr(
@@ -219,7 +332,10 @@ def test_copy_to_sftp_and_archive_s3_files_s3_archive_failure(
 
         # Add ReferenceFile objects to the database for these files.
         file_location = "s3://" + os.path.join(mock_s3_bucket, key)
-        reference_file = ReferenceFile(file_location=file_location)
+        reference_file = ReferenceFileFactory(
+            file_location=file_location,
+            reference_file_type_id=ReferenceFileType.OUTBOUND_STATUS_RETURN.reference_file_type_id,
+        )
         test_db_session.add(reference_file)
 
         # Expect to find no ReferenceFiles with the archived file_location
@@ -329,6 +445,7 @@ def test_copy_from_sftp_to_s3_and_archive_files_some_files_already_exist(
     mock_sftp_client,
     mock_sftp_default_listdir_filenames,
     test_db_session,
+    initialize_factories_session,
 ):
     config = SftpS3TransferConfig(
         s3_bucket_uri="s3://" + mock_s3_bucket,
@@ -345,11 +462,14 @@ def test_copy_from_sftp_to_s3_and_archive_files_some_files_already_exist(
     for i, filename in enumerate(mock_sftp_default_listdir_filenames):
         if i % 2 == 0:
             filepath = os.path.join(config.s3_bucket_uri, config.dest_dir, filename)
-            reference_file = ReferenceFile(file_location=filepath)
+            reference_file = ReferenceFileFactory(
+                file_location=filepath,
+                reference_file_type_id=ReferenceFileType.OUTBOUND_STATUS_RETURN.reference_file_type_id,
+            )
             test_db_session.add(reference_file)
-            test_db_session.commit()
         else:
             files_to_be_downloaded.append(filename)
+    test_db_session.commit()
 
     copy_from_sftp_to_s3_and_archive_files(config=config, db_session=test_db_session)
 
