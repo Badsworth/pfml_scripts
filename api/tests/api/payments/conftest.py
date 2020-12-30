@@ -18,3 +18,8 @@ def set_exporter_env_vars(mock_s3_bucket, mock_fineos_s3_bucket, monkeypatch):
     monkeypatch.setenv("PFML_FINEOS_INBOUND_PATH", f"s3://{mock_s3_bucket}/cps/inbound/")
     monkeypatch.setenv("FINEOS_DATA_IMPORT_PATH", f"s3://{mock_fineos_s3_bucket}/DT2/dataimports/")
     monkeypatch.setenv("PFML_FINEOS_OUTBOUND_PATH", f"s3://{mock_s3_bucket}/cps/outbound/")
+
+
+def upload_file_to_s3(file_path, s3_bucket, key):
+    s3 = boto3.client("s3")
+    s3.upload_file(file_path.__str__(), s3_bucket, key)

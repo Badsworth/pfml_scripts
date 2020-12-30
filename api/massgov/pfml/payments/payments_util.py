@@ -317,6 +317,35 @@ def create_files(
     return (dat_filepath, inf_filepath)
 
 
+def copy_fineos_data_to_archival_bucket(expected_file_names: List[str]) -> Dict[str, str]:
+    s3_config = get_s3_config()
+    return file_util.copy_s3_files(
+        s3_config.fineos_data_export_path, s3_config.pfml_fineos_inbound_path, expected_file_names
+    )
+
+
+def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str]]:
+    s3_config = get_s3_config()
+    s3_objects = file_util.list_files(s3_config.pfml_fineos_inbound_path)
+
+    date_to_full_path: Dict = {}
+
+    for s3_object in s3_objects:
+        for expected_file_name in expected_file_names:
+            if s3_object.endswith(expected_file_name):
+                # Grab everything that isn't the suffix of the file name
+                date = s3_object[: -len(expected_file_name)]
+                fixed_date_str = date.rstrip("-")  # eg. 2020-01-01- becomes 2020-01-01
+
+                if not date_to_full_path.get(fixed_date_str):
+                    date_to_full_path[fixed_date_str] = []
+
+                full_path = os.path.join(s3_config.pfml_fineos_inbound_path, s3_object)
+                date_to_full_path[fixed_date_str].append(full_path)
+
+    return date_to_full_path
+
+
 def create_mmars_files_in_s3(
     path: str,
     filename: str,

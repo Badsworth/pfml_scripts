@@ -2,6 +2,7 @@ import xml.dom.minidom as minidom
 from datetime import datetime, timedelta
 
 import boto3
+import pytest
 
 import massgov.pfml.db as db
 import massgov.pfml.payments.payments_util as payments_util
@@ -9,6 +10,45 @@ import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import Country, CtrBatchIdentifier, GeoState
 from massgov.pfml.db.models.factories import AddressFactory, CtrBatchIdentifierFactory
 from massgov.pfml.payments.payments_util import is_same_address
+from tests.api.payments.conftest import upload_file_to_s3
+
+
+@pytest.fixture
+def set_source_path(tmp_path, mock_fineos_s3_bucket):
+    file_name = "2020-12-21-expected_file_one.csv"
+    test_file = tmp_path / file_name
+    test_file.write_text("test, data, rowOne\ntest, data, rowTwo")
+
+    upload_file_to_s3(
+        test_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}",
+    )
+
+    file_name = "2020-12-21-expected_file_two.csv"
+    test_file = tmp_path / file_name
+    test_file.write_text("test, data, rowOne\ntest, data, rowTwo")
+
+    upload_file_to_s3(
+        test_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}",
+    )
+
+
+def test_copy_fineos_data_to_archival_bucket(tmp_path, set_source_path, set_exporter_env_vars):
+    expected_file_names = ["expected_file_one.csv", "expected_file_two.csv"]
+    payments_util.copy_fineos_data_to_archival_bucket(expected_file_names)
+
+    copied_files = file_util.list_files(payments_util.get_s3_config().pfml_fineos_inbound_path)
+
+    assert len(copied_files) == 2
+
+
+def test_group_s3_files_by_date(set_source_path, set_exporter_env_vars):
+    expected_file_names = ["expected_file_one.csv", "expected_file_two.csv"]
+    payments_util.copy_fineos_data_to_archival_bucket(expected_file_names)
+    data_by_date = payments_util.group_s3_files_by_date(expected_file_names)
+
+    files_for_test_date = data_by_date["2020-12-21"]
+    assert files_for_test_date is not None
+    assert len(files_for_test_date) == 2
 
 
 def _create_ctr_batch_identifier(
