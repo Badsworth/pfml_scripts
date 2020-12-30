@@ -6,8 +6,9 @@ import boto3
 import massgov.pfml.db as db
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import CtrBatchIdentifier
-from massgov.pfml.db.models.factories import CtrBatchIdentifierFactory
+from massgov.pfml.db.models.employees import Country, CtrBatchIdentifier, GeoState
+from massgov.pfml.db.models.factories import AddressFactory, CtrBatchIdentifierFactory
+from massgov.pfml.payments.payments_util import is_same_address
 
 
 def _create_ctr_batch_identifier(
@@ -73,3 +74,138 @@ def test_create_mmars_files_in_s3(mock_s3_bucket):
     s3 = boto3.client("s3")
     inf_file = s3.get_object(Bucket=mock_s3_bucket, Key=f"{filename}.INF")
     assert inf_file["Body"].read() == b"NewMmarsBatchDeptCode = EOL;\n"
+
+
+def test_same_address(initialize_factories_session):
+    first = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="#827 unit",
+        city="boston",
+        zip_code="02110",
+        country_id=Country.USA.country_id,
+    )
+    second = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="#827 unit",
+        city="boston",
+        zip_code="02110",
+        country_id=Country.USA.country_id,
+    )
+    assert is_same_address(first, second) is True
+
+
+def test_same_address_comparable(initialize_factories_session):
+    first = AddressFactory(
+        address_line_one=" 1234 MaIn sT ",
+        address_line_two="   #827 uNIT",
+        city="BOSTON",
+        zip_code=" 02110  ",
+    )
+    second = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="#827 unit",
+        city="boston",
+        zip_code="02110",
+    )
+    assert is_same_address(first, second) is True
+
+    # CTR normalized zip codes should be read as 5 digits
+    fineos_address = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="#827 unit",
+        city="boston",
+        zip_code="02110",
+    )
+    ctr_address = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="#827 unit",
+        city="boston",
+        zip_code="02110-12345",
+    )
+    assert is_same_address(fineos_address, ctr_address) is True
+
+
+def test_different_address(initialize_factories_session):
+    first = AddressFactory()
+    second = AddressFactory()
+    assert is_same_address(first, second) is False
+
+    # Different address line one
+    third = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="#827 unit",
+        city="boston",
+        zip_code="02110",
+    )
+    fourth = AddressFactory(
+        address_line_one="1234 main street",
+        address_line_two="#827 unit",
+        city="boston",
+        zip_code="02110",
+    )
+    assert is_same_address(third, fourth) is False
+
+    # Different city
+    fifth = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="#827 unit",
+        city="watertown",
+        zip_code="02110",
+    )
+    assert is_same_address(third, fifth) is False
+
+    # Different state
+    sixth = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="#827 unit",
+        city="boston",
+        geo_state_id=GeoState.CA.geo_state_id,
+        zip_code="02111",
+    )
+    assert is_same_address(third, sixth) is False
+
+    # Different zip code
+    seventh = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="#827 unit",
+        city="boston",
+        zip_code="02111",
+    )
+    assert is_same_address(third, seventh) is False
+
+    # Different country
+    eighth = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="#827 unit",
+        city="boston",
+        zip_code="02111",
+        country_id=Country.USA.country_id,
+    )
+    ninth = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="#827 unit",
+        city="boston",
+        zip_code="02111",
+        country_id=Country.TWN.country_id,
+    )
+    assert is_same_address(eighth, ninth) is False
+
+
+def test_address_line_two(initialize_factories_session):
+    first = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="#827 unit",
+        city="boston",
+        zip_code="02110",
+    )
+    second = AddressFactory(address_line_one="1234 main st", city="boston", zip_code="02110")
+    assert is_same_address(first, second) is False
+
+    third = AddressFactory(address_line_one="1234 main st", city="boston", zip_code="02110")
+    fourth = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="#827 unit",
+        city="boston",
+        zip_code="02110",
+    )
+    assert is_same_address(third, fourth) is False

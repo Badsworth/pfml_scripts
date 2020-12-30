@@ -18,6 +18,7 @@ from massgov.pfml.db.models.employees import (
     AddressType,
     BankAccountType,
     Claim,
+    CtrAddressPair,
     Employee,
     EmployeeAddress,
     GeoState,
@@ -442,30 +443,36 @@ def get_employee_and_claim(
     return employee, claim
 
 
-def update_mailing_address(
+def update_ctr_address_pair_fineos_address(
     payment_data: PaymentData, employee: Employee, db_session: db.Session
 ) -> None:
-    mailing_address = employee.mailing_address
-    if not mailing_address:
-        mailing_address = Address()
-    mailing_address.address_line_one = payment_data.address_line_one
-    if payment_data.address_line_two:
-        mailing_address.address_line_two = payment_data.address_line_two
-    mailing_address.city = payment_data.city
-    mailing_address.geo_state_id = GeoState.get_id(payment_data.state)
-    mailing_address.zip_code = payment_data.zip_code
-    mailing_address.address_type_id = AddressType.MAILING.address_type_id
+    # Construct an Address from the payment_data
+    payment_data_address = Address(
+        address_line_one=payment_data.address_line_one,
+        address_line_two=payment_data.address_line_two if payment_data.address_line_two else None,
+        city=payment_data.city,
+        geo_state_id=GeoState.get_id(payment_data.state),
+        zip_code=payment_data.zip_code,
+        address_type_id=AddressType.MAILING.address_type_id,
+    )
 
-    db_session.add(mailing_address)
-    employee.mailing_address = mailing_address
+    # If ctr_address_pair exists, compare the exisiting fineos_address with the payment_data address
+    #   If they're the same, nothing needs to be done, so we can return
+    #   If they're different or if no ctr_address_pair exists, create a new CtrAddressPair
+    ctr_address_pair = employee.ctr_address_pair
+    if ctr_address_pair:
+        if payments_util.is_same_address(ctr_address_pair.fineos_address, payment_data_address):
+            return
+
+    new_ctr_address_pair = CtrAddressPair(fineos_address=payment_data_address)
+    employee.ctr_address_pair = new_ctr_address_pair
+    db_session.add(payment_data_address)
+    db_session.add(new_ctr_address_pair)
+    db_session.add(employee)
 
     # We also want to make sure the address is linked in the EmployeeAddress table
-    employee_address = employee.addresses.filter(
-        EmployeeAddress.address_id == mailing_address.address_id
-    ).one_or_none()
-    if not employee_address:
-        employee_address = EmployeeAddress(employee=employee, address=mailing_address)
-        db_session.add(employee_address)
+    employee_address = EmployeeAddress(employee=employee, address=payment_data_address)
+    db_session.add(employee_address)
 
 
 def create_or_update_payment(
@@ -536,7 +543,7 @@ def process_payment_data_record(
     claim = cast(Claim, claim)
 
     # Update the mailing address with values from FINEOS
-    update_mailing_address(payment_data, employee, db_session)
+    update_ctr_address_pair_fineos_address(payment_data, employee, db_session)
     # Update the EFT info with values from FINEOS
     update_eft(payment_data, employee, db_session)
     # Create the payment record

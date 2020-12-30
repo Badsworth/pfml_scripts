@@ -9,6 +9,8 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
+    Address,
+    AddressType,
     CtrDocumentIdentifier,
     Employee,
     EmployeeReferenceFile,
@@ -232,17 +234,24 @@ def update_employee_data(
     ams_document_id: str,
     vc_doc_vcust: Element,
     employee: Employee,
+    db_session: db.Session,
 ) -> None:
-    # update address fields
-    # TODO: Handle reconciling address data that comes from the OVCR and may be different than what's in FINEOS (https://lwd.atlassian.net/browse/API-803?focusedCommentId=25231)
+    # update address fields on the CTR half of the CtrAddressPair
+    if not employee.ctr_address_pair.ctr_address:
+        ctr_address = Address(address_type_id=AddressType.MAILING.address_type_id)
+        employee.ctr_address_pair.ctr_address = ctr_address
+        db_session.add(employee)
+
+    ctr_address = employee.ctr_address_pair.ctr_address
     geo_state_id = GeoState.get_id(validated_address_data.ST)
-    employee.mailing_address.geo_state_id = geo_state_id
-    employee.mailing_address.address_line_one = validated_address_data.STR_1_NM
-    employee.mailing_address.city = validated_address_data.CITY_NM
-    employee.mailing_address.zip_code = validated_address_data.ZIP
+    ctr_address.geo_state_id = geo_state_id
+    ctr_address.address_line_one = validated_address_data.STR_1_NM
+    ctr_address.city = validated_address_data.CITY_NM
+    ctr_address.zip_code = validated_address_data.ZIP
 
     if validated_address_data.STR_2_NM not in ["null", None]:
-        employee.mailing_address.address_line_two = validated_address_data.STR_2_NM
+        ctr_address.address_line_two = validated_address_data.STR_2_NM
+    db_session.add(ctr_address)
 
 
 def get_employee(ams_document_id: str, db_session: db.Session,) -> Optional[Employee]:
@@ -397,6 +406,11 @@ def process_ams_document(
         validation_container,
     )
 
+    if not dependencies.employee.ctr_address_pair:
+        validation_container.add_validation_issue(
+            ValidationReason.MISSING_IN_DB, "employee.ctr_address_pair"
+        )
+
     if validation_container.has_validation_issues():
         state_log_util.finish_state_log(
             state_log=state_log,
@@ -411,6 +425,7 @@ def process_ams_document(
             dependencies.ams_document_id,
             dependencies.vc_doc_vcust,
             dependencies.employee,
+            db_session=db_session,
         )
 
         state_log_util.finish_state_log(

@@ -121,27 +121,31 @@ def build_individual_vcc_document(
     )
     payment_address_line_1 = payments_util.validate_db_input(
         key="address_line_one",
-        db_object=employee.mailing_address,
+        db_object=employee.ctr_address_pair.fineos_address,
         required=True,
         max_length=75,
         truncate=True,
     )
     payment_address_line_2 = payments_util.validate_db_input(
         key="address_line_two",
-        db_object=employee.mailing_address,
+        db_object=employee.ctr_address_pair.fineos_address,
         required=False,
         max_length=75,
         truncate=True,
     )
     city = payments_util.validate_db_input(
-        key="city", db_object=employee.mailing_address, required=True, max_length=60, truncate=True
+        key="city",
+        db_object=employee.ctr_address_pair.fineos_address,
+        required=True,
+        max_length=60,
+        truncate=True,
     )
     city = cast(
         str, city
     )  # We've validated it's present, cast it to remove the Optional for linting
     state = payments_util.validate_db_input(
         key="geo_state",
-        db_object=employee.mailing_address,
+        db_object=employee.ctr_address_pair.fineos_address,
         required=True,
         max_length=2,
         truncate=False,
@@ -149,7 +153,7 @@ def build_individual_vcc_document(
     )
     zip_code = payments_util.validate_db_input(
         key="zip_code",
-        db_object=employee.mailing_address,
+        db_object=employee.ctr_address_pair.fineos_address,
         required=True,
         max_length=10,
         truncate=False,

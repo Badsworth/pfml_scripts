@@ -414,6 +414,14 @@ class AddressFactory(BaseFactory):
     geo_state_id = employee_models.GeoState.MA.geo_state_id
 
 
+class CtrAddressPairFactory(BaseFactory):
+    class Meta:
+        model = employee_models.CtrAddressPair
+
+    fineos_address = factory.SubFactory(AddressFactory)
+    fineos_address_id = factory.LazyAttribute(lambda c: c.fineos_address.address_id)
+
+
 class PaymentPreferenceFactory(BaseFactory):
     class Meta:
         model = application_models.ApplicationPaymentPreference

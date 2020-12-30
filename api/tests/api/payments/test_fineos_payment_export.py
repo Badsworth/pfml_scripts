@@ -23,6 +23,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ClaimFactory,
+    CtrAddressPairFactory,
     EftFactory,
     EmployeeFactory,
     EmployerFactory,
@@ -62,13 +63,15 @@ def add_db_records(
         eft = EftFactory()
 
     mailing_address = None
+    ctr_address_pair = None
     if add_address:
         mailing_address = AddressFactory()
+        ctr_address_pair = CtrAddressPairFactory(fineos_address=mailing_address)
 
     if add_employee:
         employee = EmployeeFactory.create(
             tax_identifier=TaxIdentifier(tax_identifier=tin),
-            mailing_address=mailing_address,
+            ctr_address_pair=ctr_address_pair,
             eft=eft,
         )
 
@@ -432,7 +435,7 @@ def test_process_extract_data(
         employee = claim.employee
         assert employee
 
-        mailing_address = employee.mailing_address
+        mailing_address = employee.ctr_address_pair.fineos_address
         assert mailing_address
         assert mailing_address.address_line_one == f"AddressLine1-{index}"
         assert mailing_address.city == f"City{index}"
@@ -441,9 +444,11 @@ def test_process_extract_data(
         assert mailing_address.address_type_id == AddressType.MAILING.address_type_id
 
         employee_addresses = employee.addresses.all()
-        assert len(employee_addresses) == 1  # Just the 1 already present
-        assert employee_addresses[0].employee_id == employee.employee_id
-        assert employee_addresses[0].address_id == mailing_address.address_id
+        assert (
+            len(employee_addresses) == 2
+        )  # 1 created in setup_process_tests, 1 created during process_extract_data
+        assert employee_addresses[1].employee_id == employee.employee_id
+        assert employee_addresses[1].address_id == mailing_address.address_id
 
         reference_files = payment.reference_files
         assert len(reference_files) == 1
@@ -646,7 +651,7 @@ def test_process_extract_data_no_existing_claim_address_eft(
         employee = claim.employee
         assert employee
 
-        mailing_address = employee.mailing_address
+        mailing_address = employee.ctr_address_pair.fineos_address
         assert mailing_address
         assert mailing_address.address_line_one == f"AddressLine1-{index}"
         assert mailing_address.city == f"City{index}"

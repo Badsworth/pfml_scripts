@@ -306,6 +306,19 @@ class TaxIdentifier(Base):
         return func.right(TaxIdentifier.tax_identifier, 4)
 
 
+class CtrAddressPair(Base):
+    __tablename__ = "link_ctr_address_pair"
+    fineos_address_id = Column(
+        UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True, unique=True
+    )
+    ctr_address_id = Column(
+        UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True, index=True
+    )
+
+    fineos_address = relationship("Address", foreign_keys=fineos_address_id)
+    ctr_address = relationship("Address", foreign_keys=ctr_address_id)
+
+
 class Employee(Base):
     __tablename__ = "employee"
     employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -333,6 +346,9 @@ class Employee(Base):
     mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), index=True)
     payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     ctr_vendor_customer_code = Column(Text)
+    ctr_address_pair_id = Column(
+        UUID(as_uuid=True), ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
+    )
 
     title = relationship(LkTitle)
     race = relationship(LkRace)
@@ -348,13 +364,13 @@ class Employee(Base):
     latest_import_log = relationship("ImportLog")
     claims = cast(Optional[List["Claim"]], relationship("Claim", back_populates="employee"))
     state_logs = relationship("StateLog", back_populates="employee")
-    mailing_address = relationship("Address")
     eft = relationship("EFT", back_populates="employee", uselist=False)
     reference_files = relationship("EmployeeReferenceFile", back_populates="employee")
     payment_method = relationship(LkPaymentMethod, foreign_keys=payment_method_id)
     tax_identifier = cast(
         Optional[TaxIdentifier], relationship("TaxIdentifier", back_populates="employee")
     )
+    ctr_address_pair = relationship("CtrAddressPair")
 
     authorized_reps: "Query[AuthorizedRepEmployee]" = dynamic_loader(
         "AuthorizedRepEmployee", back_populates="employee"

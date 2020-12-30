@@ -7,7 +7,6 @@ import defusedxml.ElementTree as ET
 
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
-    Address,
     CtrDocumentIdentifier,
     EmployeeReferenceFile,
     GeoState,
@@ -17,6 +16,8 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
 )
 from massgov.pfml.db.models.factories import (
+    AddressFactory,
+    CtrAddressPairFactory,
     EmployeeFactory,
     ReferenceFileFactory,
     TaxIdentifierFactory,
@@ -94,7 +95,9 @@ def create_ovr_dependencies(
     vcc_reference_file = ReferenceFileFactory.create(
         reference_file_type_id=ReferenceFileType.VCC.reference_file_type_id
     )
-    employee = EmployeeFactory(mailing_address=Address(), tax_identifier=tax_identifier)
+    mailing_address = AddressFactory()
+    ctr_address_pair = CtrAddressPairFactory(fineos_address=mailing_address)
+    employee = EmployeeFactory(ctr_address_pair=ctr_address_pair, tax_identifier=tax_identifier)
 
     ctr_document_identifer = CtrDocumentIdentifier(
         ctr_document_identifier=ams_document_id, document_date="2021-01-01", document_counter=1
@@ -125,7 +128,9 @@ def get_ovr_reference_file():
 
 
 def setup_mock_update_employee_data(monkeypatch):
-    def mock_update_employee_data(ams_document, ams_document_id, vc_doc_vcust, employee):
+    def mock_update_employee_data(
+        ams_document, ams_document_id, vc_doc_vcust, employee, db_session
+    ):
         mock_update_employee_data.times_called = mock_update_employee_data.times_called + 1
 
     mock_update_employee_data.times_called = 0
@@ -331,28 +336,25 @@ def test_update_employee_data(test_db_session, initialize_factories_session):
 
     employee = EmployeeFactory.create()
 
-    # give the employee a mailing address with all None values
-    new_address = Address()
-    employee.mailing_address = new_address
-    test_db_session.add(new_address)
+    # give the employee a CtrAddressPair without a ctr_address
+    ctr_address_pair = CtrAddressPairFactory()
+    employee.ctr_address_pair = ctr_address_pair
     test_db_session.add(employee)
     test_db_session.commit()
 
     test_db_session.refresh(employee)
 
-    assert employee.mailing_address.address_line_one is None
-    assert employee.mailing_address.address_line_two is None
-    assert employee.mailing_address.city is None
-    assert employee.mailing_address.geo_state_id is None
-    assert employee.mailing_address.zip_code is None
+    assert employee.ctr_address_pair.ctr_address is None
 
-    update_employee_data(vc_doc_ad_data, ams_document_id, vc_doc_vcust, employee)
+    update_employee_data(vc_doc_ad_data, ams_document_id, vc_doc_vcust, employee, test_db_session)
 
-    assert employee.mailing_address.address_line_one == vc_doc_ad.find("STR_1_NM").text
-    assert employee.mailing_address.address_line_two is None
-    assert employee.mailing_address.city == vc_doc_ad.find("CITY_NM").text
-    assert employee.mailing_address.zip_code == vc_doc_ad.find("ZIP").text
-    assert employee.mailing_address.geo_state_id == GeoState.get_id(vc_doc_ad.find("ST").text)
+    assert employee.ctr_address_pair.ctr_address.address_line_one == vc_doc_ad.find("STR_1_NM").text
+    assert employee.ctr_address_pair.ctr_address.address_line_two is None
+    assert employee.ctr_address_pair.ctr_address.city == vc_doc_ad.find("CITY_NM").text
+    assert employee.ctr_address_pair.ctr_address.zip_code == vc_doc_ad.find("ZIP").text
+    assert employee.ctr_address_pair.ctr_address.geo_state_id == GeoState.get_id(
+        vc_doc_ad.find("ST").text
+    )
 
 
 def test_move_processed_file(test_db_session, initialize_factories_session, mock_s3_bucket):
@@ -377,30 +379,20 @@ def test_update_employee_data_when_missing_data(test_db_session, initialize_fact
     )
 
     # give the employee a mailing address with all None values
-    new_address = Address()
-    employee.mailing_address = new_address
-    test_db_session.add(new_address)
+    employee.ctr_address_pair = CtrAddressPairFactory()
     test_db_session.add(employee)
     test_db_session.commit()
 
     test_db_session.refresh(employee)
 
-    assert employee.mailing_address.address_line_one is None
-    assert employee.mailing_address.address_line_two is None
-    assert employee.mailing_address.city is None
-    assert employee.mailing_address.geo_state_id is None
-    assert employee.mailing_address.zip_code is None
+    assert employee.ctr_address_pair.ctr_address is None
 
     ovr_reference_file = get_ovr_reference_file()
 
     process_ams_document(ams_document, test_db_session, ovr_reference_file)
 
     test_db_session.refresh(employee)
-    assert employee.mailing_address.address_line_one is None
-    assert employee.mailing_address.address_line_two is None
-    assert employee.mailing_address.city is None
-    assert employee.mailing_address.geo_state_id is None
-    assert employee.mailing_address.zip_code is None
+    assert employee.ctr_address_pair.ctr_address is None
 
 
 def test_state_log_creation_with_no_validation_issues(
@@ -598,12 +590,7 @@ def test_finish_state_log_with_no_validation_issues(
         ams_document_id, TIN, test_db_session
     )
 
-    assert employee.mailing_address.address_line_one is None
-    assert employee.mailing_address.address_line_two is None
-    assert employee.mailing_address.city is None
-    assert employee.mailing_address.geo_state_id is None
-    assert employee.mailing_address.zip_code is None
-
+    assert employee.ctr_address_pair.ctr_address is None
     ovr_reference_file = get_ovr_reference_file()
 
     process_outbound_vendor_customer_return(ovr_reference_file, test_db_session)
@@ -619,11 +606,14 @@ def test_finish_state_log_with_no_validation_issues(
 
     address = ams_document.find("VC_DOC_AD")
 
-    assert employee.mailing_address.address_line_one == address.find("STR_1_NM").text
-    assert employee.mailing_address.address_line_two is None
-    assert employee.mailing_address.city == address.find("CITY_NM").text
-    assert employee.mailing_address.geo_state.geo_state_description == address.find("ST").text
-    assert employee.mailing_address.zip_code == address.find("ZIP").text
+    assert employee.ctr_address_pair.ctr_address.address_line_one == address.find("STR_1_NM").text
+    assert employee.ctr_address_pair.ctr_address.address_line_two is None
+    assert employee.ctr_address_pair.ctr_address.city == address.find("CITY_NM").text
+    assert (
+        employee.ctr_address_pair.ctr_address.geo_state.geo_state_description
+        == address.find("ST").text
+    )
+    assert employee.ctr_address_pair.ctr_address.zip_code == address.find("ZIP").text
     assert ovr_reference_file.file_location == PROCESSED_S3_PATH
 
 

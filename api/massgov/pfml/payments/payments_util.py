@@ -16,7 +16,12 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.lookup import LookupTable
-from massgov.pfml.db.models.employees import CtrBatchIdentifier, LkReferenceFileType, ReferenceFile
+from massgov.pfml.db.models.employees import (
+    Address,
+    CtrBatchIdentifier,
+    LkReferenceFileType,
+    ReferenceFile,
+)
 
 logger = logging.get_logger(__package__)
 
@@ -353,6 +358,36 @@ def get_xml_attribute(elem: Element, attr_str: str) -> Optional[str]:
         return attr_val.text
     else:
         return None
+
+
+def compare_address_fields(first: Address, second: Address, field: str) -> bool:
+    value1 = getattr(first, field)
+    value2 = getattr(second, field)
+
+    if field == "zip_code":
+        value1 = value1.strip()[:5]
+        value2 = value2.strip()[:5]
+
+    if type(value1) is str:
+        value1 = value1.strip().lower()
+    if type(value2) is str:
+        value2 = value2.strip().lower()
+
+    return value1 == value2
+
+
+def is_same_address(first: Address, second: Address) -> bool:
+    if (
+        compare_address_fields(first, second, "address_line_one")
+        and compare_address_fields(first, second, "city")
+        and compare_address_fields(first, second, "zip_code")
+        and compare_address_fields(first, second, "geo_state_id")
+        and compare_address_fields(first, second, "country_id")
+        and compare_address_fields(first, second, "address_line_two")
+    ):
+        return True
+    else:
+        return False
 
 
 def move_file_and_update_ref_file(

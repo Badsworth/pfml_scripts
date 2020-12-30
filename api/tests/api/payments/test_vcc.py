@@ -26,6 +26,7 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.factories import (
     AddressFactory,
+    CtrAddressPairFactory,
     CtrDocumentIdentifierFactory,
     EftFactory,
     EmployeeFactory,
@@ -60,12 +61,13 @@ def get_base_employee(add_eft=True, use_random_tin=False):
         geo_state_id=GeoState.IL.geo_state_id,
         zip_code="12345",
     )
+    ctr_address_pair = CtrAddressPairFactory(fineos_address=mailing_address)
     employee = EmployeeFactory.create(
         first_name="Jane",
         last_name="Doe",
         tax_identifier=tax_identifier,
         eft=eft,
-        mailing_address=mailing_address,
+        ctr_address_pair=ctr_address_pair,
         payment_method_id=PaymentMethod.ACH.payment_method_id,
     )
     return employee
@@ -265,9 +267,9 @@ def test_build_individual_vcc_document_truncated_values(initialize_factories_ses
     employee = get_base_employee()
     employee.first_name = "A" * 20
     employee.last_name = "C" * 40
-    employee.mailing_address.address_line_one = "D" * 80
-    employee.mailing_address.address_line_two = "E" * 80
-    employee.mailing_address.city = "F" * 65
+    employee.ctr_address_pair.fineos_address.address_line_one = "D" * 80
+    employee.ctr_address_pair.fineos_address.address_line_two = "E" * 80
+    employee.ctr_address_pair.fineos_address.city = "F" * 65
 
     document = vcc.build_individual_vcc_document(Document(), employee, now, vcc.get_doc_id(now, 1))
     doc_id = document._attrs["DOC_ID"].value
@@ -474,24 +476,24 @@ def test_build_individual_vcc_document_missing_required_values(initialize_factor
         vcc.build_individual_vcc_document(Document(), no_ssn_data, now, vcc.get_doc_id(now, 1))
 
     no_address1_data = get_base_employee(use_random_tin=True)
-    no_address1_data.mailing_address.address_line_one = ""
+    no_address1_data.ctr_address_pair.fineos_address.address_line_one = ""
     with pytest.raises(
         Exception, match="Value for address_line_one is required to generate document."
     ):
         vcc.build_individual_vcc_document(Document(), no_address1_data, now, vcc.get_doc_id(now, 1))
 
     no_city_data = get_base_employee(use_random_tin=True)
-    no_city_data.mailing_address.city = ""
+    no_city_data.ctr_address_pair.fineos_address.city = ""
     with pytest.raises(Exception, match="Value for city is required to generate document."):
         vcc.build_individual_vcc_document(Document(), no_city_data, now, vcc.get_doc_id(now, 1))
 
     no_state_data = get_base_employee(use_random_tin=True)
-    no_state_data.mailing_address.geo_state = None
+    no_state_data.ctr_address_pair.fineos_address.geo_state = None
     with pytest.raises(Exception, match="Value for geo_state is required to generate document."):
         vcc.build_individual_vcc_document(Document(), no_state_data, now, vcc.get_doc_id(now, 1))
 
     no_zip_data = get_base_employee(use_random_tin=True)
-    no_zip_data.mailing_address.zip_code = ""
+    no_zip_data.ctr_address_pair.fineos_address.zip_code = ""
     with pytest.raises(Exception, match="Value for zip_code is required to generate document."):
         vcc.build_individual_vcc_document(Document(), no_zip_data, now, vcc.get_doc_id(now, 1))
 
@@ -525,7 +527,7 @@ def test_build_individual_vcc_document_too_long_values(initialize_factories_sess
         )
 
     long_zip_data = get_base_employee(use_random_tin=True)
-    long_zip_data.mailing_address.zip_code = "01234-56789"
+    long_zip_data.ctr_address_pair.fineos_address.zip_code = "01234-56789"
     with pytest.raises(Exception, match="Value for zip_code is longer than allowed length of 10."):
         vcc.build_individual_vcc_document(Document(), long_zip_data, now, vcc.get_doc_id(now, 1))
 
