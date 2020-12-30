@@ -19,6 +19,6 @@ module.exports = {
     preview: "env-3",
   },
   // See docs/portal/maintenance-pages.md
-  maintenancePageRoutes: ["/*"],
+  // maintenancePageRoutes: [],
   newRelicAppId: "847045300",
 };
