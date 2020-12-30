@@ -92,6 +92,7 @@ const flagsConfig = {
   prod: {
     claimantShowAuth: true,
     pfmlTerriyay: true,
+    claimantShowMedicalLeaveType: true,
   },
 };
 
