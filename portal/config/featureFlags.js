@@ -91,8 +91,9 @@ const flagsConfig = {
   },
   prod: {
     claimantShowAuth: true,
-    pfmlTerriyay: true,
+    claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
+    pfmlTerriyay: true,
   },
 };
 
