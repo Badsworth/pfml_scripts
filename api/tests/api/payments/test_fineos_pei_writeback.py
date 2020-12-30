@@ -5,8 +5,8 @@ from datetime import date
 import faker
 from freezegun import freeze_time
 
+import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.fineos_pei_writeback as writeback
-import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import PaymentReferenceFile, ReferenceFile, ReferenceFileType
 from massgov.pfml.db.models.factories import ClaimFactory, EmployerFactory, PaymentFactory
@@ -38,19 +38,19 @@ def test_upload_writebacks_to_s3(
 
     expected_file_name = "2020-12-21-12-00-01-pei_writeback.csv"
     expected_file_location = os.path.join(
-        payments_util.get_s3_config().pfml_fineos_outbound_path, "sent", expected_file_name
+        payments_config.get_s3_config().pfml_fineos_outbound_path, "sent", expected_file_name
     )
     assert expected_file_location == uploaded_filepath
 
     # Confirm that file is in PFML S3 bucket
     saved_files = file_util.list_files(
-        os.path.join(payments_util.get_s3_config().pfml_fineos_outbound_path, "sent")
+        os.path.join(payments_config.get_s3_config().pfml_fineos_outbound_path, "sent")
     )
     assert len(saved_files) == 1
     assert set(saved_files) == set([expected_file_name])
 
     # Also confirm that file is in FINEOS S3 bucket
-    saved_files = file_util.list_files(f"{payments_util.get_s3_config().fineos_data_import_path}")
+    saved_files = file_util.list_files(f"{payments_config.get_s3_config().fineos_data_import_path}")
     assert len(saved_files) == 1
     assert set(saved_files) == set([expected_file_name])
 
@@ -59,7 +59,7 @@ def test_save_writeback_reference_files(
     test_db_session, set_exporter_env_vars, initialize_factories_session
 ):
     s3_filepath = os.path.join(
-        payments_util.get_s3_config().pfml_fineos_outbound_path,
+        payments_config.get_s3_config().pfml_fineos_outbound_path,
         "sent",
         "2020-12-21-12-00-01-pei_writeback.csv",
     )
@@ -103,7 +103,9 @@ def test_pei_writeback_to_s3(test_db_session, set_exporter_env_vars, initialize_
     assert lines[2] == "123,456,Active,,,,12/22/2020,,Pending,"
 
     file_name = "2020-12-21-12-00-01-pei_writeback.csv"
-    fineos_filepath = os.path.join(payments_util.get_s3_config().fineos_data_import_path, file_name)
+    fineos_filepath = os.path.join(
+        payments_config.get_s3_config().fineos_data_import_path, file_name
+    )
     lines = list(file_util.read_file_lines(fineos_filepath))
     assert lines[0] == ",".join([f.name for f in dataclasses.fields(writeback.PeiWritebackRecord)])
     assert lines[1] == "123,456,Active,,,,12/23/2020,,Pending,"

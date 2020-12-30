@@ -1,3 +1,4 @@
+import json
 import os
 import xml.dom.minidom as minidom
 from dataclasses import dataclass, field
@@ -11,7 +12,9 @@ import botocore
 import pytz
 import smart_open
 from sqlalchemy import func
+from sqlalchemy.orm.exc import MultipleResultsFound
 
+import massgov.pfml.payments.config as payments_config
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
@@ -22,6 +25,7 @@ from massgov.pfml.db.models.employees import (
     LkReferenceFileType,
     ReferenceFile,
 )
+from massgov.pfml.util.aws.ses import EmailRecipient, send_email
 
 logger = logging.get_logger(__package__)
 
@@ -35,48 +39,6 @@ class Constants:
 
 
 BATCH_ID_TEMPLATE = Constants.COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
-
-
-@dataclass
-class PaymentsS3Config:
-    # S3 paths (eg. s3://bucket/path/to/folder/)
-    # Vars prefixed with fineos are buckets owned by fineos
-    # Vars prefixed by pfml are owned by us
-
-    # FINEOS generates data export files for PFML API to pick up
-    # This is where FINEOS makes those files available to us
-    fineos_data_export_path: str
-    # PFML API stores a copy of all files that FINEOS generates for us
-    # This is where we store that copy
-    fineos_data_import_path: str
-    # PFML API stores a copy of all files that we retrieve from CTR
-    # This is where we store that copy
-    pfml_ctr_inbound_path: str
-    ## PFML API stores a copy of all files that we generate for the office of the Comptroller
-    ## This is where we store that copy
-    pfml_ctr_outbound_path: str
-    ## PFML API stores a copy of all files that we generate for FINEOS
-    ## This is where we store that copy
-    pfml_fineos_inbound_path: str
-    # PFML API generates files for FINEOS to process
-    # This is where FINEOS picks up files from us
-    pfml_fineos_outbound_path: str
-
-
-def get_s3_config() -> PaymentsS3Config:
-    return PaymentsS3Config(
-        fineos_data_export_path=str(os.environ.get("FINEOS_DATA_EXPORT_PATH")),
-        fineos_data_import_path=str(os.environ.get("FINEOS_DATA_IMPORT_PATH")),
-        pfml_ctr_inbound_path=str(os.environ.get("PFML_CTR_INBOUND_PATH")),
-        pfml_ctr_outbound_path=str(os.environ.get("PFML_CTR_OUTBOUND_PATH")),
-        pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
-        pfml_fineos_outbound_path=str(os.environ.get("PFML_FINEOS_OUTBOUND_PATH")),
-    )
-
-
-def get_dfml_operations_email() -> str:
-    # TODO - set this in the terraform as EOL-DL-DFML-GAXVCC_Confirmation@mass.gov
-    return str(os.environ.get("DFML_BUSINESS_OPERATIONS_EMAIL"))
 
 
 class ValidationReason(str, Enum):
@@ -318,14 +280,14 @@ def create_files(
 
 
 def copy_fineos_data_to_archival_bucket(expected_file_names: List[str]) -> Dict[str, str]:
-    s3_config = get_s3_config()
+    s3_config = payments_config.get_s3_config()
     return file_util.copy_s3_files(
         s3_config.fineos_data_export_path, s3_config.pfml_fineos_inbound_path, expected_file_names
     )
 
 
 def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str]]:
-    s3_config = get_s3_config()
+    s3_config = payments_config.get_s3_config()
     s3_objects = file_util.list_files(s3_config.pfml_fineos_inbound_path)
 
     date_to_full_path: Dict = {}
@@ -424,3 +386,58 @@ def move_file_and_update_ref_file(
 ) -> None:
     file_util.rename_file(ref_file.file_location, destination)
     ref_file.file_location = destination
+
+
+def get_inf_data_from_reference_file(
+    reference: ReferenceFile, db_session: db.Session
+) -> Optional[Dict]:
+    ctr_id = reference.ctr_batch_identifier_id
+
+    try:
+        ctr_batch = (
+            db_session.query(CtrBatchIdentifier)
+            .filter(CtrBatchIdentifier.ctr_batch_identifier_id == ctr_id)
+            .one_or_none()
+        )
+
+        if ctr_batch and ctr_batch.inf_data:
+            return json.loads(str(ctr_batch.inf_data))
+    except MultipleResultsFound as e:
+        logger.exception(
+            "CtrBatchIdentifier query failed: %s",
+            type(e),
+            extra={"CtrBatchIdentifier.ctr_batch_identifier_id": ctr_id, "error": e},
+        )
+    return None
+
+
+def get_inf_data_as_plain_text(inf_data: Dict) -> str:
+    text = ""
+    for key, value in inf_data.items():
+        text += f"{key} = {value}\n"
+
+    return text
+
+
+def email_inf_data(
+    ref_file: ReferenceFile, db_session: db.Session, email: EmailRecipient, subject: str
+) -> None:
+
+    inf_data = get_inf_data_from_reference_file(ref_file, db_session)
+
+    if inf_data is None:
+        logger.error(
+            "Could not find INF data for reference file",
+            extra={"reference_file_id": ref_file.reference_file_id},
+        )
+        return
+
+    payment_config = payments_config.get_email_config()
+    data = get_inf_data_as_plain_text(inf_data)
+    send_email(
+        email,
+        subject,
+        data,
+        payment_config.pfml_email_address,
+        payment_config.bounce_forwarding_email_address,
+    )

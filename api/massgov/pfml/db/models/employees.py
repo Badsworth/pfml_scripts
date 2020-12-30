@@ -664,7 +664,10 @@ class ReferenceFile(Base):
         Integer, ForeignKey("lk_reference_file_type.reference_file_type_id"), nullable=True
     )
     ctr_batch_identifier_id = Column(
-        UUID(as_uuid=True), ForeignKey("ctr_batch_identifier"), nullable=True, index=True
+        UUID(as_uuid=True),
+        ForeignKey("ctr_batch_identifier.ctr_batch_identifier_id"),
+        nullable=True,
+        index=True,
     )
 
     reference_file_type = relationship(LkReferenceFileType)

@@ -17,7 +17,8 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.payments.payments_util import get_now, get_s3_config
+from massgov.pfml.payments.config import get_s3_config
+from massgov.pfml.payments.payments_util import get_now
 
 logger = logging.get_logger(__package__)
 

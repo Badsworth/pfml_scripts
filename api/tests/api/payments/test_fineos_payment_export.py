@@ -30,7 +30,8 @@ from massgov.pfml.db.models.factories import (
     PaymentFactory,
     ReferenceFileFactory,
 )
-from massgov.pfml.payments.payments_util import ValidationIssue, ValidationReason, get_s3_config
+from massgov.pfml.payments.config import get_s3_config
+from massgov.pfml.payments.payments_util import ValidationIssue, ValidationReason
 
 EXPECTED_OUTCOME = {"message": "Success"}
 

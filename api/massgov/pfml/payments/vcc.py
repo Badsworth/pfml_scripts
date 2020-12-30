@@ -6,6 +6,7 @@ from sqlalchemy import func
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
+import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
@@ -427,4 +428,4 @@ def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
 
 
 def build_vcc_files_for_s3(db_session: db.Session) -> Tuple[str, str]:
-    return build_vcc_files(db_session, payments_util.get_s3_config().pfml_ctr_outbound_path)
+    return build_vcc_files(db_session, payments_config.get_s3_config().pfml_ctr_outbound_path)

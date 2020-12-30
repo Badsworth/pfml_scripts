@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
+import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
@@ -82,7 +83,7 @@ class ExtractData:
         self.date_str = date_str
 
         file_location = os.path.join(
-            payments_util.get_s3_config().pfml_fineos_inbound_path, RECEIVED_FOLDER, self.date_str
+            payments_config.get_s3_config().pfml_fineos_inbound_path, RECEIVED_FOLDER, self.date_str
         )
         self.reference_file = ReferenceFile(
             file_location=file_location,
@@ -223,7 +224,7 @@ class PaymentData:
 
 def copy_fineos_data_to_archival_bucket(db_session: db.Session) -> Dict[str, Dict[str, str]]:
     # stage source and destination folders
-    s3_config = payments_util.get_s3_config()
+    s3_config = payments_config.get_s3_config()
     source_folder = s3_config.fineos_data_export_path
     destination_folder = os.path.join(s3_config.pfml_fineos_inbound_path, RECEIVED_FOLDER)
 
@@ -373,7 +374,7 @@ def get_date_group_str_from_path(path: str) -> Optional[str]:
 
 def reference_file_exists(db_session, date_str):
     path = os.path.join(
-        payments_util.get_s3_config().pfml_fineos_inbound_path, PROCESSED_FOLDER, date_str
+        payments_config.get_s3_config().pfml_fineos_inbound_path, PROCESSED_FOLDER, date_str
     )
     reference_file = (
         db_session.query(ReferenceFile)
@@ -389,7 +390,7 @@ def reference_file_exists(db_session, date_str):
 
 
 def group_s3_files_by_date() -> Dict[str, List[str]]:
-    s3_config = payments_util.get_s3_config()
+    s3_config = payments_config.get_s3_config()
     source_folder = os.path.join(s3_config.pfml_fineos_inbound_path, RECEIVED_FOLDER)
     s3_objects = file_util.list_files(source_folder)
     s3_objects.sort()

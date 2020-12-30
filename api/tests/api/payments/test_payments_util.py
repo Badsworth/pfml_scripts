@@ -1,3 +1,4 @@
+import json
 import xml.dom.minidom as minidom
 from datetime import datetime, timedelta
 
@@ -5,11 +6,20 @@ import boto3
 import pytest
 
 import massgov.pfml.db as db
+import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import Country, CtrBatchIdentifier, GeoState
-from massgov.pfml.db.models.factories import AddressFactory, CtrBatchIdentifierFactory
-from massgov.pfml.payments.payments_util import is_same_address
+from massgov.pfml.db.models.factories import (
+    AddressFactory,
+    CtrBatchIdentifierFactory,
+    ReferenceFileFactory,
+)
+from massgov.pfml.payments.payments_util import (
+    get_inf_data_as_plain_text,
+    get_inf_data_from_reference_file,
+    is_same_address,
+)
 from tests.api.payments.conftest import upload_file_to_s3
 
 
@@ -36,7 +46,7 @@ def test_copy_fineos_data_to_archival_bucket(tmp_path, set_source_path, set_expo
     expected_file_names = ["expected_file_one.csv", "expected_file_two.csv"]
     payments_util.copy_fineos_data_to_archival_bucket(expected_file_names)
 
-    copied_files = file_util.list_files(payments_util.get_s3_config().pfml_fineos_inbound_path)
+    copied_files = file_util.list_files(payments_config.get_s3_config().pfml_fineos_inbound_path)
 
     assert len(copied_files) == 2
 
@@ -249,3 +259,32 @@ def test_address_line_two(initialize_factories_session):
         zip_code="02110",
     )
     assert is_same_address(third, fourth) is False
+
+
+def test_get_inf_data_from_reference_file(test_db_session, initialize_factories_session):
+    ctr_batch_identifier = CtrBatchIdentifierFactory.create()
+    reference_file = ReferenceFileFactory.create()
+    reference_file.ctr_batch_identifier_id = ctr_batch_identifier.ctr_batch_identifier_id
+
+    inf_data = get_inf_data_from_reference_file(reference_file, test_db_session)
+
+    assert inf_data is not None
+    assert inf_data == json.loads(ctr_batch_identifier.inf_data)
+
+
+def test_get_inf_data_as_plain_text(test_db_session):
+    inf_data_dict = {
+        "NewMmarsBatchID": "EOL0101GAX11",
+        "NewMmarsBatchDeptCode": "EOL",
+        "NewMmarsUnitCode": "8770",
+        "NewMmarsImportDate": "2020-01-01",
+        "NewMmarsTransCode": "GAX",
+        "NewMmarsTableName": "",
+        "NewMmarsTransCount": "2",
+        "NewMmarsTransDollarAmount": "2500.00",
+    }
+    inf_data_text = get_inf_data_as_plain_text(inf_data_dict)
+
+    for key in inf_data_dict.keys():
+        expected_line = f"{key} = {inf_data_dict[key]}"
+        assert expected_line in inf_data_text

@@ -78,6 +78,9 @@ services:
       # - SERVICE_NOW_PASSWORD=...
       - PORTAL_BASE_URL=https://paidleave.mass.gov
       - ENABLE_APPLICATION_FRAUD_CHECK=0
+      - PAYMENTS_GAX_BIEVNT_EMAIL=
+      - PFML_EMAIL_ADDRESS=noreplypfml@mass.gov
+      - BOUNCE_FORWARDING_EMAIL_ADDRESS=noreplypfml@mass.gov
 
     networks:
       main:

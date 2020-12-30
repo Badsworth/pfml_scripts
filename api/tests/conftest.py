@@ -165,35 +165,30 @@ def auth_key():
 
 @pytest.fixture
 def consented_user_token(consented_user_claims, auth_key):
-
     encoded = jwt.encode(consented_user_claims, auth_key)
     return encoded
 
 
 @pytest.fixture
 def fineos_user_token(fineos_user_claims, auth_key):
-
     encoded = jwt.encode(fineos_user_claims, auth_key)
     return encoded
 
 
 @pytest.fixture
 def auth_token(auth_claims, auth_key):
-
     encoded = jwt.encode(auth_claims, auth_key)
     return encoded
 
 
 @pytest.fixture
 def oauth_auth_token(oauth_claims, auth_key):
-
     encoded = jwt.encode(oauth_claims, auth_key)
     return encoded
 
 
 @pytest.fixture
 def employer_auth_token(employer_claims, auth_key):
-
     encoded = jwt.encode(employer_claims, auth_key)
     return encoded
 
@@ -208,6 +203,20 @@ def test_fs_path(tmp_path):
     test_file = test_folder / file_name
     test_file.write_text(content)
     return test_folder
+
+
+@pytest.fixture
+def mock_ses(monkeypatch):
+    import boto3
+
+    monkeypatch.setenv("PFML_EMAIL_ADDRESS", "noreplypfml@mass.gov")
+    monkeypatch.setenv("BOUNCE_FORWARDING_EMAIL", "noreplypfml@mass.gov")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "test")
+
+    with moto.mock_ses():
+        ses = boto3.client("ses")
+        ses.verify_email_identity(EmailAddress=os.getenv("PFML_EMAIL_ADDRESS"))
+        yield
 
 
 @pytest.fixture
@@ -384,6 +393,7 @@ def reset_aws_env_vars(monkeypatch):
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
     monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
     monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "testing")
 
 
 # This fixture was necessary at the time of this PR as

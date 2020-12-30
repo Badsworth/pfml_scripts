@@ -48,4 +48,8 @@ module "tasks" {
   enable_recurring_payments_schedule = false
 
   logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
+
+  payments_gax_bievnt_email       = ""
+  pfml_email_address              = "noreplypfml@mass.gov"
+  bounce_forwarding_email_address = "noreplypfml@mass.gov"
 }

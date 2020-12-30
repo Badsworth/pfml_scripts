@@ -48,4 +48,8 @@ module "tasks" {
   payments_pfml_ctr_outbound_path    = "s3://massgov-pfml-prod-agency-transfer/ctr/outbound"
 
   enable_recurring_payments_schedule = false
+
+  payments_gax_bievnt_email       = "Accounts.Payable@detma.org"
+  pfml_email_address              = "noreplypfml@mass.gov"
+  bounce_forwarding_email_address = "noreplypfml@mass.gov"
 }

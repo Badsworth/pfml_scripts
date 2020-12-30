@@ -6,9 +6,10 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-import massgov.pfml.db as db
+import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.logging
+from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     ClaimType,
     CtrDocumentIdentifier,
@@ -20,12 +21,12 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.payments.payments_util import Constants
+from massgov.pfml.payments.payments_util import Constants, email_inf_data
+from massgov.pfml.util.aws.ses import EmailRecipient
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 TWOPLACES = decimal.Decimal(10) ** -2
-
 
 # Mappings of attributes to their static values
 # These generic ones are reused by each element type
@@ -359,8 +360,19 @@ def build_gax_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
         logger.exception("Unable to create GAX:", str(e))
         db_session.rollback()
 
-    return ("", "")
+    return "", ""
 
 
 def build_gax_files_for_s3(db_session: db.Session) -> Tuple[str, str]:
-    return build_gax_files(db_session, payments_util.get_s3_config().pfml_ctr_outbound_path)
+    return build_gax_files(db_session, payments_config.get_s3_config().pfml_ctr_outbound_path)
+
+
+def send_bievnt_email(
+    ref_file: ReferenceFile, db_session: db.Session, recipient_email: EmailRecipient
+) -> None:
+    subject = f"DFML GAX BIEVNT info for Batch ID {ref_file.ctr_batch_identifier_id} on {payments_util.get_now():%m/%d/%Y}"
+
+    try:
+        email_inf_data(ref_file, db_session, recipient_email, subject)
+    except RuntimeError:
+        logger.exception("Error sending email")

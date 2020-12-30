@@ -4,7 +4,7 @@ from typing import Optional
 import defusedxml.ElementTree as ET
 from sqlalchemy.orm.exc import MultipleResultsFound
 
-import massgov.pfml.payments.payments_util as payments_util
+import massgov.pfml.payments.config as payments_config
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
@@ -93,7 +93,7 @@ def get_reference_file(source_filepath: str, db_session: db.Session) -> Optional
 def process_ctr_outbound_returns(db_session: db.Session) -> None:
     # Read files that are in /ctr/inbound/received and append ReferenceFile objects to each list,
     # then call the appropriate handler for elements in each list
-    s3_config = payments_util.get_s3_config()
+    s3_config = payments_config.get_s3_config()
     base_filepath = os.path.join(s3_config.pfml_ctr_inbound_path, "received")
     try:
         ctr_inbound_filenames = file_util.list_files_without_folder(base_filepath)

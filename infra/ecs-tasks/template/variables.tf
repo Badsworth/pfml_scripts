@@ -154,3 +154,21 @@ variable "enable_recurring_payments_schedule" {
   type        = bool
   default     = false
 }
+
+variable "payments_gax_bievnt_email" {
+  description = "Email address to send BIEVNT data to the EOL finance team."
+  type        = string
+  default     = ""
+}
+
+variable "pfml_email_address" {
+  description = "Generic send from address for outgoing emails."
+  type        = string
+  default     = ""
+}
+
+variable "bounce_forwarding_email_address" {
+  description = "Generic send to address for bounced back outgoing email notifications."
+  type        = string
+  default     = ""
+}

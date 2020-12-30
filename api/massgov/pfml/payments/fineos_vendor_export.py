@@ -4,6 +4,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, cast
 
+import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
@@ -77,7 +78,7 @@ class ExtractData:
 
         self.reference_file = ReferenceFile(
             file_location=os.path.join(
-                payments_util.get_s3_config().pfml_fineos_inbound_path, "received", self.date_str
+                payments_config.get_s3_config().pfml_fineos_inbound_path, "received", self.date_str
             ),
             reference_file_type_id=ReferenceFileType.VENDOR_CLAIM_EXTRACT.reference_file_type_id,
             reference_file_id=uuid.uuid4().__str__(),

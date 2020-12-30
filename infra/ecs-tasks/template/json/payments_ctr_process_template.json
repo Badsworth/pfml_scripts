@@ -30,6 +30,10 @@
         { "name": "DB_NAME", "value": "${db_name}" },
         { "name": "DB_USERNAME", "value": "${db_username}" },
 
+        { "name": "PAYMENTS_GAX_BIEVNT_EMAIL", "value": "${payments_gax_bievnt_email}" },
+        { "name": "PFML_EMAIL_ADDRESS", "value": "${pfml_email_address}" },
+        { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS", "value": "${bounce_forwarding_email_address}" },
+
         { "name": "CTR_MOVEIT_INCOMING_PATH", "value": "${ctr_moveit_incoming_path}" },
         { "name": "CTR_MOVEIT_ARCHIVE_PATH", "value": "${ctr_moveit_archive_path}" },
         { "name": "PFML_CTR_INBOUND_PATH", "value": "${pfml_ctr_inbound_path}" },
@@ -41,4 +45,3 @@
       ]
     }
   ]
-  
