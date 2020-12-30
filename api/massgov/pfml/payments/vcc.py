@@ -37,7 +37,7 @@ vcc_doc_vcust_attributes = {"DOC_VCUST_LN_NO": "1", "ORG_TYP": "1", "ORG_CLS": "
 
 vcc_doc_ad_attributes = {
     "DOC_VCUST_LN_NO": "1",
-    "DFLT_AD_TYP": "True",
+    "DFLT_AD_TYP": "TRUE",
     "CNTAC_NO": "PC001",
     "PRIN_CNTAC": "NONE PROVIDED",
     "CNTAC_PH_NO": "NONE PROVIDED",
@@ -49,9 +49,9 @@ vcc_doc_ad_attributes_pa = {"AD_TYP": "PA", "DOC_AD_LN_NO": "1"}
 
 vcc_doc_ad_attributes_pr = {"AD_TYP": "PR", "DOC_AD_LN_NO": "2"}
 
-vcc_doc_1099_attributes = {"DOC_VCUST_LN_NO": "1", "DOC_1099_LN_NO": "1", "RPT_1099_FL": "True"}
+vcc_doc_1099_attributes = {"DOC_VCUST_LN_NO": "1", "DOC_1099_LN_NO": "1", "RPT_1099_FL": "TRUE"}
 
-vcc_doc_bus_attributes = {"DOC_VCUST_LN_NO": "1", "CERT_NO": "DFMLCertified"}
+vcc_doc_bus_attributes = {"DOC_VCUST_LN_NO": "1", "CERT_NO": "DFMLCERTIFIED"}
 
 # If EFT data is present, we'll add a second vcc_doc_bus section with different static attributes
 vcc_doc_bus_attributes_w9 = {"DOC_BUS_LN_NO": "1", "BUS_TYP": "W9"}
@@ -76,6 +76,17 @@ def get_doc_id(now: datetime, count: int) -> str:
 
 def get_state_str(geo_state: LkGeoState) -> Optional[str]:
     return geo_state.geo_state_description
+
+
+# TIN_AD has max length 40 chars
+# CTR says ok to truncate
+def get_tin_ad(address_line_one: Optional[str], address_line_two: Optional[str]) -> str:
+    if address_line_one is None:
+        raise Exception("get_tin_ad: address_line_one cannot be None")
+    tin_ad = address_line_one
+    if address_line_two:
+        tin_ad += f" {address_line_two}"
+    return tin_ad[:40]
 
 
 def build_individual_vcc_document(
@@ -144,6 +155,8 @@ def build_individual_vcc_document(
         truncate=False,
     )
     payment_method = employee.payment_method
+
+    tin_ad = get_tin_ad(payment_address_line_1, payment_address_line_2)
 
     has_eft = payee_aba_num and payee_acct_type and payee_acct_num
 
@@ -246,7 +259,7 @@ def build_individual_vcc_document(
     # Add the individual VCC_DOC_1099 values
     vcc_doc_1099_elements = {
         "DOC_ID": doc_id,
-        "TIN_AD": f"{payment_address_line_1} {payment_address_line_2}"[:40],  # Max length of 40
+        "TIN_AD": tin_ad,
         "TIN_CITY_NM": city[:30],  # This has a max length of 30 despite it being 60 elsewhere
         "TIN_ST": state,
         "TIN_ZIP": zip_code,
@@ -343,9 +356,14 @@ def build_vcc_dat(
             ctr_document_identifier=doc_id, document_date=now.date(), document_counter=doc_count,
         )
         db_session.add(ctr_doc_id)
+        try:
+            # vcc_document refers to individual documents which contain employee/payment data
+            vcc_document = build_individual_vcc_document(xml_document, employee, now, doc_id)
+        except Exception as e:
+            logger.exception(
+                f"Caught exception in build_individual_vcc_document for employee {employee} and doc_id {doc_id}: {e}"
+            )
 
-        # vcc_document refers to individual documents which contain employee/payment data
-        vcc_document = build_individual_vcc_document(xml_document, employee, now, doc_id)
         document_root.appendChild(vcc_document)
 
         # Add records to the database for the document.

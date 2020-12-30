@@ -16,6 +16,7 @@ from massgov.pfml.db.models.employees import (
     ClaimType,
     CtrDocumentIdentifier,
     Payment,
+    PaymentMethod,
     PaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,
@@ -38,6 +39,7 @@ def get_payment(
     payment_date: datetime.date,
     start_date: datetime.date,
     end_date: datetime.date,
+    payment_method_id: int,
 ) -> Payment:
     employee = EmployeeFactory(ctr_vendor_customer_code=ctr_vendor_code)
     employer = EmployerFactory()
@@ -53,6 +55,7 @@ def get_payment(
             claim_type_id=claim_type_id,
             fineos_absence_id=fineos_absence_id,
         ),
+        payment_method_id=payment_method_id,
     )
 
 
@@ -66,6 +69,7 @@ def get_payments() -> List[Payment]:
             payment_date=datetime(2020, 7, 1).date(),
             start_date=datetime(2020, 8, 1).date(),
             end_date=datetime(2020, 12, 1).date(),
+            payment_method_id=PaymentMethod.CHECK.payment_method_id,
         ),
         get_payment(
             fineos_absence_id="NTN-1234-ABS-02",
@@ -75,6 +79,7 @@ def get_payments() -> List[Payment]:
             payment_date=datetime(2020, 1, 15).date(),
             start_date=datetime(2020, 2, 15).date(),
             end_date=datetime(2020, 4, 15).date(),
+            payment_method_id=PaymentMethod.ACH.payment_method_id,
         ),
     ]
 
@@ -127,8 +132,8 @@ def test_get_fiscal_month():
 
 
 def test_get_disbursement_format():
-    assert gax.get_disbursement_format("ACH") == "EFT"
-    assert gax.get_disbursement_format("Check") == "REGW"
+    assert gax.get_disbursement_format(PaymentMethod.ACH) is None
+    assert gax.get_disbursement_format(PaymentMethod.CHECK) == "REGW"
 
 
 def test_gax_doc_id():
@@ -151,6 +156,7 @@ def test_build_individual_gax_document(initialize_factories_session, test_db_ses
         claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
         start_date=datetime(2020, 8, 1).date(),
         end_date=datetime(2020, 12, 1).date(),
+        payment_method_id=PaymentMethod.ACH.payment_method_id,
     )
     test_db_session.add(payment)
     test_db_session.commit()
@@ -191,9 +197,9 @@ def test_build_individual_gax_document(initialize_factories_session, test_db_ses
 
     expected_vend_subelements = {
         "DOC_ID": doc_id,
-        "VEND_CUST_CD": "abc1234",
-        "AD_ID": "xyz789",
-        # "DFLT_DISB_FRMT": "EFT", # TODO: uncomment this when disbursement_format is set
+        "VEND_CUST_CD": "ABC1234",
+        "AD_ID": "AD010",
+        "DFLT_DISB_FRMT": "null",  # for ACH
     }
     expected_vend_subelements.update(gax.generic_attributes.copy())
     expected_vend_subelements.update(gax.abs_doc_vend_attributes.copy())
@@ -213,7 +219,9 @@ def test_build_individual_gax_document(initialize_factories_session, test_db_ses
         "PER_DC": "1",
         "VEND_INV_NO": "NTN-1234-ABS-01_2020-07-01",
         "VEND_INV_DT": "2020-07-01",
-        "RFED_DOC_ID": "PFMLFAMFY2170030632",
+        "CHK_DSCR": "PFML PAYMENT NTN-1234-ABS-01",
+        "RFED_DOC_ID": "PFMLFAMLFY2170030632",
+        "ACTV_CD": "7246",
         "SVC_FRM_DT": "2020-08-01",
         "SVC_TO_DT": "2020-12-01",
     }

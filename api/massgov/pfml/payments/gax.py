@@ -3,7 +3,7 @@ import random
 import string
 import xml.dom.minidom as minidom
 from datetime import datetime
-from typing import Dict, List, Tuple, cast
+from typing import Dict, List, Optional, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
@@ -12,7 +12,9 @@ import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
     ClaimType,
     CtrDocumentIdentifier,
+    LkPaymentMethod,
     Payment,
+    PaymentMethod,
     PaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,
@@ -38,11 +40,19 @@ generic_attributes = {
 
 ams_doc_attributes = {"DOC_IMPORT_MODE": "OE"}
 
-abs_doc_vend_attributes = {"DOC_VEND_LN_NO": "1", "AD_ID": "AD010"}
+# Note: DFML should never explicitly set the SCHED_PYMT_DT attribute
+# CTR wants DFML to let this be calculated by MMARS
+# MMARS calculates this as either VEND_INV_DT or SVC_TO_DT, whichever is later
+abs_doc_vend_attributes = {
+    "DOC_VEND_LN_NO": "1",
+    "VEND_DISB_CAT": "350",
+    "VEND_SNGL_CHK_FL": "TRUE",
+}
 
 abs_doc_actg_attributes = {
     "DOC_VEND_LN_NO": "1",
     "DOC_ACTG_LN_NO": "1",
+    "EVNT_TYP_ID": "AP01",
     "VEND_INV_LN_NO": "1",
     "RFED_DOC_CD": "GAE",
     "RFED_DOC_DEPT_CD": Constants.COMPTROLLER_DEPT_CODE,
@@ -69,9 +79,12 @@ def get_fiscal_month(date_value: datetime) -> int:
     return date_value.month + 6
 
 
-def get_event_type_id(leave_type: int) -> str:
-    if leave_type == ClaimType.FAMILY_LEAVE.claim_type_id:
-        return "7246"  # this also covers military leave
+def get_activity_code(leave_type: int) -> str:
+    if (
+        leave_type == ClaimType.FAMILY_LEAVE.claim_type_id
+        or leave_type == ClaimType.MILITARY_LEAVE.claim_type_id
+    ):
+        return "7246"
     if leave_type == ClaimType.MEDICAL_LEAVE.claim_type_id:
         return "7247"
 
@@ -80,27 +93,38 @@ def get_event_type_id(leave_type: int) -> str:
 
 def get_rfed_doc_id(leave_type: int) -> str:
     # Note: the RFED_DOC_ID changes at the beginning of each fiscal year
-    if leave_type == ClaimType.FAMILY_LEAVE.claim_type_id:
-        return "PFMLFAMFY2170030632"
+    if (
+        leave_type == ClaimType.FAMILY_LEAVE.claim_type_id
+        or leave_type == ClaimType.MILITARY_LEAVE.claim_type_id
+    ):
+        return "PFMLFAMLFY2170030632"
     if leave_type == ClaimType.MEDICAL_LEAVE.claim_type_id:
-        return "PFMLMEDFY2170030632"
+        return "PFMLMEDIFY2170030632"
 
     raise Exception(f"Leave type {leave_type} not found")
 
 
-def get_disbursement_format(payment_method: str) -> str:
+def get_disbursement_format(payment_method: Optional[LkPaymentMethod]) -> Optional[str]:
+    if payment_method is None:
+        raise Exception("Payment method cannot be None")
+
     # ACH is coded as "EFT" in MMARS
-    if payment_method == "ACH":
-        return "EFT"
+    # If the payment method is ACH, then CTR wants us to allow MMARS to fill in this value.
+    # MMARS sets the disbursement method to whatever is set in the AD010 address.
+    if payment_method.payment_method_id == PaymentMethod.ACH.payment_method_id:
+        return None
     # Check is coded as "REGW" in MMARS
-    if payment_method == "Check":
+    # We explicitly specify if we want the payment method to be check.
+    if payment_method.payment_method_id == PaymentMethod.CHECK.payment_method_id:
         return "REGW"
 
     raise Exception(f"Payment method {payment_method} not found")
 
 
 def get_doc_id() -> str:
-    return "INTFDFML" + "".join(random.choices(string.ascii_letters + string.digits, k=12))
+    # All values we send to MMARS should be in uppercase, but the DOC_ID must be in uppercase
+    # Otherwise, MMARS will enter a weird error state, so we also explicitly set to upper here
+    return "INTFDFML" + "".join(random.choices(string.ascii_letters + string.digits, k=12)).upper()
 
 
 def get_date_format(date_value: datetime) -> str:
@@ -123,8 +147,7 @@ def build_individual_gax_document(
     except Exception as e:
         raise Exception(f"Required payment model not present {str(e)}")
 
-    leave_type = get_rfed_doc_id(claim.claim_type.claim_type_id)
-    payment_date = payments_util.validate_db_input(
+    payment_date_str = payments_util.validate_db_input(
         key="payment_date",
         db_object=payment,
         required=True,
@@ -162,7 +185,7 @@ def build_individual_gax_document(
             f"Payment period start ({start}) and end ({end}) dates are invalid. Both need to be before now ({today})."
         )
 
-    start_date = payments_util.validate_db_input(
+    start_date_str = payments_util.validate_db_input(
         key="period_start_date",
         db_object=payment,
         required=True,
@@ -170,7 +193,7 @@ def build_individual_gax_document(
         max_length=10,
         func=get_date_format,
     )
-    end_date = payments_util.validate_db_input(
+    end_date_str = payments_util.validate_db_input(
         key="period_end_date",
         db_object=payment,
         required=True,
@@ -179,14 +202,13 @@ def build_individual_gax_document(
         func=get_date_format,
     )
 
-    # TODO: uncomment and wire get_disbursement_format with appropriate values
-    # disbursement_format = get_disbursement_format(...)
-
     doc_id = get_doc_id()
-    event_type_id = get_event_type_id(claim.claim_type.claim_type_id)
-    rfed_doc_id = leave_type
+    activity_code = get_activity_code(claim.claim_type.claim_type_id)
+    rfed_doc_id = get_rfed_doc_id(claim.claim_type.claim_type_id)
+    disbursement_format = get_disbursement_format(payment.payment_method)
 
-    vendor_invoice_number = f"{absence_case_id}_{payment_date}"
+    vendor_invoice_number = f"{absence_case_id}_{payment_date_str}"
+    check_description = f"PFML PAYMENT {absence_case_id}"[:250]
 
     # Create the root of the document
     ams_document_attributes = {"DOC_ID": doc_id}
@@ -216,9 +238,10 @@ def build_individual_gax_document(
     root.appendChild(abs_doc_vend)
     # Add the individual ABS_DOC_VEND values
     abs_doc_vend_elements = {
+        "AD_ID": payments_util.Constants.COMPTROLLER_AD_ID,
         "DOC_ID": doc_id,
         "VEND_CUST_CD": vendor_customer_code,
-        # "DFLT_DISB_FRMT": disbursement_format, # TODO: uncomment and set to disbursement_format
+        "DFLT_DISB_FRMT": disbursement_format,
     }
     abs_doc_vend_elements.update(abs_doc_vend_attributes.copy())
     abs_doc_vend_elements.update(generic_attributes.copy())
@@ -229,19 +252,21 @@ def build_individual_gax_document(
     payments_util.add_attributes(abs_doc_actg, {"AMSDataObject": "Y"})
     root.appendChild(abs_doc_actg)
 
-    # Add the individual ABS_DOC_ACTG values
+    # Add the individual ABS_DOC_ACTG values.
+    # Note: Both the CHK_DSCR and the VEND_INV_NO are printed on a check if the payment method is Check.
     abs_doc_actg_elements = {
         "DOC_ID": doc_id,
-        "EVNT_TYP_ID": event_type_id,
         "LN_AM": monetary_amount,
         "BFY": fiscal_year,
         "FY_DC": fiscal_year,
         "PER_DC": doc_period,
         "VEND_INV_NO": vendor_invoice_number,
-        "VEND_INV_DT": payment_date,
+        "VEND_INV_DT": payment_date_str,
+        "CHK_DSCR": check_description,
         "RFED_DOC_ID": rfed_doc_id,
-        "SVC_FRM_DT": start_date,
-        "SVC_TO_DT": end_date,
+        "ACTV_CD": activity_code,
+        "SVC_FRM_DT": start_date_str,
+        "SVC_TO_DT": end_date_str,
     }
     abs_doc_actg_elements.update(abs_doc_actg_attributes.copy())
     abs_doc_actg_elements.update(generic_attributes.copy())
@@ -269,9 +294,13 @@ def build_gax_dat(
         )
         db_session.add(ctr_doc_id)
 
-        # gax_document refers to individual documents which contain payment data
-        gax_document = build_individual_gax_document(xml_document, payment, now)
-        document_root.appendChild(gax_document)
+        try:
+            # gax_document refers to individual documents which contain payment data
+            gax_document = build_individual_gax_document(xml_document, payment, now)
+            document_root.appendChild(gax_document)
+        except Exception as e:
+            logger.exception(f"Caught in build_gax_dat: {e}")
+            continue
 
         # Add records to the database for the document.
         payment_ref_file = PaymentReferenceFile(

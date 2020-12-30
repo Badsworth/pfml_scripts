@@ -234,7 +234,8 @@ def add_cdata_elements(
             cdata = document.createCDATASection("null")
         else:
             # Anything in the CDATA tag is passed directly and markup ignored
-            cdata = document.createCDATASection(str(val))
+            # CTR wants DFML to send all values in as uppercase
+            cdata = document.createCDATASection(str(val).upper())
         elem.appendChild(cdata)
 
 

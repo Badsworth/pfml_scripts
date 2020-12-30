@@ -125,8 +125,8 @@ def test_build_individual_vcc_document(initialize_factories_session):
 
     expected_vcust_subelements = {
         "DOC_ID": doc_id,
-        "FRST_NM": "Jane",
-        "LAST_NM": "Doe",
+        "FRST_NM": "JANE",
+        "LAST_NM": "DOE",
         "TIN": "123456789",
         "ABA_NO": "345345345",
         "ACCT_TYP": "1",
@@ -144,9 +144,9 @@ def test_build_individual_vcc_document(initialize_factories_session):
 
     expected_doc_1_subelements = {
         "DOC_ID": doc_id,
-        "STR_1_NM": "123 Foo St.",
-        "STR_2_NM": "Apt #123",
-        "CITY_NM": "Chicago",
+        "STR_1_NM": "123 FOO ST.",
+        "STR_2_NM": "APT #123",
+        "CITY_NM": "CHICAGO",
         "ST": "IL",
         "ZIP": "12345",
     }
@@ -162,9 +162,9 @@ def test_build_individual_vcc_document(initialize_factories_session):
 
     expected_doc_2_subelements = {
         "DOC_ID": doc_id,
-        "STR_1_NM": "123 Foo St.",
-        "STR_2_NM": "Apt #123",
-        "CITY_NM": "Chicago",
+        "STR_1_NM": "123 FOO ST.",
+        "STR_2_NM": "APT #123",
+        "CITY_NM": "CHICAGO",
         "ST": "IL",
         "ZIP": "12345",
     }
@@ -180,8 +180,8 @@ def test_build_individual_vcc_document(initialize_factories_session):
 
     expected_1099_subelements = {
         "DOC_ID": doc_id,
-        "TIN_AD": "123 Foo St. Apt #123",
-        "TIN_CITY_NM": "Chicago",
+        "TIN_AD": "123 FOO ST. APT #123",
+        "TIN_CITY_NM": "CHICAGO",
         "TIN_ST": "IL",
         "TIN_ZIP": "12345",
     }
@@ -242,8 +242,8 @@ def test_build_individual_vcc_document_no_eft(initialize_factories_session):
     vcc_doc_vcust = document.childNodes[1]
     expected_vcust_subelements = {
         "DOC_ID": doc_id,
-        "FRST_NM": "Jane",
-        "LAST_NM": "Doe",
+        "FRST_NM": "JANE",
+        "LAST_NM": "DOE",
         "TIN": "123456789",
         # Extra fields not present
     }
@@ -263,11 +263,11 @@ def test_build_individual_vcc_document_truncated_values(initialize_factories_ses
     now = datetime.now()
 
     employee = get_base_employee()
-    employee.first_name = "a" * 20
-    employee.last_name = "c" * 40
-    employee.mailing_address.address_line_one = "d" * 80
-    employee.mailing_address.address_line_two = "e" * 80
-    employee.mailing_address.city = "f" * 65
+    employee.first_name = "A" * 20
+    employee.last_name = "C" * 40
+    employee.mailing_address.address_line_one = "D" * 80
+    employee.mailing_address.address_line_two = "E" * 80
+    employee.mailing_address.city = "F" * 65
 
     document = vcc.build_individual_vcc_document(Document(), employee, now, vcc.get_doc_id(now, 1))
     doc_id = document._attrs["DOC_ID"].value
@@ -279,8 +279,8 @@ def test_build_individual_vcc_document_truncated_values(initialize_factories_ses
 
     expected_vcust_subelements = {
         "DOC_ID": doc_id,
-        "FRST_NM": "a" * 14,
-        "LAST_NM": "c" * 30,
+        "FRST_NM": "A" * 14,
+        "LAST_NM": "C" * 30,
         "TIN": "123456789",
         "ABA_NO": "345345345",
         "ACCT_TYP": "1",
@@ -296,9 +296,9 @@ def test_build_individual_vcc_document_truncated_values(initialize_factories_ses
 
     expected_doc_ad_subelements = {
         "DOC_ID": doc_id,
-        "STR_1_NM": "d" * 75,
-        "STR_2_NM": "e" * 75,
-        "CITY_NM": "f" * 60,
+        "STR_1_NM": "D" * 75,
+        "STR_2_NM": "E" * 75,
+        "CITY_NM": "F" * 60,
         "ST": "IL",
         "ZIP": "12345",
     }
@@ -314,8 +314,8 @@ def test_build_individual_vcc_document_truncated_values(initialize_factories_ses
 
     expected_1099_subelements = {
         "DOC_ID": doc_id,
-        "TIN_AD": "d" * 40,  # Only address 1 ends up present
-        "TIN_CITY_NM": "f" * 30,
+        "TIN_AD": "D" * 40,  # Only address 1 ends up present
+        "TIN_CITY_NM": "F" * 30,
         "TIN_ST": "IL",
         "TIN_ZIP": "12345",
     }

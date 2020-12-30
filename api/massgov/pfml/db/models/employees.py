@@ -1107,6 +1107,7 @@ class ClaimType(LookupTable):
 
     FAMILY_LEAVE = LkClaimType(1, "Family Leave")
     MEDICAL_LEAVE = LkClaimType(2, "Medical Leave")
+    MILITARY_LEAVE = LkClaimType(3, "Military Leave")
 
 
 class Race(LookupTable):
