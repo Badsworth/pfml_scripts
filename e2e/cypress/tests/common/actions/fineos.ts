@@ -594,6 +594,24 @@ export function claimAdjudicationFlow(
   cy.wait(200);
 }
 
+export function claimAdjudicationMailedDoc(claimNumber: string): void {
+  visitClaim(claimNumber);
+  assertOnClaimPage(claimNumber);
+  onTab("Documents");
+  uploadDocument("HCP", "State Managed");
+  onTab("Absence Hub");
+  cy.get('input[type="submit"][value="Adjudicate"]').click();
+  markEvidence(claimNumber, "BGBM1", "State managed Paid Leave Confirmation");
+  markEvidence(claimNumber, "BGBM1", "Identification Proof");
+  checkStatus(claimNumber, "Evidence", "Satisfied");
+  fillAbsencePeriod(claimNumber);
+  checkStatus(claimNumber, "Availability", "Time Available");
+  // Complete Adjudication
+  assertAdjudicatingClaim(claimNumber);
+  clickBottomWidgetButton("OK");
+  assertClaimApprovable();
+}
+
 export function searchClaimantSSN(ssn: string): void {
   ssn = ssn.replace(/-/g, "");
   cy.get('a[aria-label="Parties"]').click();

@@ -18,7 +18,6 @@ describe("Submit a medical claim and adjucation approval - MHAP1", () => {
       cy.log("generated claim", claim.claim);
       const application: ApplicationRequestBody = claim.claim;
       const paymentPreference = claim.paymentPreference;
-      cy.stash("claim", application);
 
       const credentials: Credentials = {
         username: Cypress.env("E2E_PORTAL_USERNAME"),

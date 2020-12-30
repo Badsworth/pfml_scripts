@@ -811,6 +811,18 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
   onPage("checklist");
 }
 
+export function submitClaimNoLeaveCert(
+  application: ApplicationRequestBody,
+  paymentPreference: PaymentPreferenceRequestBody
+): void {
+  submitClaimPartOne(application);
+  clickChecklistButton("Add payment information");
+  addPaymentInfo(paymentPreference);
+  onPage("checklist");
+  clickChecklistButton("Upload identity document");
+  addId("MA ID");
+}
+
 export function submitClaimPortal(
   application: ApplicationRequestBody,
   paymentPreference: PaymentPreferenceRequestBody
