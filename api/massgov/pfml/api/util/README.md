@@ -2,6 +2,20 @@
 
 ## Ordinary Usage
 
+
+### Creating a Finished State Log
+If you're looking to create a completed state log in one call, use this
+```py
+state_log = state_log_util.create_finished_state_log(
+        associated_model=employee, # Can be an employee/payment/reference_file DB object
+        start_state=State.DFML_REPORT_CREATED,
+        end_state=State.DFML_REPORT_SUBMITTED,
+        outcome=state_log_util.build_outcome("success", validation_container), # Validation container is optional (but recommended if there were any issues)
+        db_session=test_db_session,
+        start_time=datetime(2019, 1, 1)  # Optional (otherwise start and end times will be equal to now)
+    )
+```
+
 ### Creating a New State Log
 ```py
 state_log = state_log_util.create_state_log(

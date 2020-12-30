@@ -422,9 +422,6 @@ class Payment(Base):
     __tablename__ = "payment"
     payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
-    payment_method_id = Column(
-        Integer, ForeignKey("lk_payment_method.payment_method_id"), nullable=False
-    )
     period_start_date = Column(Date)
     period_end_date = Column(Date)
     payment_date = Column(Date)
@@ -438,7 +435,6 @@ class Payment(Base):
     disb_amount = Column(Numeric(asdecimal=True))
 
     claim = relationship(Claim)
-    payment_method = relationship(LkPaymentMethod, foreign_keys=payment_method_id)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")

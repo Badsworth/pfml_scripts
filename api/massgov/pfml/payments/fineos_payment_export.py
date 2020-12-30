@@ -440,6 +440,9 @@ def get_employee_and_claim(
         claim = Claim(employee=employee, fineos_absence_id=payment_data.absence_case_number,)
         db_session.add(claim)
 
+    # Update the payment method ID of the employee
+    employee.payment_method_id = PaymentMethod.get_id(payment_data.raw_payment_method)
+
     return employee, claim
 
 
@@ -492,7 +495,6 @@ def create_or_update_payment(
         payment = Payment()
 
     payment.claim = claim
-    payment.payment_method_id = PaymentMethod.get_id(payment_data.raw_payment_method)
     payment.period_start_date = payments_util.datetime_str_to_date(
         payment_data.payment_start_period
     )

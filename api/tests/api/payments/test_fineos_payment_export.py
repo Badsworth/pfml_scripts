@@ -474,11 +474,11 @@ def test_process_extract_data(
         # Payment 2 uses CHECK over ACH, so some logic differs for it.
         # The 2nd record is also family leave, the other two are medical leave
         if index == "2":
-            assert payment.payment_method_id == PaymentMethod.CHECK.payment_method_id
+            assert employee.payment_method_id == PaymentMethod.CHECK.payment_method_id
             assert not mailing_address.address_line_two
 
         else:
-            assert payment.payment_method_id == PaymentMethod.ACH.payment_method_id
+            assert employee.payment_method_id == PaymentMethod.ACH.payment_method_id
             assert mailing_address.address_line_two == f"AddressLine2-{index}"
             assert str(eft.routing_nbr) == index * 9
             assert str(eft.account_nbr) == index * 9
@@ -676,13 +676,13 @@ def test_process_extract_data_no_existing_claim_address_eft(
 
         # Payment 2 uses CHECK over ACH, so some logic differs for it.
         if index == "2":
-            assert payment.payment_method_id == PaymentMethod.CHECK.payment_method_id
+            assert employee.payment_method_id == PaymentMethod.CHECK.payment_method_id
             assert not mailing_address.address_line_two
 
             assert not eft  # Not set by factory logic, shouldn't be set at all now
 
         else:
-            assert payment.payment_method_id == PaymentMethod.ACH.payment_method_id
+            assert employee.payment_method_id == PaymentMethod.ACH.payment_method_id
             assert mailing_address.address_line_two == f"AddressLine2-{index}"
             assert str(eft.routing_nbr) == index * 9
             assert str(eft.account_nbr) == index * 9

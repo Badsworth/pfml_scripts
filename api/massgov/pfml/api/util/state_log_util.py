@@ -76,8 +76,9 @@ def create_state_log(
     associated_model: AssociatedModel,
     db_session: db.Session,
     commit: bool = True,
+    start_time: Optional[datetime] = None,
 ) -> StateLog:
-    now = get_now()
+    now = start_time if start_time else get_now()
 
     state_log = StateLog(start_state_id=start_state.state_id, started_at=now)
     latest_query_params = []
@@ -102,6 +103,40 @@ def create_state_log(
 
     if commit:
         db_session.commit()
+    return state_log
+
+
+def create_finished_state_log(
+    associated_model: AssociatedModel,
+    start_state: LkState,
+    end_state: LkState,
+    outcome: Dict[
+        str, str
+    ],  # TODO - in order to make certain people use build_outcome, make this a custom type
+    db_session: db.Session,
+    start_time: Optional[datetime] = None,
+) -> StateLog:
+    """ Except for very specific scenarios, we should be using this in actuality instead of create+finish"""
+    # Let the user pass in a start time so start/end aren't the same
+    start_state_time = start_time if start_time else get_now()
+
+    # TODO (once we're not scrambling to finish this) - move all the logic from create_state_log here and delete it.
+    state_log = create_state_log(
+        start_state=start_state,
+        associated_model=associated_model,
+        db_session=db_session,
+        commit=False,
+        start_time=start_state_time,
+    )
+
+    finish_state_log(
+        state_log=state_log,
+        end_state=end_state,
+        outcome=outcome,
+        db_session=db_session,
+        commit=False,  # There's not really ever a scenario we want to do this
+    )
+
     return state_log
 
 

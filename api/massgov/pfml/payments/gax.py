@@ -205,7 +205,7 @@ def build_individual_gax_document(
     doc_id = get_doc_id()
     activity_code = get_activity_code(claim.claim_type.claim_type_id)
     rfed_doc_id = get_rfed_doc_id(claim.claim_type.claim_type_id)
-    disbursement_format = get_disbursement_format(payment.payment_method)
+    disbursement_format = get_disbursement_format(employee.payment_method)
 
     vendor_invoice_number = f"{absence_case_id}_{payment_date_str}"
     check_description = f"PFML PAYMENT {absence_case_id}"[:250]

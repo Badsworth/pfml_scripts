@@ -306,6 +306,73 @@ def test_finish_state_log(initialize_factories_session, test_db_session):
     assert reference_file_state_log.outcome == {"message": "success"}
 
 
+@freeze_time("2020-01-01 12:00:00")
+def test_create_finished_state_log(initialize_factories_session, test_db_session):
+    # An Employee
+    employee = EmployeeFactory.create()
+    employee_state_log = state_log_util.create_finished_state_log(
+        associated_model=employee,
+        start_state=State.VERIFY_VENDOR_STATUS,
+        end_state=State.DFML_REPORT_SUBMITTED,
+        outcome=state_log_util.build_outcome("success"),
+        db_session=test_db_session,
+    )
+
+    assert employee_state_log.start_state_id == State.VERIFY_VENDOR_STATUS.state_id
+    assert employee_state_log.end_state_id == State.DFML_REPORT_SUBMITTED.state_id
+    assert employee_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
+    assert employee_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
+    assert employee_state_log.outcome == {"message": "success"}
+    assert employee_state_log.associated_type == state_log_util.AssociatedClass.EMPLOYEE.value
+    assert employee_state_log.employee_id == employee.employee_id
+    assert employee_state_log.payment is None
+    assert employee_state_log.reference_file_id is None
+
+    # A payment
+    payment = PaymentFactory.create()
+    payment_state_log = state_log_util.create_finished_state_log(
+        associated_model=payment,
+        start_state=State.PAYMENTS_RETRIEVED,
+        end_state=State.DFML_REPORT_SUBMITTED,
+        outcome=state_log_util.build_outcome("success"),
+        db_session=test_db_session,
+    )
+
+    assert payment_state_log.start_state_id == State.PAYMENTS_RETRIEVED.state_id
+    assert payment_state_log.end_state_id == State.DFML_REPORT_SUBMITTED.state_id
+    assert payment_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
+    assert payment_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
+    assert payment_state_log.outcome == {"message": "success"}
+    assert payment_state_log.associated_type == state_log_util.AssociatedClass.PAYMENT.value
+    assert payment_state_log.employee_id is None
+    assert payment_state_log.payment_id == payment.payment_id
+    assert payment_state_log.reference_file_id is None
+
+    # A reference file
+    reference_file = ReferenceFileFactory.create()
+    reference_file_state_log = state_log_util.create_finished_state_log(
+        associated_model=reference_file,
+        start_state=State.DFML_REPORT_CREATED,
+        end_state=State.DFML_REPORT_SUBMITTED,
+        outcome=state_log_util.build_outcome("success"),
+        db_session=test_db_session,
+        start_time=datetime(2019, 1, 1),
+    )
+
+    assert reference_file_state_log.start_state_id == State.DFML_REPORT_CREATED.state_id
+    assert reference_file_state_log.end_state_id == State.DFML_REPORT_SUBMITTED.state_id
+    assert reference_file_state_log.started_at.isoformat() == "2019-01-01T00:00:00"
+    assert reference_file_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
+    assert reference_file_state_log.outcome == {"message": "success"}
+    assert (
+        reference_file_state_log.associated_type
+        == state_log_util.AssociatedClass.REFERENCE_FILE.value
+    )
+    assert reference_file_state_log.employee_id is None
+    assert reference_file_state_log.payment_id is None
+    assert reference_file_state_log.reference_file_id == reference_file.reference_file_id
+
+
 def test_get_latest_state_log_in_end_state(initialize_factories_session, test_db_session):
     # A happy path where the last state log entry has an end state
     test_setup = simple_employee_with_end_state(test_db_session)

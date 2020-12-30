@@ -41,7 +41,9 @@ def get_payment(
     end_date: datetime.date,
     payment_method_id: int,
 ) -> Payment:
-    employee = EmployeeFactory(ctr_vendor_customer_code=ctr_vendor_code)
+    employee = EmployeeFactory(
+        ctr_vendor_customer_code=ctr_vendor_code, payment_method_id=payment_method_id
+    )
     employer = EmployerFactory()
 
     return PaymentFactory(
@@ -55,7 +57,6 @@ def get_payment(
             claim_type_id=claim_type_id,
             fineos_absence_id=fineos_absence_id,
         ),
-        payment_method_id=payment_method_id,
     )
 
 

@@ -304,7 +304,6 @@ class PaymentFactory(BaseFactory):
 
     payment_id = Generators.UuidObj
 
-    payment_method_id = employee_models.PaymentMethod.ACH.payment_method_id
     amount = 100.00
     # This is a workaround for claim which requires an employer_id, but
     # doesn't actually set it as a foreign key. This doesn't actually
