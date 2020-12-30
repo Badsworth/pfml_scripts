@@ -1,5 +1,7 @@
 from typing import Optional, Union
 
+import flask
+import newrelic.agent
 import requests
 
 from massgov.pfml.servicenow.models import OutboundMessage
@@ -34,12 +36,30 @@ class ServiceNowClient:
         """ Make a request to a "Table API" that has been configured to trigger outbound email delivery using templates
             See docs at: https://docs.servicenow.com/bundle/orlando-application-development/page/integrate/inbound-rest/concept/c_TableAPI.html#c_TableAPI
         """
+        has_flask_context = flask.has_request_context()
         response = self._session.post(
             f"{self._base_url}/api/now/table/{table}", data=message.json()
         )
         try:
             response.raise_for_status()
         except requests.HTTPError as e:
+
+            newrelic.agent.record_custom_event(
+                "ServiceNowError",
+                {
+                    "error.class": "ServiceNowClientBadResponse",
+                    "error.message": response.text,
+                    "response.status": response.status_code,
+                    "request.method": flask.request.method if has_flask_context else None,
+                    "request.uri": flask.request.path if has_flask_context else None,
+                    "request.headers.x-amzn-requestid": flask.request.headers.get(
+                        "x-amzn-requestid", None
+                    )
+                    if has_flask_context
+                    else None,
+                },
+            )
+
             raise ServiceNowException from e
 
         if response.text and self._response:

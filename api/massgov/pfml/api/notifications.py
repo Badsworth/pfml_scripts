@@ -1,6 +1,8 @@
 import json
 
 import connexion
+import flask
+import newrelic.agent
 from sqlalchemy.orm.exc import MultipleResultsFound
 from werkzeug.exceptions import BadRequest
 
@@ -21,6 +23,7 @@ def notifications_post():
     # Bounce them out if they do not have access
     ensure(CREATE, Notification)
 
+    has_flask_context = flask.has_request_context()
     body = connexion.request.json
     # Use the pydantic models for validation
     notification_request = NotificationRequest.parse_obj(body)
@@ -55,6 +58,21 @@ def notifications_post():
         except MultipleResultsFound as exc:
             logger.error("Multiple employers found for specified FEIN", exc_info=exc)
 
+            newrelic.agent.record_custom_event(
+                "FineosError",
+                {
+                    "error.class": "FINEOSNotificationMultipleResults",
+                    "error.message": "Multiple employers found for specified FEIN",
+                    "request.method": flask.request.method if has_flask_context else None,
+                    "request.uri": flask.request.path if has_flask_context else None,
+                    "request.headers.x-amzn-requestid": flask.request.headers.get(
+                        "x-amzn-requestid", None
+                    )
+                    if has_flask_context
+                    else None,
+                },
+            )
+
             return response_util.error_response(
                 status_code=BadRequest,
                 message="Multiple employers found for specified FEIN",
@@ -62,6 +80,22 @@ def notifications_post():
             )
 
         if employer is None:
+
+            newrelic.agent.record_custom_event(
+                "FineosError",
+                {
+                    "error.class": "FINEOSNotificationInvalidFEIN",
+                    "error.message": "Failed to lookup the specified FEIN to add Claim record on Notification POST request",
+                    "request.method": flask.request.method if has_flask_context else None,
+                    "request.uri": flask.request.path if has_flask_context else None,
+                    "request.headers.x-amzn-requestid": flask.request.headers.get(
+                        "x-amzn-requestid", None
+                    )
+                    if has_flask_context
+                    else None,
+                },
+            )
+
             return response_util.error_response(
                 status_code=BadRequest,
                 message="Failed to lookup the specified FEIN to add Claim record on Notification POST request",
