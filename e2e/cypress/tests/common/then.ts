@@ -244,12 +244,6 @@ Then("I should find the {string} document", function (label: string): void {
   fineos.findDocument(label);
 });
 
-Then("I see that financially eligibility is {string}", function (
-  status: string
-): void {
-  cy.get("td[id*='EligibilityStatus']").contains(status);
-});
-
 Then("there should be {int} ID document(s) uploaded", function (
   count: number
 ): void {

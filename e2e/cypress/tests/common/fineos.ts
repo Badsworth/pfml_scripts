@@ -1,7 +1,5 @@
 import { Given, Then, When } from "cypress-cucumber-preprocessor/steps";
 import { fineos } from "./actions";
-import { formatDateString } from "./util";
-import { subDays, isBefore } from "date-fns";
 
 Given("I am logged into Fineos as a Savilinx user", () => {
   fineos.loginSavilinx();
@@ -120,52 +118,6 @@ Then("I can commence intake on that claim", () => {
   cy.unstash("claimNumber").as("claimNumber");
   cy.get<string>("@claimNumber").then(fineos.commenceIntake);
 });
-
-Then(
-  "I should modify leave dates for the requested time off",
-  function (): void {
-    cy.unstash<string>("claimNumber").then(fineos.assertAdjudicatingClaim);
-    cy.get("#leaveRequestDetailsWidget_un18_startDate").then((dateEl) => {
-      cy.wrap(dateEl.text()).as("startDate");
-    });
-    cy.get("input[type='submit'][value='Edit']").click();
-    cy.wait("@ajaxRender");
-    cy.get("input[value='Yes']").click();
-    cy.get(".popup-container").within(() => {
-      cy.get<string>("@startDate").then((date) => {
-        const newStartDate = formatDateString(subDays(new Date(date), 1));
-        cy.labelled("Absence start date").type(
-          `{selectall}{backspace}${newStartDate}{enter}`
-        );
-        cy.wait("@ajaxRender");
-        cy.wait(200);
-        cy.labelled("Last day worked").type(
-          `{selectall}{backspace}${newStartDate}{enter}`
-        );
-        cy.wait("@ajaxRender");
-        cy.wait(200);
-      });
-    });
-    cy.get("#editAbsencePeriodPopupWidget_un29_okButtonBean").click();
-    fineos.clickBottomWidgetButton("OK");
-    cy.wait("@ajaxRender");
-    cy.wait(200);
-
-    // Assert new start date is before the original claim start date
-    cy.get<string>("@startDate").then((date) => {
-      const previousStartDate = new Date(date);
-      cy.get('.date-wrapper > span[id*="un42_leaveStartDate"]').then(
-        (dateEl) => {
-          const updatedStartDate = new Date(dateEl.text());
-          cy.wrap(isBefore(updatedStartDate, previousStartDate)).should(
-            "equal",
-            true
-          );
-        }
-      );
-    });
-  }
-);
 
 Then("I should confirm proper tasks have been created", function (): void {
   fineos.onTab("Task");

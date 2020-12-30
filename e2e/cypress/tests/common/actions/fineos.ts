@@ -1,5 +1,6 @@
 import { getFineosBaseUrl } from "../../../config";
 import { formatDateString } from "../util";
+import { format } from "date-fns";
 
 export function loginSavilinx(): void {
   Cypress.config("baseUrl", getFineosBaseUrl());
@@ -237,6 +238,22 @@ export function denialReason(reason: string): void {
     .find("select")
     .select(reasonSelection);
   cy.get('input[type="submit"][value="OK"]').click();
+}
+
+export function changeLeaveStart(startDate: Date): void {
+  onTab("Request Information");
+  cy.get("input[type='submit'][value='Edit']").click();
+  cy.get("input[value='Yes']").click();
+  cy.get(".popup-container").within(() => {
+    const formattedDate = format(startDate, "MM/dd/yyyy");
+    cy.labelled("Absence start date").type(
+      `{selectall}{backspace}${formattedDate}{enter}`
+    );
+    cy.labelled("Last day worked").type(
+      `{selectall}{backspace}${formattedDate}{enter}`
+    );
+    cy.get("input[type='button'][value='OK']").click();
+  });
 }
 
 export function claimCompletion(): void {
