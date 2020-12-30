@@ -8,6 +8,7 @@ export function beforePortal(): void {
       pfmlTerriyay: true,
       claimantShowAuth: true,
       claimantShowMedicalLeaveType: true,
+      noMaintenance: true,
     }),
     { log: true }
   );
