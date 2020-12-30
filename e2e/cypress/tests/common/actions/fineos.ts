@@ -75,6 +75,13 @@ export function assertAdjudicatingClaim(claimId: string): void {
   cy.contains(".pageheader_subtitle", "Editing Leave Request");
 }
 
+export function assertClaimFinancialEligibility(expectMet: boolean): void {
+  cy.get("[id*=leavePlanAdjudicationListviewWidgetEligibilityStatus").should(
+    "have.text",
+    expectMet ? "Met" : "Not Met"
+  );
+}
+
 export function assertClaimApprovable(): void {
   // Assert that we have all green checkboxes.
   cy.get(
