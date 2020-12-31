@@ -117,6 +117,15 @@ export const BGBM2 = scenario("BGBM2", {
   },
 });
 
+export const BGBM3 = scenario("BHAP1", {
+  reason: "Child Bonding",
+  reason_qualifier: "Foster Care",
+  residence: "MA-proofed",
+  docs: {
+    FOSTERPLACEMENT: {},
+  },
+});
+
 export const BGBM = chance([
   [1, BGBM1],
   [1, BGBM2],

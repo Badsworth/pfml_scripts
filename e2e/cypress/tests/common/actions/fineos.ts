@@ -622,6 +622,14 @@ export function searchClaimantSSN(ssn: string): void {
   cy.get('input[type="submit"][value="Search"]').click();
 }
 
+export function uploadIDdoc(claimNumber: string): void {
+  visitClaim(claimNumber);
+  onTab("Documents");
+  uploadDocument("MA ID", "Identification Proof");
+  findDocument("MA ID");
+  cy.wait(200);
+}
+
 export function checkPaymentPreference(simClaim: SimulationClaim): void {
   const { claim, paymentPreference } = simClaim;
   searchClaimantSSN(claim.tax_identifier as string);
