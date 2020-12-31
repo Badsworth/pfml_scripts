@@ -1,5 +1,7 @@
+import csv
 import json
 import os
+import tempfile
 import xml.dom.minidom as minidom
 from dataclasses import dataclass, field
 from datetime import date, datetime
@@ -25,7 +27,7 @@ from massgov.pfml.db.models.employees import (
     LkReferenceFileType,
     ReferenceFile,
 )
-from massgov.pfml.util.aws.ses import EmailRecipient, send_email
+from massgov.pfml.util.aws.ses import EmailRecipient, send_email, send_email_with_attachment
 
 logger = logging.get_logger(__package__)
 
@@ -442,3 +444,56 @@ def email_inf_data(
         payment_config.pfml_email_address,
         payment_config.bounce_forwarding_email_address,
     )
+
+
+def email_fineos_vendor_customer_numbers(
+    ref_file: ReferenceFile, db_session: db.Session, email: EmailRecipient, subject: str
+) -> None:
+
+    inf_data = get_inf_data_from_reference_file(ref_file, db_session)
+
+    if inf_data is None:
+        logger.error(
+            "Could not find INF data for reference file",
+            extra={"reference_file_id": ref_file.reference_file_id},
+        )
+        return
+
+    payment_config = payments_config.get_email_config()
+    body_text = get_inf_data_as_plain_text(inf_data)
+
+    fineos_vendor_customer_numbers = get_fineos_vendor_customer_numbers_from_reference_file(
+        ref_file
+    )
+    fieldnames = ["fineos_customer_number", "ctr_vendor_customer_code"]
+    csv_data_path = [create_csv_from_list(fineos_vendor_customer_numbers, fieldnames)]
+
+    send_email_with_attachment(
+        email, subject, body_text, payment_config.pfml_email_address, csv_data_path
+    )
+
+
+def get_fineos_vendor_customer_numbers_from_reference_file(reference: ReferenceFile) -> List[Dict]:
+    return [
+        {
+            "fineos_customer_number": emp.employee.fineos_customer_number,
+            "ctr_vendor_customer_code": emp.employee.ctr_vendor_customer_code,
+        }
+        for emp in reference.employees
+    ]
+
+
+def create_csv_from_list(customer_data: List[Dict], fieldnames: List[str]) -> str:
+    temp_file_name = f"{get_now():%Y-%m-%d}-VCC-BIEVNT-supplement"
+    directory = tempfile.mkdtemp()
+
+    csv_filepath = os.path.join(directory, f"{temp_file_name}.csv")
+
+    with open(csv_filepath, mode="w") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        for data in customer_data:
+            writer.writerow(data)
+
+    return csv_filepath

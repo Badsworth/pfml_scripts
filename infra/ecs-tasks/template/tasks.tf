@@ -89,8 +89,7 @@ locals {
       vars = {
         fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
         fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
-
-        input_directory_path = var.fineos_import_employee_updates_input_directory_path
+        input_directory_path            = var.fineos_import_employee_updates_input_directory_path
       }
     },
 
@@ -157,6 +156,11 @@ locals {
         pfml_ctr_inbound_path    = var.payments_pfml_ctr_inbound_path
         ctr_moveit_outgoing_path = var.payments_ctr_moveit_outgoing_path
         pfml_ctr_outbound_path   = var.payments_pfml_ctr_outbound_path
+
+        payments_gax_bievnt_email               = var.payments_gax_bievnt_email
+        pfml_email_address                      = var.pfml_email_address
+        bounce_forwarding_email_address         = var.bounce_forwarding_email_address
+        payments_dfml_business_operations_email = var.payments_dfml_business_operations_email
       }
     },
 
@@ -167,11 +171,6 @@ locals {
       vars = {
         fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
         fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
-
-        payments_gax_bievnt_email       = var.payments_gax_bievnt_email
-        pfml_email_address              = var.pfml_email_address
-        bounce_forwarding_email_address = var.bounce_forwarding_email_address
-
 
         fineos_data_export_path   = var.payments_fineos_data_export_path
         pfml_fineos_inbound_path  = var.payments_pfml_fineos_inbound_path

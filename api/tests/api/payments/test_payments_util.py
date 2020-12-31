@@ -13,9 +13,13 @@ from massgov.pfml.db.models.employees import Country, CtrBatchIdentifier, GeoSta
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     CtrBatchIdentifierFactory,
+    CtrDocumentIdentifierFactory,
+    EmployeeFactory,
+    EmployeeReferenceFileFactory,
     ReferenceFileFactory,
 )
 from massgov.pfml.payments.payments_util import (
+    get_fineos_vendor_customer_numbers_from_reference_file,
     get_inf_data_as_plain_text,
     get_inf_data_from_reference_file,
     is_same_address,
@@ -288,3 +292,28 @@ def test_get_inf_data_as_plain_text(test_db_session):
     for key in inf_data_dict.keys():
         expected_line = f"{key} = {inf_data_dict[key]}"
         assert expected_line in inf_data_text
+
+
+def test_get_fineos_vendor_customer_numbers_from_reference_file(initialize_factories_session):
+    ctr_doc_identfier = CtrDocumentIdentifierFactory.create()
+    ref_file = ReferenceFileFactory.create()
+    employee1 = EmployeeFactory.create(fineos_customer_number=111)
+    employee2 = EmployeeFactory.create(fineos_customer_number=222)
+
+    EmployeeReferenceFileFactory(
+        reference_file=ref_file, ctr_document_identifier=ctr_doc_identfier, employee=employee1
+    )
+    EmployeeReferenceFileFactory(
+        reference_file=ref_file, ctr_document_identifier=ctr_doc_identfier, employee=employee2
+    )
+
+    data = get_fineos_vendor_customer_numbers_from_reference_file(ref_file)
+
+    assert len(data) == 2
+    for d in data:
+        assert {"fineos_customer_number", "ctr_vendor_customer_code"} == set(d.keys())
+        assert d["fineos_customer_number"] in [111, 222]
+        assert d["ctr_vendor_customer_code"] in [
+            employee1.ctr_vendor_customer_code,
+            employee2.ctr_vendor_customer_code,
+        ]

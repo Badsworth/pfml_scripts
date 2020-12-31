@@ -3,15 +3,14 @@ import os
 import pytest
 from pydantic import ValidationError
 
+import massgov.pfml.payments.payments_util as payments_util
+import massgov.pfml.util.aws.ses as ses
 from massgov.pfml.api.validation.exceptions import ValidationException
 
 
-def test_send_email(mock_ses, reset_aws_env_vars):
-    import massgov.pfml.util.aws.ses as ses
-
+def test_send_email(mock_ses):
     recipient = ses.EmailRecipient(to_addresses=["test@example.com"])
     sender = os.getenv("PFML_EMAIL_ADDRESS")
-
     subject = "INF data"
     body_text = "Test Message"
     response = ses.send_email(recipient, subject, body_text, sender, sender)
@@ -20,8 +19,26 @@ def test_send_email(mock_ses, reset_aws_env_vars):
     assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
 
 
+def test_send_email_with_attachments(mock_ses):
+    recipient = ses.EmailRecipient(to_addresses=["test@example.com"])
+    sender = os.getenv("PFML_EMAIL_ADDRESS")
+    subject = "INF data"
+    body_text = "Test Message"
+
+    fieldnames = ["fineos_customer_number", "ctr_vendor_customer_code"]
+    fineos_vendor_customer_numbers = [
+        {"fineos_customer_number": 1, "ctr_vendor_customer_code": 1},
+        {"fineos_customer_number": 2, "ctr_vendor_customer_code": 2},
+    ]
+    attachments = [payments_util.create_csv_from_list(fineos_vendor_customer_numbers, fieldnames)]
+    response = ses.send_email_with_attachment(recipient, subject, body_text, sender, attachments)
+
+    assert response is not None
+    assert response["MessageId"] is not None
+    assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
+
+
 def test_email_format():
-    import massgov.pfml.util.aws.ses as ses
 
     # valid email addresses
     ses.EmailRecipient(to_addresses=["test@example.com"])

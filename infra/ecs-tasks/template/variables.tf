@@ -172,3 +172,10 @@ variable "bounce_forwarding_email_address" {
   type        = string
   default     = ""
 }
+
+variable "payments_dfml_business_operations_email" {
+  description = "Email address to send BIEVNT FINEOS and VENDOR customer numbers to DFML EOL team."
+  type        = string
+  default     = ""
+}
+

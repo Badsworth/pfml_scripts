@@ -734,6 +734,9 @@ class EmployeeReferenceFile(Base):
         "CtrDocumentIdentifier", back_populates="employee_reference_files"
     )
 
+    def __iter__(self):
+        return self
+
 
 class StateLog(Base):
     __tablename__ = "state_log"

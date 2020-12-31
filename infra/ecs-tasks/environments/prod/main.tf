@@ -49,7 +49,8 @@ module "tasks" {
 
   enable_recurring_payments_schedule = false
 
-  payments_gax_bievnt_email       = "Accounts.Payable@detma.org"
-  pfml_email_address              = "noreplypfml@mass.gov"
-  bounce_forwarding_email_address = "noreplypfml@mass.gov"
+  payments_gax_bievnt_email               = "Accounts.Payable@detma.org"
+  pfml_email_address                      = "noreplypfml@mass.gov"
+  bounce_forwarding_email_address         = "noreplypfml@mass.gov"
+  payments_dfml_business_operations_email = "EOL-DL-DFML-GAXVCC_Confirmation@mass.gov"
 }

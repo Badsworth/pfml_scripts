@@ -19,7 +19,8 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.payments.payments_util import Constants
+from massgov.pfml.payments.payments_util import Constants, email_fineos_vendor_customer_numbers
+from massgov.pfml.util.aws.ses import EmailRecipient
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -465,3 +466,14 @@ def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
 
 def build_vcc_files_for_s3(db_session: db.Session) -> Tuple[str, str]:
     return build_vcc_files(db_session, payments_config.get_s3_config().pfml_ctr_outbound_path)
+
+
+def send_bievnt_email(
+    ref_file: ReferenceFile, db_session: db.Session, recipient_email: EmailRecipient
+) -> None:
+    subject = f"DFML VCC BIEVNT info for Batch ID {ref_file.ctr_batch_identifier_id} on {payments_util.get_now():%m/%d/%Y}"
+
+    try:
+        email_fineos_vendor_customer_numbers(ref_file, db_session, recipient_email, subject)
+    except RuntimeError:
+        logger.exception("Error sending dfml vcc bievnt email")

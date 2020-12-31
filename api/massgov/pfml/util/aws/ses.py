@@ -1,4 +1,8 @@
+import os
 import re
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import Dict, List, Optional
 
 import boto3
@@ -7,6 +11,7 @@ from pydantic import BaseModel, validator
 
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.util.files import read_file
 
 logger = logging.get_logger(__name__)
 
@@ -80,3 +85,51 @@ def send_email(
         error_message = e.response["Error"]["Message"]
         logger.exception("Error sending email: %s", error_message)
         raise RuntimeError("Error sending email: %s", error_message)
+
+
+def send_email_with_attachment(
+    recipient: EmailRecipient, subject: str, body_text: str, sender: str, attachments: List[str]
+) -> Dict:
+    """
+    attachments is a list containing the full-paths to the file that will be attached to the email.
+     Eg ["/tmp/tmp8pjy66hd/fineos-vendor_customer_numbers.csv", ...]
+    """
+    aws_ses = boto3.client("ses")
+
+    msg = MIMEMultipart("mixed")
+
+    msg["Subject"] = subject
+    msg["From"] = sender
+    msg["To"] = ", ".join(
+        recipient.to_addresses + (recipient.cc_addresses if recipient.cc_addresses else [])
+    )
+    if recipient.bcc_addresses:
+        msg["Bcc"] = ", ".join(recipient.bcc_addresses if recipient.bcc_addresses else [])
+
+    msg_body = MIMEMultipart("alternative")
+    msg_text = MIMEText(str(body_text.encode(CHARSET)), "plain", CHARSET)
+    msg_body.attach(msg_text)
+
+    msg.attach(msg_body)
+
+    # Add the attachment to the parent container.
+    create_email_attachments(msg, attachments)
+
+    try:
+        response = aws_ses.send_raw_email(
+            Source=msg["From"], Destinations=[msg["To"]], RawMessage={"Data": msg.as_string(),},
+        )
+
+        logger.info(f"Email sent! Message ID: {response['MessageId']}")
+        return response
+    except ClientError as e:
+        error_message = e.response["Error"]["Message"]
+        logger.exception("Error sending email: %s", error_message)
+        raise RuntimeError("Error sending email: %s", error_message)
+
+
+def create_email_attachments(msg_container: MIMEMultipart, attachments: List[str]) -> None:
+    for attachment in attachments:
+        att = MIMEApplication(read_file(attachment, mode="rb"))
+        att.add_header("Content-Disposition", "attachment", filename=os.path.basename(attachment))
+        msg_container.attach(att)
