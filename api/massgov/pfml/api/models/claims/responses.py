@@ -32,6 +32,7 @@ class ClaimReviewResponse(PydanticBaseModel):
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
     follow_up_date: Optional[date]
     is_reviewable: Optional[bool]
+    status: Optional[str]
 
 
 class DocumentResponse(PydanticBaseModel):

@@ -165,6 +165,7 @@ def get_claim_as_leave_admin(
         fineos = massgov.pfml.fineos.create_client()
         absence_periods = fineos.get_absence_period_decisions(fineos_user_id, absence_id).dict()
         customer_id = absence_periods["decisions"][0]["employee"]["id"]
+        status = absence_periods["decisions"][0]["period"]["leavePlan"]["adjudicationStatus"]
         customer_info = fineos.get_customer_info(fineos_user_id, customer_id).dict()
         customer_occupations = fineos.get_customer_occupations(fineos_user_id, customer_id).dict()
         hours_worked_per_week = customer_occupations["elements"][0]["hrsWorkedPerWeek"]
@@ -221,6 +222,7 @@ def get_claim_as_leave_admin(
             tax_identifier=customer_info["idNumber"]
             if customer_info["idNumber"] is not None
             else "",
+            status=status,
             follow_up_date=follow_up_date,
             is_reviewable=is_reviewable,
         )

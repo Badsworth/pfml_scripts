@@ -1272,6 +1272,8 @@ components:
           type: string
         leave_details:
           $ref: "#/components/schemas/EmployerLeaveDetails"
+        status:
+          type: string
         middle_name:
           type: string
         previous_leaves:
