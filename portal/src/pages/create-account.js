@@ -89,19 +89,6 @@ export const CreateAccount = (props) => {
           </a>
         </Link>
       </div>
-      <div className="margin-top-2 text-base-darkest">
-        <Trans
-          i18nKey="pages.authCreateAccount.areAnEmployer"
-          components={{
-            "employer-create-account-link": (
-              <a
-                className="display-inline-block"
-                href={routes.employers.createAccount}
-              />
-            ),
-          }}
-        />
-      </div>
     </form>
   );
 };
