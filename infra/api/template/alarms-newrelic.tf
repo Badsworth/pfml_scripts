@@ -1,6 +1,7 @@
-# Terraform configuration for APM alarms. (application-layer metrics, e.g. latency, error rate, traffic rate)
+# Terraform configuration for any alarm that's stored in New Relic.
 
 # ----------------------------------------------------------------------------------------------------------------------
+# High-level administrative objects: (empty) alert policies, notification channels, etc.
 
 resource "newrelic_alert_policy" "api_alerts" {
   name                = "PFML API Alerts (${upper(var.environment_name)})"
@@ -41,6 +42,9 @@ resource "newrelic_alert_policy_channel" "pfml_alerts" {
   policy_id   = newrelic_alert_policy.api_alerts.id
   channel_ids = [newrelic_alert_channel.newrelic_api_notifications.id]
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Alerts relating to the API's generic performance metrics
 
 resource "newrelic_alert_condition" "api_error_rate" {
   # WARN: error rate above 1% for at least five minutes
@@ -114,9 +118,8 @@ resource "newrelic_alert_condition" "api_response_time" {
   }
 }
 
-////////////////
-// RDS Alerts //
-////////////////
+# ----------------------------------------------------------------------------------------------------------------------
+# Alerts relating to the API's RDS database
 
 resource "newrelic_nrql_alert_condition" "rds_high_cpu_utilization" {
   # WARN: CPU Utilization above 75% for at least 5 minutes
@@ -180,11 +183,10 @@ resource "newrelic_nrql_alert_condition" "rds_low_storage_space" {
   }
 }
 
-///////////////////
-// FINEOS Alerts //
-///////////////////
+# ----------------------------------------------------------------------------------------------------------------------
+# Alerts relating to errors from FINEOS
 
-resource "newrelic_nrql_alert_condition" "fineos_error_rate_5XXs" {
+resource "newrelic_nrql_alert_condition" "fineos_aggregated_5xx_rate" {
   # WARN: FINEOS responses that are 5XXs exceed 10% at least once in the last 5 minutes
   # CRIT: FINEOS responses that are 5XXs exceed 33% for all of the last 5 minutes
   name           = "FINEOS 5XXs response rate too high"
@@ -219,7 +221,7 @@ resource "newrelic_nrql_alert_condition" "fineos_error_rate_5XXs" {
   }
 }
 
-resource "newrelic_nrql_alert_condition" "fineos_error_rate_4XXs" {
+resource "newrelic_nrql_alert_condition" "fineos_aggregated_4xx_rate" {
   # WARN: % FINEOS responses that are 4XXs exceed 10% for 5 minutes
   # CRIT: % FINEOS responses that are 4XXs exceed 15% for 2 minutes
   name           = "FINEOS 4XXs response rate too high"
@@ -249,6 +251,104 @@ resource "newrelic_nrql_alert_condition" "fineos_error_rate_4XXs" {
     threshold_occurrences = "at_least_once"
   }
 }
+
+resource "newrelic_nrql_alert_condition" "fineos_claim-submission_5xx_rate" {
+  # CONDITION: Percentage of 5xx responses from all FINEOS endpoints used by the API's 'submit_application' endpoint
+  # CRIT: This percentage is > 33% for at least 5 minutes
+  # WARN: This percentage is > 10% for any 1 minute in a 5 minute window
+
+  name                 = "[5xx] High rate of claim submission failure in ${upper(var.environment_name)} FINEOS"
+  policy_id            = newrelic_alert_policy.api_alerts.id
+  type                 = "static"
+  value_function       = "single_value"
+  enabled              = true
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  nrql {
+    query = <<-NRQL
+      SELECT percentage(
+        COUNT(*), WHERE http.statusCode >= 500
+      ) FROM Span
+      WHERE http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/ReadEmployer'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/webservice'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/updateCustomerDetails'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/startAbsence'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/updateCustomerContactDetails'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/%/reflexive-questions'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/cases/%/occupations'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/occupations/%/week-based-work-pattern%'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/notifications/%/complete-intake'
+      AND appName = 'PFML-API-${upper(var.environment_name)}'
+    NRQL
+
+    evaluation_offset = 3
+  }
+
+  warning {
+    threshold_duration    = 300 # five minutes
+    threshold             = 10  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 300 # five minutes
+    threshold             = 33  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "all"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "fineos_claim-submission_4xx_rate" {
+  # CONDITION: Percentage of 4xx responses from all FINEOS endpoints used by the API's 'submit_application' endpoint
+  # CRIT: This percentage is > 33% for at least 5 minutes
+  # WARN: This percentage is > 10% for any 1 minute in a 5 minute window
+
+  name                 = "[4xx] High rate of claim submission failure in ${upper(var.environment_name)} FINEOS"
+  policy_id            = newrelic_alert_policy.api_alerts.id
+  type                 = "static"
+  value_function       = "single_value"
+  enabled              = true
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  nrql {
+    query = <<-NRQL
+      SELECT percentage(
+        COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500
+      ) FROM Span
+      WHERE http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/ReadEmployer'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/webservice'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/updateCustomerDetails'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/startAbsence'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/updateCustomerContactDetails'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/%/reflexive-questions'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/cases/%/occupations'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/occupations/%/week-based-work-pattern%'
+        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/notifications/%/complete-intake'
+      AND appName = 'PFML-API-${upper(var.environment_name)}'
+    NRQL
+
+    evaluation_offset = 3
+  }
+
+  warning {
+    threshold_duration    = 300 # five minutes
+    threshold             = 10  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 300 # five minutes
+    threshold             = 33  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "all"
+  }
+}
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Alarms relating to problems in the payments pipeline
 
 resource "newrelic_nrql_alert_condition" "payments_errors_from_fineos" {
   count                = (var.environment_name == "prod") ? 1 : 0
