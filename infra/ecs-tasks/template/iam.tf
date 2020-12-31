@@ -532,7 +532,7 @@ resource "aws_iam_role_policy" "payments_fineos_process_task_fineos_role_policy"
   count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
 
   name   = "${local.app_name}-${var.environment_name}-ecs-tasks-payments-fineos-process-fineos-assume-policy"
-  role   = aws_iam_role.fineos_import_employee_updates_task_role.id
+  role   = aws_iam_role.payments_fineos_process_task_role.id
   policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
 }
 
