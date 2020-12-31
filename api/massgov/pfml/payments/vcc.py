@@ -447,8 +447,8 @@ def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
         if len(employees) == 0:
             logger.info("Did not find any employees to add to VCC. Not creating VCC files.")
             return (
-                payments_util.MMARS_FILE_SKIPPED,
-                payments_util.MMARS_FILE_SKIPPED,
+                payments_util.Constants.MMARS_FILE_SKIPPED,
+                payments_util.Constants.MMARS_FILE_SKIPPED,
             )
 
         dat_xml_document, added_employees = build_vcc_dat(employees, now, ref_file, db_session)

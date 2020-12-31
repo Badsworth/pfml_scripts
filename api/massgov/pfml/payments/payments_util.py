@@ -39,9 +39,78 @@ class Constants:
     COMPTROLLER_AD_TYPE = "PA"
     DOC_PHASE_CD_FINAL_STATUS = "3 - Final"
 
+    BATCH_ID_TEMPLATE = COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
+    MMARS_FILE_SKIPPED = "Did not create file for MMARS because there was no work to do"
 
-BATCH_ID_TEMPLATE = Constants.COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
-MMARS_FILE_SKIPPED = "Did not create file for MMARS because there was no work to do"
+    S3_OUTBOUND_READY_DIR = "ready"
+    S3_OUTBOUND_SENT_DIR = "sent"
+    S3_OUTBOUND_ERROR_DIR = "error"
+    S3_INBOUND_RECEIVED_DIR = "received"
+    S3_INBOUND_PROCESSED_DIR = "processed"
+    S3_INBOUND_ERROR_DIR = "error"
+
+
+@dataclass
+class PaymentsS3Config:
+    # S3 paths (eg. s3://bucket/path/to/folder/)
+    # Vars prefixed with fineos are buckets owned by fineos
+    # Vars prefixed by pfml are owned by us
+
+    # FINEOS generates data export files for PFML API to pick up
+    # This is where FINEOS makes those files available to us
+    fineos_data_export_path: str
+    # PFML API stores a copy of all files that FINEOS generates for us
+    # This is where we store that copy
+    fineos_data_import_path: str
+    # PFML API stores a copy of all files that we retrieve from CTR
+    # This is where we store that copy
+    pfml_ctr_inbound_path: str  # Example: s3://massgov-pfml-test-agency-transfer/ctr/inbound/
+    # PFML API stores a copy of all files that we generate for the office of the Comptroller
+    # This is where we store that copy
+    pfml_ctr_outbound_path: str  # Example: s3://massgov-pfml-test-agency-transfer/ctr/outbound/
+    # PFML API stores a copy of all files that we generate for FINEOS
+    # This is where we store that copy
+    pfml_fineos_inbound_path: str
+    # PFML API generates files for FINEOS to process
+    # This is where FINEOS picks up files from us
+    pfml_fineos_outbound_path: str
+
+
+def get_s3_config() -> PaymentsS3Config:
+    return PaymentsS3Config(
+        fineos_data_export_path=str(os.environ.get("FINEOS_DATA_EXPORT_PATH")),
+        fineos_data_import_path=str(os.environ.get("FINEOS_DATA_IMPORT_PATH")),
+        pfml_ctr_inbound_path=str(os.environ.get("PFML_CTR_INBOUND_PATH")),
+        pfml_ctr_outbound_path=str(os.environ.get("PFML_CTR_OUTBOUND_PATH")),
+        pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
+        pfml_fineos_outbound_path=str(os.environ.get("PFML_FINEOS_OUTBOUND_PATH")),
+    )
+
+
+@dataclass
+class MoveItConfig:
+    # Paths are expected to be the relative path of each directory from the root of the FTP server.
+    ctr_moveit_incoming_path: str  # Example: DMFL/Comptroller_Office/Incoming/nmmarsload
+    ctr_moveit_outgoing_path: str  # Example: DMFL/Comptroller_Office/Outgoing/nmmarsload
+    ctr_moveit_archive_path: str  # Example: DMFL/Comptroller_Office/Archive
+
+    # Include protocol, user, and host in the URI.
+    ctr_moveit_sftp_uri: str  # Example: sftp://DFML@transfertest.eol.mass.gov
+
+    # Key and password strings retrieved from some secure store (AWS Secrets Manager).
+    ctr_moveit_ssh_key: str
+    ctr_moveit_ssh_key_password: str
+
+
+def get_moveit_config() -> MoveItConfig:
+    return MoveItConfig(
+        ctr_moveit_incoming_path=str(os.environ.get("CTR_MOVEIT_INCOMING_PATH")),
+        ctr_moveit_outgoing_path=str(os.environ.get("CTR_MOVEIT_OUTGOING_PATH")),
+        ctr_moveit_archive_path=str(os.environ.get("CTR_MOVEIT_ARCHIVE_PATH")),
+        ctr_moveit_sftp_uri=str(os.environ.get("PAYMENTS_MOVEIT_URI")),
+        ctr_moveit_ssh_key=str(os.environ.get("CTR_MOVEIT_SSH_KEY")),
+        ctr_moveit_ssh_key_password=str(os.environ.get("CTR_MOVEIT_SSH_KEY_PASSWORD")),
+    )
 
 
 class ValidationReason(str, Enum):
@@ -214,7 +283,9 @@ def add_cdata_elements(
 def create_next_batch_id(
     now: datetime, file_type_descr: str, db_session: db.Session
 ) -> CtrBatchIdentifier:
-    ctr_batch_id_pattern = BATCH_ID_TEMPLATE.format(now.strftime("%m%d"), file_type_descr, "%")
+    ctr_batch_id_pattern = Constants.BATCH_ID_TEMPLATE.format(
+        now.strftime("%m%d"), file_type_descr, "%"
+    )
     max_batch_id_today = (
         db_session.query(func.max(CtrBatchIdentifier.batch_counter))
         .filter(
@@ -231,7 +302,9 @@ def create_next_batch_id(
     if max_batch_id_today:
         batch_counter = max_batch_id_today + 1
 
-    batch_id = BATCH_ID_TEMPLATE.format(now.strftime("%m%d"), file_type_descr, batch_counter)
+    batch_id = Constants.BATCH_ID_TEMPLATE.format(
+        now.strftime("%m%d"), file_type_descr, batch_counter
+    )
     ctr_batch_id = CtrBatchIdentifier(
         ctr_batch_identifier=batch_id,
         year=now.year,
@@ -251,7 +324,7 @@ def create_batch_id_and_reference_file(
     )
 
     s3_path = os.path.join(ctr_outbound_path, "ready")
-    batch_filename = BATCH_ID_TEMPLATE.format(
+    batch_filename = Constants.BATCH_ID_TEMPLATE.format(
         now.strftime("%Y%m%d"),
         file_type.reference_file_type_description,
         ctr_batch_id.batch_counter,

@@ -68,7 +68,9 @@ def test_group_s3_files_by_date(set_source_path, set_exporter_env_vars):
 def _create_ctr_batch_identifier(
     now: datetime, batch_counter: int, db_session: db.Session
 ) -> CtrBatchIdentifier:
-    batch_id = payments_util.BATCH_ID_TEMPLATE.format(now.strftime("%m%d"), "VCC", batch_counter)
+    batch_id = payments_util.Constants.BATCH_ID_TEMPLATE.format(
+        now.strftime("%m%d"), "VCC", batch_counter
+    )
     ctr_batch_id = CtrBatchIdentifierFactory(
         ctr_batch_identifier=batch_id,
         year=now.year,

@@ -374,8 +374,8 @@ def build_gax_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
         if len(payments) == 0:
             logger.info("Did not find any payments to add to GAX. Not creating GAX files.")
             return (
-                payments_util.MMARS_FILE_SKIPPED,
-                payments_util.MMARS_FILE_SKIPPED,
+                payments_util.Constants.MMARS_FILE_SKIPPED,
+                payments_util.Constants.MMARS_FILE_SKIPPED,
             )
 
         dat_xml_document, added_payments = build_gax_dat(payments, now, ref_file, db_session)

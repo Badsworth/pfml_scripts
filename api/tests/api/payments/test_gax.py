@@ -337,8 +337,8 @@ def test_build_gax_files(initialize_factories_session, test_db_session, mock_s3_
 def test_build_gax_files_no_eligible_payments(test_db_session, mock_s3_bucket):
     ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
     assert gax.build_gax_files(test_db_session, ctr_outbound_path) == (
-        payments_util.MMARS_FILE_SKIPPED,
-        payments_util.MMARS_FILE_SKIPPED,
+        payments_util.Constants.MMARS_FILE_SKIPPED,
+        payments_util.Constants.MMARS_FILE_SKIPPED,
     )
 
 
