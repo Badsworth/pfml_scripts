@@ -8,8 +8,8 @@ from requests import Session
 from requests.exceptions import HTTPError
 from requests.models import Response
 
-from certs import generate_x509_cert_and_key, p12_encoded_cert
 from massgov.pfml.rmv.caller import LazyZeepApiCaller, RmvConfig
+from tests.helpers.certs import generate_x509_cert_and_key, p12_encoded_cert
 
 
 @pytest.fixture(scope="session")

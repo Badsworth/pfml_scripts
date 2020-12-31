@@ -23,7 +23,7 @@ class StateLogSetupResult:
 
 
 def default_outcome() -> Dict[str, Any]:
-    state_log_util.build_outcome("success")
+    return state_log_util.build_outcome("success")
 
 
 @dataclass

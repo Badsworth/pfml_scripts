@@ -316,7 +316,7 @@ class CtrAddressPair(Base):
     )
 
     fineos_address = relationship("Address", foreign_keys=fineos_address_id)
-    ctr_address = relationship("Address", foreign_keys=ctr_address_id)
+    ctr_address = cast("Optional[Address]", relationship("Address", foreign_keys=ctr_address_id))
 
 
 class Employee(Base):
@@ -370,7 +370,7 @@ class Employee(Base):
     tax_identifier = cast(
         Optional[TaxIdentifier], relationship("TaxIdentifier", back_populates="employee")
     )
-    ctr_address_pair = relationship("CtrAddressPair")
+    ctr_address_pair = cast(Optional[CtrAddressPair], relationship("CtrAddressPair"))
 
     authorized_reps: "Query[AuthorizedRepEmployee]" = dynamic_loader(
         "AuthorizedRepEmployee", back_populates="employee"
@@ -754,6 +754,8 @@ class StateLog(Base):
     prev_state_log_id = Column(UUID(as_uuid=True), ForeignKey("state_log.state_log_id"))
     associated_type = Column(Text, index=True)
 
+    start_state = relationship(LkState, foreign_keys=[start_state_id])
+    end_state = cast("Optional[LkState]", relationship(LkState, foreign_keys=[end_state_id]))
     payment = relationship("Payment", back_populates="state_logs")
     reference_file = relationship("ReferenceFile", back_populates="state_logs")
     employee = relationship("Employee", back_populates="state_logs")

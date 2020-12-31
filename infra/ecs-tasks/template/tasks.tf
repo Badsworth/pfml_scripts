@@ -161,6 +161,9 @@ locals {
         pfml_email_address                      = var.pfml_email_address
         bounce_forwarding_email_address         = var.bounce_forwarding_email_address
         payments_dfml_business_operations_email = var.payments_dfml_business_operations_email
+
+        ctr_data_mart_host     = var.ctr_data_mart_host
+        ctr_data_mart_username = var.ctr_data_mart_username
       }
     },
 

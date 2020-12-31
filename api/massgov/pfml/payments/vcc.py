@@ -122,6 +122,10 @@ def build_individual_vcc_document(
     payee_acct_num = payments_util.validate_db_input(
         key="account_nbr", db_object=employee.eft, required=False, max_length=40, truncate=False
     )
+
+    if employee.ctr_address_pair is None:
+        raise Exception("Employee must have a ctr_address_pair")
+
     payment_address_line_1 = payments_util.validate_db_input(
         key="address_line_one",
         db_object=employee.ctr_address_pair.fineos_address,

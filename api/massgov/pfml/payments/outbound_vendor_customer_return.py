@@ -236,6 +236,9 @@ def update_employee_data(
     employee: Employee,
     db_session: db.Session,
 ) -> None:
+    if employee.ctr_address_pair is None:
+        raise Exception("Employee must have a ctr_address_pair")
+
     # update address fields on the CTR half of the CtrAddressPair
     if not employee.ctr_address_pair.ctr_address:
         ctr_address = Address(address_type_id=AddressType.MAILING.address_type_id)

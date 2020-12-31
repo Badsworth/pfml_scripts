@@ -57,6 +57,8 @@ class ValidationReason(str, Enum):
     NON_NULLABLE = "NonNullable"
     EXCEPTION_OCCURRED = "ExceptionOccurred"
     OUTBOUND_STATUS_ERROR = "OutboundStatusError"
+    MISMATCHED_DATA = "MismatchedData"
+    UNUSABLE_STATE = "UnusableState"
 
 
 @dataclass(frozen=True, eq=True)

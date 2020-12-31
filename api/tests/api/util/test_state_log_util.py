@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
 
+import pytest
 from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.payments_util as payments_util
 from massgov.pfml.db.models.employees import LatestStateLog, State
 from massgov.pfml.db.models.factories import EmployeeFactory, PaymentFactory, ReferenceFileFactory
-from tests.api.util import setup_state_log
+from tests.helpers.state_log import default_outcome, setup_state_log
 
 ### Setup methods for various state log scenarios ###
 
@@ -538,3 +539,89 @@ def test_build_outcome():
             ],
         },
     }
+
+
+def test_process_state(test_db_session, initialize_factories_session):
+    state_log_setup = setup_state_log(
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        start_states=[State.VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT],
+        end_states=[State.IDENTIFY_MMARS_STATUS],
+        test_db_session=test_db_session,
+    )
+
+    prev_state_log = state_log_setup.state_logs[0]
+    employee = prev_state_log.employee
+
+    # an exception will set end state to the same start state
+    with pytest.raises(Exception):
+        with state_log_util.process_state(
+            start_state=State.IDENTIFY_MMARS_STATUS,
+            associated_model=employee,
+            db_session=test_db_session,
+        ) as state_log:
+            raise Exception("An exception message")
+
+    assert state_log.start_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
+    assert state_log.end_state == state_log.start_state
+    assert state_log.outcome["message"] == "Hit exception: An exception message"
+
+    # unless an end state was already set
+    with pytest.raises(Exception):
+        with state_log_util.process_state(
+            start_state=State.IDENTIFY_MMARS_STATUS,
+            associated_model=employee,
+            db_session=test_db_session,
+        ) as state_log:
+            state_log_util.finish_state_log(
+                state_log,
+                end_state=State.ADD_TO_VCC,
+                outcome=default_outcome(),
+                db_session=test_db_session,
+                commit=True,
+            )
+            raise Exception
+
+    assert state_log.start_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
+    assert state_log.end_state.state_id == State.ADD_TO_VCC.state_id
+
+    # if nothing is done in the context, state log is created, but not finished
+    with state_log_util.process_state(
+        start_state=State.IDENTIFY_MMARS_STATUS,
+        associated_model=employee,
+        db_session=test_db_session,
+    ) as state_log:
+        pass
+
+    assert state_log.start_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
+    assert state_log.end_state is None
+
+    # if nothing is done in the context *and* successful_end_state is set, state
+    # log is created and finished
+    with state_log_util.process_state(
+        start_state=State.IDENTIFY_MMARS_STATUS,
+        associated_model=employee,
+        db_session=test_db_session,
+        successful_end_state=State.ADD_TO_GAX,
+    ) as state_log:
+        pass
+
+    assert state_log.start_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
+    assert state_log.end_state.state_id == State.ADD_TO_GAX.state_id
+
+    # unless an end state was already set
+    with state_log_util.process_state(
+        start_state=State.IDENTIFY_MMARS_STATUS,
+        associated_model=employee,
+        db_session=test_db_session,
+        successful_end_state=State.ADD_TO_GAX,
+    ) as state_log:
+        state_log_util.finish_state_log(
+            state_log,
+            end_state=State.ADD_TO_VCC,
+            outcome=default_outcome(),
+            db_session=test_db_session,
+            commit=True,
+        )
+
+    assert state_log.start_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
+    assert state_log.end_state.state_id == State.ADD_TO_VCC.state_id

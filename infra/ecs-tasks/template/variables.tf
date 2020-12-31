@@ -179,3 +179,14 @@ variable "payments_dfml_business_operations_email" {
   default     = ""
 }
 
+variable "ctr_data_mart_host" {
+  description = "URL of the EOL Finance Data Mart."
+  type        = string
+  default     = ""
+}
+
+variable "ctr_data_mart_username" {
+  description = "Username to connect to EOL Finance Data Mart."
+  type        = string
+  default     = ""
+}

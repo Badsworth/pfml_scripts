@@ -39,10 +39,14 @@
         { "name": "CTR_MOVEIT_ARCHIVE_PATH", "value": "${ctr_moveit_archive_path}" },
         { "name": "PFML_CTR_INBOUND_PATH", "value": "${pfml_ctr_inbound_path}" },
         { "name": "CTR_MOVEIT_OUTGOING_PATH", "value": "${ctr_moveit_outgoing_path}" },
-        { "name": "PFML_CTR_OUTBOUND_PATH", "value": "${pfml_ctr_outbound_path}" }
+        { "name": "PFML_CTR_OUTBOUND_PATH", "value": "${pfml_ctr_outbound_path}" },
+
+        { "name": "CTR_DATA_MART_HOST", "value": "${ctr_data_mart_host}" },
+        { "name": "CTR_DATA_MART_USERNAME", "value": "${ctr_data_mart_username}" }
       ],
       "secrets": [
-        { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }
+        { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
+        { "name": "CTR_DATA_MART_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/ctr-data-mart-password" }
       ]
     }
   ]

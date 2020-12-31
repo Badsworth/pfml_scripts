@@ -8,7 +8,7 @@ import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import Payment, State, StateLog
 from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
-from tests.api.util import AdditionalParams, setup_state_log
+from tests.helpers.state_log import AdditionalParams, setup_state_log
 
 EXPECTED_DESCRIPTION = (
     "This is a description of the problem\nMissingInDB:Field1\nMissingField:Field2"

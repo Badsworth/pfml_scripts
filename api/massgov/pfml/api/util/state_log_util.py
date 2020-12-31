@@ -1,11 +1,13 @@
+from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Generator, List, Optional, Union
 
 import massgov.pfml.db as db
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.datetime as datetime_util
+import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Employee,
     LatestStateLog,
@@ -14,6 +16,8 @@ from massgov.pfml.db.models.employees import (
     ReferenceFile,
     StateLog,
 )
+
+logger = logging.get_logger(__name__)
 
 # The types this state log supports querying for
 AssociatedModel = Union[Employee, Payment, ReferenceFile]
@@ -163,7 +167,7 @@ def create_state_log_without_associated_model(
 def finish_state_log(
     state_log: StateLog,
     end_state: LkState,
-    outcome: Dict[str, str],
+    outcome: Dict[str, Any],
     db_session: db.Session,
     commit: bool = True,
 ) -> StateLog:
@@ -180,7 +184,7 @@ def finish_state_log(
 
 def get_latest_state_log_in_end_state(
     associated_model: AssociatedModel, end_state: LkState, db_session: db.Session,
-) -> StateLog:
+) -> Optional[StateLog]:
     filter_params = [StateLog.end_state_id == end_state.state_id]
 
     if isinstance(associated_model, Employee):
@@ -287,3 +291,61 @@ def build_outcome(
     if validation_container and validation_container.has_validation_issues():
         outcome["validation_container"] = asdict(validation_container)
     return outcome
+
+
+@contextmanager
+def process_state(
+    start_state: LkState,
+    associated_model: AssociatedModel,
+    db_session: db.Session,
+    successful_end_state: Optional[LkState] = None,
+) -> Generator[StateLog, None, None]:
+    """Create state log entry and finish it if exception occurs.
+
+    If the successful_end_state parameter is provided, will finish the provided
+    with that state on context exit if an end state is not already set with an
+    outcome message of "success".
+
+    Note this commits the DB session with the state log updates on create and
+    finish. In the case of an exception, will rollback before committing just
+    the state log updates.
+    """
+
+    state_log = create_state_log(start_state, associated_model, db_session, commit=True)
+
+    try:
+        yield state_log
+    except Exception as e:
+        if not state_log.end_state_id:
+            # we want to commit any updates to the state log (though, in
+            # general, there shouldn't be any updates to it between creation and
+            # finishing, but just in case), but not any other changes in the
+            # transaction, so detach the state log from the session
+            db_session.expunge(state_log)
+
+            # rollback the transaction
+            db_session.rollback()
+
+            # then re-add the state log so we can finish it
+            db_session.add(state_log)
+
+            # then finish it
+            finish_state_log(
+                state_log=state_log,
+                end_state=state_log.start_state,
+                outcome=build_outcome(f"Hit exception: {e}"),
+                db_session=db_session,
+                commit=True,
+            )
+
+        # then re-raise the exception
+        raise
+    finally:
+        if not state_log.end_state_id and successful_end_state is not None:
+            finish_state_log(
+                state_log=state_log,
+                end_state=successful_end_state,
+                outcome=build_outcome("success"),
+                db_session=db_session,
+                commit=True,
+            )
