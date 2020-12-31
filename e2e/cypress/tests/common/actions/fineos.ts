@@ -680,3 +680,37 @@ export function checkPaymentPreference(simClaim: SimulationClaim): void {
     "be.visible"
   );
 }
+
+export function confirmRMVStatus(RMVStatus: string): void {
+  let statusText = "";
+  switch (RMVStatus) {
+    case "valid":
+      statusText = "Verification check passed";
+      cy.get("div[id*='identificationStatus']").should(
+        "contain.text",
+        statusText
+      );
+      break;
+
+    case "invalid":
+    case "fraud":
+      statusText =
+        "Verification failed because no record could be found for given ID information";
+      cy.get("div[id*='identificationStatus']").should(
+        "contain.text",
+        statusText
+      );
+      break;
+
+    case "mismatch":
+      statusText = "Verification failed because ID number mismatch";
+      cy.get("div[id*='identificationStatus']").should(
+        "contain.text",
+        statusText
+      );
+      break;
+
+    default:
+      throw new Error("RMV Status Type not found!");
+  }
+}
