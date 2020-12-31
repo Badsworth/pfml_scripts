@@ -39,6 +39,7 @@ class Constants:
 
 
 BATCH_ID_TEMPLATE = Constants.COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
+MMARS_FILE_SKIPPED = "Did not create file for MMARS because there was no work to do"
 
 
 class ValidationReason(str, Enum):

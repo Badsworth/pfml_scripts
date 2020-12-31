@@ -27,6 +27,7 @@ from massgov.pfml.util.aws.ses import EmailRecipient
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 TWOPLACES = decimal.Decimal(10) ** -2
+STATE_LOG_PICKUP_STATE = State.ADD_TO_GAX
 
 # Mappings of attributes to their static values
 # These generic ones are reused by each element type
@@ -278,9 +279,10 @@ def build_individual_gax_document(
 
 def build_gax_dat(
     payments: List[Payment], now: datetime, ref_file: ReferenceFile, db_session: db.Session
-) -> minidom.Document:
+) -> Tuple[minidom.Document, List[Payment]]:
     # xml_document represents the overall XML object
     xml_document = minidom.Document()
+    added_payments = []
 
     # Document root contains all of the GAX documents
     document_root = xml_document.createElement("AMS_DOC_XML_IMPORT_FILE")
@@ -290,26 +292,48 @@ def build_gax_dat(
     # Add the index so we can populate the non-nullable ctr_document_identifier.document_counter
     # field with something useful.
     for i, payment in enumerate(payments):
-        ctr_doc_id = CtrDocumentIdentifier(
-            ctr_document_identifier=get_doc_id(), document_date=now.date(), document_counter=i,
-        )
-        db_session.add(ctr_doc_id)
-
         try:
+            ctr_doc_id = CtrDocumentIdentifier(
+                ctr_document_identifier=get_doc_id(), document_date=now.date(), document_counter=i,
+            )
+            db_session.add(ctr_doc_id)
+
             # gax_document refers to individual documents which contain payment data
             gax_document = build_individual_gax_document(xml_document, payment, now)
             document_root.appendChild(gax_document)
-        except Exception as e:
-            logger.exception(f"Caught in build_gax_dat: {e}")
-            continue
 
-        # Add records to the database for the document.
-        payment_ref_file = PaymentReferenceFile(
-            payment=payment, reference_file=ref_file, ctr_document_identifier=ctr_doc_id,
+            # Add records to the database for the document.
+            payment_ref_file = PaymentReferenceFile(
+                payment=payment, reference_file=ref_file, ctr_document_identifier=ctr_doc_id,
+            )
+            db_session.add(payment_ref_file)
+
+            # Record in StateLog that we've added this payment to the GAX.
+            state_log_util.create_finished_state_log(
+                associated_model=payment,
+                start_state=STATE_LOG_PICKUP_STATE,
+                end_state=State.GAX_SENT,
+                outcome=state_log_util.build_outcome("Added Payment to GAX"),
+                db_session=db_session,
+            )
+
+            added_payments.append(payment)
+        except Exception:
+            logger.exception(
+                "Failed to add Payment to GAX.", extra={"payment_id": payment.payment_id},
+            )
+
+    if len(added_payments) == 0:
+        logger.error(
+            "No Payment records added to GAX. Raising Exception",
+            extra={
+                "reference_file": ref_file.reference_file_id,
+                "errored_payment_record_count": len(payments),
+            },
         )
-        db_session.add(payment_ref_file)
+        raise Exception("No Payment records added to GAX")
 
-    return xml_document
+    return (xml_document, added_payments)
 
 
 def build_gax_inf(payments: List[Payment], now: datetime, batch_id: str) -> Dict[str, str]:
@@ -330,7 +354,7 @@ def build_gax_inf(payments: List[Payment], now: datetime, batch_id: str) -> Dict
 def get_eligible_payments(db_session: db.Session) -> List[Payment]:
     state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        end_state=State.ADD_TO_GAX,
+        end_state=STATE_LOG_PICKUP_STATE,
         db_session=db_session,
     )
 
@@ -347,20 +371,28 @@ def build_gax_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
 
         payments = get_eligible_payments(db_session)
 
-        dat_xml_document = build_gax_dat(payments, now, ref_file, db_session)
-        inf_dict = build_gax_inf(payments, now, ctr_batch_id.ctr_batch_identifier)
+        if len(payments) == 0:
+            logger.info("Did not find any payments to add to GAX. Not creating GAX files.")
+            return (
+                payments_util.MMARS_FILE_SKIPPED,
+                payments_util.MMARS_FILE_SKIPPED,
+            )
+
+        dat_xml_document, added_payments = build_gax_dat(payments, now, ref_file, db_session)
+        inf_dict = build_gax_inf(added_payments, now, ctr_batch_id.ctr_batch_identifier)
         ctr_batch_id.inf_data = inf_dict
+
+        dat_filepath, inf_filepath = payments_util.create_mmars_files_in_s3(
+            ref_file.file_location, ctr_batch_id.ctr_batch_identifier, dat_xml_document, inf_dict,
+        )
 
         db_session.commit()
 
-        return payments_util.create_mmars_files_in_s3(
-            ref_file.file_location, ctr_batch_id.ctr_batch_identifier, dat_xml_document, inf_dict,
-        )
+        return (dat_filepath, inf_filepath)
     except Exception as e:
-        logger.exception("Unable to create GAX:", str(e))
+        logger.exception("Unable to create GAX")
         db_session.rollback()
-
-    return "", ""
+        raise e
 
 
 def build_gax_files_for_s3(db_session: db.Session) -> Tuple[str, str]:

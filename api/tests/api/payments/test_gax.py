@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import List
 
 import defusedxml.ElementTree as ET
+import pytest
 import smart_open
 from freezegun import freeze_time
 from sqlalchemy import func
@@ -21,6 +22,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFile,
     ReferenceFileType,
     State,
+    StateLog,
 )
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
@@ -235,8 +237,6 @@ def test_build_individual_gax_document(initialize_factories_session, test_db_ses
 def test_build_gax_files(initialize_factories_session, test_db_session, mock_s3_bucket):
     payments = get_payments()
     for payment in payments:
-        test_db_session.add(payment)
-        test_db_session.commit()
         create_add_to_gax_state_log_for_payment(payment, test_db_session)
 
     ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
@@ -248,6 +248,11 @@ def test_build_gax_files(initialize_factories_session, test_db_session, mock_s3_
     ).scalar() == len(payments)
     test_db_session.query(
         func.count(PaymentReferenceFile.ctr_document_identifier_id)
+    ).scalar() == len(payments)
+
+    # Confirm we created StateLog records for both payments
+    assert test_db_session.query(
+        func.count(StateLog.state_log_id).filter(StateLog.end_state_id == State.GAX_SENT.state_id)
     ).scalar() == len(payments)
 
     # Confirm that we created a single GAX record.
@@ -299,7 +304,11 @@ def test_build_gax_files(initialize_factories_session, test_db_session, mock_s3_
         # when creating objects (new lines are child nodes?) that is complex.
         # Note that this parser removes the CDATA tags when parsing.
         root = ET.fromstring(dat_file_contents)
-        assert len(root) == 2  # For the two documents passed in
+
+        # For the two documents passed in
+        assert len(root) == 2
+        assert len(root) == int(ref_file.ctr_batch_identifier.inf_data.get("NewMmarsTransCount"))
+
         for document in root:
             # Doc ID is generated randomly every run, but appears in many sub values.
             doc_id = document.attrib["DOC_ID"]
@@ -323,3 +332,65 @@ def test_build_gax_files(initialize_factories_session, test_db_session, mock_s3_
             abs_doc_actg = document[2]
             assert abs_doc_actg.tag == "ABS_DOC_ACTG"
             assert abs_doc_actg.attrib == {"AMSDataObject": "Y"}
+
+
+def test_build_gax_files_no_eligible_payments(test_db_session, mock_s3_bucket):
+    ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
+    assert gax.build_gax_files(test_db_session, ctr_outbound_path) == (
+        payments_util.MMARS_FILE_SKIPPED,
+        payments_util.MMARS_FILE_SKIPPED,
+    )
+
+
+def test_build_gax_files_skip_payment_record_errors(
+    initialize_factories_session, test_db_session, mock_s3_bucket
+):
+    payments = get_payments()
+    valid_payment_record = payments[0]
+    create_add_to_gax_state_log_for_payment(valid_payment_record, test_db_session)
+
+    invalid_payment_record = payments[1]
+    invalid_payment_record.amount = decimal.Decimal("00.00")
+    create_add_to_gax_state_log_for_payment(invalid_payment_record, test_db_session)
+
+    ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
+    dat_filepath, inf_filepath = gax.build_gax_files(test_db_session, ctr_outbound_path)
+
+    # Confirm that we created a single GAX record.
+    ref_files = (
+        test_db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.reference_file_type_id == ReferenceFileType.GAX.reference_file_type_id
+        )
+        .all()
+    )
+    assert len(ref_files) == 1
+
+    # Confirm we only created a StateLog record for the valid payment record
+    assert (
+        test_db_session.query(
+            func.count(StateLog.state_log_id).filter(
+                StateLog.end_state_id == State.GAX_SENT.state_id
+            )
+        ).scalar()
+        == 1
+    )
+
+    # Confirm that we only added a single payment to the GAX file.
+    ref_file = ref_files[0]
+    assert len(ref_file.payments) == 1
+    assert ref_file.ctr_batch_identifier.inf_data.get("NewMmarsTransCount") == "1"
+
+
+def test_build_gax_files_raise_error_all_rows_error(
+    initialize_factories_session, test_db_session, mock_s3_bucket
+):
+    # The only eligible payment will raise an error.
+    payments = get_payments()
+    invalid_payment_record = payments[0]
+    invalid_payment_record.amount = decimal.Decimal("00.00")
+    create_add_to_gax_state_log_for_payment(invalid_payment_record, test_db_session)
+
+    ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
+    with pytest.raises(Exception, match="No Payment records added to GAX"):
+        gax.build_gax_files(test_db_session, ctr_outbound_path)

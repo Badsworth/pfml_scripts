@@ -69,6 +69,7 @@ vcc_doc_cert_attributes = {
 MAX_VCC_DOCUMENTS_PER_DAY = 9999
 DOC_ID_TEMPLATE = "INTFDFML{}{}"  # INTFDFML121920200012 <- 13th document for December 19, 2020.
 BATCH_ID_TEMPLATE = Constants.COMPTROLLER_DEPT_CODE + "{}VCC{}"  # eg. EOL0101VCC24
+STATE_LOG_PICKUP_STATE = State.ADD_TO_VCC
 
 
 def get_doc_id(now: datetime, count: int) -> str:
@@ -335,9 +336,10 @@ def get_vcc_doc_counter_offset_for_today(now: datetime, db_session: db.Session) 
 
 def build_vcc_dat(
     employees: List[Employee], now: datetime, ref_file: ReferenceFile, db_session: db.Session,
-) -> minidom.Document:
+) -> Tuple[minidom.Document, List[Employee]]:
     # xml_document represents the overall XML object
     xml_document = minidom.Document()
+    added_employees = []
 
     # Document root contains all of the VCC documents
     document_root = xml_document.createElement("AMS_DOC_XML_IMPORT_FILE")
@@ -346,38 +348,62 @@ def build_vcc_dat(
 
     doc_count_offset = get_vcc_doc_counter_offset_for_today(now, db_session)
     for count, employee in enumerate(employees):
-        doc_count = count + doc_count_offset
-        if doc_count > MAX_VCC_DOCUMENTS_PER_DAY:
-            logger.error(
-                "Reached limit of %d VCC documents per day. Started current batch from offset %d. Made it through %d VCC documents in current batch before reaching daily limit",
-                MAX_VCC_DOCUMENTS_PER_DAY,
-                doc_count_offset,
-                count,
-            )
-            break
-
-        doc_id = get_doc_id(now, doc_count)
-        ctr_doc_id = CtrDocumentIdentifier(
-            ctr_document_identifier=doc_id, document_date=now.date(), document_counter=doc_count,
-        )
-        db_session.add(ctr_doc_id)
         try:
+            doc_count = count + doc_count_offset
+            if doc_count > MAX_VCC_DOCUMENTS_PER_DAY:
+                logger.error(
+                    "Reached limit of %d VCC documents per day. Started current batch from offset %d. Made it through %d VCC documents in current batch before reaching daily limit",
+                    MAX_VCC_DOCUMENTS_PER_DAY,
+                    doc_count_offset,
+                    count,
+                )
+                break
+
+            doc_id = get_doc_id(now, doc_count)
+            ctr_doc_id = CtrDocumentIdentifier(
+                ctr_document_identifier=doc_id,
+                document_date=now.date(),
+                document_counter=doc_count,
+            )
+
             # vcc_document refers to individual documents which contain employee/payment data
             vcc_document = build_individual_vcc_document(xml_document, employee, now, doc_id)
-        except Exception as e:
-            logger.exception(
-                f"Caught exception in build_individual_vcc_document for employee {employee} and doc_id {doc_id}: {e}"
+            document_root.appendChild(vcc_document)
+
+            # Add records to the database for the document.
+            emp_ref_file = EmployeeReferenceFile(
+                employee=employee, reference_file=ref_file, ctr_document_identifier=ctr_doc_id,
             )
 
-        document_root.appendChild(vcc_document)
+            db_session.add(ctr_doc_id)
+            db_session.add(emp_ref_file)
 
-        # Add records to the database for the document.
-        emp_ref_file = EmployeeReferenceFile(
-            employee=employee, reference_file=ref_file, ctr_document_identifier=ctr_doc_id,
+            # Record in StateLog that we've added this employee to the VCC.
+            state_log_util.create_finished_state_log(
+                associated_model=employee,
+                start_state=STATE_LOG_PICKUP_STATE,
+                end_state=State.VCC_SENT,
+                outcome=state_log_util.build_outcome("Added Payment to VCC"),
+                db_session=db_session,
+            )
+
+            added_employees.append(employee)
+        except Exception:
+            logger.exception(
+                "Failed to add Employee to VCC.", extra={"employee_id": employee.employee_id},
+            )
+
+    if len(added_employees) == 0:
+        logger.error(
+            "No Employee records added to VCC. Raising Exception",
+            extra={
+                "reference_file": ref_file.reference_file_id,
+                "errored_employee_record_count": len(employees),
+            },
         )
-        db_session.add(emp_ref_file)
+        raise Exception("No Employee records added to VCC")
 
-    return xml_document
+    return (xml_document, added_employees)
 
 
 def build_vcc_inf(employees: List[Employee], now: datetime, batch_id: str) -> Dict[str, str]:
@@ -396,7 +422,7 @@ def build_vcc_inf(employees: List[Employee], now: datetime, batch_id: str) -> Di
 def get_eligible_employees(db_session: db.Session) -> List[Employee]:
     state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.ADD_TO_VCC,
+        end_state=STATE_LOG_PICKUP_STATE,
         db_session=db_session,
     )
 
@@ -413,18 +439,28 @@ def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
 
         employees = get_eligible_employees(db_session)
 
-        dat_xml_document = build_vcc_dat(employees, now, ref_file, db_session)
-        inf_dict = build_vcc_inf(employees, now, ctr_batch_id.ctr_batch_identifier)
+        if len(employees) == 0:
+            logger.info("Did not find any employees to add to VCC. Not creating VCC files.")
+            return (
+                payments_util.MMARS_FILE_SKIPPED,
+                payments_util.MMARS_FILE_SKIPPED,
+            )
+
+        dat_xml_document, added_employees = build_vcc_dat(employees, now, ref_file, db_session)
+        inf_dict = build_vcc_inf(added_employees, now, ctr_batch_id.ctr_batch_identifier)
         ctr_batch_id.inf_data = inf_dict
 
-        db_session.commit()
-    except Exception as e:
-        logger.exception("Unable to create VCC:", str(e))
-        db_session.rollback()
+        dat_filepath, inf_filepath = payments_util.create_mmars_files_in_s3(
+            ref_file.file_location, ctr_batch_id.ctr_batch_identifier, dat_xml_document, inf_dict
+        )
 
-    return payments_util.create_mmars_files_in_s3(
-        ref_file.file_location, ctr_batch_id.ctr_batch_identifier, dat_xml_document, inf_dict
-    )
+        db_session.commit()
+
+        return (dat_filepath, inf_filepath)
+    except Exception as e:
+        logger.exception("Unable to create VCC")
+        db_session.rollback()
+        raise e
 
 
 def build_vcc_files_for_s3(db_session: db.Session) -> Tuple[str, str]:

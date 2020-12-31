@@ -17,12 +17,14 @@ import massgov.pfml.payments.vcc as vcc
 from massgov.pfml.db.models.employees import (
     BankAccountType,
     CtrDocumentIdentifier,
+    Employee,
     EmployeeReferenceFile,
     GeoState,
     PaymentMethod,
     ReferenceFile,
     ReferenceFileType,
     State,
+    StateLog,
 )
 from massgov.pfml.db.models.factories import (
     AddressFactory,
@@ -71,6 +73,18 @@ def get_base_employee(add_eft=True, use_random_tin=False):
         payment_method_id=PaymentMethod.ACH.payment_method_id,
     )
     return employee
+
+
+def create_add_to_vcc_state_log_for_employee(employee: Employee, db_session: db.Session) -> None:
+    state_log = state_log_util.create_state_log(
+        start_state=State.IDENTIFY_MMARS_STATUS, associated_model=employee, db_session=db_session,
+    )
+    state_log_util.finish_state_log(
+        state_log=state_log,
+        end_state=State.ADD_TO_VCC,
+        outcome=state_log_util.build_outcome("success"),
+        db_session=db_session,
+    )
 
 
 def _create_ctr_document_identifier(
@@ -330,17 +344,7 @@ def test_build_individual_vcc_document_truncated_values(initialize_factories_ses
 def test_build_vcc_files(initialize_factories_session, test_db_session, mock_s3_bucket):
     employees = [get_base_employee(), get_base_employee(use_random_tin=True)]
     for employee in employees:
-        state_log = state_log_util.create_state_log(
-            start_state=State.IDENTIFY_MMARS_STATUS,
-            associated_model=employee,
-            db_session=test_db_session,
-        )
-        state_log_util.finish_state_log(
-            state_log=state_log,
-            end_state=State.ADD_TO_VCC,
-            outcome=state_log_util.build_outcome("success"),
-            db_session=test_db_session,
-        )
+        create_add_to_vcc_state_log_for_employee(employee, test_db_session)
 
     ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
     (dat_filepath, inf_filepath) = vcc.build_vcc_files(test_db_session, ctr_outbound_path)
@@ -351,6 +355,11 @@ def test_build_vcc_files(initialize_factories_session, test_db_session, mock_s3_
     ).scalar() == len(employees)
     assert test_db_session.query(
         func.count(EmployeeReferenceFile.ctr_document_identifier_id)
+    ).scalar() == len(employees)
+
+    # Confirm we created StateLog records for both employees
+    assert test_db_session.query(
+        func.count(StateLog.state_log_id).filter(StateLog.end_state_id == State.VCC_SENT.state_id)
     ).scalar() == len(employees)
 
     # Confirm that we created a single VCC record.
@@ -405,7 +414,11 @@ def test_build_vcc_files(initialize_factories_session, test_db_session, mock_s3_
         # when creating objects (new lines are child nodes?) that is complex.
         # Note that this parser removes the CDATA tags when parsing.
         root = ET.fromstring(dat_file_contents)
-        assert len(root) == len(employees)  # For the two documents passed in
+
+        # For the two documents passed in
+        assert len(root) == len(employees)
+        assert len(root) == int(ref_file.ctr_batch_identifier.inf_data.get("NewMmarsTransCount"))
+
         for document in root:
             # Doc ID is generated randomly every run, but appears in many sub values.
             doc_id = document.attrib["DOC_ID"]
@@ -449,6 +462,66 @@ def test_build_vcc_files(initialize_factories_session, test_db_session, mock_s3_
             vcc_doc_cert = document[7]
             assert vcc_doc_cert.tag == "VCC_DOC_CERT"
             assert vcc_doc_cert.attrib == {"AMSDataObject": "Y"}
+
+
+def test_build_vcc_files_no_eligible_employees(test_db_session, mock_s3_bucket):
+    ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
+    assert vcc.build_vcc_files(test_db_session, ctr_outbound_path) == (
+        payments_util.MMARS_FILE_SKIPPED,
+        payments_util.MMARS_FILE_SKIPPED,
+    )
+
+
+def test_build_vcc_files_skip_employee_record_errors(
+    initialize_factories_session, test_db_session, mock_s3_bucket
+):
+    valid_employee_record = get_base_employee(use_random_tin=True)
+    create_add_to_vcc_state_log_for_employee(valid_employee_record, test_db_session)
+
+    no_first_name_employee = get_base_employee(use_random_tin=True)
+    no_first_name_employee.first_name = ""
+    create_add_to_vcc_state_log_for_employee(no_first_name_employee, test_db_session)
+
+    ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
+    dat_filepath, inf_filepath = vcc.build_vcc_files(test_db_session, ctr_outbound_path)
+
+    # Confirm that we created a single VCC record.
+    ref_files = (
+        test_db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.reference_file_type_id == ReferenceFileType.VCC.reference_file_type_id
+        )
+        .all()
+    )
+    assert len(ref_files) == 1
+
+    # Confirm we only created a StateLog record for the valid employee record
+    assert (
+        test_db_session.query(
+            func.count(StateLog.state_log_id).filter(
+                StateLog.end_state_id == State.VCC_SENT.state_id
+            )
+        ).scalar()
+        == 1
+    )
+
+    # Confirm that we only added a single employee to the VCC file.
+    ref_file = ref_files[0]
+    assert len(ref_file.employees) == 1
+    assert ref_file.ctr_batch_identifier.inf_data.get("NewMmarsTransCount") == "1"
+
+
+def test_build_vcc_files_raise_error_all_rows_error(
+    initialize_factories_session, test_db_session, mock_s3_bucket
+):
+    # The only eligible employee will raise an error.
+    no_first_name_employee = get_base_employee(use_random_tin=True)
+    no_first_name_employee.first_name = ""
+    create_add_to_vcc_state_log_for_employee(no_first_name_employee, test_db_session)
+
+    ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
+    with pytest.raises(Exception, match="No Employee records added to VCC"):
+        vcc.build_vcc_files(test_db_session, ctr_outbound_path)
 
 
 def test_build_individual_vcc_document_missing_required_values(initialize_factories_session):
