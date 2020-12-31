@@ -185,7 +185,11 @@ def get_claim_as_leave_admin(
             eform_summary = eform_summary_obj.dict()
             if eform_summary["eformType"] == "Other Income":
                 eform = fineos.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
-                other_incomes = other_incomes + TransformOtherIncomeEform.from_fineos(eform)
+                other_incomes.extend(
+                    other_income
+                    for other_income in TransformOtherIncomeEform.from_fineos(eform)
+                    if other_income.program_type == "Employer"
+                )
             elif eform_summary["eformType"] == "Other Leaves":
                 eform = fineos.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
                 other_leaves = other_leaves + TransformOtherLeaveEform.from_fineos(eform)
