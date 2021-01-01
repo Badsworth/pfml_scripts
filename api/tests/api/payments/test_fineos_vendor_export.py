@@ -1,8 +1,20 @@
+from typing import List, Optional
+
 import pytest
 
 import massgov.pfml.payments.fineos_vendor_export as vendor_export
-from massgov.pfml.db.models.employees import Claim, Employee
-from massgov.pfml.db.models.factories import EmployeeFactory, TaxIdentifierFactory
+import massgov.pfml.payments.payments_util as payments_util
+from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
+    BankAccountType,
+    Claim,
+    ClaimType,
+    Employee,
+    GeoState,
+    PaymentMethod,
+)
+from massgov.pfml.db.models.factories import EmployeeFactory, EmployerFactory, TaxIdentifierFactory
+from massgov.pfml.util import datetime
 from tests.api.payments.conftest import upload_file_to_s3
 
 
@@ -25,9 +37,10 @@ def emp_updates_path(tmp_path, mock_fineos_s3_bucket):
 
     employee_feed_file_name = "2020-12-21-19-20-42-Employee_feed.csv"
     content_line_one = '"C","I","LASTUPDATEDATE","FIRSTNAMES","INITIALS","LASTNAME","PLACEOFBIRTH","DATEOFBIRTH","DATEOFDEATH","ISDECEASED","REALDOB","TITLE","NATIONALITY","COUNTRYOFBIRT","SEX","MARITALSTATUS","DISABLED","NATINSNO","CUSTOMERNO","REFERENCENO","IDENTIFICATIO","UNVERIFIED","STAFF","GROUPCLIENT","SECUREDCLIENT","SELFSERVICEEN","SOURCESYSTEM","C_OCPRTAD_CORRESPONDENC","I_OCPRTAD_CORRESPONDENC","EXTCONSENT","EXTCONFIRMFLAG","EXTMASSID","EXTOUTOFSTATEID","PREFERREDCONT","C_BNKBRNCH_BANKBRANCH","I_BNKBRNCH_BANKBRANCH","PREFERRED_CONTACT_METHOD","DEFPAYMENTPREF","PAYMENT_PREFERENCE","PAYMENTMETHOD","PAYMENTADDRES","ADDRESS1","ADDRESS2","ADDRESS3","ADDRESS4","ADDRESS5","ADDRESS6","ADDRESS7","POSTCODE","COUNTRY","VERIFICATIONS","ACCOUNTNAME","ACCOUNTNO","BANKCODE","SORTCODE","ACCOUNTTYPE","ACTIVE_ABSENCE_FLAG"'
-    content_line_two = '"11536","1268","2020-12-03 13:52:33","Glennie","","Balistreri","","1980-01-01 00:00:00","","0","0","480000","3040000","672000","32000","64000","0","881778956","339","2ebb0217-8379-47ba-922d-64aa3a3064c5","8736000","0","0","0","0","0","8032000","11737","1269","0","1","123456789","","1056000","","","Unknown","Y","","Elec Funds Transfer","Associated Party Address","123 Main St","","","Oakland","","CA","","94612","672007","7808000","Glennie Balistreri","123546789","","123546789","Checking","Y"'
-    content_line_three = '"11536","12915","2020-12-11 11:22:22","Alice","","Halvorson","","1976-08-21 00:00:00","","0","0","480000","3040000","672000","32000","64000","0","534242831","3277","77b4d544-2142-44dc-9dca-325b53d175a2","8736000","0","0","0","0","0","8032000","11737","10959","0","1","S56010286","","1056000","","","Unknown","Y","","Elec Funds Transfer","Associated Party Address","95166 Pouros Well","","","Ahmadstad","","LA","","24920","672007","7808000","Alice Halvorson","5555555555","","011401533","Savings","Y"'
-    content = f"{content_line_one}\n{content_line_two}\n{content_line_three}"
+    content_line_two = '"11536","1268","2020-12-03 13:52:33","Glennie","","Balistreri","","1980-01-01 00:00:00","","0","0","480000","3040000","672000","32000","64000","0","881778956","339","2ebb0217-8379-47ba-922d-64aa3a3064c5","8736000","0","0","0","0","0","8032000","11737","1269","0","1","123456789","","1056000","","","Unknown","N","","Elec Funds Transfer","Associated Party Address","456 Park St","","","Oakland","","CA","","94612","672007","7808000","Glennie Balistreri","623546789","","623546789","Checking","Y"'
+    content_line_three = '"11536","1268","2020-12-03 13:52:33","Glennie","","Balistreri","","1980-01-01 00:00:00","","0","0","480000","3040000","672000","32000","64000","0","881778956","339","2ebb0217-8379-47ba-922d-64aa3a3064c5","8736000","0","0","0","0","0","8032000","11737","1269","0","1","123456789","","1056000","","","Unknown","Y","","Elec Funds Transfer","Associated Party Address","123 Main St","","","Oakland","","CA","","94612","672007","7808000","Glennie Balistreri","123546789","","123546789","Checking","Y"'
+    content_line_four = '"11536","12915","2020-12-11 11:22:22","Alice","","Halvorson","","1976-08-21 00:00:00","","0","0","480000","3040000","672000","32000","64000","0","534242831","3277","77b4d544-2142-44dc-9dca-325b53d175a2","8736000","0","0","0","0","0","8032000","11737","10959","0","1","S56010286","","1056000","","","Unknown","Y","","Elec Funds Transfer","Associated Party Address","95166 Pouros Well","","","Ahmadstad","","LA","","24920","672007","7808000","Alice Halvorson","5555555555","","011401533","Savings","Y"'
+    content = f"{content_line_one}\n{content_line_two}\n{content_line_three}\n{content_line_four}"
 
     employee_feed_file = tmp_path / employee_feed_file_name
     employee_feed_file.write_text(content)
@@ -48,24 +61,263 @@ def emp_updates_path(tmp_path, mock_fineos_s3_bucket):
     )
 
 
-def test_process_vendor_extract_data(
+def test_process_vendor_extract_data_happy_path(
     test_db_session, initialize_factories_session, emp_updates_path, set_exporter_env_vars
 ):
     tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
-    EmployeeFactory(tax_identifier=tax_identifier)
+    employee = EmployeeFactory(tax_identifier=tax_identifier)
+    employer = EmployerFactory(fineos_employer_id=96)
+
     vendor_export.process_vendor_extract_data(test_db_session)
 
-    claim = (
-        test_db_session.query(Claim)
-        .filter(Claim.fineos_absence_id == "NTN-1308-ABS-01")
-        .one_or_none()
+    # Requested absences file artifact above has three records but only one with the
+    # LEAVEREQUEST_EVIDENCERESULTTYPE != Satisfied
+    claims: List[Claim] = (
+        test_db_session.query(Claim).filter(Claim.fineos_absence_id == "NTN-1308-ABS-01").all()
     )
-    assert claim is not None
 
-    updated_employee = (
+    assert len(claims) == 1
+    claim = claims[0]
+
+    assert claim is not None
+    assert claim.employee_id == employee.employee_id
+    assert claim.employer_id == employer.employer_id
+
+    assert claim.fineos_notification_id == "NTN-1308"
+    assert claim.claim_type.claim_type_id == ClaimType.FAMILY_LEAVE.claim_type_id
+    assert (
+        claim.fineos_absence_status.absence_status_id
+        == AbsenceStatus.ADJUDICATION.absence_status_id
+    )
+    assert claim.absence_period_start_date == datetime.date(2021, 5, 13)
+    assert claim.absence_period_end_date == datetime.date(2021, 7, 22)
+    assert claim.is_id_proofed is True
+
+    updated_employee: Optional[Employee] = (
         test_db_session.query(Employee)
         .filter(Employee.tax_identifier_id == tax_identifier.tax_identifier_id)
         .one_or_none()
     )
+
+    # Sample employee file above has two records for Glennie. Only one has the
+    # DEFPAYMENTPREF flag set to Y, with the address and EFT instructions tested
+    # here.
     assert updated_employee is not None
+    # We are not updating first or last name with FINEOS data as DOR is source of truth.
+    assert updated_employee.first_name != "Glennie"
+    assert updated_employee.last_name != "Balistreri"
+    assert updated_employee.date_of_birth == datetime.date(1980, 1, 1)
+    assert updated_employee.payment_method.payment_method_id == PaymentMethod.ACH.payment_method_id
+
     assert updated_employee.ctr_address_pair.fineos_address.address_line_one == "123 Main St"
+    assert updated_employee.ctr_address_pair.fineos_address.address_line_two == ""
+    assert updated_employee.ctr_address_pair.fineos_address.city == "Oakland"
+    assert updated_employee.ctr_address_pair.fineos_address.geo_state_id == GeoState.CA.geo_state_id
+    assert updated_employee.ctr_address_pair.fineos_address.zip_code == "94612"
+
+    assert updated_employee.eft.routing_nbr == 123546789
+    assert updated_employee.eft.account_nbr == 123546789
+    assert (
+        updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+    )
+
+
+def test_process_vendor_extract_data_no_employee(
+    test_db_session, initialize_factories_session, emp_updates_path, set_exporter_env_vars
+):
+    vendor_export.process_vendor_extract_data(test_db_session)
+
+    claim: Claim = (
+        test_db_session.query(Claim)
+        .filter(Claim.fineos_absence_id == "NTN-1308-ABS-01")
+        .one_or_none()
+    )
+
+    assert claim is None
+
+
+def test_update_mailing_address_happy_path(test_db_session, initialize_factories_session):
+    employee = EmployeeFactory()
+    feed_entry = {
+        "ADDRESS1": "456 Park Avenue",
+        "ADDRESS2": "",
+        "ADDRESS4": "New York",
+        "ADDRESS6": "NY",
+        "POSTCODE": "11020",
+    }
+    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
+
+    vendor_export.update_mailing_address(
+        test_db_session, feed_entry, employee, validation_container
+    )
+
+    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
+        Employee.employee_id == employee.employee_id
+    ).one_or_none()
+
+    assert updated_employee.ctr_address_pair.fineos_address.address_line_one == "456 Park Avenue"
+    assert updated_employee.ctr_address_pair.fineos_address.address_line_two == ""
+    assert updated_employee.ctr_address_pair.fineos_address.city == "New York"
+    assert updated_employee.ctr_address_pair.fineos_address.geo_state_id == GeoState.NY.geo_state_id
+    assert updated_employee.ctr_address_pair.fineos_address.zip_code == "11020"
+
+
+def test_update_mailing_address_validation_issues(test_db_session, initialize_factories_session):
+    employee = EmployeeFactory()
+
+    # Invalid zip code
+    feed_entry = {
+        "ADDRESS1": "456 Park Avenue",
+        "ADDRESS2": "",
+        "ADDRESS4": "New York",
+        "ADDRESS6": "NY",
+        "POSTCODE": "1102",
+    }
+    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
+
+    vendor_export.update_mailing_address(
+        test_db_session, feed_entry, employee, validation_container
+    )
+
+    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
+        Employee.employee_id == employee.employee_id
+    ).one_or_none()
+
+    assert len(validation_container.validation_issues) == 1
+
+    assert updated_employee.ctr_address_pair is None
+
+    # Invalid Geo State Code
+    feed_entry = {
+        "ADDRESS1": "456 Park Avenue",
+        "ADDRESS2": "",
+        "ADDRESS4": "New York",
+        "ADDRESS6": "NZ",
+        "POSTCODE": "11020",
+    }
+    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
+
+    vendor_export.update_mailing_address(
+        test_db_session, feed_entry, employee, validation_container
+    )
+
+    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
+        Employee.employee_id == employee.employee_id
+    ).one_or_none()
+
+    assert len(validation_container.validation_issues) == 1
+
+    assert updated_employee.ctr_address_pair is None
+
+    # Missing address line 1 and incorrect Geo State Code
+    feed_entry = {
+        "ADDRESS1": "",
+        "ADDRESS2": "",
+        "ADDRESS4": "New York",
+        "ADDRESS6": "NZ",
+        "POSTCODE": "11020",
+    }
+    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
+
+    vendor_export.update_mailing_address(
+        test_db_session, feed_entry, employee, validation_container
+    )
+
+    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
+        Employee.employee_id == employee.employee_id
+    ).one_or_none()
+
+    assert len(validation_container.validation_issues) == 2
+
+    assert updated_employee.ctr_address_pair is None
+
+
+def test_update_eft_info_happy_path(test_db_session, initialize_factories_session):
+    employee = EmployeeFactory()
+
+    eft_entry = {"SORTCODE": "123456789", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
+    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
+
+    vendor_export.update_eft_info(test_db_session, eft_entry, employee, validation_container)
+
+    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
+        Employee.employee_id == employee.employee_id
+    ).one_or_none()
+
+    assert updated_employee.eft.routing_nbr == 123456789
+    assert updated_employee.eft.account_nbr == 123456789
+    assert (
+        updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+    )
+
+
+def test_update_eft_info_validation_issues(test_db_session, initialize_factories_session):
+    employee = EmployeeFactory()
+
+    # Routing number incorrect length.
+    eft_entry = {"SORTCODE": "12345678", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
+    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
+
+    vendor_export.update_eft_info(test_db_session, eft_entry, employee, validation_container)
+
+    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
+        Employee.employee_id == employee.employee_id
+    ).one_or_none()
+
+    assert len(validation_container.validation_issues) == 1
+
+    assert updated_employee.eft is None
+
+    # Account number incorrect length.
+    eft_entry = {
+        "SORTCODE": "123456789",
+        "ACCOUNTNO": "12345678901234567890123456789012345678901234567890",
+        "ACCOUNTTYPE": "Checking",
+    }
+    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
+
+    vendor_export.update_eft_info(test_db_session, eft_entry, employee, validation_container)
+
+    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
+        Employee.employee_id == employee.employee_id
+    ).one_or_none()
+
+    assert len(validation_container.validation_issues) == 1
+
+    assert updated_employee.eft is None
+
+    # Account type incorrect.
+    eft_entry = {
+        "SORTCODE": "123456789",
+        "ACCOUNTNO": "123456789012345678901234567890",
+        "ACCOUNTTYPE": "Certificate of Deposit",
+    }
+    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
+
+    vendor_export.update_eft_info(test_db_session, eft_entry, employee, validation_container)
+
+    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
+        Employee.employee_id == employee.employee_id
+    ).one_or_none()
+
+    assert len(validation_container.validation_issues) == 1
+
+    assert updated_employee.eft is None
+
+    # Account type and Routing number incorrect.
+    eft_entry = {
+        "SORTCODE": "12345678",
+        "ACCOUNTNO": "123456789012345678901234567890",
+        "ACCOUNTTYPE": "Certificate of Deposit",
+    }
+    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
+
+    vendor_export.update_eft_info(test_db_session, eft_entry, employee, validation_container)
+
+    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
+        Employee.employee_id == employee.employee_id
+    ).one_or_none()
+
+    assert len(validation_container.validation_issues) == 2
+
+    assert updated_employee.eft is None

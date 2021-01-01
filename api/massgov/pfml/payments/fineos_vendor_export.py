@@ -2,7 +2,7 @@ import os
 import tempfile
 import uuid
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, cast
+from typing import Dict, List, Optional, Tuple, cast
 
 import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.payments_util as payments_util
@@ -21,6 +21,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     EmployeeAddress,
     EmployeeReferenceFile,
+    Employer,
     GeoState,
     PaymentMethod,
     ReferenceFile,
@@ -48,6 +49,11 @@ expected_file_names = [
 ]
 
 ELECTRONIC_FUNDS_TRANSFER = 1
+
+CLAIM_TYPE_TRANSLATION = {
+    "Family Medical Leave": "Family Leave",
+    "EE Medical Leave": "Medical Leave",
+}
 
 
 @dataclass
@@ -166,11 +172,13 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             continue
 
         # Add / update entry on claim table
-        validation_container = create_or_update_claim(db_session, extract_data, requested_absence)
+        validation_container, claim = create_or_update_claim(
+            db_session, extract_data, requested_absence
+        )
 
         # Update employee info
         employee_pfml_entry = update_employee_info(
-            db_session, extract_data, requested_absence, validation_container
+            db_session, extract_data, requested_absence, claim, validation_container
         )
 
         if employee_pfml_entry is not None:
@@ -181,7 +189,7 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
 
 def create_or_update_claim(
     db_session: db.Session, extract_data: ExtractData, requested_absence: Dict[str, str]
-) -> payments_util.ValidationContainer:
+) -> Tuple[payments_util.ValidationContainer, Claim]:
     absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
     validation_container = payments_util.ValidationContainer(absence_case_id)
 
@@ -204,6 +212,19 @@ def create_or_update_claim(
             payments_util.ValidationReason.MISSING_DATASET, error_msg,
         )
     else:
+        # Translating FINEOS known values to PFML values.
+        # If no transaltion value found leave value as is and
+        # validate_csv_input will add an issue in the validation
+        # container.
+        raw_leave_type = leave_plan.get("LEAVETYPE")
+        if raw_leave_type is not None:
+            try:
+                translated_leave_type = CLAIM_TYPE_TRANSLATION.get(raw_leave_type)
+                # Used str() to fix lint error.
+                leave_plan["LEAVETYPE"] = str(translated_leave_type)
+            except KeyError:
+                pass
+
         leave_type = payments_util.validate_csv_input(
             "LEAVETYPE",
             leave_plan,
@@ -253,15 +274,17 @@ def create_or_update_claim(
     evidence_result_type = requested_absence.get("LEAVEREQUEST_EVIDENCERESULTTYPE")
     claim_pfml.is_id_proofed = evidence_result_type == "Satisfied"
 
-    db_session.add(claim_pfml)
+    # Return claim but do not persist to DB as it should not be persisted
+    # if employee info cannot be found in PFML DB.
 
-    return validation_container
+    return validation_container, claim_pfml
 
 
 def update_employee_info(
     db_session: db.Session,
     extract_data: ExtractData,
     requested_absence: Dict[str, str],
+    claim: Claim,
     validation_container: payments_util.ValidationContainer,
 ) -> Optional[Employee]:
     employee_customer_nbr = payments_util.validate_csv_input(
@@ -349,7 +372,25 @@ def update_employee_info(
     if customer_nbr is not None:
         employee_pfml_entry.fineos_customer_number = customer_nbr
 
+    # Associate claim with employee in case it is a new claim.
+    claim.employee_id = employee_pfml_entry.employee_id
+
+    # Associate claim with employer as well, if found.
+    employer_customer_nbr = payments_util.validate_csv_input(
+        "EMPLOYER_CUSTOMERNO", requested_absence, validation_container, False
+    )
+
+    if employer_customer_nbr is not None:
+        employer_pfml_entry = (
+            db_session.query(Employer)
+            .filter(Employer.fineos_employer_id == employer_customer_nbr)
+            .one_or_none()
+        )
+        if employer_pfml_entry is not None:
+            claim.employer_id = employer_pfml_entry.employer_id
+
     db_session.add(employee_pfml_entry)
+    db_session.add(claim)
 
     return employee_pfml_entry
 
