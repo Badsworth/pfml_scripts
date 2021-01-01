@@ -102,6 +102,19 @@ variable "enable_full_error_logs" {
   default     = "0"
 }
 
+variable "enable_alarm_api_cpu" {
+  description = "Enable Cloudwatch alarms for API CPU Usage"
+  type        = bool
+  default     = true
+}
+
+variable "enable_alarm_api_ram" {
+  description = "Enable Cloudwatch alarms for API RAM Usage"
+  type        = bool
+  default     = true
+}
+
+
 variable "cors_origins" {
   description = "A list of origins to allow CORS requests from."
   type        = list(string)

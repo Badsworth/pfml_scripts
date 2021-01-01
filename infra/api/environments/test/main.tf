@@ -45,6 +45,12 @@ module "api" {
   nlb_name                        = "${local.vpc}-nlb"
   nlb_port                        = 80
   enable_full_error_logs          = "1"
+
+  # Disable test Cloudwatch alarms temporarily until API-1062 is resolved.
+  # https://lwd.atlassian.net/browse/API-1062
+  enable_alarm_api_cpu = false
+  enable_alarm_api_ram = false
+
   cors_origins = [
     # Allow requests from the Portal and API Gateway (Swagger) test environment.
     "https://paidleave-test.mass.gov",

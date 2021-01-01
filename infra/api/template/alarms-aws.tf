@@ -49,6 +49,7 @@ resource "aws_sns_topic_subscription" "high-priority" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_cloudwatch_metric_alarm" "api_cpu_warn" {
+  count             = var.enable_alarm_api_cpu ? 1 : 0
   alarm_name        = "${local.app_name}-${var.environment_name}_CPU-Warning"
   alarm_description = "(${upper(var.environment_name)} API WARN) P95 CPU usage by API tasks exceeds 80%"
   namespace         = "ECS/ContainerInsights"
@@ -73,6 +74,7 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_warn" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
+  count             = var.enable_alarm_api_cpu ? 1 : 0
   alarm_name        = "${local.app_name}-${var.environment_name}_CPU-Critical"
   alarm_description = "(${upper(var.environment_name)} API CRIT) P95 CPU usage by API tasks exceeds 90%"
   namespace         = "ECS/ContainerInsights"
@@ -99,6 +101,7 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
+  count             = var.enable_alarm_api_ram ? 1 : 0
   alarm_name        = "${local.app_name}-${var.environment_name}_RAM-Warning"
   alarm_description = "(${upper(var.environment_name)} API WARN) P95 RAM usage by API tasks exceeds 90% container allotment"
   namespace         = "ECS/ContainerInsights"
@@ -123,6 +126,7 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "api_ram_crit" {
+  count             = var.enable_alarm_api_ram ? 1 : 0
   alarm_name        = "${local.app_name}-${var.environment_name}_RAM-Critical"
   alarm_description = "(${upper(var.environment_name)} API CRIT) P95 RAM usage by API tasks exceeds 95% container allotment"
   namespace         = "ECS/ContainerInsights"
