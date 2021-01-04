@@ -1503,7 +1503,7 @@ const pages = {
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     leadBackground:
       "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave.",
-    leadBackground_accountCreationCallCenter:
+    leadBackground_accountCreationContactCenter:
       "Please call us at $t(shared.contactCenterPhoneNumber) to create an account for your organization.",
     leadBackground_accountCreationInstructions:
       "You'll need the following information to <account-creation-link>get started</account-creation-link>:",

@@ -27,7 +27,7 @@ exports[`CreateAccount renders post-launch content when claimantShowMedicalLeave
       />
     </Alert>
     <p>
-      pages.employersAuthCreateAccount.leadBackground_accountCreationContactCenter
+      Please call us at (833) 344‑7365 to create an account for your organization.
     </p>
     <p>
       <Trans
@@ -176,7 +176,7 @@ exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveT
       />
     </Alert>
     <p>
-      pages.employersAuthCreateAccount.leadBackground_accountCreationContactCenter
+      Please call us at (833) 344‑7365 to create an account for your organization.
     </p>
     <p>
       <Trans
