@@ -1,5 +1,7 @@
+import Document, { DocumentType } from "src/models/Document";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import DocumentCollection from "src/models/DocumentCollection";
 import { MockEmployerClaimBuilder } from "tests/test-utils";
 import React from "react";
 import { Review } from "src/pages/employers/applications/review";
@@ -9,6 +11,18 @@ export default {
   title: "Pages/Employers/Applications/Review",
   component: Review,
   argTypes: {
+    claimOption: {
+      defaultValue: "Continuous or reduced - documentation",
+      control: {
+        type: "radio",
+        options: [
+          "Continuous or reduced - documentation",
+          "Continuous or reduced - without documentation",
+          "Intermittent - documentation",
+          "Intermittent - without documentation",
+        ],
+      },
+    },
     errorTypes: {
       control: {
         type: "check",
@@ -25,21 +39,49 @@ export default {
   },
 };
 
-export const Default = ({ errorTypes = [] }) => {
+export const Default = ({ claimOption, errorTypes = [] }) => {
   const user = new User();
   const query = { absence_id: "mock-absence-id" };
+  const leavePeriodType = claimOption.split("-")[0];
+  const documentationOption = claimOption.split("-")[1];
+  const isIntermittent = !!leavePeriodType.includes("Intermittent");
+
   const appLogic = {
     appErrors: getAppErrorInfoCollection(errorTypes),
     employers: {
-      claim: new MockEmployerClaimBuilder().completed().reviewable().create(),
+      claim: new MockEmployerClaimBuilder()
+        .completed(isIntermittent)
+        .reviewable()
+        .create(),
+      documents: getDocuments(documentationOption),
+      downloadDocument: () => {},
       loadClaim: () => {},
       loadDocuments: () => {},
       submit: () => {},
     },
     setAppErrors: () => {},
   };
+
   return <Review appLogic={appLogic} query={query} user={user} />;
 };
+
+function getDocuments(documentation) {
+  const isWithoutDocumentation = documentation.includes(
+    "without documentation"
+  );
+  const documentData = {
+    application_id: "mock-application-id",
+    content_type: "application/pdf",
+    created_at: "2020-01-02",
+    document_type: DocumentType.medicalCertification,
+    fineos_document_id: 202020,
+    name: "Your Document",
+  };
+
+  return isWithoutDocumentation
+    ? new DocumentCollection()
+    : new DocumentCollection([new Document(documentData)]);
+}
 
 function getAppErrorInfoCollection(errorTypes = []) {
   const errors = [];
