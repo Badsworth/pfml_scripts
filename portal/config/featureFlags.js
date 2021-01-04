@@ -68,36 +68,32 @@ const flagsConfig = {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
-    employerShowPreviousLeaves: true,
   },
   test: {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
-    employerShowPreviousLeaves: true,
   },
   stage: {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
-    employerShowPreviousLeaves: true,
   },
   training: {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
-    employerShowPreviousLeaves: true,
   },
   performance: {
     claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
-    employerShowPreviousLeaves: true,
   },
   prod: {
     claimantShowAuth: true,
+    claimantShowJan1ApplicationInstructions: true,
+    claimantShowMedicalLeaveType: true,
     pfmlTerriyay: true,
-    employerShowPreviousLeaves: true,
   },
 };
 
