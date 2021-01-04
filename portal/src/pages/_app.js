@@ -171,7 +171,7 @@ export const App = ({ Component, pageProps }) => {
     <ErrorBoundary>
       <Helmet>
         {/* <title> is controlled through rendering a <Title> component on each page */}
-        <meta name="description" content={t("pages.app.siteDescription")} />
+        <meta name="description" content={t("pages.app.seoDescription")} />
       </Helmet>
       <div className="l-container">
         <div>

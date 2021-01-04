@@ -584,15 +584,15 @@ const shared = {
   previousLeaveEntryPrefix: "Previous leave",
   qualifyingReasonDetailsLabel: "What counts as a qualifying reason?",
   resendVerificationCodeLink: "Resend the code",
+  siteDescription:
+    "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
   usernameLabel: "Email address",
   verificationCodeLabel: "6-digit code",
 };
 
 const pages = {
   app: {
-    siteDescription:
-      "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
-    siteTitle: "Paid Family and Medical Leave (PFML) | Mass.gov",
+    seoDescription: "$t(shared.siteDescription)",
   },
   applications: {
     claimsReflectPortal:
@@ -1991,8 +1991,7 @@ const components = {
     ],
   },
   footer: {
-    description:
-      "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
+    description: "$t(shared.siteDescription)",
     logoTitle: "Go to PFML homepage",
     orgAddress: "PO Box 838 Lawrence, MA 01842",
     orgName: "Department of Family and Medical Leave (DFML)",

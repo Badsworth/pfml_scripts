@@ -33,9 +33,9 @@ class MyDocument extends Document {
           />
 
           <link href="/favicon.png" rel="shortcut icon" type="image/png" />
-
-          {/* Block search engine indexing during development: https://lwd.atlassian.net/browse/CP-458 */}
-          <meta name="robots" content="noindex" />
+          {process.env.BUILD_ENV !== "prod" && (
+            <meta name="robots" content="noindex" />
+          )}
         </Head>
         <body>
           <UnsupportedBrowserBanner />
