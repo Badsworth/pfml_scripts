@@ -75,7 +75,7 @@ export function transformDOREmployeesWageLines(
         return;
       }
       // Passes in wages that correspond to a financially (in)eligibile status.
-      const quarterWages = claim.financiallyIneligible ? 1200 : 1300;
+      const quarterWages = claim.financiallyIneligible ? 1200 : 1500;
       const lines = filingPeriods.map((period, index): string => {
         return (
           format(

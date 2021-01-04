@@ -26,7 +26,7 @@ describe("DOR Employee File Generator", function () {
       transformDOREmployeesWageLines(employers, filingPeriods)
     );
     expect(contents).toMatchInlineSnapshot(`
-      "B0000120200630Dave                                                                                                                                                                                                                                                           Smith                                                                                                                                                                                                                                                          000000000FT             1300.00             1300.00                0.00                0.00                0.00                0.00
+      "B0000120200630Dave                                                                                                                                                                                                                                                           Smith                                                                                                                                                                                                                                                          000000000FT             1500.00             1500.00                0.00                0.00                0.00                0.00
       "
     `);
   });
