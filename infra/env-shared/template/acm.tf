@@ -32,6 +32,7 @@ resource "aws_api_gateway_domain_name" "domain_name" {
   count           = var.enable_pretty_domain ? 1 : 0
   certificate_arn = data.aws_acm_certificate.domain[0].arn
   domain_name     = local.api_domain
+  security_policy = "TLS_1_2"
 }
 
 resource "aws_api_gateway_base_path_mapping" "stage_mapping" {
