@@ -905,6 +905,23 @@ export const makeFile = (attrs = {}) => {
 };
 
 /**
+ * Create an HTML <input> for a test's event.target
+ * @param {object} attrs - HTML attributes for the input
+ * @returns {HTMLInputElement}
+ */
+export function createInputElement(attrs) {
+  const input = document.createElement("input");
+
+  Object.entries(attrs).forEach(([attributeName, value]) => {
+    input.setAttribute(attributeName, value);
+  });
+
+  if (attrs.checked === false) input.checked = false;
+
+  return input;
+}
+
+/**
  * Export convenience functions to simulate events like typing
  * into input fields and submitting forms, and run the simulated
  * events in Enzyme's `act` function to ensure any re-rendering
@@ -932,9 +949,12 @@ export const simulateEvents = (wrapper) => {
    */
   function changeField(name, value, type, checked) {
     act(() => {
-      wrapper.find({ name }).simulate("change", {
-        target: { checked, name, type, value },
-      });
+      wrapper
+        .find({ name })
+        .last() // in cases where we use `mount` to render, we want the actual input component, which comes last in order
+        .simulate("change", {
+          target: { checked, name, type, value, getAttribute: jest.fn() },
+        });
     });
   }
 
@@ -942,14 +962,22 @@ export const simulateEvents = (wrapper) => {
    * Simulate selecting an option that lives within a component
    * @param {string} name Name of input field
    * @param {string} value Value for input field
+   * @param {string} [id] ID attribute for input field
    */
-  function changeRadioGroup(name, value) {
+  function changeRadioGroup(name, value, id) {
     act(() => {
       wrapper
         .find({ name })
         .last() // in cases where we use `mount` to render, we want the actual input component, which comes last in order
         .simulate("change", {
-          target: { checked: true, name, type: "radio", value },
+          target: {
+            checked: true,
+            id,
+            name,
+            type: "radio",
+            value,
+            getAttribute: jest.fn(),
+          },
         });
     });
   }
@@ -965,7 +993,13 @@ export const simulateEvents = (wrapper) => {
       const value = input.prop("value");
 
       input.simulate("change", {
-        target: { checked, name, type: "checkbox", value },
+        target: {
+          checked,
+          name,
+          type: "checkbox",
+          value,
+          getAttribute: jest.fn(),
+        },
       });
     });
   }

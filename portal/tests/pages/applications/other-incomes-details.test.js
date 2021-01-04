@@ -1,6 +1,7 @@
 import {
   MockClaimBuilder,
   renderWithAppLogic,
+  simulateEvents,
   testHook,
 } from "../../test-utils";
 import OtherIncome, { OtherIncomeType } from "../../../src/models/OtherIncome";
@@ -55,17 +56,11 @@ describe("OtherIncomesDetails", () => {
           claimAttrs: claim,
           render: "mount",
         }));
+        const { changeField } = simulateEvents(wrapper);
+
+        changeField("other_incomes[0].income_amount_dollars", "1,000,000");
 
         await act(async () => {
-          wrapper
-            .find("input[name='other_incomes[0].income_amount_dollars']")
-            .simulate("change", {
-              target: {
-                name: "other_incomes[0].income_amount_dollars",
-                value: "1,000,000",
-              },
-            });
-
           await wrapper.find("form").simulate("submit");
         });
 
@@ -88,17 +83,11 @@ describe("OtherIncomesDetails", () => {
           claimAttrs: claim,
           render: "mount",
         }));
+        const { changeField } = simulateEvents(wrapper);
+
+        changeField("other_incomes[0].income_amount_dollars", "");
 
         await act(async () => {
-          wrapper
-            .find("input[name='other_incomes[0].income_amount_dollars']")
-            .simulate("change", {
-              target: {
-                name: "other_incomes[0].income_amount_dollars",
-                value: "",
-              },
-            });
-
           await wrapper.find("form").simulate("submit");
         });
 

@@ -7,6 +7,7 @@ import EmployerBenefitDetails, {
 import {
   MockClaimBuilder,
   renderWithAppLogic,
+  simulateEvents,
   testHook,
 } from "../../test-utils";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
@@ -54,17 +55,11 @@ describe("EmployerBenefitDetails", () => {
           claimAttrs: claim,
           render: "mount",
         }));
+        const { changeField } = simulateEvents(wrapper);
+
+        changeField("employer_benefits[0].benefit_amount_dollars", "1,000,000");
 
         await act(async () => {
-          wrapper
-            .find("input[name='employer_benefits[0].benefit_amount_dollars']")
-            .simulate("change", {
-              target: {
-                name: "employer_benefits[0].benefit_amount_dollars",
-                value: "1,000,000",
-              },
-            });
-
           await wrapper.find("form").simulate("submit");
         });
 
@@ -87,17 +82,11 @@ describe("EmployerBenefitDetails", () => {
           claimAttrs: claim,
           render: "mount",
         }));
+        const { changeField } = simulateEvents(wrapper);
+
+        changeField("employer_benefits[0].benefit_amount_dollars", "");
 
         await act(async () => {
-          wrapper
-            .find("input[name='employer_benefits[0].benefit_amount_dollars']")
-            .simulate("change", {
-              target: {
-                name: "employer_benefits[0].benefit_amount_dollars",
-                value: "",
-              },
-            });
-
           await wrapper.find("form").simulate("submit");
         });
 

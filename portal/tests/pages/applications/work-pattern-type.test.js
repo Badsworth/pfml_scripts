@@ -1,4 +1,8 @@
-import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
+import {
+  MockClaimBuilder,
+  renderWithAppLogic,
+  simulateEvents,
+} from "../../test-utils";
 import WorkPatternType from "../../../src/pages/applications/work-pattern-type";
 import { WorkPatternType as WorkPatternTypeEnum } from "../../../src/models/Claim";
 import { act } from "react-dom/test-utils";
@@ -16,14 +20,14 @@ describe("WorkPatternType", () => {
     const { appLogic, wrapper } = renderWithAppLogic(WorkPatternType, {
       claimAttrs: new MockClaimBuilder().fixedWorkPattern().create(),
     });
+    const { changeRadioGroup } = simulateEvents(wrapper);
+
+    changeRadioGroup(
+      "work_pattern.work_pattern_type",
+      WorkPatternTypeEnum.variable
+    );
 
     act(() => {
-      wrapper.find("InputChoiceGroup").simulate("change", {
-        target: {
-          value: WorkPatternTypeEnum.variable,
-          name: "work_pattern.work_pattern_type",
-        },
-      });
       wrapper.find("QuestionPage").simulate("save");
     });
 
@@ -40,14 +44,14 @@ describe("WorkPatternType", () => {
     const { appLogic, wrapper } = renderWithAppLogic(WorkPatternType, {
       claimAttrs: new MockClaimBuilder().fixedWorkPattern().create(),
     });
+    const { changeRadioGroup } = simulateEvents(wrapper);
+
+    changeRadioGroup(
+      "work_pattern.work_pattern_type",
+      WorkPatternTypeEnum.fixed
+    );
 
     act(() => {
-      wrapper.find("InputChoiceGroup").simulate("change", {
-        target: {
-          value: WorkPatternTypeEnum.fixed,
-          name: "work_pattern.work_pattern_type",
-        },
-      });
       wrapper.find("QuestionPage").simulate("save");
     });
 

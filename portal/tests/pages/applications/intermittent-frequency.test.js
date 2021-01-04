@@ -6,8 +6,11 @@ import {
 import IntermittentFrequency, {
   irregularOver6MonthsId,
 } from "../../../src/pages/applications/intermittent-frequency";
-import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
-import { act } from "react-dom/test-utils";
+import {
+  MockClaimBuilder,
+  renderWithAppLogic,
+  simulateEvents,
+} from "../../test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -175,7 +178,7 @@ describe("IntermittentFrequency", () => {
   });
 
   describe("frequency_basis change handler", () => {
-    let wrapper;
+    let changeRadioGroup, wrapper;
     const claimAttrs = intermittentClaimAttrs();
     const frequencyBasisInputName =
       "leave_details.intermittent_leave_periods[0].frequency_interval_basis";
@@ -184,18 +187,11 @@ describe("IntermittentFrequency", () => {
       ({ wrapper } = renderWithAppLogic(IntermittentFrequency, {
         claimAttrs,
       }));
+      ({ changeRadioGroup } = simulateEvents(wrapper));
     });
 
     it("selects Months radio", () => {
-      act(() => {
-        wrapper.find({ name: frequencyBasisInputName }).simulate("change", {
-          preventDefault: jest.fn(),
-          target: {
-            name: frequencyBasisInputName,
-            value: FrequencyIntervalBasis.months,
-          },
-        });
-      });
+      changeRadioGroup(frequencyBasisInputName, FrequencyIntervalBasis.months);
 
       const choices = wrapper
         .find({ name: frequencyBasisInputName })
@@ -205,16 +201,11 @@ describe("IntermittentFrequency", () => {
     });
 
     it("selects 'Irregular over 6 months' radio when input ID matches", () => {
-      act(() => {
-        wrapper.find({ name: frequencyBasisInputName }).simulate("change", {
-          preventDefault: jest.fn(),
-          target: {
-            id: irregularOver6MonthsId,
-            name: frequencyBasisInputName,
-            value: FrequencyIntervalBasis.months,
-          },
-        });
-      });
+      changeRadioGroup(
+        frequencyBasisInputName,
+        FrequencyIntervalBasis.months,
+        irregularOver6MonthsId
+      );
 
       const choices = wrapper
         .find({ name: frequencyBasisInputName })

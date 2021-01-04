@@ -15,7 +15,13 @@ export default function getInputValueFromEvent(event) {
     return undefined;
   }
 
-  const { checked, type, value, inputMode, pattern } = event.target;
+  const { checked, pattern, type, value } = event.target;
+
+  // Use getAttribute for this since some browsers, including Firefox,
+  // don't support accessing the value via event.target.inputMode
+  // https://caniuse.com/mdn-api_htmlelement_inputmode
+  const inputMode = event.target.getAttribute("inputmode");
+
   let result = value;
   if (type === "checkbox" || type === "radio") {
     // Convert boolean input string values into an actual boolean
