@@ -150,7 +150,7 @@ resource "aws_db_instance" "default" {
     #
     # Test downtime is disabled until 01/31/2021 to account for launch activities.
     #
-    # If you change this schedule, please update the ECS autoscaling policy in app_autoscaling.tf.
+    # If you change this schedule, please update the ECS autoscaling policy in autoscaling-ecs.tf.
     #
     # See https://lwd.atlassian.net/wiki/spaces/DD/pages/275611773/RDS+databases.
   })

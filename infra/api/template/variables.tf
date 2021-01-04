@@ -293,3 +293,15 @@ variable "cognito_enable_provisioned_concurrency" {
   type        = bool
   default     = false
 }
+
+variable "cognito_provisioned_concurrency_level_max" {
+  description = "The number of Cognito lambdas that will be kept 'hot' during the working week."
+  type        = number
+  default     = 5
+}
+
+variable "cognito_provisioned_concurrency_level_min" {
+  description = "The number of Cognito lambdas that will be kept 'hot' on nights and weekends."
+  type        = number
+  default     = 1
+}

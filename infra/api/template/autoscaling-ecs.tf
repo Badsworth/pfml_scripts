@@ -1,3 +1,5 @@
+# Autoscaling policies and related resources for the PFML API's ECS task.
+
 resource "aws_appautoscaling_policy" "ecs_scale_policy" {
   name               = "${var.environment_name}-${local.app_name}-ecs-scale-policy"
   policy_type        = "TargetTrackingScaling"

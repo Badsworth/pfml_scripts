@@ -88,12 +88,17 @@ resource "aws_lambda_permission" "allow_cognito_pre_signup_alias" {
   qualifier     = aws_lambda_alias.cognito_pre_signup__latest[0].name
 }
 
-# Keep five instances of this lambda 'hot' at all times, subject to autoscaling policies (TBI in API-1024)
+# Keep five instances of this lambda 'hot' at all times. Scales down to one instance outside of business hours EST.
 resource "aws_lambda_provisioned_concurrency_config" "cognito_pre_signup_concurrency_settings" {
   count                             = var.cognito_enable_provisioned_concurrency ? 1 : 0
   qualifier                         = aws_lambda_alias.cognito_pre_signup__latest[0].name
   function_name                     = aws_lambda_alias.cognito_pre_signup__latest[0].function_name
-  provisioned_concurrent_executions = 5
+  provisioned_concurrent_executions = var.cognito_provisioned_concurrency_level_max
+
+  # An AWS autoscaling policy will alter this value, so ignore changes to it that come from Terraform.
+  lifecycle {
+    ignore_changes = [provisioned_concurrent_executions]
+  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -178,12 +183,17 @@ resource "aws_lambda_permission" "allow_cognito_post_confirmation_alias" {
   qualifier     = aws_lambda_alias.cognito_post_confirmation__latest[0].name
 }
 
-# Keep five instances of this lambda 'hot' at all times, subject to autoscaling policies (TBI in API-1024).
+# Keep five instances of this lambda 'hot' at all times. Scales down to one instance outside of business hours EST.
 resource "aws_lambda_provisioned_concurrency_config" "cognito_post_confirmation_concurrency_settings" {
   count                             = var.cognito_enable_provisioned_concurrency ? 1 : 0
   qualifier                         = aws_lambda_alias.cognito_post_confirmation__latest[0].name
   function_name                     = aws_lambda_alias.cognito_post_confirmation__latest[0].function_name
-  provisioned_concurrent_executions = 5
+  provisioned_concurrent_executions = var.cognito_provisioned_concurrency_level_max
+
+  # An AWS autoscaling policy will alter this value, so ignore changes to it that come from Terraform.
+  lifecycle {
+    ignore_changes = [provisioned_concurrent_executions]
+  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
