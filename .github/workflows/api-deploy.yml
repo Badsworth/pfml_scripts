@@ -189,7 +189,7 @@ jobs:
     env:
       infra-working-dir: ./api/lambdas/formstack_import
     outputs:
-      s3_key: ${{ steps.get_s3_key.outputs.s3_key }}
+      s3_key: ${{ steps.rename.outputs.new_s3_key }}
 
     steps:
       - uses: actions/checkout@v2
@@ -228,6 +228,13 @@ jobs:
       - name: Get Package S3 Key
         id: get_s3_key
         run: echo "::set-output name=s3_key::$(make get-release-key)"
+        working-directory: ${{ env.infra-working-dir }}
+
+      - name: Rename the Lambda for Formstack Import
+        id: rename
+        run: |
+          aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+          echo "::set-output name=new_s3_key::${{ needs.update-the-deploy-branch.outputs.commit_hash }}"
         working-directory: ${{ env.infra-working-dir }}
 
   eligibility-feed-build:
@@ -237,8 +244,7 @@ jobs:
     env:
       infra-working-dir: ./api/lambdas/fineos/eligibility_export_feed
     outputs:
-      s3_key: ${{ steps.get_s3_key.outputs.s3_key }}
-      dependencies_s3_key: ${{ steps.get_dependencies_s3_key.outputs.dependencies_s3_key }}
+      s3_key: ${{ steps.rename.outputs.new_s3_key }}
 
     steps:
       - uses: actions/checkout@v2
@@ -277,6 +283,13 @@ jobs:
       - name: Get Package S3 Key
         id: get_s3_key
         run: echo "::set-output name=s3_key::$(make get-release-key)"
+        working-directory: ${{ env.infra-working-dir }}
+
+      - name: Rename the Lambda for FINEOS Eligibility Feed
+        id: rename
+        run: |
+          aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+          echo "::set-output name=new_s3_key::${{ needs.update-the-deploy-branch.outputs.commit_hash }}"
         working-directory: ${{ env.infra-working-dir }}
 
   cognito-pre-signup-build:
@@ -287,7 +300,7 @@ jobs:
       run:
         working-directory: ./api/lambdas/cognito_pre_signup
     outputs:
-      s3_key: ${{ steps.get_s3_key.outputs.s3_key }}
+      s3_key: ${{ steps.rename.outputs.new_s3_key }}
 
     steps:
       - uses: actions/checkout@v2
@@ -319,6 +332,12 @@ jobs:
       - name: Get Package S3 Key
         id: get_s3_key
         run: echo "::set-output name=s3_key::$(make get-release-key)"
+
+      - name: Rename the Lambda for Cognito Pre Signup
+        id: rename
+        run: |
+          aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+          echo "::set-output name=new_s3_key::${{ needs.update-the-deploy-branch.outputs.commit_hash }}"
 
   cognito-post-confirmation-build:
     name: Build and upload Lambda function for Cognito Post Confirmation hook
@@ -328,7 +347,7 @@ jobs:
       run:
         working-directory: ./api/lambdas/cognito_post_confirmation
     outputs:
-      s3_key: ${{ steps.get_s3_key.outputs.s3_key }}
+      s3_key: ${{ steps.rename.outputs.new_s3_key }}
 
     steps:
       - uses: actions/checkout@v2
@@ -360,6 +379,12 @@ jobs:
       - name: Get Package S3 Key
         id: get_s3_key
         run: echo "::set-output name=s3_key::$(make get-release-key)"
+        
+      - name: Rename the Lambda for Cognito Post Confirmation
+        id: rename
+        run: |
+          aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+          echo "::set-output name=new_s3_key::${{ needs.update-the-deploy-branch.outputs.commit_hash }}"
 
   api-db-migrate-up:
     name: Run migrations

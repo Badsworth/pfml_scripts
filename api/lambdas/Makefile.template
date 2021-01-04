@@ -54,6 +54,9 @@ get-release-url: ## Get S3 URL for uploaded release from SAM package output file
 get-release-key: ## Get just the S3 key (i.e., path without the bucket name) for uploaded release
 	@jq -r '.Resources.$(LAMBDA_FUNCTION_NAME).Properties.CodeUri' $(RELEASE_INFO_FILE) | sed "s|s3://${LAMBDA_BUILD_BUCKET}/${LAMBDA_BUILD_PREFIX}/||"
 
+get-bucket-url: ## Get just the base S3 bucket url
+	@echo "s3://${LAMBDA_BUILD_BUCKET}/${LAMBDA_BUILD_PREFIX}"
+
 help: ## Displays this help screen
 	@grep -Eh '^[[:print:]]+:.*?##' $(MAKEFILE_LIST) | \
 	sort -d | \
