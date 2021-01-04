@@ -234,7 +234,7 @@ resource "newrelic_nrql_alert_condition" "fineos_aggregated_4xx_rate" {
     query             = <<-NRQL
       SELECT percentage(COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500) FROM Span
       WHERE name LIKE 'External/%-api.masspfml.fineos.com/requests/'
-      AND appName = 'PFML-API-${upper(var.environment_name)}'"
+      AND appName = 'PFML-API-${upper(var.environment_name)}'
     NRQL
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
