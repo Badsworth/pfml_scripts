@@ -231,7 +231,11 @@ resource "newrelic_nrql_alert_condition" "fineos_aggregated_4xx_rate" {
   enabled        = true
 
   nrql {
-    query             = "SELECT percentage(COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500) FROM Span WHERE name LIKE 'External/%-api.masspfml.fineos.com/requests/' AND appName = 'PFML-API-${upper(var.environment_name)}'"
+    query             = <<-NRQL
+      SELECT percentage(COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500) FROM Span
+      WHERE name LIKE 'External/%-api.masspfml.fineos.com/requests/'
+      AND appName = 'PFML-API-${upper(var.environment_name)}'"
+    NRQL
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
@@ -239,16 +243,16 @@ resource "newrelic_nrql_alert_condition" "fineos_aggregated_4xx_rate" {
 
   warning {
     threshold             = 10
-    threshold_duration    = 300
+    threshold_duration    = 300 # 5 minutes
     operator              = "above"
     threshold_occurrences = "at_least_once"
   }
 
   critical {
-    threshold             = 15
-    threshold_duration    = 120
+    threshold             = 33
+    threshold_duration    = 300 # 5 minutes
     operator              = "above"
-    threshold_occurrences = "at_least_once"
+    threshold_occurrences = "all"
   }
 }
 
