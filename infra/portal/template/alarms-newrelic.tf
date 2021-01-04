@@ -231,11 +231,12 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
   }
 }
 
-resource "newrelic_nrql_alert_condition" "unexpected_openapi_violations" {
+resource "newrelic_nrql_alert_condition" "unexpected_validation_violations" {
   # CRIT: ValidationError with matching issueType, above 0, for at least 5 minutes
-  enabled   = true
-  name      = "Unexpected OpenAPI violations"
-  policy_id = newrelic_alert_policy.portal_alerts.id
+  enabled     = true
+  name        = "Unexpected validation violations"
+  policy_id   = newrelic_alert_policy.portal_alerts.id
+  runbook_url = "https://lwd.atlassian.net/l/c/XSzdMmJ6"
 
   aggregation_window   = 120 # 2 minutes, should match threshold_duration
   type                 = "static"
@@ -243,7 +244,9 @@ resource "newrelic_nrql_alert_condition" "unexpected_openapi_violations" {
   violation_time_limit = "THIRTY_DAYS"
 
   nrql {
-    query             = "SELECT count(*) FROM PageAction WHERE actionName = 'ValidationError' AND issueType IN ('enum', 'type') AND environment = '${var.environment_name}'"
+    # Ignoring employer_benefits[%].benefit_amount_frequency since we expect an
+    # enum ValidationError for it on the Employer review page
+    query             = "SELECT count(*) FROM PageAction WHERE actionName = 'ValidationError' AND environment = '${var.environment_name}' AND (issueType IN ('enum', 'type') OR issueType LIKE 'type_error%') AND issueField NOT LIKE 'employer_benefits[%].benefit_amount_frequency'"
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
