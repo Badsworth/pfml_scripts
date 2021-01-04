@@ -13,7 +13,9 @@ export default {
       control: {
         type: "check",
         options: [
-          "Hours worked per week",
+          "Hours worked per week - invalid_hours_worked_per_week",
+          "Hours worked per week - minimum",
+          "Hours worked per week - maximum",
           "Employer benefit - benefit end date",
           "Previous leave - leave start date",
           "Previous leave - leave end date",
@@ -41,12 +43,34 @@ export const Default = ({ errorTypes = [] }) => {
 
 function getAppErrorInfoCollection(errorTypes = []) {
   const errors = [];
-  if (errorTypes.includes("Hours worked per week")) {
+  if (
+    errorTypes.includes("Hours worked per week - invalid_hours_worked_per_week")
+  ) {
     errors.push(
       new AppErrorInfo({
         message:
           "hours_worked_per_week must be greater than 0 and less than 168",
         type: "invalid_hours_worked_per_week",
+        field: "hours_worked_per_week",
+      })
+    );
+  }
+
+  if (errorTypes.includes("Hours worked per week - minimum")) {
+    errors.push(
+      new AppErrorInfo({
+        message: "Enter the average weekly hours.",
+        type: "minimum",
+        field: "hours_worked_per_week",
+      })
+    );
+  }
+
+  if (errorTypes.includes("Hours worked per week - maximum")) {
+    errors.push(
+      new AppErrorInfo({
+        message: "Average weekly hours must be 168 or fewer.",
+        type: "maximum",
         field: "hours_worked_per_week",
       })
     );

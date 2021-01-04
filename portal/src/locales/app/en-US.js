@@ -445,8 +445,8 @@ const errors = {
       // TODO (EMPLOYER-723) remove this
       invalid_hours_worked_per_week:
         "Average weekly hours must be 168 or fewer.",
-      maximum: "Enter the average weekly hours.",
-      minimum: "Average weekly hours must be 168 or fewer.",
+      maximum: "Average weekly hours must be 168 or fewer.",
+      minimum: "Enter the average weekly hours.",
     },
     outstanding_information_request_required:
       "This application has already been reviewed.",
