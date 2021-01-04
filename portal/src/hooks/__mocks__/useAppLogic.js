@@ -64,6 +64,11 @@ export default jest.fn(() => ({
     goToPageFor: jest.fn(),
     pathname: "/mock-portalFlow-pathname",
   },
+  otherLeaves: {
+    removeEmployerBenefit: jest.fn(() => true),
+    removeOtherIncome: jest.fn(() => true),
+    removePreviousLeave: jest.fn(() => true),
+  },
   setAppErrors: jest.fn(),
   updateUser: jest.fn(),
   user: new User({ user_id: "mock_user_id", consented_to_data_sharing: true }),

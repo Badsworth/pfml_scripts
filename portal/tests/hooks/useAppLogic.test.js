@@ -13,6 +13,7 @@ describe("useAppLogic", () => {
       clearErrors,
       documents,
       employers,
+      otherLeaves,
       portalFlow,
       rest,
       setAppErrors,
@@ -28,6 +29,7 @@ describe("useAppLogic", () => {
         employers,
         clearErrors,
         portalFlow,
+        otherLeaves,
         setAppErrors,
         users,
         ...rest
@@ -53,6 +55,9 @@ describe("useAppLogic", () => {
     expect(documents.loadAll).toBeInstanceOf(Function);
     expect(documents.attach).toBeInstanceOf(Function);
     expect(employers.submit).toBeInstanceOf(Function);
+    expect(otherLeaves.removeEmployerBenefit).toBeInstanceOf(Function);
+    expect(otherLeaves.removeOtherIncome).toBeInstanceOf(Function);
+    expect(otherLeaves.removePreviousLeave).toBeInstanceOf(Function);
     expect(users.user).toBeUndefined();
     expect(users).toEqual(expect.anything());
     // there should be no other properties;

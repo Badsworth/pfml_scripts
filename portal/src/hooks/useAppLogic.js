@@ -4,6 +4,7 @@ import useAuthLogic from "./useAuthLogic";
 import useClaimsLogic from "./useClaimsLogic";
 import useDocumentsLogic from "./useDocumentsLogic";
 import useEmployersLogic from "./useEmployersLogic";
+import useOtherLeavesLogic from "./useOtherLeavesLogic";
 import usePortalFlow from "./usePortalFlow";
 import useUsersLogic from "./useUsersLogic";
 
@@ -43,6 +44,8 @@ const useAppLogic = () => {
     portalFlow,
   });
 
+  const otherLeaves = useOtherLeavesLogic({ appErrorsLogic });
+
   return {
     appErrors,
     auth,
@@ -52,6 +55,7 @@ const useAppLogic = () => {
     clearErrors: appErrorsLogic.clearErrors,
     documents,
     employers,
+    otherLeaves,
     portalFlow,
     setAppErrors: appErrorsLogic.setAppErrors,
     users,
