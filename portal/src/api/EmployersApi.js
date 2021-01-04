@@ -39,15 +39,15 @@ export default class EmployersApi extends BaseApi {
    * @returns {Promise<EmployersAPISingleResult>}
    */
   getClaim = async (absenceId) => {
-    const { data, success, status } = await this.request(
+    const { data, status } = await this.request(
       "GET",
       `claims/${absenceId}/review`
     );
 
     return {
-      claim: success ? new EmployerClaim(data) : null,
+      claim: new EmployerClaim(data),
       status,
-      success,
+      success: true,
     };
   };
 
@@ -92,20 +92,17 @@ export default class EmployersApi extends BaseApi {
    * @returns {DocumentApiListResult} The result of the API call
    */
   getDocuments = async (absenceId) => {
-    const { data, success, status } = await this.request(
+    const { data, status } = await this.request(
       "GET",
       `claims/${absenceId}/documents`
     );
-    let documents = null;
-    if (success) {
-      documents = data.map((documentData) => new Document(documentData));
-      documents = new DocumentCollection(documents);
-    }
+    let documents = data.map((documentData) => new Document(documentData));
+    documents = new DocumentCollection(documents);
 
     return {
       documents,
       status,
-      success,
+      success: true,
     };
   };
 
@@ -117,7 +114,7 @@ export default class EmployersApi extends BaseApi {
    * @returns {Promise<EmployersAPISingleResult>}
    */
   submitClaimReview = async (absenceId, patchData) => {
-    const { status, success } = await this.request(
+    const { status } = await this.request(
       "PATCH",
       `claims/${absenceId}/review`,
       patchData
@@ -126,7 +123,7 @@ export default class EmployersApi extends BaseApi {
     return {
       claim: null,
       status,
-      success,
+      success: true,
     };
   };
 }

@@ -64,7 +64,7 @@ export default class DocumentsApi extends BaseApi {
     formData.append("name", file.name);
     formData.append("mark_evidence_received", mark_evidence_received);
 
-    const { data, status, success } = await this.request(
+    const { data, status } = await this.request(
       "POST",
       `${application_id}/documents`,
       formData,
@@ -73,9 +73,9 @@ export default class DocumentsApi extends BaseApi {
     );
 
     return {
-      document: success ? new Document(data) : null,
+      document: new Document(data),
       status,
-      success,
+      success: true,
     };
   };
 
@@ -87,19 +87,16 @@ export default class DocumentsApi extends BaseApi {
    * @returns {DocumentApiListResult} The result of the API call
    */
   getDocuments = async (application_id) => {
-    const { data, status, success } = await this.request(
+    const { data, status } = await this.request(
       "GET",
       `${application_id}/documents`
     );
-    let documents = null;
-    if (success) {
-      documents = data.map((documentData) => new Document(documentData));
-      documents = new DocumentCollection(documents);
-    }
+    let documents = data.map((documentData) => new Document(documentData));
+    documents = new DocumentCollection(documents);
 
     return {
       documents,
-      success,
+      success: true,
       status,
     };
   };

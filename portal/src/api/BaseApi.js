@@ -15,12 +15,11 @@ import { Auth } from "@aws-amplify/auth";
 import tracker from "../services/tracker";
 
 /**
- * @typedef {Promise<{ data: object, errors: ?Array, warnings: ?Array, status: number, success: boolean}>} Response
+ * @typedef {Promise<{ data: object, errors: ?Array, warnings: ?Array, status: number}>} Response
  * @property {object} data - API's JSON response
  * @property {Array} warnings - API's validation warnings, such as missing required fields. These are "warnings"
  *  because we expect some fields to be missing as the user proceeds page-by-page through the flow.
  * @property {number} status - Status code
- * @property {boolean} success - Did the request succeed or fail?
  */
 
 /**
@@ -124,8 +123,6 @@ export default class BaseApi {
     return {
       data,
       status: response.status,
-      // response.ok is true when the status was in the 2xx range
-      success: response.ok,
       // Guaranteeing warnings is always an array makes our code simpler
       warnings: formatIssues(warnings) || [],
     };

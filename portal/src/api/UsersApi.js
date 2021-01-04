@@ -25,17 +25,13 @@ export default class UsersApi extends BaseApi {
    * @returns {Promise<UsersApiResult>}
    */
   getCurrentUser = async () => {
-    const { data, success, status } = await this.request(
-      "GET",
-      "current",
-      null
-    );
+    const { data, status } = await this.request("GET", "current", null);
     const roles = this.transformUserRoles(data.roles);
 
     return Promise.resolve({
-      success,
+      success: true,
       status,
-      user: success ? new User({ ...data, roles }) : null,
+      user: new User({ ...data, roles }),
     });
   };
 
@@ -46,23 +42,17 @@ export default class UsersApi extends BaseApi {
    * @returns {Promise<UsersApiResult>}
    */
   updateUser = async (user_id, patchData) => {
-    const { data, success, status } = await this.request(
-      "PATCH",
-      user_id,
-      patchData
-    );
+    const { data, status } = await this.request("PATCH", user_id, patchData);
     const roles = this.transformUserRoles(data.roles);
 
     return {
-      success,
+      success: true,
       status,
-      user: success
-        ? new User({
-            ...patchData,
-            ...data,
-            roles,
-          })
-        : null,
+      user: new User({
+        ...patchData,
+        ...data,
+        roles,
+      }),
     };
   };
 
