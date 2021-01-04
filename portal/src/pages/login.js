@@ -45,6 +45,9 @@ export const Login = (props) => {
     updateFields,
   });
   const showClaimantAuth = isFeatureEnabled("claimantShowAuth");
+  const showSelfRegistration = isFeatureEnabled(
+    "employerShowSelfRegistrationForm"
+  );
 
   return (
     <React.Fragment>
@@ -127,6 +130,10 @@ export const Login = (props) => {
                     href={routes.employers.createAccount}
                   />
                 ),
+                "text-normal": <span className="text-normal" />,
+              }}
+              tOptions={{
+                context: showSelfRegistration ? null : "contactCallCenter",
               }}
             />
           </p>

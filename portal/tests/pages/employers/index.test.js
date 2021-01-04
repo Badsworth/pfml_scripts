@@ -14,7 +14,7 @@ describe("Employer index", () => {
       appLogic = useAppLogic();
     });
 
-    wrapper = shallow(<Index appLogic={appLogic} />);
+    wrapper = shallow(<Index appLogic={appLogic} />).dive();
   });
 
   it("renders pre-launch content when claimantShowMedicalLeaveType is false", () => {
@@ -23,6 +23,9 @@ describe("Employer index", () => {
     };
 
     expect(wrapper).toMatchSnapshot();
+    wrapper
+      .find("Trans")
+      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
   it("renders post-launch content when claimantShowMedicalLeaveType is true", () => {
@@ -31,5 +34,8 @@ describe("Employer index", () => {
     };
 
     expect(wrapper).toMatchSnapshot();
+    wrapper
+      .find("Trans")
+      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 });

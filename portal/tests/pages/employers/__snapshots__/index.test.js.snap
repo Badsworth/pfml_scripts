@@ -1,203 +1,309 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Employer index renders post-launch content when claimantShowMedicalLeaveType is true 1`] = `
-<Index
-  appLogic={
-    Object {
-      "appErrors": AppErrorInfoCollection {
-        "items": Array [],
-        "itemsById": Object {},
-      },
-      "auth": Object {
-        "createAccount": [MockFunction],
-        "createEmployerAccount": [MockFunction],
-        "forgotPassword": [MockFunction],
-        "isLoggedIn": true,
-        "login": [MockFunction],
-        "logout": [MockFunction],
-        "requireLogin": [MockFunction],
-        "resendForgotPasswordCode": [MockFunction],
-        "resendVerifyAccountCode": [MockFunction],
-        "resetEmployerPasswordAndCreateEmployerApiAccount": [MockFunction],
-        "resetPassword": [MockFunction],
-        "verifyAccount": [MockFunction],
-        "verifyEmployerAccount": [MockFunction],
-      },
-      "catchError": [MockFunction],
-      "claims": Object {
-        "claims": ClaimCollection {
-          "items": Array [],
-          "itemsById": Object {},
-        },
-        "complete": [MockFunction],
-        "create": [MockFunction],
-        "get": [MockFunction],
-        "hasLoadedAll": false,
-        "hasLoadedClaimAndWarnings": [MockFunction],
-        "load": [MockFunction],
-        "loadAll": [MockFunction],
-        "submit": [MockFunction],
-        "submitPaymentPreference": [MockFunction],
-        "update": [MockFunction],
-        "warningsLists": Object {},
-      },
-      "documents": Object {
-        "attach": [MockFunction],
-        "documents": DocumentCollection {
-          "items": Array [],
-          "itemsById": Object {},
-        },
-        "hasLoadedClaimDocuments": [MockFunction],
-        "loadAll": [MockFunction],
-      },
-      "employers": Object {
-        "downloadDocument": [MockFunction],
-        "loadClaim": [MockFunction],
-        "loadDocuments": [MockFunction],
-        "submit": [MockFunction],
-      },
-      "portalFlow": Object {
-        "goTo": [MockFunction],
-        "goToNextPage": [MockFunction],
-        "goToPageFor": [MockFunction],
-        "pathname": "/mock-portalFlow-pathname",
-      },
-      "setAppErrors": [MockFunction],
-      "updateUser": [MockFunction],
-      "user": User {
-        "auth_id": null,
-        "consented_to_data_sharing": true,
-        "email_address": null,
-        "roles": Array [],
-        "status": null,
-        "user_id": "mock_user_id",
-      },
-      "users": Object {
-        "loadUser": [MockFunction],
-        "requireUserConsentToDataAgreement": [MockFunction],
-        "requireUserRole": [MockFunction],
-        "updateUser": [MockFunction],
-        "user": User {
-          "auth_id": null,
-          "consented_to_data_sharing": true,
-          "email_address": null,
-          "roles": Array [],
-          "status": null,
-          "user_id": "mock_user_id",
-        },
-      },
-    }
-  }
-  user={
-    User {
-      "auth_id": null,
-      "consented_to_data_sharing": true,
-      "email_address": null,
-      "roles": Array [],
-      "status": null,
-      "user_id": "mock_user_id",
-    }
-  }
-/>
+<div
+  className="grid-container"
+>
+  <div
+    className="grid-row"
+  >
+    <div
+      className="desktop:grid-col-8"
+    >
+      <Title>
+        Welcome
+      </Title>
+      <p>
+        Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family leave for bonding with a child, with more benefits available in 2021.
+      </p>
+      <Heading
+        level="2"
+      >
+        <SvgIconMail
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={30}
+          width={30}
+        />
+        Check your email regularly
+      </Heading>
+      <p>
+        When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.
+      </p>
+      <Heading
+        level="2"
+      >
+        <IconWait
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={30}
+          width={30}
+        />
+        Respond to applications within 10 business days
+      </Heading>
+      <p>
+        When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.
+      </p>
+      <Heading
+        level="2"
+      >
+        <SvgIconPdf
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={30}
+          width={30}
+        />
+        View forms and notices online
+      </Heading>
+      <p>
+        <Trans
+          components={
+            Object {
+              "healthcare-provider-form-link": <a
+                href="https://www.mass.gov/hcp-form"
+                rel="noopener"
+                target="_blank"
+              />,
+            }
+          }
+          i18nKey="pages.employersDashboard.viewFormsBody"
+        />
+      </p>
+    </div>
+    <div
+      className="grid-col-fill"
+    />
+    <aside
+      className="desktop:grid-col-3 margin-top-7 desktop:margin-top-1"
+    >
+      <Heading
+        level="2"
+      >
+        Learn more
+      </Heading>
+      <Trans
+        components={
+          Object {
+            "li": <li />,
+            "mass-employer-role-link": <a
+              href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+              rel="noopener"
+              target="_blank"
+            />,
+            "reimbursements-link": <a
+              href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
+              rel="noopener"
+              target="_blank"
+            />,
+            "ul": <ul
+              className="usa-list desktop:font-body-2xs desktop:padding-top-05"
+            />,
+          }
+        }
+        i18nKey="pages.employersDashboard.learnMoreLinks"
+      />
+    </aside>
+  </div>
+</div>
+`;
+
+exports[`Employer index renders post-launch content when claimantShowMedicalLeaveType is true 2`] = `
+Array [
+  "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the ",
+  <a
+    href="https://www.mass.gov/hcp-form"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    Certification of a Serious Health Condition form
+  </a>,
+  " during the review process.",
+]
+`;
+
+exports[`Employer index renders post-launch content when claimantShowMedicalLeaveType is true 3`] = `
+<ul
+  className="usa-list desktop:font-body-2xs desktop:padding-top-05"
+  key="0"
+>
+  <li
+    key="0"
+  >
+    <a
+      href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+      key="0"
+      rel="noopener"
+      target="_blank"
+    >
+      Your role as a Massachusetts employer
+    </a>
+  </li>
+  <li
+    key="1"
+  >
+    <a
+      href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
+      key="0"
+      rel="noopener"
+      target="_blank"
+    >
+      Employer reimbursements
+    </a>
+  </li>
+</ul>
 `;
 
 exports[`Employer index renders pre-launch content when claimantShowMedicalLeaveType is false 1`] = `
-<Index
-  appLogic={
-    Object {
-      "appErrors": AppErrorInfoCollection {
-        "items": Array [],
-        "itemsById": Object {},
-      },
-      "auth": Object {
-        "createAccount": [MockFunction],
-        "createEmployerAccount": [MockFunction],
-        "forgotPassword": [MockFunction],
-        "isLoggedIn": true,
-        "login": [MockFunction],
-        "logout": [MockFunction],
-        "requireLogin": [MockFunction],
-        "resendForgotPasswordCode": [MockFunction],
-        "resendVerifyAccountCode": [MockFunction],
-        "resetEmployerPasswordAndCreateEmployerApiAccount": [MockFunction],
-        "resetPassword": [MockFunction],
-        "verifyAccount": [MockFunction],
-        "verifyEmployerAccount": [MockFunction],
-      },
-      "catchError": [MockFunction],
-      "claims": Object {
-        "claims": ClaimCollection {
-          "items": Array [],
-          "itemsById": Object {},
-        },
-        "complete": [MockFunction],
-        "create": [MockFunction],
-        "get": [MockFunction],
-        "hasLoadedAll": false,
-        "hasLoadedClaimAndWarnings": [MockFunction],
-        "load": [MockFunction],
-        "loadAll": [MockFunction],
-        "submit": [MockFunction],
-        "submitPaymentPreference": [MockFunction],
-        "update": [MockFunction],
-        "warningsLists": Object {},
-      },
-      "documents": Object {
-        "attach": [MockFunction],
-        "documents": DocumentCollection {
-          "items": Array [],
-          "itemsById": Object {},
-        },
-        "hasLoadedClaimDocuments": [MockFunction],
-        "loadAll": [MockFunction],
-      },
-      "employers": Object {
-        "downloadDocument": [MockFunction],
-        "loadClaim": [MockFunction],
-        "loadDocuments": [MockFunction],
-        "submit": [MockFunction],
-      },
-      "portalFlow": Object {
-        "goTo": [MockFunction],
-        "goToNextPage": [MockFunction],
-        "goToPageFor": [MockFunction],
-        "pathname": "/mock-portalFlow-pathname",
-      },
-      "setAppErrors": [MockFunction],
-      "updateUser": [MockFunction],
-      "user": User {
-        "auth_id": null,
-        "consented_to_data_sharing": true,
-        "email_address": null,
-        "roles": Array [],
-        "status": null,
-        "user_id": "mock_user_id",
-      },
-      "users": Object {
-        "loadUser": [MockFunction],
-        "requireUserConsentToDataAgreement": [MockFunction],
-        "requireUserRole": [MockFunction],
-        "updateUser": [MockFunction],
-        "user": User {
-          "auth_id": null,
-          "consented_to_data_sharing": true,
-          "email_address": null,
-          "roles": Array [],
-          "status": null,
-          "user_id": "mock_user_id",
-        },
-      },
-    }
-  }
-  user={
-    User {
-      "auth_id": null,
-      "consented_to_data_sharing": true,
-      "email_address": null,
-      "roles": Array [],
-      "status": null,
-      "user_id": "mock_user_id",
-    }
-  }
-/>
+<div
+  className="grid-container"
+>
+  <div
+    className="grid-row"
+  >
+    <div
+      className="desktop:grid-col-8"
+    >
+      <Title>
+        Welcome
+      </Title>
+      <p>
+        Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family leave for bonding with a child, with more benefits available in 2021.
+      </p>
+      <Heading
+        level="2"
+      >
+        <SvgIconMail
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={30}
+          width={30}
+        />
+        Check your email regularly
+      </Heading>
+      <p>
+        When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.
+      </p>
+      <Heading
+        level="2"
+      >
+        <IconWait
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={30}
+          width={30}
+        />
+        Respond to applications within 10 business days
+      </Heading>
+      <p>
+        When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.
+      </p>
+      <Heading
+        level="2"
+      >
+        <SvgIconPdf
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={30}
+          width={30}
+        />
+        View forms and notices online
+      </Heading>
+      <p>
+        <Trans
+          components={
+            Object {
+              "healthcare-provider-form-link": <a
+                href="https://www.mass.gov/hcp-form"
+                rel="noopener"
+                target="_blank"
+              />,
+            }
+          }
+          i18nKey="pages.employersDashboard.viewFormsBody"
+        />
+      </p>
+    </div>
+    <div
+      className="grid-col-fill"
+    />
+    <aside
+      className="desktop:grid-col-3 margin-top-7 desktop:margin-top-1"
+    >
+      <Heading
+        level="2"
+      >
+        Learn more
+      </Heading>
+      <Trans
+        components={
+          Object {
+            "li": <li />,
+            "mass-employer-role-link": <a
+              href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+              rel="noopener"
+              target="_blank"
+            />,
+            "reimbursements-link": <a
+              href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
+              rel="noopener"
+              target="_blank"
+            />,
+            "ul": <ul
+              className="usa-list desktop:font-body-2xs desktop:padding-top-05"
+            />,
+          }
+        }
+        i18nKey="pages.employersDashboard.learnMoreLinks"
+      />
+    </aside>
+  </div>
+</div>
+`;
+
+exports[`Employer index renders pre-launch content when claimantShowMedicalLeaveType is false 2`] = `
+Array [
+  "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the ",
+  <a
+    href="https://www.mass.gov/hcp-form"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    Certification of a Serious Health Condition form
+  </a>,
+  " during the review process.",
+]
+`;
+
+exports[`Employer index renders pre-launch content when claimantShowMedicalLeaveType is false 3`] = `
+<ul
+  className="usa-list desktop:font-body-2xs desktop:padding-top-05"
+  key="0"
+>
+  <li
+    key="0"
+  >
+    <a
+      href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+      key="0"
+      rel="noopener"
+      target="_blank"
+    >
+      Your role as a Massachusetts employer
+    </a>
+  </li>
+  <li
+    key="1"
+  >
+    <a
+      href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
+      key="0"
+      rel="noopener"
+      target="_blank"
+    >
+      Employer reimbursements
+    </a>
+  </li>
+</ul>
 `;

@@ -637,6 +637,8 @@ const pages = {
       "Need to apply for paid leave? <create-account-link>Create an account</create-account-link>",
     createEmployerAccount:
       "Are you a Massachusetts employer? <create-employer-account-link>Create an employer account</create-employer-account-link>",
+    createEmployerAccount_contactCallCenter:
+      "Are you a Massachusetts employer? <text-normal>Call $t(shared.contactCenterPhoneNumber) to create an employer account.</text-normal>",
     forgotPasswordLink: "Forgot your password?",
     loginButton: "Log in",
     passwordLabel: "$t(shared.passwordLabel)",
@@ -1501,6 +1503,12 @@ const pages = {
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     leadBackground:
       "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave.",
+    leadBackground_accountCreationCallCenter:
+      "Please call us at $t(shared.contactCenterPhoneNumber) to create an account for your organization.",
+    leadBackground_accountCreationInstructions:
+      "You'll need the following information to <account-creation-link>get started</account-creation-link>:",
+    leadBackground_accountCreationList:
+      "<ul><li>Work email address: An email address can only be associated with one account.</li><li>Password: Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters.</li><li>Employer ID number (EIN): A 9-digit number assigned by the Internal Revenue Service. It is listed on tax returns and your payroll department should have this information.</li></ul>",
     leadBackground_prelaunch:
       "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family leave for bonding with a child, with more benefits available in 2021.",
     leadMultipleCompanies:

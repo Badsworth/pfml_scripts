@@ -48,6 +48,10 @@ const flagsConfig = {
     // TODO (EMPLOYER-718): Remove flag
     employerShowPreviousLeaves: false,
 
+    // When this flag is enabled, the form on Employer Create Account page is visible
+    // TODO (EMPLOYER-718): Remove flag
+    employerShowSelfRegistrationForm: false,
+
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
     noMaintenance: false,

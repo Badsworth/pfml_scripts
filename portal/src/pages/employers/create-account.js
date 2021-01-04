@@ -42,73 +42,114 @@ export const CreateAccount = (props) => {
   });
 
   const showMedicalLeave = isFeatureEnabled("claimantShowMedicalLeaveType");
+  const showSelfRegistration = isFeatureEnabled(
+    "employerShowSelfRegistrationForm"
+  );
 
   return (
-    <form className="usa-form" onSubmit={handleSubmit}>
-      <Title>{t("pages.employersAuthCreateAccount.title")}</Title>
-      <Alert state="info" className="margin-bottom-3" neutral>
-        <Trans
-          i18nKey="pages.employersAuthCreateAccount.alertHeading"
-          components={{
-            "create-account-link": <a href={routes.index} />,
-            p: <p />,
-          }}
-        />
-      </Alert>
-      <Lead>
-        {t("pages.employersAuthCreateAccount.leadBackground", {
-          context: showMedicalLeave ? null : "prelaunch",
-        })}
-      </Lead>
-      <Lead>{t("pages.employersAuthCreateAccount.leadMultipleCompanies")}</Lead>
-      <Details label={t("pages.employersAuthCreateAccount.detailsLabel")}>
-        <Trans
-          i18nKey="pages.employersAuthCreateAccount.detailsList"
-          components={{
-            ul: <ul className="usa-list" />,
-            li: <li />,
-          }}
-        />
-      </Details>
-      <InputText
-        {...getFunctionalInputProps("username")}
-        type="email"
-        hint={t("pages.employersAuthCreateAccount.usernameHint")}
-        label={t("pages.employersAuthCreateAccount.usernameLabel")}
-        smallLabel
-      />
-      <InputPassword
-        {...getFunctionalInputProps("password")}
-        autoComplete="new-password"
-        hint={t("pages.employersAuthCreateAccount.passwordHint")}
-        label={t("pages.employersAuthCreateAccount.passwordLabel")}
-        smallLabel
-      />
-      <InputText
-        {...getFunctionalInputProps("ein")}
-        inputMode="numeric"
-        mask="fein"
-        hint={
+    <React.Fragment>
+      <form className="usa-form" onSubmit={handleSubmit}>
+        <Title>{t("pages.employersAuthCreateAccount.title")}</Title>
+        <Alert state="info" className="margin-bottom-3" neutral>
           <Trans
-            i18nKey="pages.employersAuthCreateAccount.einHint"
+            i18nKey="pages.employersAuthCreateAccount.alertHeading"
             components={{
-              "ein-link": (
-                <a
-                  target="_blank"
-                  rel="noopener"
-                  href={routes.external.massgov.federalEmployerIdNumber}
-                />
-              ),
+              "create-account-link": <a href={routes.index} />,
+              p: <p />,
             }}
           />
-        }
-        label={t("pages.employersAuthCreateAccount.einLabel")}
-        smallLabel
-      />
-      <p>{t("pages.employersAuthCreateAccount.nextStep")}</p>
-      <Button type="submit" loading={handleSubmit.isThrottled}>
-        {t("pages.employersAuthCreateAccount.createAccountButton")}
-      </Button>
+        </Alert>
+        {!showSelfRegistration && (
+          <React.Fragment>
+            <p>
+              {t(
+                "pages.employersAuthCreateAccount.leadBackground_accountCreationContactCenter"
+              )}
+            </p>
+            <p>
+              <Trans
+                i18nKey="pages.employersAuthCreateAccount.leadBackground_accountCreationInstructions"
+                components={{
+                  "account-creation-link": (
+                    <a
+                      href={routes.external.massgov.employerAccount}
+                      target="_blank"
+                      rel="noopener"
+                    />
+                  ),
+                }}
+              />
+            </p>
+            <Trans
+              i18nKey="pages.employersAuthCreateAccount.leadBackground_accountCreationList"
+              components={{
+                ul: <ul className="usa-list" />,
+                li: <li />,
+              }}
+            />
+          </React.Fragment>
+        )}
+        {showSelfRegistration && (
+          <React.Fragment>
+            <Lead>
+              {t("pages.employersAuthCreateAccount.leadBackground", {
+                context: showMedicalLeave ? null : "prelaunch",
+              })}
+            </Lead>
+            <Lead>
+              {t("pages.employersAuthCreateAccount.leadMultipleCompanies")}
+            </Lead>
+            <Details label={t("pages.employersAuthCreateAccount.detailsLabel")}>
+              <Trans
+                i18nKey="pages.employersAuthCreateAccount.detailsList"
+                components={{
+                  ul: <ul className="usa-list" />,
+                  li: <li />,
+                }}
+              />
+            </Details>
+            <InputText
+              {...getFunctionalInputProps("username")}
+              type="email"
+              hint={t("pages.employersAuthCreateAccount.usernameHint")}
+              label={t("pages.employersAuthCreateAccount.usernameLabel")}
+              smallLabel
+            />
+            <InputPassword
+              {...getFunctionalInputProps("password")}
+              autoComplete="new-password"
+              hint={t("pages.employersAuthCreateAccount.passwordHint")}
+              label={t("pages.employersAuthCreateAccount.passwordLabel")}
+              smallLabel
+            />
+            <InputText
+              {...getFunctionalInputProps("ein")}
+              inputMode="numeric"
+              mask="fein"
+              hint={
+                <Trans
+                  i18nKey="pages.employersAuthCreateAccount.einHint"
+                  components={{
+                    "ein-link": (
+                      <a
+                        target="_blank"
+                        rel="noopener"
+                        href={routes.external.massgov.federalEmployerIdNumber}
+                      />
+                    ),
+                  }}
+                />
+              }
+              label={t("pages.employersAuthCreateAccount.einLabel")}
+              smallLabel
+            />
+            <p>{t("pages.employersAuthCreateAccount.nextStep")}</p>
+            <Button type="submit" loading={handleSubmit.isThrottled}>
+              {t("pages.employersAuthCreateAccount.createAccountButton")}
+            </Button>
+          </React.Fragment>
+        )}
+      </form>
 
       <div className="border-top-2px border-base-lighter margin-top-4 padding-top-4 text-base-dark text-bold">
         <p>
@@ -121,7 +162,6 @@ export const CreateAccount = (props) => {
             }}
           />
         </p>
-
         <p>
           <Trans
             i18nKey="pages.employersAuthCreateAccount.createClaimantAccount"
@@ -136,7 +176,7 @@ export const CreateAccount = (props) => {
           />
         </p>
       </div>
-    </form>
+    </React.Fragment>
   );
 };
 

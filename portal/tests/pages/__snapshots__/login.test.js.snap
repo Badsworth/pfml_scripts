@@ -51,9 +51,17 @@ exports[`Login renders the empty page 1`] = `
                 className="display-inline-block"
                 href="/employers/create-account"
               />,
+              "text-normal": <span
+                className="text-normal"
+              />,
             }
           }
           i18nKey="pages.authLogin.createEmployerAccount"
+          tOptions={
+            Object {
+              "context": "contactCallCenter",
+            }
+          }
         />
       </p>
     </div>
