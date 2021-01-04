@@ -103,7 +103,8 @@ export default class SimulationRunner {
         claim.claim,
         submittedDocuments.map(
           makeDocUploadBody(this.storage.documentDirectory, "Automated Upload")
-        )
+        ),
+        claim.paymentPreference
       );
       claimId = responseIds.fineos_absence_id as string;
     }
