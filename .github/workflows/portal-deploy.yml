@@ -66,6 +66,7 @@ jobs:
         run: |
           echo "Not part of pfml-devops, cancelling workflow"
           exit 1
+
   update-the-deploy-branch:
     name: Update archival branch
     needs: prod-check
@@ -97,6 +98,42 @@ jobs:
           git reset --hard $commit_hash
           git push -f origin HEAD
           echo "::set-output name=commit_hash::$commit_hash"
+
+
+  start-deployment-status:
+    name: Start deployment status
+    needs: update-the-deploy-branch
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_id: ${{ steps.create-deployment.outputs.deployment_id }}
+
+    steps:
+      - name: Set portal-env Value
+        run: echo "portal-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
+
+      - name: Set deployed-url Value
+        run: |
+          if [[ "${{ env.portal-env }}" == 'prod' ]]; then
+            echo "deployed-url=https://paidleave.mass.gov/" >> $GITHUB_ENV
+          else
+            echo "deployed-url=https://paidleave-${{ env.portal-env }}.mass.gov/" >> $GITHUB_ENV
+          fi
+
+      - uses: chrnorm/deployment-action@releases/v1
+        name: Create GitHub deployment
+        id: create-deployment
+        with:
+          # NOTE: If you are intending for this GitHub deployment to trigger another
+          #       workflow that's listening for on: [deployment], you need to update this
+          #       to secrets.PFML_DEVOPS_TOKEN (same for the update step at the end.)
+          #
+          #       This is intentionally using the github.token right now to avoid unintended
+          #       side-effects from happening off of the automated deployments.
+          #
+          token: "${{ github.token }}"
+          target_url: ${{ env.deployed-url }}
+          environment: "Portal (${{ env.portal-env }})"
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
   deploy:
     name: Deploy
@@ -188,6 +225,7 @@ jobs:
         id: terraform_apply
         run: terraform apply plan.tfplan
         working-directory: ${{ env.terraformBaseDir }}${{ env.portal_env }}
+
   invalidate-cloudfront:
     name: Invalidate Cloudfront Cache
     runs-on: ubuntu-latest
@@ -237,6 +275,44 @@ jobs:
           sudo apt-get install jq
           DISTRIBUTION_ID=$(echo $TF_OUTPUT | jq -r '.cloudfront_distribution_id.value')
           aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+
+  update-deployment-status:
+    name: Update deployment status
+    needs: [start-deployment-status, invalidate-cloudfront]
+    runs-on: ubuntu-latest
+    if: always() && needs.start-deployment-status.result == 'success'
+
+    steps:
+      - name: Set deploy-state Value to true
+        run: |
+          if [[ $DEPLOY_RESULT == 'success' ]]
+          then
+            echo "deploy-state=success" >> $GITHUB_ENV
+          else
+            echo "deploy-state=failure" >> $GITHUB_ENV
+          fi
+        env:
+          DEPLOY_RESULT: ${{ needs.invalidate-cloudfront.result }}
+
+      - name: Set portal-env Value
+        run: echo "portal-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
+
+      - name: Set deployed-url Value
+        run: |
+          if [[ "${{ env.portal-env }}" == 'prod' ]]; then
+            echo "deployed-url=https://paidleave.mass.gov/" >> $GITHUB_ENV
+          else
+            echo "deployed-url=https://paidleave-${{ env.portal-env }}.mass.gov/" >> $GITHUB_ENV
+          fi
+
+      - uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: ${{ github.token }}
+          # This should match target_url in start-deployment-status.
+          # see: https://github.com/chrnorm/deployment-status/issues/13#issuecomment-734731491
+          environment_url: ${{ env.deployed-url }}
+          state: ${{ env.deploy-state }}
+          deployment_id: ${{ needs.start-deployment-status.outputs.deploy_id }}
 
   end-to-end:
     name: End-to-End Test Deployment
