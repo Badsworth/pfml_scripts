@@ -104,6 +104,9 @@ def applications_start():
     with app.db_session() as db_session:
         db_session.add(application)
 
+    log_attributes = get_application_log_attributes(application)
+    logger.info("applications_start success", extra=log_attributes)
+
     return response_util.success_response(
         message="Successfully created application",
         data=ApplicationResponse.from_orm(application).dict(),
@@ -121,6 +124,10 @@ def applications_update(application_id):
 
     # The presence of a submitted_time indicates that the application has already been submitted.
     if existing_application.submitted_time:
+        log_attributes = get_application_log_attributes(existing_application)
+        logger.info(
+            "applications_update failure - application already submitted", extra=log_attributes
+        )
         return response_util.error_response(
             status_code=Forbidden,
             message="Application {} could not be updated. Application already submitted on {}".format(
@@ -143,6 +150,11 @@ def applications_update(application_id):
         )
 
     issues = application_rules.get_application_issues(existing_application)
+
+    # Calling get_application_log_attributes too early causes the application not to update properly for some reason
+    # See https://github.com/EOLWD/pfml/pull/2601
+    log_attributes = get_application_log_attributes(existing_application)
+    logger.info("applications_update success", extra=log_attributes)
 
     return response_util.success_response(
         message="Application updated without errors.",
@@ -618,6 +630,8 @@ def payment_preference_submit(application_id: str) -> Response:
 
         ensure(EDIT, existing_application)
 
+        log_attributes = get_application_log_attributes(existing_application)
+
         updated_body = applications_service.remove_masked_fields_from_request(
             body, existing_application
         )
@@ -625,6 +639,10 @@ def payment_preference_submit(application_id: str) -> Response:
         payment_pref_request = PaymentPreferenceRequestBody.parse_obj(updated_body)
 
         if not payment_pref_request.payment_preference:
+            logger.info(
+                "payment_preference_submit failure - payment preference is null",
+                extra=log_attributes,
+            )
             return response_util.error_response(
                 status_code=BadRequest,
                 message="Payment Preference cannot be null",
@@ -643,6 +661,10 @@ def payment_preference_submit(application_id: str) -> Response:
 
             issues = application_rules.get_payments_issues(existing_application)
             if issues:
+                logger.info(
+                    "payment_preference_submit failure - payment preference failed validation",
+                    extra=log_attributes,
+                )
                 return response_util.error_response(
                     status_code=BadRequest,
                     message="Payment info is not valid for submission",
@@ -658,6 +680,8 @@ def payment_preference_submit(application_id: str) -> Response:
                     db_session.commit()
                     db_session.refresh(existing_application)
 
+                    logger.info("payment_preference_submit success", extra=log_attributes)
+
                     return response_util.success_response(
                         message="Payment Preference for application {} submitted without errors".format(
                             existing_application.application_id
@@ -668,6 +692,10 @@ def payment_preference_submit(application_id: str) -> Response:
                         status_code=201,
                     ).to_api_response()
                 except ValueError as ve:
+                    logger.error(
+                        "payment_preference_submit failure - failure submitting payment preference to claims processing system",
+                        extra=log_attributes,
+                    )
                     return response_util.error_response(
                         status_code=BadRequest,
                         message=str(ve),
@@ -677,12 +705,21 @@ def payment_preference_submit(application_id: str) -> Response:
                         ),
                     ).to_api_response()
             else:
+                logger.error(
+                    "payment_preference_submit failure - failure saving payment preference to database",
+                    extra=log_attributes,
+                )
                 return response_util.error_response(
                     status_code=ServiceUnavailable,
                     message="Payment Preference failed to save. Please try again.",
                     data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
                     errors=[],
                 ).to_api_response()
+
+        logger.info(
+            "payment_preference_submit failure - payment preference already submitted",
+            extra=log_attributes,
+        )
         return response_util.error_response(
             status_code=Forbidden,
             message="Application {} could not be updated. Payment preference already submitted".format(
