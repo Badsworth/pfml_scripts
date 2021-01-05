@@ -1,0 +1,66 @@
+# Run linting for the Paid Leave API when PR commenter requests it.
+#
+name: API Linter
+
+on:
+  issue_comment:
+    types: [created]
+    paths:
+      - api/**
+
+defaults:
+  run:
+    working-directory: ./api
+
+env:
+  CI: true
+
+jobs:
+  # Check for formatting and linting issues.
+  comment-check:
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request
+
+    outputs:
+      asked: ${{ steps.check.outputs.triggered }}
+
+    steps:
+      - uses: khan/pull-request-comment-trigger@master
+        id: check
+        with:
+          trigger: '/gh make format'
+          reaction: rocket
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  format:
+    runs-on: ubuntu-latest
+    needs: [comment-check]
+    if: needs.comment-check.outputs.asked == 'true'
+
+    steps:
+      - name: get pull request ref
+        id: get_pull_request_ref
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/:repository/pulls/:issue_id
+          repository: ${{ github.repository }}
+          issue_id: ${{ github.event.issue.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ fromJson(steps.get_pull_request_ref.outputs.data).head.ref }}
+        
+      - name: build container
+        run: make build
+
+      - name: format
+        run: make format
+
+      - uses: EndBug/add-and-commit@v6
+        with:
+          message: 'Autoformat API files'
+          branch: ${{ fromJson(steps.get_pull_request_ref.outputs.data).head.ref }}
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
