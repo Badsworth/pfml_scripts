@@ -39,8 +39,8 @@ class LeaveDetails(PydanticBaseModel):
 class EmployerBenefit(PydanticBaseModel):
     benefit_amount_dollars: Optional[float]
     benefit_amount_frequency: Optional[str]
-    benefit_start_date: date
-    benefit_end_date: date
+    benefit_start_date: Optional[date]
+    benefit_end_date: Optional[date]
     benefit_type: Optional[str]
     program_type: Optional[str]
 

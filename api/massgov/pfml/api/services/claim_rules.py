@@ -103,6 +103,11 @@ def get_employer_benefits_issues(
         return error_list
 
     for index, employer_benefit in enumerate(employer_benefits):
+        # FINEOS does not require that benefit_start_date or benefit_end_date is populated.
+        # The existence of one also does not imply the existence of the other.
+        if employer_benefit.benefit_start_date is None or employer_benefit.benefit_end_date is None:
+            continue
+
         if employer_benefit.benefit_start_date > employer_benefit.benefit_end_date:
             error_list.append(
                 ValidationErrorDetail(
