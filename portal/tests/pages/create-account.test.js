@@ -57,4 +57,12 @@ describe("CreateAccount", () => {
 
     expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
   });
+
+  it("displays employer-specific content when employerShowSelfRegistrationForm is false", () => {
+    process.env.featureFlags = { employerShowSelfRegistrationForm: false };
+
+    wrapper.find("Trans").forEach((trans) => {
+      expect(trans.dive()).toMatchSnapshot();
+    });
+  });
 });

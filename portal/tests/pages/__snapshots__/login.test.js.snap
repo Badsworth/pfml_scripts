@@ -40,7 +40,7 @@ exports[`Login renders the empty page 1`] = `
       Log in
     </Button>
     <div
-      className="border-top-2px border-base-lighter margin-top-4 padding-top-4 text-base-dark text-bold"
+      className="border-top-2px border-base-lighter margin-top-4 padding-top-4 text-base-dark"
     >
       <div />
       <p>
@@ -50,9 +50,6 @@ exports[`Login renders the empty page 1`] = `
               "create-employer-account-link": <a
                 className="display-inline-block"
                 href="/employers/create-account"
-              />,
-              "text-normal": <span
-                className="text-normal"
               />,
             }
           }

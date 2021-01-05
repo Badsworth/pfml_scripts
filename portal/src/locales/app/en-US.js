@@ -613,6 +613,8 @@ const pages = {
       "<strong>Are you a Massachusetts employer?</strong> <employer-create-account-link>Create an employer account</employer-create-account-link> to manage leave for your team.",
     backButton: "Back to Mass.gov",
     createAccountButton: "Create account",
+    createEmployerAccount:
+      "<strong>Are you a Massachusetts employer?</strong> Call $t(shared.contactCenterPhoneNumber) to create an employer account.",
     haveAnAccountFooterLabel: "Have an account?",
     logInFooterLink: "Log in",
     passwordHint: "$t(shared.passwordHint)",
@@ -634,11 +636,11 @@ const pages = {
       "Thanks for verifying your email address. You may now log into your account.",
     accountVerifiedHeading: "Email successfully verified",
     createClaimantAccount:
-      "Need to apply for paid leave? <create-account-link>Create an account</create-account-link>",
+      "<strong>Need to apply for paid leave? <create-account-link>Create an account</create-account-link></strong>",
     createEmployerAccount:
       "Are you a Massachusetts employer? <create-employer-account-link>Create an employer account</create-employer-account-link>",
     createEmployerAccount_contactCallCenter:
-      "Are you a Massachusetts employer? <text-normal>Call $t(shared.contactCenterPhoneNumber) to create an employer account.</text-normal>",
+      "<strong>Are you a Massachusetts employer?</strong> Call $t(shared.contactCenterPhoneNumber) to create an employer account.",
     forgotPasswordLink: "Forgot your password?",
     loginButton: "Log in",
     passwordLabel: "$t(shared.passwordLabel)",

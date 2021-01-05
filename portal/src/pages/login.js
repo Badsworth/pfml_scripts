@@ -96,7 +96,7 @@ export const Login = (props) => {
           {t("pages.authLogin.loginButton")}
         </Button>
 
-        <div className="border-top-2px border-base-lighter margin-top-4 padding-top-4 text-base-dark text-bold">
+        <div className="border-top-2px border-base-lighter margin-top-4 padding-top-4 text-base-dark">
           <div>
             {/*
               Empty <div> above is a hacky fix to an issue where React was outputting the wrong href for
@@ -130,7 +130,6 @@ export const Login = (props) => {
                     href={routes.employers.createAccount}
                   />
                 ),
-                "text-normal": <span className="text-normal" />,
               }}
               tOptions={{
                 context: showSelfRegistration ? null : "contactCallCenter",

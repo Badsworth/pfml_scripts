@@ -35,6 +35,10 @@ export const CreateAccount = (props) => {
     updateFields,
   });
 
+  const showSelfRegistration = isFeatureEnabled(
+    "employerShowSelfRegistrationForm"
+  );
+
   // Temporarily prevent users from accessing this page prior to launch
   // TODO (CP-1407): Remove this redirect logic
   useEffect(() => {
@@ -81,13 +85,18 @@ export const CreateAccount = (props) => {
         {t("pages.authCreateAccount.createAccountButton")}
       </Button>
       <div className="border-top-2px border-base-lighter margin-top-4" />
-      <div className="margin-top-4 text-base-darkest text-bold">
-        {t("pages.authCreateAccount.haveAnAccountFooterLabel")}
+      <div className="margin-top-4 text-base-darkest">
+        <strong>{t("pages.authCreateAccount.haveAnAccountFooterLabel")}</strong>
         <Link href={routes.auth.login}>
-          <a className="display-inline-block margin-left-1">
+          <a className="display-inline-block margin-left-1 text-bold">
             {t("pages.authCreateAccount.logInFooterLink")}
           </a>
         </Link>
+        {!showSelfRegistration && (
+          <p>
+            <Trans i18nKey="pages.authCreateAccount.createEmployerAccount" />
+          </p>
+        )}
       </div>
     </form>
   );
