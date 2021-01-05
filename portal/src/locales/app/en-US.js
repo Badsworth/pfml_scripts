@@ -1805,10 +1805,9 @@ const pages = {
     claimantCreateAccountButton: "Create an account",
     claimantHeading: "Workers",
     createAccountHeading: "Create an account",
-    employerCardBody: "Register now so you can manage leave for your team.",
-    employerCardBody_prelaunch:
-      "Register now so your team is ready for when workers can start requesting leave.",
-    employerCreateAccountButton: "Create an employer account",
+    employerCardBody_contactCenter:
+      "Call $t(shared.contactCenterPhoneNumber) to create an employer account.",
+    employerCardBody_massEmployer: "Are you a Massachusetts employer?",
     employerHeading: "Employers",
     seoTitle: "Massachusetts Paid Family and Medical Leave",
     title:

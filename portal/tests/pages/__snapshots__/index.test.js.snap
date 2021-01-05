@@ -1,5 +1,78 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Index does not render employer information when employerShowSelfRegistrationForm is true 1`] = `
+<Fragment>
+  <Title
+    seoTitle="Massachusetts Paid Family and Medical Leave"
+  >
+    <Trans
+      components={
+        Object {
+          "mass-paid-leave-link": <a
+            href="https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="pages.index.title"
+      tOptions={
+        Object {
+          "context": "prelaunch",
+        }
+      }
+    />
+  </Title>
+  <div
+    className="margin-top-6 measure-7"
+  >
+    <Heading
+      level="2"
+    >
+      Create an account
+    </Heading>
+    <div
+      className="grid-row grid-gap"
+    >
+      <article
+        className="margin-bottom-3 measure-3"
+      >
+        <div
+          className="bg-base-lightest padding-3"
+        >
+          <p>
+            <Trans
+              components={
+                Object {
+                  "mass-how-to-apply-link": <a
+                    href="https://www.mass.gov/guides/what-is-paid-family-and-medical-leave#-how-can-i-apply-for-paid-leave-massachusetts-benefits"
+                  />,
+                }
+              }
+              i18nKey="pages.index.claimantCardBodyPrelaunch"
+            />
+          </p>
+        </div>
+      </article>
+    </div>
+  </div>
+</Fragment>
+`;
+
+exports[`Index does not render employer information when employerShowSelfRegistrationForm is true 2`] = `"Coming soon: Log into your Paid Family and Medical Leave account."`;
+
+exports[`Index does not render employer information when employerShowSelfRegistrationForm is true 3`] = `
+Array [
+  "Later this month, you can create an account to apply for Paid Family and Medical Leave. ",
+  <a
+    href="https://www.mass.gov/guides/what-is-paid-family-and-medical-leave#-how-can-i-apply-for-paid-leave-massachusetts-benefits"
+    key="1"
+  >
+    Learn more about how to apply.
+  </a>,
+]
+`;
+
 exports[`Index renders post-launch index content when claimantShowAuth is true 1`] = `
 <Fragment>
   <Title
@@ -35,11 +108,16 @@ exports[`Index renders post-launch index content when claimantShowAuth is true 1
       className="grid-row grid-gap"
     >
       <article
-        className="measure-3"
+        className="margin-bottom-3 measure-3"
       >
         <div
           className="bg-base-lightest padding-3"
         >
+          <Heading
+            level="3"
+          >
+            Workers
+          </Heading>
           <p>
             You can now apply for Paid Family and Medical Leave.
           </p>
@@ -63,6 +141,24 @@ exports[`Index renders post-launch index content when claimantShowAuth is true 1
               </a>
             </Link>
           </div>
+        </div>
+      </article>
+      <article
+        className="measure-3"
+      >
+        <div
+          className="bg-base-lightest padding-3"
+        >
+          <Heading
+            level="3"
+          >
+            Employers
+          </Heading>
+          <p>
+            Are you a Massachusetts employer?
+            <br />
+            Call (833) 344‑7365 to create an employer account.
+          </p>
         </div>
       </article>
     </div>
@@ -120,7 +216,7 @@ exports[`Index renders pre-launch index content 1`] = `
       className="grid-row grid-gap"
     >
       <article
-        className="measure-3"
+        className="margin-bottom-3 measure-3"
       >
         <div
           className="bg-base-lightest padding-3"
@@ -136,6 +232,24 @@ exports[`Index renders pre-launch index content 1`] = `
               }
               i18nKey="pages.index.claimantCardBodyPrelaunch"
             />
+          </p>
+        </div>
+      </article>
+      <article
+        className="measure-3"
+      >
+        <div
+          className="bg-base-lightest padding-3"
+        >
+          <Heading
+            level="3"
+          >
+            Employers
+          </Heading>
+          <p>
+            Are you a Massachusetts employer?
+            <br />
+            Call (833) 344‑7365 to create an employer account.
           </p>
         </div>
       </article>

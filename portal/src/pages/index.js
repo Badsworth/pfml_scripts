@@ -15,6 +15,9 @@ export const Index = (props) => {
   const { t } = useTranslation();
 
   const showAuth = isFeatureEnabled("claimantShowAuth");
+  const showSelfRegistration = isFeatureEnabled(
+    "employerShowSelfRegistrationForm"
+  );
 
   // Redirect logged-in users
   useEffect(() => {
@@ -48,7 +51,7 @@ export const Index = (props) => {
         <Heading level="2">{t("pages.index.createAccountHeading")}</Heading>
 
         <div className="grid-row grid-gap">
-          <article className="measure-3">
+          <article className="margin-bottom-3 measure-3">
             <div className="bg-base-lightest padding-3">
               {!showAuth && (
                 <p>
@@ -64,8 +67,10 @@ export const Index = (props) => {
               )}
               {showAuth && (
                 <React.Fragment>
+                  <Heading level="3">
+                    {t("pages.index.claimantHeading")}
+                  </Heading>
                   <p>{t("pages.index.claimantCardBody")}</p>
-
                   <ButtonLink
                     href={routes.auth.createAccount}
                     className="margin-top-3"
@@ -84,6 +89,18 @@ export const Index = (props) => {
               )}
             </div>
           </article>
+          {!showSelfRegistration && (
+            <article className="measure-3">
+              <div className="bg-base-lightest padding-3">
+                <Heading level="3">{t("pages.index.employerHeading")}</Heading>
+                <p>
+                  {t("pages.index.employerCardBody_massEmployer")}
+                  <br />
+                  {t("pages.index.employerCardBody_contactCenter")}
+                </p>
+              </div>
+            </article>
+          )}
         </div>
       </div>
     </React.Fragment>
