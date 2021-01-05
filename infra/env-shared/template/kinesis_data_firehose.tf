@@ -1,7 +1,7 @@
 # Kinesis Data Firehose (KDF)
 
-data "aws_ssm_parameter" "newrelic-api-key" {
-  name = "/admin/pfml-api/newrelic-api-key"
+data "aws_ssm_parameter" "newrelic-insert-api-key" {
+  name = "/admin/pfml-api/newrelic-insert-api-key"
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "aws_waf" {
@@ -19,7 +19,7 @@ resource "aws_kinesis_firehose_delivery_stream" "aws_waf" {
   http_endpoint_configuration {
     url                = "https://aws-api.newrelic.com/firehose/v1"
     name               = "New Relic"
-    access_key         = data.aws_ssm_parameter.newrelic-api-key.value
+    access_key         = data.aws_ssm_parameter.newrelic-insert-api-key.value
     buffering_size     = 1
     buffering_interval = 60
     role_arn           = aws_iam_role.kinesis_aws_waf_role.arn
