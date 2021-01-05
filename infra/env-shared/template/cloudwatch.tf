@@ -11,3 +11,12 @@ resource "aws_cloudwatch_log_subscription_filter" "gateway_execution_logs_to_new
   # matches all log events
   filter_pattern = ""
 }
+
+# Allows the newrelic log ingestion lambda to retrieve its telemetry from any and all CloudWatch log groups.
+resource "aws_lambda_permission" "nr_lambda_permission_generic" {
+  statement_id  = "NRLambdaPermission_AnyLogGroup"
+  action        = "lambda:InvokeFunction"
+  principal     = "logs.us-east-1.amazonaws.com"
+  function_name = module.constants.newrelic_log_ingestion_arn
+  source_arn    = "arn:aws:logs:us-east-1:498823821309:log-group:*:*"
+}
