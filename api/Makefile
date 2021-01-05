@@ -144,6 +144,10 @@ fineos-eligibility-feed-export: ## Run an eligibility feed export
 	mkdir -p eligibility_export/absence-eligibility/upload
 	OUTPUT_DIRECTORY_PATH=eligibility_export FINEOS_AWS_IAM_ROLE_ARN="arn" FINEOS_AWS_IAM_ROLE_EXTERNAL_ID="1" $(PY_RUN_CMD) fineos-eligibility-feed-export $(DECODE_LOG)
 
+fineos-payments-mock-generate:
+	mkdir -p mock_fineos_payments_files
+	$(PY_RUN_CMD) fineos-payments-mock-generate --folder mock_fineos_payments_files --count 10 $(DECODE_LOG)
+
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	aws ecr get-login-password --region 'us-east-1' | \
