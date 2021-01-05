@@ -9,6 +9,7 @@ export function beforePortal(): void {
       claimantShowAuth: true,
       claimantShowMedicalLeaveType: true,
       noMaintenance: true,
+      employerShowSelfRegistrationForm: true,
     }),
     { log: true }
   );
