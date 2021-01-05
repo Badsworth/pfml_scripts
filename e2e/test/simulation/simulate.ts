@@ -9,8 +9,8 @@ import type { SimulationClaim } from "../../src/simulation/types";
 import generators from "../../src/simulation/documents";
 import fs from "fs";
 import { extractLeavePeriod } from "../../src/utils";
-import { fromEmployersFactory } from "../../src/simulation/EmployerFactory";
-import employerPool from "../../src/simulation/fixtures/employerPool";
+import { fromEmployerData } from "../../src/simulation/EmployerFactory";
+import employerPool from "../../employers/e2e.json";
 import { WorkPattern } from "../../src/api";
 import { format } from "date-fns";
 
@@ -26,7 +26,7 @@ const opts = {
       tax_identifier: "000-00-0000",
     };
   }),
-  employerFactory: jest.fn(fromEmployersFactory(employerPool)),
+  employerFactory: jest.fn(fromEmployerData(employerPool)),
 };
 
 const medical: ScenarioOpts = {

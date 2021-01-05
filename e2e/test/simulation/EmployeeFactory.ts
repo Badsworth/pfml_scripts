@@ -1,21 +1,33 @@
-import employers from "../../src/simulation/fixtures/employerPool";
 import {
-  randomEmployee,
-  fromClaimsFactory,
+  fromEmployerFactory,
+  fromClaimData,
 } from "../../src/simulation/EmployeeFactory";
 import { ParseSSN } from "ssn";
 import { describe, it, expect } from "@jest/globals";
 import { EmployeeFactory } from "../../src/simulation/types";
 
+const employerFactory = () => ({
+  accountKey: "12345678910",
+  name: "Wayne Enterprises",
+  fein: "84-7847847",
+  street: "1 Wayne Tower",
+  city: "Gotham City",
+  state: "MA",
+  zip: "01010-1234",
+  dba: "",
+  family_exemption: false,
+  medical_exemption: false,
+});
+
 describe("Random generator", () => {
   it("Should generate an employee with a valid SSN", () => {
-    const employee = randomEmployee(false);
+    const employee = fromEmployerFactory(employerFactory)(false);
     new ParseSSN((employee.tax_identifier ?? "").replace(/-/g, ""));
   });
 
   it("Should pull an employer from the employer pool", () => {
-    const employee = randomEmployee(false);
-    expect(employers.map((e) => e.fein)).toContain(employee.employer_fein);
+    const employee = fromEmployerFactory(employerFactory)(false);
+    expect(employee.employer_fein).toEqual("84-7847847");
   });
 });
 
@@ -49,7 +61,7 @@ describe("Employee pool generator", () => {
   };
 
   beforeEach(() => {
-    pool = fromClaimsFactory([claimA, claimB]);
+    pool = fromClaimData([claimA, claimB]);
   });
 
   it("Should pull an employee from the pool", () => {

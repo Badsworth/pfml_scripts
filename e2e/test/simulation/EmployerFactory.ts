@@ -1,10 +1,10 @@
 import { describe, it, expect } from "@jest/globals";
-import employerPool from "../../src/simulation/fixtures/employerPool";
 import { EmployerFactory } from "../../src/simulation/types";
 import {
   randomEmployer,
-  fromEmployersFactory,
+  fromEmployerData,
 } from "../../src/simulation/EmployerFactory";
+import employers from "../../employers/e2e.json";
 
 describe("Employer random generator", () => {
   it("Should generate a random employer", () => {
@@ -17,11 +17,11 @@ describe("Employer pool generator", () => {
   let pool: EmployerFactory;
 
   beforeEach(() => {
-    pool = fromEmployersFactory(employerPool);
+    pool = fromEmployerData(employers);
   });
 
   it("Should pull an employer from the employer pool", () => {
     const employer = pool();
-    expect(employerPool).toContainEqual(expect.objectContaining(employer));
+    expect(employers).toContainEqual(expect.objectContaining(employer));
   });
 });

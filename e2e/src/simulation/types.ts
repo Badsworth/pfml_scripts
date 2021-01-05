@@ -67,5 +67,5 @@ export type Employer = {
   medical_exemption: boolean;
   exemption_commence_date?: Date;
   exemption_cease_date?: Date;
-  updated_date: Date;
+  updated_date?: Date;
 };

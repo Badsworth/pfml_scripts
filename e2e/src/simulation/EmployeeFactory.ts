@@ -1,14 +1,12 @@
 import faker from "faker";
 import { RandomSSN } from "ssn";
-import { EmployeeFactory, SimulationClaim } from "./types";
-import { fromEmployersFactory } from "./EmployerFactory";
-import employerPool from "./fixtures/employerPool";
+import { EmployeeFactory, EmployerFactory, SimulationClaim } from "./types";
 
 /**
  * Creates an employee "pool" from a previous simulation.
  * @param claims
  */
-export function fromClaimsFactory(claims: SimulationClaim[]): EmployeeFactory {
+export function fromClaimData(claims: SimulationClaim[]): EmployeeFactory {
   const pool = [...claims];
   return function (financiallyIneligible: boolean) {
     const claim = shuffle(pool).find(
@@ -61,17 +59,15 @@ function shuffle<T extends unknown[]>(array: T): T {
   return array;
 }
 
-/**
- * Creates brand new, random employees.
- */
-export const randomEmployee: EmployeeFactory = (
-  financiallyIneligible,
-  employerFactory = fromEmployersFactory(employerPool)
-) => {
-  return {
-    first_name: faker.name.firstName(),
-    last_name: faker.name.lastName(),
-    tax_identifier: new RandomSSN().value().toFormattedString(),
-    employer_fein: employerFactory().fein,
+export function fromEmployerFactory(
+  employerFactory: EmployerFactory
+): EmployeeFactory {
+  return () => {
+    return {
+      first_name: faker.name.firstName(),
+      last_name: faker.name.lastName(),
+      tax_identifier: new RandomSSN().value().toFormattedString(),
+      employer_fein: employerFactory().fein,
+    };
   };
-};
+}

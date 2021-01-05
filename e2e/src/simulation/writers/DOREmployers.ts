@@ -59,7 +59,9 @@ export default function transformDOREmployers(
           record.exemption_cease_date
             ? formatISODate(new Date(record.exemption_cease_date))
             : NO_EXEMPTION_DATE,
-          formatISODatetime(new Date(record.updated_date))
+          formatISODatetime(
+            record.updated_date ? new Date(record.updated_date) : new Date()
+          )
         ) + "\n";
       this.push(line);
       callback();

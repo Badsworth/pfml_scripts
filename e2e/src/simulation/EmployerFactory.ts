@@ -6,7 +6,7 @@ import { EmployerFactory, Employer } from "./types";
  * Creates an employer "pool" from a previous simulation.
  * @param employers
  */
-export function fromEmployersFactory(employers: Employer[]): EmployerFactory {
+export function fromEmployerData(employers: Employer[]): EmployerFactory {
   return function () {
     return employers[Math.floor(Math.random() * employers.length)];
   };

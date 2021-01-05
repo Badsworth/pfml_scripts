@@ -1,18 +1,13 @@
 import { CommandModule } from "yargs";
 import SimulationStorage from "../SimulationStorage";
 import fs from "fs";
+import path from "path";
 import { formatISODatetime } from "../quarters";
 import quarters from "../quarters";
 import { SystemWideArgs } from "../../cli";
-import { randomEmployee, fromClaimsFactory } from "../EmployeeFactory";
-import { fromEmployersFactory } from "../EmployerFactory";
-import employerPool from "../fixtures/employerPool";
-import type {
-  SimulationClaim,
-  EmployeeFactory,
-  EmployerFactory,
-  Employer,
-} from "../types";
+import * as EmployeeFactory from "../EmployeeFactory";
+import * as EmployerFactory from "../EmployerFactory";
+import type { SimulationClaim, Employer } from "../types";
 import {
   writeClaimFile,
   writeClaimIndex,
@@ -25,7 +20,7 @@ type GenerateArgs = {
   count: string;
   directory: string;
   employeesFrom?: string;
-  employersFrom?: string;
+  employersFrom: string;
 } & SystemWideArgs;
 
 const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
@@ -67,6 +62,8 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
       description:
         "The path to a previous employers file to use as an employer pool",
       requiresArg: true,
+      default: path.resolve(`${__dirname}/../../../employers/e2e.json`),
+      demandOption: true,
       alias: "E",
     },
   },
@@ -76,15 +73,13 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
       paths: [process.cwd()],
     });
     const { default: generator } = await import(path);
-    // generate or initialize pool of employers
-    const employers = (args.employersFrom
-      ? await readJSONFile(args.employersFrom)
-      : employerPool) as Employer[];
-    const employerFactory: EmployerFactory = fromEmployersFactory(employers);
+    const employers = (await readJSONFile(args.employersFrom)) as Employer[];
+    const employerFactory = EmployerFactory.fromEmployerData(employers);
+
     // generate or initialize pool of employees
-    let employeeFactory: EmployeeFactory = randomEmployee;
+    let employeeFactory = EmployeeFactory.fromEmployerFactory(employerFactory);
     if (args.employeesFrom) {
-      employeeFactory = fromClaimsFactory(
+      employeeFactory = EmployeeFactory.fromClaimData(
         (await readJSONFile(args.employeesFrom)) as SimulationClaim[]
       );
     }
@@ -94,6 +89,9 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
     await fs.promises.mkdir(storage.documentDirectory, { recursive: true });
     const limit = parseInt(args.count);
 
+    // Setup the claim generator. Important: This is a generator, and does not loop all the way through
+    // when it is called. It loops asynchonously, only when the next item is requested. This allows us to keep
+    // memory usage in check, even when generating huge claim pools.
     const claimsGen = (async function* (): AsyncGenerator<SimulationClaim> {
       for (let i = 0; i < limit; i++) {
         yield generator({
@@ -106,7 +104,7 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
     })();
 
     // Write the claim file first, streaming to JSON. We'll read this back
-    // later on.
+    // later on. We await this operation because we need this JSON file in the next steps.
     await writeClaimFile(claimsGen, storage.claimFile);
     args.logger.info("Completed claim file generation");
 
