@@ -3,7 +3,7 @@
  *
  * @see https://github.com/navahq/archive-vermont-customer-portal-apps/blob/27b66dd7bf37671a6e33a8d2c51a82c7bd9daa41/online-application-app/src/client/actions/index.js#L150
  * @param {object} event
- * @param {object} event.target
+ * @param {HTMLElement|object} event.target
  * @param {boolean} [event.target.checked] - if input was radio/checkbox, was it selected?
  * @param {string} event.target.name - The name representing this field in our state
  * @param {*} event.target.value
@@ -17,10 +17,16 @@ export default function getInputValueFromEvent(event) {
 
   const { checked, pattern, type, value } = event.target;
 
-  // Use getAttribute for this since some browsers, including Firefox,
-  // don't support accessing the value via event.target.inputMode
-  // https://caniuse.com/mdn-api_htmlelement_inputmode
-  const inputMode = event.target.getAttribute("inputmode");
+  const inputMode =
+    // Some components, like InputDate, hijack the change event and pass in a plain object
+    // TODO (CP-1667): This condition shouldn't be required once our components stop
+    // hijacking event.target
+    typeof event.target.getAttribute === "function"
+      ? // Use getAttribute for this since some browsers, including Firefox,
+        // don't support accessing the value via event.target.inputMode.
+        // https://caniuse.com/mdn-api_htmlelement_inputmode
+        event.target.getAttribute("inputmode")
+      : null;
 
   let result = value;
   if (type === "checkbox" || type === "radio") {

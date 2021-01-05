@@ -151,6 +151,7 @@ function Mask(props) {
    * @param {SyntheticEvent} originalEvent - Original event that triggered this change
    */
   const dispatchChange = (value, originalEvent) => {
+    // TODO (CP-1667): Stop hijacking the target, and pass back a proper HTMLElement
     field.props.onChange({
       _originalEvent: originalEvent,
       target: {
