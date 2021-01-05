@@ -935,7 +935,7 @@ export function createInputElement(attrs) {
  *
  * changeField("username", "jane.doe@test.com");
  * changeField("password", "P@ssw0rd");
- * submitForm();
+ * await submitForm();
  * @param {React.Component} wrapper React wrapper component
  * @returns {{ changeField: Function, submitForm: Function }}
  */
@@ -1018,10 +1018,22 @@ export const simulateEvents = (wrapper) => {
 
   /**
    * Simulate submitting a form contained within a component
+   * @returns {Promise}
    */
-  function submitForm() {
-    act(() => {
-      wrapper.find("form").simulate("submit", {
+  async function submitForm() {
+    let eventName, form;
+
+    const formComponent = wrapper.find("form");
+    if (formComponent.exists()) {
+      form = formComponent;
+      eventName = "submit";
+    } else {
+      form = wrapper.find("QuestionPage");
+      eventName = "save";
+    }
+
+    await act(async () => {
+      await form.simulate(eventName, {
         preventDefault: jest.fn(),
       });
     });

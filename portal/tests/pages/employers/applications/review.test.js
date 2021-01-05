@@ -84,8 +84,8 @@ describe("Review", () => {
     );
   });
 
-  it("submits a claim with the correct options", () => {
-    simulateEvents(wrapper).submitForm();
+  it("submits a claim with the correct options", async () => {
+    await simulateEvents(wrapper).submitForm();
 
     expect(appLogic.employers.submit).toHaveBeenCalledWith("NTN-111-ABS-01", {
       comment: expect.any(String),
@@ -98,13 +98,13 @@ describe("Review", () => {
     });
   });
 
-  it("sets 'comment' based on the Feedback", () => {
+  it("sets 'comment' based on the Feedback", async () => {
     act(() => {
       const setComment = wrapper.find("Feedback").prop("setComment");
       setComment("my comment");
     });
 
-    simulateEvents(wrapper).submitForm();
+    await await simulateEvents(wrapper).submitForm();
 
     expect(appLogic.employers.submit).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
@@ -112,7 +112,7 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'employer_decision' based on EmployerDecision", () => {
+  it("sets 'employer_decision' based on EmployerDecision", async () => {
     act(() => {
       const setEmployerDecision = wrapper
         .find("EmployerDecision")
@@ -120,7 +120,7 @@ describe("Review", () => {
       setEmployerDecision("Approve");
     });
 
-    simulateEvents(wrapper).submitForm();
+    await simulateEvents(wrapper).submitForm();
 
     expect(appLogic.employers.submit).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
@@ -128,13 +128,13 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'fraud' based on FraudReport", () => {
+  it("sets 'fraud' based on FraudReport", async () => {
     act(() => {
       const setFraud = wrapper.find("FraudReport").prop("onChange");
       setFraud("No");
     });
 
-    simulateEvents(wrapper).submitForm();
+    await simulateEvents(wrapper).submitForm();
 
     expect(appLogic.employers.submit).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
@@ -142,7 +142,7 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'hours_worked_per_week' based on SupportingWorkDetails", () => {
+  it("sets 'hours_worked_per_week' based on SupportingWorkDetails", async () => {
     act(() => {
       const setAmendedHours = wrapper
         .find("SupportingWorkDetails")
@@ -150,7 +150,7 @@ describe("Review", () => {
       setAmendedHours(50.5);
     });
 
-    simulateEvents(wrapper).submitForm();
+    await simulateEvents(wrapper).submitForm();
 
     expect(appLogic.employers.submit).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
@@ -193,8 +193,8 @@ describe("Review", () => {
     expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
   });
 
-  it("sets 'has_amendments' to false if nothing is amended", () => {
-    simulateEvents(wrapper).submitForm();
+  it("sets 'has_amendments' to false if nothing is amended", async () => {
+    await simulateEvents(wrapper).submitForm();
 
     expect(appLogic.employers.submit).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
@@ -202,7 +202,7 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'has_amendments' to true if benefits are amended", () => {
+  it("sets 'has_amendments' to true if benefits are amended", async () => {
     act(() => {
       wrapper
         .find("EmployerBenefits")
@@ -210,7 +210,7 @@ describe("Review", () => {
         .onChange(new EmployerBenefit({ employer_benefit_id: 0 }));
     });
 
-    simulateEvents(wrapper).submitForm();
+    await simulateEvents(wrapper).submitForm();
 
     expect(appLogic.employers.submit).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
@@ -218,7 +218,7 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'has_amendments' to true if leaves are amended", () => {
+  it("sets 'has_amendments' to true if leaves are amended", async () => {
     act(() => {
       wrapper
         .find("PreviousLeaves")
@@ -226,7 +226,7 @@ describe("Review", () => {
         .onChange(new PreviousLeave({ previous_leave_id: 0 }));
     });
 
-    simulateEvents(wrapper).submitForm();
+    await simulateEvents(wrapper).submitForm();
 
     expect(appLogic.employers.submit).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
@@ -234,12 +234,12 @@ describe("Review", () => {
     );
   });
 
-  it("sets 'has_amendments' to true if hours are amended", () => {
+  it("sets 'has_amendments' to true if hours are amended", async () => {
     act(() => {
       wrapper.find("SupportingWorkDetails").props().onChange(60);
     });
 
-    simulateEvents(wrapper).submitForm();
+    await simulateEvents(wrapper).submitForm();
 
     expect(appLogic.employers.submit).toHaveBeenCalledWith(
       "NTN-111-ABS-01",

@@ -33,7 +33,7 @@ describe("CreateAccount", () => {
       expect(wrapper.find("InputPassword").length).toEqual(1);
     });
 
-    it("calls createAccount upon form submission", () => {
+    it("calls createAccount upon form submission", async () => {
       const email = "email@test.com";
       const password = "TestP@ssw0rd!";
       const ein = "123456789";
@@ -41,7 +41,7 @@ describe("CreateAccount", () => {
       changeField("username", email);
       changeField("password", password);
       changeField("ein", ein);
-      submitForm();
+      await submitForm();
       expect(appLogic.auth.createEmployerAccount).toHaveBeenCalledWith(
         email,
         password,

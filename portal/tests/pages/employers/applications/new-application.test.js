@@ -111,16 +111,16 @@ describe("NewApplication", () => {
       expect(wrapper.find(ConditionalContent).children()).toHaveLength(1);
     });
 
-    it("navigates to claim review page when user selects yes and submits form", () => {
-      submitForm();
+    it("navigates to claim review page when user selects yes and submits form", async () => {
+      await submitForm();
 
       expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalled();
     });
 
-    it("navigates to confirmation page when user selects no and submits form", () => {
+    it("navigates to confirmation page when user selects no and submits form", async () => {
       changeRadioGroup("hasReviewerVerified", "false");
 
-      submitForm();
+      await submitForm();
 
       expect(appLogic.portalFlow.goToPageFor).toHaveBeenCalledWith(
         "CONFIRMATION",

@@ -27,13 +27,13 @@ describe("CreateAccount", () => {
   });
 
   describe("when the form is submitted", () => {
-    it("calls createAccount", () => {
+    it("calls createAccount", async () => {
       const email = "email@test.com";
       const password = "TestP@ssw0rd!";
 
       changeField("username", email);
       changeField("password", password);
-      submitForm();
+      await submitForm();
       expect(appLogic.auth.createAccount).toHaveBeenCalledWith(email, password);
     });
   });

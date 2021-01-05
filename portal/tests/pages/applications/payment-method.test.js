@@ -61,13 +61,13 @@ describe("PaymentMethod", () => {
   });
 
   describe("when user clicks continue", () => {
-    it("submits payment preference fields for direct deposit", () => {
+    it("submits payment preference fields for direct deposit", async () => {
       ({ appLogic, claim, wrapper } = renderWithAppLogic(PaymentMethod, {
         claimAttrs: new MockClaimBuilder().directDeposit().create(),
       }));
 
       const { submitForm } = simulateEvents(wrapper);
-      submitForm();
+      await submitForm();
 
       expect(appLogic.claims.submitPaymentPreference).toHaveBeenCalledWith(
         claim.application_id,
@@ -82,13 +82,13 @@ describe("PaymentMethod", () => {
       );
     });
 
-    it("submits payment preference fields for check", () => {
+    it("submits payment preference fields for check", async () => {
       ({ appLogic, claim, wrapper } = renderWithAppLogic(PaymentMethod, {
         claimAttrs: new MockClaimBuilder().check().create(),
       }));
 
       const { submitForm } = simulateEvents(wrapper);
-      submitForm();
+      await submitForm();
 
       expect(appLogic.claims.submitPaymentPreference).toHaveBeenCalledWith(
         claim.application_id,

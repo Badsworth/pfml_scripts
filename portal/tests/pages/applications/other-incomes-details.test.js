@@ -9,7 +9,6 @@ import OtherIncomesDetails, {
   OtherIncomeCard,
 } from "../../../src/pages/applications/other-incomes-details";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import QuestionPage from "../../../src/components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../../src/components/RepeatableFieldset";
 import RepeatableFieldsetCard from "../../../src/components/RepeatableFieldsetCard";
@@ -36,10 +35,10 @@ describe("OtherIncomesDetails", () => {
     });
 
     describe("when user clicks continue", () => {
-      it("calls claims.update", () => {
-        act(() => {
-          wrapper.find("QuestionPage").simulate("save");
-        });
+      it("calls claims.update", async () => {
+        const { submitForm } = simulateEvents(wrapper);
+
+        await submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
@@ -56,13 +55,10 @@ describe("OtherIncomesDetails", () => {
           claimAttrs: claim,
           render: "mount",
         }));
-        const { changeField } = simulateEvents(wrapper);
+        const { changeField, submitForm } = simulateEvents(wrapper);
 
         changeField("other_incomes[0].income_amount_dollars", "1,000,000");
-
-        await act(async () => {
-          await wrapper.find("form").simulate("submit");
-        });
+        await submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
@@ -83,13 +79,10 @@ describe("OtherIncomesDetails", () => {
           claimAttrs: claim,
           render: "mount",
         }));
-        const { changeField } = simulateEvents(wrapper);
+        const { changeField, submitForm } = simulateEvents(wrapper);
 
         changeField("other_incomes[0].income_amount_dollars", "");
-
-        await act(async () => {
-          await wrapper.find("form").simulate("submit");
-        });
+        await submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
@@ -103,7 +96,7 @@ describe("OtherIncomesDetails", () => {
         );
       });
 
-      it("calls claims.update without coercing an undefined amount to null", () => {
+      it("calls claims.update without coercing an undefined amount to null", async () => {
         expect.assertions();
 
         delete claim.other_incomes[0].income_amount_dollars;
@@ -112,10 +105,9 @@ describe("OtherIncomesDetails", () => {
           claimAttrs: claim,
           render: "mount",
         }));
+        const { submitForm } = simulateEvents(wrapper);
 
-        act(() => {
-          wrapper.find("form").simulate("submit");
-        });
+        await submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
@@ -131,11 +123,14 @@ describe("OtherIncomesDetails", () => {
     });
 
     describe("when the user clicks 'Add another'", () => {
-      it("adds another entry", () => {
+      it("adds another entry", async () => {
+        const { submitForm } = simulateEvents(wrapper);
+
         act(() => {
           wrapper.find(RepeatableFieldset).simulate("addClick");
-          wrapper.find(QuestionPage).simulate("save");
         });
+
+        await submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
@@ -147,15 +142,19 @@ describe("OtherIncomesDetails", () => {
     });
 
     describe("when the user clicks 'Remove'", () => {
-      it("removes the entry", () => {
+      it("removes the entry", async () => {
+        const { submitForm } = simulateEvents(wrapper);
+
         act(() => {
           wrapper
             .find(RepeatableFieldset)
             .dive()
             .find(RepeatableFieldsetCard)
             .simulate("removeClick");
-          wrapper.find(QuestionPage).simulate("save");
         });
+
+        await submitForm();
+
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {

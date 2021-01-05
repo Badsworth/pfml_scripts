@@ -26,9 +26,9 @@ describe("Start", () => {
   });
 
   describe("when user clicks agree and submit", () => {
-    it("calls submitApplication", () => {
+    it("calls submitApplication", async () => {
       const { submitForm } = simulateEvents(wrapper);
-      submitForm();
+      await submitForm();
       expect(appLogic.claims.create).toHaveBeenCalled();
     });
   });

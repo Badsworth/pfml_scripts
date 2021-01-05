@@ -60,16 +60,16 @@ describe("Login", () => {
   });
 
   describe("when the form is submitted", () => {
-    it("calls login", () => {
+    it("calls login", async () => {
       changeField("username", email);
       changeField("password", password);
 
-      submitForm();
+      await submitForm();
 
       expect(appLogic.auth.login).toHaveBeenCalledWith(email, password);
     });
 
-    it("calls login with query param", () => {
+    it("calls login with query param", async () => {
       const nextPage = "/next-page";
       query = {
         next: nextPage,
@@ -78,7 +78,7 @@ describe("Login", () => {
       changeField("username", email);
       changeField("password", password);
 
-      submitForm();
+      await submitForm();
 
       expect(appLogic.auth.login).toHaveBeenCalledWith(
         email,

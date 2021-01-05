@@ -58,7 +58,7 @@ describe("ResetPassword", () => {
     });
 
     describe("when the form is submitted", () => {
-      it("calls resetPassword", () => {
+      it("calls resetPassword", async () => {
         const password = "abcdef12345678";
         const code = "123456";
         const wrapper = render();
@@ -66,7 +66,7 @@ describe("ResetPassword", () => {
 
         changeField("code", code);
         changeField("password", password);
-        submitForm();
+        await submitForm();
 
         expect(appLogic.auth.resetPassword).toHaveBeenCalledWith(
           username,
@@ -85,7 +85,7 @@ describe("ResetPassword", () => {
     });
 
     describe("when the form is submitted", () => {
-      it("calls resetPassword", () => {
+      it("calls resetPassword", async () => {
         const email = "email@test.com";
         const password = "abcdef12345678";
         const code = "123456";
@@ -95,7 +95,7 @@ describe("ResetPassword", () => {
         changeField("code", code);
         changeField("password", password);
         changeField("username", email);
-        submitForm();
+        await submitForm();
 
         expect(appLogic.auth.resetPassword).toHaveBeenCalledWith(
           email,
@@ -156,7 +156,7 @@ describe("ResetPassword", () => {
       click({ name: "resend-code-button" });
       await resolveResendCodeMock();
 
-      submitForm();
+      await submitForm();
 
       expect(appLogic.setAppErrors).toHaveBeenCalledTimes(1);
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
@@ -170,9 +170,9 @@ describe("ResetPassword", () => {
       ).not.toHaveBeenCalled();
 
       changeRadioGroup("isEmployer", "false");
-      submitForm();
+      await submitForm();
 
-      expect(appLogic.auth.resetPassword).not.toHaveBeenCalled();
+      expect(appLogic.auth.resetPassword).toHaveBeenCalled();
     });
 
     it("calls resetEmployerPasswordAndCreateEmployerApiAccount when user indicates they're an employer", async () => {
@@ -199,7 +199,7 @@ describe("ResetPassword", () => {
       changeRadioGroup("isEmployer", "true");
       changeField("ein", ein);
 
-      submitForm();
+      await submitForm();
 
       expect(
         appLogic.auth.resetEmployerPasswordAndCreateEmployerApiAccount
@@ -228,7 +228,7 @@ describe("ResetPassword", () => {
       changeField("password", password);
       changeRadioGroup("isEmployer", "false");
 
-      submitForm();
+      await submitForm();
 
       expect(appLogic.auth.resetPassword).toHaveBeenCalledWith(
         email,

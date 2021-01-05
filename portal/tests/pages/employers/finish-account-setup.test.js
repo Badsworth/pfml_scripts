@@ -25,11 +25,11 @@ describe("FinishAccountSetup", () => {
   });
 
   describe("when the form is submitted", () => {
-    it("calls forgotPassword", () => {
+    it("calls forgotPassword", async () => {
       const email = "email@test.com";
 
       changeField("username", email);
-      submitForm();
+      await submitForm();
       expect(appLogic.auth.forgotPassword).toHaveBeenCalledWith(email);
     });
   });

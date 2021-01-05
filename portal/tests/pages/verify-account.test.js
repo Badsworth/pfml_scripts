@@ -51,8 +51,8 @@ describe("VerifyAccount", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("prevents submission when isEmployer isn't set when EIN fields are visible", () => {
-    submitForm();
+  it("prevents submission when isEmployer isn't set when EIN fields are visible", async () => {
+    await submitForm();
 
     expect(appLogic.setAppErrors).toHaveBeenCalledTimes(1);
     expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
@@ -64,14 +64,14 @@ describe("VerifyAccount", () => {
     expect(appLogic.auth.verifyEmployerAccount).not.toHaveBeenCalled();
 
     changeRadioGroup("isEmployer", "false");
-    submitForm();
+    await submitForm();
 
-    expect(appLogic.auth.verifyAccount).not.toHaveBeenCalled();
+    expect(appLogic.auth.verifyAccount).toHaveBeenCalled();
   });
 
-  it("submits empty strings if user has not entered values yet", () => {
+  it("submits empty strings if user has not entered values yet", async () => {
     changeRadioGroup("isEmployer", "true");
-    submitForm();
+    await submitForm();
 
     expect(appLogic.auth.verifyEmployerAccount).toHaveBeenCalledWith(
       "",
@@ -98,11 +98,11 @@ describe("VerifyAccount", () => {
     });
 
     describe("when user is not an employer and the form is submitted", () => {
-      it("calls verifyAccount", () => {
+      it("calls verifyAccount", async () => {
         changeField("code", verificationCode);
         changeRadioGroup("isEmployer", "false");
 
-        submitForm();
+        await submitForm();
         expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith(
           username,
           verificationCode
@@ -125,11 +125,11 @@ describe("VerifyAccount", () => {
     });
 
     describe("when user is not an employer and the form is submitted", () => {
-      it("calls verifyAccount", () => {
+      it("calls verifyAccount", async () => {
         changeField("username", username);
         changeField("code", verificationCode);
         changeRadioGroup("isEmployer", "false");
-        submitForm();
+        await submitForm();
         expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith(
           username,
           verificationCode
@@ -154,9 +154,9 @@ describe("VerifyAccount", () => {
       );
     });
 
-    it("calls verifyEmployerAccount upon form submission", () => {
+    it("calls verifyEmployerAccount upon form submission", async () => {
       changeField("code", verificationCode);
-      submitForm();
+      await submitForm();
       expect(appLogic.auth.verifyEmployerAccount).toHaveBeenCalledWith(
         username,
         verificationCode,
@@ -182,12 +182,12 @@ describe("VerifyAccount", () => {
       expect(wrapper.find("ConditionalContent").prop("visible")).toBe(false);
     });
 
-    it("calls verifyEmployerAccount upon form submission", () => {
+    it("calls verifyEmployerAccount upon form submission", async () => {
       changeRadioGroup("isEmployer", "true");
       changeField("code", verificationCode);
       changeField("username", username);
       changeField("ein", ein);
-      submitForm();
+      await submitForm();
       expect(appLogic.auth.verifyEmployerAccount).toHaveBeenCalledWith(
         username,
         verificationCode,
@@ -211,9 +211,9 @@ describe("VerifyAccount", () => {
       );
     });
 
-    it("calls verifyAccount when form is submitted", () => {
+    it("calls verifyAccount when form is submitted", async () => {
       changeField("code", verificationCode);
-      submitForm();
+      await submitForm();
 
       expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith(
         "test@example.com",

@@ -9,12 +9,12 @@ describe("BondingLeaveAttestation", () => {
     expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
-  it("calls goToNextPage when user submits form", () => {
+  it("calls goToNextPage when user submits form", async () => {
     const { appLogic, wrapper } = renderWithAppLogic(BondingLeaveAttestation);
     const spy = jest.spyOn(appLogic.portalFlow, "goToNextPage");
 
     const { submitForm } = simulateEvents(wrapper);
-    submitForm();
+    await submitForm();
     expect(spy).toHaveBeenCalledTimes(1);
   });
 });

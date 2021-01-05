@@ -35,10 +35,9 @@ describe("EmployerBenefitDetails", () => {
     });
 
     describe("when user clicks continue", () => {
-      it("calls claims.update", () => {
-        act(() => {
-          wrapper.find("QuestionPage").simulate("save");
-        });
+      it("calls claims.update", async () => {
+        const { submitForm } = simulateEvents(wrapper);
+        await submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
@@ -55,13 +54,10 @@ describe("EmployerBenefitDetails", () => {
           claimAttrs: claim,
           render: "mount",
         }));
-        const { changeField } = simulateEvents(wrapper);
+        const { changeField, submitForm } = simulateEvents(wrapper);
 
         changeField("employer_benefits[0].benefit_amount_dollars", "1,000,000");
-
-        await act(async () => {
-          await wrapper.find("form").simulate("submit");
-        });
+        await submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
@@ -82,13 +78,10 @@ describe("EmployerBenefitDetails", () => {
           claimAttrs: claim,
           render: "mount",
         }));
-        const { changeField } = simulateEvents(wrapper);
+        const { changeField, submitForm } = simulateEvents(wrapper);
 
         changeField("employer_benefits[0].benefit_amount_dollars", "");
-
-        await act(async () => {
-          await wrapper.find("form").simulate("submit");
-        });
+        await submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
@@ -102,7 +95,7 @@ describe("EmployerBenefitDetails", () => {
         );
       });
 
-      it("calls claims.update without coercing an undefined amount to null", () => {
+      it("calls claims.update without coercing an undefined amount to null", async () => {
         expect.assertions();
 
         delete claim.employer_benefits[0].benefit_amount_dollars;
@@ -111,10 +104,9 @@ describe("EmployerBenefitDetails", () => {
           claimAttrs: claim,
           render: "mount",
         }));
+        const { submitForm } = simulateEvents(wrapper);
 
-        act(() => {
-          wrapper.find("form").simulate("submit");
-        });
+        await submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
@@ -130,11 +122,15 @@ describe("EmployerBenefitDetails", () => {
     });
 
     describe("when the user clicks 'Add another'", () => {
-      it("adds another benefit", () => {
+      it("adds another benefit", async () => {
+        const { submitForm } = simulateEvents(wrapper);
+
         act(() => {
           wrapper.find("RepeatableFieldset").simulate("addClick");
-          wrapper.find("QuestionPage").simulate("save");
         });
+
+        await submitForm();
+
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {
@@ -148,15 +144,19 @@ describe("EmployerBenefitDetails", () => {
     });
 
     describe("when the user clicks 'Remove'", () => {
-      it("removes the benefit", () => {
+      it("removes the benefit", async () => {
+        const { submitForm } = simulateEvents(wrapper);
+
         act(() => {
           wrapper
             .find("RepeatableFieldset")
             .dive()
             .find("RepeatableFieldsetCard")
             .simulate("removeClick");
-          wrapper.find("QuestionPage").simulate("save");
         });
+
+        await submitForm();
+
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
           {

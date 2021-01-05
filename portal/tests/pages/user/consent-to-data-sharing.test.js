@@ -41,9 +41,9 @@ describe("ConsentToDataSharing", () => {
   });
 
   describe("when the user agrees and submits the form", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       const { submitForm } = simulateEvents(wrapper);
-      submitForm();
+      await submitForm();
     });
 
     it("sets user's consented_to_data_sharing field to true", () => {

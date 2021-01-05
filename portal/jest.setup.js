@@ -30,6 +30,17 @@ process.env.session = { secondsOfInactivityUntilLogout: 10 };
 global.fetch = jest.fn();
 global.scrollTo = jest.fn();
 
+// URL.createObjectURL() hasn't been implemented in the jest DOM yet but will be
+// eventually. When it is (and this error triggers) we should remove this mock.
+// Read more: https://github.com/jsdom/jsdom/issues/1721
+if (URL.createObjectURL) {
+  throw new Error(
+    "jest DOM has added URL.createObjectURL() -- we can remove this hack now"
+  );
+}
+URL.createObjectURL = () => "image.png";
+URL.revokeObjectURL = jest.fn();
+
 /**
  * Mock global libraries
  */
