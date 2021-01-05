@@ -67,47 +67,54 @@ export const App = ({ Component, pageProps }) => {
   const [ui, setUI] = useState({ isLoading: false });
 
   /**
-   * Event handler for when a page route transition has ended
-   * (either successfully or unsuccessfully).
-   * Scrolls the window to the top of the document upon route changes.
-   */
-  const handleRouteChangeEnd = () => {
-    setUI({ ...ui, isLoading: false });
-    window.scrollTo(0, 0);
-  };
-
-  /**
-   * Event handler for when a page route is transitioning
-   */
-  const handleRouteChangeStart = (url = "") => {
-    const [routeName, queryString] = url.split("?");
-
-    const pageAttributes = getPageAttributesFromQueryString(queryString);
-    tracker.startPageView(routeName, pageAttributes);
-
-    appLogic.clearErrors();
-    setUI({ ...ui, isLoading: true });
-  };
-
-  /**
-   * Fires when a route changed completely
-   * @param {string} url - New route URL
-   */
-  const handleRouteChangeComplete = (url = "") => {
-    handleRouteChangeEnd();
-
-    // For screen readers, we want to move their active focus towards the top
-    // of the page so they become aware of the page change and can navigate
-    // through the new page content. This relies on our pages utilizing the <Title>
-    // component, which includes the markup to support this.
-    const pageHeading = document.querySelector(".js-title");
-    if (pageHeading) pageHeading.focus();
-  };
-
-  /**
    * Attach route change event handlers
    */
   useEffect(() => {
+    /**
+     * Event handler for when a page route transition has ended
+     * (either successfully or unsuccessfully).
+     * Scrolls the window to the top of the document upon route changes.
+     */
+    const handleRouteChangeEnd = () => {
+      setUI((ui) => {
+        return { ...ui, isLoading: false };
+      });
+      window.scrollTo(0, 0);
+    };
+
+    /**
+     * Event handler for when a page route is transitioning
+     */
+    const handleRouteChangeStart = (url = "") => {
+      const [routeName, queryString] = url.split("?");
+
+      const pageAttributes = {
+        ...getPageAttributesFromQueryString(queryString),
+        ...getPageAttributesFromUser(appLogic.users.user),
+      };
+      tracker.startPageView(routeName, pageAttributes);
+
+      appLogic.clearErrors();
+      setUI((ui) => {
+        return { ...ui, isLoading: true };
+      });
+    };
+
+    /**
+     * Fires when a route changed completely
+     * @param {string} url - New route URL
+     */
+    const handleRouteChangeComplete = (url = "") => {
+      handleRouteChangeEnd();
+
+      // For screen readers, we want to move their active focus towards the top
+      // of the page so they become aware of the page change and can navigate
+      // through the new page content. This relies on our pages utilizing the <Title>
+      // component, which includes the markup to support this.
+      const pageHeading = document.querySelector(".js-title");
+      if (pageHeading) pageHeading.focus();
+    };
+
     // Track route events so we can provide a visual indicator when a page is loading
     router.events.on("routeChangeStart", handleRouteChangeStart);
     router.events.on("routeChangeComplete", handleRouteChangeComplete);
@@ -116,8 +123,12 @@ export const App = ({ Component, pageProps }) => {
     // Passing this empty array causes this effect to be run only once upon mount. See:
     // https://reactjs.org/docs/hooks-effect.html#tip-optimizing-performance-by-skipping-effects
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return function cleanup() {
+      router.events.off("routeChangeStart", handleRouteChangeStart);
+      router.events.off("routeChangeComplete", handleRouteChangeComplete);
+      router.events.off("routeChangeError", handleRouteChangeEnd);
+    };
+  }, [router, appLogic]);
 
   /**
    * Render the page body based on the current state of the application
@@ -221,6 +232,24 @@ function getPageAttributesFromQueryString(queryString) {
     pageAttributes[`query_${snakeCase(key)}`] = value;
   }
   return pageAttributes;
+}
+
+/**
+ * Given the current user object, returns an object containing custom attributes to send to New Relic.
+ * @param {?User} user The user object or null
+ */
+function getPageAttributesFromUser(user) {
+  if (!user) {
+    return {
+      "user.is_logged_in": false,
+    };
+  } else {
+    return {
+      "user.is_logged_in": true,
+      "user.auth_id": user.auth_id,
+      "user.has_employer_role": user.hasEmployerRole,
+    };
+  }
 }
 
 export default App;
