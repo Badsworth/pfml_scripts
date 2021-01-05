@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime
 from typing import Dict, Optional, Type, Union
 
 import connexion
@@ -750,10 +751,23 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
         "submitted_time",
     ]
 
+    timestamp_attributes_to_log = [
+        "start_time",
+        "updated_time",
+        "completed_time",
+        "submitted_time",
+    ]
+
     result = {}
     for name in attributes_to_log:
         value = getattr(application, name)
         result[f"application.{name}"] = str(value) if value is not None else None
+
+    for name in timestamp_attributes_to_log:
+        dt_value: Optional[datetime] = getattr(application, name)
+        result[f"application.{name}.timestamp"] = (
+            str(dt_value.timestamp()) if dt_value is not None else None
+        )
 
     # Use a different attribute name for other_incomes_awaiting_approval to be consistent with other booleans
     has_other_incomes_awaiting_approval = application.other_incomes_awaiting_approval
