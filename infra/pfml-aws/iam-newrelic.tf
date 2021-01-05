@@ -34,3 +34,12 @@ resource "aws_iam_role_policy_attachment" "newrelic_readonly_policy_attachment" 
   role       = aws_iam_role.newrelic.id
   policy_arn = data.aws_iam_policy.read_only.arn
 }
+
+# Allows the newrelic log ingestion lambda to retrieve its telemetry from any and all CloudWatch log groups.
+resource "aws_lambda_permission" "nr_lambda_permission_generic" {
+  statement_id  = "NRLambdaPermission_AnyLogGroup"
+  action        = "lambda:InvokeFunction"
+  principal     = "logs.us-east-1.amazonaws.com"
+  function_name = module.constants.newrelic_log_ingestion_arn
+  source_arn    = "arn:aws:logs:us-east-1:498823821309:log-group:*:*"
+}
