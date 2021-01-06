@@ -257,7 +257,7 @@ describe("BaseApi", () => {
   });
 
   describe("when the request succeeds with a status in the 2xx range", () => {
-    it("resolves with the body, status, and warnings properties", async () => {
+    it("resolves with the body, and warnings properties", async () => {
       expect.assertions();
 
       global.fetch = jest.fn().mockResolvedValue({
@@ -272,7 +272,6 @@ describe("BaseApi", () => {
                 "data": Object {
                   "mock_response": true,
                 },
-                "status": 200,
                 "warnings": Array [],
               }
             `);

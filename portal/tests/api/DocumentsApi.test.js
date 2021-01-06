@@ -80,12 +80,11 @@ describe("DocumentsApi", () => {
         expect(request.body.get("mark_evidence_received")).toBe("false");
       });
 
-      it("resolves with success, status, and document instance", async () => {
+      it("resolves with document instance", async () => {
         const file = makeFile();
 
         const {
           document: documentResponse,
-          ...rest
         } = await documentsApi.attachDocument(
           applicationId,
           file,
@@ -93,12 +92,6 @@ describe("DocumentsApi", () => {
           false
         );
         expect(documentResponse).toBeInstanceOf(Document);
-        expect(rest).toMatchInlineSnapshot(`
-          Object {
-            "status": 200,
-            "success": true,
-          }
-        `);
       });
 
       it("sends POST request with the mark_evidence_received flag", async () => {
@@ -153,12 +146,10 @@ describe("DocumentsApi", () => {
         );
       });
 
-      it("resolves with success, status, and DocumentCollection instance", async () => {
+      it("resolves with DocumentCollection instance", async () => {
         const result = await documentsApi.getDocuments(applicationId);
         expect(result).toEqual({
           documents: expect.any(DocumentCollection),
-          status: 200,
-          success: true,
         });
         expect(result.documents.items).toEqual([
           new Document({

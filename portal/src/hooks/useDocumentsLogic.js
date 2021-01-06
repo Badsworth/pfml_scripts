@@ -55,17 +55,15 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const {
-        documents: loadedDocuments,
-        success,
-      } = await documentsApi.getDocuments(application_id);
-      if (success) {
-        setLoadedApplicationDocs((loadedApplicationDocs) => [
-          ...loadedApplicationDocs,
-          application_id,
-        ]);
-        addDocuments(loadedDocuments.items);
-      }
+      const { documents: loadedDocuments } = await documentsApi.getDocuments(
+        application_id
+      );
+
+      setLoadedApplicationDocs((loadedApplicationDocs) => [
+        ...loadedApplicationDocs,
+        application_id,
+      ]);
+      addDocuments(loadedDocuments.items);
     } catch (error) {
       appErrorsLogic.catchError(new DocumentsLoadError(application_id));
     }
@@ -109,16 +107,14 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
 
     const uploadPromises = filesWithUniqueId.map(async (fileWithUniqueId) => {
       try {
-        const { success, document } = await documentsApi.attachDocument(
+        const { document } = await documentsApi.attachDocument(
           application_id,
           fileWithUniqueId.file,
           documentType,
           mark_evidence_received
         );
-        if (success) {
-          addDocument(document);
-          return { success };
-        }
+        addDocument(document);
+        return { success: true };
       } catch (error) {
         appErrorsLogic.catchError(
           new DocumentsUploadError(

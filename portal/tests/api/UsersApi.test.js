@@ -63,8 +63,6 @@ describe("users API", () => {
           },
           `
           Object {
-            "status": 200,
-            "success": true,
             "user": ObjectContaining {
               "email_address": "mock-user@example.com",
             },
@@ -137,11 +135,6 @@ describe("users API", () => {
         status: 200,
         ok: true,
       });
-    });
-
-    it("responds with success status", async () => {
-      const response = await usersApi.updateUser(user.user_id, user);
-      expect(response.success).toBeTruthy();
     });
 
     it("responds with an instance of a User", async () => {

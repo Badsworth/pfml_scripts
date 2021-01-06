@@ -122,7 +122,7 @@ describe("EmployersApi", () => {
         );
       });
 
-      it("resolves with success and status", async () => {
+      it("resolves with claim", async () => {
         const response = await employersApi.getClaim(absenceId);
 
         expect(response.claim).toBeInstanceOf(EmployerClaim);
@@ -199,7 +199,7 @@ describe("EmployersApi", () => {
         );
       });
 
-      it("resolves with success and status", async () => {
+      it("resolves with documents", async () => {
         const expectedDocuments = mockDocumentCollection.map(
           (documentInfo) => new Document(documentInfo)
         );
@@ -236,19 +236,10 @@ describe("EmployersApi", () => {
         );
       });
 
-      it("resolves with success and status", async () => {
-        const response = await employersApi.submitClaimReview(
-          absenceId,
-          mockClaimReview
-        );
+      it("resolves with empty promise", async () => {
+        await employersApi.submitClaimReview(absenceId, mockClaimReview);
 
-        expect(response).toMatchSnapshot(`
-          Object {
-            "claim": null,
-            "status": 200,
-            "success": true,
-          }
-        `);
+        expect(fetch).toHaveBeenCalledTimes(1);
       });
     });
   });

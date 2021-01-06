@@ -16,10 +16,9 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim, success } = await employersApi.getClaim(absenceId);
-      if (success) {
-        setClaim(claim);
-      }
+      const { claim } = await employersApi.getClaim(absenceId);
+
+      setClaim(claim);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -34,10 +33,9 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { documents, success } = await employersApi.getDocuments(absenceId);
-      if (success) {
-        setDocuments(documents);
-      }
+      const { documents } = await employersApi.getDocuments(absenceId);
+
+      setDocuments(documents);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

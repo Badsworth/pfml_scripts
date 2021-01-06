@@ -11,16 +11,12 @@ import routes from "../routes";
 
 /**
  * @typedef {object} EmployersAPISingleResult
- * @property {number} status - Status code
- * @property {boolean} success - Returns true if 2xx status code
  * @property {EmployerClaim} [claim] - If the request succeeded, this will contain a claim
  */
 
 /**
  * @typedef {object} DocumentApiListResult
  * @property {DocumentCollection} [documents] - If the request succeeded, this will contain a list of documents
- * @property {number} status - Status code
- * @property {boolean} success - Did the request succeed or fail?
  */
 
 export default class EmployersApi extends BaseApi {
@@ -39,15 +35,10 @@ export default class EmployersApi extends BaseApi {
    * @returns {Promise<EmployersAPISingleResult>}
    */
   getClaim = async (absenceId) => {
-    const { data, status } = await this.request(
-      "GET",
-      `claims/${absenceId}/review`
-    );
+    const { data } = await this.request("GET", `claims/${absenceId}/review`);
 
     return {
       claim: new EmployerClaim(data),
-      status,
-      success: true,
     };
   };
 
@@ -92,17 +83,12 @@ export default class EmployersApi extends BaseApi {
    * @returns {DocumentApiListResult} The result of the API call
    */
   getDocuments = async (absenceId) => {
-    const { data, status } = await this.request(
-      "GET",
-      `claims/${absenceId}/documents`
-    );
+    const { data } = await this.request("GET", `claims/${absenceId}/documents`);
     let documents = data.map((documentData) => new Document(documentData));
     documents = new DocumentCollection(documents);
 
     return {
       documents,
-      status,
-      success: true,
     };
   };
 
@@ -111,19 +97,9 @@ export default class EmployersApi extends BaseApi {
    *
    * @param {string} absenceId - FINEOS absence id
    * @param {object} patchData - PATCH data of amendment and comment fields
-   * @returns {Promise<EmployersAPISingleResult>}
+   * @returns {Promise}
    */
   submitClaimReview = async (absenceId, patchData) => {
-    const { status } = await this.request(
-      "PATCH",
-      `claims/${absenceId}/review`,
-      patchData
-    );
-
-    return {
-      claim: null,
-      status,
-      success: true,
-    };
+    await this.request("PATCH", `claims/${absenceId}/review`, patchData);
   };
 }

@@ -34,15 +34,13 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { user, success } = await usersApi.updateUser(user_id, patchData);
+      const { user } = await usersApi.updateUser(user_id, patchData);
 
-      if (success) {
-        setUser(user);
+      setUser(user);
 
-        const context = claim ? { claim, user } : { user };
-        const params = claim ? { claim_id: claim.application_id } : null;
-        portalFlow.goToNextPage(context, params);
-      }
+      const context = claim ? { claim, user } : { user };
+      const params = claim ? { claim_id: claim.application_id } : null;
+      portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

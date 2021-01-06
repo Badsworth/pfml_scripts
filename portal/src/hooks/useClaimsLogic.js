@@ -102,12 +102,10 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claims, success } = await claimsApi.getClaims();
+      const { claims } = await claimsApi.getClaims();
 
-      if (success) {
-        setClaims(claims);
-        setHasLoadedAll(true);
-      }
+      setClaims(claims);
+      setHasLoadedAll(true);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -167,14 +165,12 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim, success } = await claimsApi.completeClaim(application_id);
+      const { claim } = await claimsApi.completeClaim(application_id);
 
-      if (success) {
-        setClaim(claim);
-        const context = { claim, user };
-        const params = { claim_id: claim.application_id };
-        portalFlow.goToNextPage(context, params);
-      }
+      setClaim(claim);
+      const context = { claim, user };
+      const params = { claim_id: claim.application_id };
+      portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -189,15 +185,13 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim, success } = await claimsApi.createClaim();
+      const { claim } = await claimsApi.createClaim();
 
-      if (success) {
-        addClaim(claim);
+      addClaim(claim);
 
-        const context = { claim, user };
-        const params = { claim_id: claim.application_id };
-        portalFlow.goToPageFor("CREATE_CLAIM", context, params);
-      }
+      const context = { claim, user };
+      const params = { claim_id: claim.application_id };
+      portalFlow.goToPageFor("CREATE_CLAIM", context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -212,18 +206,16 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim, success } = await claimsApi.submitClaim(application_id);
+      const { claim } = await claimsApi.submitClaim(application_id);
 
-      if (success) {
-        setClaim(claim);
+      setClaim(claim);
 
-        const context = { claim, user };
-        const params = {
-          claim_id: claim.application_id,
-          "part-one-submitted": "true",
-        };
-        portalFlow.goToNextPage(context, params);
-      }
+      const context = { claim, user };
+      const params = {
+        claim_id: claim.application_id,
+        "part-one-submitted": "true",
+      };
+      portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

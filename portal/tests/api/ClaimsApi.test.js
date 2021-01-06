@@ -80,7 +80,7 @@ describe("ClaimsApi", () => {
       );
     });
 
-    it("resolves with claim, success, status, and warnings properties", async () => {
+    it("resolves with claim, and warnings properties", async () => {
       const { claim: claimResponse, ...rest } = await claimsApi.getClaim(
         claim.application_id
       );
@@ -89,8 +89,6 @@ describe("ClaimsApi", () => {
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
         Object {
-          "status": 200,
-          "success": true,
           "warnings": Array [
             Object {
               "field": "first_name",
@@ -132,17 +130,11 @@ describe("ClaimsApi", () => {
         );
       });
 
-      it("resolves with claims, success, status properties", async () => {
-        const { claims: claimsResponse, ...rest } = await claimsApi.getClaims();
+      it("resolves with claims properties", async () => {
+        const { claims: claimsResponse } = await claimsApi.getClaims();
 
         expect(claimsResponse).toBeInstanceOf(ClaimCollection);
         expect(claimsResponse.items).toEqual([claim]);
-        expect(rest).toMatchInlineSnapshot(`
-          Object {
-            "status": 200,
-            "success": true,
-          }
-        `);
       });
     });
   });
@@ -176,17 +168,11 @@ describe("ClaimsApi", () => {
         );
       });
 
-      it("resolves with claim, success, status properties", async () => {
-        const { claim: claimResponse, ...rest } = await claimsApi.createClaim();
+      it("resolves with claim properties", async () => {
+        const { claim: claimResponse } = await claimsApi.createClaim();
 
         expect(claimResponse).toBeInstanceOf(Claim);
         expect(claimResponse).toEqual(claim);
-        expect(rest).toMatchInlineSnapshot(`
-          Object {
-            "status": 201,
-            "success": true,
-          }
-        `);
       });
     });
 
@@ -230,19 +216,13 @@ describe("ClaimsApi", () => {
       );
     });
 
-    it("resolves with claim, success, status properties", async () => {
-      const { claim: claimResponse, ...rest } = await claimsApi.completeClaim(
+    it("resolves with claim properties", async () => {
+      const { claim: claimResponse } = await claimsApi.completeClaim(
         claim.application_id
       );
 
       expect(claimResponse).toBeInstanceOf(Claim);
       expect(claimResponse).toEqual(claim);
-      expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "status": 200,
-          "success": true,
-        }
-      `);
     });
   });
 
@@ -275,7 +255,7 @@ describe("ClaimsApi", () => {
       );
     });
 
-    it("resolves with claim, errors, success, status, and warnings properties", async () => {
+    it("resolves with claim, errors and warnings properties", async () => {
       const { claim: claimResponse, ...rest } = await claimsApi.updateClaim(
         claim.application_id,
         claim
@@ -286,8 +266,6 @@ describe("ClaimsApi", () => {
       expect(rest).toMatchInlineSnapshot(`
         Object {
           "errors": undefined,
-          "status": 200,
-          "success": true,
           "warnings": Array [],
         }
       `);
@@ -320,19 +298,13 @@ describe("ClaimsApi", () => {
       );
     });
 
-    it("resolves with claim, success, status properties", async () => {
-      const { claim: claimResponse, ...rest } = await claimsApi.submitClaim(
+    it("resolves with claim properties", async () => {
+      const { claim: claimResponse } = await claimsApi.submitClaim(
         claim.application_id
       );
 
       expect(claimResponse).toBeInstanceOf(Claim);
       expect(claimResponse).toEqual(claim);
-      expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "status": 201,
-          "success": true,
-        }
-      `);
     });
   });
 
@@ -367,7 +339,7 @@ describe("ClaimsApi", () => {
       );
     });
 
-    it("resolves with claim, success, status properties", async () => {
+    it("resolves with claim properties", async () => {
       const {
         claim: claimResponse,
         ...rest
@@ -381,8 +353,6 @@ describe("ClaimsApi", () => {
       expect(rest).toMatchInlineSnapshot(`
         Object {
           "errors": undefined,
-          "status": 201,
-          "success": true,
           "warnings": Array [],
         }
       `);

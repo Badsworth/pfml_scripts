@@ -5,9 +5,7 @@ import User from "../models/User";
 import routes from "../routes";
 
 /**
- * @typedef {{ success: boolean, user: User }} UsersApiResult
- * @property {number} status - Status code
- * @property {boolean} success - Did the request succeed or fail?
+ * @typedef {{ user: User }} UsersApiResult
  * @property {User} [user] - If the request succeeded, this will contain the created user
  */
 
@@ -25,12 +23,10 @@ export default class UsersApi extends BaseApi {
    * @returns {Promise<UsersApiResult>}
    */
   getCurrentUser = async () => {
-    const { data, status } = await this.request("GET", "current", null);
+    const { data } = await this.request("GET", "current", null);
     const roles = this.transformUserRoles(data.roles);
 
     return Promise.resolve({
-      success: true,
-      status,
       user: new User({ ...data, roles }),
     });
   };
@@ -42,12 +38,10 @@ export default class UsersApi extends BaseApi {
    * @returns {Promise<UsersApiResult>}
    */
   updateUser = async (user_id, patchData) => {
-    const { data, status } = await this.request("PATCH", user_id, patchData);
+    const { data } = await this.request("PATCH", user_id, patchData);
     const roles = this.transformUserRoles(data.roles);
 
     return {
-      success: true,
-      status,
       user: new User({
         ...patchData,
         ...data,

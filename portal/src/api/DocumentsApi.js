@@ -12,15 +12,11 @@ import routes from "../routes";
 /**
  * @typedef {object} DocumentApiSingleResult
  * @property {Document} document - If the request succeeded, this will contain the created claim
- * @property {number} status - Status code
- * @property {boolean} success - Did the request succeed or fail?
  */
 
 /**
  * @typedef {object} DocumentApiListResult
  * @property {DocumentCollection} [documents] - If the request succeeded, this will contain a list of documents
- * @property {number} status - Status code
- * @property {boolean} success - Did the request succeed or fail?
  */
 
 /**
@@ -64,7 +60,7 @@ export default class DocumentsApi extends BaseApi {
     formData.append("name", file.name);
     formData.append("mark_evidence_received", mark_evidence_received);
 
-    const { data, status } = await this.request(
+    const { data } = await this.request(
       "POST",
       `${application_id}/documents`,
       formData,
@@ -74,8 +70,6 @@ export default class DocumentsApi extends BaseApi {
 
     return {
       document: new Document(data),
-      status,
-      success: true,
     };
   };
 
@@ -87,17 +81,12 @@ export default class DocumentsApi extends BaseApi {
    * @returns {DocumentApiListResult} The result of the API call
    */
   getDocuments = async (application_id) => {
-    const { data, status } = await this.request(
-      "GET",
-      `${application_id}/documents`
-    );
+    const { data } = await this.request("GET", `${application_id}/documents`);
     let documents = data.map((documentData) => new Document(documentData));
     documents = new DocumentCollection(documents);
 
     return {
       documents,
-      success: true,
-      status,
     };
   };
 

@@ -6,16 +6,12 @@ import routes from "../routes";
 
 /**
  * @typedef {object} ClaimsApiSingleResult
- * @property {number} status - Status code
- * @property {boolean} success - Did the request succeed or fail?
  * @property {Claim} [claim] - If the request succeeded, this will contain the created claim
  * @property {{ field: string, message: string, rule: string, type: string }[]} [warnings] - Validation warnings
  */
 
 /**
  * @typedef {object} ClaimsApiListResult
- * @property {number} status - Status code
- * @property {boolean} success - Did the request succeed or fail?
  * @property {ClaimCollection} [claims] - If the request succeeded, this will contain the created user
  */
 
@@ -33,15 +29,10 @@ export default class ClaimsApi extends BaseApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   getClaim = async (application_id) => {
-    const { data, status, warnings } = await this.request(
-      "GET",
-      application_id
-    );
+    const { data, warnings } = await this.request("GET", application_id);
 
     return {
-      success: true,
       claim: new Claim(data),
-      status,
       warnings,
     };
   };
@@ -51,15 +42,13 @@ export default class ClaimsApi extends BaseApi {
    * @returns {Promise<ClaimsApiListResult>} The result of the API call
    */
   getClaims = async () => {
-    const { data, status } = await this.request("GET");
+    const { data } = await this.request("GET");
 
     let claims = data.map((claimData) => new Claim(claimData));
     claims = new ClaimCollection(claims);
 
     return {
       claims,
-      success: true,
-      status,
     };
   };
 
@@ -71,15 +60,13 @@ export default class ClaimsApi extends BaseApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   completeClaim = async (application_id) => {
-    const { data, status } = await this.request(
+    const { data } = await this.request(
       "POST",
       `${application_id}/complete_application`
     );
 
     return {
       claim: new Claim(data),
-      status,
-      success: true,
     };
   };
 
@@ -88,12 +75,10 @@ export default class ClaimsApi extends BaseApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   createClaim = async () => {
-    const { data, status } = await this.request("POST");
+    const { data } = await this.request("POST");
 
     return {
-      success: true,
       claim: new Claim(data),
-      status,
     };
   };
 
@@ -104,7 +89,7 @@ export default class ClaimsApi extends BaseApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   updateClaim = async (application_id, patchData) => {
-    const { data, errors, status, warnings } = await this.request(
+    const { data, errors, warnings } = await this.request(
       "PATCH",
       application_id,
       patchData,
@@ -116,8 +101,6 @@ export default class ClaimsApi extends BaseApi {
     return {
       claim: new Claim(data),
       errors,
-      success: true,
-      status,
       warnings,
     };
   };
@@ -130,20 +113,18 @@ export default class ClaimsApi extends BaseApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   submitClaim = async (application_id) => {
-    const { data, status } = await this.request(
+    const { data } = await this.request(
       "POST",
       `${application_id}/submit_application`
     );
 
     return {
       claim: new Claim(data),
-      status,
-      success: true,
     };
   };
 
   submitPaymentPreference = async (application_id, paymentPreferenceData) => {
-    const { data, errors, status, warnings } = await this.request(
+    const { data, errors, warnings } = await this.request(
       "POST",
       `${application_id}/submit_payment_preference`,
       paymentPreferenceData
@@ -152,8 +133,6 @@ export default class ClaimsApi extends BaseApi {
     return {
       claim: new Claim(data),
       errors,
-      success: true,
-      status,
       warnings,
     };
   };
