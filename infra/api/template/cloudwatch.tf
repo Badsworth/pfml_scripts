@@ -76,14 +76,6 @@ resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cognito_presignup" 
   destination_arn = local.newrelic_log_ingestion_lambda
 }
 
-resource "aws_lambda_permission" "nr_lambda_permission_cognito_presignup" {
-  statement_id  = "NRLambdaPermission_CognitoPreSign_${var.environment_name}"
-  action        = "lambda:InvokeFunction"
-  function_name = local.newrelic_log_ingestion_lambda
-  principal     = "logs.us-east-1.amazonaws.com"
-  source_arn    = "${aws_cloudwatch_log_group.lambda_cognito_presignup.arn}:*"
-}
-
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_cloudwatch_log_group" "lambda_cognito_postconf" {
@@ -99,14 +91,6 @@ resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cognito_postconf" {
   log_group_name  = aws_cloudwatch_log_group.lambda_cognito_postconf.name
   filter_pattern  = ""
   destination_arn = local.newrelic_log_ingestion_lambda
-}
-
-resource "aws_lambda_permission" "nr_lambda_permission_cognito_postconf" {
-  statement_id  = "NRLambdaPermission_CognitoPostConf_${var.environment_name}"
-  action        = "lambda:InvokeFunction"
-  function_name = local.newrelic_log_ingestion_lambda
-  principal     = "logs.us-east-1.amazonaws.com"
-  source_arn    = "${aws_cloudwatch_log_group.lambda_cognito_postconf.arn}:*"
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -126,14 +110,6 @@ resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_formstack_import" {
   destination_arn = local.newrelic_log_ingestion_lambda
 }
 
-resource "aws_lambda_permission" "nr_lambda_permission_formstack_import" {
-  statement_id  = "NRLambdaPermission_FormstackImport_${var.environment_name}"
-  action        = "lambda:InvokeFunction"
-  function_name = local.newrelic_log_ingestion_lambda
-  principal     = "logs.us-east-1.amazonaws.com"
-  source_arn    = "${aws_cloudwatch_log_group.lambda_formstack_import.arn}:*"
-}
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 resource "aws_cloudwatch_log_group" "lambda_eligibility_feed" {
@@ -151,14 +127,6 @@ resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_eligibility_feed" {
   destination_arn = local.newrelic_log_ingestion_lambda
 }
 
-resource "aws_lambda_permission" "nr_lambda_permission_eligibility_feed" {
-  statement_id  = "NRLambdaPermission_EligibilityFeed_${var.environment_name}"
-  action        = "lambda:InvokeFunction"
-  function_name = local.newrelic_log_ingestion_lambda
-  principal     = "logs.us-east-1.amazonaws.com"
-  source_arn    = "${aws_cloudwatch_log_group.lambda_eligibility_feed.arn}:*"
-}
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # RDS Cloudwatch logs subscription filter and lambda permission
 
@@ -167,12 +135,4 @@ resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_permission_rds_logs
   log_group_name  = aws_cloudwatch_log_group.postgresql.name
   filter_pattern  = ""
   destination_arn = local.newrelic_log_ingestion_lambda
-}
-
-resource "aws_lambda_permission" "nr_lambda_permission_rds_logs" {
-  statement_id  = "NRLambdaPermission_RDSLogs_${var.environment_name}"
-  action        = "lambda:InvokeFunction"
-  function_name = local.newrelic_log_ingestion_lambda
-  principal     = "logs.us-east-1.amazonaws.com"
-  source_arn    = "${aws_cloudwatch_log_group.postgresql.arn}:*"
 }

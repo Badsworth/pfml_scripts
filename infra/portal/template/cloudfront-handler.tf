@@ -44,11 +44,3 @@ resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cloudfront_handler"
   filter_pattern  = ""
   destination_arn = local.newrelic_log_ingestion_lambda
 }
-
-resource "aws_lambda_permission" "nr_lambda_permission_cloudfront_handler" {
-  statement_id  = "NRLambdaPermission_CloudfrontHandler_${var.environment_name}"
-  action        = "lambda:InvokeFunction"
-  function_name = local.newrelic_log_ingestion_lambda
-  principal     = "logs.us-east-1.amazonaws.com"
-  source_arn    = "${aws_cloudwatch_log_group.lambda_cloudfront_handler.arn}:*"
-}
