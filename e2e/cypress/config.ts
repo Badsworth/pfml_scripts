@@ -26,11 +26,11 @@ export function getFineosBaseUrl(): string {
 const admins: Record<string, Credentials> = {
   "84-7847847": {
     username: "gqzap.employer.847847847@inbox.testmail.app",
-    password: "WaynePassword#1",
+    password: "LeaveAd1inPa$$word",
   },
   "99-9999999": {
     username: "gqzap.employer.999999999@inbox.testmail.app",
-    password: "UmbrellaPassword#1",
+    password: "LeaveAd1inPa$$word",
   },
 };
 
