@@ -83,14 +83,25 @@ const errors = {
       required: "Enter a date of birth.",
     },
     employer_benefits: {
+      benefit_amount_dollars: {
+        required:
+          "Enter the amount you will receive, or remove how often you will receive that amount.",
+      },
+      benefit_amount_frequency: {
+        required: "Enter how often you will receive this amount.",
+      },
       benefit_end_date: {
         date:
           "Date you stop receiving this benefit must include a day, month, and year.",
+        invalid_date_range:
+          "Date you stop using this benefit must be on or after the date you start using this benefit.",
+        minimum: "Benefit end date must be after December 31, 2020",
         required: "Enter the date you will stop using this benefit.",
       },
       benefit_start_date: {
         date:
           "Date you start receiving this benefit must include a day, month, and year.",
+        minimum: "Benefit start date must be after December 31, 2020",
         required: "Enter the date you will start using this benefit.",
       },
       benefit_type: {
@@ -304,14 +315,25 @@ const errors = {
       required: "Enter your license or ID number.",
     },
     other_incomes: {
+      income_amount_dollars: {
+        required:
+          "Enter the amount you will receive, or remove how often you will receive that amount.",
+      },
+      income_amount_frequency: {
+        required: "Enter how often you will receive this amount.",
+      },
       income_end_date: {
         date:
           "Date you stop receiving this income must include a day, month, and year.",
+        invalid_date_range:
+          "Date you stop receiving this income must be on or after the date you start receiving this income.",
+        minimum: "Income end date must be after December 31, 2020",
         required: "Enter the date you will stop receiving this income.",
       },
       income_start_date: {
         date:
           "Date you start receiving this income must include a day, month, and year.",
+        minimum: "Income start date must be after December 31, 2020",
         required: "Enter the date you will start receiving this income.",
       },
       income_type: {
@@ -354,6 +376,9 @@ const errors = {
       },
       leave_end_date: {
         date: "Date your leave ended must include a day, month, and year.",
+        invalid_date_range:
+          "Date your leave ends must be on or after the date your leave began.",
+        minimum: "Leave end date must be after December 31, 2020",
         required: "Enter the date your leave ended.",
       },
       leave_reason: {
@@ -361,6 +386,7 @@ const errors = {
       },
       leave_start_date: {
         date: "Date your leave began must include a day, month, and year.",
+        minimum: "Leave start date must be after December 31, 2020",
         required: "Enter the date your leave began.",
       },
     },
