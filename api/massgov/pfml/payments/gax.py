@@ -365,7 +365,7 @@ def build_gax_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
     try:
         now = payments_util.get_now()
 
-        ctr_batch_id, ref_file = payments_util.create_batch_id_and_reference_file(
+        ctr_batch_id, ref_file, filename = payments_util.create_batch_id_and_reference_file(
             now, ReferenceFileType.GAX, db_session, ctr_outbound_path
         )
 
@@ -383,7 +383,7 @@ def build_gax_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
         ctr_batch_id.inf_data = inf_dict
 
         dat_filepath, inf_filepath = payments_util.create_mmars_files_in_s3(
-            ref_file.file_location, ctr_batch_id.ctr_batch_identifier, dat_xml_document, inf_dict,
+            ref_file.file_location, str(filename), dat_xml_document, inf_dict,
         )
 
         db_session.commit()

@@ -274,7 +274,7 @@ def test_build_gax_files(initialize_factories_session, test_db_session, mock_s3_
     assert ref_file.ctr_batch_identifier.inf_data.get("NewMmarsTransCode") == "GAX"
 
     with smart_open.open(inf_filepath) as inf_file:
-        assert inf_filepath.split("/")[-1] == "EOL0101GAX10.INF"
+        assert inf_filepath.split("/")[-1] == "EOL20210101GAX10.INF"
         inf_file_contents = "".join(line for line in inf_file)
         assert inf_file_contents == (
             "NewMmarsBatchID = EOL0101GAX10;\n"
@@ -288,7 +288,7 @@ def test_build_gax_files(initialize_factories_session, test_db_session, mock_s3_
         )
 
     with smart_open.open(dat_filepath) as dat_file:
-        assert dat_filepath.split("/")[-1] == "EOL0101GAX10.DAT"
+        assert dat_filepath.split("/")[-1] == "EOL20210101GAX10.DAT"
         dat_file_contents = "".join(line for line in dat_file)
 
         # This bit doesn't get parsed into the XML objects

@@ -321,16 +321,18 @@ def create_next_batch_id(
 
 def create_batch_id_and_reference_file(
     now: datetime, file_type: LkReferenceFileType, db_session: db.Session, ctr_outbound_path: str
-) -> Tuple[CtrBatchIdentifier, ReferenceFile]:
+) -> Tuple[CtrBatchIdentifier, ReferenceFile, pathlib.Path]:
     ctr_batch_id = create_next_batch_id(
         now, file_type.reference_file_type_description or "", db_session
     )
 
-    s3_path = os.path.join(ctr_outbound_path, "ready")
-    batch_filename = Constants.BATCH_ID_TEMPLATE.format(
-        now.strftime("%Y%m%d"),
-        file_type.reference_file_type_description,
-        ctr_batch_id.batch_counter,
+    s3_path = os.path.join(ctr_outbound_path, Constants.S3_OUTBOUND_READY_DIR)
+    batch_filename = pathlib.Path(
+        Constants.BATCH_ID_TEMPLATE.format(
+            now.strftime("%Y%m%d"),
+            file_type.reference_file_type_description,
+            ctr_batch_id.batch_counter,
+        )
     )
     dir_path = os.path.join(s3_path, batch_filename)
 
@@ -341,7 +343,7 @@ def create_batch_id_and_reference_file(
     )
     db_session.add(ref_file)
 
-    return (ctr_batch_id, ref_file)
+    return (ctr_batch_id, ref_file, batch_filename)
 
 
 def create_files(

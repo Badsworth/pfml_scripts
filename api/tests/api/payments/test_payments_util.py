@@ -61,44 +61,22 @@ def make_s3_file(s3_bucket, key, test_file_name):
     s3.upload_file(test_file_path, s3_bucket, key)
 
 
-def test_get_date_group_str_from_path():
-    assert (
-        payments_util.get_date_group_str_from_path("2020-12-01-11-30-00-vpei.csv")
-        == "2020-12-01-11-30-00"
-    )
-    assert (
-        payments_util.get_date_group_str_from_path("/2020-12-01-11-30-00-vpei.csv")
-        == "2020-12-01-11-30-00"
-    )
-    assert (
-        payments_util.get_date_group_str_from_path("DT2/2020-12-01-11-30-00-vpei.csv")
-        == "2020-12-01-11-30-00"
-    )
-    assert (
-        payments_util.get_date_group_str_from_path("2020-12-01-11-30-00/2020-12-01-vpei.csv")
-        == "2020-12-01-11-30-00"
-    )
-    assert (
-        payments_util.get_date_group_str_from_path(
-            "2020-12-01-11-30-00/2020-12-01-11-30-00-vpei.csv"
-        )
-        == "2020-12-01-11-30-00"
-    )
-    assert (
-        payments_util.get_date_group_str_from_path(
-            "2020-12-01-11-30-00/2020-12-01-11-45-00-vpei.csv"
-        )
-        == "2020-12-01-11-30-00"
-    )
-    assert (
-        payments_util.get_date_group_str_from_path(
-            "2020-12-01-11-30-00/2020-12-02-11-30-00-vpei.csv"
-        )
-        == "2020-12-01-11-30-00"
-    )
-
-    assert payments_util.get_date_group_str_from_path("2020-12-01-vpei.csv") is None
-    assert payments_util.get_date_group_str_from_path("vpei.csv") is None
+@pytest.mark.parametrize(
+    "path, date_group",
+    (
+        ("2020-12-01-11-30-00-vpei.csv", "2020-12-01-11-30-00"),
+        ("/2020-12-01-11-30-00-vpei.csv", "2020-12-01-11-30-00"),
+        ("DT2/2020-12-01-11-30-00-vpei.csv", "2020-12-01-11-30-00"),
+        ("2020-12-01-11-30-00/2020-12-01-vpei.csv", "2020-12-01-11-30-00"),
+        ("2020-12-01-11-30-00/2020-12-01-11-30-00-vpei.csv", "2020-12-01-11-30-00"),
+        ("2020-12-01-11-30-00/2020-12-01-11-45-00-vpei.csv", "2020-12-01-11-30-00"),
+        ("2020-12-01-11-30-00/2020-12-02-11-30-00-vpei.csv", "2020-12-01-11-30-00"),
+        ("2020-12-01-vpei.csv", None),
+        ("vpei.csv", None),
+    ),
+)
+def test_get_date_group_str_from_path(path, date_group):
+    assert payments_util.get_date_group_str_from_path(path) == date_group
 
 
 def test_payment_extract_reference_file_exists_by_date_group(
@@ -545,3 +523,26 @@ def test_get_fineos_vendor_customer_numbers_from_reference_file(initialize_facto
             employee1.ctr_vendor_customer_code,
             employee2.ctr_vendor_customer_code,
         ]
+
+
+def test_create_batch_id_and_reference_file(test_db_session):
+    now = datetime.now()
+    file_type = ReferenceFileType.VCC
+    path = "s3://massgov-pfml-test-agency-transfer/ctr/outbound/"
+    expected_filename = (
+        payments_util.Constants.COMPTROLLER_DEPT_CODE + now.strftime("%Y%m%d") + "VCC" + "10"
+    )
+
+    # We already have tests for create_next_batch_id() so we don't test that return value here.
+    _ctr_batch_id, ref_file, batch_filename = payments_util.create_batch_id_and_reference_file(
+        now, file_type, test_db_session, path
+    )
+
+    assert str(batch_filename) == expected_filename
+
+    expected_file_location = os.path.join(
+        path, payments_util.Constants.S3_OUTBOUND_READY_DIR, expected_filename
+    )
+    assert ref_file.file_location == expected_file_location
+    assert ref_file.ctr_batch_identifier
+    assert ref_file.reference_file_type_id == file_type.reference_file_type_id

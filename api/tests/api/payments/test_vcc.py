@@ -381,7 +381,7 @@ def test_build_vcc_files(initialize_factories_session, test_db_session, mock_s3_
     assert ref_file.ctr_batch_identifier.inf_data.get("NewMmarsTransCode") == "VCC"
 
     with smart_open.open(inf_filepath) as inf_file:
-        assert os.path.basename(inf_filepath) == "EOL0101VCC10.INF"
+        assert os.path.basename(inf_filepath) == "EOL20200101VCC10.INF"
         inf_file_contents = "".join(line for line in inf_file)
         assert inf_file_contents == (
             "NewMmarsBatchID = EOL0101VCC10;\n"
@@ -395,7 +395,7 @@ def test_build_vcc_files(initialize_factories_session, test_db_session, mock_s3_
         )
 
     with smart_open.open(dat_filepath) as dat_file:
-        assert os.path.basename(dat_filepath) == "EOL0101VCC10.DAT"
+        assert os.path.basename(dat_filepath) == "EOL20200101VCC10.DAT"
         dat_file_contents = "".join(line for line in dat_file)
 
         # This bit doesn't get parsed into the XML objects
