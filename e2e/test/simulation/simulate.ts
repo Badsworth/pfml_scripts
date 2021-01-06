@@ -459,6 +459,25 @@ describe("Simulation Generator", () => {
       }),
     });
   });
+
+  it("Should not add employer response by default", async () => {
+    const simulationClaim = await scenario("TEST", medical)(opts);
+    expect(simulationClaim.employerResponse).toBeUndefined();
+  });
+
+  it("Should support adding an employer response", async () => {
+    const response = {
+      hours_worked_per_week: 40,
+      fraud: "No" as const,
+      employer_decision: "Approve" as const,
+      comment: "Test test",
+    };
+    const { employerResponse } = await scenario("TEST", {
+      ...medical,
+      employerResponse: response,
+    })(opts);
+    expect(employerResponse).toEqual(response);
+  });
 });
 
 describe("Leave date generator", () => {

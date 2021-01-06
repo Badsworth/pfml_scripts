@@ -1,4 +1,8 @@
-import { ApplicationRequestBody, PaymentPreferenceRequestBody } from "../api";
+import {
+  ApplicationRequestBody,
+  EmployerClaimRequestBody,
+  PaymentPreferenceRequestBody,
+} from "../api";
 import { DocumentTypes } from "./documents";
 
 export const fineosUserTypeNames = ["SAVILINX", "DFMLOPS"] as const;
@@ -10,6 +14,7 @@ export type SimulationClaim = {
   scenario: string;
   claim: ApplicationRequestBody;
   documents: ClaimDocument[];
+  employerResponse?: SimulatedEmployerResponse;
 
   // Flag to control validity of a mass ID #. Used in RMV file generation.
   hasInvalidMassId?: boolean;
@@ -32,6 +37,11 @@ export type ClaimDocument = {
   // submitted.
   submittedManually?: boolean;
 };
+
+export type SimulatedEmployerResponse = Pick<
+  EmployerClaimRequestBody,
+  "hours_worked_per_week" | "employer_decision" | "fraud" | "comment"
+>;
 
 // EmployeeFactory is the interface for getting or generating an employee.
 export interface EmployeeFactory {

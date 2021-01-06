@@ -15,9 +15,12 @@ import {
   ApplicationResponse,
   postApplicationsByApplicationIdSubmitPaymentPreference,
   PaymentPreferenceRequestBody,
+  patchEmployersClaimsByFineosAbsenceIdReview,
+  getEmployersClaimsByFineosAbsenceIdReview,
 } from "../api";
 import AuthenticationManager from "./AuthenticationManager";
 import { Credentials } from "../types";
+import { SimulatedEmployerResponse } from "./types";
 
 if (!global.FormData) {
   // @ts-ignore
@@ -64,7 +67,9 @@ export default class PortalSubmitter {
     credentials: Credentials,
     application: ApplicationRequestBody,
     documents: DocumentUploadRequest[] = [],
-    paymentPreference: PaymentPreferenceRequestBody = {}
+    paymentPreference: PaymentPreferenceRequestBody = {},
+    employerCredentials?: Credentials,
+    employerResponse?: SimulatedEmployerResponse
   ): Promise<ApplicationResponse> {
     const options = await this.getOptions(credentials);
     const application_id = await this.createApplication(options);
@@ -86,12 +91,51 @@ export default class PortalSubmitter {
       options
     );
     await this.completeApplication(application_id, options);
+    if (employerResponse) {
+      if (!employerCredentials) {
+        throw new Error(
+          "Unable to submit employer response without leave admin credentials"
+        );
+      }
+      await this.submitEmployerResponse(
+        employerCredentials,
+        fineos_absence_id,
+        employerResponse
+      );
+    }
     return {
       fineos_absence_id: fineos_absence_id,
       application_id: application_id,
       first_name: first_name,
       last_name: last_name,
     };
+  }
+
+  protected async submitEmployerResponse(
+    employerCredentials: Credentials,
+    fineosAbsenceId: string,
+    response: SimulatedEmployerResponse
+  ): Promise<void> {
+    const options = await this.getOptions(employerCredentials);
+    const review = await getEmployersClaimsByFineosAbsenceIdReview(
+      { fineosAbsenceId },
+      options
+    );
+    const { data } = review.data;
+    if (!data || !data.employer_benefits || !data.previous_leaves) {
+      throw new Error(
+        "Cannot submit employer response due to missing data on the employer review."
+      );
+    }
+    await patchEmployersClaimsByFineosAbsenceIdReview(
+      { fineosAbsenceId },
+      {
+        employer_benefits: data.employer_benefits,
+        previous_leaves: data.previous_leaves,
+        ...response,
+      },
+      options
+    );
   }
 
   protected async uploadDocuments(

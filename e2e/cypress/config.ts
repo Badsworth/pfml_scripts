@@ -1,3 +1,5 @@
+import type { Credentials } from "../src/types";
+
 /**
  * Returns a URL for Fineos with embedded username and password.
  */
@@ -23,20 +25,19 @@ export function getFineosBaseUrl(): string {
   return url.toString();
 }
 
-const admins: Record<string, Credentials> = {
-  "84-7847847": {
-    username: "gqzap.employer.847847847@inbox.testmail.app",
-    password: "LeaveAd1inPa$$word",
-  },
-  "99-9999999": {
-    username: "gqzap.employer.999999999@inbox.testmail.app",
-    password: "LeaveAd1inPa$$word",
-  },
-};
-
 export function getLeaveAdminCredentials(fein: string): Credentials {
-  if (!(fein in admins)) {
+  // Backward compatibility - throw error if the employer is not one of our "blessed" employers.
+  if (!["84-7847847", "99-9999999"].includes(fein)) {
     throw new Error(`Unable to determine Leave Admin credentials for ${fein}`);
   }
-  return admins[fein];
+  const password = Cypress.env("E2E_EMPLOYER_PORTAL_PASSWORD");
+  if (!password) {
+    throw new Error(
+      `You must set the E2E_EMPLOYER_PORTAL_PASSWORD environment variable.`
+    );
+  }
+  return {
+    username: `gqzap.employer.${fein.replace("-", "")}@inbox.testmail.app`,
+    password,
+  };
 }

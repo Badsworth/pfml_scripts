@@ -4,6 +4,7 @@ import {
   SimulationClaim,
   EmployerFactory,
   EmployeeFactory,
+  SimulatedEmployerResponse,
 } from "./types";
 import {
   ApplicationRequestBody,
@@ -91,6 +92,7 @@ export type ScenarioOpts = {
   employerExempt?: boolean;
   gaveAppropriateNotice?: boolean;
   docs: ScenarioDocumentConfiguration;
+  employerResponse?: SimulatedEmployerResponse;
   skipSubmitClaim?: boolean;
   shortNotice?: boolean;
   has_continuous_leave_periods?: boolean;
@@ -197,6 +199,7 @@ export function scenario(
       scenario: name,
       claim,
       paymentPreference,
+      employerResponse: _config.employerResponse,
       documents: await generateDocuments(claim, _config, opts),
       financiallyIneligible: !!_config.financiallyIneligible,
       // Flag for skipSubmitClaim.

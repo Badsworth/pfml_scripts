@@ -9,34 +9,25 @@ import SimulationStateTracker from "./SimulationStateTracker";
 import delay from "delay";
 import { Credentials } from "../types";
 
+export type CredentialCallback = (
+  type: "leave_admin" | "claimant",
+  qualifier?: string
+) => Credentials;
 /**
  * This class is responsible for executing a business simulation.
  */
 export default class SimulationRunner {
-  storage: SimulationStorage;
-  submitter: PortalSubmitter;
-  logger: winston.Logger;
-  tracker: SimulationStateTracker;
-  credentials: Credentials;
-
   constructor(
-    storage: SimulationStorage,
-    submitter: PortalSubmitter,
-    tracker: SimulationStateTracker,
-    logger: winston.Logger,
-    credentials: Credentials
-  ) {
-    this.storage = storage;
-    this.submitter = submitter;
-    this.tracker = tracker;
-    this.logger = logger;
-    this.credentials = credentials;
-  }
+    protected storage: SimulationStorage,
+    protected submitter: PortalSubmitter,
+    protected tracker: SimulationStateTracker,
+    protected logger: winston.Logger,
+    protected credentialCallback: CredentialCallback
+  ) {}
 
   async run(delaySeconds = 0): Promise<void> {
     let consecutiveFailures = 0;
     for (const claim of await this.storage.claims()) {
-      // const claimId = claim.claim.tax_identifier;
       const logger = this.logger.child({
         ssn: claim.claim.tax_identifier,
         scenario: claim.scenario,
@@ -94,17 +85,22 @@ export default class SimulationRunner {
 
     let claimId = "unsubmitted";
 
+    if (!claim.claim.employer_fein)
+      throw new Error("No employer FEIN was given for this claim");
+
     if (!claim.skipSubmitClaim) {
       logger.debug(
         `Submitting claim with ${submittedDocuments.length} documents`
       );
       const responseIds = await this.submitter.submit(
-        this.credentials,
+        this.credentialCallback("claimant"),
         claim.claim,
         submittedDocuments.map(
           makeDocUploadBody(this.storage.documentDirectory, "Automated Upload")
         ),
-        claim.paymentPreference
+        claim.paymentPreference,
+        this.credentialCallback("leave_admin", claim.claim.employer_fein),
+        claim.employerResponse
       );
       claimId = responseIds.fineos_absence_id as string;
     }

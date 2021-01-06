@@ -1,6 +1,6 @@
 import yargs, { CommandModule } from "yargs";
 import PortalSubmitter from "../PortalSubmitter";
-import SimulationRunner from "../SimulationRunner";
+import SimulationRunner, { CredentialCallback } from "../SimulationRunner";
 import SimulationStorage from "../SimulationStorage";
 import {
   SimulationStateFileTracker,
@@ -16,6 +16,27 @@ type SimulateArgs = {
   track: boolean;
   delay: number;
 } & SystemWideArgs;
+
+const makeCredentials: CredentialCallback = (type, qualifier) => {
+  switch (type) {
+    case "claimant":
+      return {
+        username: config("PORTAL_USERNAME"),
+        password: config("PORTAL_PASSWORD"),
+      };
+    case "leave_admin":
+      if (!qualifier) {
+        throw new Error("No FEIN was given");
+      }
+      return {
+        username: `gqzap.employer.${qualifier.replace(
+          "-",
+          ""
+        )}@inbox.testmail.app`,
+        password: config("EMPLOYER_PORTAL_PASSWORD"),
+      };
+  }
+};
 
 const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
   command: "run",
@@ -51,10 +72,6 @@ const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
       })
     );
     const submitter = new PortalSubmitter(authenticator, config("API_BASEURL"));
-    const credentials = {
-      username: config("PORTAL_USERNAME"),
-      password: config("PORTAL_PASSWORD"),
-    };
     const tracker = args.track
       ? new SimulationStateFileTracker(storage.stateFile)
       : new SimulationStateNullTracker();
@@ -63,7 +80,7 @@ const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
       submitter,
       tracker,
       args.logger.child({ from: "runner" }),
-      credentials
+      makeCredentials
     );
     const profile = args.logger.startTimer();
     try {

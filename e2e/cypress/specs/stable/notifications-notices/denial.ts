@@ -48,7 +48,6 @@ describe("Denial Notification and Notice", () => {
   it("Checking Legal Notice for both claimant and Leave-Admin", () => {
     beforePortal();
     cy.unstash<Credentials>("credentials").then((credentials) => {
-      portal.login(credentials);
       cy.unstash<Submission>("submission").then((submission) => {
         portal.login(credentials);
         cy.log("Waiting for documents");
