@@ -17,9 +17,7 @@ const AmendButton = ({ onClick }) => {
     <span className="c-amend-button">
       <Button variation="unstyled" onClick={onClick}>
         <FontAwesomeIcon icon={faEdit} className="edit-icon margin-right-1" />
-        <span className="amend-text">
-          {t("pages.employersClaimsReview.amend")}
-        </span>
+        <span className="amend-text">{t("components.amendButton.amend")}</span>
       </Button>
     </span>
   );

@@ -185,9 +185,9 @@ export class BaseMockClaimBuilder {
       new PreviousLeave({
         previous_leave_id: 1,
         is_for_current_employer: false,
-        leave_end_date: "2020-02-01",
+        leave_end_date: "2021-02-01",
         leave_reason: PreviousLeaveReason.pregnancy,
-        leave_start_date: "2020-01-01",
+        leave_start_date: "2021-01-01",
       }),
     ]);
     return this;
@@ -198,9 +198,9 @@ export class BaseMockClaimBuilder {
       new PreviousLeave({
         previous_leave_id: 1,
         is_for_current_employer: true,
-        leave_end_date: "2020-02-01",
+        leave_end_date: "2021-02-01",
         leave_reason: PreviousLeaveReason.medical,
-        leave_start_date: "2020-01-01",
+        leave_start_date: "2021-01-01",
       }),
     ]);
     return this;

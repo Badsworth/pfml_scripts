@@ -21,13 +21,13 @@ const EmployerBenefits = (props) => {
   return (
     <React.Fragment>
       <ReviewHeading level="2">
-        {t("pages.employersClaimsReview.employerBenefits.header")}
+        {t("components.employersEmployerBenefits.header")}
       </ReviewHeading>
       <Table className="width-full">
         <caption>
           <p className="text-normal">
             <Trans
-              i18nKey="pages.employersClaimsReview.employerBenefits.caption"
+              i18nKey="components.employersEmployerBenefits.caption"
               components={{
                 "reductions-overview-link": (
                   <a
@@ -39,20 +39,18 @@ const EmployerBenefits = (props) => {
               }}
             />
           </p>
-          <p>{t("pages.employersClaimsReview.employerBenefits.tableName")}</p>
+          <p>{t("components.employersEmployerBenefits.tableName")}</p>
         </caption>
         <thead>
           <tr>
             <th scope="col">
-              {t("pages.employersClaimsReview.employerBenefits.dateRangeLabel")}
+              {t("components.employersEmployerBenefits.dateRangeLabel")}
             </th>
             <th scope="col">
-              {t(
-                "pages.employersClaimsReview.employerBenefits.benefitTypeLabel"
-              )}
+              {t("components.employersEmployerBenefits.benefitTypeLabel")}
             </th>
             <th scope="col" colSpan="2">
-              {t("pages.employersClaimsReview.employerBenefits.detailsLabel")}
+              {t("components.employersEmployerBenefits.detailsLabel")}
             </th>
           </tr>
         </thead>
@@ -69,16 +67,14 @@ const EmployerBenefits = (props) => {
           ) : (
             <tr>
               <th scope="row">
-                {t("pages.employersClaimsReview.noneReported")}
+                {t("components.employersEmployerBenefits.noneReported")}
               </th>
               <td colSpan="2" />
             </tr>
           )}
         </tbody>
       </Table>
-      <p>
-        {t("pages.employersClaimsReview.employerBenefits.commentInstructions")}
-      </p>
+      <p>{t("components.employersEmployerBenefits.commentInstructions")}</p>
     </React.Fragment>
   );
 };

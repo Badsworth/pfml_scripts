@@ -58,19 +58,19 @@ const Feedback = ({
         choices={[
           {
             checked: shouldShowCommentBox,
-            label: t("pages.employersClaimsReview.feedback.choiceYes"),
+            label: t("components.employersFeedback.choiceYes"),
             value: "true",
           },
           {
             checked: !shouldShowCommentBox,
             disabled: isDenyingRequest || isEmployeeNoticeInsufficient,
-            label: t("pages.employersClaimsReview.feedback.choiceNo"),
+            label: t("components.employersFeedback.choiceNo"),
             value: "false",
           },
         ]}
         label={
           <ReviewHeading level="2">
-            {t("pages.employersClaimsReview.feedback.instructionsLabel")}
+            {t("components.employersFeedback.instructionsLabel")}
           </ReviewHeading>
         }
         name="shouldShowCommentBox"
@@ -90,7 +90,7 @@ const Feedback = ({
         <React.Fragment>
           <FormLabel className="usa-label" htmlFor="comment" small>
             <Trans
-              i18nKey="pages.employersClaimsReview.feedback.commentSolicitation"
+              i18nKey="components.employersFeedback.commentSolicitation"
               tOptions={{
                 context: buildContext() || "",
               }}
@@ -105,22 +105,20 @@ const Feedback = ({
           {shouldShowFileUpload && (
             <React.Fragment>
               <FormLabel small>
-                {t(
-                  "pages.employersClaimsReview.feedback.supportingDocumentationLabel"
-                )}
+                {t("components.employersFeedback.supportingDocumentationLabel")}
               </FormLabel>
               <FileCardList
                 filesWithUniqueId={uploadedFiles}
                 setFiles={setUploadedFiles}
                 setAppErrors={appLogic.setAppErrors}
                 fileHeadingPrefix={t(
-                  "pages.employersClaimsReview.feedback.fileHeadingPrefix"
+                  "components.employersFeedback.fileHeadingPrefix"
                 )}
                 addFirstFileButtonText={t(
-                  "pages.employersClaimsReview.feedback.addFirstFileButton"
+                  "components.employersFeedback.addFirstFileButton"
                 )}
                 addAnotherFileButtonText={t(
-                  "pages.employersClaimsReview.feedback.addAnotherFileButton"
+                  "components.employersFeedback.addAnotherFileButton"
                 )}
               />
             </React.Fragment>

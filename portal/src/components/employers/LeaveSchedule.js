@@ -48,43 +48,37 @@ const LeaveSchedule = ({ appLogic, claim }) => {
 
   const buildContext = () => {
     const hasDocuments = !!medicalDocuments.length;
-    if (isIntermittent && hasDocuments) return "intermittent_hasDocuments";
-    if (!isIntermittent && hasDocuments) return "hasDocuments";
+    if (isIntermittent && hasDocuments) return "intermittentWithDocuments";
+    if (!isIntermittent && hasDocuments) return "documents";
   };
 
   return (
     <React.Fragment>
       <ReviewHeading level="2">
-        {t("pages.employersClaimsReview.leaveSchedule.header")}
+        {t("components.employersLeaveSchedule.header")}
       </ReviewHeading>
       <Table className="width-full">
         <caption>
           <p className="text-normal">
             <Trans
-              i18nKey="pages.employersClaimsReview.leaveSchedule.caption"
+              i18nKey="components.employersLeaveSchedule.caption"
               tOptions={{
                 context: buildContext() || "",
               }}
             />
           </p>
-          <p>{t("pages.employersClaimsReview.leaveSchedule.tableName")}</p>
+          <p>{t("components.employersLeaveSchedule.tableName")}</p>
         </caption>
         <thead>
           <tr>
             <th scope="col">
-              {t(
-                "pages.employersClaimsReview.leaveSchedule.tableHeader_dateRange"
-              )}
+              {t("components.employersLeaveSchedule.dateRangeLabel")}
             </th>
             <th scope="col">
-              {t(
-                "pages.employersClaimsReview.leaveSchedule.tableHeader_leaveFrequency"
-              )}
+              {t("components.employersLeaveSchedule.leaveFrequencyLabel")}
             </th>
             <th scope="col">
-              {t(
-                "pages.employersClaimsReview.leaveSchedule.tableHeader_details"
-              )}
+              {t("components.employersLeaveSchedule.detailsLabel")}
             </th>
           </tr>
         </thead>
@@ -104,7 +98,9 @@ const LeaveSchedule = ({ appLogic, claim }) => {
                 )}
               </th>
               <td colSpan="2">
-                {t("pages.employersClaimsReview.leaveSchedule.type_continuous")}
+                {t(
+                  "components.employersLeaveSchedule.claimDurationType_continuous"
+                )}
               </td>
             </tr>
           )}
@@ -125,17 +121,15 @@ const LeaveSchedule = ({ appLogic, claim }) => {
               </th>
               <td>
                 {t(
-                  "pages.employersClaimsReview.leaveSchedule.type_reducedSchedule"
+                  "components.employersLeaveSchedule.claimDurationType_reducedSchedule"
                 )}
               </td>
               <td>
                 {/* TODO (CP-1074): Update hours/day */}
                 {/* TODO (EMPLOYER-655): Update reduced leave details */}
-                {t(
-                  "pages.employersClaimsReview.leaveSchedule.downloadAttachments"
-                )}
+                {t("components.employersLeaveSchedule.downloadAttachments")}
                 {/* {t(
-                  "pages.employersClaimsReview.leaveSchedule.reducedHoursPerWeek",
+                  "components.employersLeaveSchedule.reducedHoursPerWeek",
                   {
                     numOfHours: 10,
                   }
@@ -153,10 +147,10 @@ const LeaveSchedule = ({ appLogic, claim }) => {
       {!!medicalDocuments.length && (
         <ReviewRow
           level="3"
-          label={t("pages.employersClaimsReview.documentationLabel")}
+          label={t("components.employersLeaveSchedule.documentationLabel")}
         >
           <Trans
-            i18nKey="pages.employersClaimsReview.leaveSchedule.caption_recordkeeping_hasDocuments"
+            i18nKey="components.employersLeaveSchedule.recordkeepingInstructions"
             components={{
               "mass-employer-role-link": (
                 <a
@@ -197,7 +191,7 @@ const HcpDocumentItem = (props) => {
 
   const documentName =
     document.name?.trim() ||
-    t("pages.employersClaimsReview.leaveSchedule.healthCareProviderFormLink") ||
+    t("components.employersLeaveSchedule.healthCareProviderFormLink") ||
     document.document_type.trim();
 
   const handleClick = async (event) => {

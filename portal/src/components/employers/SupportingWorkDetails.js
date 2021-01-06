@@ -35,12 +35,12 @@ const SupportingWorkDetails = (props) => {
   return (
     <React.Fragment>
       <ReviewHeading level="2">
-        {t("pages.employersClaimsReview.supportingWorkDetails.header")}
+        {t("components.employersSupportingWorkDetails.header")}
       </ReviewHeading>
       <ReviewRow
         level="3"
         label={t(
-          "pages.employersClaimsReview.supportingWorkDetails.hoursWorkedLabel"
+          "components.employersSupportingWorkDetails.weeklyHoursWorkedLabel"
         )}
         action={
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />

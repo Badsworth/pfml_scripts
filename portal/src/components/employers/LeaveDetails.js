@@ -26,25 +26,25 @@ const LeaveDetails = (props) => {
   return (
     <React.Fragment>
       <ReviewHeading level="2">
-        {t("pages.employersClaimsReview.leaveDetails.header")}
+        {t("components.employersLeaveDetails.header")}
       </ReviewHeading>
       <ReviewRow
         level="3"
-        label={t("pages.employersClaimsReview.leaveDetails.leaveTypeLabel")}
+        label={t("components.employersLeaveDetails.leaveTypeLabel")}
       >
-        {t("pages.employersClaimsReview.leaveDetails.leaveReasonValue", {
+        {t("components.employersLeaveDetails.leaveReasonValue", {
           context: findKeyByValue(LeaveReason, reason),
         })}
       </ReviewRow>
       <ReviewRow
         level="3"
-        label={t("pages.employersClaimsReview.leaveDetails.applicationIdLabel")}
+        label={t("components.employersLeaveDetails.applicationIdLabel")}
       >
         {fineos_absence_id}
       </ReviewRow>
       <ReviewRow
         level="3"
-        label={t("pages.employersClaimsReview.leaveDetails.leaveDurationLabel")}
+        label={t("components.employersLeaveDetails.leaveDurationLabel")}
       >
         {isIntermittent
           ? "—"

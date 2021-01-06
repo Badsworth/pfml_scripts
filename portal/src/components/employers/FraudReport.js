@@ -28,41 +28,31 @@ const FraudReport = ({ onChange = () => {} }) => {
         smallLabel
         label={
           <ReviewHeading level="2">
-            {t("pages.employersClaimsReview.fraudReport.heading")}
+            {t("components.employersFraudReport.heading")}
           </ReviewHeading>
         }
         hint={
-          <Details
-            label={t("pages.employersClaimsReview.fraudReport.detailsLabel")}
-          >
+          <Details label={t("components.employersFraudReport.detailsLabel")}>
             <ul className="usa-list">
               <li>
-                {t(
-                  "pages.employersClaimsReview.fraudReport.fraudContent_personalInfo"
-                )}
+                {t("components.employersFraudReport.example_personalInfo")}
               </li>
               <li>
-                {t(
-                  "pages.employersClaimsReview.fraudReport.fraudContent_falseDocuments"
-                )}
+                {t("components.employersFraudReport.example_falseDocuments")}
               </li>
-              <li>
-                {t(
-                  "pages.employersClaimsReview.fraudReport.fraudContent_falseInfo"
-                )}
-              </li>
+              <li>{t("components.employersFraudReport.example_falseInfo")}</li>
             </ul>
           </Details>
         }
         choices={[
           {
             checked: isFraud === "Yes",
-            label: t("pages.employersClaimsReview.fraudReport.choiceYes"),
+            label: t("components.employersFraudReport.choiceYes"),
             value: "Yes",
           },
           {
             checked: isFraud === "No",
-            label: t("pages.employersClaimsReview.fraudReport.choiceNo"),
+            label: t("components.employersFraudReport.choiceNo"),
             value: "No",
           },
         ]}
@@ -74,9 +64,9 @@ const FraudReport = ({ onChange = () => {} }) => {
         <React.Fragment>
           <Alert
             state="warning"
-            heading={t("pages.employersClaimsReview.fraudReport.alertHeading")}
+            heading={t("components.employersFraudReport.alertHeading")}
           >
-            {t("pages.employersClaimsReview.fraudReport.alertBody")}
+            {t("components.employersFraudReport.alertBody")}
           </Alert>
         </React.Fragment>
       </ConditionalContent>

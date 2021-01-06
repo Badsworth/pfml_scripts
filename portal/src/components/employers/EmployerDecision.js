@@ -37,12 +37,12 @@ const EmployerDecision = ({ fraud, onChange = () => {} }) => {
         smallLabel
         label={
           <ReviewHeading level="2">
-            {t("pages.employersClaimsReview.employerDecision.heading")}
+            {t("components.employersEmployerDecision.heading")}
           </ReviewHeading>
         }
         hint={
           <Trans
-            i18nKey="pages.employersClaimsReview.employerDecision.explanation"
+            i18nKey="components.employersEmployerDecision.explanation"
             className="font-heading-xs text-normal"
             components={{
               "mass-employer-role-link": (
@@ -60,14 +60,12 @@ const EmployerDecision = ({ fraud, onChange = () => {} }) => {
           {
             checked: employerDecision === "Approve",
             disabled: fraud === "Yes",
-            label: t(
-              "pages.employersClaimsReview.employerDecision.choiceApprove"
-            ),
+            label: t("components.employersEmployerDecision.choiceApprove"),
             value: "Approve",
           },
           {
             checked: employerDecision === "Deny",
-            label: t("pages.employersClaimsReview.employerDecision.choiceDeny"),
+            label: t("components.employersEmployerDecision.choiceDeny"),
             value: "Deny",
           },
         ]}

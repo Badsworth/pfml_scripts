@@ -42,7 +42,7 @@ exports[`Feedback renders the component 1`] = `
       small={true}
     >
       <Trans
-        i18nKey="pages.employersClaimsReview.feedback.commentSolicitation"
+        i18nKey="components.employersFeedback.commentSolicitation"
         tOptions={
           Object {
             "context": "",

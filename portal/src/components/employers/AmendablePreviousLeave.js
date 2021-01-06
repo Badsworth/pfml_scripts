@@ -48,7 +48,7 @@ const AmendablePreviousLeave = ({ appErrors, leavePeriod, onChange }) => {
           )}
         </th>
         <td>
-          {t("pages.employersClaimsReview.previousLeaves.leaveReasonValue", {
+          {t("components.employersPreviousLeaves.leaveReasonValue", {
             context: findKeyByValue(
               PreviousLeaveReason,
               leavePeriod.leave_reason
@@ -73,15 +73,12 @@ const AmendablePreviousLeave = ({ appErrors, leavePeriod, onChange }) => {
               }}
             >
               <Heading level="4">
-                {t(
-                  "pages.employersClaimsReview.previousLeaves.leaveReasonValue",
-                  {
-                    context: findKeyByValue(
-                      PreviousLeaveReason,
-                      leavePeriod.leave_reason
-                    ),
-                  }
-                )}
+                {t("components.employersPreviousLeaves.leaveReasonValue", {
+                  context: findKeyByValue(
+                    PreviousLeaveReason,
+                    leavePeriod.leave_reason
+                  ),
+                })}
               </Heading>
               <InputDate
                 onChange={(e) =>

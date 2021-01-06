@@ -22,11 +22,11 @@ const PreviousLeaves = (props) => {
   return (
     <React.Fragment>
       <ReviewHeading level="2">
-        {t("pages.employersClaimsReview.previousLeaves.header")}
+        {t("components.employersPreviousLeaves.header")}
       </ReviewHeading>
       <p>
         <Trans
-          i18nKey="pages.employersClaimsReview.previousLeaves.explanation"
+          i18nKey="components.employersPreviousLeaves.explanation"
           components={{
             "calculate-reductions-link": (
               <a
@@ -39,18 +39,16 @@ const PreviousLeaves = (props) => {
         />
       </p>
       <Details
-        label={t("pages.employersClaimsReview.previousLeaves.detailsLabel")}
+        label={t(
+          "components.employersPreviousLeaves.qualifyingReasonDetailsLabel"
+        )}
         className="text-bold"
       >
-        <p>
-          {t(
-            "pages.employersClaimsReview.previousLeaves.qualifyingReasonContent"
-          )}
-        </p>
+        <p>{t("components.employersPreviousLeaves.qualifyingReasonContent")}</p>
         <ul className="usa-list">
           <li>
             <Trans
-              i18nKey="pages.employersClaimsReview.previousLeaves.qualifyingReason_manageHealth"
+              i18nKey="components.employersPreviousLeaves.qualifyingReason_manageHealth"
               components={{
                 "mass-benefits-guide-serious-health-condition-link": (
                   <a
@@ -67,22 +65,22 @@ const PreviousLeaves = (props) => {
           </li>
           <li>
             {t(
-              "pages.employersClaimsReview.previousLeaves.qualifyingReason_bondWithChild"
+              "components.employersPreviousLeaves.qualifyingReason_bondWithChild"
             )}
           </li>
           <li>
             {t(
-              "pages.employersClaimsReview.previousLeaves.qualifyingReason_activeDuty"
+              "components.employersPreviousLeaves.qualifyingReason_activeDuty"
             )}
           </li>
           <li>
             {t(
-              "pages.employersClaimsReview.previousLeaves.qualifyingReason_careForFamilyMilitary"
+              "components.employersPreviousLeaves.qualifyingReason_careForFamilyMilitary"
             )}
           </li>
           <li>
             <Trans
-              i18nKey="pages.employersClaimsReview.previousLeaves.qualifyingReason_careForFamilyMedical"
+              i18nKey="components.employersPreviousLeaves.qualifyingReason_careForFamilyMedical"
               components={{
                 "mass-benefits-guide-serious-health-condition-link": (
                   <a
@@ -103,14 +101,10 @@ const PreviousLeaves = (props) => {
         <thead>
           <tr>
             <th scope="col">
-              {t(
-                "pages.employersClaimsReview.previousLeaves.tableHeader_dateRange"
-              )}
+              {t("components.employersPreviousLeaves.dateRangeLabel")}
             </th>
             <th scope="col" colSpan="2">
-              {t(
-                "pages.employersClaimsReview.previousLeaves.tableHeader_leaveType"
-              )}
+              {t("components.employersPreviousLeaves.leaveTypeLabel")}
             </th>
           </tr>
         </thead>
@@ -131,16 +125,14 @@ const PreviousLeaves = (props) => {
           ) : (
             <tr>
               <th scope="row">
-                {t("pages.employersClaimsReview.noneReported")}
+                {t("components.employersPreviousLeaves.noneReported")}
               </th>
               <td colSpan="3" />
             </tr>
           )}
         </tbody>
       </Table>
-      <p>
-        {t("pages.employersClaimsReview.employerBenefits.commentInstructions")}
-      </p>
+      <p>{t("components.employersPreviousLeaves.commentInstructions")}</p>
     </React.Fragment>
   );
 };

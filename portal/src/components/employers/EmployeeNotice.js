@@ -33,20 +33,20 @@ const EmployeeNotice = ({ fraud, onChange = () => {} }) => {
         smallLabel
         label={
           <ReviewHeading level="2">
-            {t("pages.employersClaimsReview.employeeNotice.heading")}
+            {t("components.employersEmployeeNotice.heading")}
           </ReviewHeading>
         }
         choices={[
           {
             checked: employeeNotice === "Yes",
             disabled: fraud === "Yes",
-            label: t("pages.employersClaimsReview.employeeNotice.choiceYes"),
+            label: t("components.employersEmployeeNotice.choiceYes"),
             value: "Yes",
           },
           {
             checked: employeeNotice === "No",
             disabled: fraud === "Yes",
-            label: t("pages.employersClaimsReview.employeeNotice.choiceNo"),
+            label: t("components.employersEmployeeNotice.choiceNo"),
             value: "No",
           },
         ]}

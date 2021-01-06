@@ -24,7 +24,7 @@ exports[`EmployerBenefits renders the component 1`] = `
               />,
             }
           }
-          i18nKey="pages.employersClaimsReview.employerBenefits.caption"
+          i18nKey="components.employersEmployerBenefits.caption"
         />
       </p>
       <p>

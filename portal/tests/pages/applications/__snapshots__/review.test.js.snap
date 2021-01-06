@@ -649,7 +649,7 @@ exports[`PreviousLeaveList renders review info for a previous leave entry 1`] = 
   <br />
   Leave was for a pregnancy.
   <br />
-  1/1/2020 – 2/1/2020
+  1/1/2021 – 2/1/2021
 </ReviewRow>
 `;
 

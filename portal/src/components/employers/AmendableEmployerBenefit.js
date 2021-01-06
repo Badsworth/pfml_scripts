@@ -61,15 +61,12 @@ const AmendableEmployerBenefit = ({ appErrors, employerBenefit, onChange }) => {
       benefit_amount_dollars,
       benefit_amount_frequency,
     } = employerBenefit;
-    return t(
-      "pages.employersClaimsReview.employerBenefits.amountPerFrequency",
-      {
-        context: isFrequencyUnknown
-          ? null
-          : findKeyByValue(EmployerBenefitFrequency, benefit_amount_frequency),
-        amount: benefit_amount_dollars,
-      }
-    );
+    return t("components.employersEmployerBenefits.amountPerFrequency", {
+      context: isFrequencyUnknown
+        ? null
+        : findKeyByValue(EmployerBenefitFrequency, benefit_amount_frequency),
+      amount: benefit_amount_dollars,
+    });
   };
 
   /**
@@ -82,9 +79,7 @@ const AmendableEmployerBenefit = ({ appErrors, employerBenefit, onChange }) => {
     const unknownFrequency = isFrequencyUnknown
       ? [
           {
-            label: t(
-              "pages.employersClaimsReview.employerBenefits.employerBenefitFrequencyValue"
-            ),
+            label: t("components.employersEmployerBenefits.amountFrequency"),
             value: "Unknown",
           },
         ]
@@ -92,12 +87,9 @@ const AmendableEmployerBenefit = ({ appErrors, employerBenefit, onChange }) => {
     const frequencies = Object.values(EmployerBenefitFrequency).map(
       (frequency) => {
         return {
-          label: t(
-            "pages.employersClaimsReview.employerBenefits.employerBenefitFrequencyValue",
-            {
-              context: findKeyByValue(EmployerBenefitFrequency, frequency),
-            }
-          ),
+          label: t("components.employersEmployerBenefits.amountFrequency", {
+            context: findKeyByValue(EmployerBenefitFrequency, frequency),
+          }),
           value: frequency,
         };
       }
@@ -126,9 +118,7 @@ const AmendableEmployerBenefit = ({ appErrors, employerBenefit, onChange }) => {
           {getBenefitAmountByType()}
           {amendment.benefit_amount_frequency === "Unknown" && (
             <span className="usa-error-message display-inline-block text-normal padding-left-1">
-              {t(
-                "pages.employersClaimsReview.employerBenefits.frequencyHelperText"
-              )}
+              {t("components.employersEmployerBenefits.frequencyHelperText")}
             </span>
           )}
         </td>

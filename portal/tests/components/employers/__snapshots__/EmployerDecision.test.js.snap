@@ -30,7 +30,7 @@ exports[`EmployerDecision renders the component 1`] = `
             />,
           }
         }
-        i18nKey="pages.employersClaimsReview.employerDecision.explanation"
+        i18nKey="components.employersEmployerDecision.explanation"
       />
     }
     label={

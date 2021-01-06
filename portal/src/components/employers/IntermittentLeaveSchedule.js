@@ -33,28 +33,31 @@ const IntermittentLeaveSchedule = (props) => {
         {/* {formatDateRange(leavePeriod.start_date, leavePeriod.end_date)} */}
       </th>
       <td>
-        {t("pages.employersClaimsReview.leaveSchedule.type_intermittent")}
+        {t(
+          "components.employersIntermittentLeaveSchedule.claimDurationType_intermittent"
+        )}
       </td>
       <td>
         {/* TODO (EMPLOYER-448): Support intermittent leave
         TODO (EMPLOYER-655): Update intermittent leave details */}
         {/* <div className="text-bold">
-          {t("pages.employersClaimsReview.leaveSchedule.frequencyBasis", {
+          {t("components.employersIntermittentLeaveSchedule.frequencyBasis", {
             context: getFormattedFrequencyBasis(),
           })}
         </div> */}
         <div>
           {/* TODO (EMPLOYER-448): Support intermittent leave
           TODO (EMPLOYER-655): Update intermittent leave details */}
-          {t("pages.employersClaimsReview.leaveSchedule.downloadAttachments")}
+          {t(
+            "components.employersIntermittentLeaveSchedule.downloadAttachments"
+          )}
           {/* <Trans
-            i18nKey="pages.employersClaimsReview.leaveSchedule.intermittentFrequencyDuration"
+            i18nKey="components.employersIntermittentLeaveSchedule.intermittentFrequencyDuration"
             tOptions={{
               context: getI18nContextForIntermittentFrequencyDuration(
                 leavePeriod
               ),
               duration: leavePeriod.duration,
-              durationBasis: leavePeriod.durationBasis,
               frequency: leavePeriod.frequency,
             }}
           /> */}

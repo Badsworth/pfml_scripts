@@ -18,7 +18,7 @@ exports[`PreviousLeaves renders the component 1`] = `
           />,
         }
       }
-      i18nKey="pages.employersClaimsReview.previousLeaves.explanation"
+      i18nKey="components.employersPreviousLeaves.explanation"
     />
   </p>
   <Details
@@ -42,7 +42,7 @@ exports[`PreviousLeaves renders the component 1`] = `
               />,
             }
           }
-          i18nKey="pages.employersClaimsReview.previousLeaves.qualifyingReason_manageHealth"
+          i18nKey="components.employersPreviousLeaves.qualifyingReason_manageHealth"
         />
       </li>
       <li>
@@ -65,7 +65,7 @@ exports[`PreviousLeaves renders the component 1`] = `
               />,
             }
           }
-          i18nKey="pages.employersClaimsReview.previousLeaves.qualifyingReason_careForFamilyMedical"
+          i18nKey="components.employersPreviousLeaves.qualifyingReason_careForFamilyMedical"
         />
       </li>
     </ul>

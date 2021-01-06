@@ -1589,185 +1589,13 @@ const pages = {
     truthAttestationHeading: "Start the review process",
   },
   employersClaimsReview: {
-    amend: "Amend",
-    documentationLabel: "Documentation",
-    durationBasis_days: "{{numOfDays}} days",
-    employeeInformation: {
-      addressLabel: "Mailing address",
-      dobLabel: "Date of birth",
-      employeeNameLabel: "Employee name",
-      header: "Employee information",
-      ssnOrItinLabel:
-        "Social Security Number or Individual Taxpayer Identification Number",
-    },
-    employeeNotice: {
-      choiceNo: "$t(shared.choiceNo) (explain below)",
-      choiceYes: "$t(shared.choiceYes)",
-      heading:
-        "Did the employee give you at least 30 days notice about their leave?",
-    },
-    employerBenefits: {
-      amountPerFrequency: "{{amount, currency}}",
-      amountPerFrequency_daily: "$t(shared.amountPerFrequency_daily)",
-      amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
-      amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",
-      amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
-      benefitTypeLabel: "Benefit type",
-      caption:
-        "Your employee is planning to use these benefits during their leave. Learn more about how paid leave works with <reductions-overview-link>other government and private benefit programs</reductions-overview-link>.",
-      commentInstructions: "$t(shared.employerInstructions_addComment)",
-      dateRangeLabel: "Date range",
-      detailsLabel: "Details",
-      employerBenefitFrequencyValue: "Select a frequency",
-      employerBenefitFrequencyValue_daily: "$t(shared.amountFrequency_daily)",
-      employerBenefitFrequencyValue_inTotal:
-        "$t(shared.amountFrequency_inTotal)",
-      employerBenefitFrequencyValue_monthly:
-        "$t(shared.amountFrequency_monthly)",
-      employerBenefitFrequencyValue_weekly: "$t(shared.amountFrequency_weekly)",
-      employerBenefitType_familyOrMedicalLeave:
-        "$t(shared.employerBenefitType_familyOrMedicalLeave)",
-      employerBenefitType_paidLeave: "$t(shared.employerBenefitType_paidLeave)",
-      employerBenefitType_permanentDisability:
-        "$t(shared.employerBenefitType_permanentDisability)",
-      employerBenefitType_shortTermDisability:
-        "$t(shared.employerBenefitType_shortTermDisability)",
-      employerBenefitType_unknown: "Unknown",
-      frequencyHelperText: "[Needs review]",
-      header: "Employer benefits",
-      tableName: "Employer-sponsored benefit details",
-    },
-    employerDecision: {
-      choiceApprove: "Approve",
-      choiceDeny: "Deny (explain below)",
-      explanation:
-        "Answer based on your company policies and our <mass-employer-role-link>guidelines for employers</mass-employer-role-link>. Your recommendation is helpful to the Department in making its determination.",
-      heading: "Have you approved or denied this leave request?",
-    },
     employerIdentifierLabel: "Employer ID number (EIN)",
-    feedback: {
-      addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
-      addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
-      choiceNo: "$t(shared.choiceNo)",
-      choiceYes: "$t(shared.choiceYes)",
-      commentSolicitation: "Please tell us more.",
-      commentSolicitation_employeeNotice:
-        "Please tell us when your employee notified you about their leave.",
-      commentSolicitation_employerDecision:
-        "Please tell us why you denied this leave request.",
-      commentSolicitation_fraud:
-        "Please tell us why you believe this is fraudulent.",
-      fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
-      instructionsLabel: "Do you have any additional comments or concerns?",
-      supportingDocumentationLabel:
-        "If you have any supporting documentation, please attach it for review.",
-    },
-    fraudReport: {
-      alertBody:
-        "We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to call us at $t(shared.contactCenterPhoneNumber) from 8am$t(chars.nbhyphen)5pm ET.",
-      alertHeading: "You are reporting fraud.",
-      choiceNo: "$t(shared.choiceNo)",
-      choiceYes: "$t(shared.choiceYes) (explain below)",
-      commentSolicitation: "Please provide a comment below",
-      detailsLabel: "What counts as paid leave fraud?",
-      fraudContent_falseDocuments: "Providing forged or falsified documents",
-      fraudContent_falseInfo:
-        "Withholding information or providing false information to the Department of Family and Medical Leave",
-      fraudContent_personalInfo:
-        "Using someone’s personal information to fraudulently collect benefits",
-      heading: "Do you have any reason to suspect this is fraud?",
-    },
     instructionsAmendment:
       "Please review the details of this application carefully. If anything is incorrect or incomplete, you can add an amendment or include specific comments at the end.",
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
-    leaveDetails: {
-      applicationIdLabel: "Application ID",
-      header: "Leave details",
-      leaveDurationLabel: "Leave duration",
-      leaveReasonValue_activeDutyFamily:
-        "$t(shared.leaveReasonActiveDutyFamily)",
-      leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-      leaveReasonValue_care: "$t(shared.leaveReasonMedical)",
-      leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-      leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
-      leaveReasonValue_serviceMemberFamily:
-        "$t(shared.leaveReasonServiceMemberFamily)",
-      leaveTypeLabel: "Leave type",
-    },
-    leaveSchedule: {
-      caption: "This is your employee’s expected leave schedule.",
-      caption_hasDocuments:
-        "This is your employee’s expected leave schedule. Download the attached documentation for more details.",
-      caption_intermittent_hasDocuments:
-        "Download the attached documentation for details about the employee’s intermittent leave schedule.",
-      caption_recordkeeping_hasDocuments:
-        "To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.",
-      downloadAttachments:
-        "Download the documentation below or contact us at $t(shared.contactCenterPhoneNumber) for details about the leave schedule.",
-      frequencyBasis_irregular: "Irregular over the next 6 months",
-      frequencyBasis_months: "At least once a month",
-      frequencyBasis_weeks: "At least once a week",
-      header: "Leave schedule",
-      healthCareProviderFormLink: "Certification of a Serious Health Condition",
-      intermittentFrequencyDuration_irregularMonths_days:
-        "Estimated <strong>{{frequency}}</strong> absences over the next 6 months, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
-      intermittentFrequencyDuration_irregularMonths_hours:
-        "Estimated <strong>{{frequency}}</strong> absences over the next 6 months, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
-      intermittentFrequencyDuration_months_days:
-        "Estimated <strong>{{frequency}}</strong> absences per month, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
-      intermittentFrequencyDuration_months_hours:
-        "Estimated <strong>{{frequency}}</strong> absences per month, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
-      intermittentFrequencyDuration_weeks_days:
-        "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
-      intermittentFrequencyDuration_weeks_hours:
-        "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
-      reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
-      tableHeader_dateRange: "Date range",
-      tableHeader_details: "Details",
-      tableHeader_leaveFrequency: "Leave frequency",
-      tableName: "Leave schedule details table",
-      type_continuous: "$t(shared.claimDurationTypeContinuous)",
-      type_intermittent: "$t(shared.claimDurationTypeIntermittent)",
-      type_reducedSchedule: "$t(shared.claimDurationTypeReducedSchedule)",
-    },
-    noneReported: "None reported",
-    notApplicable: "-",
     organizationNameLabel: "Organization",
-    previousLeaves: {
-      commentInstructions: "$t(shared.employerInstructions_addComment)",
-      detailsLabel: "$t(shared.qualifyingReasonDetailsLabel)",
-      explanation:
-        "If your employee took any paid or unpaid leave for a qualifying reason since January 1, 2021, it may <calculate-reductions-link>affect their benefit amount</calculate-reductions-link>.",
-      header: "Past leave",
-      leaveReasonValue_activeDutyFamily:
-        "$t(shared.leaveReasonActiveDutyFamily)",
-      leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-      leaveReasonValue_care: "$t(shared.leaveReasonMedical)",
-      leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-      leaveReasonValue_pregnancy: "$t(shared.leaveReasonBonding)",
-      leaveReasonValue_serviceMemberFamily:
-        "$t(shared.leaveReasonServiceMemberFamily)",
-      qualifyingReasonContent:
-        "An employee or contractor can take paid or unpaid leave to:",
-      qualifyingReason_activeDuty:
-        "Manage family affairs when a family member is on active duty in the armed forces",
-      qualifyingReason_bondWithChild:
-        "Bond with a child after birth or placement",
-      qualifyingReason_careForFamilyMedical:
-        "Care for a family member with a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>",
-      qualifyingReason_careForFamilyMilitary:
-        "Care for a family member who serves in the armed forces",
-      qualifyingReason_manageHealth:
-        "Manage a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>, including illness, injury, or pregnancy",
-      tableHeader_dateRange: "Date range",
-      tableHeader_leaveType: "Leave type",
-    },
     submitButton: "Submit",
     submitLoadingMessage: "Submitting… Do not refresh or go back.",
-    supportingWorkDetails: {
-      header: "Supporting work details",
-      hoursWorkedLabel: "Weekly hours worked",
-    },
     title: "Review application from {{name}}",
   },
   employersClaimsStatus: {
@@ -1877,6 +1705,9 @@ const pages = {
 };
 
 const components = {
+  amendButton: {
+    amend: "Amend",
+  },
   amendmentForm: {
     cancel: "Cancel amendment",
     question_benefitAmount: "How much will they receive?",
@@ -1960,6 +1791,172 @@ const components = {
   },
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",
+  },
+  employersEmployeeInformation: {
+    addressLabel: "Mailing address",
+    dobLabel: "Date of birth",
+    employeeNameLabel: "Employee name",
+    header: "Employee information",
+    ssnOrItinLabel:
+      "Social Security Number or Individual Taxpayer Identification Number",
+  },
+  employersEmployeeNotice: {
+    choiceNo: "$t(shared.choiceNo) (explain below)",
+    choiceYes: "$t(shared.choiceYes)",
+    heading:
+      "Did the employee give you at least 30 days notice about their leave?",
+  },
+  employersEmployerBenefits: {
+    amountFrequency: "Select a frequency",
+    amountFrequency_daily: "$t(shared.amountFrequency_daily)",
+    amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
+    amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
+    amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
+    amountPerFrequency: "{{amount, currency}}",
+    amountPerFrequency_daily: "$t(shared.amountPerFrequency_daily)",
+    amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
+    amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",
+    amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
+    benefitTypeLabel: "Benefit type",
+    caption:
+      "Your employee is planning to use these benefits during their leave. Learn more about how paid leave works with <reductions-overview-link>other government and private benefit programs</reductions-overview-link>.",
+    commentInstructions: "$t(shared.employerInstructions_addComment)",
+    dateRangeLabel: "Date range",
+    detailsLabel: "Details",
+    frequencyHelperText: "[Needs review]",
+    header: "Employer benefits",
+    noneReported: "None reported",
+    tableName: "Employer-sponsored benefit details",
+  },
+  employersEmployerDecision: {
+    choiceApprove: "Approve",
+    choiceDeny: "Deny (explain below)",
+    explanation:
+      "Answer based on your company policies and our <mass-employer-role-link>guidelines for employers</mass-employer-role-link>. Your recommendation is helpful to the Department in making its determination.",
+    heading: "Have you approved or denied this leave request?",
+  },
+  employersFeedback: {
+    addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
+    addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    commentSolicitation: "Please tell us more.",
+    commentSolicitation_employeeNotice:
+      "Please tell us when your employee notified you about their leave.",
+    commentSolicitation_employerDecision:
+      "Please tell us why you denied this leave request.",
+    commentSolicitation_fraud:
+      "Please tell us why you believe this is fraudulent.",
+    fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
+    instructionsLabel: "Do you have any additional comments or concerns?",
+    supportingDocumentationLabel:
+      "If you have any supporting documentation, please attach it for review.",
+  },
+  employersFraudReport: {
+    alertBody:
+      "We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to call us at (833) 344‑7365 from 8am‑5pm ET.",
+    alertHeading: "You are reporting fraud.",
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes) (explain below)",
+    detailsLabel: "What counts as paid leave fraud?",
+    example_falseDocuments: "Providing forged or falsified documents",
+    example_falseInfo:
+      "Withholding information or providing false information to the Department of Family and Medical Leave",
+    example_personalInfo:
+      "Using someone’s personal information to fraudulently collect benefits",
+    heading: "Do you have any reason to suspect this is fraud?",
+  },
+  employersIntermittentLeaveSchedule: {
+    claimDurationType_continuous: "$t(shared.claimDurationTypeContinuous)",
+    claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
+    claimDurationType_reducedSchedule:
+      "$t(shared.claimDurationTypeReducedSchedule)",
+    downloadAttachments:
+      "Download the documentation below or contact us at $t(shared.contactCenterPhoneNumber) for details about the leave schedule.",
+    frequencyBasis_irregular: "Irregular over the next 6 months",
+    frequencyBasis_months: "At least once a month",
+    frequencyBasis_weeks: "At least once a week",
+    intermittentFrequencyDuration_irregularMonths_days:
+      "Estimated <strong>{{frequency}}</strong> absences over the next 6 months, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
+    intermittentFrequencyDuration_irregularMonths_hours:
+      "Estimated <strong>{{frequency}}</strong> absences over the next 6 months, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
+    intermittentFrequencyDuration_months_days:
+      "Estimated <strong>{{frequency}}</strong> absences per month, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
+    intermittentFrequencyDuration_months_hours:
+      "Estimated <strong>{{frequency}}</strong> absences per month, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
+    intermittentFrequencyDuration_weeks_days:
+      "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
+    intermittentFrequencyDuration_weeks_hours:
+      "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
+  },
+  employersLeaveDetails: {
+    applicationIdLabel: "Application ID",
+    header: "Leave details",
+    leaveDurationLabel: "Leave duration",
+    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_care: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    leaveTypeLabel: "Leave type",
+  },
+  employersLeaveSchedule: {
+    caption: "This is your employee’s expected leave schedule.",
+    caption_documents:
+      "This is your employee’s expected leave schedule. Download the attached documentation for more details.",
+    caption_intermittentWithDocuments:
+      "Download the attached documentation for details about the employee’s intermittent leave schedule.",
+    claimDurationType_continuous: "$t(shared.claimDurationTypeContinuous)",
+    claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
+    claimDurationType_reducedSchedule:
+      "$t(shared.claimDurationTypeReducedSchedule)",
+    dateRangeLabel: "Date range",
+    detailsLabel: "Details",
+    documentationLabel: "Documentation",
+    downloadAttachments:
+      "Download the documentation below or contact us at $t(shared.contactCenterPhoneNumber) for details about the leave schedule.",
+    header: "Leave schedule",
+    healthCareProviderFormLink: "Certification of a Serious Health Condition",
+    leaveFrequencyLabel: "Leave frequency",
+    recordkeepingInstructions:
+      "To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.",
+    reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
+    tableName: "Leave schedule details table",
+  },
+  employersPreviousLeaves: {
+    commentInstructions: "$t(shared.employerInstructions_addComment)",
+    dateRangeLabel: "Date range",
+    explanation:
+      "If your employee took any paid or unpaid leave for a qualifying reason since January 1, 2021, it may <calculate-reductions-link>affect their benefit amount</calculate-reductions-link>.",
+    header: "Past leave",
+    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_care: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    leaveTypeLabel: "Leave type",
+    noneReported: "None reported",
+    qualifyingReasonContent:
+      "An employee or contractor can take paid or unpaid leave to:",
+    qualifyingReasonDetailsLabel: "$t(shared.qualifyingReasonDetailsLabel)",
+    qualifyingReason_activeDuty:
+      "Manage family affairs when a family member is on active duty in the armed forces",
+    qualifyingReason_bondWithChild:
+      "Bond with a child after birth or placement",
+    qualifyingReason_careForFamilyMedical:
+      "Care for a family member with a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>",
+    qualifyingReason_careForFamilyMilitary:
+      "Care for a family member who serves in the armed forces",
+    qualifyingReason_manageHealth:
+      "Manage a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>, including illness, injury, or pregnancy",
+  },
+  employersSupportingWorkDetails: {
+    header: "Supporting work details",
+    weeklyHoursWorkedLabel: "Weekly hours worked",
   },
   errorBoundary: {
     message:

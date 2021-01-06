@@ -25,21 +25,17 @@ const EmployeeInformation = (props) => {
   return (
     <React.Fragment>
       <ReviewHeading level="2">
-        {t("pages.employersClaimsReview.employeeInformation.header")}
+        {t("components.employersEmployeeInformation.header")}
       </ReviewHeading>
       <ReviewRow
         level="3"
-        label={t(
-          "pages.employersClaimsReview.employeeInformation.employeeNameLabel"
-        )}
+        label={t("components.employersEmployeeInformation.employeeNameLabel")}
       >
         {first_name} {middle_name} {last_name}
       </ReviewRow>
       <ReviewRow
         level="3"
-        label={t(
-          "pages.employersClaimsReview.employeeInformation.addressLabel"
-        )}
+        label={t("components.employersEmployeeInformation.addressLabel")}
       >
         <span className="residential-address">
           {line_1}
@@ -51,15 +47,13 @@ const EmployeeInformation = (props) => {
       </ReviewRow>
       <ReviewRow
         level="3"
-        label={t(
-          "pages.employersClaimsReview.employeeInformation.ssnOrItinLabel"
-        )}
+        label={t("components.employersEmployeeInformation.ssnOrItinLabel")}
       >
         {tax_identifier}
       </ReviewRow>
       <ReviewRow
         level="3"
-        label={t("pages.employersClaimsReview.employeeInformation.dobLabel")}
+        label={t("components.employersEmployeeInformation.dobLabel")}
       >
         {formatDateRange(date_of_birth)}
       </ReviewRow>
