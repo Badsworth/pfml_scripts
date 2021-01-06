@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional
 
 import flask
-import flask_httpauth
+from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app
 from massgov.pfml.db.models.employees import ImportLog
@@ -16,23 +16,24 @@ from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
 def init(app, dashboard_password):
-    auth = flask_httpauth.HTTPBasicAuth(realm="PFML dashboards")
-
     if dashboard_password == "":
         # Disable completely if no password is configured.
         return
 
-    @auth.verify_password
-    def verify_password(username, password):
-        if username == "pfmlapi" and secrets.compare_digest(password, dashboard_password):
-            return username
-        return None  # Not authorized
-
-    @app.route("/dashboards", methods=["GET"])
-    @auth.login_required
-    def serve_dashboard():
+    @app.route("/dashboard/<key>/batch/")
+    def dashboard_batch(key):
+        if not secrets.compare_digest(key, dashboard_password):
+            raise NotFound
         entries = import_jobs_get()
         return flask.render_template("dashboards.html", data=entries, now=utcnow())
+
+    @app.route("/dashboard/<key>/batch/<int:batch_id>")
+    def dashboard_batch_id(key, batch_id):
+        if not secrets.compare_digest(key, dashboard_password):
+            raise NotFound
+        with massgov.pfml.api.app.db_session() as db_session:
+            entry = db_session.query(ImportLog).get(batch_id)
+        return flask.render_template("dashboard_batch_id.html", entry=entry, now=utcnow())
 
 
 class ImportLogResponse(PydanticBaseModel):
