@@ -39,11 +39,30 @@ from massgov.pfml.payments.fineos_payment_export import CiIndex
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
+
+def ssn_validator(arg):
+    value = int(arg)
+    if value < 250000000:
+        raise argparse.ArgumentTypeError("ssn must be at least 250000000")
+    return value
+
+
+def fein_validator(arg):
+    value = int(arg)
+    if value < 100000000:
+        raise argparse.ArgumentTypeError("fein must be at least 100000000")
+    return value
+
+
 parser = argparse.ArgumentParser(description="Generate fake payments files and data")
 parser.add_argument("--count", type=str, default="10", help="Number of employees to generate")
 parser.add_argument(
     "--folder", type=str, default="payments_files", help="Output folder for generated files"
 )
+parser.add_argument(
+    "--fein", type=fein_validator, default=100000000, help="Base FEIN for employers"
+)
+parser.add_argument("--ssn", type=ssn_validator, default=250000000, help="Base SSN for employees")
 
 # == CSV file constants
 PEI_FILE_NAME = "vpei.csv"
@@ -112,17 +131,6 @@ FINEOS_PAYMENT_EXPORT_FILES[REQUESTED_ABSENCES_FILE_NAME] = REQUESTED_ABSENCE_FI
 FINEOS_PAYMENT_EXPORT_FILES[EMPLOYEE_FEED_FILE_NAME] = EMPLOYEE_FEED_FIELD_NAMES
 FINEOS_PAYMENT_EXPORT_FILES[LEAVE_PLAN_FILE_NAME] = LEAVE_PLAN_FIELD_NAMES
 
-# == Utility Constants
-MOCK_DATA_PROVIDER = {
-    "c": 7326,
-    "i": 300,
-    "fein": 100000000,
-    "ssn": 250000000,
-    "employee_customer_number": 350,
-    "employer_customer_number": 1250,
-    "absence_case_id": 0,
-}
-
 
 # == Utility data classes
 @dataclass
@@ -137,11 +145,8 @@ class FineosPaymentsExportCsvWriter:
 class GenerateConfig:
     employee_count: int
     folder_path: str
-
-
-def _get_next_mock_data(key):
-    MOCK_DATA_PROVIDER[key] += 1
-    return MOCK_DATA_PROVIDER[key]
+    ssn_id_base: int
+    fein_id_base: int
 
 
 def _create_files(folder_path: str, date_prefix: str) -> Dict[str, FineosPaymentsExportCsvWriter]:
@@ -160,14 +165,19 @@ def _create_files(folder_path: str, date_prefix: str) -> Dict[str, FineosPayment
 
 
 def _create_db_models(
-    db_session: db.Session, ssn: str, fein: str, absence_case_id: str, add_eft=True
+    db_session: db.Session,
+    ssn: str,
+    fein: str,
+    fineos_employer_id: str,
+    absence_case_id: str,
+    add_eft=True,
 ) -> (Employee, Employer, Claim):
 
     eft = None
     if add_eft:
-        eft = EftFactory()
+        eft = EftFactory.create()
 
-    mailing_address = AddressFactory()
+    mailing_address = AddressFactory.create()
 
     ctr_address_pair = CtrAddressPairFactory(fineos_address=mailing_address)
     employee = EmployeeFactory.create(
@@ -176,9 +186,7 @@ def _create_db_models(
 
     employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
 
-    employer = EmployerFactory.create(
-        employer_fein=fein, fineos_employer_id=_get_next_mock_data("employer_customer_number")
-    )
+    employer = EmployerFactory.create(employer_fein=fein, fineos_employer_id=fineos_employer_id)
     claim = ClaimFactory.create(
         employer_id=employer.employer_id, employee=employee, fineos_absence_id=absence_case_id,
     )
@@ -263,6 +271,7 @@ def _generate_single_fineos_vendor_row(
     employer: Employer,
     claim: Claim,
     ci_index: CiIndex,
+    employee_customer_number: str,
     file_name_to_file_info: Dict[str, FineosPaymentsExportCsvWriter],
     missing_field: bool = False,
     invalid_row: bool = False,
@@ -275,8 +284,6 @@ def _generate_single_fineos_vendor_row(
     # shared variables
     is_eft = employee.eft is not None
     address = employee.addresses.all()[0].address
-
-    customer_number = _get_next_mock_data("employee_customer_number")
 
     # Requested Absence file
     application_date = datetime.now()
@@ -294,7 +301,7 @@ def _generate_single_fineos_vendor_row(
     requested_absence_row["LEAVEREQUEST_EVIDENCERESULTTYPE"] = (
         "Satisfied" if random.random() < 0.8 else "Not Satisfied"
     )
-    requested_absence_row["EMPLOYEE_CUSTOMERNO"] = customer_number
+    requested_absence_row["EMPLOYEE_CUSTOMERNO"] = employee_customer_number
     requested_absence_row["EMPLOYER_CUSTOMERNO"] = employer.fineos_employer_id
 
     requested_absence_csv_writer.writerow(requested_absence_row)
@@ -304,7 +311,7 @@ def _generate_single_fineos_vendor_row(
     employee_feed_row["C"] = ci_index.c
     employee_feed_row["I"] = ci_index.i
     employee_feed_row["DEFPAYMENTPREF"] = "Y" if random.random() < 0.8 else "N"
-    employee_feed_row["CUSTOMERNO"] = customer_number
+    employee_feed_row["CUSTOMERNO"] = employee_customer_number
     employee_feed_row["NATINSNO"] = employee.tax_identifier.tax_identifier
     employee_feed_row["DATEOFBIRTH"] = datetime(
         1978, random.randint(1, 12), 1, 11, 30, 00
@@ -331,7 +338,7 @@ def _generate_single_fineos_vendor_row(
 
     # Leave Plan file
     leave_plan_row = {}
-    leave_plan_row["ABSENCE_CASENUMBER"] = customer_number
+    leave_plan_row["ABSENCE_CASENUMBER"] = claim.fineos_absence_id
     leave_plan_row["LEAVETYPE"] = random.sample(
         [
             "EE Medical Leave",
@@ -352,19 +359,24 @@ def generate(db_session: db.Session, config: GenerateConfig):
         )
 
         # generate and write csv rows
+        ssn = config.ssn_id_base + 1
+        fein = config.fein_id_base + 1
+
         for i in range(int(config.employee_count)):
             if i % 100 == 0:
                 logger.info("generated %i employees", i)
 
-            ci_index = CiIndex(_get_next_mock_data("c"), _get_next_mock_data("i"))
-            ssn = _get_next_mock_data("ssn")
-            fein = _get_next_mock_data("fein")
-            absence_case_base = _get_next_mock_data("absence_case_id")
-            absence_case_id = f"NTN-{absence_case_base}-ABS-{absence_case_base}"
+            ssn_part_str = str(ssn)[2:]
+            fein_part_str = str(fein)[2:]
+
+            ci_index = CiIndex(ssn_part_str.rjust(9, "1"), fein_part_str.rjust(9, "2"))
+            fineos_employer_id = int(fein_part_str.rjust(9, "3"))
+            absence_case_id = f"NTN-{ssn_part_str.rjust(9, '4')}-ABS-01"
+            employee_customer_number = ssn_part_str.rjust(9, "5")
 
             add_eft = random.random() < 0.5
             employee, employer, claim = _create_db_models(
-                db_session, ssn, fein, absence_case_id, add_eft=add_eft
+                db_session, ssn, fein, fineos_employer_id, absence_case_id, add_eft=add_eft
             )
 
             if random.random() < 0.2:  # existing payment
@@ -389,10 +401,14 @@ def generate(db_session: db.Session, config: GenerateConfig):
                 employer,
                 claim,
                 ci_index,
+                employee_customer_number,
                 file_name_to_file_info,
                 missing_field=missing_field,
                 invalid_row=invalid_row,
             )
+
+            ssn += 1
+            fein += 1
 
         # flush buffer to csv files
         for file_info in file_name_to_file_info.values():
@@ -405,14 +421,21 @@ def generate(db_session: db.Session, config: GenerateConfig):
 def main():
     massgov.pfml.util.logging.init(__name__)
 
-    db_session = massgov.pfml.db.init()
+    db_session = massgov.pfml.db.init(sync_lookups=True)
     massgov.pfml.db.models.factories.db_session = db_session
 
     args = parser.parse_args()
     folder_path = args.folder
     employee_count = args.count
+    fein_id_base = int(args.fein)
+    ssn_id_base = int(args.ssn)
 
-    config = GenerateConfig(folder_path=folder_path, employee_count=employee_count)
+    config = GenerateConfig(
+        folder_path=folder_path,
+        employee_count=employee_count,
+        fein_id_base=fein_id_base,
+        ssn_id_base=ssn_id_base,
+    )
     generate(db_session, config)
 
     logger.info("done generating files")
