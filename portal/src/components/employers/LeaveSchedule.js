@@ -161,14 +161,16 @@ const LeaveSchedule = ({ appLogic, claim }) => {
               ),
             }}
           />
-          {medicalDocuments.map((document) => (
-            <HcpDocumentItem
-              appLogic={appLogic}
-              absenceId={absenceId}
-              document={document}
-              key={document.fineos_document_id}
-            />
-          ))}
+          <p>
+            {medicalDocuments.map((document) => (
+              <HcpDocumentItem
+                appLogic={appLogic}
+                absenceId={absenceId}
+                document={document}
+                key={document.fineos_document_id}
+              />
+            ))}
+          </p>
         </ReviewRow>
       )}
     </React.Fragment>
