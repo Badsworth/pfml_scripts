@@ -6,10 +6,6 @@ const withImages = require("next-images");
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE_BUNDLE === "true",
 });
-// TODO (CP-884): Next.js will eventually provide production source maps out of the box,
-// so remove this plugin when that becomes available. Experimental support was
-// added in https://github.com/zeit/next.js/pull/13018
-const withSourceMaps = require("@zeit/next-source-maps");
 const withTranspileModules = require("next-transpile-modules");
 
 // eslint-disable-next-line no-console
@@ -23,6 +19,8 @@ const config = {
     featureFlags,
     buildEnv,
   },
+  // Output source maps for production builds so they can aid in debugging production issues
+  productionBrowserSourceMaps: true,
   sassOptions: {
     // Mayflowers requires us to expose its includePaths so its imports work
     includePaths: mayflowerAssets.includePaths,
@@ -53,10 +51,8 @@ const config = {
 };
 
 module.exports = withBundleAnalyzer(
-  withSourceMaps(
-    // We transpile Mayflower since there's an issue that results in untranspiled
-    // modules being included in our code, which breaks IE11 compatibility
-    // https://jira.mass.gov/browse/DP-20446
-    withTranspileModules(["@massds/mayflower-react"])(withImages(config))
-  )
+  // We transpile Mayflower since there's an issue that results in untranspiled
+  // modules being included in our code, which breaks IE11 compatibility
+  // https://jira.mass.gov/browse/DP-20446
+  withTranspileModules(["@massds/mayflower-react"])(withImages(config))
 );
