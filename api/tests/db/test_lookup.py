@@ -45,6 +45,20 @@ class LkShape(Base):
         )
 
 
+# A lookup table with an id and description.
+class LkPolygon(Base):
+    __tablename__ = "lk_polygon__lookup_test"
+    polygon_id = Column(Integer, primary_key=True, autoincrement=True)
+    polygon_name = Column(Text, nullable=False)
+
+    def __init__(self, polygon_id, name):
+        self.polygon_id = polygon_id
+        self.polygon_name = name
+
+    def __repr__(self):
+        return "<LkPolygon(polygon_id=%r, polygon_name=%r)>" % (self.polygon_id, self.polygon_name)
+
+
 # A table that uses the lookup tables via foreign keys.
 class Widget(Base):
     __tablename__ = "widget__lookup_test"
@@ -82,6 +96,19 @@ def class_shape():
         TRIANGLE = LkShape(3, "triangle", 3)
 
     return Shape
+
+
+@pytest.fixture
+def class_polygon():
+    class Polygon(lookup.LookupTable):
+        model = LkPolygon
+        column_names = ("polygon_id", "polygon_name")
+
+        TRIANGLE = LkPolygon(3, "triangle")
+        SQUARE = LkPolygon(4, "square")
+        PENTAGON = LkPolygon(5, "pentagon")
+
+    return Polygon
 
 
 def test_sync_to_database(test_db_session, class_colour):
@@ -209,6 +236,24 @@ def test_get_instance_by_description(test_db_session, class_colour):
     purple = Colour.get_instance(test_db_session, description="purple")
     assert purple.colour_id == 3
     assert purple.colour_name == "purple"
+
+
+def test_get_instance_by_description_shared_by_lookups(test_db_session, class_shape, class_polygon):
+    Shape, Polygon = class_shape, class_polygon
+
+    Shape.sync_to_database(test_db_session)
+    Polygon.sync_to_database(test_db_session)
+    test_db_session.commit()
+
+    square_shape = Shape.get_instance(test_db_session, description="square")
+    assert square_shape.shape_id == 2
+    assert square_shape.name == "square"
+    assert type(square_shape) == LkShape
+
+    square_polygon = Polygon.get_instance(test_db_session, description="square")
+    assert square_polygon.polygon_id == 4
+    assert square_polygon.polygon_name == "square"
+    assert type(square_polygon) == LkPolygon
 
 
 def test_get_instance_invalid_value(test_db_session, class_colour, class_shape):
