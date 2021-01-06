@@ -46,6 +46,7 @@ def get_s3_config() -> PaymentsS3Config:
 @dataclass
 class PaymentsEmailConfig:
     payments_gax_bievnt_email: str
+    payments_dfml_business_operations_email: str
     pfml_email_address: str
     bounce_forwarding_email_address: str
 
@@ -53,6 +54,9 @@ class PaymentsEmailConfig:
 def get_email_config() -> PaymentsEmailConfig:
     payments_email_config = PaymentsEmailConfig(
         payments_gax_bievnt_email=os.getenv("PAYMENTS_GAX_BIEVNT_EMAIL", ""),
+        payments_dfml_business_operations_email=os.getenv(
+            "PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL", ""
+        ),
         pfml_email_address=os.getenv("PFML_EMAIL_ADDRESS", "noreplypfml@mass.gov"),
         bounce_forwarding_email_address=os.getenv(
             "BOUNCE_FORWARDING_EMAIL_ADDRESS", "noreplypfml@mass.gov"
@@ -63,6 +67,7 @@ def get_email_config() -> PaymentsEmailConfig:
         "Constructed payments configuration",
         extra={
             "payments_gax_bievnt_email": payments_email_config.payments_gax_bievnt_email,
+            "pfml_dfml_business_operations_email": payments_email_config.payments_dfml_business_operations_email,
             "pfml_email_address": payments_email_config.pfml_email_address,
             "bounce_forwarding_email_address": payments_email_config.bounce_forwarding_email_address,
         },

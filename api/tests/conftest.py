@@ -202,10 +202,12 @@ def test_fs_path(tmp_path):
 
 
 @pytest.fixture
-def mock_ses(monkeypatch):
+def mock_ses(monkeypatch, reset_aws_env_vars):
     import boto3
 
     monkeypatch.setenv("PFML_EMAIL_ADDRESS", "noreplypfml@mass.gov")
+    monkeypatch.setenv("PAYMENTS_GAX_BIEVNT_EMAIL", "test@example.com")
+    monkeypatch.setenv("PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL", "test@example.com")
     monkeypatch.setenv("BOUNCE_FORWARDING_EMAIL", "noreplypfml@mass.gov")
     monkeypatch.setenv("AWS_DEFAULT_REGION", "test")
 

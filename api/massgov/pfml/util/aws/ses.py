@@ -1,4 +1,5 @@
 import os
+import pathlib
 import re
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
@@ -88,7 +89,11 @@ def send_email(
 
 
 def send_email_with_attachment(
-    recipient: EmailRecipient, subject: str, body_text: str, sender: str, attachments: List[str]
+    recipient: EmailRecipient,
+    subject: str,
+    body_text: str,
+    sender: str,
+    attachments: List[pathlib.Path],
 ) -> Dict:
     """
     attachments is a list containing the full-paths to the file that will be attached to the email.
@@ -128,7 +133,7 @@ def send_email_with_attachment(
         raise RuntimeError("Error sending email: %s", error_message)
 
 
-def create_email_attachments(msg_container: MIMEMultipart, attachments: List[str]) -> None:
+def create_email_attachments(msg_container: MIMEMultipart, attachments: List[pathlib.Path]) -> None:
     for attachment in attachments:
         att = MIMEApplication(read_file(attachment, mode="rb"))
         att.add_header("Content-Disposition", "attachment", filename=os.path.basename(attachment))

@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
+import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging as logging
@@ -19,6 +20,7 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
+from massgov.pfml.util.aws.ses import EmailRecipient, send_email_with_attachment
 
 logger = logging.get_logger(__name__)
 
@@ -414,11 +416,13 @@ def _get_time_based_errors(
 
 
 def _send_errors_email(subject: str, body: str, error_files: List[pathlib.Path]) -> None:
-    pass
 
-    # payments_util.send_email(address=_get_email_address() subject=subject, body=body, attachments=[error_files])
-    # No idea what this looks like yet
-    # - waiting on Eyuel's implementation to hook this up
+    email_config = payments_config.get_email_config()
+    sender = email_config.pfml_email_address
+    recipient = EmailRecipient(to_addresses=[email_config.payments_dfml_business_operations_email])
+    send_email_with_attachment(
+        recipient=recipient, subject=subject, body_text=body, sender=sender, attachments=error_files
+    )
 
 
 def _send_fineos_payments_errors(working_directory: pathlib.Path, db_session: db.Session) -> None:

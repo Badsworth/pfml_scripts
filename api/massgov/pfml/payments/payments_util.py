@@ -1,6 +1,7 @@
 import csv
 import json
 import os
+import pathlib
 import tempfile
 import xml.dom.minidom as minidom
 from dataclasses import dataclass, field
@@ -558,11 +559,11 @@ def get_fineos_vendor_customer_numbers_from_reference_file(reference: ReferenceF
     ]
 
 
-def create_csv_from_list(customer_data: List[Dict], fieldnames: List[str]) -> str:
+def create_csv_from_list(customer_data: List[Dict], fieldnames: List[str]) -> pathlib.Path:
     temp_file_name = f"{get_now():%Y-%m-%d}-VCC-BIEVNT-supplement"
     directory = tempfile.mkdtemp()
 
-    csv_filepath = os.path.join(directory, f"{temp_file_name}.csv")
+    csv_filepath = pathlib.Path(os.path.join(directory, f"{temp_file_name}.csv"))
 
     with open(csv_filepath, mode="w") as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
