@@ -1,9 +1,12 @@
+import os
 from typing import List, Optional
 
+import boto3
 import pytest
 
 import massgov.pfml.payments.fineos_vendor_export as vendor_export
 import massgov.pfml.payments.payments_util as payments_util
+import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     BankAccountType,
@@ -12,8 +15,15 @@ from massgov.pfml.db.models.employees import (
     Employee,
     GeoState,
     PaymentMethod,
+    ReferenceFileType,
 )
-from massgov.pfml.db.models.factories import EmployeeFactory, EmployerFactory, TaxIdentifierFactory
+from massgov.pfml.db.models.factories import (
+    EmployeeFactory,
+    EmployerFactory,
+    ReferenceFileFactory,
+    TaxIdentifierFactory,
+)
+from massgov.pfml.payments.config import get_s3_config
 from massgov.pfml.util import datetime
 from tests.api.payments.conftest import upload_file_to_s3
 
@@ -59,6 +69,36 @@ def emp_updates_path(tmp_path, mock_fineos_s3_bucket):
     upload_file_to_s3(
         leave_plan_info_file, mock_fineos_s3_bucket, f"DT2/dataexports/{leave_plan_info_file_name}"
     )
+
+
+def test_copy_fineos_data_to_archival_bucket(
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
+):
+    date_prefix = "2020-01-02-11-30-00-"
+    s3_prefix = "DT2/dataexports/"
+    # Add 3 top level expected files
+    s3 = boto3.client("s3")
+    for expected_file_name in vendor_export.expected_file_names:
+        key = os.path.join(s3_prefix, f"{date_prefix}{expected_file_name}")
+        s3.put_object(Bucket=mock_fineos_s3_bucket, Key=key, Body="a,b,c")
+
+    copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
+        test_db_session, vendor_export.expected_file_names, ReferenceFileType.VENDOR_CLAIM_EXTRACT
+    )
+
+    assert copied_file_mapping_by_date
+    assert list(copied_file_mapping_by_date.keys())[0] == "2020-01-02-11-30-00"
+    assert len(copied_file_mapping_by_date["2020-01-02-11-30-00"]) == 3
+
+    destination_folder = os.path.join(
+        get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_RECEIVED_DIR
+    )
+    copied_files = file_util.list_files(destination_folder)
+    assert len(copied_files) == 3
+
+    for expected_file_name in vendor_export.expected_file_names:
+        expected_copied_file_name = f"{date_prefix}{expected_file_name}"
+        assert expected_copied_file_name in copied_files
 
 
 def test_process_vendor_extract_data_happy_path(
@@ -160,6 +200,72 @@ def test_update_mailing_address_happy_path(test_db_session, initialize_factories
     assert updated_employee.ctr_address_pair.fineos_address.city == "New York"
     assert updated_employee.ctr_address_pair.fineos_address.geo_state_id == GeoState.NY.geo_state_id
     assert updated_employee.ctr_address_pair.fineos_address.zip_code == "11020"
+
+
+def test_process_extract_unprocessed_folder_files(
+    mock_fineos_s3_bucket,
+    set_exporter_env_vars,
+    test_db_session,
+    tmp_path,
+    initialize_factories_session,
+):
+    s3 = boto3.client("s3")
+
+    def add_s3_files(prefix):
+        for expected_file_name in vendor_export.expected_file_names:
+            key = f"{prefix}{expected_file_name}"
+            s3.put_object(Bucket=mock_fineos_s3_bucket, Key=key, Body="a,b,c")
+
+    def get_download_directory(tmp_path, directory_name):
+        directory = tmp_path / directory_name
+        directory.mkdir()
+        return directory
+
+    # add files
+    add_s3_files("DT2/dataexports/2020-01-01-11-30-00/2020-01-01-11-30-00-")
+    add_s3_files("DT2/dataexports/2020-01-02-11-30-00/2020-01-02-11-30-00-")
+    add_s3_files("DT2/dataexports/2020-01-03-11-30-00/2020-01-03-11-30-00-")
+    add_s3_files("DT2/dataexports/2020-01-04-11-30-00-")
+
+    # add reference files for processed folders
+    ReferenceFileFactory.create(
+        file_location=os.path.join(
+            get_s3_config().pfml_fineos_inbound_path,
+            payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+            "2020-01-01-11-30-00",
+        ),
+        reference_file_type_id=ReferenceFileType.VENDOR_CLAIM_EXTRACT.reference_file_type_id,
+    )
+    ReferenceFileFactory.create(
+        file_location=os.path.join(
+            get_s3_config().pfml_fineos_inbound_path,
+            payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+            "2020-01-03-11-30-00",
+        ),
+        reference_file_type_id=ReferenceFileType.VENDOR_CLAIM_EXTRACT.reference_file_type_id,
+    )
+
+    # confirm all unprocessed files were downloaded
+    vendor_export.process_vendor_extract_data(test_db_session)
+    destination_folder = os.path.join(
+        get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+    )
+    processed_files = file_util.list_files(destination_folder, recursive=True)
+    assert len(processed_files) == 6
+
+    expected_file_names = []
+    for date_file in vendor_export.expected_file_names:
+        for unprocessed_date in ["2020-01-02-11-30-00", "2020-01-04-11-30-00"]:
+            expected_file_names.append(f"{unprocessed_date}/{unprocessed_date}-{date_file}")
+
+    for processed_file in processed_files:
+        assert processed_file in expected_file_names
+
+    # confirm no files will be copied in a subsequent copy
+    copied_files = payments_util.copy_fineos_data_to_archival_bucket(
+        test_db_session, vendor_export.expected_file_names, ReferenceFileType.VENDOR_CLAIM_EXTRACT
+    )
+    assert not copied_files
 
 
 def test_update_mailing_address_validation_issues(test_db_session, initialize_factories_session):

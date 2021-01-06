@@ -92,12 +92,29 @@ class ExtractData:
 
 
 def process_vendor_extract_data(db_session: db.Session) -> None:
-    payments_util.copy_fineos_data_to_archival_bucket(expected_file_names)
+    payments_util.copy_fineos_data_to_archival_bucket(
+        db_session, expected_file_names, ReferenceFileType.VENDOR_CLAIM_EXTRACT
+    )
     data_by_date = payments_util.group_s3_files_by_date(expected_file_names)
     download_directory = tempfile.mkdtemp().__str__()
 
+    previously_processed_date = set()
+
     for date_str, s3_file_locations in data_by_date.items():
         try:
+            if (
+                date_str in previously_processed_date
+                or payments_util.payment_extract_reference_file_exists_by_date_group(
+                    db_session, date_str, ReferenceFileType.VENDOR_CLAIM_EXTRACT
+                )
+            ):
+                logger.warning(
+                    "Found previously processed file(s) for date group still in received folder: %s",
+                    date_str,
+                )
+                previously_processed_date.add(date_str)
+                continue
+
             extract_data = ExtractData(s3_file_locations, date_str)
             download_and_index_data(extract_data, download_directory)
             process_records_to_db(extract_data, db_session)

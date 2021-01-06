@@ -2,8 +2,10 @@ import csv
 import json
 import os
 import pathlib
+import re
 import tempfile
 import xml.dom.minidom as minidom
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import Enum
@@ -358,30 +360,131 @@ def create_files(
     return (dat_filepath, inf_filepath)
 
 
-def copy_fineos_data_to_archival_bucket(expected_file_names: List[str]) -> Dict[str, str]:
-    s3_config = payments_config.get_s3_config()
-    return file_util.copy_s3_files(
-        s3_config.fineos_data_export_path, s3_config.pfml_fineos_inbound_path, expected_file_names
+def get_date_group_str_from_path(path: str) -> Optional[str]:
+    # E.g. For a file path s3://bucket/folder/2020-12-01-file-name.csv return 2020-12-01
+    match = re.search("\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}-\\d{2}", path)
+    date_group_str = match[0] if match else None
+
+    return date_group_str
+
+
+def payment_extract_reference_file_exists_by_date_group(
+    db_session: db.Session, date_group: str, export_type: LkReferenceFileType
+) -> bool:
+    path = os.path.join(
+        payments_config.get_s3_config().pfml_fineos_inbound_path,
+        Constants.S3_INBOUND_PROCESSED_DIR,
+        date_group,
     )
+    reference_file = (
+        db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.file_location == path,
+            ReferenceFile.reference_file_type_id == export_type.reference_file_type_id,
+        )
+        .first()
+    )
+
+    return reference_file is not None
+
+
+def copy_fineos_data_to_archival_bucket(
+    db_session: db.Session, expected_file_names: List[str], export_type: LkReferenceFileType
+) -> Dict[str, Dict[str, str]]:
+    # stage source and destination folders
+    s3_config = payments_config.get_s3_config()
+    source_folder = s3_config.fineos_data_export_path
+    destination_folder = os.path.join(
+        s3_config.pfml_fineos_inbound_path, Constants.S3_INBOUND_RECEIVED_DIR
+    )
+
+    # copy all previously unprocessed files to the received folder
+    # keep a mapping of expected to mapped files grouped by date
+    copied_file_mapping_by_date: Dict[str, Dict[str, str]] = {}
+
+    def copy_files(files, folder, check_already_processed=False):
+        previously_processed_date_group = set()
+
+        for file_path in files:
+            date_str = get_date_group_str_from_path(file_path)
+            for expected_file_name in expected_file_names:
+                if file_path.endswith(expected_file_name) and date_str is not None:
+                    source_file = os.path.join(source_folder, folder, file_path)
+
+                    if check_already_processed and (
+                        date_str in previously_processed_date_group
+                        or payment_extract_reference_file_exists_by_date_group(
+                            db_session, date_str, export_type
+                        )
+                    ):
+                        previously_processed_date_group.add(date_str)
+                        continue
+
+                    file_name = file_util.get_file_name(file_path)
+                    destination_file = os.path.join(destination_folder, file_name)
+
+                    if copied_file_mapping_by_date.get(date_str) is None:
+                        copied_file_mapping_by_date[date_str] = dict.fromkeys(
+                            expected_file_names, ""
+                        )
+
+                    # We found two files which end the same, error
+                    existing_expected_file = copied_file_mapping_by_date[date_str].get(
+                        expected_file_name
+                    )
+                    if existing_expected_file and existing_expected_file != source_file:
+                        raise RuntimeError(
+                            f"Duplicate files found for {expected_file_name}: {existing_expected_file} and {source_file}"
+                        )
+
+                    file_util.copy_file(source_file, destination_file)
+                    copied_file_mapping_by_date[date_str][expected_file_name] = destination_file
+
+    # process top level files
+    top_level_files = file_util.list_files(source_folder)
+    copy_files(top_level_files, folder="", check_already_processed=True)
+
+    # check archive folders for unprocessed dates
+    date_folders = file_util.list_folders(source_folder)
+    for date_folder in date_folders:
+        if not payment_extract_reference_file_exists_by_date_group(
+            db_session, date_folder, export_type
+        ):
+            subfolder_path = os.path.join(source_folder, date_folder)
+            subfolder_files = file_util.list_files(subfolder_path)
+            copy_files(subfolder_files, folder=date_folder, check_already_processed=False)
+
+    # check for missing files in each group
+    missing_files = []
+    for date_str, copied_file_mapping in copied_file_mapping_by_date.items():
+        for expected_file_name, destination in copied_file_mapping.items():
+            if not destination:
+                missing_files.append(f"{date_str}-{expected_file_name}")
+
+    if missing_files:
+        raise Exception(f"The following files were not found in S3 {','.join(missing_files)}")
+
+    return copied_file_mapping_by_date
 
 
 def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str]]:
     s3_config = payments_config.get_s3_config()
-    s3_objects = file_util.list_files(s3_config.pfml_fineos_inbound_path)
+    source_folder = os.path.join(
+        s3_config.pfml_fineos_inbound_path, Constants.S3_INBOUND_RECEIVED_DIR
+    )
+    s3_objects = file_util.list_files(source_folder)
+    s3_objects.sort()
 
-    date_to_full_path: Dict = {}
+    date_to_full_path: Dict[str, List[str]] = OrderedDict()
 
     for s3_object in s3_objects:
+        fixed_date_str = get_date_group_str_from_path(s3_object)
         for expected_file_name in expected_file_names:
-            if s3_object.endswith(expected_file_name):
-                # Grab everything that isn't the suffix of the file name
-                date = s3_object[: -len(expected_file_name)]
-                fixed_date_str = date.rstrip("-")  # eg. 2020-01-01- becomes 2020-01-01
-
+            if s3_object.endswith(expected_file_name) and fixed_date_str is not None:
                 if not date_to_full_path.get(fixed_date_str):
                     date_to_full_path[fixed_date_str] = []
 
-                full_path = os.path.join(s3_config.pfml_fineos_inbound_path, s3_object)
+                full_path = os.path.join(source_folder, s3_object)
                 date_to_full_path[fixed_date_str].append(full_path)
 
     return date_to_full_path

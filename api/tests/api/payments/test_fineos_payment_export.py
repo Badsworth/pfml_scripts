@@ -6,6 +6,7 @@ import pytest
 from freezegun import freeze_time
 
 import massgov.pfml.payments.fineos_payment_export as exporter
+import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     AddressType,
@@ -167,158 +168,6 @@ def add_s3_files(mock_fineos_s3_bucket, s3_prefix):
 ### TESTS BEGIN
 
 
-def test_get_date_group_str_from_path():
-    assert (
-        exporter.get_date_group_str_from_path("2020-12-01-11-30-00-vpei.csv")
-        == "2020-12-01-11-30-00"
-    )
-    assert (
-        exporter.get_date_group_str_from_path("/2020-12-01-11-30-00-vpei.csv")
-        == "2020-12-01-11-30-00"
-    )
-    assert (
-        exporter.get_date_group_str_from_path("DT2/2020-12-01-11-30-00-vpei.csv")
-        == "2020-12-01-11-30-00"
-    )
-    assert (
-        exporter.get_date_group_str_from_path("2020-12-01-11-30-00/2020-12-01-vpei.csv")
-        == "2020-12-01-11-30-00"
-    )
-    assert (
-        exporter.get_date_group_str_from_path("2020-12-01-11-30-00/2020-12-01-11-30-00-vpei.csv")
-        == "2020-12-01-11-30-00"
-    )
-    assert (
-        exporter.get_date_group_str_from_path("2020-12-01-11-30-00/2020-12-01-11-45-00-vpei.csv")
-        == "2020-12-01-11-30-00"
-    )
-    assert (
-        exporter.get_date_group_str_from_path("2020-12-01-11-30-00/2020-12-02-11-30-00-vpei.csv")
-        == "2020-12-01-11-30-00"
-    )
-
-    assert exporter.get_date_group_str_from_path("2020-12-01-vpei.csv") is None
-    assert exporter.get_date_group_str_from_path("vpei.csv") is None
-
-
-def test_copy_fineos_data_to_archival_bucket(
-    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
-):
-    date_prefix = "2020-01-02-11-30-00-"
-    s3_prefix = "DT2/dataexports/"
-    # Add 3 top level expected files
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpei.csv", "vpei.csv")
-    make_s3_file(
-        mock_fineos_s3_bucket,
-        f"{s3_prefix}{date_prefix}vpeipaymentdetails.csv",
-        "vpei_payment_details.csv",
-    )
-    make_s3_file(
-        mock_fineos_s3_bucket,
-        f"{s3_prefix}{date_prefix}vpeiclaimdetails.csv",
-        "vpei_claim_details.csv",
-    )
-
-    # Add a few other files in the same path with other names
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpeiclaimants.csv", "small.csv")
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpeiother.csv", "small.csv")
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}VBI_OTHER.csv", "small.csv")
-
-    # Add 3 files in a date folder
-    date_prefix = "2020-01-01-11-30-00-"
-    s3_prefix = "DT2/dataexports/2020-01-01-11-30-00/"
-    # Add 3 subfolder expected files
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpei.csv", "vpei.csv")
-    make_s3_file(
-        mock_fineos_s3_bucket,
-        f"{s3_prefix}{date_prefix}vpeipaymentdetails.csv",
-        "vpei_payment_details.csv",
-    )
-    make_s3_file(
-        mock_fineos_s3_bucket,
-        f"{s3_prefix}{date_prefix}vpeiclaimdetails.csv",
-        "vpei_claim_details.csv",
-    )
-
-    # Add a few more invalid files with the same suffix in other S3 "folders"
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}yesterday/vpei.csv", "vpei.csv")
-    make_s3_file(
-        mock_fineos_s3_bucket,
-        f"{s3_prefix}2020-11-21-11-30-00/vpeipaymentdetails.csv",
-        "vpei_payment_details.csv",
-    )
-    make_s3_file(mock_fineos_s3_bucket, "DT2/vpeiclaimdetails.csv", "vpei_claim_details.csv")
-    make_s3_file(mock_fineos_s3_bucket, "IDT/dataexports/vpeiclaimdetails.csv", "small.csv")
-    copied_file_mapping_by_date = exporter.copy_fineos_data_to_archival_bucket(test_db_session)
-
-    expected_prefix_1 = f"s3://{mock_s3_bucket}/cps/inbound/received/2020-01-02-11-30-00-"
-    assert (
-        copied_file_mapping_by_date["2020-01-02-11-30-00"]["vpei.csv"]
-        == f"{expected_prefix_1}vpei.csv"
-    )
-    assert (
-        copied_file_mapping_by_date["2020-01-02-11-30-00"]["vpeipaymentdetails.csv"]
-        == f"{expected_prefix_1}vpeipaymentdetails.csv"
-    )
-    assert (
-        copied_file_mapping_by_date["2020-01-02-11-30-00"]["vpeiclaimdetails.csv"]
-        == f"{expected_prefix_1}vpeiclaimdetails.csv"
-    )
-
-    expected_prefix_2 = f"s3://{mock_s3_bucket}/cps/inbound/received/2020-01-01-11-30-00-"
-    assert (
-        copied_file_mapping_by_date["2020-01-01-11-30-00"]["vpei.csv"]
-        == f"{expected_prefix_2}vpei.csv"
-    )
-    assert (
-        copied_file_mapping_by_date["2020-01-01-11-30-00"]["vpeipaymentdetails.csv"]
-        == f"{expected_prefix_2}vpeipaymentdetails.csv"
-    )
-    assert (
-        copied_file_mapping_by_date["2020-01-01-11-30-00"]["vpeiclaimdetails.csv"]
-        == f"{expected_prefix_2}vpeiclaimdetails.csv"
-    )
-
-
-def test_copy_fineos_data_to_archival_bucket_duplicate_suffix_error(
-    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
-):
-    date_prefix = "2020-12-01-11-30-00-"
-    s3_prefix = f"DT2/dataexports/{date_prefix}"
-    # Add the 3 expected files
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}vpei.csv", "vpei.csv")
-    make_s3_file(
-        mock_fineos_s3_bucket, f"{s3_prefix}vpeipaymentdetails.csv", "vpei_payment_details.csv",
-    )
-    make_s3_file(
-        mock_fineos_s3_bucket, f"{s3_prefix}vpeiclaimdetails.csv", "vpei_claim_details.csv"
-    )
-
-    # Add an extra vpei.csv file in the same folder
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}ANOTHER-vpei.csv", "vpei.csv")
-
-    with pytest.raises(
-        Exception,
-        match=f"Duplicate files found for vpei.csv: s3://test_bucket/cps/inbound/received/{date_prefix}ANOTHER-vpei.csv and s3://fineos_bucket/DT2/dataexports/{date_prefix}vpei.csv",
-    ):
-        exporter.copy_fineos_data_to_archival_bucket(test_db_session)
-
-
-def test_copy_fineos_data_to_archival_bucket_missing_file_error(
-    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
-):
-    date_prefix = "2020-12-01-11-30-00-"
-    s3_prefix = f"DT2/dataexports/{date_prefix}"
-    # Add only one file
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}vpei.csv", "vpei.csv")
-
-    with pytest.raises(
-        Exception,
-        match=f"The following files were not found in S3 {date_prefix}vpeipaymentdetails.csv,{date_prefix}vpeiclaimdetails.csv",
-    ):
-        exporter.copy_fineos_data_to_archival_bucket(test_db_session)
-
-
 def test_download_and_parse_data(mock_s3_bucket, tmp_path):
     make_s3_file(mock_s3_bucket, "path/to/file/test.csv", "small.csv")
 
@@ -353,38 +202,41 @@ def test_download_and_parse_data(mock_s3_bucket, tmp_path):
     }
 
 
-def test_group_s3_files_by_date(mock_s3_bucket, set_exporter_env_vars):
-    shared_prefix = "cps/inbound/received/"
-
-    for prefix in [
-        f"{shared_prefix}2020-01-01-11-30-00-",
-        f"{shared_prefix}2020-01-02-11-30-00-",
-        f"{shared_prefix}2020-01-03-11-30-00-",
-    ]:
-        # Add the 3 expected files
-        make_s3_file(mock_s3_bucket, f"{prefix}vpei.csv", "vpei.csv")
-        make_s3_file(
-            mock_s3_bucket, f"{prefix}vpeipaymentdetails.csv", "vpei_payment_details.csv",
-        )
-        make_s3_file(mock_s3_bucket, f"{prefix}vpeiclaimdetails.csv", "vpei_claim_details.csv")
-        # Add some other random files to the same folder
-        make_s3_file(mock_s3_bucket, f"{prefix}somethingelse.csv", "small.csv")
-        make_s3_file(mock_s3_bucket, f"{prefix}vpeiandsuch.csv", "small.csv")
-        make_s3_file(mock_s3_bucket, f"{prefix}secretrecipe.csv", "small.csv")
-
-    data_by_date = exporter.group_s3_files_by_date()
-    assert set(data_by_date.keys()) == set(
-        ["2020-01-01-11-30-00", "2020-01-02-11-30-00", "2020-01-03-11-30-00"]
+def test_copy_fineos_data_to_archival_bucket(
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
+):
+    date_prefix = "2020-01-02-11-30-00-"
+    s3_prefix = "DT2/dataexports/"
+    # Add 3 top level expected files
+    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpei.csv", "vpei.csv")
+    make_s3_file(
+        mock_fineos_s3_bucket,
+        f"{s3_prefix}{date_prefix}vpeipaymentdetails.csv",
+        "vpei_payment_details.csv",
     )
-    for date_item, paths in data_by_date.items():
-        expected_path_to_file = f"s3://{mock_s3_bucket}/{shared_prefix}{date_item}-"
-        assert set(paths) == set(
-            [
-                f"{expected_path_to_file}vpei.csv",
-                f"{expected_path_to_file}vpeiclaimdetails.csv",
-                f"{expected_path_to_file}vpeipaymentdetails.csv",
-            ]
-        )
+    make_s3_file(
+        mock_fineos_s3_bucket,
+        f"{s3_prefix}{date_prefix}vpeiclaimdetails.csv",
+        "vpei_claim_details.csv",
+    )
+
+    copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
+        test_db_session, exporter.expected_file_names, ReferenceFileType.PAYMENT_EXTRACT
+    )
+
+    assert copied_file_mapping_by_date
+    assert list(copied_file_mapping_by_date.keys())[0] == "2020-01-02-11-30-00"
+    assert len(copied_file_mapping_by_date["2020-01-02-11-30-00"]) == 3
+
+    destination_folder = os.path.join(
+        get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_RECEIVED_DIR
+    )
+    copied_files = file_util.list_files(destination_folder)
+    assert len(copied_files) == 3
+
+    for expected_file_name in exporter.expected_file_names:
+        expected_copied_file_name = f"{date_prefix}{expected_file_name}"
+        assert expected_copied_file_name in copied_files
 
 
 @freeze_time("2021-01-03 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
