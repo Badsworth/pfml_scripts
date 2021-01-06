@@ -90,62 +90,78 @@ exports[`CreateAccount renders post-launch content when claimantShowMedicalLeave
 
 exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 2`] = `
 Array [
-  <Trans
-    components={
-      Object {
-        "create-account-link": <a
-          href="/"
-        />,
-        "p": <p />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.alertHeading"
-  />,
-  <Trans
-    components={
-      Object {
-        "account-creation-link": <a
-          href="https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications"
-          rel="noopener"
-          target="_blank"
-        />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.leadBackground_accountCreationInstructions"
-  />,
-  <Trans
-    components={
-      Object {
-        "li": <li />,
-        "ul": <ul
-          className="usa-list"
-        />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.leadBackground_accountCreationList"
-  />,
-  <Trans
-    components={
-      Object {
-        "log-in-link": <a
-          className="display-inline-block"
-          href="/login"
-        />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.haveAnAccount"
-  />,
-  <Trans
-    components={
-      Object {
-        "create-account-link": <a
-          className="display-inline-block"
-          href="/create-account"
-        />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.createClaimantAccount"
-  />,
+  "Workers who wish to apply for paid leave should follow ",
+  <a
+    href="/"
+    key="1"
+  >
+    these instructions
+  </a>,
+  ".",
+]
+`;
+
+exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 3`] = `
+Array [
+  "You'll need the following information to ",
+  <a
+    href="https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    get started
+  </a>,
+  ":",
+]
+`;
+
+exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 4`] = `
+<ul
+  className="usa-list"
+  key="0"
+>
+  <li
+    key="0"
+  >
+    Work email address: An email address can only be associated with one account.
+  </li>
+  <li
+    key="1"
+  >
+    Password: Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters.
+  </li>
+  <li
+    key="2"
+  >
+    Employer ID number (EIN): A 9-digit number assigned by the Internal Revenue Service. It is listed on tax returns and your payroll department should have this information.
+  </li>
+</ul>
+`;
+
+exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 5`] = `
+Array [
+  "Have an account? ",
+  <a
+    className="display-inline-block"
+    href="/login"
+    key="1"
+  >
+    Log in
+  </a>,
+]
+`;
+
+exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 6`] = `
+Array [
+  "Need to apply for paid leave? ",
+  <a
+    className="display-inline-block"
+    href="/create-account"
+    key="1"
+  >
+    Create an account
+  </a>,
 ]
 `;
 
@@ -239,62 +255,78 @@ exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveT
 
 exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 2`] = `
 Array [
-  <Trans
-    components={
-      Object {
-        "create-account-link": <a
-          href="/"
-        />,
-        "p": <p />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.alertHeading"
-  />,
-  <Trans
-    components={
-      Object {
-        "account-creation-link": <a
-          href="https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications"
-          rel="noopener"
-          target="_blank"
-        />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.leadBackground_accountCreationInstructions"
-  />,
-  <Trans
-    components={
-      Object {
-        "li": <li />,
-        "ul": <ul
-          className="usa-list"
-        />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.leadBackground_accountCreationList"
-  />,
-  <Trans
-    components={
-      Object {
-        "log-in-link": <a
-          className="display-inline-block"
-          href="/login"
-        />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.haveAnAccount"
-  />,
-  <Trans
-    components={
-      Object {
-        "create-account-link": <a
-          className="display-inline-block"
-          href="/create-account"
-        />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.createClaimantAccount"
-  />,
+  "Workers who wish to apply for paid leave should follow ",
+  <a
+    href="/"
+    key="1"
+  >
+    these instructions
+  </a>,
+  ".",
+]
+`;
+
+exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 3`] = `
+Array [
+  "You'll need the following information to ",
+  <a
+    href="https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    get started
+  </a>,
+  ":",
+]
+`;
+
+exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 4`] = `
+<ul
+  className="usa-list"
+  key="0"
+>
+  <li
+    key="0"
+  >
+    Work email address: An email address can only be associated with one account.
+  </li>
+  <li
+    key="1"
+  >
+    Password: Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters.
+  </li>
+  <li
+    key="2"
+  >
+    Employer ID number (EIN): A 9-digit number assigned by the Internal Revenue Service. It is listed on tax returns and your payroll department should have this information.
+  </li>
+</ul>
+`;
+
+exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 5`] = `
+Array [
+  "Have an account? ",
+  <a
+    className="display-inline-block"
+    href="/login"
+    key="1"
+  >
+    Log in
+  </a>,
+]
+`;
+
+exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 6`] = `
+Array [
+  "Need to apply for paid leave? ",
+  <a
+    className="display-inline-block"
+    href="/create-account"
+    key="1"
+  >
+    Create an account
+  </a>,
 ]
 `;
 
@@ -431,49 +463,62 @@ exports[`CreateAccount when employerShowSelfRegistrationForm is set to true rend
 
 exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 2`] = `
 Array [
-  <Trans
-    components={
-      Object {
-        "create-account-link": <a
-          href="/"
-        />,
-        "p": <p />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.alertHeading"
-  />,
-  <Trans
-    components={
-      Object {
-        "li": <li />,
-        "ul": <ul
-          className="usa-list"
-        />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.detailsList"
-  />,
-  <Trans
-    components={
-      Object {
-        "log-in-link": <a
-          className="display-inline-block"
-          href="/login"
-        />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.haveAnAccount"
-  />,
-  <Trans
-    components={
-      Object {
-        "create-account-link": <a
-          className="display-inline-block"
-          href="/create-account"
-        />,
-      }
-    }
-    i18nKey="pages.employersAuthCreateAccount.createClaimantAccount"
-  />,
+  "Workers who wish to apply for paid leave should follow ",
+  <a
+    href="/"
+    key="1"
+  >
+    these instructions
+  </a>,
+  ".",
+]
+`;
+
+exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 3`] = `
+<ul
+  className="usa-list"
+  key="0"
+>
+  <li
+    key="0"
+  >
+    Review paid leave applications from your employees
+  </li>
+  <li
+    key="1"
+  >
+    Get updates about the program by email
+  </li>
+  <li
+    key="2"
+  >
+    Download documents and decision letters
+  </li>
+</ul>
+`;
+
+exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 4`] = `
+Array [
+  "Have an account? ",
+  <a
+    className="display-inline-block"
+    href="/login"
+    key="1"
+  >
+    Log in
+  </a>,
+]
+`;
+
+exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 5`] = `
+Array [
+  "Need to apply for paid leave? ",
+  <a
+    className="display-inline-block"
+    href="/create-account"
+    key="1"
+  >
+    Create an account
+  </a>,
 ]
 `;

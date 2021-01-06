@@ -5,7 +5,6 @@ import {
 } from "../../../test-utils";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
 import Status from "../../../../src/pages/employers/applications/status";
-import { Trans } from "react-i18next";
 
 jest.mock("../../../../src/hooks/useAppLogic");
 
@@ -57,7 +56,7 @@ describe("Status", () => {
 
   it("renders the page and correct content in Trans component", () => {
     expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find(Trans)).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   it("shows the claimant name as the title", () => {

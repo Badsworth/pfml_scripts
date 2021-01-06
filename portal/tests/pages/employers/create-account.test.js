@@ -1,6 +1,5 @@
 import CreateAccount from "../../../src/pages/employers/create-account";
 import React from "react";
-import { Trans } from "react-i18next";
 import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
 import { simulateEvents } from "../../test-utils";
@@ -25,7 +24,9 @@ describe("CreateAccount", () => {
   describe("when employerShowSelfRegistrationForm is set to true", () => {
     it("renders the page", () => {
       expect(wrapper).toMatchSnapshot();
-      expect(wrapper.find(Trans)).toMatchSnapshot();
+      wrapper.find("Trans").forEach((trans) => {
+        expect(trans.dive()).toMatchSnapshot();
+      });
     });
 
     it("displays the form fields", () => {
@@ -74,7 +75,9 @@ describe("CreateAccount", () => {
     wrapper = shallow(<CreateAccount appLogic={appLogic} />);
 
     expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find(Trans)).toMatchSnapshot();
+    wrapper.find("Trans").forEach((trans) => {
+      expect(trans.dive()).toMatchSnapshot();
+    });
   });
 
   it("renders post-launch content when claimantShowMedicalLeaveType is true", () => {
@@ -85,6 +88,8 @@ describe("CreateAccount", () => {
     wrapper = shallow(<CreateAccount appLogic={appLogic} />);
 
     expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find(Trans)).toMatchSnapshot();
+    wrapper.find("Trans").forEach((trans) => {
+      expect(trans.dive()).toMatchSnapshot();
+    });
   });
 });
