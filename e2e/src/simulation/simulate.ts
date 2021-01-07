@@ -100,6 +100,9 @@ export type ScenarioOpts = {
   has_intermittent_leave_periods?: boolean;
   pregnant_or_recent_birth?: boolean;
   bondingDate?: "far-past" | "past" | "future";
+  leave_dates?: [Date, Date];
+  address?: Address;
+  payment?: PaymentPreference;
   work_pattern_type?: "standard" | "rotating_shift";
   // Makes a claim for an extremely short time period (1 day).
   shortClaim?: boolean;
@@ -129,7 +132,7 @@ export function scenario(
       opts.employerFactory
     );
 
-    const address: Address = {
+    const address: Address = _config.address ?? {
       city: faker.address.city(),
       line_1: faker.address.streetAddress(),
       state: faker.address.stateAbbr(),
@@ -183,7 +186,7 @@ export function scenario(
     claim.has_intermittent_leave_periods =
       (claim.leave_details?.intermittent_leave_periods?.length ?? 0) > 0;
 
-    const paymentPreferenceDetails: PaymentPreference = {
+    const paymentPreferenceDetails: PaymentPreference = _config.payment ?? {
       payment_method: "Elec Funds Transfer",
       account_number: "5555555555",
       routing_number: "011401533",
@@ -397,12 +400,12 @@ function generateWorkPattern(
 
 function generateContinuousLeavePeriods(
   shortLeave: boolean,
-  work_pattern: WorkPattern
+  work_pattern: WorkPattern,
+  leave_dates?: [Date, Date]
 ): ContinuousLeavePeriods[] {
-  const [startDate, endDate] = generateLeaveDates(
-    work_pattern,
-    shortLeave ? { days: 1 } : undefined
-  );
+  const [startDate, endDate] =
+    leave_dates ??
+    generateLeaveDates(work_pattern, shortLeave ? { days: 1 } : undefined);
   return [
     {
       start_date: formatISO(startDate, { representation: "date" }),
@@ -493,7 +496,11 @@ function generateLeaveDetails(
       !config.has_intermittent_leave_periods);
   const details: ApplicationLeaveDetails = {
     continuous_leave_periods: has_continuous_leave_periods
-      ? generateContinuousLeavePeriods(!!config.shortClaim, work_pattern)
+      ? generateContinuousLeavePeriods(
+          !!config.shortClaim,
+          work_pattern,
+          config.leave_dates
+        )
       : [],
     reduced_schedule_leave_periods: config.has_reduced_schedule_leave_periods
       ? generateReducedLeavePeriods(!!config.shortClaim, work_pattern)

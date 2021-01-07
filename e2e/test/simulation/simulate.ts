@@ -12,7 +12,7 @@ import { extractLeavePeriod } from "../../src/utils";
 import { fromEmployerData } from "../../src/simulation/EmployerFactory";
 import employerPool from "../../employers/e2e.json";
 import { WorkPattern } from "../../src/api";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 jest.mock("../../src/simulation/documents");
 
@@ -70,6 +70,26 @@ const intermittent: ScenarioOpts = {
     MASSID: {},
   },
   has_intermittent_leave_periods: true,
+};
+
+const payments: ScenarioOpts = {
+  reason: "Serious Health Condition - Employee",
+  residence: "MA-proofed",
+  has_continuous_leave_periods: true,
+  leave_dates: [parseISO("2021-01-01"), parseISO("2021-02-01")],
+  address: {
+    city: "City",
+    line_1: "123 Street Road",
+    state: "MA",
+    zip: "00000",
+  },
+  payment: {
+    payment_method: "Check",
+    account_number: "",
+    routing_number: "",
+    bank_account_type: "Checking",
+  },
+  docs: {},
 };
 
 describe("Simulation Generator", () => {
@@ -477,6 +497,36 @@ describe("Simulation Generator", () => {
       employerResponse: response,
     })(opts);
     expect(employerResponse).toEqual(response);
+  });
+
+  it("Should use the provided field data", async () => {
+    const claim = await scenario("TEST", payments)(opts);
+    expect(claim.claim.mailing_address).toMatchObject({
+      city: "City",
+      line_1: "123 Street Road",
+      state: "MA",
+      zip: "00000",
+    });
+    expect(claim.claim.residential_address).toMatchObject({
+      city: "City",
+      line_1: "123 Street Road",
+      state: "MA",
+      zip: "00000",
+    });
+    expect(claim.claim.leave_details).toMatchObject({
+      continuous_leave_periods: [
+        {
+          start_date: "2021-01-01",
+          end_date: "2021-02-01",
+        },
+      ],
+    });
+    expect(claim.paymentPreference.payment_preference).toMatchObject({
+      payment_method: "Check",
+      account_number: "",
+      routing_number: "",
+      bank_account_type: "Checking",
+    });
   });
 });
 
