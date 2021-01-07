@@ -202,3 +202,9 @@ variable "dfml_business_operations_email_address" {
   type        = string
   default     = ""
 }
+
+variable "enable_register_admins_job" {
+  description = "Is the cloudwatch event to register admins enabled?"
+  type        = bool
+  default     = true
+}

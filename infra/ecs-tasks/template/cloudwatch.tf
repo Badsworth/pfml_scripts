@@ -38,6 +38,7 @@ resource "aws_cloudwatch_event_rule" "every_15_minutes" {
   name                = "register-admins-${var.environment_name}-every-15-minutes"
   description         = "Fires every 15 minutes"
   schedule_expression = "rate(15 minutes)"
+  is_enabled          = var.enable_register_admins_job
 }
 
 resource "aws_cloudwatch_event_target" "register_admins_event_target_ecs" {

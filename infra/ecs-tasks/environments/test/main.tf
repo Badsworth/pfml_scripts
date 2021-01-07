@@ -58,4 +58,5 @@ module "tasks" {
   pfml_fineos_outbound_path = "s3://massgov-pfml-test-agency-transfer/cps/outbound"
 
   enable_recurring_payments_schedule = false
+  enable_register_admins_job         = true
 }
