@@ -23,7 +23,10 @@ export const PHAP1 = scenario("PHAP1", {
   },
   bondingDate: "past",
   wages: 90000,
-  docs: {},
+  docs: {
+    MASSID: {},
+    BIRTHCERTIFICATE: {},
+  },
 });
 
 // Happy Path - EmployeeB: Medical, Check payment
@@ -45,7 +48,10 @@ export const PHAP2 = scenario("PHAP2", {
     bank_account_type: "Checking",
   },
   wages: 60000,
-  docs: {},
+  docs: {
+    HCP: {},
+    MASSID: {},
+  },
 });
 
 // Happy Path - EmployeeC: Bonding, deposit payment
@@ -69,7 +75,10 @@ export const PHAP3 = scenario("PHAP3", {
   },
   bondingDate: "past",
   wages: 30000,
-  docs: {},
+  docs: {
+    MASSID: {},
+    BIRTHCERTIFICATE: {},
+  },
 });
 
 // Happy Path - EmployeeD: Medical, deposit payment
@@ -91,7 +100,10 @@ export const PHAP4 = scenario("PHAP4", {
     bank_account_type: "Savings",
   },
   wages: 90000,
-  docs: {},
+  docs: {
+    HCP: {},
+    MASSID: {},
+  },
 });
 
 // Happy Path - Employee A: Bonding, Check payment
@@ -115,7 +127,10 @@ export const PHAP5 = scenario("PHAP5", {
   },
   bondingDate: "past",
   wages: 90000,
-  docs: {},
+  docs: {
+    MASSID: {},
+    BIRTHCERTIFICATE: {},
+  },
 });
 
 // Happy Path - EmployeeB: Medical, Check payment
@@ -137,7 +152,10 @@ export const PHAP6 = scenario("PHAP6", {
     bank_account_type: "Checking",
   },
   wages: 60000,
-  docs: {},
+  docs: {
+    HCP: {},
+    MASSID: {},
+  },
 });
 
 // Happy Path - EmployeeC: Bonding, deposit payment
@@ -161,7 +179,10 @@ export const PHAP7 = scenario("PHAP7", {
   },
   bondingDate: "past",
   wages: 30000,
-  docs: {},
+  docs: {
+    MASSID: {},
+    BIRTHCERTIFICATE: {},
+  },
 });
 
 // Happy Path - EmployeeD: Medical, deposit payment
@@ -183,7 +204,10 @@ export const PHAP8 = scenario("PHAP8", {
     bank_account_type: "Savings",
   },
   wages: 90000,
-  docs: {},
+  docs: {
+    HCP: {},
+    MASSID: {},
+  },
 });
 
 // Retroactive tests
@@ -209,7 +233,10 @@ export const PHAP8 = scenario("PHAP8", {
 //  },
 //  bondingDate: "past",
 //  wages: 90000,
-//  docs: {},
+//  docs: {
+//    MASSID: {},
+//    BIRTHCERTIFICATE: {},
+//  },
 //});
 //
 //// Happy Pathi: Retroactive - EmployeeB: Medical, Check payment
@@ -231,7 +258,10 @@ export const PHAP8 = scenario("PHAP8", {
 //    bank_account_type: "Checking",
 //  },
 //  wages: 60000,
-//  docs: {},
+//  docs: {
+//    HCP: {},
+//    MASSID: {},
+//  }
 //});
 //
 //// Happy Path: Retroactive - EmployeeC: Bonding, check payment
@@ -255,7 +285,10 @@ export const PHAP8 = scenario("PHAP8", {
 //  },
 //  bondingDate: "past",
 //  wages: 30000,
-//  docs: {},
+//  docs: {
+//    MASSID: {},
+//    BIRTHCERTIFICATE: {},
+//  },
 //});
 //
 //// Happy Path: Retroactive - EmployeeD: Medical, check payment
@@ -277,7 +310,10 @@ export const PHAP8 = scenario("PHAP8", {
 //    bank_account_type: "Checking",
 //  },
 //  wages: 90000,
-//  docs: {},
+//  docs: {
+//    HCP: {},
+//    MASSID: {},
+//  }
 //});
 //
 //// Happy Path: Retroactive - Employee A: Bonding, Check payment
@@ -301,7 +337,10 @@ export const PHAP8 = scenario("PHAP8", {
 //  },
 //  bondingDate: "past",
 //  wages: 90000,
-//  docs: {},
+//  docs: {
+//    MASSID: {},
+//    BIRTHCERTIFICATE: {},
+//  },
 //});
 
 const PHAP = chance([
