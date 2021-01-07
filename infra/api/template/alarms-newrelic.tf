@@ -250,7 +250,7 @@ resource "newrelic_nrql_alert_condition" "fineos_aggregated_5xx_rate" {
 
 resource "newrelic_nrql_alert_condition" "fineos_aggregated_4xx_rate" {
   # WARN: % FINEOS responses that are 4XXs exceed 10% for 5 minutes
-  # CRIT: % FINEOS responses that are 4XXs exceed 15% for 2 minutes
+  # CRIT: % FINEOS responses that are 4XXs exceed 33% for 5 minutes
   name           = "FINEOS 4XXs response rate too high"
   policy_id      = newrelic_alert_policy.api_alerts.id
   type           = "static"
@@ -377,6 +377,119 @@ resource "newrelic_nrql_alert_condition" "fineos_claim-submission_4xx_rate" {
   }
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+# Alerts relating to errors in the /notifications endpoint where FINEOS POSTs new claims
+
+resource "newrelic_nrql_alert_condition" "notifications_endpoint_error_rate" {
+  # WARN: % Error responses exceed 10% at least once in 5 minutes
+  # CRIT: % Error responses exceed 33% for a continuous 5 minute window
+  name           = "Notifications endpoint error rate too high"
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  type           = "static"
+  value_function = "single_value"
+  enabled        = true
+
+  nrql {
+    query             = <<-NRQL
+      SELECT percentage(
+        COUNT(*), WHERE response.statusCode >= 400
+      ) FROM Span
+      WHERE name LIKE 'POST paidleave-api-%.mass.gov:80/api/v1/notifications'
+      AND appName = 'PFML-API-${upper(var.environment_name)}'
+    NRQL
+    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
+  }
+
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  warning {
+    threshold             = 10
+    threshold_duration    = 300 # 5 minutes
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold             = 33
+    threshold_duration    = 300 # 5 minutes
+    operator              = "above"
+    threshold_occurrences = "all"
+  }
+}
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Alerts relating to errors from ServiceNow
+
+resource "newrelic_nrql_alert_condition" "servicenow_4xx_rate" {
+  # WARN: ServiceNow responses that are 4XXs exceed 10% at least once in the last 5 minutes
+  # CRIT: ServiceNow responses that are 4XXs exceed 33% for all of the last 5 minutes
+  name           = "ServiceNow error response rate too high"
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  type           = "static"
+  value_function = "single_value"
+  enabled        = true
+
+  nrql {
+    query             = <<-NRQL
+      SELECT percentage(COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500) FROM Span
+      WHERE name LIKE 'External/savilinx.servicenowservices.com/requests/'
+      AND appName = 'PFML-API-${upper(var.environment_name)}'
+    NRQL
+    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
+  }
+
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  warning {
+    threshold_duration    = 300 # five minutes
+    threshold             = 10  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 300 # five minutes
+    threshold             = 33  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "all"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "servicenow_5xx_rate" {
+  # WARN: ServiceNow responses that are 5XXs exceed 10% at least once in the last 5 minutes
+  # CRIT: ServiceNow responses that are 5XXs exceed 33% for all of the last 5 minutes
+  name           = "ServiceNow error response rate too high"
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  type           = "static"
+  value_function = "single_value"
+  enabled        = true
+
+  nrql {
+    query             = <<-NRQL
+      SELECT percentage(COUNT(*), WHERE http.statusCode >= 500) FROM Span
+      WHERE name LIKE 'External/savilinx.servicenowservices.com/requests/'
+      AND appName = 'PFML-API-${upper(var.environment_name)}'
+    NRQL
+    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
+  }
+
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  warning {
+    threshold_duration    = 300 # five minutes
+    threshold             = 10  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 300 # five minutes
+    threshold             = 33  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "all"
+  }
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Alarms relating to problems in the payments pipeline
