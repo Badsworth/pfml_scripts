@@ -49,6 +49,7 @@ from massgov.pfml.util.pydantic.types import Regexes
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 LeaveScheduleDB = Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
+OtherBenefitsDB = Union[EmployerBenefit, OtherIncome, PreviousLeave]
 
 
 def process_partially_masked_field(
@@ -649,11 +650,25 @@ def add_or_update_work_pattern(
     application.work_pattern = work_pattern
 
 
+def delete_application_other_benefits(
+    benefit: Type[OtherBenefitsDB], application: Application, db_session: db.Session
+) -> None:
+    db_session.query(benefit).filter(benefit.application_id == application.application_id).delete(
+        synchronize_session=False
+    )
+    db_session.refresh(application)
+
+
 def add_or_update_employer_benefits(
     db_session: db.Session,
     api_employer_benefits: Optional[List[apps_common_io.EmployerBenefit]],
     application: Application,
 ) -> None:
+
+    if not api_employer_benefits and application.employer_benefits:
+        delete_application_other_benefits(EmployerBenefit, application, db_session)
+        return
+
     assert api_employer_benefits is not None
 
     # For any benefits in the request without an ID, create a new benefit
@@ -731,6 +746,11 @@ def add_or_update_other_incomes(
     api_other_incomes: Optional[List[apps_common_io.OtherIncome]],
     application: Application,
 ) -> None:
+
+    if not api_other_incomes and application.other_incomes:
+        delete_application_other_benefits(OtherIncome, application, db_session)
+        return
+
     assert api_other_incomes is not None
     # For any incomes in the request without an ID, create a new income
     other_incomes_to_create = list(
@@ -803,6 +823,10 @@ def add_or_update_previous_leaves(
     api_previous_leaves: Optional[List[claims_common_io.PreviousLeave]],
     application: Application,
 ) -> None:
+
+    if not api_previous_leaves and application.previous_leaves:
+        delete_application_other_benefits(PreviousLeave, application, db_session)
+        return
 
     assert api_previous_leaves is not None
     previous_leaves_to_create = []

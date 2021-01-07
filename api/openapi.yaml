@@ -1418,10 +1418,12 @@ components:
               $ref: "#/components/schemas/WorkPattern"
               nullable: true
             employer_benefits:
+              nullable: true
               type: array
               items:
                 $ref: "#/components/schemas/EmployerBenefit"
             other_incomes:
+              nullable: true
               type: array
               items:
                 $ref: "#/components/schemas/OtherIncome"
@@ -1432,6 +1434,7 @@ components:
               nullable: true
               example: false
             previous_leaves:
+              nullable: true
               type: array
               items:
                 $ref: "#/components/schemas/PreviousLeave"

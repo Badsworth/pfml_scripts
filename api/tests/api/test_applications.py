@@ -4158,3 +4158,125 @@ def test_previous_leave_delete_other_users_application(client, user, auth_token,
     )
 
     assert response.status_code == 403
+
+
+def test_application_patch_null_benefits(
+    client, user, auth_token, test_db_session, initialize_factories_session
+):
+    # employer_benefits
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    EmployerBenefitFactory.create(application_id=application.application_id)
+
+    update_request_body = {
+        "employer_benefits": None,
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    response_body = response.get_json().get("data")
+    test_db_session.refresh(application)
+
+    assert response.status_code == 200
+    assert len(response_body.get("employer_benefits")) == 0
+    assert len(application.employer_benefits) == 0
+
+    # other_incomes
+    OtherIncomeFactory.create(application_id=application.application_id)
+
+    update_request_body = {"other_incomes": None}
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    response_body = response.get_json().get("data")
+    test_db_session.refresh(application)
+
+    assert response.status_code == 200
+    assert len(response_body.get("other_incomes")) == 0
+    assert len(application.other_incomes) == 0
+
+    # previous_leaves
+    PreviousLeaveFactory.create(application_id=application.application_id)
+
+    update_request_body = {"previous_leaves": None}
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    response_body = response.get_json().get("data")
+    test_db_session.refresh(application)
+
+    assert response.status_code == 200
+    assert len(response_body.get("previous_leaves")) == 0
+    assert len(application.previous_leaves) == 0
+
+
+def test_application_patch_benefits_empty_arrays(
+    client, user, auth_token, test_db_session, initialize_factories_session
+):
+    # employer_benefits
+    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    EmployerBenefitFactory.create(application_id=application.application_id)
+
+    update_request_body = {
+        "employer_benefits": [],
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    response_body = response.get_json().get("data")
+    test_db_session.refresh(application)
+
+    assert response.status_code == 200
+    assert len(response_body.get("employer_benefits")) == 0
+    assert len(application.employer_benefits) == 0
+
+    # other_incomes
+    OtherIncomeFactory.create(application_id=application.application_id)
+
+    update_request_body = {"other_incomes": []}
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    response_body = response.get_json().get("data")
+    test_db_session.refresh(application)
+
+    assert response.status_code == 200
+    assert len(response_body.get("other_incomes")) == 0
+    assert len(application.other_incomes) == 0
+
+    # previous_leaves
+    PreviousLeaveFactory.create(application_id=application.application_id)
+
+    update_request_body = {"previous_leaves": []}
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    response_body = response.get_json().get("data")
+    test_db_session.refresh(application)
+
+    assert response.status_code == 200
+    assert len(response_body.get("previous_leaves")) == 0
+    assert len(application.previous_leaves) == 0
