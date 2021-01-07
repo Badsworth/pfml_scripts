@@ -1,37 +1,31 @@
 import { Locator, Browser, By } from "@flood/element";
-import {
-  waitForElement,
-  waitForRealTimeSim,
-  isFinanciallyEligible,
-} from "../helpers";
-import {
-  StoredStep,
-  LSTSimClaim,
-  StandardDocumentType,
-  TaskType,
-} from "../config";
+import * as Cfg from "../config";
+import * as Util from "../helpers";
 import Tasks from "./index";
 import { approveEvidence } from "./ApproveClaim";
 
 let breakTaskFlow = false;
 let breakStepFlow = false;
-let taskName: TaskType;
-let docType: StandardDocumentType;
+let taskName: Cfg.TaskType;
+let docType: Cfg.StandardDocumentType;
 let taskDescription: string;
 
 export const PreDocumentReview = async (browser: Browser): Promise<void> => {
-  const openTask = await waitForElement(
+  const openTask = await Util.waitForElement(
     browser,
     By.css('a[aria-label="Open Task"]')
   );
   await browser.click(openTask);
 
-  const name = await waitForElement(browser, By.css("[id*='WorkTypeName']"));
-  const description = await waitForElement(
+  const name = await Util.waitForElement(
+    browser,
+    By.css("[id*='WorkTypeName']")
+  );
+  const description = await Util.waitForElement(
     browser,
     By.css("span[id$='Description']")
   );
-  taskName = (await name.text()) as TaskType;
+  taskName = (await name.text()) as Cfg.TaskType;
   taskDescription = await description.text();
   switch (taskName) {
     case "ID Review":
@@ -44,14 +38,14 @@ export const PreDocumentReview = async (browser: Browser): Promise<void> => {
       throw new Error(`Unknown document type for task: '${taskName}'.`);
   }
   try {
-    const openClaim = await waitForElement(
+    const openClaim = await Util.waitForElement(
       browser,
       By.css('a[title="Navigate to case details"]')
     );
     await browser.click(openClaim);
   } catch (e) {
     // if this task is not attached to any claim, close task
-    const closeTask = await waitForElement(
+    const closeTask = await Util.waitForElement(
       browser,
       By.css("[title='Close Task']")
     );
@@ -60,14 +54,17 @@ export const PreDocumentReview = async (browser: Browser): Promise<void> => {
   }
 };
 
-export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+export default async (
+  browser: Browser,
+  data: Cfg.LSTSimClaim
+): Promise<void> => {
   if (breakTaskFlow) return;
   // check if claim has already been approved or declined
   const claimStatus = await (
-    await waitForElement(browser, By.css(".key-info-bar .status"))
+    await Util.waitForElement(browser, By.css(".key-info-bar .status"))
   ).text();
   // go to the absence hub tab
-  const absenceHubTab = await waitForElement(
+  const absenceHubTab = await Util.waitForElement(
     browser,
     By.css("[class^='TabO'][keytipnumber='5']")
   );
@@ -77,13 +74,13 @@ export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
     await browser.wait(1000);
     // check evidence status if claim's in adjudication
     evidenceStatus = await (
-      await waitForElement(
+      await Util.waitForElement(
         browser,
         By.css("td[id*='leavePlanAdjudicationListviewWidgetEvidenceStatus0']")
       )
     ).text();
     // go to the documents tab
-    const documentsTab = await waitForElement(
+    const documentsTab = await Util.waitForElement(
       browser,
       By.css("[class^='TabO'][keytipnumber='11']")
     );
@@ -91,7 +88,7 @@ export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
     // check if the document is there and keep track
     try {
       const document: Locator = By.css(`a[title='${docType}' i]`);
-      await waitForElement(browser, document);
+      await Util.waitForElement(browser, document);
     } catch (e) {
       // in case there are no documents attached, don't throw error
       evidenceStatus = "Not Satisfied";
@@ -112,7 +109,7 @@ export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
     return;
   }
   // verify eligibility before continuing
-  const isEligible = await isFinanciallyEligible(browser);
+  const isEligible = await Util.isFinanciallyEligible(browser);
   if (isEligible) {
     for (const step of steps) {
       if (breakStepFlow) {
@@ -127,7 +124,6 @@ export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
       try {
         console.info(stepName);
         await step.test(browser, data);
-        await waitForRealTimeSim(browser, data, 1 / steps.length);
       } catch (e) {
         throw new Error(`Failed to execute step "${stepName}": ${e}`);
       }
@@ -138,12 +134,13 @@ export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
   }
 };
 
-export const steps: StoredStep[] = [
+export const steps: Cfg.StoredStep[] = [
   {
+    time: 15000,
     name: "Review documents received",
-    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+    test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // go to the documents tab
-      const documentsTab = await waitForElement(
+      const documentsTab = await Util.waitForElement(
         browser,
         By.css("[class^='TabO'][keytipnumber='11']")
       );
@@ -152,7 +149,7 @@ export const steps: StoredStep[] = [
       try {
         const document: Locator = By.css(`a[title='${docType}' i]`);
         // const popupPage = await browser.page;
-        await waitForElement(browser, document);
+        await Util.waitForElement(browser, document);
         // const documentPage = await browser.waitForNewPage();
         // await browser.wait(5000);
         // documentPage.close({ runBeforeUnload: true });
@@ -165,16 +162,17 @@ export const steps: StoredStep[] = [
     },
   },
   {
+    time: 15000,
     name: "Approve evidence received",
-    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+    test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // go to the absence hub tab
-      const absenceHubTab = await waitForElement(
+      const absenceHubTab = await Util.waitForElement(
         browser,
         By.css("[class^='TabO'][keytipnumber='5']")
       );
       await browser.click(absenceHubTab);
 
-      const adjudicateButton = await waitForElement(
+      const adjudicateButton = await Util.waitForElement(
         browser,
         By.css("input[type='submit'][value='Adjudicate']")
       );
@@ -182,7 +180,7 @@ export const steps: StoredStep[] = [
       // if documents exist, approve evidence
       await approveEvidence(docType).test(browser, data);
 
-      const okButton = await waitForElement(
+      const okButton = await Util.waitForElement(
         browser,
         By.css("input[type='submit'][value='OK']")
       );
@@ -190,26 +188,27 @@ export const steps: StoredStep[] = [
     },
   },
   {
+    time: 15000,
     name: "Close document review task",
     test: async (browser: Browser): Promise<void> => {
       // go to the tasks tab
-      const tasksTab = await waitForElement(
+      const tasksTab = await Util.waitForElement(
         browser,
         By.css("[class^='TabO'][keytipnumber='9']")
       );
       await browser.click(tasksTab);
       // find this task
-      const currentTask = await waitForElement(
+      const currentTask = await Util.waitForElement(
         browser,
         By.css(`table[id*='TasksForCaseWidget'] td[title='${taskDescription}']`)
       );
       await browser.click(currentTask);
       // close this task
-      const closeTaskButton = await waitForElement(
+      const closeTaskButton = await Util.waitForElement(
         browser,
         By.css("input[title='Close selected task']")
       );
       await browser.click(closeTaskButton);
     },
   },
-];
+].map(Util.simulateRealTime);

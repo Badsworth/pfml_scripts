@@ -1,27 +1,31 @@
 import { Browser, By } from "@flood/element";
 import assert from "assert";
-import { StoredStep, LSTSimClaim, TaskType } from "../config";
-import { labelled, waitForElement, waitForRealTimeSim } from "../helpers";
+import * as Cfg from "../config";
+import * as Util from "../helpers";
 
-export const taskName: TaskType = "_DenyClaim";
-export const steps: StoredStep[] = [
+export const taskName: Cfg.TaskType = "_DenyClaim";
+export const steps: Cfg.StoredStep[] = [
   {
+    time: 15000,
     name: "Reject leave plan",
     test: async (browser: Browser): Promise<void> => {
       // go to leave details
-      const leaveDetailsTab = await waitForElement(
+      const leaveDetailsTab = await Util.waitForElement(
         browser,
         By.css("[class^='TabO'][keytipnumber='6']")
       );
       await leaveDetailsTab.click();
       // reject all undecided leave plans
-      await waitForElement(browser, By.css("table[id*='selectedLeavePlans']"));
+      await Util.waitForElement(
+        browser,
+        By.css("table[id*='selectedLeavePlans']")
+      );
       const allLeavePlans = await browser.findElements(
         By.css("table[id*='selectedLeavePlans'] tr")
       );
       for (const leavePlan in allLeavePlans) {
         await (
-          await waitForElement(
+          await Util.waitForElement(
             browser,
             By.css(
               `table[id*='selectedLeavePlans'] tr:nth-child(${
@@ -30,7 +34,7 @@ export const steps: StoredStep[] = [
             )
           )
         ).click();
-        const rejectPlan = await waitForElement(
+        const rejectPlan = await Util.waitForElement(
           browser,
           By.css("input[type='submit'][value='Reject']")
         );
@@ -40,18 +44,19 @@ export const steps: StoredStep[] = [
     },
   },
   {
+    time: 15000,
     name: "Deny application",
     test: async (browser: Browser): Promise<void> => {
-      const denyButton = await waitForElement(
+      const denyButton = await Util.waitForElement(
         browser,
         By.css("a[aria-label='Deny']")
       );
       await denyButton.click();
 
-      const reasonSelect = await labelled(browser, "Denial Reason");
+      const reasonSelect = await Util.labelled(browser, "Denial Reason");
       await browser.selectByText(reasonSelect, "Non-eligible employee");
 
-      const okButton = await waitForElement(
+      const okButton = await Util.waitForElement(
         browser,
         By.css("[id*='Popup'] input[type='submit'][value='OK']")
       );
@@ -69,16 +74,18 @@ export const steps: StoredStep[] = [
       );
     },
   },
-];
+].map(Util.simulateRealTime);
 
-export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+export default async (
+  browser: Browser,
+  data: Cfg.LSTSimClaim
+): Promise<void> => {
   data.agentTask = taskName;
   for (const step of steps) {
     const stepName = `Deny - ${step.name}`;
     try {
       console.info(stepName);
       await step.test(browser, data);
-      await waitForRealTimeSim(browser, data, 1 / steps.length);
     } catch (e) {
       throw new Error(`Failed to execute step "${stepName}": ${e}`);
     }

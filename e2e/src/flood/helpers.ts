@@ -2,10 +2,7 @@ import { Locator, Browser, By, ElementHandle, Until } from "@flood/element";
 import {
   config,
   LSTSimClaim,
-  realUserTimings,
   StandardDocumentType,
-  SimulationSpeed,
-  TaskType,
   StoredStep,
   getFineosBaseUrl,
 } from "./config";
@@ -252,32 +249,33 @@ export function getDocumentType(document: ClaimDocument): StandardDocumentType {
   }
 }
 
-export const waitForRealTimeSim = async (
-  browser: Browser,
-  data: LSTSimClaim,
-  waitFor = 1
-): Promise<void> => {
-  const speedSetting = await config("E2E_SIMULATION_SPEED");
-  const speedFactor = SimulationSpeed[speedSetting];
-  let realTime: number;
-  if (data.agentTask) {
-    realTime = (realUserTimings[data.scenario] as Record<TaskType, number>)[
-      data.agentTask
-    ];
-  } else {
-    realTime = realUserTimings[data.scenario] as number;
-  }
-  realTime = realTime * 60 * 1000 * waitFor * speedFactor;
-  // prevent Flood.io node's memory overflow
-  if (realTime < 1000 && speedFactor > 0) {
-    realTime = 1000;
-  }
-  const seconds = (realTime / 1000).toFixed(3);
-  console.info(
-    `[${speedSetting}] Wait ${seconds} seconds - real time simulation`
-  );
-  await browser.wait(realTime);
-};
+export const simulateRealTime = (step: StoredStep): StoredStep => ({
+  time: step.time,
+  name: step.name,
+  test: async (browser: Browser, data: LSTSimClaim) => {
+    // Start the timer
+    const start = Date.now();
+    // Adjust minimum runtime based on configuration
+    const time = step.time * parseFloat(await config("E2E_SIMULATION_SPEED"));
+    // Run the actual step's function
+    await step.test(browser, data);
+    // Stop the timer
+    const end = Date.now();
+    const stepRuntime = end - start;
+    // Time left after running the step function
+    // If it's below 0, then the step function went overtime
+    const waitTime = time - stepRuntime;
+    // wait for the remaining time left to simulate a real user's actions
+    if (waitTime > 0) {
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+    }
+    console.info(
+      `\n\nStep '${name}' finished in ${stepRuntime}ms with ${
+        waitTime > 0 ? "a wait " : "an over"
+      }time of ${Math.abs(time - stepRuntime)}ms\n\n`
+    );
+  },
+});
 
 export function assignTasks(
   fineosId: string,
@@ -285,6 +283,7 @@ export function assignTasks(
   agent: FineosUserType = "SAVILINX"
 ): StoredStep {
   return {
+    time: 0,
     name: `Assign ${fineosId}'s tasks to ${agent} Agent`,
     test: async (browser: Browser): Promise<void> => {
       if (search) {

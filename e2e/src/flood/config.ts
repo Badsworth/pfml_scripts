@@ -17,39 +17,6 @@ export const globalElementSettings: TestSettings = {
   clearCookies: true,
 };
 
-// simulation speed factor control
-export const SimulationSpeed: Record<string, number> = {
-  REAL: 1,
-  TEST: 0.1,
-  DEV: 0,
-};
-
-// real time simulation in minutes
-// todo: deny claim real timing?
-export const realUserTimings: Record<
-  LSTScenario,
-  Record<TaskType, number> | number
-> = {
-  SavilinxAgent: {
-    "Adjudicate Absence": 0,
-    "ID Review": 0,
-    "Certification Review": 0,
-    _DenyClaim: 0,
-    _ReqAddInfo: 0,
-  },
-  DFMLOpsAgent: {
-    "Adjudicate Absence": 0,
-    "ID Review": 10,
-    "Certification Review": 10,
-    _DenyClaim: 1.5,
-    _ReqAddInfo: 1.5,
-  },
-  PortalRegistration: 3,
-  PortalClaimSubmit: 15,
-  FineosClaimSubmit: 8,
-  LeaveAdminSelfRegistration: 0.5,
-};
-
 export const dataBaseUrl = "data/pilot4";
 export const documentUrl = "forms/hcp-real.pdf";
 export const PortalBaseUrl = config("E2E_PORTAL_BASEURL");
@@ -62,6 +29,7 @@ export type LSTStepFunction = (
 
 export type StoredStep = {
   name: string;
+  time: number;
   test: LSTStepFunction;
 };
 
@@ -174,16 +142,19 @@ export async function getFineosBaseUrl(
   return fineosAuthUrl;
 }
 
+let envConfig: Record<string, unknown>;
 export async function config(name: string): Promise<string> {
   if (name in process.env) {
     return process.env[name] as string;
   } else {
-    const jsonConfig: Record<string, unknown> = await import(
-      //@ts-ignore
-      "./data/env.json"
-    );
-    if (name in jsonConfig) {
-      return jsonConfig[name] as string;
+    if (typeof envConfig === "undefined") {
+      envConfig = await import(
+        //@ts-ignore
+        "./data/env.json"
+      );
+    }
+    if (name in envConfig) {
+      return envConfig[name] as string;
     }
   }
   throw new Error(

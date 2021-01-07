@@ -1,18 +1,14 @@
 import { Browser, Locator, By, ElementHandle, Key } from "@flood/element";
-import { StoredStep, LSTSimClaim, StandardDocumentType } from "../config";
-import {
-  labelled,
-  waitForElement,
-  waitForRealTimeSim,
-  isFinanciallyEligible,
-} from "../helpers";
+import * as Cfg from "../config";
+import * as Util from "../helpers";
 import Tasks from "./index";
 
 let evidenceApproved = false;
 
-export const steps: StoredStep[] = [
+export const steps: Cfg.StoredStep[] = [
   checkApprovalReadiness(false),
   {
+    time: 15000,
     name: "Paid Benefits",
     test: async (browser: Browser): Promise<void> => {
       const adjudicateButton = await browser.maybeFindElement(
@@ -23,7 +19,7 @@ export const steps: StoredStep[] = [
         await browser.waitForNavigation();
       }
 
-      const paidBenefitsTab = await waitForElement(
+      const paidBenefitsTab = await Util.waitForElement(
         browser,
         By.visibleText("Paid Benefits")
       );
@@ -32,7 +28,7 @@ export const steps: StoredStep[] = [
       const currentAvgWeeklyAge = parseFloat(
         (
           await (
-            await waitForElement(
+            await Util.waitForElement(
               browser,
               By.css("[id*='paidBenefitsListviewAverageWeeklyWage0']")
             )
@@ -41,23 +37,26 @@ export const steps: StoredStep[] = [
       );
 
       if (currentAvgWeeklyAge < 1200) {
-        const editButton = await waitForElement(
+        const editButton = await Util.waitForElement(
           browser,
           By.css("input[type='submit'][value='Edit']")
         );
         await editButton.click();
 
-        const avgWeeklyWage = await labelled(browser, "Average weekly wage");
+        const avgWeeklyWage = await Util.labelled(
+          browser,
+          "Average weekly wage"
+        );
         await browser.clear(avgWeeklyWage);
         await browser.type(avgWeeklyWage, "1200");
 
-        const benefitPeriodSelect = await waitForElement(
+        const benefitPeriodSelect = await Util.waitForElement(
           browser,
           By.css("select[id*='benefitWaitingPeriodBasis']")
         );
         await browser.selectByText(benefitPeriodSelect, "Days");
 
-        const okButton = await waitForElement(
+        const okButton = await Util.waitForElement(
           browser,
           By.css("input[type='submit'][value='OK']")
         );
@@ -66,22 +65,23 @@ export const steps: StoredStep[] = [
     },
   },
   {
+    time: 15000,
     name: "Accept Leave Plan",
-    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
-      let manageRequestTab = await waitForElement(
+    test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
+      let manageRequestTab = await Util.waitForElement(
         browser,
         By.visibleText("Manage Request")
       );
       await browser.click(manageRequestTab);
       // check if availability can still be approved
-      const familyLeavePlanAvailability = await waitForElement(
+      const familyLeavePlanAvailability = await Util.waitForElement(
         browser,
         getFamilyLeavePlanProp("AvailabilityStatus")
       );
       const availabilityStatus = await familyLeavePlanAvailability.text();
       // when it is Pending Certification, then we can make it pass
       if (availabilityStatus === "Pending Certification") {
-        const evidenceTab = await waitForElement(
+        const evidenceTab = await Util.waitForElement(
           browser,
           By.visibleText("Evidence")
         );
@@ -89,22 +89,24 @@ export const steps: StoredStep[] = [
         await certifyEvidence.test(browser, data);
       }
       // go back and try to approve leave plan
-      manageRequestTab = await waitForElement(
+      manageRequestTab = await Util.waitForElement(
         browser,
         By.visibleText("Manage Request")
       );
       await browser.click(manageRequestTab);
       // select the right leave plan
-      await (await waitForElement(browser, getFamilyLeavePlanProp())).click();
+      await (
+        await Util.waitForElement(browser, getFamilyLeavePlanProp())
+      ).click();
       // try accepting the leave plan
-      const acceptButton = await waitForElement(
+      const acceptButton = await Util.waitForElement(
         browser,
         By.css("input[type='submit'][value='Accept']")
       );
       await browser.click(acceptButton);
       await browser.waitForNavigation();
       // exit adjudication
-      const okButton = await waitForElement(
+      const okButton = await Util.waitForElement(
         browser,
         By.css("input[type='submit'][value='OK']")
       );
@@ -112,11 +114,15 @@ export const steps: StoredStep[] = [
     },
   },
   {
+    time: 15000,
     name: "Finalize claim adjudication",
-    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+    test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // check if leave has been accepted
       const leavePlanStatus = await (
-        await waitForElement(browser, getFamilyLeavePlanProp("DecisionStatus"))
+        await Util.waitForElement(
+          browser,
+          getFamilyLeavePlanProp("DecisionStatus")
+        )
       ).text();
 
       // if leave plan has not been accepted, deny claim
@@ -126,31 +132,37 @@ export const steps: StoredStep[] = [
         return;
       }
 
-      const approveButton = await waitForElement(
+      const approveButton = await Util.waitForElement(
         browser,
         By.css("a[aria-label='Approve']")
       );
       await approveButton.click();
 
-      await waitForElement(browser, By.visibleText("Approved"));
+      await Util.waitForElement(browser, By.visibleText("Approved"));
     },
   },
-];
+].map(Util.simulateRealTime);
 
-export function checkApprovalReadiness(exitAdjudication = true): StoredStep {
+export function checkApprovalReadiness(
+  exitAdjudication = true
+): Cfg.StoredStep {
   return {
+    time: 15000,
     name: "Claim Approval Readiness Check",
-    test: async (browser: Browser, data: LSTSimClaim): Promise<void> => {
+    test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // we're looking for a specific plan
       // because "Limit" leave plans break this flow
       const evidenceStatus = await (
-        await waitForElement(browser, getFamilyLeavePlanProp("EvidenceStatus"))
+        await Util.waitForElement(
+          browser,
+          getFamilyLeavePlanProp("EvidenceStatus")
+        )
       ).text();
       // if evidence has not been reviewed yet,
       // approve all evidence
       evidenceApproved = evidenceStatus.indexOf("Satisfied") === 0;
       if (!evidenceApproved) {
-        const adjudicateButton = await waitForElement(
+        const adjudicateButton = await Util.waitForElement(
           browser,
           By.css("input[type='submit'][value='Adjudicate']")
         );
@@ -160,7 +172,7 @@ export function checkApprovalReadiness(exitAdjudication = true): StoredStep {
         await certifyEvidence.test(browser, data);
 
         if (exitAdjudication) {
-          const okButton = await waitForElement(
+          const okButton = await Util.waitForElement(
             browser,
             By.css("input[type='submit'][value='OK']")
           );
@@ -173,12 +185,13 @@ export function checkApprovalReadiness(exitAdjudication = true): StoredStep {
 }
 
 export const approveEvidence = (
-  specificDoc?: StandardDocumentType
-): StoredStep => ({
+  specificDoc?: Cfg.StandardDocumentType
+): Cfg.StoredStep => ({
+  time: 0,
   name: "Evidence Review",
   test: async (browser: Browser): Promise<void> => {
     console.info("Approve - Evidence Review");
-    const evidenceTab = await waitForElement(
+    const evidenceTab = await Util.waitForElement(
       browser,
       By.visibleText("Evidence")
     );
@@ -203,13 +216,13 @@ export const approveEvidence = (
 
 export const approveDocumentEvidence = async (
   browser: Browser,
-  doc: number | StandardDocumentType
+  doc: number | Cfg.StandardDocumentType
 ): Promise<boolean> => {
   // search for this documents' review decision
   let evidence: ElementHandle;
 
   if (typeof doc === "number") {
-    evidence = await waitForElement(
+    evidence = await Util.waitForElement(
       browser,
       By.css(
         `table[id*='evidenceResultListviewWidget'] tr:nth-child(${
@@ -218,7 +231,7 @@ export const approveDocumentEvidence = async (
       )
     );
   } else {
-    evidence = await waitForElement(
+    evidence = await Util.waitForElement(
       browser,
       By.css(`td[title*="${doc}"] ~ td:nth-child(5)`)
     );
@@ -229,24 +242,24 @@ export const approveDocumentEvidence = async (
   await browser.doubleClick(evidence);
 
   await browser.wait(1000);
-  const manageButton = await waitForElement(
+  const manageButton = await Util.waitForElement(
     browser,
     By.css("input[type='submit'][value='Manage Evidence']")
   );
   await manageButton.click();
 
-  const receiptSelect = await labelled(browser, "Evidence Receipt");
+  const receiptSelect = await Util.labelled(browser, "Evidence Receipt");
   await browser.selectByText(receiptSelect, "Received");
 
-  const decisionSelect = await labelled(browser, "Evidence Decision");
+  const decisionSelect = await Util.labelled(browser, "Evidence Decision");
   await browser.selectByText(decisionSelect, "Satisfied");
 
-  const reasonInput = await labelled(browser, "Evidence Decision Reason");
+  const reasonInput = await Util.labelled(browser, "Evidence Decision Reason");
   await browser.sendKeyCombinations(Key.SHIFT, Key.END);
   await browser.sendKeys(Key.BACK_SPACE);
   await browser.type(reasonInput, "PFML - Approved for LST purposes");
 
-  const okButton = await waitForElement(
+  const okButton = await Util.waitForElement(
     browser,
     By.css("table[id*='Popup'] input[type='button'][value='OK']")
   );
@@ -255,17 +268,18 @@ export const approveDocumentEvidence = async (
   return true;
 };
 
-export const certifyEvidence: StoredStep = {
+export const certifyEvidence: Cfg.StoredStep = {
+  time: 0,
   name: "Evidence Certification",
   test: async (browser: Browser): Promise<void> => {
     console.info("Approve - Evidence Certification");
-    const certificationTab = await waitForElement(
+    const certificationTab = await Util.waitForElement(
       browser,
       By.visibleText("Certification Periods")
     );
     await certificationTab.click();
 
-    const prefillButton = await waitForElement(
+    const prefillButton = await Util.waitForElement(
       browser,
       By.css(
         "input[type='submit'][value='Prefill with Requested Absence Periods']"
@@ -273,7 +287,7 @@ export const certifyEvidence: StoredStep = {
     );
     await prefillButton.click();
 
-    const yesButton = await waitForElement(
+    const yesButton = await Util.waitForElement(
       browser,
       By.css(".popup_buttons input[type='submit'][value='Yes']")
     );
@@ -282,15 +296,17 @@ export const certifyEvidence: StoredStep = {
   },
 };
 
-export default async (browser: Browser, data: LSTSimClaim): Promise<void> => {
-  const isEligible = await isFinanciallyEligible(browser);
+export default async (
+  browser: Browser,
+  data: Cfg.LSTSimClaim
+): Promise<void> => {
+  const isEligible = await Util.isFinanciallyEligible(browser);
   if (isEligible) {
     for (const step of steps) {
       const stepName = `Approve - ${step.name}`;
       try {
         console.info(stepName);
         await step.test(browser, data);
-        await waitForRealTimeSim(browser, data, 1 / steps.length);
       } catch (e) {
         throw new Error(`Failed to execute step "${stepName}": ${e}`);
       }
