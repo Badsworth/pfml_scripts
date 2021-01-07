@@ -188,8 +188,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       infra-working-dir: ./api/lambdas/formstack_import
-    outputs:
-      s3_key: ${{ steps.rename.outputs.new_s3_key }}
 
     steps:
       - uses: actions/checkout@v2
@@ -209,32 +207,41 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - name: Check if lambda packages exist in S3 before the build
+        id: s3-check
+        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}" 
+        continue-on-error: true
+        working-directory: ${{ env.infra-working-dir }}
+
+      - name: Echo message about the package
+        if: steps.s3-check.outcome == 'success'
+        run: echo "The Lambda package already exists in S3 bucket; skipping rebuild."
+
       - name: Install API Package Dependencies
+        if: steps.s3-check.outcome == 'failure'
         run: pip install wheel setuptools poetry
         working-directory: ${{ env.working-dir }}
 
       - name: Build API package
+        if: steps.s3-check.outcome == 'failure'
         run: poetry build
         working-directory: ${{ env.working-dir }}
 
       - name: Install Lambda CLI Dependencies
+        if: steps.s3-check.outcome == 'failure'
         run: pip install boto3 setuptools awscli aws-sam-cli
         working-directory: ${{ env.infra-working-dir }}
 
       - name: Lambda Build, Package and Upload to S3
+        if: steps.s3-check.outcome == 'failure'
         run: make release
-        working-directory: ${{ env.infra-working-dir }}
-
-      - name: Get Package S3 Key
-        id: get_s3_key
-        run: echo "::set-output name=s3_key::$(make get-release-key)"
         working-directory: ${{ env.infra-working-dir }}
 
       - name: Rename the Lambda for Formstack Import
         id: rename
+        if: steps.s3-check.outcome == 'failure'
         run: |
           aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-          echo "::set-output name=new_s3_key::${{ needs.update-the-deploy-branch.outputs.commit_hash }}"
         working-directory: ${{ env.infra-working-dir }}
 
   eligibility-feed-build:
@@ -243,8 +250,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       infra-working-dir: ./api/lambdas/fineos/eligibility_export_feed
-    outputs:
-      s3_key: ${{ steps.rename.outputs.new_s3_key }}
 
     steps:
       - uses: actions/checkout@v2
@@ -264,32 +269,41 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - name: Check if lambda packages exist in S3 before the build
+        id: s3-check
+        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}"
+        continue-on-error: true
+        working-directory: ${{ env.infra-working-dir }}
+
+      - name: Echo message about the package
+        if: steps.s3-check.outcome == 'success'
+        run: echo "The Lambda package already exists in S3 bucket; skipping rebuild."
+
       - name: Install API Package Dependencies
+        if: steps.s3-check.outcome == 'failure'
         run: pip install wheel setuptools poetry
         working-directory: ${{ env.working-dir }}
 
       - name: Build API package
+        if: steps.s3-check.outcome == 'failure'
         run: poetry build
         working-directory: ${{ env.working-dir }}
 
       - name: Install Lambda CLI Dependencies
+        if: steps.s3-check.outcome == 'failure'
         run: pip install boto3 setuptools awscli aws-sam-cli
         working-directory: ${{ env.infra-working-dir }}
 
       - name: Lambda Build, Package and Upload to S3
+        if: steps.s3-check.outcome == 'failure'
         run: make release
         working-directory: ${{ env.infra-working-dir }}
 
-      - name: Get Package S3 Key
-        id: get_s3_key
-        run: echo "::set-output name=s3_key::$(make get-release-key)"
-        working-directory: ${{ env.infra-working-dir }}
-
-      - name: Rename the Lambda for FINEOS Eligibility Feed
+      - name: Rename the Lambda for FINEOS Eligibility Feed  
         id: rename
+        if: steps.s3-check.outcome == 'failure'
         run: |
           aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-          echo "::set-output name=new_s3_key::${{ needs.update-the-deploy-branch.outputs.commit_hash }}"
         working-directory: ${{ env.infra-working-dir }}
 
   cognito-pre-signup-build:
@@ -299,8 +313,6 @@ jobs:
     defaults:
       run:
         working-directory: ./api/lambdas/cognito_pre_signup
-    outputs:
-      s3_key: ${{ steps.rename.outputs.new_s3_key }}
 
     steps:
       - uses: actions/checkout@v2
@@ -320,24 +332,32 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - name: Check if lambda packages exist in S3 before the build
+        id: s3-check
+        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}" 
+        continue-on-error: true
+
+      - name: Echo message about the package
+        if: steps.s3-check.outcome == 'success'
+        run: echo "The Lambda package already exists in S3 bucket; skipping rebuild."
+
       - name: Install API Package Dependencies
+        if: steps.s3-check.outcome == 'failure'
         run: pip install wheel setuptools poetry
 
       - name: Install Lambda CLI Dependencies
+        if: steps.s3-check.outcome == 'failure'
         run: pip install boto3 setuptools awscli aws-sam-cli
 
       - name: Lambda Build, Package and Upload to S3
+        if: steps.s3-check.outcome == 'failure'
         run: make release
-
-      - name: Get Package S3 Key
-        id: get_s3_key
-        run: echo "::set-output name=s3_key::$(make get-release-key)"
 
       - name: Rename the Lambda for Cognito Pre Signup
         id: rename
+        if: steps.s3-check.outcome == 'failure'
         run: |
           aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-          echo "::set-output name=new_s3_key::${{ needs.update-the-deploy-branch.outputs.commit_hash }}"
 
   cognito-post-confirmation-build:
     name: Build and upload Lambda function for Cognito Post Confirmation hook
@@ -346,8 +366,6 @@ jobs:
     defaults:
       run:
         working-directory: ./api/lambdas/cognito_post_confirmation
-    outputs:
-      s3_key: ${{ steps.rename.outputs.new_s3_key }}
 
     steps:
       - uses: actions/checkout@v2
@@ -367,24 +385,32 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - name: Check if lambda packages exist in S3 before the build
+        id: s3-check
+        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}" 
+        continue-on-error: true
+
+      - name: Echo message about the package
+        if: steps.s3-check.outcome == 'success'
+        run: echo "The Lambda package already exists in S3 bucket; skipping rebuild."
+
       - name: Install API Package Dependencies
+        if: steps.s3-check.outcome == 'failure'
         run: pip install wheel setuptools poetry
 
       - name: Install Lambda CLI Dependencies
+        if: steps.s3-check.outcome == 'failure'
         run: pip install boto3 setuptools awscli aws-sam-cli
 
       - name: Lambda Build, Package and Upload to S3
+        if: steps.s3-check.outcome == 'failure'
         run: make release
-
-      - name: Get Package S3 Key
-        id: get_s3_key
-        run: echo "::set-output name=s3_key::$(make get-release-key)"
         
       - name: Rename the Lambda for Cognito Post Confirmation
         id: rename
+        if: steps.s3-check.outcome == 'failure'
         run: |
           aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-          echo "::set-output name=new_s3_key::${{ needs.update-the-deploy-branch.outputs.commit_hash }}"
 
   api-db-migrate-up:
     name: Run migrations
@@ -484,10 +510,10 @@ jobs:
 
     env:
       TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      TF_VAR_formstack_lambda_artifact_s3_key: ${{ needs.formstack-import-build.outputs.s3_key }}
-      TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.cognito-post-confirmation-build.outputs.s3_key }}
-      TF_VAR_cognito_pre_signup_lambda_artifact_s3_key: ${{ needs.cognito-pre-signup-build.outputs.s3_key }}
-      TF_VAR_fineos_eligibility_transfer_lambda_build_s3_key: ${{ needs.eligibility-feed-build.outputs.s3_key }}
+      TF_VAR_formstack_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      TF_VAR_cognito_pre_signup_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      TF_VAR_fineos_eligibility_transfer_lambda_build_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
     steps:
       - uses: actions/checkout@v2
