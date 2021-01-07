@@ -9,7 +9,7 @@ exports[`OtherIncomes renders the page 1`] = `
     choices={
       Array [
         Object {
-          "checked": true,
+          "checked": false,
           "label": "Yes",
           "value": "yes",
         },
@@ -65,7 +65,7 @@ exports[`OtherIncomes renders the page 1`] = `
     name="has_other_incomes"
     onChange={[Function]}
     type="radio"
-    value={true}
+    value=""
   />
 </QuestionPage>
 `;

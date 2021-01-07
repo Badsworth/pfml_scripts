@@ -62,11 +62,24 @@ export const OtherIncomesDetails = (props) => {
     const updatedEntries = other_incomes.concat([new OtherIncome()]);
     updateFields({ other_incomes: updatedEntries });
   };
-  const handleRemoveClick = (entry, index) => {
-    // Remove the specified entry
-    const updatedEntries = [...other_incomes];
-    updatedEntries.splice(index, 1);
-    updateFields({ other_incomes: updatedEntries });
+
+  const otherLeaves = appLogic.otherLeaves;
+  const handleRemoveClick = async (entry, index) => {
+    let entrySavedToApi = !!entry.other_income_id;
+    if (entrySavedToApi) {
+      // Try to delete the entry from the API
+      const success = await otherLeaves.removeOtherIncome(
+        claim.application_id,
+        entry.other_income_id
+      );
+      entrySavedToApi = !success;
+    }
+
+    if (!entrySavedToApi) {
+      const updatedEntries = [...other_incomes];
+      updatedEntries.splice(index, 1);
+      updateFields({ other_incomes: updatedEntries });
+    }
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

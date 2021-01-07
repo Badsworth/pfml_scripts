@@ -1,4 +1,5 @@
 import EmployerBenefit, {
+  EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
 import EmployerBenefitDetails, {
@@ -12,6 +13,8 @@ import {
 } from "../../test-utils";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import React from "react";
+import RepeatableFieldset from "../../../src/components/RepeatableFieldset";
+import RepeatableFieldsetCard from "../../../src/components/RepeatableFieldsetCard";
 import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
 import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
@@ -19,15 +22,34 @@ import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps"
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("EmployerBenefitDetails", () => {
-  let appLogic, claim, wrapper;
+  let appLogic, claim, submitForm, wrapper;
 
   describe("when the user's claim has employer benefits", () => {
     beforeEach(() => {
-      claim = new MockClaimBuilder().continuous().employerBenefit().create();
+      claim = new MockClaimBuilder()
+        .continuous()
+        .employerBenefit([
+          {
+            benefit_amount_dollars: 500,
+            benefit_amount_frequency: EmployerBenefitFrequency.weekly,
+            benefit_end_date: "2021-02-01",
+            benefit_start_date: "2021-01-01",
+            benefit_type: EmployerBenefitType.familyOrMedicalLeave,
+          },
+          {
+            benefit_amount_dollars: 700,
+            benefit_amount_frequency: EmployerBenefitFrequency.monthly,
+            benefit_end_date: "2021-02-05",
+            benefit_start_date: "2021-01-05",
+            benefit_type: EmployerBenefitType.paidLeave,
+          },
+        ])
+        .create();
 
       ({ appLogic, wrapper } = renderWithAppLogic(EmployerBenefitDetails, {
         claimAttrs: claim,
       }));
+      submitForm = simulateEvents(wrapper).submitForm;
     });
 
     it("renders the page", () => {
@@ -36,7 +58,6 @@ describe("EmployerBenefitDetails", () => {
 
     describe("when user clicks continue", () => {
       it("calls claims.update", async () => {
-        const { submitForm } = simulateEvents(wrapper);
         await submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
@@ -104,8 +125,8 @@ describe("EmployerBenefitDetails", () => {
           claimAttrs: claim,
           render: "mount",
         }));
-        const { submitForm } = simulateEvents(wrapper);
 
+        const { submitForm } = simulateEvents(wrapper);
         await submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
@@ -123,8 +144,6 @@ describe("EmployerBenefitDetails", () => {
 
     describe("when the user clicks 'Add another'", () => {
       it("adds another benefit", async () => {
-        const { submitForm } = simulateEvents(wrapper);
-
         act(() => {
           wrapper.find("RepeatableFieldset").simulate("addClick");
         });
@@ -144,25 +163,92 @@ describe("EmployerBenefitDetails", () => {
     });
 
     describe("when the user clicks 'Remove'", () => {
-      it("removes the benefit", async () => {
-        const { submitForm } = simulateEvents(wrapper);
+      let removeButton;
 
-        act(() => {
-          wrapper
-            .find("RepeatableFieldset")
-            .dive()
-            .find("RepeatableFieldsetCard")
-            .simulate("removeClick");
+      beforeEach(() => {
+        removeButton = wrapper
+          .find(RepeatableFieldset)
+          .dive()
+          .find(RepeatableFieldsetCard)
+          .first()
+          .dive()
+          .find("Button");
+      });
+
+      describe("and the benefit isn't saved to the API", () => {
+        it("removes the benefit", async () => {
+          appLogic.claims.update.mockImplementationOnce(
+            (applicationId, patchData) => {
+              expect(applicationId).toBe(claim.application_id);
+              expect(patchData.employer_benefits).toHaveLength(1);
+            }
+          );
+
+          await act(async () => {
+            await removeButton.simulate("click");
+          });
+          await submitForm();
+
+          expect(
+            appLogic.otherLeaves.removeEmployerBenefit
+          ).not.toHaveBeenCalled();
+          expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+        });
+      });
+
+      describe("and the benefit is saved to the API", () => {
+        beforeEach(() => {
+          claim.employer_benefits[0].employer_benefit_id =
+            "mock-employer-benefit-id-1";
         });
 
-        await submitForm();
+        describe("when the DELETE request succeeds", () => {
+          it("removes the benefit", async () => {
+            appLogic.claims.update.mockImplementationOnce(
+              (applicationId, patchData) => {
+                expect(applicationId).toBe(claim.application_id);
+                expect(patchData.employer_benefits).toHaveLength(1);
+              }
+            );
 
-        expect(appLogic.claims.update).toHaveBeenCalledWith(
-          claim.application_id,
-          {
-            employer_benefits: [],
-          }
-        );
+            await act(async () => {
+              await removeButton.simulate("click");
+            });
+            await submitForm();
+
+            expect(
+              appLogic.otherLeaves.removeEmployerBenefit
+            ).toHaveBeenCalled();
+            expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+          });
+        });
+
+        describe("when the DELETE request fails", () => {
+          beforeEach(() => {
+            appLogic.otherLeaves.removeEmployerBenefit.mockImplementationOnce(
+              () => false
+            );
+          });
+
+          it("does not remove the benefit", async () => {
+            appLogic.claims.update.mockImplementationOnce(
+              (applicationId, patchData) => {
+                expect(applicationId).toBe(claim.application_id);
+                expect(patchData.employer_benefits).toHaveLength(2);
+              }
+            );
+
+            await act(async () => {
+              await removeButton.simulate("click");
+            });
+            await submitForm();
+
+            expect(
+              appLogic.otherLeaves.removeEmployerBenefit
+            ).toHaveBeenCalled();
+            expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+          });
+        });
       });
     });
   });
@@ -200,7 +286,7 @@ describe("EmployerBenefitDetails", () => {
     });
 
     it("adds a blank entry so a card is rendered", () => {
-      const entries = wrapper.find("RepeatableFieldset").prop("entries");
+      const entries = wrapper.find(RepeatableFieldset).prop("entries");
 
       expect(entries).toHaveLength(1);
       expect(entries[0]).toEqual(new EmployerBenefit());

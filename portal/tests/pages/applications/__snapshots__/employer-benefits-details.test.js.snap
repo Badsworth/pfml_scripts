@@ -139,7 +139,15 @@ exports[`EmployerBenefitDetails when the user's claim has employer benefits rend
           "benefit_end_date": "2021-02-01",
           "benefit_start_date": "2021-01-01",
           "benefit_type": "Family or medical leave insurance",
-          "employer_benefit_id": 1,
+          "employer_benefit_id": null,
+        },
+        EmployerBenefit {
+          "benefit_amount_dollars": 700,
+          "benefit_amount_frequency": "Per Month",
+          "benefit_end_date": "2021-02-05",
+          "benefit_start_date": "2021-01-05",
+          "benefit_type": "Accrued paid leave",
+          "employer_benefit_id": null,
         },
       ]
     }

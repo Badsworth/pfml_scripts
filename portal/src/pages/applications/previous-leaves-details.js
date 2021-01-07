@@ -43,10 +43,24 @@ export const PreviousLeavesDetails = (props) => {
     const updatedEntries = previous_leaves.concat([new PreviousLeave()]);
     updateFields({ previous_leaves: updatedEntries });
   };
-  const handleRemoveClick = (entry, index) => {
-    const updatedEntries = [...previous_leaves];
-    updatedEntries.splice(index, 1);
-    updateFields({ previous_leaves: updatedEntries });
+
+  const otherLeaves = appLogic.otherLeaves;
+  const handleRemoveClick = async (entry, index) => {
+    let entrySavedToApi = !!entry.previous_leave_id;
+    if (entrySavedToApi) {
+      // Try to delete the entry from the API
+      const success = await otherLeaves.removePreviousLeave(
+        claim.application_id,
+        entry.previous_leave_id
+      );
+      entrySavedToApi = !success;
+    }
+
+    if (!entrySavedToApi) {
+      const updatedEntries = [...previous_leaves];
+      updatedEntries.splice(index, 1);
+      updateFields({ previous_leaves: updatedEntries });
+    }
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

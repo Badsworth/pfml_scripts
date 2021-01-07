@@ -4,7 +4,10 @@ import {
   simulateEvents,
   testHook,
 } from "../../test-utils";
-import OtherIncome, { OtherIncomeType } from "../../../src/models/OtherIncome";
+import OtherIncome, {
+  OtherIncomeFrequency,
+  OtherIncomeType,
+} from "../../../src/models/OtherIncome";
 import OtherIncomesDetails, {
   OtherIncomeCard,
 } from "../../../src/pages/applications/other-incomes-details";
@@ -19,15 +22,34 @@ import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps"
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("OtherIncomesDetails", () => {
-  let appLogic, claim, wrapper;
+  let appLogic, claim, submitForm, wrapper;
 
   describe("when the user's claim has other income sources", () => {
     beforeEach(() => {
-      claim = new MockClaimBuilder().continuous().otherIncome().create();
+      claim = new MockClaimBuilder()
+        .continuous()
+        .otherIncome([
+          {
+            income_amount_dollars: 500,
+            income_amount_frequency: OtherIncomeFrequency.weekly,
+            income_end_date: "2021-02-01",
+            income_start_date: "2021-01-01",
+            income_type: OtherIncomeType.ssdi,
+          },
+          {
+            income_amount_dollars: 700,
+            income_amount_frequency: OtherIncomeFrequency.monthly,
+            income_end_date: "2021-02-06",
+            income_start_date: "2021-01-06",
+            income_type: OtherIncomeType.jonesAct,
+          },
+        ])
+        .create();
 
       ({ appLogic, claim, wrapper } = renderWithAppLogic(OtherIncomesDetails, {
         claimAttrs: claim,
       }));
+      submitForm = simulateEvents(wrapper).submitForm;
     });
 
     it("renders the page", () => {
@@ -36,8 +58,6 @@ describe("OtherIncomesDetails", () => {
 
     describe("when user clicks continue", () => {
       it("calls claims.update", async () => {
-        const { submitForm } = simulateEvents(wrapper);
-
         await submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
@@ -105,8 +125,8 @@ describe("OtherIncomesDetails", () => {
           claimAttrs: claim,
           render: "mount",
         }));
-        const { submitForm } = simulateEvents(wrapper);
 
+        const { submitForm } = simulateEvents(wrapper);
         await submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
@@ -124,8 +144,6 @@ describe("OtherIncomesDetails", () => {
 
     describe("when the user clicks 'Add another'", () => {
       it("adds another entry", async () => {
-        const { submitForm } = simulateEvents(wrapper);
-
         act(() => {
           wrapper.find(RepeatableFieldset).simulate("addClick");
         });
@@ -142,30 +160,90 @@ describe("OtherIncomesDetails", () => {
     });
 
     describe("when the user clicks 'Remove'", () => {
-      it("removes the entry", async () => {
-        const { submitForm } = simulateEvents(wrapper);
+      let removeButton;
 
-        act(() => {
-          wrapper
-            .find(RepeatableFieldset)
-            .dive()
-            .find(RepeatableFieldsetCard)
-            .simulate("removeClick");
+      beforeEach(() => {
+        removeButton = wrapper
+          .find(RepeatableFieldset)
+          .dive()
+          .find(RepeatableFieldsetCard)
+          .first()
+          .dive()
+          .find("Button");
+      });
+
+      describe("and the income isn't saved to the API", () => {
+        it("removes the income", async () => {
+          appLogic.claims.update.mockImplementationOnce(
+            (applicationId, patchData) => {
+              expect(applicationId).toBe(claim.application_id);
+              expect(patchData.other_incomes).toHaveLength(1);
+            }
+          );
+
+          await act(async () => {
+            await removeButton.simulate("click");
+          });
+          await submitForm();
+
+          expect(appLogic.otherLeaves.removeOtherIncome).not.toHaveBeenCalled();
+          expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+        });
+      });
+
+      describe("and the income is saved to the API", () => {
+        beforeEach(() => {
+          claim.other_incomes[0].other_income_id = "mock-other-income-id-1";
         });
 
-        await submitForm();
+        describe("when the DELETE request succeeds", () => {
+          it("removes the income", async () => {
+            appLogic.claims.update.mockImplementationOnce(
+              (applicationId, patchData) => {
+                expect(applicationId).toBe(claim.application_id);
+                expect(patchData.other_incomes).toHaveLength(1);
+              }
+            );
 
-        expect(appLogic.claims.update).toHaveBeenCalledWith(
-          claim.application_id,
-          {
-            other_incomes: [],
-          }
-        );
+            await act(async () => {
+              await removeButton.simulate("click");
+            });
+            await submitForm();
+
+            expect(appLogic.otherLeaves.removeOtherIncome).toHaveBeenCalled();
+            expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+          });
+        });
+
+        describe("when the DELETE request fails", () => {
+          beforeEach(() => {
+            appLogic.otherLeaves.removeOtherIncome.mockImplementationOnce(
+              () => false
+            );
+          });
+
+          it("does not remove the income", async () => {
+            appLogic.claims.update.mockImplementationOnce(
+              (applicationId, patchData) => {
+                expect(applicationId).toBe(claim.application_id);
+                expect(patchData.other_incomes).toHaveLength(2);
+              }
+            );
+
+            await act(async () => {
+              await removeButton.simulate("click");
+            });
+            await submitForm();
+
+            expect(appLogic.otherLeaves.removeOtherIncome).toHaveBeenCalled();
+            expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+          });
+        });
       });
     });
   });
 
-  describe("when the user's claim does not have employer benefits", () => {
+  describe("when the user's claim does not have other incomes", () => {
     beforeEach(() => {
       claim = new MockClaimBuilder().continuous().create();
 
@@ -175,7 +253,7 @@ describe("OtherIncomesDetails", () => {
     });
 
     it("adds a blank entry so a card is rendered", () => {
-      const entries = wrapper.find("RepeatableFieldset").prop("entries");
+      const entries = wrapper.find(RepeatableFieldset).prop("entries");
 
       expect(entries).toHaveLength(1);
       expect(entries[0]).toEqual(new OtherIncome());

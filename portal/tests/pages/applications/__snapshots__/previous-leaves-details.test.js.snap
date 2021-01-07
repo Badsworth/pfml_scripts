@@ -113,10 +113,17 @@ exports[`PreviousLeavesDetails when the user's claim has previous leaves renders
       Array [
         PreviousLeave {
           "is_for_current_employer": false,
-          "leave_end_date": "2021-02-01",
+          "leave_end_date": "2020-02-01",
           "leave_reason": "Pregnancy / Maternity",
-          "leave_start_date": "2021-01-01",
-          "previous_leave_id": 1,
+          "leave_start_date": "2020-01-01",
+          "previous_leave_id": null,
+        },
+        PreviousLeave {
+          "is_for_current_employer": true,
+          "leave_end_date": "2020-02-05",
+          "leave_reason": "Serious health condition",
+          "leave_start_date": "2020-01-05",
+          "previous_leave_id": null,
         },
       ]
     }

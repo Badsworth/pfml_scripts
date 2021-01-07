@@ -62,11 +62,24 @@ export const EmployerBenefitsDetails = (props) => {
     const updatedEntries = employer_benefits.concat([new EmployerBenefit()]);
     updateFields({ employer_benefits: updatedEntries });
   };
-  const handleRemoveClick = (entry, index) => {
-    // Remove the specified benefit
-    const updatedEntries = [...employer_benefits];
-    updatedEntries.splice(index, 1);
-    updateFields({ employer_benefits: updatedEntries });
+
+  const otherLeaves = appLogic.otherLeaves;
+  const handleRemoveClick = async (entry, index) => {
+    let entrySavedToApi = !!entry.employer_benefit_id;
+    if (entrySavedToApi) {
+      // Try to delete the entry from the API
+      const success = await otherLeaves.removeEmployerBenefit(
+        claim.application_id,
+        entry.employer_benefit_id
+      );
+      entrySavedToApi = !success;
+    }
+
+    if (!entrySavedToApi) {
+      const updatedEntries = [...employer_benefits];
+      updatedEntries.splice(index, 1);
+      updateFields({ employer_benefits: updatedEntries });
+    }
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

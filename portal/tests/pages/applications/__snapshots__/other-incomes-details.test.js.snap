@@ -145,11 +145,19 @@ exports[`OtherIncomesDetails when the user's claim has other income sources rend
     entries={
       Array [
         OtherIncome {
-          "income_amount_dollars": 125,
+          "income_amount_dollars": 500,
           "income_amount_frequency": "Per Week",
-          "income_end_date": "2021-01-01",
-          "income_start_date": "2021-01-30",
-          "income_type": "Earnings from another employment/self-employment",
+          "income_end_date": "2021-02-01",
+          "income_start_date": "2021-01-01",
+          "income_type": "SSDI",
+          "other_income_id": null,
+        },
+        OtherIncome {
+          "income_amount_dollars": 700,
+          "income_amount_frequency": "Per Month",
+          "income_end_date": "2021-02-06",
+          "income_start_date": "2021-01-06",
+          "income_type": "Jones Act benefits",
           "other_income_id": null,
         },
       ]

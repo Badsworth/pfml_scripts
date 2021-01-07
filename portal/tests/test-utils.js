@@ -150,18 +150,22 @@ export class BaseMockClaimBuilder {
     return this;
   }
 
-  otherIncome() {
-    set(this.claimAttrs, "other_incomes", [
-      new OtherIncome({
-        income_amount_dollars: 125,
-        income_amount_frequency: OtherIncomeFrequency.weekly,
-        income_end_date: "2021-01-01",
-        income_start_date: "2021-01-30",
-        income_type: OtherIncomeType.otherEmployer,
-      }),
-    ]);
-    set(this.claimAttrs, "has_other_incomes", true);
-    set(this.claimAttrs, "other_incomes_awaiting_approval", false);
+  otherIncome(attrs) {
+    set(
+      this.claimAttrs,
+      "other_incomes",
+      attrs
+        ? attrs.map((attr) => new OtherIncome(attr))
+        : [
+            new OtherIncome({
+              income_amount_dollars: 125,
+              income_amount_frequency: OtherIncomeFrequency.weekly,
+              income_end_date: "2021-01-01",
+              income_start_date: "2021-01-30",
+              income_type: OtherIncomeType.otherEmployer,
+            }),
+          ]
+    );
     return this;
   }
 
@@ -479,6 +483,25 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
 
   noPreviousLeave() {
     set(this.claimAttrs, "has_previous_leaves", false);
+    return this;
+  }
+
+  previousLeave(attrs) {
+    set(
+      this.claimAttrs,
+      "previous_leaves",
+      attrs
+        ? attrs.map((attr) => new PreviousLeave(attr))
+        : [
+            new PreviousLeave({
+              previous_leave_id: 1,
+              is_for_current_employer: false,
+              leave_end_date: "2020-02-01",
+              leave_reason: PreviousLeaveReason.pregnancy,
+              leave_start_date: "2020-01-01",
+            }),
+          ]
+    );
     return this;
   }
 
