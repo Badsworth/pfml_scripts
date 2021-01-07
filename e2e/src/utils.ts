@@ -35,7 +35,7 @@ export async function labelled(
 ): Promise<puppeteer.ElementHandle> {
   const $label = await contains(page, "label", label);
   const id = await $label.evaluate((el) => el.getAttribute("for"));
-  const input = await page.$(`input[name="${id}"]`);
+  const input = await page.$(`input[name="${id}"],select[name="${id}"]`);
   if (input !== null) {
     return input;
   }

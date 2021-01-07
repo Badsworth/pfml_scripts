@@ -1,5 +1,5 @@
 import yargs, { CommandModule } from "yargs";
-import PortalSubmitter from "../PortalSubmitter";
+import PortalPuppeteerSubmitter from "../PortalPuppeteerSubmitter";
 import SimulationRunner, { CredentialCallback } from "../SimulationRunner";
 import SimulationStorage from "../SimulationStorage";
 import {
@@ -71,7 +71,11 @@ const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
         ClientId: config("COGNITO_CLIENTID"),
       })
     );
-    const submitter = new PortalSubmitter(authenticator, config("API_BASEURL"));
+    const submitter = new PortalPuppeteerSubmitter(
+      authenticator,
+      config("API_BASEURL"),
+      getFineosBaseUrl()
+    );
     const tracker = args.track
       ? new SimulationStateFileTracker(storage.stateFile)
       : new SimulationStateNullTracker();
