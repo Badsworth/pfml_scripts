@@ -24,6 +24,7 @@ const opts = {
       last_name: "Doe",
       employer_fein: "00-000000",
       tax_identifier: "000-00-0000",
+      wages: 5500,
     };
   }),
   employerFactory: jest.fn(fromEmployerData(employerPool)),
@@ -135,14 +136,21 @@ describe("Simulation Generator", () => {
   it("Should pass arguments to the employee factory", async () => {
     await scenario("TEST", { ...medical })(opts);
     expect(opts.employeeFactory).toHaveBeenCalledWith(
-      false,
+      "eligible",
       opts.employerFactory
     );
-    await scenario("TEST", { ...medical, financiallyIneligible: true })(opts);
+    await scenario("TEST", { ...medical, wages: "ineligible" })(opts);
     expect(opts.employeeFactory).toHaveBeenCalledWith(
-      true,
+      "ineligible",
       opts.employerFactory
     );
+  });
+
+  it("Should populate wage data received from the employee factory", async () => {
+    const claim = await scenario("TEST", { ...medical, wages: "ineligible" })(
+      opts
+    );
+    expect(claim.wages).toEqual(5500);
   });
 
   it("Should populate the mass_id property for mass proofed claims", async () => {
@@ -166,21 +174,6 @@ describe("Simulation Generator", () => {
     );
     expect(claim.claim.mass_id).toBe(null);
     expect(claim.claim.has_state_id).toBe(false);
-  });
-
-  it("Should default to generating financially eligible claims", async () => {
-    const claim = await scenario("TEST", { ...medical, residence: "OOS" })(
-      opts
-    );
-    expect(claim.financiallyIneligible).toBe(false);
-  });
-
-  it("Should populate financial eligibility field.", async () => {
-    const claim = await scenario("TEST", {
-      ...medical,
-      financiallyIneligible: true,
-    })(opts);
-    expect(claim.financiallyIneligible).toBe(true);
   });
 
   it("Should have has_ properties that match its leave periods", async () => {

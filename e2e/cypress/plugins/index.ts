@@ -232,11 +232,13 @@ async function getEmployee(employeeType: string): Promise<EmployeeRecord> {
     .readFile(config("EMPLOYEES_FILE"), "utf-8")
     .then(JSON.parse);
   const factory = fromClaimData(claims);
+  // @todo: We should probably just update this to match the employee factory wage spec
+  // - it's just out of scope for what I'm doing right now.
   switch (employeeType) {
     case "financially eligible":
-      return factory(false);
+      return factory("eligible");
     case "financially ineligible":
-      return factory(true);
+      return factory("ineligible");
     default:
       throw new Error(`Unknown employee type: ${employeeType}`);
   }

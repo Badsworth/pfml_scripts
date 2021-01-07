@@ -7,7 +7,7 @@ export default function (): stream.Writable {
   const transform = new stream.Transform({
     objectMode: true,
     write(chunk: SimulationClaim, encoding, callback) {
-      const { scenario, claim } = chunk;
+      const { scenario, claim, wages } = chunk;
       const { first_name, last_name, tax_identifier, employer_fein } = claim;
       this.push({
         scenario,
@@ -15,6 +15,7 @@ export default function (): stream.Writable {
         last_name,
         tax_identifier,
         employer_fein,
+        wages,
       });
       callback();
     },
@@ -27,6 +28,7 @@ export default function (): stream.Writable {
       last_name: "Last Name",
       tax_identifier: "SSN",
       employer_fein: "Employer FEIN",
+      wages: "Yearly Wages",
     },
   });
 

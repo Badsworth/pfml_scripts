@@ -31,6 +31,7 @@ const claim = {
     mass_id: "12345",
   },
   documents: [],
+  wages: 4000,
 };
 export const claims = [claim];
 

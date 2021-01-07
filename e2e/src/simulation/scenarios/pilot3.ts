@@ -37,7 +37,7 @@ export const MHAP2 = scenario("MHAP2", {
 export const MHAP3 = scenario("MHAP3", {
   reason: "Serious Health Condition - Employee",
   residence: "MA-proofed",
-  financiallyIneligible: true,
+  wages: "ineligible",
   docs: {
     HCP: {},
     MASSID: {},

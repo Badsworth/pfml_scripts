@@ -60,7 +60,7 @@ const HAP3Portal = scenario("PortalClaimSubmit", {
     MASSID: {},
     HCP: {},
   },
-  financiallyIneligible: true,
+  wages: "ineligible",
 });
 
 const HAPPortal = chance([
@@ -96,7 +96,7 @@ const HAP3Fineos = scenario("FineosClaimSubmit", {
     MASSID: {},
     HCP: {},
   },
-  financiallyIneligible: true,
+  wages: "ineligible",
 });
 
 const HAPFineos = chance([

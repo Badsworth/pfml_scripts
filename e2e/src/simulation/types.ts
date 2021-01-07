@@ -24,6 +24,7 @@ export type SimulationClaim = {
   // that have accompanying documents, but aren't actually in the system yet.
   skipSubmitClaim?: boolean;
   paymentPreference: PaymentPreferenceRequestBody;
+  wages?: number;
 };
 
 // Represents a document that may be uploaded during final submission, or may
@@ -43,10 +44,18 @@ export type SimulatedEmployerResponse = Pick<
   "hours_worked_per_week" | "employer_decision" | "fraud" | "comment"
 >;
 
+export type WageSpecification =
+  | "high"
+  | "medium"
+  | "low"
+  | "eligible"
+  | "ineligible"
+  | number;
+
 // EmployeeFactory is the interface for getting or generating an employee.
 export interface EmployeeFactory {
   (
-    financiallyIneligible: boolean,
+    wageSpec: WageSpecification,
     employerFactory?: EmployerFactory
   ): EmployeeRecord;
 }
@@ -57,6 +66,7 @@ export type EmployeeRecord = {
   last_name: string;
   tax_identifier: string;
   employer_fein: string;
+  wages: number;
 };
 
 // EmployerFactory is the interface for getting or generating an employer.

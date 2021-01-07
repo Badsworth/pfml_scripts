@@ -6,7 +6,7 @@ export const INELIGIBLE1 = scenario("INELIGIBLE1", {
   reason: "Child Bonding",
   reason_qualifier: "Newborn",
   residence: "MA-proofed",
-  financiallyIneligible: true,
+  wages: "ineligible",
   bondingDate: "past",
   docs: {
     MASSID: {},
@@ -17,7 +17,7 @@ export const INELIGIBLE2 = scenario("INELIGIBLE2", {
   reason: "Child Bonding",
   reason_qualifier: "Adoption",
   residence: "MA-proofed",
-  financiallyIneligible: true,
+  wages: "ineligible",
   bondingDate: "past",
   docs: {
     MASSID: {},

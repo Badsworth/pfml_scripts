@@ -17,6 +17,7 @@ async function buildData(
       employer_fein: claim.claim.employer_fein,
       submitted: stateRecord?.time ?? "Never",
       caseNumber: stateRecord?.result,
+      wages: claim.wages,
       error: stateRecord?.error,
     };
   });
@@ -38,6 +39,7 @@ export default async function stream(
       tax_identifier: "SSN",
       employer_fein: "FEIN",
       caseNumber: "Fineos Case #",
+      wages: "Yearly Wages",
       error: "Error Message",
     },
   };

@@ -8,7 +8,7 @@ import { claims, employers, extract } from "./DOREmployers";
 const filingPeriods = [new Date("2020-06-30")];
 
 describe("DOR Employee File Generator", function () {
-  it("should generate a valid employeer line", async function () {
+  it("should generate a valid employer line", async function () {
     const contents = await extract(
       claims,
       transformDOREmployeesEmployerLines(employers, filingPeriods)
@@ -26,7 +26,7 @@ describe("DOR Employee File Generator", function () {
       transformDOREmployeesWageLines(employers, filingPeriods)
     );
     expect(contents).toMatchInlineSnapshot(`
-      "B0000120200630Dave                                                                                                                                                                                                                                                           Smith                                                                                                                                                                                                                                                          000000000FT             1500.00             1500.00                0.00                0.00                0.00                0.00
+      "B0000120200630Dave                                                                                                                                                                                                                                                           Smith                                                                                                                                                                                                                                                          000000000FT             1000.00             1000.00                0.00                0.00                0.00                0.00
       "
     `);
   });

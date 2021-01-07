@@ -21,13 +21,30 @@ const employerFactory = () => ({
 
 describe("Random generator", () => {
   it("Should generate an employee with a valid SSN", () => {
-    const employee = fromEmployerFactory(employerFactory)(false);
+    const employee = fromEmployerFactory(employerFactory)("eligible");
     new ParseSSN((employee.tax_identifier ?? "").replace(/-/g, ""));
   });
 
   it("Should pull an employer from the employer pool", () => {
-    const employee = fromEmployerFactory(employerFactory)(false);
+    const employee = fromEmployerFactory(employerFactory)("eligible");
     expect(employee.employer_fein).toEqual("84-7847847");
+  });
+
+  const cases = [
+    ["ineligible" as const, 2000, 5399],
+    ["eligible" as const, 5400, 100000],
+  ];
+  cases.forEach(([spec, min, max]) => {
+    it(`Should generate wage data according to spec: ${spec}`, () => {
+      const employee = fromEmployerFactory(employerFactory)(spec);
+      expect(employee.wages).toBeGreaterThanOrEqual(min as number);
+      expect(employee.wages).toBeLessThanOrEqual(max as number);
+    });
+  });
+
+  it("Should generate a specific wage amount if given one", () => {
+    const employee = fromEmployerFactory(employerFactory)(100);
+    expect(employee.wages).toEqual(100);
   });
 });
 
@@ -44,7 +61,7 @@ describe("Employee pool generator", () => {
     scenario: "TEST",
     documents: [],
     paymentPreference: {},
-    financiallyIneligible: false,
+    wages: 4000,
   };
   const claimB = {
     id: "123",
@@ -57,27 +74,43 @@ describe("Employee pool generator", () => {
     scenario: "TEST",
     documents: [],
     paymentPreference: {},
-    financiallyIneligible: true,
+    wages: 10000,
   };
 
   beforeEach(() => {
     pool = fromClaimData([claimA, claimB]);
   });
 
-  it("Should pull an employee from the pool", () => {
-    expect(pool(false)).toMatchObject({
+  it("Should pull an ineligible employee from the pool", () => {
+    expect(pool("ineligible")).toMatchObject({
       tax_identifier: claimA.claim.tax_identifier,
     });
   });
 
-  it("Should pull a financially ineligible employee from the pool", () => {
-    expect(pool(true)).toMatchObject({
+  it("Should pull a financially eligible employee from the pool", () => {
+    expect(pool("eligible")).toMatchObject({
       tax_identifier: claimB.claim.tax_identifier,
     });
   });
 
   it("Should exhaust the pool", () => {
-    pool(false);
-    expect(() => pool(false)).toThrow("The employee pool is empty");
+    pool("ineligible");
+    expect(() => pool("ineligible")).toThrow("The employee pool is empty");
+  });
+
+  it("Should be usable, even with legacy claims", () => {
+    const ineligibleClaim = {
+      ...claimB,
+      wages: undefined,
+      financiallyIneligible: true,
+    };
+    const eligibleClaim = { ...claimB, wages: undefined };
+    const pool = fromClaimData([ineligibleClaim, eligibleClaim]);
+    expect(pool("ineligible")).toMatchObject({
+      tax_identifier: ineligibleClaim.claim.tax_identifier,
+    });
+    expect(pool("eligible")).toMatchObject({
+      tax_identifier: eligibleClaim.claim.tax_identifier,
+    });
   });
 });

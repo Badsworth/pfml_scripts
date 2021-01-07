@@ -1,16 +1,27 @@
 import faker from "faker";
 import { RandomSSN } from "ssn";
-import { EmployeeFactory, EmployerFactory, SimulationClaim } from "./types";
+import {
+  EmployeeFactory,
+  EmployerFactory,
+  SimulationClaim,
+  WageSpecification,
+} from "./types";
 
 /**
  * Creates an employee "pool" from a previous simulation.
  * @param claims
  */
 export function fromClaimData(claims: SimulationClaim[]): EmployeeFactory {
-  const pool = [...claims];
-  return function (financiallyIneligible: boolean) {
-    const claim = shuffle(pool).find(
-      (claim) => !!claim.financiallyIneligible === financiallyIneligible
+  const pool = [...claims].map((claim) => {
+    // Backward compatibility - generate wage data for any claims built without the wages prop.
+    return {
+      ...claim,
+      wages: claim.wages ?? (claim.financiallyIneligible ? 4800 : 6000),
+    };
+  });
+  return function (wageSpec) {
+    const claim = shuffle(pool).find((claim) =>
+      wagesInBounds(claim.wages, wageSpec)
     );
     if (!claim) {
       throw new Error("The employee pool is empty");
@@ -32,6 +43,7 @@ export function fromClaimData(claims: SimulationClaim[]): EmployeeFactory {
       last_name: claim.claim.last_name,
       tax_identifier: claim.claim.tax_identifier,
       employer_fein: claim.claim.employer_fein,
+      wages: claim.wages,
     };
   };
 }
@@ -59,15 +71,50 @@ function shuffle<T extends unknown[]>(array: T): T {
   return array;
 }
 
+function wagesInBounds(wages: number, spec: WageSpecification) {
+  const [min, max] = getWageBounds(spec);
+  return wages >= min && wages <= max;
+}
+
+// Generate the min/max bounds for yearly wages.
+function getWageBounds(spec: WageSpecification) {
+  if (typeof spec === "number") {
+    return [spec, spec];
+  }
+  switch (spec) {
+    case "ineligible":
+      return [2000, 5399];
+    case "eligible":
+      return [5400, 100000];
+    case "high":
+      return [90000, 100000];
+    case "medium":
+      return [30000, 90000];
+    case "low":
+      return [5400, 30000];
+    default:
+      throw new Error(`Invalid wage specification: ${spec}`);
+  }
+}
+// Generate a yearly wage amount, given a specification.
+function generateWages(spec: WageSpecification): number {
+  if (typeof spec === "number") {
+    return spec;
+  }
+  const [min, max] = getWageBounds(spec);
+  return faker.random.number({ min, max });
+}
+
 export function fromEmployerFactory(
   employerFactory: EmployerFactory
 ): EmployeeFactory {
-  return () => {
+  return (wageSpec) => {
     return {
       first_name: faker.name.firstName(),
       last_name: faker.name.lastName(),
       tax_identifier: new RandomSSN().value().toFormattedString(),
       employer_fein: employerFactory().fein,
+      wages: generateWages(wageSpec),
     };
   };
 }

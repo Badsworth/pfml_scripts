@@ -5,6 +5,7 @@ import {
   EmployerFactory,
   EmployeeFactory,
   SimulatedEmployerResponse,
+  WageSpecification,
 } from "./types";
 import {
   ApplicationRequestBody,
@@ -88,7 +89,6 @@ export type ScenarioOpts = {
   reason: ApplicationLeaveDetails["reason"];
   reason_qualifier?: ApplicationLeaveDetails["reason_qualifier"];
   residence: "MA-proofed" | "MA-unproofed" | "OOS";
-  financiallyIneligible?: boolean;
   employerExempt?: boolean;
   gaveAppropriateNotice?: boolean;
   docs: ScenarioDocumentConfiguration;
@@ -109,6 +109,7 @@ export type ScenarioOpts = {
   // For ID-proofing
   id_proof?: boolean;
   id_check?: string;
+  wages?: WageSpecification;
 };
 
 export function scenario(
@@ -128,7 +129,7 @@ export function scenario(
     }
 
     const employee = opts.employeeFactory(
-      !!_config.financiallyIneligible,
+      _config.wages ?? "eligible",
       opts.employerFactory
     );
 
@@ -204,9 +205,9 @@ export function scenario(
       paymentPreference,
       employerResponse: _config.employerResponse,
       documents: await generateDocuments(claim, _config, opts),
-      financiallyIneligible: !!_config.financiallyIneligible,
       // Flag for skipSubmitClaim.
       skipSubmitClaim: !!_config.skipSubmitClaim,
+      wages: employee.wages,
     };
   };
 }
@@ -306,10 +307,7 @@ export function agentScenario(
     };
     if (config.claim?.employer_fein) {
       const _config = { ...config, ...opts };
-      const employee = opts.employeeFactory(
-        !!_config.financiallyIneligible,
-        opts.employerFactory
-      );
+      const employee = opts.employeeFactory("eligible", opts.employerFactory);
       defaultAgent.claim = {
         ..._config.claim,
         employer_fein: employee.employer_fein,

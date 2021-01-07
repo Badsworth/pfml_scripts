@@ -64,7 +64,7 @@ export function transformDOREmployeesWageLines(
     objectMode: true,
     transform(claim: SimulationClaim, encoding, callback) {
       // Gets claim/employee-specific data.
-      const { claim: employee } = claim;
+      const { claim: employee, wages } = claim;
       const employer = employers.get(claim.claim.employer_fein as string);
       if (!employer) {
         callback(
@@ -74,8 +74,13 @@ export function transformDOREmployeesWageLines(
         );
         return;
       }
+      if (!wages) {
+        throw new Error(
+          "Unable to generate due to missing wage data for employee"
+        );
+      }
       // Passes in wages that correspond to a financially (in)eligibile status.
-      const quarterWages = claim.financiallyIneligible ? 1200 : 1500;
+      const quarterWages = wages / 4;
       const lines = filingPeriods.map((period, index): string => {
         return (
           format(

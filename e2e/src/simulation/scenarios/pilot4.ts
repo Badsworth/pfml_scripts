@@ -43,7 +43,7 @@ export const BHAP4 = scenario("BHAP4", {
   reason: "Child Bonding",
   reason_qualifier: "Newborn",
   residence: "OOS",
-  financiallyIneligible: true,
+  wages: "ineligible",
   bondingDate: "past",
   docs: {
     OOSID: {},

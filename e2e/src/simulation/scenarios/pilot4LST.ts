@@ -42,7 +42,7 @@ const LeaveAdminSelfReg = agentScenario("LeaveAdminSelfRegistration", {
   },
 });
 */
-/* 
+/*
   SavilinxAgent
 */
 // const SavilinxAgent = agentScenario("SavilinxAgent");
@@ -64,7 +64,7 @@ const BHAP4 = scenario("PortalClaimSubmit", {
   reason: "Child Bonding",
   reason_qualifier: "Newborn",
   residence: "OOS",
-  financiallyIneligible: true,
+  wages: "ineligible",
   bondingDate: "past",
   docs: {
     OOSID: {},
@@ -96,7 +96,7 @@ const FBHAP4 = scenario("FineosClaimSubmit", {
   reason: "Child Bonding",
   reason_qualifier: "Newborn",
   residence: "OOS",
-  financiallyIneligible: true,
+  wages: "ineligible",
   bondingDate: "past",
   docs: {
     OOSID: {},
