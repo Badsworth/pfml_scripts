@@ -19,6 +19,9 @@ describe("Confirmation", () => {
     renderPage(query);
 
     expect(wrapper).toMatchSnapshot();
+    wrapper.find("Trans").forEach((trans) => {
+      expect(trans.dive()).toMatchSnapshot();
+    });
     expect(wrapper.find("Trans")).toHaveLength(3);
   });
 

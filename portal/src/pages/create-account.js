@@ -58,6 +58,9 @@ export const CreateAccount = (props) => {
         <Trans
           i18nKey="pages.authCreateAccount.alertBody"
           components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
             "mass-benefits-timeline-link": (
               <a
                 href={routes.external.massgov.benefitsTimeline_2020December2}
@@ -94,7 +97,14 @@ export const CreateAccount = (props) => {
         </Link>
         {!showSelfRegistration && (
           <p>
-            <Trans i18nKey="pages.authCreateAccount.createEmployerAccount" />
+            <Trans
+              i18nKey="pages.authCreateAccount.createEmployerAccount"
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
           </p>
         )}
       </div>

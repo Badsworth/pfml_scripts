@@ -31,6 +31,7 @@ describe("IntermittentLeaveSchedule", () => {
     );
 
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   it("renders a regular intermittent leave period", () => {

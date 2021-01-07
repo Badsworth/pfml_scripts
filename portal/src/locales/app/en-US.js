@@ -633,14 +633,14 @@ const pages = {
   },
   authCreateAccount: {
     alertBody:
-      "<p>You can apply online if you’re currently employed in Massachusetts.</p><p>If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at $t(shared.contactCenterPhoneNumber).</p><p><mass-benefits-timeline-link>Learn more about the paid leave benefit timeline.</mass-benefits-timeline-link></p>",
+      "<p>You can apply online if you’re currently employed in Massachusetts.</p><p>If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</p><p><mass-benefits-timeline-link>Learn more about the paid leave benefit timeline.</mass-benefits-timeline-link></p>",
     alertHeading: "You can now apply for paid family and medical leave.",
     areAnEmployer:
       "<strong>Are you a Massachusetts employer?</strong> <employer-create-account-link>Create an employer account</employer-create-account-link> to manage leave for your team.",
     backButton: "Back to Mass.gov",
     createAccountButton: "Create account",
     createEmployerAccount:
-      "<strong>Are you a Massachusetts employer?</strong> Call $t(shared.contactCenterPhoneNumber) to create an employer account.",
+      "<strong>Are you a Massachusetts employer?</strong> Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> to create an employer account.",
     haveAnAccountFooterLabel: "Have an account?",
     logInFooterLink: "Log in",
     passwordHint: "$t(shared.passwordHint)",
@@ -666,7 +666,7 @@ const pages = {
     createEmployerAccount:
       "Are you a Massachusetts employer? <create-employer-account-link>Create an employer account</create-employer-account-link>",
     createEmployerAccount_contactCallCenter:
-      "<strong>Are you a Massachusetts employer?</strong> Call $t(shared.contactCenterPhoneNumber) to create an employer account.",
+      "<strong>Are you a Massachusetts employer?</strong> Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> to create an employer account.",
     forgotPasswordLink: "Forgot your password?",
     loginButton: "Log in",
     passwordLabel: "$t(shared.passwordLabel)",
@@ -1532,7 +1532,7 @@ const pages = {
     leadBackground:
       "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave.",
     leadBackground_accountCreationContactCenter:
-      "Please call us at $t(shared.contactCenterPhoneNumber) to create an account for your organization.",
+      "Please call us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> to create an account for your organization.",
     leadBackground_accountCreationInstructions:
       "You'll need the following information to <account-creation-link>get started</account-creation-link>:",
     leadBackground_accountCreationList:
@@ -1560,7 +1560,7 @@ const pages = {
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
     instructions:
-      "<p>Thanks for letting us know that you’re not the right person to review this.</p><ul><li>Please check with your human resources team and your colleagues to see who should respond.</li><li>If the right person at your company already has an employer account, they received the same email you did and can respond directly.</li><li>Otherwise, please ask them to call us at $t(shared.contactCenterPhoneNumber).</li></ul>",
+      "<p>Thanks for letting us know that you’re not the right person to review this.</p><ul><li>Please check with your human resources team and your colleagues to see who should respond.</li><li>If the right person at your company already has an employer account, they received the same email you did and can respond directly.</li><li>Otherwise, please ask them to call us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</li></ul>",
     instructionsFollowUpDateLabel:
       "<div><strong>Review by:</strong> {{date}} at 11:59 p.m. Eastern time</div>",
     instructions_processingApplication:
@@ -1662,7 +1662,7 @@ const pages = {
     claimantHeading: "Workers",
     createAccountHeading: "Create an account",
     employerCardBody_contactCenter:
-      "Call $t(shared.contactCenterPhoneNumber) to create an employer account.",
+      "Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> to create an employer account.",
     employerCardBody_massEmployer: "Are you a Massachusetts employer?",
     employerHeading: "Employers",
     seoTitle: "Massachusetts Paid Family and Medical Leave",
@@ -1854,7 +1854,7 @@ const components = {
   },
   employersFraudReport: {
     alertBody:
-      "We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to call us at (833) 344‑7365 from 8am‑5pm ET.",
+      "We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to call us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> from 8am‑5pm ET.",
     alertHeading: "You are reporting fraud.",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes) (explain below)",
@@ -1872,7 +1872,7 @@ const components = {
     claimDurationType_reducedSchedule:
       "$t(shared.claimDurationTypeReducedSchedule)",
     downloadAttachments:
-      "Download the documentation below or contact us at $t(shared.contactCenterPhoneNumber) for details about the leave schedule.",
+      "Download the documentation below or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> for details about the leave schedule.",
     frequencyBasis_irregular: "Irregular over the next 6 months",
     frequencyBasis_months: "At least once a month",
     frequencyBasis_weeks: "At least once a week",
@@ -1916,7 +1916,7 @@ const components = {
     detailsLabel: "Details",
     documentationLabel: "Documentation",
     downloadAttachments:
-      "Download the documentation below or contact us at $t(shared.contactCenterPhoneNumber) for details about the leave schedule.",
+      "Download the documentation below or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> for details about the leave schedule.",
     header: "Leave schedule",
     healthCareProviderFormLink: "Certification of a Serious Health Condition",
     leaveFrequencyLabel: "Leave frequency",

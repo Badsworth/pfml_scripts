@@ -1,4 +1,5 @@
 import React from "react";
+import { Trans } from "react-i18next";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -48,9 +49,14 @@ const IntermittentLeaveSchedule = (props) => {
         <div>
           {/* TODO (EMPLOYER-448): Support intermittent leave
           TODO (EMPLOYER-655): Update intermittent leave details */}
-          {t(
-            "components.employersIntermittentLeaveSchedule.downloadAttachments"
-          )}
+          <Trans
+            i18nKey="components.employersIntermittentLeaveSchedule.downloadAttachments"
+            components={{
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+            }}
+          />
           {/* <Trans
             i18nKey="components.employersIntermittentLeaveSchedule.intermittentFrequencyDuration"
             tOptions={{

@@ -132,6 +132,8 @@ exports[`LeaveSchedule renders intermittent schedule 1`] = `
 </Fragment>
 `;
 
+exports[`LeaveSchedule renders intermittent schedule 2`] = `"This is your employee’s expected leave schedule."`;
+
 exports[`LeaveSchedule renders reduced schedule 1`] = `
 <Fragment>
   <ReviewHeading
@@ -187,10 +189,32 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
           Reduced leave schedule
         </td>
         <td>
-          Download the documentation below or contact us at (833) 344‑7365 for details about the leave schedule.
+          <Trans
+            components={
+              Object {
+                "contact-center-phone-link": <a
+                  href="tel:(833) 344‑7365"
+                />,
+              }
+            }
+            i18nKey="components.employersLeaveSchedule.downloadAttachments"
+          />
         </td>
       </tr>
     </tbody>
   </Table>
 </Fragment>
+`;
+
+exports[`LeaveSchedule renders reduced schedule 2`] = `
+Array [
+  "Download the documentation below or contact us at ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " for details about the leave schedule.",
+]
 `;

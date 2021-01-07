@@ -31,6 +31,9 @@ export const Confirmation = (props) => {
       <Trans
         i18nKey="pages.employersClaimsConfirmation.instructions"
         components={{
+          "contact-center-phone-link": (
+            <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+          ),
           p: <p />,
           ul: <ul className="usa-list" />,
           li: <li />,

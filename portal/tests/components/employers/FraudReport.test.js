@@ -22,6 +22,7 @@ describe("FraudReport", () => {
   it("renders just the input choices by default", () => {
     expect(wrapper.find("ConditionalContent").prop("visible")).toBe(false);
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   it('renders the alert if "Yes" is selected', () => {
@@ -31,6 +32,7 @@ describe("FraudReport", () => {
 
     expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   it('calls "onChange" when the decision has changed', () => {

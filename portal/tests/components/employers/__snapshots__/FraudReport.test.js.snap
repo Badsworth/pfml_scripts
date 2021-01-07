@@ -55,10 +55,32 @@ exports[`FraudReport renders just the input choices by default 1`] = `
       heading="You are reporting fraud."
       state="warning"
     >
-      We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to call us at (833) 344‑7365 from 8am‑5pm ET.
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+          }
+        }
+        i18nKey="components.employersFraudReport.alertBody"
+      />
     </Alert>
   </ConditionalContent>
 </Fragment>
+`;
+
+exports[`FraudReport renders just the input choices by default 2`] = `
+Array [
+  "We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to call us at ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " from 8am‑5pm ET.",
+]
 `;
 
 exports[`FraudReport renders the alert if "Yes" is selected 1`] = `
@@ -116,8 +138,30 @@ exports[`FraudReport renders the alert if "Yes" is selected 1`] = `
       heading="You are reporting fraud."
       state="warning"
     >
-      We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to call us at (833) 344‑7365 from 8am‑5pm ET.
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+          }
+        }
+        i18nKey="components.employersFraudReport.alertBody"
+      />
     </Alert>
   </ConditionalContent>
 </Fragment>
+`;
+
+exports[`FraudReport renders the alert if "Yes" is selected 2`] = `
+Array [
+  "We take allegations about fraud seriously. Selecting this will begin further investigation. Please only select if you are convinced this is fraudulent. If you have questions, feel free to call us at ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " from 8am‑5pm ET.",
+]
 `;

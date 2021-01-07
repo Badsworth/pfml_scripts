@@ -127,7 +127,14 @@ const LeaveSchedule = ({ appLogic, claim }) => {
               <td>
                 {/* TODO (CP-1074): Update hours/day */}
                 {/* TODO (EMPLOYER-655): Update reduced leave details */}
-                {t("components.employersLeaveSchedule.downloadAttachments")}
+                <Trans
+                  i18nKey="components.employersLeaveSchedule.downloadAttachments"
+                  components={{
+                    "contact-center-phone-link": (
+                      <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                    ),
+                  }}
+                />
                 {/* {t(
                   "components.employersLeaveSchedule.reducedHoursPerWeek",
                   {

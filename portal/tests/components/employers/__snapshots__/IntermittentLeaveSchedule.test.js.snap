@@ -10,7 +10,16 @@ exports[`IntermittentLeaveSchedule renders a regular intermittent leave period 1
   </td>
   <td>
     <div>
-      Download the documentation below or contact us at (833) 344‑7365 for details about the leave schedule.
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+          }
+        }
+        i18nKey="components.employersIntermittentLeaveSchedule.downloadAttachments"
+      />
     </div>
   </td>
 </tr>
@@ -26,8 +35,30 @@ exports[`IntermittentLeaveSchedule renders an irregular intermittent leave perio
   </td>
   <td>
     <div>
-      Download the documentation below or contact us at (833) 344‑7365 for details about the leave schedule.
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+          }
+        }
+        i18nKey="components.employersIntermittentLeaveSchedule.downloadAttachments"
+      />
     </div>
   </td>
 </tr>
+`;
+
+exports[`IntermittentLeaveSchedule renders an irregular intermittent leave period 2`] = `
+Array [
+  "Download the documentation below or contact us at ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " for details about the leave schedule.",
+]
 `;

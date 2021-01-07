@@ -62,9 +62,14 @@ export const CreateAccount = (props) => {
         {!showSelfRegistration && (
           <React.Fragment>
             <p>
-              {t(
-                "pages.employersAuthCreateAccount.leadBackground_accountCreationContactCenter"
-              )}
+              <Trans
+                i18nKey="pages.employersAuthCreateAccount.leadBackground_accountCreationContactCenter"
+                components={{
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
+                }}
+              />
             </p>
             <p>
               <Trans

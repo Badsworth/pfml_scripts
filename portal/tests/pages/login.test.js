@@ -29,6 +29,7 @@ describe("Login", () => {
 
   it("renders the empty page", () => {
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   describe("when account-verified query param is true", () => {

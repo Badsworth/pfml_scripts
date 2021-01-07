@@ -47,6 +47,9 @@ exports[`Login renders the empty page 1`] = `
         <Trans
           components={
             Object {
+              "contact-center-phone-link": <a
+                href="tel:(833) 344‑7365"
+              />,
               "create-employer-account-link": <a
                 className="display-inline-block"
                 href="/employers/create-account"
@@ -64,6 +67,24 @@ exports[`Login renders the empty page 1`] = `
     </div>
   </form>
 </Fragment>
+`;
+
+exports[`Login renders the empty page 2`] = `
+Array [
+  <strong
+    key="strong-0"
+  >
+    Are you a Massachusetts employer?
+  </strong>,
+  " Call ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="2"
+  >
+    (833) 344‑7365
+  </a>,
+  " to create an employer account.",
+]
 `;
 
 exports[`Login when account-verified query param is true displays verification success message 1`] = `

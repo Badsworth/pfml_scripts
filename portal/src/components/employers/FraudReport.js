@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import Alert from "../Alert";
 import ConditionalContent from "../ConditionalContent";
 import Details from "../Details";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
-import { useTranslation } from "react-i18next";
 
 const FraudReport = ({ onChange = () => {} }) => {
   const { t } = useTranslation();
@@ -66,7 +66,14 @@ const FraudReport = ({ onChange = () => {} }) => {
             state="warning"
             heading={t("components.employersFraudReport.alertHeading")}
           >
-            {t("components.employersFraudReport.alertBody")}
+            <Trans
+              i18nKey="components.employersFraudReport.alertBody"
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
           </Alert>
         </React.Fragment>
       </ConditionalContent>

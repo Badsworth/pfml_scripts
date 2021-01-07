@@ -157,7 +157,16 @@ exports[`Index renders post-launch index content when claimantShowAuth is true 1
           <p>
             Are you a Massachusetts employer?
             <br />
-            Call (833) 344‑7365 to create an employer account.
+            <Trans
+              components={
+                Object {
+                  "contact-center-phone-link": <a
+                    href="tel:(833) 344‑7365"
+                  />,
+                }
+              }
+              i18nKey="pages.index.employerCardBody_contactCenter"
+            />
           </p>
         </div>
       </article>
@@ -178,6 +187,19 @@ Array [
     new paid leave program
   </a>,
   ".",
+]
+`;
+
+exports[`Index renders post-launch index content when claimantShowAuth is true 3`] = `
+Array [
+  "Call ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " to create an employer account.",
 ]
 `;
 
@@ -249,7 +271,16 @@ exports[`Index renders pre-launch index content 1`] = `
           <p>
             Are you a Massachusetts employer?
             <br />
-            Call (833) 344‑7365 to create an employer account.
+            <Trans
+              components={
+                Object {
+                  "contact-center-phone-link": <a
+                    href="tel:(833) 344‑7365"
+                  />,
+                }
+              }
+              i18nKey="pages.index.employerCardBody_contactCenter"
+            />
           </p>
         </div>
       </article>
@@ -269,5 +300,18 @@ Array [
   >
     Learn more about how to apply.
   </a>,
+]
+`;
+
+exports[`Index renders pre-launch index content 4`] = `
+Array [
+  "Call ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " to create an employer account.",
 ]
 `;

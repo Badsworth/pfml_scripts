@@ -130,6 +130,9 @@ export const Login = (props) => {
                     href={routes.employers.createAccount}
                   />
                 ),
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
               }}
               tOptions={{
                 context: showSelfRegistration ? null : "contactCallCenter",

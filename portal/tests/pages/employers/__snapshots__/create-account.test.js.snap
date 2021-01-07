@@ -27,7 +27,16 @@ exports[`CreateAccount renders post-launch content when claimantShowMedicalLeave
       />
     </Alert>
     <p>
-      Please call us at (833) 344‑7365 to create an account for your organization.
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+          }
+        }
+        i18nKey="pages.employersAuthCreateAccount.leadBackground_accountCreationContactCenter"
+      />
     </p>
     <p>
       <Trans
@@ -103,6 +112,19 @@ Array [
 
 exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 3`] = `
 Array [
+  "Please call us at ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " to create an account for your organization.",
+]
+`;
+
+exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 4`] = `
+Array [
   "You'll need the following information to ",
   <a
     href="https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications"
@@ -116,7 +138,7 @@ Array [
 ]
 `;
 
-exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 4`] = `
+exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 5`] = `
 <ul
   className="usa-list"
   key="0"
@@ -139,7 +161,7 @@ exports[`CreateAccount renders post-launch content when claimantShowMedicalLeave
 </ul>
 `;
 
-exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 5`] = `
+exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 6`] = `
 Array [
   "Have an account? ",
   <a
@@ -152,7 +174,7 @@ Array [
 ]
 `;
 
-exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 6`] = `
+exports[`CreateAccount renders post-launch content when claimantShowMedicalLeaveType is true 7`] = `
 Array [
   "Need to apply for paid leave? ",
   <a
@@ -192,7 +214,16 @@ exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveT
       />
     </Alert>
     <p>
-      Please call us at (833) 344‑7365 to create an account for your organization.
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+          }
+        }
+        i18nKey="pages.employersAuthCreateAccount.leadBackground_accountCreationContactCenter"
+      />
     </p>
     <p>
       <Trans
@@ -268,6 +299,19 @@ Array [
 
 exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 3`] = `
 Array [
+  "Please call us at ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " to create an account for your organization.",
+]
+`;
+
+exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 4`] = `
+Array [
   "You'll need the following information to ",
   <a
     href="https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications"
@@ -281,7 +325,7 @@ Array [
 ]
 `;
 
-exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 4`] = `
+exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 5`] = `
 <ul
   className="usa-list"
   key="0"
@@ -304,7 +348,7 @@ exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveT
 </ul>
 `;
 
-exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 5`] = `
+exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 6`] = `
 Array [
   "Have an account? ",
   <a
@@ -317,7 +361,7 @@ Array [
 ]
 `;
 
-exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 6`] = `
+exports[`CreateAccount renders pre-launch content when claimantShowMedicalLeaveType is false 7`] = `
 Array [
   "Need to apply for paid leave? ",
   <a

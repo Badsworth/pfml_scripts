@@ -75,6 +75,7 @@ describe("LeaveSchedule", () => {
     renderWithClaim(INTERMITTENT_CLAIM);
     expect(wrapper.find("IntermittentLeaveSchedule").exists()).toEqual(true);
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").last().dive()).toMatchSnapshot();
   });
 
   it("renders reduced schedule", () => {
@@ -83,18 +84,9 @@ describe("LeaveSchedule", () => {
       .absenceId()
       .create();
     renderWithClaim(reducedScheduleClaim);
-    const cellValues = wrapper
-      .find("tbody")
-      .find("tr")
-      .children()
-      .map((cell) => cell.text());
 
-    expect(cellValues).toEqual([
-      "",
-      "Reduced leave schedule",
-      "Download the documentation below or contact us at (833) 344‑7365 for details about the leave schedule.",
-    ]);
     expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("Trans").last().dive()).toMatchSnapshot();
   });
 
   it("renders multiple schedule types", () => {

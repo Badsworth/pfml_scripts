@@ -96,7 +96,16 @@ export const Index = (props) => {
                 <p>
                   {t("pages.index.employerCardBody_massEmployer")}
                   <br />
-                  {t("pages.index.employerCardBody_contactCenter")}
+                  <Trans
+                    i18nKey="pages.index.employerCardBody_contactCenter"
+                    components={{
+                      "contact-center-phone-link": (
+                        <a
+                          href={`tel:${t("shared.contactCenterPhoneNumber")}`}
+                        />
+                      ),
+                    }}
+                  />
                 </p>
               </div>
             </article>
