@@ -26,27 +26,21 @@ describe("ClaimsApi", () => {
   let claimsApi;
   const accessTokenJwt =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
-  const headers = {
+  const baseRequestHeaders = {
     Authorization: `Bearer ${accessTokenJwt}`,
     "Content-Type": "application/json",
   };
 
   beforeEach(() => {
+    process.env.featureFlags = {};
     jest.resetAllMocks();
     jest.spyOn(Auth, "currentSession").mockImplementation(() =>
       Promise.resolve({
         accessToken: { jwtToken: accessTokenJwt },
       })
     );
-    claimsApi = new ClaimsApi();
-  });
 
-  beforeEach(() => {
-    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
-      Promise.resolve({
-        accessToken: { jwtToken: accessTokenJwt },
-      })
-    );
+    claimsApi = new ClaimsApi();
   });
 
   describe("getClaim", () => {
@@ -74,9 +68,25 @@ describe("ClaimsApi", () => {
         `${process.env.apiUrl}/applications/${claim.application_id}`,
         {
           body: null,
-          headers,
+          headers: baseRequestHeaders,
           method: "GET",
         }
+      );
+    });
+
+    it("includes feature flag headers when relevant feature flags are enabled", async () => {
+      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
+
+      await claimsApi.getClaim(claim.application_id);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Require-Other-Leaves": true,
+          },
+        })
       );
     });
 
@@ -124,7 +134,7 @@ describe("ClaimsApi", () => {
           `${process.env.apiUrl}/applications`,
           {
             body: null,
-            headers,
+            headers: baseRequestHeaders,
             method: "GET",
           }
         );
@@ -162,7 +172,7 @@ describe("ClaimsApi", () => {
           `${process.env.apiUrl}/applications`,
           {
             body: null,
-            headers,
+            headers: baseRequestHeaders,
             method: "POST",
           }
         );
@@ -210,9 +220,25 @@ describe("ClaimsApi", () => {
         `${process.env.apiUrl}/applications/${claim.application_id}/complete_application`,
         {
           body: null,
-          headers,
+          headers: baseRequestHeaders,
           method: "POST",
         }
+      );
+    });
+
+    it("includes feature flag headers when relevant feature flags are enabled", async () => {
+      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
+
+      await claimsApi.completeClaim(claim.application_id);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Require-Other-Leaves": true,
+          },
+        })
       );
     });
 
@@ -246,12 +272,25 @@ describe("ClaimsApi", () => {
         `${process.env.apiUrl}/applications/${claim.application_id}`,
         {
           body: JSON.stringify(claim),
-          headers: {
-            ...headers,
-            "X-PFML-Warn-On-Missing-Required-Fields": true,
-          },
+          headers: baseRequestHeaders,
           method: "PATCH",
         }
+      );
+    });
+
+    it("includes feature flag headers when relevant feature flags are enabled", async () => {
+      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
+
+      await claimsApi.updateClaim(claim.application_id, claim);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Require-Other-Leaves": true,
+          },
+        })
       );
     });
 
@@ -292,9 +331,25 @@ describe("ClaimsApi", () => {
         `${process.env.apiUrl}/applications/${claim.application_id}/submit_application`,
         {
           body: null,
-          headers,
+          headers: baseRequestHeaders,
           method: "POST",
         }
+      );
+    });
+
+    it("includes feature flag headers when relevant feature flags are enabled", async () => {
+      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
+
+      await claimsApi.submitClaim(claim.application_id);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Require-Other-Leaves": true,
+          },
+        })
       );
     });
 
@@ -333,9 +388,28 @@ describe("ClaimsApi", () => {
         `${process.env.apiUrl}/applications/${claim.application_id}/submit_payment_preference`,
         {
           body: JSON.stringify(payment_preference),
-          headers,
+          headers: baseRequestHeaders,
           method: "POST",
         }
+      );
+    });
+
+    it("includes feature flag headers when relevant feature flags are enabled", async () => {
+      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
+
+      await claimsApi.submitPaymentPreference(
+        claim.application_id,
+        payment_preference
+      );
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Require-Other-Leaves": true,
+          },
+        })
       );
     });
 

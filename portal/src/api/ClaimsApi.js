@@ -2,6 +2,7 @@
 import BaseApi from "./BaseApi";
 import Claim from "../models/Claim";
 import ClaimCollection from "../models/ClaimCollection";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 
 /**
@@ -22,6 +23,36 @@ export default class ClaimsApi extends BaseApi {
 
   get i18nPrefix() {
     return "claims";
+  }
+
+  /**
+   * Pass feature flags to the API as headers to enable
+   * API functionality that can be toggled on/off.
+   * @private
+   * @returns {object}
+   */
+  get featureFlagHeaders() {
+    const headers = {};
+
+    if (isFeatureEnabled("claimantShowOtherLeaveStep")) {
+      // Enable validation on fields in the Other Leave step
+      headers["X-FF-Require-Other-Leaves"] = true;
+    }
+
+    return headers;
+  }
+
+  /**
+   * Send an authenticated API request, with feature flag headers
+   * @example const response = await this.request("GET", "users/current");
+   *
+   * @param {string} method - i.e GET, POST, etc
+   * @param {string} subPath - relative path without a leading forward slash
+   * @param {object|FormData} [body] - request body
+   * @returns {Promise<{ data: object, warnings?: object[]}>} response - rejects on non-2xx status codes
+   */
+  request(method, subPath, body) {
+    return super.request(method, subPath, body, this.featureFlagHeaders);
   }
 
   /**
@@ -92,10 +123,7 @@ export default class ClaimsApi extends BaseApi {
     const { data, errors, warnings } = await this.request(
       "PATCH",
       application_id,
-      patchData,
-      {
-        "X-PFML-Warn-On-Missing-Required-Fields": true,
-      }
+      patchData
     );
 
     return {

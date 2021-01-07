@@ -59,13 +59,13 @@ export default class BaseApi {
    * @param {{ multipartForm: boolean}}  options
    * @returns {Response} response - rejects on non-2xx status codes
    */
-  request = async (
+  async request(
     method,
     subPath = "",
     body = null,
     additionalHeaders = {},
     options = { multipartForm: false }
-  ) => {
+  ) {
     method = method.toUpperCase();
     validateRequestMethod(method);
 
@@ -94,7 +94,7 @@ export default class BaseApi {
     });
 
     return response;
-  };
+  }
 
   /**
    * Send a request and handle the response
@@ -103,7 +103,7 @@ export default class BaseApi {
    * @returns {Response} response - only rejects on network failure or if anything prevented the request from completing
    * @throws {NetworkError}
    */
-  sendRequest = async (url, options) => {
+  async sendRequest(url, options) {
     let data, errors, response, warnings;
 
     try {
@@ -124,7 +124,7 @@ export default class BaseApi {
       // Guaranteeing warnings is always an array makes our code simpler
       warnings: formatIssues(warnings) || [],
     };
-  };
+  }
 }
 
 /**
