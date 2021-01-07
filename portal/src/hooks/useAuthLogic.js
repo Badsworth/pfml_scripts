@@ -10,8 +10,8 @@ import { useTranslation } from "../locales/i18n";
 
 /**
  * @param {object} params
- * @param {Function} params.setAppErrors
- * @param {User} params.user
+ * @param {object} params.appErrorsLogic
+ * @param {object} params.portalFlow
  * @returns {object}
  */
 const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {

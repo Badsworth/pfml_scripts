@@ -85,7 +85,8 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       setClaimWarnings(application_id, warnings);
     } catch (error) {
       if (error instanceof NotFoundError) {
-        return portalFlow.goTo(routes.applications.index);
+        portalFlow.goTo(routes.applications.index);
+        return;
       }
 
       appErrorsLogic.catchError(error);

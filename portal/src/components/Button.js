@@ -41,7 +41,7 @@ function Button({ type = "button", ...props }) {
       className={classes}
       name={props.name}
       onClick={props.onClick}
-      type={type}
+      type={type === "submit" ? "submit" : "button"}
       disabled={props.disabled || showLoading}
     >
       {children}

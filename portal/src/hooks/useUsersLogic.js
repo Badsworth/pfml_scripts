@@ -13,9 +13,8 @@ import { useRouter } from "next/router";
  * Hook that defines user state
  * @param {object} props
  * @param {object} props.appErrorsLogic - Utilities for set application's error  state
- * @param {Function} props.appErrorsLogic.setAppErrors - Set application error state
+ * @param {boolean} props.isLoggedIn
  * @param {object} props.portalFlow - Utilities for navigating portal application
- * @param {Function} props.portalFlow.goToNextPage - Navigate to next page in application
  * @returns {object} { user: User, loadUser: Function }
  */
 const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {

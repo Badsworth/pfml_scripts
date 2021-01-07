@@ -15,14 +15,6 @@
       "prettier",
       "prettier/standard"
     ],
-    "globals": {
-      // Puppeteer globals
-      "page": true,
-      "browser": true,
-      "jestPuppeteer": true,
-      // Trackers loaded globally
-      "newrelic": "readonly"
-    },
     "parser": "babel-eslint",
     "parserOptions": {
       "ecmaVersion": 2018,
@@ -34,7 +26,9 @@
     "plugins": ["jest", "jsdoc", "jsx-a11y", "react-hooks", "todo-plz"],
     "rules": {
         "jest/consistent-test-it": ["error", { "fn": "it" }],
+        "jest/no-conditional-expect": "off",
         "jest/no-try-expect": "off",
+        "jest/valid-title": "off",
         "jsdoc/check-param-names": "error",
         "jsdoc/newline-after-description": "off",
         "jsdoc/require-jsdoc": "off",
@@ -65,6 +59,12 @@
         "todo-plz/ticket-ref": ["error", { "pattern": "(API|CP|EMPLOYER|POL)-[0-9]+", "terms": ["TODO"] }]
       },
     "settings": {
+      "jest": {
+        "version": "detect"
+      },
+      "jsdoc": {
+        "mode": "typescript"
+      },
       "react": {
         "version": "detect"
       }

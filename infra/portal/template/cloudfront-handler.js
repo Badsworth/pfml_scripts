@@ -14,9 +14,9 @@ const path = require("path");
  * @see https://docs.aws.amazon.com/lambda/latest/dg/nodejs-handler.html#nodejs-handler-async
  * @param {object} event
  * @param {object[]} event.Records
- * @param {object} event.Records[].cf
- * @param {object} event.Records[].cf.response
- * @param {object} event.Records[].cf.response.headers - headers for response
+ * @param {object} event.Records.cf
+ * @param {object} event.Records.cf.response
+ * @param {object} event.Records.cf.response.headers - headers for response
  * @param {*} _context - not used
  * @returns {Promise<object>} mutated request/response
  */
