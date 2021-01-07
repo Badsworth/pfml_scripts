@@ -20,7 +20,7 @@ def init(app, dashboard_password):
         # Disable completely if no password is configured.
         return
 
-    @app.route("/dashboard/<key>/batch/")
+    @app.route("/dashboard/<key>/batch")
     def dashboard_batch(key):
         if not secrets.compare_digest(key, dashboard_password):
             raise NotFound
