@@ -340,6 +340,11 @@ paths:
             format: uuid
           description: ID of Application to retrieve
           required: true
+        - name: X-FF-Require-Other-Leaves
+          description: Enforces validations on Other Leaves fields when present
+          in: header
+          schema:
+            type: string
       responses:
         "200":
           $ref: "#/components/responses/ApplicationResponse"
@@ -366,6 +371,11 @@ paths:
             format: uuid
           description: ID of Application to update
           required: true
+        - name: X-FF-Require-Other-Leaves
+          description: Enforces validations on Other Leaves fields when present
+          in: header
+          schema:
+            type: string
       responses:
         "200":
           description: Application updated without errors.
@@ -401,6 +411,11 @@ paths:
             format: uuid
           description: ID of Application to submit
           required: true
+        - name: X-FF-Require-Other-Leaves
+          description: Enforces validations on Other Leaves fields when present
+          in: header
+          schema:
+            type: string
       responses:
         "201":
           description: Application submitted without errors.
@@ -440,6 +455,11 @@ paths:
             format: uuid
           description: ID of Application to submit
           required: true
+        - name: X-FF-Require-Other-Leaves
+          description: Enforces validations on Other Leaves fields when present
+          in: header
+          schema:
+            type: string
       responses:
         "201":
           description: Application completed without errors.

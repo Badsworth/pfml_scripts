@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Dict, Optional, Type, Union
 
 import connexion
+import flask
 import puremagic
 from flask import Response
 from puremagic import PureError
@@ -55,7 +56,7 @@ def application_get(application_id):
         ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
-    issues = application_rules.get_application_issues(existing_application)
+    issues = application_rules.get_application_issues(existing_application, flask.request.headers)
 
     return response_util.success_response(
         message="Successfully retrieved application",
@@ -150,7 +151,7 @@ def applications_update(application_id):
             db_session, application_request, existing_application
         )
 
-    issues = application_rules.get_application_issues(existing_application)
+    issues = application_rules.get_application_issues(existing_application, flask.request.headers)
 
     # Calling get_application_log_attributes too early causes the application not to update properly for some reason
     # See https://github.com/EOLWD/pfml/pull/2601
@@ -195,7 +196,9 @@ def applications_submit(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(existing_application)
+        issues = application_rules.get_application_issues(
+            existing_application, flask.request.headers
+        )
         if issues:
             logger.info(
                 "applications_submit failure - application failed validation", extra=log_attributes
@@ -292,7 +295,9 @@ def applications_complete(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(existing_application)
+        issues = application_rules.get_application_issues(
+            existing_application, flask.request.headers
+        )
         if issues:
             logger.info(
                 "applications_complete failure - application failed validation",

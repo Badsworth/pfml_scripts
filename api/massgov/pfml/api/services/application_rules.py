@@ -3,6 +3,7 @@ from itertools import chain, combinations
 from typing import Any, Iterable, List, Optional, Union
 
 from dateutil.relativedelta import relativedelta
+from werkzeug.datastructures import Headers
 
 import massgov.pfml.db as db
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
@@ -28,14 +29,14 @@ MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
 MAX_DAYS_IN_LEAVE_PERIOD_RANGE = 364
 
 
-def get_application_issues(application: Application) -> Optional[List[Issue]]:
+def get_application_issues(application: Application, headers: Headers) -> Optional[List[Issue]]:
     """Takes in application and outputs any validation issues.
     These issues are either fields that are always required for an application or fields that are conditionally required based on previous input.
     """
     issues = []
     issues += get_always_required_issues(application)
     issues += get_leave_periods_issues(application)
-    issues += get_conditional_issues(application)
+    issues += get_conditional_issues(application, headers)
 
     if len(issues) == 0:
         return None
@@ -260,8 +261,9 @@ def get_previous_leave_issues(leave: PreviousLeave, index: int) -> List[Issue]:
     return issues
 
 
-def get_conditional_issues(application: Application) -> List[Issue]:
+def get_conditional_issues(application: Application, headers: Headers) -> List[Issue]:
     issues = []
+    require_other_leaves_fields = headers.get("X-FF-Require-Other-Leaves", None)
 
     # Fields involved in Part 1 of the progressive application
     if application.has_state_id and not application.mass_id:
@@ -389,6 +391,16 @@ def get_conditional_issues(application: Application) -> List[Issue]:
 
     if application.previous_leaves:
         issues += get_previous_leaves_issues(application)
+
+    if require_other_leaves_fields:
+        # TODO (CP-1674): Move these rules into the "always required" set once the
+        # X-FF-Require-Other-Leaves header is obsolete.
+        for field in ["has_employer_benefits", "has_other_incomes", "has_previous_leaves"]:
+            val = deepgetattr(application, field)
+            if val is None:
+                issues.append(
+                    Issue(type=IssueType.required, message=f"{field} is required", field=field,)
+                )
 
     # Fields involved in Part 3 of the progressive application
     # TODO: (API-515) Document and certification validations can be called here

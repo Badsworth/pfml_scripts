@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 from freezegun import freeze_time
+from werkzeug.datastructures import Headers
 
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.services.application_rules import (
@@ -218,7 +219,7 @@ def test_employer_notified_date_minimum(test_db_session, initialize_factories_se
     test_app = ApplicationFactory.create(
         employer_notified=True, employer_notification_date=date(2018, 12, 31)
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert (
         Issue(
             type=IssueType.minimum,
@@ -281,7 +282,7 @@ def test_residential_address_fields_required(test_db_session, initialize_factori
         employer_notified=True,
     )
 
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
 
     assert [
         Issue(
@@ -319,7 +320,7 @@ def test_mailing_address_fields_required(test_db_session, initialize_factories_s
         employer_notified=True,
     )
 
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
 
     assert [
         Issue(
@@ -1306,7 +1307,7 @@ def test_reduced_leave_period_minimum_total_minutes(test_db_session, initialize_
 
 def test_mass_id_required_if_has_mass_id(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(has_state_id=True, mass_id=None)
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1319,7 +1320,7 @@ def test_mass_id_required_if_has_mass_id(test_db_session, initialize_factories_s
 
 def test_mailing_addr_required_if_has_mailing_addr(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(has_mailing_address=True, mailing_address=None)
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1335,7 +1336,7 @@ def test_pregnant_required_medical_leave(test_db_session, initialize_factories_s
         leave_reason_id=LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
         pregnant_or_recent_birth=None,
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1351,7 +1352,7 @@ def test_reason_qualifers_required_for_bonding(test_db_session, initialize_facto
         leave_reason_id=LeaveReason.CHILD_BONDING.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1370,7 +1371,7 @@ def test_child_birth_date_required_for_newborn_bonding(
         leave_reason_qualifier_id=LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
         child_birth_date=None,
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1389,7 +1390,7 @@ def test_child_placement_date_required_for_adoption_bonding(
         leave_reason_qualifier_id=LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id,
         child_placement_date=None,
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1408,7 +1409,7 @@ def test_child_placement_date_required_for_fostercare_bonding(
         leave_reason_qualifier_id=LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id,
         child_placement_date=None,
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1571,7 +1572,7 @@ def test_employer_fein_required_for_employed_claimants(
         employer_notification_date=date(2021, 1, 3),
         employer_notified=True,
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1591,13 +1592,13 @@ def test_employer_fein_not_required_for_self_employed_claimants(
             test_db_session, template=EmploymentStatus.SELF_EMPLOYED
         ),
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert not issues
 
 
 def test_employer_notification_date_required(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(employer_notified=True, employer_notification_date=None)
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1617,7 +1618,7 @@ def test_employer_notification_date_required_when_employed(
             test_db_session, template=EmploymentStatus.EMPLOYED
         ),
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1636,7 +1637,7 @@ def test_employer_notification_date_not_required_when_unemployed(
             test_db_session, template=EmploymentStatus.UNEMPLOYED
         ),
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [] == issues
 
 
@@ -1649,7 +1650,7 @@ def test_employer_notification_date_not_required_when_self_employed(
             test_db_session, template=EmploymentStatus.SELF_EMPLOYED
         ),
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [] == issues
 
 
@@ -1660,7 +1661,7 @@ def test_employer_benefit_no_issues(test_db_session, initialize_factories_sessio
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [] == issues
 
 
@@ -1677,13 +1678,13 @@ def test_employer_benefit_amount_fields_are_optional(test_db_session, initialize
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [] == issues
 
 
 def test_employer_benefit_missing_fields(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(employer_benefits=[EmployerBenefit()])
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1714,7 +1715,7 @@ def test_employer_benefit_amount_dollars_required(test_db_session, initialize_fa
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1736,7 +1737,7 @@ def test_employer_benefit_amount_frequency_required(test_db_session, initialize_
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1760,7 +1761,7 @@ def test_employer_benefit_start_date_must_be_after_2020(
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.minimum,
@@ -1783,7 +1784,7 @@ def test_employer_benefit_end_date_must_be_after_2020(
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.minimum,
@@ -1808,7 +1809,7 @@ def test_employer_benefit_end_date_must_be_after_start_date(
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.invalid_date_range,
@@ -1818,6 +1819,70 @@ def test_employer_benefit_end_date_must_be_after_start_date(
     ] == issues
 
 
+def test_other_leave_feature_flagged_rules(test_db_session, initialize_factories_session):
+    # Assert that API returns specific validation warnings when the
+    # X-FF-Require-Other-Leaves header is present
+    application = ApplicationFactory.create()
+    headers = Headers()
+
+    # Rules aren't enforced when a feature flag header isn't included
+    issues = get_conditional_issues(application, headers)
+
+    assert (
+        Issue(
+            field="has_employer_benefits",
+            message="has_employer_benefits is required",
+            type=IssueType.required,
+        )
+        not in issues
+    )
+    assert (
+        Issue(
+            field="has_other_incomes",
+            message="has_other_incomes is required",
+            type=IssueType.required,
+        )
+        not in issues
+    )
+    assert (
+        Issue(
+            field="has_previous_leaves",
+            message="has_previous_leaves is required",
+            type=IssueType.required,
+        )
+        not in issues
+    )
+
+    # Rules are enforced when a feature flag header isn't included
+    headers.add("X-FF-Require-Other-Leaves", "value_does_not_matter")
+    issues = get_conditional_issues(application, headers)
+
+    assert (
+        Issue(
+            field="has_employer_benefits",
+            message="has_employer_benefits is required",
+            type=IssueType.required,
+        )
+        in issues
+    )
+    assert (
+        Issue(
+            field="has_other_incomes",
+            message="has_other_incomes is required",
+            type=IssueType.required,
+        )
+        in issues
+    )
+    assert (
+        Issue(
+            field="has_previous_leaves",
+            message="has_previous_leaves is required",
+            type=IssueType.required,
+        )
+        in issues
+    )
+
+
 def test_other_income_no_issues(test_db_session, initialize_factories_session):
     application = ApplicationFactory.create()
     incomes = [OtherIncomeFactory.create(application_id=application.application_id,)]
@@ -1825,7 +1890,7 @@ def test_other_income_no_issues(test_db_session, initialize_factories_session):
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [] == issues
 
 
@@ -1842,13 +1907,13 @@ def test_other_income_amount_fields_are_optional(test_db_session, initialize_fac
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [] == issues
 
 
 def test_other_income_missing_fields(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(other_incomes=[OtherIncome()])
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1879,7 +1944,7 @@ def test_other_income_amount_dollars_required(test_db_session, initialize_factor
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1901,7 +1966,7 @@ def test_other_income_amount_frequency_required(test_db_session, initialize_fact
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -1923,7 +1988,7 @@ def test_other_income_start_date_must_be_after_2020(test_db_session, initialize_
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.minimum,
@@ -1944,7 +2009,7 @@ def test_other_income_end_date_must_be_after_2020(test_db_session, initialize_fa
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.minimum,
@@ -1969,7 +2034,7 @@ def test_other_income_end_date_must_be_after_start_date(
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.invalid_date_range,
@@ -1983,13 +2048,13 @@ def test_has_other_incomes_required(test_db_session, initialize_factories_sessio
     test_app = ApplicationFactory.create(
         other_incomes_awaiting_approval=True, has_other_incomes=False
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [] == issues
 
     test_app = ApplicationFactory.create(
         other_incomes_awaiting_approval=True, has_other_incomes=None
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -2002,7 +2067,7 @@ def test_has_other_incomes_required(test_db_session, initialize_factories_sessio
     test_app = ApplicationFactory.create(
         other_incomes_awaiting_approval=True, has_other_incomes=True
     )
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.conflicting,
@@ -2020,13 +2085,13 @@ def test_previous_leave_no_issues(test_db_session, initialize_factories_session)
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [] == issues
 
 
 def test_previous_leave_missing_fields(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(previous_leaves=[PreviousLeave()])
-    issues = get_conditional_issues(test_app)
+    issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
             type=IssueType.required,
@@ -2064,7 +2129,7 @@ def test_previous_leave_start_date_must_be_after_2020(
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.minimum,
@@ -2085,7 +2150,7 @@ def test_previous_leave_end_date_must_be_after_2020(test_db_session, initialize_
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.minimum,
@@ -2110,7 +2175,7 @@ def test_previous_leave_end_date_must_be_after_start_date(
     test_db_session.add(application)
     test_db_session.commit()
 
-    issues = get_conditional_issues(application)
+    issues = get_conditional_issues(application, Headers())
     assert [
         Issue(
             type=IssueType.invalid_date_range,
