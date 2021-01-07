@@ -35,4 +35,27 @@ module "tasks" {
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/PERF"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/PERF/dataexports"
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
+
+  eolwd_moveit_sftp_uri    = "sftp://DFML@transferwebtest.eolwd.aws"
+  ctr_moveit_incoming_path = "DMFL/Comptroller_Office/Incoming/nmmarsload"
+  ctr_moveit_outgoing_path = "DMFL/Comptroller_Office/Outgoing/nmmarsload"
+  ctr_moveit_archive_path  = "DMFL/Comptroller_Office/Archive"
+  pfml_ctr_inbound_path    = "s3://massgov-pfml-performance-agency-transfer/ctr/inbound"
+  pfml_ctr_outbound_path   = "s3://massgov-pfml-performance-agency-transfer/ctr/outbound"
+
+  pfml_email_address                     = "noreplypfml@mass.gov"
+  bounce_forwarding_email_address        = "noreplypfml@mass.gov"
+  ctr_gax_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
+  ctr_vcc_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
+  dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
+
+  ctr_data_mart_host     = "duaua-fdm-wdb1.cs.govt.state.ma.us"
+  ctr_data_mart_username = "SRV-LWD-DFML-NONPROD"
+
+  fineos_data_export_path   = "s3://fin-somdev-data-export/PERF/dataexports"
+  fineos_data_import_path   = "s3://fin-somdev-data-import/PERF/peiupdate"
+  pfml_fineos_inbound_path  = "s3://massgov-pfml-performance-agency-transfer/cps/inbound"
+  pfml_fineos_outbound_path = "s3://massgov-pfml-performance-agency-transfer/cps/outbound"
+
+  enable_recurring_payments_schedule = false
 }

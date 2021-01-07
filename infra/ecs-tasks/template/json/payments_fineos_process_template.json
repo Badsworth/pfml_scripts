@@ -34,9 +34,9 @@
       { "name": "FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", "value": "${fineos_aws_iam_role_external_id}" },
 
       { "name": "FINEOS_DATA_EXPORT_PATH", "value": "${fineos_data_export_path}" },
-      { "name": "PFML_FINEOS_INBOUND_PATH", "value": "${pfml_fineos_inbound_path}" },
       { "name": "FINEOS_DATA_IMPORT_PATH", "value": "${fineos_data_import_path}" },
-      { "name": "PFML_FINEOS_OUTBOUND_PATH", "value": "${pfml_fineos_outbound_path}" }      
+      { "name": "PFML_FINEOS_INBOUND_PATH", "value": "${pfml_fineos_inbound_path}" },
+      { "name": "PFML_FINEOS_OUTBOUND_PATH", "value": "${pfml_fineos_outbound_path}" }
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }

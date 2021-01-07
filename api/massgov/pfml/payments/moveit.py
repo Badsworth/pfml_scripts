@@ -1,8 +1,9 @@
 import os
 from urllib.parse import urlparse
 
+import massgov.pfml.payments.config as payments_config
 from massgov.pfml import db
-from massgov.pfml.payments.payments_util import Constants, get_moveit_config, get_s3_config
+from massgov.pfml.payments.payments_util import Constants
 from massgov.pfml.payments.sftp_s3_transfer import (
     SftpS3TransferConfig,
     copy_from_sftp_to_s3_and_archive_files,
@@ -11,8 +12,8 @@ from massgov.pfml.payments.sftp_s3_transfer import (
 
 
 def pickup_files_from_moveit(db_session: db.Session) -> None:
-    moveit_config = get_moveit_config()
-    s3_config = get_s3_config()
+    moveit_config = payments_config.get_moveit_config()
+    s3_config = payments_config.get_s3_config()
 
     parsed_s3_path = urlparse(s3_config.pfml_ctr_inbound_path)
     s3_bucket_uri = "s3://" + (parsed_s3_path.hostname or "")
@@ -32,8 +33,8 @@ def pickup_files_from_moveit(db_session: db.Session) -> None:
 
 
 def send_files_to_moveit(db_session: db.Session) -> None:
-    moveit_config = get_moveit_config()
-    s3_config = get_s3_config()
+    moveit_config = payments_config.get_moveit_config()
+    s3_config = payments_config.get_s3_config()
 
     parsed_s3_path = urlparse(s3_config.pfml_ctr_outbound_path)
     s3_bucket_uri = "s3://" + (parsed_s3_path.hostname or "")

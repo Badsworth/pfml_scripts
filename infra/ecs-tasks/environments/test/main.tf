@@ -34,22 +34,28 @@ module "tasks" {
 
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/DT2"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/DT2/dataexports"
+  logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
 
-  payments_fineos_data_export_path   = "s3://fin-somedev-data-export/DT2/dataexports"
-  payments_pfml_fineos_inbound_path  = "s3://massgov-pfml-test-agency-transfer/cps/inbound"
-  payments_fineos_data_import_path   = "s3://fin-somedev-data-import/DT2/peiupdate"
-  payments_pfml_fineos_outbound_path = "s3://massgov-pfml-test-agency-transfer/cps/outbound"
-  payments_ctr_moveit_incoming_path  = "sftp://TBD"
-  payments_ctr_moveit_archive_path   = "sftp://TBD"
-  payments_pfml_ctr_inbound_path     = "s3://massgov-pfml-test-agency-transfer/ctr/inbound"
-  payments_ctr_moveit_outgoing_path  = "sftp://TBD"
-  payments_pfml_ctr_outbound_path    = "s3://massgov-pfml-test-agency-transfer/ctr/outbound"
+  eolwd_moveit_sftp_uri    = ""
+  ctr_moveit_incoming_path = ""
+  ctr_moveit_outgoing_path = ""
+  ctr_moveit_archive_path  = ""
+  pfml_ctr_inbound_path    = "s3://massgov-pfml-test-agency-transfer/ctr/inbound"
+  pfml_ctr_outbound_path   = "s3://massgov-pfml-test-agency-transfer/ctr/outbound"
 
-  logging_level                      = "massgov.pfml.fineos.fineos_client=DEBUG"
+  pfml_email_address                     = "noreplypfml@mass.gov"
+  bounce_forwarding_email_address        = "noreplypfml@mass.gov"
+  ctr_gax_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
+  ctr_vcc_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
+  dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
+
+  ctr_data_mart_host     = ""
+  ctr_data_mart_username = ""
+
+  fineos_data_export_path   = "s3://fin-somdev-data-export/DT2/dataexports"
+  fineos_data_import_path   = "s3://fin-somdev-data-import/DT2/peiupdate"
+  pfml_fineos_inbound_path  = "s3://massgov-pfml-test-agency-transfer/cps/inbound"
+  pfml_fineos_outbound_path = "s3://massgov-pfml-test-agency-transfer/cps/outbound"
+
   enable_recurring_payments_schedule = false
-
-  payments_gax_bievnt_email               = ""
-  pfml_email_address                      = "noreplypfml@mass.gov"
-  bounce_forwarding_email_address         = "noreplypfml@mass.gov"
-  payments_dfml_business_operations_email = ""
 }

@@ -37,20 +37,26 @@ module "tasks" {
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somprod-data-import/PRD"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somprod-data-export/PRD/dataexports"
 
-  payments_fineos_data_export_path   = "s3://fin-somprod-data-export/PRD/dataexports"
-  payments_pfml_fineos_inbound_path  = "s3://massgov-pfml-prod-agency-transfer/cps/inbound"
-  payments_fineos_data_import_path   = "s3://fin-somprod-data-import/PRD/peiupdate"
-  payments_pfml_fineos_outbound_path = "s3://massgov-pfml-prod-agency-transfer/cps/outbound"
-  payments_ctr_moveit_incoming_path  = "sftp://transfer.eol.mass.gov/DMFL/Comptroller_Office/Incoming/nmmarsload"
-  payments_ctr_moveit_archive_path   = "sftp://transfer.eol.mass.gov/DMFL/Comptroller_Office/Archive"
-  payments_pfml_ctr_inbound_path     = "s3://massgov-pfml-prod-agency-transfer/ctr/inbound"
-  payments_ctr_moveit_outgoing_path  = "sftp://transfer.eol.mass.gov/DMFL/Comptroller_Office/Outgoing/nmmarsload"
-  payments_pfml_ctr_outbound_path    = "s3://massgov-pfml-prod-agency-transfer/ctr/outbound"
+  eolwd_moveit_sftp_uri    = "sftp://DFML@transfer.eol.mass.gov"
+  ctr_moveit_incoming_path = "DMFL/Comptroller_Office/Incoming/nmmarsload"
+  ctr_moveit_outgoing_path = "DMFL/Comptroller_Office/Outgoing/nmmarsload"
+  ctr_moveit_archive_path  = "DMFL/Comptroller_Office/Archive"
+  pfml_ctr_inbound_path    = "s3://massgov-pfml-prod-agency-transfer/ctr/inbound"
+  pfml_ctr_outbound_path   = "s3://massgov-pfml-prod-agency-transfer/ctr/outbound"
+
+  pfml_email_address                     = "noreplypfml@mass.gov"
+  bounce_forwarding_email_address        = "noreplypfml@mass.gov"
+  ctr_gax_bievnt_email_address           = "Accounts.Payable@detma.org"
+  ctr_vcc_bievnt_email_address           = "EOL-DL-DFML-GAXVCC_Confirmation@mass.gov"
+  dfml_business_operations_email_address = "EOL-DL-DFML-GAXVCC_Confirmation@mass.gov"
+
+  ctr_data_mart_host     = "dua-fdm-wdb1.cs.govt.state.ma.us"
+  ctr_data_mart_username = "SRV-LWD-DFML-PROD"
+
+  fineos_data_export_path   = "s3://fin-somprod-data-export/PRD/dataexports"
+  fineos_data_import_path   = "s3://fin-somprod-data-import/PRD/peiupdate"
+  pfml_fineos_inbound_path  = "s3://massgov-pfml-prod-agency-transfer/cps/inbound"
+  pfml_fineos_outbound_path = "s3://massgov-pfml-prod-agency-transfer/cps/outbound"
 
   enable_recurring_payments_schedule = false
-
-  payments_gax_bievnt_email               = "Accounts.Payable@detma.org"
-  pfml_email_address                      = "noreplypfml@mass.gov"
-  bounce_forwarding_email_address         = "noreplypfml@mass.gov"
-  payments_dfml_business_operations_email = "EOL-DL-DFML-GAXVCC_Confirmation@mass.gov"
 }

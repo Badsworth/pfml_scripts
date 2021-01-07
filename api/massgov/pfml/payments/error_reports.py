@@ -419,7 +419,7 @@ def _send_errors_email(subject: str, body: str, error_files: List[pathlib.Path])
 
     email_config = payments_config.get_email_config()
     sender = email_config.pfml_email_address
-    recipient = EmailRecipient(to_addresses=[email_config.payments_dfml_business_operations_email])
+    recipient = EmailRecipient(to_addresses=[email_config.dfml_business_operations_email_address])
     send_email_with_attachment(
         recipient=recipient, subject=subject, body_text=body, sender=sender, attachments=error_files
     )

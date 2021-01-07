@@ -151,16 +151,18 @@ locals {
       containers_template = "payments_ctr_process_template.json"
       task_role           = aws_iam_role.payments_ctr_process_task_role.arn
       vars = {
-        ctr_moveit_incoming_path = var.payments_ctr_moveit_incoming_path
-        ctr_moveit_archive_path  = var.payments_ctr_moveit_archive_path
-        pfml_ctr_inbound_path    = var.payments_pfml_ctr_inbound_path
-        ctr_moveit_outgoing_path = var.payments_ctr_moveit_outgoing_path
-        pfml_ctr_outbound_path   = var.payments_pfml_ctr_outbound_path
+        eolwd_moveit_sftp_uri    = var.eolwd_moveit_sftp_uri
+        ctr_moveit_incoming_path = var.ctr_moveit_incoming_path
+        ctr_moveit_archive_path  = var.ctr_moveit_archive_path
+        ctr_moveit_outgoing_path = var.ctr_moveit_outgoing_path
+        pfml_ctr_inbound_path    = var.pfml_ctr_inbound_path
+        pfml_ctr_outbound_path   = var.pfml_ctr_outbound_path
 
-        payments_gax_bievnt_email               = var.payments_gax_bievnt_email
-        pfml_email_address                      = var.pfml_email_address
-        bounce_forwarding_email_address         = var.bounce_forwarding_email_address
-        payments_dfml_business_operations_email = var.payments_dfml_business_operations_email
+        pfml_email_address                     = var.pfml_email_address
+        bounce_forwarding_email_address        = var.bounce_forwarding_email_address
+        ctr_gax_bievnt_email_address           = var.ctr_gax_bievnt_email_address
+        ctr_vcc_bievnt_email_address           = var.ctr_vcc_bievnt_email_address
+        dfml_business_operations_email_address = var.dfml_business_operations_email_address
 
         ctr_data_mart_host     = var.ctr_data_mart_host
         ctr_data_mart_username = var.ctr_data_mart_username
@@ -175,10 +177,10 @@ locals {
         fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
         fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
 
-        fineos_data_export_path   = var.payments_fineos_data_export_path
-        pfml_fineos_inbound_path  = var.payments_pfml_fineos_inbound_path
-        fineos_data_import_path   = var.payments_fineos_data_import_path
-        pfml_fineos_outbound_path = var.payments_pfml_fineos_outbound_path
+        fineos_data_export_path   = var.fineos_data_export_path
+        fineos_data_import_path   = var.fineos_data_import_path
+        pfml_fineos_inbound_path  = var.pfml_fineos_inbound_path
+        pfml_fineos_outbound_path = var.pfml_fineos_outbound_path
       }
     },
 

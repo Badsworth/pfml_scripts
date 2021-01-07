@@ -7,6 +7,7 @@ from typing import List, Optional
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
+import massgov.pfml.payments.config as payments_config
 import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
@@ -17,7 +18,6 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.payments.config import get_s3_config
 from massgov.pfml.payments.payments_util import get_now
 
 logger = logging.get_logger(__package__)
@@ -76,7 +76,7 @@ def upload_writeback_csv(db_session: db.Session, payments: List[Payment]) -> str
     current_datetime = get_now()
     filename_to_upload = f"{current_datetime.strftime('%Y-%m-%d-%H-%M-%S')}-pei_writeback.csv"
 
-    s3_config = get_s3_config()
+    s3_config = payments_config.get_s3_config()
 
     # Step 1: save writeback file to PFML S3 first in the /ready dir and set metadata
     pfml_pei_writeback_ready_filepath = os.path.join(

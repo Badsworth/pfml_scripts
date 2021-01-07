@@ -53,69 +53,6 @@ class Constants:
     S3_INBOUND_ERROR_DIR = "error"
 
 
-@dataclass
-class PaymentsS3Config:
-    # S3 paths (eg. s3://bucket/path/to/folder/)
-    # Vars prefixed with fineos are buckets owned by fineos
-    # Vars prefixed by pfml are owned by us
-
-    # FINEOS generates data export files for PFML API to pick up
-    # This is where FINEOS makes those files available to us
-    fineos_data_export_path: str
-    # PFML API stores a copy of all files that FINEOS generates for us
-    # This is where we store that copy
-    fineos_data_import_path: str
-    # PFML API stores a copy of all files that we retrieve from CTR
-    # This is where we store that copy
-    pfml_ctr_inbound_path: str  # Example: s3://massgov-pfml-test-agency-transfer/ctr/inbound/
-    # PFML API stores a copy of all files that we generate for the office of the Comptroller
-    # This is where we store that copy
-    pfml_ctr_outbound_path: str  # Example: s3://massgov-pfml-test-agency-transfer/ctr/outbound/
-    # PFML API stores a copy of all files that we generate for FINEOS
-    # This is where we store that copy
-    pfml_fineos_inbound_path: str
-    # PFML API generates files for FINEOS to process
-    # This is where FINEOS picks up files from us
-    pfml_fineos_outbound_path: str
-
-
-def get_s3_config() -> PaymentsS3Config:
-    return PaymentsS3Config(
-        fineos_data_export_path=str(os.environ.get("FINEOS_DATA_EXPORT_PATH")),
-        fineos_data_import_path=str(os.environ.get("FINEOS_DATA_IMPORT_PATH")),
-        pfml_ctr_inbound_path=str(os.environ.get("PFML_CTR_INBOUND_PATH")),
-        pfml_ctr_outbound_path=str(os.environ.get("PFML_CTR_OUTBOUND_PATH")),
-        pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
-        pfml_fineos_outbound_path=str(os.environ.get("PFML_FINEOS_OUTBOUND_PATH")),
-    )
-
-
-@dataclass
-class MoveItConfig:
-    # Paths are expected to be the relative path of each directory from the root of the FTP server.
-    ctr_moveit_incoming_path: str  # Example: DMFL/Comptroller_Office/Incoming/nmmarsload
-    ctr_moveit_outgoing_path: str  # Example: DMFL/Comptroller_Office/Outgoing/nmmarsload
-    ctr_moveit_archive_path: str  # Example: DMFL/Comptroller_Office/Archive
-
-    # Include protocol, user, and host in the URI.
-    ctr_moveit_sftp_uri: str  # Example: sftp://DFML@transfertest.eol.mass.gov
-
-    # Key and password strings retrieved from some secure store (AWS Secrets Manager).
-    ctr_moveit_ssh_key: str
-    ctr_moveit_ssh_key_password: str
-
-
-def get_moveit_config() -> MoveItConfig:
-    return MoveItConfig(
-        ctr_moveit_incoming_path=str(os.environ.get("CTR_MOVEIT_INCOMING_PATH")),
-        ctr_moveit_outgoing_path=str(os.environ.get("CTR_MOVEIT_OUTGOING_PATH")),
-        ctr_moveit_archive_path=str(os.environ.get("CTR_MOVEIT_ARCHIVE_PATH")),
-        ctr_moveit_sftp_uri=str(os.environ.get("PAYMENTS_MOVEIT_URI")),
-        ctr_moveit_ssh_key=str(os.environ.get("CTR_MOVEIT_SSH_KEY")),
-        ctr_moveit_ssh_key_password=str(os.environ.get("CTR_MOVEIT_SSH_KEY_PASSWORD")),
-    )
-
-
 class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"

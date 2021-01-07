@@ -206,9 +206,10 @@ def mock_ses(monkeypatch, reset_aws_env_vars):
     import boto3
 
     monkeypatch.setenv("PFML_EMAIL_ADDRESS", "noreplypfml@mass.gov")
-    monkeypatch.setenv("PAYMENTS_GAX_BIEVNT_EMAIL", "test@example.com")
-    monkeypatch.setenv("PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL", "test@example.com")
     monkeypatch.setenv("BOUNCE_FORWARDING_EMAIL", "noreplypfml@mass.gov")
+    monkeypatch.setenv("CTR_GAX_BIEVNT_EMAIL_ADDRESS", "test1@example.com")
+    monkeypatch.setenv("CTR_VCC_BIEVNT_EMAIL_ADDRESS", "test2@example.com")
+    monkeypatch.setenv("DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", "test3@example.com")
     monkeypatch.setenv("AWS_DEFAULT_REGION", "test")
 
     with moto.mock_ses():
