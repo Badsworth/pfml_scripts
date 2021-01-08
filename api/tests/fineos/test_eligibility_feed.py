@@ -903,6 +903,119 @@ def test_process_employee_updates_with_recovery(
     assert_number_of_data_lines_in_each_file(tmp_path, 2)
 
 
+def test_process_employee_updates_export_file_number_limit(
+    test_db_session, tmp_path, initialize_factories_session, create_triggers, mocker
+):
+    WagesAndContributionsFactory.create_batch(size=15)
+
+    process_employee_batch_spy = mocker.spy(ef, "process_employee_batch")
+
+    process_results = ef.process_employee_updates(
+        test_db_session,
+        massgov.pfml.fineos.MockFINEOSClient(),
+        tmp_path,
+        batch_size=10,
+        export_file_number_limit=5,
+    )
+
+    process_employee_batch_spy.assert_called_once()
+
+    assert process_results.started_at
+    assert process_results.completed_at
+    assert process_results.employers_total_count == 5
+    assert process_results.employers_success_count == 5
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
+    assert process_results.employee_and_employer_pairs_total_count == 5
+
+    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+
+
+def test_process_employee_updates_export_file_number_limit_mismatched_batch_size(
+    test_db_session, tmp_path, initialize_factories_session, create_triggers, mocker
+):
+    WagesAndContributionsFactory.create_batch(size=10)
+
+    process_employee_batch_spy = mocker.spy(ef, "process_employee_batch")
+
+    process_results = ef.process_employee_updates(
+        test_db_session,
+        massgov.pfml.fineos.MockFINEOSClient(),
+        tmp_path,
+        batch_size=2,
+        export_file_number_limit=5,
+    )
+
+    assert process_employee_batch_spy.call_count == 3
+
+    assert process_results.started_at
+    assert process_results.completed_at
+    assert process_results.employers_total_count == 5
+    assert process_results.employers_success_count == 5
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
+    assert process_results.employee_and_employer_pairs_total_count == 5
+
+    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+
+
+def test_process_employee_updates_export_file_number_limit_fewer_than_limit_exist(
+    test_db_session, tmp_path, initialize_factories_session, create_triggers
+):
+    WagesAndContributionsFactory.create_batch(size=2)
+
+    process_results = ef.process_employee_updates(
+        test_db_session,
+        massgov.pfml.fineos.MockFINEOSClient(),
+        tmp_path,
+        batch_size=10,
+        export_file_number_limit=5,
+    )
+
+    assert process_results.started_at
+    assert process_results.completed_at
+    assert process_results.employers_total_count == 2
+    assert process_results.employers_success_count == 2
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
+    assert process_results.employee_and_employer_pairs_total_count == 2
+
+    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+
+
+def test_process_employee_updates_export_file_number_limit_with_error_continues_processing_other_employers(
+    test_db_session, tmp_path, initialize_factories_session, create_triggers, monkeypatch
+):
+    wages = WagesAndContributionsFactory.create_batch(size=5)
+
+    def mock(fineos, employer):
+        # error for the first employer
+        if employer.employer_id == wages[0].employer_id:
+            raise Exception
+
+        # success for second one
+        return "1234"
+
+    monkeypatch.setattr(ef, "get_fineos_employer_id", mock)
+
+    process_results = ef.process_employee_updates(
+        test_db_session,
+        massgov.pfml.fineos.MockFINEOSClient(),
+        tmp_path,
+        batch_size=10,
+        export_file_number_limit=5,
+    )
+
+    assert process_results.started_at
+    assert process_results.completed_at
+    assert process_results.employers_total_count == 5
+    assert process_results.employers_success_count == 4
+    assert process_results.employers_error_count == 1
+    assert process_results.employers_skipped_count == 0
+    assert process_results.employee_and_employer_pairs_total_count == 4
+    assert_number_of_data_lines_in_each_file(tmp_path, 1)
+
+
 def test_open_and_write_to_eligibility_file_delete_on_exception(
     tmp_path, mock_s3_bucket, monkeypatch
 ):

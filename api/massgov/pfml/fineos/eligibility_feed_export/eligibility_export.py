@@ -86,6 +86,7 @@ def main_with_return():
                 output_directory_path,
                 output_transport_params,
                 batch_size=config.update_batch_size,
+                export_file_number_limit=config.export_file_number_limit,
             )
     else:
         process_result = eligibility_feed.process_all_employers(

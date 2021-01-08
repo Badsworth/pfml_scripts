@@ -55,6 +55,9 @@ class EligibilityFeedExportConfig(BaseSettings):
         EligibilityFeedExportMode.FULL, env="ELIGIBILITY_FEED_MODE"
     )
     update_batch_size: int = Field(1000, env="ELIGIBILITY_FEED_UPDATE_BATCH_SIZE")
+    export_file_number_limit: Optional[int] = Field(
+        None, env="ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT"
+    )  # Only applies to "updates" mode
     bundle_count: PositiveInt = PositiveInt(1)  # Only applies to "full" mode currently
 
 
@@ -373,10 +376,18 @@ def process_employee_updates(
     output_dir_path: str,
     output_transport_params: Optional[OutputTransportParams] = None,
     batch_size: int = 1000,
+    export_file_number_limit: Optional[int] = None,
 ) -> EligibilityFeedExportReport:
     report = EligibilityFeedExportReport(started_at=utcnow().isoformat())
 
-    logger.info("Starting eligibility feeds generation for employee updates.")
+    logger.info(
+        "Starting eligibility feeds generation for employee updates.",
+        extra={
+            "output_dir_path": output_dir_path,
+            "batch_size": batch_size,
+            "export_file_number_limit": export_file_number_limit,
+        },
+    )
 
     # We may modify this code to spawn more than one process to consume the
     # updates similar to what has been done for all employers process.
@@ -413,6 +424,7 @@ def process_employee_updates(
             updated_employee_ids,
             report,
             output_transport_params,
+            export_file_number_limit=export_file_number_limit,
         )
 
         unsuccessful_employee_ids.update(
@@ -421,6 +433,12 @@ def process_employee_updates(
 
         delete_processed_batch(db_session, successfully_processed_employee_ids, process_id)
         db_session.commit()
+
+        # process_employee_batch() will stop processing if it hits the limit,
+        # but need to break out of this loop grabbing the batches as well
+        if export_file_number_limit and report.employers_success_count >= export_file_number_limit:
+            logger.info("Export file number limit was hit. Finishing task.")
+            break
 
     if report.employers_total_count == 0:
         logger.info("Eligibility Feed: No updates found to process.")
@@ -437,6 +455,7 @@ def process_employee_batch(
     batch_of_employee_ids: Iterable[EmployeeId],
     report: EligibilityFeedExportReport,
     output_transport_params: Optional[OutputTransportParams] = None,
+    export_file_number_limit: Optional[int] = None,
 ) -> Set[EmployeeId]:
     # Want information for the only most recent Employer for a given Employee
     employer_id_to_employee_ids = get_most_recent_employer_to_employee_info(
@@ -488,6 +507,15 @@ def process_employee_batch(
 
             report.employers_success_count += 1
             successfully_processed_employee_ids.extend(employee_ids)
+
+            if (
+                export_file_number_limit
+                and report.employers_success_count >= export_file_number_limit
+            ):
+                logger.info(
+                    "Hit export file number limit while processing batch. Stopping batch processing."
+                )
+                break
         except Exception:
             logger.exception(
                 "Error generating FINEOS Eligibility Feed for Employer",
