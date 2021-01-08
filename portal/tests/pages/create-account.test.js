@@ -1,7 +1,7 @@
-import { mount, shallow } from "enzyme";
 import CreateAccount from "../../src/pages/create-account";
 import React from "react";
 import { act } from "react-dom/test-utils";
+import { shallow } from "enzyme";
 import { simulateEvents } from "../test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
@@ -36,26 +36,6 @@ describe("CreateAccount", () => {
       await submitForm();
       expect(appLogic.auth.createAccount).toHaveBeenCalledWith(email, password);
     });
-  });
-
-  it("redirects to '/' when claimantShowAuth is false", () => {
-    process.env.featureFlags = { claimantShowAuth: false };
-    appLogic = useAppLogic();
-    act(() => {
-      wrapper = mount(<CreateAccount appLogic={appLogic} />);
-    });
-
-    expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith("/");
-  });
-
-  it("does not redirect when claimantShowAuth is true", () => {
-    process.env.featureFlags = { claimantShowAuth: true };
-    appLogic = useAppLogic();
-    act(() => {
-      wrapper = mount(<CreateAccount appLogic={appLogic} />);
-    });
-
-    expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
   });
 
   it("displays employer-specific content when employerShowSelfRegistrationForm is false", () => {

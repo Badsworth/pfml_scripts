@@ -44,7 +44,6 @@ export const Login = (props) => {
     formState,
     updateFields,
   });
-  const showClaimantAuth = isFeatureEnabled("claimantShowAuth");
   const showSelfRegistration = isFeatureEnabled(
     "employerShowSelfRegistrationForm"
   );
@@ -103,21 +102,19 @@ export const Login = (props) => {
               the create-account-link on initial page load, when it is hidden behind the feature flag.
               The empty <div> isn't necessary once this content is no longer behind a feature flag
              */}
-            {showClaimantAuth && (
-              <p>
-                <Trans
-                  i18nKey="pages.authLogin.createClaimantAccount"
-                  components={{
-                    "create-account-link": (
-                      <a
-                        className="display-inline-block"
-                        href={routes.auth.createAccount}
-                      />
-                    ),
-                  }}
-                />
-              </p>
-            )}
+            <p>
+              <Trans
+                i18nKey="pages.authLogin.createClaimantAccount"
+                components={{
+                  "create-account-link": (
+                    <a
+                      className="display-inline-block"
+                      href={routes.auth.createAccount}
+                    />
+                  ),
+                }}
+              />
+            </p>
           </div>
 
           <p>

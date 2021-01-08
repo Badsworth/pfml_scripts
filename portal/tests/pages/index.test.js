@@ -7,18 +7,7 @@ jest.mock("@aws-amplify/auth");
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("Index", () => {
-  it("renders pre-launch index content", () => {
-    const { wrapper } = renderWithAppLogic(Index, {
-      diveLevels: 0,
-    });
-    expect(wrapper).toMatchSnapshot();
-    wrapper
-      .find("Trans")
-      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
-  });
-
-  it("renders post-launch index content when claimantShowAuth is true", () => {
-    process.env.featureFlags = { claimantShowAuth: true };
+  it("renders landing page content", () => {
     const { wrapper } = renderWithAppLogic(Index, {
       diveLevels: 0,
     });

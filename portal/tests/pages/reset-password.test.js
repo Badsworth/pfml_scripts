@@ -25,8 +25,6 @@ describe("ResetPassword", () => {
   }
 
   beforeEach(() => {
-    process.env.featureFlags = { claimantShowAuth: true };
-
     testHook(() => {
       appLogic = useAppLogic();
     });

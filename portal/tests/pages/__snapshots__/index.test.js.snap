@@ -16,11 +16,6 @@ exports[`Index does not render employer information when employerShowSelfRegistr
         }
       }
       i18nKey="pages.index.title"
-      tOptions={
-        Object {
-          "context": "prelaunch",
-        }
-      }
     />
   </Title>
   <div
@@ -40,18 +35,34 @@ exports[`Index does not render employer information when employerShowSelfRegistr
         <div
           className="bg-base-lightest padding-3"
         >
+          <Heading
+            level="3"
+          >
+            Workers
+          </Heading>
           <p>
-            <Trans
-              components={
-                Object {
-                  "mass-how-to-apply-link": <a
-                    href="https://www.mass.gov/guides/what-is-paid-family-and-medical-leave#-how-can-i-apply-for-paid-leave-massachusetts-benefits"
-                  />,
-                }
-              }
-              i18nKey="pages.index.claimantCardBodyPrelaunch"
-            />
+            You can now apply for Paid Family and Medical Leave.
           </p>
+          <ButtonLink
+            className="margin-top-3"
+            href="/create-account"
+          >
+            Create an account
+          </ButtonLink>
+          <div
+            className="margin-top-2 text-dark text-bold"
+          >
+            Have an account?
+            <Link
+              href="/login"
+            >
+              <a
+                className="display-inline-block margin-left-1"
+              >
+                Log in
+              </a>
+            </Link>
+          </div>
         </div>
       </article>
     </div>
@@ -59,21 +70,22 @@ exports[`Index does not render employer information when employerShowSelfRegistr
 </Fragment>
 `;
 
-exports[`Index does not render employer information when employerShowSelfRegistrationForm is true 2`] = `"Coming soon: Log into your Paid Family and Medical Leave account."`;
-
-exports[`Index does not render employer information when employerShowSelfRegistrationForm is true 3`] = `
+exports[`Index does not render employer information when employerShowSelfRegistrationForm is true 2`] = `
 Array [
-  "Later this month, you can create an account to apply for Paid Family and Medical Leave. ",
+  "Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this ",
   <a
-    href="https://www.mass.gov/guides/what-is-paid-family-and-medical-leave#-how-can-i-apply-for-paid-leave-massachusetts-benefits"
+    href="https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts"
     key="1"
+    rel="noopener"
+    target="_blank"
   >
-    Learn more about how to apply.
+    new paid leave program
   </a>,
+  ".",
 ]
 `;
 
-exports[`Index renders post-launch index content when claimantShowAuth is true 1`] = `
+exports[`Index renders landing page content 1`] = `
 <Fragment>
   <Title
     seoTitle="Massachusetts Paid Family and Medical Leave"
@@ -89,11 +101,6 @@ exports[`Index renders post-launch index content when claimantShowAuth is true 1
         }
       }
       i18nKey="pages.index.title"
-      tOptions={
-        Object {
-          "context": null,
-        }
-      }
     />
   </Title>
   <div
@@ -175,7 +182,7 @@ exports[`Index renders post-launch index content when claimantShowAuth is true 1
 </Fragment>
 `;
 
-exports[`Index renders post-launch index content when claimantShowAuth is true 2`] = `
+exports[`Index renders landing page content 2`] = `
 Array [
   "Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this ",
   <a
@@ -190,120 +197,7 @@ Array [
 ]
 `;
 
-exports[`Index renders post-launch index content when claimantShowAuth is true 3`] = `
-Array [
-  "Call ",
-  <a
-    href="tel:(833) 344‑7365"
-    key="1"
-  >
-    (833) 344‑7365
-  </a>,
-  " to create an employer account.",
-]
-`;
-
-exports[`Index renders pre-launch index content 1`] = `
-<Fragment>
-  <Title
-    seoTitle="Massachusetts Paid Family and Medical Leave"
-  >
-    <Trans
-      components={
-        Object {
-          "mass-paid-leave-link": <a
-            href="https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts"
-            rel="noopener"
-            target="_blank"
-          />,
-        }
-      }
-      i18nKey="pages.index.title"
-      tOptions={
-        Object {
-          "context": "prelaunch",
-        }
-      }
-    />
-  </Title>
-  <div
-    className="margin-top-6 measure-7"
-  >
-    <Heading
-      level="2"
-    >
-      Create an account
-    </Heading>
-    <div
-      className="grid-row grid-gap"
-    >
-      <article
-        className="margin-bottom-3 measure-3"
-      >
-        <div
-          className="bg-base-lightest padding-3"
-        >
-          <p>
-            <Trans
-              components={
-                Object {
-                  "mass-how-to-apply-link": <a
-                    href="https://www.mass.gov/guides/what-is-paid-family-and-medical-leave#-how-can-i-apply-for-paid-leave-massachusetts-benefits"
-                  />,
-                }
-              }
-              i18nKey="pages.index.claimantCardBodyPrelaunch"
-            />
-          </p>
-        </div>
-      </article>
-      <article
-        className="measure-3"
-      >
-        <div
-          className="bg-base-lightest padding-3"
-        >
-          <Heading
-            level="3"
-          >
-            Employers
-          </Heading>
-          <p>
-            Are you a Massachusetts employer?
-            <br />
-            <Trans
-              components={
-                Object {
-                  "contact-center-phone-link": <a
-                    href="tel:(833) 344‑7365"
-                  />,
-                }
-              }
-              i18nKey="pages.index.employerCardBody_contactCenter"
-            />
-          </p>
-        </div>
-      </article>
-    </div>
-  </div>
-</Fragment>
-`;
-
-exports[`Index renders pre-launch index content 2`] = `"Coming soon: Log into your Paid Family and Medical Leave account."`;
-
-exports[`Index renders pre-launch index content 3`] = `
-Array [
-  "Later this month, you can create an account to apply for Paid Family and Medical Leave. ",
-  <a
-    href="https://www.mass.gov/guides/what-is-paid-family-and-medical-leave#-how-can-i-apply-for-paid-leave-massachusetts-benefits"
-    key="1"
-  >
-    Learn more about how to apply.
-  </a>,
-]
-`;
-
-exports[`Index renders pre-launch index content 4`] = `
+exports[`Index renders landing page content 3`] = `
 Array [
   "Call ",
   <a

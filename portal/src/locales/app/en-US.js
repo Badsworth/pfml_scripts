@@ -1681,8 +1681,6 @@ const pages = {
   },
   index: {
     claimantCardBody: "You can now apply for Paid Family and Medical Leave.",
-    claimantCardBodyPrelaunch:
-      "Later this month, you can create an account to apply for Paid Family and Medical Leave. <mass-how-to-apply-link>Learn more about how to apply.</mass-how-to-apply-link>",
     claimantCreateAccountButton: "Create an account",
     claimantHeading: "Workers",
     createAccountHeading: "Create an account",
@@ -1693,8 +1691,6 @@ const pages = {
     seoTitle: "Massachusetts Paid Family and Medical Leave",
     title:
       "Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this <mass-paid-leave-link>new paid leave program</mass-paid-leave-link>.",
-    title_prelaunch:
-      "Coming soon: Log into your Paid Family and Medical Leave account.",
   },
   userConsentToDataSharing: {
     agreementBody:

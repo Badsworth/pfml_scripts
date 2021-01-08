@@ -1,4 +1,3 @@
-import React, { useEffect } from "react";
 import Alert from "../components/Alert";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
@@ -6,6 +5,7 @@ import InputPassword from "../components/InputPassword";
 import InputText from "../components/InputText";
 import Link from "next/link";
 import PropTypes from "prop-types";
+import React from "react";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../services/featureFlags";
@@ -38,14 +38,6 @@ export const CreateAccount = (props) => {
   const showSelfRegistration = isFeatureEnabled(
     "employerShowSelfRegistrationForm"
   );
-
-  // Temporarily prevent users from accessing this page prior to launch
-  // TODO (CP-1407): Remove this redirect logic
-  useEffect(() => {
-    if (!isFeatureEnabled("claimantShowAuth")) {
-      appLogic.portalFlow.goTo(routes.index);
-    }
-  });
 
   return (
     <form className="usa-form" onSubmit={handleSubmit}>

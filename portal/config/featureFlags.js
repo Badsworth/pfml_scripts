@@ -7,11 +7,6 @@ const flagsConfig = {
   // Define a default or all feature flags here.
   // Environments will fallback to these default values.
   defaults: {
-    // When this flag is enabled, claimant login and account creation options
-    // are visible and content reflects workers can apply for leave.
-    // TODO (CP-1407): Enable claimant auth once Portal is open for claims
-    claimantShowAuth: false,
-
     // When this flag is enabled, the user can see the "Employment status"
     // question in the claimant flow (CP-1204)
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
@@ -71,32 +66,26 @@ const flagsConfig = {
   development: {
     example: true,
     pfmlTerriyay: true,
-    claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
   },
   test: {
-    claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
   },
   stage: {
-    claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
   },
   training: {
-    claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
   },
   performance: {
-    claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
   },
   prod: {
-    claimantShowAuth: true,
     claimantShowJan1ApplicationInstructions: true,
     claimantShowMedicalLeaveType: true,
     pfmlTerriyay: true,

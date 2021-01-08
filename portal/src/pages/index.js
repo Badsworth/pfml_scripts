@@ -14,7 +14,6 @@ export const Index = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
 
-  const showAuth = isFeatureEnabled("claimantShowAuth");
   const showSelfRegistration = isFeatureEnabled(
     "employerShowSelfRegistrationForm"
   );
@@ -44,7 +43,6 @@ export const Index = (props) => {
               />
             ),
           }}
-          tOptions={{ context: showAuth ? null : "prelaunch" }}
         />
       </Title>
       <div className="margin-top-6 measure-7">
@@ -53,40 +51,22 @@ export const Index = (props) => {
         <div className="grid-row grid-gap">
           <article className="margin-bottom-3 measure-3">
             <div className="bg-base-lightest padding-3">
-              {!showAuth && (
-                <p>
-                  <Trans
-                    i18nKey="pages.index.claimantCardBodyPrelaunch"
-                    components={{
-                      "mass-how-to-apply-link": (
-                        <a href={routes.external.massgov.howToApplyPaidLeave} />
-                      ),
-                    }}
-                  />
-                </p>
-              )}
-              {showAuth && (
-                <React.Fragment>
-                  <Heading level="3">
-                    {t("pages.index.claimantHeading")}
-                  </Heading>
-                  <p>{t("pages.index.claimantCardBody")}</p>
-                  <ButtonLink
-                    href={routes.auth.createAccount}
-                    className="margin-top-3"
-                  >
-                    {t("pages.index.claimantCreateAccountButton")}
-                  </ButtonLink>
-                  <div className="margin-top-2 text-dark text-bold">
-                    {t("pages.authCreateAccount.haveAnAccountFooterLabel")}
-                    <Link href={routes.auth.login}>
-                      <a className="display-inline-block margin-left-1">
-                        {t("pages.authCreateAccount.logInFooterLink")}
-                      </a>
-                    </Link>
-                  </div>
-                </React.Fragment>
-              )}
+              <Heading level="3">{t("pages.index.claimantHeading")}</Heading>
+              <p>{t("pages.index.claimantCardBody")}</p>
+              <ButtonLink
+                href={routes.auth.createAccount}
+                className="margin-top-3"
+              >
+                {t("pages.index.claimantCreateAccountButton")}
+              </ButtonLink>
+              <div className="margin-top-2 text-dark text-bold">
+                {t("pages.authCreateAccount.haveAnAccountFooterLabel")}
+                <Link href={routes.auth.login}>
+                  <a className="display-inline-block margin-left-1">
+                    {t("pages.authCreateAccount.logInFooterLink")}
+                  </a>
+                </Link>
+              </div>
             </div>
           </article>
           {!showSelfRegistration && (

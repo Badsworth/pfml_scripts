@@ -33,7 +33,6 @@ describe("VerifyAccount", () => {
   }
 
   beforeEach(() => {
-    process.env.featureFlags = { claimantShowAuth: true };
     appLogic = useAppLogic();
     appLogic.auth.resendVerifyAccountCode.mockImplementation(() => {
       return new Promise((resolve) => {
@@ -241,20 +240,6 @@ describe("VerifyAccount", () => {
       expect(wrapper.find("Alert[name='code-resent-message']").exists()).toBe(
         false
       );
-    });
-  });
-
-  describe("when claimantShowAuth flag is disabled", () => {
-    beforeEach(() => {
-      process.env.featureFlags = { claimantShowAuth: false };
-      render();
-    });
-
-    it("render EIN field by default", () => {
-      expect(wrapper.find("InputChoiceGroup[name='isEmployer']").exists()).toBe(
-        false
-      );
-      expect(wrapper.find("ConditionalContent").prop("visible")).toBe(true);
     });
   });
 });
