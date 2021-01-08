@@ -9,21 +9,13 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import LkReferenceFileType, ReferenceFile, ReferenceFileType
+from massgov.pfml.payments.outbound_status_return import process_outbound_status_return
+from massgov.pfml.payments.outbound_vendor_customer_return import (
+    process_outbound_vendor_customer_return,
+)
+from massgov.pfml.payments.process_outbound_payment_return import process_outbound_payment_return
 
 logger = logging.get_logger(__name__)
-
-
-# TODO API-675: Remove stubs and replace the calls to these with the imported functions
-def stub_process_outbound_status_return(db_session, reference_file):
-    pass
-
-
-def stub_process_outbound_vendor_customer_return(db_session, reference_file):
-    pass
-
-
-def stub_process_outbound_payment_return(db_session, reference_file):
-    pass
 
 
 def handle_unknown_type(source_filepath: str, reference_file: ReferenceFile) -> None:
@@ -176,8 +168,8 @@ def process_ctr_outbound_returns(db_session: db.Session) -> None:
     # TODO API-675: Remove the stub function calls and replace with the imported functions
     # Question: Should the functions also accept the opened files, so that we don't have to download twice?
     for reference_file in outbound_status_return_files:
-        stub_process_outbound_status_return(db_session, reference_file)
+        process_outbound_status_return(db_session, reference_file)
     for reference_file in outbound_vendor_customer_return_files:
-        stub_process_outbound_vendor_customer_return(db_session, reference_file)
+        process_outbound_vendor_customer_return(reference_file, db_session)
     for reference_file in outbound_payment_return_files:
-        stub_process_outbound_payment_return(db_session, reference_file)
+        process_outbound_payment_return(db_session, reference_file)

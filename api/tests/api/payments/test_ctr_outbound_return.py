@@ -37,11 +37,11 @@ def create_mock_stubs(monkeypatch):
 
     mock_stub_outbound_status_return.times_called = 0
     monkeypatch.setattr(
-        "massgov.pfml.payments.ctr_outbound_return.stub_process_outbound_status_return",
+        "massgov.pfml.payments.ctr_outbound_return.process_outbound_status_return",
         mock_stub_outbound_status_return,
     )
 
-    def mock_stub_process_outbound_vendor_customer_return(db_session, reference_file):
+    def mock_stub_process_outbound_vendor_customer_return(reference_file, db_session):
         mock_stub_process_outbound_vendor_customer_return.times_called = (
             mock_stub_process_outbound_vendor_customer_return.times_called + 1
         )
@@ -53,7 +53,7 @@ def create_mock_stubs(monkeypatch):
 
     mock_stub_process_outbound_vendor_customer_return.times_called = 0
     monkeypatch.setattr(
-        "massgov.pfml.payments.ctr_outbound_return.stub_process_outbound_vendor_customer_return",
+        "massgov.pfml.payments.ctr_outbound_return.process_outbound_vendor_customer_return",
         mock_stub_process_outbound_vendor_customer_return,
     )
 
@@ -69,7 +69,7 @@ def create_mock_stubs(monkeypatch):
 
     mock_stub_process_outbound_payment_return.times_called = 0
     monkeypatch.setattr(
-        "massgov.pfml.payments.ctr_outbound_return.stub_process_outbound_payment_return",
+        "massgov.pfml.payments.ctr_outbound_return.process_outbound_payment_return",
         mock_stub_process_outbound_payment_return,
     )
 

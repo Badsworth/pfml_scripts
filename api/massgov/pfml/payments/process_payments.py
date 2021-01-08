@@ -18,14 +18,6 @@ def make_db_session() -> db.Session:
     return db.init(sync_lookups=True)
 
 
-def ctr_process():
-    """ Run the whole program """
-    audit.init_security_logging()
-    logging.init(__name__)
-
-    logger.info("Payments CTR Process placeholder ECS task")
-
-
 def fineos_process():
     """Entry point for FINEOS Payment Exports Processing"""
     audit.init_security_logging()
@@ -64,7 +56,3 @@ def _fineos_process(db_session: db.Session) -> None:
         send_fineos_error_reports(db_session)
     except Exception:
         logger.exception("Error sending FINEOS error reports")
-
-
-if __name__ == "__main__":
-    ctr_process()
