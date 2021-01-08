@@ -2,57 +2,207 @@ import dataclasses
 import os
 from datetime import date
 
-import faker
 from freezegun import freeze_time
+from pytest import raises
 
+import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.fineos_pei_writeback as writeback
+import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import PaymentReferenceFile, ReferenceFile, ReferenceFileType
-from massgov.pfml.db.models.factories import ClaimFactory, EmployerFactory, PaymentFactory
+from massgov.pfml.db.models.employees import (
+    PaymentMethod,
+    PaymentReferenceFile,
+    ReferenceFile,
+    ReferenceFileType,
+    State,
+)
+from massgov.pfml.db.models.factories import PaymentFactory
+from tests.helpers.state_log import AdditionalParams, setup_state_log
 
 
-def generate_payment(test_db_session, absence_id, extraction_date=None):
-    employer = EmployerFactory.create()
-    claim = ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id=absence_id)
-    if not extraction_date:
-        fake = faker.Faker()
-        extraction_date = fake.date_object()
-    return PaymentFactory.create(
-        claim=claim,
+def generate_extracted_payment(test_db_session):
+    payment = PaymentFactory.create(
+        fineos_pei_c_value="123", fineos_pei_i_value="456", fineos_extraction_date=date(2021, 1, 7)
+    )
+    setup_state_log(
+        associated_class=state_log_util.AssociatedClass.PAYMENT,
+        start_states=[State.PAYMENT_EXPORT_ERROR_REPORT_SENT],
+        end_states=[State.MARK_AS_EXTRACTED_IN_FINEOS],
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(payment=payment),
+    )
+    return payment
+
+
+def generate_disbursed_payment(test_db_session):
+    payment = PaymentFactory.create(
         fineos_pei_c_value="123",
         fineos_pei_i_value="456",
-        fineos_extraction_date=extraction_date,
+        fineos_extraction_date=date(2021, 1, 7),
+        disb_method_id=PaymentMethod.CHECK.payment_method_id,
+        disb_check_eft_number="11111",
+        disb_check_eft_issue_date=date(2021, 1, 6),
     )
+    setup_state_log(
+        associated_class=state_log_util.AssociatedClass.PAYMENT,
+        start_states=[State.PAYMENT_COMPLETE],
+        end_states=[State.SEND_PAYMENT_DETAILS_TO_FINEOS],
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(payment=payment),
+    )
+    return payment
+
+
+def generate_extracted_writeback_record(test_db_session):
+    return writeback.PeiWritebackRecord(
+        pei_C_value="1234",
+        pei_I_value="4567",
+        status="Active",
+        extractionDate=date(2021, 1, 7),
+        transactionStatus="Pending",
+    )
+
+
+def generate_disbursed_writeback_record(test_db_session):
+    return writeback.PeiWritebackRecord(
+        pei_C_value="1234",
+        pei_I_value="4567",
+        status="Active",
+        extractionDate=date(2020, 1, 12),
+        stockNo="5452",
+        transStatusDate=date(2020, 1, 13),
+        transactionStatus=PaymentMethod.ACH.payment_method_description,
+    )
+
+
+def test_get_records_to_writeback(test_db_session, initialize_factories_session):
+    extracted_payment_1 = generate_extracted_payment(test_db_session)
+    disbursed_payment_1 = generate_disbursed_payment(test_db_session)
+
+    payments, records = writeback.get_records_to_writeback(test_db_session)
+    assert len(records) == 2
+    assert payments[0].payment_id == extracted_payment_1.payment_id
+    assert payments[0] == extracted_payment_1
+    assert records[0] == writeback.PeiWritebackRecord(
+        pei_C_value=extracted_payment_1.fineos_pei_c_value,
+        pei_I_value=extracted_payment_1.fineos_pei_i_value,
+        status="Active",
+        extractionDate=extracted_payment_1.fineos_extraction_date,
+        transactionStatus="Pending",
+    )
+
+    assert payments[1].payment_id == disbursed_payment_1.payment_id
+    assert payments[1] == disbursed_payment_1
+    assert records[1] == writeback.PeiWritebackRecord(
+        pei_C_value=disbursed_payment_1.fineos_pei_c_value,
+        pei_I_value=disbursed_payment_1.fineos_pei_i_value,
+        status="Active",
+        extractionDate=disbursed_payment_1.fineos_extraction_date,
+        stockNo=disbursed_payment_1.disb_check_eft_number,
+        transStatusDate=disbursed_payment_1.disb_check_eft_issue_date,
+        transactionStatus=disbursed_payment_1.disb_method.payment_method_description,
+    )
+
+
+def test_get_records_both_payments_missing_fields(test_db_session, initialize_factories_session):
+    extracted_payment_1 = generate_extracted_payment(test_db_session)
+    extracted_payment_1.fineos_extraction_date = None
+    test_db_session.add(extracted_payment_1)
+    test_db_session.commit()
+
+    disbursed_payment_1 = generate_disbursed_payment(test_db_session)
+    disbursed_payment_1.disb_check_eft_issue_date = None
+    disbursed_payment_1.disb_check_eft_number = None
+    test_db_session.add(disbursed_payment_1)
+    test_db_session.commit()
+
+    payments, records = writeback.get_records_to_writeback(test_db_session)
+    assert len(records) == 0
+    assert len(payments) == 0
+
+
+def test_get_records_one_payment_missing_fields(test_db_session, initialize_factories_session):
+    extracted_payment_1 = generate_extracted_payment(test_db_session)
+
+    disbursed_payment_1 = generate_disbursed_payment(test_db_session)
+    disbursed_payment_1.disb_check_eft_issue_date = None
+    disbursed_payment_1.disb_check_eft_number = None
+    test_db_session.add(disbursed_payment_1)
+    test_db_session.commit()
+
+    disbursed_payment_2 = generate_disbursed_payment(test_db_session)
+
+    payments, records = writeback.get_records_to_writeback(test_db_session)
+    assert len(payments) == 2
+    assert len(records) == 2
+
+    assert payments[0] == extracted_payment_1
+    assert records[0] == writeback.PeiWritebackRecord(
+        pei_C_value=extracted_payment_1.fineos_pei_c_value,
+        pei_I_value=extracted_payment_1.fineos_pei_i_value,
+        status="Active",
+        extractionDate=extracted_payment_1.fineos_extraction_date,
+        transactionStatus="Pending",
+    )
+
+    assert payments[1] == disbursed_payment_2
+    assert records[1] == writeback.PeiWritebackRecord(
+        pei_C_value=disbursed_payment_2.fineos_pei_c_value,
+        pei_I_value=disbursed_payment_2.fineos_pei_i_value,
+        status="Active",
+        extractionDate=disbursed_payment_2.fineos_extraction_date,
+        stockNo=disbursed_payment_2.disb_check_eft_number,
+        transStatusDate=disbursed_payment_2.disb_check_eft_issue_date,
+        transactionStatus=disbursed_payment_2.disb_method.payment_method_description,
+    )
+
+
+def test_extracted_payment_missing_fields(test_db_session, initialize_factories_session):
+    extracted_payment = generate_extracted_payment(test_db_session)
+    extracted_payment.fineos_pei_c_value = None
+    extracted_payment.fineos_pei_i_value = None
+    extracted_payment.fineos_extraction_date = None
+
+    with raises(
+        Exception,
+        match=f"Payment {extracted_payment.payment_id} cannot be converted to PeiWritebackRecord for extracted payments because it is missing fields.",
+    ):
+        writeback._extracted_payment_to_pei_writeback_record(extracted_payment)
+
+
+def test_disbursed_payment_missing_fields(test_db_session, initialize_factories_session):
+    disbursed_payment = generate_extracted_payment(test_db_session)
+    disbursed_payment.fineos_extraction_date = None
+    disbursed_payment.disb_check_eft_number = None
+    disbursed_payment.disb_check_eft_issue_date = None
+
+    with raises(
+        Exception,
+        match=f"Payment {disbursed_payment.payment_id} cannot be converted to PeiWritebackRecord for disbursed payments because it is missing fields.",
+    ):
+        writeback._disbursed_payment_to_pei_writeback_record(disbursed_payment)
 
 
 @freeze_time("2020-12-21 12:00:01", tz_offset=5)
-def test_upload_writebacks_to_s3(
+def test_writing_writeback_csv_in_s3(
     test_db_session, set_exporter_env_vars, initialize_factories_session
 ):
-    payment_a = generate_payment(test_db_session, absence_id="NTN-01-ABS-01")
-    payment_b = generate_payment(test_db_session, absence_id="NTN-01-ABS-02")
-    payments = [payment_a, payment_b]
+    records = [
+        generate_disbursed_writeback_record(test_db_session),
+        generate_extracted_writeback_record(test_db_session),
+    ]
 
-    uploaded_filepath = writeback.upload_writeback_csv(test_db_session, payments)
-
-    expected_file_name = "2020-12-21-12-00-01-pei_writeback.csv"
-    expected_file_location = os.path.join(
-        payments_config.get_s3_config().pfml_fineos_outbound_path, "sent", expected_file_name
+    # Confirm content in the PFML FINEOS sent bucket
+    s3_dest = os.path.join(
+        payments_config.get_s3_config().pfml_fineos_outbound_path,
+        payments_util.Constants.S3_OUTBOUND_SENT_DIR,
     )
-    assert expected_file_location == uploaded_filepath
-
-    # Confirm that file is in PFML S3 bucket
-    saved_files = file_util.list_files(
-        os.path.join(payments_config.get_s3_config().pfml_fineos_outbound_path, "sent")
-    )
-    assert len(saved_files) == 1
-    assert set(saved_files) == set([expected_file_name])
-
-    # Also confirm that file is in FINEOS S3 bucket
-    saved_files = file_util.list_files(f"{payments_config.get_s3_config().fineos_data_import_path}")
-    assert len(saved_files) == 1
-    assert set(saved_files) == set([expected_file_name])
+    writeback.write_to_s3(records, test_db_session, s3_dest)
+    lines = list(file_util.read_file_lines(s3_dest))
+    assert lines[0] == ",".join([f.name for f in dataclasses.fields(writeback.PeiWritebackRecord)])
+    assert lines[1] == "1234,4567,Active,,,5452,01/12/2020,,Elec Funds Transfer,01/13/2020"
+    assert lines[2] == "1234,4567,Active,,,,01/07/2021,,Pending,"
 
 
 def test_save_writeback_reference_files(
@@ -60,14 +210,17 @@ def test_save_writeback_reference_files(
 ):
     s3_filepath = os.path.join(
         payments_config.get_s3_config().pfml_fineos_outbound_path,
-        "sent",
+        "ready",
         "2020-12-21-12-00-01-pei_writeback.csv",
     )
-    payment_a = generate_payment(test_db_session, absence_id="NTN-01-ABS-03")
-    payment_b = generate_payment(test_db_session, absence_id="NTN-01-ABS-04")
-    payments = [payment_a, payment_b]
+    payments = [
+        generate_disbursed_payment(test_db_session),
+        generate_extracted_payment(test_db_session),
+    ]
 
-    writeback.write_to_s3_and_save_reference_files(payments, test_db_session, s3_filepath)
+    writeback.save_reference_files(payments, test_db_session, s3_filepath)
+
+    # Confirm ReferenceFile is created correctly
     assert test_db_session.query(ReferenceFile).count() == 1
     saved_ref_file = test_db_session.query(ReferenceFile).first()
     assert (
@@ -75,6 +228,7 @@ def test_save_writeback_reference_files(
         == ReferenceFileType.PEI_WRITEBACK.reference_file_type_id
     )
 
+    # Confirm both PaymentReferenceFiles are created correctly
     assert test_db_session.query(PaymentReferenceFile).count() == 2
     first_payment_ref = test_db_session.query(PaymentReferenceFile).first()
     assert first_payment_ref.reference_file_id == saved_ref_file.reference_file_id
@@ -86,27 +240,44 @@ def test_save_writeback_reference_files(
 
 
 @freeze_time("2020-12-21 12:00:01", tz_offset=5)
-def test_pei_writeback_to_s3(test_db_session, set_exporter_env_vars, initialize_factories_session):
-    payment_a = generate_payment(
-        test_db_session, absence_id="NTN-01-ABS-05", extraction_date=date(2020, 12, 23)
+def test_writeback_files_uploaded_to_s3(
+    test_db_session, set_exporter_env_vars, initialize_factories_session
+):
+    writeback_records = [
+        generate_disbursed_writeback_record(test_db_session),
+        generate_extracted_writeback_record(test_db_session),
+    ]
+    payments = [
+        generate_disbursed_payment(test_db_session),
+        generate_extracted_payment(test_db_session),
+    ]
+
+    writeback.upload_writeback_csv_and_save_reference_files(
+        test_db_session, writeback_records, payments
     )
-    payment_b = generate_payment(
-        test_db_session, absence_id="NTN-01-ABS-06", extraction_date=date(2020, 12, 22)
+
+    expected_file_name = "2020-12-21-12-00-01-pei_writeback.csv"
+
+    # Confirm that file is in PFML S3 bucket
+    saved_files = file_util.list_files(
+        os.path.join(
+            payments_config.get_s3_config().pfml_fineos_outbound_path,
+            payments_util.Constants.S3_OUTBOUND_SENT_DIR,
+        )
     )
-    payments = [payment_a, payment_b]
+    assert len(saved_files) == 1
+    assert set(saved_files) == set([expected_file_name])
 
-    uploaded_filepath = writeback.upload_writeback_csv(test_db_session, payments)
+    # Also confirm that file is in FINEOS S3 bucket
+    saved_files = file_util.list_files(f"{payments_config.get_s3_config().fineos_data_import_path}")
+    assert len(saved_files) == 1
+    assert set(saved_files) == set([expected_file_name])
 
-    lines = list(file_util.read_file_lines(uploaded_filepath))
-    assert lines[0] == ",".join([f.name for f in dataclasses.fields(writeback.PeiWritebackRecord)])
-    assert lines[1] == "123,456,Active,,,,12/23/2020,,Pending,"
-    assert lines[2] == "123,456,Active,,,,12/22/2020,,Pending,"
-
-    file_name = "2020-12-21-12-00-01-pei_writeback.csv"
+    # Confirm content in the FINEOS data import bucket
     fineos_filepath = os.path.join(
-        payments_config.get_s3_config().fineos_data_import_path, file_name
+        payments_config.get_s3_config().fineos_data_import_path, expected_file_name
     )
     lines = list(file_util.read_file_lines(fineos_filepath))
     assert lines[0] == ",".join([f.name for f in dataclasses.fields(writeback.PeiWritebackRecord)])
-    assert lines[1] == "123,456,Active,,,,12/23/2020,,Pending,"
-    assert lines[2] == "123,456,Active,,,,12/22/2020,,Pending,"
+    assert lines[1] == "1234,4567,Active,,,5452,01/12/2020,,Elec Funds Transfer,01/13/2020"
+    assert lines[2] == "1234,4567,Active,,,,01/07/2021,,Pending,"

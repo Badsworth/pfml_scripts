@@ -34,6 +34,7 @@ class AdditionalParams:
     fineos_absence_id: Optional[str] = None
     ctr_vendor_customer_code: Optional[str] = None
     add_claim_payment_for_employee: bool = False
+    payment: Optional[Payment] = None
 
 
 # Utility method for creating state logs
@@ -67,7 +68,10 @@ def setup_state_log(
             fineos_absence_id=additional_params.fineos_absence_id,
             employee=employee,
         )
-        associated_model = PaymentFactory.create(payment_date=date(2020, 1, 7), claim=claim)
+        if additional_params.payment:
+            associated_model = additional_params.payment
+        else:
+            associated_model = PaymentFactory.create(payment_date=date(2020, 1, 7), claim=claim)
     if associated_class == state_log_util.AssociatedClass.REFERENCE_FILE:
         associated_model = ReferenceFileFactory.create()
 
