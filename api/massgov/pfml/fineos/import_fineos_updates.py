@@ -74,8 +74,8 @@ def handler():
                 db_session, config.fineos_folder_path, fineos_boto_session
             )
             log_entry.report = json.dumps(asdict(report), indent=2)
-    except Exception as ex:
-        logger.exception("%s", ex)
+    except Exception:
+        logger.exception("Error importing employee updates from FINEOS")
         sys.exit(1)
 
     logger.info(

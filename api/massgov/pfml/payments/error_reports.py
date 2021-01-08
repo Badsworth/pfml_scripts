@@ -113,7 +113,10 @@ def _build_file_path(working_directory: pathlib.Path, file_name: str) -> pathlib
 
 def _parse_outcome(state_log: StateLog) -> Outcome:
     if not state_log.outcome:
-        logger.warning(f"No outcome specified for state_log {state_log.state_log_id}")
+        logger.warning(
+            f"No outcome specified for state_log {state_log.state_log_id}",
+            extra={"state_log_id": state_log.state_log_id},
+        )
         return Outcome(None, GENERIC_OUTCOME_MSG)
 
     outcome = cast(Dict[str, Any], state_log.outcome)
@@ -169,7 +172,8 @@ def _get_employee_claim_payment_from_state_log(
             # This scenario shouldn't happen unless we somehow have a payment
             # not associated with an employee (but is technically possible with our DB model setup)
             logger.error(
-                f"No employee found for payment {payment.payment_id} associated with state_log {state_log.state_log_id}"
+                f"No employee found for payment {payment.payment_id} associated with state_log {state_log.state_log_id}",
+                extra={"payment_id": payment.payment_id, "state_log_id": state_log.state_log_id},
             )
             return None, None, None
 
@@ -223,7 +227,8 @@ def _get_employee_claim_payment_from_state_log(
     # if the state_log was created without using our utility which requires a Payment/Employee/ReferenceFile
     # In any case, log an error
     logger.warning(
-        f"Error report generation encountered an unexpected scenario regarding State Log {state_log.state_log_id}"
+        f"Error report generation encountered an unexpected scenario regarding State Log {state_log.state_log_id}",
+        extra={"state_log_id": state_log.state_log_id},
     )
     return None, None, None
 
@@ -336,7 +341,10 @@ def _make_simple_report(
             # Yes, this is incredibly flimsy and hacky, but
             # this will only be used for VCC/GAX error cases
             if not outcome.key:
-                logger.warning(f"No MMARS doc ID present for state_log {state_log.state_log_id}")
+                logger.warning(
+                    f"No MMARS doc ID present for state_log {state_log.state_log_id}",
+                    extra={"state_log_id": state_log.state_log_id},
+                )
             mmars_document_id = outcome.key
 
         error_report = _build_error_report(
@@ -465,8 +473,8 @@ def send_fineos_error_reports(db_session: db.Session) -> None:
         # entries to the DB. The objects are already in a finished state
         # so they don't need to be modified/directly accessed here
         db_session.commit()
-    except Exception as e:
-        logger.exception(f"Error creating FINEOS payment reports {e}")
+    except Exception:
+        logger.exception("Error creating FINEOS payment reports")
         db_session.rollback()
 
 
@@ -630,6 +638,6 @@ def send_ctr_error_reports(db_session: db.Session) -> None:
         # entries to the DB. The objects are already in a finished state
         # so they don't need to be modified/directly accessed here
         db_session.commit()
-    except Exception as e:
-        logger.exception(f"Error creating CTR payment reports: {e}")
+    except Exception:
+        logger.exception("Error creating CTR payment reports")
         db_session.rollback()

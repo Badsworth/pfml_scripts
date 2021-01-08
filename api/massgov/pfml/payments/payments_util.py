@@ -541,7 +541,7 @@ def get_inf_data_from_reference_file(
         logger.exception(
             "CtrBatchIdentifier query failed: %s",
             type(e),
-            extra={"CtrBatchIdentifier.ctr_batch_identifier_id": ctr_id, "error": e},
+            extra={"CtrBatchIdentifier.ctr_batch_identifier_id": ctr_id},
         )
     return None
 

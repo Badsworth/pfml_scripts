@@ -202,10 +202,10 @@ def handle_xml_syntax_error(
     error_filepath = file_location.replace("/received", "/error")
     try:
         rename_file(reference_file.file_location, error_filepath)
-    except Exception as inner_exception:
+    except Exception:
         logger.exception(
             f"File at location '{file_location}' could not be parsed into valid XML, and an error occurred when attempting to move to '{error_filepath}'",
-            extra={"error": inner_exception},
+            extra={"file_location": file_location, "error_filepath": error_filepath},
         )
         return
 
@@ -215,17 +215,17 @@ def handle_xml_syntax_error(
         reference_file.file_location = error_filepath
         db_session.add(reference_file)
         db_session.commit()
-    except Exception as inner_exception:
+    except Exception:
         logger.exception(
             f"File at location '{file_location}' could not be parsed into valid XML, and has been moved to '{error_filepath}', but an error occurred when saving the new location",
-            extra={"error": inner_exception},
+            extra={"file_location": file_location, "error_filepath": error_filepath},
         )
         db_session.rollback()
         return
 
     logger.exception(
         f"File at location '{file_location}' could not be parsed into valid XML, and has been moved to '{error_filepath}'",
-        extra={"error": outer_exception},
+        extra={"file_location": file_location, "error_filepath": error_filepath},
     )
 
 
@@ -270,11 +270,15 @@ def get_employee(ams_document_id: str, db_session: db.Session,) -> Optional[Empl
 
     except MultipleResultsFound:
         logger.exception(
-            f"Multiple employees found for specified CTR Document Identifier {ams_document_id}"
+            f"Multiple employees found for specified CTR Document Identifier {ams_document_id}",
+            extra={"ams_document_id": ams_document_id},
         )
 
     if not employee:
-        logger.error(f"Employee not found for AMS_DOCUMENT with DOC_ID {ams_document_id}")
+        logger.error(
+            f"Employee not found for AMS_DOCUMENT with DOC_ID {ams_document_id}",
+            extra={"ams_document_id": ams_document_id},
+        )
 
     return employee
 
@@ -318,13 +322,15 @@ def get_ctr_document_identifier(
         )
     except MultipleResultsFound:
         logger.exception(
-            f"Multiple CtrDocumentIdentifiers found for specified CTR Document Identifier {ams_document_id}"
+            f"Multiple CtrDocumentIdentifiers found for specified CTR Document Identifier {ams_document_id}",
+            extra={"ams_document_id": ams_document_id},
         )
         return ctr_document_identifier
 
     if not ctr_document_identifier:
         logger.error(
-            f"CTR_DOCUMENT_IDENTIFIER not found for AMS_DOCUMENT with DOC_ID {ams_document_id}"
+            f"CTR_DOCUMENT_IDENTIFIER not found for AMS_DOCUMENT with DOC_ID {ams_document_id}",
+            extra={"ams_document_id": ams_document_id},
         )
 
     return ctr_document_identifier
@@ -339,14 +345,20 @@ def check_dependencies(
     ams_document_id = ams_document.get("DOC_ID")
 
     if ams_document_id is None or ams_document_id == "null":
-        logger.error(f"AMS_DOCUMENT is missing DOC_ID value in file {reference_file.file_location}")
+        logger.error(
+            f"AMS_DOCUMENT is missing DOC_ID value in file {reference_file.file_location}",
+            extra={"file_location": reference_file.file_location},
+        )
         return checked_dependencies
     else:
         checked_dependencies.ams_document_id = ams_document_id
 
     vc_doc_vcust = ams_document.find("VC_DOC_VCUST")
     if not vc_doc_vcust:
-        logger.error(f"Missing VC_DOC_VCUST in AMS_DOCUMENT with DOC_ID {ams_document_id}")
+        logger.error(
+            f"Missing VC_DOC_VCUST in AMS_DOCUMENT with DOC_ID {ams_document_id}",
+            extra={"ams_document_id": ams_document_id},
+        )
         return checked_dependencies
     else:
         checked_dependencies.vc_doc_vcust = vc_doc_vcust
@@ -465,15 +477,19 @@ def validate_and_fetch_file(reference_file: ReferenceFile) -> Optional[Reference
     ):
         logger.error(
             f"Skipping processing file at location '{file_location}' because it is not of type \
-                '{ReferenceFileType.OUTBOUND_VENDOR_CUSTOMER_RETURN.reference_file_type_description}'"
+                '{ReferenceFileType.OUTBOUND_VENDOR_CUSTOMER_RETURN.reference_file_type_description}'",
+            extra={"file_location": file_location},
         )
         return outbound_vendor_customer_return_file
 
     # Retrieve file from S3 bucket
     try:
         outbound_vendor_customer_return_file = read_file(file_location)
-    except Exception as e:
-        logger.error(f"Error retrieving file from S3 at: {file_location}", extra={"error": e})
+    except Exception:
+        logger.error(
+            f"Error retrieving file from S3 at: {file_location}",
+            extra={"file_location": file_location},
+        )
 
     return outbound_vendor_customer_return_file
 
@@ -502,18 +518,18 @@ def process_outbound_vendor_customer_return(
 
         try:
             move_processed_file(reference_file)
-        except Exception as e:
+        except Exception:
             db_session.rollback()
             logger.exception(
                 f"Outbound Vendor Customer Return ReferenceFile at {reference_file.file_location} processed, but could not move the file to the processed folder in S3",
-                extra={"error": e},
+                extra={"file_location": reference_file.file_location},
             )
             return
 
         db_session.commit()
-    except Exception as exception:
+    except Exception:
         db_session.rollback()
         logger.exception(
             f"Unexpected exception processing outbound vendor customer return at {reference_file.file_location}",
-            extra={"error": exception},
+            extra={"file_location": reference_file.file_location},
         )

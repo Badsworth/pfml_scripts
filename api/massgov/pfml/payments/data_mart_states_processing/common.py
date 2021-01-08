@@ -328,7 +328,10 @@ def get_latest_state_logs_with_employees_in_state_for_processing(
     )
 
     if not state_logs_for_employees:
-        logger.info("No records in {end_state.state_description}")
+        logger.info(
+            "No records in {end_state.state_description}",
+            extra={"end_state": end_state.state_description},
+        )
         return []
 
     state_logs_for_employees_with_logging = logging.log_every(

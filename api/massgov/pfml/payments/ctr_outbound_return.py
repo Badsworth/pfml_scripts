@@ -30,15 +30,20 @@ def handle_unknown_type(source_filepath: str, reference_file: ReferenceFile) -> 
     error_filepath = source_filepath.replace("/received", "/error")
     try:
         file_util.rename_file(source_filepath, error_filepath)
-    except Exception as e:
+    except Exception:
         logger.exception(
-            f"Exception while handling ReferenceFile at {source_filepath},  could not move to {error_filepath}",
-            extra={"errors": e},
+            "Exception while handling ReferenceFile at %s, could not move to %s",
+            source_filepath,
+            error_filepath,
+            extra={"source_filepath": source_filepath, "error_filepath": error_filepath},
         )
         return
     reference_file.file_location = error_filepath
     logger.error(
-        f"Incorrect file type, or unparseable file, for file at {source_filepath}; moved to {error_filepath}"
+        "Incorrect file type, or unparseable file, for file at %s; moved to %s",
+        source_filepath,
+        error_filepath,
+        extra={"source_filepath": source_filepath, "error_filepath": error_filepath},
     )
 
 
@@ -60,12 +65,19 @@ def read_and_inspect_file(file_location: str) -> Optional[LkReferenceFileType]:
 
         return file_type
 
-    except IOError as error:
-        logger.exception(f"Unable to open S3 file: {file_location}", extra={"error": error})
-    except ET.ParseError as error:
-        logger.exception(f"Unable to parse file as xml: {file_location}", extra={"error": error})
-    except Exception as error:
-        logger.exception(f"Unexpected error handling file: {file_location}", extra={"error": error})
+    except IOError:
+        logger.exception(
+            f"Unable to open S3 file: {file_location}", extra={"file_location": file_location}
+        )
+    except ET.ParseError:
+        logger.exception(
+            f"Unable to parse file as xml: {file_location}", extra={"file_location": file_location}
+        )
+    except Exception:
+        logger.exception(
+            f"Unexpected error handling file: {file_location}",
+            extra={"file_location": file_location},
+        )
     return file_type
 
 
@@ -76,15 +88,15 @@ def get_reference_file(source_filepath: str, db_session: db.Session) -> Optional
             .filter(ReferenceFile.file_location == source_filepath)
             .one_or_none()
         )
-    except MultipleResultsFound as error:
+    except MultipleResultsFound:
         logger.exception(
             f"Found more than one ReferenceFile with the same file_location: {source_filepath}",
-            extra={"error": error},
+            extra={"source_filepath": source_filepath},
         )
-    except Exception as error:
+    except Exception:
         logger.exception(
             f"Error attempting to retrieve ReferenceFile with file_location: {source_filepath}",
-            extra={"error": error},
+            extra={"source_filepath": source_filepath},
         )
 
     return reference_file
@@ -97,8 +109,11 @@ def process_ctr_outbound_returns(db_session: db.Session) -> None:
     base_filepath = os.path.join(s3_config.pfml_ctr_inbound_path, "received")
     try:
         ctr_inbound_filenames = file_util.list_files_without_folder(base_filepath)
-    except Exception as e:
-        logger.exception(f"Error connecting to S3 folder: {base_filepath}", extra={"errors": e})
+    except Exception:
+        logger.exception(
+            f"Error connecting to S3 folder: {base_filepath}",
+            extra={"base_filepath": base_filepath},
+        )
         return
 
     outbound_status_return_files = []
@@ -107,7 +122,8 @@ def process_ctr_outbound_returns(db_session: db.Session) -> None:
 
     if len(ctr_inbound_filenames) == 0:
         logger.warning(
-            f"Did not find any files in source S3 directory: {s3_config.pfml_ctr_inbound_path}"
+            f"Did not find any files in source S3 directory: {s3_config.pfml_ctr_inbound_path}",
+            extra={"pfml_ctr_inbound_path": s3_config.pfml_ctr_inbound_path},
         )
         return
 
@@ -119,7 +135,8 @@ def process_ctr_outbound_returns(db_session: db.Session) -> None:
             reference_file = get_reference_file(source_filepath, db_session)
             if not reference_file:
                 logger.warning(
-                    f"Could not find ReferenceFile record in database for file in S3 named: {source_filepath}"
+                    f"Could not find ReferenceFile record in database for file in S3 named: {source_filepath}",
+                    extra={"source_filepath": source_filepath},
                 )
                 continue
 
@@ -148,10 +165,10 @@ def process_ctr_outbound_returns(db_session: db.Session) -> None:
 
         # commit ReferenceFile.file_location and .reference_file_type_id changes
         db_session.commit()
-    except Exception as error:
+    except Exception:
         logger.exception(
             f"An exception occurred processing files in {base_filepath}, database will not be updated",
-            extra={"error": error},
+            extra={"base_filepath": base_filepath},
         )
         db_session.rollback()
         return

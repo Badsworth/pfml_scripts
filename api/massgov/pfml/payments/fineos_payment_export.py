@@ -617,6 +617,7 @@ def process_extract_data(download_directory: pathlib.Path, db_session: db.Sessio
                 logger.warning(
                     "Found previously processed file(s) for date group still in received folder: %s",
                     date_str,
+                    extra={"date_str": date_str},
                 )
                 previously_processed_date.add(date_str)
                 continue

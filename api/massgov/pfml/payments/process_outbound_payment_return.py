@@ -115,13 +115,15 @@ def process_outbound_payment_return(db_session: db.Session, ref_file: ReferenceF
         file_location = ref_file.file_location
         file = file_util.read_file(file_location)
     except Exception as e:
-        logger.exception("Unable to open file:", extra={"error": e})
+        logger.exception("Unable to open file", extra={"file_location": ref_file.file_location})
         raise e
 
     try:
         root = ET.fromstring(file)
     except Exception as e:
-        logger.exception("XML is not properly formatted", extra={"error": e})
+        logger.exception(
+            "XML is not properly formatted", extra={"file_location": ref_file.file_location}
+        )
         # TODO: Create a row in the StateLog table for the ReferenceFile and set the state
         # to Outbound Payment Return syntax error
         payments_util.move_file_and_update_ref_file(

@@ -111,6 +111,7 @@ def process_vendor_extract_data(db_session: db.Session) -> None:
                 logger.warning(
                     "Found previously processed file(s) for date group still in received folder: %s",
                     date_str,
+                    extra={"date_str": date_str},
                 )
                 previously_processed_date.add(date_str)
                 continue
@@ -120,12 +121,12 @@ def process_vendor_extract_data(db_session: db.Session) -> None:
             process_records_to_db(extract_data, db_session)
             move_files_from_received_to_processed(extract_data, db_session)
             db_session.commit()
-        except Exception as e:
+        except Exception:
             # If there was a file-level exception anywhere in the processing,
             # we move the file from received to error
             # Add this function:
             db_session.rollback()
-            logger.exception(e)
+            logger.exception("Error processing vendor extract data")
             move_files_from_received_to_error(extract_data)
 
 
@@ -174,7 +175,10 @@ def download_file(s3_path: str, download_directory: str) -> str:
     try:
         file_util.download_from_s3(s3_path, download_location)
     except Exception as e:
-        logger.exception(e)
+        logger.exception(
+            "Error downloading file",
+            extra={"s3_path": s3_path, "download_directory": download_directory},
+        )
         raise e
 
     return download_location

@@ -390,7 +390,7 @@ def build_gax_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
 
         return (dat_filepath, inf_filepath)
     except Exception as e:
-        logger.exception("Unable to create GAX")
+        logger.exception("Unable to create GAX", extra={"ctr_outbound_path": ctr_outbound_path})
         db_session.rollback()
         raise e
 

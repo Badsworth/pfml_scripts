@@ -169,13 +169,15 @@ def process_outbound_status_return(db_session: db.Session, ref_file: ReferenceFi
         file_location = ref_file.file_location
         file = file_util.read_file(file_location)
     except Exception as e:
-        logger.exception("Unable to open file:", extra={"error": e})
+        logger.exception("Unable to open file", extra={"file_location": ref_file.file_location})
         raise e
 
     try:
         root = ET.fromstring(file)
     except Exception as e:
-        logger.exception("XML is not properly formatted", extra={"error": e})
+        logger.exception(
+            "XML is not properly formatted", extra={"file_location": ref_file.file_location}
+        )
         payments_util.move_file_and_update_ref_file(
             db_session, ref_file.file_location.replace("received", "error"), ref_file
         )

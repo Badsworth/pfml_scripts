@@ -159,11 +159,19 @@ def upload_writeback_csv_and_save_reference_files(
         )
         file_util.rename_file(pfml_pei_writeback_ready_filepath, pfml_pei_writeback_sent_filepath)
         logger.info(
-            f"Successfully renamed writeback CSV ${pfml_pei_writeback_ready_filepath} to ${pfml_pei_writeback_sent_filepath}"
+            f"Successfully renamed writeback CSV ${pfml_pei_writeback_ready_filepath} to ${pfml_pei_writeback_sent_filepath}",
+            extra={
+                "pfml_pei_writeback_ready_filepath": pfml_pei_writeback_ready_filepath,
+                "pfml_pei_writeback_sent_filepath": pfml_pei_writeback_sent_filepath,
+            },
         )
     except Exception as e:
         logger.exception(
-            f"Error moving writeback from {pfml_pei_writeback_ready_filepath} to {pfml_pei_writeback_sent_filepath}"
+            f"Error moving writeback from {pfml_pei_writeback_ready_filepath} to {pfml_pei_writeback_sent_filepath}",
+            extra={
+                "pfml_pei_writeback_ready_filepath": pfml_pei_writeback_ready_filepath,
+                "pfml_pei_writeback_sent_filepath": pfml_pei_writeback_sent_filepath,
+            },
         )
         raise e
 
@@ -173,7 +181,12 @@ def upload_writeback_csv_and_save_reference_files(
         db_session.commit()
     except Exception as e:
         logger.exception(
-            f"Error updating ReferenceFile {reference_file.reference_file_id} from {pfml_pei_writeback_ready_filepath} to {pfml_pei_writeback_sent_filepath}"
+            f"Error updating ReferenceFile {reference_file.reference_file_id} from {pfml_pei_writeback_ready_filepath} to {pfml_pei_writeback_sent_filepath}",
+            extra={
+                "reference_file_id": reference_file.reference_file_id,
+                "pfml_pei_writeback_ready_filepath": pfml_pei_writeback_ready_filepath,
+                "pfml_pei_writeback_sent_filepath": pfml_pei_writeback_sent_filepath,
+            },
         )
         raise e
 
@@ -199,10 +212,14 @@ def write_to_s3(
             )
             pei_writer.writeheader()
             pei_writer.writerows(encoded_rows)
-        logger.info(f"Successfully uploaded writeback CSV to ${s3_dest}")
+        logger.info(
+            f"Successfully uploaded writeback CSV to ${s3_dest}", extra={"s3_dest": s3_dest}
+        )
 
     except Exception as e:
-        logger.error(f"Error uploading writeback CSV to S3 bucket ${s3_dest}")
+        logger.error(
+            f"Error uploading writeback CSV to S3 bucket ${s3_dest}", extra={"s3_dest": s3_dest}
+        )
         raise e
 
 
@@ -221,7 +238,9 @@ def save_reference_files(
         )
         db_session.add(ref_file)
     except Exception as e:
-        logger.error(f"Error saving ReferenceFile for PEI writeback ${s3_dest}")
+        logger.error(
+            f"Error saving ReferenceFile for PEI writeback ${s3_dest}", extra={"s3_dest": s3_dest}
+        )
         raise e
 
     try:
@@ -231,7 +250,10 @@ def save_reference_files(
         db_session.commit()
     except Exception as e:
         db_session.rollback()
-        logger.error(f"Error saving PaymentReferenceFiles for PEI Writeback ${s3_dest}")
+        logger.error(
+            f"Error saving PaymentReferenceFiles for PEI Writeback ${s3_dest}",
+            extra={"s3_dest": s3_dest},
+        )
         raise e
 
     return ref_file
