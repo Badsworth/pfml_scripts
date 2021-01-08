@@ -184,6 +184,15 @@ locals {
       }
     },
 
+    "payments-rotate-data-mart-password" = {
+      command             = ["payments-rotate-data-mart-password"]
+      containers_template = "payments_rotate_data_mart_password_template.json"
+      task_role           = aws_iam_role.payments_ctr_process_task_role.arn
+      vars = {
+        ctr_data_mart_host     = var.ctr_data_mart_host
+        ctr_data_mart_username = var.ctr_data_mart_username
+      }
+    }
   }
 }
 

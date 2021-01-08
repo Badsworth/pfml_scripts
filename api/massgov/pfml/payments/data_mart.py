@@ -187,3 +187,21 @@ def get_vendor_info(data_mart_conn: Connection, vendor_tin: str) -> Optional[Ven
     result = results[0]
 
     return VendorInfoResult.parse_obj(dict(result.items()))
+
+
+def change_password_unsafe(
+    data_mart_conn: Connection, username: str, old_password: str, new_password: str
+) -> None:
+    """Issue ALTER LOGIN query for given user to change their password.
+
+    Due to the way ALTER LOGIN works, this function does not properly escape
+    values in the query and so should not be used with untrusted inputs.
+    """
+    if new_password == old_password:
+        return
+
+    data_mart_conn.execute(
+        sqlalchemy.text(
+            f"ALTER LOGIN [{username}] WITH PASSWORD = '{new_password}' OLD_PASSWORD = '{old_password}'"
+        ),
+    )
