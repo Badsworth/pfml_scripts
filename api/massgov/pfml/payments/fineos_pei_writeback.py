@@ -279,5 +279,5 @@ def _disbursed_payment_to_pei_writeback_record(payment: Payment) -> PeiWriteback
         extractionDate=payment.fineos_extraction_date,
         stockNo=payment.disb_check_eft_number,
         transStatusDate=payment.disb_check_eft_issue_date,
-        transactionStatus=payment.disb_method.payment_method_description,
+        transactionStatus=f"Distributed {payment.disb_method.payment_method_description}",
     )

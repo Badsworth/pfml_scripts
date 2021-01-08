@@ -72,7 +72,7 @@ def generate_disbursed_writeback_record(test_db_session):
         extractionDate=date(2020, 1, 12),
         stockNo="5452",
         transStatusDate=date(2020, 1, 13),
-        transactionStatus=PaymentMethod.ACH.payment_method_description,
+        transactionStatus=f"Distributed {PaymentMethod.ACH.payment_method_description}",
     )
 
 
@@ -101,7 +101,7 @@ def test_get_records_to_writeback(test_db_session, initialize_factories_session)
         extractionDate=disbursed_payment_1.fineos_extraction_date,
         stockNo=disbursed_payment_1.disb_check_eft_number,
         transStatusDate=disbursed_payment_1.disb_check_eft_issue_date,
-        transactionStatus=disbursed_payment_1.disb_method.payment_method_description,
+        transactionStatus=f"Distributed {disbursed_payment_1.disb_method.payment_method_description}",
     )
 
 
@@ -154,7 +154,7 @@ def test_get_records_one_payment_missing_fields(test_db_session, initialize_fact
         extractionDate=disbursed_payment_2.fineos_extraction_date,
         stockNo=disbursed_payment_2.disb_check_eft_number,
         transStatusDate=disbursed_payment_2.disb_check_eft_issue_date,
-        transactionStatus=disbursed_payment_2.disb_method.payment_method_description,
+        transactionStatus=f"Distributed {disbursed_payment_2.disb_method.payment_method_description}",
     )
 
 
@@ -201,7 +201,9 @@ def test_writing_writeback_csv_in_s3(
     writeback.write_to_s3(records, test_db_session, s3_dest)
     lines = list(file_util.read_file_lines(s3_dest))
     assert lines[0] == ",".join([f.name for f in dataclasses.fields(writeback.PeiWritebackRecord)])
-    assert lines[1] == "1234,4567,Active,,,5452,01/12/2020,,Elec Funds Transfer,01/13/2020"
+    assert (
+        lines[1] == "1234,4567,Active,,,5452,01/12/2020,,Distributed Elec Funds Transfer,01/13/2020"
+    )
     assert lines[2] == "1234,4567,Active,,,,01/07/2021,,Pending,"
 
 
@@ -279,5 +281,7 @@ def test_writeback_files_uploaded_to_s3(
     )
     lines = list(file_util.read_file_lines(fineos_filepath))
     assert lines[0] == ",".join([f.name for f in dataclasses.fields(writeback.PeiWritebackRecord)])
-    assert lines[1] == "1234,4567,Active,,,5452,01/12/2020,,Elec Funds Transfer,01/13/2020"
+    assert (
+        lines[1] == "1234,4567,Active,,,5452,01/12/2020,,Distributed Elec Funds Transfer,01/13/2020"
+    )
     assert lines[2] == "1234,4567,Active,,,,01/07/2021,,Pending,"
