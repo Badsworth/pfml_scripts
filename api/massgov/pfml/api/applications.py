@@ -153,7 +153,8 @@ def applications_update(application_id):
 
     issues = application_rules.get_application_issues(existing_application, flask.request.headers)
 
-    # Calling get_application_log_attributes too early causes the application not to update properly for some reason
+    # Set log attributes to the updated attributes rather than the previous attributes
+    # Also, calling get_application_log_attributes too early causes the application not to update properly for some reason
     # See https://github.com/EOLWD/pfml/pull/2601
     log_attributes = get_application_log_attributes(existing_application)
     logger.info("applications_update success", extra=log_attributes)
@@ -265,6 +266,8 @@ def applications_submit(application_id):
         complete_intake_issues = complete_intake(existing_application, db_session)
         if len(complete_intake_issues) == 0:
             existing_application.submitted_time = datetime_util.utcnow()
+            # Update log attributes now that submitted_time is set
+            log_attributes = get_application_log_attributes(existing_application)
             db_session.add(existing_application)
             logger.info(
                 "applications_submit - application complete intake success", extra=log_attributes
@@ -312,6 +315,8 @@ def applications_complete(application_id):
 
         if mark_documents_as_received(existing_application, db_session):
             existing_application.completed_time = datetime_util.utcnow()
+            # Update log attributes now that completed_time is set
+            log_attributes = get_application_log_attributes(existing_application)
             logger.info(
                 "applications_complete - application documents marked as received",
                 extra=log_attributes,
