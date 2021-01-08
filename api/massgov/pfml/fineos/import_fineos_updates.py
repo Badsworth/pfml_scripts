@@ -124,9 +124,17 @@ def process_fineos_updates(
     file_path = f"{folder_path}/{file}"
     csv_input = CSVSourceWrapper(file_path, transport_params={"session": boto_session})
 
+    line_count = 0
     for row in log_every(logger, csv_input, count=10, item_name="CSV row"):
+        line_count += 1
+
         report.total_employees_received_count += 1
-        process_csv_row(db_session, row, report)
+        try:
+            process_csv_row(db_session, row, report)
+        except Exception:
+            logger.exception(
+                f"Unhandled issue processing CSV row with file: {file} at line {line_count}. Continuing processing."
+            )
 
     end_time = utcnow()
     report.end = end_time.isoformat()
@@ -217,7 +225,14 @@ def process_csv_row(
         if employee_classification_id is not None:
             employee.occupation_id = employee_classification_id
 
-        employer_fineos_id = row.get("ORG_CUSTOMERNO")
+        employer_fineos_id = row.get("ORG_CUSTOMERNO", None)
+        if not employer_fineos_id.isdecimal():
+            logger.warning(
+                f"Employer has non-numeric FINEOS Customer Nbr {employer_fineos_id} for employee_id {emp_id}."
+            )
+            report.errored_employees_count += 1
+            return
+
         employer_id: Optional[str] = (
             db_session.query(Employer.employer_id)
             .filter(Employer.fineos_employer_id == employer_fineos_id)
