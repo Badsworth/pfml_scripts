@@ -1562,8 +1562,6 @@ const pages = {
       "You'll need the following information to <account-creation-link>get started</account-creation-link>:",
     leadBackground_accountCreationList:
       "<ul><li>Work email address: An email address can only be associated with one account.</li><li>Password: Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters.</li><li>Employer ID number (EIN): A 9-digit number assigned by the Internal Revenue Service. It is listed on tax returns and your payroll department should have this information.</li></ul>",
-    leadBackground_prelaunch:
-      "Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family leave for bonding with a child, with more benefits available in 2021.",
     leadMultipleCompanies:
       "If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.",
     nextStep: "We’ll send you a 6-digit code to verify your email address.",
@@ -1675,8 +1673,6 @@ const pages = {
     viewFormsTitle: "View forms and notices online",
     welcomeBody:
       "Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.",
-    welcomeBody_prelaunch:
-      "Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family leave for bonding with a child, with more benefits available in 2021.",
     welcomeTitle: "Welcome",
   },
   index: {

@@ -84,10 +84,6 @@ export const LeaveReason = (props) => {
     "claimantShowJan1ApplicationInstructions"
   );
 
-  // Medical leave type is disabled for soft launch (CP-1245)
-  // TODO (CP-1246): Remove this feature flag when the portal supports medical
-  const showMedicalLeaveType = isFeatureEnabled("claimantShowMedicalLeaveType");
-
   // Military leave types are disabled for soft launch (CP-1145)
   // TODO (CP-534): Remove this feature flag when the portal supports
   // activeDutyFamily and serviceMemberFamily
@@ -96,10 +92,8 @@ export const LeaveReason = (props) => {
   );
 
   const getChoices = () => {
-    const choices = [];
+    const choices = [choiceMedical, choiceBonding];
 
-    showMedicalLeaveType && choices.push(choiceMedical);
-    choices.push(choiceBonding);
     showMilitaryLeaveTypes &&
       choices.push(choiceActiveDutyFamily, choiceServiceMemberFamily);
 

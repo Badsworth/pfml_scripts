@@ -17,11 +17,6 @@ const flagsConfig = {
     // bonding pre/post birth/placement and medical leave
     claimantShowJan1ApplicationInstructions: false,
 
-    // When this flag is enabled, the medical leave option is selectable on
-    // the Leave Reason page in the claimant flow (CP-1245)
-    // TODO (CP-1246): Show this option when portal supports medical leave
-    claimantShowMedicalLeaveType: false,
-
     // When this flag is enabled, the military leave options are selectable on
     // the Leave Reason page in the claimant flow (CP-1145)
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
@@ -67,27 +62,21 @@ const flagsConfig = {
     example: true,
     pfmlTerriyay: true,
     claimantShowJan1ApplicationInstructions: true,
-    claimantShowMedicalLeaveType: true,
   },
   test: {
     claimantShowJan1ApplicationInstructions: true,
-    claimantShowMedicalLeaveType: true,
   },
   stage: {
     claimantShowJan1ApplicationInstructions: true,
-    claimantShowMedicalLeaveType: true,
   },
   training: {
     claimantShowJan1ApplicationInstructions: true,
-    claimantShowMedicalLeaveType: true,
   },
   performance: {
     claimantShowJan1ApplicationInstructions: true,
-    claimantShowMedicalLeaveType: true,
   },
   prod: {
     claimantShowJan1ApplicationInstructions: true,
-    claimantShowMedicalLeaveType: true,
     pfmlTerriyay: true,
   },
 };

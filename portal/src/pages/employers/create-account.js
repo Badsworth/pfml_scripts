@@ -41,7 +41,6 @@ export const CreateAccount = (props) => {
     updateFields,
   });
 
-  const showMedicalLeave = isFeatureEnabled("claimantShowMedicalLeaveType");
   const showSelfRegistration = isFeatureEnabled(
     "employerShowSelfRegistrationForm"
   );
@@ -96,11 +95,7 @@ export const CreateAccount = (props) => {
         )}
         {showSelfRegistration && (
           <React.Fragment>
-            <Lead>
-              {t("pages.employersAuthCreateAccount.leadBackground", {
-                context: showMedicalLeave ? null : "prelaunch",
-              })}
-            </Lead>
+            <Lead>{t("pages.employersAuthCreateAccount.leadBackground")}</Lead>
             <Lead>
               {t("pages.employersAuthCreateAccount.leadMultipleCompanies")}
             </Lead>

@@ -17,22 +17,7 @@ describe("Employer index", () => {
     wrapper = shallow(<Index appLogic={appLogic} />).dive();
   });
 
-  it("renders pre-launch content when claimantShowMedicalLeaveType is false", () => {
-    process.env.featureFlags = {
-      claimantShowMedicalLeaveType: false,
-    };
-
-    expect(wrapper).toMatchSnapshot();
-    wrapper
-      .find("Trans")
-      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
-  });
-
-  it("renders post-launch content when claimantShowMedicalLeaveType is true", () => {
-    process.env.featureFlags = {
-      claimantShowMedicalLeaveType: true,
-    };
-
+  it("renders page", () => {
     expect(wrapper).toMatchSnapshot();
     wrapper
       .find("Trans")

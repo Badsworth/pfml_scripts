@@ -66,30 +66,4 @@ describe("CreateAccount", () => {
       expect(wrapper.find("InputPassword").length).toEqual(0);
     });
   });
-
-  it("renders pre-launch content when claimantShowMedicalLeaveType is false", () => {
-    process.env.featureFlags = {
-      claimantShowMedicalLeaveType: false,
-    };
-
-    wrapper = shallow(<CreateAccount appLogic={appLogic} />);
-
-    expect(wrapper).toMatchSnapshot();
-    wrapper.find("Trans").forEach((trans) => {
-      expect(trans.dive()).toMatchSnapshot();
-    });
-  });
-
-  it("renders post-launch content when claimantShowMedicalLeaveType is true", () => {
-    process.env.featureFlags = {
-      claimantShowMedicalLeaveType: true,
-    };
-
-    wrapper = shallow(<CreateAccount appLogic={appLogic} />);
-
-    expect(wrapper).toMatchSnapshot();
-    wrapper.find("Trans").forEach((trans) => {
-      expect(trans.dive()).toMatchSnapshot();
-    });
-  });
 });

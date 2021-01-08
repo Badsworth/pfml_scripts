@@ -16,7 +16,6 @@ describe("LeaveReasonPage", () => {
 
     beforeEach(() => {
       process.env.featureFlags = {
-        claimantShowMedicalLeaveType: true,
         claimantShowMilitaryLeaveTypes: true,
       };
       ({ wrapper } = renderWithAppLogic(LeaveReasonPage, {
@@ -43,7 +42,6 @@ describe("LeaveReasonPage", () => {
 
     beforeEach(() => {
       process.env.featureFlags = {
-        claimantShowMedicalLeaveType: false,
         claimantShowMilitaryLeaveTypes: false,
       };
       ({ wrapper } = renderWithAppLogic(LeaveReasonPage, {
@@ -51,12 +49,10 @@ describe("LeaveReasonPage", () => {
       }));
     });
 
-    it("renders the page with only the bonding reason", () => {
+    it("renders the page without military leave options", () => {
       const choiceGroup = wrapper.find("InputChoiceGroup").first().dive();
 
-      expect(choiceGroup.exists(`[value="${LeaveReason.medical}"]`)).toBe(
-        false
-      );
+      expect(choiceGroup.exists(`[value="${LeaveReason.medical}"]`)).toBe(true);
       expect(choiceGroup.exists(`[value="${LeaveReason.bonding}"]`)).toBe(true);
       expect(
         choiceGroup.exists(`[value="${LeaveReason.activeDutyFamily}"]`)
