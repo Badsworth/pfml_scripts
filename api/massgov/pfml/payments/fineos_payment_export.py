@@ -526,35 +526,43 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             _setup_state_log(payment, False, validation_container, db_session)
 
 
+# TODO move to payments_util
 def move_files_from_received_to_processed(
     extract_data: ExtractData, db_session: db.Session
 ) -> None:
     # Effectively, this method will move a file of path:
-    # s3://bucket/path/to/received/2020-01-01-file.csv
+    # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
     # to
-    # s3://bucket/path/to/processed/2020-01-01/2020-01-01-file.csv
+    # s3://bucket/path/to/processed/2020-01-01-11-30-00-payment-export/2020-01-01-11-30-00-file.csv
+    date_group_folder = payments_util.get_date_group_folder_name(
+        extract_data.date_str, ReferenceFileType.PAYMENT_EXTRACT
+    )
     new_pei_s3_path = extract_data.pei.file_location.replace(
-        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{extract_data.date_str}"
+        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
 
     new_payment_s3_path = extract_data.payment_details.file_location.replace(
-        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{extract_data.date_str}"
+        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
 
     new_claim_s3_path = extract_data.claim_details.file_location.replace(
-        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{extract_data.date_str}"
+        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
 
     # Update the reference file DB record to point to the new folder for these files
     extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
-        RECEIVED_FOLDER, PROCESSED_FOLDER
+        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}"
+    )
+    extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
+        extract_data.date_str, date_group_folder
     )
     db_session.add(extract_data.reference_file)
 
 
+# TODO move to payments_util
 def move_files_from_received_to_error(
     extract_data: Optional[ExtractData], db_session: db.Session
 ) -> None:
@@ -562,21 +570,24 @@ def move_files_from_received_to_error(
         logger.error("Cannot move files to error directory, as path is not known")
         return
     # Effectively, this method will move a file of path:
-    # s3://bucket/path/to/received/2020-01-01-file.csv
+    # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
     # to
-    # s3://bucket/path/to/error/2020-01-01/2020-01-01-file.csv
+    # s3://bucket/path/to/error/2020-01-01-11-30-00-payment-export/2020-01-01-file.csv
+    date_group_folder = payments_util.get_date_group_folder_name(
+        extract_data.date_str, ReferenceFileType.PAYMENT_EXTRACT
+    )
     new_pei_s3_path = extract_data.pei.file_location.replace(
-        "received", f"error/{extract_data.date_str}"
+        "received", f"error/{date_group_folder}"
     )
     file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
 
     new_payment_s3_path = extract_data.payment_details.file_location.replace(
-        "received", f"error/{extract_data.date_str}"
+        "received", f"error/{date_group_folder}"
     )
     file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
 
     new_claim_s3_path = extract_data.claim_details.file_location.replace(
-        "received", f"error/{extract_data.date_str}"
+        "received", f"error/{date_group_folder}"
     )
     file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
 

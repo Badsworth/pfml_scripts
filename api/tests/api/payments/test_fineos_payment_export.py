@@ -255,7 +255,7 @@ def test_process_extract_data(
 
     # Make sure files were copied to the processed directory
     moved_files = file_util.list_files(
-        f"s3://{mock_s3_bucket}/cps/inbound/processed/2020-01-01-11-30-00/"
+        f"s3://{mock_s3_bucket}/cps/inbound/processed/{payments_util.get_date_group_folder_name('2020-01-01-11-30-00', ReferenceFileType.PAYMENT_EXTRACT)}/"
     )
     assert len(moved_files) == 3
 
@@ -308,7 +308,7 @@ def test_process_extract_data(
         reference_file = reference_files[0].reference_file
         assert (
             reference_file.file_location
-            == "s3://test_bucket/cps/inbound/processed/2020-01-01-11-30-00"
+            == "s3://test_bucket/cps/inbound/processed/2020-01-01-11-30-00-payment-export"
         )
         assert (
             reference_file.reference_file_type_id
@@ -446,13 +446,21 @@ def test_process_extract_unprocessed_folder_files(
     # add reference files for processed folders
     ReferenceFileFactory.create(
         file_location=os.path.join(
-            get_s3_config().pfml_fineos_inbound_path, "processed", "2020-01-01-11-30-00"
+            get_s3_config().pfml_fineos_inbound_path,
+            "processed",
+            payments_util.get_date_group_folder_name(
+                "2020-01-01-11-30-00", ReferenceFileType.PAYMENT_EXTRACT
+            ),
         ),
         reference_file_type_id=ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id,
     )
     ReferenceFileFactory.create(
         file_location=os.path.join(
-            get_s3_config().pfml_fineos_inbound_path, "processed", "2020-01-03-11-30-00"
+            get_s3_config().pfml_fineos_inbound_path,
+            "processed",
+            payments_util.get_date_group_folder_name(
+                "2020-01-03-11-30-00", ReferenceFileType.PAYMENT_EXTRACT
+            ),
         ),
         reference_file_type_id=ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id,
     )
@@ -460,22 +468,27 @@ def test_process_extract_unprocessed_folder_files(
     # confirm all unprocessed files were downloaded
     download_directory_1 = get_download_directory(tmp_path, "directory_1")
     exporter.process_extract_data(download_directory_1, test_db_session)
-    downloaded_files = file_util.list_files(str(download_directory_1))
-    assert len(downloaded_files) == 6
+    destination_folder = os.path.join(
+        get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+    )
+    processed_files = file_util.list_files(destination_folder, recursive=True)
+    assert len(processed_files) == 6
 
     expected_file_names = []
     for date_file in ["vpei.csv", "vpeipaymentdetails.csv", "vpeiclaimdetails.csv"]:
         for unprocessed_date in ["2020-01-02-11-30-00", "2020-01-04-11-30-00"]:
-            expected_file_names.append(f"{unprocessed_date}-{date_file}")
+            expected_file_names.append(
+                f"{payments_util.get_date_group_folder_name(unprocessed_date, ReferenceFileType.PAYMENT_EXTRACT)}/{unprocessed_date}-{date_file}"
+            )
 
-    for downloaded_file in downloaded_files:
-        assert downloaded_file in expected_file_names
+    for processed_file in processed_files:
+        assert processed_file in expected_file_names
 
-    # confirm no files were downloaded on repeat run
-    download_directory_2 = get_download_directory(tmp_path, "directory_2")
-    exporter.process_extract_data(download_directory_2, test_db_session)
-    downloaded_files = file_util.list_files(str(download_directory_2))
-    assert len(downloaded_files) == 0
+    # confirm no files will be copied in a subsequent copy
+    copied_files = payments_util.copy_fineos_data_to_archival_bucket(
+        test_db_session, exporter.expected_file_names, ReferenceFileType.PAYMENT_EXTRACT
+    )
+    assert not copied_files
 
 
 def test_process_extract_data_no_existing_claim_address_eft(

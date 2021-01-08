@@ -79,6 +79,21 @@ def test_get_date_group_str_from_path(path, date_group):
     assert payments_util.get_date_group_str_from_path(path) == date_group
 
 
+def test_get_date_group_folder_name():
+    assert (
+        payments_util.get_date_group_folder_name(
+            "2020-12-01-11-30-00", ReferenceFileType.PAYMENT_EXTRACT
+        )
+        == "2020-12-01-11-30-00-payment-export"
+    )
+    assert (
+        payments_util.get_date_group_folder_name(
+            "2020-12-01-11-30-00", ReferenceFileType.VENDOR_CLAIM_EXTRACT
+        )
+        == "2020-12-01-11-30-00-vendor-export"
+    )
+
+
 def test_payment_extract_reference_file_exists_by_date_group(
     test_db_session, initialize_factories_session, set_exporter_env_vars
 ):
@@ -91,7 +106,7 @@ def test_payment_extract_reference_file_exists_by_date_group(
     file_location = os.path.join(
         payments_config.get_s3_config().pfml_fineos_inbound_path,
         payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
-        date_group,
+        payments_util.get_date_group_folder_name(date_group, ReferenceFileType.PAYMENT_EXTRACT),
     )
     ReferenceFileFactory.create(
         file_location=file_location,

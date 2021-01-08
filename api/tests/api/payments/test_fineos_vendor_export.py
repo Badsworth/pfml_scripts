@@ -232,7 +232,9 @@ def test_process_extract_unprocessed_folder_files(
         file_location=os.path.join(
             get_s3_config().pfml_fineos_inbound_path,
             payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
-            "2020-01-01-11-30-00",
+            payments_util.get_date_group_folder_name(
+                "2020-01-01-11-30-00", ReferenceFileType.VENDOR_CLAIM_EXTRACT
+            ),
         ),
         reference_file_type_id=ReferenceFileType.VENDOR_CLAIM_EXTRACT.reference_file_type_id,
     )
@@ -240,7 +242,9 @@ def test_process_extract_unprocessed_folder_files(
         file_location=os.path.join(
             get_s3_config().pfml_fineos_inbound_path,
             payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
-            "2020-01-03-11-30-00",
+            payments_util.get_date_group_folder_name(
+                "2020-01-03-11-30-00", ReferenceFileType.VENDOR_CLAIM_EXTRACT
+            ),
         ),
         reference_file_type_id=ReferenceFileType.VENDOR_CLAIM_EXTRACT.reference_file_type_id,
     )
@@ -256,7 +260,9 @@ def test_process_extract_unprocessed_folder_files(
     expected_file_names = []
     for date_file in vendor_export.expected_file_names:
         for unprocessed_date in ["2020-01-02-11-30-00", "2020-01-04-11-30-00"]:
-            expected_file_names.append(f"{unprocessed_date}/{unprocessed_date}-{date_file}")
+            expected_file_names.append(
+                f"{payments_util.get_date_group_folder_name(unprocessed_date, ReferenceFileType.VENDOR_CLAIM_EXTRACT)}/{unprocessed_date}-{date_file}"
+            )
 
     for processed_file in processed_files:
         assert processed_file in expected_file_names

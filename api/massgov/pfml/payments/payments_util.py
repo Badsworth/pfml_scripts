@@ -307,13 +307,27 @@ def get_date_group_str_from_path(path: str) -> Optional[str]:
     return date_group_str
 
 
+def get_date_group_folder_name(date_group: str, reference_file_type: LkReferenceFileType) -> str:
+    if (
+        not reference_file_type.reference_file_type_description
+    ):  # TODO remove when lookup descriptions are non nullable
+        return ""
+
+    reference_file_type_folder_postfix = reference_file_type.reference_file_type_description.lower().replace(
+        " ", "-"
+    )
+
+    date_group_folder = f"{date_group}-{reference_file_type_folder_postfix}"
+    return date_group_folder
+
+
 def payment_extract_reference_file_exists_by_date_group(
     db_session: db.Session, date_group: str, export_type: LkReferenceFileType
 ) -> bool:
     path = os.path.join(
         payments_config.get_s3_config().pfml_fineos_inbound_path,
         Constants.S3_INBOUND_PROCESSED_DIR,
-        date_group,
+        get_date_group_folder_name(date_group, export_type),
     )
     reference_file = (
         db_session.query(ReferenceFile)

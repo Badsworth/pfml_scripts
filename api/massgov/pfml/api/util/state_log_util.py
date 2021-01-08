@@ -43,14 +43,14 @@ def get_now() -> datetime:
 
 
 def _create_or_update_latest_state_log(
-    state_log: StateLog, latest_query_params: Optional[List], db_session: db.Session
+    state_log: StateLog, latest_query_params: List, db_session: db.Session
 ) -> None:
     # Grab the latest state log and if it exists
     # add a pointer back to the previous most recent state log
 
     latest_state_log = None
     # In some cases, we know this is the first one (eg. from create_state_log_without_associated_model)
-    if latest_query_params is not None:
+    if latest_query_params:
         latest_state_log = (
             db_session.query(LatestStateLog).filter(*latest_query_params).one_or_none()
         )
@@ -157,7 +157,7 @@ def create_state_log_without_associated_model(
     )
     db_session.add(state_log)
 
-    _create_or_update_latest_state_log(state_log, None, db_session)
+    _create_or_update_latest_state_log(state_log, [], db_session)
 
     if commit:
         db_session.commit()

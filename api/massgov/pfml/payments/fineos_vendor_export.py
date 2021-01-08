@@ -560,27 +560,31 @@ def generate_employee_reference_file(
         # If payment method is EFT, then we also need a state log entry that starts in EFT_DETECTED_IN_VENDOR_EXPORT and ends in EFT_REQUEST_RECEIVED
 
 
+# TODO move to payments_util
 def move_files_from_received_to_processed(
     extract_data: ExtractData, db_session: db.Session
 ) -> None:
     # Effectively, this method will move a file of path:
-    # s3://bucket/path/to/received/2020-01-01-file.csv
+    # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
     # to
-    # s3://bucket/path/to/processed/2020-01-01/2020-01-01-file.csv
+    # s3://bucket/path/to/processed/2020-01-01-11-30-00-payment-export/2020-01-01-11-30-00-file.csv
+    date_group_folder = payments_util.get_date_group_folder_name(
+        extract_data.date_str, ReferenceFileType.VENDOR_CLAIM_EXTRACT
+    )
     new_requested_absence_info_s3_path = extract_data.requested_absence_info.file_location.replace(
-        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{extract_data.date_str}"
+        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(
         extract_data.requested_absence_info.file_location, new_requested_absence_info_s3_path
     )
 
     new_employee_feed_s3_path = extract_data.employee_feed.file_location.replace(
-        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{extract_data.date_str}"
+        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.employee_feed.file_location, new_employee_feed_s3_path)
 
     new_leave_plan_info_s3_path = extract_data.leave_plan_info.file_location.replace(
-        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{extract_data.date_str}"
+        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.leave_plan_info.file_location, new_leave_plan_info_s3_path)
 
@@ -588,27 +592,34 @@ def move_files_from_received_to_processed(
     extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
         RECEIVED_FOLDER, PROCESSED_FOLDER
     )
+    extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
+        extract_data.date_str, date_group_folder
+    )
     db_session.add(extract_data.reference_file)
 
 
+# TODO move to payments_util
 def move_files_from_received_to_error(extract_data: ExtractData) -> None:
     # Effectively, this method will move a file of path:
     # s3://bucket/path/to/received/2020-01-01-file.csv
     # to
     # s3://bucket/path/to/errored/2020-01-01/2020-01-01-file.csv
+    date_group_folder = payments_util.get_date_group_folder_name(
+        extract_data.date_str, ReferenceFileType.VENDOR_CLAIM_EXTRACT
+    )
     new_requested_absence_info_s3_path = extract_data.requested_absence_info.file_location.replace(
-        RECEIVED_FOLDER, f"{ERRORED_FOLDER}/{extract_data.date_str}"
+        RECEIVED_FOLDER, f"{date_group_folder}"
     )
     file_util.rename_file(
         extract_data.requested_absence_info.file_location, new_requested_absence_info_s3_path
     )
 
     new_employee_feed_s3_path = extract_data.employee_feed.file_location.replace(
-        RECEIVED_FOLDER, f"{ERRORED_FOLDER}/{extract_data.date_str}"
+        RECEIVED_FOLDER, f"{ERRORED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.employee_feed.file_location, new_employee_feed_s3_path)
 
     new_leave_plan_info_s3_path = extract_data.leave_plan_info.file_location.replace(
-        RECEIVED_FOLDER, f"{ERRORED_FOLDER}/{extract_data.date_str}"
+        RECEIVED_FOLDER, f"{ERRORED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.leave_plan_info.file_location, new_leave_plan_info_s3_path)

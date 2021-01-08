@@ -1308,8 +1308,8 @@ class ReferenceFileType(LookupTable):
 
     GAX = LkReferenceFileType(1, "GAX", 2)
     VCC = LkReferenceFileType(2, "VCC", 2)
-    PAYMENT_EXTRACT = LkReferenceFileType(3, "Payment extract", 3)
-    VENDOR_CLAIM_EXTRACT = LkReferenceFileType(4, "Vendor claim extract", 3)
+    PAYMENT_EXTRACT = LkReferenceFileType(3, "Payment export", 3)
+    VENDOR_CLAIM_EXTRACT = LkReferenceFileType(4, "Vendor export", 3)
     DUA_CLAIMANT_LIST = LkReferenceFileType(5, "DUA claimant list", 1)
     DIA_CLAIMANT_LIST = LkReferenceFileType(6, "DIA claimant list", 1)
     DUA_PAYMENT_LIST = LkReferenceFileType(7, "DUA payment list", 1)

@@ -15,7 +15,8 @@ from datetime import datetime, timedelta
 from typing import Dict
 
 import massgov.pfml.db as db
-import massgov.pfml.util.logging
+import massgov.pfml.util.files as file_util
+import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
@@ -37,7 +38,7 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.payments.fineos_payment_export import CiIndex
 
-logger = massgov.pfml.util.logging.get_logger(__name__)
+logger = logging.get_logger(__name__)
 
 
 def ssn_validator(arg):
@@ -65,6 +66,7 @@ parser.add_argument(
 parser.add_argument("--ssn", type=ssn_validator, default=250000000, help="Base SSN for employees")
 
 # == CSV file constants
+# TODO use file name contats in payment and vendor modules
 PEI_FILE_NAME = "vpei.csv"
 PEI_PAYMENT_DETAILS_FILE_NAME = "vpeipaymentdetails.csv"
 PEI_CLAIM_DETAILS_FILE_NAME = "vpeiclaimdetails.csv"
@@ -143,17 +145,18 @@ class FineosPaymentsExportCsvWriter:
 
 @dataclass
 class GenerateConfig:
-    employee_count: int
     folder_path: str
-    ssn_id_base: int
-    fein_id_base: int
+    employee_count: int = 10
+    ssn_id_base: int = 100000000
+    fein_id_base: int = 250000000
+    random_seed: int = 1111
 
 
 def _create_files(folder_path: str, date_prefix: str) -> Dict[str, FineosPaymentsExportCsvWriter]:
     file_name_to_fineos_payment_file_info = {}
     for file_name, column_names in FINEOS_PAYMENT_EXPORT_FILES.items():
         csv_file_path = os.path.join(folder_path, f"{date_prefix}{file_name}")
-        csv_file = open(csv_file_path, mode="w")
+        csv_file = file_util.write_file(csv_file_path, mode="w")
         csv_writer = csv.DictWriter(csv_file, fieldnames=column_names)
         csv_writer.writeheader()
 
@@ -179,12 +182,14 @@ def _create_db_models(
 
     mailing_address = AddressFactory.create()
 
-    ctr_address_pair = CtrAddressPairFactory(fineos_address=mailing_address)
+    ctr_address_pair = CtrAddressPairFactory.create(fineos_address=mailing_address)
     employee = EmployeeFactory.create(
         tax_identifier=TaxIdentifier(tax_identifier=ssn), ctr_address_pair=ctr_address_pair, eft=eft
     )
 
-    employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
+    employee.addresses = [
+        EmployeeAddress(employee_id=employee.employee_id, address_id=mailing_address.address_id)
+    ]
 
     employer = EmployerFactory.create(employer_fein=fein, fineos_employer_id=fineos_employer_id)
     claim = ClaimFactory.create(
@@ -211,7 +216,7 @@ def _generate_single_fineos_payment_row(
 
     # PEI File
     is_eft = employee.eft is not None
-    address = employee.addresses.all()[0].address
+    address = employee.ctr_address_pair.fineos_address
 
     payment_date = datetime.now()
     vpei_row = OrderedDict()
@@ -283,7 +288,7 @@ def _generate_single_fineos_vendor_row(
 
     # shared variables
     is_eft = employee.eft is not None
-    address = employee.addresses.all()[0].address
+    address = employee.ctr_address_pair.fineos_address
 
     # Requested Absence file
     application_date = datetime.now()
@@ -352,8 +357,11 @@ def _generate_single_fineos_vendor_row(
 
 
 def generate(db_session: db.Session, config: GenerateConfig):
+    random.seed(config.random_seed)
+
     try:
         date_prefix = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-")
+
         file_name_to_file_info: Dict[str, FineosPaymentsExportCsvWriter] = _create_files(
             config.folder_path, date_prefix
         )
@@ -419,10 +427,10 @@ def generate(db_session: db.Session, config: GenerateConfig):
 
 
 def main():
-    massgov.pfml.util.logging.init(__name__)
+    logging.init(__name__)
 
-    db_session = massgov.pfml.db.init(sync_lookups=True)
-    massgov.pfml.db.models.factories.db_session = db_session
+    db_session = db.init(sync_lookups=True)
+    db.models.factories.db_session = db_session
 
     args = parser.parse_args()
     folder_path = args.folder
