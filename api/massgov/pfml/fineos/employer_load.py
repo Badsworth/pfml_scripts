@@ -28,6 +28,7 @@ def parse_args():
         "--process-id",
         help="Identifier for the update process task. Need when multiple tasks are running simultaneously.",
         type=int,
+        default=1,
     )
     return parser.parse_args()
 
