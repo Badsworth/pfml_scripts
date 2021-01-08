@@ -76,6 +76,7 @@ const errors = {
   claims: {
     date_of_birth: {
       date: "Date of birth must include a month, day, and year.",
+      format: "Date of birth must include a month, day, and year.",
       invalid_age: "The person taking leave must be at least 14 years old.",
       invalid_year_range: `Date of birth year must be on or after ${
         new Date().getFullYear() - 100
@@ -93,6 +94,8 @@ const errors = {
       benefit_end_date: {
         date:
           "Date you stop receiving this benefit must include a day, month, and year.",
+        format:
+          "Date you stop receiving this benefit must include a day, month, and year.",
         invalid_date_range:
           "Date you stop using this benefit must be on or after the date you start using this benefit.",
         minimum: "Benefit end date must be after December 31, 2020",
@@ -100,6 +103,8 @@ const errors = {
       },
       benefit_start_date: {
         date:
+          "Date you start receiving this benefit must include a day, month, and year.",
+        format:
           "Date you start receiving this benefit must include a day, month, and year.",
         minimum: "Benefit start date must be after December 31, 2020",
         required: "Enter the date you will start using this benefit.",
@@ -167,21 +172,25 @@ const errors = {
     leave_details: {
       child_birth_date: {
         date: "Date of birth must include a month, day, and year.",
+        format: "Date of birth must include a month, day, and year.",
         required: "Enter your child’s date of birth or due date.",
       },
       child_placement_date: {
         date: "Placement date must include a month, day, and year.",
+        format: "Placement date must include a month, day, and year.",
         required: "Enter the date your child arrived in your home.",
       },
       continuous_leave_periods: {
         end_date: {
           date: "End date must include a month, day, and year.",
+          format: "End date must include a month, day, and year.",
           minimum:
             "Last day of leave must be on or after the first day of leave.",
           required: "Enter the last day of your continuous leave.",
         },
         start_date: {
           date: "Start date must include a month, day, and year.",
+          format: "Start date must include a month, day, and year.",
           minimum:
             "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December$t(chars.nbsp)31,$t(chars.nbsp)2020.",
           required: "Enter the first day of your continuous leave.",
@@ -189,6 +198,8 @@ const errors = {
       },
       employer_notification_date: {
         date:
+          "Date you notified your employer must include a day, month, and year.",
+        format:
           "Date you notified your employer must include a day, month, and year.",
         minimum:
           "Year you notified your employer must be within the past two years.",
@@ -212,6 +223,7 @@ const errors = {
         },
         end_date: {
           date: "End date must include a month, day, and year.",
+          format: "End date must include a month, day, and year.",
           minimum:
             "Last day of leave must be on or after the first day of leave.",
           required: "Enter the last day of your intermittent leave.",
@@ -226,6 +238,7 @@ const errors = {
         },
         start_date: {
           date: "Start date must include a month, day, and year.",
+          format: "Start date must include a month, day, and year.",
           minimum:
             "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December$t(chars.nbsp)31,$t(chars.nbsp)2020.",
           required: "Enter the first day of your intermittent leave.",
@@ -245,6 +258,7 @@ const errors = {
       reduced_schedule_leave_periods: {
         end_date: {
           date: "End date must include a month, day, and year.",
+          format: "End date must include a month, day, and year.",
           minimum:
             "Last day of leave must be on or after the first day of leave.",
           required: "Enter the last day of your reduced leave schedule.",
@@ -266,6 +280,7 @@ const errors = {
         },
         start_date: {
           date: "Start date must include a month, day, and year.",
+          format: "Start date must include a month, day, and year.",
           minimum:
             "Paid Family and Medical Leave cannot be taken before Jan 1, 2021. Enter a date after December$t(chars.nbsp)31,$t(chars.nbsp)2020.",
           required: "Enter the first day of your reduced leave schedule.",
@@ -325,6 +340,8 @@ const errors = {
       income_end_date: {
         date:
           "Date you stop receiving this income must include a day, month, and year.",
+        format:
+          "Date you stop receiving this income must include a day, month, and year.",
         invalid_date_range:
           "Date you stop receiving this income must be on or after the date you start receiving this income.",
         minimum: "Income end date must be after December 31, 2020",
@@ -332,6 +349,8 @@ const errors = {
       },
       income_start_date: {
         date:
+          "Date you start receiving this income must include a day, month, and year.",
+        format:
           "Date you start receiving this income must include a day, month, and year.",
         minimum: "Income start date must be after December 31, 2020",
         required: "Enter the date you will start receiving this income.",
@@ -376,6 +395,7 @@ const errors = {
       },
       leave_end_date: {
         date: "Date your leave ended must include a day, month, and year.",
+        format: "Date your leave ended must include a day, month, and year.",
         invalid_date_range:
           "Date your leave ends must be on or after the date your leave began.",
         minimum: "Leave end date must be after December 31, 2020",
@@ -386,6 +406,7 @@ const errors = {
       },
       leave_start_date: {
         date: "Date your leave began must include a day, month, and year.",
+        format: "Date your leave began must include a day, month, and year.",
         minimum: "Leave start date must be after December 31, 2020",
         required: "Enter the date your leave began.",
       },
@@ -460,11 +481,13 @@ const errors = {
       },
       benefit_end_date: {
         date: "End date must include a day, month, and year.",
+        format: "End date must include a day, month, and year.",
         minimum:
           "Last day of benefit must be on or after the first day of benefit.",
       },
       benefit_start_date: {
         date: "Start date must include a day, month, and year.",
+        format: "Start date must include a day, month, and year.",
       },
     },
     hours_worked_per_week: {
@@ -479,11 +502,13 @@ const errors = {
     previous_leaves: {
       leave_start_date: {
         date: "Start date must include a day, month, and year.",
+        format: "Start date must include a day, month, and year.",
         invalid_previous_leave_start_date:
           "Paid leave cannot be taken before January 1, 2021. Enter a date after December 31, 2020.",
       },
       leave_end_date: {
         date: "End date must include a day, month, and year.",
+        format: "End date must include a day, month, and year.",
         minimum:
           "Last day of leave must be on or after the first day of leave.",
       },
