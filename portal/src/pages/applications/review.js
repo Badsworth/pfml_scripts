@@ -102,7 +102,10 @@ export const Review = (props) => {
 
   const steps = Step.createClaimStepsFromMachine(
     claimantConfigs,
-    { claim: props.claim },
+    {
+      claim: props.claim,
+      showOtherLeaveStep: isFeatureEnabled("claimantShowOtherLeaveStep"),
+    },
     null
   );
 
