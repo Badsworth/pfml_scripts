@@ -18,8 +18,15 @@ export const EmployerBenefits = (props) => {
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
-  const handleSave = () =>
+  const handleSave = () => {
+    if (
+      formState.has_employer_benefits === false &&
+      claim.employer_benefits.length
+    ) {
+      formState.employer_benefits = null;
+    }
     appLogic.claims.update(claim.application_id, formState);
+  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,

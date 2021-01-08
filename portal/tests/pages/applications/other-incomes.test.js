@@ -4,12 +4,11 @@ import {
   simulateEvents,
 } from "../../test-utils";
 import OtherIncomes from "../../../src/pages/applications/other-incomes";
-import { act } from "react-dom/test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("OtherIncomes", () => {
-  let appLogic, claim, wrapper;
+  let appLogic, changeRadioGroup, claim, submitForm, wrapper;
 
   beforeEach(() => {
     claim = new MockClaimBuilder().continuous().otherIncome().create();
@@ -17,6 +16,8 @@ describe("OtherIncomes", () => {
     ({ appLogic, wrapper } = renderWithAppLogic(OtherIncomes, {
       claimAttrs: claim,
     }));
+
+    ({ changeRadioGroup, submitForm } = simulateEvents(wrapper));
   });
 
   it("renders the page", () => {
@@ -28,14 +29,10 @@ describe("OtherIncomes", () => {
   // that making a selection calls handleHasOtherIncomesChange() and updates
   // both fields to the expected values.
   describe("when user selects a radio and clicks continue", () => {
-    it("calls claims.update with expected API fields when user selects Yes", () => {
-      const { changeRadioGroup } = simulateEvents(wrapper);
-
+    it("calls claims.update with expected API fields when user selects Yes", async () => {
       changeRadioGroup("has_other_incomes", "yes");
 
-      act(() => {
-        wrapper.find("QuestionPage").simulate("save");
-      });
+      await submitForm();
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         claim.application_id,
@@ -46,32 +43,25 @@ describe("OtherIncomes", () => {
       );
     });
 
-    it("calls claims.update with expected API fields when user selects No", () => {
-      const { changeRadioGroup } = simulateEvents(wrapper);
-
+    it("calls claims.update with expected API fields when user selects No", async () => {
       changeRadioGroup("has_other_incomes", "no");
 
-      act(() => {
-        wrapper.find("QuestionPage").simulate("save");
-      });
+      await submitForm();
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           other_incomes_awaiting_approval: false,
+          other_incomes: null,
           has_other_incomes: false,
         }
       );
     });
 
-    it("calls claims.update with expected API fields when user selects Not Yet", () => {
-      const { changeRadioGroup } = simulateEvents(wrapper);
-
+    it("calls claims.update with expected API fields when user selects Not Yet", async () => {
       changeRadioGroup("has_other_incomes", "pending");
 
-      act(() => {
-        wrapper.find("QuestionPage").simulate("save");
-      });
+      await submitForm();
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         claim.application_id,

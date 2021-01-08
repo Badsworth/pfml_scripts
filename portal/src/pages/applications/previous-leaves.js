@@ -21,8 +21,15 @@ export const PreviousLeaves = (props) => {
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
-  const handleSave = () =>
+  const handleSave = () => {
+    if (
+      formState.has_previous_leaves === false &&
+      claim.previous_leaves.length
+    ) {
+      formState.previous_leaves = null;
+    }
     appLogic.claims.update(claim.application_id, formState);
+  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,

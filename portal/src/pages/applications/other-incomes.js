@@ -34,10 +34,14 @@ export const OtherIncomes = (props) => {
         other_incomes_awaiting_approval: false,
       });
     } else if (event.target.value === "no") {
-      updateFields({
+      const fieldValues = {
         has_other_incomes: false,
         other_incomes_awaiting_approval: false,
-      });
+      };
+      if (claim.other_incomes.length) {
+        fieldValues.other_incomes = null;
+      }
+      updateFields(fieldValues);
     } else if (event.target.value === "pending") {
       updateFields({
         has_other_incomes: false,
