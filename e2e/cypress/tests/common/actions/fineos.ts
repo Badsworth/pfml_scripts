@@ -1,6 +1,6 @@
 import { getFineosBaseUrl } from "../../../config";
 import { formatDateString } from "../util";
-import { format } from "date-fns";
+import { format, addMonths, addDays } from "date-fns";
 
 export function loginSavilinx(): void {
   Cypress.config("baseUrl", getFineosBaseUrl());
@@ -11,6 +11,7 @@ export function visitClaim(claimId: string): void {
   cy.get('a[aria-label="Cases"]').click();
   cy.get('td[keytipnumber="4"]').contains("Case").click();
   cy.labelled("Case Number").type(claimId);
+  cy.labelled("Case Type").select("Absence Case");
   cy.get('input[type="submit"][value="Search"]').click();
   assertOnClaimPage(claimId);
 }
@@ -610,6 +611,61 @@ export function claimAdjudicationMailedDoc(claimNumber: string): void {
   assertAdjudicatingClaim(claimNumber);
   clickBottomWidgetButton("OK");
   assertClaimApprovable();
+}
+
+export function addBondingLeaveFlow(timeStamp: Date): void {
+  cy.get('a[aria-label="Add Time"]').click({ force: true });
+  cy.get('input[type="radio"][value*="another_reason_id"]').click();
+  cy.get('input[type="submit"][title="Add Time Off Period"]').click();
+  cy.get(".popup-container").within(() => {
+    cy.labelled("Absence status").select("Known");
+    cy.wait("@ajaxRender");
+    const startDate = addMonths(timeStamp, 2);
+    const startDateFormatted = format(startDate, "MM/dd/yyyy");
+    const endDateFormatted = format(addDays(startDate, 2), "MM/dd/yyyy");
+
+    cy.labelled("Absence start date").type(
+      `{selectall}{backspace}${startDateFormatted}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.labelled("Absence end date").type(
+      `{selectall}{backspace}${endDateFormatted}{enter}`
+    );
+    cy.wait("@ajaxRender");
+    cy.get("input[type='checkbox'][id*='startDateAllDay_CHECKBOX']").click();
+    cy.get("input[type='checkbox'][id*='endDateAllDay_CHECKBOX']").click();
+    cy.get("input[type='submit'][value='OK']").click();
+  });
+  clickBottomWidgetButton("Next");
+  cy.wait("@ajaxRender");
+  // Work Pattern
+  cy.get("input[type='checkbox'][id*='standardWorkWeek_CHECKBOX']").click();
+  cy.labelled("Pattern Status").select("Known");
+  clickBottomWidgetButton("Next");
+  cy.wait("@ajaxRender");
+  // Complete Details
+  cy.labelled("Primary Relationship to Employee").select("Child");
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  cy.labelled("Qualifier 1").select("Biological");
+  clickBottomWidgetButton("Next");
+  // Additional Info
+  clickBottomWidgetButton("Next");
+  // Wrap up
+  clickBottomWidgetButton("OK");
+  // Assert bonding leave request was added
+  cy.get("[id*='processPhaseEnum']").should("contain.text", "Adjudication");
+  cy.get("[id*='requestedLeaveCardWidget']").should(
+    "contain.text",
+    "Pending leave"
+  );
+  cy.get(".absencePeriodDescription").should(
+    "contain.text",
+    "Fixed time off for Child Bonding"
+  );
+  cy.wait(200);
 }
 
 export function searchClaimantSSN(ssn: string): void {

@@ -1,9 +1,9 @@
-import { fineos, portal, email } from "../../../tests/common/actions";
-import { beforeFineos } from "../../../tests/common/before";
-import { beforePortal } from "../../../tests/common/before";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
-import { ApplicationResponse } from "../../../../src/api";
-import { Submission } from "../../../../src/types";
+import { fineos, portal, email } from "../../tests/common/actions";
+import { beforeFineos } from "../../tests/common/before";
+import { beforePortal } from "../../tests/common/before";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
+import { ApplicationResponse } from "../../../src/api";
+import { Submission } from "../../../src/types";
 
 describe("Approval (notificatins/notices)", () => {
   it("Create a financially eligible claim in which an employer will respond", () => {

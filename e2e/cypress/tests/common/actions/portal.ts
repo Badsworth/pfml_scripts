@@ -229,10 +229,8 @@ export function selectClaimType(application: ApplicationRequestBody): void {
       "I can’t work due to an illness, injury, or pregnancy.",
     "Child Bonding":
       "I need to bond with my child after birth, adoption, or foster placement.",
-    "Care For A Family Member":
-      "I need to manage family affairs while a family member is on active duty in the armed forces.",
     "Pregnancy/Maternity":
-      "I need to care for a family member who serves in the armed forces.",
+      "I can’t work due to an illness, injury, or pregnancy.",
   };
   const leaveReason: ClaimTypePortal = {
     Newborn: "Birth",
@@ -784,7 +782,10 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
   onPage("checklist");
   clickChecklistButton("Enter leave details");
   selectClaimType(application);
-  if (reason === "Serious Health Condition - Employee") {
+  if (
+    reason === "Serious Health Condition - Employee" ||
+    reason === "Pregnancy/Maternity"
+  ) {
     answerPregnancyQuestion(application);
   } else {
     enterBondingDateInfo(application);

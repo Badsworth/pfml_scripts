@@ -523,6 +523,9 @@ function generateLeaveDetails(
     case "Serious Health Condition - Employee":
       // Do nothing else.
       break;
+    case "Pregnancy/Maternity":
+      details.pregnant_or_recent_birth = true;
+      break;
     case "Child Bonding":
       switch (reason_qualifier) {
         case "Newborn":

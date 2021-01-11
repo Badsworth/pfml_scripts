@@ -43,6 +43,15 @@ export const MHAP3 = scenario("MHAP3", {
     MASSID: {},
   },
 });
+// Medical Pre-Birth
+export const MHAP4 = scenario("MHAP4", {
+  reason: "Pregnancy/Maternity",
+  residence: "MA-proofed",
+  docs: {
+    HCP: {},
+    MASSID: {},
+  },
+});
 
 // Combine Happy path scenarios into a single group:
 export const MHAP = chance([
