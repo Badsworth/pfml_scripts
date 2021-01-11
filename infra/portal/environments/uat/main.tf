@@ -1,6 +1,6 @@
 # This file was originally generated from the following command:
 #
-#   bin/bootstrap-env.sh $ENV_NAME portal
+#   bin/bootstrap-env.sh uat portal
 #
 # If adding new variables, it's recommended to update the bootstrap
 # templates so there's less manual work in creating new envs.
@@ -13,7 +13,7 @@ terraform {
   required_version = "0.12.24"
 
   backend "s3" {
-    bucket         = "massgov-pfml-$ENV_NAME-env-mgmt"
+    bucket         = "massgov-pfml-uat-env-mgmt"
     key            = "terraform/portal.tfstate"
     region         = "us-east-1"
     dynamodb_table = "terraform_locks"
@@ -36,10 +36,9 @@ output "cognito_user_pool_client_id" {
 module "massgov_pfml" {
   cognito_extra_redirect_urls = []
   cognito_extra_logout_urls   = []
-  cognito_enable_provisioned_concurrency = false
 
   # You probably don't need to change the variables below:
   source                 = "../../template"
-  environment_name       = "$ENV_NAME"
+  environment_name       = "uat"
   cloudfront_origin_path = local.cloudfront_origin_path
 }

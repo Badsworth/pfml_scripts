@@ -11,4 +11,5 @@ module.exports = {
   prod: merge({}, defaultEnvVariables, require("./prod")),
   training: merge({}, defaultEnvVariables, require("./training")),
   performance: merge({}, defaultEnvVariables, require("./performance")),
+  uat: merge({}, defaultEnvVariables, require("./uat")),
 };

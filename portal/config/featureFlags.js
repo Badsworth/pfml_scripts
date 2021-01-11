@@ -75,6 +75,11 @@ const flagsConfig = {
   performance: {
     claimantShowJan1ApplicationInstructions: true,
   },
+  uat: {
+    claimantShowAuth: true,
+    claimantShowJan1ApplicationInstructions: true,
+    claimantShowMedicalLeaveType: true,
+  },
   prod: {
     claimantShowJan1ApplicationInstructions: true,
     pfmlTerriyay: true,

@@ -35,6 +35,7 @@ env:
   refs/heads/deploy/portal/prod: prod
   refs/heads/deploy/portal/performance: performance
   refs/heads/deploy/portal/training: training
+  refs/heads/deploy/portal/uat: uat
 
 jobs:
   prod-check:
@@ -318,7 +319,7 @@ jobs:
     name: End-to-End Test Deployment
     runs-on: ubuntu-latest
     needs: [ update-the-deploy-branch, invalidate-cloudfront ]
-    if: github.ref != 'refs/heads/deploy/portal/prod'
+    if: github.ref != 'refs/heads/deploy/portal/prod' && github.ref != 'refs/heads/deploy/portal/uat'
     steps:
       - uses: actions/checkout@v2
         with:

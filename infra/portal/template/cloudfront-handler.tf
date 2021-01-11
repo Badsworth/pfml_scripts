@@ -16,7 +16,9 @@ resource "aws_lambda_function" "cloudfront_handler" {
   handler          = "cloudfront-handler.handler"
   source_code_hash = data.archive_file.cloudfront_handler.output_base64sha256
   runtime          = "nodejs12.x"
-  publish          = false
+
+  # Cloudfront lambda function associations need to use published, static version
+  publish = true
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
   })
