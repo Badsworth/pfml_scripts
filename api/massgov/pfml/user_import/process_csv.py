@@ -85,7 +85,6 @@ def process_by_email(
                 fein=fein,
                 email=email,
                 cognito_pool_id=cognito_pool_id,
-                verification_code=employer_to_register.get("verification_code"),
                 cognito_client=cognito_client,
                 fineos_client=fineos_client,
             )

@@ -21,7 +21,6 @@ from massgov.pfml.util.aws.cognito import (
     lookup_cognito_account_id,
 )
 from massgov.pfml.util.employers import lookup_employer
-from massgov.pfml.verification.verification import verify
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -31,7 +30,6 @@ def create_or_update_user_record(
     fein: str,
     email: str,
     cognito_pool_id: str,
-    verification_code: Optional[str],
     consume_use: Optional[bool] = False,
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
     fineos_client: Optional[fineos.AbstractFINEOSClient] = None,
@@ -43,15 +41,6 @@ def create_or_update_user_record(
     if not requested_employer:
         logger.warning("No employer found %s", fein, extra={"FEIN": fein})
         return False, "No employer found"
-
-    if verification_code:
-        verify(
-            db_session=db_session,
-            verification_code=verification_code,
-            email=email,
-            employer=requested_employer,
-            consume_use=consume_use,
-        )
 
     try:
         existing_cognito_id = lookup_cognito_account_id(
