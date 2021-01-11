@@ -80,7 +80,7 @@ describe("AppErrorInfoCollection", () => {
       expect(
         shallow(<TestErrorComponent errors={result} />).html()
       ).toMatchInlineSnapshot(
-        `"We couldn’t find you in our system. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, fill out the <a href=\\"test/link\\">form on Mass.gov</a> and we’ll set up your application through our Contact Center. Fineos issues happened."`
+        `"We couldn’t find you in our system. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, <a href=\\"test/link\\">follow these instructions</a> and we’ll set up your application through our Contact Center. Fineos issues happened."`
       );
     });
   });
