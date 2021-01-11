@@ -2,10 +2,11 @@
 
 locals {
   critical_sns_topic = {
-    "test"        = aws_sns_topic.api-low-priority-alerts-topic.arn,
+    "test"        = aws_sns_topic.api-low-priority-alerts-topic.arn
     "stage"       = aws_sns_topic.api-low-priority-alerts-topic.arn
     "performance" = aws_sns_topic.api-low-priority-alerts-topic.arn
     "training"    = aws_sns_topic.api-low-priority-alerts-topic.arn
+    "uat"         = aws_sns_topic.api-low-priority-alerts-topic.arn
     "prod"        = aws_sns_topic.api-high-priority-alerts-topic.arn
   }
 }

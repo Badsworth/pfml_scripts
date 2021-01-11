@@ -33,6 +33,7 @@ locals {
     "performance" = local.low_priority_channel_key,
     "training"    = local.low_priority_channel_key,
     "stage"       = local.low_priority_channel_key,
+    "uat"         = local.low_priority_channel_key,
     "prod"        = local.high_priority_channel_key,
   }
 }
