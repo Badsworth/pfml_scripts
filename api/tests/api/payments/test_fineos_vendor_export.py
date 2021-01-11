@@ -71,39 +71,15 @@ def emp_updates_path(tmp_path, mock_fineos_s3_bucket):
     )
 
 
-def test_copy_fineos_data_to_archival_bucket(
-    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
-):
-    date_prefix = "2020-01-02-11-30-00-"
-    s3_prefix = "DT2/dataexports/"
-    # Add 3 top level expected files
-    s3 = boto3.client("s3")
-    for expected_file_name in vendor_export.expected_file_names:
-        key = os.path.join(s3_prefix, f"{date_prefix}{expected_file_name}")
-        s3.put_object(Bucket=mock_fineos_s3_bucket, Key=key, Body="a,b,c")
-
-    copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, vendor_export.expected_file_names, ReferenceFileType.VENDOR_CLAIM_EXTRACT
-    )
-
-    assert copied_file_mapping_by_date
-    assert list(copied_file_mapping_by_date.keys())[0] == "2020-01-02-11-30-00"
-    assert len(copied_file_mapping_by_date["2020-01-02-11-30-00"]) == 3
-
-    destination_folder = os.path.join(
-        get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_RECEIVED_DIR
-    )
-    copied_files = file_util.list_files(destination_folder)
-    assert len(copied_files) == 3
-
-    for expected_file_name in vendor_export.expected_file_names:
-        expected_copied_file_name = f"{date_prefix}{expected_file_name}"
-        assert expected_copied_file_name in copied_files
-
-
 def test_process_vendor_extract_data_happy_path(
-    test_db_session, initialize_factories_session, emp_updates_path, set_exporter_env_vars
+    test_db_session,
+    initialize_factories_session,
+    emp_updates_path,
+    set_exporter_env_vars,
+    monkeypatch,
 ):
+    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-12-20")
+
     tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
     employee = EmployeeFactory(tax_identifier=tax_identifier)
     employer = EmployerFactory(fineos_employer_id=96)
@@ -163,8 +139,14 @@ def test_process_vendor_extract_data_happy_path(
 
 
 def test_process_vendor_extract_data_no_employee(
-    test_db_session, initialize_factories_session, emp_updates_path, set_exporter_env_vars
+    test_db_session,
+    initialize_factories_session,
+    emp_updates_path,
+    set_exporter_env_vars,
+    monkeypatch,
 ):
+    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-12-20")
+
     vendor_export.process_vendor_extract_data(test_db_session)
 
     claim: Claim = (
@@ -208,7 +190,10 @@ def test_process_extract_unprocessed_folder_files(
     test_db_session,
     tmp_path,
     initialize_factories_session,
+    monkeypatch,
 ):
+    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2019-12-31")
+
     s3 = boto3.client("s3")
 
     def add_s3_files(prefix):

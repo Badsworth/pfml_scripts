@@ -9,7 +9,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, cast
 from xml.etree.ElementTree import Element
 
 import boto3
@@ -29,6 +29,7 @@ from massgov.pfml.db.models.employees import (
     CtrBatchIdentifier,
     LkReferenceFileType,
     ReferenceFile,
+    ReferenceFileType,
 )
 from massgov.pfml.util.aws.ses import EmailRecipient, send_email, send_email_with_attachment
 
@@ -341,6 +342,38 @@ def payment_extract_reference_file_exists_by_date_group(
     return reference_file is not None
 
 
+def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
+    """Returns a max history datetime for a given ReferenceFileType
+
+    Only accepts:
+        - ReferenceFileType.VENDOR_CLAIM_EXTRACT
+        - ReferenceFileType.PAYMENT_EXTRACT
+
+    Raises:
+        ValueError: An unacceptable ReferenceFileType or a bad datestring was
+                    provided by get_date_config()
+    """
+    date_config = payments_config.get_date_config()
+
+    if (
+        export_type.reference_file_type_id
+        == ReferenceFileType.VENDOR_CLAIM_EXTRACT.reference_file_type_id
+    ):
+        datestring = date_config.fineos_vendor_max_history_date
+
+    elif (
+        export_type.reference_file_type_id
+        == ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id
+    ):
+        datestring = date_config.fineos_payment_max_history_date
+
+    else:
+        raise ValueError(f"Incorrect export_type {export_type} provided")
+
+    return datetime.strptime(datestring, "%Y-%m-%d")  # This may raise a ValueError
+
+
+# TODO: This function should probably get broken down into smaller functions
 def copy_fineos_data_to_archival_bucket(
     db_session: db.Session, expected_file_names: List[str], export_type: LkReferenceFileType
 ) -> Dict[str, Dict[str, str]]:
@@ -360,6 +393,36 @@ def copy_fineos_data_to_archival_bucket(
 
         for file_path in files:
             date_str = get_date_group_str_from_path(file_path)
+
+            # Only copy folders that are newer than a given date
+            # Folders are formatted as 2020-12-17-00-00-00; we just care about the day portion
+            try:
+                # Cast is for picky linter that doesn't want to index an Optional[str]
+                # TODO: Better is to refactor get_date_group_str_from_path() to return
+                #       str and raise an error if there's an issue
+                date_str_str = cast(str, date_str)
+                date_of_folder = datetime.strptime(date_str_str[:10], "%Y-%m-%d")
+            except ValueError:
+                # There are non-timestamped folders that we don't want to
+                # process, so we skip ahead
+                logger.info(
+                    f"Skipping: FINEOS extract folder named {date_str} is not a parseable date"
+                )
+                continue
+
+            # If get_fineos_max_history_date() raises a ValueError, we have
+            # a big problem and it should propagate up.
+            max_history_date = get_fineos_max_history_date(export_type)
+
+            # If the date of the folder is older than the max_history_date,
+            # we skip ahead
+            if date_of_folder < max_history_date:
+                max_history_date_str = max_history_date.strftime("%Y-%m-%d")
+                logger.info(
+                    f"Skipping: FINEOS extract folder dated {date_str} is prior to max_history_date {max_history_date_str}"
+                )
+                continue
+
             for expected_file_name in expected_file_names:
                 if file_path.endswith(expected_file_name) and date_str is not None:
                     source_file = os.path.join(source_folder, folder, file_path)

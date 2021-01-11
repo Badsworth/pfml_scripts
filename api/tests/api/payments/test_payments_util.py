@@ -32,6 +32,15 @@ from massgov.pfml.payments.payments_util import (
 )
 from tests.api.payments.conftest import upload_file_to_s3
 
+# TODO: These should really be in payments_util or payments_config
+PAYMENT_EXTRACT_FILENAMES = ["vpei.csv", "vpeiclaimdetails.csv", "vpeipaymentdetails.csv"]
+
+VENDOR_EXTRACT_FILENAMES = [
+    "LeavePlan_info.csv",
+    "Employee_feed.csv",
+    "VBI_REQUESTEDABSENCE_SOM.csv",
+]
+
 
 @pytest.fixture
 def set_source_path(tmp_path, mock_fineos_s3_bucket):
@@ -59,6 +68,42 @@ def make_s3_file(s3_bucket, key, test_file_name):
 
     s3 = boto3.client("s3")
     s3.upload_file(test_file_path, s3_bucket, key)
+
+
+def get_timestamped_filename(timestamp, filename):
+    """Tiny utility to prepend timestamps to filenames"""
+    return "-".join([timestamp, filename])
+
+
+def upload_timestamped_s3_files(s3_bucket, s3_prefix, timestamp, filename_list):
+    """Utility to create sets of files in a mock s3 bucket
+
+    Files in filename_list must exist in the test_files directory
+
+    Args:
+        s3_bucket: Should be just the bucket name without s3://. Ex: "test_bucket"
+        s3_prefix: The "folder" path. Ex: "DT2/dataexports/2020-01-01-11-30-00/"
+        timestamp: A timestamp string with NO trailing hyphen. Ex: "2020-12-01-11-30-00"
+        filename_list: A list of filenames to create.
+            Ex: ["vpei.csv", "vpeiclaimdetails.csv", "vpeipaymentdetails.csv"]
+    """
+    for filename in filename_list:
+        timestamped_filename = get_timestamped_filename(timestamp, filename)
+        make_s3_file(s3_bucket, os.path.join(s3_prefix, timestamped_filename), filename)
+
+
+def assert_copied_file_mapping_by_date_matches(
+    copied_file_mapping_by_date, timestamp, s3_prefix, filename_list
+):
+    """Run asserts for all files in filename_list"""
+    for filename in filename_list:
+        timestamped_filename = get_timestamped_filename(timestamp, filename)
+        assert copied_file_mapping_by_date[timestamp][filename] == os.path.join(
+            s3_prefix, timestamped_filename
+        )
+
+
+## == Tests Begin ==
 
 
 @pytest.mark.parametrize(
@@ -119,132 +164,239 @@ def test_payment_extract_reference_file_exists_by_date_group(
 
 
 def test_copy_fineos_data_to_archival_bucket(
-    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
 ):
-    date_prefix = "2020-01-02-11-30-00-"
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2020-01-01")
+
+    expected_timestamp_1 = "2020-01-02-11-30-00"
     s3_prefix = "DT2/dataexports/"
     # Add 3 top level expected files
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpei.csv", "vpei.csv")
-    make_s3_file(
-        mock_fineos_s3_bucket,
-        f"{s3_prefix}{date_prefix}vpeipaymentdetails.csv",
-        "vpei_payment_details.csv",
-    )
-    make_s3_file(
-        mock_fineos_s3_bucket,
-        f"{s3_prefix}{date_prefix}vpeiclaimdetails.csv",
-        "vpei_claim_details.csv",
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_1, PAYMENT_EXTRACT_FILENAMES
     )
 
     # Add a few other files in the same path with other names
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpeiclaimants.csv", "small.csv")
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpeiother.csv", "small.csv")
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}VBI_OTHER.csv", "small.csv")
-
-    # Add 3 files in a date folder
-    date_prefix = "2020-01-01-11-30-00-"
-    s3_prefix = "DT2/dataexports/2020-01-01-11-30-00/"
-    # Add 3 subfolder expected files
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpei.csv", "vpei.csv")
     make_s3_file(
-        mock_fineos_s3_bucket,
-        f"{s3_prefix}{date_prefix}vpeipaymentdetails.csv",
-        "vpei_payment_details.csv",
+        mock_fineos_s3_bucket, f"{s3_prefix}{expected_timestamp_1}-vpeiclaimants.csv", "small.csv"
     )
     make_s3_file(
-        mock_fineos_s3_bucket,
-        f"{s3_prefix}{date_prefix}vpeiclaimdetails.csv",
-        "vpei_claim_details.csv",
+        mock_fineos_s3_bucket, f"{s3_prefix}{expected_timestamp_1}-vpeiother.csv", "small.csv"
+    )
+    make_s3_file(
+        mock_fineos_s3_bucket, f"{s3_prefix}{expected_timestamp_1}-VBI_OTHER.csv", "small.csv"
+    )
+
+    # Add 3 files in a date folder
+    expected_timestamp_2 = "2020-01-01-11-30-00"
+    s3_prefix = "DT2/dataexports/2020-01-01-11-30-00/"
+    # Add 3 subfolder expected files
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_2, PAYMENT_EXTRACT_FILENAMES
     )
 
     # Add a few more invalid files with the same suffix in other S3 "folders"
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}yesterday/vpei.csv", "vpei.csv")
+    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}-yesterday/vpei.csv", "vpei.csv")
     make_s3_file(
         mock_fineos_s3_bucket,
-        f"{s3_prefix}2020-11-21-11-30-00/vpeipaymentdetails.csv",
-        "vpei_payment_details.csv",
+        f"{s3_prefix}-2020-11-21-11-30-00/vpeipaymentdetails.csv",
+        "vpeipaymentdetails.csv",
     )
-    make_s3_file(mock_fineos_s3_bucket, "DT2/vpeiclaimdetails.csv", "vpei_claim_details.csv")
+    make_s3_file(mock_fineos_s3_bucket, "DT2/vpeiclaimdetails.csv", "vpeiclaimdetails.csv")
     make_s3_file(mock_fineos_s3_bucket, "IDT/dataexports/vpeiclaimdetails.csv", "small.csv")
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session,
-        ["vpei.csv", "vpeipaymentdetails.csv", "vpeiclaimdetails.csv"],
-        ReferenceFileType.PAYMENT_EXTRACT,
+        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.PAYMENT_EXTRACT,
     )
 
-    expected_prefix_1 = f"s3://{mock_s3_bucket}/cps/inbound/received/2020-01-02-11-30-00-"
-    assert (
-        copied_file_mapping_by_date["2020-01-02-11-30-00"]["vpei.csv"]
-        == f"{expected_prefix_1}vpei.csv"
-    )
-    assert (
-        copied_file_mapping_by_date["2020-01-02-11-30-00"]["vpeipaymentdetails.csv"]
-        == f"{expected_prefix_1}vpeipaymentdetails.csv"
-    )
-    assert (
-        copied_file_mapping_by_date["2020-01-02-11-30-00"]["vpeiclaimdetails.csv"]
-        == f"{expected_prefix_1}vpeiclaimdetails.csv"
+    received_s3_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/"
+
+    # These should be there
+    assert_copied_file_mapping_by_date_matches(
+        copied_file_mapping_by_date,
+        expected_timestamp_1,
+        received_s3_prefix,
+        PAYMENT_EXTRACT_FILENAMES,
     )
 
-    expected_prefix_2 = f"s3://{mock_s3_bucket}/cps/inbound/received/2020-01-01-11-30-00-"
-    assert (
-        copied_file_mapping_by_date["2020-01-01-11-30-00"]["vpei.csv"]
-        == f"{expected_prefix_2}vpei.csv"
+    # These should also be there
+    assert_copied_file_mapping_by_date_matches(
+        copied_file_mapping_by_date,
+        expected_timestamp_1,
+        received_s3_prefix,
+        PAYMENT_EXTRACT_FILENAMES,
     )
-    assert (
-        copied_file_mapping_by_date["2020-01-01-11-30-00"]["vpeipaymentdetails.csv"]
-        == f"{expected_prefix_2}vpeipaymentdetails.csv"
+
+
+def test_copy_fineos_data_to_archival_bucket_skip_old_payment(
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
+):
+    # Monkey path the max history date
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2020-01-02")
+
+    # Add 3 top level files: should be processed
+    expected_timestamp_1 = "2020-01-03-11-30-00"
+    s3_prefix = "DT2/dataexports/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_1, PAYMENT_EXTRACT_FILENAMES
     )
-    assert (
-        copied_file_mapping_by_date["2020-01-01-11-30-00"]["vpeiclaimdetails.csv"]
-        == f"{expected_prefix_2}vpeiclaimdetails.csv"
+
+    # Add 3 files in a date folder: should be processed
+    expected_timestamp_2 = "2020-01-02-11-30-00"
+    s3_prefix = f"DT2/dataexports/{expected_timestamp_2}/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_2, PAYMENT_EXTRACT_FILENAMES
     )
+
+    # Add 3 files in a date folder: should NOT be processed
+    not_expected_timestamp_1 = "2020-01-01-11-30-00"
+    s3_prefix = f"DT2/dataexports/{not_expected_timestamp_1}/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, not_expected_timestamp_1, PAYMENT_EXTRACT_FILENAMES
+    )
+
+    # Actually run the command
+    copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
+        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.PAYMENT_EXTRACT,
+    )
+
+    received_s3_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/"
+
+    # 2020-01-03 files should be there
+    assert_copied_file_mapping_by_date_matches(
+        copied_file_mapping_by_date,
+        expected_timestamp_1,
+        received_s3_prefix,
+        PAYMENT_EXTRACT_FILENAMES,
+    )
+
+    # 2020-01-02 files should be there
+    assert_copied_file_mapping_by_date_matches(
+        copied_file_mapping_by_date,
+        expected_timestamp_2,
+        received_s3_prefix,
+        PAYMENT_EXTRACT_FILENAMES,
+    )
+
+    # 2020-01-01 files should NOT be there
+    assert copied_file_mapping_by_date.get(not_expected_timestamp_1) is None
+
+
+def test_copy_fineos_data_to_archival_bucket_skip_old_vendor(
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
+):
+    # Monkey path the max history date
+    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-01-02")
+
+    # Add 3 top level files: should be processed
+    expected_timestamp_1 = "2020-01-03-11-30-00"
+    s3_prefix = "DT2/dataexports/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_1, VENDOR_EXTRACT_FILENAMES
+    )
+
+    # Add 3 files in a date folder: should be processed
+    expected_timestamp_2 = "2020-01-02-11-30-00"
+    s3_prefix = f"DT2/dataexports/{expected_timestamp_2}/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_2, VENDOR_EXTRACT_FILENAMES
+    )
+
+    # Add 3 files in a date folder: should NOT be processed
+    not_expected_timestamp_1 = "2020-01-01-11-30-00"
+    s3_prefix = f"DT2/dataexports/{not_expected_timestamp_1}/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, not_expected_timestamp_1, VENDOR_EXTRACT_FILENAMES
+    )
+
+    # Actually run the command
+    copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
+        test_db_session, VENDOR_EXTRACT_FILENAMES, ReferenceFileType.VENDOR_CLAIM_EXTRACT,
+    )
+
+    received_s3_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/"
+
+    # 2020-01-03 files should be there
+    assert_copied_file_mapping_by_date_matches(
+        copied_file_mapping_by_date,
+        expected_timestamp_1,
+        received_s3_prefix,
+        VENDOR_EXTRACT_FILENAMES,
+    )
+
+    # 2020-01-02 files should be there
+    assert_copied_file_mapping_by_date_matches(
+        copied_file_mapping_by_date,
+        expected_timestamp_2,
+        received_s3_prefix,
+        VENDOR_EXTRACT_FILENAMES,
+    )
+
+    # 2020-01-01 files should NOT be there
+    assert copied_file_mapping_by_date.get(not_expected_timestamp_1) is None
+
+
+def test_copy_fineos_data_to_archival_bucket_skip_top_level(
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
+):
+    # Monkey path the max history date
+    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-04-01")
+
+    # Add 3 top level files: should not be processed
+    expected_timestamp_1 = "2020-01-03-11-30-00"
+    s3_prefix = "DT2/dataexports/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_1, VENDOR_EXTRACT_FILENAMES
+    )
+
+    # Actually run the command
+    copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
+        test_db_session, VENDOR_EXTRACT_FILENAMES, ReferenceFileType.VENDOR_CLAIM_EXTRACT,
+    )
+
+    # Files should be empty
+    assert copied_file_mapping_by_date == {}
 
 
 def test_copy_fineos_data_to_archival_bucket_duplicate_suffix_error(
-    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
 ):
-    date_prefix = "2020-12-01-11-30-00-"
-    s3_prefix = f"DT2/dataexports/{date_prefix}"
-    # Add the 3 expected files
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}vpei.csv", "vpei.csv")
-    make_s3_file(
-        mock_fineos_s3_bucket, f"{s3_prefix}vpeipaymentdetails.csv", "vpei_payment_details.csv",
-    )
-    make_s3_file(
-        mock_fineos_s3_bucket, f"{s3_prefix}vpeiclaimdetails.csv", "vpei_claim_details.csv"
+    # Monkey path the max history date
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2020-12-01")
+
+    date_prefix = "2020-12-01-11-30-00"
+    s3_prefix = "DT2/dataexports/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, date_prefix, PAYMENT_EXTRACT_FILENAMES
     )
 
     # Add an extra vpei.csv file in the same folder
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}ANOTHER-vpei.csv", "vpei.csv")
+    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}-ANOTHER-vpei.csv", "vpei.csv")
 
     with pytest.raises(
         Exception,
-        match=f"Duplicate files found for vpei.csv: s3://test_bucket/cps/inbound/received/{date_prefix}ANOTHER-vpei.csv and s3://fineos_bucket/DT2/dataexports/{date_prefix}vpei.csv",
+        match=f"Duplicate files found for vpei.csv: s3://test_bucket/cps/inbound/received/{date_prefix}-ANOTHER-vpei.csv and s3://fineos_bucket/DT2/dataexports/{date_prefix}-vpei.csv",
     ):
         payments_util.copy_fineos_data_to_archival_bucket(
-            test_db_session,
-            ["vpei.csv", "vpeipaymentdetails.csv", "vpeiclaimdetails.csv"],
-            ReferenceFileType.PAYMENT_EXTRACT,
+            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.PAYMENT_EXTRACT,
         )
 
 
 def test_copy_fineos_data_to_archival_bucket_missing_file_error(
-    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
 ):
-    date_prefix = "2020-12-01-11-30-00-"
+    # Monkey path the max history date
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2020-12-01")
+
+    date_prefix = "2020-12-01-11-30-00"
     s3_prefix = f"DT2/dataexports/{date_prefix}"
     # Add only one file
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}vpei.csv", "vpei.csv")
+    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}-vpei.csv", "vpei.csv")
 
     with pytest.raises(
         Exception,
-        match=f"The following files were not found in S3 {date_prefix}vpeipaymentdetails.csv,{date_prefix}vpeiclaimdetails.csv",
+        match=f"The following files were not found in S3 {date_prefix}-vpeiclaimdetails.csv,{date_prefix}-vpeipaymentdetails.csv",
     ):
         payments_util.copy_fineos_data_to_archival_bucket(
-            test_db_session,
-            ["vpei.csv", "vpeipaymentdetails.csv", "vpeiclaimdetails.csv"],
-            ReferenceFileType.PAYMENT_EXTRACT,
+            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.PAYMENT_EXTRACT,
         )
 
 
@@ -259,17 +411,15 @@ def test_group_s3_files_by_date(mock_s3_bucket, set_exporter_env_vars):
         # Add the 3 expected files
         make_s3_file(mock_s3_bucket, f"{prefix}vpei.csv", "vpei.csv")
         make_s3_file(
-            mock_s3_bucket, f"{prefix}vpeipaymentdetails.csv", "vpei_payment_details.csv",
+            mock_s3_bucket, f"{prefix}vpeipaymentdetails.csv", "vpeipaymentdetails.csv",
         )
-        make_s3_file(mock_s3_bucket, f"{prefix}vpeiclaimdetails.csv", "vpei_claim_details.csv")
+        make_s3_file(mock_s3_bucket, f"{prefix}vpeiclaimdetails.csv", "vpeiclaimdetails.csv")
         # Add some other random files to the same folder
         make_s3_file(mock_s3_bucket, f"{prefix}somethingelse.csv", "small.csv")
         make_s3_file(mock_s3_bucket, f"{prefix}vpeiandsuch.csv", "small.csv")
         make_s3_file(mock_s3_bucket, f"{prefix}secretrecipe.csv", "small.csv")
 
-    data_by_date = payments_util.group_s3_files_by_date(
-        ["vpei.csv", "vpeipaymentdetails.csv", "vpeiclaimdetails.csv"]
-    )
+    data_by_date = payments_util.group_s3_files_by_date(PAYMENT_EXTRACT_FILENAMES)
     assert set(data_by_date.keys()) == set(
         ["2020-01-01-11-30-00", "2020-01-02-11-30-00", "2020-01-03-11-30-00"]
     )
@@ -561,3 +711,34 @@ def test_create_batch_id_and_reference_file(test_db_session):
     assert ref_file.file_location == expected_file_location
     assert ref_file.ctr_batch_identifier
     assert ref_file.reference_file_type_id == file_type.reference_file_type_id
+
+
+def test_get_fineos_max_history_date(monkeypatch):
+    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2021-01-01")
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2021-01-15")
+
+    vendor_datetime = payments_util.get_fineos_max_history_date(
+        ReferenceFileType.VENDOR_CLAIM_EXTRACT
+    )
+    assert vendor_datetime == datetime(2021, 1, 1, 0, 0)
+
+    payment_datetime = payments_util.get_fineos_max_history_date(ReferenceFileType.PAYMENT_EXTRACT)
+    assert payment_datetime == datetime(2021, 1, 15, 0, 0)
+
+
+def test_get_fineos_max_history_date_bad_type(monkeypatch):
+    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2021-01-01")
+
+    with pytest.raises(ValueError):
+        payments_util.get_fineos_max_history_date(ReferenceFileType.GAX)
+
+
+def test_get_fineos_max_history_date_bad_string(monkeypatch):
+    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "foo")
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "bar")
+
+    with pytest.raises(ValueError):
+        payments_util.get_fineos_max_history_date(ReferenceFileType.VENDOR_CLAIM_EXTRACT)
+
+    with pytest.raises(ValueError):
+        payments_util.get_fineos_max_history_date(ReferenceFileType.PAYMENT_EXTRACT)

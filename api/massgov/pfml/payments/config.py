@@ -179,3 +179,39 @@ def get_email_config() -> PaymentsEmailConfig:
     )
 
     return payments_email_config
+
+
+@dataclass
+class PaymentsDateConfig:
+    """Config for Payments dates
+
+    PFML API processes the following timestamped files from FINEOS:
+    - vendor extracts
+    - payment extracts
+
+    Due to some challenges around launch, we need to be able to configure
+    how far back in time we look when checking each folder.
+
+    This config is a wrapper around date env vars.
+    """
+
+    # PFML API will not process FINEOS vendor data older than this date
+    fineos_vendor_max_history_date: str
+    # PFML API will not process FINEOS payment data older than this date
+    fineos_payment_max_history_date: str
+
+
+def get_date_config() -> PaymentsDateConfig:
+    payments_date_config = PaymentsDateConfig(
+        fineos_vendor_max_history_date=str(os.getenv("FINEOS_VENDOR_MAX_HISTORY_DATE")),
+        fineos_payment_max_history_date=str(os.getenv("FINEOS_PAYMENT_MAX_HISTORY_DATE")),
+    )
+
+    logger.info(
+        "Constructed payments date config",
+        extra={
+            "fineos_vendor_max_history_date": payments_date_config.fineos_vendor_max_history_date,
+            "fineos_payment_max_history_date": payments_date_config.fineos_payment_max_history_date,
+        },
+    )
+    return payments_date_config

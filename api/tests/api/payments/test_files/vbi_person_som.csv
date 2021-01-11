@@ -1,4 +1,0 @@
-"CLASSID","INDEXID","LASTUPDATEDATE","FIRSTNAMES","MIDDLEINTIAL","LASTNAME","DATEOFBIRTH","DATEOFDEATH","ISDECEASED","REALDOB","STAFF","SEX","MARITALSTATUS","CUSTOMERNO","DISABLED","REFERENCENO","SECUREDCLIENT","UNVERIFIED","PARTYTYPE","IDENTIFICATIO","SOURCESYSTEM","C_OCPRTAD_CORRESPONDENC","I_OCPRTAD_CORRESPONDENC"
-"11536","310","2020-09-17 13:02:19","FirstName1","1","Surname1","1980-01-01 00:00:00","","0","1","0","Female","Married","1301","0","44","0","0","Unknown","Social Security Number","Internal","11737","213"
-"11536","501","2020-09-17 15:23:47","FirstName2","2","Surname2","1980-01-01 00:00:00","","0","1","0","Female","Married","1302","0","62","0","0","Unknown","Social Security Number","Internal","11737","403"
-"11536","502","2020-09-17 15:25:02","FirstName3","3","Surname3","1980-01-01 00:00:00","","0","1","0","Female","Married","1303","0","63","0","0","Unknown","Social Security Number","Internal","11737","404"

@@ -36,7 +36,9 @@
       { "name": "FINEOS_DATA_EXPORT_PATH", "value": "${fineos_data_export_path}" },
       { "name": "FINEOS_DATA_IMPORT_PATH", "value": "${fineos_data_import_path}" },
       { "name": "PFML_FINEOS_INBOUND_PATH", "value": "${pfml_fineos_inbound_path}" },
-      { "name": "PFML_FINEOS_OUTBOUND_PATH", "value": "${pfml_fineos_outbound_path}" }
+      { "name": "PFML_FINEOS_OUTBOUND_PATH", "value": "${pfml_fineos_outbound_path}" },
+      { "name": "FINEOS_VENDOR_MAX_HISTORY_DATE", "value": "${fineos_vendor_max_history_date}" },
+      { "name": "FINEOS_PAYMENT_MAX_HISTORY_DATE", "value": "${fineos_payment_max_history_date}" }
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }

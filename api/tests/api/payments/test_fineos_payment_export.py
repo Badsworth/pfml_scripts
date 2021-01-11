@@ -109,9 +109,9 @@ def setup_process_tests(
     # Add the 3 expected files
     make_s3_file(mock_s3_bucket, f"{s3_prefix}vpei.csv", "vpei.csv")
     make_s3_file(
-        mock_s3_bucket, f"{s3_prefix}vpeipaymentdetails.csv", "vpei_payment_details.csv",
+        mock_s3_bucket, f"{s3_prefix}vpeipaymentdetails.csv", "vpeipaymentdetails.csv",
     )
-    make_s3_file(mock_s3_bucket, f"{s3_prefix}vpeiclaimdetails.csv", "vpei_claim_details.csv")
+    make_s3_file(mock_s3_bucket, f"{s3_prefix}vpeiclaimdetails.csv", "vpeiclaimdetails.csv")
 
     add_db_records(
         test_db_session,
@@ -158,11 +158,9 @@ def get_download_directory(tmp_path, directory_name):
 def add_s3_files(mock_fineos_s3_bucket, s3_prefix):
     make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}vpei.csv", "vpei.csv")
     make_s3_file(
-        mock_fineos_s3_bucket, f"{s3_prefix}vpeipaymentdetails.csv", "vpei_payment_details.csv",
+        mock_fineos_s3_bucket, f"{s3_prefix}vpeipaymentdetails.csv", "vpeipaymentdetails.csv",
     )
-    make_s3_file(
-        mock_fineos_s3_bucket, f"{s3_prefix}vpeiclaimdetails.csv", "vpei_claim_details.csv"
-    )
+    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}vpeiclaimdetails.csv", "vpeiclaimdetails.csv")
 
 
 ### TESTS BEGIN
@@ -200,43 +198,6 @@ def test_download_and_parse_data(mock_s3_bucket, tmp_path):
         "ColumnA_2": "",
         "ColumnA_3": "",
     }
-
-
-def test_copy_fineos_data_to_archival_bucket(
-    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars
-):
-    date_prefix = "2020-01-02-11-30-00-"
-    s3_prefix = "DT2/dataexports/"
-    # Add 3 top level expected files
-    make_s3_file(mock_fineos_s3_bucket, f"{s3_prefix}{date_prefix}vpei.csv", "vpei.csv")
-    make_s3_file(
-        mock_fineos_s3_bucket,
-        f"{s3_prefix}{date_prefix}vpeipaymentdetails.csv",
-        "vpei_payment_details.csv",
-    )
-    make_s3_file(
-        mock_fineos_s3_bucket,
-        f"{s3_prefix}{date_prefix}vpeiclaimdetails.csv",
-        "vpei_claim_details.csv",
-    )
-
-    copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, exporter.expected_file_names, ReferenceFileType.PAYMENT_EXTRACT
-    )
-
-    assert copied_file_mapping_by_date
-    assert list(copied_file_mapping_by_date.keys())[0] == "2020-01-02-11-30-00"
-    assert len(copied_file_mapping_by_date["2020-01-02-11-30-00"]) == 3
-
-    destination_folder = os.path.join(
-        get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_RECEIVED_DIR
-    )
-    copied_files = file_util.list_files(destination_folder)
-    assert len(copied_files) == 3
-
-    for expected_file_name in exporter.expected_file_names:
-        expected_copied_file_name = f"{date_prefix}{expected_file_name}"
-        assert expected_copied_file_name in copied_files
 
 
 @freeze_time("2021-01-03 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
@@ -436,7 +397,10 @@ def test_process_extract_unprocessed_folder_files(
     test_db_session,
     tmp_path,
     initialize_factories_session,
+    monkeypatch,
 ):
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+
     # add files
     add_s3_files(mock_fineos_s3_bucket, "DT2/dataexports/2020-01-01-11-30-00/2020-01-01-11-30-00-")
     add_s3_files(mock_fineos_s3_bucket, "DT2/dataexports/2020-01-02-11-30-00/2020-01-02-11-30-00-")

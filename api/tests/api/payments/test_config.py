@@ -17,3 +17,14 @@ def test_get_config_fully_specified(monkeypatch):
         ctr_vcc_bievnt_email_address="test2@test.com",
         dfml_business_operations_email_address="test3@test.com",
     )
+
+
+def test_get_date_config(monkeypatch):
+    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2021-01-01")
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2021-01-15")
+
+    payments_date_config = payments_config.get_date_config()
+
+    assert payments_date_config == payments_config.PaymentsDateConfig(
+        fineos_vendor_max_history_date="2021-01-01", fineos_payment_max_history_date="2021-01-15",
+    )

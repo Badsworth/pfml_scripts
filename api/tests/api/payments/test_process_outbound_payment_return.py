@@ -285,7 +285,7 @@ def test_process_outbound_payment_return_invalid_path(
 def test_process_outbound_payment_return_invalid_xml(
     test_db_session, mock_s3_bucket, initialize_factories_session
 ):
-    full_path, test_file_path = get_paths(mock_s3_bucket, "leave_plan.csv")
+    full_path, test_file_path = get_paths(mock_s3_bucket, "LeavePlan_info.csv")
 
     ref_file = ReferenceFileFactory.create(file_location=full_path)
 
@@ -293,4 +293,4 @@ def test_process_outbound_payment_return_invalid_xml(
         process_outbound_payment_return.process_outbound_payment_return(test_db_session, ref_file)
 
     test_db_session.refresh(ref_file)
-    assert ref_file.file_location == "s3://test_bucket/ctr/inbound/error/leave_plan.csv"
+    assert ref_file.file_location == "s3://test_bucket/ctr/inbound/error/LeavePlan_info.csv"

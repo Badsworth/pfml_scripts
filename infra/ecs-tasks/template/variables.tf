@@ -119,6 +119,18 @@ variable "pfml_fineos_outbound_path" {
   default     = ""
 }
 
+variable "fineos_vendor_max_history_date" {
+  description = "PFML API will not process FINEOS vendor data older than this date"
+  type        = string
+  default     = ""
+}
+
+variable "fineos_payment_max_history_date" {
+  description = "PFML API will not process FINEOS payment data older than this date"
+  type        = string
+  default     = ""
+}
+
 variable "pfml_ctr_inbound_path" {
   description = "PFML API stores a copy of all files that CTR/MMARS generates for us"
   type        = string

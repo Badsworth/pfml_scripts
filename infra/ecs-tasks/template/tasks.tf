@@ -177,10 +177,12 @@ locals {
         fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
         fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
 
-        fineos_data_export_path   = var.fineos_data_export_path
-        fineos_data_import_path   = var.fineos_data_import_path
-        pfml_fineos_inbound_path  = var.pfml_fineos_inbound_path
-        pfml_fineos_outbound_path = var.pfml_fineos_outbound_path
+        fineos_data_export_path         = var.fineos_data_export_path
+        fineos_data_import_path         = var.fineos_data_import_path
+        pfml_fineos_inbound_path        = var.pfml_fineos_inbound_path
+        pfml_fineos_outbound_path       = var.pfml_fineos_outbound_path
+        fineos_vendor_max_history_date  = var.fineos_vendor_max_history_date
+        fineos_payment_max_history_date = var.fineos_payment_max_history_date
       }
     },
 

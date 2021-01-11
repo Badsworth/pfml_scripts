@@ -11,8 +11,15 @@ from massgov.pfml.payments.process_payments import _fineos_process
 
 
 def test_fineos_process(
-    test_db_session, mock_fineos_s3_bucket, set_exporter_env_vars, initialize_factories_session
+    test_db_session,
+    mock_fineos_s3_bucket,
+    set_exporter_env_vars,
+    initialize_factories_session,
+    monkeypatch,
 ):
+    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+
     # Setup the data
     # generate_fineos_payment_export_files(test_db_session, mock_fineos_s3_bucket)
     s3_config = payments_config.get_s3_config()
