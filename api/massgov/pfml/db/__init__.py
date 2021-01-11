@@ -108,7 +108,11 @@ def get_connection_parameters(db_config: DbConfig) -> Dict[str, Any]:
     # TODO: make this configurable?
     # https://lwd.atlassian.net/browse/API-188
     connect_args = {}
-    if os.getenv("ENVIRONMENT") != "local":
+    environment = os.getenv("ENVIRONMENT")
+    if not environment:
+        raise Exception("ENVIRONMENT is not set")
+
+    if environment != "local":
         # TODO: should this be one of the verify-{ca,full} options?
         connect_args["sslmode"] = "require"
 

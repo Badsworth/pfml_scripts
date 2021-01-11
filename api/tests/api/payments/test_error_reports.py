@@ -243,7 +243,7 @@ def test_get_employee_claim_payment_from_state_log_multiple_mmars_claims(
 
 @freeze_time("2020-01-01 12:00:00")
 def test_send_fineos_payments_errors_empty_db(
-    test_db_session, initialize_factories_session, tmp_path, mock_ses
+    test_db_session, initialize_factories_session, tmp_path, mock_ses, set_exporter_env_vars
 ):
     # If there is nothing in a bad state, this should just create
     # a bunch of CSVs with just a header
@@ -270,7 +270,7 @@ def test_send_fineos_payments_errors_empty_db(
 
 @freeze_time("2020-01-01 12:00:00")
 def test_send_ctr_payments_errors_empty_db(
-    test_db_session, initialize_factories_session, tmp_path, mock_ses
+    test_db_session, initialize_factories_session, tmp_path, mock_ses, set_exporter_env_vars
 ):
     # If there is nothing in a bad state, this should just create
     # a bunch of CSVs with just a header
@@ -297,7 +297,7 @@ def test_send_ctr_payments_errors_empty_db(
 
 @freeze_time("2020-01-01 12:00:00")
 def test_send_fineos_payments_errors(
-    test_db_session, initialize_factories_session, tmp_path, mock_ses
+    test_db_session, initialize_factories_session, tmp_path, mock_ses, set_exporter_env_vars
 ):
     # Setup for cps_payment_export_report
     setup_state_log_in_end_state(
@@ -385,7 +385,7 @@ def test_send_fineos_payments_errors(
 
 @freeze_time("2020-01-01 12:00:00")
 def test_send_ctr_payments_errors_simple_reports(
-    test_db_session, initialize_factories_session, tmp_path, mock_ses
+    test_db_session, initialize_factories_session, tmp_path, mock_ses, set_exporter_env_vars
 ):
     # In the interest of keeping this single test at only 200 lines,
     # the time-based reports are in the next test (test_send_ctr_payments_errors_time_based_reports)
@@ -570,7 +570,7 @@ def test_send_ctr_payments_errors_simple_reports(
 
 @freeze_time("2020-02-01 12:00:00")
 def test_send_ctr_payments_errors_time_based_reports(
-    test_db_session, initialize_factories_session, tmp_path, mock_ses
+    test_db_session, initialize_factories_session, tmp_path, mock_ses, set_exporter_env_vars
 ):
     # Note, for the sake of this test, all state logs are too old/stuck
     # The utilities used in this test create the records on 2020-01-01, so we've set "now" to 2020-02-01

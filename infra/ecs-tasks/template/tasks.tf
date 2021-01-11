@@ -150,6 +150,7 @@ locals {
       command             = ["payments-ctr-process"]
       containers_template = "payments_ctr_process_template.json"
       task_role           = aws_iam_role.payments_ctr_process_task_role.arn
+      execution_role      = aws_iam_role.payments_ctr_import_execution_role.arn
       vars = {
         eolwd_moveit_sftp_uri    = var.eolwd_moveit_sftp_uri
         ctr_moveit_incoming_path = var.ctr_moveit_incoming_path
@@ -157,6 +158,7 @@ locals {
         ctr_moveit_outgoing_path = var.ctr_moveit_outgoing_path
         pfml_ctr_inbound_path    = var.pfml_ctr_inbound_path
         pfml_ctr_outbound_path   = var.pfml_ctr_outbound_path
+        pfml_error_reports_path  = var.pfml_error_reports_path
 
         pfml_email_address                     = var.pfml_email_address
         bounce_forwarding_email_address        = var.bounce_forwarding_email_address
@@ -177,12 +179,24 @@ locals {
         fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
         fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
 
-        fineos_data_export_path         = var.fineos_data_export_path
-        fineos_data_import_path         = var.fineos_data_import_path
-        pfml_fineos_inbound_path        = var.pfml_fineos_inbound_path
-        pfml_fineos_outbound_path       = var.pfml_fineos_outbound_path
+        fineos_data_export_path   = var.fineos_data_export_path
+        fineos_data_import_path   = var.fineos_data_import_path
+        pfml_fineos_inbound_path  = var.pfml_fineos_inbound_path
+        pfml_fineos_outbound_path = var.pfml_fineos_outbound_path
+        pfml_error_reports_path   = var.pfml_error_reports_path
+
         fineos_vendor_max_history_date  = var.fineos_vendor_max_history_date
         fineos_payment_max_history_date = var.fineos_payment_max_history_date
+      }
+    },
+
+    "fineos-test-vendor-export-generate" = {
+      command             = ["fineos-test-vendor-export-generate"]
+      task_role           = aws_iam_role.payments_fineos_process_task_role.arn
+      containers_template = "fineos_test_vendor_export_generate.json"
+      vars = {
+        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
+        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
       }
     },
 

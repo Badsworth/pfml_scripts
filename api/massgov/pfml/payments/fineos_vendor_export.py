@@ -16,12 +16,10 @@ from massgov.pfml.db.models.employees import (
     Address,
     BankAccountType,
     Claim,
-    ClaimType,
     CtrAddressPair,
     Employee,
     EmployeeAddress,
     EmployeeReferenceFile,
-    Employer,
     GeoState,
     PaymentMethod,
     ReferenceFile,
@@ -53,6 +51,7 @@ ELECTRONIC_FUNDS_TRANSFER = 1
 CLAIM_TYPE_TRANSLATION = {
     "Family Medical Leave": "Family Leave",
     "EE Medical Leave": "Medical Leave",
+    "Military Related Leave": "Military Leave",
 }
 
 
@@ -92,6 +91,7 @@ class ExtractData:
 
 
 def process_vendor_extract_data(db_session: db.Session) -> None:
+    logger.info("Processing vendor extracts")
     payments_util.copy_fineos_data_to_archival_bucket(
         db_session, expected_file_names, ReferenceFileType.VENDOR_CLAIM_EXTRACT
     )
@@ -100,7 +100,10 @@ def process_vendor_extract_data(db_session: db.Session) -> None:
 
     previously_processed_date = set()
 
+    logger.info("Dates in /received folder: %s", ", ".join(data_by_date.keys()))
+
     for date_str, s3_file_locations in data_by_date.items():
+        logger.info("Processing files in %s", date_str, extra={"folder_timestamp": date_str})
         try:
             if (
                 date_str in previously_processed_date
@@ -109,7 +112,7 @@ def process_vendor_extract_data(db_session: db.Session) -> None:
                 )
             ):
                 logger.warning(
-                    "Found previously processed file(s) for date group still in received folder: %s",
+                    "Found existing ReferenceFile record for date group in /processed folder: %s",
                     date_str,
                     extra={"date_str": date_str},
                 )
@@ -120,6 +123,7 @@ def process_vendor_extract_data(db_session: db.Session) -> None:
             download_and_index_data(extract_data, download_directory)
             process_records_to_db(extract_data, db_session)
             move_files_from_received_to_processed(extract_data, db_session)
+            logger.info("Successfully processed %s", date_str, extra={"folder_timestamp": date_str})
             db_session.commit()
         except Exception:
             # If there was a file-level exception anywhere in the processing,
@@ -128,6 +132,7 @@ def process_vendor_extract_data(db_session: db.Session) -> None:
             db_session.rollback()
             logger.exception("Error processing vendor extract data")
             move_files_from_received_to_error(extract_data)
+            raise
 
 
 def download_and_index_data(extract_data: ExtractData, download_directory: str) -> None:
@@ -188,8 +193,21 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
     requested_absences = extract_data.requested_absence_info.indexed_data.values()
 
     for requested_absence in requested_absences:
+        absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
+        if absence_case_id is not None:
+            logger.info(
+                "Processing absence_case_id %s",
+                absence_case_id,
+                extra={"absence_case_id": absence_case_id},
+            )
         evidence_result_type = requested_absence.get("LEAVEREQUEST_EVIDENCERESULTTYPE")
         if evidence_result_type is None or evidence_result_type != "Satisfied":
+            if absence_case_id is not None:
+                logger.info(
+                    "Skipping: absence_case_id %s is not id proofed",
+                    absence_case_id,
+                    extra={"absence_case_id": absence_case_id},
+                )
             continue
 
         # Add / update entry on claim table
@@ -206,6 +224,7 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             generate_employee_reference_file(
                 db_session, extract_data, employee_pfml_entry, validation_container
             )
+            manage_state_log(db_session, extract_data, employee_pfml_entry, validation_container)
 
 
 def create_or_update_claim(
@@ -221,10 +240,22 @@ def create_or_update_claim(
     if claim_pfml is None:
         claim_pfml = Claim()
         claim_pfml.fineos_absence_id = absence_case_id
+        logger.info(
+            "Will attempt to create new claim for absence_case_id %s",
+            absence_case_id,
+            extra={"absence_case_id": absence_case_id},
+        )
+    else:
+        logger.info(
+            "Existing claim for absence_case_id %s",
+            absence_case_id,
+            extra={"absence_case_id": absence_case_id},
+        )
 
     # Update, or finish formatting new,  claim row.
     claim_pfml.fineos_notification_id = requested_absence.get("NOTIFICATION_CASENUMBER")
 
+    """
     leave_plan = extract_data.leave_plan_info.indexed_data.get(absence_case_id)
 
     if leave_plan is None:
@@ -261,6 +292,7 @@ def create_or_update_claim(
                 # validate_csv_input already recorded the key does not exist
                 # but doesn't signal back.
                 pass
+    """
 
     case_status = payments_util.validate_csv_input(
         "ABSENCE_CASESTATUS",
@@ -308,14 +340,14 @@ def update_employee_info(
     claim: Claim,
     validation_container: payments_util.ValidationContainer,
 ) -> Optional[Employee]:
-    employee_customer_nbr = payments_util.validate_csv_input(
+    fineos_customer_number = payments_util.validate_csv_input(
         "EMPLOYEE_CUSTOMERNO", requested_absence, validation_container, True
     )
 
-    if employee_customer_nbr is None:
+    if fineos_customer_number is None:
         employee_feed_entry = None
     else:
-        employee_feed_entry = extract_data.employee_feed.indexed_data.get(employee_customer_nbr)
+        employee_feed_entry = extract_data.employee_feed.indexed_data.get(fineos_customer_number)
 
     # As we filter out all employee feed entries that do not have the default payment flag
     # set to Y this may be a possible condition: employee exists in FINEOS but has no
@@ -323,11 +355,19 @@ def update_employee_info(
     if employee_feed_entry is None:
         absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
         error_msg = (
-            f"Employee in VBI_REQUESTEDABSENCE_SOM with absence id {absence_case_id} and customer nbr {employee_customer_nbr} "
+            f"Employee in VBI_REQUESTEDABSENCE_SOM with absence id {absence_case_id} and customer nbr {fineos_customer_number} "
             "not found in employee feed file with default payment flag set to Y."
         )
         validation_container.add_validation_issue(
             payments_util.ValidationReason.MISSING_DATASET, error_msg
+        )
+        logger.warning(
+            "Skipping: %s",
+            error_msg,
+            extra={
+                "absence_case_id": absence_case_id,
+                "fineos_customer_number": fineos_customer_number,
+            },
         )
         return None
 
@@ -352,9 +392,8 @@ def update_employee_info(
 
     # Assumption is we should not be creating employees in the PFML DB through this extract.
     if employee_pfml_entry is None:
-        error_msg = f"Employee in employee file with customer nbr {employee_customer_nbr} not found in PFML DB."
-        validation_container.add_validation_issue(
-            payments_util.ValidationReason.MISSING_IN_DB, error_msg
+        logger.exception(
+            f"Employee in employee file with customer nbr {fineos_customer_number} not found in PFML DB."
         )
         return None
 
@@ -375,7 +414,10 @@ def update_employee_info(
         employee_feed_entry,
         validation_container,
         True,
-        custom_validator_func=payments_util.lookup_validator(PaymentMethod),
+        custom_validator_func=payments_util.lookup_validator(
+            PaymentMethod,
+            disallowed_lookup_values=[cast(str, PaymentMethod.DEBIT.payment_method_description)],
+        ),
     )
 
     if payment_method is not None:
@@ -386,29 +428,35 @@ def update_employee_info(
 
     update_eft_info(db_session, employee_feed_entry, employee_pfml_entry, validation_container)
 
-    customer_nbr = payments_util.validate_csv_input(
+    fineos_customer_number = payments_util.validate_csv_input(
         "CUSTOMERNO", employee_feed_entry, validation_container, True
     )
 
-    if customer_nbr is not None:
-        employee_pfml_entry.fineos_customer_number = customer_nbr
+    if fineos_customer_number is not None:
+        employee_pfml_entry.fineos_customer_number = fineos_customer_number
 
     # Associate claim with employee in case it is a new claim.
     claim.employee_id = employee_pfml_entry.employee_id
 
-    # Associate claim with employer as well, if found.
-    employer_customer_nbr = payments_util.validate_csv_input(
-        "EMPLOYER_CUSTOMERNO", requested_absence, validation_container, False
-    )
+    # TODO --
+    # Identify what the best way to handle multiple records is:
+    # It's technically possible for multiple Employers to have the same
+    # FINEOS employer ID because the database does not make it unique.
+    # Until then, we do not associate the claim with an employer.
 
-    if employer_customer_nbr is not None:
-        employer_pfml_entry = (
-            db_session.query(Employer)
-            .filter(Employer.fineos_employer_id == employer_customer_nbr)
-            .one_or_none()
-        )
-        if employer_pfml_entry is not None:
-            claim.employer_id = employer_pfml_entry.employer_id
+    # Associate claim with employer as well, if found.
+    # employer_customer_nbr = payments_util.validate_csv_input(
+    #     "EMPLOYER_CUSTOMERNO", requested_absence, validation_container, False
+    # )
+
+    # if employer_customer_nbr is not None:
+    #     employer_pfml_entry = (
+    #         db_session.query(Employer)
+    #         .filter(Employer.fineos_employer_id == employer_customer_nbr)
+    #         .one_or_none()
+    #     )
+    #     if employer_pfml_entry is not None:
+    #         claim.employer_id = employer_pfml_entry.employer_id
 
     db_session.add(employee_pfml_entry)
     db_session.add(claim)
@@ -498,17 +546,17 @@ def update_eft_info(
         "ACCOUNTTYPE",
         employee_feed_entry,
         validation_container,
-        True,
+        eft_required,
         custom_validator_func=payments_util.lookup_validator(BankAccountType),
     )
 
-    if nbr_of_validation_errors == len(validation_container.validation_issues):
+    if eft_required and nbr_of_validation_errors == len(validation_container.validation_issues):
         eft = employee_pfml_entry.eft
         if not eft:
             eft = EFT()
         # Cast is to satisfy picky linting
-        eft.routing_nbr = int(cast(str, routing_nbr))
-        eft.account_nbr = int(cast(str, account_nbr))
+        eft.routing_nbr = cast(str, routing_nbr)
+        eft.account_nbr = cast(str, account_nbr)
         eft.bank_account_type_id = BankAccountType.get_id(account_type)
         db_session.add(eft)
         employee_pfml_entry.eft = eft
@@ -520,12 +568,62 @@ def generate_employee_reference_file(
     employee_pfml_entry: Employee,
     validation_container: payments_util.ValidationContainer,
 ) -> None:
-    db_session.add(extract_data.reference_file)
-    employee_reference_file = EmployeeReferenceFile(
-        employee_id=employee_pfml_entry.employee_id,
-        reference_file_id=extract_data.reference_file.reference_file_id,
+    """Create an EmployeeReferenceFile record if none already exists
+
+    This will not create duplicate records if the employee appears multiple
+    times in the same vendor export.
+    """
+
+    # Check to see if an EmployeeReferenceFile record already exists
+    # TODO -- We should eliminate this db query by tracking employees that
+    #         have already appeared in this file, but beware of memory issues
+    #         in case the number is too big to store in a list
+    employee_reference_file = (
+        db_session.query(EmployeeReferenceFile)
+        .filter(
+            EmployeeReferenceFile.employee_id == employee_pfml_entry.employee_id,
+            EmployeeReferenceFile.reference_file_id
+            == extract_data.reference_file.reference_file_id,
+        )
+        .first()
     )
-    db_session.add(employee_reference_file)
+
+    # If none exists, create one
+    if employee_reference_file is None:
+        logger.info(
+            "Creating an EmployeeReferenceFile for employee with customer nbr %s and reference file with reference_file_id %s",
+            employee_pfml_entry.fineos_customer_number,
+            extract_data.reference_file.reference_file_id,
+            extra={
+                "fineos_customer_number": employee_pfml_entry.fineos_customer_number,
+                "reference_file_id": extract_data.reference_file.reference_file_id,
+            },
+        )
+        employee_reference_file = EmployeeReferenceFile(
+            employee=employee_pfml_entry, reference_file=extract_data.reference_file,
+        )
+        db_session.add(employee_reference_file)
+
+    # If one exists, skip
+    else:
+        logger.info(
+            "An EmployeeReferenceFile already exists for employee with customer nbr %s and reference file with reference_file_id %s",
+            employee_pfml_entry.fineos_customer_number,
+            extract_data.reference_file.reference_file_id,
+            extra={
+                "fineos_customer_number": employee_pfml_entry.fineos_customer_number,
+                "reference_file_id": extract_data.reference_file.reference_file_id,
+            },
+        )
+
+
+def manage_state_log(
+    db_session: db.Session,
+    extract_data: ExtractData,
+    employee_pfml_entry: Employee,
+    validation_container: payments_util.ValidationContainer,
+) -> None:
+
     validation_container.record_key = employee_pfml_entry.employee_id
     if validation_container.has_validation_issues():
         state_log = state_log_util.create_state_log(

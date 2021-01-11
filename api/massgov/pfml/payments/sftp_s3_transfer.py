@@ -36,8 +36,10 @@ def copy_to_sftp_and_archive_s3_files(
     source_dir_path = os.path.join(config.s3_bucket_uri, config.source_dir)
     s3_filenames = file_util.list_s3_files_and_directories_by_level(source_dir_path)
     if len(s3_filenames.keys()) == 0:
+        logger.info("No files found to move to SFTP")
         # If there are no new files in S3 return early to avoid the overhead of an SFTP connection.
         return
+    logger.info(f"Copying {s3_filenames} to SFTP server")
 
     sftp_client = file_util.get_sftp_client(
         uri=config.sftp_uri, ssh_key_password=config.ssh_key_password, ssh_key=config.ssh_key,

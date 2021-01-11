@@ -85,6 +85,17 @@ services:
       # - PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL=
       - PFML_EMAIL_ADDRESS=noreplypfml@mass.gov
       - BOUNCE_FORWARDING_EMAIL_ADDRESS=noreplypfml@mass.gov
+      # Uncomment and set these in order to run the FINEOS and CTR ECS tasks locally with real S3
+      # You'll also need to configure the mount for your ~/.aws/credentials in
+      # docker-compose.override.yml in order for this to work.
+      #- FINEOS_DATA_EXPORT_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/fake-fineos-export/
+      #- FINEOS_DATA_IMPORT_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/fake-fineos-import/
+      #- PFML_CTR_INBOUND_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/ctr/inbound
+      #- PFML_CTR_OUTBOUND_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/ctr/outbound
+      #- PFML_FINEOS_INBOUND_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/cps/inbound
+      #- PFML_FINEOS_OUTBOUND_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/cps/outbound
+      #- PFML_ERROR_REPORTS_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/error-reports/outbound
+      #- AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
 
     networks:
       main:

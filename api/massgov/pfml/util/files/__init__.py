@@ -17,8 +17,12 @@ import smart_open
 from botocore.config import Config
 
 import massgov.pfml.util.aws.sts as aws_sts
+import massgov.pfml.util.logging as logging
+
+logger = logging.get_logger(__name__)
 
 EBCDIC_ENCODING = "cp1140"  # See https://pypi.org/project/ebcdic/ for further details
+FINEOS_BUCKET_PREFIX = "fin-som"
 
 
 def is_s3_path(path):
@@ -64,6 +68,27 @@ def split_sftp_url(path):
     return (parts.username or "", parts.hostname, parts.port or 22)
 
 
+def get_s3_client(
+    bucket_name: str, boto_session: Optional[boto3.Session] = None
+) -> botocore.client.BaseClient:
+    """Returns the appropriate S3 client for a given bucket
+    """
+    if boto_session:
+        return boto_session.client("s3")
+    elif bucket_name.startswith(FINEOS_BUCKET_PREFIX):
+        # This should get passed in from the method but getting it
+        # directly from the environment due to time constraints.
+        fineos_boto_session = aws_sts.assume_session(
+            role_arn=os.environ["FINEOS_AWS_IAM_ROLE_ARN"],
+            external_id=os.environ["FINEOS_AWS_IAM_ROLE_EXTERNAL_ID"],
+            role_session_name="payments_copy_file",
+            region_name="us-east-1",
+        )
+        return fineos_boto_session.client("s3")
+    else:
+        return boto3.client("s3")
+
+
 def list_folders(folder_path: str, boto_session: Optional[boto3.Session] = None) -> List[str]:
     """List immediate subfolders under folder path.
     Returns a list of subfolders names (maximum of 1000).
@@ -80,7 +105,7 @@ def list_folders(folder_path: str, boto_session: Optional[boto3.Session] = None)
         if prefix and not prefix.endswith("/"):
             prefix = prefix + "/"
 
-        s3 = boto_session.client("s3") if boto_session else boto3.client("s3")
+        s3 = get_s3_client(bucket_name, boto_session)
         response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
 
         subfolders = []
@@ -129,7 +154,7 @@ def list_files(
         if prefix and not prefix.endswith("/"):
             prefix = prefix + "/"
 
-        s3 = boto_session.client("s3") if boto_session else boto3.client("s3")
+        s3 = get_s3_client(bucket_name, boto_session)
 
         # When the delimiter is provided, s3 knows to stop listing keys that contain it (starting after the prefix).
         # https://docs.aws.amazon.com/AmazonS3/latest/dev/ListingKeysHierarchy.html
@@ -181,7 +206,7 @@ def list_s3_files_and_directories_by_level(
     # Add an empty string at the end of the prefix so it always ends in "/".
     bucket_name, prefix = split_s3_url(path)
     prefix = os.path.join(prefix, "")
-    s3 = boto_session.client("s3") if boto_session else boto3.client("s3")
+    s3 = get_s3_client(bucket_name, boto_session)
 
     contents_by_level: Dict[str, List[str]] = {}
     contents = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix).get("Contents")
@@ -227,35 +252,39 @@ def copy_file(source, destination):
         # s3.copy(copy_source, dest_bucket, dest_path)
 
         # Simulate copy for now using independent download and upload.
-        source_boto3_session = boto3
-        dest_boto3_session = boto3
 
-        is_fineos_source = source_bucket.startswith("fin-som")
-        is_fineos_dest = dest_bucket.startswith("fin-som")
+        # TODO - temporarily commenting this out to use get_s3_client() helper function.
+        # source_boto3_session = boto3
+        # dest_boto3_session = boto3
 
-        if is_fineos_source or is_fineos_dest:
-            # This should get passed in from the method but getting it
-            # directly from the environment due to time constraints.
-            fineos_boto_session = aws_sts.assume_session(
-                role_arn=os.environ["FINEOS_AWS_IAM_ROLE_ARN"],
-                external_id=os.environ["FINEOS_AWS_IAM_ROLE_EXTERNAL_ID"],
-                role_session_name="payments_copy_file",
-                region_name="us-east-1",
-            )
+        # is_fineos_source = source_bucket.startswith("fin-som")
+        # is_fineos_dest = dest_bucket.startswith("fin-som")
 
-            if is_fineos_source:
-                source_boto3_session = fineos_boto_session
+        # if is_fineos_source or is_fineos_dest:
+        #     # This should get passed in from the method but getting it
+        #     # directly from the environment due to time constraints.
+        #     fineos_boto_session = aws_sts.assume_session(
+        #         role_arn=os.environ["FINEOS_AWS_IAM_ROLE_ARN"],
+        #         external_id=os.environ["FINEOS_AWS_IAM_ROLE_EXTERNAL_ID"],
+        #         role_session_name="payments_copy_file",
+        #         region_name="us-east-1",
+        #     )
 
-            if is_fineos_dest:
-                dest_boto3_session = fineos_boto_session
+        #     if is_fineos_source:
+        #         source_boto3_session = fineos_boto_session
+
+        #     if is_fineos_dest:
+        #         dest_boto3_session = fineos_boto_session
 
         file_descriptor, tempfile_path = tempfile.mkstemp()
 
         try:
-            source_s3 = source_boto3_session.client("s3")
+            # dest_s3 = source_boto3_session.client("s3")
+            source_s3 = get_s3_client(source_bucket)
             source_s3.download_file(source_bucket, source_path, tempfile_path)
 
-            dest_s3 = dest_boto3_session.client("s3")
+            # dest_s3 = dest_boto3_session.client("s3")
+            dest_s3 = get_s3_client(dest_bucket)
             dest_s3.upload_file(tempfile_path, dest_bucket, dest_path)
         finally:
             os.close(file_descriptor)
@@ -392,6 +421,7 @@ def get_sftp_client(uri: str, ssh_key_password: str, ssh_key: str) -> paramiko.S
     # https://docs.paramiko.org/en/stable/api/keys.html#paramiko.pkey.PKey.from_private_key
     ssh_key_fileobj = io.StringIO(ssh_key)
     pkey = paramiko.rsakey.RSAKey.from_private_key(ssh_key_fileobj, password=ssh_key_password)
+    logger.info(f"Connecting to SFTP endpoint {uri}")
 
     user, host, port = split_sftp_url(uri)
     t = paramiko.Transport((host, port))
@@ -406,10 +436,14 @@ def copy_file_from_s3_to_sftp(source: str, dest: str, sftp: paramiko.SFTPClient)
 
     # Download file from S3 to a tempfile.
     _handle, tempfile_path = tempfile.mkstemp()
+    logger.info(f"Downloading files from {source} to a temporary local directory.")
     download_from_s3(source, tempfile_path)
 
     # Copy the file from local tempfile to destination.
-    sftp.put(tempfile_path, dest)
+    logger.info(f"Uploading files to SFTP at {dest}")
+    # confirm=False is added as otherwise SFTP will attempt to read
+    # the file it just wrote and fail, and the file might not be available yet.
+    sftp.put(tempfile_path, dest, confirm=False)
 
 
 # Copy the file through a local tempfile instead of streaming from SFTP directly to S3 to reduce the

@@ -61,6 +61,10 @@ class PaymentsS3Config:
     # This is where we store that copy
     # Ex: s3://massgov-pfml-prod-agency-transfer/ctr/outbound/
     pfml_ctr_outbound_path: str
+    # PFML API stores a copy of all files that we generate for error reporting
+    # This is where the store that copy
+    # Ex: s3://massgov-pfml-prod-agency-transfer/error-reports/outbound/
+    pfml_error_reports_path: str
 
 
 def get_s3_config() -> PaymentsS3Config:
@@ -71,6 +75,7 @@ def get_s3_config() -> PaymentsS3Config:
         pfml_ctr_outbound_path=str(os.environ.get("PFML_CTR_OUTBOUND_PATH")),
         pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
         pfml_fineos_outbound_path=str(os.environ.get("PFML_FINEOS_OUTBOUND_PATH")),
+        pfml_error_reports_path=str(os.environ.get("PFML_ERROR_REPORTS_PATH")),
     )
 
 

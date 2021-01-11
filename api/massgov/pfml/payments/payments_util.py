@@ -91,9 +91,14 @@ class ValidationContainer:
 
 
 def lookup_validator(
-    lookup_table_clazz: Type[LookupTable],
+    lookup_table_clazz: Type[LookupTable], disallowed_lookup_values: Optional[List[str]] = None
 ) -> Callable[[str], Optional[ValidationReason]]:
     def validator_func(raw_value: str) -> Optional[ValidationReason]:
+        # In certain scenarios, a value might be in our lookup table, but not be
+        # valid for a particular scenario, this lets you skip those scenarios
+        if disallowed_lookup_values and raw_value in disallowed_lookup_values:
+            return ValidationReason.INVALID_LOOKUP_VALUE
+
         # description_to_db_instance is used by the get_id method
         # If the value passed into this method is set as a key in that, it's valid
         if raw_value not in lookup_table_clazz.description_to_db_instance:
@@ -118,8 +123,8 @@ def validate_csv_input(
         errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
         return None  # Effectively treating "" and "Unknown" the same
 
-    # Check the length only if it is defined
-    if value is not None:
+    # Check the length only if it is defined/not empty
+    if value:
         if min_length and len(value) < min_length:
             errors.add_validation_issue(ValidationReason.FIELD_TOO_SHORT, key)
         if max_length and len(value) > max_length:
@@ -384,6 +389,10 @@ def copy_fineos_data_to_archival_bucket(
         s3_config.pfml_fineos_inbound_path, Constants.S3_INBOUND_RECEIVED_DIR
     )
 
+    # If get_fineos_max_history_date() raises a ValueError, we have
+    # a big problem and it should propagate up.
+    max_history_date = get_fineos_max_history_date(export_type)
+
     # copy all previously unprocessed files to the received folder
     # keep a mapping of expected to mapped files grouped by date
     copied_file_mapping_by_date: Dict[str, Dict[str, str]] = {}
@@ -393,7 +402,6 @@ def copy_fineos_data_to_archival_bucket(
 
         for file_path in files:
             date_str = get_date_group_str_from_path(file_path)
-
             # Only copy folders that are newer than a given date
             # Folders are formatted as 2020-12-17-00-00-00; we just care about the day portion
             try:
@@ -409,10 +417,6 @@ def copy_fineos_data_to_archival_bucket(
                     f"Skipping: FINEOS extract folder named {date_str} is not a parseable date"
                 )
                 continue
-
-            # If get_fineos_max_history_date() raises a ValueError, we have
-            # a big problem and it should propagate up.
-            max_history_date = get_fineos_max_history_date(export_type)
 
             # If the date of the folder is older than the max_history_date,
             # we skip ahead
@@ -463,6 +467,23 @@ def copy_fineos_data_to_archival_bucket(
     # check archive folders for unprocessed dates
     date_folders = file_util.list_folders(source_folder)
     for date_folder in date_folders:
+        # We never want to process anything from before 2020-12-17 in any environment
+        # Add a hardcoded-check here to exclude data that is that old
+        # Folders are formatted as 2020-12-17-00-00-00, we just care about the day portion
+        try:
+            date_of_folder = datetime.strptime(date_folder[:10], "%Y-%m-%d")
+            if date_of_folder < max_history_date:
+                logger.info(
+                    f"Skipping FINEOS extract folder dated {date_folder} as it is prior to 12/17/2020"
+                )
+                continue
+        except ValueError:
+            # There are folders named config and logs that we don't want to process
+            logger.info(
+                f"Skipping FINEOS extract folder named {date_folder} as it is not a parseable date"
+            )
+            continue
+
         if not payment_extract_reference_file_exists_by_date_group(
             db_session, date_folder, export_type
         ):
@@ -483,11 +504,13 @@ def copy_fineos_data_to_archival_bucket(
     return copied_file_mapping_by_date
 
 
+# TODO adjust tests and replace with new version
 def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str]]:
     s3_config = payments_config.get_s3_config()
     source_folder = os.path.join(
         s3_config.pfml_fineos_inbound_path, Constants.S3_INBOUND_RECEIVED_DIR
     )
+    logger.info(f"Grouping files by date in {source_folder}")
     s3_objects = file_util.list_files(source_folder)
     s3_objects.sort()
 

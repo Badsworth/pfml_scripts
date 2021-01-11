@@ -13,14 +13,6 @@ from massgov.pfml.payments.sftp_s3_transfer import (
 )
 
 
-@pytest.fixture
-def setup_mock_sftp_client(monkeypatch, mock_sftp_client):
-    # Mock SFTP client so we can inspect the method calls we make later in the test.
-    monkeypatch.setattr(
-        file_util, "get_sftp_client", lambda uri, ssh_key_password, ssh_key: mock_sftp_client,
-    )
-
-
 def test_copy_to_sftp_and_archive_s3_files_success(
     mock_s3_bucket,
     setup_mock_sftp_client,

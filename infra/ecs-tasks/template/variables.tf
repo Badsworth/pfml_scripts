@@ -149,6 +149,12 @@ variable "eolwd_moveit_sftp_uri" {
   default     = ""
 }
 
+variable "pfml_error_reports_path" {
+  description = "PFML API stores a copy of all error reports generated"
+  type        = string
+  default     = ""
+}
+
 variable "ctr_moveit_incoming_path" {
   description = "CTR/MMARS generates Outbound Return files for PFML API to pick up (MOVEit folder)"
   type        = string

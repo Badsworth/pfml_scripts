@@ -18,3 +18,7 @@ services:
       # To make local development easier, mount project code so that we don't
       # have to rebuild the docker container every time we run
       - .:/app:z
+      # You can make your aws credentials accessible in the container by
+      # uncommenting this line with the path to your aws credentials folder
+      # On a mac, this will generally be in a folder with your name
+      # - /Users/{yourname}/.aws:/home/{yourname}/.aws:ro

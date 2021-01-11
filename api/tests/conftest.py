@@ -260,7 +260,7 @@ def mock_sftp_client(
         def get(self, src: str, dest: str):
             self.calls.append(("get", src, dest))
 
-        def put(self, src: str, dest: str):
+        def put(self, src: str, dest: str, confirm: bool):
             self.calls.append(("put", src, dest))
 
         def remove(self, filename: str):

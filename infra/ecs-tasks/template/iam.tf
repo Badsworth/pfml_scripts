@@ -550,17 +550,9 @@ data "aws_iam_policy_document" "payments_fineos_process_task_role_extras" {
     ]
 
     resources = [
-      "${data.aws_s3_bucket.agency_transfer.arn}"
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
     ]
-
-    condition {
-      test     = "StringEquals"
-      variable = "s3:prefix"
-      values = [
-        "cps/",
-        "cps/*"
-      ]
-    }
 
     effect = "Allow"
   }
@@ -575,6 +567,10 @@ data "aws_iam_policy_document" "payments_fineos_process_task_role_extras" {
     resources = [
       "${data.aws_s3_bucket.agency_transfer.arn}/cps",
       "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/payments",
+      "${data.aws_s3_bucket.agency_transfer.arn}/payments/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
     ]
 
     effect = "Allow"
@@ -591,6 +587,10 @@ data "aws_iam_policy_document" "payments_fineos_process_task_role_extras" {
     resources = [
       "${data.aws_s3_bucket.agency_transfer.arn}/cps",
       "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/payments",
+      "${data.aws_s3_bucket.agency_transfer.arn}/payments/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
     ]
 
     effect = "Allow"
@@ -620,17 +620,9 @@ data "aws_iam_policy_document" "payments_ctr_process_task_role_extras" {
     ]
 
     resources = [
-      "${data.aws_s3_bucket.agency_transfer.arn}"
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
     ]
-
-    condition {
-      test     = "StringEquals"
-      variable = "s3:prefix"
-      values = [
-        "ctr/",
-        "ctr/*"
-      ]
-    }
 
     effect = "Allow"
   }
@@ -645,6 +637,8 @@ data "aws_iam_policy_document" "payments_ctr_process_task_role_extras" {
     resources = [
       "${data.aws_s3_bucket.agency_transfer.arn}/ctr",
       "${data.aws_s3_bucket.agency_transfer.arn}/ctr/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
     ]
 
     effect = "Allow"
@@ -661,8 +655,81 @@ data "aws_iam_policy_document" "payments_ctr_process_task_role_extras" {
     resources = [
       "${data.aws_s3_bucket.agency_transfer.arn}/ctr",
       "${data.aws_s3_bucket.agency_transfer.arn}/ctr/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
     ]
 
     effect = "Allow"
+  }
+}
+
+resource "aws_iam_role" "payments_ctr_import_execution_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-ctr-import-execution-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "payments_ctr_import_execution_role_extras" {
+  role       = aws_iam_role.payments_ctr_import_execution_role.name
+  policy_arn = aws_iam_policy.payments_ctr_import_execution_role_extras.arn
+}
+
+resource "aws_iam_policy" "payments_ctr_import_execution_role_extras" {
+  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-ctr-import-execution-policy"
+  description = "A clone of the standard execution role with extra SSM permissions for Payments CTR Import's decryption keys."
+  policy      = data.aws_iam_policy_document.payments_ctr_import_execution_role_extras.json
+}
+
+data "aws_iam_policy_document" "payments_ctr_import_execution_role_extras" {
+  # Allow ECS to log to Cloudwatch.
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+
+    resources = [
+      "${aws_cloudwatch_log_group.ecs_tasks.arn}:*"
+    ]
+  }
+
+  # Allow ECS to authenticate with ECR and download images.
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+
+    # ECS Fargate doesn't like it when you restrict the access to a single
+    # repository. Instead, it needs access to all of them.
+    resources = [
+      "*"
+    ]
+  }
+
+  # Allow ECS to access secrets from parameter store.
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
+      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}/*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "ssm:GetParametersByPath",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}"
+    ]
   }
 }

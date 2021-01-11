@@ -28,8 +28,8 @@ def test_pickup_files_from_moveit_transforms_s3path_correctly(monkeypatch, test_
 def test_send_files_to_moveit_transforms_s3path_correctly(monkeypatch, test_db_session):
     outbound_s3_path = "s3://massgov-pfml-test-agency-transfer/ctr/outbound/"
     s3_bucket_uri = "s3://massgov-pfml-test-agency-transfer"
-    source_dir = os.path.join("/ctr/outbound", payments_util.Constants.S3_OUTBOUND_READY_DIR)
-    archive_dir = os.path.join("/ctr/outbound", payments_util.Constants.S3_OUTBOUND_SENT_DIR)
+    source_dir = os.path.join("ctr/outbound", payments_util.Constants.S3_OUTBOUND_READY_DIR)
+    archive_dir = os.path.join("ctr/outbound", payments_util.Constants.S3_OUTBOUND_SENT_DIR)
 
     monkeypatch.setenv("PFML_CTR_OUTBOUND_PATH", outbound_s3_path)
 

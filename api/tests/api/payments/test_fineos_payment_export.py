@@ -202,8 +202,14 @@ def test_download_and_parse_data(mock_s3_bucket, tmp_path):
 
 @freeze_time("2021-01-03 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data(
-    mock_s3_bucket, set_exporter_env_vars, test_db_session, tmp_path, initialize_factories_session
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    test_db_session,
+    tmp_path,
+    initialize_factories_session,
+    monkeypatch,
 ):
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(mock_s3_bucket, test_db_session)
     exporter.process_extract_data(tmp_path, test_db_session)
 
@@ -300,8 +306,14 @@ def test_process_extract_data(
 
 
 def test_process_extract_data_one_bad_record(
-    mock_s3_bucket, set_exporter_env_vars, test_db_session, tmp_path, initialize_factories_session
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    test_db_session,
+    tmp_path,
+    initialize_factories_session,
+    monkeypatch,
 ):
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
     # This test will properly process record 1 & 3, but record 2 will
     # end up in an error state because we don't have an TIN/employee associated with them
     setup_process_tests(
@@ -367,6 +379,7 @@ def test_process_extract_data_rollback(
     def err_method(*args):
         raise Exception("Fake Error")
 
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
     monkeypatch.setattr(exporter, "move_files_from_received_to_processed", err_method)
 
     with pytest.raises(Exception, match="Fake Error"):
@@ -456,8 +469,14 @@ def test_process_extract_unprocessed_folder_files(
 
 
 def test_process_extract_data_no_existing_claim_address_eft(
-    mock_s3_bucket, set_exporter_env_vars, test_db_session, tmp_path, initialize_factories_session
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    test_db_session,
+    tmp_path,
+    initialize_factories_session,
+    monkeypatch,
 ):
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(
         mock_s3_bucket, test_db_session, add_claim=False, add_address=False, add_eft=False
     )
@@ -521,8 +540,14 @@ def test_process_extract_data_no_existing_claim_address_eft(
 
 @freeze_time("2021-01-03 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_existing_payment(
-    mock_s3_bucket, set_exporter_env_vars, test_db_session, tmp_path, initialize_factories_session
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    test_db_session,
+    tmp_path,
+    initialize_factories_session,
+    monkeypatch,
 ):
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(mock_s3_bucket, test_db_session, add_payment=True)
 
     exporter.process_extract_data(tmp_path, test_db_session)

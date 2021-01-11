@@ -42,6 +42,7 @@ module "tasks" {
   ctr_moveit_archive_path  = ""
   pfml_ctr_inbound_path    = "s3://massgov-pfml-stage-agency-transfer/ctr/inbound"
   pfml_ctr_outbound_path   = "s3://massgov-pfml-stage-agency-transfer/ctr/outbound"
+  pfml_error_reports_path  = "s3://massgov-pfml-stage-agency-transfer/error-reports/outbound"
 
   pfml_email_address                     = "noreplypfml@mass.gov"
   bounce_forwarding_email_address        = "noreplypfml@mass.gov"
@@ -58,6 +59,7 @@ module "tasks" {
   pfml_fineos_outbound_path       = "s3://massgov-pfml-stage-agency-transfer/cps/outbound"
   fineos_vendor_max_history_date  = "2021-01-11"
   fineos_payment_max_history_date = "2021-01-21"
+
 
   enable_recurring_payments_schedule = false
   enable_register_admins_job         = true

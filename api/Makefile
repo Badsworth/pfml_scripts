@@ -148,6 +148,21 @@ fineos-payments-mock-generate:
 	mkdir -p mock_fineos_payments_files
 	$(PY_RUN_CMD) fineos-payments-mock-generate --folder mock_fineos_payments_files --count 10 --fein 102000000 --ssn 252000000  $(DECODE_LOG)
 
+payments-fineos-process: # Run the Payments FINEOS import process (Just the vendor extract parts for VCC right now)
+	$(PY_RUN_CMD) payments-fineos-process --steps vendor-extract error-report
+
+payments-ctr-process: # Run the Payments Comptroller processes (Just the VCC parts right now)
+	$(PY_RUN_CMD) payments-ctr-process --steps vcc data-mart error-report
+	
+fineos-test-vendor-export-generate:
+	mkdir -p mock_fineos_test_vendor_export
+	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export --fein 103000000 --ssn 253000000 --cvalue 5100 --employeecustomernumber 200 --absencecaseid 200 $(DECODE_LOG)
+
+fineos-test-vendor-export-generate-more:
+	mkdir -p mock_fineos_test_vendor_export_more
+	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export_more --fein 104000000 --ssn 254000000 --cvalue 5200 --employeecustomernumber 300 --absencecaseid 300 $(DECODE_LOG)
+
+
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	aws ecr get-login-password --region 'us-east-1' | \

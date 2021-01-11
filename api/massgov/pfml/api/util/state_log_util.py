@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, Generator, List, Optional, Union
 
+from sqlalchemy.exc import IntegrityError
+
 import massgov.pfml.db as db
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.datetime as datetime_util
@@ -51,9 +53,20 @@ def _create_or_update_latest_state_log(
     latest_state_log = None
     # In some cases, we know this is the first one (eg. from create_state_log_without_associated_model)
     if latest_query_params:
-        latest_state_log = (
-            db_session.query(LatestStateLog).filter(*latest_query_params).one_or_none()
-        )
+        try:
+            latest_state_log = (
+                db_session.query(LatestStateLog).filter(*latest_query_params).one_or_none()
+            )
+        except IntegrityError:
+            logger.warning(
+                "Unexpected error with one_or_none()",
+                extra={
+                    "state_log_id": state_log.state_log_id,
+                    "payment_id": state_log.payment_id,
+                    "employee_id": state_log.employee_id,
+                    "reference_file_id": state_log.reference_file_id,
+                },
+            )
 
     if latest_state_log:
         state_log.prev_state_log = latest_state_log.state_log

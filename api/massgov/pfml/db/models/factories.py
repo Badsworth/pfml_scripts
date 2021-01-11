@@ -301,7 +301,6 @@ class ClaimFactory(BaseFactory):
 
     claim_id = Generators.UuidObj
 
-    employer_id = factory.LazyAttribute(lambda a: a.employer.employer_id)
     authorized_representative_id = None
     claim_type_id = None
     benefit_amount = 100

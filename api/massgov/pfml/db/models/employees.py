@@ -279,8 +279,8 @@ class EmployerLog(Base):
 class EFT(Base):
     __tablename__ = "eft"
     eft_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    routing_nbr = Column(Integer, nullable=False)
-    account_nbr = Column(Integer, nullable=False)
+    routing_nbr = Column(Text, nullable=False)
+    account_nbr = Column(Text, nullable=False)
     bank_account_type_id = Column(
         Integer, ForeignKey("lk_bank_account_type.bank_account_type_id"), nullable=False
     )

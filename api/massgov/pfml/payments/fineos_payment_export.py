@@ -405,10 +405,9 @@ def update_eft(payment_data: PaymentData, employee: Employee, db_session: db.Ses
         eft = EFT()
 
     # Need to cast these values as str rather than Optional[str]
-    # as we've already validated they're not None
-    # for linting, but then make them ints for actually assigning them
-    eft.routing_nbr = int(cast(str, payment_data.routing_nbr))
-    eft.account_nbr = int(cast(str, payment_data.account_nbr))
+    # as we've already validated they're not None for linting
+    eft.routing_nbr = cast(str, payment_data.routing_nbr)
+    eft.account_nbr = cast(str, payment_data.account_nbr)
     eft.bank_account_type_id = BankAccountType.get_id(payment_data.raw_account_type)
 
     employee.eft = eft

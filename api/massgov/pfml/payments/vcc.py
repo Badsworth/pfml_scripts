@@ -318,6 +318,12 @@ def build_individual_vcc_document(
     vcc_doc_cert_elements.update(generic_attributes.copy())
     payments_util.add_cdata_elements(vcc_doc_cert, document, vcc_doc_cert_elements)
 
+    logger.debug(
+        "Added to VCC: employee with fineos_customer_number %s",
+        employee.fineos_customer_number,
+        extra={"fineos_customer_number": employee.fineos_customer_number},
+    )
+
     return root
 
 
@@ -354,6 +360,11 @@ def build_vcc_dat(
     doc_count_offset = get_vcc_doc_counter_offset_for_today(now, db_session)
     for count, employee in enumerate(employees):
         try:
+            logger.debug(
+                "Process: employee with fineos_customer_number %s",
+                employee.fineos_customer_number,
+                extra={"fineos_customer_number": employee.fineos_customer_number},
+            )
             doc_count = count + doc_count_offset
             if doc_count > MAX_VCC_DOCUMENTS_PER_DAY:
                 logger.error(
@@ -388,7 +399,7 @@ def build_vcc_dat(
                 associated_model=employee,
                 start_state=STATE_LOG_PICKUP_STATE,
                 end_state=State.VCC_SENT,
-                outcome=state_log_util.build_outcome("Added Payment to VCC"),
+                outcome=state_log_util.build_outcome("Added vendor to VCC"),
                 db_session=db_session,
             )
 
@@ -445,7 +456,9 @@ def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
         employees = get_eligible_employees(db_session)
 
         if len(employees) == 0:
-            logger.info("Did not find any employees to add to VCC. Not creating VCC files.")
+            logger.info(
+                "Gracefully exiting: Did not find any employees to add to VCC. Not creating VCC files."
+            )
             return (
                 payments_util.Constants.MMARS_FILE_SKIPPED,
                 payments_util.Constants.MMARS_FILE_SKIPPED,
@@ -469,7 +482,12 @@ def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
 
 
 def build_vcc_files_for_s3(db_session: db.Session) -> Tuple[str, str]:
-    return build_vcc_files(db_session, payments_config.get_s3_config().pfml_ctr_outbound_path)
+    logger.info("VCC: Begin")
+    dat_filepath, inf_filepath = build_vcc_files(
+        db_session, payments_config.get_s3_config().pfml_ctr_outbound_path
+    )
+    logger.info("VCC: Done")
+    return (dat_filepath, inf_filepath)
 
 
 def send_bievnt_email(

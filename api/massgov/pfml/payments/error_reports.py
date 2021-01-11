@@ -1,4 +1,5 @@
 import csv
+import os
 import pathlib
 import tempfile
 from dataclasses import dataclass
@@ -9,6 +10,7 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.datetime as datetime_util
+import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
@@ -20,7 +22,8 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
-from massgov.pfml.util.aws.ses import EmailRecipient, send_email_with_attachment
+
+# from massgov.pfml.util.aws.ses import EmailRecipient, send_email_with_attachment
 
 logger = logging.get_logger(__name__)
 
@@ -386,7 +389,7 @@ def _get_time_based_errors(
     state_logs = state_log_util.get_state_logs_stuck_in_state(
         associated_class=associated_class,
         end_state=current_state,
-        days_stuck=days_stuck,
+        days_stuck=30,  # TODO - after launch, set this back to days_stuck, we don't want to send stuck messages while we've half-processed data before launch
         db_session=db_session,
         now=now,
     )
@@ -424,13 +427,22 @@ def _get_time_based_errors(
 
 
 def _send_errors_email(subject: str, body: str, error_files: List[pathlib.Path]) -> None:
-
+    """ TODO - get this working, our role can't do it right now
     email_config = payments_config.get_email_config()
     sender = email_config.pfml_email_address
     recipient = EmailRecipient(to_addresses=[email_config.dfml_business_operations_email_address])
     send_email_with_attachment(
         recipient=recipient, subject=subject, body_text=body, sender=sender, attachments=error_files
     )
+    """
+    s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
+
+    for error_file in error_files:
+        # upload the error reports to a path like: s3://bucket/path/2020-01-01/2020-01-01-CPS-payment-export-error-report.csv
+        output_path = os.path.join(
+            s3_prefix, payments_util.get_now().strftime("%Y-%m-%d"), error_file.name
+        )
+        file_util.upload_to_s3(str(error_file), output_path)
 
 
 def _send_fineos_payments_errors(working_directory: pathlib.Path, db_session: db.Session) -> None:

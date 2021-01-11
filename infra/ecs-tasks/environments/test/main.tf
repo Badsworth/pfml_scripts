@@ -42,6 +42,7 @@ module "tasks" {
   ctr_moveit_archive_path  = ""
   pfml_ctr_inbound_path    = "s3://massgov-pfml-test-agency-transfer/ctr/inbound"
   pfml_ctr_outbound_path   = "s3://massgov-pfml-test-agency-transfer/ctr/outbound"
+  pfml_error_reports_path  = "s3://massgov-pfml-test-agency-transfer/error-reports/outbound"
 
   pfml_email_address                     = "noreplypfml@mass.gov"
   bounce_forwarding_email_address        = "noreplypfml@mass.gov"
