@@ -15,7 +15,6 @@ import { Trans } from "react-i18next";
 import UserFeedback from "../../components/UserFeedback";
 import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
@@ -145,26 +144,24 @@ export const Success = (props) => {
           </div>
         )}
 
-        {isFeatureEnabled("claimantShowJan1ApplicationInstructions") &&
-          claim.isBondingLeave &&
-          reason_qualifier === ReasonQualifier.newBorn && (
-            <div className={secondaryContentContainerClasses}>
-              <Heading level="2">
-                <IconCopy {...iconProps} />
-                {t("pages.claimsSuccess.medicalLeaveAfterBirthHeading")}
-              </Heading>
-              <p>
-                <Trans
-                  i18nKey="pages.claimsSuccess.medicalLeaveAfterBirth"
-                  components={{
-                    "medical-bonding-link": (
-                      <a href={routes.external.massgov.medicalBonding} />
-                    ),
-                  }}
-                />
-              </p>
-            </div>
-          )}
+        {claim.isBondingLeave && reason_qualifier === ReasonQualifier.newBorn && (
+          <div className={secondaryContentContainerClasses}>
+            <Heading level="2">
+              <IconCopy {...iconProps} />
+              {t("pages.claimsSuccess.medicalLeaveAfterBirthHeading")}
+            </Heading>
+            <p>
+              <Trans
+                i18nKey="pages.claimsSuccess.medicalLeaveAfterBirth"
+                components={{
+                  "medical-bonding-link": (
+                    <a href={routes.external.massgov.medicalBonding} />
+                  ),
+                }}
+              />
+            </p>
+          </div>
+        )}
 
         <UserFeedback url={routes.external.massgov.feedbackClaimant} />
 

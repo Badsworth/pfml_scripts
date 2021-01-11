@@ -122,27 +122,23 @@ export const Checklist = (props) => {
           stepHref={step.href}
           editable={step.editable}
         >
-          {/* TODO (CP-1496): Remove this entire conditional when feature flag is removed so each step has a description */}
-          {(isFeatureEnabled("claimantShowJan1ApplicationInstructions") ||
-            step.name !== "leaveDetails") && (
-            <Trans
-              i18nKey="pages.claimsChecklist.stepHTMLDescription"
-              components={{
-                "healthcare-provider-form-link": (
-                  <a
-                    target="_blank"
-                    rel="noopener"
-                    href={routes.external.massgov.healthcareProviderForm}
-                  />
-                ),
-                ul: <ul className="usa-list" />,
-                li: <li />,
-              }}
-              tOptions={{
-                context: description,
-              }}
-            />
-          )}
+          <Trans
+            i18nKey="pages.claimsChecklist.stepHTMLDescription"
+            components={{
+              "healthcare-provider-form-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.healthcareProviderForm}
+                />
+              ),
+              ul: <ul className="usa-list" />,
+              li: <li />,
+            }}
+            tOptions={{
+              context: description,
+            }}
+          />
         </Step>
       );
     });

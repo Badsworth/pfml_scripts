@@ -12,11 +12,6 @@ const flagsConfig = {
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
     claimantShowEmploymentStatus: false,
 
-    // When this flag is enabled, claimant can see the leave types available to them on Jan 1.
-    // TODO (CP-1496): Show Jan 1 application instructions when portal supports
-    // bonding pre/post birth/placement and medical leave
-    claimantShowJan1ApplicationInstructions: false,
-
     // When this flag is enabled, the military leave options are selectable on
     // the Leave Reason page in the claimant flow (CP-1145)
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
@@ -61,27 +56,13 @@ const flagsConfig = {
   development: {
     example: true,
     pfmlTerriyay: true,
-    claimantShowJan1ApplicationInstructions: true,
   },
-  test: {
-    claimantShowJan1ApplicationInstructions: true,
-  },
-  stage: {
-    claimantShowJan1ApplicationInstructions: true,
-  },
-  training: {
-    claimantShowJan1ApplicationInstructions: true,
-  },
-  performance: {
-    claimantShowJan1ApplicationInstructions: true,
-  },
-  uat: {
-    claimantShowAuth: true,
-    claimantShowJan1ApplicationInstructions: true,
-    claimantShowMedicalLeaveType: true,
-  },
+  test: {},
+  stage: {},
+  training: {},
+  performance: {},
+  uat: {},
   prod: {
-    claimantShowJan1ApplicationInstructions: true,
     pfmlTerriyay: true,
   },
 };

@@ -16,19 +16,4 @@ describe("Dashboard", () => {
       expect(trans.dive()).toMatchSnapshot();
     });
   });
-
-  it("renders post-launch content when when claimantShowJan1ApplicationInstructions is true", () => {
-    process.env.featureFlags = {
-      claimantShowJan1ApplicationInstructions: true,
-    };
-    mockRouter.pathname = routes.applications.dashboard;
-
-    const { wrapper } = renderWithAppLogic(Dashboard, {
-      diveLevels: 1,
-    });
-
-    wrapper.find("Trans").forEach((trans) => {
-      expect(trans.dive()).toMatchSnapshot();
-    });
-  });
 });

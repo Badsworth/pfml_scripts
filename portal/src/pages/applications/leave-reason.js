@@ -80,10 +80,6 @@ export const LeaveReason = (props) => {
     value: LeaveReasonEnum.serviceMemberFamily,
   };
 
-  const showJan1ApplicationInstructions = isFeatureEnabled(
-    "claimantShowJan1ApplicationInstructions"
-  );
-
   // Military leave types are disabled for soft launch (CP-1145)
   // TODO (CP-534): Remove this feature flag when the portal supports
   // activeDutyFamily and serviceMemberFamily
@@ -121,9 +117,6 @@ export const LeaveReason = (props) => {
             p: <p />,
             ul: <ul className="usa-list" />,
             li: <li />,
-          }}
-          tOptions={{
-            context: showJan1ApplicationInstructions ? null : "prelaunch",
           }}
         />
       </Alert>

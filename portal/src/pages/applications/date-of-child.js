@@ -6,7 +6,6 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { ReasonQualifier } from "../../models/Claim";
 import get from "lodash/get";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -69,10 +68,9 @@ export const DateOfChild = (props) => {
         })}
         example={t("components.form.dateInputExample")}
         hint={
-          // TODO (CP-1496): Remove feature flag condition
-          isFeatureEnabled("claimantShowJan1ApplicationInstructions") &&
-          reason_qualifier === ReasonQualifier.newBorn &&
-          t("pages.claimsBondingDateOfChild.birthHint")
+          reason_qualifier === ReasonQualifier.newBorn
+            ? t("pages.claimsBondingDateOfChild.birthHint")
+            : null
         }
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}

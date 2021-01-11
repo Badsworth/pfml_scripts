@@ -1003,9 +1003,6 @@ const pages = {
       "I need to manage family affairs while a family member is on active duty in the armed forces.",
     alertBody:
       "<p>To apply for the following paid benefits:</p><ul><li>Paid family leave to care for a family member who serves in the armed forces</li><li>Paid family leave to manage family affairs when a family member is on active duty in the armed forces</li></ul><p>Call the Department of Family and Medical Leave Contact Center at $t(shared.contactCenterPhoneNumber).</p>",
-    // TODO (CP-1496): Remove string once Jan 1 content is always on
-    alertBody_prelaunch:
-      "<p>Starting January$t(chars.nbsp)1, 2021, you can also apply for the following paid$t(chars.nbsp)benefits:</p><ul><li>Medical leave to manage your own <mass-benefits-guide-serious-health-condition>serious health$t(chars.nbsp)condition</mass-benefits-guide-serious-health-condition></li><li>Family leave to bond with your child prior to birth, adoption, or foster placement</li><li>Family leave to manage family affairs while a family member is on active duty$t(chars.nbsp)overseas</li><li>Family leave to care for a family member who serves in the armed$t(chars.nbsp)forces</li></ul>",
     bondingLeaveHint: "Family leave",
     bondingLeaveLabel:
       "I need to bond with my child after birth, adoption, or foster placement.",
@@ -1517,15 +1514,9 @@ const pages = {
     alertOnline:
       "<p>If you are currently employed in Massachusetts but not self-employed, you can apply online or by phone for the following types of paid leave:</p><ul><li>Medical leave due to your own illness, injury, or pregnancy</li><li>Family leave to bond with your child after birth, adoption, or foster placement — whether you are applying before or after the child arrives</li></ul>",
     alertOnlineHeading: "Apply online",
-    // TODO (CP-1496): Remove string once Jan 1 content is always on
-    alertOnline_prelaunch:
-      "<p>You can apply online or by phone if you meet all of the following criteria:</p><ul><li>Currently employed in$t(chars.nbsp)Massachusetts</li><li>Not self-employed</li><li>Applying for paid family leave to bond with your child after a 2020 birth, adoption, or foster placement</li></ul>",
     alertPhone:
       "<p>Apply by calling the Department of Family and Medical Leave Contact Center at $t(shared.contactCenterPhoneNumber) if <strong>any</strong> of the following are true:</p><ul><li>You are self-employed or unemployed and you are applying for paid leave</li><li>You need paid family leave to care for a family member who serves in the armed forces</li><li>You need paid family leave to manage family affairs when a family member is on active duty in the armed forces</li></ul>",
     alertPhoneHeading: "Apply by phone",
-    // TODO (CP-1496): Remove string once Jan 1 content is always on
-    alertPhone_prelaunch:
-      "<p>Apply by calling the Department of Family and Medical Leave Contact Center at $t(shared.contactCenterPhoneNumber) if you meet all of the following criteria:</p><ul><li>Self-employed or unemployed</li><li>Applying for paid family leave to bond with your child after a 2020 birth, adoption, or foster placement</li></ul><p>More benefits will be available starting January$t(chars.nbsp)1, 2021. Learn more at <benefits-timeline-link>mass.gov</benefits-timeline-link>.</p>",
     createClaimButton: "Create an application",
     stepOne:
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
@@ -1536,9 +1527,6 @@ const pages = {
     stepTwo:
       "<p>For medical leave your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
     stepTwoHeading: "2. Get documentation that supports your leave request",
-    // TODO (CP-1496): Remove string once Jan 1 content is always on
-    stepTwo_prelaunch:
-      "<p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p>",
     title: "$t(shared.dashboardTitles.create)",
   },
   employersAuthCreateAccount: {

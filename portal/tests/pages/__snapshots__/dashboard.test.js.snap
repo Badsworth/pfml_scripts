@@ -36,11 +36,6 @@ exports[`Dashboard renders dashboard content 1`] = `
         }
       }
       i18nKey="pages.dashboard.alertOnline"
-      tOptions={
-        Object {
-          "context": "prelaunch",
-        }
-      }
     />
     <Heading
       level="3"
@@ -66,11 +61,6 @@ exports[`Dashboard renders dashboard content 1`] = `
         }
       }
       i18nKey="pages.dashboard.alertPhone"
-      tOptions={
-        Object {
-          "context": "prelaunch",
-        }
-      }
     />
   </Alert>
   <div
@@ -160,11 +150,6 @@ exports[`Dashboard renders dashboard content 1`] = `
         }
       }
       i18nKey="pages.dashboard.stepTwo"
-      tOptions={
-        Object {
-          "context": "prelaunch",
-        }
-      }
     />
     <Heading
       level="2"
@@ -231,144 +216,6 @@ Array [
   <p
     key="p-0"
   >
-    You can apply online or by phone if you meet all of the following criteria:
-  </p>,
-  <ul
-    className="usa-list"
-    key="1"
-  >
-    <li
-      key="0"
-    >
-      Currently employed in Massachusetts
-    </li>
-    <li
-      key="1"
-    >
-      Not self-employed
-    </li>
-    <li
-      key="2"
-    >
-      Applying for paid family leave to bond with your child after a 2020 birth, adoption, or foster placement
-    </li>
-  </ul>,
-]
-`;
-
-exports[`Dashboard renders dashboard content 3`] = `
-Array [
-  <p
-    key="p-0"
-  >
-    Apply by calling the Department of Family and Medical Leave Contact Center at (833) 344‑7365 if you meet all of the following criteria:
-  </p>,
-  <ul
-    className="usa-list"
-    key="1"
-  >
-    <li
-      key="0"
-    >
-      Self-employed or unemployed
-    </li>
-    <li
-      key="1"
-    >
-      Applying for paid family leave to bond with your child after a 2020 birth, adoption, or foster placement
-    </li>
-  </ul>,
-  <p
-    key="p-2"
-  >
-    More benefits will be available starting January 1, 2021. Learn more at 
-    <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
-      key="1"
-    >
-      mass.gov
-    </a>
-    .
-  </p>,
-]
-`;
-
-exports[`Dashboard renders dashboard content 4`] = `
-Array [
-  <p
-    key="p-0"
-  >
-    If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.
-  </p>,
-  <p
-    key="p-1"
-  >
-    Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.
-  </p>,
-]
-`;
-
-exports[`Dashboard renders dashboard content 5`] = `
-<p
-  key="p-0"
->
-  For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.
-</p>
-`;
-
-exports[`Dashboard renders dashboard content 6`] = `
-Array [
-  <p
-    key="p-0"
-  >
-    Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.
-  </p>,
-  <p
-    key="p-1"
-  >
-    If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be 
-    <a
-      href="https://www.mass.gov/pfml-medical-bonding"
-      key="1"
-    >
-      easily added to your claim
-    </a>
-     by calling our Contact Center at (833) 344‑7365.
-  </p>,
-  <p
-    key="p-2"
-  >
-    You need to create multiple leave applications if you are:
-  </p>,
-  <ul
-    className="usa-list"
-    key="3"
-  >
-    <li
-      key="0"
-    >
-      Taking leave from multiple employers.
-    </li>
-    <li
-      key="1"
-    >
-      Taking time off in uneven blocks of time (intermittent leave), 
-      <strong
-        key="strong-1"
-      >
-        and
-      </strong>
-       taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.
-    </li>
-  </ul>,
-]
-`;
-
-exports[`Dashboard renders post-launch content when when claimantShowJan1ApplicationInstructions is true 1`] = `
-Array [
-  <p
-    key="p-0"
-  >
     If you are currently employed in Massachusetts but not self-employed, you can apply online or by phone for the following types of paid leave:
   </p>,
   <ul
@@ -389,7 +236,7 @@ Array [
 ]
 `;
 
-exports[`Dashboard renders post-launch content when when claimantShowJan1ApplicationInstructions is true 2`] = `
+exports[`Dashboard renders dashboard content 3`] = `
 Array [
   <p
     key="p-0"
@@ -425,7 +272,7 @@ Array [
 ]
 `;
 
-exports[`Dashboard renders post-launch content when when claimantShowJan1ApplicationInstructions is true 3`] = `
+exports[`Dashboard renders dashboard content 4`] = `
 Array [
   <p
     key="p-0"
@@ -440,7 +287,7 @@ Array [
 ]
 `;
 
-exports[`Dashboard renders post-launch content when when claimantShowJan1ApplicationInstructions is true 4`] = `
+exports[`Dashboard renders dashboard content 5`] = `
 Array [
   <p
     key="p-0"
@@ -467,7 +314,7 @@ Array [
 ]
 `;
 
-exports[`Dashboard renders post-launch content when when claimantShowJan1ApplicationInstructions is true 5`] = `
+exports[`Dashboard renders dashboard content 6`] = `
 Array [
   <p
     key="p-0"
