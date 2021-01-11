@@ -689,7 +689,7 @@ const pages = {
     createClaimantAccount:
       "<strong>Need to apply for paid leave? <create-account-link>Create an account</create-account-link></strong>",
     createEmployerAccount:
-      "Are you a Massachusetts employer? <create-employer-account-link>Create an employer account</create-employer-account-link>",
+      "<strong>Are you a Massachusetts employer? <create-employer-account-link>Create an employer account</create-employer-account-link></strong>",
     createEmployerAccount_contactCallCenter:
       "<strong>Are you a Massachusetts employer?</strong> Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> to create an employer account.",
     forgotPasswordLink: "Forgot your password?",
@@ -1579,6 +1579,20 @@ const pages = {
     submitButton: "Submit",
     title: "Finish setting up your account",
     usernameLabel: "$t(shared.usernameLabel)",
+  },
+  employersAuthVerifyBusiness: {
+    companyNameLabel: "Company: {{company}}",
+    detailsLabel: "Where to find tax withholding information",
+    detailsList:
+      "<ul><li>Placeholder</li><li>Placeholder</li><li>Placeholder</li></ul>",
+    employerIdNumberLabel: "Employer ID number (EIN): {{ein}}",
+    haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
+    lead:
+      "We need more information to verify your identity. We require every employer to verify recent <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> data when creating an account. This helps protect your employees and your company information.",
+    submitButton: "Submit",
+    title: "Verify your tax withholding data",
+    withholdingAmountHint: "Include the full amount with dollars and cents.",
+    withholdingAmountLabel: "Withholding tax amount for {{date}}",
   },
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",

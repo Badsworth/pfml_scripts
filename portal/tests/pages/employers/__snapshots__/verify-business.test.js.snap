@@ -1,0 +1,95 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VerifyBusiness renders the page 1`] = `
+<form
+  className="usa-form"
+  onSubmit={[Function]}
+>
+  <Title>
+    Verify your tax withholding data
+  </Title>
+  <Lead>
+    Company: Company Name
+    <br />
+    Employer ID number (EIN): XX-XXX-XXXX
+  </Lead>
+  <Lead>
+    <Trans
+      components={
+        Object {
+          "mass-tax-connect-link": <a
+            href=""
+          />,
+        }
+      }
+      i18nKey="pages.employersAuthVerifyBusiness.lead"
+    />
+  </Lead>
+  <Details
+    label="Where to find tax withholding information"
+  >
+    <Trans
+      components={
+        Object {
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.employersAuthVerifyBusiness.detailsList"
+    />
+  </Details>
+  <InputText
+    hint="Include the full amount with dollars and cents."
+    label="Withholding tax amount for XX-XX-XXXX"
+    mask="currency"
+    name="withholdingAmount"
+    onChange={[Function]}
+    smallLabel={true}
+    value=""
+  />
+  <Button
+    loading={false}
+    type="submit"
+  >
+    Submit
+  </Button>
+</form>
+`;
+
+exports[`VerifyBusiness renders the page 2`] = `
+Array [
+  "We need more information to verify your identity. We require every employer to verify recent ",
+  <a
+    href=""
+    key="1"
+  >
+    MassTaxConnect
+  </a>,
+  " data when creating an account. This helps protect your employees and your company information.",
+]
+`;
+
+exports[`VerifyBusiness renders the page 3`] = `
+<ul
+  className="usa-list"
+  key="0"
+>
+  <li
+    key="0"
+  >
+    Placeholder
+  </li>
+  <li
+    key="1"
+  >
+    Placeholder
+  </li>
+  <li
+    key="2"
+  >
+    Placeholder
+  </li>
+</ul>
+`;

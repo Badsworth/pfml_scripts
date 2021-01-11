@@ -69,6 +69,7 @@ const routes = {
     review: "/employers/applications/review",
     status: "/employers/applications/status",
     success: "/employers/applications/success",
+    verifyBusiness: "/employers/verify-business",
   },
   external: {
     massgov: {
