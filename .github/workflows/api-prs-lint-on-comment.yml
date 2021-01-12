@@ -67,4 +67,6 @@ jobs:
         with:
           message: 'Autoformat API files'
           branch: ${{ fromJson(steps.get_pull_request_ref.outputs.data).head.ref }}
+          author_name: 'PFMLDevOps'
+          author_email: '68565627+PFMLDevOps@users.noreply.github.com'
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
