@@ -156,6 +156,7 @@ resource "aws_lambda_function" "cognito_custom_message" {
 
   environment {
     variables = {
+      ENVIRONMENT                           = var.environment_name
       NEW_RELIC_ACCOUNT_ID                  = "2837112"        # PFML account
       NEW_RELIC_TRUSTED_ACCOUNT_KEY         = "1606654"        # EOLWD parent account
       NEW_RELIC_LAMBDA_HANDLER              = "lambda.handler" # the actual lambda entrypoint

@@ -54,6 +54,7 @@ resource "aws_lambda_function" "cognito_pre_signup" {
 
   environment {
     variables = {
+      ENVIRONMENT                           = var.environment_name
       DB_HOST                               = aws_db_instance.default.address
       DB_NAME                               = aws_db_instance.default.name
       DB_USERNAME                           = "pfml_api"
@@ -142,6 +143,7 @@ resource "aws_lambda_function" "cognito_post_confirmation" {
 
   environment {
     variables = {
+      ENVIRONMENT                                 = var.environment_name
       DB_HOST                                     = aws_db_instance.default.address
       DB_NAME                                     = aws_db_instance.default.name
       DB_USERNAME                                 = "pfml_api"
@@ -221,6 +223,7 @@ resource "aws_lambda_function" "formstack_import" {
 
   environment {
     variables = {
+      ENVIRONMENT                           = var.environment_name
       DB_HOST                               = aws_db_instance.default.address
       DB_NAME                               = aws_db_instance.default.name
       DB_USERNAME                           = "pfml_api"
@@ -264,6 +267,7 @@ resource "aws_lambda_function" "eligibility_feed" {
 
   environment {
     variables = {
+      ENVIRONMENT                                 = var.environment_name
       DB_HOST                                     = aws_db_instance.default.address
       DB_NAME                                     = aws_db_instance.default.name
       DB_USERNAME                                 = "pfml_api"
