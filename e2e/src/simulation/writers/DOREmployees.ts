@@ -44,6 +44,8 @@ export function transformDOREmployeesEmployerLines(
           employer.name.padEnd(255),
           employer.fein.replace(/-/g, "").padEnd(14),
           "F",
+          employer.fein.replace(/-/g, "").padEnd(14),
+          60000,
           formatISODate(period),
           formatISODatetime(period)
         )

@@ -6,6 +6,7 @@ import {
   SimulationClaim,
   WageSpecification,
 } from "./types";
+import unique from "./unique";
 
 /**
  * Creates an employee "pool" from a previous simulation.
@@ -105,6 +106,14 @@ function generateWages(spec: WageSpecification): number {
   return faker.random.number({ min, max });
 }
 
+const generateSSN = unique(() => {
+  let ssn;
+  do {
+    ssn = new RandomSSN().value().toFormattedString();
+  } while (ssn.startsWith("250-0"));
+  return ssn;
+});
+
 export function fromEmployerFactory(
   employerFactory: EmployerFactory
 ): EmployeeFactory {
@@ -112,7 +121,7 @@ export function fromEmployerFactory(
     return {
       first_name: faker.name.firstName(),
       last_name: faker.name.lastName(),
-      tax_identifier: new RandomSSN().value().toFormattedString(),
+      tax_identifier: generateSSN(),
       employer_fein: employerFactory().fein,
       wages: generateWages(wageSpec),
     };
