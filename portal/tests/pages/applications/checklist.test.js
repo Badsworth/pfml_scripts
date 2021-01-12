@@ -1,5 +1,7 @@
 import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import Checklist from "../../../src/pages/applications/checklist";
+import { mockRouter } from "next/router";
+import routes from "../../../src/routes";
 
 function renderStepListDescription(stepListWrapper) {
   return stepListWrapper
@@ -12,6 +14,10 @@ function renderStepListDescription(stepListWrapper) {
 const diveLevels = 4;
 
 describe("Checklist", () => {
+  beforeEach(() => {
+    mockRouter.pathname = routes.applications.checklist;
+  });
+
   it("renders multiple StepList components with list of Steps", () => {
     const { wrapper } = renderWithAppLogic(Checklist, {
       diveLevels,

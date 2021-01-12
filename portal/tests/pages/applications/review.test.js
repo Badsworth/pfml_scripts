@@ -20,15 +20,18 @@ import Review, {
 } from "../../../src/pages/applications/review";
 import { DateTime } from "luxon";
 import React from "react";
+import { mockRouter } from "next/router";
+import routes from "../../../src/routes";
 import { shallow } from "enzyme";
-
-jest.mock("../../../src/hooks/useAppLogic");
 
 // Dive more levels to account for withClaimDocuments HOC
 const diveLevels = 4;
 
 describe("Part 1 Review Page", () => {
   describe("when all data is present", () => {
+    beforeEach(() => {
+      mockRouter.pathname = routes.applications.review;
+    });
     it("renders Review page with Part 1 content and edit links", () => {
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: new MockClaimBuilder()
@@ -61,10 +64,12 @@ describe("Part 1 Review Page", () => {
       claimAttrs: new MockClaimBuilder().part1Complete().create(),
       diveLevels,
     });
+    const submitSpy = jest.spyOn(appLogic.claims, "submit");
+    const completeSpy = jest.spyOn(appLogic.claims, "complete");
     wrapper.find("Button").simulate("click");
 
-    expect(appLogic.claims.submit).toHaveBeenCalledWith(claim.application_id);
-    expect(appLogic.claims.complete).not.toHaveBeenCalled();
+    expect(submitSpy).toHaveBeenCalledWith(claim.application_id);
+    expect(completeSpy).not.toHaveBeenCalled();
   });
 });
 
@@ -89,12 +94,12 @@ describe("Final Review Page", () => {
     });
 
     it("completes the application when the user clicks Submit", () => {
+      const submitSpy = jest.spyOn(appLogic.claims, "submit");
+      const completeSpy = jest.spyOn(appLogic.claims, "complete");
       wrapper.find("Button").simulate("click");
 
-      expect(appLogic.claims.submit).not.toHaveBeenCalled();
-      expect(appLogic.claims.complete).toHaveBeenCalledWith(
-        claim.application_id
-      );
+      expect(submitSpy).not.toHaveBeenCalled();
+      expect(completeSpy).toHaveBeenCalledWith(claim.application_id);
     });
 
     it("renders a spinner for loading documents", () => {
@@ -255,10 +260,14 @@ describe("Leave reason", () => {
       const claim = new MockClaimBuilder().completed().create();
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: claim,
-        render: "mount",
+        diveLevels,
       });
-      expect(wrapper.text()).toContain(pregnancyOrRecentBirthLabel);
-      expect(wrapper.text()).not.toContain(familyLeaveTypeLabel);
+      expect(
+        wrapper.find({ label: pregnancyOrRecentBirthLabel }).exists()
+      ).toBe(true);
+      expect(wrapper.find({ label: familyLeaveTypeLabel }).exists()).toBe(
+        false
+      );
     });
   });
 
@@ -270,10 +279,12 @@ describe("Leave reason", () => {
         .create();
       const { wrapper } = renderWithAppLogic(Review, {
         claimAttrs: claim,
-        render: "mount",
+        diveLevels,
       });
-      expect(wrapper.text()).not.toContain(pregnancyOrRecentBirthLabel);
-      expect(wrapper.text()).toContain(familyLeaveTypeLabel);
+      expect(
+        wrapper.find({ label: pregnancyOrRecentBirthLabel }).exists()
+      ).toBe(false);
+      expect(wrapper.find({ label: familyLeaveTypeLabel }).exists()).toBe(true);
     });
   });
 });

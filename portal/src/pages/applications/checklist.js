@@ -1,7 +1,7 @@
 import Claim, { ClaimStatus, ReasonQualifier } from "../../models/Claim";
 import Document, { DocumentType } from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
-import { filter, findIndex, get } from "lodash";
+import { camelCase, filter, findIndex, get } from "lodash";
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
@@ -109,6 +109,13 @@ export const Checklist = (props) => {
   function renderSteps(steps) {
     return steps.map((step) => {
       const description = getStepDescription(step.name, claim);
+      const stepHref = appLogic.portalFlow.getNextPageRoute(
+        step.name,
+        { claim },
+        {
+          claim_id: claim.application_id,
+        }
+      );
 
       return (
         <Step
@@ -117,9 +124,11 @@ export const Checklist = (props) => {
           })}
           key={step.name}
           number={getStepNumber(step)}
-          title={t("pages.claimsChecklist.stepTitle", { context: step.name })}
+          title={t("pages.claimsChecklist.stepTitle", {
+            context: camelCase(step.name),
+          })}
           status={step.status}
-          stepHref={step.href}
+          stepHref={stepHref}
           editable={step.editable}
         >
           <Trans
@@ -159,7 +168,7 @@ export const Checklist = (props) => {
       "leave_details.has_future_child_date"
     );
     if (stepName !== ClaimSteps.uploadCertification) {
-      return stepName;
+      return camelCase(stepName);
     }
     if (claimReason === LeaveReason.medical) {
       return "medical";
@@ -302,6 +311,9 @@ Checklist.propTypes = {
     appErrors: PropTypes.object.isRequired,
     claims: PropTypes.shape({
       warningsLists: PropTypes.object.isRequired,
+    }).isRequired,
+    portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
   claim: PropTypes.instanceOf(Claim).isRequired,

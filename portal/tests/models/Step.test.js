@@ -1,5 +1,4 @@
 import BaseModel from "../../src/models/BaseModel";
-import Claim from "../../src/models/Claim";
 import { MockClaimBuilder } from "../test-utils";
 import Step from "../../src/models/Step";
 import claimantConfig from "../../src/flows/claimant";
@@ -23,40 +22,6 @@ describe("Step Model", () => {
       },
     },
   ];
-
-  describe("href", () => {
-    it("returns href with claim id parameter set", () => {
-      const context = { claim: new Claim({ application_id: "12345" }) };
-
-      const step = new Step({
-        name,
-        pages,
-        context,
-      });
-
-      expect(step.href).toEqual(expect.stringContaining("?claim_id="));
-    });
-  });
-
-  describe("initialPage", () => {
-    it("return first page's route", () => {
-      const step = new Step({
-        name,
-        pages,
-      });
-      expect(step.initialPage).toBe(pages[0].route);
-    });
-
-    it("return initialPageRoute while initialPageRoute is specified", () => {
-      const initialPageRoute = "/testing";
-      const step = new Step({
-        name,
-        pages,
-        initialPageRoute,
-      });
-      expect(step.initialPage).toBe(initialPageRoute);
-    });
-  });
 
   describe("isComplete", () => {
     it("uses completeCond when present", () => {
@@ -353,13 +318,13 @@ describe("Step Model", () => {
 
       expect(steps.map((s) => s.name)).toMatchInlineSnapshot(`
         Array [
-          "verifyId",
-          "employerInformation",
-          "leaveDetails",
-          "reviewAndConfirm",
-          "payment",
-          "uploadId",
-          "uploadCertification",
+          "VERIFY_ID",
+          "EMPLOYER_INFORMATION",
+          "LEAVE_DETAILS",
+          "REVIEW_AND_CONFIRM",
+          "PAYMENT",
+          "UPLOAD_ID",
+          "UPLOAD_CERTIFICATION",
         ]
       `);
     });

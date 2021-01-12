@@ -1,22 +1,21 @@
 import { get, groupBy, isEmpty, map } from "lodash";
 import BaseModel from "./BaseModel";
-import { createRouteWithQuery } from "../utils/routeWithParams";
 import getRelevantIssues from "../utils/getRelevantIssues";
-import routes from "../routes";
 
 /**
- * Unique identifiers for steps in the portal application
+ * Unique identifiers for steps in the portal application. The values
+ * map to events in our routing state machine.
  * @enum {string}
  */
 export const ClaimSteps = {
-  verifyId: "verifyId",
-  employerInformation: "employerInformation",
-  leaveDetails: "leaveDetails",
-  otherLeave: "otherLeave",
-  reviewAndConfirm: "reviewAndConfirm",
-  payment: "payment",
-  uploadId: "uploadId",
-  uploadCertification: "uploadCertification",
+  verifyId: "VERIFY_ID",
+  employerInformation: "EMPLOYER_INFORMATION",
+  leaveDetails: "LEAVE_DETAILS",
+  otherLeave: "OTHER_LEAVE",
+  reviewAndConfirm: "REVIEW_AND_CONFIRM",
+  payment: "PAYMENT",
+  uploadCertification: "UPLOAD_CERTIFICATION",
+  uploadId: "UPLOAD_ID",
 };
 
 const fieldHasValue = (fieldPath, context) => {
@@ -63,12 +62,6 @@ export default class Step extends BaseModel {
        */
       pages: null,
       /**
-       * @type {string}
-       * Optionally define which route a user should be directed to for this Step.
-       * By default, the first entry in `pages` will be used.
-       */
-      initialPageRoute: null,
-      /**
        * @type {Step[]}
        * Array of steps that must be completed before this step
        */
@@ -103,18 +96,6 @@ export default class Step extends BaseModel {
 
   get fields() {
     return this.pages.flatMap((page) => page.meta.fields);
-  }
-
-  get initialPage() {
-    if (this.initialPageRoute) return this.initialPageRoute;
-    return this.pages[0].route;
-  }
-
-  // page user is navigated to when clicking into step
-  get href() {
-    return createRouteWithQuery(this.initialPage, {
-      claim_id: get(this.context, "claim.application_id"),
-    });
   }
 
   get status() {
@@ -247,11 +228,6 @@ export default class Step extends BaseModel {
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.reviewAndConfirm],
-      // TODO (CP-1272): Utilize the Checklist state node's transitions instead of
-      // relying on the array order or the extra `initialPageRoute` property
-      initialPageRoute: claim.isBondingLeave
-        ? routes.applications.bondingLeaveAttestation
-        : routes.applications.review,
       dependsOn: filterOutHiddenSteps([
         verifyId,
         employerInformation,

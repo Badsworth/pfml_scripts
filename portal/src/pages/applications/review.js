@@ -114,7 +114,15 @@ export const Review = (props) => {
   const getStepEditHref = (name) => {
     const step = steps.find((s) => s.name === name);
 
-    if (step && step.editable) return step.href;
+    if (step && step.editable) {
+      return appLogic.portalFlow.getNextPageRoute(
+        step.name,
+        { claim },
+        {
+          claim_id: claim.application_id,
+        }
+      );
+    }
   };
 
   const handleSubmit = useThrottledHandler(async () => {
@@ -704,6 +712,9 @@ Review.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
     claims: PropTypes.object.isRequired,
+    portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
+    }).isRequired,
   }).isRequired,
   claim: PropTypes.instanceOf(Claim),
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),

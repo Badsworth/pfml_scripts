@@ -52,6 +52,47 @@ describe("usePortalFlow", () => {
     });
   });
 
+  describe("getNextPageRoute", () => {
+    let expectedRoute, portalFlow;
+    beforeEach(() => {
+      mockRouter.pathname = routes.applications.checklist;
+      expectedRoute = machineConfigs.states[mockRouter.pathname].on.VERIFY_ID;
+      testHook(() => {
+        portalFlow = usePortalFlow();
+      });
+    });
+
+    it("returns the url with the provided event", () => {
+      const result = portalFlow.getNextPageRoute("VERIFY_ID", {});
+      expect(result).toBe(expectedRoute);
+    });
+
+    describe("when params are passed", () => {
+      it("adds params to url", () => {
+        const params = { param1: "test" };
+        const result = portalFlow.getNextPageRoute("VERIFY_ID", {}, params);
+
+        expect(result).toBe(`${expectedRoute}?param1=${params.param1}`);
+      });
+    });
+
+    describe("when path is not defined", () => {
+      it("throws error", () => {
+        mockRouter.pathname = "/not/in/configs";
+
+        testHook(() => {
+          portalFlow = usePortalFlow();
+        });
+
+        const testGoToPageFor = () => {
+          portalFlow.getNextPageRoute();
+        };
+
+        expect(testGoToPageFor).toThrowError(RouteTransitionError);
+      });
+    });
+  });
+
   describe("goToNextPage", () => {
     let nextPageRoute, portalFlow;
 
@@ -111,7 +152,7 @@ describe("usePortalFlow", () => {
             "fields": Array [
               "claim.tax_identifier",
             ],
-            "step": "verifyId",
+            "step": "VERIFY_ID",
           },
           "on": Object {
             "CONTINUE": "/applications/checklist",

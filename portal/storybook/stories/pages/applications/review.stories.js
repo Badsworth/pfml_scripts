@@ -38,6 +38,9 @@ export const DefaultStory = (args) => {
         }),
       ]),
     },
+    portalFlow: {
+      getNextPageRoute: () => "/storybook-mock",
+    },
   };
 
   return (

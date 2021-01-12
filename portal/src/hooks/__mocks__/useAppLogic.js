@@ -59,6 +59,7 @@ export default jest.fn(() => ({
     submit: jest.fn(),
   },
   portalFlow: {
+    getNextPageRoute: jest.fn(),
     goTo: jest.fn(),
     goToNextPage: jest.fn(),
     goToPageFor: jest.fn(),

@@ -117,6 +117,9 @@ export const DefaultStory = (args) => {
       attachDocument: () => {},
       documents: new DocumentCollection(documents || []),
     },
+    portalFlow: {
+      getNextPageRoute: () => "/storybook-mock",
+    },
   };
 
   return (

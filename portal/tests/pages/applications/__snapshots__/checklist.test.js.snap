@@ -281,7 +281,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     <Step
       completedText="Completed"
       editable={true}
-      key="verifyId"
+      key="VERIFY_ID"
       number={1}
       status="completed"
       stepHref="/applications/name?claim_id=mock_application_id"
@@ -312,7 +312,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     <Step
       completedText="Completed"
       editable={true}
-      key="employerInformation"
+      key="EMPLOYER_INFORMATION"
       number={2}
       status="completed"
       stepHref="/applications/employment-status?claim_id=mock_application_id"
@@ -343,7 +343,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     <Step
       completedText="Completed"
       editable={true}
-      key="leaveDetails"
+      key="LEAVE_DETAILS"
       number={3}
       status="completed"
       stepHref="/applications/leave-reason?claim_id=mock_application_id"
@@ -374,7 +374,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     <Step
       completedText="Completed"
       editable={true}
-      key="reviewAndConfirm"
+      key="REVIEW_AND_CONFIRM"
       number={4}
       status="not_started"
       stepHref="/applications/review?claim_id=mock_application_id"
@@ -423,7 +423,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     <Step
       completedText="Completed"
       editable={true}
-      key="payment"
+      key="PAYMENT"
       number={5}
       status="disabled"
       stepHref="/applications/payment-method?claim_id=mock_application_id"
@@ -472,7 +472,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     <Step
       completedText="Completed"
       editable={true}
-      key="uploadId"
+      key="UPLOAD_ID"
       number={6}
       status="disabled"
       stepHref="/applications/upload-id?claim_id=mock_application_id"
@@ -503,7 +503,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     <Step
       completedText="Completed"
       editable={true}
-      key="uploadCertification"
+      key="UPLOAD_CERTIFICATION"
       number={7}
       status="disabled"
       stepHref="/applications/upload-certification?claim_id=mock_application_id"

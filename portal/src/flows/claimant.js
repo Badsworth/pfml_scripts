@@ -65,6 +65,19 @@ export const guards = {
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
 };
 
+/**
+ * Events shared by checklist and review
+ */
+const checklistEvents = {
+  VERIFY_ID: routes.applications.name,
+  LEAVE_DETAILS: routes.applications.leaveReason,
+  OTHER_LEAVE: routes.applications.employerBenefits,
+  EMPLOYER_INFORMATION: routes.applications.employmentStatus,
+  PAYMENT: routes.applications.paymentMethod,
+  UPLOAD_CERTIFICATION: routes.applications.uploadCertification,
+  UPLOAD_ID: routes.applications.uploadId,
+};
+
 export default {
   states: {
     [routes.applications.dashboard]: {
@@ -95,16 +108,6 @@ export default {
     [routes.applications.checklist]: {
       meta: {},
       on: {
-        // These are aids for our unit tests to support
-        // navigating the full state machine. Each step
-        // in the checklist should have a transition
-        // that points to the expected route a user is
-        // directed to when they enter the Step.
-        VERIFY_ID: routes.applications.name,
-        LEAVE_DETAILS: routes.applications.leaveReason,
-        OTHER_LEAVE: routes.applications.employerBenefits,
-        EMPLOYER_INFORMATION: routes.applications.employmentStatus,
-        PAYMENT: routes.applications.paymentMethod,
         REVIEW_AND_CONFIRM: [
           {
             target: routes.applications.bondingLeaveAttestation,
@@ -112,8 +115,7 @@ export default {
           },
           { target: routes.applications.review },
         ],
-        UPLOAD_CERTIFICATION: routes.applications.uploadCertification,
-        UPLOAD_ID: routes.applications.uploadId,
+        ...checklistEvents,
       },
     },
     [routes.applications.success]: {
@@ -465,6 +467,7 @@ export default {
             target: routes.applications.checklist,
           },
         ],
+        ...checklistEvents,
       },
     },
     [routes.applications.uploadDocsOptions]: {

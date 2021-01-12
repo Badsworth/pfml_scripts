@@ -40,19 +40,30 @@ const usePortalFlow = () => {
   };
 
   /**
+   * Compose urls based on the given state transition event
+   * @param {string} event - name of transition event defined in the state machine's configs
+   * @param {object} context - additional context used to evaluate action
+   * @param {object} params - query parameters to append to page route
+   * @returns {string}
+   */
+  const getNextPageRoute = (event, context, params) => {
+    const nextRoutingMachine = routingMachine.withContext(context);
+    const nextPageRoute = nextRoutingMachine.transition(pathname, event);
+    if (!nextPageRoute) {
+      throw new RouteTransitionError(`Next page not found for: ${event}`);
+    }
+    return createRouteWithQuery(nextPageRoute.value, params);
+  };
+
+  /**
    * Navigate to the page for the given state transition event
    * @param {string} event - name of transition event defined in the state machine's configs
    * @param {object} context - additional context used to evaluate action
    * @param {object} params - query parameters to append to page route
    */
   const goToPageFor = (event, context, params) => {
-    const nextRoutingMachine = routingMachine.withContext(context);
-    const nextPageRoute = nextRoutingMachine.transition(pathname, event);
-    if (!nextPageRoute) {
-      throw new RouteTransitionError(`Next page not found for: ${event}`);
-    }
-
-    goTo(nextPageRoute.value, params);
+    const nextPage = getNextPageRoute(event, context, params);
+    goTo(nextPage);
   };
 
   /**
@@ -64,7 +75,15 @@ const usePortalFlow = () => {
     goToPageFor(event, context, params);
   };
 
-  return { page, pathname, pathWithParams, goTo, goToNextPage, goToPageFor };
+  return {
+    page,
+    pathname,
+    pathWithParams,
+    getNextPageRoute,
+    goTo,
+    goToNextPage,
+    goToPageFor,
+  };
 };
 
 export default usePortalFlow;
