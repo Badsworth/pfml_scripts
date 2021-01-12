@@ -26,3 +26,7 @@ def join_with_coordinating_conjunction(
 
     all_but_last_term_joined = f"{separator} ".join(terms[:-1])
     return f"{all_but_last_term_joined}{separator} {conjunction} {terms[-1]}"
+
+
+def sanitize_fein(fein: str) -> str:
+    return fein.replace("-", "").zfill(9)

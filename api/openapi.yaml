@@ -176,6 +176,38 @@ paths:
         $ref: "#/components/requestBodies/EmployeeSearchRequest"
 
 
+  /employers/withholding/{employer_fein}:
+    get:
+      summary: Retrieves the last withholding date for the FEIN specified
+      operationId: massgov.pfml.api.employers.employer_get_most_recent_withholding_dates
+      tags:
+        - Employers
+      parameters:
+        - name: employer_fein
+          in: path
+          schema:
+            type: string
+            example: "12-345678"
+          description: "FEIN of the employer"
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/WithholdingResponse"
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /employers/claims/{fineos_absence_id}/documents/{fineos_document_id}:
     get:
       summary: Retrieve a FINEOS documents for a specified absence ID and document ID
@@ -1662,6 +1694,13 @@ components:
         - document_type
         - file
       additionalProperties: false
+
+    WithholdingResponse:
+      type: object
+      properties:
+        filing_period:
+          format: date
+          example: "1970-06-01"
 
     ClaimDocumentResponse:
       type: object
