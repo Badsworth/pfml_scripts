@@ -263,7 +263,11 @@ def get_previous_leave_issues(leave: PreviousLeave, index: int) -> List[Issue]:
 
 def get_conditional_issues(application: Application, headers: Headers) -> List[Issue]:
     issues = []
-    require_other_leaves_fields = headers.get("X-FF-Require-Other-Leaves", None)
+    # TODO (CP-1674): This condition is temporary. It can be removed once we
+    # can safely enforce these validation rules across all in-progress claims
+    require_other_leaves_fields = (
+        headers.get("X-FF-Require-Other-Leaves", None) and not application.submitted_time
+    )
 
     # Fields involved in Part 1 of the progressive application
     if application.has_state_id and not application.mass_id:

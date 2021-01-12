@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 import pytest
 from freezegun import freeze_time
@@ -1880,6 +1880,41 @@ def test_other_leave_feature_flagged_rules(test_db_session, initialize_factories
             type=IssueType.required,
         )
         in issues
+    )
+
+
+def test_other_leave_submitted_feature_flagged_rules(test_db_session, initialize_factories_session):
+    # Assert that API does not return specific validation warnings when the
+    # X-FF-Require-Other-Leaves header is present and the claim is already submitted
+    application = ApplicationFactory.create(submitted_time=datetime.now())
+    headers = Headers()
+    headers.add("X-FF-Require-Other-Leaves", "value_does_not_matter")
+
+    issues = get_conditional_issues(application, headers)
+
+    assert (
+        Issue(
+            field="has_employer_benefits",
+            message="has_employer_benefits is required",
+            type=IssueType.required,
+        )
+        not in issues
+    )
+    assert (
+        Issue(
+            field="has_other_incomes",
+            message="has_other_incomes is required",
+            type=IssueType.required,
+        )
+        not in issues
+    )
+    assert (
+        Issue(
+            field="has_previous_leaves",
+            message="has_previous_leaves is required",
+            type=IssueType.required,
+        )
+        not in issues
     )
 
 
