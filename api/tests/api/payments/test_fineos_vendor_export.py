@@ -69,6 +69,15 @@ def emp_updates_path(tmp_path, mock_fineos_s3_bucket):
         leave_plan_info_file, mock_fineos_s3_bucket, f"DT2/dataexports/{leave_plan_info_file_name}"
     )
 
+    # Add another file to test that our file processing ignores non-dated files
+    other_file_name = "config.csv"
+    content_line_one = "Text"
+    other_file = tmp_path / other_file_name
+    other_file.write_text(content_line_one)
+    upload_file_to_s3(
+        leave_plan_info_file, mock_fineos_s3_bucket, f"DT2/dataexports/{other_file_name}"
+    )
+
 
 def test_process_vendor_extract_data_happy_path(
     test_db_session,

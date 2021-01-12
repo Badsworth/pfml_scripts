@@ -410,7 +410,7 @@ def copy_fineos_data_to_archival_bucket(
                 #       str and raise an error if there's an issue
                 date_str_str = cast(str, date_str)
                 date_of_folder = datetime.strptime(date_str_str[:10], "%Y-%m-%d")
-            except ValueError:
+            except (ValueError, TypeError):
                 # There are non-timestamped folders that we don't want to
                 # process, so we skip ahead
                 logger.info(
