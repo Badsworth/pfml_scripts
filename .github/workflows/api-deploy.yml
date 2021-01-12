@@ -209,7 +209,7 @@ jobs:
 
       - name: Check if lambda packages exist in S3 before the build
         id: s3-check
-        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}" 
+        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
         continue-on-error: true
         working-directory: ${{ env.infra-working-dir }}
 
@@ -271,7 +271,7 @@ jobs:
 
       - name: Check if lambda packages exist in S3 before the build
         id: s3-check
-        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}"
+        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
         continue-on-error: true
         working-directory: ${{ env.infra-working-dir }}
 
@@ -334,7 +334,7 @@ jobs:
 
       - name: Check if lambda packages exist in S3 before the build
         id: s3-check
-        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}" 
+        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
         continue-on-error: true
 
       - name: Echo message about the package
@@ -387,7 +387,7 @@ jobs:
 
       - name: Check if lambda packages exist in S3 before the build
         id: s3-check
-        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}" 
+        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
         continue-on-error: true
 
       - name: Echo message about the package
