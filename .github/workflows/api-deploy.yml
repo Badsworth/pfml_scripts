@@ -47,6 +47,7 @@ env:
   refs/heads/deploy/api/prod: prod
   refs/heads/deploy/api/performance: performance
   refs/heads/deploy/api/training: training
+  refs/heads/deploy/api/uat: uat
 
 jobs:
   prod-check:
@@ -688,7 +689,7 @@ jobs:
     name: End-to-End Test Deployment
     runs-on: ubuntu-latest
     needs: [update-the-deploy-branch, api-release, api-gateway-release]
-    if: github.ref != 'refs/heads/deploy/api/prod'
+    if: github.ref != 'refs/heads/deploy/api/prod' && github.ref != 'refs/heads/deploy/api/uat'
     steps:
       - uses: actions/checkout@v2
         with:

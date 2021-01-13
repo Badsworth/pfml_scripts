@@ -64,7 +64,7 @@ module "api" {
   fineos_client_group_client_api_url                  = "https://uat-api.masspfml.fineos.com/groupclientapi/"
   fineos_client_wscomposer_api_url                    = "https://uat-api.masspfml.fineos.com/integration-services/wscomposer/"
   fineos_client_oauth2_url                            = "https://uat-api.masspfml.fineos.com/oauth2/token"
-  fineos_client_oauth2_client_id                      = "TODO" # TODO
+  fineos_client_oauth2_client_id                      = "61on8s7n66i0gj913didkmn5q"
   fineos_eligibility_feed_output_directory_path       = "s3://fin-sompre-data-import/UAT"
   fineos_import_employee_updates_input_directory_path = "s3://fin-sompre-data-export/UAT/dataexports"
   service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
