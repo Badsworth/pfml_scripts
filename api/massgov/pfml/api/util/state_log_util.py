@@ -346,7 +346,7 @@ def process_state(
             finish_state_log(
                 state_log=state_log,
                 end_state=state_log.start_state,
-                outcome=build_outcome(f"Hit exception: {e}"),
+                outcome=build_outcome(f"Hit exception: {type(e).__name__}"),
                 db_session=db_session,
                 commit=True,
             )

@@ -129,7 +129,7 @@ def test_process_identify_mmars_status_unexpected_internal_exception_for_state_l
     assert new_state_log_for_failed.state_log_id != state_logs[0].state_log_id
     assert new_state_log_for_failed.start_state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert new_state_log_for_failed.end_state_id == State.IDENTIFY_MMARS_STATUS.state_id
-    assert new_state_log_for_failed.outcome["message"] == "Hit exception: "
+    assert new_state_log_for_failed.outcome["message"] == "Hit exception: Exception"
 
     # second employee should be in next state
     new_state_log_for_success = state_log_util.get_latest_state_log_in_end_state(

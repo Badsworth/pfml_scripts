@@ -979,7 +979,7 @@ def test_process_catches_exceptions_and_continues(
     assert new_state_log_for_failed.state_log_id != state_logs[0].state_log_id
     assert new_state_log_for_failed.start_state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert new_state_log_for_failed.end_state_id == State.IDENTIFY_MMARS_STATUS.state_id
-    assert new_state_log_for_failed.outcome["message"] == "Hit exception: "
+    assert new_state_log_for_failed.outcome["message"] == "Hit exception: Exception"
     # and the related log message should have the correct info
     assert failed_log_record_dict["state_log_id"] == new_state_log_for_failed.state_log_id
 

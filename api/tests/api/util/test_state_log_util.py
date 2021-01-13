@@ -563,7 +563,7 @@ def test_process_state(test_db_session, initialize_factories_session):
 
     assert state_log.start_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert state_log.end_state == state_log.start_state
-    assert state_log.outcome["message"] == "Hit exception: An exception message"
+    assert state_log.outcome["message"] == "Hit exception: Exception"
 
     # unless an end state was already set
     with pytest.raises(Exception):

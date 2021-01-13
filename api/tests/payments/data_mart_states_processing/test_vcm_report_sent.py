@@ -47,9 +47,7 @@ def test_process_vcm_report_sent_no_vendor(
     assert new_state_log.state_log_id != state_log.state_log_id
     assert new_state_log.start_state_id == State.VCM_REPORT_SENT.state_id
 
-    assert new_state_log.outcome == {
-        "message": f"Hit exception: Vendor was included in VCM report, but Vendor does not exist. StateLog ID: {new_state_log.state_log_id}"
-    }
+    assert new_state_log.outcome == {"message": "Hit exception: ValueError"}
 
 
 def test_process_vcm_report_sent_mismatched_data(
