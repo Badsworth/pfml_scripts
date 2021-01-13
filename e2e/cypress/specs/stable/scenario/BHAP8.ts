@@ -30,7 +30,8 @@ describe("Submit a REDUCED LEAVE bonding claim and adjucation approval - BHAP8",
       portal.onPage("checklist");
 
       // Submit Claim
-      portal.submitClaimPortal(application, paymentPreference);
+      portal.submitClaimPartOne(application);
+      portal.submitClaimPartsTwoThree(application, paymentPreference);
     });
   });
 });

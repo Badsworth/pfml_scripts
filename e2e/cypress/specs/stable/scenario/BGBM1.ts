@@ -9,7 +9,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
     beforePortal();
 
     cy.task("generateClaim", {
-      claimType: "BHAP1",
+      claimType: "BGBM1",
       employeeType: "financially eligible",
     }).then((claim: SimulationClaim) => {
       if (!claim) {
@@ -23,6 +23,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
         username: Cypress.env("E2E_PORTAL_USERNAME"),
         password: Cypress.env("E2E_PORTAL_PASSWORD"),
       };
+      cy.stash("credentials", credentials);
       portal.login(credentials);
 
       // Continue Creating Claim
@@ -33,13 +34,25 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
       portal.onPage("checklist");
 
       // Submit Claim
-      portal.submitClaimNoLeaveCert(application, paymentPreference);
+      portal.submitClaimPartOne(application);
+      cy.wait("@submitClaimResponse").then((xhr) => {
+        if (!xhr.response || !xhr.response.body) {
+          throw new Error("No response body detected");
+        }
+        const body =
+          typeof xhr.response.body === "string"
+            ? JSON.parse(xhr.response.body)
+            : xhr.response.body;
+        cy.stashLog("claimNumber", body.data.fineos_absence_id);
+        cy.stashLog("applicationId", body.data.application_id);
+      });
+      portal.submitPartThreeNoLeaveCert(application, paymentPreference);
     });
   });
 
   // Prepare for adjudication approval
   it(
-    "As a CSR (Savilinx), I should be able to Approve a BHAP1 claim submission",
+    "As a CSR (Savilinx), I should be able to Approve a BGBM1 claim submission",
     { baseUrl: getFineosBaseUrl() },
     () => {
       beforeFineos();
@@ -50,4 +63,21 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
       });
     }
   );
+
+  // Check Application card in portal for document uploaded in Fineos
+  it("I should be able to see that a document has been uploaded in the portal", () => {
+    beforePortal();
+    cy.unstash<Credentials>("credentials").then((credentials) => {
+      portal.login(credentials);
+      cy.unstash<string>("applicationId").then((application_id) => {
+        portal.goToIdUploadPage(application_id);
+        cy.contains(
+          "form",
+          "Upload your Massachusetts driver’s license or ID card"
+        )
+          .find("h3")
+          .should("have.length", 1);
+      });
+    });
+  });
 });

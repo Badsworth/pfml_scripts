@@ -175,7 +175,7 @@ export function clickDeny(): void {
 
 export function clickBottomWidgetButton(value = "OK"): void {
   cy.get("#PageFooterWidget").within(() => {
-    cy.get(`input[value="${value}"]`).click();
+    cy.get(`input[value="${value}"]`).click({ force: true });
   });
 }
 
@@ -250,9 +250,9 @@ export function changeLeaveStart(startDate: Date): void {
     cy.labelled("Absence start date").type(
       `{selectall}{backspace}${formattedDate}{enter}`
     );
-    cy.labelled("Last day worked").type(
-      `{selectall}{backspace}${formattedDate}{enter}`
-    );
+    cy.labelled(
+      "Last day worked"
+    ).type(`{selectall}{backspace}${formattedDate}{enter}`, { force: true });
     cy.get("input[type='button'][value='OK']").click();
   });
 }

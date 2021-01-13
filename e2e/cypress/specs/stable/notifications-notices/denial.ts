@@ -34,6 +34,19 @@ describe("Denial Notification and Notice", () => {
     });
   });
 
+  it(
+    "Claims for a financially ineligible claimant should be marked not met.",
+    { baseUrl: getFineosBaseUrl() },
+    () => {
+      beforeFineos();
+      cy.visit("/");
+      cy.unstash<Submission>("submission").then((submission) => {
+        fineos.visitClaim(submission.fineos_absence_id);
+        fineos.assertClaimFinancialEligibility(false);
+      });
+    }
+  );
+
   it("Deny a claim", { baseUrl: getFineosBaseUrl() }, () => {
     beforeFineos();
     cy.visit("/");

@@ -5,7 +5,7 @@ import { getFineosBaseUrl } from "../../../config";
 
 describe("Request for More Information (notificatins/notices)", () => {
   it(
-    "Create a financially ineligible claim that is denied by an agent",
+    "Create a financially eligible claim that is denied by an agent",
     { baseUrl: getFineosBaseUrl() },
     () => {
       beforeFineos();

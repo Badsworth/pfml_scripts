@@ -493,18 +493,6 @@ export function reportOtherBenefits(): void {
 export function confirmInfo(): void {
   // Usually preceeded by - "I am on the claims Review page"
   cy.contains("Submit Part 1").click();
-
-  cy.wait("@submitClaimResponse").then((xhr) => {
-    if (!xhr.response || !xhr.response.body) {
-      throw new Error("No response body detected");
-    }
-    const body =
-      typeof xhr.response.body === "string"
-        ? JSON.parse(xhr.response.body)
-        : xhr.response.body;
-    cy.stashLog("claimNumber", body.data.fineos_absence_id);
-    cy.stashLog("applicationId", body.data.application_id);
-  });
 }
 
 // Payment Section Currently Removed
@@ -809,14 +797,12 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
   }
   onPage("review");
   confirmInfo();
-  onPage("checklist");
 }
 
-export function submitClaimNoLeaveCert(
+export function submitPartThreeNoLeaveCert(
   application: ApplicationRequestBody,
   paymentPreference: PaymentPreferenceRequestBody
 ): void {
-  submitClaimPartOne(application);
   clickChecklistButton("Add payment information");
   addPaymentInfo(paymentPreference);
   onPage("checklist");
@@ -824,12 +810,11 @@ export function submitClaimNoLeaveCert(
   addId("MA ID");
 }
 
-export function submitClaimPortal(
+export function submitClaimPartsTwoThree(
   application: ApplicationRequestBody,
   paymentPreference: PaymentPreferenceRequestBody
 ): void {
   const reason = application.leave_details && application.leave_details.reason;
-  submitClaimPartOne(application);
   clickChecklistButton("Add payment information");
   addPaymentInfo(paymentPreference);
   onPage("checklist");

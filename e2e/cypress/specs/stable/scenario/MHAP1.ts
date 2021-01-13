@@ -3,6 +3,7 @@ import { fineos } from "../../../tests/common/actions";
 import { beforeFineos } from "../../../tests/common/before";
 import { beforePortal } from "../../../tests/common/before";
 import { getFineosBaseUrl } from "../../../config";
+import { Submission } from "../../../../src/types";
 
 describe("Submit a medical claim and adjucation approval - MHAP1", () => {
   it("As a claimant, I should be able to submit a Medical Leave claim (MHAP1) through the portal", () => {
@@ -33,7 +34,22 @@ describe("Submit a medical claim and adjucation approval - MHAP1", () => {
       portal.onPage("checklist");
 
       // Submit Claim
-      portal.submitClaimPortal(application, paymentPreference);
+      portal.submitClaimPartOne(application);
+      cy.wait("@submitClaimResponse").then((xhr) => {
+        if (!xhr.response || !xhr.response.body) {
+          throw new Error("No response body detected");
+        }
+        const body =
+          typeof xhr.response.body === "string"
+            ? JSON.parse(xhr.response.body)
+            : xhr.response.body;
+        cy.stash("submission", {
+          application_id: body.data.application_id,
+          fineos_absence_id: body.data.fineos_absence_id,
+          timestamp_from: Date.now(),
+        });
+      });
+      portal.submitClaimPartsTwoThree(application, paymentPreference);
     });
   });
 
@@ -45,8 +61,8 @@ describe("Submit a medical claim and adjucation approval - MHAP1", () => {
       beforeFineos();
       cy.visit("/");
 
-      cy.unstash<string>("claimNumber").then((claimNumber) => {
-        fineos.claimAdjudicationFlow(claimNumber);
+      cy.unstash<Submission>("submission").then((submission) => {
+        fineos.claimAdjudicationFlow(submission.fineos_absence_id);
       });
     }
   );
