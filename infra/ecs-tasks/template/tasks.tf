@@ -151,6 +151,8 @@ locals {
       containers_template = "payments_ctr_process_template.json"
       task_role           = aws_iam_role.payments_ctr_process_task_role.arn
       execution_role      = aws_iam_role.payments_ctr_import_execution_role.arn
+      cpu                 = "2048"
+      memory              = "16384"
       vars = {
         eolwd_moveit_sftp_uri    = var.eolwd_moveit_sftp_uri
         ctr_moveit_incoming_path = var.ctr_moveit_incoming_path
@@ -175,6 +177,8 @@ locals {
       command             = ["payments-fineos-process"]
       containers_template = "payments_fineos_process_template.json"
       task_role           = aws_iam_role.payments_fineos_process_task_role.arn
+      cpu                 = "2048"
+      memory              = "16384"
       vars = {
         fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
         fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
