@@ -37,7 +37,7 @@ module "tasks" {
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somprod-data-import/PRD"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somprod-data-export/PRD/dataexports"
 
-  eolwd_moveit_sftp_uri    = "sftp://DFML@transfer.eol.mass.gov"
+  eolwd_moveit_sftp_uri    = "sftp://DFML@transfer.eolwd.aws"
   ctr_moveit_incoming_path = "Comptroller_Office/Incoming/nmmarsload"
   ctr_moveit_outgoing_path = "Comptroller_Office/Outgoing/nmmarsload"
   ctr_moveit_archive_path  = "Comptroller_Office/Archive"
