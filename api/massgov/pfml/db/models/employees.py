@@ -1212,6 +1212,7 @@ class Flow(LookupTable):
     VENDOR_CHECK = LkFlow(7, "Vendor check")
     VENDOR_EFT = LkFlow(8, "Vendor EFT")
     UNUSED = LkFlow(9, "Unused flow")
+    PEI_WRITEBACK_FILES = LkFlow(10, "PEI Writeback files")
 
 
 class State(LookupTable):
@@ -1300,6 +1301,13 @@ class State(LookupTable):
         40, "EFT: allowable time in state exceeded", Flow.VENDOR_EFT.flow_id
     )
     EFT_ELIGIBLE = LkState(41, "EFT eligible", Flow.VENDOR_EFT.flow_id)
+
+    # State for sending the PEI writeback file to FINEOS.
+    # https://app.lucidchart.com/lucidchart/3ad90c37-4cbb-467e-bfcf-bc98504c98f2/edit
+    SEND_PEI_WRITEBACK = LkState(42, "Send PEI writeback", Flow.PEI_WRITEBACK_FILES.flow_id)
+    PEI_WRITEBACK_SENT = LkState(
+        43, "PEI writeback sent to FINEOS", Flow.PEI_WRITEBACK_FILES.flow_id
+    )
 
 
 class ReferenceFileType(LookupTable):
