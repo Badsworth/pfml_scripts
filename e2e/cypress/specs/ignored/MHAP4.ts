@@ -52,6 +52,7 @@ describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineo
         );
       });
     });
+    cy.wait(1000);
   });
 
   // Check for ER and approval claim in Fineos
@@ -64,7 +65,6 @@ describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineo
         cy.visit("/");
         fineos.claimAdjudicationFlow(submission.fineos_absence_id, true);
         fineos.addBondingLeaveFlow(submission.timestamp_from);
-        cy.wait(200);
       });
     }
   );

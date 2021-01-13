@@ -120,8 +120,8 @@ describe("Denial Notification and Notice", () => {
             timestamp_from: submission.timestamp_from,
           },
           { timeout: 180000 }
-        ).then((emails) => {
-          const emailContent = email.getNotificationData(emails[0].html);
+        ).then(async (emails) => {
+          const emailContent = await email.getNotificationData(emails[0].html);
           if (typeof claim.date_of_birth !== "string") {
             throw new Error("DOB must be a string");
           }
@@ -161,8 +161,8 @@ describe("Denial Notification and Notice", () => {
             timestamp_from: submission.timestamp_from,
           },
           { timeout: 180000 }
-        ).then((emails) => {
-          const emailContent = email.getNotificationData(
+        ).then(async (emails) => {
+          const emailContent = await email.getNotificationData(
             emails[0].html,
             "denial (employer)"
           );
@@ -179,6 +179,7 @@ describe("Denial Notification and Notice", () => {
             `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
           );
         });
+
         // Check email for Claimant
         cy.task<Email[]>(
           "getEmails",
@@ -188,17 +189,18 @@ describe("Denial Notification and Notice", () => {
             timestamp_from: submission.timestamp_from,
           },
           { timeout: 180000 }
-        ).then((emails) => {
-          const emailContent = email.getNotificationData(
-            emails[0].html,
-            "denial (claimant)"
-          );
-          if (emailContent === undefined) {
-            throw new Error("Denial (claimant) email not found");
+        ).then(async (emails) => {
+          for (const emailSingle of emails) {
+            email.getNotificationData(emailSingle.html).then((data) => {
+              if (data.applicationId.includes(submission.fineos_absence_id)) {
+                expect(data.applicationId).to.contain(
+                  submission.fineos_absence_id
+                );
+              } else {
+                throw new Error("No emails match the Fineos Absence ID");
+              }
+            });
           }
-          expect(emailContent.applicationId).to.contain(
-            submission.fineos_absence_id
-          );
         });
       });
     });

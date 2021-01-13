@@ -91,8 +91,10 @@ describe("Request for More Information (notificatins/notices)", () => {
             address: "gqzap.notifications@inbox.testmail.app",
             subject: subjectClaimant,
             timestamp_from,
-          }).then((emails) => {
-            const emailContent = email.getNotificationData(emails[0].html);
+          }).then(async (emails) => {
+            const emailContent = await email.getNotificationData(
+              emails[0].html
+            );
             expect(emails.length).to.be.greaterThan(0);
             expect(emailContent.applicationId).to.contain(caseNumber);
           });

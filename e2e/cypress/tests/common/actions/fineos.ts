@@ -541,6 +541,8 @@ export function markEvidence(
   onTab("Evidence");
   cy.contains(".ListTable td", evidenceType).click();
   cy.get("input[type='submit'][value='Manage Evidence']").click();
+  cy.wait("@ajaxRender");
+  cy.wait(200);
   // Focus inside popup.
   cy.get(".WidgetPanel_PopupWidget").within(() => {
     if (claimType === "BGBM1") {
@@ -592,7 +594,7 @@ export function claimAdjudicationFlow(
   if (ERresponse) {
     approveClaim();
   }
-  cy.wait(200);
+  cy.wait(1000);
 }
 
 export function claimAdjudicationMailedDoc(claimNumber: string): void {
@@ -617,9 +619,12 @@ export function addBondingLeaveFlow(timeStamp: Date): void {
   cy.get('a[aria-label="Add Time"]').click({ force: true });
   cy.get('input[type="radio"][value*="another_reason_id"]').click();
   cy.get('input[type="submit"][title="Add Time Off Period"]').click();
+  cy.wait("@ajaxRender");
+  cy.wait(200);
   cy.get(".popup-container").within(() => {
     cy.labelled("Absence status").select("Known");
     cy.wait("@ajaxRender");
+    cy.wait(200);
     const startDate = addMonths(timeStamp, 2);
     const startDateFormatted = format(startDate, "MM/dd/yyyy");
     const endDateFormatted = format(addDays(startDate, 2), "MM/dd/yyyy");
@@ -628,21 +633,25 @@ export function addBondingLeaveFlow(timeStamp: Date): void {
       `{selectall}{backspace}${startDateFormatted}{enter}`
     );
     cy.wait("@ajaxRender");
+    cy.wait(200);
     cy.labelled("Absence end date").type(
       `{selectall}{backspace}${endDateFormatted}{enter}`
     );
     cy.wait("@ajaxRender");
+    cy.wait(200);
     cy.get("input[type='checkbox'][id*='startDateAllDay_CHECKBOX']").click();
     cy.get("input[type='checkbox'][id*='endDateAllDay_CHECKBOX']").click();
     cy.get("input[type='submit'][value='OK']").click();
   });
   clickBottomWidgetButton("Next");
   cy.wait("@ajaxRender");
+  cy.wait(200);
   // Work Pattern
   cy.get("input[type='checkbox'][id*='standardWorkWeek_CHECKBOX']").click();
   cy.labelled("Pattern Status").select("Known");
   clickBottomWidgetButton("Next");
   cy.wait("@ajaxRender");
+  cy.wait(200);
   // Complete Details
   cy.labelled("Primary Relationship to Employee").select("Child");
   cy.wait("@ajaxRender");
@@ -665,7 +674,7 @@ export function addBondingLeaveFlow(timeStamp: Date): void {
     "contain.text",
     "Fixed time off for Child Bonding"
   );
-  cy.wait(200);
+  cy.wait(1000);
 }
 
 export function searchClaimantSSN(ssn: string): void {

@@ -1,7 +1,7 @@
 export const getNotificationSubject = function (
   employeeName: string,
   notificationType: string,
-  caseNumber: string
+  caseNumber?: string
 ): string {
   const notificationSubjects: { [key: string]: string } = {
     "application started": `${employeeName} started a paid leave application with the Commonwealth of Massachusetts`,
@@ -26,10 +26,10 @@ export const removeTags = function (str: string): string {
   return str.replace(/(<([^>]+)>)/gi, "");
 };
 
-export const getNotificationData = function (
+export const getNotificationData = async function (
   str: string,
   notificationType?: string
-): { [key: string]: string } {
+): Promise<{ [key: string]: string }> {
   const cleanedString = removeTags(str);
   const notificationData: { [key: string]: string } = {
     name: this.getTextBetween(cleanedString, "Employee name:", "Date of birth"),

@@ -61,8 +61,8 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
             timestamp_from: submission.timestamp_from,
           },
           { timeout: 360000 }
-        ).then((emails) => {
-          const emailContent = email.getNotificationData(emails[0].html);
+        ).then(async (emails) => {
+          const emailContent = await email.getNotificationData(emails[0].html);
           expect(emailContent.name).to.equal(employeeFullName);
           expect(emailContent.applicationId).to.equal(
             submission.fineos_absence_id
