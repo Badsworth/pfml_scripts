@@ -3,7 +3,6 @@ import { parseISO } from "date-fns";
 
 // Cases drawn from: https://docs.google.com/spreadsheets/d/1eb0bzZsfgRaqesaAX_zg6Ez5vDCGVs4yMeUodIXyrn4/edit#gid=0
 
-const paidToday = parseISO("2020-12-28");
 const paidTomorrow = parseISO("2021-01-01");
 const claimEnd = parseISO("2021-02-01");
 const retroactiveStart = parseISO("2020-12-01");
@@ -14,7 +13,7 @@ export const A = scenario("A", {
   reason_qualifier: "Newborn",
   residence: "MA-proofed",
   has_continuous_leave_periods: true,
-  leave_dates: [paidToday, claimEnd],
+  leave_dates: [paidTomorrow, claimEnd],
   address: {
     city: "Boston",
     line_1: "30 Coolidge Rd",
@@ -23,8 +22,6 @@ export const A = scenario("A", {
   },
   payment: {
     payment_method: "Check",
-    account_number: "",
-    routing_number: "",
     bank_account_type: "Checking",
   },
   bondingDate: "past",
@@ -33,6 +30,11 @@ export const A = scenario("A", {
     MASSID: {},
     BIRTHCERTIFICATE: {},
   },
+  employerResponse: {
+    hours_worked_per_week: 40,
+    employer_decision: "Approve",
+    fraud: "No",
+  },
 });
 
 // Happy Path - EmployeeB: Medical, Check payment
@@ -40,7 +42,7 @@ export const B = scenario("B", {
   reason: "Serious Health Condition - Employee",
   residence: "MA-proofed",
   has_continuous_leave_periods: true,
-  leave_dates: [paidToday, claimEnd],
+  leave_dates: [paidTomorrow, claimEnd],
   address: {
     city: "Quincy",
     line_1: "47 Washington St",
@@ -49,14 +51,17 @@ export const B = scenario("B", {
   },
   payment: {
     payment_method: "Check",
-    account_number: "",
-    routing_number: "",
     bank_account_type: "Checking",
   },
   wages: 60000,
   docs: {
     HCP: {},
     MASSID: {},
+  },
+  employerResponse: {
+    hours_worked_per_week: 40,
+    employer_decision: "Approve",
+    fraud: "No",
   },
 });
 
@@ -66,7 +71,7 @@ export const C = scenario("C", {
   reason_qualifier: "Newborn",
   residence: "MA-proofed",
   has_continuous_leave_periods: true,
-  leave_dates: [paidToday, claimEnd],
+  leave_dates: [paidTomorrow, claimEnd],
   address: {
     city: "Salem",
     line_1: "2 Margin St",
@@ -74,7 +79,7 @@ export const C = scenario("C", {
     zip: "01970",
   },
   payment: {
-    payment_method: "Debit",
+    payment_method: "Elec Funds Transfer",
     account_number: "5555555555",
     routing_number: "121042882",
     bank_account_type: "Savings",
@@ -85,6 +90,11 @@ export const C = scenario("C", {
     MASSID: {},
     BIRTHCERTIFICATE: {},
   },
+  employerResponse: {
+    hours_worked_per_week: 40,
+    employer_decision: "Approve",
+    fraud: "No",
+  },
 });
 
 // Happy Path - EmployeeD: Medical, deposit payment
@@ -92,7 +102,7 @@ export const D = scenario("D", {
   reason: "Serious Health Condition - Employee",
   residence: "MA-proofed",
   has_continuous_leave_periods: true,
-  leave_dates: [paidToday, claimEnd],
+  leave_dates: [paidTomorrow, claimEnd],
   address: {
     city: "Worcester",
     line_1: "484 Main St",
@@ -100,7 +110,7 @@ export const D = scenario("D", {
     zip: "01608",
   },
   payment: {
-    payment_method: "Debit",
+    payment_method: "Elec Funds Transfer",
     account_number: "5555555555",
     routing_number: "121042882",
     bank_account_type: "Savings",
@@ -109,6 +119,11 @@ export const D = scenario("D", {
   docs: {
     HCP: {},
     MASSID: {},
+  },
+  employerResponse: {
+    hours_worked_per_week: 40,
+    employer_decision: "Approve",
+    fraud: "No",
   },
 });
 
@@ -127,8 +142,6 @@ export const E = scenario("E", {
   },
   payment: {
     payment_method: "Check",
-    account_number: "",
-    routing_number: "",
     bank_account_type: "Checking",
   },
   bondingDate: "past",
@@ -136,6 +149,11 @@ export const E = scenario("E", {
   docs: {
     MASSID: {},
     BIRTHCERTIFICATE: {},
+  },
+  employerResponse: {
+    hours_worked_per_week: 40,
+    employer_decision: "Approve",
+    fraud: "No",
   },
 });
 
@@ -153,14 +171,17 @@ export const F = scenario("F", {
   },
   payment: {
     payment_method: "Check",
-    account_number: "",
-    routing_number: "",
     bank_account_type: "Checking",
   },
   wages: 60000,
   docs: {
     HCP: {},
     MASSID: {},
+  },
+  employerResponse: {
+    hours_worked_per_week: 40,
+    employer_decision: "Approve",
+    fraud: "No",
   },
 });
 
@@ -178,7 +199,7 @@ export const G = scenario("G", {
     zip: "01970",
   },
   payment: {
-    payment_method: "Debit",
+    payment_method: "Elec Funds Transfer",
     account_number: "5555555555",
     routing_number: "121042882",
     bank_account_type: "Savings",
@@ -188,6 +209,11 @@ export const G = scenario("G", {
   docs: {
     MASSID: {},
     BIRTHCERTIFICATE: {},
+  },
+  employerResponse: {
+    hours_worked_per_week: 40,
+    employer_decision: "Approve",
+    fraud: "No",
   },
 });
 
@@ -204,7 +230,7 @@ export const H = scenario("H", {
     zip: "01608",
   },
   payment: {
-    payment_method: "Debit",
+    payment_method: "Elec Funds Transfer",
     account_number: "5555555555",
     routing_number: "121042882",
     bank_account_type: "Savings",
@@ -213,6 +239,11 @@ export const H = scenario("H", {
   docs: {
     HCP: {},
     MASSID: {},
+  },
+  employerResponse: {
+    hours_worked_per_week: 40,
+    employer_decision: "Approve",
+    fraud: "No",
   },
 });
 
@@ -233,8 +264,6 @@ export const I = scenario("I", {
   },
   payment: {
     payment_method: "Check",
-    account_number: "",
-    routing_number: "",
     bank_account_type: "Checking",
   },
   bondingDate: "past",
@@ -242,6 +271,11 @@ export const I = scenario("I", {
   docs: {
     MASSID: {},
     BIRTHCERTIFICATE: {},
+  },
+  employerResponse: {
+    hours_worked_per_week: 40,
+    employer_decision: "Approve",
+    fraud: "No",
   },
 });
 
@@ -259,14 +293,17 @@ export const J = scenario("J", {
   },
   payment: {
     payment_method: "Check",
-    account_number: "",
-    routing_number: "",
     bank_account_type: "Checking",
   },
   wages: 60000,
   docs: {
     HCP: {},
     MASSID: {},
+  },
+  employerResponse: {
+    hours_worked_per_week: 40,
+    employer_decision: "Approve",
+    fraud: "No",
   },
 });
 
@@ -285,8 +322,6 @@ export const K = scenario("K", {
   },
   payment: {
     payment_method: "Check",
-    account_number: "",
-    routing_number: "",
     bank_account_type: "Checking",
   },
   bondingDate: "past",
@@ -294,6 +329,11 @@ export const K = scenario("K", {
   docs: {
     MASSID: {},
     BIRTHCERTIFICATE: {},
+  },
+  employerResponse: {
+    hours_worked_per_week: 40,
+    employer_decision: "Approve",
+    fraud: "No",
   },
 });
 
@@ -350,15 +390,14 @@ export const K = scenario("K", {
 //});
 
 export default chance([
-  // Equal chance for any one of these scenarios (we're targeting 2 of each).
-  [1, A],
-  [1, B],
-  [1, C],
-  [1, D],
-  [1, E],
-  [1, F],
-  [1, G],
-  [1, H],
+  [20, A],
+  [20, B],
+  [20, C],
+  [20, D],
+  // [20, E],
+  // [20, F],
+  // [20, G],
+  // [20, H],
   [1, I],
   [1, J],
   [1, K],

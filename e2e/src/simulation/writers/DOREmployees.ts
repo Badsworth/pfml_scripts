@@ -4,6 +4,8 @@ import { format } from "util";
 import { formatISODate, formatISODatetime } from "../quarters";
 import multipipe from "multipipe";
 
+const amt = (num: number): string => num.toFixed(2).padStart(20);
+
 export function transformDOREmployeesEmployerLines(
   employers: Map<string, Employer>,
   filingPeriods: Date[]
@@ -45,7 +47,7 @@ export function transformDOREmployeesEmployerLines(
           employer.fein.replace(/-/g, "").padEnd(14),
           "F",
           employer.fein.replace(/-/g, "").padEnd(14),
-          60000,
+          amt(60000),
           formatISODate(period),
           formatISODatetime(period)
         )
@@ -61,7 +63,6 @@ export function transformDOREmployeesWageLines(
   employers: Map<string, Employer>,
   filingPeriods: Date[]
 ): stream.Duplex {
-  const amt = (num: number): string => num.toFixed(2).padStart(20);
   const transform = new stream.Transform({
     objectMode: true,
     transform(claim: SimulationClaim, encoding, callback) {

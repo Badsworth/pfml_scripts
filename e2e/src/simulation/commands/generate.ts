@@ -105,8 +105,12 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
 
     // Write the claim file first, streaming to JSON. We'll read this back
     // later on. We await this operation because we need this JSON file in the next steps.
-    await writeClaimFile(claimsGen, storage.claimFile);
+    const counts = await writeClaimFile(claimsGen, storage.claimFile);
     args.logger.info("Completed claim file generation");
+    const rows = Object.entries(counts).map(([scenario, count]) => {
+      return `${scenario.padEnd(20)}: ${count}`;
+    });
+    args.logger.info(`Claims Generated:\n${rows.join("\n")}`);
 
     // Generate the claim index, which will be used to cross-reference the claims and scenarios in Fineos.
     const claimsIndexPromise = writeClaimIndex(

@@ -1,5 +1,5 @@
 import { Employer, SimulationClaim } from "../types";
-import stream, { pipeline } from "stream";
+import stream, { pipeline, Transform } from "stream";
 import JSONStream from "JSONStream";
 import fs from "fs";
 import { promisify } from "util";
@@ -13,15 +13,26 @@ import {
 // Create a promised version of the pipeline function.
 const pipelineP = promisify(pipeline);
 
-export function writeClaimFile(
+export async function writeClaimFile(
   claims: AsyncIterable<SimulationClaim>,
   destination: string
-): Promise<void> {
-  return pipelineP(
+): Promise<Record<string, number>> {
+  const scenarios: Record<string, number> = {};
+  await pipelineP(
     stream.Readable.from(claims, { objectMode: true }),
+    new Transform({
+      objectMode: true,
+      transform(chunk: SimulationClaim, encoding, done) {
+        const { scenario } = chunk;
+        scenarios[scenario] =
+          scenario in scenarios ? scenarios[scenario] + 1 : 1;
+        done(null, chunk);
+      },
+    }),
     JSONStream.stringify(),
     fs.createWriteStream(destination)
   );
+  return scenarios;
 }
 
 export function writeClaimIndex(
