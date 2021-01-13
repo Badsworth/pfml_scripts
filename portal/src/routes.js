@@ -72,6 +72,7 @@ const routes = {
     verifyBusiness: "/employers/verify-business",
   },
   external: {
+    massTaxConnect: "https://mtc.dor.state.ma.us/mtc/_/",
     massgov: {
       benefitsGuide:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide",
@@ -84,6 +85,8 @@ const routes = {
         "https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits#-calculate-any-reductions-",
       consentAgreement:
         "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement",
+      contactDepartmentOfRevenue:
+        "https://www.mass.gov/info-details/dor-contact-us",
       dfml: "https://www.mass.gov/orgs/department-of-family-and-medical-leave",
       dfmlRegulations:
         "https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1",

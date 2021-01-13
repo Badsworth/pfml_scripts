@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
@@ -36,19 +37,27 @@ export const VerifyBusiness = (props) => {
     <form className="usa-form" onSubmit={handleSubmit}>
       <Title>{t("pages.employersAuthVerifyBusiness.title")}</Title>
       <Lead>
-        {t("pages.employersAuthVerifyBusiness.companyNameLabel", {
-          company: "Company Name",
-        })}
+        <Trans
+          i18nKey="pages.employersAuthVerifyBusiness.companyNameLabel"
+          tOptions={{ company: "XXXXX" }}
+        />
         <br />
-        {t("pages.employersAuthVerifyBusiness.employerIdNumberLabel", {
-          ein: "XX-XXX-XXXX",
-        })}
+        <Trans
+          i18nKey="pages.employersAuthVerifyBusiness.employerIdNumberLabel"
+          tOptions={{ ein: "XX-XXXXXX" }}
+        />
       </Lead>
       <Lead>
         <Trans
           i18nKey="pages.employersAuthVerifyBusiness.lead"
           components={{
-            "mass-tax-connect-link": <a href="" />,
+            "mass-tax-connect-link": (
+              <a
+                href={routes.external.massTaxConnect}
+                target="_blank"
+                rel="noopener"
+              />
+            ),
           }}
         />
       </Lead>
@@ -56,7 +65,21 @@ export const VerifyBusiness = (props) => {
         <Trans
           i18nKey="pages.employersAuthVerifyBusiness.detailsList"
           components={{
-            ul: <ul className="usa-list" />,
+            "mass-tax-connect-link": (
+              <a
+                href={routes.external.massTaxConnect}
+                target="_blank"
+                rel="noopener"
+              />
+            ),
+            "contact-dor-link": (
+              <a
+                href={routes.external.massgov.contactDepartmentOfRevenue}
+                target="_blank"
+                rel="noopener"
+              />
+            ),
+            ol: <ol className="usa-list" />,
             li: <li />,
           }}
         />
@@ -67,7 +90,7 @@ export const VerifyBusiness = (props) => {
         mask="currency"
         hint={t("pages.employersAuthVerifyBusiness.withholdingAmountHint")}
         label={t("pages.employersAuthVerifyBusiness.withholdingAmountLabel", {
-          date: "XX-XX-XXXX",
+          date: "{DD-MMM-YYYY}",
         })}
         smallLabel
       />

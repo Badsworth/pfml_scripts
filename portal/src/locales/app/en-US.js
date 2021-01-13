@@ -1569,18 +1569,18 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   employersAuthVerifyBusiness: {
-    companyNameLabel: "Company: {{company}}",
-    detailsLabel: "Where to find tax withholding information",
+    companyNameLabel: "<strong>Organization:</strong> {{company}}",
+    detailsLabel: "Where to find your paid leave contributions",
     detailsList:
-      "<ul><li>Placeholder</li><li>Placeholder</li><li>Placeholder</li></ul>",
-    employerIdNumberLabel: "Employer ID number (EIN): {{ein}}",
+      "Log into <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> or contact your payroll department to complete these steps:<ol><li>On the <strong>Accounts</strong> tab, select <strong>Paid Family and Medical Leave</strong>.</li><li>On the <strong>Recent Periods</strong> tab, select the <strong>{DD-MMM-YYYY}</strong> period.</li><li>Copy the <strong>XXX</strong> amount from the <strong>Summary</strong> section.</li></ol>If you have any questions about your paid leave contributions, please contact the <contact-dor-link>Department of Revenue</contact-dor-link>.",
+    employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     lead:
       "We need more information to verify your identity. We require every employer to verify recent <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> data when creating an account. This helps protect your employees and your company information.",
     submitButton: "Submit",
-    title: "Verify your tax withholding data",
+    title: "Verify your paid leave contributions",
     withholdingAmountHint: "Include the full amount with dollars and cents.",
-    withholdingAmountLabel: "Withholding tax amount for {{date}}",
+    withholdingAmountLabel: "Paid leave contributions for {{date}}",
   },
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
