@@ -733,3 +733,76 @@ data "aws_iam_policy_document" "payments_ctr_import_execution_role_extras" {
     ]
   }
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for S3 buckets for business intelligence (BI) data extracts
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "fineos_bucket_tool_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-bucket-tool"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "fineos_bucket_tool_assume_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-bucket-tool-assume-role-policy"
+  role   = aws_iam_role.fineos_bucket_tool_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
+}
+
+resource "aws_iam_role_policy" "fineos_bucket_tool_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-bucket-tool-role-policy"
+  role   = aws_iam_role.fineos_bucket_tool_role.id
+  policy = data.aws_iam_policy_document.fineos_bucket_tool_task_policy_document.json
+}
+
+data "aws_iam_policy_document" "fineos_bucket_tool_task_policy_document" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3ReadOnBucket"
+    actions = [
+      "s3:Get*",
+      "s3:List*"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/",
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3WriteOnBucket"
+    actions = [
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/",
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+    ]
+
+    effect = "Allow"
+  }
+}

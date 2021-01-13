@@ -204,6 +204,16 @@ locals {
       }
     },
 
+    "fineos-bucket-tool" = {
+      command             = ["fineos-bucket-tool"]
+      containers_template = "fineos_bucket_tool.json"
+      task_role           = aws_iam_role.fineos_bucket_tool_role.arn
+      vars = {
+        fineos_aws_iam_role_arn         = var.fineos_aws_iam_role_arn
+        fineos_aws_iam_role_external_id = var.fineos_aws_iam_role_external_id
+      }
+    },
+
     "payments-rotate-data-mart-password" = {
       command             = ["payments-rotate-data-mart-password"]
       containers_template = "payments_rotate_data_mart_password_template.json"
