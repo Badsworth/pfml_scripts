@@ -68,7 +68,7 @@ export default (
         await doNextTask(browser, data);
       },
     },
-  ].map(Util.simulateRealTime);
+  ];
 
   async function doNextTask(
     browser: Browser,

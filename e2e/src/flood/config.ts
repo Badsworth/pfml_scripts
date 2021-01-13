@@ -21,6 +21,7 @@ export const dataBaseUrl = "data/pilot4";
 export const documentUrl = "forms/hcp-real.pdf";
 export const PortalBaseUrl = config("E2E_PORTAL_BASEURL");
 export const APIBaseUrl = config("E2E_API_BASEURL");
+export const floodToken = config("E2E_FLOOD_API_TOKEN");
 
 export type LSTStepFunction = (
   browser: Browser,
@@ -142,17 +143,14 @@ export async function getFineosBaseUrl(
   return fineosAuthUrl;
 }
 
-let envConfig: Record<string, unknown>;
 export async function config(name: string): Promise<string> {
   if (name in process.env) {
     return process.env[name] as string;
   } else {
-    if (typeof envConfig === "undefined") {
-      envConfig = await import(
-        //@ts-ignore
-        "./data/env.json"
-      );
-    }
+    const envConfig: Record<string, unknown> = await import(
+      //@ts-ignore
+      "./data/env.json"
+    );
     if (name in envConfig) {
       return envConfig[name] as string;
     }

@@ -141,7 +141,7 @@ export const steps: Cfg.StoredStep[] = [
       await Util.waitForElement(browser, By.visibleText("Approved"));
     },
   },
-].map(Util.simulateRealTime);
+];
 
 export function checkApprovalReadiness(
   exitAdjudication = true
