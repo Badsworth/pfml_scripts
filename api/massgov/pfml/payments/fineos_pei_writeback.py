@@ -12,12 +12,14 @@ import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
+    LatestStateLog,
     LkState,
     Payment,
     PaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,
     State,
+    StateLog,
 )
 from massgov.pfml.payments.payments_util import Constants, get_now
 
@@ -50,6 +52,7 @@ class PeiWritebackItem:
     start_state: LkState
     end_state: LkState
     encoded_row: Dict[str, str]
+    post_writeback_hook: Optional[Callable] = None
 
 
 ACTIVE_WRITEBACK_RECORD_STATUS = "Active"
@@ -99,12 +102,14 @@ def get_records_to_writeback(db_session: db.Session) -> List[PeiWritebackItem]:
         start_state=State.MARK_AS_EXTRACTED_IN_FINEOS,
         end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         writeback_record_converter=_extracted_payment_to_pei_writeback_record,
+        post_writeback_hook=_after_vendor_check_initiated,
     )
     disbursed_writeback_items = _get_writeback_items_for_state(
         db_session=db_session,
         start_state=State.SEND_PAYMENT_DETAILS_TO_FINEOS,
         end_state=State.PAYMENT_COMPLETE,
         writeback_record_converter=_disbursed_payment_to_pei_writeback_record,
+        post_writeback_hook=None,
     )
 
     return extracted_writeback_items + disbursed_writeback_items
@@ -115,6 +120,7 @@ def _get_writeback_items_for_state(
     start_state: LkState,
     end_state: LkState,
     writeback_record_converter: Callable,
+    post_writeback_hook: Optional[Callable] = None,
 ) -> List[PeiWritebackItem]:
     pei_writeback_items = []
 
@@ -136,6 +142,7 @@ def _get_writeback_items_for_state(
                     start_state=start_state,
                     end_state=end_state,
                     encoded_row=csv_util.encode_row(writeback_record, PEI_WRITEBACK_CSV_ENCODERS),
+                    post_writeback_hook=post_writeback_hook,
                 )
             )
         except Exception:
@@ -236,6 +243,9 @@ def upload_writeback_csv_and_save_reference_files(
 
         reference_file.file_location = pfml_pei_writeback_sent_filepath
         db_session.add(reference_file)
+
+        _run_post_writeback_hooks(pei_writeback_items, db_session)
+
         db_session.commit()
     except Exception as e:
         db_session.rollback()
@@ -335,3 +345,48 @@ def _disbursed_payment_to_pei_writeback_record(payment: Payment) -> PeiWriteback
         transStatusDate=payment.disb_check_eft_issue_date,
         transactionStatus=f"Distributed {payment.disb_method.payment_method_description}",
     )
+
+
+def _run_post_writeback_hooks(
+    pei_writeback_items: List[PeiWritebackItem], db_session: db.Session
+) -> None:
+    for item in pei_writeback_items:
+        if item.post_writeback_hook:
+            try:
+                item.post_writeback_hook(payment=item.payment, db_session=db_session)
+            except Exception:
+                logger.exception(
+                    "Error executing post_writeback_hook",
+                    extra={"payment_id": item.payment.payment_id},
+                )
+                continue
+
+
+def _after_vendor_check_initiated(payment: Payment, db_session: db.Session) -> None:
+    employee = payment.claim.employee
+
+    latest_state_log = (
+        db_session.query(StateLog)
+        .join(LatestStateLog)
+        .filter(LatestStateLog.employee_id == employee.employee_id)
+        .one_or_none()
+    )
+
+    if (
+        latest_state_log is None
+        or latest_state_log.end_state.state_id in Constants.RESTARTABLE_EMPLOYEE_STATES
+    ):
+        state_log_util.create_finished_state_log(
+            associated_model=employee,
+            start_state=State.VENDOR_CHECK_INITIATED_BY_PAYMENT_EXPORT,
+            end_state=State.IDENTIFY_MMARS_STATUS,
+            outcome=state_log_util.build_outcome(
+                "Start Vendor Check flow after receiving payment in payment extract"
+            ),
+            db_session=db_session,
+        )
+    else:
+        logger.error(
+            "Files are already in flight to CTR. Not sure what to do.",
+            extra={"employee_id": employee.employee_id},
+        )

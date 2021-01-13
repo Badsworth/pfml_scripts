@@ -327,6 +327,12 @@ def test_save_writeback_reference_files(
         db_session=test_db_session,
     )
     assert len(extracted_payment_state_logs_before) == 0
+    employee_state_logs_before = state_log_util.get_all_latest_state_logs_in_end_state(
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        end_state=State.IDENTIFY_MMARS_STATUS,
+        db_session=test_db_session,
+    )
+    assert len(employee_state_logs_before) == 0
 
     disbursed_payment_state_logs_before = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
@@ -353,19 +359,25 @@ def test_save_writeback_reference_files(
     )
 
     # Confirm StateLogs are created for each payment.
-    extracted_payment_state_logs_before = state_log_util.get_all_latest_state_logs_in_end_state(
+    extracted_payment_state_logs_after = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
         end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         db_session=test_db_session,
     )
-    assert len(extracted_payment_state_logs_before) == 1
+    assert len(extracted_payment_state_logs_after) == 1
+    employee_state_logs_after = state_log_util.get_all_latest_state_logs_in_end_state(
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        end_state=State.IDENTIFY_MMARS_STATUS,
+        db_session=test_db_session,
+    )
+    assert len(employee_state_logs_after) == 1
 
-    disbursed_payment_state_logs_before = state_log_util.get_all_latest_state_logs_in_end_state(
+    disbursed_payment_state_logs_after = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
         end_state=State.PAYMENT_COMPLETE,
         db_session=test_db_session,
     )
-    assert len(disbursed_payment_state_logs_before) == 1
+    assert len(disbursed_payment_state_logs_after) == 1
 
     # Confirm both PaymentReferenceFiles are created correctly
     payment_ids = [payment.payment_id for payment in payments]
@@ -456,3 +468,38 @@ def test_writeback_files_uploaded_to_s3(
         PENDING_WRITEBACK_EXTRACTION_DATE.strftime("%m/%d/%Y"),
         writeback.PENDING_WRITEBACK_RECORD_TRANSACTION_STATUS,
     )
+
+
+def test_after_vendor_check_initiated_logs_error_for_existing_employee_state_log(
+    test_db_session, initialize_factories_session, caplog
+):
+    # Create a payment associated with an employee with a StateLog in a non-restartable state.
+    payment = generate_extracted_payment(test_db_session)
+    state_log_util.create_finished_state_log(
+        associated_model=payment.claim.employee,
+        start_state=State.VENDOR_CHECK_INITIATED_BY_PAYMENT_EXPORT,
+        end_state=State.IDENTIFY_MMARS_STATUS,
+        outcome=state_log_util.build_outcome(
+            "Start Vendor Check flow after receiving payment in payment extract"
+        ),
+        db_session=test_db_session,
+    )
+    test_db_session.commit()
+
+    employee_state_logs_before = state_log_util.get_all_latest_state_logs_in_end_state(
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        end_state=State.IDENTIFY_MMARS_STATUS,
+        db_session=test_db_session,
+    )
+    assert len(employee_state_logs_before) == 1
+
+    caplog.set_level(logging.ERROR)  # noqa: B1
+    writeback._after_vendor_check_initiated(payment, test_db_session)
+    assert "Files are already in flight to CTR. Not sure what to do." in caplog.text
+
+    employee_state_logs_after = state_log_util.get_all_latest_state_logs_in_end_state(
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        end_state=State.IDENTIFY_MMARS_STATUS,
+        db_session=test_db_session,
+    )
+    assert len(employee_state_logs_before) == len(employee_state_logs_after)

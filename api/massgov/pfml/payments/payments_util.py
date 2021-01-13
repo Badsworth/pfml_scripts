@@ -30,6 +30,7 @@ from massgov.pfml.db.models.employees import (
     LkReferenceFileType,
     ReferenceFile,
     ReferenceFileType,
+    State,
 )
 from massgov.pfml.util.aws.ses import EmailRecipient, send_email, send_email_with_attachment
 
@@ -52,6 +53,16 @@ class Constants:
     S3_INBOUND_RECEIVED_DIR = "received"
     S3_INBOUND_PROCESSED_DIR = "processed"
     S3_INBOUND_ERROR_DIR = "error"
+
+    RESTARTABLE_EMPLOYEE_STATES = [
+        State.VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT.state_id,
+        State.VENDOR_EXPORT_ERROR_REPORT_SENT.state_id,
+        State.VENDOR_CHECK_INITIATED_BY_PAYMENT_EXPORT.state_id,
+        State.MMARS_STATUS_CONFIRMED.state_id,
+        State.VCM_REPORT_SENT.state_id,
+        State.VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED.state_id,
+        State.ADD_TO_VCC_ERROR_REPORT.state_id,
+    ]
 
 
 class ValidationReason(str, Enum):
