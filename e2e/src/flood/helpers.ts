@@ -1,14 +1,42 @@
 import { Locator, Browser, By, ElementHandle, Until } from "@flood/element";
-import {
-  config,
-  LSTSimClaim,
-  StandardDocumentType,
-  StoredStep,
-  getFineosBaseUrl,
-} from "./config";
+import * as Cfg from "./config";
 import { ClaimDocument, FineosUserType } from "../simulation/types";
 import { getFamilyLeavePlanProp } from "./tasks/ApproveClaim";
 import { actions } from "./scenarios/SavilinxAgent.perf";
+
+// This helper cannot be used directly in a global variable definitions
+// as it causes a compilation error when Element runs
+export function simulateRealTime(step: Cfg.StoredStep): Cfg.StoredStep {
+  const { time, name, test } = step;
+  return {
+    time: time,
+    name: name,
+    test: async (browser: Browser, data: Cfg.LSTSimClaim) => {
+      // Start the timer
+      const start = Date.now();
+      // Adjust minimum runtime based on configuration
+      const minTime =
+        time * parseFloat(await Cfg.config("E2E_SIMULATION_SPEED"));
+      // Run the actual step's function
+      await test(browser, data);
+      // Stop the timer
+      const end = Date.now();
+      const stepRuntime = end - start;
+      // Time left after running the step function
+      // If it's below 0, then the step function went overtime
+      const waitTime = minTime - stepRuntime;
+      // wait for the remaining time left to simulate a real user's actions
+      if (waitTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+      }
+      console.info(
+        `\n\nStep '${name}' finished in ${stepRuntime}ms with ${
+          waitTime > 0 ? "a wait " : "an over"
+        }time of ${Math.abs(minTime - stepRuntime)}ms\n\n`
+      );
+    },
+  };
+}
 
 export const formatDate = (d: string | null | undefined): string =>
   new Intl.DateTimeFormat("en-US", {
@@ -93,8 +121,8 @@ export type TestMailVerificationFetcher = {
 export async function getMailVerifier(
   browser: Browser
 ): Promise<TestMailVerificationFetcher> {
-  const apiKey = await config("E2E_TESTMAIL_APIKEY");
-  const namespace = await config("E2E_TESTMAIL_NAMESPACE");
+  const apiKey = await Cfg.config("E2E_TESTMAIL_APIKEY");
+  const namespace = await Cfg.config("E2E_TESTMAIL_NAMESPACE");
   const endpoint = "https://api.testmail.app/api/json";
   let tag: string;
   let username: string;
@@ -241,7 +269,9 @@ export async function getMailVerifier(
   };
 }
 
-export function getDocumentType(document: ClaimDocument): StandardDocumentType {
+export function getDocumentType(
+  document: ClaimDocument
+): Cfg.StandardDocumentType {
   if (["MASSID", "OOSID"].includes(document.type)) {
     return "Identification Proof";
   } else {
@@ -249,45 +279,17 @@ export function getDocumentType(document: ClaimDocument): StandardDocumentType {
   }
 }
 
-export const simulateRealTime = (step: StoredStep): StoredStep => ({
-  time: step.time,
-  name: step.name,
-  test: async (browser: Browser, data: LSTSimClaim) => {
-    // Start the timer
-    const start = Date.now();
-    // Adjust minimum runtime based on configuration
-    const time = step.time * parseFloat(await config("E2E_SIMULATION_SPEED"));
-    // Run the actual step's function
-    await step.test(browser, data);
-    // Stop the timer
-    const end = Date.now();
-    const stepRuntime = end - start;
-    // Time left after running the step function
-    // If it's below 0, then the step function went overtime
-    const waitTime = time - stepRuntime;
-    // wait for the remaining time left to simulate a real user's actions
-    if (waitTime > 0) {
-      await new Promise((resolve) => setTimeout(resolve, waitTime));
-    }
-    console.info(
-      `\n\nStep '${name}' finished in ${stepRuntime}ms with ${
-        waitTime > 0 ? "a wait " : "an over"
-      }time of ${Math.abs(time - stepRuntime)}ms\n\n`
-    );
-  },
-});
-
 export function assignTasks(
   fineosId: string,
   search = true,
   agent: FineosUserType = "SAVILINX"
-): StoredStep {
+): Cfg.StoredStep {
   return {
     time: 0,
     name: `Assign ${fineosId}'s tasks to ${agent} Agent`,
     test: async (browser: Browser): Promise<void> => {
       if (search) {
-        await browser.visit(await getFineosBaseUrl());
+        await browser.visit(await Cfg.getFineosBaseUrl());
         // search for particular by id
         const casesMenu = await waitForElement(
           browser,

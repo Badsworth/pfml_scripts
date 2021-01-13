@@ -18,15 +18,18 @@ export const steps: Cfg.StoredStep[] = [
         value: JSON.stringify({
           pfmlTerriyay: true,
           claimantShowAuth: true,
+          employerShowSelfRegistrationForm: true,
         }),
         url: await Cfg.PortalBaseUrl,
       });
-      await browser.visit(await Cfg.PortalBaseUrl);
-      const registerEmployerButton = await Util.waitForElement(
-        browser,
-        By.linkText("Create an employer account")
+      await browser.visit(
+        `${await Cfg.PortalBaseUrl}/employers/create-account`
       );
-      await browser.click(registerEmployerButton);
+      // const registerEmployerButton = await waitForElement(
+      //   browser,
+      //   By.linkText("Create an employer account")
+      // );
+      // await browser.click(registerEmployerButton);
     },
   },
   {
@@ -93,6 +96,7 @@ export const steps: Cfg.StoredStep[] = [
         By.css("button[type='submit']")
       );
       await browser.click(logInButton);
+      await browser.waitForNavigation();
       const termsButton = await Util.waitForElement(
         browser,
         By.visibleText("Agree and continue")
@@ -101,7 +105,7 @@ export const steps: Cfg.StoredStep[] = [
       await Util.waitForElement(browser, By.visibleText("Log out"));
     },
   },
-].map(Util.simulateRealTime);
+];
 
 export default (): void => {
   TestData.fromJSON<Cfg.LSTSimClaim>(

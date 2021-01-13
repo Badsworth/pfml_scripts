@@ -5,16 +5,12 @@ import {
   TestData,
   step,
 } from "@flood/element";
-import {
-  globalElementSettings,
-  dataBaseUrl,
-  LSTScenario,
-  LSTSimClaim,
-} from "./config";
+import * as Cfg from "./config";
+import * as Util from "./helpers";
 import scenarios from "./scenarios";
 
 export const settings: TestSettings = {
-  ...globalElementSettings,
+  ...Cfg.globalElementSettings,
   // These overrides are essential to any Flood.io deployment
   loopCount: -1,
   actionDelay: 1, // needs to be 3 if running agents
@@ -23,13 +19,13 @@ export const settings: TestSettings = {
 
 export default (): void => {
   // Define variable that will control which scenario we're going to execute here.
-  let curr: LSTScenario;
+  let curr: Cfg.LSTScenario;
   // Set up test data to control execution.
-  TestData.fromJSON<LSTSimClaim>(`./${dataBaseUrl}/claims.json`)
+  TestData.fromJSON<Cfg.LSTSimClaim>(`./${Cfg.dataBaseUrl}/claims.json`)
     .shuffle(true)
     .circular(true);
   // Before moving on to next scenario, fetch and adjust data needed
-  beforeEach(async (browser: Browser, data?: LSTSimClaim) => {
+  beforeEach(async (browser: Browser, data?: Cfg.LSTSimClaim) => {
     if (typeof data !== "object" || !data || !("scenario" in data)) {
       throw new Error("Unable to determine scenario for step");
     }
@@ -40,17 +36,19 @@ export default (): void => {
   });
   // Loops through all scenarios and defines the steps for each.
   Object.entries(scenarios).forEach(([scenario, steps]) => {
-    steps.forEach((stepDef) => {
+    const realTimeSteps = steps.map(Util.simulateRealTime);
+    realTimeSteps.forEach((stepDef) => {
+      const stepName = `${scenario}: ${stepDef.name}`;
       step.if(
         () => curr === scenario,
-        `${scenario}: ${stepDef.name}`,
-        async (browser: Browser, data: LSTSimClaim) => {
+        stepName,
+        async (browser: Browser, data: Cfg.LSTSimClaim) => {
           try {
             await stepDef.test(browser, data);
           } catch (e) {
             // Catch and log failures so we can detect them in the logs.
             console.log(
-              `\n\nDetected fatal failure while running ${curr}: ${stepDef.name}`,
+              `\n\nDetected fatal failure while running ${stepName}`,
               e,
               "\n\n"
             );

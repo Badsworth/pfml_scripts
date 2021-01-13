@@ -302,7 +302,8 @@ export default async (
 ): Promise<void> => {
   const isEligible = await Util.isFinanciallyEligible(browser);
   if (isEligible) {
-    for (const step of steps) {
+    const realTimeSteps = steps.map(Util.simulateRealTime);
+    for (const step of realTimeSteps) {
       const stepName = `Approve - ${step.name}`;
       try {
         console.info(stepName);

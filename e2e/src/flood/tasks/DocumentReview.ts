@@ -111,7 +111,8 @@ export default async (
   // verify eligibility before continuing
   const isEligible = await Util.isFinanciallyEligible(browser);
   if (isEligible) {
-    for (const step of steps) {
+    const realTimeSteps = steps.map(Util.simulateRealTime);
+    for (const step of realTimeSteps) {
       if (breakStepFlow) {
         console.info(
           `A breaking condition was found therefore steps after '${
@@ -211,4 +212,4 @@ export const steps: Cfg.StoredStep[] = [
       await browser.click(closeTaskButton);
     },
   },
-].map(Util.simulateRealTime);
+];

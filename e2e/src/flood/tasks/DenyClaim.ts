@@ -74,14 +74,15 @@ export const steps: Cfg.StoredStep[] = [
       );
     },
   },
-].map(Util.simulateRealTime);
+];
 
 export default async (
   browser: Browser,
   data: Cfg.LSTSimClaim
 ): Promise<void> => {
   data.agentTask = taskName;
-  for (const step of steps) {
+  const realTimeSteps = steps.map(Util.simulateRealTime);
+  for (const step of realTimeSteps) {
     const stepName = `Deny - ${step.name}`;
     try {
       console.info(stepName);

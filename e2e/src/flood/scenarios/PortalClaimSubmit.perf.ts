@@ -86,7 +86,7 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
+    time: 0,
     name: "Assign tasks to specific Agent",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // we don't want to run this step on a real Flood
@@ -97,7 +97,7 @@ export const steps: Cfg.StoredStep[] = [
       }
     },
   },
-].map(Util.simulateRealTime);
+];
 
 export default (): void => {
   TestData.fromJSON<Cfg.LSTSimClaim>(

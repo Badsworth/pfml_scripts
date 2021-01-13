@@ -500,7 +500,7 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
+    time: 0,
     name: "Assign tasks to specific Agent",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       if (!ENV.FLOOD_LOAD_TEST) {
@@ -510,7 +510,7 @@ export const steps: Cfg.StoredStep[] = [
       }
     },
   },
-].map(Util.simulateRealTime);
+];
 
 async function fillContinuousLeavePeriods(
   browser: Browser,
