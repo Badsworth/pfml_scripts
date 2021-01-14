@@ -83,6 +83,7 @@ services:
       # - FINEOS_PAYMENT_MAX_HISTORY_DATE=2021-01-01
       # - PAYMENTS_GAX_BIEVNT_EMAIL=
       # - PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL=
+      - DFML_PROJECT_MANAGER_EMAIL_ADDRESS=
       - PFML_EMAIL_ADDRESS=noreplypfml@mass.gov
       - BOUNCE_FORWARDING_EMAIL_ADDRESS=noreplypfml@mass.gov
       # Uncomment and set these in order to run the FINEOS and CTR ECS tasks locally with real S3

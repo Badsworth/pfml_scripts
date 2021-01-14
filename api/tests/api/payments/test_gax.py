@@ -234,7 +234,9 @@ def test_build_individual_gax_document(initialize_factories_session, test_db_ses
 
 
 @freeze_time("2021-01-01 12:00:00")
-def test_build_gax_files(initialize_factories_session, test_db_session, mock_s3_bucket):
+def test_build_gax_files(
+    initialize_factories_session, test_db_session, mock_s3_bucket, set_exporter_env_vars, mock_ses
+):
     payments = get_payments()
     for payment in payments:
         create_add_to_gax_state_log_for_payment(payment, test_db_session)
@@ -343,7 +345,7 @@ def test_build_gax_files_no_eligible_payments(test_db_session, mock_s3_bucket):
 
 
 def test_build_gax_files_skip_payment_record_errors(
-    initialize_factories_session, test_db_session, mock_s3_bucket
+    initialize_factories_session, test_db_session, mock_s3_bucket, set_exporter_env_vars, mock_ses
 ):
     payments = get_payments()
     valid_payment_record = payments[0]

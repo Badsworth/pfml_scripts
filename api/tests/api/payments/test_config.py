@@ -2,6 +2,7 @@ import massgov.pfml.payments.config as payments_config
 
 
 def test_get_config_fully_specified(monkeypatch):
+    monkeypatch.setenv("DFML_PROJECT_MANAGER_EMAIL_ADDRESS", "test@test.gov")
     monkeypatch.setenv("PFML_EMAIL_ADDRESS", "noreplypfml@mass.gov")
     monkeypatch.setenv("BOUNCE_FORWARDING_EMAIL_ADDRESS", "noreplypfml@mass.gov")
     monkeypatch.setenv(
@@ -15,6 +16,7 @@ def test_get_config_fully_specified(monkeypatch):
     payments_email_config = payments_config.get_email_config()
 
     assert payments_email_config == payments_config.PaymentsEmailConfig(
+        dfml_project_manager_email_address="test@test.gov",
         pfml_email_address="noreplypfml@mass.gov",
         bounce_forwarding_email_address="noreplypfml@mass.gov",
         bounce_forwarding_email_address_arn="arn:aws:ses:us-east-1:498823821309:identity/noreplypfml@mass.gov",

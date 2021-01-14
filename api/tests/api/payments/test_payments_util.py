@@ -1,4 +1,3 @@
-import json
 import os
 import xml.dom.minidom as minidom
 from datetime import datetime, timedelta
@@ -644,7 +643,7 @@ def test_get_inf_data_from_reference_file(test_db_session, initialize_factories_
     inf_data = get_inf_data_from_reference_file(reference_file, test_db_session)
 
     assert inf_data is not None
-    assert inf_data == json.loads(ctr_batch_identifier.inf_data)
+    assert inf_data == ctr_batch_identifier.inf_data
 
 
 def test_get_inf_data_as_plain_text(test_db_session):

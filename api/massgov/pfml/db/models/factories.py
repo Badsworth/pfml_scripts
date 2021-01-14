@@ -2,7 +2,6 @@
 # This should be used for seeding tables in development and testing.
 #
 
-import json
 import random
 import string
 from datetime import date, datetime, timedelta
@@ -175,18 +174,16 @@ class CtrBatchIdentifierFactory(BaseFactory):
     year = datetime.now().year
     batch_date = datetime.now()
     batch_counter = Generators.VccBatchCounter
-    inf_data = json.dumps(
-        {
-            "NewMmarsBatchID": "EOL0101GAX11",
-            "NewMmarsBatchDeptCode": "EOL",
-            "NewMmarsUnitCode": "8770",
-            "NewMmarsImportDate": "2020-01-01",
-            "NewMmarsTransCode": "GAX",
-            "NewMmarsTableName": "",
-            "NewMmarsTransCount": "2",
-            "NewMmarsTransDollarAmount": "2500.00",
-        }
-    )
+    inf_data = {
+        "NewMmarsBatchID": "EOL0101GAX11",
+        "NewMmarsBatchDeptCode": "EOL",
+        "NewMmarsUnitCode": "8770",
+        "NewMmarsImportDate": "2020-01-01",
+        "NewMmarsTransCode": "GAX",
+        "NewMmarsTableName": "",
+        "NewMmarsTransCount": "2",
+        "NewMmarsTransDollarAmount": "2500.00",
+    }
 
 
 class CtrDocumentIdentifierFactory(BaseFactory):

@@ -162,6 +162,7 @@ locals {
         pfml_ctr_outbound_path   = var.pfml_ctr_outbound_path
         pfml_error_reports_path  = var.pfml_error_reports_path
 
+        dfml_project_manager_email_address     = var.dfml_project_manager_email_address
         pfml_email_address                     = var.pfml_email_address
         bounce_forwarding_email_address        = var.bounce_forwarding_email_address
         bounce_forwarding_email_address_arn    = var.bounce_forwarding_email_address_arn
@@ -192,6 +193,8 @@ locals {
 
         fineos_vendor_max_history_date  = var.fineos_vendor_max_history_date
         fineos_payment_max_history_date = var.fineos_payment_max_history_date
+
+        dfml_project_manager_email_address = var.dfml_project_manager_email_address
       }
     },
 

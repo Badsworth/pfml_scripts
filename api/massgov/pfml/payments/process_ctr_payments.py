@@ -110,11 +110,11 @@ def _ctr_process(db_session: db.Session, config: Configuration) -> None:
     if config.query_data_mart:
         process_data_mart(db_session)
 
-    # 4. Create GAX files
+    # 4. Create GAX files, send BIEVNT email
     if config.make_gax:
         build_gax_files_for_s3(db_session)
 
-    # 5. Create VCC files
+    # 5. Create VCC files, send BIEVNT email
     if config.make_vcc:
         build_vcc_files_for_s3(db_session)
 
@@ -122,6 +122,6 @@ def _ctr_process(db_session: db.Session, config: Configuration) -> None:
     if config.send_to_moveit:
         moveit.send_files_to_moveit(db_session)
 
-    # 7. Send BIEVNT and other OSM Reports
+    # 7. Send OSM Reports
     if config.make_error_report:
         send_ctr_error_reports(db_session)

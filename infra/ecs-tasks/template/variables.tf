@@ -209,6 +209,12 @@ variable "pfml_email_address" {
   default     = ""
 }
 
+variable "dfml_project_manager_email_address" {
+  description = "DFML Project manager email address"
+  type        = string
+  default     = ""
+}
+
 variable "bounce_forwarding_email_address" {
   description = "Generic send to address for bounced back outgoing email notifications"
   type        = string

@@ -341,7 +341,9 @@ def test_build_individual_vcc_document_truncated_values(initialize_factories_ses
 
 
 @freeze_time("2020-01-01 12:00:00")
-def test_build_vcc_files(initialize_factories_session, test_db_session, mock_s3_bucket):
+def test_build_vcc_files(
+    initialize_factories_session, test_db_session, mock_s3_bucket, set_exporter_env_vars, mock_ses
+):
     employees = [get_base_employee(), get_base_employee(use_random_tin=True)]
     for employee in employees:
         create_add_to_vcc_state_log_for_employee(employee, test_db_session)
@@ -473,7 +475,7 @@ def test_build_vcc_files_no_eligible_employees(test_db_session, mock_s3_bucket):
 
 
 def test_build_vcc_files_skip_employee_record_errors(
-    initialize_factories_session, test_db_session, mock_s3_bucket
+    initialize_factories_session, test_db_session, mock_s3_bucket, set_exporter_env_vars, mock_ses
 ):
     valid_employee_record = get_base_employee(use_random_tin=True)
     create_add_to_vcc_state_log_for_employee(valid_employee_record, test_db_session)

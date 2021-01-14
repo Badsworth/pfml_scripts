@@ -386,6 +386,8 @@ def build_gax_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
             ref_file.file_location, str(filename), dat_xml_document, inf_dict,
         )
 
+        send_bievnt_email(ref_file, db_session)
+
         db_session.commit()
 
         return (dat_filepath, inf_filepath)
@@ -399,12 +401,17 @@ def build_gax_files_for_s3(db_session: db.Session) -> Tuple[str, str]:
     return build_gax_files(db_session, payments_config.get_s3_config().pfml_ctr_outbound_path)
 
 
-def send_bievnt_email(
-    ref_file: ReferenceFile, db_session: db.Session, recipient_email: EmailRecipient
-) -> None:
+def send_bievnt_email(ref_file: ReferenceFile, db_session: db.Session) -> None:
     subject = f"DFML GAX BIEVNT info for Batch ID {ref_file.ctr_batch_identifier_id} on {payments_util.get_now():%m/%d/%Y}"
 
     try:
-        email_inf_data(ref_file, db_session, recipient_email, subject)
+        email_config = payments_config.get_email_config()
+        gax_bienvt_email = email_config.ctr_gax_bievnt_email_address
+        project_manager_email = email_config.dfml_project_manager_email_address
+        email_recipient = EmailRecipient(
+            to_addresses=[gax_bienvt_email], cc_addresses=[project_manager_email]
+        )
+
+        email_inf_data(ref_file, db_session, email_recipient, subject)
     except RuntimeError:
-        logger.exception("Error sending email")
+        logger.exception("Error sending GAX BIEVNT email")

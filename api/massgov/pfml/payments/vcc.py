@@ -472,6 +472,8 @@ def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
             ref_file.file_location, str(filename), dat_xml_document, inf_dict
         )
 
+        send_bievnt_email(ref_file, db_session)
+
         db_session.commit()
 
         return (dat_filepath, inf_filepath)
@@ -490,12 +492,17 @@ def build_vcc_files_for_s3(db_session: db.Session) -> Tuple[str, str]:
     return (dat_filepath, inf_filepath)
 
 
-def send_bievnt_email(
-    ref_file: ReferenceFile, db_session: db.Session, recipient_email: EmailRecipient
-) -> None:
+def send_bievnt_email(ref_file: ReferenceFile, db_session: db.Session) -> None:
     subject = f"DFML VCC BIEVNT info for Batch ID {ref_file.ctr_batch_identifier_id} on {payments_util.get_now():%m/%d/%Y}"
 
     try:
-        email_fineos_vendor_customer_numbers(ref_file, db_session, recipient_email, subject)
+        email_config = payments_config.get_email_config()
+        vcc_bienvt_email = email_config.ctr_vcc_bievnt_email_address
+        project_manager_email = email_config.dfml_project_manager_email_address
+        email_recipient = EmailRecipient(
+            to_addresses=[vcc_bienvt_email], cc_addresses=[project_manager_email]
+        )
+
+        email_fineos_vendor_customer_numbers(ref_file, db_session, email_recipient, subject)
     except RuntimeError:
-        logger.exception("Error sending dfml vcc bievnt email")
+        logger.exception("Error sending VCC BIEVNT email")

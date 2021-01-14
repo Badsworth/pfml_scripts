@@ -44,6 +44,7 @@ module "tasks" {
   pfml_ctr_outbound_path   = "s3://massgov-pfml-test-agency-transfer/ctr/outbound"
   pfml_error_reports_path  = "s3://massgov-pfml-test-agency-transfer/error-reports/outbound"
 
+  dfml_project_manager_email_address     = "mass-pfml-payments-test-email@navapbc.com"
   pfml_email_address                     = "noreplypfml@mass.gov"
   bounce_forwarding_email_address        = "noreplypfml@mass.gov"
   bounce_forwarding_email_address_arn    = "arn:aws:ses:us-east-1:498823821309:identity/noreplypfml@mass.gov"

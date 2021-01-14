@@ -142,6 +142,9 @@ class PaymentsEmailConfig:
     This config is a wrapper around email env vars.
     """
 
+    # DFML project manager email address. Should be CC'd on the BIEVNT emails
+    # Ex: kevin.bailey@mass.gov
+    dfml_project_manager_email_address: str
     # Sender email address
     # Ex: noreplypfml@mass.gov
     pfml_email_address: str
@@ -162,6 +165,7 @@ class PaymentsEmailConfig:
 
 def get_email_config() -> PaymentsEmailConfig:
     payments_email_config = PaymentsEmailConfig(
+        dfml_project_manager_email_address=os.getenv("DFML_PROJECT_MANAGER_EMAIL_ADDRESS", ""),
         pfml_email_address=os.getenv("PFML_EMAIL_ADDRESS", "noreplypfml@mass.gov"),
         bounce_forwarding_email_address=os.getenv(
             "BOUNCE_FORWARDING_EMAIL_ADDRESS", "noreplypfml@mass.gov"
@@ -177,6 +181,7 @@ def get_email_config() -> PaymentsEmailConfig:
     logger.info(
         "Constructed payments configuration",
         extra={
+            "dfml_project_manager_email_address": payments_email_config.dfml_project_manager_email_address,
             "pfml_email_address": payments_email_config.pfml_email_address,
             "bounce_forwarding_email_address": payments_email_config.bounce_forwarding_email_address,
             "bounce_forwarding_email_address_arn": payments_email_config.bounce_forwarding_email_address_arn,

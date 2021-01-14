@@ -41,6 +41,7 @@
       { "name": "FINEOS_VENDOR_MAX_HISTORY_DATE", "value": "${fineos_vendor_max_history_date}" },
       { "name": "FINEOS_PAYMENT_MAX_HISTORY_DATE", "value": "${fineos_payment_max_history_date}" },
 
+      { "name": "DFML_PROJECT_MANAGER_EMAIL_ADDRESS", "value": "${dfml_project_manager_email_address}" },
       { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", "value": "${bounce_forwarding_email_address_arn}" }
 
     ],

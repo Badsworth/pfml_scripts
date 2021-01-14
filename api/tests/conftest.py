@@ -205,6 +205,7 @@ def test_fs_path(tmp_path):
 def mock_ses(monkeypatch, reset_aws_env_vars):
     import boto3
 
+    monkeypatch.setenv("DFML_PROJECT_MANAGER_EMAIL_ADDRESS", "test@test.gov")
     monkeypatch.setenv("PFML_EMAIL_ADDRESS", "noreplypfml@mass.gov")
     monkeypatch.setenv("BOUNCE_FORWARDING_EMAIL", "noreplypfml@mass.gov")
     monkeypatch.setenv(

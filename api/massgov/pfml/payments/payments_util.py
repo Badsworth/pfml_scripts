@@ -1,5 +1,4 @@
 import csv
-import json
 import os
 import pathlib
 import re
@@ -635,7 +634,8 @@ def get_inf_data_from_reference_file(
         )
 
         if ctr_batch and ctr_batch.inf_data:
-            return json.loads(str(ctr_batch.inf_data))
+            # convert to Dict from sql alchemy JSON data type which has type Union[Dict, List]
+            return cast(Dict, ctr_batch.inf_data)
     except MultipleResultsFound as e:
         logger.exception(
             "CtrBatchIdentifier query failed: %s",
@@ -694,7 +694,7 @@ def get_mapped_claim_type(claim_type_str: str) -> LkClaimType:
 
 
 def email_fineos_vendor_customer_numbers(
-    ref_file: ReferenceFile, db_session: db.Session, email: EmailRecipient, subject: str
+    ref_file: ReferenceFile, db_session: db.Session, recipient: EmailRecipient, subject: str
 ) -> None:
 
     inf_data = get_inf_data_from_reference_file(ref_file, db_session)
@@ -716,7 +716,7 @@ def email_fineos_vendor_customer_numbers(
     csv_data_path = [create_csv_from_list(fineos_vendor_customer_numbers, fieldnames)]
 
     send_email(
-        email,
+        recipient,
         subject,
         body_text,
         payment_config.pfml_email_address,
