@@ -4,7 +4,9 @@ import pathlib
 
 import boto3
 import defusedxml.ElementTree as ET
+import pytest
 
+import massgov.pfml.payments.outbound_returns.outbound_vendor_customer_return as outbound_vendor_customer_return
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     CtrDocumentIdentifier,
@@ -22,17 +24,7 @@ from massgov.pfml.db.models.factories import (
     ReferenceFileFactory,
     TaxIdentifierFactory,
 )
-from massgov.pfml.payments.outbound_vendor_customer_return import (
-    VcDocAdData,
-    check_dependencies,
-    handle_xml_syntax_error,
-    move_processed_file,
-    process_ams_document,
-    process_outbound_vendor_customer_return,
-    update_employee_data,
-    validate_ams_document,
-)
-from massgov.pfml.payments.payments_util import ValidationContainer, ValidationReason
+from massgov.pfml.payments.payments_util import Constants, ValidationContainer, ValidationReason
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 TEST_FILE_PATH = os.path.join(
@@ -51,9 +43,13 @@ RECEIVED_FOLDER = (
     f"s3://test_bucket/{SOURCE_FOLDER}"  # test_bucket should be the mock_s3_bucket name
 )
 RECEIVED_S3_PATH = f"{RECEIVED_FOLDER}/{SOURCE_FILE_NAME}"
-PROCESSED_FOLDER = RECEIVED_FOLDER.replace("received", "processed")
+PROCESSED_FOLDER = RECEIVED_FOLDER.replace(
+    Constants.S3_INBOUND_RECEIVED_DIR, Constants.S3_INBOUND_PROCESSED_DIR
+)
 PROCESSED_S3_PATH = f"{PROCESSED_FOLDER}/{SOURCE_FILE_NAME}"
-ERROR_FOLDER = RECEIVED_FOLDER.replace("received", "error")
+ERROR_FOLDER = RECEIVED_FOLDER.replace(
+    Constants.S3_INBOUND_RECEIVED_DIR, Constants.S3_INBOUND_ERROR_DIR
+)
 ERROR_S3_PATH = f"{ERROR_FOLDER}/{SOURCE_FILE_NAME}"
 
 
@@ -136,7 +132,7 @@ def setup_mock_update_employee_data(monkeypatch):
     mock_update_employee_data.times_called = 0
 
     monkeypatch.setattr(
-        "massgov.pfml.payments.outbound_vendor_customer_return.update_employee_data",
+        "massgov.pfml.payments.outbound_returns.outbound_vendor_customer_return.update_employee_data",
         mock_update_employee_data,
     )
     return mock_update_employee_data
@@ -145,6 +141,9 @@ def setup_mock_update_employee_data(monkeypatch):
 def setup_mock_s3_bucket(mock_s3_bucket):
     s3 = boto3.client("s3")
     s3.put_object(Bucket=mock_s3_bucket, Key=SOURCE_KEY, Body=file_util.read_file(TEST_FILE_PATH))
+
+
+# === TESTS BEGIN ===
 
 
 def test_validate_ams_document_valid_doc(test_db_session, initialize_factories_session):
@@ -156,7 +155,10 @@ def test_validate_ams_document_valid_doc(test_db_session, initialize_factories_s
     tax_identifier = TaxIdentifierFactory.create(tax_identifier="517467495")
     employee = EmployeeFactory.create(tax_identifier=tax_identifier)
 
-    validation_container, validated_address_data = validate_ams_document(
+    (
+        validation_container,
+        validated_address_data,
+    ) = outbound_vendor_customer_return.validate_ams_document(
         ams_document, ams_document_id, vc_doc_vcust, employee, validation_container
     )
 
@@ -172,7 +174,10 @@ def test_validate_ams_document_with_invalid_fields(test_db_session, initialize_f
     tax_identifier = TaxIdentifier(tax_identifier="590764658")
     employee = EmployeeFactory.create(tax_identifier=tax_identifier)
 
-    validation_container, validated_address_data = validate_ams_document(
+    (
+        validation_container,
+        validated_address_data,
+    ) = outbound_vendor_customer_return.validate_ams_document(
         ams_document, ams_document_id, vc_doc_vcust, employee, validation_container
     )
 
@@ -206,7 +211,10 @@ def test_validate_ams_document_with_missing_fields(test_db_session, initialize_f
     tax_identifier = TaxIdentifier(tax_identifier="590764658")
     employee = EmployeeFactory.create(tax_identifier=tax_identifier)
 
-    validation_container, validated_address_data = validate_ams_document(
+    (
+        validation_container,
+        validated_address_data,
+    ) = outbound_vendor_customer_return.validate_ams_document(
         ams_document, ams_document_id, vc_doc_vcust, employee, validation_container
     )
 
@@ -241,7 +249,10 @@ def test_validate_ams_document_with_multiple_addresses(
     tax_identifier = TaxIdentifier(tax_identifier="579313283")
     employee = EmployeeFactory.create(tax_identifier=tax_identifier)
 
-    validation_container, validated_address_data = validate_ams_document(
+    (
+        validation_container,
+        validated_address_data,
+    ) = outbound_vendor_customer_return.validate_ams_document(
         ams_document, ams_document_id, vc_doc_vcust, employee, validation_container
     )
 
@@ -258,7 +269,9 @@ def test_check_dependencies(test_db_session, initialize_factories_session):
     ams_document = get_ams_document("missing_doc_id")
     ams_document_id = ams_document.get("DOC_ID")
     reference_file = ReferenceFileFactory.create()
-    dependencies = check_dependencies(ams_document, test_db_session, reference_file)
+    dependencies = outbound_vendor_customer_return.check_dependencies(
+        ams_document, test_db_session, reference_file
+    )
 
     assert dependencies.ams_document_id is None
     assert dependencies.ctr_document_identifier is None
@@ -269,7 +282,9 @@ def test_check_dependencies(test_db_session, initialize_factories_session):
 
     ams_document = get_ams_document("missing_vc_doc_vcust")
     ams_document_id = ams_document.get("DOC_ID")
-    dependencies = check_dependencies(ams_document, test_db_session, reference_file)
+    dependencies = outbound_vendor_customer_return.check_dependencies(
+        ams_document, test_db_session, reference_file
+    )
 
     assert dependencies.ams_document_id == ams_document_id
     assert dependencies.vc_doc_vcust is None
@@ -281,7 +296,9 @@ def test_check_dependencies(test_db_session, initialize_factories_session):
     ams_document = get_ams_document()
     vc_doc_vcust = ams_document.find("VC_DOC_VCUST")
     ams_document_id = ams_document.get("DOC_ID")
-    dependencies = check_dependencies(ams_document, test_db_session, reference_file)
+    dependencies = outbound_vendor_customer_return.check_dependencies(
+        ams_document, test_db_session, reference_file
+    )
 
     assert dependencies.ams_document_id == ams_document_id
     assert dependencies.vc_doc_vcust == vc_doc_vcust
@@ -296,7 +313,9 @@ def test_check_dependencies(test_db_session, initialize_factories_session):
     test_db_session.commit()
 
     # Employee not found
-    dependencies = check_dependencies(ams_document, test_db_session, reference_file)
+    dependencies = outbound_vendor_customer_return.check_dependencies(
+        ams_document, test_db_session, reference_file
+    )
 
     assert dependencies.ams_document_id == ams_document_id
     assert dependencies.vc_doc_vcust == vc_doc_vcust
@@ -319,7 +338,9 @@ def test_check_dependencies(test_db_session, initialize_factories_session):
     test_db_session.commit()
 
     # all dependencies met:
-    dependencies = check_dependencies(ams_document, test_db_session, reference_file)
+    dependencies = outbound_vendor_customer_return.check_dependencies(
+        ams_document, test_db_session, reference_file
+    )
 
     assert dependencies.ams_document_id == ams_document_id
     assert dependencies.vc_doc_vcust == vc_doc_vcust
@@ -332,7 +353,7 @@ def test_update_employee_data(test_db_session, initialize_factories_session):
     ams_document_id = ams_document.get("DOC_ID")
     vc_doc_vcust = ams_document.find("VC_DOC_VCUST")
     vc_doc_ad = ams_document.find("VC_DOC_AD")  # address data
-    vc_doc_ad_data = VcDocAdData(vc_doc_ad)
+    vc_doc_ad_data = outbound_vendor_customer_return.VcDocAdData(vc_doc_ad)
 
     employee = EmployeeFactory.create()
 
@@ -346,7 +367,9 @@ def test_update_employee_data(test_db_session, initialize_factories_session):
 
     assert employee.ctr_address_pair.ctr_address is None
 
-    update_employee_data(vc_doc_ad_data, ams_document_id, vc_doc_vcust, employee, test_db_session)
+    outbound_vendor_customer_return.update_employee_data(
+        vc_doc_ad_data, ams_document_id, vc_doc_vcust, employee, test_db_session
+    )
 
     assert employee.ctr_address_pair.ctr_address.address_line_one == vc_doc_ad.find("STR_1_NM").text
     assert employee.ctr_address_pair.ctr_address.address_line_two is None
@@ -355,18 +378,6 @@ def test_update_employee_data(test_db_session, initialize_factories_session):
     assert employee.ctr_address_pair.ctr_address.geo_state_id == GeoState.get_id(
         vc_doc_ad.find("ST").text
     )
-
-
-def test_move_processed_file(test_db_session, initialize_factories_session, mock_s3_bucket):
-    setup_mock_s3_bucket(mock_s3_bucket)
-    reference_file = ReferenceFileFactory.create(file_location=RECEIVED_S3_PATH)
-    move_processed_file(reference_file)
-    assert reference_file.file_location == PROCESSED_S3_PATH
-
-    processed_files = file_util.list_files(PROCESSED_FOLDER)
-    received_files = file_util.list_files(RECEIVED_FOLDER)
-    assert processed_files == ["test_file.xml"]
-    assert received_files == []
 
 
 def test_update_employee_data_when_missing_data(test_db_session, initialize_factories_session):
@@ -389,7 +400,9 @@ def test_update_employee_data_when_missing_data(test_db_session, initialize_fact
 
     ovr_reference_file = get_ovr_reference_file()
 
-    process_ams_document(ams_document, test_db_session, ovr_reference_file)
+    outbound_vendor_customer_return.process_ams_document(
+        ams_document, test_db_session, ovr_reference_file
+    )
 
     test_db_session.refresh(employee)
     assert employee.ctr_address_pair.ctr_address is None
@@ -408,7 +421,7 @@ def test_state_log_creation_with_no_validation_issues(
 
     ovr_reference_file = get_ovr_reference_file()
 
-    validation_container, state_log = process_ams_document(
+    validation_container, state_log = outbound_vendor_customer_return.process_ams_document(
         ams_document, test_db_session, ovr_reference_file
     )
 
@@ -423,7 +436,7 @@ def test_state_log_creation_with_dependency_issues(test_db_session, initialize_f
     ams_document = get_ams_document()
     ovr_reference_file = get_ovr_reference_file()
 
-    validation_container, state_log = process_ams_document(
+    validation_container, state_log = outbound_vendor_customer_return.process_ams_document(
         ams_document, test_db_session, ovr_reference_file
     )
 
@@ -442,7 +455,7 @@ def test_state_log_with_validation_issues(test_db_session, initialize_factories_
 
     ovr_reference_file = get_ovr_reference_file()
 
-    validation_container, state_log = process_ams_document(
+    validation_container, state_log = outbound_vendor_customer_return.process_ams_document(
         ams_document, test_db_session, ovr_reference_file
     )
 
@@ -468,7 +481,7 @@ def test_process_ams_document_with_validation_issues(
 
     ovr_reference_file = get_ovr_reference_file()
 
-    validation_container, state_log = process_ams_document(
+    validation_container, state_log = outbound_vendor_customer_return.process_ams_document(
         ams_document, test_db_session, ovr_reference_file
     )
 
@@ -494,7 +507,7 @@ def test_process_ams_document_with_no_validation_issues(
 
     ovr_reference_file = get_ovr_reference_file()
 
-    validation_container, state_log = process_ams_document(
+    validation_container, state_log = outbound_vendor_customer_return.process_ams_document(
         ams_document, test_db_session, ovr_reference_file
     )
 
@@ -508,21 +521,27 @@ def test_process_outbound_vendor_customer_return_reference_file_type(
 ):
     setup_mock_s3_bucket(mock_s3_bucket)
 
-    # skips processing the file if ReferenceFileType is not OutboundVendorCustomerReturn
+    # skips processing the file because ReferenceFileType is not
+    # OUTBOUND_VENDOR_CUSTOMER_RETURN
     caplog.set_level(logging.ERROR)  # noqa: B1
     reference_file = ReferenceFileFactory(file_location=RECEIVED_S3_PATH)
-    process_outbound_vendor_customer_return(reference_file, test_db_session)
-    assert "Skipping processing file at location" in caplog.text
+    with pytest.raises(ValueError):
+        outbound_vendor_customer_return.process_outbound_vendor_customer_return(
+            test_db_session, reference_file
+        )
     assert reference_file.file_location == RECEIVED_S3_PATH
+    assert "Unable to process ReferenceFile" in caplog.text
     caplog.clear()
 
-    # update the ReferenceFileType
+    # set the ReferenceFileType to OUTBOUND_VENDOR_CUSTOMER_RETURN
     reference_file.reference_file_type_id = (
         ReferenceFileType.OUTBOUND_VENDOR_CUSTOMER_RETURN.reference_file_type_id
     )
-    process_outbound_vendor_customer_return(reference_file, test_db_session)
+    outbound_vendor_customer_return.process_outbound_vendor_customer_return(
+        test_db_session, reference_file
+    )
     assert reference_file.file_location == PROCESSED_S3_PATH
-    assert "Skipping processing file at location" not in caplog.text
+    assert "Unable to process ReferenceFile" not in caplog.text
 
 
 def test_finish_state_log_with_validation_issues(
@@ -543,7 +562,9 @@ def test_finish_state_log_with_validation_issues(
 
     ovr_reference_file = get_ovr_reference_file()
 
-    process_outbound_vendor_customer_return(ovr_reference_file, test_db_session)
+    outbound_vendor_customer_return.process_outbound_vendor_customer_return(
+        test_db_session, ovr_reference_file
+    )
 
     state_log = test_db_session.query(StateLog).filter(StateLog.employee == employee).all()
 
@@ -593,7 +614,9 @@ def test_finish_state_log_with_no_validation_issues(
     assert employee.ctr_address_pair.ctr_address is None
     ovr_reference_file = get_ovr_reference_file()
 
-    process_outbound_vendor_customer_return(ovr_reference_file, test_db_session)
+    outbound_vendor_customer_return.process_outbound_vendor_customer_return(
+        test_db_session, ovr_reference_file
+    )
 
     state_log = test_db_session.query(StateLog).filter(StateLog.employee == employee).all()
 
@@ -615,73 +638,3 @@ def test_finish_state_log_with_no_validation_issues(
     )
     assert employee.ctr_address_pair.ctr_address.zip_code == address.find("ZIP").text
     assert ovr_reference_file.file_location == PROCESSED_S3_PATH
-
-
-def test_handle_xml_syntax_error_S3_failure(
-    test_db_session, initialize_factories_session, caplog, mock_s3_bucket
-):
-    setup_mock_s3_bucket(mock_s3_bucket)
-    exception = Exception()
-    caplog.set_level(logging.ERROR)  # noqa: B1
-    ovr_reference_file = get_ovr_reference_file()
-
-    # Test S3 failure
-    invalid_s3_path = ovr_reference_file.file_location.replace("s3://", "notS3://")
-    ovr_reference_file.file_location = invalid_s3_path
-
-    handle_xml_syntax_error(ovr_reference_file, exception, test_db_session)
-
-    test_db_session.refresh(ovr_reference_file)
-    test_db_session.flush()
-
-    assert ovr_reference_file.file_location == RECEIVED_S3_PATH
-    assert (
-        "an error occurred when attempting to move to 'notS3://test_bucket/ctr/inbound/error/test_file.xml'"
-        in caplog.text
-    )
-
-
-def test_handle_xml_syntax_error_DB_failure(
-    test_db_session, initialize_factories_session, caplog, mock_s3_bucket
-):
-
-    setup_mock_s3_bucket(mock_s3_bucket)
-    exception = Exception()
-    caplog.set_level(logging.ERROR)  # noqa: B1
-    ovr_reference_file = get_ovr_reference_file()
-
-    # Test DB failure
-    # insert a ReferenceFile already containing the error path, forcing a unique key error in handle_xml_syntax_error
-    ReferenceFileFactory(
-        file_location=ovr_reference_file.file_location.replace("received", "error")
-    )
-    handle_xml_syntax_error(ovr_reference_file, exception, test_db_session)
-
-    test_db_session.refresh(ovr_reference_file)
-    received_files = file_util.list_files(RECEIVED_FOLDER)
-    error_files = file_util.list_files(ERROR_FOLDER)
-
-    assert "an error occurred when saving the new location" in caplog.text
-    assert received_files == []
-    assert error_files == ["test_file.xml"]
-    assert ovr_reference_file.file_location == RECEIVED_S3_PATH
-
-
-def test_handle_xml_syntax_error_no_issues(
-    test_db_session, initialize_factories_session, caplog, mock_s3_bucket
-):
-    setup_mock_s3_bucket(mock_s3_bucket)
-    exception = Exception()
-    caplog.set_level(logging.ERROR)  # noqa: B1
-    ovr_reference_file = get_ovr_reference_file()
-
-    # No S3 or DB issues
-    handle_xml_syntax_error(ovr_reference_file, exception, test_db_session)
-
-    test_db_session.refresh(ovr_reference_file)
-    received_files = file_util.list_files(RECEIVED_FOLDER)
-    error_files = file_util.list_files(ERROR_FOLDER)
-
-    assert received_files == []
-    assert error_files == ["test_file.xml"]
-    assert ovr_reference_file.file_location == ERROR_S3_PATH

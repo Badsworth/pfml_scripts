@@ -8,7 +8,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 from xml.etree.ElementTree import Element
 
 import boto3
@@ -16,6 +16,7 @@ import botocore
 import pytz
 import smart_open
 from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import MultipleResultsFound
 
 import massgov.pfml.payments.config as payments_config
@@ -27,8 +28,13 @@ from massgov.pfml.db.models.employees import (
     Address,
     ClaimType,
     CtrBatchIdentifier,
+    CtrDocumentIdentifier,
+    Employee,
+    EmployeeReferenceFile,
     LkClaimType,
     LkReferenceFileType,
+    Payment,
+    PaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -102,6 +108,12 @@ class ValidationContainer:
         return len(self.validation_issues) != 0
 
 
+def get_now() -> datetime:
+    # Note that this uses Eastern time (not UTC)
+    tz = pytz.timezone("America/New_York")
+    return datetime.now(tz)
+
+
 def lookup_validator(
     lookup_table_clazz: Type[LookupTable], disallowed_lookup_values: Optional[List[str]] = None
 ) -> Callable[[str], Optional[ValidationReason]]:
@@ -151,12 +163,6 @@ def validate_csv_input(
     return value
 
 
-def get_now() -> datetime:
-    # Note that this uses Eastern time (not UTC)
-    tz = pytz.timezone("America/New_York")
-    return datetime.now(tz)
-
-
 def validate_db_input(
     key: str,
     db_object: Any,
@@ -184,6 +190,62 @@ def validate_db_input(
         raise Exception(f"Value for {key} is longer than allowed length of {max_length}.")
 
     return value_str
+
+
+def validate_xml_input(
+    key: str,
+    element: Element,
+    errors: ValidationContainer,
+    find_attribute: bool = False,
+    required: Optional[bool] = False,
+    acceptable_values: Optional[List[str]] = None,
+) -> Optional[str]:
+    """Validate XML input
+
+    Primarily used to validate XML input from CTR Outbound Return files
+    """
+    if find_attribute:
+        value = get_xml_attribute(element, key)
+    else:
+        value = get_xml_subelement(element, key)
+
+    # If this attribute is required and it is either not present or set to
+    # "null", then add a validation issue and return None
+    if required and value is None:
+        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
+        return None
+
+    # If this attribute can only be within a set of acceptable values, then
+    # add a validation issue if it isn't one of those values
+    if acceptable_values and value not in acceptable_values:
+        errors.add_validation_issue(ValidationReason.INVALID_VALUE, key)
+
+    return value
+
+
+def get_xml_attribute(element: Element, key: str) -> Optional[str]:
+    """Get an attribute from an XML element
+
+    Returns:
+        None: if the attribute is missing
+    """
+    if key in element.attrib:
+        return element.attrib[key]
+    else:
+        return None
+
+
+def get_xml_subelement(element: Element, key: str) -> Optional[str]:
+    """Get a subelement from an XML element
+
+    Returns:
+        None: if the subelement is missing or is set to "null"
+    """
+    sub_elem = element.find(key)
+    if sub_elem is not None and sub_elem.text and sub_elem.text.lower() != "null":
+        return sub_elem.text.strip("\n")
+    else:
+        return None
 
 
 def validate_input(
@@ -576,14 +638,6 @@ def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
     return datetime.fromisoformat(datetime_str).date()
 
 
-def get_xml_attribute(elem: Element, attr_str: str) -> Optional[str]:
-    attr_val = elem.find(attr_str)
-    if attr_val is not None and attr_val.text != "null":
-        return attr_val.text
-    else:
-        return None
-
-
 def compare_address_fields(first: Address, second: Address, field: str) -> bool:
     value1 = getattr(first, field)
     value2 = getattr(second, field)
@@ -749,3 +803,169 @@ def create_csv_from_list(customer_data: List[Dict], fieldnames: List[str]) -> pa
             writer.writerow(data)
 
     return csv_filepath
+
+
+def read_reference_file(ref_file: ReferenceFile, ref_file_type: LkReferenceFileType) -> str:
+    """ Reads a ReferenceFile
+
+    Must have a file_location and a matching file_type
+
+    Raises:
+        ValueError: if the file_type is wrong or if the file_location is missing
+        Also: various errors from actually reading the file
+    """
+
+    if ref_file.file_location is None:
+        raise ValueError(f"ReferenceFile {ref_file.reference_file_id} is missing a file_location")
+    elif ref_file.reference_file_type_id != ref_file_type.reference_file_type_id:
+        raise ValueError(
+            f"ReferenceFile {ref_file.reference_file_id} is not of the expected ReferenceFileType {ref_file_type.reference_file_type_description}"
+        )
+    else:
+        return file_util.read_file(ref_file.file_location)  # May raise file handling errors
+
+
+def move_reference_file(
+    db_session: db.Session, ref_file: ReferenceFile, src_dir: str, dest_dir: str
+) -> None:
+    """ Moves a ReferenceFile
+
+    Renames the actual S3 file (copies and deletes) and updates the reference_file.file_location
+    """
+    if ref_file.file_location is None:
+        raise ValueError(f"ReferenceFile {ref_file.reference_file_id} is missing a file_location")
+
+    old_location = ref_file.file_location
+
+    # Verify that the file_locations contains the src directory. Ex: Constants.S3_INBOUND_RECEIVED_DIR
+    # This will raise a ValueError if the src directory is not found
+    old_location.rindex(src_dir)
+
+    # Replace src directory with the dest directory. Ex: Constants.S3_INBOUND_ERROR_DIR
+    new_location = old_location.replace(src_dir, dest_dir)
+
+    # Rename the file
+    # This may raise S3-related errors
+    file_util.rename_file(old_location, new_location)
+
+    # Update reference_file.file_location
+    try:
+        ref_file.file_location = new_location
+        db_session.add(ref_file)
+        db_session.commit()
+    except SQLAlchemyError:
+        # Rollback the database transaction
+        db_session.rollback()
+        # Rollback the file move
+        file_util.rename_file(new_location, old_location)
+        # Log the exception
+        logger.exception(
+            "Unable to move ReferenceFile",
+            extra={
+                "file_location": ref_file.file_location,
+                "src_dir": src_dir,
+                "dest_dir": dest_dir,
+            },
+        )
+        raise
+
+
+def get_payment_by_doc_id(
+    db_session: db.Session, doc_id: str
+) -> Tuple[Payment, CtrDocumentIdentifier]:
+    """Return the payment associated with the given DOC_ID"""
+    payment_ref_file = (
+        db_session.query(PaymentReferenceFile)
+        .join(PaymentReferenceFile.ctr_document_identifier)
+        .filter(CtrDocumentIdentifier.ctr_document_identifier == doc_id)
+        .first()
+    )
+    if payment_ref_file is None or payment_ref_file.payment is None:
+        raise ValueError("No payment was found")
+    else:
+        return (payment_ref_file.payment, payment_ref_file.ctr_document_identifier)
+
+
+def get_model_by_doc_id(
+    db_session: db.Session, doc_id: str
+) -> Tuple[Union[Employee, Payment], CtrDocumentIdentifier]:
+    """Return the payment or employee associated with the given DOC_ID"""
+    try:
+        return get_payment_by_doc_id(db_session, doc_id)
+    except ValueError:
+        # If no payment was found, look for an employee
+        employee_ref_file = (
+            db_session.query(EmployeeReferenceFile)
+            .join(EmployeeReferenceFile.ctr_document_identifier)
+            .filter(CtrDocumentIdentifier.ctr_document_identifier == doc_id)
+            .first()
+        )
+        if employee_ref_file is None or employee_ref_file.employee is None:
+            raise ValueError("No employee or payment was found")
+        else:
+            return (employee_ref_file.employee, employee_ref_file.ctr_document_identifier)
+
+
+def create_model_reference_file(
+    db_session: db.Session,
+    ref_file: ReferenceFile,
+    associated_model: Union[Payment, Employee],
+    ctr_document_identifier_model: CtrDocumentIdentifier,
+) -> None:
+    """Creates a PaymentReferenceFile or EmployeeReferenceFile for a Payment or Employee
+
+    Raises:
+        SQLAlchemyError: if there is an issue creating the db record
+    """
+    model_ref_file: Union[EmployeeReferenceFile, PaymentReferenceFile]
+    try:
+        if isinstance(associated_model, Payment):
+            model_ref_file = PaymentReferenceFile(
+                payment=associated_model,
+                reference_file=ref_file,
+                ctr_document_identifier=ctr_document_identifier_model,
+            )
+        elif isinstance(associated_model, Employee):
+            model_ref_file = EmployeeReferenceFile(
+                employee=associated_model,
+                reference_file=ref_file,
+                ctr_document_identifier=ctr_document_identifier_model,
+            )
+
+        db_session.add(model_ref_file)
+    except SQLAlchemyError:
+        # It's possible for SQLAlchemy to raise an IntegrityError if we try to
+        # add a second PaymentReferenceFile/EmployeeReferenceFile with the
+        # same payment + reference_file combination. IntegrityErrors blow up
+        # the db transaction and require a rollback. If we rollback, we've
+        # broken all processing.
+        db_session.rollback()
+        logger.exception(
+            "Unable to create a <Model>ReferenceFile",
+            extra={
+                "file_location": ref_file.file_location,
+                "ctr_document_identifier": ctr_document_identifier_model.ctr_document_identifier,
+            },
+        )
+        raise
+
+
+def get_reference_file(source_filepath: str, db_session: db.Session) -> Optional[ReferenceFile]:
+    """Returns a ReferenceFile for a given file location
+
+    Raises:
+        MultipleResultsFound: if multiple ReferenceFiles have the same file_location
+                              This should not happen. The db is broken.
+    """
+    try:
+        return (
+            db_session.query(ReferenceFile)
+            .filter(ReferenceFile.file_location == source_filepath)
+            .one_or_none()
+        )
+    except MultipleResultsFound:
+        logger.exception(
+            f"Found more than one ReferenceFile with the same file_location: {source_filepath}",
+            extra={"source_filepath": source_filepath},
+        )
+        raise

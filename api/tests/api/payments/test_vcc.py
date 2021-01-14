@@ -11,7 +11,7 @@ from sqlalchemy import func
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
-import massgov.pfml.payments.outbound_status_return as outbound_status_return
+import massgov.pfml.payments.outbound_returns.outbound_status_return as outbound_status_return
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.payments.vcc as vcc
 from massgov.pfml.db.models.employees import (
@@ -642,21 +642,7 @@ def test_get_vcc_doc_counter_offset_for_today_with_existing_values(
 
 
 def get_validation_container(ams_doc):
-    if ams_doc.get("TRAN_CD") is None and ams_doc.find("DOC_ID") is None:
-        return outbound_status_return.get_payment_validation_issues(ams_doc, None, None)
-    elif ams_doc.get("TRAN_CD") is not None and ams_doc.find("DOC_ID") is None:
-        return outbound_status_return.get_payment_validation_issues(
-            ams_doc, None, ams_doc.get("TRAN_CD")
-        )
-    elif ams_doc.get("TRAN_CD") is not None and ams_doc.find("DOC_ID") is None:
-        return outbound_status_return.get_payment_validation_issues(
-            ams_doc, ams_doc.find("DOC_ID").text, None
-        )
-
-    tran_cd = ams_doc.get("TRAN_CD")
-    doc_id = ams_doc.find("DOC_ID").text
-
-    return outbound_status_return.get_payment_validation_issues(ams_doc, doc_id, tran_cd)
+    return outbound_status_return.AmsDocData(ams_doc).validation_container
 
 
 def test_vcc_outbound_status_errors(initialize_factories_session):
@@ -667,8 +653,7 @@ def test_vcc_outbound_status_errors(initialize_factories_session):
 
     doc_count = 0
     for ams_doc in root:
-        ams_doc_data = get_validation_container(ams_doc)
-        validation_container = ams_doc_data.validation_container
+        validation_container = get_validation_container(ams_doc)
 
         if doc_count == 0:  # Good doc
             assert validation_container.has_validation_issues() is False
@@ -684,8 +669,7 @@ def test_vcc_outbound_status_errors(initialize_factories_session):
             assert (
                 validation_container.validation_issues[0].reason
                 == payments_util.ValidationReason.INVALID_VALUE
-                and validation_container.validation_issues[0].details
-                == "DOC_PHASE_CD (2 - Not Final)"
+                and validation_container.validation_issues[0].details == "2 - Not Final"
             )
         elif doc_count == 3:  # Has ERRORS set
             assert validation_container.has_validation_issues() is True

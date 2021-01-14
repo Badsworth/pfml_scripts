@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 import boto3
 import pytest
+from sqlalchemy.exc import SQLAlchemyError
 
 import massgov.pfml.db as db
 import massgov.pfml.payments.config as payments_config
@@ -28,8 +29,13 @@ from massgov.pfml.payments.payments_util import (
     get_inf_data_as_plain_text,
     get_inf_data_from_reference_file,
     is_same_address,
+    move_reference_file,
 )
 from tests.api.payments.conftest import upload_file_to_s3
+
+TEST_FILENAME = "test.txt"
+TEST_SRC_DIR = "received"
+TEST_DEST_DIR = "error"
 
 # TODO: These should really be in payments_util or payments_config
 PAYMENT_EXTRACT_FILENAMES = ["vpei.csv", "vpeiclaimdetails.csv", "vpeipaymentdetails.csv"]
@@ -58,6 +64,19 @@ def set_source_path(tmp_path, mock_fineos_s3_bucket):
     upload_file_to_s3(
         test_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}",
     )
+
+
+def create_test_reference_file(test_db_session, mock_s3_bucket):
+    src_path = os.path.join("s3://", mock_s3_bucket, TEST_SRC_DIR)
+    dest_path = os.path.join("s3://", mock_s3_bucket, TEST_DEST_DIR)
+    key = os.path.join(TEST_SRC_DIR, TEST_FILENAME)
+    file_location = os.path.join(src_path, TEST_FILENAME)
+
+    s3 = boto3.client("s3")
+    s3.put_object(Bucket=mock_s3_bucket, Key=key, Body="test\n")
+    ref_file = ReferenceFileFactory.create(file_location=file_location)
+
+    return (ref_file, src_path, dest_path)
 
 
 def make_s3_file(s3_bucket, key, test_file_name):
@@ -687,6 +706,88 @@ def test_get_fineos_vendor_customer_numbers_from_reference_file(initialize_facto
             employee1.ctr_vendor_customer_code,
             employee2.ctr_vendor_customer_code,
         ]
+
+
+def test_move_reference_file(test_db_session, initialize_factories_session, mock_s3_bucket):
+    (ref_file, src_path, dest_path) = create_test_reference_file(test_db_session, mock_s3_bucket)
+
+    move_reference_file(test_db_session, ref_file, TEST_SRC_DIR, TEST_DEST_DIR)
+
+    # File should no longer exist in the src_dir
+    src_files = file_util.list_files(src_path)
+    assert src_files == []
+
+    # File should now be in the dest dir
+    dest_files = file_util.list_files(dest_path)
+    assert dest_files == [TEST_FILENAME]
+
+    # reference_file.file_location should be updated in the db
+    test_db_session.refresh(ref_file)
+    test_db_session.flush()
+    assert ref_file.file_location == os.path.join(dest_path, TEST_FILENAME)
+
+
+def test_move_reference_file_invalid_file_location(test_db_session, initialize_factories_session):
+    ref_file = ReferenceFileFactory.create()
+    with pytest.raises(ValueError):
+        move_reference_file(test_db_session, ref_file, TEST_SRC_DIR, TEST_DEST_DIR)
+
+
+def test_move_reference_file_missing_src_dir(test_db_session, initialize_factories_session):
+    ref_file = ReferenceFileFactory.create(
+        file_location=os.path.join("s3://", "foo", TEST_FILENAME)
+    )
+    with pytest.raises(ValueError):
+        move_reference_file(test_db_session, ref_file, TEST_SRC_DIR, TEST_DEST_DIR)
+
+
+def test_move_reference_file_s3_failure(
+    test_db_session, initialize_factories_session, caplog, mock_s3_bucket
+):
+    (ref_file, src_path, dest_path) = create_test_reference_file(test_db_session, mock_s3_bucket)
+
+    # Test S3 failure
+    ref_file.file_location = ref_file.file_location.replace("s3://", "notS3://")
+    with pytest.raises(FileNotFoundError):
+        move_reference_file(test_db_session, ref_file, TEST_SRC_DIR, TEST_DEST_DIR)
+
+    # File should still be in the src_dir
+    src_files = file_util.list_files(src_path)
+    assert src_files == [TEST_FILENAME]
+
+    # File should not be in the dest dir
+    dest_files = file_util.list_files(dest_path)
+    assert dest_files == []
+
+    # reference_file.file_location should not be changed in the db
+    test_db_session.refresh(ref_file)
+    test_db_session.flush()
+    assert ref_file.file_location == os.path.join(src_path, TEST_FILENAME)
+
+
+def test_move_reference_file_db_failure(
+    test_db_session, initialize_factories_session, caplog, mock_s3_bucket
+):
+    (ref_file, src_path, dest_path) = create_test_reference_file(test_db_session, mock_s3_bucket)
+
+    # Test DB failure
+    # insert a ReferenceFile already containing the error path, forcing a unique key error
+    ReferenceFileFactory(file_location=ref_file.file_location.replace(TEST_SRC_DIR, TEST_DEST_DIR))
+    with pytest.raises(SQLAlchemyError):
+        move_reference_file(test_db_session, ref_file, TEST_SRC_DIR, TEST_DEST_DIR)
+
+    # File should still be in the src_dir
+    src_files = file_util.list_files(src_path)
+    assert src_files == [TEST_FILENAME]
+
+    # File should not be in the dest dir
+    dest_files = file_util.list_files(dest_path)
+    assert dest_files == []
+
+    # reference_file.file_location should not be changed in the db
+    # test_db_session.refresh(ref_file)
+    test_db_session.flush()
+    assert ref_file.file_location == os.path.join(src_path, TEST_FILENAME)
 
 
 def test_create_batch_id_and_reference_file(test_db_session):

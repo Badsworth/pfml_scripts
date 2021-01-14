@@ -7,6 +7,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
+import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Address,
@@ -19,13 +20,6 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.payments.payments_util import (
-    Constants,
-    ValidationContainer,
-    ValidationReason,
-    get_xml_attribute,
-)
-from massgov.pfml.util.files import read_file, rename_file
 
 logger = logging.get_logger(__name__)
 
@@ -34,8 +28,8 @@ OUTBOUND_VENDOR_CUSTOMER_RETURN_CONSTANTS = {
     "DOC_CAT": "VCUST",
     "DOC_TYP": "VCC",
     "DOC_CD": "VCC",
-    "DOC_DEPT_CD": Constants.COMPTROLLER_DEPT_CODE,
-    "DOC_UNIT_CD": Constants.COMPTROLLER_UNIT_CODE,
+    "DOC_DEPT_CD": payments_util.Constants.COMPTROLLER_DEPT_CODE,
+    "DOC_UNIT_CD": payments_util.Constants.COMPTROLLER_UNIT_CODE,
     "ORG_TYP": "1",
     "TIN_TYP": "2",
 }
@@ -56,16 +50,16 @@ class VcDocVcustData:
     ORG_VEND_VCUST_CD: Optional[str]
 
     def __init__(self, vc_doc_vcust: Element):
-        self.DOC_CAT = get_xml_attribute(vc_doc_vcust, "DOC_CAT")
-        self.DOC_TYP = get_xml_attribute(vc_doc_vcust, "DOC_TYP")
-        self.DOC_CD = get_xml_attribute(vc_doc_vcust, "DOC_CD")
-        self.DOC_DEPT_CD = get_xml_attribute(vc_doc_vcust, "DOC_DEPT_CD")
-        self.DOC_UNIT_CD = get_xml_attribute(vc_doc_vcust, "DOC_UNIT_CD")
-        self.ORG_TYP = get_xml_attribute(vc_doc_vcust, "ORG_TYP")
-        self.TIN = get_xml_attribute(vc_doc_vcust, "TIN")
-        self.TIN_TYP = get_xml_attribute(vc_doc_vcust, "TIN_TYP")
-        self.VEND_CUST_CD = get_xml_attribute(vc_doc_vcust, "VEND_CUST_CD")
-        self.ORG_VEND_VCUST_CD = get_xml_attribute(vc_doc_vcust, "ORG_VEND_CUST_CD")
+        self.DOC_CAT = payments_util.get_xml_subelement(vc_doc_vcust, "DOC_CAT")
+        self.DOC_TYP = payments_util.get_xml_subelement(vc_doc_vcust, "DOC_TYP")
+        self.DOC_CD = payments_util.get_xml_subelement(vc_doc_vcust, "DOC_CD")
+        self.DOC_DEPT_CD = payments_util.get_xml_subelement(vc_doc_vcust, "DOC_DEPT_CD")
+        self.DOC_UNIT_CD = payments_util.get_xml_subelement(vc_doc_vcust, "DOC_UNIT_CD")
+        self.ORG_TYP = payments_util.get_xml_subelement(vc_doc_vcust, "ORG_TYP")
+        self.TIN = payments_util.get_xml_subelement(vc_doc_vcust, "TIN")
+        self.TIN_TYP = payments_util.get_xml_subelement(vc_doc_vcust, "TIN_TYP")
+        self.VEND_CUST_CD = payments_util.get_xml_subelement(vc_doc_vcust, "VEND_CUST_CD")
+        self.ORG_VEND_VCUST_CD = payments_util.get_xml_subelement(vc_doc_vcust, "ORG_VEND_CUST_CD")
 
 
 class VcDocAdData:
@@ -78,13 +72,13 @@ class VcDocAdData:
     ZIP: Optional[str]
 
     def __init__(self, vc_doc_ad: Element):
-        self.AD_TYP = get_xml_attribute(vc_doc_ad, "AD_TYP")
-        self.AD_ID = get_xml_attribute(vc_doc_ad, "AD_ID")
-        self.STR_1_NM = get_xml_attribute(vc_doc_ad, "STR_1_NM")
-        self.STR_2_NM = get_xml_attribute(vc_doc_ad, "STR_2_NM")
-        self.CITY_NM = get_xml_attribute(vc_doc_ad, "CITY_NM")
-        self.ST = get_xml_attribute(vc_doc_ad, "ST")
-        self.ZIP = get_xml_attribute(vc_doc_ad, "ZIP")
+        self.AD_TYP = payments_util.get_xml_subelement(vc_doc_ad, "AD_TYP")
+        self.AD_ID = payments_util.get_xml_subelement(vc_doc_ad, "AD_ID")
+        self.STR_1_NM = payments_util.get_xml_subelement(vc_doc_ad, "STR_1_NM")
+        self.STR_2_NM = payments_util.get_xml_subelement(vc_doc_ad, "STR_2_NM")
+        self.CITY_NM = payments_util.get_xml_subelement(vc_doc_ad, "CITY_NM")
+        self.ST = payments_util.get_xml_subelement(vc_doc_ad, "ST")
+        self.ZIP = payments_util.get_xml_subelement(vc_doc_ad, "ZIP")
 
 
 class Dependencies:
@@ -111,8 +105,8 @@ def get_pfml_payment_addresses(ams_document: Element) -> List[Element]:
         if AD_ID is None or AD_TYP is None:
             continue
         if (
-            AD_ID.text == Constants.COMPTROLLER_AD_ID
-            and AD_TYP.text == Constants.COMPTROLLER_AD_TYPE
+            AD_ID.text == payments_util.Constants.COMPTROLLER_AD_ID
+            and AD_TYP.text == payments_util.Constants.COMPTROLLER_AD_TYPE
         ):
             pfml_payment_addresses.append(address)
 
@@ -120,7 +114,7 @@ def get_pfml_payment_addresses(ams_document: Element) -> List[Element]:
 
 
 def validate_pfml_address(
-    vc_doc_ad: Element, validation_container: ValidationContainer
+    vc_doc_ad: Element, validation_container: payments_util.ValidationContainer
 ) -> Optional[VcDocAdData]:
     vc_doc_ad_data = VcDocAdData(vc_doc_ad)
 
@@ -130,7 +124,9 @@ def validate_pfml_address(
     for field in REQUIRED_ADDRESS_FIELDS:
         value = getattr(vc_doc_ad_data, field)
         if not value:
-            validation_container.add_validation_issue(ValidationReason.MISSING_FIELD, field)
+            validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_FIELD, field
+            )
             address_issues = True
 
     if address_issues:
@@ -144,20 +140,26 @@ def validate_ams_document(
     ams_document_id: str,
     vc_doc_vcust: Element,
     employee: Employee,
-    validation_container: ValidationContainer,
-) -> Tuple[ValidationContainer, Optional[VcDocAdData]]:
+    validation_container: payments_util.ValidationContainer,
+) -> Tuple[payments_util.ValidationContainer, Optional[VcDocAdData]]:
     # validate DOC_ID
     if not ams_document_id.startswith("INTFDFML"):
-        validation_container.add_validation_issue(ValidationReason.INVALID_VALUE, "DOC_ID")
+        validation_container.add_validation_issue(
+            payments_util.ValidationReason.INVALID_VALUE, "DOC_ID"
+        )
 
     # validate VC_DOC_VCUST constant values
     vc_doc_vcust_data = VcDocVcustData(vc_doc_vcust)
     for k, v in OUTBOUND_VENDOR_CUSTOMER_RETURN_CONSTANTS.items():
         field_value = getattr(vc_doc_vcust_data, k)
         if not field_value:
-            validation_container.add_validation_issue(ValidationReason.MISSING_FIELD, k)
+            validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_FIELD, k
+            )
         elif field_value != v:
-            validation_container.add_validation_issue(ValidationReason.INVALID_VALUE, k)
+            validation_container.add_validation_issue(
+                payments_util.ValidationReason.INVALID_VALUE, k
+            )
 
     # validate originating VCC document data
     tin_value = vc_doc_vcust_data.TIN
@@ -165,9 +167,13 @@ def validate_ams_document(
     if tin_value:
         if employee.tax_identifier:
             if tin_value != employee.tax_identifier.tax_identifier:
-                validation_container.add_validation_issue(ValidationReason.INVALID_VALUE, "TIN")
+                validation_container.add_validation_issue(
+                    payments_util.ValidationReason.INVALID_VALUE, "TIN"
+                )
     else:
-        validation_container.add_validation_issue(ValidationReason.MISSING_FIELD, "TIN")
+        validation_container.add_validation_issue(
+            payments_util.ValidationReason.MISSING_FIELD, "TIN"
+        )
 
     # additional validations
 
@@ -176,57 +182,27 @@ def validate_ams_document(
     validated_address_data = None
     if len(vc_doc_ads) > 1:
         validation_container.add_validation_issue(
-            ValidationReason.MULTIPLE_VALUES_FOUND, "VC_DOC_AD"
+            payments_util.ValidationReason.MULTIPLE_VALUES_FOUND, "VC_DOC_AD"
         )
     elif len(vc_doc_ads) == 0:
-        validation_container.add_validation_issue(ValidationReason.VALUE_NOT_FOUND, "VC_DOC_AD")
+        validation_container.add_validation_issue(
+            payments_util.ValidationReason.VALUE_NOT_FOUND, "VC_DOC_AD"
+        )
     else:
         validated_address_data = validate_pfml_address(vc_doc_ads[0], validation_container)
 
     # Check that VEND_CUST_CD and ORG_VEND_CUST_CD are not null
     if not vc_doc_vcust_data.VEND_CUST_CD:
-        validation_container.add_validation_issue(ValidationReason.NON_NULLABLE, "VEND_CUST_CD")
+        validation_container.add_validation_issue(
+            payments_util.ValidationReason.NON_NULLABLE, "VEND_CUST_CD"
+        )
 
     if not vc_doc_vcust_data.ORG_VEND_VCUST_CD:
-        validation_container.add_validation_issue(ValidationReason.NON_NULLABLE, "ORG_VEND_CUST_CD")
+        validation_container.add_validation_issue(
+            payments_util.ValidationReason.NON_NULLABLE, "ORG_VEND_CUST_CD"
+        )
 
     return validation_container, validated_address_data
-
-
-def handle_xml_syntax_error(
-    reference_file: ReferenceFile, outer_exception: Exception, db_session: db.Session
-) -> None:
-    file_location = reference_file.file_location
-
-    # move file to S3 bucket 'ctr/inbound/error'
-    error_filepath = file_location.replace("/received", "/error")
-    try:
-        rename_file(reference_file.file_location, error_filepath)
-    except Exception:
-        logger.exception(
-            f"File at location '{file_location}' could not be parsed into valid XML, and an error occurred when attempting to move to '{error_filepath}'",
-            extra={"file_location": file_location, "error_filepath": error_filepath},
-        )
-        return
-
-    # save new location
-    try:
-        # update the ReferenceFile's file_location in the db
-        reference_file.file_location = error_filepath
-        db_session.add(reference_file)
-        db_session.commit()
-    except Exception:
-        logger.exception(
-            f"File at location '{file_location}' could not be parsed into valid XML, and has been moved to '{error_filepath}', but an error occurred when saving the new location",
-            extra={"file_location": file_location, "error_filepath": error_filepath},
-        )
-        db_session.rollback()
-        return
-
-    logger.exception(
-        f"File at location '{file_location}' could not be parsed into valid XML, and has been moved to '{error_filepath}'",
-        extra={"file_location": file_location, "error_filepath": error_filepath},
-    )
 
 
 def update_employee_data(
@@ -269,15 +245,25 @@ def get_employee(ams_document_id: str, db_session: db.Session,) -> Optional[Empl
         )
 
     except MultipleResultsFound:
+        # This should never happen, but if it does, it means that the same
+        # DOC_ID was reused for multiple employees. Our db is in a bad place.
+        # Resolution: Identify which employees have this DOC_ID and try to
+        #             find out why.
         logger.exception(
-            f"Multiple employees found for specified CTR Document Identifier {ams_document_id}",
-            extra={"ams_document_id": ams_document_id},
+            "Multiple employees found for specified CTR Document Identifier %s",
+            ams_document_id,
+            extra={"ctr_document_identifier": ams_document_id},
         )
 
+    # This should never happen, but if it does: it means that no employee
+    # record was found associated with this DOC_ID. Our db may be in a bad
+    # place.
+    # Resolution: Identify what record (if any) is associated with this DOC_ID
     if not employee:
         logger.error(
-            f"Employee not found for AMS_DOCUMENT with DOC_ID {ams_document_id}",
-            extra={"ams_document_id": ams_document_id},
+            "Employee not found for AMS_DOCUMENT with DOC_ID %s",
+            ams_document_id,
+            extra={"ctr_document_identifier": ams_document_id},
         )
 
     return employee
@@ -297,14 +283,25 @@ def vcc_check(ams_document_id: str, db_session: db.Session) -> Optional[Employee
         ).first()
 
     except SQLAlchemyError:
+        # Unknown other SQLAlchemy errors
         logger.exception(
-            f"Could not find matching VCC for AMS_DOCUMENT with DOC_ID {ams_document_id}"
+            "SQLAlchemyError while querying for VCC with DOC_ID %s",
+            ams_document_id,
+            extra={"ctr_document_identifier": ams_document_id},
         )
         return None
 
+    # This should never happen, but if it does:
+    # 1. CTR has sent us a DOC_ID we never sent them OR
+    # 2. Our db lost a DOC_ID that we previously sent to CTR in a VCC
+    # Resolution: Grep all the VCCs in the PFML agency transfer bucket for
+    #             this DOC_ID to see whether this is a bug in our code or an
+    #             error in MMARS
     if not vcc_employee_reference_file:
         logger.error(
-            f"Failed to find VCC file for specified CTR Document Identifier {ams_document_id}"
+            "Failed to find VCC file for specified CTR Document Identifier %s",
+            ams_document_id,
+            extra={"ctr_document_identifier": ams_document_id},
         )
     return vcc_employee_reference_file
 
@@ -321,16 +318,34 @@ def get_ctr_document_identifier(
             .one_or_none()
         )
     except MultipleResultsFound:
+        # This should never happen, but if it does, it means that something
+        # went wrong with our db. The ctr_document_identifier column should
+        # be unique.
         logger.exception(
-            f"Multiple CtrDocumentIdentifiers found for specified CTR Document Identifier {ams_document_id}",
+            "Multiple CtrDocumentIdentifiers found for specified CTR Document Identifier %s",
+            ams_document_id,
             extra={"ams_document_id": ams_document_id},
         )
         return ctr_document_identifier
+    except SQLAlchemyError:
+        # Unknown other SQLAlchemy errors
+        logger.exception(
+            "SQLAlchemyError while querying for DOC_ID %s",
+            ams_document_id,
+            extra={"ctr_document_identifier": ams_document_id},
+        )
 
+    # This should never happen, but if it does:
+    # 1. CTR has sent us a DOC_ID we never sent them OR
+    # 2. Our db lost a DOC_ID that we previously sent to CTR in a VCC
+    # Resolution: Grep all the VCCs in the PFML agency transfer bucket for
+    #             this DOC_ID to see whether this is a bug in our code or an
+    #             error in MMARS
     if not ctr_document_identifier:
         logger.error(
-            f"CTR_DOCUMENT_IDENTIFIER not found for AMS_DOCUMENT with DOC_ID {ams_document_id}",
-            extra={"ams_document_id": ams_document_id},
+            "DOC_ID %s not found in db",
+            ams_document_id,
+            extra={"ctr_document_identifier": ams_document_id},
         )
 
     return ctr_document_identifier
@@ -345,8 +360,11 @@ def check_dependencies(
     ams_document_id = ams_document.get("DOC_ID")
 
     if ams_document_id is None or ams_document_id == "null":
-        logger.error(
-            f"AMS_DOCUMENT is missing DOC_ID value in file {reference_file.file_location}",
+        # This is a malformed Outbound Vendor Customer Return.
+        # We should notify CTR
+        logger.exception(
+            "AMS_DOCUMENT is missing DOC_ID value in file %s",
+            reference_file.file_location,
             extra={"file_location": reference_file.file_location},
         )
         return checked_dependencies
@@ -355,9 +373,16 @@ def check_dependencies(
 
     vc_doc_vcust = ams_document.find("VC_DOC_VCUST")
     if not vc_doc_vcust:
-        logger.error(
-            f"Missing VC_DOC_VCUST in AMS_DOCUMENT with DOC_ID {ams_document_id}",
-            extra={"ams_document_id": ams_document_id},
+        # This is a malformed Outbound Vendor Customer Return.
+        # We should notify CTR
+        logger.exception(
+            "Missing VC_DOC_VCUST in AMS_DOCUMENT with DOC_ID %s in file %s",
+            ams_document_id,
+            reference_file.file_location,
+            extra={
+                "file_location": reference_file.file_location,
+                "ams_document_id": ams_document_id,
+            },
         )
         return checked_dependencies
     else:
@@ -383,7 +408,7 @@ def check_dependencies(
 
 def process_ams_document(
     ams_document: Element, db_session: db.Session, reference_file: ReferenceFile
-) -> Tuple[Optional[ValidationContainer], Optional[state_log_util.StateLog]]:
+) -> Tuple[Optional[payments_util.ValidationContainer], Optional[state_log_util.StateLog]]:
 
     # verify all dependencies exist
     dependencies = check_dependencies(ams_document, db_session, reference_file)
@@ -397,13 +422,6 @@ def process_ams_document(
     ):
         return None, None
 
-    state_log = state_log_util.create_state_log(
-        start_state=State.VCC_SENT,
-        associated_model=dependencies.employee,
-        db_session=db_session,
-        commit=False,
-    )
-
     employee_reference_file = EmployeeReferenceFile(
         employee_id=dependencies.employee.employee_id,
         reference_file_id=reference_file.reference_file_id,
@@ -411,7 +429,7 @@ def process_ams_document(
     )
     db_session.add(employee_reference_file)
 
-    validation_container = ValidationContainer(dependencies.ams_document_id)
+    validation_container = payments_util.ValidationContainer(dependencies.ams_document_id)
 
     validation_container, validated_address_data = validate_ams_document(
         ams_document,
@@ -423,17 +441,18 @@ def process_ams_document(
 
     if not dependencies.employee.ctr_address_pair:
         validation_container.add_validation_issue(
-            ValidationReason.MISSING_IN_DB, "employee.ctr_address_pair"
+            payments_util.ValidationReason.MISSING_IN_DB, "employee.ctr_address_pair"
         )
 
     if validation_container.has_validation_issues():
-        state_log_util.finish_state_log(
-            state_log=state_log,
+        state_log = state_log_util.create_finished_state_log(
+            associated_model=dependencies.employee,
+            start_state=State.VCC_SENT,
             end_state=State.VCC_SENT,
             outcome=state_log_util.build_outcome("Validation issues found", validation_container),
             db_session=db_session,
-            commit=False,
         )
+
     elif validated_address_data:
         update_employee_data(
             validated_address_data,
@@ -442,94 +461,70 @@ def process_ams_document(
             dependencies.employee,
             db_session=db_session,
         )
-
-        state_log_util.finish_state_log(
-            state_log=state_log,
+        state_log = state_log_util.create_finished_state_log(
+            associated_model=dependencies.employee,
+            start_state=State.VCC_SENT,
             end_state=State.VCC_SENT,
             outcome=state_log_util.build_outcome(
                 "No validation issues found", validation_container
             ),
             db_session=db_session,
-            commit=False,
         )
 
     return validation_container, state_log
 
 
-def move_processed_file(reference_file: ReferenceFile) -> None:
-    file_location = reference_file.file_location
-    # Move the file within the agency transfer S3 bucket to ctr/inbound/processed
-    # TODO: Switch to using get_s3_config?
-    success_filepath = file_location.replace("/received", "/processed")
-
-    rename_file(reference_file.file_location, success_filepath)
-
-    # Update the file_location in the db
-    reference_file.file_location = success_filepath
-
-
-def validate_and_fetch_file(reference_file: ReferenceFile) -> Optional[ReferenceFile]:
-    file_location = reference_file.file_location
-    outbound_vendor_customer_return_file = None
-    if (
-        reference_file.reference_file_type_id
-        != ReferenceFileType.OUTBOUND_VENDOR_CUSTOMER_RETURN.reference_file_type_id
-    ):
-        logger.error(
-            f"Skipping processing file at location '{file_location}' because it is not of type \
-                '{ReferenceFileType.OUTBOUND_VENDOR_CUSTOMER_RETURN.reference_file_type_description}'",
-            extra={"file_location": file_location},
-        )
-        return outbound_vendor_customer_return_file
-
-    # Retrieve file from S3 bucket
-    try:
-        outbound_vendor_customer_return_file = read_file(file_location)
-    except Exception:
-        logger.error(
-            f"Error retrieving file from S3 at: {file_location}",
-            extra={"file_location": file_location},
-        )
-
-    return outbound_vendor_customer_return_file
-
-
 def process_outbound_vendor_customer_return(
-    reference_file: ReferenceFile, db_session: db.Session
+    db_session: db.Session, ref_file: ReferenceFile
 ) -> None:
-    outbound_vendor_customer_return_file = validate_and_fetch_file(reference_file)
-
-    if not outbound_vendor_customer_return_file:
-        return
-
-    xml_document = None
-    # Parse file as XML Document
-    # Using .fromstring because .read_file returns the file as a string, not a File object
+    # Read the ReferenceFile to string
+    # Raise an error if the ReferenceFile is not readable
     try:
-        xml_document = ET.fromstring(outbound_vendor_customer_return_file)
-    except Exception as exception:
-        handle_xml_syntax_error(reference_file, exception, db_session)
-        return
+        xml_string = payments_util.read_reference_file(
+            ref_file, ReferenceFileType.OUTBOUND_VENDOR_CUSTOMER_RETURN
+        )
+    except Exception:
+        # There was an issue attempting to read the reference file
+        logger.exception(
+            "Unable to process ReferenceFile", extra={"file_location": ref_file.file_location}
+        )
+        raise
+
+    # Parse file as XML Document
+    # Using .fromstring because file_util.read_file returns the file as a string, not a File object
+    # If there is an error, move the file to the error folder
+    try:
+        root = ET.fromstring(xml_string)
+    except Exception:
+        # XML parsing issue
+        logger.exception("Unable to parse XML", extra={"file_location": ref_file.file_location})
+        payments_util.move_reference_file(
+            db_session,
+            ref_file,
+            payments_util.Constants.S3_INBOUND_RECEIVED_DIR,
+            payments_util.Constants.S3_INBOUND_ERROR_DIR,
+        )
+        raise
 
     # Process each AMS_DOCUMENT in the XML Document
+    # Move the file to the processed folder
     try:
-        for ams_document in xml_document:
-            process_ams_document(ams_document, db_session, reference_file)
+        for ams_document in root:
+            process_ams_document(ams_document, db_session, ref_file)
 
-        try:
-            move_processed_file(reference_file)
-        except Exception:
-            db_session.rollback()
-            logger.exception(
-                f"Outbound Vendor Customer Return ReferenceFile at {reference_file.file_location} processed, but could not move the file to the processed folder in S3",
-                extra={"file_location": reference_file.file_location},
-            )
-            return
-
-        db_session.commit()
-    except Exception:
-        db_session.rollback()
-        logger.exception(
-            f"Unexpected exception processing outbound vendor customer return at {reference_file.file_location}",
-            extra={"file_location": reference_file.file_location},
+        # Note: this function also calls db_session.commit(), so no need to
+        # explicitly call it again.
+        payments_util.move_reference_file(
+            db_session,
+            ref_file,
+            payments_util.Constants.S3_INBOUND_RECEIVED_DIR,
+            payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
         )
+    except Exception:
+        # Rollback the db
+        db_session.rollback()
+        # Something bad enough happened that we halted processing
+        logger.exception(
+            "Unable to process ReferenceFile", extra={"file_location": ref_file.file_location}
+        )
+        raise

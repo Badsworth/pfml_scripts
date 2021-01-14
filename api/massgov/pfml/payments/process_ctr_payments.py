@@ -5,12 +5,12 @@ from typing import List
 import massgov.pfml.payments.moveit as moveit
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
-from massgov.pfml.payments.ctr_outbound_return import process_ctr_outbound_returns
 from massgov.pfml.payments.data_mart_states_processing import (
     process_all_states as process_data_mart,
 )
 from massgov.pfml.payments.error_reports import send_ctr_error_reports
 from massgov.pfml.payments.gax import build_gax_files_for_s3
+from massgov.pfml.payments.outbound_return import process_outbound_returns
 from massgov.pfml.payments.vcc import build_vcc_files_for_s3
 from massgov.pfml.util.logging import audit
 
@@ -104,7 +104,7 @@ def _ctr_process(db_session: db.Session, config: Configuration) -> None:
 
     # 2. Process Outbound Return files from CTR
     if config.do_ctr_outbound_return:
-        process_ctr_outbound_returns(db_session)
+        process_outbound_returns(db_session)
 
     # 3.Run queries against Data Mart
     if config.query_data_mart:
