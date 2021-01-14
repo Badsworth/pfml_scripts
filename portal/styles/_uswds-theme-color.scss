@@ -21,8 +21,17 @@ $theme-color-base-lightest: $c-gray-lightest;
 $theme-color-base-lighter: $c-gray-light;
 $theme-color-base: $c-gray;
 $theme-color-base-dark: $c-gray-dark;
-$theme-color-base-darkest: $c-black;
+// Using a token as a temporary workaround to:
+// https://github.com/uswds/uswds/issues/3906#issuecomment-758866001
+// This can be changed back to $c-black once that^ issue is resolved.
+$theme-color-base-darkest: "gray-90";
 $theme-color-base-ink: $c-black;
+
+// Temporary workaround to:
+// https://github.com/uswds/uswds/issues/3906#issuecomment-758772296
+// These two variables could be removed once that^ issue is resolved.
+$theme-color-emergency: "gold-30v";
+$theme-link-reverse-color: "gray-10";
 
 // Primary colors
 $theme-color-primary-lighter: $c-bay-blue-lightest;

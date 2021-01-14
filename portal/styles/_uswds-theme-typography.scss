@@ -29,7 +29,11 @@ $theme-font-role-heading: "sans";
 $theme-font-role-body: "sans";
 $theme-font-role-alt: "sans";
 
+// Set font weights to match Mayflower's, which are unconventional.
+// Browsers default bold to 700, but that looks super heavy when
+// applied to the Mayflower typeface.
 $theme-font-weight-medium: 500;
+$theme-font-weight-bold: 550;
 
 // Set base font size to match Mayflower's so type sizes in components
 // like the header match what is displayed on Mass.gov
