@@ -11,6 +11,7 @@ from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     BankAccountType,
     Claim,
+    ClaimType,
     Employee,
     GeoState,
     PaymentMethod,
@@ -108,7 +109,7 @@ def test_process_vendor_extract_data_happy_path(
     # assert claim.employer_id == employer.employer_id  # TODO - See comment in update_employee_info
 
     assert claim.fineos_notification_id == "NTN-1308"
-    # assert claim.claim_type.claim_type_id == ClaimType.FAMILY_LEAVE.claim_type_id  # TODO - claim type currently not being set
+    assert claim.claim_type.claim_type_id == ClaimType.MEDICAL_LEAVE.claim_type_id
     assert (
         claim.fineos_absence_status.absence_status_id
         == AbsenceStatus.ADJUDICATION.absence_status_id

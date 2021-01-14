@@ -253,7 +253,24 @@ def create_or_update_claim(
         )
 
     # Update, or finish formatting new,  claim row.
+    # TODO: Couldn't this overwrite the db with an empty value if it's missing?
     claim_pfml.fineos_notification_id = requested_absence.get("NOTIFICATION_CASENUMBER")
+
+    # Get claim type.
+    claim_type_header = "ABSENCEREASON_COVERAGE"
+    claim_type_raw = requested_absence.get(claim_type_header)
+    if claim_type_raw:
+        try:
+            claim_type_mapped = payments_util.get_mapped_claim_type(claim_type_raw)
+            claim_pfml.claim_type_id = claim_type_mapped.claim_type_id
+        except ValueError:
+            validation_container.add_validation_issue(
+                payments_util.ValidationReason.INVALID_VALUE, claim_type_header
+            )
+    else:
+        validation_container.add_validation_issue(
+            payments_util.ValidationReason.MISSING_FIELD, claim_type_header
+        )
 
     """
     leave_plan = extract_data.leave_plan_info.indexed_data.get(absence_case_id)

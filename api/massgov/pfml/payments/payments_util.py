@@ -26,7 +26,9 @@ from massgov.pfml import db
 from massgov.pfml.db.lookup import LookupTable
 from massgov.pfml.db.models.employees import (
     Address,
+    ClaimType,
     CtrBatchIdentifier,
+    LkClaimType,
     LkReferenceFileType,
     ReferenceFile,
     ReferenceFileType,
@@ -675,6 +677,20 @@ def email_inf_data(
         sender=sender,
         bounce_forwarding_email_address_arn=bounce_forwarding_email_address_arn,
     )
+
+
+def get_mapped_claim_type(claim_type_str: str) -> LkClaimType:
+    """Given a string from a Vendor Extract, return a LkClaimType
+
+    Raises:
+        ValueError: if the string does not match an existing LkClaimType
+    """
+    if claim_type_str == "Family":
+        return ClaimType.FAMILY_LEAVE
+    elif claim_type_str == "Employee":
+        return ClaimType.MEDICAL_LEAVE
+    else:
+        raise ValueError("Unknown claim type")
 
 
 def email_fineos_vendor_customer_numbers(
