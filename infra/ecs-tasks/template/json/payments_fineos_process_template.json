@@ -41,6 +41,11 @@
       { "name": "FINEOS_VENDOR_MAX_HISTORY_DATE", "value": "${fineos_vendor_max_history_date}" },
       { "name": "FINEOS_PAYMENT_MAX_HISTORY_DATE", "value": "${fineos_payment_max_history_date}" },
 
+      { "name": "PFML_EMAIL_ADDRESS", "value": "${pfml_email_address}" },
+      { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS", "value": "${bounce_forwarding_email_address}" },
+      { "name": "CTR_GAX_BIEVNT_EMAIL_ADDRESS", "value": "${ctr_gax_bievnt_email_address}" },
+      { "name": "CTR_VCC_BIEVNT_EMAIL_ADDRESS", "value": "${ctr_vcc_bievnt_email_address}" },
+      { "name": "DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", "value": "${dfml_business_operations_email_address}" },
       { "name": "DFML_PROJECT_MANAGER_EMAIL_ADDRESS", "value": "${dfml_project_manager_email_address}" },
       { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", "value": "${bounce_forwarding_email_address_arn}" }
 

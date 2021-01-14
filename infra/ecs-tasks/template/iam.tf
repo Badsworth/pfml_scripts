@@ -595,6 +595,17 @@ data "aws_iam_policy_document" "payments_fineos_process_task_role_extras" {
 
     effect = "Allow"
   }
+
+  statement {
+    sid = "AllowSESSendEmail"
+    actions = [
+      "ses:SendEmail",
+      "ses:SendRawEmail"
+    ]
+    resources = ["*"]
+
+    effect = "Allow"
+  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

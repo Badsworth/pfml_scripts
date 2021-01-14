@@ -22,9 +22,7 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
-
-# from massgov.pfml.util.aws.ses import EmailRecipient, send_email_with_attachment
-
+from massgov.pfml.util.aws.ses import EmailRecipient, send_email
 
 logger = logging.get_logger(__name__)
 
@@ -58,14 +56,10 @@ CSV_HEADER: List[str] = [
     PAYMENT_DATE_COLUMN,
 ]
 
-FINEOS_PAYMENTS_EMAIL_SUBJECT = (
-    "DFML CPS Reports for "  # TODO - append date - will do when email logic exists
-)
-FINEOS_PAYMENTS_EMAIL_BODY = "TODO"
-CTR_PAYMENTS_EMAIL_SUBJECT = (
-    "DFML CTR Reports for "  # TODO - append date - will do when email logic exists
-)
-CTR_PAYMENTS_EMAIL_BODY = "TODO"
+FINEOS_PAYMENTS_EMAIL_SUBJECT = "DFML CPS Reports for {0}"
+FINEOS_PAYMENTS_EMAIL_BODY = "This is the daily error report for {0}. Attached are errors resulting from the {1}. Note that the error report might be an empty file. If this happens it means there are no outstanding errors in that category for the day."
+CTR_PAYMENTS_EMAIL_SUBJECT = "DFML CTR Reports for {0}"
+CTR_PAYMENTS_EMAIL_BODY = "This is the daily error report for {0}. Attached are errors resulting from the {1}. Note that the error report might be an empty file. If this happens it means there are no outstanding errors in that category for the day."
 
 GENERIC_OUTCOME_MSG = "No details provided for cause of issue"
 
@@ -428,7 +422,6 @@ def _get_time_based_errors(
 
 
 def _send_errors_email(subject: str, body: str, error_files: List[pathlib.Path]) -> None:
-    """ TODO - get this working, our role can't do it right now
     email_config = payments_config.get_email_config()
     sender = email_config.pfml_email_address
     recipient = EmailRecipient(to_addresses=[email_config.dfml_business_operations_email_address])
@@ -438,10 +431,9 @@ def _send_errors_email(subject: str, body: str, error_files: List[pathlib.Path])
         body_text=body,
         sender=sender,
         bounce_forwarding_email_address_arn=email_config.bounce_forwarding_email_address_arn,
-        attachments=error_files
-
+        attachments=error_files,
     )
-    """
+
     s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
 
     for error_file in error_files:
@@ -477,9 +469,13 @@ def _send_fineos_payments_errors(working_directory: pathlib.Path, db_session: db
     )
     ### No time based reports exist for this task
 
+    today = payments_util.get_now()
+
     files = [cps_payment_export_report, cps_vendor_export_report]
     _send_errors_email(
-        subject=FINEOS_PAYMENTS_EMAIL_SUBJECT, body=FINEOS_PAYMENTS_EMAIL_BODY, error_files=files
+        subject=FINEOS_PAYMENTS_EMAIL_SUBJECT.format(today.strftime("%m/%d/%Y")),
+        body=FINEOS_PAYMENTS_EMAIL_BODY.format(today.strftime("%m/%d/%Y"), "FINEOS processing"),
+        error_files=files,
     )
 
 
@@ -643,8 +639,13 @@ def _send_ctr_payments_errors(working_directory: pathlib.Path, db_session: db.Se
         vendor_audit_error_report,
         eft_audit_error_report,
     ]
+
+    today = payments_util.get_now()
+
     _send_errors_email(
-        subject=CTR_PAYMENTS_EMAIL_SUBJECT, body=CTR_PAYMENTS_EMAIL_BODY, error_files=files
+        subject=CTR_PAYMENTS_EMAIL_SUBJECT.format(today.strftime("%m/%d/%Y")),
+        body=CTR_PAYMENTS_EMAIL_BODY.format(today.strftime("%m/%d/%Y"), "CTR processing"),
+        error_files=files,
     )
 
 

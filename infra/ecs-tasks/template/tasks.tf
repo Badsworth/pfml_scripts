@@ -273,5 +273,11 @@ data "template_file" "task_container_definitions" {
     environment_name           = var.environment_name
     cloudwatch_logs_group_name = aws_cloudwatch_log_group.ecs_tasks.name
     aws_region                 = data.aws_region.current.name
+
+    pfml_email_address                     = var.pfml_email_address
+    bounce_forwarding_email_address        = var.bounce_forwarding_email_address
+    ctr_gax_bievnt_email_address           = var.ctr_gax_bievnt_email_address
+    ctr_vcc_bievnt_email_address           = var.ctr_vcc_bievnt_email_address
+    dfml_business_operations_email_address = var.dfml_business_operations_email_address
   }, lookup(each.value, "vars", {}))
 }
