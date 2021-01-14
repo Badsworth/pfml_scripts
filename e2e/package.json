@@ -72,6 +72,7 @@
     "date-fns": "^2.16.1",
     "delay": "^4.3.0",
     "dotenv": "^8.2.0",
+    "enquirer": "^2.3.6",
     "faker": "^4.1.0",
     "form-data": "^3.0.0",
     "got": "^11.8.1",
@@ -86,8 +87,7 @@
     "ssn": "^1.0.3",
     "uuid": "^8.3.1",
     "winston": "^3.3.3",
-    "yargs": "^16.0.3",
-    "yargs-interactive": "^3.0.0"
+    "yargs": "^16.0.3"
   },
   "peerDependencies": {
     "puppeteer": "^2.1.1"

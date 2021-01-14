@@ -1,131 +1,10 @@
 import path from "path";
 import util from "util";
 import { exec } from "child_process";
-import yargsInteractive, { OptionData } from "yargs-interactive";
 import * as Cfg from "./flood/config";
+import { prompt } from "enquirer";
 
 const asyncExec = util.promisify(exec);
-
-type FloodOptions = {
-  [key: string]:
-    | OptionData
-    | {
-        default: boolean;
-        validate?: (input: unknown) => Promise<boolean>;
-      };
-};
-
-const getOptions = async (): Promise<FloodOptions> => ({
-  interactive: { default: true },
-  token: {
-    type: "password",
-    describe:
-      "Flood API token <https://app.flood.io/account/api> (Leave blank if previously authenticated):",
-    default: (await Cfg.floodToken) || undefined,
-    prompt: "if-empty",
-  },
-  makeBundle: {
-    type: "confirm",
-    describe: "Generate new file bundle?",
-    default: true,
-    prompt: "always",
-  },
-  files: {
-    type: "input",
-    describe: "Path to bundled files (`floodBundle.zip` and `index.perf.ts`):",
-    default: path.join(__dirname, "../scripts"),
-    prompt: "if-empty",
-  },
-  tool: {
-    type: "list",
-    describe: "Testing tool to use:",
-    choices: [
-      "flood-chrome",
-      "jmeter",
-      "gatling",
-      "java-selenium-chrome",
-      "java-selenium-firefox",
-    ],
-    default: "flood-chrome",
-    prompt: "if-empty",
-  },
-  project: {
-    type: "input",
-    describe: "Flood project name:",
-    default: "PFML",
-    prompt: "if-no-arg",
-  },
-  name: {
-    type: "input",
-    describe: "Name of test:",
-    // Requires value since no default is being provided.
-    validate: (input) => new Promise((resolve) => resolve(!!input)),
-    prompt: "if-no-arg",
-  },
-  threads: {
-    type: "number",
-    describe: "Number of concurrent users:",
-    default: 1,
-    prompt: "if-no-arg",
-  },
-  duration: {
-    type: "number",
-    describe: "Duration (minutes):",
-    default: 15,
-    prompt: "if-no-arg",
-  },
-  rampup: {
-    type: "number",
-    describe: "Ramp-up (minutes):",
-    default: 0,
-    prompt: "if-no-arg",
-  },
-  privacy: {
-    type: "list",
-    describe: "Privacy:",
-    choices: ["public", "private"],
-    default: "public",
-    prompt: "if-empty",
-  },
-  region: {
-    type: "list",
-    describe: "Region:",
-    choices: ["us-east-1", "us-west-1", "us-west-2"],
-    default: "us-east-1",
-    prompt: "if-no-arg",
-  },
-  infrastructure: {
-    type: "list",
-    describe: "On-demand or hosted grid:",
-    choices: ["demand", "hosted"],
-    default: "demand",
-    prompt: "if-empty",
-  },
-  instanceQuantity: {
-    type: "number",
-    describe: "Grid instance quantity:",
-    default: 1,
-    prompt: "if-empty",
-  },
-  stopAfter: {
-    type: "number",
-    describe:
-      "Stop grid after N minutes (where N > 0 and N <= 2,880 [48 hours]):",
-    default: 60,
-    prompt: "if-empty",
-  },
-  instanceType: {
-    type: "input",
-    describe: "Grid instance type:",
-    default: "m5.xlarge",
-    prompt: "if-empty",
-  },
-  start: {
-    type: "confirm",
-    describe: "Are you ready to start your flood?",
-    prompt: "always",
-  },
-});
 
 export const execScript = async (
   dirname: string,
@@ -140,8 +19,148 @@ export const execScript = async (
   }
 };
 
+export const convMinToSec = (minutes: string): string =>
+  (+minutes * 1000).toString();
+
 (async (): Promise<void> => {
-  const options = await getOptions();
+  const response: Record<string, string> = await prompt([
+    {
+      type: "password",
+      name: "token",
+      message:
+        "Flood API token <https://app.flood.io/account/api> (Leave blank if previously authenticated):",
+      initial: await Cfg.floodToken,
+      skip: true,
+    },
+    {
+      type: "confirm",
+      name: "makeBundle",
+      message: "Generate new file bundle?",
+      initial: false,
+      required: true,
+    },
+    {
+      type: "input",
+      name: "files",
+      message: "Path to bundled files (`floodBundle.zip` and `index.perf.ts`):",
+      initial: path.join(__dirname, "../scripts"),
+      required: true,
+    },
+    {
+      type: "select",
+      name: "tool",
+      message: "Testing tool to use:",
+      choices: [
+        { name: "flood-chrome", message: "Flood Chrome" },
+        { name: "jmeter", message: "JMeter" },
+        { name: "gatling", message: "Gatling" },
+        { name: "java-selenium-chrome", message: "Selenium Chrome" },
+        { name: "java-selenium-firefox", message: "Selenium Firefox" },
+      ],
+      initial: 0,
+      required: true,
+    },
+    {
+      type: "input",
+      name: "project",
+      message: "Flood project name:",
+      initial: "PFML",
+      required: true,
+    },
+    {
+      type: "input",
+      name: "name",
+      message: "Name of test:",
+      initial: `${new Date().toISOString().slice(0, 17).replace(/-|:/g, "")}`,
+      required: true,
+    },
+    {
+      type: "numeral",
+      name: "threads",
+      message: "Number of concurrent users:",
+      initial: 1,
+      required: true,
+    },
+    {
+      type: "numeral",
+      name: "duration",
+      message: "Duration (minutes):",
+      initial: 15,
+      result: (value) => convMinToSec(value),
+      required: true,
+    },
+    {
+      type: "numeral",
+      name: "rampup",
+      message: "Ramp-up (minutes):",
+      initial: 0,
+      result: (value) => convMinToSec(value),
+      required: true,
+    },
+    {
+      type: "select",
+      name: "privacy",
+      message: "Privacy:",
+      choices: [
+        { name: "public", message: "Public" },
+        { name: "private", message: "Private" },
+      ],
+      initial: 0,
+      skip: true,
+    },
+    {
+      type: "select",
+      name: "region",
+      message: "Region:",
+      choices: [
+        { name: "us-east-1", message: "US East (Virginia)" },
+        { name: "us-west-1", message: "US West (California)" },
+        { name: "us-west-2", message: "US West (Oregon)" },
+      ],
+      initial: 0,
+      required: true,
+    },
+    {
+      type: "select",
+      name: "infrastructure",
+      message: "Grid type:",
+      choices: [
+        { name: "demand", message: "On-demand" },
+        { name: "hosted", message: "Hosted" },
+      ],
+      initial: 0,
+      skip: true,
+    },
+    {
+      type: "numeral",
+      name: "instanceQuantity",
+      message: "Grid instance quantity:",
+      initial: 1,
+      skip: true,
+    },
+    {
+      type: "numeral",
+      name: "stopAfter",
+      message:
+        "Stop grid after N minutes (where N > 0 and N <= 2,880 [48 hours]):",
+      initial: 90,
+      skip: true,
+    },
+    {
+      type: "select",
+      name: "instanceType",
+      message: "Grid instance type:",
+      choices: ["m5.xlarge"],
+      initial: 0,
+      skip: true,
+    },
+    {
+      type: "confirm",
+      name: "startFlood",
+      message: "Are you ready to start your flood?",
+    },
+  ]);
+
   const {
     token,
     makeBundle,
@@ -158,9 +177,8 @@ export const execScript = async (
     instanceQuantity,
     stopAfter,
     instanceType,
-  } = await yargsInteractive()
-    .usage("$0 <command> [args]")
-    .interactive(options);
+    startFlood,
+  } = response;
 
   // Rebuilds flood file bundle if requested.
   if (makeBundle) {
@@ -175,24 +193,28 @@ Rebuilt the following files in ${files}:
   }
 
   // Launches flood via cURL script.
-  const command = `./launchFlood.sh \
-    -u "${token}" \
-    -l "${tool}" \
-    -p "${project}" \
-    -n "${name}" \
-    -v "${privacy}" \
-    -t "${threads}" \
-    -m "${rampup}" \
-    -d "${+duration * 1000}" \
-    -i "${infrastructure}" \
-    -q "${instanceQuantity}" \
-    -r "${region}" \
-    -y "${instanceType}" \
-    -s "${stopAfter}"`;
-  const message = `
+  if (startFlood) {
+    const command = `./launchFlood.sh \
+      -u "${token}" \
+      -l "${tool}" \
+      -p "${project}" \
+      -n "${name}" \
+      -v "${privacy}" \
+      -t "${threads}" \
+      -m "${rampup}" \
+      -d "${duration}" \
+      -i "${infrastructure}" \
+      -q "${instanceQuantity}" \
+      -r "${region}" \
+      -y "${instanceType}" \
+      -s "${stopAfter}"`;
+
+    const message = `
 Flood "${name}" launched on "${project}":
   - Concurrent users: ${threads}
-  - Duration: ${duration}
-  - Ramp-up: ${rampup}`;
-  execScript(files, command, message);
+  - Duration: ${+duration / 1000} minute(s)
+  - Ramp-up: ${rampup} minute(s)`;
+
+    execScript(files, command, message);
+  }
 })();
