@@ -215,6 +215,12 @@ variable "bounce_forwarding_email_address" {
   default     = ""
 }
 
+variable "bounce_forwarding_email_address_arn" {
+  description = "Generic send to address for bounced back outgoing email notifications (ARN)"
+  type        = string
+  default     = ""
+}
+
 variable "dfml_business_operations_email_address" {
   description = "Email address for DFML Business Operations team"
   type        = string

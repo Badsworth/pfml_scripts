@@ -47,6 +47,7 @@ module "tasks" {
 
   pfml_email_address                     = "noreplypfml@mass.gov"
   bounce_forwarding_email_address        = "noreplypfml@mass.gov"
+  bounce_forwarding_email_address_arn    = "arn:aws:ses:us-east-1:498823821309:identity/noreplypfml@mass.gov"
   ctr_gax_bievnt_email_address           = "Accounts.Payable@detma.org"
   ctr_vcc_bievnt_email_address           = "EOL-DL-DFML-GAXVCC_Confirmation@mass.gov"
   dfml_business_operations_email_address = "EOL-DL-DFML-GAXVCC_Confirmation@mass.gov"

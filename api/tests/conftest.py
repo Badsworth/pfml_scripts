@@ -207,6 +207,10 @@ def mock_ses(monkeypatch, reset_aws_env_vars):
 
     monkeypatch.setenv("PFML_EMAIL_ADDRESS", "noreplypfml@mass.gov")
     monkeypatch.setenv("BOUNCE_FORWARDING_EMAIL", "noreplypfml@mass.gov")
+    monkeypatch.setenv(
+        "BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN",
+        "arn:aws:ses:us-east-1:498823821309:identity/noreplypfml@mass.gov",
+    )
     monkeypatch.setenv("CTR_GAX_BIEVNT_EMAIL_ADDRESS", "test1@example.com")
     monkeypatch.setenv("CTR_VCC_BIEVNT_EMAIL_ADDRESS", "test2@example.com")
     monkeypatch.setenv("DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", "test3@example.com")
@@ -215,7 +219,7 @@ def mock_ses(monkeypatch, reset_aws_env_vars):
     with moto.mock_ses():
         ses = boto3.client("ses")
         ses.verify_email_identity(EmailAddress=os.getenv("PFML_EMAIL_ADDRESS"))
-        yield
+        yield ses
 
 
 @pytest.fixture

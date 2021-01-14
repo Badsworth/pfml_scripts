@@ -51,6 +51,7 @@
         { "name": "CTR_GAX_BIEVNT_EMAIL_ADDRESS", "value": "${ctr_gax_bievnt_email_address}" },
         { "name": "CTR_VCC_BIEVNT_EMAIL_ADDRESS", "value": "${ctr_vcc_bievnt_email_address}" },
         { "name": "DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", "value": "${dfml_business_operations_email_address}" },
+        { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", "value": "${bounce_forwarding_email_address_arn}" },
 
         { "name": "CTR_DATA_MART_HOST", "value": "${ctr_data_mart_host}" },
         { "name": "CTR_DATA_MART_USERNAME", "value": "${ctr_data_mart_username}" }

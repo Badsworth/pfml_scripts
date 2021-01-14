@@ -148,6 +148,7 @@ class PaymentsEmailConfig:
     # Bounce forwarding email address
     # Ex: noreplypfml@mass.gov
     bounce_forwarding_email_address: str
+    bounce_forwarding_email_address_arn: str
     # Recipient email address for GAX BIEVNT info
     # Ex: Accounts.Payable@detma.org
     ctr_gax_bievnt_email_address: str
@@ -165,6 +166,7 @@ def get_email_config() -> PaymentsEmailConfig:
         bounce_forwarding_email_address=os.getenv(
             "BOUNCE_FORWARDING_EMAIL_ADDRESS", "noreplypfml@mass.gov"
         ),
+        bounce_forwarding_email_address_arn=os.getenv("BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", ""),
         ctr_gax_bievnt_email_address=os.getenv("CTR_GAX_BIEVNT_EMAIL_ADDRESS", ""),
         ctr_vcc_bievnt_email_address=os.getenv("CTR_VCC_BIEVNT_EMAIL_ADDRESS", ""),
         dfml_business_operations_email_address=os.getenv(
@@ -177,6 +179,7 @@ def get_email_config() -> PaymentsEmailConfig:
         extra={
             "pfml_email_address": payments_email_config.pfml_email_address,
             "bounce_forwarding_email_address": payments_email_config.bounce_forwarding_email_address,
+            "bounce_forwarding_email_address_arn": payments_email_config.bounce_forwarding_email_address_arn,
             "ctr_gax_bievnt_email_address": payments_email_config.ctr_gax_bievnt_email_address,
             "ctr_vcc_bievnt_email_address": payments_email_config.ctr_vcc_bievnt_email_address,
             "dfml_business_operations_email_address": payments_email_config.dfml_business_operations_email_address,

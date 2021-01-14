@@ -32,7 +32,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.util.aws.ses import EmailRecipient, send_email, send_email_with_attachment
+from massgov.pfml.util.aws.ses import EmailRecipient, send_email
 
 logger = logging.get_logger(__package__)
 
@@ -652,7 +652,7 @@ def get_inf_data_as_plain_text(inf_data: Dict) -> str:
 
 
 def email_inf_data(
-    ref_file: ReferenceFile, db_session: db.Session, email: EmailRecipient, subject: str
+    ref_file: ReferenceFile, db_session: db.Session, recipient: EmailRecipient, subject: str
 ) -> None:
 
     inf_data = get_inf_data_from_reference_file(ref_file, db_session)
@@ -665,13 +665,15 @@ def email_inf_data(
         return
 
     payment_config = payments_config.get_email_config()
+    sender = payment_config.pfml_email_address
     data = get_inf_data_as_plain_text(inf_data)
+    bounce_forwarding_email_address_arn = payment_config.bounce_forwarding_email_address_arn
     send_email(
-        email,
-        subject,
-        data,
-        payment_config.pfml_email_address,
-        payment_config.bounce_forwarding_email_address,
+        recipient=recipient,
+        subject=subject,
+        body_text=data,
+        sender=sender,
+        bounce_forwarding_email_address_arn=bounce_forwarding_email_address_arn,
     )
 
 
@@ -697,8 +699,13 @@ def email_fineos_vendor_customer_numbers(
     fieldnames = ["fineos_customer_number", "ctr_vendor_customer_code"]
     csv_data_path = [create_csv_from_list(fineos_vendor_customer_numbers, fieldnames)]
 
-    send_email_with_attachment(
-        email, subject, body_text, payment_config.pfml_email_address, csv_data_path
+    send_email(
+        email,
+        subject,
+        body_text,
+        payment_config.pfml_email_address,
+        payment_config.bounce_forwarding_email_address_arn,
+        csv_data_path,
     )
 
 

@@ -62,38 +62,8 @@ def send_email(
     subject: str,
     body_text: str,
     sender: str,
-    bounce_forwarding_email: str,
-) -> Dict:
-    aws_ses = boto3.client("ses")
-
-    try:
-        response = aws_ses.send_email(
-            Destination={
-                "BccAddresses": recipient.bcc_addresses,
-                "CcAddresses": recipient.cc_addresses,
-                "ToAddresses": recipient.to_addresses,
-            },
-            Message={
-                "Body": {"Text": {"Charset": CHARSET, "Data": body_text,},},
-                "Subject": {"Charset": CHARSET, "Data": subject,},
-            },
-            Source=sender,
-            ReturnPath=bounce_forwarding_email,
-        )
-        logger.info(f"Email sent! Message ID: {response['MessageId']}")
-        return response
-    except ClientError as e:
-        error_message = e.response["Error"]["Message"]
-        logger.exception("Error sending email: %s", error_message)
-        raise RuntimeError("Error sending email: %s", error_message)
-
-
-def send_email_with_attachment(
-    recipient: EmailRecipient,
-    subject: str,
-    body_text: str,
-    sender: str,
-    attachments: List[pathlib.Path],
+    bounce_forwarding_email_address_arn: str,
+    attachments: Optional[List[pathlib.Path]] = None,
 ) -> Dict:
     """
     attachments is a list containing the full-paths to the file that will be attached to the email.
@@ -105,11 +75,9 @@ def send_email_with_attachment(
 
     msg["Subject"] = subject
     msg["From"] = sender
-    msg["To"] = ", ".join(
-        recipient.to_addresses + (recipient.cc_addresses if recipient.cc_addresses else [])
-    )
-    if recipient.bcc_addresses:
-        msg["Bcc"] = ", ".join(recipient.bcc_addresses if recipient.bcc_addresses else [])
+    msg["To"] = ", ".join(recipient.to_addresses)
+    msg["CC"] = ", ".join(recipient.cc_addresses if recipient.cc_addresses else [])
+    msg["Bcc"] = ", ".join(recipient.bcc_addresses if recipient.bcc_addresses else [])
 
     msg_body = MIMEMultipart("alternative")
     msg_text = MIMEText(str(body_text.encode(CHARSET)), "plain", CHARSET)
@@ -118,11 +86,15 @@ def send_email_with_attachment(
     msg.attach(msg_body)
 
     # Add the attachment to the parent container.
-    create_email_attachments(msg, attachments)
+    if attachments is not None:
+        create_email_attachments(msg, attachments)
 
     try:
         response = aws_ses.send_raw_email(
-            Source=msg["From"], Destinations=[msg["To"]], RawMessage={"Data": msg.as_string(),},
+            Source=msg["From"],
+            Destinations=[msg["To"], msg["CC"], msg["Bcc"]],
+            RawMessage={"Data": msg.as_string(),},
+            ReturnPathArn=bounce_forwarding_email_address_arn,
         )
 
         logger.info(f"Email sent! Message ID: {response['MessageId']}")
