@@ -148,27 +148,30 @@ export const IntermittentFrequency = (props) => {
       />
 
       <ConditionalContent visible={!!leavePeriod.frequency_interval_basis}>
-        <InputText
-          {...getFunctionalInputProps(`${leavePeriodPath}.frequency`)}
-          inputMode="numeric"
-          pattern="[0-9]*"
-          label={t("pages.claimsIntermittentFrequency.frequencyLabel", {
-            context:
-              leavePeriod.frequency_interval === 6
-                ? "irregular"
-                : findKeyByValue(
-                    FrequencyIntervalBasis,
-                    leavePeriod.frequency_interval_basis
-                  ),
-          })}
-          hint={
-            claim.isMedicalLeave
-              ? t("pages.claimsIntermittentFrequency.frequencyHint_medical")
-              : null // could use `context` if another leave type needs hint text
-          }
-          width="small"
-          smallLabel
-        />
+        {/* Wrapped in this condition to avoid triggering a missing i18n key event */}
+        {!!leavePeriod.frequency_interval_basis && (
+          <InputText
+            {...getFunctionalInputProps(`${leavePeriodPath}.frequency`)}
+            inputMode="numeric"
+            pattern="[0-9]*"
+            label={t("pages.claimsIntermittentFrequency.frequencyLabel", {
+              context:
+                leavePeriod.frequency_interval === 6
+                  ? "irregular"
+                  : findKeyByValue(
+                      FrequencyIntervalBasis,
+                      leavePeriod.frequency_interval_basis
+                    ),
+            })}
+            hint={
+              claim.isMedicalLeave
+                ? t("pages.claimsIntermittentFrequency.frequencyHint_medical")
+                : null // could use `context` if another leave type needs hint text
+            }
+            width="small"
+            smallLabel
+          />
+        )}
 
         <InputChoiceGroup
           {...getFunctionalInputProps(`${leavePeriodPath}.duration_basis`)}
@@ -201,7 +204,7 @@ export const IntermittentFrequency = (props) => {
         />
       </ConditionalContent>
 
-      <ConditionalContent visible={!!leavePeriod.duration_basis}>
+      {!!leavePeriod.duration_basis && (
         <InputText
           {...getFunctionalInputProps(`${leavePeriodPath}.duration`)}
           inputMode="numeric"
@@ -217,7 +220,7 @@ export const IntermittentFrequency = (props) => {
           width="small"
           smallLabel
         />
-      </ConditionalContent>
+      )}
     </QuestionPage>
   );
 };

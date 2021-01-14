@@ -52,7 +52,7 @@ exports[`IntermittentFrequency renders the page 1`] = `
           "value": "Months",
         },
         Object {
-          "checked": false,
+          "checked": true,
           "id": "irregularOver6Months",
           "key": "irregularOver6Months",
           "label": "Irregular over the next 6 months",
@@ -66,20 +66,20 @@ exports[`IntermittentFrequency renders the page 1`] = `
     onChange={[Function]}
     smallLabel={true}
     type="radio"
-    value=""
+    value="Months"
   />
   <ConditionalContent
-    visible={false}
+    visible={true}
   >
     <InputText
       hint={null}
       inputMode="numeric"
-      label="pages.claimsIntermittentFrequency.frequencyLabel"
+      label="Estimate how many absences over the next 6 months."
       name="leave_details.intermittent_leave_periods[0].frequency"
       onChange={[Function]}
       pattern="[0-9]*"
       smallLabel={true}
-      value=""
+      value={6}
       width="small"
     />
     <InputChoiceGroup
@@ -91,7 +91,7 @@ exports[`IntermittentFrequency renders the page 1`] = `
             "value": "Days",
           },
           Object {
-            "checked": false,
+            "checked": true,
             "label": "Less than a full work day",
             "value": "Hours",
           },
@@ -103,23 +103,19 @@ exports[`IntermittentFrequency renders the page 1`] = `
       onChange={[Function]}
       smallLabel={true}
       type="radio"
-      value=""
+      value="Hours"
     />
   </ConditionalContent>
-  <ConditionalContent
-    visible={false}
-  >
-    <InputText
-      hint={null}
-      inputMode="numeric"
-      label="pages.claimsIntermittentFrequency.durationLabel"
-      name="leave_details.intermittent_leave_periods[0].duration"
-      onChange={[Function]}
-      pattern="[0-9]*"
-      smallLabel={true}
-      value=""
-      width="small"
-    />
-  </ConditionalContent>
+  <InputText
+    hint={null}
+    inputMode="numeric"
+    label="How many hours of work will you miss per absence?"
+    name="leave_details.intermittent_leave_periods[0].duration"
+    onChange={[Function]}
+    pattern="[0-9]*"
+    smallLabel={true}
+    value={3}
+    width="small"
+  />
 </QuestionPage>
 `;

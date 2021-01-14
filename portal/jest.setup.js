@@ -45,6 +45,7 @@ URL.revokeObjectURL = jest.fn();
  * Mock global libraries
  */
 global.newrelic = {
+  addPageAction: jest.fn(),
   noticeError: jest.fn(),
   setCurrentRouteName: jest.fn(),
 };

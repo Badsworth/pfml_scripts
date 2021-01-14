@@ -22,7 +22,9 @@ describe("IntermittentFrequency", () => {
   });
 
   it("renders the page", () => {
-    const { wrapper } = renderWithAppLogic(IntermittentFrequency);
+    const { wrapper } = renderWithAppLogic(IntermittentFrequency, {
+      claimAttrs: new MockClaimBuilder().intermittent().create(),
+    });
 
     expect(wrapper).toMatchSnapshot();
   });
@@ -62,10 +64,14 @@ describe("IntermittentFrequency", () => {
     );
 
     expect(
-      blankClaimWrapper.find("ConditionalContent").at(1).prop("visible")
+      blankClaimWrapper
+        .find({ name: "leave_details.intermittent_leave_periods[0].duration" })
+        .exists()
     ).toBe(false);
     expect(
-      wrapperWithState.find("ConditionalContent").at(1).prop("visible")
+      wrapperWithState
+        .find({ name: "leave_details.intermittent_leave_periods[0].duration" })
+        .exists()
     ).toBe(true);
   });
 
@@ -153,13 +159,19 @@ describe("IntermittentFrequency", () => {
     const { wrapper: medicalWrapper } = renderWithAppLogic(
       IntermittentFrequency,
       {
-        claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
+        claimAttrs: new MockClaimBuilder()
+          .medicalLeaveReason()
+          .intermittent()
+          .create(),
       }
     );
     const { wrapper: bondingWrapper } = renderWithAppLogic(
       IntermittentFrequency,
       {
-        claimAttrs: new MockClaimBuilder().bondingBirthLeaveReason().create(),
+        claimAttrs: new MockClaimBuilder()
+          .bondingBirthLeaveReason()
+          .intermittent()
+          .create(),
       }
     );
 

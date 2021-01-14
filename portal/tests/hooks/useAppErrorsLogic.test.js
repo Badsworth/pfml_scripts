@@ -224,28 +224,6 @@ describe("useAppErrorsLogic", () => {
         );
       });
 
-      it("tracks when a field or rule-level error message is missing", () => {
-        const issues = [
-          {
-            field: "shop_name",
-            type: "pattern",
-            message: "This validation should have a generic error message",
-            rule: "/d{9}",
-          },
-        ];
-
-        act(() => {
-          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
-        });
-
-        expect(tracker.trackEvent).toHaveBeenCalledWith(
-          "Missing i18n - issue message",
-          {
-            i18nKey: "errors.claims.shop_name.pattern",
-          }
-        );
-      });
-
       it("sets AppErrorInfo.message to generic field-level fallback based on the issue's 'type' when 'type' is 'pattern' and field-level message is missing", () => {
         const issues = [
           {
@@ -262,27 +240,6 @@ describe("useAppErrorsLogic", () => {
 
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
           `"Field (shop_name) didn’t match expected format."`
-        );
-      });
-
-      it("tracks when a generic field-level fallback error message is missing", () => {
-        const issues = [
-          {
-            field: "shop_name",
-            type: "length",
-            message: "Field doesn't meet requirements",
-          },
-        ];
-
-        act(() => {
-          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
-        });
-
-        expect(tracker.trackEvent).toHaveBeenCalledWith(
-          "Missing i18n - issue message",
-          {
-            i18nKey: "errors.validationFallback.length",
-          }
         );
       });
 

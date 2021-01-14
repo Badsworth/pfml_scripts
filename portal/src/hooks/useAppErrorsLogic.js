@@ -127,20 +127,12 @@ const useAppErrorsLogic = () => {
       return issueMessage;
     }
 
-    tracker.trackEvent("Missing i18n - issue message", {
-      i18nKey: issueMessageKey,
-    });
-
     // 3. Display generic message if present: "errors.validationFallback.pattern" => "Field (ssn) is invalid format."
     const fallbackKey = `errors.validationFallback.${type}`;
     const fallbackMessage = t(fallbackKey, { field });
     if (fallbackMessage !== fallbackKey) {
       return fallbackMessage;
     }
-
-    tracker.trackEvent("Missing i18n - issue message", {
-      i18nKey: fallbackKey,
-    });
 
     // 4. Display API message if present
     // 5. Otherwise fallback to a generic validation failure message

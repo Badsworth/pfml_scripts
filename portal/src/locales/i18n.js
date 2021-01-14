@@ -5,36 +5,70 @@
 import englishLocale from "./app/en-US";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
+import tracker from "../services/tracker";
 
 const defaultLocale = "en-US";
 
 /**
+ * Add additional formatting to a given translation string
+ * @see https://www.i18next.com/translation-function/formatting
+ * @param {string} value - the string to be formatted
+ * @param {string} format - the type of formatting
+ * @param {string} locale - language code
+ * @returns {string} formatted value
+ */
+function formatValue(value, format, locale) {
+  // formats number into currency (e.g. 1000 -> $1,000.00)
+  if (format === "currency") {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: "USD",
+    }).format(value);
+  }
+  return value;
+}
+
+/**
+ * Track when an i18n key is missing a value.
+ * @param {string[]} locales - language codes
+ * @param {string} namespace
+ * @param {string} key
+ * @param {string} fallbackValue
+ * @returns {string}
+ */
+function missingKeyHandler(locales, namespace, key, fallbackValue) {
+  tracker.trackEvent("Missing i18n", {
+    i18nKey: key,
+    i18nLocales: locales,
+    i18nNamespace: namespace,
+  });
+
+  return fallbackValue;
+}
+
+/**
  * Initialize I18n libraries for the App
  * @param {string} locale - locale that matches localization file (e.g "en-US")
+ * @param {object} resources - mappings of locale codes and corresponding content strings
+ * @returns {Promise<Function>} resolves with the t() function
  */
-export const initializeI18n = (locale = defaultLocale) => {
-  i18next
+export const initializeI18n = (
+  locale = defaultLocale,
+  resources = { "en-US": englishLocale }
+) => {
+  return i18next
     .use(initReactI18next) // passes the i18n instance to react-i18next which will make it available for all the components via the context api.
     .init({
       debug: process.env.NODE_ENV === "development",
       fallbackLng: defaultLocale,
       interpolation: {
         escapeValue: false, // react already escapes values
-        format: function (value, format) {
-          // formats number into currency (e.g. 1000 -> $1,000.00)
-          if (format === "currency") {
-            return new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: "USD",
-            }).format(value);
-          }
-          return value;
-        },
+        format: formatValue,
       },
       lng: locale,
-      resources: {
-        "en-US": englishLocale,
-      },
+      missingKeyHandler,
+      resources,
+      saveMissing: true, // required in order for missingKeyHandler to work
     });
 };
 
