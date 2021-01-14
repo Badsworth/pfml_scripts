@@ -38,7 +38,7 @@ class DataMartIssuesAndUpdates:
 
 
 def query_data_mart_for_issues_and_updates(
-    data_mart_conn: data_mart.Connection, employee: Employee, tax_id: TaxIdentifier,
+    data_mart_client: data_mart.Client, employee: Employee, tax_id: TaxIdentifier,
 ) -> DataMartIssuesAndUpdates:
     """Fetch Vendor information from MMARS Data Mart and compare it to existing Employee information.
 
@@ -47,7 +47,7 @@ def query_data_mart_for_issues_and_updates(
     """
     result = DataMartIssuesAndUpdates()
 
-    vendor_info = data_mart.get_vendor_info(data_mart_conn, tax_id.tax_identifier)
+    vendor_info = data_mart_client.get_vendor_info(tax_id.tax_identifier)
 
     if not vendor_info:
         return result
@@ -266,10 +266,10 @@ def process_payments_waiting_on_vendor_confirmation(
 
 def process_employees_in_state(
     pfml_db_session: pfml_db.Session,
-    data_mart_engine: data_mart.Engine,
+    data_mart_client: data_mart.Client,
     end_state: LkState,
     process_state_log: Callable[
-        [pfml_db.Session, data_mart.Connection, StateLog, Employee, TaxIdentifier], None
+        [pfml_db.Session, data_mart.Client, StateLog, Employee, TaxIdentifier], None
     ],
 ) -> None:
     logger.info(
@@ -281,36 +281,35 @@ def process_employees_in_state(
         db_session=pfml_db_session, end_state=end_state
     )
 
-    with data_mart_engine.connect() as data_mart_conn:
-        for _prev_state_log, employee in state_logs_for_employees:
-            try:
-                with state_log_util.process_state(
-                    start_state=end_state, associated_model=employee, db_session=pfml_db_session,
-                ) as state_log:
+    for _prev_state_log, employee in state_logs_for_employees:
+        try:
+            with state_log_util.process_state(
+                start_state=end_state, associated_model=employee, db_session=pfml_db_session,
+            ) as state_log:
 
-                    tax_id = employee.tax_identifier
+                tax_id = employee.tax_identifier
 
-                    if not tax_id:
-                        logger.error(
-                            "Employee does not have a tax id. Skipping.",
-                            extra={
-                                "employee_id": employee.employee_id,
-                                "state_log_id": state_log.state_log_id,
-                            },
-                        )
-                        raise ValueError("Employee does not have a tax id. Skipping.")
+                if not tax_id:
+                    logger.error(
+                        "Employee does not have a tax id. Skipping.",
+                        extra={
+                            "employee_id": employee.employee_id,
+                            "state_log_id": state_log.state_log_id,
+                        },
+                    )
+                    raise ValueError("Employee does not have a tax id. Skipping.")
 
-                    process_state_log(pfml_db_session, data_mart_conn, state_log, employee, tax_id)
-            except Exception:
-                extra = {"start_state": end_state.state_description}
+                process_state_log(pfml_db_session, data_mart_client, state_log, employee, tax_id)
+        except Exception:
+            extra = {"start_state": end_state.state_description}
 
-                if employee:
-                    extra["employee_id"] = employee.employee_id
+            if employee:
+                extra["employee_id"] = employee.employee_id
 
-                if state_log:
-                    extra["state_log_id"] = state_log.state_log_id
+            if state_log:
+                extra["state_log_id"] = state_log.state_log_id
 
-                logger.exception("Hit error processing record", extra=extra)
+            logger.exception("Hit error processing record", extra=extra)
 
     logger.info(
         f"Done processing {end_state.state_description} records",

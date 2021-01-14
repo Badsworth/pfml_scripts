@@ -9,20 +9,20 @@ from massgov.pfml.util import assert_never
 logger = logging.get_logger(__name__)
 
 
-def process(pfml_db_session: pfml_db.Session, data_mart_engine: data_mart.Engine) -> None:
+def process(pfml_db_session: pfml_db.Session, data_mart_client: data_mart.Client) -> None:
     common.process_employees_in_state(
-        pfml_db_session, data_mart_engine, State.EFT_PENDING, process_state_log
+        pfml_db_session, data_mart_client, State.EFT_PENDING, process_state_log
     )
 
 
 def process_state_log(
     pfml_db_session: pfml_db.Session,
-    data_mart_conn: data_mart.Connection,
+    data_mart_client: data_mart.Client,
     state_log: StateLog,
     employee: Employee,
     tax_id: TaxIdentifier,
 ) -> None:
-    vendor_info = data_mart.get_vendor_info(data_mart_conn, tax_id.tax_identifier)
+    vendor_info = data_mart_client.get_vendor_info(tax_id.tax_identifier)
 
     if not vendor_info:
         state_log_util.finish_state_log(

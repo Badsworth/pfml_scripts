@@ -7,21 +7,21 @@ from massgov.pfml.db.models.employees import Employee, State, StateLog, TaxIdent
 logger = logging.get_logger(__name__)
 
 
-def process(pfml_db_session: pfml_db.Session, data_mart_engine: data_mart.Engine) -> None:
+def process(pfml_db_session: pfml_db.Session, data_mart_client: data_mart.Client) -> None:
     common.process_employees_in_state(
-        pfml_db_session, data_mart_engine, State.VCM_REPORT_SENT, process_state_log
+        pfml_db_session, data_mart_client, State.VCM_REPORT_SENT, process_state_log
     )
 
 
 def process_state_log(
     pfml_db_session: pfml_db.Session,
-    data_mart_conn: data_mart.Connection,
+    data_mart_client: data_mart.Client,
     state_log: StateLog,
     employee: Employee,
     tax_id: TaxIdentifier,
 ) -> None:
     potential_issues = common.query_data_mart_for_issues_and_updates(
-        data_mart_conn, employee, tax_id
+        data_mart_client, employee, tax_id
     )
 
     # commit any potential employee updates from above before processing

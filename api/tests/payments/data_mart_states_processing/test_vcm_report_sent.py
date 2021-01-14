@@ -23,18 +23,18 @@ def create_vcm_report_sent_state_log(test_db_session):
 
 
 def test_process_vcm_report_sent_no_vendor(
-    test_db_session, mocker, initialize_factories_session, mock_data_mart_engine,
+    test_db_session, mocker, initialize_factories_session, mock_data_mart_client,
 ):
     state_log = create_vcm_report_sent_state_log(test_db_session)
     employee = state_log.employee
 
-    mocker.patch.object(data_mart, "get_vendor_info", return_value=None)
+    mock_data_mart_client.get_vendor_info.return_value = None
 
     state_log_count_before = test_db_session.query(StateLog).count()
     assert state_log_count_before == 1
 
     # run process
-    vcm_report_sent.process(test_db_session, mock_data_mart_engine)
+    vcm_report_sent.process(test_db_session, mock_data_mart_client)
 
     state_log_count_after = test_db_session.query(StateLog).count()
     assert state_log_count_after == 2
@@ -51,24 +51,20 @@ def test_process_vcm_report_sent_no_vendor(
 
 
 def test_process_vcm_report_sent_mismatched_data(
-    test_db_session, mocker, initialize_factories_session, mock_data_mart_engine,
+    test_db_session, mocker, initialize_factories_session, mock_data_mart_client,
 ):
     state_log = create_vcm_report_sent_state_log(test_db_session)
     employee = state_log.employee
 
-    mocker.patch.object(
-        data_mart,
-        "get_vendor_info",
-        return_value=data_mart.VendorInfoResult(
-            vendor_customer_code="FOO", vendor_active_status=data_mart.VendorActiveStatus.INACTIVE
-        ),
+    mock_data_mart_client.get_vendor_info.return_value = data_mart.VendorInfoResult(
+        vendor_customer_code="FOO", vendor_active_status=data_mart.VendorActiveStatus.INACTIVE
     )
 
     state_log_count_before = test_db_session.query(StateLog).count()
     assert state_log_count_before == 1
 
     # run process
-    vcm_report_sent.process(test_db_session, mock_data_mart_engine)
+    vcm_report_sent.process(test_db_session, mock_data_mart_client)
 
     state_log_count_after = test_db_session.query(StateLog).count()
     assert state_log_count_after == 2
@@ -83,9 +79,9 @@ def test_process_vcm_report_sent_mismatched_data(
 
 
 def test_process_vcm_report_sent_success(
-    test_db_session, mocker, initialize_factories_session, mock_data_mart_engine,
+    test_db_session, mocker, initialize_factories_session, mock_data_mart_client,
 ):
     state_log = create_vcm_report_sent_state_log(test_db_session)
     run_test_process_success_no_pending_payment(
-        test_db_session, mock_data_mart_engine, mocker, state_log, vcm_report_sent.process
+        test_db_session, mock_data_mart_client, mocker, state_log, vcm_report_sent.process
     )

@@ -9,8 +9,8 @@ def mock_db_session(mocker):
     return mocker.patch("sqlalchemy.orm.Session", autospec=True)
 
 
-def test_process_all_states_data_mart_engine_fail_just_returns(mocker, mock_db_session):
-    mocker.patch.object(data_mart, "init", side_effect=Exception)
+def test_process_all_states_data_mart_client_fail_just_returns(mocker, mock_db_session):
+    mocker.patch.object(data_mart.RealClient, "__init__", side_effect=Exception)
 
     mock_identify_mmars_status = mocker.patch.object(
         data_mart_states_processing.identify_mmars_status, "process"
@@ -24,7 +24,7 @@ def test_process_all_states_data_mart_engine_fail_just_returns(mocker, mock_db_s
 def test_process_all_states_raises_exception_at_end_if_any_state_raised_execption(
     mocker, mock_db_session
 ):
-    mocker.patch.object(data_mart, "init")
+    mocker.patch.object(data_mart.RealClient, "__init__", return_value=None)
 
     mock_identify_mmars_status = mocker.patch.object(
         data_mart_states_processing.identify_mmars_status, "process", side_effect=Exception
@@ -57,7 +57,7 @@ def test_process_all_states_raises_exception_at_end_if_any_state_raised_execptio
 
 
 def test_process_all_states_all_success(mocker, mock_db_session):
-    mocker.patch.object(data_mart, "init")
+    mocker.patch.object(data_mart.RealClient, "__init__", return_value=None)
 
     mock_identify_mmars_status = mocker.patch.object(
         data_mart_states_processing.identify_mmars_status, "process"
@@ -82,3 +82,17 @@ def test_process_all_states_all_success(mocker, mock_db_session):
     mock_vcm_report_sent.assert_called_once()
     mock_vcc_error_report_sent.assert_called_once()
     mock_eft_pending.assert_called_once()
+
+
+def test_process_all_states_data_mart_mock(monkeypatch, mocker, mock_db_session):
+    monkeypatch.setenv("CTR_DATA_MART_MOCK", "true")
+
+    real_client_init = mocker.patch.object(data_mart.RealClient, "__init__", side_effect=Exception)
+    test_scenario_client_init = mocker.patch.object(
+        data_mart.TestScenariosClient, "__init__", side_effect=Exception
+    )
+
+    data_mart_states_processing.process_all_states(mock_db_session)
+
+    real_client_init.assert_not_called()
+    test_scenario_client_init.assert_called_once()

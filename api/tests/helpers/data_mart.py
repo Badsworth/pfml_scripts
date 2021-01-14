@@ -27,7 +27,7 @@ def create_complete_valid_matching_vendor_info_for_employee(
 
 
 def run_test_process_success_no_pending_payment(
-    test_db_session, mock_data_mart_engine, mocker, state_log, process_func
+    test_db_session, mock_data_mart_client, mocker, state_log, process_func
 ):
     employee = state_log.employee
 
@@ -40,17 +40,15 @@ def run_test_process_success_no_pending_payment(
     if employee.ctr_address_pair is None:
         employee.ctr_address_pair = CtrAddressPairFactory.create()
 
-    mocker.patch.object(
-        data_mart,
-        "get_vendor_info",
-        return_value=create_complete_valid_matching_vendor_info_for_employee(employee),
+    mock_data_mart_client.get_vendor_info.return_value = create_complete_valid_matching_vendor_info_for_employee(
+        employee
     )
 
     state_log_count_before = test_db_session.query(StateLog).count()
     assert state_log_count_before == 1
 
     # run process
-    process_func(test_db_session, mock_data_mart_engine)
+    process_func(test_db_session, mock_data_mart_client)
 
     state_log_count_after = test_db_session.query(StateLog).count()
     assert state_log_count_after == 2

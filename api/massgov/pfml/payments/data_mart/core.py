@@ -1,9 +1,3 @@
-"""Module for interacting with the Massachusetts Comptroller's Data Mart.
-
-The "Data Mart" is a Microsoft SQL Server database providing read-only access to
-data in MMARS.
-"""
-
 import urllib.parse
 from datetime import date
 from enum import Enum
@@ -41,10 +35,7 @@ class DataMartConfig(BaseSettings):
         env_prefix = "CTR_DATA_MART_"
 
 
-def init(config: Optional[DataMartConfig] = None) -> Engine:
-    if not config:
-        config = DataMartConfig()
-
+def init(config: DataMartConfig) -> Engine:
     params = urllib.parse.quote_plus(
         ";".join(
             [

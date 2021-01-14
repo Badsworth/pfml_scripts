@@ -5,7 +5,7 @@ import pydantic
 import pytest
 from sqlalchemy.orm.exc import MultipleResultsFound
 
-import massgov.pfml.payments.data_mart as data_mart
+import massgov.pfml.payments.data_mart.core as data_mart
 import massgov.pfml.payments.payments_util as payments_util
 
 
