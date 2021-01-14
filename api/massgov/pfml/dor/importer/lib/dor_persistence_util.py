@@ -318,6 +318,13 @@ def get_employer_quarterly_info_by_employer_id(db_session, employer_ids):
     return employer_rows
 
 
+def get_tax_ids(db_session, ssns):
+    tax_id_rows = (
+        db_session.query(TaxIdentifier).filter(TaxIdentifier.tax_identifier.in_(ssns)).all()
+    )
+    return tax_id_rows
+
+
 def get_employees_by_ssn(db_session, ssns):
     employee_rows = (
         db_session.query(Employee)

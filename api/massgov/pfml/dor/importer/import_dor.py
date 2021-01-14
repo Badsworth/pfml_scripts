@@ -766,9 +766,35 @@ def import_employees(
     ssn_to_new_tax_id = {}
     ssn_to_new_employee_id = {}
 
+    # look up if any existing ssns exist
+    maybe_previously_created_ssns = list(
+        map(lambda emp: emp["employee_ssn"], not_found_employee_info_list)
+    )
+
+    previously_created_tax_ids = dor_persistence_util.get_tax_ids(
+        db_session, maybe_previously_created_ssns
+    )
+
     for emp in not_found_employee_info_list:
+        found = None
+        for tax_id in previously_created_tax_ids:
+            if tax_id.tax_identifier == emp["employee_ssn"]:
+                found = tax_id
+
         ssn_to_new_employee_id[emp["employee_ssn"]] = uuid.uuid4()
-        ssn_to_new_tax_id[emp["employee_ssn"]] = uuid.uuid4()
+
+        # If a tax identifier does not already exists, create a UUID
+        # Else use the found one.
+        if not found:
+            ssn_to_new_tax_id[emp["employee_ssn"]] = uuid.uuid4()
+        else:
+            ssn_to_new_tax_id[emp["employee_ssn"]] = found.tax_identifier_id
+            logger.info(
+                "Not creating tax identifier because it already exists - {}".format(
+                    found.tax_identifier_id
+                ),
+                extra={"tax_identifier_id": found.tax_identifier_id},
+            )
 
     logger.info(
         "Done - Staging employee and wage info for creation. Employees staged for creation: %i",
@@ -778,9 +804,15 @@ def import_employees(
     # 2 - Create tax ids for new employees
     tax_id_models_to_create = []
     for ssn in ssn_to_new_employee_id:
-        tax_id_models_to_create.append(
-            dor_persistence_util.tax_id_from_dict(ssn_to_new_tax_id[ssn], ssn)
-        )
+        found = False
+        for tax_id in previously_created_tax_ids:
+            if tax_id.tax_identifier == ssn:
+                found = True
+
+        if not found:
+            tax_id_models_to_create.append(
+                dor_persistence_util.tax_id_from_dict(ssn_to_new_tax_id[ssn], ssn)
+            )
 
     logger.info("Creating new tax ids: %i", len(tax_id_models_to_create))
 
