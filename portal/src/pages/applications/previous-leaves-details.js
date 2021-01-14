@@ -1,4 +1,5 @@
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
+import React, { useEffect, useRef } from "react";
 import { get, pick } from "lodash";
 import Claim from "../../models/Claim";
 import Heading from "../../components/Heading";
@@ -7,7 +8,6 @@ import InputDate from "../../components/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
-import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -25,6 +25,7 @@ export const fields = [
 export const PreviousLeavesDetails = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
+  const useInitialEntries = useRef(true);
 
   const initialEntries = pick(props, fields).claim;
   // If the claim doesn't have any relevant entries, pre-populate the first one
@@ -35,6 +36,19 @@ export const PreviousLeavesDetails = (props) => {
   const { formState, updateFields } = useFormState(initialEntries);
   const previous_leaves = get(formState, "previous_leaves");
   const employer_fein = get(claim, "employer_fein");
+
+  useEffect(() => {
+    // Don't bother calling updateFields() when the page first renders
+    if (useInitialEntries.current) {
+      useInitialEntries.current = false;
+      return;
+    }
+
+    // When there's a validation error, we get back the list of previous_leaves with previous_leave_ids from the API
+    // When claim.previous_leaves updates, we also need to update the formState values to include the previous_leave_ids,
+    // so on subsequent submits, we don't create new previous_leave records
+    updateFields({ previous_leaves: claim.previous_leaves });
+  }, [claim.previous_leaves, updateFields]);
 
   const handleSave = () =>
     appLogic.claims.update(claim.application_id, formState);

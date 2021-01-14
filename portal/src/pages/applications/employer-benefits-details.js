@@ -2,6 +2,7 @@ import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
+import React, { useEffect, useRef } from "react";
 import { cloneDeep, get, isFinite, isNil, pick } from "lodash";
 import Claim from "../../models/Claim";
 import Dropdown from "../../components/Dropdown";
@@ -14,7 +15,6 @@ import InputText from "../../components/InputText";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
-import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -35,6 +35,7 @@ export const EmployerBenefitsDetails = (props) => {
   const { t } = useTranslation();
 
   const initialEntries = pick(props, fields).claim;
+  const useInitialEntries = useRef(true);
   // If the claim doesn't have any employer benefits pre-populate the first one so that
   // it renders in the RepeatableFieldset below
   if (initialEntries.employer_benefits.length === 0) {
@@ -42,6 +43,18 @@ export const EmployerBenefitsDetails = (props) => {
   }
   const { formState, updateFields } = useFormState(initialEntries);
   const employer_benefits = get(formState, "employer_benefits");
+
+  useEffect(() => {
+    // Don't bother calling updateFields() when the page first renders
+    if (useInitialEntries.current) {
+      useInitialEntries.current = false;
+      return;
+    }
+    // When there's a validation error, we get back the list of employer_benefits with employer_benefit_ids from the API
+    // When claim.employer_benefits updates, we also need to update the formState values to include the employer_benefit_ids,
+    // so on subsequent submits, we don't create new employer_benefit records
+    updateFields({ employer_benefits: claim.employer_benefits });
+  }, [claim.employer_benefits, updateFields]);
 
   const handleSave = async () => {
     // Make sure benefit_amount_dollars is a number.
@@ -54,6 +67,7 @@ export const EmployerBenefitsDetails = (props) => {
         isFinite(val) || isNil(val) ? val : Number(val.replace(/,/g, ""));
       return { ...benefit, benefit_amount_dollars: number };
     });
+
     await appLogic.claims.update(claim.application_id, patchData);
   };
 

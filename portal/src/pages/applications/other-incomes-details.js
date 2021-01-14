@@ -2,6 +2,7 @@ import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../models/OtherIncome";
+import React, { useEffect, useRef } from "react";
 import { cloneDeep, get, isFinite, isNil, pick } from "lodash";
 import Claim from "../../models/Claim";
 import Dropdown from "../../components/Dropdown";
@@ -14,7 +15,6 @@ import InputText from "../../components/InputText";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
-import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -35,6 +35,7 @@ export const OtherIncomesDetails = (props) => {
   const { t } = useTranslation();
 
   const initialEntries = pick(props, fields).claim;
+  const useInitialEntries = useRef(true);
   // If the claim doesn't have any relevant entries, pre-populate the first one
   // so that it renders in the RepeatableFieldset below
   if (initialEntries.other_incomes.length === 0) {
@@ -42,6 +43,19 @@ export const OtherIncomesDetails = (props) => {
   }
   const { formState, updateFields } = useFormState(initialEntries);
   const other_incomes = get(formState, "other_incomes");
+
+  useEffect(() => {
+    // Don't bother calling updateFields() when the page first renders
+    if (useInitialEntries.current) {
+      useInitialEntries.current = false;
+      return;
+    }
+
+    // When there's a validation error, we get back the list of other_incomes with other_income_ids from the API
+    // When claim.other_leaves updates, we also need to update the formState values to include the other_income_ids,
+    // so on subsequent submits, we don't create new other_income records
+    updateFields({ other_incomes: claim.other_incomes });
+  }, [claim.other_incomes, updateFields]);
 
   const handleSave = async () => {
     // Make sure income_amount_dollars is a number.

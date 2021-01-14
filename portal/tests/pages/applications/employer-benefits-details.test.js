@@ -292,6 +292,10 @@ describe("EmployerBenefitDetails", () => {
       expect(entries[0]).toEqual(new EmployerBenefit());
     });
   });
+
+  describe("when there are validation errors", () => {
+    it.todo("updates the formState with employer_benefit_ids - see CP-1686");
+  });
 });
 
 describe("EmployerBenefitCard", () => {

@@ -168,62 +168,66 @@ describe("PreviousLeavesDetails", () => {
         });
       });
     });
+  });
 
-    describe("when the user's claim does not have previous leaves", () => {
-      beforeEach(() => {
-        claim = new MockClaimBuilder().employed().continuous().create();
+  describe("when the user's claim does not have previous leaves", () => {
+    beforeEach(() => {
+      claim = new MockClaimBuilder().employed().continuous().create();
 
-        ({ appLogic, wrapper } = renderWithAppLogic(PreviousLeaveDetails, {
-          claimAttrs: claim,
-        }));
-      });
-
-      it("adds a blank entry so a card is rendered", () => {
-        const entries = wrapper.find(RepeatableFieldset).prop("entries");
-
-        expect(entries).toHaveLength(1);
-        expect(entries[0]).toEqual(new PreviousLeave());
-      });
+      ({ appLogic, wrapper } = renderWithAppLogic(PreviousLeaveDetails, {
+        claimAttrs: claim,
+      }));
     });
 
-    describe("PreviousLeaveCard", () => {
-      let wrapper;
-      const index = 0;
+    it("adds a blank entry so a card is rendered", () => {
+      const entries = wrapper.find(RepeatableFieldset).prop("entries");
 
-      beforeEach(() => {
-        let getFunctionalInputProps;
-
-        testHook(() => {
-          getFunctionalInputProps = useFunctionalInputProps({
-            appErrors: new AppErrorInfoCollection(),
-            formState: {},
-            updateFields: jest.fn(),
-          });
-        });
-
-        wrapper = shallow(
-          <PreviousLeaveCard
-            employer_fein="12-3456789"
-            entry={new PreviousLeave()}
-            index={index}
-            getFunctionalInputProps={getFunctionalInputProps}
-          />
-        );
-      });
-
-      it("renders fields for a PreviousLeave instance", () => {
-        expect(wrapper).toMatchSnapshot();
-      });
-
-      it("doesn't include Unknown as a benefit type option", () => {
-        const field = wrapper.find({
-          name: `previous_leaves[${index}].leave_reason`,
-        });
-
-        expect(field.prop("choices")).not.toContainEqual(
-          expect.objectContaining({ value: PreviousLeaveReason.unknown })
-        );
-      });
+      expect(entries).toHaveLength(1);
+      expect(entries[0]).toEqual(new PreviousLeave());
     });
+  });
+
+  describe("PreviousLeaveCard", () => {
+    let wrapper;
+    const index = 0;
+
+    beforeEach(() => {
+      let getFunctionalInputProps;
+
+      testHook(() => {
+        getFunctionalInputProps = useFunctionalInputProps({
+          appErrors: new AppErrorInfoCollection(),
+          formState: {},
+          updateFields: jest.fn(),
+        });
+      });
+
+      wrapper = shallow(
+        <PreviousLeaveCard
+          employer_fein="12-3456789"
+          entry={new PreviousLeave()}
+          index={index}
+          getFunctionalInputProps={getFunctionalInputProps}
+        />
+      );
+    });
+
+    it("renders fields for a PreviousLeave instance", () => {
+      expect(wrapper).toMatchSnapshot();
+    });
+
+    it("doesn't include Unknown as a benefit type option", () => {
+      const field = wrapper.find({
+        name: `previous_leaves[${index}].leave_reason`,
+      });
+
+      expect(field.prop("choices")).not.toContainEqual(
+        expect.objectContaining({ value: PreviousLeaveReason.unknown })
+      );
+    });
+  });
+
+  describe("when there are validation errors", () => {
+    it.todo("updates the formState with employer_benefit_ids - see CP-1686");
   });
 });

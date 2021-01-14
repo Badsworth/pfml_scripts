@@ -259,6 +259,10 @@ describe("OtherIncomesDetails", () => {
       expect(entries[0]).toEqual(new OtherIncome());
     });
   });
+
+  describe("when there are validation errors", () => {
+    it.todo("updates the formState with other_income_id - see CP-1686");
+  });
 });
 
 describe("OtherIncomeCard", () => {
