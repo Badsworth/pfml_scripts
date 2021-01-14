@@ -164,8 +164,6 @@ locals {
 
         dfml_project_manager_email_address     = var.dfml_project_manager_email_address
         pfml_email_address                     = var.pfml_email_address
-        bounce_forwarding_email_address        = var.bounce_forwarding_email_address
-        bounce_forwarding_email_address_arn    = var.bounce_forwarding_email_address_arn
         ctr_gax_bievnt_email_address           = var.ctr_gax_bievnt_email_address
         ctr_vcc_bievnt_email_address           = var.ctr_vcc_bievnt_email_address
         dfml_business_operations_email_address = var.dfml_business_operations_email_address
@@ -277,6 +275,7 @@ data "template_file" "task_container_definitions" {
 
     pfml_email_address                     = var.pfml_email_address
     bounce_forwarding_email_address        = var.bounce_forwarding_email_address
+    bounce_forwarding_email_address_arn    = var.bounce_forwarding_email_address_arn
     ctr_gax_bievnt_email_address           = var.ctr_gax_bievnt_email_address
     ctr_vcc_bievnt_email_address           = var.ctr_vcc_bievnt_email_address
     dfml_business_operations_email_address = var.dfml_business_operations_email_address
