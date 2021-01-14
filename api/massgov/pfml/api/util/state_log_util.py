@@ -39,6 +39,16 @@ class AssociatedClass(Enum):
         elif isinstance(associated_model, ReferenceFile):
             return AssociatedClass.REFERENCE_FILE.value
 
+    @staticmethod
+    def get_associated_model(state_log: StateLog) -> Optional[AssociatedModel]:
+        if state_log.associated_type == AssociatedClass.EMPLOYEE.value:
+            return state_log.employee
+        elif state_log.associated_type == AssociatedClass.PAYMENT.value:
+            return state_log.payment
+        elif state_log.associated_type == AssociatedClass.REFERENCE_FILE.value:
+            return state_log.reference_file
+        return None
+
 
 def get_now() -> datetime:
     return datetime_util.utcnow()
@@ -231,6 +241,22 @@ def get_all_latest_state_logs_in_end_state(
     #       latest_state_log.associated_class = "employee"
     # JOIN latest_state_log ON (state_log.state_log_id = latest_state_log.state_log_id)
     return db_session.query(StateLog).join(LatestStateLog).filter(*filter_params).all()
+
+
+def get_all_latest_state_logs_regardless_of_associated_class(
+    end_state: LkState, db_session: db.Session
+) -> List[StateLog]:
+    # Example query
+    #
+    # SELECT * from state_log
+    # WHERE state_log.end_state_id={end_state.state_id}
+    # JOIN latest_state_log ON (state_log.state_log_id = latest_state_log.state_log_id)
+    return (
+        db_session.query(StateLog)
+        .join(LatestStateLog)
+        .filter(StateLog.end_state_id == end_state.state_id)
+        .all()
+    )
 
 
 def get_state_logs_stuck_in_state(

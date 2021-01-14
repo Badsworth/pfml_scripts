@@ -93,6 +93,7 @@ fineos-test-vendor-export-generate = "massgov.pfml.payments.mock.fineos_extract_
 fineos-daily-generate = "massgov.pfml.fineos.mock.generate:main"
 fineos-import-employee-updates = "massgov.pfml.fineos.import_fineos_updates:handler"
 fineos-bucket-tool = "massgov.pfml.fineos.tool.bucket:main"
+transmogrify-state-logs = "massgov.pfml.util.tasks.transmogrify_states:transmogrify_states"
 
 [tool.black]
 line-length = 100

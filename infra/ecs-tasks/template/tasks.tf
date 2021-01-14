@@ -223,6 +223,10 @@ locals {
         ctr_data_mart_host     = var.ctr_data_mart_host
         ctr_data_mart_username = var.ctr_data_mart_username
       }
+    },
+
+    "transmogrify-state" = {
+      command = ["transmogrify-state"]
     }
   }
 }
