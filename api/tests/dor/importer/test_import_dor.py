@@ -589,6 +589,9 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     employee_a_lines = tuple(filter(lambda s: s.startswith("A"), employee_lines))
     employee_b_lines = tuple(filter(lambda s: s.startswith("B"), employee_lines))
 
+    # Test scenario where already created tax ID will pass.
+    dor_persistence_util.create_tax_id(test_db_session, "250000001")
+
     assert len(employee_a_lines) == employer_count * 4
     wages_contributions_count = len(employee_b_lines)
     assert wages_contributions_count >= employer_count
