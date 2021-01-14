@@ -10,7 +10,7 @@ import boto3
 import smart_open
 from csvsorter import csvsort
 
-from massgov.pfml.verification.generate_verification_codes import CSVSourceWrapper
+from massgov.pfml.util.csv import CSVSourceWrapper
 
 OUTPUT_CSV_FIELDS = ["Employer Name", "EIN", "Contact Name", "Contact Email"]
 RESULT_CSV_FIELDS = ["email", "url"]

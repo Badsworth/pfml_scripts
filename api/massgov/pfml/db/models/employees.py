@@ -18,6 +18,7 @@ from sqlalchemy.types import JSON
 
 from ..lookup import LookupTable
 from .base import Base, utc_timestamp_gen, uuid_gen
+from .verifications import Verification
 
 # https://github.com/dropbox/sqlalchemy-stubs/issues/98
 if TYPE_CHECKING:
@@ -568,9 +569,17 @@ class UserLeaveAdministrator(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False)
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), nullable=False)
     fineos_web_id = Column(Text)
+    verification_id = Column(
+        UUID(as_uuid=True), ForeignKey("verification.verification_id"), nullable=True
+    )
 
     user = relationship(User)
     employer = relationship(Employer)
+    verification = relationship(Verification)
+
+    @typed_hybrid_property
+    def verified(self) -> bool:
+        return self.verification_id is not None
 
 
 class WagesAndContributions(Base):

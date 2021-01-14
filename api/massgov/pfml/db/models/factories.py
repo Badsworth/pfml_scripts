@@ -49,7 +49,6 @@ class Generators:
     )
     UtcNow = factory.LazyFunction(datetime_util.utcnow)
     UuidObj = factory.Faker("uuid4", cast_to=None)
-    VerificationCode = factory.Faker("pystr", max_chars=6, min_chars=6)
     S3Path = factory.Sequence(lambda n: f"s3://bucket/path/to/file{n}.txt")
     CtrDocumentIdentifier = factory.LazyFunction(
         lambda: "INTFDFML" + "".join(random.choices(string.ascii_uppercase + string.digits, k=12))
@@ -240,33 +239,6 @@ class VerificationFactory(BaseFactory):
     verification_id = Generators.UuidObj
     verification_type = factory.SubFactory(VerificationTypeFactory)
     verification_type_id = factory.LazyAttribute(lambda a: a.verification_type.verification_type_id)
-
-
-class VerificationCodeFactory(BaseFactory):
-    class Meta:
-        model = verification_models.VerificationCode
-
-    verification_code_id = Generators.UuidObj
-
-    employer = factory.SubFactory(EmployerFactory)
-    employer_id = factory.LazyAttribute(lambda a: a.employer.employer_fein)
-    employer_fein = factory.LazyAttribute(lambda a: a.employer.employer_id)
-    verification_code = Generators.VerificationCode
-
-    issued_at = Generators.UtcNow
-    expires_at = factory.LazyAttribute(lambda a: a.issue_ts + timedelta(minutes=5))
-    remaining_uses = 1
-
-
-class VerificationCodeLogs(BaseFactory):
-    class Meta:
-        model = verification_models.VerificationCodeLogs
-
-    verification_code_log_id = Generators.UuidObj
-    verification_code_id = Generators.UuidObj
-    result = factory.Faker("sentence")
-    message = factory.Faker("paragraph")
-    created_at = Generators.UtcNow
 
 
 class WagesAndContributionsFactory(BaseFactory):

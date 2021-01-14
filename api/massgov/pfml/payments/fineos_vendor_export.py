@@ -27,7 +27,7 @@ from massgov.pfml.db.models.employees import (
     State,
     TaxIdentifier,
 )
-from massgov.pfml.verification.generate_verification_codes import CSVSourceWrapper
+from massgov.pfml.util.csv import CSVSourceWrapper
 
 logger = logging.get_logger(__name__)
 

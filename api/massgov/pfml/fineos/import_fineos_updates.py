@@ -22,9 +22,9 @@ from massgov.pfml.db.models.employees import (
     LkOccupation,
     LkTitle,
 )
+from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.logging import audit, log_every
-from massgov.pfml.verification.generate_verification_codes import CSVSourceWrapper
 
 logger = logging.get_logger(__name__)
 

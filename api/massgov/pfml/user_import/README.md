@@ -21,7 +21,6 @@ How to run this in test:
 3. Launch the task locally with `./bin/run-ecs-task/run-task.sh test bulk-user-import firstname.lastname bulk-user-import "s3://massgov-pfml-test-bulk-user-import/source.csv"`
 4. Reset the password for your user and you can log in: https://paidleave-test.mass.gov/forgot-password/
 
-Note that this will create verification codes in the database for the appropriate environment
 
 ## Workflow Diagram for Task
 
@@ -79,7 +78,6 @@ but the order is not important
 | :----:            | :-----: | :------: | :-------------------------------------------------------------- |
 | fein              |  none   | yes      | the FEIN of the employer to generate codes for                  |
 | email             |  none   | yes      | email of the user to register for; can be for an existing user  |
-| verification_code |  none   | no       | If present, will verify the user (only if `fein` matches)       |
 
 
 

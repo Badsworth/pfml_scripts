@@ -1,9 +1,12 @@
+import csv
 import dataclasses
 import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, Type, Union
+from typing import Any, Callable, Dict, Generator, Optional, Type, Union
 from uuid import UUID
+
+import smart_open
 
 
 def isoformat(o: Union[datetime.date, datetime.time]) -> str:
@@ -63,3 +66,19 @@ def _encode_value(obj: Any, encoders: Encoders) -> str:
         return encoder(obj)
     else:  # We have exited the for loop without finding a suitable encoder
         raise TypeError(f"Object of type '{obj.__class__.__name__}' is not CSV serializable")
+
+
+class CSVSourceWrapper:
+    """ Simple wrapper for reading dicts out of CSV files """
+
+    def __init__(self, file_path: str, transport_params: Optional[Dict[str, Any]] = None):
+        self._file_path = file_path
+        self._transport_params = transport_params
+
+    def __iter__(self) -> Generator[Dict[Any, Any], Any, Any]:
+        with smart_open.open(
+            self._file_path, "r", transport_params=self._transport_params
+        ) as csvfile:
+            dict_reader = csv.DictReader(csvfile, delimiter=",")
+            for row in dict_reader:
+                yield row
