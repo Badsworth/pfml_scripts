@@ -128,6 +128,8 @@ exports[`PreviousLeavesDetails when the user's claim has previous leaves renders
       ]
     }
     headingPrefix="Previous leave"
+    limit={6}
+    limitMessage="You can only add up to 6 leaves"
     onAddClick={[Function]}
     onRemoveClick={[Function]}
     removeButtonLabel="Remove leave"

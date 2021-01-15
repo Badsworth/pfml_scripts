@@ -163,6 +163,8 @@ exports[`OtherIncomesDetails when the user's claim has other income sources rend
       ]
     }
     headingPrefix="Income"
+    limit={6}
+    limitMessage="You can only add up to 6 incomes"
     onAddClick={[Function]}
     onRemoveClick={[Function]}
     removeButtonLabel="Remove income"

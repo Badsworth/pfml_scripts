@@ -117,6 +117,8 @@ export const PreviousLeavesDetails = (props) => {
         onRemoveClick={handleRemoveClick}
         removeButtonLabel={t("pages.claimsPreviousLeavesDetails.removeButton")}
         render={render}
+        limit={6}
+        limitMessage={t("pages.claimsPreviousLeavesDetails.limitMessage")}
       />
     </QuestionPage>
   );

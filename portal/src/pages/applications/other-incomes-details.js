@@ -135,6 +135,8 @@ export const OtherIncomesDetails = (props) => {
         onRemoveClick={handleRemoveClick}
         removeButtonLabel={t("pages.claimsOtherIncomesDetails.removeButton")}
         render={render}
+        limit={6}
+        limitMessage={t("pages.claimsOtherIncomesDetails.limitMessage")}
       />
     </QuestionPage>
   );

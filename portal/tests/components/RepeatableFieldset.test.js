@@ -33,6 +33,34 @@ describe("RepeatableFieldset", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  describe("when a limit is set", () => {
+    it("shows an enabled add button without limit message when limit is not reached", () => {
+      props.entries = [{ first_name: "Bud" }];
+      props.limit = 2;
+      props.limitMessage = "You can only add 2";
+
+      const wrapper = shallow(<RepeatableFieldset {...props} />);
+      const addButton = wrapper.find("Button").last();
+      const limitMessage = wrapper.find("Button + strong");
+
+      expect(addButton.prop("disabled")).toBe(false);
+      expect(limitMessage.exists()).toBe(false);
+    });
+
+    it("shows disabled add button and limit message when the limit is reached", () => {
+      props.entries = [{ first_name: "Bud" }, { first_name: "Scooter" }];
+      props.limit = 2;
+      props.limitMessage = "You can only add 2";
+
+      const wrapper = shallow(<RepeatableFieldset {...props} />);
+      const addButton = wrapper.find("Button").last();
+      const limitMessage = wrapper.find("Button + strong").text();
+
+      expect(addButton.prop("disabled")).toBe(true);
+      expect(limitMessage).toMatchInlineSnapshot(`"You can only add 2"`);
+    });
+  });
+
   describe("given only one entry exists", () => {
     it("does not show a Remove button", () => {
       props.entries = [{ first_name: "Bud" }];

@@ -137,6 +137,8 @@ export const EmployerBenefitsDetails = (props) => {
         onRemoveClick={handleRemoveClick}
         removeButtonLabel={t("pages.claimsEmployerBenefitDetails.removeButton")}
         render={render}
+        limit={4}
+        limitMessage={t("pages.claimsEmployerBenefitDetails.limitMessage")}
       />
     </QuestionPage>
   );

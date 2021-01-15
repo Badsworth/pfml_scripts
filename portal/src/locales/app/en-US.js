@@ -871,6 +871,7 @@ const pages = {
     choiceLabel_shortTermDisability:
       "$t(shared.employerBenefitType_shortTermDisability)",
     endDateLabel: "When will you stop using the benefit?",
+    limitMessage: "You can only add up to 4 benefits",
     removeButton: "Remove benefit",
     sectionLabel:
       "Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.",
@@ -1073,6 +1074,7 @@ const pages = {
     amountLegend: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.otherIncomeEntryPrefix)",
     endDateLabel: "When will you stop receiving this income?",
+    limitMessage: "You can only add up to 6 incomes",
     removeButton: "Remove income",
     sectionLabel:
       "Tell us about your other sources of income$t(chars.nbsp)during your leave dates for paid$t(chars.nbsp)leave.",
@@ -1156,6 +1158,7 @@ const pages = {
     leaveReasonChoice_serviceMemberFamily:
       "Caring for a family member who serves in the armed forces",
     leaveReasonLabel: "What was the qualifying reason for your leave?",
+    limitMessage: "You can only add up to 6 leaves",
     removeButton: "Remove leave",
     sectionLabel: "Tell us about previous paid or unpaid leave",
     startDateLabel: "When did your leave begin?",

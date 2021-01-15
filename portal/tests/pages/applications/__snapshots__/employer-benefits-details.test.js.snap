@@ -152,6 +152,8 @@ exports[`EmployerBenefitDetails when the user's claim has employer benefits rend
       ]
     }
     headingPrefix="Benefit"
+    limit={4}
+    limitMessage="You can only add up to 4 benefits"
     onAddClick={[Function]}
     onRemoveClick={[Function]}
     removeButtonLabel="Remove benefit"

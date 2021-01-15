@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Button from "./Button";
 import PropTypes from "prop-types";
 import RepeatableFieldsetCard from "./RepeatableFieldsetCard";
+import classnames from "classnames";
 import uniqueId from "lodash/uniqueId";
 import usePreviousValue from "../hooks/usePreviousValue";
 
@@ -14,6 +15,7 @@ const RepeatableFieldset = (props) => {
   const containerRef = React.createRef();
   const entriesAndIds = useEntryIds(entries);
   const previousEntriesLength = usePreviousValue(entriesAndIds.length);
+  const limitReached = props.limit ? entries.length >= props.limit : false;
 
   useEffect(() => {
     if (entriesAndIds.length > previousEntriesLength) {
@@ -28,6 +30,18 @@ const RepeatableFieldset = (props) => {
       if (focusableElement) focusableElement.focus();
     }
   }, [containerRef, entriesAndIds.length, previousEntriesLength]);
+
+  const limitMessageClasses = classnames(
+    // full-width on small screens, beside button on larger screens
+    "display-block",
+    "mobile-lg:display-inline-block",
+    // margin between button only on small screens
+    "margin-top-1",
+    "mobile-lg:margin-top-0",
+    // center text to align with spinner on small screens
+    "text-center",
+    "mobile-lg:text-left"
+  );
 
   return (
     <section className="margin-bottom-4" ref={containerRef}>
@@ -45,10 +59,16 @@ const RepeatableFieldset = (props) => {
           {props.render(entry, index)}
         </RepeatableFieldsetCard>
       ))}
-
-      <Button onClick={props.onAddClick} variation="outline">
+      <Button
+        onClick={props.onAddClick}
+        variation="outline"
+        disabled={limitReached}
+      >
         {props.addButtonLabel}
       </Button>
+      {limitReached && (
+        <strong className={limitMessageClasses}>{props.limitMessage}</strong>
+      )}
     </section>
   );
 };
@@ -65,6 +85,14 @@ RepeatableFieldset.propTypes = {
    * if you specify "Person", headings will be "Person 1", "Person 2", etc.
    */
   headingPrefix: PropTypes.string.isRequired,
+  /**
+   * Maximum number of repeatable fields
+   */
+  limit: PropTypes.number,
+  /**
+   * Message to display when max number of repeatable fields have been added
+   */
+  limitMessage: PropTypes.string,
   /**
    * Function used for rendering the fields
    * @param {object} entry
