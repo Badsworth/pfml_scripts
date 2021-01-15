@@ -245,7 +245,9 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     def create_service_agreement_for_employer(
-        self, fineos_employer_id: int, leave_plans: str
+        self,
+        fineos_employer_id: int,
+        service_agreement_inputs: models.CreateOrUpdateServiceAgreement,
     ) -> str:
         """Create Service Agreement For An Employer in FINEOS"""
         pass
