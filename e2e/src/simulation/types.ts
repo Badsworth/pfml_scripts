@@ -88,4 +88,5 @@ export type Employer = {
   exemption_commence_date?: Date;
   exemption_cease_date?: Date;
   updated_date?: Date;
+  size?: "small" | "medium" | "large";
 };
