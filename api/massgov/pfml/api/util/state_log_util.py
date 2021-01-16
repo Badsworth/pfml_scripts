@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, Generator, List, Optional, Union
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import MultipleResultsFound
 
 import massgov.pfml.db as db
 import massgov.pfml.payments.payments_util as payments_util
@@ -31,13 +31,13 @@ class AssociatedClass(Enum):
     REFERENCE_FILE = "reference_file"
 
     @staticmethod
-    def get_associated_type(associated_model: AssociatedModel) -> str:
+    def get_associated_type(associated_model: AssociatedModel) -> "AssociatedClass":
         if isinstance(associated_model, Payment):
-            return AssociatedClass.PAYMENT.value
+            return AssociatedClass.PAYMENT
         elif isinstance(associated_model, Employee):
-            return AssociatedClass.EMPLOYEE.value
+            return AssociatedClass.EMPLOYEE
         elif isinstance(associated_model, ReferenceFile):
-            return AssociatedClass.REFERENCE_FILE.value
+            return AssociatedClass.REFERENCE_FILE
 
     @staticmethod
     def get_associated_model(state_log: StateLog) -> Optional[AssociatedModel]:
@@ -54,20 +54,92 @@ def get_now() -> datetime:
     return datetime_util.utcnow()
 
 
+def create_finished_state_log(
+    associated_model: AssociatedModel,
+    start_state: LkState,
+    end_state: LkState,
+    outcome: Dict[str, str],
+    db_session: db.Session,
+    start_time: Optional[datetime] = None,
+) -> StateLog:
+    # Let the user pass in a start time so start/end aren't the same
+    start_state_time = start_time if start_time else get_now()
+    associated_class = AssociatedClass.get_associated_type(associated_model)
+
+    return _create_state_log(
+        start_state=start_state,
+        end_state=end_state,
+        associated_model=associated_model,
+        associated_class=associated_class,
+        outcome=outcome,
+        start_time=start_state_time,
+        db_session=db_session,
+    )
+
+
+def _create_state_log(
+    associated_model: Optional[AssociatedModel],
+    associated_class: AssociatedClass,
+    start_state: LkState,
+    end_state: LkState,
+    outcome: Dict[str, str],
+    db_session: db.Session,
+    start_time: datetime,
+) -> StateLog:
+    now = get_now()
+
+    state_log = StateLog(
+        start_state_id=start_state.state_id,
+        end_state_id=end_state.state_id,
+        outcome=outcome,
+        started_at=start_time,
+        associated_type=associated_class.value,
+        ended_at=now,
+    )
+
+    latest_query_params = None
+    if associated_model:
+        latest_query_params = []
+        # Depending on whether it's a payment/employee/reference_file, need to setup
+        # the object and query params differently
+        if isinstance(associated_model, Payment):
+            state_log.payment = associated_model
+            latest_query_params.append(LatestStateLog.payment_id == associated_model.payment_id)
+        elif isinstance(associated_model, Employee):
+            state_log.employee = associated_model
+            latest_query_params.append(LatestStateLog.employee_id == associated_model.employee_id)
+        elif isinstance(associated_model, ReferenceFile):
+            state_log.reference_file = associated_model
+            latest_query_params.append(
+                LatestStateLog.reference_file_id == associated_model.reference_file_id
+            )
+        # We also want the latest state log to be in the same flow and flow is attached to the states
+        latest_query_params.append(LkState.flow_id == end_state.flow_id)
+
+    db_session.add(state_log)
+    _create_or_update_latest_state_log(state_log, latest_query_params, db_session)
+
+    return state_log
+
+
 def _create_or_update_latest_state_log(
     state_log: StateLog, latest_query_params: List, db_session: db.Session
 ) -> None:
     # Grab the latest state log and if it exists
-    # add a pointer back to the previous most recent state log
+    # add a pointer back to the most recent state log
 
     latest_state_log = None
     # In some cases, we know this is the first one (eg. from create_state_log_without_associated_model)
     if latest_query_params:
         try:
             latest_state_log = (
-                db_session.query(LatestStateLog).filter(*latest_query_params).one_or_none()
+                db_session.query(LatestStateLog)
+                .join(StateLog)
+                .join(LkState, StateLog.end_state_id == LkState.state_id)
+                .filter(*latest_query_params)
+                .one_or_none()
             )
-        except IntegrityError:
+        except MultipleResultsFound:
             logger.warning(
                 "Unexpected error with one_or_none()",
                 extra={
@@ -77,12 +149,15 @@ def _create_or_update_latest_state_log(
                     "reference_file_id": state_log.reference_file_id,
                 },
             )
+            # TODO - should we reraise, continuing on here
+            # seems very bad (and caused issues in our test run)
+            raise
 
     if latest_state_log:
-        state_log.prev_state_log = latest_state_log.state_log
+        state_log.prev_state_log_id = latest_state_log.state_log_id
 
     # If no existing latest state log entry exists, add it
-    if not latest_state_log:
+    else:
         latest_state_log = LatestStateLog()
         # all values in this statement should only be set
         # when the latest state log is initialized.
@@ -98,111 +173,25 @@ def _create_or_update_latest_state_log(
     db_session.add(latest_state_log)
 
 
-def create_state_log(
-    start_state: LkState,
-    associated_model: AssociatedModel,
-    db_session: db.Session,
-    commit: bool = True,
-    start_time: Optional[datetime] = None,
-) -> StateLog:
-    now = start_time if start_time else get_now()
-
-    state_log = StateLog(start_state_id=start_state.state_id, started_at=now)
-    latest_query_params = []
-
-    # Depending on whether it's a payment/employee/reference_file, need to setup
-    # the object and query params differently
-    if isinstance(associated_model, Payment):
-        state_log.payment = associated_model
-        latest_query_params.append(LatestStateLog.payment_id == associated_model.payment_id)
-    elif isinstance(associated_model, Employee):
-        state_log.employee = associated_model
-        latest_query_params.append(LatestStateLog.employee_id == associated_model.employee_id)
-    elif isinstance(associated_model, ReferenceFile):
-        state_log.reference_file = associated_model
-        latest_query_params.append(
-            LatestStateLog.reference_file_id == associated_model.reference_file_id
-        )
-    state_log.associated_type = AssociatedClass.get_associated_type(associated_model)
-    db_session.add(state_log)
-
-    _create_or_update_latest_state_log(state_log, latest_query_params, db_session)
-
-    if commit:
-        db_session.commit()
-    return state_log
-
-
-def create_finished_state_log(
-    associated_model: AssociatedModel,
-    start_state: LkState,
-    end_state: LkState,
-    outcome: Dict[
-        str, str
-    ],  # TODO - in order to make certain people use build_outcome, make this a custom type
-    db_session: db.Session,
-    start_time: Optional[datetime] = None,
-) -> StateLog:
-    """ Except for very specific scenarios, we should be using this in actuality instead of create+finish"""
-    # Let the user pass in a start time so start/end aren't the same
-    start_state_time = start_time if start_time else get_now()
-
-    # TODO (once we're not scrambling to finish this) - move all the logic from create_state_log here and delete it.
-    state_log = create_state_log(
-        start_state=start_state,
-        associated_model=associated_model,
-        db_session=db_session,
-        commit=False,
-        start_time=start_state_time,
-    )
-
-    finish_state_log(
-        state_log=state_log,
-        end_state=end_state,
-        outcome=outcome,
-        db_session=db_session,
-        commit=False,  # There's not really ever a scenario we want to do this
-    )
-
-    return state_log
-
-
 def create_state_log_without_associated_model(
     start_state: LkState,
-    associated_class: AssociatedClass,
-    db_session: db.Session,
-    commit: bool = True,
-) -> StateLog:
-    now = get_now()
-
-    state_log = StateLog(
-        start_state_id=start_state.state_id, started_at=now, associated_type=associated_class.value
-    )
-    db_session.add(state_log)
-
-    _create_or_update_latest_state_log(state_log, [], db_session)
-
-    if commit:
-        db_session.commit()
-    return state_log
-
-
-def finish_state_log(
-    state_log: StateLog,
     end_state: LkState,
-    outcome: Dict[str, Any],
+    associated_class: AssociatedClass,
+    outcome: Dict[str, str],
     db_session: db.Session,
-    commit: bool = True,
+    start_time: Optional[datetime] = None,
 ) -> StateLog:
-    now = get_now()
+    start_state_time = start_time if start_time else get_now()
 
-    state_log.ended_at = now
-    state_log.end_state_id = end_state.state_id
-    state_log.outcome = outcome
-
-    if commit:
-        db_session.commit()
-    return state_log
+    return _create_state_log(
+        start_state=start_state,
+        end_state=end_state,
+        associated_model=None,
+        associated_class=associated_class,
+        outcome=outcome,
+        start_time=start_state_time,
+        db_session=db_session,
+    )
 
 
 def get_latest_state_log_in_end_state(
@@ -334,57 +323,20 @@ def build_outcome(
 
 @contextmanager
 def process_state(
-    start_state: LkState,
-    associated_model: AssociatedModel,
-    db_session: db.Session,
-    successful_end_state: Optional[LkState] = None,
-) -> Generator[StateLog, None, None]:
-    """Create state log entry and finish it if exception occurs.
-
-    If the successful_end_state parameter is provided, will finish the provided
-    with that state on context exit if an end state is not already set with an
-    outcome message of "success".
-
-    Note this commits the DB session with the state log updates on create and
-    finish. In the case of an exception, will rollback before committing just
-    the state log updates.
+    start_state: LkState, associated_model: AssociatedModel, db_session: db.Session
+) -> Generator[None, None, None]:
+    """Log an exception if an error occurs while processing a state
     """
 
-    state_log = create_state_log(start_state, associated_model, db_session, commit=True)
-
     try:
-        yield state_log
+        yield
     except Exception as e:
-        if not state_log.end_state_id:
-            # we want to commit any updates to the state log (though, in
-            # general, there shouldn't be any updates to it between creation and
-            # finishing, but just in case), but not any other changes in the
-            # transaction, so detach the state log from the session
-            db_session.expunge(state_log)
-
-            # rollback the transaction
-            db_session.rollback()
-
-            # then re-add the state log so we can finish it
-            db_session.add(state_log)
-
-            # then finish it
-            finish_state_log(
-                state_log=state_log,
-                end_state=state_log.start_state,
-                outcome=build_outcome(f"Hit exception: {type(e).__name__}"),
-                db_session=db_session,
-                commit=True,
-            )
-
+        create_finished_state_log(
+            start_state=start_state,
+            end_state=start_state,  # Create the error, but don't change the state
+            associated_model=associated_model,
+            outcome=build_outcome(f"Hit exception: {type(e).__name__}"),
+            db_session=db_session,
+        )
         # then re-raise the exception
         raise
-    finally:
-        if not state_log.end_state_id and successful_end_state is not None:
-            finish_state_log(
-                state_log=state_log,
-                end_state=successful_end_state,
-                outcome=build_outcome("success"),
-                db_session=db_session,
-                commit=True,
-            )

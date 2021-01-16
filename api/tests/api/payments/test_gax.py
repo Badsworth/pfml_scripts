@@ -88,15 +88,11 @@ def get_payments() -> List[Payment]:
 
 
 def create_add_to_gax_state_log_for_payment(payment: Payment, db_session: db.Session) -> None:
-    state_log = state_log_util.create_state_log(
+    state_log_util.create_finished_state_log(
         start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
-        associated_model=payment,
-        db_session=db_session,
-    )
-    state_log_util.finish_state_log(
-        state_log=state_log,
         end_state=State.ADD_TO_GAX,
         outcome=state_log_util.build_outcome("success"),
+        associated_model=payment,
         db_session=db_session,
     )
 

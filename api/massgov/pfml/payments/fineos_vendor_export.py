@@ -643,40 +643,29 @@ def manage_state_log(
 
     validation_container.record_key = employee_pfml_entry.employee_id
     if validation_container.has_validation_issues():
-        state_log = state_log_util.create_state_log(
+        state_log_util.create_finished_state_log(
             start_state=State.VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT,
-            associated_model=employee_pfml_entry,
-            db_session=db_session,
-            commit=False,
-        )
-        state_log_util.finish_state_log(
-            state_log=state_log,
             end_state=State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT,
+            associated_model=employee_pfml_entry,
             outcome=state_log_util.build_outcome(
                 f"Employee {employee_pfml_entry.employee_id} had validation issues in FINEOS vendor export {extract_data.date_str}",
                 validation_container,
             ),
             db_session=db_session,
-            commit=False,
         )
     else:
-        state_log = state_log_util.create_state_log(
+        state_log_util.create_finished_state_log(
             start_state=State.VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT,
-            associated_model=employee_pfml_entry,
-            db_session=db_session,
-            commit=False,
-        )
-        state_log_util.finish_state_log(
-            state_log=state_log,
             end_state=State.IDENTIFY_MMARS_STATUS,
+            associated_model=employee_pfml_entry,
             outcome=state_log_util.build_outcome(
                 f"Employee {employee_pfml_entry.employee_id} successfully extracted from FINEOS vendor export {extract_data.date_str}"
             ),
             db_session=db_session,
-            commit=False,
         )
 
-        # If payment method is EFT, then we also need a state log entry that starts in EFT_DETECTED_IN_VENDOR_EXPORT and ends in EFT_REQUEST_RECEIVED
+        # TODO - If payment method is EFT, then we also need a state log entry that starts in EFT_DETECTED_IN_VENDOR_EXPORT and ends in EFT_REQUEST_RECEIVED
+        # TODO - should I add this now?
 
 
 # TODO move to payments_util

@@ -123,12 +123,14 @@ class PaymentScenariosGenerator:
         for employee_chunk in (self.vcc_data[i : i + 10] for i in range(0, len(self.vcc_data), 10)):
             # Set states to ADD_TO_VCC.
             for employee in employee_chunk:
-                state_log = massgov.pfml.api.util.state_log_util.create_state_log(
-                    State.IDENTIFY_MMARS_STATUS, employee, self.db_session, False
+                massgov.pfml.api.util.state_log_util.create_finished_state_log(
+                    start_state=State.IDENTIFY_MMARS_STATUS,
+                    end_state=State.ADD_TO_VCC,
+                    associated_model=employee,
+                    db_session=self.db_session,
+                    outcome={},
                 )
-                massgov.pfml.api.util.state_log_util.finish_state_log(
-                    state_log, State.ADD_TO_VCC, {}, self.db_session, False
-                )
+
             self.db_session.commit()
 
             directory = f"{self.output_folder}/ctr/outbound"
@@ -136,10 +138,12 @@ class PaymentScenariosGenerator:
             logger.info("generated %s %s", dat_filepath, inf_filepath)
 
             for employee in employee_chunk:
-                state_log = massgov.pfml.api.util.state_log_util.create_state_log(
-                    State.ADD_TO_VCC, employee, self.db_session, False
+                massgov.pfml.api.util.state_log_util.create_finished_state_log(
+                    start_state=State.ADD_TO_VCC,
+                    end_state=State.VCC_SENT,
+                    associated_model=employee,
+                    db_session=self.db_session,
+                    outcome={},
                 )
-                massgov.pfml.api.util.state_log_util.finish_state_log(
-                    state_log, State.VCC_SENT, {}, self.db_session, False
-                )
+
             self.db_session.commit()

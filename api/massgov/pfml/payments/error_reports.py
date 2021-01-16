@@ -295,21 +295,12 @@ def _build_state_log(
         )
         return
 
-    new_state_log = state_log_util.create_state_log(
+    state_log_util.create_finished_state_log(
         start_state=current_state,
-        associated_model=associated_model,
-        db_session=db_session,
-        commit=False,
-    )
-    # Immediately end the state log entry
-    # but don't add/commit it, we're only going to do
-    # that if the email sends successfully.
-    state_log_util.finish_state_log(
-        state_log=new_state_log,
         end_state=next_state,
-        db_session=db_session,
+        associated_model=associated_model,
         outcome=state_log_util.build_outcome("Successfully sent email"),
-        commit=False,
+        db_session=db_session,
     )
 
 

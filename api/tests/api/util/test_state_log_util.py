@@ -5,21 +5,11 @@ from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.payments_util as payments_util
-from massgov.pfml.db.models.employees import LatestStateLog, State
+from massgov.pfml.db.models.employees import LatestStateLog, State, StateLog
 from massgov.pfml.db.models.factories import EmployeeFactory, PaymentFactory, ReferenceFileFactory
 from tests.helpers.state_log import default_outcome, setup_state_log
 
 ### Setup methods for various state log scenarios ###
-
-
-# A single state log that has a start_state but no end_state
-def single_unended_employee(test_db_session):
-    return setup_state_log(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.CLAIMANT_LIST_CREATED],
-        end_states=[None],
-        test_db_session=test_db_session,
-    )
 
 
 # A single state log that has a start and end state
@@ -28,16 +18,6 @@ def single_ended_employee(test_db_session):
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
         start_states=[State.CLAIMANT_LIST_CREATED],
         end_states=[State.CLAIMANT_LIST_SUBMITTED],
-        test_db_session=test_db_session,
-    )
-
-
-# A single state log that has a start_state but not end state
-def single_unended_payment(test_db_session):
-    return setup_state_log(
-        associated_class=state_log_util.AssociatedClass.PAYMENT,
-        start_states=[State.PAYMENTS_RETRIEVED],
-        end_states=[None],
         test_db_session=test_db_session,
     )
 
@@ -52,40 +32,12 @@ def single_ended_payment(test_db_session):
     )
 
 
-# A single state log that has a start_state but not end state
-def single_unended_reference_file(test_db_session):
-    return setup_state_log(
-        associated_class=state_log_util.AssociatedClass.REFERENCE_FILE,
-        start_states=[State.DFML_REPORT_CREATED],
-        end_states=[None],
-        test_db_session=test_db_session,
-    )
-
-
 # 3 changing State Logs, ends with a DFML_REPORT_SUBMITTED
 def simple_employee_with_end_state(test_db_session):
     return setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[
-            State.CLAIMANT_LIST_CREATED,
-            State.CLAIMANT_LIST_SUBMITTED,
-            State.DFML_REPORT_CREATED,
-        ],
-        end_states=[
-            State.CLAIMANT_LIST_SUBMITTED,
-            State.DFML_REPORT_CREATED,
-            State.DFML_REPORT_SUBMITTED,
-        ],
-        test_db_session=test_db_session,
-    )
-
-
-# 2 state logs, ends with an in-progress state log
-def simple_payment_without_end_state(test_db_session):
-    return setup_state_log(
-        associated_class=state_log_util.AssociatedClass.PAYMENT,
-        start_states=[State.CLAIMANT_LIST_SUBMITTED, State.DFML_REPORT_CREATED],
-        end_states=[State.DFML_REPORT_CREATED, None],
+        start_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS, State.ADD_TO_GAX, State.GAX_SENT,],
+        end_states=[State.ADD_TO_GAX, State.GAX_SENT, State.CONFIRM_PAYMENT,],
         test_db_session=test_db_session,
     )
 
@@ -94,217 +46,13 @@ def simple_payment_without_end_state(test_db_session):
 def employee_stuck_state_log(test_db_session):
     return setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[
-            State.DFML_REPORT_CREATED,
-            State.DFML_REPORT_CREATED,
-            State.DFML_REPORT_CREATED,
-        ],
-        end_states=[
-            State.DFML_REPORT_SUBMITTED,
-            State.DFML_REPORT_SUBMITTED,
-            State.DFML_REPORT_SUBMITTED,
-        ],
+        start_states=[State.GAX_SENT, State.GAX_SENT, State.GAX_SENT,],
+        end_states=[State.CONFIRM_PAYMENT, State.CONFIRM_PAYMENT, State.CONFIRM_PAYMENT,],
         test_db_session=test_db_session,
     )
 
 
 ### /end Setup methods for various state log scenarios ###
-
-
-@freeze_time("2020-01-01 12:00:00")
-def test_create_state_log_employee(initialize_factories_session, test_db_session):
-    employee = EmployeeFactory.create()
-
-    employee_state_log = state_log_util.create_state_log(
-        start_state=State.VERIFY_VENDOR_STATUS,
-        associated_model=employee,
-        db_session=test_db_session,
-    )
-
-    assert employee_state_log.start_state_id == State.VERIFY_VENDOR_STATUS.state_id
-    assert employee_state_log.end_state_id is None
-    assert employee_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
-    assert employee_state_log.ended_at is None
-    assert employee_state_log.outcome is None
-    assert employee_state_log.payment is None
-    assert employee_state_log.reference_file_id is None
-    assert employee_state_log.associated_type == state_log_util.AssociatedClass.EMPLOYEE.value
-    assert employee_state_log.employee_id == employee.employee_id
-
-    latest_state_log = (
-        test_db_session.query(LatestStateLog)
-        .filter(LatestStateLog.employee_id == employee.employee_id)
-        .first()
-    )
-    assert latest_state_log
-    assert latest_state_log.state_log_id == employee_state_log.state_log_id
-
-    # Add another state_log to make sure the latest state log ID updates properly
-    employee_state_log2 = state_log_util.create_state_log(
-        start_state=State.CLAIMANT_LIST_CREATED,
-        associated_model=employee,
-        db_session=test_db_session,
-    )
-
-    # Verify the latest state log ID was properly updated
-    test_db_session.refresh(latest_state_log)
-    assert latest_state_log.state_log_id == employee_state_log2.state_log_id
-
-
-@freeze_time("2020-01-01 12:00:00")
-def test_create_state_log_payment(initialize_factories_session, test_db_session):
-    payment = PaymentFactory.create()
-    payment_state_log = state_log_util.create_state_log(
-        start_state=State.PAYMENTS_RETRIEVED, associated_model=payment, db_session=test_db_session,
-    )
-
-    assert payment_state_log.start_state_id == State.PAYMENTS_RETRIEVED.state_id
-    assert payment_state_log.end_state_id is None
-    assert payment_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
-    assert payment_state_log.ended_at is None
-    assert payment_state_log.outcome is None
-    assert payment_state_log.payment_id == payment.payment_id
-    assert payment_state_log.associated_type == state_log_util.AssociatedClass.PAYMENT.value
-    assert payment_state_log.reference_file_id is None
-    assert payment_state_log.employee is None
-
-    latest_state_log = (
-        test_db_session.query(LatestStateLog)
-        .filter(LatestStateLog.payment_id == payment.payment_id)
-        .first()
-    )
-    assert latest_state_log
-    assert latest_state_log.state_log_id == payment_state_log.state_log_id
-
-    # Add another state_log to make sure the latest state log ID updates properly
-    payment_state_log2 = state_log_util.create_state_log(
-        start_state=State.PAYMENTS_STORED_IN_DB,
-        associated_model=payment,
-        db_session=test_db_session,
-    )
-
-    # Verify the latest state log ID was properly updated
-    test_db_session.refresh(latest_state_log)
-    assert latest_state_log.state_log_id == payment_state_log2.state_log_id
-
-
-@freeze_time("2020-01-01 12:00:00")
-def test_create_state_log_reference_file(initialize_factories_session, test_db_session):
-    reference_file = ReferenceFileFactory.create()
-
-    reference_file_state_log = state_log_util.create_state_log(
-        start_state=State.DFML_REPORT_CREATED,
-        associated_model=reference_file,
-        db_session=test_db_session,
-    )
-
-    assert reference_file_state_log.start_state_id == State.DFML_REPORT_CREATED.state_id
-    assert reference_file_state_log.end_state_id is None
-    assert reference_file_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
-    assert reference_file_state_log.ended_at is None
-    assert reference_file_state_log.outcome is None
-    assert reference_file_state_log.payment is None
-    assert reference_file_state_log.reference_file_id == reference_file.reference_file_id
-    assert (
-        reference_file_state_log.associated_type
-        == state_log_util.AssociatedClass.REFERENCE_FILE.value
-    )
-    assert reference_file_state_log.employee_id is None
-
-    latest_state_log = (
-        test_db_session.query(LatestStateLog)
-        .filter(LatestStateLog.reference_file_id == reference_file.reference_file_id)
-        .first()
-    )
-    assert latest_state_log
-    assert latest_state_log.state_log_id == reference_file_state_log.state_log_id
-
-    # Add another state_log to make sure the latest state log ID updates properly
-    reference_file_state_log2 = state_log_util.create_state_log(
-        start_state=State.DFML_REPORT_SUBMITTED,
-        associated_model=reference_file,
-        db_session=test_db_session,
-    )
-
-    # Verify the latest state log ID was properly updated
-    test_db_session.refresh(latest_state_log)
-    assert latest_state_log.state_log_id == reference_file_state_log2.state_log_id
-
-
-def create_state_log_without_associated_model(initialize_factories_session, test_db_session):
-    unattached_state_log = state_log_util.create_state_log_without_associated_model(
-        start_state=State.VERIFY_VENDOR_STATUS,
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        db_session=test_db_session,
-    )
-
-    assert unattached_state_log.start_state_id == State.VERIFY_VENDOR_STATUS.state_id
-    assert unattached_state_log.end_state_id is None
-    assert unattached_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
-    assert unattached_state_log.ended_at is None
-    assert unattached_state_log.outcome is None
-    assert unattached_state_log.payment is None
-    assert unattached_state_log.reference_file_id is None
-    assert unattached_state_log.associated_type == state_log_util.AssociatedClass.EMPLOYEE.value
-    assert unattached_state_log.employee_id is None
-
-    latest_state_logs = test_db_session.query(LatestStateLog).all()
-
-    assert len(latest_state_logs) == 1
-    assert latest_state_logs[0].state_log_id == unattached_state_log.state_log_id
-
-    # Note that this will always create a new latest state log as we
-    # have no object to index on in the latest state log table
-    # to find it. This is fine and expected
-    state_log_util.create_state_log(
-        start_state=State.PAYMENTS_RETRIEVED,
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        db_session=test_db_session,
-    )
-    latest_state_logs = test_db_session.query(LatestStateLog).all()
-    assert len(latest_state_logs) == 2
-
-
-@freeze_time("2020-01-01 12:00:00")
-def test_finish_state_log(initialize_factories_session, test_db_session):
-    # An Employee
-    test_setup_employee = single_unended_employee(test_db_session)
-    employee_state_log = state_log_util.finish_state_log(
-        test_setup_employee.state_logs[0],
-        end_state=State.DFML_REPORT_SUBMITTED,
-        outcome=state_log_util.build_outcome("success"),
-        db_session=test_db_session,
-    )
-
-    assert employee_state_log.end_state_id == State.DFML_REPORT_SUBMITTED.state_id
-    assert employee_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
-    assert employee_state_log.outcome == {"message": "success"}
-
-    # A payment
-    test_setup_payment = single_unended_payment(test_db_session)
-    payment_state_log = state_log_util.finish_state_log(
-        test_setup_payment.state_logs[0],
-        end_state=State.DFML_REPORT_SUBMITTED,
-        outcome=state_log_util.build_outcome("success"),
-        db_session=test_db_session,
-    )
-
-    assert payment_state_log.end_state_id == State.DFML_REPORT_SUBMITTED.state_id
-    assert payment_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
-    assert payment_state_log.outcome == {"message": "success"}
-
-    # A reference file
-    test_setup_reference_file = single_unended_reference_file(test_db_session)
-    reference_file_state_log = state_log_util.finish_state_log(
-        test_setup_reference_file.state_logs[0],
-        end_state=State.DFML_REPORT_SUBMITTED,
-        outcome=state_log_util.build_outcome("success"),
-        db_session=test_db_session,
-    )
-
-    assert reference_file_state_log.end_state_id == State.DFML_REPORT_SUBMITTED.state_id
-    assert reference_file_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
-    assert reference_file_state_log.outcome == {"message": "success"}
 
 
 @freeze_time("2020-01-01 12:00:00")
@@ -315,7 +63,7 @@ def test_create_finished_state_log(initialize_factories_session, test_db_session
         associated_model=employee,
         start_state=State.VERIFY_VENDOR_STATUS,
         end_state=State.DFML_REPORT_SUBMITTED,
-        outcome=state_log_util.build_outcome("success"),
+        outcome=default_outcome(),
         db_session=test_db_session,
     )
 
@@ -335,7 +83,7 @@ def test_create_finished_state_log(initialize_factories_session, test_db_session
         associated_model=payment,
         start_state=State.PAYMENTS_RETRIEVED,
         end_state=State.DFML_REPORT_SUBMITTED,
-        outcome=state_log_util.build_outcome("success"),
+        outcome=default_outcome(),
         db_session=test_db_session,
     )
 
@@ -355,7 +103,7 @@ def test_create_finished_state_log(initialize_factories_session, test_db_session
         associated_model=reference_file,
         start_state=State.DFML_REPORT_CREATED,
         end_state=State.DFML_REPORT_SUBMITTED,
-        outcome=state_log_util.build_outcome("success"),
+        outcome=default_outcome(),
         db_session=test_db_session,
         start_time=datetime(2019, 1, 1),
     )
@@ -374,55 +122,178 @@ def test_create_finished_state_log(initialize_factories_session, test_db_session
     assert reference_file_state_log.reference_file_id == reference_file.reference_file_id
 
 
+def test_create_finished_state_log_same_flow(initialize_factories_session, test_db_session):
+    # Every end state in this test is in the PAYMENT flow
+    payment = PaymentFactory.create()
+    payment_state_log_prev = state_log_util.create_finished_state_log(
+        associated_model=payment,
+        start_state=State.MARK_AS_EXTRACTED_IN_FINEOS,
+        end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        outcome={"message": "A"},
+        db_session=test_db_session,
+    )
+
+    payment_state_log = state_log_util.create_finished_state_log(
+        associated_model=payment,
+        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        end_state=State.ADD_TO_GAX,  # Still a PAYMENT flow state
+        outcome={"message": "B"},
+        db_session=test_db_session,
+    )
+
+    assert payment_state_log.prev_state_log_id == payment_state_log_prev.state_log_id
+
+    # Create yet another state log and make sure they're all chained together properly.
+    another_payment_state_log = state_log_util.create_finished_state_log(
+        associated_model=payment,
+        start_state=State.ADD_TO_GAX,
+        end_state=State.GAX_SENT,  # Still a PAYMENT flow state
+        outcome={"message": "C"},
+        db_session=test_db_session,
+    )
+    test_db_session.commit()
+    assert another_payment_state_log.prev_state_log_id == payment_state_log.state_log_id
+
+    # And if you try to grab the latest specifically, you'll get the last one here
+    queried_state_log = state_log_util.get_latest_state_log_in_end_state(
+        associated_model=payment, end_state=State.GAX_SENT, db_session=test_db_session
+    )
+    assert queried_state_log.state_log_id == another_payment_state_log.state_log_id
+
+    # We've seen weird behaviour with the foreign key back to itself for prev_state_log
+    # To verify it is working right, we make sure the DB is in the right place as well.
+    all_state_logs = test_db_session.query(StateLog).all()
+    assert len(all_state_logs) == 3
+    state_log_a, state_log_b, state_log_c = None, None, None
+    for state_log in all_state_logs:
+        if state_log.outcome["message"] == "A":
+            state_log_a = state_log
+        elif state_log.outcome["message"] == "B":
+            state_log_b = state_log
+        elif state_log.outcome["message"] == "C":
+            state_log_c = state_log
+        else:
+            raise Exception("This should not happen - the test is broken")
+
+    state_log_a.prev_state_log_id is None
+    state_log_b.prev_state_log_id == state_log_a.state_log_id
+    state_log_c.prev_state_log_id == state_log_b.state_log_id
+
+
+def test_create_finished_state_log_different_flow(initialize_factories_session, test_db_session):
+    # In this test, the same associated_model (a payment) will be used, but
+    # the end state will be associated with a different flow each time meaning
+    # none of the state logs will be associated with each other
+    payment = PaymentFactory.create()
+
+    state_log_1 = state_log_util.create_finished_state_log(
+        associated_model=payment,
+        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        end_state=State.ADD_TO_GAX,  # A PAYMENT flow state
+        outcome=default_outcome(),
+        db_session=test_db_session,
+    )
+
+    state_log_2 = state_log_util.create_finished_state_log(
+        associated_model=payment,
+        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        end_state=State.EFT_DETECTED_IN_VENDOR_EXPORT,  # A VENDOR_EFT flow state
+        outcome=default_outcome(),
+        db_session=test_db_session,
+    )
+
+    state_log_3 = state_log_util.create_finished_state_log(
+        associated_model=payment,
+        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        end_state=State.VCC_SENT,  # A VENDOR_CHECK flow state
+        outcome=default_outcome(),
+        db_session=test_db_session,
+    )
+    test_db_session.commit()
+
+    assert state_log_1.prev_state_log is None
+    assert state_log_2.prev_state_log is None
+    assert state_log_3.prev_state_log is None
+
+    latest_state_logs = test_db_session.query(LatestStateLog).all()
+    assert len(latest_state_logs) == 3
+
+    test_db_session.refresh(payment)
+    assert len(payment.state_logs) == 3
+
+
+@freeze_time("2020-01-01 12:00:00")
+def test_create_state_log_without_associated_model(initialize_factories_session, test_db_session):
+    unattached_state_log = state_log_util.create_state_log_without_associated_model(
+        start_state=State.VERIFY_VENDOR_STATUS,
+        end_state=State.PAYMENTS_RETRIEVED,
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        outcome=default_outcome(),
+        db_session=test_db_session,
+    )
+
+    assert unattached_state_log.start_state_id == State.VERIFY_VENDOR_STATUS.state_id
+    assert unattached_state_log.end_state_id == State.PAYMENTS_RETRIEVED.state_id
+    assert unattached_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
+    assert unattached_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
+    assert unattached_state_log.outcome == {"message": "success"}
+    assert unattached_state_log.payment is None
+    assert unattached_state_log.reference_file is None
+    assert unattached_state_log.associated_type == state_log_util.AssociatedClass.EMPLOYEE.value
+    assert unattached_state_log.employee is None
+
+    latest_state_logs = test_db_session.query(LatestStateLog).all()
+
+    assert len(latest_state_logs) == 1
+    assert latest_state_logs[0].state_log_id == unattached_state_log.state_log_id
+
+    # Note that this will always create a new latest state log as we
+    # have no object to index on in the latest state log table
+    # to find it. This is fine and expected
+    state_log_util.create_state_log_without_associated_model(
+        start_state=State.VERIFY_VENDOR_STATUS,
+        end_state=State.PAYMENTS_RETRIEVED,
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        outcome=default_outcome(),
+        db_session=test_db_session,
+    )  # Exact same params as before - but can't be connected
+    test_db_session.commit()
+    latest_state_logs = test_db_session.query(LatestStateLog).all()
+    assert len(latest_state_logs) == 2
+
+
 def test_get_latest_state_log_in_end_state(initialize_factories_session, test_db_session):
-    # A happy path where the last state log entry has an end state
+    # This employee has 3 linked state logs that ends with a CONFIRM_PAYMENT
     test_setup = simple_employee_with_end_state(test_db_session)
     state_log = state_log_util.get_latest_state_log_in_end_state(
-        test_setup.associated_model, State.DFML_REPORT_SUBMITTED, test_db_session,
+        test_setup.associated_model, State.CONFIRM_PAYMENT, test_db_session,
     )
     assert test_setup.state_logs[2].state_log_id == state_log.state_log_id
 
-    # The 2nd state starts DFML_REPORT_CREATED and doesn't yet have an end state
-    # Meaning it is still running and we shouldn't return a state log for this
-    test_setup2 = simple_payment_without_end_state(test_db_session)
-    state_log2 = state_log_util.get_latest_state_log_in_end_state(
-        test_setup2.associated_model, State.DFML_REPORT_CREATED, test_db_session
-    )
-    assert state_log2 is None
-
 
 def test_get_all_latest_state_logs_in_end_state(initialize_factories_session, test_db_session):
-    # 3 State Logs, ends with a DFML_REPORT_SUBMITTED
+    # 3 State Logs, ends with a CONFIRM_PAYMENT
     test_setup = simple_employee_with_end_state(test_db_session)
 
-    # 2 State Logs, ends with DFML_REPORT_SUBMITTED
+    # 2 State Logs, ends with CONFIRM_PAYMENT
     test_setup2 = setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.CLAIMANT_LIST_SUBMITTED, State.DFML_REPORT_CREATED],
-        end_states=[State.DFML_REPORT_CREATED, State.DFML_REPORT_SUBMITTED],
+        start_states=[State.ADD_TO_GAX, State.GAX_SENT],
+        end_states=[State.GAX_SENT, State.CONFIRM_PAYMENT],
         test_db_session=test_db_session,
     )
 
-    # 2 State Logs, contains, but does not end with DFML_REPORT_SUBMITTED
+    # 2 State Logs, contains, but does not end with CONFIRM_PAYMENT
     # Will not be present in results
     setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.DFML_REPORT_CREATED, State.DFML_REPORT_SUBMITTED],
-        end_states=[State.DFML_REPORT_SUBMITTED, State.VERIFY_VENDOR_STATUS],
-        test_db_session=test_db_session,
-    )
-
-    # 2 State Logs, the last one that has an end state is DFML_REPORT_SUBMITTED,
-    # but because another exists (and is now latest), will not be present
-    setup_state_log(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.DFML_REPORT_CREATED, State.DFML_REPORT_SUBMITTED],
-        end_states=[State.DFML_REPORT_SUBMITTED, None],
+        start_states=[State.GAX_SENT, State.CONFIRM_PAYMENT],
+        end_states=[State.CONFIRM_PAYMENT, State.ADD_TO_GAX],
         test_db_session=test_db_session,
     )
 
     submitted_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE, State.DFML_REPORT_SUBMITTED, test_db_session,
+        state_log_util.AssociatedClass.EMPLOYEE, State.CONFIRM_PAYMENT, test_db_session,
     )
     assert len(submitted_state_logs) == 2
     submitted_state_log_ids = [state_log.state_log_id for state_log in submitted_state_logs]
@@ -431,7 +302,7 @@ def test_get_all_latest_state_logs_in_end_state(initialize_factories_session, te
 
     # Also verify that it does not return anything for non-latest state logs
     created_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE, State.DFML_REPORT_CREATED, test_db_session,
+        state_log_util.AssociatedClass.EMPLOYEE, State.GAX_SENT, test_db_session,
     )
     assert created_state_logs == []
 
@@ -452,11 +323,6 @@ def test_get_time_since_ended(initialize_factories_session, test_db_session):
         time_elapsed2 = state_log_util._get_time_since_ended(test_setup2.state_logs[0])
         assert time_elapsed2.days == 1  # Day only rolls over when a full day accumulates
         assert time_elapsed2.total_seconds() == 47 * 60 * 60  # 47 hours in seconds
-
-    # Create an unfinished state log, which will return None for time elapsed
-    test_setup3 = single_unended_reference_file(test_db_session)
-    time_elapsed3 = state_log_util._get_time_since_ended(test_setup3.state_logs[0])
-    assert time_elapsed3 is None
 
 
 def test_get_time_in_current_state(initialize_factories_session, test_db_session):
@@ -486,28 +352,20 @@ def test_get_state_logs_stuck_in_state(initialize_factories_session, test_db_ses
 
     # Now will be 2020-01-04 for all of these
     now = datetime(year=2020, month=1, day=4, hour=0, minute=0, tzinfo=timezone.utc)
-    # Has 3 consecutive days in DFML_REPORT_SUBMITTED state
+    # Has 3 consecutive days in CONFIRM_PAYMENT state
     test_setup1 = employee_stuck_state_log(test_db_session)
-    # Just the last state log was in DFML_REPORT_SUBMITTED state
+    # Just the last state log was in CONFIRM_PAYMENT state
     test_setup2 = simple_employee_with_end_state(test_db_session)
 
     stuck_state_logs = state_log_util.get_state_logs_stuck_in_state(
-        state_log_util.AssociatedClass.EMPLOYEE,
-        State.DFML_REPORT_SUBMITTED,
-        3,
-        test_db_session,
-        now,
+        state_log_util.AssociatedClass.EMPLOYEE, State.CONFIRM_PAYMENT, 3, test_db_session, now,
     )
     assert len(stuck_state_logs) == 1
     assert stuck_state_logs[0].state_log_id == test_setup1.state_logs[-1].state_log_id
 
     # now let's get anything "stuck" for more than 0 days, should return the latest for all
     stuck_state_logs = state_log_util.get_state_logs_stuck_in_state(
-        state_log_util.AssociatedClass.EMPLOYEE,
-        State.DFML_REPORT_SUBMITTED,
-        0,
-        test_db_session,
-        now,
+        state_log_util.AssociatedClass.EMPLOYEE, State.CONFIRM_PAYMENT, 0, test_db_session, now,
     )
     assert len(stuck_state_logs) == 2
     stuck_state_log_ids = [state_log.state_log_id for state_log in stuck_state_logs]
@@ -516,7 +374,7 @@ def test_get_state_logs_stuck_in_state(initialize_factories_session, test_db_ses
 
 
 def test_build_outcome():
-    simple_outcome = state_log_util.build_outcome("success")
+    simple_outcome = default_outcome()
     assert simple_outcome == {"message": "success"}
 
     validation_container = payments_util.ValidationContainer("example_key")
@@ -558,70 +416,13 @@ def test_process_state(test_db_session, initialize_factories_session):
             start_state=State.IDENTIFY_MMARS_STATUS,
             associated_model=employee,
             db_session=test_db_session,
-        ) as state_log:
+        ):
             raise Exception("An exception message")
+    test_db_session.commit()
 
+    state_log = state_log_util.get_latest_state_log_in_end_state(
+        employee, State.IDENTIFY_MMARS_STATUS, test_db_session
+    )
     assert state_log.start_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert state_log.end_state == state_log.start_state
     assert state_log.outcome["message"] == "Hit exception: Exception"
-
-    # unless an end state was already set
-    with pytest.raises(Exception):
-        with state_log_util.process_state(
-            start_state=State.IDENTIFY_MMARS_STATUS,
-            associated_model=employee,
-            db_session=test_db_session,
-        ) as state_log:
-            state_log_util.finish_state_log(
-                state_log,
-                end_state=State.ADD_TO_VCC,
-                outcome=default_outcome(),
-                db_session=test_db_session,
-                commit=True,
-            )
-            raise Exception
-
-    assert state_log.start_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
-    assert state_log.end_state.state_id == State.ADD_TO_VCC.state_id
-
-    # if nothing is done in the context, state log is created, but not finished
-    with state_log_util.process_state(
-        start_state=State.IDENTIFY_MMARS_STATUS,
-        associated_model=employee,
-        db_session=test_db_session,
-    ) as state_log:
-        pass
-
-    assert state_log.start_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
-    assert state_log.end_state is None
-
-    # if nothing is done in the context *and* successful_end_state is set, state
-    # log is created and finished
-    with state_log_util.process_state(
-        start_state=State.IDENTIFY_MMARS_STATUS,
-        associated_model=employee,
-        db_session=test_db_session,
-        successful_end_state=State.ADD_TO_GAX,
-    ) as state_log:
-        pass
-
-    assert state_log.start_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
-    assert state_log.end_state.state_id == State.ADD_TO_GAX.state_id
-
-    # unless an end state was already set
-    with state_log_util.process_state(
-        start_state=State.IDENTIFY_MMARS_STATUS,
-        associated_model=employee,
-        db_session=test_db_session,
-        successful_end_state=State.ADD_TO_GAX,
-    ) as state_log:
-        state_log_util.finish_state_log(
-            state_log,
-            end_state=State.ADD_TO_VCC,
-            outcome=default_outcome(),
-            db_session=test_db_session,
-            commit=True,
-        )
-
-    assert state_log.start_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
-    assert state_log.end_state.state_id == State.ADD_TO_VCC.state_id

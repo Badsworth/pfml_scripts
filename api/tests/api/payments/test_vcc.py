@@ -76,13 +76,11 @@ def get_base_employee(add_eft=True, use_random_tin=False):
 
 
 def create_add_to_vcc_state_log_for_employee(employee: Employee, db_session: db.Session) -> None:
-    state_log = state_log_util.create_state_log(
-        start_state=State.IDENTIFY_MMARS_STATUS, associated_model=employee, db_session=db_session,
-    )
-    state_log_util.finish_state_log(
-        state_log=state_log,
+    state_log_util.create_finished_state_log(
+        start_state=State.IDENTIFY_MMARS_STATUS,
         end_state=State.ADD_TO_VCC,
         outcome=state_log_util.build_outcome("success"),
+        associated_model=employee,
         db_session=db_session,
     )
 

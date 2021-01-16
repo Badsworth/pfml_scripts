@@ -37,10 +37,7 @@ class AdditionalParams:
     payment: Optional[Payment] = None
 
 
-# Utility method for creating state logs
-def setup_state_log(
-    associated_class, start_states, end_states, test_db_session, additional_params=None,
-):
+def setup_db_for_state_log(associated_class, additional_params=None):
     if not additional_params:
         additional_params = AdditionalParams()
     if associated_class == state_log_util.AssociatedClass.EMPLOYEE:
@@ -74,25 +71,29 @@ def setup_state_log(
             associated_model = PaymentFactory.create(payment_date=date(2020, 1, 7), claim=claim)
     if associated_class == state_log_util.AssociatedClass.REFERENCE_FILE:
         associated_model = ReferenceFileFactory.create()
+    return associated_model
+
+
+# Utility method for creating state logs
+def setup_state_log(
+    associated_class, start_states, end_states, test_db_session, additional_params=None,
+):
+    associated_model = setup_db_for_state_log(associated_class, additional_params)
 
     state_logs = []
+    outcome = additional_params.outcome if additional_params and additional_params.outcome else {}
 
     for index, start_state in enumerate(start_states):
         end_state = end_states[index]
 
         with freeze_time(f"2020-01-0{index + 1} 00:00:00"):
-            state_log = state_log_util.create_state_log(
+            state_log = state_log_util.create_finished_state_log(
                 start_state=start_state,
+                end_state=end_state,
+                outcome=outcome,
                 associated_model=associated_model,
                 db_session=test_db_session,
             )
-            if end_state:
-                state_log_util.finish_state_log(
-                    state_log=state_log,
-                    end_state=end_state,
-                    outcome=additional_params.outcome,
-                    db_session=test_db_session,
-                )
 
             state_logs.append(state_log)
 

@@ -82,27 +82,20 @@ def add_mmars_payments_for_claim(claim, test_db_session):
     # has no state associated.
     payments = test_db_session.query(Payment).filter(Payment.claim_id == claim.claim_id).all()
     for payment in payments:
-        payment_state_log = state_log_util.create_state_log(
+        state_log_util.create_finished_state_log(
             start_state=State.VERIFY_VENDOR_STATUS,  # not relevant to test
+            end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
             associated_model=payment,
             db_session=test_db_session,
-        )
-        state_log_util.finish_state_log(
-            state_log=payment_state_log,
-            end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
             outcome={},
-            db_session=test_db_session,
         )
+
     return payments
 
 
 def test_parse_outcome(test_db_session, initialize_factories_session):
     # Make a generic state log to put the outcome in
-    state_log = state_log_util.create_state_log(
-        start_state=State.VERIFY_VENDOR_STATUS,  # not relevant to test
-        associated_model=PaymentFactory.create(),
-        db_session=test_db_session,
-    )
+    state_log = StateLog()
 
     # Test if outcome isn't set
     state_log.outcome = None
@@ -331,6 +324,7 @@ def test_send_fineos_payments_errors(
             add_claim_payment_for_employee=True,  # Will add claim+payment DB entries + payment state log in CONFIRM_VENDOR_STATUS_IN_MMARS
         ),
     )
+    test_db_session.commit()
 
     error_reports._send_fineos_payments_errors(tmp_path, test_db_session)
 
@@ -476,6 +470,7 @@ def test_send_ctr_payments_errors_simple_reports(
             add_claim_payment_for_employee=True,  # It will find payment/claim data
         ),
     )
+    test_db_session.commit()
 
     # Finally call the method after all that setup
     error_reports._send_ctr_payments_errors(tmp_path, test_db_session)
@@ -710,6 +705,7 @@ def test_send_ctr_payments_errors_time_based_reports(
             add_claim_payment_for_employee=True,  # It will find payment/claim data
         ),
     )
+    test_db_session.commit()
 
     # Finally call the method after all that setup
     error_reports._send_ctr_payments_errors(tmp_path, test_db_session)

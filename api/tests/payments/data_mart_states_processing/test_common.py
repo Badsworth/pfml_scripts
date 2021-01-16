@@ -16,7 +16,7 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.factories import CtrAddressPairFactory, EftFactory, EmployeeFactory
 from tests.helpers.data_mart import create_complete_valid_matching_vendor_info_for_employee
-from tests.helpers.state_log import setup_state_log
+from tests.helpers.state_log import setup_db_for_state_log, setup_state_log
 
 # tests in here require real resources
 pytestmark = pytest.mark.integration
@@ -507,35 +507,27 @@ def test_make_db_address_from_mmars_data(test_db_session, complete_vendor_info_a
 
 
 def test_process_data_mart_issues_no_vendor(test_db_session, initialize_factories_session):
-    state_log_setup = setup_state_log(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.IDENTIFY_MMARS_STATUS],
-        end_states=[None],
-        test_db_session=test_db_session,
-    )
-
-    state_log = state_log_setup.state_logs[0]
-    employee = state_log.employee
+    employee = setup_db_for_state_log(associated_class=state_log_util.AssociatedClass.EMPLOYEE)
 
     # signal couldn't find vendor
     issues = common.DataMartIssuesAndUpdates(vendor_exists=False)
 
     state_log_count_before = test_db_session.query(StateLog).count()
-    assert state_log_count_before == 1
+    assert state_log_count_before == 0
 
     common.process_data_mart_issues(
         test_db_session,
-        state_log,
+        State.IDENTIFY_MMARS_STATUS,
         employee,
         issues,
         missing_vendor_state=State.ADD_TO_VCC,
         mismatched_data_state=State.ADD_TO_VCM_REPORT,
     )
 
-    state_log_count_after = test_db_session.query(StateLog).count()
-    assert state_log_count_after == 1
+    state_logs_after = test_db_session.query(StateLog).all()
+    assert len(state_logs_after) == 1
 
-    test_db_session.refresh(state_log)
+    state_log = state_logs_after[0]
     assert state_log.end_state_id == State.ADD_TO_VCC.state_id
     assert state_log.outcome == state_log_util.build_outcome(
         "Queried Data Mart: Vendor does not exist yet"
@@ -543,15 +535,7 @@ def test_process_data_mart_issues_no_vendor(test_db_session, initialize_factorie
 
 
 def test_process_data_mart_issues_mismatched_data(test_db_session, initialize_factories_session):
-    state_log_setup = setup_state_log(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.IDENTIFY_MMARS_STATUS],
-        end_states=[None],
-        test_db_session=test_db_session,
-    )
-
-    state_log = state_log_setup.state_logs[0]
-    employee = state_log.employee
+    employee = setup_db_for_state_log(associated_class=state_log_util.AssociatedClass.EMPLOYEE)
 
     # signal some issue
     issues = common.DataMartIssuesAndUpdates(
@@ -567,22 +551,19 @@ def test_process_data_mart_issues_mismatched_data(test_db_session, initialize_fa
         ),
     )
 
-    state_log_count_before = test_db_session.query(StateLog).count()
-    assert state_log_count_before == 1
-
     common.process_data_mart_issues(
         test_db_session,
-        state_log,
+        State.IDENTIFY_MMARS_STATUS,
         employee,
         issues,
         missing_vendor_state=State.ADD_TO_VCC,
         mismatched_data_state=State.ADD_TO_VCM_REPORT,
     )
 
-    state_log_count_after = test_db_session.query(StateLog).count()
-    assert state_log_count_after == 1
+    state_logs_after = test_db_session.query(StateLog).all()
+    assert len(state_logs_after) == 1
 
-    test_db_session.refresh(state_log)
+    state_log = state_logs_after[0]
     assert state_log.end_state_id == State.ADD_TO_VCM_REPORT.state_id
     assert state_log.outcome == state_log_util.build_outcome(
         "Queried Data Mart: Vendor does not match", issues.issues
@@ -592,35 +573,24 @@ def test_process_data_mart_issues_mismatched_data(test_db_session, initialize_fa
 def test_process_data_mart_issues_no_issues_no_pending_payment(
     test_db_session, initialize_factories_session
 ):
-    state_log_setup = setup_state_log(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.IDENTIFY_MMARS_STATUS],
-        end_states=[None],
-        test_db_session=test_db_session,
-    )
-
-    state_log = state_log_setup.state_logs[0]
-    employee = state_log.employee
+    employee = setup_db_for_state_log(associated_class=state_log_util.AssociatedClass.EMPLOYEE)
 
     # signal no issues
     issues = common.DataMartIssuesAndUpdates(vendor_exists=True)
 
-    state_log_count_before = test_db_session.query(StateLog).count()
-    assert state_log_count_before == 1
-
     common.process_data_mart_issues(
         test_db_session,
-        state_log,
+        State.IDENTIFY_MMARS_STATUS,
         employee,
         issues,
         missing_vendor_state=State.ADD_TO_VCC,
         mismatched_data_state=State.ADD_TO_VCM_REPORT,
     )
 
-    state_log_count_after = test_db_session.query(StateLog).count()
-    assert state_log_count_after == 1
+    state_logs_after = test_db_session.query(StateLog).all()
+    assert len(state_logs_after) == 1
 
-    test_db_session.refresh(state_log)
+    state_log = state_logs_after[0]
     assert state_log.end_state_id == State.MMARS_STATUS_CONFIRMED.state_id
     assert state_log.outcome == state_log_util.build_outcome("Vendor confirmed in MMARS.")
 
@@ -628,15 +598,7 @@ def test_process_data_mart_issues_no_issues_no_pending_payment(
 def test_process_data_mart_issues_no_issues_pending_payment_updated(
     test_db_session, initialize_factories_session
 ):
-    employee_state_log_setup = setup_state_log(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.IDENTIFY_MMARS_STATUS],
-        end_states=[None],
-        test_db_session=test_db_session,
-    )
-
-    vendor_check_state_log = employee_state_log_setup.state_logs[0]
-    employee = vendor_check_state_log.employee
+    employee = setup_db_for_state_log(associated_class=state_log_util.AssociatedClass.EMPLOYEE)
 
     payment_state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
@@ -657,21 +619,26 @@ def test_process_data_mart_issues_no_issues_pending_payment_updated(
     issues = common.DataMartIssuesAndUpdates(vendor_exists=True)
 
     state_log_count_before = test_db_session.query(StateLog).count()
-    assert state_log_count_before == 2
+    assert state_log_count_before == 1  # Just the payment
 
     common.process_data_mart_issues(
         test_db_session,
-        vendor_check_state_log,
+        State.IDENTIFY_MMARS_STATUS,
         employee,
         issues,
         missing_vendor_state=State.ADD_TO_VCC,
         mismatched_data_state=State.ADD_TO_VCM_REPORT,
     )
 
-    state_log_count_after = test_db_session.query(StateLog).count()
-    assert state_log_count_after == 3
+    state_log_after = test_db_session.query(StateLog).all()
+    assert len(state_log_after) == 3
 
-    test_db_session.refresh(vendor_check_state_log)
+    vendor_check_state_log = state_log_util.get_latest_state_log_in_end_state(
+        associated_model=employee,
+        end_state=State.MMARS_STATUS_CONFIRMED,
+        db_session=test_db_session,
+    )
+    assert vendor_check_state_log
     assert vendor_check_state_log.end_state_id == State.MMARS_STATUS_CONFIRMED.state_id
 
     new_payment_state_log = state_log_util.get_latest_state_log_in_end_state(
@@ -685,15 +652,7 @@ def test_process_data_mart_issues_no_issues_pending_payment_updated(
 def test_process_data_mart_issues_no_issues_multiple_pending_payment_updated(
     test_db_session, initialize_factories_session
 ):
-    employee_state_log_setup = setup_state_log(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.IDENTIFY_MMARS_STATUS],
-        end_states=[None],
-        test_db_session=test_db_session,
-    )
-
-    vendor_check_state_log = employee_state_log_setup.state_logs[0]
-    employee = vendor_check_state_log.employee
+    employee = setup_db_for_state_log(associated_class=state_log_util.AssociatedClass.EMPLOYEE)
 
     first_payment_state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
@@ -745,14 +704,14 @@ def test_process_data_mart_issues_no_issues_multiple_pending_payment_updated(
     issues = common.DataMartIssuesAndUpdates(vendor_exists=True)
 
     state_log_count_before = test_db_session.query(StateLog).count()
-    assert state_log_count_before == 5
+    assert state_log_count_before == 4
 
     latest_state_log_count_before = test_db_session.query(LatestStateLog).count()
-    assert latest_state_log_count_before == 5
+    assert latest_state_log_count_before == 4
 
     common.process_data_mart_issues(
         test_db_session,
-        vendor_check_state_log,
+        State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         employee,
         issues,
         missing_vendor_state=State.ADD_TO_VCC,
@@ -765,7 +724,11 @@ def test_process_data_mart_issues_no_issues_multiple_pending_payment_updated(
     latest_state_log_count_after = test_db_session.query(LatestStateLog).count()
     assert latest_state_log_count_after == 5
 
-    test_db_session.refresh(vendor_check_state_log)
+    vendor_check_state_log = state_log_util.get_latest_state_log_in_end_state(
+        associated_model=employee,
+        end_state=State.MMARS_STATUS_CONFIRMED,
+        db_session=test_db_session,
+    )
     assert vendor_check_state_log.end_state_id == State.MMARS_STATUS_CONFIRMED.state_id
 
     # all payments for our confirmed employee should be moved along
@@ -790,15 +753,7 @@ def test_process_data_mart_issues_no_issues_multiple_pending_payment_updated(
 def test_process_data_mart_issues_no_issues_only_new_pending_payment_updated(
     test_db_session, initialize_factories_session
 ):
-    employee_state_log_setup = setup_state_log(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.IDENTIFY_MMARS_STATUS],
-        end_states=[None],
-        test_db_session=test_db_session,
-    )
-
-    vendor_check_state_log = employee_state_log_setup.state_logs[0]
-    employee = vendor_check_state_log.employee
+    employee = setup_db_for_state_log(associated_class=state_log_util.AssociatedClass.EMPLOYEE)
 
     first_payment_state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
@@ -845,14 +800,14 @@ def test_process_data_mart_issues_no_issues_only_new_pending_payment_updated(
     issues = common.DataMartIssuesAndUpdates(vendor_exists=True)
 
     state_log_count_before = test_db_session.query(StateLog).count()
-    assert state_log_count_before == 6
+    assert state_log_count_before == 5
 
     latest_state_log_count_before = test_db_session.query(LatestStateLog).count()
-    assert latest_state_log_count_before == 4
+    assert latest_state_log_count_before == 3
 
     common.process_data_mart_issues(
         test_db_session,
-        vendor_check_state_log,
+        State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         employee,
         issues,
         missing_vendor_state=State.ADD_TO_VCC,
@@ -865,7 +820,11 @@ def test_process_data_mart_issues_no_issues_only_new_pending_payment_updated(
     latest_state_log_count_after = test_db_session.query(LatestStateLog).count()
     assert latest_state_log_count_after == 4
 
-    test_db_session.refresh(vendor_check_state_log)
+    vendor_check_state_log = state_log_util.get_latest_state_log_in_end_state(
+        associated_model=employee,
+        end_state=State.MMARS_STATUS_CONFIRMED,
+        db_session=test_db_session,
+    )
     assert vendor_check_state_log.end_state_id == State.MMARS_STATUS_CONFIRMED.state_id
 
     # the first (new) payment should be moved along
@@ -897,13 +856,16 @@ def test_process_catches_exceptions_and_continues(
 
     employee_to_fail_processing = state_logs[0].employee
 
-    def mock_process_state_log_func(pfml_db_session, data_mart_client, state_log, employee, tax_id):
+    def mock_process_state_log_func(
+        pfml_db_session, data_mart_client, start_state, employee, tax_id
+    ):
         if employee.employee_id == employee_to_fail_processing.employee_id:
             raise Exception
         else:
-            state_log_util.finish_state_log(
-                state_log=state_log,
+            state_log_util.create_finished_state_log(
+                start_state=start_state,
                 end_state=State.ADD_TO_VCC,
+                associated_model=employee,
                 outcome=state_log_util.build_outcome(
                     "Queried Data Mart: Vendor does not exist yet"
                 ),
@@ -949,7 +911,6 @@ def test_process_catches_exceptions_and_continues(
     assert new_state_log_for_failed.end_state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert new_state_log_for_failed.outcome["message"] == "Hit exception: Exception"
     # and the related log message should have the correct info
-    assert failed_log_record_dict["state_log_id"] == new_state_log_for_failed.state_log_id
 
     # second employee should be in next state
     new_state_log_for_success = state_log_util.get_latest_state_log_in_end_state(

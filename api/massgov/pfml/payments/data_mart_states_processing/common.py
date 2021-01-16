@@ -165,7 +165,7 @@ def make_db_address_from_mmars_data(mmars_data: data_mart.VendorInfoResult) -> A
 
 def process_data_mart_issues(
     pfml_db_session: pfml_db.Session,
-    state_log: StateLog,
+    current_state: LkState,
     employee: Employee,
     issues_and_updates: DataMartIssuesAndUpdates,
     missing_vendor_state: Union[LkState, BaseException],
@@ -175,27 +175,31 @@ def process_data_mart_issues(
         if isinstance(missing_vendor_state, BaseException):
             raise missing_vendor_state
 
-        state_log_util.finish_state_log(
-            state_log=state_log,
+        state_log_util.create_finished_state_log(
+            start_state=current_state,
             end_state=missing_vendor_state,
+            associated_model=employee,
             outcome=state_log_util.build_outcome("Queried Data Mart: Vendor does not exist yet"),
             db_session=pfml_db_session,
         )
         return
 
     if issues_and_updates.issues.has_validation_issues():
-        state_log_util.finish_state_log(
-            state_log=state_log,
+        state_log_util.create_finished_state_log(
+            start_state=current_state,
             end_state=mismatched_data_state,
+            associated_model=employee,
             outcome=state_log_util.build_outcome(
                 "Queried Data Mart: Vendor does not match", issues_and_updates.issues
             ),
             db_session=pfml_db_session,
         )
+
     else:
-        state_log_util.finish_state_log(
-            state_log=state_log,
+        state_log_util.create_finished_state_log(
+            start_state=current_state,
             end_state=State.MMARS_STATUS_CONFIRMED,
+            associated_model=employee,
             outcome=state_log_util.build_outcome("Vendor confirmed in MMARS."),
             db_session=pfml_db_session,
         )
@@ -244,19 +248,12 @@ def process_payments_waiting_on_vendor_confirmation(
             continue
 
         # Create and finish state log entry to move the payment along to ADD_TO_GAX
-        new_payment_state_log = state_log_util.create_state_log(
+        new_payment_state_log = state_log_util.create_finished_state_log(
             start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
-            associated_model=payment,
-            db_session=pfml_db_session,
-            commit=False,
-        )
-
-        state_log_util.finish_state_log(
-            state_log=new_payment_state_log,
             end_state=State.ADD_TO_GAX,
             outcome=state_log_util.build_outcome("Vendor confirmed in MMARS."),
+            associated_model=payment,
             db_session=pfml_db_session,
-            commit=True,
         )
 
         new_payment_state_logs.append(new_payment_state_log)
@@ -269,7 +266,7 @@ def process_employees_in_state(
     data_mart_client: data_mart.Client,
     end_state: LkState,
     process_state_log: Callable[
-        [pfml_db.Session, data_mart.Client, StateLog, Employee, TaxIdentifier], None
+        [pfml_db.Session, data_mart.Client, LkState, Employee, TaxIdentifier], None
     ],
 ) -> None:
     logger.info(
@@ -285,29 +282,23 @@ def process_employees_in_state(
         try:
             with state_log_util.process_state(
                 start_state=end_state, associated_model=employee, db_session=pfml_db_session,
-            ) as state_log:
+            ):
 
                 tax_id = employee.tax_identifier
 
                 if not tax_id:
                     logger.error(
                         "Employee does not have a tax id. Skipping.",
-                        extra={
-                            "employee_id": employee.employee_id,
-                            "state_log_id": state_log.state_log_id,
-                        },
+                        extra={"employee_id": employee.employee_id},
                     )
                     raise ValueError("Employee does not have a tax id. Skipping.")
 
-                process_state_log(pfml_db_session, data_mart_client, state_log, employee, tax_id)
+                process_state_log(pfml_db_session, data_mart_client, end_state, employee, tax_id)
         except Exception:
             extra = {"start_state": end_state.state_description}
 
             if employee:
                 extra["employee_id"] = employee.employee_id
-
-            if state_log:
-                extra["state_log_id"] = state_log.state_log_id
 
             logger.exception("Hit error processing record", extra=extra)
 
@@ -328,7 +319,7 @@ def get_latest_state_logs_with_employees_in_state_for_processing(
 
     if not state_logs_for_employees:
         logger.info(
-            "No records in {end_state.state_description}",
+            f"No records in {end_state.state_description}",
             extra={"end_state": end_state.state_description},
         )
         return []

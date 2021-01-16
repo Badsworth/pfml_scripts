@@ -768,7 +768,7 @@ class StateLog(Base):
     payment = relationship("Payment", back_populates="state_logs")
     reference_file = relationship("ReferenceFile", back_populates="state_logs")
     employee = relationship("Employee", back_populates="state_logs")
-    prev_state_log = relationship("StateLog", uselist=False)
+    prev_state_log = relationship("StateLog", uselist=False, remote_side=state_log_id)
 
 
 class LatestStateLog(Base):

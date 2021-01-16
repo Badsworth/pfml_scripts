@@ -446,40 +446,33 @@ def _setup_state_log(
     validation_container: payments_util.ValidationContainer,
     db_session: db.Session,
 ) -> None:
-    if payment:
-        new_state_log = state_log_util.create_state_log(
-            start_state=State.PAYMENT_PROCESS_INITIATED,
-            associated_model=payment,
-            db_session=db_session,
-            commit=False,
-        )
-    else:
-        # In the most problematic cases, the state log
-        # needs to be created before we've got a payment
-        # object to associate it with. Associate the type with payment
-        # but no actual payment.
-        new_state_log = state_log_util.create_state_log_without_associated_model(
-            start_state=State.PAYMENT_PROCESS_INITIATED,
-            associated_class=state_log_util.AssociatedClass.PAYMENT,
-            db_session=db_session,
-            commit=False,
-        )
-
-    # Immediately end the state log entry
-    # but don't add/commit it quite yet, only if all records can be processed
     end_state = (
         State.MARK_AS_EXTRACTED_IN_FINEOS
         if was_successful
         else State.ADD_TO_PAYMENT_EXPORT_ERROR_REPORT
     )
     message = "Success" if was_successful else "Error processing payment record"
-    state_log_util.finish_state_log(
-        state_log=new_state_log,
-        end_state=end_state,
-        db_session=db_session,
-        outcome=state_log_util.build_outcome(message, validation_container),
-        commit=False,
-    )
+
+    if payment:
+        state_log_util.create_finished_state_log(
+            start_state=State.PAYMENT_PROCESS_INITIATED,
+            end_state=end_state,
+            outcome=state_log_util.build_outcome(message, validation_container),
+            associated_model=payment,
+            db_session=db_session,
+        )
+    else:
+        # In the most problematic cases, the state log
+        # needs to be created before we've got a payment
+        # object to associate it with. Associate the type with payment
+        # but no actual payment.
+        state_log_util.create_state_log_without_associated_model(
+            start_state=State.PAYMENT_PROCESS_INITIATED,
+            end_state=end_state,
+            outcome=state_log_util.build_outcome(message, validation_container),
+            associated_class=state_log_util.AssociatedClass.PAYMENT,
+            db_session=db_session,
+        )
 
 
 def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> None:
