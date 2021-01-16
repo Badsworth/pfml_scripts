@@ -669,7 +669,7 @@ def test_vcc_outbound_status_errors(initialize_factories_session):
             assert (
                 validation_container.validation_issues[0].reason
                 == payments_util.ValidationReason.INVALID_VALUE
-                and validation_container.validation_issues[0].details == "2 - Not Final"
+                and validation_container.validation_issues[0].details == "DOC_PHASE_CD"
             )
         elif doc_count == 3:  # Has ERRORS set
             assert validation_container.has_validation_issues() is True

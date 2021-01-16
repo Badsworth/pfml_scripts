@@ -129,9 +129,9 @@ class AmsDocData:
                 )
 
     def _validate_doc_phase_cd(self, ams_doc: Element) -> None:
-        if self.tran_cd == "VCC" and self.doc_phase_cd != Constants.DOC_PHASE_CD_FINAL_STATUS:
+        if self.doc_phase_cd != Constants.DOC_PHASE_CD_FINAL_STATUS:
             self.validation_container.add_validation_issue(
-                payments_util.ValidationReason.INVALID_VALUE, cast(str, self.doc_phase_cd)
+                payments_util.ValidationReason.INVALID_VALUE, "DOC_PHASE_CD"
             )
 
 

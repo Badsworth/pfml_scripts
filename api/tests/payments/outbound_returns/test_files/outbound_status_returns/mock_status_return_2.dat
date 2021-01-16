@@ -7,7 +7,7 @@
         <DOC_ID><![CDATA[INTFDFMLLNILNPSWAVCB]]></DOC_ID>
         <DOC_VERS_NO><![CDATA[1]]></DOC_VERS_NO>
         <DOC_FUNC_CD><![CDATA[1 - New]]></DOC_FUNC_CD>
-        <DOC_PHASE_CD><![CDATA[3 - Final]]></DOC_PHASE_CD>
+        <DOC_PHASE_CD><![CDATA[2 - Pending]]></DOC_PHASE_CD>
         <DOC_STA_CD><![CDATA[4 - Submitted]]></DOC_STA_CD>
         <ERRORS NO_OF_ERRORS="3">
             <ERROR ERROR_CD="W0082"><![CDATA[The EFT Status has been updated to Prenote Requested. (W0082)]]></ERROR>

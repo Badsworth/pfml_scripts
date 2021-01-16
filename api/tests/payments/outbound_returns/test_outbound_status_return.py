@@ -140,12 +140,16 @@ def test_get_validation_issues_with_issues():
         for issue in validation_container.validation_issues
     )
     assert any(
+        issue.reason == ValidationReason.INVALID_VALUE and issue.details == "DOC_PHASE_CD"
+        for issue in validation_container.validation_issues
+    )
+    assert any(
         issue.reason == ValidationReason.MISSING_FIELD and issue.details == "ERRORS"
         for issue in validation_container.validation_issues
     )
 
     assert validation_container.record_key is None
-    assert len(validation_container.validation_issues) == 9
+    assert len(validation_container.validation_issues) == 10
 
 
 def test_process_outbound_status_return_success(
@@ -304,10 +308,12 @@ def test_process_outbound_status_return_with_issues(
 
         elif state_log.payment_id == pay_ref_2.payment.payment_id:
             validation_issues = state_log.outcome["validation_container"]["validation_issues"]
-            assert len(validation_issues) == 1
+            assert len(validation_issues) == 2
             assert state_log.end_state_id == State.ADD_TO_GAX_ERROR_REPORT.state_id
             assert validation_issues[0]["details"] == "ERRORS"
             assert validation_issues[0]["reason"] == "OutboundStatusError"
+            assert validation_issues[1]["details"] == "DOC_PHASE_CD"
+            assert validation_issues[1]["reason"] == "InvalidValue"
 
         elif state_log.employee_id == emp_ref_1.employee.employee_id:
             validation_issues = state_log.outcome["validation_container"]["validation_issues"]
