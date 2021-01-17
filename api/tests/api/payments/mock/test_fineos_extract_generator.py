@@ -1,8 +1,13 @@
 import os
 import tempfile
+from typing import List
 
 import massgov.pfml.util.files as file_util
-from massgov.pfml.payments.mock.fineos_extract_generator import GenerateConfig, generate
+from massgov.pfml.payments.mock.fineos_extract_generator import DEFAULT_SCENARIOS_CONFIG, generate
+from massgov.pfml.payments.mock.payments_test_scenario_generator import (
+    ScenarioDataConfig,
+    ScenarioNameWithCount,
+)
 
 
 def test_generate_to_fs(test_db_session, mock_s3_bucket, initialize_factories_session):
@@ -16,14 +21,21 @@ def test_generate_to_s3(test_db_session, mock_s3_bucket, initialize_factories_se
 
 
 def generate_and_validate(db_session, folder_path):
-    count = 10
-    config = GenerateConfig(folder_path=folder_path, employee_count=count)
-    generate(db_session, config)
+    config = ScenarioDataConfig(scenario_config=DEFAULT_SCENARIOS_CONFIG)
+    generate(config, folder_path)
 
     files = file_util.list_files(folder_path)
     assert len(files) == 6
 
+    count = get_total_log_count(DEFAULT_SCENARIOS_CONFIG)
     for file in files:
         file_content = file_util.read_file(os.path.join(folder_path, file))
         assert file_content.strip()
         assert file_content.count("\n") == count + 1  # account for header column
+
+
+def get_total_log_count(scenario_config: List[ScenarioNameWithCount]):
+    count = 0
+    for sc in scenario_config:
+        count += sc.count
+    return count

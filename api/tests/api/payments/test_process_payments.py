@@ -1,13 +1,33 @@
 import os
 
 import massgov.pfml.payments.config as payments_config
+import massgov.pfml.payments.mock.fineos_extract_generator as fineos_extract_generator
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import Employee, Employer, ReferenceFileType
-from massgov.pfml.payments.mock.fineos_extract_generator import GenerateConfig, generate
+from massgov.pfml.db.models.employees import Employee, Employer, Payment, ReferenceFileType
+from massgov.pfml.payments.mock.payments_test_scenario_generator import (
+    ScenarioDataConfig,
+    ScenarioName,
+    ScenarioNameWithCount,
+)
 from massgov.pfml.payments.process_payments import Configuration, _fineos_process
 
 # == E2E Tests ==
+
+test_scenario_config = [
+    ScenarioNameWithCount(ScenarioName.SCENARIO_A, 1),
+    ScenarioNameWithCount(ScenarioName.SCENARIO_B, 1),
+    ScenarioNameWithCount(ScenarioName.SCENARIO_C, 1),
+    ScenarioNameWithCount(ScenarioName.SCENARIO_D, 1),
+    ScenarioNameWithCount(ScenarioName.SCENARIO_E, 1),
+    ScenarioNameWithCount(ScenarioName.SCENARIO_F, 1),
+    ScenarioNameWithCount(ScenarioName.SCENARIO_G, 1),
+    ScenarioNameWithCount(ScenarioName.SCENARIO_H, 1),
+    ScenarioNameWithCount(ScenarioName.SCENARIO_I, 1),
+    ScenarioNameWithCount(ScenarioName.SCENARIO_J, 1),
+    ScenarioNameWithCount(ScenarioName.SCENARIO_K, 1),
+    ScenarioNameWithCount(ScenarioName.SCENARIO_L, 1),
+]
 
 
 def test_fineos_process(
@@ -24,8 +44,8 @@ def test_fineos_process(
     s3_config = payments_config.get_s3_config()
     fineos_data_export_path = s3_config.fineos_data_export_path
 
-    config = GenerateConfig(folder_path=fineos_data_export_path, employee_count=10)
-    generate(test_db_session, config)
+    config = ScenarioDataConfig(scenario_config=test_scenario_config)
+    fineos_extract_generator.generate(config, fineos_data_export_path)
 
     mock_fineos_export_files = file_util.list_files(fineos_data_export_path)
     assert len(mock_fineos_export_files) == 6
@@ -36,12 +56,12 @@ def test_fineos_process(
     # fetch relevant db models
     employees = test_db_session.query(Employee).all()
     employers = test_db_session.query(Employer).all()
-    # payments = test_db_session.query(Payment).all()  TODO - come back to this when we're testing the payment extracts
+    payments = test_db_session.query(Payment).all()
 
     # top level assersions
-    assert len(employees) == 10
-    assert len(employers) == 10
-    # assert len(payments) == 6 - TODO - come back to this when we're testing the payment extracts
+    assert len(employees) == 12
+    assert len(employers) == 12
+    assert len(payments) == 10
 
     date_group_str = payments_util.get_date_group_str_from_path(mock_fineos_export_files[0])
     processed_payment_folder_path = os.path.join(
