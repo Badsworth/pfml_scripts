@@ -15,6 +15,9 @@ from . import outbound_payment_return, outbound_status_return, outbound_vendor_c
 logger = logging.get_logger(__name__)
 
 
+OUTBOUND_STATUS_RETURN_XML_DOC_ROOT_ELEMENT = "AMS_IC_STATUS"
+
+
 class OutboundReturnData:
     db_session: db.Session
     outbound_status_return_files: List[ReferenceFile]
@@ -43,7 +46,7 @@ def _identify_outbound_return(ref_file: ReferenceFile) -> LkReferenceFileType:
     root = ET.fromstring(xml_file)
 
     # check for Outbound Status Return
-    if root.tag == "AMS_IC_STATUS":
+    if root.tag == OUTBOUND_STATUS_RETURN_XML_DOC_ROOT_ELEMENT:
         return ReferenceFileType.OUTBOUND_STATUS_RETURN
     # check for Outbound Vendor Customer Return
     elif root.find("AMS_DOCUMENT") is not None:

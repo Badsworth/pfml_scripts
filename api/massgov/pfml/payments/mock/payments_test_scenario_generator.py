@@ -1,6 +1,7 @@
 # Test cases described in this Google Doc:
 # https://docs.google.com/document/d/1232xwedUI6d2WNVavRAM8r1GempjSNDlFX7KgzC1va8/edit#
 
+import decimal
 import random
 from dataclasses import dataclass
 from enum import Enum
@@ -18,16 +19,22 @@ from massgov.pfml.db.models.employees import (
     LkBankAccountType,
     LkClaimType,
     LkPaymentMethod,
+    Payment,
     PaymentMethod,
+    ReferenceFileType,
     TaxIdentifier,
 )
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ClaimFactory,
     CtrAddressPairFactory,
+    CtrBatchIdentifierFactory,
     EftFactory,
     EmployeeFactory,
+    EmployeeReferenceFileFactory,
     EmployerFactory,
+    PaymentFactory,
+    PaymentReferenceFileFactory,
 )
 from massgov.pfml.payments.fineos_payment_export import CiIndex
 
@@ -98,6 +105,20 @@ class EmployeePaymentScenarioDescriptor:
     default_payment_preference: bool = True
     evidence_satisfied: bool = True
 
+    # Creates EmployeeReferenceFile and Comptroller IDs in the database.
+    has_vcc_status_return: bool = False
+    has_vcc_status_return_errors: bool = False
+
+    # Creates PaymentReferenceFile and Comptroller IDs in the database.
+    has_gax_status_return: bool = False
+    has_gax_status_pending_ctr_action: bool = False
+    has_gax_status_return_errors: bool = False
+
+    has_outbound_vendor_return: bool = False
+    has_broken_outbound_vendor_return: bool = False  # Requires above to also be true
+
+    has_outbound_payment_return: bool = False
+
     has_payment_extract: bool = True
     missing_from_employee_feed: bool = False
 
@@ -118,6 +139,9 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_A] = EmployeePaymentScenarioDescripto
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     has_payment_extract=True,
+    has_outbound_vendor_return=True,
+    has_gax_status_return=True,
+    has_outbound_payment_return=True,
 )
 
 # EmployeeB with real address, payment method is check, leave type is bonding leave
@@ -125,6 +149,9 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_B] = EmployeePaymentScenarioDescripto
     leave_type=ClaimType.FAMILY_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     has_payment_extract=True,
+    has_outbound_vendor_return=True,
+    has_gax_status_return=True,
+    has_outbound_payment_return=True,
 )
 
 # EmployeeC with real address, real routing number, fake bank account number, payment method is ACH, leave type is medical leave
@@ -132,7 +159,11 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_C] = EmployeePaymentScenarioDescripto
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.ACH,
     account_type=BankAccountType.CHECKING,
+    has_vcc_status_return=True,
     has_payment_extract=True,
+    has_outbound_vendor_return=True,
+    has_gax_status_return=True,
+    has_outbound_payment_return=True,
 )
 
 # EmployeeD with real address, real routing number, fake bank account number, payment method is ACH, leave type is bonding leave
@@ -141,6 +172,9 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_D] = EmployeePaymentScenarioDescripto
     payee_payment_method=PaymentMethod.ACH,
     account_type=BankAccountType.SAVINGS,
     has_payment_extract=True,
+    has_outbound_vendor_return=True,
+    has_gax_status_return=True,
+    has_outbound_payment_return=True,
 )
 
 # 2. has some records that are so invalid that a state log entry cannot be created for them
@@ -285,6 +319,7 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_Z] = EmployeePaymentScenarioDescripto
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     has_payment_extract=True,
+    has_outbound_vendor_return=True,
 )
 
 
@@ -301,9 +336,11 @@ class ScenarioData:
     scenario_descriptor: EmployeePaymentScenarioDescriptor
     employee: Employee
     employer: Employer
+    payment: Optional[Payment]
     claim: Claim
     employee_customer_number: str
     vendor_customer_code: str
+    payment_amount: decimal.Decimal
     ci_index: CiIndex
 
 
@@ -317,6 +354,7 @@ def generate_scenario_data_db(
     employee_customer_number: str,
     vendor_customer_code: str,
     ci_index: CiIndex,
+    build_reference_files: bool = False,
 ) -> ScenarioData:
     eft = None
 
@@ -341,7 +379,7 @@ def generate_scenario_data_db(
         address_line_two=mock_address["payment_address_2"],
         city="" if scenario_descriptor.missing_city else mock_address["payment_address_4"],
         geo_state_id=1 if scenario_descriptor.valid_state else None,
-        geo_state_text="Massachusets" if not scenario_descriptor.valid_state else None,
+        geo_state_text="Massachusetts" if not scenario_descriptor.valid_state else None,
         zip_code=mock_address["payment_post_code"],
     )
 
@@ -361,13 +399,40 @@ def generate_scenario_data_db(
         employer_id=employer.employer_id, employee=employee, fineos_absence_id=absence_case_id,
     )
 
+    # Create a random payment amount between $1-1000
+    payment_amount = decimal.Decimal(random.uniform(1, 1000))
+
+    payment = None
+    if build_reference_files:
+        if (
+            scenario_descriptor.has_vcc_status_return
+            or scenario_descriptor.has_outbound_vendor_return
+        ):
+            emp_ref_file = EmployeeReferenceFileFactory.create(employee=employee)
+            emp_ref_file.reference_file.ctr_batch_identifier = CtrBatchIdentifierFactory.create()
+
+        if (
+            scenario_descriptor.has_gax_status_return
+            or scenario_descriptor.has_outbound_payment_return
+        ):
+            payment = PaymentFactory.create(claim=claim)
+            payment_ref_file = PaymentReferenceFileFactory.create(payment=payment)
+            payment_ref_file.reference_file.ctr_batch_identifier = (
+                CtrBatchIdentifierFactory.create()
+            )
+            payment_ref_file.reference_file.reference_file_type_id = (
+                ReferenceFileType.GAX.reference_file_type_id
+            )
+
     return ScenarioData(
         scenario_descriptor=scenario_descriptor,
         employee=employee,
         employer=employer,
+        payment=payment,
         claim=claim,
         employee_customer_number=employee_customer_number,
         vendor_customer_code=vendor_customer_code,
+        payment_amount=payment_amount,
         ci_index=ci_index,
     )
 

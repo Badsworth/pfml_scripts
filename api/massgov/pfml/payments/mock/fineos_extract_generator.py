@@ -207,7 +207,7 @@ def _generate_single_fineos_payment_row(
         else PaymentMethod.CHECK.payment_method_description
     )
     vpei_row["PAYMENTDATE"] = payment_date.strftime("%Y-%m-%d %H:%M:%S")
-    vpei_row["AMOUNT_MONAMT"] = "{:.2f}".format(1000 * random.uniform(0.3, 0.95))
+    vpei_row["AMOUNT_MONAMT"] = "{:.2f}".format(scenario_data.payment_amount)
 
     # TODO do we still want this
     # if missing_field:

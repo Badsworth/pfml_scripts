@@ -215,8 +215,11 @@ class EmployeeReferenceFileFactory(BaseFactory):
 
     reference_file = factory.SubFactory(ReferenceFileFactory)
     reference_file_id = factory.LazyAttribute(lambda e: e.reference_file.reference_file_id)
+    reference_file.reference_file_type_id = (
+        employee_models.ReferenceFileType.VCC.reference_file_type_id
+    )
 
-    ctr_document_identifier = (factory.SubFactory(CtrDocumentIdentifierFactory),)
+    ctr_document_identifier = factory.SubFactory(CtrDocumentIdentifierFactory)
     ctr_document_identifier_id = factory.LazyAttribute(
         lambda e: e.ctr_document_identifier.ctr_document_identifier_id
     )

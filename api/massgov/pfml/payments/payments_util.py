@@ -280,15 +280,20 @@ def validate_input(
 
 def add_attributes(element: minidom.Element, attributes: Dict[str, str]) -> None:
     for k, v in attributes.items():
-        element.setAttribute(k, v)
+        value = v if v else "null"
+        element.setAttribute(k, value)
 
 
 def add_cdata_elements(
-    parent: minidom.Element, document: minidom.Document, elements: Dict[str, Any]
+    parent: minidom.Element,
+    document: minidom.Document,
+    elements: Dict[str, Any],
+    add_y_attribute: bool = True,
 ) -> None:
     for key, val in elements.items():
         elem = document.createElement(key)
-        add_attributes(elem, {"Attribute": "Y"})
+        if add_y_attribute:
+            add_attributes(elem, {"Attribute": "Y"})
         parent.appendChild(elem)
 
         if val is None:
