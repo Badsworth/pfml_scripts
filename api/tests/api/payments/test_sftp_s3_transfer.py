@@ -13,6 +13,12 @@ from massgov.pfml.payments.sftp_s3_transfer import (
 )
 
 
+def _setup_mock_sftp_files(sftp_client, folder, filenames):
+    for filename in filenames:
+        filepath = os.path.join(folder, filename)
+        sftp_client._add_file(filepath, "")
+
+
 def test_copy_to_sftp_and_archive_s3_files_success(
     mock_s3_bucket,
     setup_mock_sftp_client,
@@ -211,15 +217,18 @@ def test_copy_to_sftp_and_archive_s3_files_file_exists_in_sftp_dest(
     setup_mock_sftp_client,
     mock_sftp_client,
     test_db_session,
-    mock_sftp_dir_with_conflicts,
-    mock_sftp_filename_conflicts,
     initialize_factories_session,
 ):
     archive_dir = "archive/testing"
     source_dir = "api/outbox"
+    dest_dir = "mock_sftp_dir_with_conflicts"
+
+    # Stock our mocked SFTP server with conflicting files.
+    filename_conflicts = ["file1.txt", "file2.txt"]
+    _setup_mock_sftp_files(mock_sftp_client, dest_dir, filename_conflicts)
 
     s3 = boto3.client("s3")
-    for filename in mock_sftp_filename_conflicts:
+    for filename in filename_conflicts:
         # Stock our mocked S3 bucket with the files.
         key = os.path.join(source_dir, filename)
         s3.put_object(Bucket=mock_s3_bucket, Key=key, Body="test\n")
@@ -242,7 +251,7 @@ def test_copy_to_sftp_and_archive_s3_files_file_exists_in_sftp_dest(
         s3_bucket_uri="s3://" + mock_s3_bucket,
         source_dir=source_dir,
         archive_dir=archive_dir,
-        dest_dir=mock_sftp_dir_with_conflicts,
+        dest_dir=dest_dir,
         sftp_uri="sftp://api_user@mass.gov",
         ssh_key_password="No ssh_key_password used during mocked tests",
         ssh_key="No ssh_key used during mocked tests",
@@ -251,7 +260,7 @@ def test_copy_to_sftp_and_archive_s3_files_file_exists_in_sftp_dest(
 
     # Expect that the ReferenceFiles associated with the files in S3 were not updated because the
     # conflict in the destination SFTP server prevented the transfer.
-    for filename in mock_sftp_filename_conflicts:
+    for filename in filename_conflicts:
         source_file_location = "s3://" + os.path.join(mock_s3_bucket, source_dir, filename)
         assert _first_ref_file(source_file_location, test_db_session) is not None
 
@@ -368,11 +377,7 @@ def test_copy_to_sftp_and_archive_s3_files_s3_archive_failure(
 
 
 def test_copy_from_sftp_to_s3_and_archive_files_success(
-    mock_s3_bucket,
-    setup_mock_sftp_client,
-    mock_sftp_client,
-    mock_sftp_default_listdir_filenames,
-    test_db_session,
+    mock_s3_bucket, setup_mock_sftp_client, mock_sftp_client, test_db_session,
 ):
     config = SftpS3TransferConfig(
         s3_bucket_uri="s3://" + mock_s3_bucket,
@@ -384,37 +389,35 @@ def test_copy_from_sftp_to_s3_and_archive_files_success(
         ssh_key="No ssh_key used during mocked tests",
     )
 
+    default_filenames = ["attleboro.txt", "beverly.csv", "chicopee.csv", "duxbury.txt"]
+    _setup_mock_sftp_files(mock_sftp_client, config.source_dir, default_filenames)
+
     # Expect there to be no ReferenceFiles for the files prior to copying them from SFTP to S3.
-    for filename in mock_sftp_default_listdir_filenames:
+    for filename in default_filenames:
         filepath = os.path.join(config.s3_bucket_uri, config.dest_dir, filename)
         assert _first_ref_file(filepath, test_db_session) is None
 
     copy_from_sftp_to_s3_and_archive_files(config=config, db_session=test_db_session)
 
     # Expect to find ReferenceFiles for each file after copying them from SFTP to S3.
-    for filename in mock_sftp_default_listdir_filenames:
+    for filename in default_filenames:
         filepath = os.path.join(config.s3_bucket_uri, config.dest_dir, filename)
         assert _first_ref_file(filepath, test_db_session)
 
     # List contents of destination directory, then download (get) and archive (rename) each file in
     # the destination directory.
-    expected_sftp_calls = ["listdir"] + ["get", "rename"] * len(mock_sftp_default_listdir_filenames)
+    expected_sftp_calls = ["listdir"] + ["get", "rename"] * len(default_filenames)
     assert len(mock_sftp_client.calls) == len(expected_sftp_calls)
     for i, call in enumerate(mock_sftp_client.calls):
         assert call[0] == expected_sftp_calls[i]
 
 
 def test_copy_from_sftp_to_s3_and_archive_files_no_files_in_sftp(
-    mock_s3_bucket,
-    setup_mock_sftp_client,
-    mock_sftp_client,
-    mock_sftp_default_listdir_filenames,
-    mock_sftp_dir_with_no_files,
-    test_db_session,
+    mock_s3_bucket, setup_mock_sftp_client, mock_sftp_client, test_db_session,
 ):
     config = SftpS3TransferConfig(
         s3_bucket_uri="s3://" + mock_s3_bucket,
-        source_dir=mock_sftp_dir_with_no_files,
+        source_dir="mock_sftp_dir_with_no_files",
         archive_dir="archive",
         dest_dir="pfml/inbox",
         sftp_uri="sftp://api_user@mass.gov",
@@ -435,7 +438,6 @@ def test_copy_from_sftp_to_s3_and_archive_files_some_files_already_exist(
     mock_s3_bucket,
     setup_mock_sftp_client,
     mock_sftp_client,
-    mock_sftp_default_listdir_filenames,
     test_db_session,
     initialize_factories_session,
 ):
@@ -449,9 +451,12 @@ def test_copy_from_sftp_to_s3_and_archive_files_some_files_already_exist(
         ssh_key="No ssh_key used during mocked tests",
     )
 
+    default_filenames = ["attleboro.txt", "beverly.csv", "chicopee.csv", "duxbury.txt"]
+    _setup_mock_sftp_files(mock_sftp_client, config.source_dir, default_filenames)
+
     # Create ReferenceFiles for half of the files in SFTP server.
     files_to_be_downloaded = []
-    for i, filename in enumerate(mock_sftp_default_listdir_filenames):
+    for i, filename in enumerate(default_filenames):
         if i % 2 == 0:
             filepath = os.path.join(config.s3_bucket_uri, config.dest_dir, filename)
             reference_file = ReferenceFileFactory(
@@ -466,7 +471,7 @@ def test_copy_from_sftp_to_s3_and_archive_files_some_files_already_exist(
     copy_from_sftp_to_s3_and_archive_files(config=config, db_session=test_db_session)
 
     # Expect to find ReferenceFiles for each file after copying them from SFTP to S3.
-    for filename in mock_sftp_default_listdir_filenames:
+    for filename in default_filenames:
         filepath = os.path.join(config.s3_bucket_uri, config.dest_dir, filename)
         assert _first_ref_file(filepath, test_db_session)
 
