@@ -12,7 +12,7 @@ exports[`ScheduleFixed renders the page 1`] = `
     Tell us your work schedule.
   </Heading>
   <Lead>
-    Enter the number of hours you work each day. You can enter time in 15-minute increments if needed.
+    Enter the number of hours you work each day. Enter 0 for days you don't work.
   </Lead>
   <InputHours
     hoursLabel="Hours"

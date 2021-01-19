@@ -1,10 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ReducedLeaveSchedule when leave reason is Bonding renders lead with expected content 1`] = `"You can enter time in 15-minute increments if needed."`;
+exports[`ReducedLeaveSchedule when leave reason is Bonding renders lead with expected content 1`] = `"Enter 0 for days you won’t work a reduced schedule."`;
 
 exports[`ReducedLeaveSchedule when leave reason is Medical renders lead with expected content 1`] = `
 Array [
-  "You can enter time in 15-minute increments if needed.",
+  "Enter 0 for days you won’t work a reduced schedule.",
   <br
     key="br-1"
   />,
@@ -29,7 +29,7 @@ Array [
   <InputHours
     hoursLabel="Hours"
     key="input-hours-0"
-    label="Sunday"
+    label="Sunday time off"
     minutesIncrement={15}
     minutesLabel="Minutes"
     name="leave_details.reduced_schedule_leave_periods[0].sunday_off_minutes"
@@ -40,7 +40,7 @@ Array [
   <InputHours
     hoursLabel="Hours"
     key="input-hours-1"
-    label="Monday"
+    label="Monday time off"
     minutesIncrement={15}
     minutesLabel="Minutes"
     name="leave_details.reduced_schedule_leave_periods[0].monday_off_minutes"
@@ -51,7 +51,7 @@ Array [
   <InputHours
     hoursLabel="Hours"
     key="input-hours-2"
-    label="Tuesday"
+    label="Tuesday time off"
     minutesIncrement={15}
     minutesLabel="Minutes"
     name="leave_details.reduced_schedule_leave_periods[0].tuesday_off_minutes"
@@ -62,7 +62,7 @@ Array [
   <InputHours
     hoursLabel="Hours"
     key="input-hours-3"
-    label="Wednesday"
+    label="Wednesday time off"
     minutesIncrement={15}
     minutesLabel="Minutes"
     name="leave_details.reduced_schedule_leave_periods[0].wednesday_off_minutes"
@@ -73,7 +73,7 @@ Array [
   <InputHours
     hoursLabel="Hours"
     key="input-hours-4"
-    label="Thursday"
+    label="Thursday time off"
     minutesIncrement={15}
     minutesLabel="Minutes"
     name="leave_details.reduced_schedule_leave_periods[0].thursday_off_minutes"
@@ -84,7 +84,7 @@ Array [
   <InputHours
     hoursLabel="Hours"
     key="input-hours-5"
-    label="Friday"
+    label="Friday time off"
     minutesIncrement={15}
     minutesLabel="Minutes"
     name="leave_details.reduced_schedule_leave_periods[0].friday_off_minutes"
@@ -95,7 +95,7 @@ Array [
   <InputHours
     hoursLabel="Hours"
     key="input-hours-6"
-    label="Saturday"
+    label="Saturday time off"
     minutesIncrement={15}
     minutesLabel="Minutes"
     name="leave_details.reduced_schedule_leave_periods[0].saturday_off_minutes"
