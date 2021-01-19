@@ -34,6 +34,10 @@ def main():
     parser.add_argument("--to", type=str, help="Copy object new name")
     parser.add_argument("--delete", type=str, help="Delete object")
     parser.add_argument("--delsize", type=int, help="Size of object to delete")
+    parser.add_argument("--copy_dir", type=str, help="Copy multiple objs")
+    parser.add_argument("--to_dir", type=str, help="New dest for copied objs")
+    parser.add_argument("--file_prefixes", type=str, help="List of file prefixes")
+
     args = parser.parse_args()
 
     if args.copy and not args.to:
@@ -59,7 +63,7 @@ def main():
     s3 = boto3.resource("s3")
     s3_fineos = fineos_boto_session.resource("s3") if fineos_boto_session else boto3.resource("s3")
 
-    bucket_tool(args, s3, s3_fineos)
+    bucket_tool(args, s3, s3_fineos, boto3, fineos_boto_session)
 
 
 def is_fineos_bucket(path):
@@ -68,7 +72,7 @@ def is_fineos_bucket(path):
     return path.startswith("s3://fin-som")
 
 
-def bucket_tool(args, s3, s3_fineos):
+def bucket_tool(args, s3, s3_fineos, boto3, fineos_boto_session):
     if args.list:
         bucket_ls(args.list, s3_fineos if is_fineos_bucket(args.list) else s3)
 
@@ -82,6 +86,17 @@ def bucket_tool(args, s3, s3_fineos):
 
     elif args.delete:
         bucket_delete(args.delete, args.delsize, s3_fineos if is_fineos_bucket(args.delete) else s3)
+
+    elif args.copy_dir and args.to_dir:
+        copy_dir(
+            args.copy_dir,
+            args.to_dir,
+            s3_fineos if is_fineos_bucket(args.copy_dir) else s3,
+            s3_fineos if is_fineos_bucket(args.to_dir) else s3,
+            fineos_boto_session if is_fineos_bucket(args.copy_dir) else boto3,
+            fineos_boto_session if is_fineos_bucket(args.to_dir) else boto3,
+            args.file_prefixes.split(","),
+        )
 
 
 def bucket_ls(path, s3):
@@ -141,3 +156,31 @@ def bucket_delete(delete, delsize, s3):
 
     del_object.delete()
     logger.info("delete done")
+
+
+def file_name_contains_prefix(file_prefixes, file_name):
+    for prefix in file_prefixes:
+        if file_name.startswith(prefix):
+            return True
+    return False
+
+
+def copy_dir(source, dest, s3_source, s3_dest, boto_source, boto_dest, file_prefixes):
+    if not source.endswith("/"):
+        source = source + "/"
+
+    if not dest.endswith("/"):
+        dest = dest + "/"
+
+    # get list of all files in source prefix
+    source_files = massgov.pfml.util.files.list_files(source, boto_session=boto_source)
+
+    # get list of all files in dest prefix
+    dest_files = massgov.pfml.util.files.list_files(dest, boto_session=boto_dest)
+
+    for file in source_files:
+        # copy select files that don’t already exist in the destination
+        if file_name_contains_prefix(file_prefixes, file) and (file not in dest_files):
+            source_file = source + file
+            dest_file = dest + file
+            bucket_cp(source_file, dest_file, s3_source, s3_dest)
