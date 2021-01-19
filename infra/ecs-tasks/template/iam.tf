@@ -794,6 +794,10 @@ data "aws_iam_policy_document" "cloudwatch_events_payments_ctr_scheduler_role_po
 # IAM role and policies for S3 buckets for business intelligence (BI) data extracts
 # ----------------------------------------------------------------------------------------------------------------------
 
+data "aws_s3_bucket" "business_intelligence_tool" {
+  bucket = "massgov-pfml-${var.environment_name}-business-intelligence-tool"
+}
+
 resource "aws_iam_role" "fineos_bucket_tool_role" {
   name               = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-bucket-tool"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
@@ -825,7 +829,8 @@ data "aws_iam_policy_document" "fineos_bucket_tool_task_policy_document" {
     ]
 
     resources = [
-      "${data.aws_s3_bucket.agency_transfer.arn}"
+      "${data.aws_s3_bucket.agency_transfer.arn}",
+      "${data.aws_s3_bucket.business_intelligence_tool.arn}"
     ]
 
     effect = "Allow"
@@ -841,6 +846,8 @@ data "aws_iam_policy_document" "fineos_bucket_tool_task_policy_document" {
     resources = [
       "${data.aws_s3_bucket.agency_transfer.arn}/",
       "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      "${data.aws_s3_bucket.business_intelligence_tool.arn}/",
+      "${data.aws_s3_bucket.business_intelligence_tool.arn}/*"
     ]
 
     effect = "Allow"
@@ -857,6 +864,8 @@ data "aws_iam_policy_document" "fineos_bucket_tool_task_policy_document" {
     resources = [
       "${data.aws_s3_bucket.agency_transfer.arn}/",
       "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      "${data.aws_s3_bucket.business_intelligence_tool.arn}/",
+      "${data.aws_s3_bucket.business_intelligence_tool.arn}/*"
     ]
 
     effect = "Allow"
