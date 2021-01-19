@@ -127,25 +127,23 @@ describe("getInputValueFromEvent", () => {
     });
   });
 
-  describe("given field inputMode is 'numeric' and field pattern is [0-9]*", () => {
-    it("converts string to number", () => {
+  describe("given data-value-type is 'integer'", () => {
+    it("converts string to integer, removing any decimals and commas", () => {
       const target = createInputElement({
         name: "Foo",
-        value: "44",
-        inputMode: "numeric",
-        pattern: "[0-9]*",
+        value: "1,200,000.3",
+        "data-value-type": "integer",
       });
       const value = getInputValueFromEvent({ target });
 
-      expect(value).toBe(44);
+      expect(value).toBe(1200000);
     });
 
     it("does not convert mixed strings/numbers", () => {
       const target = createInputElement({
         name: "Foo",
         value: "4hockey4",
-        inputMode: "numeric",
-        pattern: "[0-9]*",
+        "data-value-type": "integer",
       });
       const value = getInputValueFromEvent({ target });
 
@@ -156,8 +154,7 @@ describe("getInputValueFromEvent", () => {
       const target = createInputElement({
         name: "Foo",
         value: " ",
-        inputMode: "numeric",
-        pattern: "[0-9]*",
+        "data-value-type": "integer",
       });
       const value = getInputValueFromEvent({ target });
 
@@ -169,9 +166,8 @@ describe("getInputValueFromEvent", () => {
       const target = {
         name: "Foo",
         value: undefined,
-        inputMode: "numeric",
-        pattern: "[0-9]*",
-        getAttribute: jest.fn().mockReturnValue("numeric"),
+        "data-value-type": "integer",
+        getAttribute: jest.fn().mockReturnValue("integer"),
       };
       const value = getInputValueFromEvent({ target });
 
@@ -183,9 +179,8 @@ describe("getInputValueFromEvent", () => {
       const target = {
         name: "Foo",
         value: null,
-        inputMode: "numeric",
-        pattern: "[0-9]*",
-        getAttribute: jest.fn().mockReturnValue("numeric"),
+        "data-value-type": "integer",
+        getAttribute: jest.fn().mockReturnValue("integer"),
       };
       const value = getInputValueFromEvent({ target });
 

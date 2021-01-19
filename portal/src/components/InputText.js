@@ -46,9 +46,9 @@ function InputText({ type = "text", ...props }) {
     <input
       autoComplete={props.autoComplete}
       className={fieldClasses}
+      data-value-type={props.valueType}
       id={inputId}
       inputMode={inputMode}
-      pattern={props.pattern}
       maxLength={props.maxLength}
       name={props.name}
       onBlur={props.pii ? handleBlur : props.onBlur}
@@ -112,7 +112,9 @@ InputText.propTypes = {
    */
   inputId: PropTypes.string,
   /**
-   * HTML input `inputmode` attribute. Defaults to "text"
+   * HTML input `inputmode` attribute. Defaults to "text". Browsers
+   * use this attribute to inform the type of keyboard displayed
+   * to the user.
    */
   inputMode: PropTypes.oneOf(["decimal", "numeric", "text"]),
   /**
@@ -164,10 +166,6 @@ InputText.propTypes = {
    */
   optionalText: PropTypes.node,
   /**
-   * HTML input `pattern` attribute
-   */
-  pattern: PropTypes.string,
-  /**
    * Enable the smaller label variant
    */
   smallLabel: PropTypes.bool,
@@ -184,6 +182,13 @@ InputText.propTypes = {
    * for a controlled component.
    */
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  /**
+   * Adds a data attribute to the input. Can be used by
+   * change handlers or `getInputValueFromEvent` to inform
+   * what value type the field should be converted to before
+   * saving it back to the API.
+   */
+  valueType: PropTypes.oneOf(["integer", "string"]),
 };
 
 export default InputText;

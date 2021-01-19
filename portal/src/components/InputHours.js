@@ -102,8 +102,8 @@ const InputHours = (props) => {
         width="small"
         labelClassName="text-normal"
         inputMode="numeric"
-        pattern="[0-9]*"
         value={isNil(props.value) ? "" : hoursMinutes.hours}
+        valueType="integer"
         onChange={handleHoursChange}
       />
       <Dropdown

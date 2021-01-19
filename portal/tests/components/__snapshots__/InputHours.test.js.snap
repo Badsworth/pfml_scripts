@@ -17,9 +17,9 @@ exports[`InputHours renders component 1`] = `
     labelClassName="text-normal"
     name="hours"
     onChange={[Function]}
-    pattern="[0-9]*"
     smallLabel={true}
     value={40}
+    valueType="integer"
     width="small"
   />
   <Dropdown

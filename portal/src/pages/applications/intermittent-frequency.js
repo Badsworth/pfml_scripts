@@ -153,7 +153,7 @@ export const IntermittentFrequency = (props) => {
           <InputText
             {...getFunctionalInputProps(`${leavePeriodPath}.frequency`)}
             inputMode="numeric"
-            pattern="[0-9]*"
+            valueType="integer"
             label={t("pages.claimsIntermittentFrequency.frequencyLabel", {
               context:
                 leavePeriod.frequency_interval === 6
@@ -208,7 +208,7 @@ export const IntermittentFrequency = (props) => {
         <InputText
           {...getFunctionalInputProps(`${leavePeriodPath}.duration`)}
           inputMode="numeric"
-          pattern="[0-9]*"
+          valueType="integer"
           label={t("pages.claimsIntermittentFrequency.durationLabel", {
             context: findKeyByValue(DurationBasis, leavePeriod.duration_basis),
           })}

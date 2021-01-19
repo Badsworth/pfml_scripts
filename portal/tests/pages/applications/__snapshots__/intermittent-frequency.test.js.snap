@@ -77,9 +77,9 @@ exports[`IntermittentFrequency renders the page 1`] = `
       label="Estimate how many absences over the next 6 months."
       name="leave_details.intermittent_leave_periods[0].frequency"
       onChange={[Function]}
-      pattern="[0-9]*"
       smallLabel={true}
       value={6}
+      valueType="integer"
       width="small"
     />
     <InputChoiceGroup
@@ -112,9 +112,9 @@ exports[`IntermittentFrequency renders the page 1`] = `
     label="How many hours of work will you miss per absence?"
     name="leave_details.intermittent_leave_periods[0].duration"
     onChange={[Function]}
-    pattern="[0-9]*"
     smallLabel={true}
     value={3}
+    valueType="integer"
     width="small"
   />
 </QuestionPage>

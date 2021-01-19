@@ -15,17 +15,14 @@ export default function getInputValueFromEvent(event) {
     return undefined;
   }
 
-  const { checked, pattern, type, value } = event.target;
+  const { checked, type, value } = event.target;
 
-  const inputMode =
+  const valueType =
     // Some components, like InputDate, hijack the change event and pass in a plain object
     // TODO (CP-1667): This condition shouldn't be required once our components stop
     // hijacking event.target
     typeof event.target.getAttribute === "function"
-      ? // Use getAttribute for this since some browsers, including Firefox,
-        // don't support accessing the value via event.target.inputMode.
-        // https://caniuse.com/mdn-api_htmlelement_inputmode
-        event.target.getAttribute("inputmode")
+      ? event.target.getAttribute("data-value-type")
       : null;
 
   let result = value;
@@ -39,15 +36,12 @@ export default function getInputValueFromEvent(event) {
         result = !checked;
         break;
     }
-  } else if (
-    inputMode === "numeric" &&
-    pattern === "[0-9]*" &&
-    value &&
-    value.trim() !== ""
-  ) {
-    if (!isNaN(value)) {
-      result = Number(value);
-    }
+  } else if (valueType === "integer" && value && value.trim() !== "") {
+    // Support comma-delimited numbers
+    const transformedValue = value.replace(/,/g, "");
+    if (isNaN(transformedValue)) return result;
+
+    result = parseInt(transformedValue);
   } else if (typeof value === "string" && value.trim() === "") {
     // An empty or empty-looking string will be interpreted as valid
     // in our application_rules, even if it's required. We want to

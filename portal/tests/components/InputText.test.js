@@ -141,12 +141,12 @@ describe("InputText", () => {
     });
   });
 
-  describe("when pattern prop is set", () => {
-    it("includes the pattern on the input field", () => {
-      const { wrapper } = render({ pattern: "[0-9]*" });
+  describe("when valueType prop is set", () => {
+    it("sets the data-value-type attribute on the input field", () => {
+      const { wrapper } = render({ valueType: "integer" });
       const input = wrapper.find("input");
 
-      expect(input.prop("pattern")).toBe("[0-9]*");
+      expect(input.prop("data-value-type")).toBe("integer");
     });
   });
 
