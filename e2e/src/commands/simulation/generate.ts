@@ -1,19 +1,19 @@
 import { CommandModule } from "yargs";
-import SimulationStorage from "../SimulationStorage";
+import SimulationStorage from "../../simulation/SimulationStorage";
+// import { SimulationGenerator } from "../../simulation/simulate";
 import fs from "fs";
 import path from "path";
-import { formatISODatetime } from "../quarters";
-import quarters from "../quarters";
+import quarters, { formatISODatetime } from "../../simulation/quarters";
 import { SystemWideArgs } from "../../cli";
-import * as EmployeeFactory from "../EmployeeFactory";
-import * as EmployerFactory from "../EmployerFactory";
-import type { SimulationClaim, Employer } from "../types";
+import * as EmployeeFactory from "../../simulation/EmployeeFactory";
+import * as EmployerFactory from "../../simulation/EmployerFactory";
+import type { SimulationClaim, Employer } from "../../simulation/types";
 import {
   writeClaimFile,
   writeClaimIndex,
   writeDOREmployees,
   writeDOREmployers,
-} from "../writers";
+} from "../../simulation/writers";
 
 type GenerateArgs = {
   filename: string;
@@ -21,6 +21,7 @@ type GenerateArgs = {
   directory: string;
   employeesFrom?: string;
   employersFrom: string;
+  generatorConfig?: string;
 } & SystemWideArgs;
 
 const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
@@ -66,13 +67,32 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
       demandOption: true,
       alias: "E",
     },
+    generatorConfig: {
+      type: "string",
+      description: "An array of arguments for a customizable data generator",
+      requiresArg: false,
+      demandOption: false,
+      alias: "G",
+    },
   },
   async handler(args) {
     args.logger.profile("generate");
     const path = require.resolve("./" + args.filename, {
       paths: [process.cwd()],
     });
-    const { default: generator } = await import(path);
+    let generator = await import(path);
+
+    // The presence of "customizable" determines that
+    // the generator still needs to be "built" by calling it as a function
+    if ("customizable" in generator) {
+      if (!args.generatorConfig || args.generatorConfig?.length === 0) {
+        throw new Error("Missing generatorConfig parameter!");
+      }
+      generator = generator.default(JSON.parse(unescape(args.generatorConfig)));
+    } else {
+      // Otherwise, it's a normal generator, pre-configured
+      generator = generator.default;
+    }
     const employers = (await readJSONFile(args.employersFrom)) as Employer[];
     const employerFactory = EmployerFactory.fromEmployerData(employers);
 

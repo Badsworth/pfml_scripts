@@ -1,14 +1,16 @@
 import yargs, { CommandModule } from "yargs";
-import PortalPuppeteerSubmitter from "../PortalPuppeteerSubmitter";
-import SimulationRunner, { CredentialCallback } from "../SimulationRunner";
-import SimulationStorage from "../SimulationStorage";
+import PortalPuppeteerSubmitter from "../../simulation/PortalPuppeteerSubmitter";
+import SimulationRunner, {
+  CredentialCallback,
+} from "../../simulation/SimulationRunner";
+import SimulationStorage from "../../simulation/SimulationStorage";
 import {
   SimulationStateFileTracker,
   SimulationStateNullTracker,
-} from "../SimulationStateTracker";
+} from "../../simulation/SimulationStateTracker";
 import { SystemWideArgs } from "../../cli";
 import config from "../../config";
-import AuthenticationManager from "../AuthenticationManager";
+import AuthenticationManager from "../../simulation/AuthenticationManager";
 import { CognitoUserPool } from "amazon-cognito-identity-js";
 
 type SimulateArgs = {

@@ -1,4 +1,13 @@
-#!/usr/bin/env bash
+#!/bin/bash
+output=$(date +%s)
+while getopts ":f:" opt; do
+  case $opt in
+    f) output="$OPTARG"
+    ;;
+    \?) echo "Invalid argument $opt"
+    ;;
+  esac
+done
 
 cd ../src
 
@@ -53,3 +62,10 @@ done
 rm -rf flood/simulation/
 # remove temporary `src/flood/forms` folder
 rm -rf flood/forms/
+
+cd ../scripts
+
+mkdir $output
+
+mv floodBundle.zip ./$output/floodBundle.zip
+mv index.perf.ts ./$output/index.perf.ts

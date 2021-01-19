@@ -1,7 +1,7 @@
 import { CommandModule } from "yargs";
 import { SystemWideArgs } from "../../cli";
 import config from "../../config";
-import AuthenticationManager from "../AuthenticationManager";
+import AuthenticationManager from "../../simulation/AuthenticationManager";
 import { CognitoUserPool } from "amazon-cognito-identity-js";
 import TestMailVerificationFetcher from "../../../cypress/plugins/TestMailVerificationFetcher";
 

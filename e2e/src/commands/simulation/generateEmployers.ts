@@ -1,8 +1,8 @@
 import fs from "fs";
 import { CommandModule } from "yargs";
-import SimulationStorage from "../SimulationStorage";
-import { EmployerFactory, Employer } from "../types";
-import { randomEmployer } from "../EmployerFactory";
+import SimulationStorage from "../../simulation/SimulationStorage";
+import { EmployerFactory, Employer } from "../../simulation/types";
+import { randomEmployer } from "../../simulation/EmployerFactory";
 import { SystemWideArgs } from "../../cli";
 
 type GenerateEmployersArgs = {

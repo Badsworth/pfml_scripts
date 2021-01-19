@@ -1,7 +1,7 @@
 import { SystemWideArgs } from "../../cli";
 import { CommandModule } from "yargs";
-import SimulationStorage from "../SimulationStorage";
-import { SimulationStateFileTracker } from "../SimulationStateTracker";
+import SimulationStorage from "../../simulation/SimulationStorage";
+import { SimulationStateFileTracker } from "../../simulation/SimulationStateTracker";
 
 type ResetArgs = {
   directory: string;

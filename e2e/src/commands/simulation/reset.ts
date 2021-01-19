@@ -1,6 +1,6 @@
 import { SystemWideArgs } from "../../cli";
 import { CommandModule } from "yargs";
-import SimulationStorage from "../SimulationStorage";
+import SimulationStorage from "../../simulation/SimulationStorage";
 import fs from "fs";
 
 type ResetArgs = {

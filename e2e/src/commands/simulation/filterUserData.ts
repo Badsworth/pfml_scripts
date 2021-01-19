@@ -4,8 +4,8 @@ import { promisify } from "util";
 import { CommandModule } from "yargs";
 import stream, { pipeline } from "stream";
 import JSONStream from "JSONStream";
-import SimulationStorage from "../SimulationStorage";
-import { SimulationClaim } from "../types";
+import SimulationStorage from "../../simulation/SimulationStorage";
+import { SimulationClaim } from "../../simulation/types";
 import { SystemWideArgs } from "../../cli";
 
 type ImportUserDataArgs = { directory: string } & SystemWideArgs;

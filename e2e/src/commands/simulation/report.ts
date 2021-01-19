@@ -1,11 +1,11 @@
 import yargs, { CommandModule } from "yargs";
-import SimulationStorage from "../SimulationStorage";
-import { SimulationStateFileTracker } from "../SimulationStateTracker";
+import SimulationStorage from "../../simulation/SimulationStorage";
+import { SimulationStateFileTracker } from "../../simulation/SimulationStateTracker";
 import { promisify } from "util";
 import { pipeline } from "stream";
 import fs from "fs";
 import path from "path";
-import buildReport from "../SimulationReporter";
+import buildReport from "../../simulation/SimulationReporter";
 import { SystemWideArgs } from "../../cli";
 
 // Create a promised version of the pipeline function.

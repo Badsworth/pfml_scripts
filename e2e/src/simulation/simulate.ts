@@ -303,16 +303,16 @@ export function agentScenario(
       claim: {},
       paymentPreference: {},
       documents: [],
+      wages: 0,
       ...config,
     };
-    if (config.claim?.employer_fein) {
-      const _config = { ...config, ...opts };
-      const employee = opts.employeeFactory("eligible", opts.employerFactory);
-      defaultAgent.claim = {
-        ..._config.claim,
-        employer_fein: employee.employer_fein,
-      };
-    }
+    const _config = { ...config, ...opts };
+    const employee = opts.employeeFactory("eligible", opts.employerFactory);
+    defaultAgent.wages = employee.wages;
+    defaultAgent.claim = {
+      ..._config.claim,
+      employer_fein: employee.employer_fein,
+    };
     return defaultAgent;
   };
 }

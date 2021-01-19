@@ -1,4 +1,4 @@
-import yargs, { Argv, CommandModule } from "yargs";
+import yargs, { Argv } from "yargs";
 import { config as dotenv } from "dotenv";
 import winston from "winston";
 
@@ -7,21 +7,6 @@ dotenv();
 export type SystemWideArgs = {
   verbose: boolean;
   logger: winston.Logger;
-};
-
-const simulationCommand: CommandModule<SystemWideArgs, SystemWideArgs> = {
-  command: "simulation",
-  describe: "Manage business simulation",
-  builder: (yargs) => {
-    return yargs
-      .commandDir(`${__dirname}/simulation/commands`, {
-        extensions: ["js", "ts"],
-      })
-      .demandCommand();
-  },
-  async handler() {
-    // Expected no-op.
-  },
 };
 
 /**
@@ -41,7 +26,9 @@ const simulationCommand: CommandModule<SystemWideArgs, SystemWideArgs> = {
       transports: new winston.transports.Console(),
     });
   })
-  .command(simulationCommand)
+  .commandDir(`${__dirname}/commands`, {
+    extensions: ["js", "ts"],
+  })
   .option("verbose", {
     type: "boolean",
   })

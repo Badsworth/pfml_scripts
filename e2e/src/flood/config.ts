@@ -46,7 +46,6 @@ export type AgentActions = {
 export type LSTScenario =
   | "SavilinxAgent"
   | "DFMLOpsAgent"
-  | "PortalRegistration"
   | "PortalClaimSubmit"
   | "FineosClaimSubmit"
   | "LeaveAdminSelfRegistration";

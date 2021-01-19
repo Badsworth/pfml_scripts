@@ -1,8 +1,8 @@
 import { CommandModule } from "yargs";
 import { SystemWideArgs } from "../../cli";
 import fs from "fs";
-import SimulationStorage from "../SimulationStorage";
-import { SimulationClaim } from "../types";
+import SimulationStorage from "../../simulation/SimulationStorage";
+import { SimulationClaim } from "../../simulation/types";
 import { ApplicationRequestBody } from "../../api";
 
 type ImportUserDataArgs = { directory: string } & SystemWideArgs;
