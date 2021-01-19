@@ -1,28 +1,15 @@
 import "../../styles/app.scss";
 import React, { useEffect, useState } from "react";
-import { initializeI18n, useTranslation } from "../locales/i18n";
 import { Auth } from "@aws-amplify/auth";
-import ErrorBoundary from "../components/ErrorBoundary";
-import ErrorsSummary from "../components/ErrorsSummary";
-import Header from "../components/Header";
-import { Helmet } from "react-helmet";
+import PageWrapper from "../components/PageWrapper";
 import PropTypes from "prop-types";
-import Spinner from "../components/Spinner";
-import dynamic from "next/dynamic";
-import { isFeatureEnabled } from "../services/featureFlags";
+import { initializeI18n } from "../locales/i18n";
 import { snakeCase } from "lodash";
 import tracker from "../services/tracker";
 import useAppLogic from "../hooks/useAppLogic";
 import useFeatureFlagsFromQueryEffect from "../hooks/useFeatureFlagsFromQueryEffect";
 import { useRouter } from "next/router";
 import useSessionTimeout from "../hooks/useSessionTimeout";
-
-// Lazy-loaded components
-// https://nextjs.org/docs/advanced-features/dynamic-import
-const Footer = dynamic(() => import("../components/Footer"));
-const MaintenanceTakeover = dynamic(() =>
-  import("../components/MaintenanceTakeover")
-);
 
 // Configure Amplify for Auth behavior throughout the app
 Auth.configure({
@@ -53,7 +40,6 @@ initializeI18n();
  * @returns {React.Component}
  */
 export const App = ({ Component, pageProps }) => {
-  const { t } = useTranslation();
   const router = useRouter();
   useFeatureFlagsFromQueryEffect();
 
@@ -130,87 +116,20 @@ export const App = ({ Component, pageProps }) => {
     };
   }, [router, appLogic]);
 
-  /**
-   * Render the page body based on the current state of the application
-   */
-  const renderPageContent = () => {
-    const maintenancePageRoutes = process.env.maintenancePageRoutes || [];
-    const pageIsUndergoingMaintenance =
-      maintenancePageRoutes.includes(router.pathname) || // specific page
-      maintenancePageRoutes.some(
-        // pages grouped by a wildcard (e.g /applications/* or /* for site-wide)
-        (maintenancePageRoute) =>
-          maintenancePageRoute.endsWith("*") &&
-          router.pathname.startsWith(maintenancePageRoute.split("*")[0])
-      );
-
-    // Wait for page component to load
-    if (ui.isLoading) {
-      return (
-        <div className="margin-top-8 text-center">
-          <Spinner aria-valuetext={t("components.spinner.label")} />
-        </div>
-      );
-    }
-
-    // Render maintenance page in place of the page content?
-    // pathname doesn't include a trailing slash
-    if (!isFeatureEnabled("noMaintenance") && pageIsUndergoingMaintenance) {
-      return (
-        <section id="page" data-test="maintenance page">
-          <MaintenanceTakeover />
-        </section>
-      );
-    }
-
-    // Render the actual page content
-    return (
-      <section id="page">
-        <Component appLogic={appLogic} query={router.query} {...pageProps} />
-      </section>
-    );
-  };
-
-  // Prevent site from being rendered if this feature flag isn't enabled.
-  // We render a vague but recognizable message that serves as an indicator
-  // to folks who are aware, that the site is working as expected and they
-  // need to enable the feature flag.
-  // See: https://lwd.atlassian.net/browse/CP-459
-  if (!isFeatureEnabled("pfmlTerriyay")) return <code>Hello world (◕‿◕)</code>;
-
   return (
-    <ErrorBoundary>
-      <Helmet>
-        {/* <title> is controlled through rendering a <Title> component on each page */}
-        <meta name="description" content={t("pages.app.seoDescription")} />
-      </Helmet>
-      <div className="l-container">
-        <div>
-          {/* Wrap header children in a div because its parent is a flex container */}
-          <Header user={appLogic.users.user} onLogout={appLogic.auth.logout} />
-        </div>
-        <main
-          id="main"
-          className="l-main grid-container margin-top-5 margin-bottom-8"
-        >
-          <div className="grid-row">
-            <div className="grid-col-fill">
-              {/* Include a second ErrorBoundary here so that we still render a site header if we catch an error before it bubbles up any further */}
-              <ErrorBoundary>
-                <ErrorsSummary errors={appLogic.appErrors} />
-                {renderPageContent()}
-              </ErrorBoundary>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    </ErrorBoundary>
+    <PageWrapper
+      appLogic={appLogic}
+      isLoading={ui.isLoading}
+      maintenancePageRoutes={process.env.maintenancePageRoutes || []}
+    >
+      <Component appLogic={appLogic} query={router.query} {...pageProps} />
+    </PageWrapper>
   );
 };
 
 App.propTypes = {
-  // Next.js sets Component for us
+  // Next.js sets Component for us. This is the React component
+  // exported from our pages/*.js files
   Component: PropTypes.elementType.isRequired,
   // Next.js sets pageProps for us
   pageProps: PropTypes.object,

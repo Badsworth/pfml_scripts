@@ -138,19 +138,22 @@ Below is an abbreviated representation of our directory structure, pointing out 
 ├── src                     Source code
 │   ├── api                 API request modules
 │   ├── components
+│   │   └── PageWrapper.js  🖼 Main layout applied to all pages
 │   ├── hooks               Custom React hooks
 │   ├── locales             Localization files
 │   ├── models              Data models
-|   ├── pages
-│   │   ├── _app.js         Main layout applied to all pages
-│   │   └── index.js        Homepage for claimant portal
-|   |   ├── employers
-|   │       └── index.js    Homepage for employer portal
-|   ├── services
-|   ├── utils               Utility functions
+│   ├── pages
+│   │   ├── _app.js         ⭐️ Entry point, setting up the entire application
+│   │   ├── applications    Pages for authenticated claimants
+│   │   ├── dashboard.js    Dashboard for authenticated claimants
+│   │   ├── employers       Pages for authenticated employers
+│   │   │   └── index.js    Dashboard for authenticated employers
+│   │   └── index.js        Landing page for unauthenticated users
+│   ├── services
+│   └── utils               Utility functions
 ├── storybook               Storybook site config and stories
 ├── styles
 │   └── app.scss            Main stylesheet
 ├── next.config.js          Build process config for Portal
-└── playroom.config.js       Build process config for Playroom
+└── playroom.config.js      Build process config for Playroom
 ```

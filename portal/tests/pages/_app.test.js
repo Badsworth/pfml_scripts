@@ -1,14 +1,12 @@
-import React, { useEffect } from "react";
-import { mockRouter, mockRouterEvents } from "next/router";
 import { mount, shallow } from "enzyme";
 import { App } from "../../src/pages/_app";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import React from "react";
 import { act } from "react-dom/test-utils";
+import { mockRouterEvents } from "next/router";
 import tracker from "../../src/services/tracker";
 
 // see https://github.com/vercel/next.js/issues/5416
-jest.mock("next/dynamic", () => () => (props) => null);
+jest.mock("next/dynamic", () => () => (_props) => null);
 jest.mock("../../src/services/tracker");
 jest.mock("../../src/api/UsersApi");
 jest.mock("lodash/uniqueId", () => {
@@ -16,18 +14,9 @@ jest.mock("lodash/uniqueId", () => {
 });
 
 function render(customProps = {}, mountComponent = false) {
-  const TestComponent = () => <div>Hello world</div>;
-
   const props = Object.assign(
     {
-      Component: TestComponent, // allows us to do .find("TestComponent")
-      pageProps: {
-        title: "Test page",
-      },
-      initialAuthState: "signedIn",
-      initialAuthData: {
-        attributes: { email: "mocked-header-user@example.com" },
-      },
+      Component: () => <div>Hello world</div>,
     },
     customProps
   );
@@ -59,25 +48,9 @@ describe("App", () => {
     };
   });
 
-  describe("when the 'pfmlTerriyay' feature flag is disabled", () => {
-    it("doesn't render the site", () => {
-      process.env.featureFlags = {
-        pfmlTerriyay: false,
-      };
-
-      const { wrapper } = render();
-
-      expect(wrapper).toMatchInlineSnapshot(`
-        <code>
-          Hello world (◕‿◕)
-        </code>
-      `);
-    });
-  });
-
   describe("Router events", () => {
-    it("displays the spinner when a route change starts", async () => {
-      expect.assertions(2);
+    it("sets isLoading to true when a route change starts", async () => {
+      expect.assertions();
 
       // We need to mount the component so that useEffect is called
       const mountComponent = true;
@@ -95,11 +68,10 @@ describe("App", () => {
 
       wrapper.update();
 
-      expect(wrapper.find("Spinner").exists()).toBe(true);
-      expect(wrapper.find("TestComponent").exists()).toBe(false);
+      expect(wrapper.find("PageWrapper").prop("isLoading")).toBe(true);
     });
 
-    it("hides spinner and sets New Relic route name when a route change completes", async () => {
+    it("sets isLoading to false and sets New Relic route name when a route change completes", async () => {
       expect.assertions();
 
       // We need to mount the component so that useEffect is called
@@ -126,8 +98,7 @@ describe("App", () => {
         wrapper.update();
       });
 
-      expect(wrapper.find("Spinner").exists()).toBe(false);
-      expect(wrapper.find("TestComponent").exists()).toBe(true);
+      expect(wrapper.find("PageWrapper").prop("isLoading")).toBe(false);
       expect(tracker.startPageView).toHaveBeenCalledTimes(1);
       expect(tracker.startPageView).toHaveBeenCalledWith(
         "/claims",
@@ -135,8 +106,8 @@ describe("App", () => {
       );
     });
 
-    it("hides spinner when a route change throws an error", async () => {
-      expect.assertions(2);
+    it("sets isLoading to false when a route change throws an error", async () => {
+      expect.assertions();
 
       // We need to mount the component so that useEffect is called
       const mountComponent = true;
@@ -160,9 +131,7 @@ describe("App", () => {
         wrapper.update();
       });
 
-      // Spinner hidden when route change ended
-      expect(wrapper.find("Spinner").exists()).toBe(false);
-      expect(wrapper.find("TestComponent").exists()).toBe(true);
+      expect(wrapper.find("PageWrapper").prop("isLoading")).toBe(false);
     });
 
     it("scrolls to the top of the window after a route change", async () => {
@@ -226,87 +195,6 @@ describe("App", () => {
       const h1 = wrapper.find("h1").last().getDOMNode();
 
       expect(document.activeElement).toBe(h1);
-    });
-  });
-
-  it("displays MaintenanceTakeover in place of the Page when maintenancePageRoutes includes the current page's route", () => {
-    process.env.maintenancePageRoutes = ["/login"];
-    mockRouter.pathname = "/login";
-    const { wrapper } = render();
-
-    // Need to use data-test attribute since the MaintenanceTakeover component
-    // is lazy-loaded, so won't be present on initial render
-    expect(wrapper.find({ "data-test": "maintenance page" }).exists()).toBe(
-      true
-    );
-  });
-
-  it("displays MaintenanceTakeover in place of the Page when maintenancePageRoutes includes a wildcard matching the current page's route", () => {
-    let wrapper;
-    process.env.maintenancePageRoutes = ["/employers/*"];
-
-    mockRouter.pathname = "/foo";
-    ({ wrapper } = render());
-
-    // Doesn't render for a page that doesn't match the wildcard
-    expect(wrapper.find({ "data-test": "maintenance page" }).exists()).toBe(
-      false
-    );
-
-    mockRouter.pathname = "/employers/";
-    ({ wrapper } = render());
-
-    // Matches base pathname
-    expect(wrapper.find({ "data-test": "maintenance page" }).exists()).toBe(
-      true
-    );
-
-    mockRouter.pathname = "/employers/create-account";
-    ({ wrapper } = render());
-
-    // Matches sub-pages
-    expect(wrapper.find({ "data-test": "maintenance page" }).exists()).toBe(
-      true
-    );
-  });
-
-  it("bypasses MaintenanceTakeover when noMaintenance feature flag is present", () => {
-    process.env.featureFlags = {
-      noMaintenance: true,
-      pfmlTerriyay: true,
-    };
-    process.env.maintenancePageRoutes = ["/login"];
-    mockRouter.pathname = "/login";
-    const { wrapper } = render();
-
-    expect(wrapper.find({ "data-test": "maintenance page" }).exists()).toBe(
-      false
-    );
-  });
-
-  describe("displaying errors", () => {
-    it("displays errors that child pages set", () => {
-      const ChildPage = (props) => {
-        const {
-          appLogic: { setAppErrors }, // eslint-disable-line react/prop-types
-        } = props;
-        useEffect(() => {
-          const message = "A test error happened";
-          setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo({ message })])
-          );
-        }, [setAppErrors]);
-        return <React.Fragment />;
-      };
-
-      let wrapper;
-
-      act(() => {
-        wrapper = render({ Component: ChildPage }, true).wrapper;
-      });
-      wrapper.update();
-
-      expect(wrapper.find("ErrorsSummary").prop("errors")).toMatchSnapshot();
     });
   });
 });
