@@ -9,28 +9,11 @@ terraform {
   }
 }
 
-provider "newrelic" {
-  version       = "~> 2.13.5"
-  region        = "US"
-  account_id    = local.newrelic_account_id
-  api_key       = data.aws_ssm_parameter.newrelic-api-key.value
-  admin_api_key = data.aws_ssm_parameter.newrelic-admin-api-key.value
-}
-
-
 data "aws_region" "current" {
 }
 
 data "aws_caller_identity" "current" {
 }
-
-data "newrelic_entity" "pfml-portal" {
-  # A reference to the Portal's top-level object in New Relic. Not managed by TF, but required by other Terraform objects.
-  name   = "${upper(local.app_name)}-Portal-${upper(var.environment_name)}"
-  domain = "BROWSER"
-  type   = "APPLICATION"
-}
-
 
 locals {
   app_name                     = "pfml"
@@ -48,6 +31,22 @@ data "terraform_remote_state" "pagerduty" {
   }
 }
 
+provider "newrelic" {
+  version       = "~> 2.15.0"
+  region        = "US"
+  account_id    = "2837112"
+  api_key       = data.aws_ssm_parameter.newrelic-api-key.value
+  admin_api_key = data.aws_ssm_parameter.newrelic-admin-api-key.value
+}
+
 module "constants" {
   source = "../../constants"
+}
+
+data "aws_ssm_parameter" "newrelic-api-key" {
+  name = "/admin/pfml-api/newrelic-api-key"
+}
+
+data "aws_ssm_parameter" "newrelic-admin-api-key" {
+  name = "/admin/pfml-api/newrelic-admin-api-key"
 }

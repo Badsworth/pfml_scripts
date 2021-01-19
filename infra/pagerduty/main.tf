@@ -1,5 +1,5 @@
 # Management config for PagerDuty.
-#
+##
 # This is not currently automated by Github Actions and is mostly meant to make setup faster
 # for new projects or PagerDuty accounts.
 #
@@ -16,8 +16,28 @@ provider "aws" {
   alias  = "us-east-1"
 }
 
+provider "newrelic" {
+  version       = "~> 2.15.0"
+  region        = "US"
+  account_id    = "2837112"
+  api_key       = data.aws_ssm_parameter.newrelic-api-key.value
+  admin_api_key = data.aws_ssm_parameter.newrelic-admin-api-key.value
+}
+
 terraform {
-  required_version = "0.12.24"
+  required_version = "0.13.6"
+
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+    newrelic = {
+      source = "newrelic/newrelic"
+    }
+    pagerduty = {
+      source = "pagerduty/pagerduty"
+    }
+  }
 
   backend "s3" {
     bucket         = "massgov-pfml-aws-account-mgmt"
@@ -31,3 +51,4 @@ terraform {
 provider "pagerduty" {
   token = data.aws_ssm_parameter.pagerduty_api_key.value
 }
+

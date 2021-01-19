@@ -9,7 +9,8 @@ on:
 
 env:
   working-dir: ./infra
-  tf-version: 0.12.24
+  tf-version-pagerduty: 0.13.6
+  tf-version-default: 0.12.24
 
 jobs:
   tf-format:
@@ -21,7 +22,7 @@ jobs:
       - name: tf-format-check
         uses: hashicorp/terraform-github-actions@master
         with:
-          tf_actions_version: ${{ env.tf-version }}
+          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
           tf_actions_subcommand: "fmt"
           tf_actions_working_dir: ${{ env.working-dir }}
           tf_actions_comment: false
@@ -91,7 +92,7 @@ jobs:
         if: steps.check-for-changes.outputs.has-changes == 'true'
         uses: hashicorp/terraform-github-actions@master
         with:
-          tf_actions_version: ${{ env.tf-version }}
+          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
           tf_actions_subcommand: "init"
           tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
           tf_actions_comment: false
@@ -100,7 +101,7 @@ jobs:
         if: steps.check-for-changes.outputs.has-changes == 'true'
         uses: hashicorp/terraform-github-actions@master
         with:
-          tf_actions_version: ${{ env.tf-version }}
+          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
           tf_actions_subcommand: "validate"
           tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
           tf_actions_comment: false

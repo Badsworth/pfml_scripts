@@ -1,5 +1,6 @@
 # Terraform configuration for infrastructure-layer alarms. (host-specific metrics, e.g. CPU and RAM usage)
 
+
 locals {
   critical_sns_topic = {
     "test"        = aws_sns_topic.api-low-priority-alerts-topic.arn
@@ -37,14 +38,14 @@ resource "aws_sns_topic" "api-high-priority-alerts-topic" {
 resource "aws_sns_topic_subscription" "low-priority" {
   topic_arn              = aws_sns_topic.api-low-priority-alerts-topic.arn
   protocol               = "https"
-  endpoint               = "https://events.pagerduty.com/integration/${data.terraform_remote_state.pagerduty.outputs.low_priority_cloudwatch_integration_key}/enqueue"
+  endpoint               = "https://events.pagerduty.com/integration/${var.low_priority_cloudwatch_integration_key}/enqueue"
   endpoint_auto_confirms = true
 }
 
 resource "aws_sns_topic_subscription" "high-priority" {
   topic_arn              = aws_sns_topic.api-high-priority-alerts-topic.arn
   protocol               = "https"
-  endpoint               = "https://events.pagerduty.com/integration/${data.terraform_remote_state.pagerduty.outputs.high_priority_cloudwatch_integration_key}/enqueue"
+  endpoint               = "https://events.pagerduty.com/integration/${var.high_priority_cloudwatch_integration_key}/enqueue"
   endpoint_auto_confirms = true
 }
 # ----------------------------------------------------------------------------------------------------------------------
@@ -61,7 +62,7 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_warn" {
   extended_statistic  = "p95"
   metric_name         = "CpuUtilized"
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  threshold           = (data.template_file.container_definitions.vars.cpu * 0.80)
+  threshold           = (1024 * 0.80)
   evaluation_periods  = "5"  # look back at the last five minutes
   datapoints_to_alarm = "3"  # any three one-minute periods
   period              = "60" # polling on one-minute intervals
@@ -86,7 +87,7 @@ resource "aws_cloudwatch_metric_alarm" "api_cpu_crit" {
   extended_statistic  = "p95"
   metric_name         = "CpuUtilized"
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  threshold           = (data.template_file.container_definitions.vars.cpu * 0.90)
+  threshold           = (1024 * 0.9)
   evaluation_periods  = "5"  # look back at the last five minutes
   datapoints_to_alarm = "3"  # any three one-minute periods
   period              = "60" # polling on one-minute intervals
@@ -113,7 +114,7 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_warn" {
   extended_statistic  = "p95"
   metric_name         = "MemoryUtilized" # units: MiB
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  threshold           = (data.template_file.container_definitions.vars.memory * 0.90)
+  threshold           = (2048 * 0.90)
   evaluation_periods  = "5"  # look back at the last five minutes
   datapoints_to_alarm = "3"  # any three one-minute periods
   period              = "60" # polling on one-minute intervals
@@ -138,7 +139,7 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_crit" {
   extended_statistic  = "p95"
   metric_name         = "MemoryUtilized" # units: MiB
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  threshold           = (data.template_file.container_definitions.vars.memory * 0.95)
+  threshold           = (2048 * 0.95)
   evaluation_periods  = "5"  # look back at the last five minutes
   datapoints_to_alarm = "3"  # any three one-minute periods
   period              = "60" # polling on one-minute intervals

@@ -22,8 +22,8 @@ data "aws_ssm_parameter" "pagerduty_api_key" {
 }
 
 locals {
-  low_priority_channel_key  = data.terraform_remote_state.pagerduty.outputs.low_priority_nr_portal_integration_key
-  high_priority_channel_key = data.terraform_remote_state.pagerduty.outputs.high_priority_nr_portal_integration_key
+  low_priority_channel_key  = var.low_priority_nr_portal_integration_key
+  high_priority_channel_key = var.high_priority_nr_portal_integration_key
 
   alert_channel = {
     "test"        = local.low_priority_channel_key,
@@ -153,7 +153,7 @@ resource "newrelic_alert_condition" "portal_page_rendering_time" {
 /////////////////
 
 module "newrelic_alert_cognito_password_reset_errors" {
-  source    = "../../modules/newrelic_baseline_error_rate"
+  source    = "../newrelic_baseline_error_rate"
   policy_id = newrelic_alert_policy.portal_alerts.id
 
   name  = "High password reset error rate"
@@ -161,7 +161,7 @@ module "newrelic_alert_cognito_password_reset_errors" {
 }
 
 module "newrelic_alert_cognito_sign_in_errors" {
-  source    = "../../modules/newrelic_baseline_error_rate"
+  source    = "../newrelic_baseline_error_rate"
   policy_id = newrelic_alert_policy.portal_alerts.id
 
   name  = "High log in error rate"
@@ -169,7 +169,7 @@ module "newrelic_alert_cognito_sign_in_errors" {
 }
 
 module "newrelic_alert_cognito_claimant_sign_up_errors" {
-  source    = "../../modules/newrelic_baseline_error_rate"
+  source    = "../newrelic_baseline_error_rate"
   policy_id = newrelic_alert_policy.portal_alerts.id
 
   name  = "High claimant sign up error rate"
@@ -177,7 +177,7 @@ module "newrelic_alert_cognito_claimant_sign_up_errors" {
 }
 
 module "newrelic_alert_cognito_claimant_sign_up_verification_errors" {
-  source    = "../../modules/newrelic_baseline_error_rate"
+  source    = "../newrelic_baseline_error_rate"
   policy_id = newrelic_alert_policy.portal_alerts.id
 
   name  = "High sign up verification error rate"
@@ -185,7 +185,7 @@ module "newrelic_alert_cognito_claimant_sign_up_verification_errors" {
 }
 
 module "newrelic_alert_cognito_employer_sign_up_errors" {
-  source    = "../../modules/newrelic_baseline_error_rate"
+  source    = "../newrelic_baseline_error_rate"
   policy_id = newrelic_alert_policy.portal_alerts.id
 
   name  = "High employer sign up error rate"
@@ -193,7 +193,7 @@ module "newrelic_alert_cognito_employer_sign_up_errors" {
 }
 
 module "newrelic_alert_application_complete_errors" {
-  source    = "../../modules/newrelic_baseline_error_rate"
+  source    = "../newrelic_baseline_error_rate"
   policy_id = newrelic_alert_policy.portal_alerts.id
 
   name  = "High application completion error rate"
@@ -201,7 +201,7 @@ module "newrelic_alert_application_complete_errors" {
 }
 
 module "newrelic_alert_application_document_upload_errors" {
-  source    = "../../modules/newrelic_baseline_error_rate"
+  source    = "../newrelic_baseline_error_rate"
   policy_id = newrelic_alert_policy.portal_alerts.id
 
   name  = "High document upload error rate"
@@ -209,7 +209,7 @@ module "newrelic_alert_application_document_upload_errors" {
 }
 
 module "newrelic_alert_application_submit_errors" {
-  source    = "../../modules/newrelic_baseline_error_rate"
+  source    = "../newrelic_baseline_error_rate"
   policy_id = newrelic_alert_policy.portal_alerts.id
 
   name  = "High application submission error rate"
@@ -217,7 +217,7 @@ module "newrelic_alert_application_submit_errors" {
 }
 
 module "newrelic_alert_application_submit_payment_preference_errors" {
-  source    = "../../modules/newrelic_baseline_error_rate"
+  source    = "../newrelic_baseline_error_rate"
   policy_id = newrelic_alert_policy.portal_alerts.id
 
   name  = "High payment preference submission error rate"
