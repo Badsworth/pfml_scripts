@@ -6,7 +6,7 @@
 # in the API README to generate an associated table migration.
 
 from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from ..lookup import LookupTable
@@ -42,8 +42,14 @@ class Verification(Base):
     verification_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     verification_type_id = Column(Integer, ForeignKey("lk_verification_type.verification_type_id"))
     verification_type = relationship("LkVerificationType")
-    verified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
-    email_address = Column(Text)
+    verification_metadata = Column(JSONB)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+    )
 
 
 def sync_lookup_tables(db_session):
