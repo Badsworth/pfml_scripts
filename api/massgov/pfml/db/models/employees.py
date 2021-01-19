@@ -408,6 +408,13 @@ class Claim(Base):
     absence_period_end_date = Column(Date)
     fineos_notification_id = Column(Text)
     is_id_proofed = Column(Boolean)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+    )
 
     # Not sure if these are currently used.
     authorized_representative_id = Column(UUID(as_uuid=True))
@@ -550,6 +557,13 @@ class User(Base):
     active_directory_id = Column(Text, index=True, unique=True)
     email_address = Column(Text)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+    )
 
     roles = relationship("UserRole", back_populates="user", uselist=True)
 
@@ -558,6 +572,13 @@ class UserRole(Base):
     __tablename__ = "link_user_role"
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), primary_key=True)
     role_id = Column(Integer, ForeignKey("lk_role.role_id"), primary_key=True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
+    )
 
     user = relationship(User)
     role = relationship(LkRole)
@@ -571,6 +592,13 @@ class UserLeaveAdministrator(Base):
     fineos_web_id = Column(Text)
     verification_id = Column(
         UUID(as_uuid=True), ForeignKey("verification.verification_id"), nullable=True
+    )
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        onupdate=utc_timestamp_gen,
     )
 
     user = relationship(User)
