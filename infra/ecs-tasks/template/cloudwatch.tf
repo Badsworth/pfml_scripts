@@ -63,18 +63,33 @@ resource "aws_cloudwatch_event_target" "register_admins_event_target_ecs" {
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Payments ECS Task using Cloudwatch Events (Eventbridge)
-resource "aws_cloudwatch_event_target" "trigger_payments_ctr_process_ecs_task_daily_at_8_pm" {
-  rule      = aws_cloudwatch_event_rule.payments_ctr_process_ecs_task_daily_at_8_pm.name
-  arn       = aws_ecs_task_definition.ecs_tasks["process-payments"].arn
+resource "aws_cloudwatch_event_target" "trigger_payments_ctr_process_ecs_task_daily_at_9_am_et" {
+  count = var.enable_recurring_payments_schedule == true ? 1 : 0
+
+  rule      = aws_cloudwatch_event_rule.payments_ctr_process_ecs_task_daily_at_9_am_et.name
+  arn       = data.aws_ecs_cluster.cluster.arn
   target_id = "payments_ctr_process_${var.environment_name}_cloudwatch_event_target"
-  count     = var.enable_recurring_payments_schedule == true ? 1 : 0
+  role_arn  = aws_iam_role.cloudwatch_events_payments_ctr_scheduler_role.arn
+
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = aws_ecs_task_definition.ecs_tasks["payments-ctr-process"].arn
+    launch_type         = "FARGATE"
+    platform_version    = "1.4.0"
+
+    network_configuration {
+      assign_public_ip = false
+      subnets          = var.app_subnet_ids
+      security_groups  = [aws_security_group.tasks.id]
+    }
+  }
 }
 
-resource "aws_cloudwatch_event_rule" "payments_ctr_process_ecs_task_daily_at_8_pm" {
-  name        = "${var.environment_name}-payments-ctr-process-ecs-task-daily-at-8-pm"
-  description = "Fires the ${var.environment_name} Payments CTR Process ECS task daily at 8pm US EDT/1am UTC"
-  # The time of day can only be specified in UTC and will need to be updated when daylight savings changes occur, if the 2300 US ET is desired to be consistent.
-  schedule_expression = "cron(0 1 * * ? *)"
+resource "aws_cloudwatch_event_rule" "payments_ctr_process_ecs_task_daily_at_9_am_et" {
+  name        = "${var.environment_name}-payments-ctr-process-ecs-task-daily-at-9-am-et"
+  description = "Fires the ${var.environment_name} Payments CTR Process ECS task daily at 9am US EDT/2pm UTC"
+  # The time of day can only be specified in UTC and will need to be updated when daylight savings changes occur, if the 9AM US ET is desired to be consistent.
+  schedule_expression = "cron(0 14 * * ? *)"
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
   })

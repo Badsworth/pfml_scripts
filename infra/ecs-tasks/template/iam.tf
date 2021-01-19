@@ -746,6 +746,51 @@ data "aws_iam_policy_document" "payments_ctr_import_execution_role_extras" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for payments-ctr-process scheduler
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "cloudwatch_events_payments_ctr_scheduler_role" {
+  name               = "${local.app_name}-${var.environment_name}-payments-ctr-scheduler-events-role"
+  assume_role_policy = data.aws_iam_policy_document.cloudwatch_events_payments_ctr_scheduler_role_assume_policy.json
+}
+
+data "aws_iam_policy_document" "cloudwatch_events_payments_ctr_scheduler_role_assume_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "cloudwatch_events_payments_ctr_scheduler_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-payments-ctr-scheduler-events-role-policy"
+  role   = aws_iam_role.cloudwatch_events_payments_ctr_scheduler_role.id
+  policy = data.aws_iam_policy_document.cloudwatch_events_payments_ctr_scheduler_role_policy.json
+}
+
+data "aws_iam_policy_document" "cloudwatch_events_payments_ctr_scheduler_role_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["ecs:RunTask"]
+
+    resources = ["arn:aws:ecs:us-east-1:${data.aws_caller_identity.current.account_id}:task-definition/${aws_ecs_task_definition.ecs_tasks["payments-ctr-process"].family}:*"]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["iam:PassRole"]
+
+    resources = [
+      aws_iam_role.task_executor.arn,
+      aws_iam_role.payments_ctr_process_task_role.arn
+    ]
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for S3 buckets for business intelligence (BI) data extracts
 # ----------------------------------------------------------------------------------------------------------------------
 
