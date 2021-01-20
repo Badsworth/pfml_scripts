@@ -10,7 +10,7 @@ exports[`FieldsetAddress renders the component with existing values 1`] = `
   <InputText
     autoComplete="address-line1"
     errorMsg={null}
-    label="Street address 1"
+    label="Address"
     name="address.line_1"
     onChange={[MockFunction]}
     smallLabel={true}
@@ -19,7 +19,7 @@ exports[`FieldsetAddress renders the component with existing values 1`] = `
   <InputText
     autoComplete="address-line2"
     errorMsg={null}
-    label="Street address 2"
+    label="Address line 2"
     name="address.line_2"
     onChange={[MockFunction]}
     optionalText="(optional)"
@@ -69,7 +69,7 @@ exports[`FieldsetAddress renders the component with null values 1`] = `
   <InputText
     autoComplete="address-line1"
     errorMsg={null}
-    label="Street address 1"
+    label="Address"
     name="address.line_1"
     onChange={[MockFunction]}
     smallLabel={true}
@@ -78,7 +78,7 @@ exports[`FieldsetAddress renders the component with null values 1`] = `
   <InputText
     autoComplete="address-line2"
     errorMsg={null}
-    label="Street address 2"
+    label="Address line 2"
     name="address.line_2"
     onChange={[MockFunction]}
     optionalText="(optional)"

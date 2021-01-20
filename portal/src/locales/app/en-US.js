@@ -746,7 +746,7 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   claimsAddress: {
-    choiceNo: "$t(shared.choiceNo)",
+    choiceNo: "No, I would like to add a mailing address",
     choiceYes: "$t(shared.choiceYes)",
     hasMailingAddressHint:
       "We may send notices to this address. If you choose to get your payments through paper checks, we will mail the checks to this address.",
@@ -1991,8 +1991,10 @@ const components = {
   },
   fieldsetAddress: {
     cityLabel: "City",
-    line1Label: "Street address 1",
-    line2Label: "Street address 2",
+    line1Label_mailing: "Mailing address",
+    line1Label_residential: "Address",
+    line2Label_mailing: "Mailing address line 2",
+    line2Label_residential: "Address line 2",
     stateLabel: "State",
     zipLabel: "ZIP",
   },

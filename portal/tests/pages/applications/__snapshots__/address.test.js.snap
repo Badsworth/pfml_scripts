@@ -36,7 +36,7 @@ exports[`Address renders the page without any address info 1`] = `
         },
         Object {
           "checked": false,
-          "label": "No",
+          "label": "No, I would like to add a mailing address",
           "value": "true",
         },
       ]
@@ -60,6 +60,7 @@ exports[`Address renders the page without any address info 1`] = `
     visible={null}
   >
     <FieldsetAddress
+      addressType="mailing"
       appErrors={
         AppErrorInfoCollection {
           "items": Array [],

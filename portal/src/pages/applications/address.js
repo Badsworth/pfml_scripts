@@ -107,6 +107,7 @@ export const Address = (props) => {
           appErrors={appLogic.appErrors}
           label={t("pages.claimsAddress.mailingAddressLabel")}
           hint={t("pages.claimsAddress.mailingAddressHint")}
+          addressType="mailing"
           {...mailingAddressProps}
         />
       </ConditionalContent>

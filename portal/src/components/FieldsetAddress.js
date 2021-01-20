@@ -10,9 +10,16 @@ import { useTranslation } from "../locales/i18n";
 /**
  * A fieldset for collecting a user's US address.
  */
-const FieldsetAddress = (props) => {
+const FieldsetAddress = ({ addressType = "residential", ...props }) => {
   const { appErrors, name, onChange, value } = props;
   const { t } = useTranslation();
+
+  const line1Label = t("components.fieldsetAddress.line1Label", {
+    context: addressType,
+  });
+  const line2Label = t("components.fieldsetAddress.line2Label", {
+    context: addressType,
+  });
 
   return (
     <Fieldset>
@@ -23,7 +30,7 @@ const FieldsetAddress = (props) => {
       <InputText
         autoComplete="address-line1"
         errorMsg={appErrors.fieldErrorMessage(`${name}.line_1`)}
-        label={t("components.fieldsetAddress.line1Label")}
+        label={line1Label}
         name={`${name}.line_1`}
         onChange={onChange}
         smallLabel
@@ -33,7 +40,7 @@ const FieldsetAddress = (props) => {
       <InputText
         autoComplete="address-line2"
         errorMsg={appErrors.fieldErrorMessage(`${name}.line_2`)}
-        label={t("components.fieldsetAddress.line2Label")}
+        label={line2Label}
         name={`${name}.line_2`}
         onChange={onChange}
         optionalText={t("components.form.optional")}
@@ -90,6 +97,10 @@ FieldsetAddress.propTypes = {
    * Localized label for the entire fieldset
    */
   label: PropTypes.string.isRequired,
+  /**
+   * Determines which labels to use
+   */
+  addressType: PropTypes.oneOf(["residential", "mailing"]),
   /**
    * The root HTML name value. Each field will use a name with
    * this as the prefix.

@@ -125,12 +125,23 @@ describe("FieldsetAddress", () => {
     });
   });
 
-  describe("when the hint prob is set", () => {
+  describe("when the hint prop is set", () => {
     it("renders the hint text", () => {
       props.hint = "This is a hint";
       wrapper = shallow(<FieldsetAddress {...props} />);
 
       expect(wrapper.find("FormLabel").prop("hint")).toBe(props.hint);
+    });
+  });
+
+  describe("when the addressType prop is mailing", () => {
+    it("renders alterative mailing address labels", () => {
+      props.addressType = "mailing";
+      wrapper = shallow(<FieldsetAddress {...props} />);
+
+      const labelText = wrapper.find({ name: "address.line_1" }).prop("label");
+
+      expect(labelText).toMatchInlineSnapshot(`"Mailing address"`);
     });
   });
 });
