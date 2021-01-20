@@ -9,6 +9,8 @@ locals {
   environments = ["test", "stage", "prod", "performance", "training", "uat"]
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+
 resource "aws_s3_bucket" "terraform" {
   for_each = toset(local.environments)
 
@@ -43,6 +45,8 @@ resource "aws_s3_bucket_public_access_block" "terraform_block_public_access" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
 
 # Create S3 buckets to store data imported from Formstack
 
@@ -81,7 +85,7 @@ resource "aws_s3_bucket_public_access_block" "formstack_import_block_public_acce
   restrict_public_buckets = true
 }
 
-
+# ----------------------------------------------------------------------------------------------------------------------
 
 # Create S3 buckets to receive agency data.
 #
@@ -127,6 +131,8 @@ resource "aws_s3_bucket_public_access_block" "agency_transfer_block_public_acces
   restrict_public_buckets = true
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+
 resource "aws_s3_bucket" "lambda_build" {
   bucket = "massgov-pfml-api-lambda-builds"
   acl    = "private"
@@ -155,6 +161,7 @@ resource "aws_s3_bucket_public_access_block" "lambda_build_block_public_access" 
   restrict_public_buckets = true
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
 
 # Create S3 buckets to store CSVs that will be linked in emails sent to
 # Third-Party Administrators (TPAs)
@@ -181,6 +188,33 @@ resource "aws_s3_bucket" "tpa_csv_storage" {
 resource "aws_s3_bucket_public_access_block" "tpa_csv_storage_block_public_access" {
   bucket = aws_s3_bucket.tpa_csv_storage.id
 
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_s3_bucket" "ses_to_newrelic_dlq" {
+  bucket = "massgov-pfml-ses-to-newrelic-dlq"
+  tags = merge(module.constants.common_tags, {
+    public = "no"
+    Name   = "massgov-pfml-ses-to-newrelic-dlq"
+  })
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm     = "aws:kms"
+        kms_master_key_id = aws_kms_key.ses_newrelic_dlq.arn
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "ses_to_newrelic_dlq" {
+  bucket                  = aws_s3_bucket.ses_to_newrelic_dlq.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true

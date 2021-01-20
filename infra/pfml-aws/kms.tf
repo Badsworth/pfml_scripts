@@ -28,6 +28,10 @@ resource "aws_kms_key" "s3_kms_key" {
   policy      = data.aws_iam_policy_document.prod_tfstate_s3_kms_key.json
 }
 
+resource "aws_kms_key" "ses_newrelic_dlq" {
+  description = "Terraform generated KMS key for the massgov-pfml-ses-to-newrelic-dlq bucket"
+}
+
 resource "aws_kms_alias" "id_proofing_document_alias" {
   name          = "alias/prod_tfstate_s3_kms_key"
   target_key_id = aws_kms_key.s3_kms_key.key_id
