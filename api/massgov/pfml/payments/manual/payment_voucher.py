@@ -133,6 +133,7 @@ def copy_input_files_to_output_path(input_path, output_path):
     """Copy the input files to the output directory for use and as an archive."""
     input_files = []
     for input_file in massgov.pfml.util.files.list_files(input_path):
+        copy = False
         for pattern in (
             "Employee_feed.csv",
             "LeavePlan_info.csv",
@@ -141,8 +142,10 @@ def copy_input_files_to_output_path(input_path, output_path):
             "vpeiclaimdetails.csv",
             "vpeipaymentdetails.csv",
         ):
-            if not input_file.endswith(pattern):
-                continue
+            if input_file.endswith(pattern):
+                copy = True
+        if not copy:
+            continue
         source = os.path.join(input_path, input_file)
         destination = os.path.join(output_path, input_file)
         logger.info("copy %s to %s", source, destination)
