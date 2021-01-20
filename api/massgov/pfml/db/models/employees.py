@@ -14,6 +14,7 @@ from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Index, Inte
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Query, dynamic_loader, relationship
 from sqlalchemy.sql.expression import func
+from sqlalchemy.sql.functions import now as sqlnow
 from sqlalchemy.types import JSON
 
 from ..lookup import LookupTable
@@ -408,12 +409,20 @@ class Claim(Base):
     absence_period_end_date = Column(Date)
     fineos_notification_id = Column(Text)
     is_id_proofed = Column(Boolean)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
     updated_at = Column(
         TIMESTAMP(timezone=True),
         nullable=False,
         default=utc_timestamp_gen,
         onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
     )
 
     # Not sure if these are currently used.
@@ -557,12 +566,20 @@ class User(Base):
     active_directory_id = Column(Text, index=True, unique=True)
     email_address = Column(Text)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
     updated_at = Column(
         TIMESTAMP(timezone=True),
         nullable=False,
         default=utc_timestamp_gen,
         onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
     )
 
     roles = relationship("UserRole", back_populates="user", uselist=True)
@@ -572,12 +589,20 @@ class UserRole(Base):
     __tablename__ = "link_user_role"
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), primary_key=True)
     role_id = Column(Integer, ForeignKey("lk_role.role_id"), primary_key=True)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
     updated_at = Column(
         TIMESTAMP(timezone=True),
         nullable=False,
         default=utc_timestamp_gen,
         onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
     )
 
     user = relationship(User)
@@ -593,12 +618,20 @@ class UserLeaveAdministrator(Base):
     verification_id = Column(
         UUID(as_uuid=True), ForeignKey("verification.verification_id"), nullable=True
     )
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
     updated_at = Column(
         TIMESTAMP(timezone=True),
         nullable=False,
         default=utc_timestamp_gen,
         onupdate=utc_timestamp_gen,
+        server_default=sqlnow(),
     )
 
     user = relationship(User)
