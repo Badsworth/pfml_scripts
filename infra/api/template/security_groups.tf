@@ -115,6 +115,18 @@ resource "aws_security_group_rule" "rds_postgresql_ingress_nessus" {
   security_group_id = aws_security_group.rds_postgresql.id
 }
 
+# Allow RDS access from AWS Workspaces.
+# The source SG is managed by EOTSS / Smartronix.
+resource "aws_security_group_rule" "rds_postgresql_ingress_workspaces" {
+  type                     = "ingress"
+  description              = "PostgreSQL from AWS Workspaces"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = "sg-01b132e682b7aa99b"
+  security_group_id        = aws_security_group.rds_postgresql.id
+}
+
 # Allow outgoing network traffic to RDS databases from data import lambdas
 resource "aws_security_group" "data_import" {
   name        = "${local.app_name}-data-import-${var.environment_name}"
