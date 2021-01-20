@@ -52,6 +52,8 @@ def main():
         or is_fineos_bucket(args.copy)
         or is_fineos_bucket(args.to)
         or is_fineos_bucket(args.delete)
+        or is_fineos_bucket(args.copy_dir)
+        or is_fineos_bucket(args.to_dir)
     ):
         fineos_boto_session = massgov.pfml.util.aws.sts.assume_session(
             role_arn=config.fineos_aws_iam_role_arn,
@@ -160,7 +162,7 @@ def bucket_delete(delete, delsize, s3):
 
 def file_name_contains_prefix(file_prefixes, file_name):
     for prefix in file_prefixes:
-        if file_name.startswith(prefix):
+        if prefix in file_name:
             return True
     return False
 
