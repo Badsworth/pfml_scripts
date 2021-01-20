@@ -107,6 +107,8 @@ class PaymentData:
     tin: Optional[str]
     absence_case_number: Optional[str]
 
+    full_name: Optional[str]
+
     address_line_one: Optional[str]
     address_line_two: Optional[str]
     city: Optional[str]
@@ -152,6 +154,10 @@ class PaymentData:
         )
         self.absence_case_number = payments_util.validate_csv_input(
             "ABSENCECASENU", claim_details, self.validation_container, True
+        )
+
+        self.full_name = payments_util.validate_csv_input(
+            "PAYEEFULLNAME", pei_record, self.validation_container, False
         )
 
         self.address_line_one = payments_util.validate_csv_input(
@@ -276,10 +282,15 @@ def determine_field_names(download_location: pathlib.Path) -> List[str]:
 def download_and_parse_data(s3_path: str, download_directory: pathlib.Path) -> List[Dict[str, str]]:
     file_name = s3_path.split("/")[-1]
     download_location = download_directory / file_name
-    file_util.download_from_s3(s3_path, str(download_location))
+    logger.info("download %s to %s", s3_path, download_location)
+    if s3_path.startswith("s3:/"):
+        file_util.download_from_s3(s3_path, str(download_location))
+    else:
+        file_util.copy_file(s3_path, str(download_location))
 
     raw_extract_data = []
 
+    logger.info("parse %s", download_location)
     field_names = determine_field_names(download_location)
     with open(download_location) as extract_file:
         dict_reader = csv.DictReader(extract_file, delimiter=",", fieldnames=field_names)

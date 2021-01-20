@@ -177,8 +177,12 @@ def download_and_index_data(extract_data: ExtractData, download_directory: str) 
 def download_file(s3_path: str, download_directory: str) -> str:
     file_name = os.path.basename(s3_path)
     download_location = os.path.join(download_directory, file_name)
+    logger.info("download %s to %s", s3_path, download_location)
     try:
-        file_util.download_from_s3(s3_path, download_location)
+        if s3_path.startswith("s3:/"):
+            file_util.download_from_s3(s3_path, download_location)
+        else:
+            file_util.copy_file(s3_path, download_location)
     except Exception as e:
         logger.exception(
             "Error downloading file",
