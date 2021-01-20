@@ -263,11 +263,12 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
     )
     requested_absence_extract.indexed_data["NTN-308848-ABS-01"] = test_requested_absence_csv_row
 
-    test_employee = EmployeeFactory(
-        tax_identifier=TaxIdentifier(tax_identifier="999004400"),
-        ctr_vendor_customer_code="VC0001230001",
+    test_db_session.add(
+        EmployeeFactory(
+            tax_identifier=TaxIdentifier(tax_identifier="999004400"),
+            ctr_vendor_customer_code="VC0001230001",
+        )
     )
-    test_db_session.add(test_employee)
 
     output_csv = MockCSVWriter()
     writeback_csv = MockCSVWriter()
@@ -288,6 +289,7 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
     assert re.match("^GAXMDFMLAAAA........$", doc_id)
     assert output_csv.rows[0] == {
         "absence_case_number": "NTN-308848-ABS-01",
+        "address_code": "AD010",
         "address_line_1": "47 Washington St",
         "address_line_2": "",
         "c_value": "7326",
@@ -307,10 +309,9 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "payment_preference": "Check",
         "scheduled_payment_date": "2021-01-18",
         "state": "MA",
-        "validation_issues": "[]",
         "vendor_invoice_date": "2021-01-22",
         "vendor_invoice_line": "1",
-        "vendor_invoice_number": "NTN-308848-ABS-01_2021-01-18",
+        "vendor_invoice_number": "NTN-308848-ABS-01_249",
         "vendor_single_payment": "Yes",
         "zip": "02169",
     }
@@ -326,8 +327,23 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
 
 
 @freezegun.freeze_time("2021-01-21 08:00:00", tz_offset=0)
-def test_process_extracts_to_payment_voucher(test_db_session, tmp_path):
+def test_process_extracts_to_payment_voucher(
+    test_db_session, initialize_factories_session, tmp_path
+):
     input_path = os.path.join(os.path.dirname(__file__), "test_files")
+
+    for ssn in ("390666954", "235702221", "158786713", "037408790", "135407982", "003061455"):
+        test_db_session.add(
+            EmployeeFactory(
+                tax_identifier=TaxIdentifier(tax_identifier=ssn),
+                ctr_vendor_customer_code="VC00012300" + ssn[-2:],
+            )
+        )
+    test_db_session.add(
+        EmployeeFactory(
+            tax_identifier=TaxIdentifier(tax_identifier="375563922"), ctr_vendor_customer_code=None,
+        )
+    )
 
     # DOC ID in output is randomized so seed to get reproducible output.
     random.seed(1)
@@ -340,3 +356,8 @@ def test_process_extracts_to_payment_voucher(test_db_session, tmp_path):
     expected_output = open(os.path.join(input_path, "expected_payment_voucher.csv")).readlines()
 
     assert csv_output == expected_output
+
+    writeback = open(os.path.join(tmp_path, "20210121_080000_writeback.csv")).readlines()
+    expected_writeback = open(os.path.join(input_path, "expected_writeback.csv")).readlines()
+
+    assert writeback == expected_writeback

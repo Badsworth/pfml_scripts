@@ -21,6 +21,7 @@ import random
 import string
 import sys
 import tempfile
+from typing import Dict, Optional
 
 import smart_open
 
@@ -181,6 +182,12 @@ def process_payment_records(
         )
 
 
+class PaymentRowError(Exception):
+    """An error in a row that prevents processing of the payment."""
+
+    pass
+
+
 def process_payment_record(
     extract_data,
     requested_absence_extract,
@@ -192,25 +199,35 @@ def process_payment_record(
     db_session,
 ):
     """Process a single payment record with the given index."""
+    extra: Dict[str, Optional[str]] = {}
+
     try:
         payment_data = fineos_payment_export.PaymentData(extract_data, index, record)
-        requested_absence = requested_absence_extract.indexed_data[payment_data.absence_case_number]
+        extra.update(absence_case=payment_data.absence_case_number, i_value=index.i)
 
-        mmars_vendor_code, mmars_lookup_ok = get_mmars_vendor_code(payment_data.tin, db_session)
+        requested_absence = requested_absence_extract.indexed_data[payment_data.absence_case_number]
 
         if payment_data.validation_container.has_validation_issues():
             logger.warning(
-                "validation issues: %r", payment_data.validation_container.validation_issues
+                "validation issues: %r",
+                payment_data.validation_container.validation_issues,
+                extra=extra,
             )
+
+        mmars_vendor_code = get_mmars_vendor_code(payment_data.tin, db_session)
 
         write_row_to_output(
             index, payment_data, requested_absence, mmars_vendor_code, payment_date, output_csv
         )
-        if mmars_lookup_ok:
-            write_writeback_row(index, writeback_csv)
+        write_writeback_row(index, writeback_csv)
+
+        logger.info("wrote payment row", extra=extra)
+
+    except PaymentRowError as err:
+        logger.warning("%s", err, extra=extra)
 
     except Exception:
-        logger.exception("exception for payment row")
+        logger.exception("exception for payment row", extra=extra)
 
 
 def get_mmars_vendor_code(tax_identifier, db_session):
@@ -223,11 +240,11 @@ def get_mmars_vendor_code(tax_identifier, db_session):
     )
     if employee:
         if employee.ctr_vendor_customer_code:
-            return employee.ctr_vendor_customer_code, True
+            return employee.ctr_vendor_customer_code
         else:
-            return "Vendor code not in PFML DB", False
+            raise PaymentRowError("ctr_vendor_customer_code is NULL")
     else:
-        return "Employee not in PFML DB", False
+        raise PaymentRowError("not found in employee table")
 
 
 def write_row_to_output(
@@ -245,6 +262,7 @@ def write_row_to_output(
         mmars_vendor_code=mmars_vendor_code,
         first_last_name=payment_data.full_name,
         payment_preference=payment_data.raw_payment_method,
+        address_code="AD010",
         address_line_1=payment_data.address_line_one,
         address_line_2=payment_data.address_line_two,
         city=payment_data.city,
@@ -255,8 +273,7 @@ def write_row_to_output(
         event_type="AP01",
         payment_amount=payment_data.payment_amount,
         description="PFML Payment %s" % payment_data.absence_case_number,
-        vendor_invoice_number="%s_%s"
-        % (payment_data.absence_case_number, payment_date.isoformat()),
+        vendor_invoice_number="%s_%s" % (payment_data.absence_case_number, index.i),
         vendor_invoice_line="1",
         vendor_invoice_date=(payment_end_period + datetime.timedelta(days=1)).isoformat(),
         payment_period_start_date=payment_start_period.isoformat(),
@@ -264,18 +281,8 @@ def write_row_to_output(
         absence_case_number=payment_data.absence_case_number,
         c_value=index.c,
         i_value=index.i,
-        validation_issues=str(payment_data.validation_container.validation_issues),
     )
     output_csv.writerow(dataclasses.asdict(payment_row))
-    logger.info(
-        "wrote payment row",
-        extra={
-            "absence_case": payment_data.absence_case_number,
-            "payment_date": payment_data.payment_date,
-            "c_value": index.c,
-            "i_value": index.i,
-        },
-    )
 
 
 def write_writeback_row(index, writeback_csv):

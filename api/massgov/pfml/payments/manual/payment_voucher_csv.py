@@ -17,6 +17,7 @@ class PaymentVoucherCSV:
     mmars_vendor_code: str
     first_last_name: str
     payment_preference: str
+    address_code: str
     address_line_1: str
     address_line_2: str
     city: str
@@ -35,7 +36,6 @@ class PaymentVoucherCSV:
     absence_case_number: str
     c_value: str
     i_value: str
-    validation_issues: str
 
 
 PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
@@ -46,6 +46,7 @@ PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
     mmars_vendor_code="MMARS vendor code",
     first_last_name="First last name",
     payment_preference="Payment preference",
+    address_code="Address code",
     address_line_1="Address line 1",
     address_line_2="Address line 2",
     city="City",
@@ -64,7 +65,6 @@ PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
     absence_case_number="Absence case number",
     c_value="C value",
     i_value="I value",
-    validation_issues="Validation issues",
 )
 
 
