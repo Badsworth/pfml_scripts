@@ -154,7 +154,7 @@ payments-fineos-process: # Run the Payments FINEOS import process (Just the vend
 
 payments-ctr-process: # Run the Payments Comptroller processes (Just the VCC parts right now)
 	$(PY_RUN_CMD) payments-ctr-process --steps vcc data-mart error-report
-	
+
 fineos-test-vendor-export-generate:
 	mkdir -p mock_fineos_test_vendor_export
 	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export --fein 103000000 --ssn 253000000 --cvalue 5100 --employeecustomernumber 200 --absencecaseid 200 $(DECODE_LOG)
@@ -162,7 +162,6 @@ fineos-test-vendor-export-generate:
 fineos-test-vendor-export-generate-more:
 	mkdir -p mock_fineos_test_vendor_export_more
 	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export_more --fein 104000000 --ssn 254000000 --cvalue 5200 --employeecustomernumber 300 --absencecaseid 300 $(DECODE_LOG)
-
 
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
@@ -363,14 +362,14 @@ test-watch-changed: ## Watch and run `make test-changed` on file changes
 test-watch-focus: ## Watch and run tests decorated with `@pytest.mark.dev_focus` on file changes
 	$(call run_test_watch,-m dev_focus $(args))
 
-API_PATHS := . ../infra/api ../infra/ecs-tasks ../infra/env-shared ../.github/workflows/api-*
+API_PATHS := . ../infra/api ../infra/ecs-tasks ../infra/env-shared ../.github/workflows/api-deploy.yml
 release-notes: refs=origin/deploy/api/stage..origin/master
 release-notes: ## Generate API release notes for $refs (defaults between stage and test)
 	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
-	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
+	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
 	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'
 
-API_RELEASE_BRANCHES := $(addprefix origin/, master deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training)
+API_RELEASE_BRANCHES := $(addprefix origin/, master deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat)
 where-ticket: ## Search release branches for $ticket
 	@for b in $(API_RELEASE_BRANCHES); do echo "## $$b ##"; \
 		git --no-pager log --oneline --decorate --grep=$(ticket) $$b; \
