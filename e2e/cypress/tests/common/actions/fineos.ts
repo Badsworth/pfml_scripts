@@ -738,7 +738,7 @@ export function checkPaymentPreference(simClaim: SimulationClaim): void {
   cy.contains("span", claim.mailing_address?.city as string).should(
     "be.visible"
   );
-  cy.contains("span", claim.mailing_address?.state as string).should(
+  cy.contains("tr > td > span", claim.mailing_address?.state as string).should(
     "be.visible"
   );
   cy.contains("span", claim.mailing_address?.zip as string).should(

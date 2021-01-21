@@ -5,7 +5,7 @@ import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
 import { ApplicationResponse } from "../../../src/api";
 import { Submission } from "../../../src/types";
 
-describe("Approval (notificatins/notices)", () => {
+describe("Approval (notificatins/notices)", { retries: 0 }, () => {
   it("Create a financially eligible claim in which an employer will respond", () => {
     beforePortal();
     cy.visit("/");
@@ -64,9 +64,10 @@ describe("Approval (notificatins/notices)", () => {
   );
 
   // Check Legal Notice for both claimant/Leave-admin
-  it("Checking Legal Notice for both claimant and Leave-Admin", () => {
+  it("Checking Legal Notice and Notifications for both claimant and Leave-Admin", () => {
     beforePortal();
     cy.unstash<Credentials>("credentials").then((credentials) => {
+      // Check Legal Notice for Claimaint
       portal.login(credentials);
       cy.unstash<Submission>("submission").then((submission) => {
         portal.login(credentials);
@@ -100,78 +101,74 @@ describe("Approval (notificatins/notices)", () => {
             employeeFullName,
             "approval"
           );
-        });
-      });
-    });
-  });
 
-  // Check for email notification in regards to a claim approval
-  it("Checking email notifications for both claimant and Leave-Admin", () => {
-    cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-      if (!claim.employer_fein || !claim.first_name || !claim.last_name) {
-        throw new Error("This employer has no FEIN");
-      }
-      cy.unstash<Submission>("submission").then((submission) => {
-        const employeeFullName = `${claim.first_name} ${claim.last_name}`;
-        const subjectEmployer = email.getNotificationSubject(
-          employeeFullName,
-          "approval (employer)",
-          submission.fineos_absence_id
-        );
-        const subjectClaimant = email.getNotificationSubject(
-          employeeFullName,
-          "approval (claimant)",
-          submission.fineos_absence_id
-        );
-        cy.log(subjectEmployer);
-        cy.log(subjectClaimant);
-
-        // Check email for Employer/Leave Admin
-        cy.task<Email[]>(
-          "getEmails",
-          {
-            address: "gqzap.notifications@inbox.testmail.app",
-            subject: subjectEmployer,
-            timestamp_from: submission.timestamp_from,
-          },
-          { timeout: 180000 }
-        ).then(async (emails) => {
-          const emailContent = await email.getNotificationData(emails[0].html);
-          if (typeof claim.date_of_birth !== "string") {
-            throw new Error("DOB must be a string");
+          // Checking email notifications for both claimant and Leave-Admin
+          if (!claim.employer_fein || !claim.first_name || !claim.last_name) {
+            throw new Error("This employer has no FEIN");
           }
-          const dob = claim.date_of_birth.replace(/-/g, "/").slice(5) + "/****";
-          expect(emailContent.name).to.equal(employeeFullName);
-          expect(emailContent.dob).to.equal(dob);
-          expect(emailContent.applicationId).to.equal(
+          const subjectEmployer = email.getNotificationSubject(
+            employeeFullName,
+            "approval (employer)",
             submission.fineos_absence_id
           );
-          expect(emails[0].html).to.contain(
-            `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
+          const subjectClaimant = email.getNotificationSubject(
+            employeeFullName,
+            "approval (claimant)",
+            submission.fineos_absence_id
           );
-        });
+          cy.log(subjectEmployer);
+          cy.log(subjectClaimant);
 
-        // Check email for Claimant/Employee
-        cy.task<Email[]>(
-          "getEmails",
-          {
-            address: "gqzap.notifications@inbox.testmail.app",
-            subject: subjectClaimant,
-            timestamp_from: submission.timestamp_from,
-          },
-          { timeout: 180000 }
-        ).then(async (emails) => {
-          for (const emailSingle of emails) {
-            email.getNotificationData(emailSingle.html).then((data) => {
-              if (data.applicationId.includes(submission.fineos_absence_id)) {
-                expect(data.applicationId).to.contain(
-                  submission.fineos_absence_id
-                );
-              } else {
-                throw new Error("No emails match the Fineos Absence ID");
-              }
-            });
-          }
+          // Check email for Employer/Leave Admin
+          cy.task<Email[]>(
+            "getEmails",
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: subjectEmployer,
+              timestamp_from: submission.timestamp_from,
+            },
+            { timeout: 180000 }
+          ).then(async (emails) => {
+            const emailContent = await email.getNotificationData(
+              emails[0].html
+            );
+            if (typeof claim.date_of_birth !== "string") {
+              throw new Error("DOB must be a string");
+            }
+            const dob =
+              claim.date_of_birth.replace(/-/g, "/").slice(5) + "/****";
+            expect(emailContent.name).to.equal(employeeFullName);
+            expect(emailContent.dob).to.equal(dob);
+            expect(emailContent.applicationId).to.equal(
+              submission.fineos_absence_id
+            );
+            expect(emails[0].html).to.contain(
+              `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
+            );
+          });
+
+          // Check email for Claimant/Employee
+          cy.task<Email[]>(
+            "getEmails",
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: subjectClaimant,
+              timestamp_from: submission.timestamp_from,
+            },
+            { timeout: 180000 }
+          ).then(async (emails) => {
+            for (const emailSingle of emails) {
+              email.getNotificationData(emailSingle.html).then((data) => {
+                if (data.applicationId.includes(submission.fineos_absence_id)) {
+                  expect(data.applicationId).to.contain(
+                    submission.fineos_absence_id
+                  );
+                } else {
+                  throw new Error("No emails match the Fineos Absence ID");
+                }
+              });
+            }
+          });
         });
       });
     });

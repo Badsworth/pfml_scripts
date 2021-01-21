@@ -31,6 +31,20 @@ describe("Submit a REDUCED LEAVE bonding claim and adjucation approval - BHAP8",
 
       // Submit Claim
       portal.submitClaimPartOne(application);
+      cy.wait("@submitClaimResponse").then((xhr) => {
+        if (!xhr.response || !xhr.response.body) {
+          throw new Error("No response body detected");
+        }
+        const body =
+          typeof xhr.response.body === "string"
+            ? JSON.parse(xhr.response.body)
+            : xhr.response.body;
+        cy.stash("submission", {
+          application_id: body.data.application_id,
+          fineos_absence_id: body.data.fineos_absence_id,
+          timestamp_from: Date.now(),
+        });
+      });
       portal.submitClaimPartsTwoThree(application, paymentPreference);
     });
   });

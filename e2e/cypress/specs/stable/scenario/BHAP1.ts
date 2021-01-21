@@ -6,114 +6,119 @@ import { getFineosBaseUrl } from "../../../config";
 import { subDays, format } from "date-fns";
 import { Submission } from "../../../../src/types";
 
-describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
-  it("As a claimant, I should be able to submit a claim (BHAP1) through the portal", () => {
-    beforePortal();
+describe(
+  "Submit a bonding claim and adjucation approval - BHAP1",
+  { retries: 0 },
+  () => {
+    it("As a claimant, I should be able to submit a claim (BHAP1) through the portal", () => {
+      beforePortal();
 
-    cy.task("generateClaim", {
-      claimType: "BHAP1",
-      employeeType: "financially eligible",
-    }).then((claim: SimulationClaim) => {
-      if (!claim) {
-        throw new Error("Claim Was Not Generated");
-      }
-      cy.stash("claim", claim);
-      const application: ApplicationRequestBody = claim.claim;
-      const paymentPreference = claim.paymentPreference;
-
-      const credentials: Credentials = {
-        username: Cypress.env("E2E_PORTAL_USERNAME"),
-        password: Cypress.env("E2E_PORTAL_PASSWORD"),
-      };
-      portal.login(credentials);
-
-      // Continue Creating Claim
-      portal.startClaim();
-      portal.onPage("start");
-      portal.agreeToStart();
-      portal.hasClaimId();
-      portal.onPage("checklist");
-
-      // Submit Claim
-      portal.submitClaimPartOne(application);
-      cy.wait("@submitClaimResponse").then((xhr) => {
-        if (!xhr.response || !xhr.response.body) {
-          throw new Error("No response body detected");
+      cy.task("generateClaim", {
+        claimType: "BHAP1",
+        employeeType: "financially eligible",
+      }).then((claim: SimulationClaim) => {
+        if (!claim) {
+          throw new Error("Claim Was Not Generated");
         }
-        const body =
-          typeof xhr.response.body === "string"
-            ? JSON.parse(xhr.response.body)
-            : xhr.response.body;
-        cy.stash("submission", {
-          application_id: body.data.application_id,
-          fineos_absence_id: body.data.fineos_absence_id,
-          timestamp_from: Date.now(),
+        cy.stash("claim", claim);
+        const application: ApplicationRequestBody = claim.claim;
+        const paymentPreference = claim.paymentPreference;
+
+        const credentials: Credentials = {
+          username: Cypress.env("E2E_PORTAL_USERNAME"),
+          password: Cypress.env("E2E_PORTAL_PASSWORD"),
+        };
+        portal.login(credentials);
+
+        // Continue Creating Claim
+        portal.startClaim();
+        portal.onPage("start");
+        portal.agreeToStart();
+        portal.hasClaimId();
+        portal.onPage("checklist");
+
+        // Submit Claim
+        portal.submitClaimPartOne(application);
+        cy.wait("@submitClaimResponse").then((xhr) => {
+          if (!xhr.response || !xhr.response.body) {
+            throw new Error("No response body detected");
+          }
+          const body =
+            typeof xhr.response.body === "string"
+              ? JSON.parse(xhr.response.body)
+              : xhr.response.body;
+          cy.stash("submission", {
+            application_id: body.data.application_id,
+            fineos_absence_id: body.data.fineos_absence_id,
+            timestamp_from: Date.now(),
+          });
         });
+        portal.submitClaimPartsTwoThree(application, paymentPreference);
+        cy.wait(2000);
       });
-      portal.submitClaimPartsTwoThree(application, paymentPreference);
     });
-  });
 
-  // tests that leave dates can be modified in FINEOS after portal submission
-  it(
-    "Should allow CSR modification of a claim that was submitted via the Portal",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      beforeFineos();
-      cy.visit("/");
+    // tests that leave dates can be modified in FINEOS after portal submission
+    it(
+      "Should allow CSR modification of a claim that was submitted via the Portal",
+      { baseUrl: getFineosBaseUrl() },
+      () => {
+        beforeFineos();
+        cy.visit("/");
 
-      // Request for additional Info in Fineos
-      cy.unstash<Submission>("submission").then((submission) => {
-        fineos.visitClaim(submission.fineos_absence_id);
-        cy.get('.date-wrapper span[id*="leaveStartDate"]')
-          .invoke("text")
-          .as("previousStartDate");
+        // Request for additional Info in Fineos
+        cy.unstash<Submission>("submission").then((submission) => {
+          fineos.visitClaim(submission.fineos_absence_id);
+          cy.get('.date-wrapper span[id*="leaveStartDate"]')
+            .invoke("text")
+            .as("previousStartDate");
 
-        cy.get("input[type='submit'][value='Adjudicate']").click();
-        cy.get<string>("@previousStartDate").then((dateString) => {
-          const newStartDate = subDays(new Date(dateString), 1);
-          fineos.changeLeaveStart(newStartDate);
-          cy.wrap(newStartDate).as("newStartDate");
+          cy.get("input[type='submit'][value='Adjudicate']").click();
+          cy.get<string>("@previousStartDate").then((dateString) => {
+            const newStartDate = subDays(new Date(dateString), 1);
+            fineos.changeLeaveStart(newStartDate);
+            cy.wrap(newStartDate).as("newStartDate");
+          });
+
+          fineos.clickBottomWidgetButton("OK");
+          cy.get<Date>("@newStartDate").then((date) => {
+            cy.get('.date-wrapper span[id*="leaveStartDate"]').should(
+              "have.text",
+              format(date, "MM/dd/yyyy")
+            );
+          });
+          cy.wait(1000);
         });
+      }
+    );
 
-        fineos.clickBottomWidgetButton("OK");
-        cy.get<Date>("@newStartDate").then((date) => {
-          cy.get('.date-wrapper span[id*="leaveStartDate"]').should(
-            "have.text",
-            format(date, "MM/dd/yyyy")
-          );
+    it(
+      "Confirm info in Payment Preference",
+      { baseUrl: getFineosBaseUrl() },
+      () => {
+        beforeFineos();
+        cy.visit("/");
+
+        // Request for additional Info in Fineos
+        cy.unstash<SimulationClaim>("claim").then((claim) => {
+          fineos.checkPaymentPreference(claim);
         });
         cy.wait(1000);
-      });
-    }
-  );
+      }
+    );
 
-  it(
-    "Confirm info in Payment Preference",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      beforeFineos();
-      cy.visit("/");
+    // Prepare for adjudication approval
+    it(
+      "As a CSR (Savilinx), I should be able to Approve a BHAP1 claim submission",
+      { baseUrl: getFineosBaseUrl() },
+      () => {
+        beforeFineos();
+        cy.visit("/");
 
-      // Request for additional Info in Fineos
-      cy.unstash<SimulationClaim>("claim").then((claim) => {
-        fineos.checkPaymentPreference(claim);
-      });
-      cy.wait(1000);
-    }
-  );
-
-  // Prepare for adjudication approval
-  it(
-    "As a CSR (Savilinx), I should be able to Approve a BHAP1 claim submission",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      beforeFineos();
-      cy.visit("/");
-
-      cy.unstash<Submission>("submission").then((submission) => {
-        fineos.claimAdjudicationFlow(submission.fineos_absence_id);
-      });
-    }
-  );
-});
+        cy.unstash<Submission>("submission").then((submission) => {
+          fineos.claimAdjudicationFlow(submission.fineos_absence_id);
+        });
+      }
+    );
+  }
+);
