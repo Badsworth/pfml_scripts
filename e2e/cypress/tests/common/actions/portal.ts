@@ -166,7 +166,7 @@ export function verifyIdentity(
   cy.get(":nth-child(2) > .usa-radio__label").click();
   cy.contains("button", "Save and continue").click();
 
-  cy.labelled("Street address 1").type(
+  cy.labelled("Address").type(
     (application.mailing_address &&
       application.mailing_address.line_1) as string
   );
