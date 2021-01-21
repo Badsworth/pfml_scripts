@@ -5,6 +5,11 @@
 # If adding new variables, it's recommended to update the bootstrap
 # templates so there's less manual work in creating new envs.
 #
+
+locals {
+  environment_name = "performance"
+}
+
 provider "aws" {
   region = "us-east-1"
 }
@@ -27,7 +32,7 @@ data "aws_ecs_cluster" "performance" {
 module "api" {
   source = "../../template"
 
-  environment_name                = "performance"
+  environment_name                = local.environment_name
   service_app_count               = 5 # high enough to not break immediately (?), but low enough to maybe see how autoscaling behaves in LST.
   service_max_app_count           = 10
   service_docker_tag              = local.service_docker_tag
@@ -76,4 +81,7 @@ module "api" {
   service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-performance.mass.gov"
   enable_application_fraud_check                      = "0"
+
+  dor_fineos_etl_definition          = local.dor_fineos_etl_definition
+  dor_fineos_etl_schedule_expression = "cron(0 4 * * ? *)" # Daily at 04:00 UTC [23:00 EST] [00:00 EDT]
 }

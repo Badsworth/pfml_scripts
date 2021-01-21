@@ -5,6 +5,11 @@
 # If adding new variables, it's recommended to update the bootstrap
 # templates so there's less manual work in creating new envs.
 #
+
+locals {
+  environment_name = "uat"
+}
+
 provider "aws" {
   region = "us-east-1"
 }
@@ -27,7 +32,7 @@ data "aws_ecs_cluster" "uat" {
 module "api" {
   source = "../../template"
 
-  environment_name                = "uat"
+  environment_name                = local.environment_name
   service_app_count               = 2 # keep this at two for now since this env is for manual testing
   service_max_app_count           = 10
   service_docker_tag              = local.service_docker_tag
@@ -72,4 +77,7 @@ module "api" {
   fineos_aws_iam_role_arn                             = "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
   fineos_aws_iam_role_external_id                     = "8jFBtjr4UA@"
   enable_application_fraud_check                      = "0"
+
+  dor_fineos_etl_definition          = local.dor_fineos_etl_definition
+  dor_fineos_etl_schedule_expression = "cron(0 4 * * ? *)" # Daily at 04:00 UTC [23:00 EST] [00:00 EDT]
 }

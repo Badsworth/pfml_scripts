@@ -5,6 +5,11 @@
 # If adding new variables, it's recommended to update the bootstrap
 # templates so there's less manual work in creating new envs.
 #
+
+locals {
+  environment_name = "stage"
+}
+
 provider "aws" {
   region = "us-east-1"
 }
@@ -27,7 +32,7 @@ data "aws_ecs_cluster" "stage" {
 module "api" {
   source = "../../template"
 
-  environment_name                = "stage"
+  environment_name                = local.environment_name
   service_app_count               = 2 # because stage is a low-demand environment
   service_max_app_count           = 10
   service_docker_tag              = local.service_docker_tag
@@ -83,4 +88,7 @@ module "api" {
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"
   enable_application_fraud_check                      = "0"
+
+  dor_fineos_etl_definition          = local.dor_fineos_etl_definition
+  dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 }

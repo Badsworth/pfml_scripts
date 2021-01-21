@@ -5,6 +5,11 @@
 # If adding new variables, it's recommended to update the bootstrap
 # templates so there's less manual work in creating new envs.
 #
+
+locals {
+  environment_name = "training"
+}
+
 provider "aws" {
   region = "us-east-1"
 }
@@ -27,7 +32,7 @@ data "aws_ecs_cluster" "training" {
 module "api" {
   source = "../../template"
 
-  environment_name                = "training"
+  environment_name                = local.environment_name
   service_app_count               = 2 # because training is a very low-demand environment
   service_max_app_count           = 10
   service_docker_tag              = local.service_docker_tag
@@ -69,4 +74,7 @@ module "api" {
   service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-training.mass.gov"
   enable_application_fraud_check                      = "0"
+
+  dor_fineos_etl_definition          = local.dor_fineos_etl_definition
+  dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 }
