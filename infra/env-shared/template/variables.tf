@@ -35,3 +35,9 @@ variable "enable_fortinet_managed_rules" {
   type        = bool
   default     = false
 }
+
+variable "enforce_fortinet_managed_fules" {
+  description = "Instructs Fortinet Managed Rules to either to block or count rule-matches"
+  type        = bool
+  default     = false
+}
