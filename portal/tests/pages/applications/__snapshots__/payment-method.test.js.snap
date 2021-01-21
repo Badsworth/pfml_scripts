@@ -120,12 +120,16 @@ exports[`PaymentMethod renders the page 1`] = `
     <div
       className="margin-top-6 margin-bottom-2"
     >
-      <p>
-        Once you submit Part 2, your payment information will be viewable by our Contact Center staff. To make edits to Part 2, you’ll need to call the Contact Center at (833) 344‑7365.
-      </p>
-      <p>
-        Next, you’ll work on Part 3, and submit your application.
-      </p>
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+          }
+        }
+        i18nKey="pages.claimsPaymentMethod.partTwoNextSteps"
+      />
     </div>
     <Button
       className="margin-top-4"
@@ -149,5 +153,27 @@ Array [
     possible tax implications
   </a>,
   " of your paid leave benefits.",
+]
+`;
+
+exports[`PaymentMethod renders the page 3`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Once you submit Part 2, your payment information will be viewable by our Contact Center staff. To make edits to Part 2, you’ll need to call the Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+    .
+  </p>,
+  <p
+    key="p-1"
+  >
+    Next, you’ll work on Part 3, and submit your application.
+  </p>,
 ]
 `;

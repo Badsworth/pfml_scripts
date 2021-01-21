@@ -70,6 +70,13 @@ exports[`Final Review Page when the claim is complete renders Review page with f
   </Heading>
   <Lead>
     <Trans
+      components={
+        Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
+        }
+      }
       i18nKey="pages.claimsReview.partDescription"
       tOptions={
         Object {
@@ -287,9 +294,16 @@ exports[`Final Review Page when the claim is complete renders Review page with f
 
 exports[`Final Review Page when the claim is complete renders Review page with final review page content and only edit links for Part 2/3 sections 2`] = `
 Array [
-  "If you need to make edits to Part 1, you’ll need to call our Contact Center at (833) 344‑7365. Your application ID is ",
+  "If you need to make edits to Part 1, you’ll need to call our Contact Center at ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  ". Your application ID is ",
   <strong
-    key="strong-1"
+    key="strong-3"
   >
     NTN-111-ABS-01
   </strong>,
@@ -617,15 +631,16 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
   <div
     className="margin-top-6 margin-bottom-2"
   >
-    <p>
-      Once you review and submit Part 1, your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at (833) 344‑7365.
-    </p>
-    <p>
-      We’ll also notify your employer that you’ve started an application for paid family and medical leave.
-    </p>
-    <p>
-      Next, you’ll be able to work on Parts 2 and 3, and submit your application.
-    </p>
+    <Trans
+      components={
+        Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
+        }
+      }
+      i18nKey="pages.claimsReview.partOneNextSteps"
+    />
   </div>
   <Button
     className="margin-top-3"

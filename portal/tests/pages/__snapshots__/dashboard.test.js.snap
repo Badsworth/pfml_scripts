@@ -54,6 +54,9 @@ exports[`Dashboard renders dashboard content 1`] = `
           "benefits-timeline-link": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-timeline#december-2,-2020-"
           />,
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "ul": <ul
             className="usa-list"
@@ -190,6 +193,9 @@ exports[`Dashboard renders dashboard content 1`] = `
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "medical-bonding-link": <a
             href="https://www.mass.gov/pfml-medical-bonding"
@@ -241,9 +247,16 @@ Array [
   <p
     key="p-0"
   >
-    Apply by calling the Department of Family and Medical Leave Contact Center at (833) 344‑7365 if 
+    Apply by calling the Department of Family and Medical Leave Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+     if 
     <strong
-      key="strong-1"
+      key="strong-3"
     >
       any
     </strong>
@@ -331,7 +344,14 @@ Array [
     >
       easily added to your claim
     </a>
-     by calling our Contact Center at (833) 344‑7365.
+     by calling our Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="3"
+    >
+      (833) 344‑7365
+    </a>
+    .
   </p>,
   <p
     key="p-2"

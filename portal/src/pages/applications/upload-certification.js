@@ -141,7 +141,14 @@ export const UploadCertification = (props) => {
 
       {hasLoadingDocumentsError && (
         <Alert className="margin-bottom-3" noIcon>
-          {t("pages.claimsUploadCertification.documentsLoadError")}
+          <Trans
+            i18nKey="pages.claimsUploadCertification.documentsLoadError"
+            components={{
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+            }}
+          />
         </Alert>
       )}
       {isLoadingDocuments && !hasLoadingDocumentsError && (

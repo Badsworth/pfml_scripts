@@ -140,7 +140,7 @@ describe("Checklist", () => {
     });
 
     expect(partOneSubmittedMessage).toHaveLength(1);
-    expect(partOneSubmittedMessage).toMatchSnapshot();
+    expect(partOneSubmittedMessage.find("Trans").dive()).toMatchSnapshot();
   });
 
   it("renders success message after submitting part 2", () => {

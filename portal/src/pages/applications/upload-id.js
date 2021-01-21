@@ -136,7 +136,14 @@ export const UploadId = (props) => {
 
         {hasLoadingDocumentsError && (
           <Alert className="margin-bottom-3" noIcon>
-            {t("pages.claimsUploadId.documentsLoadError")}
+            <Trans
+              i18nKey="pages.claimsUploadId.documentsLoadError"
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
           </Alert>
         )}
 

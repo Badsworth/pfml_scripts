@@ -269,6 +269,6 @@ describe("ApplicationCard", () => {
     const wrapper = render(claim, { appLogic });
     const legalNotices = wrapper.find("LegalNotices").dive();
 
-    expect(legalNotices.find("Alert")).toMatchSnapshot();
+    expect(legalNotices.find("Alert Trans").dive()).toMatchSnapshot();
   });
 });

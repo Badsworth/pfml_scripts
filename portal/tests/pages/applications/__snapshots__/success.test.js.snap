@@ -34,6 +34,9 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
@@ -62,6 +65,9 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "ul": <ul
             className="usa-list"
@@ -104,7 +110,14 @@ Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you’ll receive:
+    Call the Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+     if you’ll receive:
   </p>,
   <ul
     className="usa-list"
@@ -193,7 +206,21 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
       autoWidth={true}
       state="warning"
     >
-      After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date.
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+          }
+        }
+        i18nKey="pages.claimsSuccess.proofRequired"
+        tOptions={
+          Object {
+            "context": "bondingAdoptFosterFuture",
+          }
+        }
+      />
     </Alert>
     <Heading
       level="2"
@@ -209,6 +236,9 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
@@ -237,6 +267,9 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "ul": <ul
             className="usa-list"
@@ -274,12 +307,21 @@ Array [
 ]
 `;
 
-exports[`Success renders content tailored to Family (Bonding Future Adoption) 3`] = `
+exports[`Success renders content tailored to Family (Bonding Future Adoption) 3`] = `"After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date."`;
+
+exports[`Success renders content tailored to Family (Bonding Future Adoption) 4`] = `
 Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you’ll receive:
+    Call the Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+     if you’ll receive:
   </p>,
   <ul
     className="usa-list"
@@ -313,37 +355,43 @@ Array [
 ]
 `;
 
-exports[`Success renders content tailored to Family (Bonding Future Adoption) 4`] = `
+exports[`Success renders content tailored to Family (Bonding Future Adoption) 5`] = `
 <ul
   className="usa-list"
   key="0"
 >
-   
   <li
-    key="1"
+    key="0"
   >
     Your employer has 10 days to provide feedback on your application.
   </li>
    
   <li
-    key="3"
+    key="2"
   >
     Once you’ve provided proof of placement, we’ll confirm your eligibility and make sure that your documents are valid.
   </li>
    
   <li
-    key="5"
+    key="4"
   >
     After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
   </li>
    
   <li
-    key="7"
+    key="6"
   >
-    If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at (833) 344‑7365.
+    If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+    .
   </li>
   <li
-    key="8"
+    key="7"
   >
     If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.
   </li>
@@ -374,7 +422,21 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
       autoWidth={true}
       state="warning"
     >
-      After your child is born, you will need to upload, mail, or fax a document that shows your child’s date of birth.
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+          }
+        }
+        i18nKey="pages.claimsSuccess.proofRequired"
+        tOptions={
+          Object {
+            "context": "bondingNewbornFuture",
+          }
+        }
+      />
     </Alert>
     <Heading
       level="2"
@@ -390,6 +452,9 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
@@ -418,6 +483,9 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "ul": <ul
             className="usa-list"
@@ -449,6 +517,9 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
         <Trans
           components={
             Object {
+              "contact-center-phone-link": <a
+                href="tel:(833) 344‑7365"
+              />,
               "medical-bonding-link": <a
                 href="https://www.mass.gov/pfml-medical-bonding"
               />,
@@ -482,12 +553,21 @@ Array [
 ]
 `;
 
-exports[`Success renders content tailored to Family (Bonding Future Newborn) 3`] = `
+exports[`Success renders content tailored to Family (Bonding Future Newborn) 3`] = `"After your child is born, you will need to upload, mail, or fax a document that shows your child’s date of birth."`;
+
+exports[`Success renders content tailored to Family (Bonding Future Newborn) 4`] = `
 Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you’ll receive:
+    Call the Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+     if you’ll receive:
   </p>,
   <ul
     className="usa-list"
@@ -521,49 +601,62 @@ Array [
 ]
 `;
 
-exports[`Success renders content tailored to Family (Bonding Future Newborn) 4`] = `
+exports[`Success renders content tailored to Family (Bonding Future Newborn) 5`] = `
 <ul
   className="usa-list"
   key="0"
 >
-   
   <li
-    key="1"
+    key="0"
   >
     Your employer has 10 days to provide feedback on your application.
   </li>
    
   <li
-    key="3"
+    key="2"
   >
     Once you’ve provided proof of birth, we’ll confirm your eligibility and make sure that your documents are valid.
   </li>
    
   <li
-    key="5"
+    key="4"
   >
     After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
   </li>
    
   <li
-    key="7"
+    key="6"
   >
-    If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at (833) 344‑7365.
+    If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+    .
   </li>
   <li
-    key="8"
+    key="7"
   >
     If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.
   </li>
 </ul>
 `;
 
-exports[`Success renders content tailored to Family (Bonding Future Newborn) 5`] = `
+exports[`Success renders content tailored to Family (Bonding Future Newborn) 6`] = `
 Array [
-  "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at (833) 344‑7365 if you need ",
+  "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " if you need ",
   <a
     href="https://www.mass.gov/pfml-medical-bonding"
-    key="1"
+    key="3"
   >
     medical leave after giving birth
   </a>,
@@ -605,6 +698,9 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
@@ -633,6 +729,9 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "ul": <ul
             className="usa-list"
@@ -664,6 +763,9 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
         <Trans
           components={
             Object {
+              "contact-center-phone-link": <a
+                href="tel:(833) 344‑7365"
+              />,
               "medical-bonding-link": <a
                 href="https://www.mass.gov/pfml-medical-bonding"
               />,
@@ -702,7 +804,14 @@ Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you’ll receive:
+    Call the Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+     if you’ll receive:
   </p>,
   <ul
     className="usa-list"
@@ -769,10 +878,17 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 4`] = `
 
 exports[`Success renders content tailored to Family (Bonding Newborn) 5`] = `
 Array [
-  "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at (833) 344‑7365 if you need ",
+  "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " if you need ",
   <a
     href="https://www.mass.gov/pfml-medical-bonding"
-    key="1"
+    key="3"
   >
     medical leave after giving birth
   </a>,
@@ -814,6 +930,9 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
@@ -842,6 +961,9 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "ul": <ul
             className="usa-list"
@@ -884,7 +1006,14 @@ Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you’ll receive:
+    Call the Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+     if you’ll receive:
   </p>,
   <ul
     className="usa-list"
@@ -983,6 +1112,9 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
@@ -1011,6 +1143,9 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "ul": <ul
             className="usa-list"
@@ -1042,6 +1177,9 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
         <Trans
           components={
             Object {
+              "contact-center-phone-link": <a
+                href="tel:(833) 344‑7365"
+              />,
               "medical-bonding-link": <a
                 href="https://www.mass.gov/pfml-medical-bonding"
               />,
@@ -1080,7 +1218,14 @@ Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you’ll receive:
+    Call the Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+     if you’ll receive:
   </p>,
   <ul
     className="usa-list"
@@ -1154,7 +1299,14 @@ Array [
   >
     easily added to your claim
   </a>,
-  " by calling our Contact Center at (833) 344‑7365.",
+  " by calling our Contact Center at ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="3"
+  >
+    (833) 344‑7365
+  </a>,
+  ".",
 ]
 `;
 
@@ -1182,7 +1334,21 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
       autoWidth={true}
       state="warning"
     >
-      You must call the Contact Center at (833) 344‑7365 once your medical leave begins to confirm that your leave has begun. We can’t approve your application until we hear from you.
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+          }
+        }
+        i18nKey="pages.claimsSuccess.proofRequired"
+        tOptions={
+          Object {
+            "context": "medicalPregnantFuture",
+          }
+        }
+      />
     </Alert>
     <Heading
       level="2"
@@ -1198,6 +1364,9 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "reductions-employer-benefits-link": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
@@ -1226,6 +1395,9 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "ul": <ul
             className="usa-list"
@@ -1257,6 +1429,9 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
         <Trans
           components={
             Object {
+              "contact-center-phone-link": <a
+                href="tel:(833) 344‑7365"
+              />,
               "medical-bonding-link": <a
                 href="https://www.mass.gov/pfml-medical-bonding"
               />,
@@ -1292,10 +1467,30 @@ Array [
 
 exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 3`] = `
 Array [
+  "You must call the Contact Center at ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " once your medical leave begins to confirm that your leave has begun. We can’t approve your application until we hear from you.",
+]
+`;
+
+exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 4`] = `
+Array [
   <p
     key="p-0"
   >
-    Call the Contact Center at (833) 344‑7365 if you’ll receive:
+    Call the Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+     if you’ll receive:
   </p>,
   <ul
     className="usa-list"
@@ -1329,38 +1524,44 @@ Array [
 ]
 `;
 
-exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 4`] = `
+exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 5`] = `
 <ul
   className="usa-list"
   key="0"
 >
-   
   <li
-    key="1"
+    key="0"
   >
     Your employer has 10 days to provide feedback on your application.
   </li>
    
   <li
-    key="3"
+    key="2"
   >
-    When your leave begins, call the DFML Contact Center at (833) 344‑7365 to tell us. Then we’ll confirm your eligibility and make sure that your documents are valid.
+    When your leave begins, call the DFML Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+     to tell us. Then we’ll confirm your eligibility and make sure that your documents are valid.
   </li>
    
   <li
-    key="5"
+    key="4"
   >
     After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.
   </li>
   <li
-    key="6"
+    key="5"
   >
     If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.
   </li>
 </ul>
 `;
 
-exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 5`] = `
+exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 6`] = `
 Array [
   "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. Family leave to bond with your child can be ",
   <a
@@ -1369,6 +1570,13 @@ Array [
   >
     easily added to your claim
   </a>,
-  " by calling our Contact Center at (833) 344‑7365.",
+  " by calling our Contact Center at ",
+  <a
+    href="tel:(833) 344‑7365"
+    key="3"
+  >
+    (833) 344‑7365
+  </a>,
+  ".",
 ]
 `;

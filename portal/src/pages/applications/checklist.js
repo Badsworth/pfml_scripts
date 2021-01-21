@@ -134,6 +134,9 @@ export const Checklist = (props) => {
           <Trans
             i18nKey="pages.claimsChecklist.stepHTMLDescription"
             components={{
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
               "healthcare-provider-form-link": (
                 <a
                   target="_blank"
@@ -221,6 +224,9 @@ export const Checklist = (props) => {
       <Trans
         i18nKey="pages.claimsChecklist.stepListDescription"
         components={{
+          "contact-center-phone-link": (
+            <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+          ),
           "mail-fax-instructions-link": (
             <a
               target="_blank"
@@ -244,7 +250,14 @@ export const Checklist = (props) => {
           name="part-one-submitted-message"
           state="success"
         >
-          {t("pages.claimsChecklist.partOneSubmittedDescription")}
+          <Trans
+            i18nKey="pages.claimsChecklist.partOneSubmittedDescription"
+            components={{
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+            }}
+          />
         </Alert>
       )}
       {paymentPrefSubmitted && (
@@ -283,7 +296,14 @@ export const Checklist = (props) => {
         >
           {stepGroup.number === 3 && hasLoadingDocumentsError ? (
             <Alert className="margin-bottom-3" noIcon>
-              {t("pages.claimsChecklist.documentsLoadError")}
+              <Trans
+                i18nKey="pages.claimsChecklist.documentsLoadError"
+                components={{
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
+                }}
+              />
             </Alert>
           ) : stepGroup.number === 3 && isLoadingDocuments ? (
             <Spinner aria-valuetext={t("components.spinner.label")} />

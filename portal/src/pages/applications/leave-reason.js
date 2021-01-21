@@ -105,6 +105,9 @@ export const LeaveReason = (props) => {
         <Trans
           i18nKey="pages.claimsLeaveReason.alertBody"
           components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
             "mass-benefits-guide-serious-health-condition": (
               <a
                 target="_blank"

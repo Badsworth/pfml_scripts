@@ -160,6 +160,11 @@ export const Review = (props) => {
             i18nKey="pages.claimsReview.partDescription"
             tOptions={{ context: "1" }}
             values={{ absence_id: claim.fineos_absence_id }}
+            components={{
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+            }}
           />
         </Lead>
       )}
@@ -575,9 +580,14 @@ export const Review = (props) => {
 
       {usePartOneReview ? (
         <div className="margin-top-6 margin-bottom-2">
-          <p>{t("pages.claimsReview.partOneNextStepsLine1")}</p>
-          <p>{t("pages.claimsReview.partOneNextStepsLine2")}</p>
-          <p>{t("pages.claimsReview.partOneNextStepsLine3")}</p>
+          <Trans
+            i18nKey="pages.claimsReview.partOneNextSteps"
+            components={{
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+            }}
+          />
         </div>
       ) : (
         <React.Fragment>
@@ -645,7 +655,14 @@ export const Review = (props) => {
           </Heading>
           {hasLoadingDocumentsError && (
             <Alert className="margin-bottom-3" noIcon>
-              {t("pages.claimsReview.documentsLoadError")}
+              <Trans
+                i18nKey="pages.claimsReview.documentsLoadError"
+                components={{
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
+                }}
+              />
             </Alert>
           )}
           {isLoadingDocuments && !hasLoadingDocumentsError && (

@@ -12,6 +12,9 @@ exports[`LeaveReasonPage renders the page for medical leave and does not show re
     <Trans
       components={
         Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344‑7365"
+          />,
           "li": <li />,
           "mass-benefits-guide-serious-health-condition": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
@@ -135,7 +138,14 @@ Array [
   <p
     key="2"
   >
-    Call the Department of Family and Medical Leave Contact Center at (833) 344‑7365.
+    Call the Department of Family and Medical Leave Contact Center at 
+    <a
+      href="tel:(833) 344‑7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+    .
   </p>,
 ]
 `;

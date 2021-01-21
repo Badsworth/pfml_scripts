@@ -90,7 +90,17 @@ export const Success = (props) => {
       <div className="measure-6">
         {claimContext !== "leaveNotInFuture" && (
           <Alert state="warning" autoWidth>
-            {t("pages.claimsSuccess.proofRequired", { context: claimContext })}
+            <Trans
+              i18nKey="pages.claimsSuccess.proofRequired"
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+              tOptions={{
+                context: claimContext,
+              }}
+            />
           </Alert>
         )}
 
@@ -101,6 +111,9 @@ export const Success = (props) => {
         <Trans
           i18nKey="pages.claimsSuccess.reportReductionsProcess"
           components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
             ul: <ul className="usa-list" />,
             li: <li />,
             "reductions-employer-benefits-link": (
@@ -119,7 +132,13 @@ export const Success = (props) => {
 
         <Trans
           i18nKey="pages.claimsSuccess.adjudicationProcess"
-          components={{ ul: <ul className="usa-list" />, li: <li /> }}
+          components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
           tOptions={{
             context: claimContext,
           }}
@@ -135,6 +154,9 @@ export const Success = (props) => {
               <Trans
                 i18nKey="pages.claimsSuccess.familyLeaveToBond"
                 components={{
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
                   "medical-bonding-link": (
                     <a href={routes.external.massgov.medicalBonding} />
                   ),
@@ -154,6 +176,9 @@ export const Success = (props) => {
               <Trans
                 i18nKey="pages.claimsSuccess.medicalLeaveAfterBirth"
                 components={{
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
                   "medical-bonding-link": (
                     <a href={routes.external.massgov.medicalBonding} />
                   ),

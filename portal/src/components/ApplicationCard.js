@@ -202,7 +202,14 @@ function LegalNotices(props) {
 
       {hasLoadingDocumentsError && (
         <Alert noIcon>
-          {t("components.applicationCard.documentsLoadError")}
+          <Trans
+            i18nKey="components.applicationCard.documentsLoadError"
+            components={{
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+            }}
+          />
         </Alert>
       )}
 
@@ -329,6 +336,9 @@ function ApplicationActions(props) {
             <Trans
               i18nKey="components.applicationCard.reductionsInstructionsIntro"
               components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
                 "reductions-overview-link": (
                   <a href={routes.external.massgov.reductionsOverview} />
                 ),

@@ -70,6 +70,9 @@ export const Dashboard = (props) => {
         <Trans
           i18nKey="pages.dashboard.alertPhone"
           components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
             "benefits-timeline-link": (
               <a
                 href={routes.external.massgov.benefitsTimeline_2020December2}
@@ -108,6 +111,9 @@ export const Dashboard = (props) => {
         <Trans
           i18nKey="pages.dashboard.stepThree"
           components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
             "medical-bonding-link": (
               <a href={routes.external.massgov.medicalBonding} />
             ),

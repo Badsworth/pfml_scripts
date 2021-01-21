@@ -161,8 +161,14 @@ export const PaymentMethod = (props) => {
           </Fieldset>
         </ConditionalContent>
         <div className="margin-top-6 margin-bottom-2">
-          <p>{t("pages.claimsReview.partTwoNextStepsLine1")}</p>
-          <p>{t("pages.claimsReview.partTwoNextStepsLine2")}</p>
+          <Trans
+            i18nKey="pages.claimsPaymentMethod.partTwoNextSteps"
+            components={{
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+            }}
+          />
         </div>
         <Button
           className="margin-top-4"

@@ -120,7 +120,7 @@ describe("useAppErrorsLogic", () => {
 
         expect(appErrorsLogic.appErrors.items).toHaveLength(1);
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
+          `"An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at <contact-center-phone-link>(833) 344‑7365</contact-center-phone-link>"`
         );
         expect(appErrorsLogic.appErrors.items[0].meta).toEqual({
           application_id: "mock-application-id",

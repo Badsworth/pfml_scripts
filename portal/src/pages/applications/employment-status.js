@@ -57,6 +57,9 @@ export const EmploymentStatus = (props) => {
           <Trans
             i18nKey="pages.claimsEmploymentStatus.alertBody"
             components={{
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
               p: <p />,
             }}
           />
