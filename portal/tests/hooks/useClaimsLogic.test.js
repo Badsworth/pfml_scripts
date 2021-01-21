@@ -357,15 +357,20 @@ describe("useClaimsLogic", () => {
 
   describe("when claims have been loaded or a new claim was created", () => {
     describe("complete", () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         mockRouter.pathname = routes.applications.review;
         renderHook();
-
-        act(() => {
-          claimsLogic.setClaims(
-            new ClaimCollection([new Claim({ application_id: applicationId })])
-          );
+        const claim = new Claim({ application_id: applicationId });
+        createClaimMock.mockResolvedValueOnce({
+          claim,
+          success: true,
         });
+
+        await act(async () => {
+          await claimsLogic.create();
+        });
+
+        mockRouter.push.mockClear();
       });
 
       it("completes the claim", async () => {
@@ -429,15 +434,21 @@ describe("useClaimsLogic", () => {
         last_name: null,
       };
 
+      beforeEach(() => {
+        const claim = new Claim({ application_id: applicationId });
+        createClaimMock.mockResolvedValueOnce({
+          claim,
+          success: true,
+        });
+      });
+
       it("updates claim and redirects to nextPage when successful", async () => {
         mockRouter.pathname = routes.applications.ssn;
 
         renderHook();
 
-        act(() => {
-          claimsLogic.setClaims(
-            new ClaimCollection([new Claim({ application_id: applicationId })])
-          );
+        await act(async () => {
+          await claimsLogic.create();
         });
 
         await act(async () => {
@@ -460,10 +471,8 @@ describe("useClaimsLogic", () => {
         mockRouter.pathname = routes.applications.name;
         renderHook();
 
-        act(() => {
-          claimsLogic.setClaims(
-            new ClaimCollection([new Claim({ application_id: applicationId })])
-          );
+        await act(async () => {
+          await claimsLogic.create();
 
           appErrorsLogic.setAppErrors(
             new AppErrorInfoCollection([new AppErrorInfo()])
@@ -491,13 +500,10 @@ describe("useClaimsLogic", () => {
 
           renderHook();
 
-          act(() => {
-            claimsLogic.setClaims(
-              new ClaimCollection([
-                new Claim({ application_id: applicationId }),
-              ])
-            );
+          await act(async () => {
+            await claimsLogic.create();
           });
+          mockRouter.push.mockClear();
 
           updateClaimMock.mockResolvedValueOnce({
             claim: { ...claimResponse, last_name },
@@ -528,12 +534,8 @@ describe("useClaimsLogic", () => {
 
           renderHook();
 
-          act(() => {
-            claimsLogic.setClaims(
-              new ClaimCollection([
-                new Claim({ application_id: applicationId }),
-              ])
-            );
+          await act(async () => {
+            await claimsLogic.create();
           });
 
           updateClaimMock.mockResolvedValueOnce({
@@ -558,12 +560,8 @@ describe("useClaimsLogic", () => {
 
           renderHook();
 
-          act(() => {
-            claimsLogic.setClaims(
-              new ClaimCollection([
-                new Claim({ application_id: applicationId }),
-              ])
-            );
+          await act(async () => {
+            await claimsLogic.create();
           });
 
           updateClaimMock.mockResolvedValueOnce({
@@ -594,12 +592,8 @@ describe("useClaimsLogic", () => {
           mockRouter.pathname = routes.applications.leavePeriodIntermittent;
           renderHook();
 
-          act(() => {
-            claimsLogic.setClaims(
-              new ClaimCollection([
-                new Claim({ application_id: applicationId }),
-              ])
-            );
+          await act(async () => {
+            await claimsLogic.create();
           });
 
           updateClaimMock.mockResolvedValueOnce({
@@ -627,13 +621,10 @@ describe("useClaimsLogic", () => {
           mockRouter.pathname = routes.applications.name;
           renderHook();
 
-          act(() => {
-            claimsLogic.setClaims(
-              new ClaimCollection([
-                new Claim({ application_id: applicationId }),
-              ])
-            );
+          await act(async () => {
+            await claimsLogic.create();
           });
+          mockRouter.push.mockClear();
 
           updateClaimMock.mockImplementationOnce(() => {
             throw new BadRequestError();
@@ -652,15 +643,21 @@ describe("useClaimsLogic", () => {
     });
 
     describe("submit", () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         mockRouter.pathname = routes.applications.review;
         renderHook(routes.applications);
 
-        act(() => {
-          claimsLogic.setClaims(
-            new ClaimCollection([new Claim({ application_id: applicationId })])
-          );
+        const claim = new Claim({ application_id: applicationId });
+        createClaimMock.mockResolvedValueOnce({
+          claim,
+          success: true,
         });
+
+        await act(async () => {
+          await claimsLogic.create();
+        });
+
+        mockRouter.push.mockClear();
       });
 
       it("submits the claim", async () => {
@@ -732,15 +729,22 @@ describe("useClaimsLogic", () => {
         payment_preference: new MockClaimBuilder().directDeposit().create()
           .payment_preference,
       };
-      beforeEach(() => {
+
+      beforeEach(async () => {
         mockRouter.pathname = routes.applications.paymentMethod;
         renderHook(routes.applications);
 
-        act(() => {
-          claimsLogic.setClaims(
-            new ClaimCollection([new Claim({ application_id: applicationId })])
-          );
+        const claim = new Claim({ application_id: applicationId });
+        createClaimMock.mockResolvedValueOnce({
+          claim,
+          success: true,
         });
+
+        await act(async () => {
+          await claimsLogic.create();
+        });
+
+        mockRouter.push.mockClear();
       });
 
       it("submits the payment preference", async () => {

@@ -275,7 +275,6 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     update,
     submit,
     submitPaymentPreference,
-    setClaims,
     warningsLists,
   };
 };
