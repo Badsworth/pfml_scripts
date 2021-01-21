@@ -199,8 +199,9 @@ resource "aws_s3_bucket_public_access_block" "tpa_csv_storage_block_public_acces
 resource "aws_s3_bucket" "ses_to_newrelic_dlq" {
   bucket = "massgov-pfml-ses-to-newrelic-dlq"
   tags = merge(module.constants.common_tags, {
-    public = "no"
-    Name   = "massgov-pfml-ses-to-newrelic-dlq"
+    environment = "prod"
+    public      = "no"
+    Name        = "massgov-pfml-ses-to-newrelic-dlq"
   })
 
   server_side_encryption_configuration {
