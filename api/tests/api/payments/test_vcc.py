@@ -19,7 +19,9 @@ from massgov.pfml.db.models.employees import (
     CtrDocumentIdentifier,
     Employee,
     EmployeeReferenceFile,
+    Flow,
     GeoState,
+    LatestStateLog,
     PaymentMethod,
     ReferenceFile,
     ReferenceFileType,
@@ -357,10 +359,38 @@ def test_build_vcc_files(
         func.count(EmployeeReferenceFile.ctr_document_identifier_id)
     ).scalar() == len(employees)
 
-    # Confirm we created StateLog records for both employees
-    assert test_db_session.query(
-        func.count(StateLog.state_log_id).filter(StateLog.end_state_id == State.VCC_SENT.state_id)
+    # Confirm we created StateLog records correctly
+    # - 2 should be created by the setup
+    # - 2 should be created for the VENDOR_CHECK flow
+    # - 2 should be created for the VENDOR_EFT flow
+    state_logs = test_db_session.query(StateLog).all()
+    assert len(state_logs) == 6
+    assert test_db_session.query(func.count(StateLog.state_log_id)).filter(
+        StateLog.end_state_id == State.ADD_TO_VCC.state_id
     ).scalar() == len(employees)
+    assert test_db_session.query(func.count(StateLog.state_log_id)).filter(
+        StateLog.end_state_id == State.VCC_SENT.state_id
+    ).scalar() == len(employees)
+    assert test_db_session.query(func.count(StateLog.state_log_id)).filter(
+        StateLog.end_state_id == State.EFT_PENDING.state_id
+    ).scalar() == len(employees)
+
+    # There should be 6 latest state logs
+    # 2 in the VENDOR_CHECK flow
+    # 2 in the VENDOR_EFT flow
+    latest_state_logs = test_db_session.query(LatestStateLog).all()
+    assert len(latest_state_logs) == 4
+    for employee in employees:
+        assert employee.employee_id in [
+            latest_state_log.employee_id
+            for latest_state_log in latest_state_logs
+            if latest_state_log.state_log.end_state.flow_id == Flow.VENDOR_CHECK.flow_id
+        ]
+        assert employee.employee_id in [
+            latest_state_log.employee_id
+            for latest_state_log in latest_state_logs
+            if latest_state_log.state_log.end_state.flow_id == Flow.VENDOR_EFT.flow_id
+        ]
 
     # Confirm that we created a single VCC record.
     ref_files = (
@@ -464,6 +494,32 @@ def test_build_vcc_files(
             assert vcc_doc_cert.attrib == {"AMSDataObject": "Y"}
 
 
+def test_build_vcc_files_no_eft(
+    initialize_factories_session, test_db_session, mock_s3_bucket, set_exporter_env_vars, mock_ses
+):
+    employee = get_base_employee(use_random_tin=True, add_eft=False)
+    employee.payment_method_id = PaymentMethod.CHECK.payment_method_id
+    create_add_to_vcc_state_log_for_employee(employee, test_db_session)
+
+    ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
+    (dat_filepath, inf_filepath) = vcc.build_vcc_files(test_db_session, ctr_outbound_path)
+
+    # Confirm we created StateLog records correctly
+    # - 1 should be created by the setup
+    # - 1 should be created for the VENDOR_CHECK flow
+    # - 0 should be created for the VENDOR_EFT flow
+    state_logs = test_db_session.query(StateLog).all()
+    assert len(state_logs) == 2
+
+    # There should be 1 latest state log
+    # 1 in the VENDOR_CHECK flow
+    # 0 in the VENDOR_EFT flow
+    latest_state_logs = test_db_session.query(LatestStateLog).all()
+    assert len(latest_state_logs) == 1
+    assert latest_state_logs[0].employee_id == employee.employee_id
+    assert latest_state_logs[0].state_log.end_state.flow_id == Flow.VENDOR_CHECK.flow_id
+
+
 def test_build_vcc_files_no_eligible_employees(test_db_session, mock_s3_bucket):
     ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
     assert vcc.build_vcc_files(test_db_session, ctr_outbound_path) == (
@@ -495,15 +551,28 @@ def test_build_vcc_files_skip_employee_record_errors(
     )
     assert len(ref_files) == 1
 
-    # Confirm we only created a StateLog record for the valid employee record
-    assert (
-        test_db_session.query(
-            func.count(StateLog.state_log_id).filter(
-                StateLog.end_state_id == State.VCC_SENT.state_id
-            )
-        ).scalar()
-        == 1
+    # Confirm StateLogs:
+    # 2 setup state logs
+    # 1 for ADD_TO_VCC
+    # 1 for EFT_PENDING
+    state_logs = test_db_session.query(StateLog).all()
+    assert len(state_logs) == 4
+
+    eft_pending_state_logs = (
+        test_db_session.query(StateLog)
+        .filter(StateLog.end_state_id == State.EFT_PENDING.state_id)
+        .all()
     )
+    assert len(eft_pending_state_logs) == 1
+    assert eft_pending_state_logs[0].employee_id == valid_employee_record.employee_id
+
+    vcc_sent_state_logs = (
+        test_db_session.query(StateLog)
+        .filter(StateLog.end_state_id == State.VCC_SENT.state_id)
+        .all()
+    )
+    assert len(vcc_sent_state_logs) == 1
+    assert vcc_sent_state_logs[0].employee_id == valid_employee_record.employee_id
 
     # Confirm that we only added a single employee to the VCC file.
     ref_file = ref_files[0]

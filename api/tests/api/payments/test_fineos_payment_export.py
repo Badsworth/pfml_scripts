@@ -76,6 +76,8 @@ def add_db_records(
             ctr_address_pair=ctr_address_pair,
             eft=eft,
         )
+        if add_eft:
+            employee.payment_method_id = PaymentMethod.ACH.payment_method_id
 
     if add_address:
         employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
@@ -304,6 +306,13 @@ def test_process_extract_data(
             assert str(eft.account_nbr) == index * 9
             assert eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
 
+            # Verify that there is exactly one successful state log per employee that uses ACH
+            state_logs = employee.state_logs
+            assert len(state_logs) == 1
+            state_log = state_logs[0]
+            assert "Initiated VENDOR_EFT flow for Employee" in state_log.outcome["message"]
+            assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
+
 
 def test_process_extract_data_one_bad_record(
     mock_s3_bucket,
@@ -352,7 +361,9 @@ def test_process_extract_data_one_bad_record(
     # Get the errored state log by querying for all state logs without a payment set
     # as it will have failed before getting to the payment logic
     unsuccessful_state_logs = (
-        test_db_session.query(StateLog).filter(StateLog.payment_id == None).all()  # noqa
+        test_db_session.query(StateLog)
+        .filter(StateLog.payment_id == None, StateLog.employee_id == None)  # noqa
+        .all()
     )
     assert len(unsuccessful_state_logs) == 1
     assert unsuccessful_state_logs[0].outcome == {

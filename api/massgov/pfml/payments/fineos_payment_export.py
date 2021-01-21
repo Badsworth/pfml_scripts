@@ -472,6 +472,20 @@ def _setup_state_log(
             associated_model=payment,
             db_session=db_session,
         )
+
+        if was_successful:
+            employee = payment.claim.employee
+            if employee.eft and employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
+                state_log_util.create_finished_state_log(
+                    start_state=State.EFT_DETECTED_IN_PAYMENT_EXPORT,
+                    end_state=State.EFT_REQUEST_RECEIVED,
+                    associated_model=employee,
+                    outcome=state_log_util.build_outcome(
+                        f"Initiated VENDOR_EFT flow for Employee {employee.employee_id} from FINEOS payment export"
+                    ),
+                    db_session=db_session,
+                )
+
     else:
         # In the most problematic cases, the state log
         # needs to be created before we've got a payment

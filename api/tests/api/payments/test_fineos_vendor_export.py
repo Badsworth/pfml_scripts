@@ -3,6 +3,7 @@ from typing import List, Optional
 
 import boto3
 import pytest
+from sqlalchemy import func
 
 import massgov.pfml.payments.fineos_vendor_export as vendor_export
 import massgov.pfml.payments.payments_util as payments_util
@@ -16,6 +17,8 @@ from massgov.pfml.db.models.employees import (
     GeoState,
     PaymentMethod,
     ReferenceFileType,
+    State,
+    StateLog,
 )
 from massgov.pfml.db.models.factories import (
     EmployeeFactory,
@@ -144,6 +147,27 @@ def test_process_vendor_extract_data_happy_path(
     assert updated_employee.eft.account_nbr == "123546789"
     assert (
         updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+    )
+
+    # Confirm StateLogs
+    state_logs = test_db_session.query(StateLog).all()
+    assert len(state_logs) == 2
+    assert len(updated_employee.state_logs) == 2
+
+    # Confirm 1 state log for VENDOR_EFT flow
+    assert (
+        test_db_session.query(func.count(StateLog.state_log_id))
+        .filter(StateLog.end_state_id == State.EFT_REQUEST_RECEIVED.state_id)
+        .scalar()
+        == 1
+    )
+
+    # Confirm 1 state log for VENDOR_CHECK flow
+    assert (
+        test_db_session.query(func.count(StateLog.state_log_id))
+        .filter(StateLog.end_state_id == State.IDENTIFY_MMARS_STATUS.state_id)
+        .scalar()
+        == 1
     )
 
 

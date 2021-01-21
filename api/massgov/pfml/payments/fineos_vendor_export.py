@@ -668,8 +668,19 @@ def manage_state_log(
             db_session=db_session,
         )
 
-        # TODO - If payment method is EFT, then we also need a state log entry that starts in EFT_DETECTED_IN_VENDOR_EXPORT and ends in EFT_REQUEST_RECEIVED
-        # TODO - should I add this now?
+        if (
+            employee_pfml_entry.eft
+            and employee_pfml_entry.payment_method_id == PaymentMethod.ACH.payment_method_id
+        ):
+            state_log_util.create_finished_state_log(
+                start_state=State.EFT_DETECTED_IN_VENDOR_EXPORT,
+                end_state=State.EFT_REQUEST_RECEIVED,
+                associated_model=employee_pfml_entry,
+                outcome=state_log_util.build_outcome(
+                    f"Initiated VENDOR_EFT flow for Employee {employee_pfml_entry.employee_id} from FINEOS vendor export {extract_data.date_str}"
+                ),
+                db_session=db_session,
+            )
 
 
 # TODO move to payments_util

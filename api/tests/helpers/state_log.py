@@ -5,9 +5,10 @@ from typing import Any, Dict, List, Optional, Union
 from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-from massgov.pfml.db.models.employees import Employee, Payment, StateLog
+from massgov.pfml.db.models.employees import Employee, Payment, PaymentMethod, StateLog
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
+    EftFactory,
     EmployeeFactory,
     EmployerFactory,
     PaymentFactory,
@@ -35,6 +36,7 @@ class AdditionalParams:
     ctr_vendor_customer_code: Optional[str] = None
     add_claim_payment_for_employee: bool = False
     payment: Optional[Payment] = None
+    add_eft: bool = False
 
 
 def setup_db_for_state_log(associated_class, additional_params=None):
@@ -53,6 +55,10 @@ def setup_db_for_state_log(associated_class, additional_params=None):
                 employee=associated_model,
             )
             PaymentFactory.create(payment_date=date(2020, 1, 7), claim=claim)
+        if additional_params.add_eft:
+            eft = EftFactory.create()
+            associated_model.eft = eft
+            associated_model.payment_method_id = PaymentMethod.ACH.payment_method_id
 
     if associated_class == state_log_util.AssociatedClass.PAYMENT:
         employee = EmployeeFactory.create(

@@ -403,6 +403,18 @@ def build_vcc_dat(
                 db_session=db_session,
             )
 
+            # If the employee has EFT info, move them forward in the VENDOR_EFT flow
+            if employee.eft and employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
+                state_log_util.create_finished_state_log(
+                    associated_model=employee,
+                    start_state=State.EFT_REQUEST_RECEIVED,
+                    end_state=State.EFT_PENDING,
+                    outcome=state_log_util.build_outcome(
+                        "Added vendor to VCC, EFT data is included"
+                    ),
+                    db_session=db_session,
+                )
+
             added_employees.append(employee)
         except Exception:
             logger.exception(

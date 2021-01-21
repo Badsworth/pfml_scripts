@@ -6,7 +6,7 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.error_reports as error_reports
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import Payment, State, StateLog
+from massgov.pfml.db.models.employees import Flow, LkState, Payment, State, StateLog
 from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
 from tests.helpers.state_log import AdditionalParams, setup_state_log
 
@@ -561,6 +561,54 @@ def test_send_ctr_payments_errors_simple_reports(
     # the 7 created as part of processing no longer exist
     rolled_back_state_logs = test_db_session.query(StateLog).all()
     assert len(rolled_back_state_logs) == 17
+
+
+@freeze_time("2020-01-01 12:00:00")
+def test_send_ctr_payments_errors_eft_pending(
+    test_db_session, initialize_factories_session, tmp_path, mock_ses, set_exporter_env_vars
+):
+    # Setup for VCM Report
+    setup_state_log_in_end_state(
+        state_log_util.AssociatedClass.EMPLOYEE,
+        end_state=State.ADD_TO_VCM_REPORT,
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(
+            fineos_customer_num="000000003",
+            fineos_absence_id="NTN-03-ABS-03",
+            ctr_vendor_customer_code="VEND-03",
+            add_claim_payment_for_employee=False,  # No payment or claim data will be found
+            add_eft=True,
+        ),
+    )
+
+    setup_state_log_in_end_state(
+        state_log_util.AssociatedClass.EMPLOYEE,
+        end_state=State.ADD_TO_VCM_REPORT,
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(
+            fineos_customer_num="000000004",
+            fineos_absence_id="NTN-04-ABS-04",
+            ctr_vendor_customer_code="VEND-04",
+            add_claim_payment_for_employee=True,  # It will find payment/claim data
+            add_eft=True,
+        ),
+    )
+
+    test_db_session.commit()
+
+    # Finally call the method after all that setup
+    error_reports._send_ctr_payments_errors(tmp_path, test_db_session)
+
+    # Confirm state logs for VENDOR_EFT flow
+    state_logs = (
+        test_db_session.query(StateLog)
+        .join(LkState, StateLog.end_state_id == LkState.state_id)
+        .filter(LkState.flow_id == Flow.VENDOR_EFT.flow_id)
+        .all()
+    )
+    assert len(state_logs) == 2
+    for state_log in state_logs:
+        assert state_log.end_state_id == State.EFT_PENDING.state_id
 
 
 @freeze_time("2020-02-01 12:00:00")
