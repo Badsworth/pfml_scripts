@@ -1,7 +1,7 @@
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Button from "../../components/Button";
 import Details from "../../components/Details";
-import InputText from "../../components/InputText";
+import InputNumber from "../../components/InputNumber";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import React from "react";
@@ -85,7 +85,7 @@ export const VerifyBusiness = (props) => {
         />
       </Details>
       {/* TODO (EMPLOYER-470): Display date based on GET request for latest filing period */}
-      <InputText
+      <InputNumber
         {...getFunctionalInputProps("withholdingAmount")}
         mask="currency"
         hint={t("pages.employersAuthVerifyBusiness.withholdingAmountHint")}

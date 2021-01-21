@@ -58,7 +58,7 @@ exports[`AmendableEmployerBenefit renders the component 1`] = `
             value="2021-03-01"
             yearLabel="Year"
           />
-          <InputText
+          <InputNumber
             label="How much will they receive?"
             mask="currency"
             name="benefit-amount-amendment"

@@ -79,9 +79,8 @@ exports[`OtherIncomeCard renders fields for an OtherIncome instance 1`] = `
     >
       How much will you receive?
     </FormLabel>
-    <InputText
+    <InputNumber
       formGroupClassName="margin-top-05"
-      inputMode="numeric"
       label="Amount"
       labelClassName="text-normal margin-top-0"
       mask="currency"

@@ -9,7 +9,7 @@ import ConditionalContent from "../ConditionalContent";
 import Dropdown from "../Dropdown";
 import Heading from "../Heading";
 import InputDate from "../InputDate";
-import InputText from "../InputText";
+import InputNumber from "../InputNumber";
 import PropTypes from "prop-types";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
@@ -174,7 +174,7 @@ const AmendableEmployerBenefit = ({ appErrors, employerBenefit, onChange }) => {
                 yearLabel={t("components.form.dateInputYearLabel")}
                 smallLabel
               />
-              <InputText
+              <InputNumber
                 onChange={(e) =>
                   amendBenefit(
                     employerBenefit.employer_benefit_id,

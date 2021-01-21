@@ -66,7 +66,7 @@ exports[`VerifyBusiness renders the page 1`] = `
       i18nKey="pages.employersAuthVerifyBusiness.detailsList"
     />
   </Details>
-  <InputText
+  <InputNumber
     hint="Include the full amount with dollars and cents."
     label="Paid leave contributions for {DD-MMM-YYYY}"
     mask="currency"

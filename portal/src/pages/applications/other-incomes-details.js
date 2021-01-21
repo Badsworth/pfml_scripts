@@ -11,7 +11,7 @@ import FormLabel from "../../components/FormLabel";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
-import InputText from "../../components/InputText";
+import InputNumber from "../../components/InputNumber";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -221,11 +221,10 @@ export const OtherIncomeCard = (props) => {
         >
           {t("pages.claimsOtherIncomesDetails.amountLegend")}
         </FormLabel>
-        <InputText
+        <InputNumber
           {...getFunctionalInputProps(
             `other_incomes[${index}].income_amount_dollars`
           )}
-          inputMode="numeric"
           label={t("pages.claimsOtherIncomesDetails.amountLabel")}
           labelClassName="text-normal margin-top-0"
           formGroupClassName="margin-top-05"

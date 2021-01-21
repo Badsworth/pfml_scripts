@@ -8,7 +8,7 @@ import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputText from "../../components/InputText";
+import InputNumber from "../../components/InputNumber";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -150,9 +150,8 @@ export const IntermittentFrequency = (props) => {
       <ConditionalContent visible={!!leavePeriod.frequency_interval_basis}>
         {/* Wrapped in this condition to avoid triggering a missing i18n key event */}
         {!!leavePeriod.frequency_interval_basis && (
-          <InputText
+          <InputNumber
             {...getFunctionalInputProps(`${leavePeriodPath}.frequency`)}
-            inputMode="numeric"
             valueType="integer"
             label={t("pages.claimsIntermittentFrequency.frequencyLabel", {
               context:
@@ -205,9 +204,8 @@ export const IntermittentFrequency = (props) => {
       </ConditionalContent>
 
       {!!leavePeriod.duration_basis && (
-        <InputText
+        <InputNumber
           {...getFunctionalInputProps(`${leavePeriodPath}.duration`)}
-          inputMode="numeric"
           valueType="integer"
           label={t("pages.claimsIntermittentFrequency.durationLabel", {
             context: findKeyByValue(DurationBasis, leavePeriod.duration_basis),

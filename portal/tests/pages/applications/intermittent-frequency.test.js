@@ -176,7 +176,7 @@ describe("IntermittentFrequency", () => {
     );
 
     const fieldFinder = (nodeWrapper) =>
-      ["InputText", "InputChoiceGroup"].includes(nodeWrapper.name());
+      ["InputNumber", "InputChoiceGroup"].includes(nodeWrapper.name());
     const medicalWrapperFields = medicalWrapper.findWhere(fieldFinder);
     const bondingWrapperFields = bondingWrapper.findWhere(fieldFinder);
 
