@@ -21,16 +21,6 @@ locals {
   newrelic_trusted_account_key = "1606654" # EOLWD's New Relic parent account number
 }
 
-data "terraform_remote_state" "pagerduty" {
-  backend = "s3"
-
-  config = {
-    bucket = "massgov-pfml-aws-account-mgmt"
-    key    = "terraform/pagerduty.tfstate"
-    region = "us-east-1"
-  }
-}
-
 provider "newrelic" {
   version       = "~> 2.15.0"
   region        = "US"

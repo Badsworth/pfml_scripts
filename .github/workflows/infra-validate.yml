@@ -9,7 +9,7 @@ on:
 
 env:
   working-dir: ./infra
-  tf-version-pagerduty: 0.13.6
+  tf-version-monitoring: 0.13.6
   tf-version-default: 0.12.24
 
 jobs:
@@ -44,7 +44,7 @@ jobs:
         include:
         - component: "constants"
         - component: "pfml-aws"
-        - component: "pagerduty"
+        - component: "monitoring"
 
     steps:
       - uses: actions/checkout@v2

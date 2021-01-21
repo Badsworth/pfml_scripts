@@ -41,7 +41,7 @@ terraform {
 
   backend "s3" {
     bucket         = "massgov-pfml-aws-account-mgmt"
-    key            = "terraform/pagerduty.tfstate"
+    key            = "terraform/monitoring.tfstate"
     region         = "us-east-1"
     dynamodb_table = "terraform_locks"
     encrypt        = "true"
