@@ -15,13 +15,13 @@ variable "high_priority_nr_integration_key" {
   type        = string
 }
 
-variable "low_priority_cloudwatch_integration_key" {
-  description = "Name of the cloudwatch integration key"
+variable "warning_alert_sns_topic_arn" {
+  description = "SNS topic ARN for cloudwatch warning alarms"
   type        = string
 }
 
-variable "high_priority_cloudwatch_integration_key" {
-  description = "Name of the cloudwatch integration key"
+variable "critical_alert_sns_topic_arn" {
+  description = "SNS topic ARN for cloudwatch critical alarms"
   type        = string
 }
 

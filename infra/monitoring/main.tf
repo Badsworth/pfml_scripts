@@ -52,3 +52,6 @@ provider "pagerduty" {
   token = data.aws_ssm_parameter.pagerduty_api_key.value
 }
 
+module "constants" {
+  source = "../constants"
+}
