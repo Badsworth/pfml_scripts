@@ -156,21 +156,38 @@ def download_document_as_leave_admin(
 
 
 def get_claim_as_leave_admin(
-    fineos_user_id: str, absence_id: str, employer: Employer
+    fineos_user_id: str,
+    absence_id: str,
+    employer: Employer,
+    fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None,
 ) -> ClaimReviewResponse:
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
     """
     try:
-        fineos = massgov.pfml.fineos.create_client()
-        absence_periods = fineos.get_absence_period_decisions(fineos_user_id, absence_id).dict()
+        if not fineos_client:
+            fineos_client = massgov.pfml.fineos.create_client()
+        absence_periods = fineos_client.get_absence_period_decisions(
+            fineos_user_id, absence_id
+        ).dict()
         customer_id = absence_periods["decisions"][0]["employee"]["id"]
-        status = absence_periods["decisions"][0]["period"]["leavePlan"]["adjudicationStatus"]
-        customer_info = fineos.get_customer_info(fineos_user_id, customer_id).dict()
-        customer_occupations = fineos.get_customer_occupations(fineos_user_id, customer_id).dict()
+        if (
+            "leavePlan" in absence_periods["decisions"][0]["period"]
+            and absence_periods["decisions"][0]["period"]["leavePlan"]
+        ):
+            status = absence_periods["decisions"][0]["period"]["leavePlan"]["adjudicationStatus"]
+        elif "leaveRequest" in absence_periods["decisions"][0]["period"]:
+            # Claims for ineligible Employers have no Leave Plan (and get rejected)
+            status = absence_periods["decisions"][0]["period"]["leaveRequest"]["decisionStatus"]
+        else:
+            status = "UNKNOWN"
+        customer_info = fineos_client.get_customer_info(fineos_user_id, customer_id).dict()
+        customer_occupations = fineos_client.get_customer_occupations(
+            fineos_user_id, customer_id
+        ).dict()
         hours_worked_per_week = customer_occupations["elements"][0]["hrsWorkedPerWeek"]
-        eform_summaries = fineos.get_eform_summary(fineos_user_id, absence_id)
-        managed_reqs = fineos.get_managed_requirements(fineos_user_id, absence_id)
+        eform_summaries = fineos_client.get_eform_summary(fineos_user_id, absence_id)
+        managed_reqs = fineos_client.get_managed_requirements(fineos_user_id, absence_id)
         other_leaves: List[PreviousLeave] = []
         other_incomes: List[EmployerBenefit] = []
         is_reviewable = False
@@ -184,14 +201,18 @@ def get_claim_as_leave_admin(
         for eform_summary_obj in eform_summaries:
             eform_summary = eform_summary_obj.dict()
             if eform_summary["eformType"] == "Other Income":
-                eform = fineos.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
+                eform = fineos_client.get_eform(
+                    fineos_user_id, absence_id, eform_summary["eformId"]
+                )
                 other_incomes.extend(
                     other_income
                     for other_income in TransformOtherIncomeEform.from_fineos(eform)
                     if other_income.program_type == "Employer"
                 )
             elif eform_summary["eformType"] == "Other Leaves":
-                eform = fineos.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
+                eform = fineos_client.get_eform(
+                    fineos_user_id, absence_id, eform_summary["eformId"]
+                )
                 other_leaves = other_leaves + TransformOtherLeaveEform.from_fineos(eform)
 
         if customer_info["address"] is not None:
