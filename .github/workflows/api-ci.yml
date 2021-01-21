@@ -83,3 +83,34 @@ jobs:
   
       - name: pre-flight-test
         run: make release-test
+
+  # Run Tenable container scanning
+  scan-containers:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build image
+        run: make release-build
+        
+      - name: pull latest tenable image
+        env:
+          DOCKER_PW: ${{ secrets.PFML_TENABLE_DOCKER_PASSWORD }}
+          DOCKER_USER: ${{ secrets.PFML_TENABLE_DOCKER_USER }}
+        run: |
+          echo "$DOCKER_PW" | docker login --username "$DOCKER_USER" --password-stdin tenableio-docker-consec-local.jfrog.io
+          docker pull tenableio-docker-consec-local.jfrog.io/cs-scanner:latest
+
+      - name: run tenable scan
+        env:
+          TENABLE_ACCESS_KEY: ${{ secrets.TENABLE_ACCESS_KEY }}
+          TENABLE_SECRET_KEY: ${{ secrets.TENABLE_SECRET_KEY }}
+        run: |
+          DOCKER_TAG=$(docker images | grep mass-pfml-api | grep -v latest | awk '{print $2}')
+          docker save mass-pfml-api:$DOCKER_TAG | docker run \
+          --env TENABLE_ACCESS_KEY=$TENABLE_ACCESS_KEY \
+          --env TENABLE_SECRET_KEY=$TENABLE_SECRET_KEY \
+          --env IMPORT_REPO_NAME=mass-pfml-api \
+          --env CHECK_POLICY=true \
+          --interactive tenableio-docker-consec-local.jfrog.io/cs-scanner:latest inspect-image mass-pfml-api:$DOCKER_TAG
