@@ -107,7 +107,7 @@ resource "aws_wafregional_web_acl" "fortinet_managed_rules" {
     override_action {
       # NONE  = None of the rules in the group will be overriden.
       # COUNT = Count the rules that triggered but do not block.
-      type = var.enforce_fortinet_managed_fules ? "NONE" : "COUNT"
+      type = var.enforce_fortinet_managed_rules ? "NONE" : "COUNT"
     }
   }
 }
