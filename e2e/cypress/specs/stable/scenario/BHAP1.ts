@@ -3,7 +3,6 @@ import { fineos } from "../../../tests/common/actions";
 import { beforeFineos } from "../../../tests/common/before";
 import { beforePortal } from "../../../tests/common/before";
 import { getFineosBaseUrl } from "../../../config";
-import { subDays, format } from "date-fns";
 import { Submission } from "../../../../src/types";
 
 describe(
@@ -54,69 +53,22 @@ describe(
           });
         });
         portal.submitClaimPartsTwoThree(application, paymentPreference);
-        cy.wait(2000);
       });
     });
 
-    // tests that leave dates can be modified in FINEOS after portal submission
     it(
-      "Should allow CSR modification of a claim that was submitted via the Portal",
-      { baseUrl: getFineosBaseUrl() },
-      () => {
-        beforeFineos();
-        cy.visit("/");
-
-        // Request for additional Info in Fineos
-        cy.unstash<Submission>("submission").then((submission) => {
-          fineos.visitClaim(submission.fineos_absence_id);
-          cy.get('.date-wrapper span[id*="leaveStartDate"]')
-            .invoke("text")
-            .as("previousStartDate");
-
-          cy.get("input[type='submit'][value='Adjudicate']").click();
-          cy.get<string>("@previousStartDate").then((dateString) => {
-            const newStartDate = subDays(new Date(dateString), 1);
-            fineos.changeLeaveStart(newStartDate);
-            cy.wrap(newStartDate).as("newStartDate");
-          });
-
-          fineos.clickBottomWidgetButton("OK");
-          cy.get<Date>("@newStartDate").then((date) => {
-            cy.get('.date-wrapper span[id*="leaveStartDate"]').should(
-              "have.text",
-              format(date, "MM/dd/yyyy")
-            );
-          });
-          cy.wait(1000);
-        });
-      }
-    );
-
-    it(
-      "Confirm info in Payment Preference",
-      { baseUrl: getFineosBaseUrl() },
-      () => {
-        beforeFineos();
-        cy.visit("/");
-
-        // Request for additional Info in Fineos
-        cy.unstash<SimulationClaim>("claim").then((claim) => {
-          fineos.checkPaymentPreference(claim);
-        });
-        cy.wait(1000);
-      }
-    );
-
-    // Prepare for adjudication approval
-    it(
-      "As a CSR (Savilinx), I should be able to Approve a BHAP1 claim submission",
+      "Should Modidy Leave Dates/Check Payment Preference/Prepare claim for Adjudication",
       { baseUrl: getFineosBaseUrl() },
       () => {
         beforeFineos();
         cy.visit("/");
 
         cy.unstash<Submission>("submission").then((submission) => {
-          fineos.claimAdjudicationFlow(submission.fineos_absence_id);
+          cy.unstash<SimulationClaim>("claim").then((claim) => {
+            fineos.modifyDates(submission);
+            fineos.checkPaymentPreference(claim);
+            fineos.claimAdjudicationFlow(submission.fineos_absence_id);
+          });
         });
       }
     );

@@ -1,6 +1,7 @@
 import { getFineosBaseUrl } from "../../../config";
 import { formatDateString } from "../util";
-import { format, addMonths, addDays } from "date-fns";
+import { format, addMonths, addDays, subDays } from "date-fns";
+import { Submission } from "types";
 
 export function loginSavilinx(): void {
   Cypress.config("baseUrl", getFineosBaseUrl());
@@ -594,7 +595,7 @@ export function claimAdjudicationFlow(
   if (ERresponse) {
     approveClaim();
   }
-  cy.wait(1000);
+  cy.wait(2000);
 }
 
 export function claimAdjudicationMailedDoc(claimNumber: string): void {
@@ -744,6 +745,30 @@ export function checkPaymentPreference(simClaim: SimulationClaim): void {
   cy.contains("span", claim.mailing_address?.zip as string).should(
     "be.visible"
   );
+  cy.wait(2000);
+}
+
+export function modifyDates(submission: Submission): void {
+  visitClaim(submission.fineos_absence_id);
+  cy.get('.date-wrapper span[id*="leaveStartDate"]')
+    .invoke("text")
+    .as("previousStartDate");
+
+  cy.get("input[type='submit'][value='Adjudicate']").click();
+  cy.get<string>("@previousStartDate").then((dateString) => {
+    const newStartDate = subDays(new Date(dateString), 1);
+    changeLeaveStart(newStartDate);
+    cy.wrap(newStartDate).as("newStartDate");
+  });
+
+  clickBottomWidgetButton("OK");
+  cy.get<Date>("@newStartDate").then((date) => {
+    cy.get('.date-wrapper span[id*="leaveStartDate"]').should(
+      "have.text",
+      format(date, "MM/dd/yyyy")
+    );
+  });
+  cy.wait(2000);
 }
 
 export function confirmRMVStatus(RMVStatus: string): void {

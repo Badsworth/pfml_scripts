@@ -828,5 +828,5 @@ export function submitClaimPartsTwoThree(
   onPage("review");
   confirmSubmit();
   goToDashboard();
-  cy.wait(1000);
+  cy.wait(3000);
 }
