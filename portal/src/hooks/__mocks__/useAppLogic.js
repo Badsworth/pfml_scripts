@@ -1,9 +1,9 @@
+import User, { UserLeaveAdministrator } from "../../models/User";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Claim from "../../models/Claim";
 import ClaimCollection from "../../models/ClaimCollection";
 import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
-import User from "../../models/User";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
@@ -81,6 +81,20 @@ export default jest.fn(() => ({
     user: new User({
       user_id: "mock_user_id",
       consented_to_data_sharing: true,
+      user_leave_administrators: [
+        new UserLeaveAdministrator({
+          employer_dba: "Book Bindings 'R Us",
+          employer_fein: "1298391823",
+          employer_id: "dda903f-f093f-ff900",
+          verified: false,
+        }),
+        new UserLeaveAdministrator({
+          employer_dba: "Knitting Castle",
+          employer_fein: "390293443",
+          employer_id: "dda930f-93jfk-iej08",
+          verified: true,
+        }),
+      ],
     }),
   },
 }));

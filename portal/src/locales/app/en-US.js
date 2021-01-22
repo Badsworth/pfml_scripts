@@ -606,6 +606,7 @@ const shared = {
   minutesLabel: "Minutes",
   networkError:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
+  noneReported: "None reported",
   noticeDate: "Posted {{date}}",
   noticeName: "Other notice", // it should fallback to this if we receive an unexpected or undefined enum
   noticeName_approvalNotice: "Approval notice",
@@ -1674,6 +1675,13 @@ const pages = {
       "Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.",
     welcomeTitle: "Welcome",
   },
+  employersOrganizations: {
+    nearFutureAvailability:
+      "You'll be able to add more organizations to your account in the near future.",
+    organizationsTableHeader: "Organization",
+    title: "Your organizations",
+    verificationRequired: "Verification required",
+  },
   index: {
     claimantCardBody: "You can now apply for Paid Family and Medical Leave.",
     claimantCreateAccountButton: "Create an account",
@@ -1841,7 +1849,6 @@ const components = {
     detailsLabel: "Details",
     frequencyHelperText: "[Needs review]",
     header: "Employer benefits",
-    noneReported: "None reported",
     tableName: "Employer-sponsored benefit details",
   },
   employersEmployerDecision: {
@@ -1955,7 +1962,6 @@ const components = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveTypeLabel: "Leave type",
-    noneReported: "None reported",
     qualifyingReasonContent:
       "An employee or contractor can take paid or unpaid leave to:",
     qualifyingReasonDetailsLabel: "$t(shared.qualifyingReasonDetailsLabel)",

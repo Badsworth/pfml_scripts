@@ -25,9 +25,12 @@ export default class UsersApi extends BaseApi {
   getCurrentUser = async () => {
     const { data } = await this.request("GET", "current", null);
     const roles = this.transformUserRoles(data.roles);
+    const user_leave_administrators = this.transformUserLeaveAdministrators(
+      data.user_leave_administrators
+    );
 
     return Promise.resolve({
-      user: new User({ ...data, roles }),
+      user: new User({ ...data, roles, user_leave_administrators }),
     });
   };
 
@@ -40,12 +43,16 @@ export default class UsersApi extends BaseApi {
   updateUser = async (user_id, patchData) => {
     const { data } = await this.request("PATCH", user_id, patchData);
     const roles = this.transformUserRoles(data.roles);
+    const user_leave_administrators = this.transformUserLeaveAdministrators(
+      data.user_leave_administrators
+    );
 
     return {
       user: new User({
         ...patchData,
         ...data,
         roles,
+        user_leave_administrators,
       }),
     };
   };
@@ -54,5 +61,18 @@ export default class UsersApi extends BaseApi {
   // [{ role: { role_description, role_id }}] --> [{ role_description, role_id }]
   transformUserRoles = (roles) => {
     return compact(map(roles, "role"));
+  };
+
+  // TODO (EMPLOYER-813): Remove helper method when API returns array of UserLeaveAdministrator objects
+  // [{ employer: { employer_dba, employer_fein, employer_id }, verified}]
+  // becomes
+  // [{ employer_dba, employer_fein, employer_id, verified }]]
+  transformUserLeaveAdministrators = (userLeaveAdministrators = []) => {
+    return userLeaveAdministrators.map(({ employer, ...rest }) => {
+      return {
+        ...employer,
+        ...rest,
+      };
+    });
   };
 }

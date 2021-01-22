@@ -66,9 +66,7 @@ const EmployerBenefits = (props) => {
             ))
           ) : (
             <tr>
-              <th scope="row">
-                {t("components.employersEmployerBenefits.noneReported")}
-              </th>
+              <th scope="row">{t("shared.noneReported")}</th>
               <td colSpan="2" />
             </tr>
           )}

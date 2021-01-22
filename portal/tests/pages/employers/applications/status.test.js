@@ -79,7 +79,8 @@ describe("Status", () => {
   // it("shows the status", () => {
   //   const statusRow = wrapper.find("StatusRow").at(1);
   //   expect(statusRow.prop("label")).toEqual("Status");
-  //   expect(statusRow.find("StatusTag").prop("state")).toEqual("approved");
+  //   expect(statusRow.find("Tag").prop("state")).toEqual("success");
+  //   TODO (EMPLOYER-656): Also test tag label
   // });
 
   it("shows the leave type", () => {

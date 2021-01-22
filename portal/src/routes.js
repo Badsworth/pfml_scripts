@@ -66,6 +66,7 @@ const routes = {
     dashboard: "/employers",
     finishAccountSetup: "/employers/finish-account-setup",
     newApplication: "/employers/applications/new-application",
+    organizations: "/employers/organizations",
     review: "/employers/applications/review",
     status: "/employers/applications/status",
     success: "/employers/applications/success",

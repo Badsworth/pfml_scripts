@@ -10,6 +10,7 @@ class User extends BaseModel {
       roles: [], // array of UserRole
       status: null,
       user_id: null,
+      user_leave_administrators: [], // array of UserLeaveAdministrator
     };
   }
 
@@ -36,5 +37,16 @@ export class UserRole extends BaseModel {
 export const RoleDescription = {
   employer: "Employer",
 };
+
+export class UserLeaveAdministrator extends BaseModel {
+  get defaults() {
+    return {
+      employer_dba: null,
+      employer_fein: null,
+      employer_id: null,
+      verified: null,
+    };
+  }
+}
 
 export default User;

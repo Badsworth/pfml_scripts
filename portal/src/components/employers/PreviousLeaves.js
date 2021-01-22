@@ -124,9 +124,7 @@ const PreviousLeaves = (props) => {
             </React.Fragment>
           ) : (
             <tr>
-              <th scope="row">
-                {t("components.employersPreviousLeaves.noneReported")}
-              </th>
+              <th scope="row">{t("shared.noneReported")}</th>
               <td colSpan="3" />
             </tr>
           )}

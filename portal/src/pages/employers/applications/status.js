@@ -8,7 +8,7 @@ import Lead from "../../../components/Lead";
 import LeaveReason from "../../../models/LeaveReason";
 import PropTypes from "prop-types";
 import StatusRow from "../../../components/StatusRow";
-import StatusTag from "../../../components/StatusTag";
+import Tag from "../../../components/Tag";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import download from "downloadjs";
@@ -78,7 +78,7 @@ export const Status = (props) => {
       {/* TODO (EMPLOYER-656): Display adjudication status */}
       {shouldShowAdjudicationStatus && (
         <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
-          <StatusTag state="approved" />
+          <Tag state="success" />
         </StatusRow>
       )}
       <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>

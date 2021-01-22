@@ -43,6 +43,24 @@ describe("users API", () => {
                 { role: { role_description: "Employer", role_id: 1 } },
                 { role: { role_description: "User", role_id: 2 } },
               ],
+              user_leave_administrators: [
+                {
+                  employer: {
+                    employer_dba: "Book Bindings 'R Us",
+                    employer_fein: "1298391823",
+                    employer_id: "dda903f-f093f-ff900",
+                  },
+                  verified: false,
+                },
+                {
+                  employer: {
+                    employer_dba: "Knitting Castle",
+                    employer_fein: "390293443",
+                    employer_id: "dda930f-93jfk-iej08",
+                  },
+                  verified: true,
+                },
+              ],
             },
           },
           status: 200,
@@ -90,6 +108,25 @@ describe("users API", () => {
           {
             role_description: "User",
             role_id: 2,
+          },
+        ]);
+      });
+
+      it("returns transformed user leave administrators", async () => {
+        const response = await usersApi.getCurrentUser();
+
+        expect(response.user.user_leave_administrators).toEqual([
+          {
+            employer_dba: "Book Bindings 'R Us",
+            employer_fein: "1298391823",
+            employer_id: "dda903f-f093f-ff900",
+            verified: false,
+          },
+          {
+            employer_dba: "Knitting Castle",
+            employer_fein: "390293443",
+            employer_id: "dda930f-93jfk-iej08",
+            verified: true,
           },
         ]);
       });
@@ -153,6 +190,7 @@ describe("users API", () => {
           ],
           "status": null,
           "user_id": "mock-user_id",
+          "user_leave_administrators": Array [],
         }
       `);
     });
