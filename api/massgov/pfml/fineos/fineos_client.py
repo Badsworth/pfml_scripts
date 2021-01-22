@@ -999,14 +999,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
     def create_service_agreement_for_employer(
-        self,
-        fineos_employer_id: int,
-        service_agreement_inputs: models.CreateOrUpdateServiceAgreement,
+        self, fineos_employer_id: int, leave_plans: str
     ) -> str:
         """Create a Service Agreement for an employer in FINEOS."""
-        xml_body = self._create_service_agreement_payload(
-            fineos_employer_id, service_agreement_inputs
-        )
+        xml_body = self._create_service_agreement_payload(fineos_employer_id, leave_plans)
 
         response = self._wscomposer_request(
             "POST", "webservice", {"config": "ServiceAgreementService"}, xml_body
@@ -1036,30 +1032,15 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return str(fineos_customer_nbr_value)
 
     @staticmethod
-    def _create_service_agreement_payload(
-        fineos_employer_id: int, service_agreement_inputs: models.CreateOrUpdateServiceAgreement
-    ) -> str:
+    def _create_service_agreement_payload(fineos_employer_id: int, leave_plans: str) -> str:
         fineos_employer_id_data = models.AdditionalData(
             name="CustomerNumber", value=str(fineos_employer_id)
         )
-        absence_management_data = models.AdditionalData(
-            name="AbsenceManagement", value=service_agreement_inputs.absence_management_flag
-        )
-        leave_plans_data = models.AdditionalData(
-            name="LeavePlans", value=service_agreement_inputs.leave_plans
-        )
-        unlink_leave_plans_data = models.AdditionalData(
-            name="UnlinkAllExistingLeavePlans", value=True
-        )
+        leave_plans_data = models.AdditionalData(name="LeavePlans", value=leave_plans)
 
         additional_data_set = models.AdditionalDataSet()
         additional_data_set.additional_data.append(fineos_employer_id_data)
-        if service_agreement_inputs.absence_management_flag:
-            additional_data_set.additional_data.append(leave_plans_data)
-        else:
-            additional_data_set.additional_data.append(absence_management_data)
-
-        additional_data_set.additional_data.append(unlink_leave_plans_data)
+        additional_data_set.additional_data.append(leave_plans_data)
 
         service_data = models.ServiceAgreementData()
         service_data.additional_data_set = additional_data_set

@@ -644,9 +644,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
 
     def create_service_agreement_for_employer(
-        self,
-        fineos_employee_id: int,
-        service_agreement_inputs: models.CreateOrUpdateServiceAgreement,
+        self, fineos_employee_id: int, leave_plans: str
     ) -> str:
         _capture_call(
             "create_service_agreement_for_employer", None, fineos_employee_id=fineos_employee_id

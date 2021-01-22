@@ -27,12 +27,6 @@ class CreateOrUpdateEmployer(pydantic.BaseModel):
     employer_dba: Optional[str]
 
 
-class CreateOrUpdateServiceAgreement(pydantic.BaseModel):
-    absence_management_flag: bool
-    leave_plans: str
-    start_date: Optional[datetime.date]
-
-
 # Classes for UpdateOrCreateParty request. Most attributes
 # we are defaulting. The classes are used to help construct
 # the XML request body. Not all elements of the request have
