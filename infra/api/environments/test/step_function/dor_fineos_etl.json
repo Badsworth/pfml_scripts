@@ -159,7 +159,8 @@
             {
               "Name": "fineos-eligibility-feed-export",
               "Environment": [
-                { "Name": "ELIGIBILITY_FEED_MODE", "Value": "updates" }
+                { "Name": "ELIGIBILITY_FEED_MODE", "Value": "updates" },
+                { "Name": "ELIGIBILITY_FEED_UPDATE_BATCH_SIZE", "Value": "50000" }
               ]
             }
           ]
