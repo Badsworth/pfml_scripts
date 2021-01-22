@@ -9,6 +9,7 @@
 import argparse
 import csv
 import os
+from datetime import date
 
 import sqlalchemy
 from smart_open import open as smart_open
@@ -21,14 +22,21 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 S3_BUCKET = os.environ.get("S3_EXPORT_BUCKET", None)
 
 
+def get_file_target(args, count):
+    """ Produce a target based on the parameters provided """
+    if args.use_date:
+        return f"{args.s3_output}/{date.today()}/query{count}.csv"
+    return f"{args.s3_output}-query{count}.csv"
+
+
 def execute_sql():
     """Execute some SQL against the database."""
     massgov.pfml.util.logging.audit.init_security_logging()
     massgov.pfml.util.logging.init("execute_sql")
 
     args = parse_args()
-    if args.s3_output and not S3_BUCKET:
-        logger.error("S3 Output Requested without S3_EXPORT_BUCKET set")
+    if args.s3_output and not args.s3_bucket:
+        logger.error("S3 Output Requested without S3_EXPORT_BUCKET or --s3_bucket set")
         exit(1)
 
     s3_mode = bool(args.s3_output)
@@ -38,7 +46,8 @@ def execute_sql():
         for sql in args.sql:
             count += 1
             if s3_mode:
-                execute_sql_statement_s3(db_session, sql, args.s3_output, count)
+                target = get_file_target(args, count)
+                execute_sql_statement_s3(db_session, sql, args.s3_bucket, target)
             else:
                 execute_sql_statement(db_session, sql, args.limit)
 
@@ -48,14 +57,13 @@ def execute_sql():
     logger.info("done, %i statements executed", count)
 
 
-def execute_sql_statement_s3(db_session, sql, file_target, count):
+def execute_sql_statement_s3(db_session, sql, bucket, file_target):
     """ Export the results of an SQL statement to S3 """
-    file_loc = f"{file_target}-query{count}.csv"
-    logger.info("exporting results of %r to %s in %s", sql, file_loc, S3_BUCKET)
+    logger.info("exporting results of %r to %s in %s", sql, file_target, bucket)
     result = db_session.execute(sql)
     dictwriter = None
     fields = None
-    with smart_open(f"s3://{S3_BUCKET}/{file_loc}", "w") as open_fh:
+    with smart_open(f"s3://{bucket}/{file_target}", "w") as open_fh:
         for row in result:
             if not dictwriter:
                 fields = row.keys()
@@ -101,6 +109,17 @@ def parse_args():
             "If you run multiple queries with --s3_output, "
             "_query1, _query2, etc will be appended"
         ),
+    )
+    parser.add_argument(
+        "--s3_bucket",
+        default=S3_BUCKET,
+        help=("An S3 bucket to export query data to; default is set in env"),
+    )
+    parser.add_argument(
+        "--use_date",
+        default=False,
+        action="store_true",
+        help=("Prepend the current date to the folder"),
     )
     args = parser.parse_args()
     if not args.sql:

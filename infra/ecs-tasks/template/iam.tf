@@ -217,7 +217,9 @@ data "aws_iam_policy_document" "task_sql_export_s3_policy_doc" {
 
     resources = [
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export",
-      "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export/*"
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export/*",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-business-intelligence-tool/api_db/accounts_created",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-business-intelligence-tool/api_db/accounts_created/*"
     ]
   }
 }
@@ -471,6 +473,50 @@ data "aws_iam_policy_document" "fineos_feeds_role_policy" {
   }
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for Leave Admin export query scheduled task
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "cloudwatch_events_export_leave_admins_created_role" {
+  name               = "${local.app_name}-${var.environment_name}-export-leave-admins-created-role"
+  assume_role_policy = data.aws_iam_policy_document.cloudwatch_events_export_leave_admins_created_assume_policy.json
+}
+
+data "aws_iam_policy_document" "cloudwatch_events_export_leave_admins_created_assume_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "cloudwatch_events_export_leave_admins_created_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-export-leave-admins-created-role-policy"
+  role   = aws_iam_role.cloudwatch_events_export_leave_admins_created_role.id
+  policy = data.aws_iam_policy_document.cloudwatch_events_export_leave_admins_created_role_policy.json
+}
+
+data "aws_iam_policy_document" "cloudwatch_events_export_leave_admins_created_role_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["ecs:RunTask"]
+
+    resources = ["arn:aws:ecs:us-east-1:${data.aws_caller_identity.current.account_id}:task-definition/${aws_ecs_task_definition.ecs_tasks["execute-sql"].family}:*"]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["iam:PassRole"]
+
+    resources = [
+      aws_iam_role.task_executor.arn,
+      aws_iam_role.task_execute_sql_task_role.arn
+    ]
+  }
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for Registering Admins to FINEOS scheduler

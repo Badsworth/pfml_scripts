@@ -60,6 +60,49 @@ resource "aws_cloudwatch_event_target" "register_admins_event_target_ecs" {
     }
   }
 }
+# -- Export daily registered users via execute-sql ------------------------------------------
+
+resource "aws_cloudwatch_event_rule" "every_24_hours" {
+  name                = "export-leave-admins-created-${var.environment_name}-every-24-hours"
+  description         = "Fires every 24 hours"
+  schedule_expression = "rate(24 hours)"
+}
+
+resource "aws_cloudwatch_event_target" "export_leave_admins_created_target_ecs" {
+  arn       = data.aws_ecs_cluster.cluster.arn
+  target_id = "export_leave_admins_${var.environment_name}_ecs_event_target"
+  rule      = aws_cloudwatch_event_rule.every_24_hours.name
+  role_arn  = aws_iam_role.cloudwatch_events_export_leave_admins_created_role.arn
+
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = aws_ecs_task_definition.ecs_tasks["execute-sql"].arn
+    launch_type         = "FARGATE"
+    platform_version    = "1.4.0"
+
+    network_configuration {
+      assign_public_ip = false
+      subnets          = var.app_subnet_ids
+      security_groups  = [aws_security_group.tasks.id]
+    }
+  }
+  input = <<DOC
+{
+  "containerOverrides": [
+          {
+            "name": "execute-sql",
+            "command": [
+              "execute-sql",
+              "--s3_output=api_db/accounts_created",
+              "--s3_bucket=massgov-pfml-${var.environment_name}-business-intelligence-tool",
+              "--use_date",
+              "SELECT pu.email_address as email, pu.user_id as user_id, pu.active_directory_id as cognito_id,ula.fineos_web_id as fineos_id,e.employer_name as employer_name,e.employer_dba as employer_dba,e.employer_fein as fein,e.fineos_employer_id as fineos_customer_number,ula.created_at as date_created FROM public.user pu LEFT JOIN link_user_leave_administrator ula ON (pu.user_id=ula.user_id) LEFT JOIN employer e ON (ula.employer_id=e.employer_id) WHERE ula.created_at >= now() - interval '24 hour'"
+            ]
+          }
+        ]
+}
+DOC
+}
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Payments ECS Task using Cloudwatch Events (Eventbridge)
