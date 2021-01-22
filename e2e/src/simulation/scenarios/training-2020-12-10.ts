@@ -35,7 +35,8 @@ const MR = MRS;
 
 export const INVALIDMED = scenario("INVALIDMED", {
   reason: "Serious Health Condition - Employee",
-  has_reduced_schedule_leave_periods: true,
+  work_pattern_spec: "standard",
+  reduced_leave_spec: "0,240,240,240,240,240,0",
   residence: "MA-proofed",
   docs: {
     MASSID: { invalid: true },
@@ -45,7 +46,8 @@ export const INVALIDMED = scenario("INVALIDMED", {
 
 export const PREBIRTHMED = scenario("PREBIRTH", {
   reason: "Serious Health Condition - Employee",
-  has_reduced_schedule_leave_periods: true,
+  work_pattern_spec: "standard",
+  reduced_leave_spec: "0,240,240,240,240,240,0",
   residence: "MA-proofed",
   pregnant_or_recent_birth: true,
   docs: {

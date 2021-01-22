@@ -96,14 +96,20 @@ export type ScenarioOpts = {
   skipSubmitClaim?: boolean;
   shortNotice?: boolean;
   has_continuous_leave_periods?: boolean;
-  has_reduced_schedule_leave_periods?: boolean;
+  // Reduced leave can be specified in a specification. See work_pattern_spec for the expected
+  // format.
+  reduced_leave_spec?: string;
   has_intermittent_leave_periods?: boolean;
   pregnant_or_recent_birth?: boolean;
   bondingDate?: "far-past" | "past" | "future";
   leave_dates?: [Date, Date];
   address?: Address;
   payment?: PaymentPreference;
-  work_pattern_type?: "standard" | "rotating_shift";
+  // Specifies work pattern. Can be one of "standard" or "rotating_shift", or a granular
+  // schedule in the format of "0,240,240,0;240,0,0,0", where days are delineated by commas,
+  // weeks delineated by semicolon, and the numbers are minutes worked on that day of the week
+  // (starting Sunday).
+  work_pattern_spec?: "standard" | "rotating_shift" | string;
   // Makes a claim for an extremely short time period (1 day).
   shortClaim?: boolean;
   // For ID-proofing
@@ -140,7 +146,7 @@ export function scenario(
       zip: faker.address.zipCode(),
     };
 
-    const workPattern = generateWorkPattern(_config.work_pattern_type);
+    const workPattern = generateWorkPattern(_config.work_pattern_spec);
     const claim: ApplicationRequestBody = {
       // These fields are brought directly over from the employee record.
       employment_status: "Employed",
@@ -363,36 +369,40 @@ const daysOfWeek = [
   "Friday" as const,
   "Saturday" as const,
 ];
-function makeWeeklySchedule(week_number: number, ...hoursByDay: number[]) {
-  return daysOfWeek.map((day_of_week, i) => ({
-    day_of_week,
-    minutes: (hoursByDay[i] ?? 0) * 60,
-    week_number,
-  }));
-}
+export const generateWorkPatternFromSpec = (
+  scheduleSpec: string
+): WorkPattern => {
+  const expandWeek = (week_number: number, ...minutesByDay: number[]) =>
+    daysOfWeek.map((day_of_week, i) => ({
+      day_of_week,
+      minutes: minutesByDay[i] ?? 0,
+      week_number,
+    }));
+
+  // Split schedule into weeks, then days, and build an array of the days.
+  const weeks = scheduleSpec.split(";").map((weekSpec, weekIndex) => {
+    const days = weekSpec.split(",").map((n) => parseInt(n));
+    return expandWeek(weekIndex + 1, ...days);
+  });
+
+  return {
+    work_pattern_type: weeks.length > 1 ? "Rotating" : "Fixed",
+    work_week_starts: "Monday",
+    work_pattern_days: weeks.flat(),
+  };
+};
+
 function generateWorkPattern(
-  type: ScenarioOpts["work_pattern_type"] = "standard"
+  spec: ScenarioOpts["work_pattern_spec"] = "standard"
 ): WorkPattern {
-  switch (type) {
+  // standard and rotating_shift are two options
+  switch (spec) {
     case "standard":
-      return {
-        work_pattern_type: "Fixed",
-        work_week_starts: "Monday",
-        work_pattern_days: makeWeeklySchedule(1, 0, 8, 8, 8, 8, 8, 0),
-      };
+      return generateWorkPatternFromSpec("0,480,480,480,480,480,0");
     case "rotating_shift":
-      return {
-        work_pattern_type: "Rotating",
-        work_week_starts: "Monday",
-        work_pattern_days: [
-          ...makeWeeklySchedule(1, 0, 12, 0, 12, 0, 12),
-          ...makeWeeklySchedule(2, 12, 0, 12, 0, 12),
-        ],
-      };
+      return generateWorkPatternFromSpec("0,720,0,720,0,720,0;720,0,720,0,720");
     default:
-      throw new Error(
-        `Unsure of how to generate a work pattern for ${type} type.`
-      );
+      return generateWorkPatternFromSpec(spec);
   }
 }
 
@@ -437,29 +447,39 @@ function generateIntermittentLeavePeriods(
 
 function generateReducedLeavePeriods(
   shortLeave: boolean,
-  work_pattern: WorkPattern
+  work_pattern: WorkPattern,
+  spec: string
 ): ReducedScheduleLeavePeriods[] {
   const [startDate, endDate] = generateLeaveDates(
     work_pattern,
     shortLeave ? { days: 1 } : undefined
   );
-  function getDayOffMinutes(dayName: string): number {
-    const dayObj = (work_pattern.work_pattern_days ?? [])
-      .filter((day) => day.day_of_week == dayName && day.week_number === 1)
-      .pop();
-    return dayObj && dayObj.minutes ? dayObj.minutes / 2 : 0;
+  const minsByDay = spec
+    // Split the spec into weeks (even though we only care about 1 week at a time here).
+    .split(";")
+    // Split the week into days and parse the minutes off.
+    .map((weekSpec) => weekSpec.split(",").map((n) => parseInt(n)))
+    // Only look at the first wek.
+    .pop();
+
+  if (!minsByDay || minsByDay.find(isNaN)) {
+    throw new Error(`Invalid reduced leave specification: ${spec}`);
   }
+
+  const getDayOffMinutes = (dayNumber: number) =>
+    dayNumber in minsByDay ? minsByDay[dayNumber] : 0;
+
   return [
     {
       start_date: formatISO(startDate, { representation: "date" }),
       end_date: formatISO(endDate, { representation: "date" }),
-      sunday_off_minutes: getDayOffMinutes("Sunday"),
-      monday_off_minutes: getDayOffMinutes("Monday"),
-      tuesday_off_minutes: getDayOffMinutes("Tuesday"),
-      wednesday_off_minutes: getDayOffMinutes("Wednesday"),
-      thursday_off_minutes: getDayOffMinutes("Thursday"),
-      friday_off_minutes: getDayOffMinutes("Friday"),
-      saturday_off_minutes: getDayOffMinutes("Saturday"),
+      sunday_off_minutes: getDayOffMinutes(0),
+      monday_off_minutes: getDayOffMinutes(1),
+      tuesday_off_minutes: getDayOffMinutes(2),
+      wednesday_off_minutes: getDayOffMinutes(3),
+      thursday_off_minutes: getDayOffMinutes(4),
+      friday_off_minutes: getDayOffMinutes(5),
+      saturday_off_minutes: getDayOffMinutes(6),
     },
   ];
 }
@@ -490,8 +510,7 @@ function generateLeaveDetails(
   const { reason, reason_qualifier } = config;
   const has_continuous_leave_periods =
     config.has_continuous_leave_periods ||
-    (!config.has_reduced_schedule_leave_periods &&
-      !config.has_intermittent_leave_periods);
+    (!config.reduced_leave_spec && !config.has_intermittent_leave_periods);
   const details: ApplicationLeaveDetails = {
     continuous_leave_periods: has_continuous_leave_periods
       ? generateContinuousLeavePeriods(
@@ -500,8 +519,12 @@ function generateLeaveDetails(
           config.leave_dates
         )
       : [],
-    reduced_schedule_leave_periods: config.has_reduced_schedule_leave_periods
-      ? generateReducedLeavePeriods(!!config.shortClaim, work_pattern)
+    reduced_schedule_leave_periods: config.reduced_leave_spec
+      ? generateReducedLeavePeriods(
+          !!config.shortClaim,
+          work_pattern,
+          config.reduced_leave_spec
+        )
       : [],
     intermittent_leave_periods: config.has_intermittent_leave_periods
       ? generateIntermittentLeavePeriods(!!config.shortClaim, work_pattern)

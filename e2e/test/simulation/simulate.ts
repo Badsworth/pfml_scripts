@@ -4,6 +4,7 @@ import {
   chance,
   ScenarioOpts,
   generateLeaveDates,
+  generateWorkPatternFromSpec,
 } from "../../src/simulation/simulate";
 import type { SimulationClaim } from "../../src/simulation/types";
 import generators from "../../src/simulation/documents";
@@ -58,7 +59,8 @@ const reduced: ScenarioOpts = {
     HCP: {},
     MASSID: {},
   },
-  has_reduced_schedule_leave_periods: true,
+  work_pattern_spec: "standard",
+  reduced_leave_spec: "0,240,240,240,240,240,0",
 };
 
 const intermittent: ScenarioOpts = {
@@ -396,7 +398,8 @@ describe("Simulation Generator", () => {
   it("Should create a reduced leave claim for a rotating shift pattern", async () => {
     const { claim } = await scenario("TEST", {
       ...reduced,
-      work_pattern_type: "rotating_shift",
+      work_pattern_spec: "0,720,720",
+      reduced_leave_spec: "0,240,240",
     })(opts);
     const [start, end] = extractLeavePeriod(
       claim,
@@ -406,11 +409,11 @@ describe("Simulation Generator", () => {
     expect(claim.leave_details?.reduced_schedule_leave_periods).toEqual([
       expect.objectContaining({
         sunday_off_minutes: 0,
-        monday_off_minutes: 360,
-        tuesday_off_minutes: 0,
-        wednesday_off_minutes: 360,
+        monday_off_minutes: 240,
+        tuesday_off_minutes: 240,
+        wednesday_off_minutes: 0,
         thursday_off_minutes: 0,
-        friday_off_minutes: 360,
+        friday_off_minutes: 0,
         saturday_off_minutes: 0,
       }),
     ]);
@@ -419,7 +422,7 @@ describe("Simulation Generator", () => {
   it("Should create a claim with a rotating schedule", async () => {
     const { claim } = await scenario("TEST", {
       ...medical,
-      work_pattern_type: "rotating_shift",
+      work_pattern_spec: "rotating_shift",
     })(opts);
     expect(claim.work_pattern).toEqual({
       work_pattern_type: "Rotating",
@@ -532,6 +535,24 @@ describe("Leave date generator", () => {
       const [start] = generateLeaveDates(schedule);
       expect(format(start, "iiii")).toEqual("Monday");
     }
+  });
+});
+
+describe("Work pattern generator", () => {
+  it("Should generate a fixed work pattern", () => {
+    const pattern = generateWorkPatternFromSpec("0,480");
+    expect(pattern.work_week_starts).toEqual("Monday");
+    expect(pattern.work_pattern_type).toEqual("Fixed");
+    expect(pattern.work_pattern_days?.length).toBe(7);
+    expect(pattern.work_pattern_days).toMatchSnapshot();
+  });
+
+  it("Should generate a rotating work pattern", () => {
+    const pattern = generateWorkPatternFromSpec("0,480;480,0");
+    expect(pattern.work_week_starts).toEqual("Monday");
+    expect(pattern.work_pattern_type).toEqual("Rotating");
+    expect(pattern.work_pattern_days?.length).toBe(14);
+    expect(pattern.work_pattern_days).toMatchSnapshot();
   });
 });
 

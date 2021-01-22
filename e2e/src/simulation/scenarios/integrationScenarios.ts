@@ -9,7 +9,8 @@ export const BHAP8 = scenario("BHAP8", {
     HCP: {},
     MASSID: {},
   },
-  has_reduced_schedule_leave_periods: true,
+  work_pattern_spec: "standard",
+  reduced_leave_spec: "0,240,240,240,240,240,0",
 });
 
 export const BHAP9 = scenario("BHAP9", {
