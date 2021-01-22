@@ -7,7 +7,7 @@
       "Comment": "FINEOS employee updates import to RDS",
       "Type": "Task",
       "Resource": "arn:aws:states:::ecs:runTask.sync",
-      "TimeoutSeconds": 1200,
+      "TimeoutSeconds": 28800,
       "Parameters": {
         "LaunchType": "FARGATE",
         "PlatformVersion": "1.4.0",
@@ -29,7 +29,7 @@
       "Comment": "DOR import to RDS",
       "Type": "Task",
       "Resource": "arn:aws:states:::ecs:runTask.sync",
-      "TimeoutSeconds": 1200,
+      "TimeoutSeconds": 28800,
       "Parameters": {
         "LaunchType": "FARGATE",
         "PlatformVersion": "1.4.0",
@@ -83,7 +83,7 @@
           "load_employers_to_fineos": {
             "Type": "Task",
             "Resource": "arn:aws:states:::ecs:runTask.sync",
-            "TimeoutSeconds": 1200,
+            "TimeoutSeconds": 28800,
             "Parameters": {
               "LaunchType": "FARGATE",
               "PlatformVersion": "1.4.0",
@@ -121,7 +121,7 @@
       "Comment": "Generate eligibility files containing employees for FINEOS",
       "Type": "Task",
       "Resource": "arn:aws:states:::ecs:runTask.sync",
-      "TimeoutSeconds": 3600,
+      "TimeoutSeconds": 28800,
       "Parameters": {
         "LaunchType": "FARGATE",
         "PlatformVersion": "1.4.0",
