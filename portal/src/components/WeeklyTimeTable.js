@@ -11,7 +11,7 @@ export const WeeklyTimeTable = (props) => {
   const { t } = useTranslation();
 
   return (
-    <Table className={props.className}>
+    <Table className={props.className} scrollable>
       <thead>
         <tr>
           <th>{t("components.weeklyTimeTable.dayAbbr_Sunday")}</th>

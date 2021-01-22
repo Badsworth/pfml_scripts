@@ -7,9 +7,7 @@ exports[`LeaveSchedule renders continuous schedule 1`] = `
   >
     Leave schedule
   </ReviewHeading>
-  <Table
-    className="width-full"
-  >
+  <Table>
     <caption>
       <p
         className="text-normal"
@@ -71,9 +69,7 @@ exports[`LeaveSchedule renders intermittent schedule 1`] = `
   >
     Leave schedule
   </ReviewHeading>
-  <Table
-    className="width-full"
-  >
+  <Table>
     <caption>
       <p
         className="text-normal"
@@ -141,9 +137,7 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
   >
     Leave schedule
   </ReviewHeading>
-  <Table
-    className="width-full"
-  >
+  <Table>
     <caption>
       <p
         className="text-normal"

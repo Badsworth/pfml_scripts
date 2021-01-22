@@ -7,7 +7,7 @@ describe("Table", () => {
     const wrapper = shallow(<Table />);
 
     expect(wrapper.prop("className")).toBe(
-      "usa-table usa-table--borderless c-table"
+      "usa-table usa-table--borderless c-table width-full"
     );
   });
 
@@ -15,7 +15,7 @@ describe("Table", () => {
     const wrapper = shallow(<Table className="some-style additional-style" />);
 
     expect(wrapper.prop("className")).toBe(
-      "usa-table usa-table--borderless c-table some-style additional-style"
+      "usa-table usa-table--borderless c-table width-full some-style additional-style"
     );
   });
 
@@ -29,5 +29,31 @@ describe("Table", () => {
 
     expect(wrapper.children()).toHaveLength(1);
     expect(wrapper.find("caption").text()).toMatch(text);
+  });
+
+  it("adds a stacked modifier class when the responsive prop is set", () => {
+    const wrapper = shallow(
+      <Table responsive>
+        <tr>
+          <td>Test</td>
+        </tr>
+      </Table>
+    );
+
+    expect(wrapper.hasClass("usa-table--stacked-header")).toBe(true);
+  });
+
+  it("nests the table in a scrollable container when the scrollable prop is set", () => {
+    const wrapper = shallow(
+      <Table scrollable>
+        <tr>
+          <td>Test</td>
+        </tr>
+      </Table>
+    );
+
+    expect(wrapper.is("div")).toBe(true);
+    expect(wrapper.hasClass("usa-table-container--scrollable")).toBe(true);
+    expect(wrapper.childAt(0).is("table")).toBe(true);
   });
 });

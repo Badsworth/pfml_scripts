@@ -7,9 +7,7 @@ exports[`EmployerBenefits renders the component 1`] = `
   >
     Employer benefits
   </ReviewHeading>
-  <Table
-    className="width-full"
-  >
+  <Table>
     <caption>
       <p
         className="text-normal"
