@@ -63,9 +63,19 @@ class Extract:
     indexed_data: Dict[CiIndex, Dict[str, str]] = field(default_factory=dict)
 
 
+@dataclass
+class ExtractMultiple:
+    """A extract that has multiple rows per key CiIndex."""
+
+    file_location: str
+    # Mapping from a CiIndex to a list of CSV rows that contain data for that record. Each CSV row
+    # is a raw dict from field name to value, as returned by csv.DictReader().
+    indexed_data: Dict[CiIndex, List[Dict[str, str]]] = field(default_factory=dict)
+
+
 class ExtractData:
     pei: Extract
-    payment_details: Extract
+    payment_details: ExtractMultiple
     claim_details: Extract
 
     date_str: str
@@ -77,7 +87,7 @@ class ExtractData:
             if s3_location.endswith(PEI_EXPECTED_FILE_NAME):
                 self.pei = Extract(s3_location)
             elif s3_location.endswith(PAYMENT_DETAILS_EXPECTED_FILE_NAME):
-                self.payment_details = Extract(s3_location)
+                self.payment_details = ExtractMultiple(s3_location)
             elif s3_location.endswith(CLAIM_DETAILS_EXPECTED_FILE_NAME):
                 self.claim_details = Extract(s3_location)
 
@@ -147,7 +157,7 @@ class PaymentData:
         if self.validation_container.has_validation_issues():
             return
         # Cast these to non-optional values as we've validated them above (for linting)
-        payment_details = cast(Dict[str, str], payment_details)
+        payment_details = cast(List[Dict[str, str]], payment_details)
         claim_details = cast(Dict[str, str], claim_details)
 
         # Grab every value we might need out of the datasets
@@ -200,15 +210,6 @@ class PaymentData:
             ),
         )
 
-        def payment_period_date_validator(
-            payment_period_date_str: str,
-        ) -> Optional[payments_util.ValidationReason]:
-            now = payments_util.get_now()
-            payment_period_date = datetime.strptime(payment_period_date_str, "%Y-%m-%d %H:%M:%S")
-            if payment_period_date.date() > now.date():
-                return payments_util.ValidationReason.INVALID_VALUE
-            return None
-
         self.payment_date = payments_util.validate_csv_input(
             "PAYMENTDATE",
             pei_record,
@@ -217,21 +218,7 @@ class PaymentData:
             custom_validator_func=payment_period_date_validator,
         )
 
-        self.payment_start_period = payments_util.validate_csv_input(
-            "PAYMENTSTARTP",
-            payment_details,
-            self.validation_container,
-            True,
-            custom_validator_func=payment_period_date_validator,
-        )
-
-        self.payment_end_period = payments_util.validate_csv_input(
-            "PAYMENTENDPER",
-            payment_details,
-            self.validation_container,
-            True,
-            custom_validator_func=payment_period_date_validator,
-        )
+        self.aggregate_payment_details(payment_details)
 
         def amount_validator(amount_str: str) -> Optional[payments_util.ValidationReason]:
             amount = float(amount_str)
@@ -268,6 +255,49 @@ class PaymentData:
             custom_validator_func=payments_util.lookup_validator(BankAccountType),
         )
 
+    def aggregate_payment_details(self, payment_details):
+        """Aggregate payment period dates across all the payment details for this payment.
+
+        Pseudocode:
+           payment_start_period = min(payment_detail[1..N].PAYMENTSTARTP)
+           payment_end_period = max(payment_detail[1..N].PAYMENTENDP)
+        """
+        start_periods = []
+        end_periods = []
+        for payment_detail_row in payment_details:
+            row_start_period = payments_util.validate_csv_input(
+                "PAYMENTSTARTP",
+                payment_detail_row,
+                self.validation_container,
+                True,
+                custom_validator_func=payment_period_date_validator,
+            )
+            row_end_period = payments_util.validate_csv_input(
+                "PAYMENTENDPER",
+                payment_detail_row,
+                self.validation_container,
+                True,
+                custom_validator_func=payment_period_date_validator,
+            )
+            if row_start_period is not None:
+                start_periods.append(row_start_period)
+            if row_end_period is not None:
+                end_periods.append(row_end_period)
+        if start_periods:
+            self.payment_start_period = min(start_periods)
+        if end_periods:
+            self.payment_end_period = max(end_periods)
+
+
+def payment_period_date_validator(
+    payment_period_date_str: str,
+) -> Optional[payments_util.ValidationReason]:
+    now = payments_util.get_now()
+    payment_period_date = datetime.strptime(payment_period_date_str, "%Y-%m-%d %H:%M:%S")
+    if payment_period_date.date() > now.date():
+        return payments_util.ValidationReason.INVALID_VALUE
+    return None
+
 
 def download_and_process_data(extract_data: ExtractData, download_directory: pathlib.Path) -> None:
     # To make processing simpler elsewhere, we index each extract file object on a key
@@ -286,9 +316,10 @@ def download_and_process_data(extract_data: ExtractData, download_directory: pat
     # claim details needs to be indexed on PECLASSID and PEINDEXID
     # which point to the vpei.C and vpei.I columns
     for record in payment_details:
-        extract_data.payment_details.indexed_data[
-            CiIndex(record["PECLASSID"], record["PEINDEXID"])
-        ] = record
+        index = CiIndex(record["PECLASSID"], record["PEINDEXID"])
+        if index not in extract_data.payment_details.indexed_data:
+            extract_data.payment_details.indexed_data[index] = []
+        extract_data.payment_details.indexed_data[index].append(record)
 
     # Claim details file
     claim_details = download_and_parse_data(
@@ -332,7 +363,6 @@ def download_and_parse_data(s3_path: str, download_directory: pathlib.Path) -> L
 
     raw_extract_data = []
 
-    logger.info("parse %s", download_location)
     field_names = determine_field_names(download_location)
     with open(download_location) as extract_file:
         dict_reader = csv.DictReader(extract_file, delimiter=",", fieldnames=field_names)
@@ -342,6 +372,7 @@ def download_and_parse_data(s3_path: str, download_directory: pathlib.Path) -> L
         next(dict_reader)  # Because we specify the fieldnames, skip the header row
         raw_extract_data = list(dict_reader)
 
+    logger.info("read %s: %i records", download_location, len(raw_extract_data))
     return raw_extract_data
 
 

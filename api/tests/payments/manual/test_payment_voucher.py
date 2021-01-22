@@ -255,7 +255,7 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
     extract_data = fineos_payment_export.ExtractData(input_files, "manual")
     extract_data.pei.indexed_data[test_ci_index] = test_pei_csv_row
     extract_data.claim_details.indexed_data[test_ci_index] = test_claim_details_csv_row
-    extract_data.payment_details.indexed_data[test_ci_index] = test_payment_details_csv_row
+    extract_data.payment_details.indexed_data[test_ci_index] = [test_payment_details_csv_row]
 
     # Build a fineos_vendor_export.Extract object with 1 row of data.
     requested_absence_extract = fineos_vendor_export.Extract(
@@ -294,7 +294,7 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "address_line_2": "",
         "c_value": "7326",
         "city": "Quincy",
-        "description": "PFML Payment NTN-308848-ABS-01",
+        "description": "PFML Payment NTN-308848-ABS-01 [01/15/2021-01/21/2021]",
         "doc_id": doc_id,
         "event_type": "AP01",
         "first_last_name": "Grady Bednar",
@@ -321,7 +321,105 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "c_value": "7326",
         "i_value": "249",
         "status": "Active",
-        "status_effective_date": "01/15/2021",
+        "status_effective_date": "",
+        "status_reason": "Manual payment voucher",
+    }
+
+
+@freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
+def test_process_payment_record_multiple_details(test_db_session, initialize_factories_session):
+    input_files = [
+        "s3://bucket/test/2021-01-17-19-14-25-Employee_feed.csv",
+        "s3://bucket/test/2021-01-17-19-14-25-LeavePlan_info.csv",
+        "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE_SOM.csv",
+        "s3://bucket/test/2021-01-17-19-14-25-vpeiclaimdetails.csv",
+        "s3://bucket/test/2021-01-17-19-14-25-vpei.csv",
+        "s3://bucket/test/2021-01-17-19-14-25-vpeipaymentdetails.csv",
+    ]
+
+    # Build a fineos_payment_export.ExtractData object with 1 row of data.
+    extract_data = fineos_payment_export.ExtractData(input_files, "manual")
+    extract_data.pei.indexed_data[test_ci_index] = test_pei_csv_row
+    extract_data.claim_details.indexed_data[test_ci_index] = test_claim_details_csv_row
+
+    # Multiple rows for this payment in payment_details.
+    test_payment_details_csv_row_2 = test_payment_details_csv_row.copy()
+    test_payment_details_csv_row_2["PAYMENTSTARTP"] = "2021-01-22 00:00:00"
+    test_payment_details_csv_row_2["PAYMENTENDPER"] = "2021-01-28 00:00:00"
+    test_payment_details_csv_row_3 = test_payment_details_csv_row.copy()
+    test_payment_details_csv_row_3["PAYMENTSTARTP"] = "2021-01-29 00:00:00"
+    test_payment_details_csv_row_3["PAYMENTENDPER"] = "2021-02-04 00:00:00"
+    extract_data.payment_details.indexed_data[test_ci_index] = [
+        test_payment_details_csv_row,
+        test_payment_details_csv_row_3,
+        test_payment_details_csv_row_2,
+    ]
+
+    # Build a fineos_vendor_export.Extract object with 1 row of data.
+    requested_absence_extract = fineos_vendor_export.Extract(
+        "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE_SOM.csv"
+    )
+    requested_absence_extract.indexed_data["NTN-308848-ABS-01"] = test_requested_absence_csv_row
+
+    test_db_session.add(
+        EmployeeFactory(
+            tax_identifier=TaxIdentifier(tax_identifier="999004400"),
+            ctr_vendor_customer_code="VC0001230001",
+        )
+    )
+
+    output_csv = MockCSVWriter()
+    writeback_csv = MockCSVWriter()
+
+    payment_voucher.process_payment_record(
+        extract_data,
+        requested_absence_extract,
+        test_ci_index,
+        test_pei_csv_row,
+        output_csv,
+        writeback_csv,
+        datetime.date(2021, 1, 18),
+        test_db_session,
+    )
+
+    assert len(output_csv.rows) == 1
+    doc_id = output_csv.rows[0]["doc_id"]
+    assert re.match("^GAXMDFMLAAAA........$", doc_id)
+    assert output_csv.rows[0] == {
+        "absence_case_number": "NTN-308848-ABS-01",
+        "address_code": "AD010",
+        "address_line_1": "47 Washington St",
+        "address_line_2": "",
+        "c_value": "7326",
+        "city": "Quincy",
+        "description": "PFML Payment NTN-308848-ABS-01 [01/15/2021-02/04/2021]",
+        "doc_id": doc_id,
+        "event_type": "AP01",
+        "first_last_name": "Grady Bednar",
+        "i_value": "249",
+        "leave_type": "PFMLMEDIFY2170030632",
+        "mmars_vendor_code": "VC0001230001",
+        "payment_amount": "1600.18",
+        "payment_doc_id_code": "GAX",
+        "payment_doc_id_dept": "EOL",
+        "payment_period_end_date": "2021-02-04",
+        "payment_period_start_date": "2021-01-15",
+        "payment_preference": "Check",
+        "scheduled_payment_date": "2021-01-18",
+        "state": "MA",
+        "vendor_invoice_date": "2021-02-05",
+        "vendor_invoice_line": "1",
+        "vendor_invoice_number": "NTN-308848-ABS-01_249",
+        "vendor_single_payment": "Yes",
+        "zip": "02169",
+    }
+
+    assert len(writeback_csv.rows) == 1
+    assert writeback_csv.rows[0] == {
+        "c_value": "7326",
+        "i_value": "249",
+        "status": "Active",
+        "status_effective_date": "",
         "status_reason": "Manual payment voucher",
     }
 
@@ -332,7 +430,15 @@ def test_process_extracts_to_payment_voucher(
 ):
     input_path = os.path.join(os.path.dirname(__file__), "test_files")
 
-    for ssn in ("390666954", "235702221", "158786713", "037408790", "135407982", "003061455"):
+    for ssn in (
+        "390666954",
+        "235702221",
+        "158786713",
+        "037408790",
+        "135407982",
+        "003061455",
+        "066360920",
+    ):
         test_db_session.add(
             EmployeeFactory(
                 tax_identifier=TaxIdentifier(tax_identifier=ssn),

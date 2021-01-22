@@ -64,9 +64,7 @@ def main():
         with massgov.pfml.util.batch.log.log_entry(
             db_session_raw, "Payment voucher", ""
         ) as log_entry, massgov.pfml.db.session_scope(db_session_raw) as db_session:
-            log_entry.report = json.dumps(
-                {"input_path": args.input_path, "output_path": args.output_path}
-            )
+            log_entry.report = json.dumps(vars(args))
             process_extracts_to_payment_voucher(
                 args.input_path, args.output_path, args.payment_date, args.writeback, db_session
             )
@@ -272,7 +270,12 @@ def write_row_to_output(
         vendor_single_payment="Yes",
         event_type="AP01",
         payment_amount=payment_data.payment_amount,
-        description="PFML Payment %s" % payment_data.absence_case_number,
+        description="PFML Payment %s [%s-%s]"
+        % (
+            payment_data.absence_case_number,
+            payment_start_period.strftime("%m/%d/%Y"),
+            payment_end_period.strftime("%m/%d/%Y"),
+        ),
         vendor_invoice_number="%s_%s" % (payment_data.absence_case_number, index.i),
         vendor_invoice_line="1",
         vendor_invoice_date=(payment_end_period + datetime.timedelta(days=1)).isoformat(),
@@ -291,7 +294,7 @@ def write_writeback_row(index, writeback_csv):
         c_value=index.c,
         i_value=index.i,
         status="Active",
-        status_effective_date=datetime.date.today().strftime("%m/%d/%Y"),
+        status_effective_date="",
         status_reason="Manual payment voucher",
     )
     writeback_csv.writerow(dataclasses.asdict(writeback_row))

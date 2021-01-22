@@ -665,7 +665,7 @@ def test_validation_missing_fields(set_exporter_env_vars):
     ci_index = exporter.CiIndex("1", "1")
     extract_data = exporter.ExtractData(exporter.expected_file_names, "2020-01-01-11-30-00")
     extract_data.pei.indexed_data = {ci_index: {"PAYEECUSTOMER": "1234"}}
-    extract_data.payment_details.indexed_data = {ci_index: {"isdata": "1"}}
+    extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
     extract_data.claim_details.indexed_data = {ci_index: {"isdata": "1"}}
 
     payment_data = exporter.PaymentData(
@@ -732,7 +732,7 @@ def test_validation_param_length(set_exporter_env_vars):
     extract_data = exporter.ExtractData(exporter.expected_file_names, "2020-01-01-11-30-00")
     # First let's check if a field is too short
     extract_data.pei.indexed_data = {ci_index: {"PAYEEBANKCODE": "123", "PAYMENTPOSTCO": "123"}}
-    extract_data.payment_details.indexed_data = {ci_index: {"isdata": "1"}}
+    extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
     extract_data.claim_details.indexed_data = {ci_index: {"isdata": "1"}}
 
     payment_data = exporter.PaymentData(
@@ -777,7 +777,7 @@ def test_validation_lookup_validators(set_exporter_env_vars):
             "PAYMENTADD6": "BadData",
         }
     }
-    extract_data.payment_details.indexed_data = {ci_index: {"isdata": "1"}}
+    extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
     extract_data.claim_details.indexed_data = {ci_index: {"isdata": "1"}}
 
     payment_data = exporter.PaymentData(
