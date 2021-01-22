@@ -67,7 +67,8 @@ def notifications_post():
                     "request.uri": flask.request.path if has_flask_context else None,
                     "request.headers.x-amzn-requestid": flask.request.headers.get(
                         "x-amzn-requestid", None
-                    )
+                    ),
+                    "absence-id": notification_request.absence_case_id
                     if has_flask_context
                     else None,
                 },
@@ -90,7 +91,8 @@ def notifications_post():
                     "request.uri": flask.request.path if has_flask_context else None,
                     "request.headers.x-amzn-requestid": flask.request.headers.get(
                         "x-amzn-requestid", None
-                    )
+                    ),
+                    "absence-id": notification_request.absence_case_id
                     if has_flask_context
                     else None,
                 },
