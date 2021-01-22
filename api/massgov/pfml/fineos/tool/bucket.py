@@ -37,6 +37,8 @@ def main():
     parser.add_argument("--copy_dir", type=str, help="Copy multiple objs")
     parser.add_argument("--to_dir", type=str, help="New dest for copied objs")
     parser.add_argument("--file_prefixes", type=str, help="List of file prefixes")
+    parser.add_argument("--recursive", dest="recursive", action="store_true")
+    parser.set_defaults(recursive=False)
 
     args = parser.parse_args()
 
@@ -98,6 +100,7 @@ def bucket_tool(args, s3, s3_fineos, boto3, fineos_boto_session):
             fineos_boto_session if is_fineos_bucket(args.copy_dir) else boto3,
             fineos_boto_session if is_fineos_bucket(args.to_dir) else boto3,
             args.file_prefixes.split(","),
+            args.recursive,
         )
 
 
@@ -167,7 +170,7 @@ def file_name_contains_prefix(file_prefixes, file_name):
     return False
 
 
-def copy_dir(source, dest, s3_source, s3_dest, boto_source, boto_dest, file_prefixes):
+def copy_dir(source, dest, s3_source, s3_dest, boto_source, boto_dest, file_prefixes, recursive):
     if not source.endswith("/"):
         source = source + "/"
 
@@ -175,10 +178,14 @@ def copy_dir(source, dest, s3_source, s3_dest, boto_source, boto_dest, file_pref
         dest = dest + "/"
 
     # get list of all files in source prefix
-    source_files = massgov.pfml.util.files.list_files(source, boto_session=boto_source)
+    source_files = massgov.pfml.util.files.list_files(
+        source, recursive=recursive, boto_session=boto_source
+    )
 
     # get list of all files in dest prefix
-    dest_files = massgov.pfml.util.files.list_files(dest, boto_session=boto_dest)
+    dest_files = massgov.pfml.util.files.list_files(
+        dest, recursive=recursive, boto_session=boto_dest
+    )
 
     for file in source_files:
         # copy select files that don’t already exist in the destination

@@ -131,8 +131,6 @@ def list_files(
     Directory names will be included for local paths, whereas they will not for
     S3 paths.
 
-    Also, for S3 paths, only the first 1000 files will be returned.
-
     Args:
         path: Supports s3:// and local paths.
         recursive: Only applicable for S3 paths.
@@ -160,22 +158,23 @@ def list_files(
         # https://docs.aws.amazon.com/AmazonS3/latest/dev/ListingKeysHierarchy.html
         delimiter = "" if recursive else "/"
 
-        object_contents = s3.list_objects_v2(
-            Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter
-        ).get("Contents")
+        paginator = s3.get_paginator("list_objects_v2")
+        pages = paginator.paginate(Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter)
 
-        if object_contents:
-            if recursive:
-                partial_file_paths = []
+        file_paths = []
+        for page in pages:
+            object_contents = page.get("Contents")
+
+            if object_contents:
                 for object in object_contents:
-                    key = object["Key"]
-                    start_index = key.index(prefix) + len(prefix)
-                    partial_file_paths.append(key[start_index:])
-                return partial_file_paths
-            else:
-                return [get_file_name(object["Key"]) for object in object_contents]
+                    if recursive:
+                        key = object["Key"]
+                        start_index = key.index(prefix) + len(prefix)
+                        file_paths.append(key[start_index:])
+                    else:
+                        file_paths.append(get_file_name(object["Key"]))
 
-        return []
+        return file_paths
 
     return os.listdir(path)
 
