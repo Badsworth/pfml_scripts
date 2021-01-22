@@ -98,29 +98,38 @@ def _ctr_process(db_session: db.Session, config: Configuration) -> None:
     """Process CTR Payments"""
     logger.info("Start processing CTR payments")
 
-    # 1. Grab files from SFTP/MOVEit, upload to S3
-    if config.pickup_from_moveit:
-        moveit.pickup_files_from_moveit(db_session)
+    # If any of the first 3 steps fail
+    # we should not steps 4-6 (GAX/VCC logic)
+    # Step 7 should always be attempted
+    skip_gax_vcc = False
+    try:
+        # 1. Grab files from SFTP/MOVEit, upload to S3
+        if config.pickup_from_moveit:
+            moveit.pickup_files_from_moveit(db_session)
 
-    # 2. Process Outbound Return files from CTR
-    if config.do_ctr_outbound_return:
-        process_outbound_returns(db_session)
+        # 2. Process Outbound Return files from CTR
+        if config.do_ctr_outbound_return:
+            process_outbound_returns(db_session)
 
-    # 3.Run queries against Data Mart
-    if config.query_data_mart:
-        process_data_mart(db_session)
+        # 3.Run queries against Data Mart
+        if config.query_data_mart:
+            process_data_mart(db_session)
+    except Exception:
+        skip_gax_vcc = True
+        logger.exception("One of the setup steps failed - skipping GAX/VCC logic")
 
-    # 4. Create GAX files, send BIEVNT email
-    if config.make_gax:
-        build_gax_files_for_s3(db_session)
+    if not skip_gax_vcc:
+        # 4. Create GAX files, send BIEVNT email
+        if config.make_gax:
+            build_gax_files_for_s3(db_session)
 
-    # 5. Create VCC files, send BIEVNT email
-    if config.make_vcc:
-        build_vcc_files_for_s3(db_session)
+        # 5. Create VCC files, send BIEVNT email
+        if config.make_vcc:
+            build_vcc_files_for_s3(db_session)
 
-    # 6. Upload files from S3 to MOVEit
-    if config.send_to_moveit:
-        moveit.send_files_to_moveit(db_session)
+        # 6. Upload files from S3 to MOVEit
+        if config.send_to_moveit:
+            moveit.send_files_to_moveit(db_session)
 
     # 7. Send OSM Reports
     if config.make_error_report:
