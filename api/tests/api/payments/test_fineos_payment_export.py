@@ -12,6 +12,7 @@ from massgov.pfml.db.models.employees import (
     AddressType,
     BankAccountType,
     EmployeeAddress,
+    EmployeeLog,
     GeoState,
     Payment,
     PaymentMethod,
@@ -210,9 +211,14 @@ def test_process_extract_data(
     tmp_path,
     initialize_factories_session,
     monkeypatch,
+    create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(mock_s3_bucket, test_db_session)
+
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 9
+
     exporter.process_extract_data(tmp_path, test_db_session)
 
     # First verify the files were downloaded
@@ -313,6 +319,9 @@ def test_process_extract_data(
             assert "Initiated VENDOR_EFT flow for Employee" in state_log.outcome["message"]
             assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
 
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
+
 
 def test_process_extract_data_one_bad_record(
     mock_s3_bucket,
@@ -321,6 +330,7 @@ def test_process_extract_data_one_bad_record(
     tmp_path,
     initialize_factories_session,
     monkeypatch,
+    create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
     # This test will properly process record 1 & 3, but record 2 will
@@ -333,6 +343,9 @@ def test_process_extract_data_one_bad_record(
         add_eft=False,
         add_second_employee=False,
     )
+
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 2
 
     exporter.process_extract_data(tmp_path, test_db_session)
 
@@ -374,6 +387,9 @@ def test_process_extract_data_one_bad_record(
         },
     }
 
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
+
 
 def test_process_extract_data_rollback(
     mock_s3_bucket,
@@ -382,8 +398,12 @@ def test_process_extract_data_rollback(
     tmp_path,
     initialize_factories_session,
     monkeypatch,
+    create_triggers,
 ):
     setup_process_tests(mock_s3_bucket, test_db_session)
+
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 9
 
     # Override the method that moves files at the end to throw
     # an error so that everything will rollback
@@ -414,6 +434,9 @@ def test_process_extract_data_rollback(
             == ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id
         )
 
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
+
 
 def test_process_extract_unprocessed_folder_files(
     mock_fineos_s3_bucket,
@@ -422,6 +445,7 @@ def test_process_extract_unprocessed_folder_files(
     tmp_path,
     initialize_factories_session,
     monkeypatch,
+    create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
 
@@ -478,6 +502,9 @@ def test_process_extract_unprocessed_folder_files(
     )
     assert not copied_files
 
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == 0
+
 
 def test_process_extract_data_no_existing_claim_address_eft(
     mock_s3_bucket,
@@ -486,11 +513,15 @@ def test_process_extract_data_no_existing_claim_address_eft(
     tmp_path,
     initialize_factories_session,
     monkeypatch,
+    create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(
         mock_s3_bucket, test_db_session, add_claim=False, add_address=False, add_eft=False
     )
+
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 3
 
     exporter.process_extract_data(tmp_path, test_db_session)
 
@@ -548,6 +579,9 @@ def test_process_extract_data_no_existing_claim_address_eft(
             assert str(eft.account_nbr) == index * 9
             assert eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
 
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
+
 
 @freeze_time("2021-01-03 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_existing_payment(
@@ -557,9 +591,13 @@ def test_process_extract_data_existing_payment(
     tmp_path,
     initialize_factories_session,
     monkeypatch,
+    create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(mock_s3_bucket, test_db_session, add_payment=True)
+
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 9
 
     exporter.process_extract_data(tmp_path, test_db_session)
 
@@ -587,6 +625,9 @@ def test_process_extract_data_existing_payment(
         assert state_log.outcome == EXPECTED_OUTCOME
         assert state_log.start_state_id == State.PAYMENT_PROCESS_INITIATED.state_id
         assert state_log.end_state_id == State.MARK_AS_EXTRACTED_IN_FINEOS.state_id
+
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
 
 
 def test_validation_of_joining_datasets(set_exporter_env_vars):

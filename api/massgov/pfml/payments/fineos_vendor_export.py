@@ -4,6 +4,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple, cast
 
+import massgov.pfml.fineos.util.log_tables as fineos_log_tables_util
 import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
@@ -121,10 +122,24 @@ def process_vendor_extract_data(db_session: db.Session) -> None:
 
             extract_data = ExtractData(s3_file_locations, date_str)
             download_and_index_data(extract_data, download_directory)
-            process_records_to_db(extract_data, db_session)
-            move_files_from_received_to_processed(extract_data, db_session)
-            logger.info("Successfully processed %s", date_str, extra={"folder_timestamp": date_str})
-            db_session.commit()
+            with db_session.no_autoflush:
+                updated_employees = process_records_to_db(extract_data, db_session)
+                move_files_from_received_to_processed(extract_data, db_session)
+                logger.info(
+                    "Successfully processed %s", date_str, extra={"folder_timestamp": date_str}
+                )
+                db_session.commit()
+
+            # Remove rows from EmployeeLog table due to update trigger if there
+            # were changes to Employees committed.
+            #
+            # These updates should not be included in the Eligibility Feed.
+            if updated_employees:
+                for updated_employee in updated_employees:
+                    fineos_log_tables_util.delete_most_recent_update_entry_for_employee(
+                        db_session, updated_employee
+                    )
+                db_session.commit()
         except Exception:
             # If there was a file-level exception anywhere in the processing,
             # we move the file from received to error
@@ -193,8 +208,9 @@ def download_file(s3_path: str, download_directory: str) -> str:
     return download_location
 
 
-def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> None:
+def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> List[Employee]:
     requested_absences = extract_data.requested_absence_info.indexed_data.values()
+    updated_employees = []
 
     for requested_absence in requested_absences:
         absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
@@ -229,6 +245,11 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                 db_session, extract_data, employee_pfml_entry, validation_container
             )
             manage_state_log(db_session, extract_data, employee_pfml_entry, validation_container)
+
+            if db_session.is_modified(employee_pfml_entry):
+                updated_employees.append(employee_pfml_entry)
+
+    return updated_employees
 
 
 def create_or_update_claim(

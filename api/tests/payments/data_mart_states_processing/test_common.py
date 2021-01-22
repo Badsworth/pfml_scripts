@@ -8,6 +8,7 @@ import massgov.pfml.payments.data_mart_states_processing.common as common
 import massgov.pfml.payments.payments_util as payments_util
 from massgov.pfml.db.models.employees import (
     Country,
+    EmployeeLog,
     GeoState,
     LatestStateLog,
     PaymentMethod,
@@ -51,13 +52,13 @@ def complete_vendor_info_address():
 # Tests
 
 
-def test_query_data_mart_for_issues_and_updates_no_vendor(
+def test_query_data_mart_for_issues_and_updates_core_no_vendor(
     test_db_session, initialize_factories_session, mock_data_mart_client, mocker
 ):
     employee = EmployeeFactory.create()
     mock_data_mart_client.get_vendor_info.return_value = None
 
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
@@ -66,7 +67,7 @@ def test_query_data_mart_for_issues_and_updates_no_vendor(
     assert issues_and_updates.issues.has_validation_issues() is False
 
 
-def test_query_data_mart_for_issues_and_updates_parse_error(
+def test_query_data_mart_for_issues_and_updates_core_parse_error(
     test_db_session, initialize_factories_session, mock_data_mart_client, mocker
 ):
     employee = EmployeeFactory.create()
@@ -76,12 +77,12 @@ def test_query_data_mart_for_issues_and_updates_parse_error(
     )
 
     with pytest.raises(pydantic.ValidationError):
-        common.query_data_mart_for_issues_and_updates(
+        common.query_data_mart_for_issues_and_updates_core(
             mock_data_mart_client, employee, employee.tax_identifier
         )
 
 
-def test_query_data_mart_for_issues_and_updates_multiple_vendor_entries(
+def test_query_data_mart_for_issues_and_updates_core_multiple_vendor_entries(
     test_db_session, initialize_factories_session, mock_data_mart_client, mocker
 ):
     employee = EmployeeFactory.create()
@@ -89,12 +90,12 @@ def test_query_data_mart_for_issues_and_updates_multiple_vendor_entries(
     mock_data_mart_client.get_vendor_info.side_effect = sqlalchemy.orm.exc.MultipleResultsFound()
 
     with pytest.raises(sqlalchemy.orm.exc.MultipleResultsFound):
-        common.query_data_mart_for_issues_and_updates(
+        common.query_data_mart_for_issues_and_updates_core(
             mock_data_mart_client, employee, employee.tax_identifier
         )
 
 
-def test_query_data_mart_for_issues_and_updates_no_vendor_info(
+def test_query_data_mart_for_issues_and_updates_core_no_vendor_info(
     test_db_session, initialize_factories_session, mock_data_mart_client, mocker
 ):
     # Have Data Mart return empty info for the Vendor
@@ -106,7 +107,7 @@ def test_query_data_mart_for_issues_and_updates_no_vendor_info(
 
     assert employee_without_vendor_code.ctr_vendor_customer_code is None
 
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client,
         employee_without_vendor_code,
         employee_without_vendor_code.tax_identifier,
@@ -134,7 +135,7 @@ def test_query_data_mart_for_issues_and_updates_no_vendor_info(
 
     assert employee_with_vendor_code.ctr_vendor_customer_code == "BAR"
 
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee_with_vendor_code, employee_with_vendor_code.tax_identifier
     )
 
@@ -155,7 +156,7 @@ def test_query_data_mart_for_issues_and_updates_no_vendor_info(
     assert employee_with_vendor_code.ctr_vendor_customer_code == "BAR"
 
 
-def test_query_data_mart_for_issues_and_updates_sets_vendor_customer_code_only_if_different(
+def test_query_data_mart_for_issues_and_updates_core_sets_vendor_customer_code_only_if_different(
     test_db_session, initialize_factories_session, mock_data_mart_client, mocker
 ):
     # If the employee has no customer code...
@@ -166,7 +167,7 @@ def test_query_data_mart_for_issues_and_updates_sets_vendor_customer_code_only_i
 
     assert employee.ctr_vendor_customer_code is None
 
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
@@ -175,7 +176,7 @@ def test_query_data_mart_for_issues_and_updates_sets_vendor_customer_code_only_i
     assert employee.ctr_vendor_customer_code == "FOO"
 
     # If we run through it again...
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
@@ -188,7 +189,7 @@ def test_query_data_mart_for_issues_and_updates_sets_vendor_customer_code_only_i
         vendor_customer_code="BAR"
     )
 
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
@@ -197,7 +198,7 @@ def test_query_data_mart_for_issues_and_updates_sets_vendor_customer_code_only_i
     assert employee.ctr_vendor_customer_code == "BAR"
 
 
-def test_query_data_mart_for_issues_and_updates_sets_ctr_address_only_if_none_and_matching(
+def test_query_data_mart_for_issues_and_updates_core_sets_ctr_address_only_if_none_and_matching(
     test_db_session,
     initialize_factories_session,
     mock_data_mart_client,
@@ -218,7 +219,7 @@ def test_query_data_mart_for_issues_and_updates_sets_ctr_address_only_if_none_an
 
     mock_data_mart_client.get_vendor_info.return_value = mismatching_vendor_info
 
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
@@ -236,7 +237,7 @@ def test_query_data_mart_for_issues_and_updates_sets_ctr_address_only_if_none_an
 
     mock_data_mart_client.get_vendor_info.return_value = matching_vendor_info
 
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
@@ -245,7 +246,7 @@ def test_query_data_mart_for_issues_and_updates_sets_ctr_address_only_if_none_an
     assert address_mismatch_issue not in issues_and_updates.issues.validation_issues
 
     # If we run through the process again...
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
@@ -257,7 +258,7 @@ def test_query_data_mart_for_issues_and_updates_sets_ctr_address_only_if_none_an
     # Even if new value shows up...
     mock_data_mart_client.get_vendor_info.return_value = mismatching_vendor_info
 
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
@@ -268,7 +269,7 @@ def test_query_data_mart_for_issues_and_updates_sets_ctr_address_only_if_none_an
     assert address_mismatch_issue in issues_and_updates.issues.validation_issues
 
 
-def test_query_data_mart_for_issues_and_updates_not_active(
+def test_query_data_mart_for_issues_and_updates_core_not_active(
     test_db_session, initialize_factories_session, mock_data_mart_client, mocker
 ):
     employee = EmployeeFactory.create()
@@ -283,7 +284,7 @@ def test_query_data_mart_for_issues_and_updates_not_active(
             vendor_customer_code="FOO", vendor_active_status=not_active_status,
         )
 
-        issues_and_updates = common.query_data_mart_for_issues_and_updates(
+        issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
             mock_data_mart_client, employee, employee.tax_identifier
         )
 
@@ -296,7 +297,7 @@ def test_query_data_mart_for_issues_and_updates_not_active(
         assert status_issue in issues_and_updates.issues.validation_issues
 
 
-def test_query_data_mart_for_issues_and_updates_ach_set_but_no_info_in_API(
+def test_query_data_mart_for_issues_and_updates_core_ach_set_but_no_info_in_API(
     test_db_session, initialize_factories_session, mock_data_mart_client, mocker
 ):
     employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
@@ -307,7 +308,7 @@ def test_query_data_mart_for_issues_and_updates_ach_set_but_no_info_in_API(
     )
 
     with pytest.raises(ValueError) as e:
-        common.query_data_mart_for_issues_and_updates(
+        common.query_data_mart_for_issues_and_updates_core(
             mock_data_mart_client, employee, employee.tax_identifier
         )
 
@@ -317,7 +318,7 @@ def test_query_data_mart_for_issues_and_updates_ach_set_but_no_info_in_API(
     )
 
 
-def test_query_data_mart_for_issues_and_updates_ach_set_but_no_info_in_MMARS(
+def test_query_data_mart_for_issues_and_updates_core_ach_set_but_no_info_in_MMARS(
     test_db_session, initialize_factories_session, mock_data_mart_client, mocker
 ):
     employee = EmployeeFactory.create(
@@ -329,7 +330,7 @@ def test_query_data_mart_for_issues_and_updates_ach_set_but_no_info_in_MMARS(
         eft_status=None,
     )
 
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
@@ -350,7 +351,7 @@ def test_query_data_mart_for_issues_and_updates_ach_set_but_no_info_in_MMARS(
         assert eft_related_issue in issues_and_updates.issues.validation_issues
 
 
-def test_query_data_mart_for_issues_and_updates_ach_set_mismatched_routing_number(
+def test_query_data_mart_for_issues_and_updates_core_ach_set_mismatched_routing_number(
     test_db_session, initialize_factories_session, mock_data_mart_client, mocker
 ):
     employee = EmployeeFactory.create(
@@ -370,7 +371,7 @@ def test_query_data_mart_for_issues_and_updates_ach_set_mismatched_routing_numbe
         aba_no=None,
     )
 
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
@@ -386,7 +387,7 @@ def test_query_data_mart_for_issues_and_updates_ach_set_mismatched_routing_numbe
         aba_no="junk",
     )
 
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
@@ -395,7 +396,7 @@ def test_query_data_mart_for_issues_and_updates_ach_set_mismatched_routing_numbe
     assert mismatched_routing_number_issue in issues_and_updates.issues.validation_issues
 
 
-def test_query_data_mart_for_issues_and_updates_no_issues_all_updates_saved(
+def test_query_data_mart_for_issues_and_updates_core_no_issues_all_updates_saved(
     test_db_session, initialize_factories_session, mock_data_mart_client, mocker
 ):
     employee = EmployeeFactory.create(
@@ -414,7 +415,7 @@ def test_query_data_mart_for_issues_and_updates_no_issues_all_updates_saved(
 
     mock_data_mart_client.get_vendor_info.return_value = vendor_info
 
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
@@ -429,7 +430,7 @@ def test_query_data_mart_for_issues_and_updates_no_issues_all_updates_saved(
     )
 
 
-def test_query_data_mart_for_issues_and_updates_no_issues_no_updates(
+def test_query_data_mart_for_issues_and_updates_core_no_issues_no_updates(
     test_db_session, initialize_factories_session, mock_data_mart_client, mocker
 ):
     employee = EmployeeFactory.create(
@@ -445,7 +446,7 @@ def test_query_data_mart_for_issues_and_updates_no_issues_no_updates(
         employee
     )
 
-    issues_and_updates = common.query_data_mart_for_issues_and_updates(
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
     )
 
@@ -923,3 +924,60 @@ def test_process_catches_exceptions_and_continues(
     assert new_state_log_for_success.state_log_id != state_logs[1].state_log_id
     assert new_state_log_for_success.start_state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert new_state_log_for_success.end_state_id == State.ADD_TO_VCC.state_id
+
+
+def test_query_data_mart_for_issues_and_updates_save_does_not_leave_employee_log_behind(
+    test_db_session, initialize_factories_session, mock_data_mart_client, mocker, create_triggers
+):
+    # If the employee has no customer code...
+    employee = EmployeeFactory.create(ctr_vendor_customer_code=None)
+    mock_data_mart_client.get_vendor_info.return_value = data_mart.VendorInfoResult(
+        vendor_customer_code="FOO"
+    )
+
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 1
+
+    assert employee.ctr_vendor_customer_code is None
+
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_save(
+        test_db_session, mock_data_mart_client, employee, employee.tax_identifier
+    )
+
+    # ...we should pick it up
+    assert issues_and_updates.employee_updates is True
+    assert employee.ctr_vendor_customer_code == "FOO"
+
+    # but should not have an additional log entries
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
+
+    # If we run through it again...
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_save(
+        test_db_session, mock_data_mart_client, employee, employee.tax_identifier
+    )
+
+    # ...should indicate no updates and value is unchanged
+    assert issues_and_updates.employee_updates is False
+    assert employee.ctr_vendor_customer_code == "FOO"
+
+    # but should not have an additional log entries
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
+
+    # But if new value shows up...
+    mock_data_mart_client.get_vendor_info.return_value = data_mart.VendorInfoResult(
+        vendor_customer_code="BAR"
+    )
+
+    issues_and_updates = common.query_data_mart_for_issues_and_updates_save(
+        test_db_session, mock_data_mart_client, employee, employee.tax_identifier
+    )
+
+    # ...we should see the update
+    assert issues_and_updates.employee_updates is True
+    assert employee.ctr_vendor_customer_code == "BAR"
+
+    # but should not have an additional log entries
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before

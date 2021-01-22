@@ -3,6 +3,7 @@ from typing import Iterable, Optional
 
 import massgov.pfml.api.services.fineos_actions as fineos_actions
 import massgov.pfml.db as db
+import massgov.pfml.fineos.util.log_tables as fineos_log_tables_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Employer, EmployerLog
 from massgov.pfml.fineos import AbstractFINEOSClient
@@ -117,18 +118,9 @@ def load_updates(
             # the row in `employer`, delete the latest "UPDATE" event for
             # that employer from EmployerLog.
             if is_create:
-                db_session.query(EmployerLog).filter(
-                    EmployerLog.employer_log_id
-                    == (
-                        db_session.query(EmployerLog.employer_log_id)
-                        .filter(
-                            EmployerLog.employer_id == employer.employer_id,
-                            EmployerLog.action == "UPDATE",
-                        )
-                        .order_by(EmployerLog.modified_at.desc())
-                        .limit(1)
-                    )
-                ).delete(synchronize_session=False)
+                fineos_log_tables_util.delete_most_recent_update_entry_for_employer(
+                    db_session, employer
+                )
 
             # finalize the deletes before moving on
             db_session.commit()

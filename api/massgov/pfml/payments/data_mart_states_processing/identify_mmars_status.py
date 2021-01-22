@@ -20,13 +20,9 @@ def process_state_log(
     employee: Employee,
     tax_id: TaxIdentifier,
 ) -> None:
-    potential_issues = common.query_data_mart_for_issues_and_updates(
-        data_mart_client, employee, tax_id
+    potential_issues = common.query_data_mart_for_issues_and_updates_save(
+        pfml_db_session, data_mart_client, employee, tax_id
     )
-
-    # commit any potential employee updates from above before processing
-    # potential issues
-    pfml_db_session.commit()
 
     common.process_data_mart_issues(
         pfml_db_session,

@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
+import massgov.pfml.fineos.util.log_tables as fineos_log_tables_util
 import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
@@ -353,7 +354,7 @@ def update_ctr_address_pair_fineos_address(
         address_type_id=AddressType.MAILING.address_type_id,
     )
 
-    # If ctr_address_pair exists, compare the exisiting fineos_address with the payment_data address
+    # If ctr_address_pair exists, compare the existing fineos_address with the payment_data address
     #   If they're the same, nothing needs to be done, so we can return
     #   If they're different or if no ctr_address_pair exists, create a new CtrAddressPair
     ctr_address_pair = employee.ctr_address_pair
@@ -427,12 +428,12 @@ def update_eft(payment_data: PaymentData, employee: Employee, db_session: db.Ses
 
 def process_payment_data_record(
     payment_data: PaymentData, reference_file: ReferenceFile, db_session: db.Session
-) -> Optional[Payment]:
+) -> Tuple[Optional[Payment], Optional[Employee]]:
     employee, claim = get_employee_and_claim(payment_data, db_session)
 
     # We weren't able to find the employee and claim, can't properly associate it
     if payment_data.validation_container.has_validation_issues():
-        return None
+        return None, None
     # cast the types here so the linter doesn't think these are potentially None below
     employee = cast(Employee, employee)
     claim = cast(Claim, claim)
@@ -448,7 +449,7 @@ def process_payment_data_record(
     payment_reference_file = PaymentReferenceFile(payment=payment, reference_file=reference_file,)
     db_session.add(payment_reference_file)
 
-    return payment
+    return (payment, employee if db_session.is_modified(employee) else None)
 
 
 def _setup_state_log(
@@ -500,11 +501,12 @@ def _setup_state_log(
         )
 
 
-def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> None:
+def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> List[Employee]:
     # Add the files to the DB
     # Note a single payment reference file is used for all files collectively
     db_session.add(extract_data.reference_file)
 
+    updated_employees = []
     for index, record in extract_data.pei.indexed_data.items():
         try:
             # Construct a payment data object for easier organization of the many params
@@ -515,7 +517,7 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                 _setup_state_log(None, False, payment_data.validation_container, db_session)
                 continue
 
-            payment = process_payment_data_record(
+            payment, updated_employee = process_payment_data_record(
                 payment_data, extract_data.reference_file, db_session
             )
 
@@ -528,6 +530,9 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                 payment_data.validation_container,
                 db_session,
             )
+
+            if updated_employee:
+                updated_employees.append(updated_employee)
         except Exception as e:
             # In the case of any error, add the error message to the validation
             # container, or create one and add it.
@@ -541,6 +546,8 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             )
             # Note if this errors, the whole process fails, if adding a DB record fails, that's probably desirable
             _setup_state_log(payment, False, validation_container, db_session)
+
+    return updated_employees
 
 
 # TODO move to payments_util
@@ -641,9 +648,22 @@ def process_extract_data(download_directory: pathlib.Path, db_session: db.Sessio
 
             extract_data = ExtractData(s3_file_locations, date_str)
             download_and_process_data(extract_data, download_directory)
-            process_records_to_db(extract_data, db_session)
-            move_files_from_received_to_processed(extract_data, db_session)
-            db_session.commit()
+
+            with db_session.no_autoflush:
+                updated_employees = process_records_to_db(extract_data, db_session)
+                move_files_from_received_to_processed(extract_data, db_session)
+                db_session.commit()
+
+            # Remove rows from EmployeeLog table due to update trigger if there
+            # were changes to Employees committed.
+            #
+            # These updates should not be included in the Eligibility Feed.
+            if updated_employees:
+                for updated_employee in updated_employees:
+                    fineos_log_tables_util.delete_most_recent_update_entry_for_employee(
+                        db_session, updated_employee
+                    )
+                db_session.commit()
         except Exception as e:
             db_session.rollback()
             logger.exception("Error processing FINEOS payment export")

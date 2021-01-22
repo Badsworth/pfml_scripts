@@ -14,6 +14,7 @@ from massgov.pfml.db.models.employees import (
     Claim,
     ClaimType,
     Employee,
+    EmployeeLog,
     GeoState,
     PaymentMethod,
     ReferenceFileType,
@@ -89,12 +90,16 @@ def test_process_vendor_extract_data_happy_path(
     emp_updates_path,
     set_exporter_env_vars,
     monkeypatch,
+    create_triggers,
 ):
     monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-12-20")
 
     tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
     employee = EmployeeFactory(tax_identifier=tax_identifier)
     EmployerFactory(fineos_employer_id=96)
+
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 1
 
     vendor_export.process_vendor_extract_data(test_db_session)
 
@@ -170,6 +175,9 @@ def test_process_vendor_extract_data_happy_path(
         == 1
     )
 
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
+
 
 def test_process_vendor_extract_data_no_employee(
     test_db_session,
@@ -177,18 +185,25 @@ def test_process_vendor_extract_data_no_employee(
     emp_updates_path,
     set_exporter_env_vars,
     monkeypatch,
+    create_triggers,
 ):
     monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-12-20")
 
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 0
+
     vendor_export.process_vendor_extract_data(test_db_session)
 
-    claim: Claim = (
+    claim: Optional[Claim] = (
         test_db_session.query(Claim)
         .filter(Claim.fineos_absence_id == "NTN-1308-ABS-01")
         .one_or_none()
     )
 
     assert claim is None
+
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
 
 
 def test_update_mailing_address_happy_path(test_db_session, initialize_factories_session):
@@ -224,6 +239,7 @@ def test_process_extract_unprocessed_folder_files(
     tmp_path,
     initialize_factories_session,
     monkeypatch,
+    create_triggers,
 ):
     monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2019-12-31")
 
@@ -267,6 +283,9 @@ def test_process_extract_unprocessed_folder_files(
         reference_file_type_id=ReferenceFileType.VENDOR_CLAIM_EXTRACT.reference_file_type_id,
     )
 
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 0
+
     # confirm all unprocessed files were downloaded
     vendor_export.process_vendor_extract_data(test_db_session)
     destination_folder = os.path.join(
@@ -290,6 +309,9 @@ def test_process_extract_unprocessed_folder_files(
         test_db_session, vendor_export.expected_file_names, ReferenceFileType.VENDOR_CLAIM_EXTRACT
     )
     assert not copied_files
+
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
 
 
 def test_update_mailing_address_validation_issues(test_db_session, initialize_factories_session):

@@ -3,6 +3,7 @@ from typing import Callable, Iterable, List, Tuple, Union
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as pfml_db
+import massgov.pfml.fineos.util.log_tables as fineos_log_tables_util
 import massgov.pfml.payments.data_mart as data_mart
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.datetime as datetime_util
@@ -37,7 +38,38 @@ class DataMartIssuesAndUpdates:
     vendor_exists: bool = False
 
 
-def query_data_mart_for_issues_and_updates(
+def query_data_mart_for_issues_and_updates_save(
+    pfml_db_session: pfml_db.Session,
+    data_mart_client: data_mart.Client,
+    employee: Employee,
+    tax_id: TaxIdentifier,
+) -> DataMartIssuesAndUpdates:
+    """Fetch Vendor information from MMARS Data Mart, compare it to existing Employee information, commit updates.
+
+    Wrapper around query_data_mart_for_issues_and_updates_core that handles
+    committing Employee updates and cleaning up EmployeeLog entries that result.
+    """
+    # no_autoflush here so we do not push partial changes to DB, to ensure only
+    # one EmployeeLog entry is created
+    with pfml_db_session.no_autoflush:
+        issues_and_updates = query_data_mart_for_issues_and_updates_core(
+            data_mart_client, employee, tax_id
+        )
+
+    # commit any potential employee updates from above before processing
+    # potential issues
+    if issues_and_updates.employee_updates:
+        pfml_db_session.commit()
+
+        fineos_log_tables_util.delete_most_recent_update_entry_for_employee(
+            pfml_db_session, employee
+        )
+        pfml_db_session.commit()
+
+    return issues_and_updates
+
+
+def query_data_mart_for_issues_and_updates_core(
     data_mart_client: data_mart.Client, employee: Employee, tax_id: TaxIdentifier,
 ) -> DataMartIssuesAndUpdates:
     """Fetch Vendor information from MMARS Data Mart and compare it to existing Employee information.

@@ -7,6 +7,7 @@ import boto3
 from pydantic import BaseSettings, Field
 
 import massgov
+import massgov.pfml.fineos.util.log_tables as fineos_log_tables_util
 import massgov.pfml.util.aws.sts as aws_sts
 import massgov.pfml.util.batch.log
 import massgov.pfml.util.files as file_utils
@@ -14,7 +15,6 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     Employee,
-    EmployeeLog,
     EmployeeOccupation,
     Employer,
     LkGender,
@@ -311,16 +311,6 @@ def process_csv_row(
     # These updates should not be included in the Eligibility Feed
     # on their own.
     if is_employee_modified:
-        db_session.query(EmployeeLog).filter(
-            EmployeeLog.employee_log_id
-            == (
-                db_session.query(EmployeeLog.employee_log_id)
-                .filter(
-                    EmployeeLog.employee_id == employee.employee_id, EmployeeLog.action == "UPDATE",
-                )
-                .order_by(EmployeeLog.modified_at.desc())
-                .limit(1)
-            )
-        ).delete(synchronize_session=False)
+        fineos_log_tables_util.delete_most_recent_update_entry_for_employee(db_session, employee)
 
     report.updated_employees_count += 1
