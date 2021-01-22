@@ -26,7 +26,7 @@ def setup_test_files(mock_s3_bucket, initialize_factories_session, with_ref_file
     for test_file_name in test_files:
 
         local_file_path = os.path.join(TEST_FILES_FOLDER, test_file_name)
-        key = os.path.join(Constants.S3_INBOUND_RECEIVED_DIR, test_file_name)
+        key = os.path.join("ctr/inbound", Constants.S3_INBOUND_RECEIVED_DIR, test_file_name)
         upload_file_to_s3(local_file_path, mock_s3_bucket, key)
 
         if with_ref_file:

@@ -382,6 +382,8 @@ def build_vcc_dat(
                 document_counter=doc_count,
             )
 
+            db_session.add(ctr_doc_id)
+
             # vcc_document refers to individual documents which contain employee/payment data
             vcc_document = build_individual_vcc_document(xml_document, employee, now, doc_id)
             document_root.appendChild(vcc_document)
@@ -391,7 +393,6 @@ def build_vcc_dat(
                 employee=employee, reference_file=ref_file, ctr_document_identifier=ctr_doc_id,
             )
 
-            db_session.add(ctr_doc_id)
             db_session.add(emp_ref_file)
 
             # Record in StateLog that we've added this employee to the VCC.

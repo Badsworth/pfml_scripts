@@ -1,13 +1,20 @@
 import os
+import tempfile
 import xml.dom.minidom as minidom
 from random import randint
 from typing import Any, Dict, List
 
+import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.mock.payments_test_scenario_generator as scenario_generator
 import massgov.pfml.payments.outbound_returns as outbound_returns
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import EmployeeReferenceFile, PaymentReferenceFile
+from massgov.pfml.db.models.employees import (
+    EmployeeReferenceFile,
+    LkReferenceFileType,
+    PaymentReferenceFile,
+    ReferenceFileType,
+)
 
 ### Outbound Vendor Return values
 
@@ -208,27 +215,35 @@ def _generate_outbound_vendor_return(scenario_datasets: List[scenario_generator.
     xml_document.appendChild(document_root)
 
     for scenario_data in scenario_datasets:
-        # Many scenarios don't get to the point where we would expect
-        # a vendor return, so skip them.
-        if not scenario_data.scenario_descriptor.has_outbound_vendor_return:
-            continue
+        try:
+            # Many scenarios don't get to the point where we would expect
+            # a vendor return, so skip them.
+            if not scenario_data.scenario_descriptor.has_outbound_vendor_return:
+                continue
 
-        # We assume that this scenario has an associated EmployeeReferenceFile
-        employee_reference_files = [
-            ref_file
-            for ref_file in scenario_data.employee.reference_files
-            if ref_file.__class__ == EmployeeReferenceFile
-        ]
-        employee_reference_file = employee_reference_files[0]
+            # We assume that this scenario has an associated EmployeeReferenceFile
+            employee_reference_file = [
+                ref_file
+                for ref_file in scenario_data.employee.reference_files
+                if ref_file.__class__ == EmployeeReferenceFile
+                and ref_file.reference_file.reference_file_type_id
+                == ReferenceFileType.VCC.reference_file_type_id
+            ][0]
 
-        doc_id = employee_reference_file.ctr_document_identifier.ctr_document_identifier
+            doc_id = employee_reference_file.ctr_document_identifier.ctr_document_identifier
 
-        # To test scenarios where they send us a garbage file, individual records
-        # can be overriden to be broken which causes most values to be missing/null
-        if scenario_data.scenario_descriptor.has_broken_outbound_vendor_return:
-            add_broken_vendor_record(xml_document, document_root, doc_id)
-        else:
-            add_vendor_record(xml_document, document_root, scenario_data, doc_id)
+            # To test scenarios where they send us a garbage file, individual records
+            # can be overriden to be broken which causes most values to be missing/null
+            if scenario_data.scenario_descriptor.has_broken_outbound_vendor_return:
+                add_broken_vendor_record(xml_document, document_root, doc_id)
+            else:
+                add_vendor_record(xml_document, document_root, scenario_data, doc_id)
+        except Exception:
+            print(
+                "Error trying to generate outbound vendor return for scenario",
+                scenario_data.scenario_descriptor.scenario_name,
+            )
+            raise
 
     return xml_document
 
@@ -246,11 +261,28 @@ def _generate_outbound_payment_return(scenario_datasets: List[scenario_generator
         if not scenario_data.scenario_descriptor.has_outbound_payment_return:
             continue
 
+        # We assume that this scenario has an associated PaymentReferenceFile
+        payment_reference_files = [
+            ref_file
+            for ref_file in scenario_data.payment.reference_files
+            if ref_file.__class__ == PaymentReferenceFile
+            and ref_file.reference_file.reference_file_type_id
+            == ReferenceFileType.GAX.reference_file_type_id
+        ]
+        payment_reference_file_count = len(payment_reference_files)
+        if not payment_reference_file_count == 1:
+            raise Exception(
+                f"Expect a single PaymentReferenceFile for this scenario. Found {payment_reference_file_count} PaymentReferenceFiles."
+            )
+
+        payment_reference_file = payment_reference_files[0]
+        doc_id = payment_reference_file.ctr_document_identifier.ctr_document_identifier
+
         # Pull all the values out first that we'll need
         vendor_code = scenario_data.employee.ctr_vendor_customer_code
 
         # Calculate a few values that just use the incrementing count
-        py_id = "INTFDFMLN50LINES0{:03}".format(count)
+        py_id = doc_id
         chk_no = "{:011}".format(count)
         now = payments_util.get_now().strftime("%Y-%m-%d")
         amount = "{:0.2f}".format(scenario_data.payment_amount)
@@ -275,7 +307,7 @@ def _generate_outbound_payment_return(scenario_datasets: List[scenario_generator
 
 
 def _generate_outbound_status_return_xml_document(
-    scenario_datasets: List[scenario_generator.ScenarioData],
+    scenario_datasets: List[scenario_generator.ScenarioData], ref_file_type: LkReferenceFileType
 ) -> minidom.Document:
     xml_document = minidom.Document()
 
@@ -286,11 +318,17 @@ def _generate_outbound_status_return_xml_document(
     xml_document.appendChild(document_root)
 
     for scenario_data in scenario_datasets:
-        if scenario_data.scenario_descriptor.has_vcc_status_return:
+        if (
+            scenario_data.scenario_descriptor.has_vcc_status_return
+            and ref_file_type.reference_file_type_id == ReferenceFileType.VCC.reference_file_type_id
+        ):
             doc = _generate_outbound_status_return_document_for_vcc(xml_document, scenario_data)
             document_root.appendChild(doc)
 
-        if scenario_data.scenario_descriptor.has_gax_status_return:
+        if (
+            scenario_data.scenario_descriptor.has_gax_status_return
+            and ref_file_type.reference_file_type_id == ReferenceFileType.GAX.reference_file_type_id
+        ):
             doc = _generate_outbound_status_return_document_for_gax(xml_document, scenario_data)
             document_root.appendChild(doc)
 
@@ -311,6 +349,8 @@ def _generate_outbound_status_return_document_for_gax(
         ref_file
         for ref_file in scenario_data.payment.reference_files
         if ref_file.__class__ == PaymentReferenceFile
+        and ref_file.reference_file.reference_file_type_id
+        == ReferenceFileType.GAX.reference_file_type_id
     ]
     payment_reference_file_count = len(payment_reference_files)
     if not payment_reference_file_count == 1:
@@ -346,6 +386,8 @@ def _generate_outbound_status_return_document_for_vcc(
         ref_file
         for ref_file in scenario_data.employee.reference_files
         if ref_file.__class__ == EmployeeReferenceFile
+        and ref_file.reference_file.reference_file_type_id
+        == ReferenceFileType.VCC.reference_file_type_id
     ]
     employee_reference_file_count = len(employee_reference_files)
     if not employee_reference_file_count == 1:
@@ -409,18 +451,18 @@ def _create_errors_element_for_status_return_document(
 
     if has_errors:
         error_count = randint(1, 3)
-        errors = example_status_doc_errors[0:error_count]
-        for error in errors:
-            code = error[0]
-            descr = error[1]
+        # errors = example_status_doc_errors[0:error_count]
+        # for error in errors:
+        #     code = error[0]
+        #     descr = error[1]
 
-            error_node = xml_document.createElement("ERROR")
-            error_node.setAttribute("ERROR_CD", code)
-
-            cdata = xml_document.createCDATASection(descr)
-            error_node.appendChild(cdata)
-
-            errors_element.appendChild(error_node)
+    # Adding this sub element for now because our parser doesn't like it when the ERRORS element
+    # has no children.
+    error_node = xml_document.createElement("ERROR")
+    error_node.setAttribute("ERROR_CD", "code")
+    cdata = xml_document.createCDATASection("descr")
+    error_node.appendChild(cdata)
+    errors_element.appendChild(error_node)
 
     errors_element.setAttribute("NO_OF_ERRORS", str(error_count))
 
@@ -439,33 +481,55 @@ def add_cdata_elements(
         elem.appendChild(cdata)
 
 
-def write_file(file_name: str, folder_path: str, xml_document: minidom.Document):
-    now = payments_util.get_now()
-
-    timed_file_name = "-".join([now.strftime("%Y-%m-%d-%H-%M-%S"), file_name])
+def write_file(
+    file_name: str, folder_path: str, date_group_str: str, xml_document: minidom.Document
+):
+    timed_file_name = "-".join([date_group_str, file_name])
     full_path = os.path.join(folder_path, timed_file_name)
 
-    f = file_util.write_file(full_path, mode="wb")
-    f.write(xml_document.toprettyxml(indent="   ", encoding="ISO-8859-1"))
+    file_content = xml_document.toprettyxml(indent="   ", encoding="ISO-8859-1")
+    _handle, tempfile_path = tempfile.mkstemp()
+    temp_file = file_util.write_file(tempfile_path, mode="wb")
+    temp_file.write(file_content)
+    temp_file.close()
+
+    config = payments_config.get_moveit_config()
+    sftp_client = file_util.get_sftp_client(
+        uri=config.ctr_moveit_sftp_uri,
+        ssh_key_password=config.ctr_moveit_ssh_key_password,
+        ssh_key=config.ctr_moveit_ssh_key,
+    )
+    sftp_client.put(tempfile_path, full_path, confirm=False)
 
 
 # === Main Generator Functions ===
+OUTBOUND_VENDOR_RETURN_FILE_NAME = "outbound-vendor-return.xml"
+OUTBOUND_STATUS_RETURN_FILE_NAME = "outbound-status-return.xml"
+OUTBOUND_PAYMENT_RETURN_FILE_NAME = "outbound-payment-return.xml"
+
+
+# VCC
 def generate_outbound_vendor_return(
-    scenario_datasets: List[scenario_generator.ScenarioData], folder_path: str
+    scenario_datasets: List[scenario_generator.ScenarioData], folder_path: str, date_group_str: str
 ):
     xml_document = _generate_outbound_vendor_return(scenario_datasets)
-    write_file("outbound-vendor-return.xml", folder_path, xml_document)
+    write_file(OUTBOUND_VENDOR_RETURN_FILE_NAME, folder_path, date_group_str, xml_document)
 
 
+# GAX
 def generate_outbound_payment_return(
-    scenario_datasets: List[scenario_generator.ScenarioData], folder_path: str
+    scenario_datasets: List[scenario_generator.ScenarioData], folder_path: str, date_group_str: str
 ):
     xml_document = _generate_outbound_payment_return(scenario_datasets)
-    write_file("outbound-payment-return.xml", folder_path, xml_document)
+    write_file(OUTBOUND_PAYMENT_RETURN_FILE_NAME, folder_path, date_group_str, xml_document)
 
 
+# VCC or GAX
 def generate_outbound_status_return(
-    scenario_datasets: List[scenario_generator.ScenarioData], folder_path: str,
+    scenario_datasets: List[scenario_generator.ScenarioData],
+    folder_path: str,
+    date_group_str: str,
+    ref_file_type: LkReferenceFileType,
 ):
-    xml_document = _generate_outbound_status_return_xml_document(scenario_datasets)
-    write_file("outbound-status-return.xml", folder_path, xml_document)
+    xml_document = _generate_outbound_status_return_xml_document(scenario_datasets, ref_file_type)
+    write_file(OUTBOUND_STATUS_RETURN_FILE_NAME, folder_path, date_group_str, xml_document)

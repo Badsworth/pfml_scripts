@@ -478,7 +478,7 @@ def test_after_vendor_check_initiated_logs_error_for_existing_employee_state_log
     state_log_util.create_finished_state_log(
         associated_model=payment.claim.employee,
         start_state=State.VENDOR_CHECK_INITIATED_BY_PAYMENT_EXPORT,
-        end_state=State.IDENTIFY_MMARS_STATUS,
+        end_state=State.ADD_TO_VCM_REPORT,
         outcome=state_log_util.build_outcome(
             "Start Vendor Check flow after receiving payment in payment extract"
         ),
@@ -488,18 +488,18 @@ def test_after_vendor_check_initiated_logs_error_for_existing_employee_state_log
 
     employee_state_logs_before = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.IDENTIFY_MMARS_STATUS,
+        end_state=State.ADD_TO_VCM_REPORT,
         db_session=test_db_session,
     )
     assert len(employee_state_logs_before) == 1
 
-    caplog.set_level(logging.ERROR)  # noqa: B1
+    caplog.set_level(logging.WARNING)  # noqa: B1
     writeback._after_vendor_check_initiated(payment, test_db_session)
     assert "Files are already in flight to CTR. Not sure what to do." in caplog.text
 
     employee_state_logs_after = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.IDENTIFY_MMARS_STATUS,
+        end_state=State.ADD_TO_VCM_REPORT,
         db_session=test_db_session,
     )
     assert len(employee_state_logs_before) == len(employee_state_logs_after)

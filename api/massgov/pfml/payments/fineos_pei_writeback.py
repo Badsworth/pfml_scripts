@@ -12,14 +12,13 @@ import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
-    LatestStateLog,
+    Flow,
     LkState,
     Payment,
     PaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,
     State,
-    StateLog,
 )
 from massgov.pfml.payments.payments_util import Constants, get_now
 
@@ -365,16 +364,13 @@ def _run_post_writeback_hooks(
 def _after_vendor_check_initiated(payment: Payment, db_session: db.Session) -> None:
     employee = payment.claim.employee
 
-    latest_state_log = (
-        db_session.query(StateLog)
-        .join(LatestStateLog)
-        .filter(LatestStateLog.employee_id == employee.employee_id)
-        .one_or_none()
+    latest_state_log = state_log_util.get_latest_state_log_in_flow(
+        employee, Flow.VENDOR_CHECK, db_session
     )
 
-    if (
-        latest_state_log is None
-        or latest_state_log.end_state.state_id in Constants.RESTARTABLE_EMPLOYEE_STATES
+    if latest_state_log is None or (
+        latest_state_log.end_state
+        and latest_state_log.end_state.state_id in Constants.RESTARTABLE_EMPLOYEE_STATES
     ):
         state_log_util.create_finished_state_log(
             associated_model=employee,
@@ -386,7 +382,7 @@ def _after_vendor_check_initiated(payment: Payment, db_session: db.Session) -> N
             db_session=db_session,
         )
     else:
-        logger.error(
+        logger.warning(
             "Files are already in flight to CTR. Not sure what to do.",
             extra={"employee_id": employee.employee_id},
         )

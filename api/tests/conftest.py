@@ -265,8 +265,12 @@ def mock_sftp_client():
 
         def listdir(self, dir: str):
             self.calls.append(("listdir", dir))
+            # Remove the directory from the front of the file name to match the behaviour of the
+            # non-mocked SFTP client we use which returns the filenames relative to the directory
+            # passed in instead of the entire path to the file.
+            first_char_index = len(dir) + 1 if len(dir) else 0
             return sorted(
-                [fn[len(dir) + 1 :] for fn in list(self.files.keys()) if fn.startswith(dir)]
+                [fn[first_char_index:] for fn in list(self.files.keys()) if fn.startswith(dir)]
             )
 
         # Non-standard method to add/modify the SFTP client with files of our choosing.

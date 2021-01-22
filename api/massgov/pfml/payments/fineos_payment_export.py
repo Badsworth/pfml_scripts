@@ -4,6 +4,7 @@ import os
 import pathlib
 from collections import OrderedDict
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Dict, List, Optional, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
@@ -191,19 +192,59 @@ class PaymentData:
             pei_record,
             self.validation_container,
             True,
-            custom_validator_func=payments_util.lookup_validator(PaymentMethod),
+            custom_validator_func=payments_util.lookup_validator(
+                PaymentMethod,
+                disallowed_lookup_values=[
+                    cast(str, PaymentMethod.DEBIT.payment_method_description)
+                ],
+            ),
         )
-        self.payment_start_period = payments_util.validate_csv_input(
-            "PAYMENTSTARTP", payment_details, self.validation_container, True
-        )
-        self.payment_end_period = payments_util.validate_csv_input(
-            "PAYMENTENDPER", payment_details, self.validation_container, True
-        )
+
+        def payment_period_date_validator(
+            payment_period_date_str: str,
+        ) -> Optional[payments_util.ValidationReason]:
+            now = payments_util.get_now()
+            payment_period_date = datetime.strptime(payment_period_date_str, "%Y-%m-%d %H:%M:%S")
+            if payment_period_date.date() > now.date():
+                return payments_util.ValidationReason.INVALID_VALUE
+            return None
+
         self.payment_date = payments_util.validate_csv_input(
-            "PAYMENTDATE", pei_record, self.validation_container, True
+            "PAYMENTDATE",
+            pei_record,
+            self.validation_container,
+            True,
+            custom_validator_func=payment_period_date_validator,
         )
+
+        self.payment_start_period = payments_util.validate_csv_input(
+            "PAYMENTSTARTP",
+            payment_details,
+            self.validation_container,
+            True,
+            custom_validator_func=payment_period_date_validator,
+        )
+
+        self.payment_end_period = payments_util.validate_csv_input(
+            "PAYMENTENDPER",
+            payment_details,
+            self.validation_container,
+            True,
+            custom_validator_func=payment_period_date_validator,
+        )
+
+        def amount_validator(amount_str: str) -> Optional[payments_util.ValidationReason]:
+            amount = float(amount_str)
+            if amount < 0:
+                return payments_util.ValidationReason.INVALID_VALUE
+            return None
+
         self.payment_amount = payments_util.validate_csv_input(
-            "AMOUNT_MONAMT", pei_record, self.validation_container, True
+            "AMOUNT_MONAMT",
+            pei_record,
+            self.validation_container,
+            True,
+            custom_validator_func=amount_validator,
         )
 
         # These are only required if payment_method is for EFT
@@ -492,6 +533,7 @@ def _setup_state_log(
         # needs to be created before we've got a payment
         # object to associate it with. Associate the type with payment
         # but no actual payment.
+        # TODO save with employee id and claim for traceability
         state_log_util.create_state_log_without_associated_model(
             start_state=State.PAYMENT_PROCESS_INITIATED,
             end_state=end_state,
@@ -534,6 +576,8 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             if updated_employee:
                 updated_employees.append(updated_employee)
         except Exception as e:
+            logger.exception("Validation error while processing payments %s", e)
+
             # In the case of any error, add the error message to the validation
             # container, or create one and add it.
             if payment_data:
@@ -544,6 +588,7 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             validation_container.add_validation_issue(
                 payments_util.ValidationReason.EXCEPTION_OCCURRED, str(e)
             )
+
             # Note if this errors, the whole process fails, if adding a DB record fails, that's probably desirable
             _setup_state_log(payment, False, validation_container, db_session)
 

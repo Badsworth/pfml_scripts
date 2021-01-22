@@ -98,7 +98,7 @@ def send_email(
             ReturnPathArn=bounce_forwarding_email_address_arn,
         )
 
-        logger.info(f"Email sent! Message ID: {response['MessageId']}")
+        logger.info("Email sent successfully.", extra={"message_id": response["MessageId"]})
         return response
     except ClientError as e:
         error_message = e.response["Error"]["Message"]

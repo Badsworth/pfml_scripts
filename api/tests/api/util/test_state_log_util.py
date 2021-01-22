@@ -261,6 +261,33 @@ def test_create_state_log_without_associated_model(initialize_factories_session,
     latest_state_logs = test_db_session.query(LatestStateLog).all()
     assert len(latest_state_logs) == 2
 
+    # However, if we create ANOTHER state log and specify we want to attach it
+    # it won't create a new previous state log entry and will properly
+    # link them
+    state_log_util.create_state_log_without_associated_model(
+        start_state=State.VERIFY_VENDOR_STATUS,
+        end_state=State.PAYMENTS_RETRIEVED,
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        outcome=default_outcome(),
+        prev_state_log=unattached_state_log,
+        db_session=test_db_session,
+    )
+    test_db_session.commit()
+    latest_state_logs = test_db_session.query(LatestStateLog).all()
+    assert len(latest_state_logs) == 2
+
+    # The first state log we created should not
+    # be returned when querying for latest state log
+    # as it has been succeeded
+    state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        end_state=State.PAYMENTS_RETRIEVED,
+        db_session=test_db_session,
+    )
+    assert len(state_logs) == 2
+    state_log_ids = [state_log.state_log_id for state_log in state_logs]
+    assert unattached_state_log.state_log_id not in state_log_ids
+
 
 def test_get_latest_state_log_in_end_state(initialize_factories_session, test_db_session):
     # This employee has 3 linked state logs that ends with a CONFIRM_PAYMENT

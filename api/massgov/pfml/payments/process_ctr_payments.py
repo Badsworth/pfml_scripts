@@ -10,7 +10,7 @@ from massgov.pfml.payments.data_mart_states_processing import (
 )
 from massgov.pfml.payments.error_reports import send_ctr_error_reports
 from massgov.pfml.payments.gax import build_gax_files_for_s3
-from massgov.pfml.payments.outbound_return import process_outbound_returns
+from massgov.pfml.payments.outbound_returns import process_outbound_returns
 from massgov.pfml.payments.vcc import build_vcc_files_for_s3
 from massgov.pfml.util.logging import audit
 

@@ -16,8 +16,6 @@ def pickup_files_from_moveit(db_session: db.Session) -> None:
     moveit_config = payments_config.get_moveit_config()
     s3_config = payments_config.get_s3_config()
 
-    # TODO - is this not working? look at the below method and fix it
-
     parsed_s3_path = urlparse(s3_config.pfml_ctr_inbound_path)
     s3_bucket_uri = "s3://" + (parsed_s3_path.hostname or "")
     dest_dir = os.path.join(parsed_s3_path.path, Constants.S3_INBOUND_RECEIVED_DIR)
@@ -26,7 +24,7 @@ def pickup_files_from_moveit(db_session: db.Session) -> None:
         s3_bucket_uri=s3_bucket_uri,
         dest_dir=dest_dir,
         sftp_uri=moveit_config.ctr_moveit_sftp_uri,
-        source_dir=moveit_config.ctr_moveit_outgoing_path,
+        source_dir=moveit_config.ctr_moveit_incoming_path,
         archive_dir=moveit_config.ctr_moveit_archive_path,
         ssh_key=moveit_config.ctr_moveit_ssh_key,
         ssh_key_password=moveit_config.ctr_moveit_ssh_key_password,

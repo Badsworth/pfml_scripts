@@ -23,21 +23,21 @@ def setup_mock_sftp_client(monkeypatch, mock_sftp_client):
 
 
 @pytest.fixture
-def set_exporter_env_vars(mock_s3_bucket, mock_fineos_s3_bucket, monkeypatch):
+def set_exporter_env_vars(mock_s3_bucket, mock_fineos_s3_bucket, mock_sftp_client, monkeypatch):
     monkeypatch.setenv("FINEOS_DATA_EXPORT_PATH", f"s3://{mock_fineos_s3_bucket}/DT2/dataexports/")
     monkeypatch.setenv("PFML_FINEOS_INBOUND_PATH", f"s3://{mock_s3_bucket}/cps/inbound/")
     monkeypatch.setenv("FINEOS_DATA_IMPORT_PATH", f"s3://{mock_fineos_s3_bucket}/DT2/dataimports/")
     monkeypatch.setenv("PFML_FINEOS_OUTBOUND_PATH", f"s3://{mock_s3_bucket}/cps/outbound/")
 
-    monkeypatch.setenv("PFML_CTR_INBOUND_PATH", f"s3://{mock_s3_bucket}")
-    monkeypatch.setenv("PFML_CTR_OUTBOUND_PATH", f"s3://{mock_s3_bucket}")
+    monkeypatch.setenv("PFML_CTR_INBOUND_PATH", f"s3://{mock_s3_bucket}/ctr/inbound/")
+    monkeypatch.setenv("PFML_CTR_OUTBOUND_PATH", f"s3://{mock_s3_bucket}/ctr/outbound/")
 
     monkeypatch.setenv("PFML_ERROR_REPORTS_PATH", f"s3://{mock_s3_bucket}/error_reports/outbound")
 
     monkeypatch.setenv("CTR_MOVEIT_INCOMING_PATH", "pfml/inbox")
     monkeypatch.setenv("CTR_MOVEIT_OUTGOING_PATH", "source/outbox")
     monkeypatch.setenv("CTR_MOVEIT_ARCHIVE_PATH", "archive")
-    monkeypatch.setenv("PAYMENTS_MOVEIT_URI", "sftp://api_user@mass.gov")
+    monkeypatch.setenv("EOLWD_MOVEIT_SFTP_URI", "sftp://api_user@mass.gov")
     monkeypatch.setenv("CTR_MOVEIT_SSH_KEY", "No ssh_key_password used during mocked tests")
     monkeypatch.setenv("CTR_MOVEIT_SSH_KEY_PASSWORD", "No ssh_key used during mocked tests")
 

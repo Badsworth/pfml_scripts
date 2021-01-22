@@ -28,6 +28,15 @@ def assert_matches_and_eft_eligible(employee, vendor_info, vendor_customer_code=
     assert vendor_info == matching_info
 
 
+def assert_matches_and_eft_pending(employee, vendor_info, vendor_customer_code=None):
+    matching_info = data_mart_test_scenarios.create_complete_valid_matching_vendor_info_for_employee(
+        employee, vendor_customer_code
+    )
+    matching_info.generate_eft_payment = False
+    matching_info.eft_status = data_mart_core.EFTStatus.PRENOTE_PENDING
+    assert vendor_info == matching_info
+
+
 def assert_matches_and_not_eft_eligible(employee, vendor_info, vendor_customer_code=None):
     matching_info = data_mart_test_scenarios.create_complete_valid_matching_vendor_info_for_employee(
         employee, vendor_customer_code
@@ -95,38 +104,35 @@ def test_test_scenarios_client(test_db_session, test_scenario_employees_and_map,
             vendor_info = data_mart_client.get_vendor_info(employee.tax_identifier.tax_identifier)
 
             if (
-                logical_id == "EmployeeA"
-                or logical_id == "EmployeeB"
-                or logical_id == "EmployeeC"
-                or logical_id == "EmployeeD"
-                or logical_id == "EmployeeR"
-                or logical_id == "EmployeeS"
+                logical_id == "A"
+                or logical_id == "B"
+                or logical_id == "O"
+                or logical_id == "P"
+                or logical_id == "R"
+                or logical_id == "S"
+                or logical_id == "X"
+                or logical_id == "Z"
             ):
-                if round_id == "round1":
-                    assert vendor_info is None
-                else:
-                    assert_matches_and_eft_eligible(employee, vendor_info)
-            elif (
-                logical_id == "EmployeeM"
-                or logical_id == "EmployeeO"
-                or logical_id == "EmployeeP"
-                or logical_id == "EmployeeQ"
-            ):
-                assert vendor_info is None
-            elif logical_id == "EmployeeN":
-                assert_matches_and_eft_eligible(employee, vendor_info)
-            elif logical_id == "EmployeeU":
-                assert_missing_address(employee, vendor_info)
-            elif logical_id == "EmployeeV":
-                assert_different_address(employee, vendor_info)
-            elif logical_id == "EmployeeW":
-                assert_different_routing(employee, vendor_info)
-            elif logical_id == "EmployeeX":
                 if round_id == "round1":
                     assert vendor_info is None
                 else:
                     assert_matches_and_not_eft_eligible(employee, vendor_info)
-            elif logical_id == "EmployeeY":
+            elif logical_id == "C" or logical_id == "D" or logical_id == "Q":
+                if round_id == "round1":
+                    assert vendor_info is None
+                else:
+                    assert_matches_and_eft_pending(employee, vendor_info)
+            elif logical_id == "M":
+                assert vendor_info is None
+            elif logical_id == "N":
+                assert_matches_and_not_eft_eligible(employee, vendor_info)
+            elif logical_id == "U":
+                assert_missing_address(employee, vendor_info)
+            elif logical_id == "V":
+                assert_different_address(employee, vendor_info)
+            elif logical_id == "W":
+                assert_different_routing(employee, vendor_info)
+            elif logical_id == "Y":
                 if round_id == "round1":
                     assert vendor_info is None
                 else:
@@ -138,7 +144,7 @@ def test_test_scenarios_client(test_db_session, test_scenario_employees_and_map,
 def test_test_scenarios_client_with_vendor_customer_code(
     initialize_factories_session, test_db_session, monkeypatch
 ):
-    logical_id = "EmployeeA"
+    logical_id = "A"
     vendor_customer_code = "19891213"
     employee = EmployeeFactory.create(ctr_address_pair=CtrAddressPairFactory(), eft=EftFactory())
     vendor_tin = employee.tax_identifier.tax_identifier
@@ -154,4 +160,5 @@ def test_test_scenarios_client_with_vendor_customer_code(
     monkeypatch.setenv("CTR_DATA_MART_MOCK_ROUND", "round2")
     vendor_info = data_mart_client.get_vendor_info(vendor_tin)
 
-    assert_matches_and_eft_eligible(employee, vendor_info, vendor_customer_code)
+    assert_matches_and_not_eft_eligible(employee, vendor_info, vendor_customer_code)
+    assert vendor_info.vendor_customer_code == vendor_customer_code

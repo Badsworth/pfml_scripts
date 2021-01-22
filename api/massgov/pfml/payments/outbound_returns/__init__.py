@@ -144,19 +144,19 @@ def _process_outbound_returns(outbound_return_data: OutboundReturnData) -> None:
             )
         except Exception:
             logger.exception(
-                "Fatal error while processing Outbound Status Return %s",
+                "Fatal error while processing Outbound Vendor Return %s",
                 ref_file.file_location,
                 extra={"file_location", ref_file.file_location},
             )
             raise
 
     # 3. Outbound Payment Returns
-    for ref_file in outbound_return_data.outbound_vendor_customer_return_files:
+    for ref_file in outbound_return_data.outbound_payment_return_files:
         try:
             outbound_payment_return.process_outbound_payment_return(db_session, ref_file)
         except Exception:
             logger.exception(
-                "Fatal error while processing Outbound Status Return %s",
+                "Fatal error while processing Outbound Payment Return %s",
                 ref_file.file_location,
                 extra={"file_location", ref_file.file_location},
             )
@@ -175,7 +175,6 @@ def process_outbound_returns(db_session: db.Session) -> None:
     base_filepath = os.path.join(
         s3_config.pfml_ctr_inbound_path, payments_util.Constants.S3_INBOUND_RECEIVED_DIR
     )
-
     # Get the filenames
     try:
         ctr_inbound_filenames = file_util.list_files_without_folder(base_filepath)

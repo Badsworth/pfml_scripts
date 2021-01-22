@@ -13,6 +13,7 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Employee,
     LatestStateLog,
+    LkFlow,
     LkState,
     Payment,
     ReferenceFile,
@@ -85,9 +86,9 @@ def _create_state_log(
     outcome: Dict[str, str],
     db_session: db.Session,
     start_time: datetime,
+    prev_state_log: Optional[StateLog] = None,
 ) -> StateLog:
     now = get_now()
-
     state_log = StateLog(
         start_state_id=start_state.state_id,
         end_state_id=end_state.state_id,
@@ -117,20 +118,23 @@ def _create_state_log(
         latest_query_params.append(LkState.flow_id == end_state.flow_id)
 
     db_session.add(state_log)
-    _create_or_update_latest_state_log(state_log, latest_query_params, db_session)
+    _create_or_update_latest_state_log(state_log, latest_query_params, prev_state_log, db_session)
 
     return state_log
 
 
 def _create_or_update_latest_state_log(
-    state_log: StateLog, latest_query_params: List, db_session: db.Session
+    state_log: StateLog,
+    latest_query_params: List,
+    prev_state_log: Optional[StateLog],
+    db_session: db.Session,
 ) -> None:
     # Grab the latest state log and if it exists
     # add a pointer back to the most recent state log
 
     latest_state_log = None
     # In some cases, we know this is the first one (eg. from create_state_log_without_associated_model)
-    if latest_query_params:
+    if latest_query_params and not prev_state_log:
         try:
             latest_state_log = (
                 db_session.query(LatestStateLog)
@@ -149,9 +153,15 @@ def _create_or_update_latest_state_log(
                     "reference_file_id": state_log.reference_file_id,
                 },
             )
-            # TODO - should we reraise, continuing on here
-            # seems very bad (and caused issues in our test run)
             raise
+    elif prev_state_log:
+        # If we have a previous state log
+        # Get the latest state log that points to it
+        latest_state_log = (
+            db_session.query(LatestStateLog)
+            .filter(LatestStateLog.state_log_id == prev_state_log.state_log_id)
+            .one_or_none()
+        )
 
     if latest_state_log:
         state_log.prev_state_log_id = latest_state_log.state_log_id
@@ -180,6 +190,7 @@ def create_state_log_without_associated_model(
     outcome: Dict[str, str],
     db_session: db.Session,
     start_time: Optional[datetime] = None,
+    prev_state_log: Optional[StateLog] = None,
 ) -> StateLog:
     start_state_time = start_time if start_time else get_now()
 
@@ -191,6 +202,28 @@ def create_state_log_without_associated_model(
         outcome=outcome,
         start_time=start_state_time,
         db_session=db_session,
+        prev_state_log=prev_state_log,
+    )
+
+
+def get_latest_state_log_in_flow(
+    associated_model: AssociatedModel, flow: LkFlow, db_session: db.Session
+) -> Optional[StateLog]:
+    filter_params = [LkState.flow_id == flow.flow_id]
+
+    if isinstance(associated_model, Employee):
+        filter_params.append(LatestStateLog.employee_id == associated_model.employee_id)
+    elif isinstance(associated_model, Payment):
+        filter_params.append(LatestStateLog.payment_id == associated_model.payment_id)
+    elif isinstance(associated_model, ReferenceFile):
+        filter_params.append(LatestStateLog.reference_file_id == associated_model.reference_file_id)
+
+    return (
+        db_session.query(StateLog)
+        .join(LatestStateLog)
+        .join(LkState, StateLog.end_state_id == LkState.state_id)
+        .filter(*filter_params)
+        .one_or_none()
     )
 
 

@@ -203,7 +203,7 @@ def test_download_and_parse_data(mock_s3_bucket, tmp_path):
     }
 
 
-@freeze_time("2021-01-03 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data(
     mock_s3_bucket,
     set_exporter_env_vars,
@@ -254,7 +254,7 @@ def test_process_extract_data(
         assert payment.period_start_date.strftime("%Y-%m-%d") == f"2021-01-0{index}"
         assert payment.period_end_date.strftime("%Y-%m-%d") == f"2021-01-1{index}"
         assert payment.payment_date.strftime("%Y-%m-%d") == f"2021-01-0{index}"
-        assert payment.fineos_extraction_date == date(2021, 1, 3)
+        assert payment.fineos_extraction_date == date(2021, 1, 13)
         assert str(payment.amount) == f"{index * 3}.99"  # eg. 111.99
 
         claim = payment.claim
@@ -583,7 +583,7 @@ def test_process_extract_data_no_existing_claim_address_eft(
     assert employee_log_count_after == employee_log_count_before
 
 
-@freeze_time("2021-01-03 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_existing_payment(
     mock_s3_bucket,
     set_exporter_env_vars,
@@ -615,7 +615,7 @@ def test_process_extract_data_existing_payment(
         assert payment.period_start_date.strftime("%Y-%m-%d") == f"2021-01-0{index}"
         assert payment.period_end_date.strftime("%Y-%m-%d") == f"2021-01-1{index}"
         assert payment.payment_date.strftime("%Y-%m-%d") == f"2021-01-0{index}"
-        assert payment.fineos_extraction_date == date(2021, 1, 3)
+        assert payment.fineos_extraction_date == date(2021, 1, 13)
         assert str(payment.amount) == f"{index * 3}.99"  # eg. 111.99
 
         # Verify that there is exactly one successful state log per payment

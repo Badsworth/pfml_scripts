@@ -61,13 +61,25 @@ class Constants:
     S3_INBOUND_PROCESSED_DIR = "processed"
     S3_INBOUND_ERROR_DIR = "error"
 
+    # Metadata for Employee-related States
     RESTARTABLE_EMPLOYEE_STATES = [
         State.VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT.state_id,
         State.VENDOR_EXPORT_ERROR_REPORT_SENT.state_id,
         State.VENDOR_CHECK_INITIATED_BY_PAYMENT_EXPORT.state_id,
+        State.IDENTIFY_MMARS_STATUS.state_id,
         State.MMARS_STATUS_CONFIRMED.state_id,
         State.VCM_REPORT_SENT.state_id,
+        # State.VCC_SENT.state_id,
         State.VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED.state_id,
+        State.VCC_ERROR_REPORT_SENT.state_id,
+    ]
+
+    # At the end of a full ECS task run, no employees should be in these
+    # states. If they are, something went wrong during the ECS task
+    MID_TASK_EMPLOYEE_STATES = [
+        State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT.state_id,
+        State.ADD_TO_VCM_REPORT.state_id,
+        State.ADD_TO_VCC.state_id,
         State.ADD_TO_VCC_ERROR_REPORT.state_id,
     ]
 

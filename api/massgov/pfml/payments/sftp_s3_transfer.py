@@ -175,12 +175,17 @@ def copy_from_sftp_to_s3_and_archive_files(
 
     source_filenames = sftp_client.listdir(config.source_dir)
     if len(source_filenames) == 0:
-        logger.info("Did not find any files in source SFTP directory:", config.source_dir)
+        logger.info("Did not find any files in source SFTP directory: %s", config.source_dir)
         return
+
+    # Remove any leading (and trailing) slashes so that we include the config.s3_bucket_uri when
+    # constructing the dest_filepath. If the dest_dir has a leading slash os.path.join() will
+    # ignore config.s3_bucket_uri and start the path at dest_dir.
+    dest_dir = config.dest_dir.strip("/")
 
     for filename in source_filenames:
         source_filepath = os.path.join(config.source_dir, filename)
-        dest_filepath = os.path.join(config.s3_bucket_uri, config.dest_dir, filename)
+        dest_filepath = os.path.join(config.s3_bucket_uri, dest_dir, filename)
         archive_filepath = os.path.join(config.archive_dir, filename)
 
         # If there is already a row in ReferenceFile for this file then skip it.

@@ -11,7 +11,7 @@ from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
 from tests.helpers.state_log import AdditionalParams, setup_state_log
 
 EXPECTED_DESCRIPTION = (
-    "This is a description of the problem\nMissingInDB:Field1\nMissingField:Field2"
+    "RecordName\nThis is a description of the problem\nMissingInDB:Field1\nMissingField:Field2"
 )
 
 
@@ -127,7 +127,9 @@ def test_parse_outcome(test_db_session, initialize_factories_session):
     outcome = error_reports._parse_outcome(state_log)
 
     assert outcome.key == "RecordName"
-    assert outcome.description == "message again\nMissingInDB:Field1\nMissingField:Field2"
+    assert (
+        outcome.description == "RecordName\nmessage again\nMissingInDB:Field1\nMissingField:Field2"
+    )
 
 
 def test_get_employee_claim_payment_from_state_log_single_payment(
@@ -148,18 +150,19 @@ def test_get_employee_claim_payment_from_state_log_single_payment(
     )
     assert len(state_log_results.state_logs) == 2
 
-    employee, claim, payment_out = error_reports._get_employee_claim_payment_from_state_log(
+    db_models = error_reports._get_employee_claim_payment_from_state_log(
         state_log_util.AssociatedClass.EMPLOYEE, state_log_results.state_logs[1], test_db_session
     )
 
     # These should all be set
-    assert employee
-    assert claim
-    assert payment_out
+    assert db_models.is_valid
+    assert db_models.employee
+    assert db_models.claim
+    assert db_models.payment
 
     # Just to be certain, make sure the IDs of the values we had BEFORE the test match what came out
-    assert state_log_results.state_logs[1].employee.claims[0].claim_id == claim.claim_id
-    assert state_log_results.state_logs[1].employee.employee_id == employee.employee_id
+    assert state_log_results.state_logs[1].employee.claims[0].claim_id == db_models.claim.claim_id
+    assert state_log_results.state_logs[1].employee.employee_id == db_models.employee.employee_id
 
 
 def test_get_employee_claim_payment_from_state_log_multiple_mmars_payments(
@@ -185,14 +188,15 @@ def test_get_employee_claim_payment_from_state_log_multiple_mmars_payments(
 
     add_mmars_payments_for_claim(claim, test_db_session)
 
-    employee, claim, payment_out = error_reports._get_employee_claim_payment_from_state_log(
+    db_models = error_reports._get_employee_claim_payment_from_state_log(
         state_log_util.AssociatedClass.EMPLOYEE, state_log_results.state_logs[0], test_db_session
     )
 
-    assert employee
-    assert claim is None
-    assert payment_out is None
-    assert state_log_results.state_logs[0].employee.employee_id == employee.employee_id
+    assert db_models.is_valid
+    assert db_models.employee
+    assert db_models.claim is None
+    assert db_models.payment is None
+    assert state_log_results.state_logs[0].employee.employee_id == db_models.employee.employee_id
 
 
 def test_get_employee_claim_payment_from_state_log_multiple_mmars_claims(
@@ -224,14 +228,14 @@ def test_get_employee_claim_payment_from_state_log_multiple_mmars_claims(
     # Make certain that both claims are properly set in the model (it's not going to refetch the state_log)
     state_log_results.state_logs[1].employee.claims = [claim1, claim2]
 
-    employee, claim, payment_out = error_reports._get_employee_claim_payment_from_state_log(
+    db_models = error_reports._get_employee_claim_payment_from_state_log(
         state_log_util.AssociatedClass.EMPLOYEE, state_log_results.state_logs[1], test_db_session
     )
 
-    assert employee
-    assert claim is None
-    assert payment_out is None
-    assert state_log_results.state_logs[1].employee.employee_id == employee.employee_id
+    assert db_models.employee
+    assert db_models.claim is None
+    assert db_models.payment is None
+    assert state_log_results.state_logs[1].employee.employee_id == db_models.employee.employee_id
 
 
 @freeze_time("2020-01-01 12:00:00")

@@ -93,6 +93,7 @@ class ScenarioNameWithCount:
 # TODO bring over data mart round responses into descriptor
 @dataclass
 class EmployeePaymentScenarioDescriptor:
+    scenario_name: ScenarioName
     leave_type: LkClaimType
     payee_payment_method: Optional[LkPaymentMethod]
     account_type: Optional[LkBankAccountType] = None
@@ -101,9 +102,19 @@ class EmployeePaymentScenarioDescriptor:
     non_existent_address: bool = False
     missing_routing: bool = False
     valid_ssn: bool = True
-    missing_ssn: bool = True
+    missing_ssn: bool = False
     default_payment_preference: bool = True
     evidence_satisfied: bool = True
+
+    has_payment_extract: bool = False
+    missing_from_employee_feed: bool = False
+
+    # Scenario information for in between extracts (vendor -> payment)
+    payee_payment_method_update: Optional[LkPaymentMethod] = None
+    non_existent_address_update: bool = False
+    routing_number_ten_digits_update: bool = False
+    negative_payment_update: bool = False
+    future_payment_benefit_week_update: bool = False
 
     # Creates EmployeeReferenceFile and Comptroller IDs in the database.
     has_vcc_status_return: bool = False
@@ -119,43 +130,38 @@ class EmployeePaymentScenarioDescriptor:
 
     has_outbound_payment_return: bool = False
 
-    has_payment_extract: bool = True
-    missing_from_employee_feed: bool = False
 
-    # Scenario information for in between extracts (vendor -> payment)
-    payee_payment_method_update: Optional[LkPaymentMethod] = None
-    non_existent_address_update: bool = False
-    routing_number_ten_digits_update: bool = False
-    negative_payment_update: bool = False
-    future_payment_benefit_week_update: bool = False
-
-
-SCENARIO_DESCRIPTORS: Dict[str, EmployeePaymentScenarioDescriptor] = {}
+SCENARIO_DESCRIPTORS: Dict[ScenarioName, EmployeePaymentScenarioDescriptor] = {}
 
 # 1. has some records that validate and should be saved.
 
 # EmployeeA with real address, payment method is check, leave type is medical leave
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_A] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_A,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     has_payment_extract=True,
     has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
     has_gax_status_return=True,
     has_outbound_payment_return=True,
 )
 
 # EmployeeB with real address, payment method is check, leave type is bonding leave
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_B] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_B,
     leave_type=ClaimType.FAMILY_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     has_payment_extract=True,
     has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
     has_gax_status_return=True,
     has_outbound_payment_return=True,
 )
 
 # EmployeeC with real address, real routing number, fake bank account number, payment method is ACH, leave type is medical leave
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_C] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_C,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.ACH,
     account_type=BankAccountType.CHECKING,
@@ -168,11 +174,13 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_C] = EmployeePaymentScenarioDescripto
 
 # EmployeeD with real address, real routing number, fake bank account number, payment method is ACH, leave type is bonding leave
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_D] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_D,
     leave_type=ClaimType.FAMILY_LEAVE,
     payee_payment_method=PaymentMethod.ACH,
     account_type=BankAccountType.SAVINGS,
     has_payment_extract=True,
     has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
     has_gax_status_return=True,
     has_outbound_payment_return=True,
 )
@@ -183,6 +191,7 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_D] = EmployeePaymentScenarioDescripto
 
 # EmployeeE has non-existent SSN. No StateLog entry should be created.
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_E] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_E,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.ACH,
     account_type=BankAccountType.CHECKING,
@@ -191,6 +200,7 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_E] = EmployeePaymentScenarioDescripto
 
 # EmployeeE has non-existent SSN. No StateLog entry should be created.
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_F] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_F,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.ACH,
     account_type=BankAccountType.CHECKING,
@@ -202,11 +212,14 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_F] = EmployeePaymentScenarioDescripto
 
 # EmployeeG payment method is debit card
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_G] = EmployeePaymentScenarioDescriptor(
-    leave_type=ClaimType.MEDICAL_LEAVE, payee_payment_method=PaymentMethod.DEBIT,
+    scenario_name=ScenarioName.SCENARIO_G,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.DEBIT,
 )
 
 # EmployeeH address is missing required field (such as city)
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_H] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_H,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.ACH,
     account_type=BankAccountType.CHECKING,
@@ -215,6 +228,7 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_H] = EmployeePaymentScenarioDescripto
 
 # EmployeeI address is improperly formatted (state is “Massachussetts” instead of “MA”)
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_I] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_I,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.ACH,
     account_type=BankAccountType.CHECKING,
@@ -223,6 +237,7 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_I] = EmployeePaymentScenarioDescripto
 
 # EmployeeJ has payment method is ACH, missing routing number
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_J] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_J,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.ACH,
     account_type=BankAccountType.CHECKING,
@@ -231,8 +246,9 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_J] = EmployeePaymentScenarioDescripto
 
 # 4. Records that should be ignored
 
-# EmployeeK is DEFPAYMENTPREF is “N” (create multiple payment methods for EmployeeJ)
+# EmployeeK is DEFPAYMENTPREF is “N”
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_K] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_K,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.ACH,
     account_type=BankAccountType.CHECKING,
@@ -241,85 +257,133 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_K] = EmployeePaymentScenarioDescripto
 
 # EmployeeL LEAVEREQUEST_EVIDENCERESULTTYPE != “Satisfied” (don’t ID proof someone)
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_L] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_L,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     evidence_satisfied=False,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_M] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_M,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     non_existent_address=True,
+    has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
+    has_vcc_status_return_errors=True,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_N] = EmployeePaymentScenarioDescriptor(
-    leave_type=ClaimType.MEDICAL_LEAVE, payee_payment_method=PaymentMethod.CHECK
+    scenario_name=ScenarioName.SCENARIO_N,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_O] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_O,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     payee_payment_method_update=PaymentMethod.DEBIT,
     has_payment_extract=True,
+    has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_P] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_P,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     has_payment_extract=True,
     non_existent_address_update=True,
+    has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_Q] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_Q,
     leave_type=ClaimType.MEDICAL_LEAVE,
-    payee_payment_method=PaymentMethod.CHECK,
+    payee_payment_method=PaymentMethod.ACH,
+    account_type=BankAccountType.CHECKING,
     routing_number_ten_digits_update=True,
     has_payment_extract=True,
+    has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_R] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_R,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     negative_payment_update=True,
     has_payment_extract=True,
+    has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_S] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_S,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     future_payment_benefit_week_update=True,
     has_payment_extract=True,
+    has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_T] = EmployeePaymentScenarioDescriptor(
-    leave_type=ClaimType.MEDICAL_LEAVE, payee_payment_method=None, missing_from_employee_feed=True
+    scenario_name=ScenarioName.SCENARIO_T,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=None,
+    missing_from_employee_feed=True,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_U] = EmployeePaymentScenarioDescriptor(
-    leave_type=ClaimType.MEDICAL_LEAVE, payee_payment_method=PaymentMethod.CHECK
+    scenario_name=ScenarioName.SCENARIO_U,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_V] = EmployeePaymentScenarioDescriptor(
-    leave_type=ClaimType.MEDICAL_LEAVE, payee_payment_method=PaymentMethod.CHECK
+    scenario_name=ScenarioName.SCENARIO_V,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_W] = EmployeePaymentScenarioDescriptor(
-    leave_type=ClaimType.MEDICAL_LEAVE, payee_payment_method=PaymentMethod.CHECK
+    scenario_name=ScenarioName.SCENARIO_W,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.ACH,
+    account_type=BankAccountType.CHECKING,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_X] = EmployeePaymentScenarioDescriptor(
-    leave_type=ClaimType.MEDICAL_LEAVE, payee_payment_method=PaymentMethod.ACH
+    scenario_name=ScenarioName.SCENARIO_X,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.ACH,
+    account_type=BankAccountType.CHECKING,
+    has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_Y] = EmployeePaymentScenarioDescriptor(
-    leave_type=ClaimType.MEDICAL_LEAVE, payee_payment_method=PaymentMethod.ACH
+    scenario_name=ScenarioName.SCENARIO_Y,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.ACH,
+    account_type=BankAccountType.CHECKING,
+    has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
 )
 
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_Z] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_Z,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     has_payment_extract=True,
     has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
+    has_gax_status_return=True,
+    has_gax_status_return_errors=True,
+    has_outbound_payment_return=False,
 )
 
 
@@ -343,7 +407,11 @@ class ScenarioData:
     payment_amount: decimal.Decimal
     ci_index: CiIndex
 
+    def __repr__(self):
+        return f"[Name: {self.scenario_descriptor.scenario_name}, Employee: {self.employee.employee_id}"
 
+
+# TODO validate scenario descriptor before starting generate
 # Generate data in DB, return scenario
 def generate_scenario_data_db(
     scenario_descriptor: EmployeePaymentScenarioDescriptor,
@@ -357,6 +425,7 @@ def generate_scenario_data_db(
     build_reference_files: bool = False,
 ) -> ScenarioData:
     eft = None
+    payment_method_id = None
 
     if scenario_descriptor.payee_payment_method:
         payment_method_id = scenario_descriptor.payee_payment_method.payment_method_id
@@ -390,6 +459,7 @@ def generate_scenario_data_db(
         ctr_address_pair=ctr_address_pair,
         eft=eft,
         payment_method_id=payment_method_id,
+        ctr_vendor_customer_code=vendor_customer_code,
     )
 
     employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
@@ -456,15 +526,15 @@ def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
                 fein_part_str = str(fein)[2:]
 
                 ci_index = CiIndex(ssn_part_str.rjust(9, "1"), fein_part_str.rjust(9, "2"))
-                fineos_employer_id = int(fein_part_str.rjust(9, "3"))
-                absence_case_id = f"NTN-{ssn_part_str.rjust(9, '4')}-ABS-01"
+                fineos_employer_id = fein_part_str.rjust(9, "3")
+                absence_case_id = f"NTN-{ssn_part_str}-ABS-01"  # maximum length of 19
                 employee_customer_number = ssn_part_str.rjust(9, "5")
                 vendor_customer_code = ssn_part_str.rjust(9, "6")
 
                 scenario_data = generate_scenario_data_db(
                     scenario_descriptor,
-                    ssn=ssn,
-                    fein=fein,
+                    ssn=str(ssn),
+                    fein=str(fein),
                     fineos_employer_id=fineos_employer_id,
                     absence_case_id=absence_case_id,
                     vendor_customer_code=vendor_customer_code,

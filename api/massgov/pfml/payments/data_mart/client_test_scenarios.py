@@ -9,6 +9,7 @@ import massgov.pfml.payments.payments_util as payments_util
 from massgov.pfml.db.models.employees import Employee, TaxIdentifier
 from massgov.pfml.payments.data_mart.client import Client
 from massgov.pfml.payments.data_mart.core import EFTStatus, VendorActiveStatus, VendorInfoResult
+from massgov.pfml.payments.mock.payments_test_scenario_generator import ScenarioName
 from massgov.pfml.util import assert_never
 
 
@@ -17,40 +18,47 @@ class TestScenarioResult(Enum):
     VENDOR_EXISTS_MISSING_ADDRESS = enum.auto()
     VENDOR_EXISTS_DIFFERENT_ADDRESS = enum.auto()
     VENDOR_EXISTS_DIFFERENT_ROUTING = enum.auto()
-    VENDOR_MATCHES_EFT_NOT_ELIGIBILE = enum.auto()
+    VENDOR_MATCHES_AND_EFT_NOT_ELIGIBILE = enum.auto()
     VENDOR_MATCHES_AND_EFT_ELIGIBLE = enum.auto()
+    VENDOR_MATCHES_AND_EFT_PENDING = enum.auto()
+    VENDOR_MATCHES_AND_EFT_ELIGIBLE_NO_VENDOR_CODE = enum.auto()
 
+
+TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_NOT_ELIGIBLE = {
+    "round1": TestScenarioResult.VENDOR_DOES_NOT_EXIST,
+    "round2": TestScenarioResult.VENDOR_MATCHES_AND_EFT_NOT_ELIGIBILE,
+}
 
 TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_ELIGIBLE = {
     "round1": TestScenarioResult.VENDOR_DOES_NOT_EXIST,
     "round2": TestScenarioResult.VENDOR_MATCHES_AND_EFT_ELIGIBLE,
 }
 
+TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_PENDING = {
+    "round1": TestScenarioResult.VENDOR_DOES_NOT_EXIST,
+    "round2": TestScenarioResult.VENDOR_MATCHES_AND_EFT_PENDING,
+}
+
 TEST_SCENARIO_EMPLOYEES_TO_CONFIG: Dict[
     str, Union[Dict[str, TestScenarioResult], TestScenarioResult]
 ] = {
-    "EmployeeA": TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_ELIGIBLE,
-    "EmployeeB": TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_ELIGIBLE,
-    "EmployeeC": TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_ELIGIBLE,
-    "EmployeeD": TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_ELIGIBLE,
-    "EmployeeM": TestScenarioResult.VENDOR_DOES_NOT_EXIST,
-    "EmployeeN": TestScenarioResult.VENDOR_MATCHES_AND_EFT_ELIGIBLE,
-    "EmployeeO": TestScenarioResult.VENDOR_DOES_NOT_EXIST,
-    "EmployeeP": TestScenarioResult.VENDOR_DOES_NOT_EXIST,
-    "EmployeeQ": TestScenarioResult.VENDOR_DOES_NOT_EXIST,
-    "EmployeeR": TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_ELIGIBLE,
-    "EmployeeS": TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_ELIGIBLE,
-    "EmployeeU": TestScenarioResult.VENDOR_EXISTS_MISSING_ADDRESS,
-    "EmployeeV": TestScenarioResult.VENDOR_EXISTS_DIFFERENT_ADDRESS,
-    "EmployeeW": TestScenarioResult.VENDOR_EXISTS_DIFFERENT_ROUTING,
-    "EmployeeX": {
-        "round1": TestScenarioResult.VENDOR_DOES_NOT_EXIST,
-        "round2": TestScenarioResult.VENDOR_MATCHES_EFT_NOT_ELIGIBILE,
-    },
-    "EmployeeY": {
-        "round1": TestScenarioResult.VENDOR_DOES_NOT_EXIST,
-        "round2": TestScenarioResult.VENDOR_MATCHES_AND_EFT_ELIGIBLE,
-    },
+    ScenarioName.SCENARIO_A.value: TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_NOT_ELIGIBLE,
+    ScenarioName.SCENARIO_B.value: TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_NOT_ELIGIBLE,
+    ScenarioName.SCENARIO_C.value: TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_PENDING,
+    ScenarioName.SCENARIO_D.value: TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_PENDING,
+    ScenarioName.SCENARIO_M.value: TestScenarioResult.VENDOR_DOES_NOT_EXIST,
+    ScenarioName.SCENARIO_N.value: TestScenarioResult.VENDOR_MATCHES_AND_EFT_NOT_ELIGIBILE,
+    ScenarioName.SCENARIO_O.value: TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_NOT_ELIGIBLE,
+    ScenarioName.SCENARIO_P.value: TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_NOT_ELIGIBLE,
+    ScenarioName.SCENARIO_Q.value: TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_PENDING,
+    ScenarioName.SCENARIO_R.value: TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_NOT_ELIGIBLE,
+    ScenarioName.SCENARIO_S.value: TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_NOT_ELIGIBLE,
+    ScenarioName.SCENARIO_U.value: TestScenarioResult.VENDOR_EXISTS_MISSING_ADDRESS,
+    ScenarioName.SCENARIO_V.value: TestScenarioResult.VENDOR_EXISTS_DIFFERENT_ADDRESS,
+    ScenarioName.SCENARIO_W.value: TestScenarioResult.VENDOR_EXISTS_DIFFERENT_ROUTING,
+    ScenarioName.SCENARIO_X.value: TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_NOT_ELIGIBLE,
+    ScenarioName.SCENARIO_Y.value: TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_ELIGIBLE,
+    ScenarioName.SCENARIO_Z.value: TEST_SCENARIO_DOES_NOT_EXIST_THEN_MATCHES_AND_EFT_NOT_ELIGIBLE,
 }
 
 
@@ -82,7 +90,9 @@ def get_test_scenario_for_employee(
     test_scenario_result_for_round = test_scenario_config.get(round_id)
 
     if not test_scenario_result_for_round:
-        raise ValueError(f"No result was provided for round {round_id}")
+        raise ValueError(
+            f"No result was provided for round {round_id}, scenario name: {test_scenario_employee}"
+        )
 
     return test_scenario_result_for_round
 
@@ -163,10 +173,11 @@ def generate_test_scenario_vendor_info(
         vendor_info.aba_no = vendor_info.aba_no + "_mod" if vendor_info.aba_no else "dummy_value"
         return vendor_info
 
-    if test_scenario_result is TestScenarioResult.VENDOR_MATCHES_EFT_NOT_ELIGIBILE:
+    if test_scenario_result is TestScenarioResult.VENDOR_MATCHES_AND_EFT_NOT_ELIGIBILE:
         vendor_info = create_complete_valid_matching_vendor_info_for_employee(
             employee, vendor_customer_code
         )
+
         vendor_info.eft_status = EFTStatus.NOT_ELIGIBILE_FOR_EFT
         vendor_info.generate_eft_payment = False
         return vendor_info
@@ -175,6 +186,21 @@ def generate_test_scenario_vendor_info(
         vendor_info = create_complete_valid_matching_vendor_info_for_employee(
             employee, vendor_customer_code
         )
+        return vendor_info
+
+    if test_scenario_result is TestScenarioResult.VENDOR_MATCHES_AND_EFT_ELIGIBLE_NO_VENDOR_CODE:
+        vendor_info = create_complete_valid_matching_vendor_info_for_employee(
+            employee, vendor_customer_code
+        )
+        vendor_info.vendor_customer_code = None
+        return vendor_info
+
+    if test_scenario_result is TestScenarioResult.VENDOR_MATCHES_AND_EFT_PENDING:
+        vendor_info = create_complete_valid_matching_vendor_info_for_employee(
+            employee, vendor_customer_code
+        )
+        vendor_info.eft_status = EFTStatus.PRENOTE_PENDING
+        vendor_info.generate_eft_payment = False
         return vendor_info
 
     assert_never(test_scenario_result)

@@ -21,9 +21,9 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import AbsenceStatus, ClaimType, PaymentMethod
 from massgov.pfml.payments.mock.payments_test_scenario_generator import (
+    SCENARIO_DESCRIPTORS,
     ScenarioData,
     ScenarioDataConfig,
-    ScenarioName,
     ScenarioNameWithCount,
 )
 
@@ -56,8 +56,8 @@ parser.add_argument("--ssn", type=ssn_validator, default=250000000, help="Base S
 # == Constants
 CLAIM_TYPE_TRANSLATION = {}
 CLAIM_TYPE_TRANSLATION[ClaimType.FAMILY_LEAVE.claim_type_description] = "Family"
-CLAIM_TYPE_TRANSLATION[ClaimType.MEDICAL_LEAVE.claim_type_description] = "Medical"
-CLAIM_TYPE_TRANSLATION[ClaimType.MILITARY_LEAVE.claim_type_description] = "Military Related Leave"
+CLAIM_TYPE_TRANSLATION[ClaimType.MEDICAL_LEAVE.claim_type_description] = "Employee"
+CLAIM_TYPE_TRANSLATION[ClaimType.MILITARY_LEAVE.claim_type_description] = "Family"
 
 # == CSV file constants
 # TODO use file name contats in payment and vendor modules
@@ -88,6 +88,7 @@ PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "P
 PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU"]
 
 REQUESTED_ABSENCE_FIELD_NAMES = [
+    "ABSENCEREASON_COVERAGE",
     "ABSENCE_CASENUMBER",
     "NOTIFICATION_CASENUMBER",
     "ABSENCE_CASESTATUS",
@@ -126,6 +127,7 @@ FINEOS_EXPORT_FILES[PEI_CLAIM_DETAILS_FILE_NAME] = PEI_CLAIM_DETAILS_FIELD_NAMES
 FINEOS_EXPORT_FILES[REQUESTED_ABSENCES_FILE_NAME] = REQUESTED_ABSENCE_FIELD_NAMES
 FINEOS_EXPORT_FILES[EMPLOYEE_FEED_FILE_NAME] = EMPLOYEE_FEED_FIELD_NAMES
 FINEOS_EXPORT_FILES[LEAVE_PLAN_FILE_NAME] = LEAVE_PLAN_FIELD_NAMES
+
 
 FINEOS_VENDOR_EXPORT_FILES = [
     REQUESTED_ABSENCES_FILE_NAME,
@@ -172,6 +174,10 @@ def _generate_single_fineos_payment_row(
     scenario_data: scenario_generator.ScenarioData,
     file_name_to_file_info: Dict[str, FineosPaymentsExportCsvWriter],
 ):
+    scenario_descriptor = scenario_data.scenario_descriptor
+    if not scenario_descriptor.has_payment_extract:
+        return
+
     # Get file writers
     pei_csv_writer = file_name_to_file_info[PEI_FILE_NAME].csv_writer
     pei_payment_details_csv_writer = file_name_to_file_info[
@@ -188,6 +194,7 @@ def _generate_single_fineos_payment_row(
     address = employee.ctr_address_pair.fineos_address
 
     payment_date = payments_util.get_now()
+
     vpei_row = OrderedDict()
     vpei_row["C"] = scenario_data.ci_index.c
     vpei_row["I"] = scenario_data.ci_index.i
@@ -200,14 +207,26 @@ def _generate_single_fineos_payment_row(
         if address.geo_state_id is None
         else address.geo_state.geo_state_description
     )
+    if (
+        scenario_descriptor.non_existent_address_update
+    ):  # TODO is this accurate change for scenario P
+        vpei_row["PAYMENTADD1"] = "123 Fictional Address"
+        vpei_row["PAYMENTADD4"] = "Nowhere"
+        vpei_row["PAYMENTADD6"] = "Massachusetts"
+
     vpei_row["PAYMENTPOSTCO"] = address.zip_code
     vpei_row["PAYMENTMETHOD"] = (
         PaymentMethod.ACH.payment_method_description
         if is_eft
         else PaymentMethod.CHECK.payment_method_description
     )
+    if scenario_descriptor.payee_payment_method_update:
+        vpei_row["PAYMENTMETHOD"] = PaymentMethod.DEBIT.payment_method_description
+
     vpei_row["PAYMENTDATE"] = payment_date.strftime("%Y-%m-%d %H:%M:%S")
     vpei_row["AMOUNT_MONAMT"] = "{:.2f}".format(scenario_data.payment_amount)
+    if scenario_descriptor.negative_payment_update:
+        vpei_row["AMOUNT_MONAMT"] = "{:.2f}".format(scenario_data.payment_amount * -1)
 
     # TODO do we still want this
     # if missing_field:
@@ -215,14 +234,23 @@ def _generate_single_fineos_payment_row(
 
     if is_eft:
         vpei_row["PAYEEBANKCODE"] = employee.eft.routing_nbr
+        if scenario_descriptor.routing_number_ten_digits_update:
+            vpei_row["PAYEEBANKCODE"] = employee.eft.routing_nbr.rjust(
+                10, "8"
+            )  # routing number is originally 9 digits
+
         vpei_row["PAYEEACCOUNTN"] = employee.eft.account_nbr
         vpei_row["PAYEEACCOUNTT"] = employee.eft.bank_account_type.bank_account_type_description
 
     pei_csv_writer.writerow(vpei_row)
 
     # PEI Payment Details File
-    payment_start = payment_date - timedelta(weeks=random.randint(2, 12))
-    payment_end = payment_date + timedelta(weeks=random.randint(2, 12))
+    payment_start = payment_date - timedelta(weeks=random.randint(5, 8))
+    payment_end = payment_date - timedelta(weeks=random.randint(1, 4))
+
+    if scenario_descriptor.future_payment_benefit_week_update:
+        payment_start = payments_util.get_now() + timedelta(weeks=1)
+        payment_start = payments_util.get_now() + timedelta(weeks=2)
 
     vpei_payment_details_row = OrderedDict()
     vpei_payment_details_row["PECLASSID"] = scenario_data.ci_index.c
@@ -253,7 +281,6 @@ def _generate_single_fineos_vendor_row(
     # Get file writers
     requested_absence_csv_writer = file_name_to_file_info[REQUESTED_ABSENCES_FILE_NAME].csv_writer
     employee_feed_csv_writer = file_name_to_file_info[EMPLOYEE_FEED_FILE_NAME].csv_writer
-    leave_plan_csv_writer = file_name_to_file_info[LEAVE_PLAN_FILE_NAME].csv_writer
 
     # Get db models
     scenario_descriptor = scenario_data.scenario_descriptor
@@ -281,18 +308,26 @@ def _generate_single_fineos_vendor_row(
     requested_absence_row["LEAVEREQUEST_EVIDENCERESULTTYPE"] = (
         "Not Satisfied" if not scenario_descriptor.evidence_satisfied else "Satisfied"
     )
+    requested_absence_row["ABSENCEREASON_COVERAGE"] = CLAIM_TYPE_TRANSLATION[
+        scenario_descriptor.leave_type.claim_type_description
+    ]
 
     requested_absence_row["EMPLOYEE_CUSTOMERNO"] = scenario_data.employee_customer_number
     requested_absence_row["EMPLOYER_CUSTOMERNO"] = employer.fineos_employer_id
 
     requested_absence_csv_writer.writerow(requested_absence_row)
 
+    # Employee Feed file
+    if scenario_descriptor.missing_from_employee_feed:
+        return
+
     if scenario_descriptor.missing_ssn:
         ssn_to_use = ""
+    elif not scenario_descriptor.valid_ssn:
+        ssn_to_use = "bad_ssn"
     else:
         ssn_to_use = employee.tax_identifier.tax_identifier
 
-    # Employee Feed file
     employee_feed_row = {}
     employee_feed_row["C"] = scenario_data.ci_index.c
     employee_feed_row["I"] = scenario_data.ci_index.i
@@ -304,11 +339,14 @@ def _generate_single_fineos_vendor_row(
     employee_feed_row["DATEOFBIRTH"] = datetime(
         1978, random.randint(1, 12), 1, 11, 30, 00
     ).strftime("%Y-%m-%d %H:%M:%S")
-    employee_feed_row["PAYMENTMETHOD"] = (
-        "Elec Funds Transfer"
-        if scenario_descriptor.payee_payment_method == PaymentMethod.ACH
-        else scenario_descriptor.payee_payment_method.payment_method_description
-    )
+    employee_feed_row["PAYMENTMETHOD"] = ""
+    if scenario_descriptor.payee_payment_method:
+        employee_feed_row["PAYMENTMETHOD"] = (
+            PaymentMethod.ACH.payment_method_description
+            if scenario_descriptor.payee_payment_method == PaymentMethod.ACH
+            else scenario_descriptor.payee_payment_method.payment_method_description
+        )
+
     employee_feed_row["ADDRESS1"] = address.address_line_one
     employee_feed_row["ADDRESS2"] = address.address_line_two
     employee_feed_row["ADDRESS4"] = address.city
@@ -330,17 +368,6 @@ def _generate_single_fineos_vendor_row(
 
     employee_feed_csv_writer.writerow(employee_feed_row)
 
-    # Leave Plan file
-    # TODO remove this file - no longer used
-    leave_plan_row = {}
-    leave_plan_row["ABSENCE_CASENUMBER"] = claim.fineos_absence_id
-    # TODO use in EmployeeFeed file column
-    leave_plan_row["LEAVETYPE"] = CLAIM_TYPE_TRANSLATION[
-        scenario_descriptor.leave_type.claim_type_description
-    ]
-
-    leave_plan_csv_writer.writerow(leave_plan_row)
-
 
 def generate_vendor_extract_files(
     scenario_data_set: List[ScenarioData], folder_path, date_prefix: str
@@ -350,7 +377,14 @@ def generate_vendor_extract_files(
     )
 
     for scenario_data in scenario_data_set:
-        _generate_single_fineos_vendor_row(scenario_data, file_name_to_file_info)
+        try:
+            _generate_single_fineos_vendor_row(scenario_data, file_name_to_file_info)
+        except Exception as e:
+            logger.exception(
+                "Error during fineos vendor generation for: %s",
+                scenario_data.scenario_descriptor.scenario_name,
+            )
+            raise e
 
     # TODO better abstraction
     for file_info in file_name_to_file_info.values():
@@ -365,7 +399,14 @@ def generate_payment_extract_files(
     )
 
     for scenario_data in scenario_data_set:
-        _generate_single_fineos_payment_row(scenario_data, file_name_to_file_info)
+        try:
+            _generate_single_fineos_payment_row(scenario_data, file_name_to_file_info)
+        except Exception as e:
+            logger.exception(
+                "Error during fineos payment extract generation for: %s",
+                scenario_data.scenario_descriptor.scenario_name,
+            )
+            raise e
 
     # TODO better abstraction
     for file_info in file_name_to_file_info.values():
@@ -383,18 +424,7 @@ def generate(config: ScenarioDataConfig, folder_path: str):
 
 
 DEFAULT_SCENARIOS_CONFIG: List[ScenarioNameWithCount] = [
-    ScenarioNameWithCount(ScenarioName.SCENARIO_A, 1),
-    ScenarioNameWithCount(ScenarioName.SCENARIO_B, 1),
-    ScenarioNameWithCount(ScenarioName.SCENARIO_C, 1),
-    ScenarioNameWithCount(ScenarioName.SCENARIO_D, 1),
-    ScenarioNameWithCount(ScenarioName.SCENARIO_E, 1),
-    ScenarioNameWithCount(ScenarioName.SCENARIO_F, 1),
-    ScenarioNameWithCount(ScenarioName.SCENARIO_G, 1),
-    ScenarioNameWithCount(ScenarioName.SCENARIO_H, 1),
-    ScenarioNameWithCount(ScenarioName.SCENARIO_I, 1),
-    ScenarioNameWithCount(ScenarioName.SCENARIO_J, 1),
-    ScenarioNameWithCount(ScenarioName.SCENARIO_K, 1),
-    ScenarioNameWithCount(ScenarioName.SCENARIO_L, 1),
+    ScenarioNameWithCount(scenario_name, 1) for scenario_name in SCENARIO_DESCRIPTORS.keys()
 ]
 
 

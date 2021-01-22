@@ -4,7 +4,7 @@ import pathlib
 import tempfile
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.config as payments_config
@@ -88,6 +88,14 @@ class ErrorReport:
 
 
 @dataclass
+class DbModels:
+    is_valid: bool
+    employee: Optional[Employee] = None
+    claim: Optional[Claim] = None
+    payment: Optional[Payment] = None
+
+
+@dataclass
 class Outcome:
     key: Optional[str]
     description: str
@@ -141,6 +149,10 @@ def _parse_outcome(state_log: StateLog) -> Outcome:
                 details = issue.get("details")
                 description_values.append(f"{reason}:{details}")
 
+        # If a key is present - add it to the description at the start
+        if key:
+            description_values.insert(0, key)
+
     return Outcome(key, "\n".join(description_values))
 
 
@@ -159,11 +171,15 @@ def _create_file(errors: List[ErrorReport], outfile: pathlib.Path) -> pathlib.Pa
 
 def _get_employee_claim_payment_from_state_log(
     associated_class: state_log_util.AssociatedClass, state_log: StateLog, db_session: db.Session
-) -> Tuple[Optional[Employee], Optional[Claim], Optional[Payment]]:
+) -> DbModels:
     # An employee can have multiple claims which each can have multiple payments
     # So, starting from a PAYMENT is easy, but starting from an EMPLOYEE is more complicated
     if associated_class == state_log_util.AssociatedClass.PAYMENT:
         payment = state_log.payment
+        if not payment:
+            # If payment is not set on a payment state log, we've hit the case where
+            # payment validation failed and we couldn't create the payment.
+            return DbModels(True)
         claim = payment.claim  # Claim ID is not nullable on payment, will always be set
         employee = claim.employee  # This is possible to be null in some specific edge cases
 
@@ -174,15 +190,16 @@ def _get_employee_claim_payment_from_state_log(
                 f"No employee found for payment {payment.payment_id} associated with state_log {state_log.state_log_id}",
                 extra={"payment_id": payment.payment_id, "state_log_id": state_log.state_log_id},
             )
-            return None, None, None
+            return DbModels(False)
 
-        return employee, claim, payment
+        return DbModels(True, payment=payment, claim=claim, employee=employee)
+
     if associated_class == state_log_util.AssociatedClass.EMPLOYEE:
         employee = state_log.employee
 
         # If an employee has no claims, it certainly has no payments either
         if not employee.claims:
-            return employee, None, None
+            return DbModels(True, employee=employee)
 
         claim_ids = [claim.claim_id for claim in employee.claims]
 
@@ -213,13 +230,13 @@ def _get_employee_claim_payment_from_state_log(
         # IF AND ONLY IF this list is length 1, we can return a payment/claim, otherwise
         # we still return None for them
         if len(latest_payment_state_logs_in_state) != 1:
-            return employee, None, None
+            return DbModels(True, employee=employee)
 
         latest_state_log = latest_payment_state_logs_in_state[0]
         payment = latest_state_log.payment
         claim = payment.claim
 
-        return employee, claim, payment
+        return DbModels(True, employee=employee, payment=payment, claim=claim)
 
     # Shouldn't happen, this should only be possible
     # if associated_class==REFERENCE_FILE -> We don't use that in this file, shouldn't happen
@@ -229,7 +246,7 @@ def _get_employee_claim_payment_from_state_log(
         f"Error report generation encountered an unexpected scenario regarding State Log {state_log.state_log_id}",
         extra={"state_log_id": state_log.state_log_id},
     )
-    return None, None, None
+    return DbModels(False)
 
 
 def _build_error_report(
@@ -241,35 +258,41 @@ def _build_error_report(
     db_session: db.Session,
 ) -> Optional[ErrorReport]:
     # If associated_class is PAYMENT, all of these should be set
+    #    unless the payment errored before we were able to create the
+    #    payment in fineos_payment_export. In that case, we will have no
+    # unless the payment errored before we were able to create the
+    # payment in fineos_payment_export. In that case, we will have no
+    # payment even when associated_class is PAYMENT.
     # If associated_class is EMPLOYEE, employee will always be set
     #    but claim/payment are only set if exactly one payment associated
     #    with that employee in the Confirm vendor status in MMARS state
-    employee, claim, payment = _get_employee_claim_payment_from_state_log(
-        associated_class, state_log, db_session
-    )
-    if not employee:
+    db_models = _get_employee_claim_payment_from_state_log(associated_class, state_log, db_session)
+
+    if not db_models.is_valid:
         # This is a bad case, but the above method already logged the problem
-        # Just return None
         return None
 
     # Always set for PAYMENTs, sometimes set for EMPLOYEE (see details above)
     fineos_absence_id = None
-    if claim:
-        fineos_absence_id = claim.fineos_absence_id
+    if db_models.claim:
+        fineos_absence_id = db_models.claim.fineos_absence_id
 
     # Set if a PAYMENT could be found
     payment_date = None
-    if payment and payment.payment_date:
-        payment_date = payment.payment_date.strftime("%m/%d/%Y")
+    if db_models.payment and db_models.payment.payment_date:
+        payment_date = db_models.payment.payment_date.strftime("%m/%d/%Y")
 
     # Set only for certain reports
+    fineos_customer_number = None
     ctr_vendor_customer_code = None
-    if add_vendor_customer_code:
-        ctr_vendor_customer_code = employee.ctr_vendor_customer_code
+    if db_models.employee:
+        fineos_customer_number = db_models.employee.fineos_customer_number
+        if add_vendor_customer_code:
+            ctr_vendor_customer_code = db_models.employee.ctr_vendor_customer_code
 
     return ErrorReport(
         description=description,
-        fineos_customer_number=employee.fineos_customer_number,
+        fineos_customer_number=fineos_customer_number,
         fineos_absence_id=fineos_absence_id,
         ctr_vendor_customer_code=ctr_vendor_customer_code,
         mmars_document_id=mmars_doc_id,
@@ -296,13 +319,23 @@ def _build_state_log(
         )
         return
 
-    state_log_util.create_finished_state_log(
-        start_state=current_state,
-        end_state=next_state,
-        associated_model=associated_model,
-        outcome=state_log_util.build_outcome("Successfully sent email"),
-        db_session=db_session,
-    )
+    if associated_model:
+        state_log_util.create_finished_state_log(
+            start_state=current_state,
+            end_state=next_state,
+            associated_model=associated_model,
+            outcome=state_log_util.build_outcome("Successfully sent email"),
+            db_session=db_session,
+        )
+    else:  # For the payment edge case where it has no associated model
+        state_log_util.create_state_log_without_associated_model(
+            start_state=current_state,
+            end_state=next_state,
+            associated_class=associated_class,
+            prev_state_log=current_state_log,
+            outcome=state_log_util.build_outcome("Successfully sent email"),
+            db_session=db_session,
+        )
 
     # If a vendor's payment method is EFT:
     # - If they do not yet exist in MMARS, then we add them to the next VCC

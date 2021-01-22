@@ -61,7 +61,7 @@ def test_fineos_process(
     # top level assersions
     assert len(employees) == 12
     assert len(employers) == 12
-    assert len(payments) == 10
+    assert len(payments) == 4
 
     date_group_str = payments_util.get_date_group_str_from_path(mock_fineos_export_files[0])
     processed_payment_folder_path = os.path.join(
