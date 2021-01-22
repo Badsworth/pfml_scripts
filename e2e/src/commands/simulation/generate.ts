@@ -1,6 +1,5 @@
 import { CommandModule } from "yargs";
 import SimulationStorage from "../../simulation/SimulationStorage";
-// import { SimulationGenerator } from "../../simulation/simulate";
 import fs from "fs";
 import path from "path";
 import quarters, { formatISODatetime } from "../../simulation/quarters";
@@ -21,6 +20,7 @@ type GenerateArgs = {
   directory: string;
   employeesFrom?: string;
   employersFrom: string;
+  allowNewEmployees?: boolean;
   generatorConfig?: string;
 } & SystemWideArgs;
 
@@ -57,6 +57,12 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
         "The path to a previous claims file to use as an employee pool",
       requiresArg: true,
       alias: "e",
+    },
+    allowNewEmployees: {
+      type: "boolean",
+      description:
+        "Whether to allow claim generation to generate new employees. Without this flag, claim generation will error out when you hit the last employee in the pool",
+      default: false,
     },
     employersFrom: {
       type: "string",
@@ -102,6 +108,13 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
       employeeFactory = EmployeeFactory.fromClaimData(
         (await readJSONFile(args.employeesFrom)) as SimulationClaim[]
       );
+      // Allow existing and generated employees to be mixed together with the allowNewEmployees flag.
+      if (args.allowNewEmployees) {
+        employeeFactory = EmployeeFactory.fromMultipleFactories(
+          employeeFactory,
+          EmployeeFactory.fromEmployerFactory(employerFactory)
+        );
+      }
     }
 
     const storage = new SimulationStorage(args.directory);

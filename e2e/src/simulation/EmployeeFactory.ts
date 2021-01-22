@@ -127,3 +127,27 @@ export function fromEmployerFactory(
     };
   };
 }
+
+/**
+ * Combine multiple factories into one. This is useful if, for example, you want to try
+ * an existing employee pool and fall back to random generation.
+ *
+ * The factories will be tried for each claim in order, so the first factory will always have preference if it is
+ * able to return a match.
+ */
+export const fromMultipleFactories = (
+  ...factories: EmployeeFactory[]
+): EmployeeFactory => {
+  return (wageSpec) => {
+    for (const factory of factories) {
+      try {
+        return factory(wageSpec);
+      } catch (e) {
+        // Just move onto the next factory if we hit an error with the first.
+      }
+    }
+    throw new Error(
+      "Unable to find or generate an employee using any of the provided factories"
+    );
+  };
+};
