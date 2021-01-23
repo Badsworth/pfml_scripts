@@ -544,9 +544,9 @@ async function fillContinuousLeavePeriods(
   }
 }
 
-export default (): void => {
+export default async (): Promise<void> => {
   TestData.fromJSON<Cfg.LSTSimClaim>(
-    `../${Cfg.dataBaseUrl}/claims.json`
+    `../${await Cfg.dataBaseUrl}/claims.json`
   ).filter((line) => line.scenario === scenario);
 
   steps.forEach((action) => {

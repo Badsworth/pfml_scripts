@@ -17,11 +17,11 @@ export const settings: TestSettings = {
   stepDelay: 1, // needs to be 8 if running agents
 };
 
-export default (): void => {
+export default async (): Promise<void> => {
   // Define variable that will control which scenario we're going to execute here.
   let curr: Cfg.LSTScenario;
   // Set up test data to control execution.
-  TestData.fromJSON<Cfg.LSTSimClaim>(`./${Cfg.dataBaseUrl}/claims.json`)
+  TestData.fromJSON<Cfg.LSTSimClaim>(`./${await Cfg.dataBaseUrl}/claims.json`)
     .shuffle(true)
     .circular(true);
   // Before moving on to next scenario, fetch and adjust data needed

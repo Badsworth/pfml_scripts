@@ -8,7 +8,7 @@ import { config as dotenv } from "dotenv";
  * to the environment variables. For detecting the proper "config environment"
  * to use, it uses the `E2E_ENVIRONMENT` environment variable.
  */
-interface E2EConfig {
+export interface E2EConfig {
   PORTAL_BASEURL: string;
   COGNITO_POOL: string;
   COGNITO_CLIENTID: string;
@@ -23,12 +23,25 @@ interface E2EConfig {
   TESTMAIL_APIKEY: string;
   TESTMAIL_NAMESPACE: string;
   EMPLOYEES_FILE: string;
+  EMPLOYERS_FILE: string;
+}
+export interface LSTConfig {
+  FLOOD_DATA_BASEURL: string;
+  SIMULATION_SPEED: string;
+  FLOOD_API_TOKEN: string;
+  TESTMAIL_APIKEY: string;
+  PORTAL_PASSWORD: string;
+  FINEOS_USERS: string;
+  FINEOS_PASSWORD: string;
+  EMPLOYER_PORTAL_USERNAME: string;
 }
 
-type E2EConfigFunction = (name: keyof E2EConfig) => string;
+export type BothConfig = E2EConfig & LSTConfig;
 
-export function factory(env: string | undefined): E2EConfigFunction {
-  let config: Partial<E2EConfig> = {};
+export type BothConfigFunction = (name: keyof BothConfig) => string;
+
+export function factory(env: string | undefined): BothConfigFunction {
+  let config: Partial<BothConfig> = {};
   if (env) {
     if (env in configs) {
       config = configs[env as keyof typeof configs];

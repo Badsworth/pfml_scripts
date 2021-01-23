@@ -1,4 +1,9 @@
 #!/bin/bash
+# show all commands
+set -o xtrace
+# change to this script's directory
+cd "$(dirname "$0")"
+# get parameters
 output=$(date +%s)
 while getopts ":f:" opt; do
   case $opt in
@@ -9,6 +14,7 @@ while getopts ":f:" opt; do
   esac
 done
 
+# go to source code
 cd ../src
 
 if [ ! -d flood/simulation ]; then
@@ -37,16 +43,16 @@ for f in flood/*.ts; do
 done
 
 # clear previous builds
-rm -rf ../scripts/floodBundle.zip
-rm -rf ../scripts/index.perf.ts
+rm -rf ../scripts/$output
+mkdir ../scripts/$output
 
 # build `.zip` flood bundle
 cd flood/
-zip -r ../../scripts/floodBundle.zip * -x '*index.perf.ts' '*tmp*' '*claims_*' '*.git*' '*.md' '*.DS_Store'
+zip -9 -r ../../scripts/$output/floodBundle.zip * -x '*index.perf.ts' '*tmp*' '*.git*' '*.md' '*.DS_Store'
 cd ..
 
 # copy index.perf.ts into scripts/ folder
-cp flood/index.perf.ts ../scripts
+cp flood/index.perf.ts ../scripts/$output
 
 # change import paths back to original
 for ff in flood/*/*.ts; do
@@ -62,10 +68,3 @@ done
 rm -rf flood/simulation/
 # remove temporary `src/flood/forms` folder
 rm -rf flood/forms/
-
-cd ../scripts
-
-mkdir $output
-
-mv floodBundle.zip ./$output/floodBundle.zip
-mv index.perf.ts ./$output/index.perf.ts

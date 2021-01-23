@@ -9,6 +9,7 @@ import { prompt } from "enquirer";
 import { exec } from "child_process";
 import { SystemWideArgs } from "../../cli";
 import * as Cfg from "../../flood/config";
+import { factory as EnvFactory, BothConfig } from "../../config";
 
 type DeployLSTArgs = {
   token: string;
@@ -28,7 +29,6 @@ type DeployLSTArgs = {
 } & SystemWideArgs;
 
 type PromptRes = Record<string, string>;
-type PromptParams = Parameters<typeof prompt>;
 
 interface Choice {
   name: string;
@@ -42,7 +42,7 @@ export type LSTDataConfig = {
   scenario: Cfg.LSTScenario;
   chance: number;
   eligible?: number;
-  type?: Cfg.ClaimType;
+  // type?: Cfg.ClaimType;
 };
 
 let deploymentData = "";
@@ -52,7 +52,7 @@ const logDeployment = (title: string, data?: Record<string, unknown>): void => {
   }`;
 };
 
-const deploymentId = new Date().toISOString().slice(0, 17).replace(/-|:/g, "");
+const deploymentId = new Date().toISOString().slice(0, 19).replace(/-|:/g, "");
 
 const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
   command: "deployLST",
@@ -93,59 +93,74 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
     // Flood LST deployment unique identifier for file structures
     args.logger.profile(`deployLST ${deploymentId}`);
     // Skips the prompt if this script is called with arguments
-    const autoPrompt = async (...args: PromptParams): Promise<PromptRes> => {
-      if ("token" in args) {
+    const autoFillPrompt = async (
+      promptConfig: Record<string, unknown>[]
+    ): Promise<PromptRes> => {
+      if (promptConfig.every((p) => (p.name as string) in args)) {
         return args as PromptRes;
       } else {
-        return prompt(...args);
+        return prompt(promptConfig as []);
       }
     };
-    // Hold configuration of newly generated claims.json
+    // Holds configuration of newly generated claims.json
     const newDataConfig: LSTDataConfig[] = [];
+    // Relevant directories
+    const scriptDir = path.join(__dirname, "../../../scripts");
+    const buildDir = path.join(scriptDir, deploymentId);
+    const docsDir = path.join(buildDir, "deployed.md");
+    const envJson = path.join(__dirname, "../../flood/data", "env.json");
+    // Asks for target environment and whether we need new test data
+    const { env, speed, createNewTestData }: PromptRes = await autoFillPrompt([
+      prompts.env,
+      prompts.speed,
+      prompts.createNewTestData,
+    ]);
+    // Holds new environment vars
+    const newEnvConfig: Partial<BothConfig> = {
+      SIMULATION_SPEED: speed,
+    };
 
-    const builds = path.join(__dirname, "../../../scripts");
-    // Asks whether we need new test data
-    const { createNewTestData }: PromptRes = await autoPrompt(
-      prompts.createNewTestData
-    );
     let assignedChance = 0;
     if (createNewTestData) {
+
+      // Finds out how much data we need and where to put it
+      const { dataOutput, numRecords }: PromptRes = await autoFillPrompt([
+        prompts.numRecords,
+        prompts.dataOutput,
+      ]);
+      // Override default folder
+      newEnvConfig.FLOOD_DATA_BASEURL = `data/${dataOutput}`;
       // While we have free space on the test file
       while (assignedChance < 100) {
         // Prompt which scenario to run and it's frequency
-        const { scenario, chance }: PromptRes = await autoPrompt([
+        const { scenario, chance }: PromptRes = await autoFillPrompt([
           prompts.scenario(newDataConfig),
           prompts.chance(assignedChance),
         ]);
         // if we're using a claim submission scenario,
         // we can control the ammount of eligible/ineligible employees,
-        let eligible = 100;
+        let eligible = "100";
         if (scenario.includes("ClaimSubmit")) {
-          const genClaims = await autoPrompt(prompts.eligible);
-          eligible = parseFloat(genClaims.eligible);
+          ({ eligible } = await autoFillPrompt([prompts.eligible]));
         }
         // Builds the new test data configuration
         const dataConfig: LSTDataConfig = {
           scenario: scenario as Cfg.LSTScenario,
           chance: parseFloat(chance),
-          eligible,
+          eligible: parseFloat(eligible),
         };
         // Add it to the global config for the data generation script
         newDataConfig.push(dataConfig);
         // The scenario occupied a certain percentage of the test file
         assignedChance += dataConfig.chance;
       }
-      // Finds out how much data we need and where to put it
-      const { dataOutput, numRecords }: PromptRes = await autoPrompt([
-        prompts.numRecords,
-        prompts.dataOutput(deploymentId),
-      ]);
       // Runs the data generation script
-      args.logger.info("Building...");
+      args.logger.info("Generating test data...");
+      const config = EnvFactory(env);
       await execScript(
         `npm run cli -- simulation generate -f ./src/simulation/scenarios/controlLST.ts -d ./src/flood/data/${dataOutput} -n "${numRecords}" -G "${escape(
           JSON.stringify(newDataConfig)
-        )}"`
+        )}" -E ${config("EMPLOYERS_FILE")}`
       );
       // Log deployment details
       logDeployment("Generated new data:", {
@@ -155,33 +170,41 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
         numRecords,
       });
     }
+    // Recreate local env.json with new configurations
+    const newEnvVars = getEnvJson(env, newEnvConfig);
+    await fs.promises.writeFile(envJson, JSON.stringify(newEnvVars, null, 2));
+    logDeployment("Environment variables:", newEnvVars);
+    args.logger.info("Generated local env.json for flood bundle!");
     // Builds a new LST bundle
-    const buildOutput = `${builds}\\${deploymentId}`;
+    args.logger.info("Building...");
     await execScript(
-      `${path.join(builds, "makeFloodBundle.sh")} -- -f "${deploymentId}"`,
-      `LST successfully built in "${buildOutput}"!`
+      `${path.join(scriptDir, "makeFloodBundle.sh")} -f "${deploymentId}"`
     );
-    // Asks for all needed info to launch/deploy a flood
-    const flood: PromptRes = await autoPrompt([
-      prompts.token(await Cfg.floodToken),
-      prompts.tool,
-      prompts.project,
-      prompts.name,
-      prompts.threads,
-      prompts.duration,
-      prompts.rampup,
-      prompts.privacy,
-      prompts.region,
-      prompts.infrastructure,
-      prompts.instanceQuantity,
-      prompts.instanceType,
-      prompts.stopAfter,
+    args.logger.info(`Built successfully. Check ./scripts/${deploymentId}`);
+
+    // Ask if we need to launch a flood
+    const { startFlood }: PromptRes = await autoFillPrompt([
       prompts.startFlood,
     ]);
-    // Log deployment details
-    logDeployment("Flood:", { buildOutput, flood });
-    // Launch the flood
-    if (flood.startFlood) {
+    if (startFlood) {
+      // Asks for all needed info to launch/deploy a flood
+      const flood: PromptRes = await autoFillPrompt([
+        prompts.token(await Cfg.floodToken),
+        prompts.tool,
+        prompts.project,
+        prompts.name,
+        prompts.threads,
+        prompts.duration,
+        prompts.rampup,
+        prompts.privacy,
+        prompts.region,
+        prompts.infrastructure,
+        prompts.instanceQuantity,
+        prompts.instanceType,
+        prompts.stopAfter,
+      ]);
+      // Log deployment details
+      logDeployment("Flood:", { buildDir, flood });
       const message = `Flood "${flood.name}" launched on "${
         flood.project
       }": \n\t- Concurrent users: ${flood.threads} \n\t- Duration: ${
@@ -209,15 +232,15 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
       }
       formData.append(
         "flood_files[]",
-        fs.createReadStream(`${buildOutput}\\index.perf.ts`),
+        fs.createReadStream(path.join(buildDir, "index.perf.ts")),
         { contentType: "text/vnd.typescript" }
       );
       formData.append(
         "flood_files[]",
-        fs.createReadStream(`${buildOutput}\\floodBundle.zip`),
+        fs.createReadStream(path.join(buildDir, "floodBundle.zip")),
         { contentType: "application/zip" }
       );
-      // Launch it
+      // Creates the new flood in Flood.io
       const newFlood = await fetch("https://api.flood.io/floods", {
         method: "POST",
         headers: {
@@ -237,7 +260,7 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
       }
     }
     // Save all configurations for future reference
-    fs.writeFileSync(`${buildOutput}\\deployed.md`, deploymentData);
+    fs.writeFileSync(docsDir, deploymentData);
     args.logger.profile("deployLST");
   },
 };
@@ -247,6 +270,28 @@ const { command, describe, builder, handler } = cmd;
 export { command, describe, builder, handler };
 
 export const prompts = {
+  env: {
+    type: "select",
+    name: "env",
+    message: "Choose the target environment:",
+    choices: [
+      { name: "test", message: "Test" },
+      { name: "stage", message: "Stage" },
+      { name: "performance", message: "Performance" },
+      { name: "training", message: "Training" },
+    ],
+    initial: 2,
+    required: true,
+  },
+  speed: {
+    type: "numeral",
+    name: "speed",
+    message: "Set simulation speed (higher means slower):",
+    min: 0,
+    max: 2,
+    initial: 1,
+    required: true,
+  },
   createNewTestData: {
     type: "confirm",
     name: "createNewTestData",
@@ -294,13 +339,13 @@ export const prompts = {
     initial: 10,
     required: true,
   },
-  dataOutput: (id: string) => ({
+  dataOutput: {
     type: "input",
     name: "dataOutput",
     message: "What is the destination folder?",
-    initial: id,
-    required: true,
-  }),
+    initial: deploymentId,
+    skip: true,
+  },
   token: (token: string) => ({
     type: "input",
     name: "token",
@@ -426,13 +471,47 @@ export const prompts = {
   startFlood: {
     type: "confirm",
     name: "startFlood",
-    message: "Are you ready to start your flood?",
+    message: "Do you want to deploy this bundle to flood?",
   },
 };
 
 export function minutesToSecs(minutes: string): string {
   return (+minutes * 60).toString();
 }
+
+export const requiredLSTEnvVars: (keyof BothConfig)[] = [
+  "FLOOD_API_TOKEN",
+  "FLOOD_DATA_BASEURL",
+  "SIMULATION_SPEED",
+  "PORTAL_BASEURL",
+  "API_BASEURL",
+  "FINEOS_BASEURL",
+  "PORTAL_USERNAME",
+  "PORTAL_PASSWORD",
+  "FINEOS_USERNAME",
+  "FINEOS_PASSWORD",
+  "FINEOS_USERS",
+  "EMPLOYER_PORTAL_USERNAME",
+  "EMPLOYER_PORTAL_PASSWORD",
+  "TESTMAIL_NAMESPACE",
+  "TESTMAIL_APIKEY",
+];
+
+export const getEnvJson = (
+  environment: string,
+  override?: Partial<BothConfig>
+): Record<string, string> => {
+  const config = EnvFactory(environment);
+  let allEnvVars: Partial<BothConfig> = {};
+  for (const env of requiredLSTEnvVars) {
+    allEnvVars[env] = config(env);
+  }
+  allEnvVars = { ...allEnvVars, ...override };
+  return Object.entries(allEnvVars).reduce((t, [k, v]) => {
+    t[`E2E_${k}`] = v as string;
+    return t;
+  }, {} as Record<string, string>);
+};
 
 export const scenarioChoices = [
   {
@@ -453,18 +532,11 @@ export const scenarioChoices = [
 
 const asyncExec = util.promisify(exec);
 
-export const execScript = async (
-  command: string,
-  message?: string,
-  dirname?: string
-): Promise<void> => {
-  const { stderr, stdout } = await asyncExec(
-    `${dirname ? `cd ${dirname} && ` : ""}${command}`
-  );
+export const execScript = async (command: string): Promise<void> => {
+  const { stderr, stdout } = await asyncExec(command);
   if (stderr) {
-    console.error(`stderr: ${stderr}`);
+    throw new Error(`Failed to run command "${command}":\n${stderr}\n`);
   } else {
-    console.info(stdout);
-    if (message) console.log(message);
+    console.log(stdout);
   }
 };

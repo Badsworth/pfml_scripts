@@ -9,6 +9,7 @@
     "FINEOS_USERNAME": "CONTENT",
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/test-stage-2020-11-30.json",
+    "EMPLOYERS_FILE": "./employers/e2e.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "stage": {
@@ -21,6 +22,7 @@
     "FINEOS_USERNAME": "CONTENT",
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/test-stage-2020-11-30.json",
+    "EMPLOYERS_FILE": "./employers/e2e.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "training": {
@@ -44,6 +46,7 @@
     "COGNITO_CLIENTID": "1ps8bs9s5ns4f6qamj6qn6qd3",
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/performance.json",
+    "EMPLOYERS_FILE": "./employers/manual.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "local": {

@@ -17,7 +17,7 @@ export const globalElementSettings: TestSettings = {
   clearCookies: true,
 };
 
-export const dataBaseUrl = "data/pilot4";
+export const dataBaseUrl = config("E2E_FLOOD_DATA_BASEURL");
 export const documentUrl = "forms/hcp-real.pdf";
 export const PortalBaseUrl = config("E2E_PORTAL_BASEURL");
 export const APIBaseUrl = config("E2E_API_BASEURL");
@@ -36,7 +36,7 @@ export type StoredStep = {
 
 export type Agent = {
   steps: StoredStep[];
-  default: () => void;
+  default: () => Promise<void>;
 };
 
 export type AgentActions = {
