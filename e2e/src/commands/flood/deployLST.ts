@@ -5,7 +5,6 @@ import util from "util";
 import fetch from "node-fetch";
 import FormData from "form-data";
 import { CommandModule } from "yargs";
-import { v4 as uuid } from "uuid";
 import { prompt } from "enquirer";
 import { exec } from "child_process";
 import { SystemWideArgs } from "../../cli";
@@ -46,6 +45,15 @@ export type LSTDataConfig = {
   type?: Cfg.ClaimType;
 };
 
+let deploymentData = "";
+const logDeployment = (title: string, data?: Record<string, unknown>): void => {
+  deploymentData += `${title}\n${
+    data ? `\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\`\n` : ""
+  }`;
+};
+
+const deploymentId = new Date().toISOString().slice(0, 17).replace(/-|:/g, "");
+
 const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
   command: "deployLST",
   describe: "Builds and deploys a bundle to run in Flood.io",
@@ -83,7 +91,6 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
   },
   async handler(args) {
     // Flood LST deployment unique identifier for file structures
-    const deploymentId = uuid().split("-")[0];
     args.logger.profile(`deployLST ${deploymentId}`);
     // Skips the prompt if this script is called with arguments
     const autoPrompt = async (...args: PromptParams): Promise<PromptRes> => {
@@ -103,7 +110,6 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
     );
     let assignedChance = 0;
     if (createNewTestData) {
-      console.info("Entering data generation...");
       // While we have free space on the test file
       while (assignedChance < 100) {
         // Prompt which scenario to run and it's frequency
@@ -135,16 +141,24 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
         prompts.dataOutput(deploymentId),
       ]);
       // Runs the data generation script
+      args.logger.info("Building...");
       await execScript(
         `npm run cli -- simulation generate -f ./src/simulation/scenarios/controlLST.ts -d ./src/flood/data/${dataOutput} -n "${numRecords}" -G "${escape(
           JSON.stringify(newDataConfig)
         )}"`
       );
+      // Log deployment details
+      logDeployment("Generated new data:", {
+        deploymentId,
+        newDataConfig,
+        dataOutput,
+        numRecords,
+      });
     }
     // Builds a new LST bundle
     const buildOutput = `${builds}\\${deploymentId}`;
     await execScript(
-      `npm run flood:build -- -f "${deploymentId}"`,
+      `${path.join(builds, "makeFloodBundle.sh")} -- -f "${deploymentId}"`,
       `LST successfully built in "${buildOutput}"!`
     );
     // Asks for all needed info to launch/deploy a flood
@@ -164,15 +178,16 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
       prompts.stopAfter,
       prompts.startFlood,
     ]);
-
-    // Launches flood via cURL script.
+    // Log deployment details
+    logDeployment("Flood:", { buildOutput, flood });
+    // Launch the flood
     if (flood.startFlood) {
       const message = `Flood "${flood.name}" launched on "${
         flood.project
       }": \n\t- Concurrent users: ${flood.threads} \n\t- Duration: ${
         +flood.duration / 60
       } minute(s) \n\t- Ramp-up: ${flood.rampup} minute(s)`;
-
+      // Prepare all the data to launch the flood
       const formData = new FormData();
       const floodData: PromptRes = {
         "flood[tool]": flood.tool,
@@ -202,8 +217,8 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
         fs.createReadStream(`${buildOutput}\\floodBundle.zip`),
         { contentType: "application/zip" }
       );
-
-      const FloodIO = await fetch("https://api.flood.io/floods", {
+      // Launch it
+      const newFlood = await fetch("https://api.flood.io/floods", {
         method: "POST",
         headers: {
           Authorization:
@@ -211,14 +226,18 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
         },
         body: formData,
       });
-      if (FloodIO.status < 400) {
-        console.log(message, FloodIO.status, FloodIO.statusText);
+      // Error handling
+      if (newFlood.status < 400) {
+        console.log(message);
         args.logger.info("Done!");
+        logDeployment(message);
       } else {
         args.logger.error("Deployment failed:");
-        console.log(FloodIO);
+        console.log(newFlood);
       }
     }
+    // Save all configurations for future reference
+    fs.writeFileSync(`${buildOutput}\\deployed.md`, deploymentData);
     args.logger.profile("deployLST");
   },
 };
@@ -315,7 +334,7 @@ export const prompts = {
     type: "input",
     name: "name",
     message: "Name of test:",
-    initial: `${new Date().toISOString().slice(0, 17).replace(/-|:/g, "")}`,
+    initial: deploymentId,
     required: true,
   },
   threads: {
@@ -443,9 +462,9 @@ export const execScript = async (
     `${dirname ? `cd ${dirname} && ` : ""}${command}`
   );
   if (stderr) {
-    console.log(`stderr: ${stderr}`);
+    console.error(`stderr: ${stderr}`);
   } else {
-    console.log(stdout);
+    console.info(stdout);
     if (message) console.log(message);
   }
 };

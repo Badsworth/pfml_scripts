@@ -21,7 +21,6 @@
     "generate:api": "npx @spec2ts/openapi-client ../api/openapi.yaml -o src/api.ts",
     "flood:all": "element run src/flood/index.perf.ts",
     "flood:plan": "element plan src/flood/index.perf.ts",
-    "flood:build": "cd scripts && makeFloodBundle.sh",
     "flood:compile": "element compile src/flood/index.perf.ts",
     "flood:PortalClaimSubmit": "element run src/flood/scenarios/PortalClaimSubmit.perf.ts --no-headless",
     "flood:FineosClaimSubmit": "element run src/flood/scenarios/FineosClaimSubmit.perf.ts --no-headless",
