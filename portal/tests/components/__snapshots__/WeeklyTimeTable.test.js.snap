@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`WeeklyTimeTable hides minutes from the time if minutes are 0 1`] = `
+<tbody>
+  <tr>
+    <td
+      key="0"
+    >
+      0h
+    </td>
+    <td
+      key="1"
+    >
+      0h 15m
+    </td>
+    <td
+      key="2"
+    >
+      1h
+    </td>
+    <td
+      key="3"
+    >
+      1h 15m
+    </td>
+    <td
+      key="4"
+    >
+      1h 30m
+    </td>
+    <td
+      key="5"
+    >
+      1h 45m
+    </td>
+    <td
+      key="6"
+    >
+      2h
+    </td>
+  </tr>
+</tbody>
+`;
+
+exports[`WeeklyTimeTable renders day names in the header 1`] = `
+<thead>
+  <tr>
+    <th>
+      Sun
+    </th>
+    <th>
+      Mon
+    </th>
+    <th>
+      Tues
+    </th>
+    <th>
+      Wed
+    </th>
+    <th>
+      Thur
+    </th>
+    <th>
+      Fri
+    </th>
+    <th>
+      Sat
+    </th>
+  </tr>
+</thead>
+`;

@@ -12,6 +12,6 @@ def get_or_404(db_session: db.Session, model: Type[_T], id: str) -> _T:
     result = db_session.query(model).get(id)
 
     if result is None:
-        raise NotFound
+        raise NotFound(description="Could not find {} with ID {}".format(model.__name__, id))
 
     return result

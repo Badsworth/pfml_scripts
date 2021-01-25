@@ -5,6 +5,7 @@
 
 import Adapter from "enzyme-adapter-react-16";
 import Enzyme from "enzyme";
+import { format } from "util";
 // Setup I18n globally for tests, so English strings are displayed in rendered components
 import { initializeI18n } from "./src/locales/i18n";
 initializeI18n();
@@ -16,10 +17,12 @@ Enzyme.configure({ adapter: new Adapter() });
  */
 process.env.apiUrl = "http://localhost/jest-mock-api";
 process.env.awsConfig = {};
+process.env.buildEnv = "mock-build-env";
 process.env.domain = "localhost";
 process.env.featureFlags = {};
 process.env.newRelicAppId = "mock-new-relic-id";
 process.env.gtmConfig = { auth: "mock-gtm-auth", preview: "mock-env" };
+process.env.session = { secondsOfInactivityUntilLogout: 10 };
 
 /**
  * Mock DOM APIs
@@ -27,10 +30,22 @@ process.env.gtmConfig = { auth: "mock-gtm-auth", preview: "mock-env" };
 global.fetch = jest.fn();
 global.scrollTo = jest.fn();
 
+// URL.createObjectURL() hasn't been implemented in the jest DOM yet but will be
+// eventually. When it is (and this error triggers) we should remove this mock.
+// Read more: https://github.com/jsdom/jsdom/issues/1721
+if (URL.createObjectURL) {
+  throw new Error(
+    "jest DOM has added URL.createObjectURL() -- we can remove this hack now"
+  );
+}
+URL.createObjectURL = () => "image.png";
+URL.revokeObjectURL = jest.fn();
+
 /**
  * Mock global libraries
  */
 global.newrelic = {
+  addPageAction: jest.fn(),
   noticeError: jest.fn(),
   setCurrentRouteName: jest.fn(),
 };
@@ -43,4 +58,10 @@ const initialProcessEnv = Object.assign({}, process.env);
 beforeEach(() => {
   // Reset our environment variables before each test run
   process.env = initialProcessEnv;
+  jest.spyOn(console, "error").mockImplementation((msg, ...args) => {
+    throw new Error(format(`console.error: ${msg}`, ...args));
+  });
+  jest.spyOn(console, "warn").mockImplementation((msg, ...args) => {
+    throw new Error(format(`console.warning: ${msg}`, ...args));
+  });
 });

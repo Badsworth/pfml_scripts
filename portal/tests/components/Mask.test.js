@@ -2,8 +2,7 @@ import Mask, { maskValue } from "../../src/components/Mask";
 import { mount, shallow } from "enzyme";
 import React from "react";
 
-// Some tests are generated. When a new mask is added, add it here:
-const masks = ["ssn", "fein", "currency"];
+const masks = ["currency", "fein", "hours", "phone", "ssn", "zip"];
 
 function render(customProps = {}, inputProps = {}, mountComponent = false) {
   const component = (
@@ -30,7 +29,7 @@ describe("Mask", () => {
     });
   });
 
-  it("renders mask", () => {
+  it("renders ssn mask", () => {
     const data = render({
       mask: "ssn",
     });
@@ -38,11 +37,48 @@ describe("Mask", () => {
     expect(data.wrapper).toMatchSnapshot();
   });
 
+  it("adds `type='text'` to the ssn masked element", () => {
+    const { wrapper } = render({ mask: "ssn" }, { value: "123456789" });
+    const input = wrapper.find("input");
+
+    expect(input.prop("type")).toBe("text");
+  });
+
+  it("adds `type='tel'` to the phone masked element", () => {
+    const { wrapper } = render({ mask: "phone" }, { value: "123456789" });
+    const input = wrapper.find("input");
+
+    expect(input.prop("type")).toBe("tel");
+  });
+
   it("adds `inputMode='number'` to the child element", () => {
     const { wrapper } = render({ mask: "ssn" }, { value: "123456789" });
     const input = wrapper.find("input");
 
     expect(input.prop("inputMode")).toBe("numeric");
+  });
+
+  it("adds `inputMode='decimal'` to the child element when mask is currency", () => {
+    const { wrapper } = render({ mask: "currency" }, { value: "123456789" });
+    const input = wrapper.find("input");
+
+    expect(input.prop("inputMode")).toBe("decimal");
+  });
+
+  it("applies overlay styling to the child element when mask is currency", () => {
+    const { wrapper } = render({ mask: "currency" }, { value: "123456789" });
+    const input = wrapper.find("div").last();
+
+    expect(input.prop("className")).toEqual(
+      "c-inputtext-mask__before--currency"
+    );
+  });
+
+  it("adds `inputMode='decimal'` to the child element when mask is hours", () => {
+    const { wrapper } = render({ mask: "hours" }, { value: "123456789" });
+    const input = wrapper.find("input");
+
+    expect(input.prop("inputMode")).toBe("decimal");
   });
 
   it("does not mask if an invalid mask value is passed in", () => {
@@ -55,10 +91,9 @@ describe("Mask", () => {
   });
 
   it("calls onChange on the InputText on a blur event", () => {
-    const onBlur = jest.fn();
     const inputOnChange = jest.fn();
     const wrapper = render(
-      { mask: "ssn", onBlur },
+      { mask: "ssn" },
       { value: "12345678", onChange: inputOnChange }
     ).wrapper;
 
@@ -70,10 +105,9 @@ describe("Mask", () => {
   });
 
   it("masking is triggered by a blur event", () => {
-    const onBlur = jest.fn();
     const inputOnChange = jest.fn();
     const wrapper = render(
-      { mask: "ssn", onBlur },
+      { mask: "ssn" },
       { value: "123456789", onChange: inputOnChange }
     ).wrapper;
 
@@ -84,11 +118,24 @@ describe("Mask", () => {
     expect(inputOnChange.mock.calls[0][0].target.value).toBe("123-45-6789");
   });
 
-  it("masking is not triggered by a change event", () => {
-    const onBlur = jest.fn();
+  it("masking is triggered by keypress on Enter key", () => {
     const inputOnChange = jest.fn();
     const wrapper = render(
-      { mask: "ssn", onBlur },
+      { mask: "ssn" },
+      { value: "123456789", onChange: inputOnChange }
+    ).wrapper;
+
+    const input = wrapper.find("input");
+
+    input.simulate("keyDown", { key: "Enter", target: { value: "123456789" } });
+
+    expect(inputOnChange.mock.calls[0][0].target.value).toBe("123-45-6789");
+  });
+
+  it("masking is not triggered by a change event", () => {
+    const inputOnChange = jest.fn();
+    const wrapper = render(
+      { mask: "ssn" },
       { value: "12345678", onChange: inputOnChange }
     ).wrapper;
 
@@ -163,6 +210,13 @@ describe("Mask", () => {
 
         expect(output).toBe("123-45-6789");
       });
+
+      it("accepts partially masked value", () => {
+        const originalValue = "123-45-****";
+        const output = maskValue(originalValue, "ssn");
+
+        expect(output).toBe("123-45-****");
+      });
     });
   });
 
@@ -194,28 +248,101 @@ describe("Mask", () => {
 
       expect(output).toBe("12-1234567");
     });
+
+    it("accepts partially masked value", () => {
+      const originalValue = "**-***1234";
+      const output = maskValue(originalValue, "fein");
+
+      expect(output).toBe("**-***1234");
+    });
   });
 
-  describe("currency", () => {
+  describe("currency and hours", () => {
     it("inserts commas", () => {
       const originalValue = "12345.557";
-      const output = maskValue(originalValue, "currency");
+      const outputCurrency = maskValue(originalValue, "currency");
+      const outputHours = maskValue(originalValue, "hours");
 
-      expect(output).toBe("12,345.56");
+      expect(outputCurrency).toBe("12,345.56");
+      expect(outputHours).toBe("12,345.56");
     });
 
     it("rounds decimals", () => {
       const originalValue = "12345.557";
-      const output = maskValue(originalValue, "currency");
+      const outputCurrency = maskValue(originalValue, "currency");
+      const outputHours = maskValue(originalValue, "hours");
 
-      expect(output).toBe("12,345.56");
+      expect(outputCurrency).toBe("12,345.56");
+      expect(outputHours).toBe("12,345.56");
     });
 
     it("allows only numbers and decimals", () => {
       const originalValue = "abc12345.def557ghi";
-      const output = maskValue(originalValue, "currency");
+      const outputCurrency = maskValue(originalValue, "currency");
+      const outputHours = maskValue(originalValue, "hours");
 
-      expect(output).toBe("12,345.56");
+      expect(outputCurrency).toBe("12,345.56");
+      expect(outputHours).toBe("12,345.56");
+    });
+  });
+
+  describe("phone", () => {
+    it("inserts dashes", () => {
+      const originalValue = "5551234567";
+      const output = maskValue(originalValue, "phone");
+
+      expect(output).toBe("555-123-4567");
+    });
+
+    it("accepts phone formatted with parenthesis", () => {
+      const originalValue = "(555) 123-4567";
+      const output = maskValue(originalValue, "phone");
+
+      expect(output).toBe("555-123-4567");
+    });
+
+    it("accepts an unexpectedly long value", () => {
+      const originalValue = "555123456790";
+      const output = maskValue(originalValue, "phone");
+
+      expect(output).toBe("555-123-456790");
+    });
+
+    it("accepts partially masked value", () => {
+      const originalValue = "555-123-****";
+      const output = maskValue(originalValue, "phone");
+
+      expect(output).toBe("555-123-****");
+    });
+  });
+
+  describe("zip", () => {
+    it("accepts 5-digit ZIP code", () => {
+      const originalValue = "12345";
+      const output = maskValue(originalValue, "zip");
+
+      expect(output).toBe("12345");
+    });
+
+    it("accepts 9-digit ZIP code", () => {
+      const originalValue = "12345-6789";
+      const output = maskValue(originalValue, "zip");
+
+      expect(output).toBe("12345-6789");
+    });
+
+    it("accepts 9-digit ZIP code without dash", () => {
+      const originalValue = "123456789";
+      const output = maskValue(originalValue, "zip");
+
+      expect(output).toBe("12345-6789");
+    });
+
+    it("accepts partially masked 9-digit ZIP code", () => {
+      const originalValue = "12345-****";
+      const output = maskValue(originalValue, "zip");
+
+      expect(output).toBe("12345-****");
     });
   });
 });

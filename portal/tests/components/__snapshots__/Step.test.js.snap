@@ -18,18 +18,21 @@ exports[`Step renders component 1`] = `
     >
       <Heading
         className=""
-        level="2"
+        level="3"
       >
         Step Title
       </Heading>
-      <p>
+      <div
+        className="usa-prose"
+      >
         <Child />
-      </p>
+      </div>
     </div>
     <div
       className="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"
     >
       <ButtonLink
+        ariaLabel="Start: Step Title"
         className="width-auto"
         href="/path-to-step-question"
       >

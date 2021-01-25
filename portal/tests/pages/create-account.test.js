@@ -12,6 +12,7 @@ describe("CreateAccount", () => {
 
   beforeEach(() => {
     appLogic = useAppLogic();
+
     act(() => {
       wrapper = shallow(<CreateAccount appLogic={appLogic} />);
     });
@@ -20,6 +21,9 @@ describe("CreateAccount", () => {
 
   it("renders the empty page", () => {
     expect(wrapper).toMatchSnapshot();
+    wrapper.find("Trans").forEach((trans) => {
+      expect(trans.dive()).toMatchSnapshot();
+    });
   });
 
   describe("when the form is submitted", () => {
@@ -29,30 +33,16 @@ describe("CreateAccount", () => {
 
       changeField("username", email);
       changeField("password", password);
-      submitForm();
+      await submitForm();
       expect(appLogic.auth.createAccount).toHaveBeenCalledWith(email, password);
     });
+  });
 
-    it("calls createAccount with empty string when username is undefined", () => {
-      const password = "TestP@ssw0rd!";
+  it("displays employer-specific content when employerShowSelfRegistrationForm is false", () => {
+    process.env.featureFlags = { employerShowSelfRegistrationForm: false };
 
-      submitForm();
-      expect(appLogic.auth.createAccount).toHaveBeenCalledWith("", "");
-
-      changeField("password", password);
-      submitForm();
-      expect(appLogic.auth.createAccount).toHaveBeenCalledWith("", password);
-    });
-
-    it("calls createAccount with empty string when password is undefined", () => {
-      const email = "email@test.com";
-
-      submitForm();
-      expect(appLogic.auth.createAccount).toHaveBeenCalledWith("", "");
-
-      changeField("username", email);
-      submitForm();
-      expect(appLogic.auth.createAccount).toHaveBeenCalledWith(email, "");
+    wrapper.find("Trans").forEach((trans) => {
+      expect(trans.dive()).toMatchSnapshot();
     });
   });
 });

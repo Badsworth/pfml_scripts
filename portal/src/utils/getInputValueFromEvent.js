@@ -3,7 +3,7 @@
  *
  * @see https://github.com/navahq/archive-vermont-customer-portal-apps/blob/27b66dd7bf37671a6e33a8d2c51a82c7bd9daa41/online-application-app/src/client/actions/index.js#L150
  * @param {object} event
- * @param {object} event.target
+ * @param {HTMLElement|object} event.target
  * @param {boolean} [event.target.checked] - if input was radio/checkbox, was it selected?
  * @param {string} event.target.name - The name representing this field in our state
  * @param {*} event.target.value
@@ -15,7 +15,16 @@ export default function getInputValueFromEvent(event) {
     return undefined;
   }
 
-  const { checked, type, value, inputMode, pattern } = event.target;
+  const { checked, type, value } = event.target;
+
+  const valueType =
+    // Some components, like InputDate, hijack the change event and pass in a plain object
+    // TODO (CP-1667): This condition shouldn't be required once our components stop
+    // hijacking event.target
+    typeof event.target.getAttribute === "function"
+      ? event.target.getAttribute("data-value-type")
+      : null;
+
   let result = value;
   if (type === "checkbox" || type === "radio") {
     // Convert boolean input string values into an actual boolean
@@ -27,21 +36,18 @@ export default function getInputValueFromEvent(event) {
         result = !checked;
         break;
     }
-  } else if (
-    inputMode === "numeric" &&
-    pattern === "[0-9]*" &&
-    value &&
-    value.trim() !== ""
-  ) {
-    if (!isNaN(value)) {
-      result = Number(value);
-    }
+  } else if (valueType === "integer" && value && value.trim() !== "") {
+    // Support comma-delimited numbers
+    const transformedValue = value.replace(/,/g, "");
+    if (isNaN(transformedValue)) return result;
+
+    result = parseInt(transformedValue);
   } else if (typeof value === "string" && value.trim() === "") {
     // An empty or empty-looking string will be interpreted as valid
-    // in the eyes of JSON Schema, even if marked as "required." So,
-    // we want to store an empty string as `undefined` in order for a
-    // required field to fail validation if its value is empty.
-    result = undefined;
+    // in our application_rules, even if it's required. We want to
+    // store an empty string as null in order for a required field
+    // to fail validation if its value is empty.
+    result = null;
   }
 
   return result;

@@ -9,11 +9,9 @@ describe("StepList", () => {
   beforeEach(() => {
     props = {
       title: "Step List",
-      submitButtonText: "Submit",
-      submitPage: "path/to/submit/page",
       startText: "Start",
       resumeText: "Resume",
-      completedText: "Completed",
+      resumeScreenReaderText: "Continue with",
       editText: "Edit",
       screenReaderNumberPrefix: "Step",
     };
@@ -22,7 +20,13 @@ describe("StepList", () => {
   it("renders component", () => {
     const wrapper = shallow(
       <StepList {...props}>
-        <Step title="Step 1" stepHref="#" status="not_started">
+        <Step
+          editable
+          title="Step 1"
+          stepHref="#"
+          status="not_started"
+          completedText="Completed"
+        >
           Step Description
         </Step>
       </StepList>
@@ -31,26 +35,45 @@ describe("StepList", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("throws error if children are not Step components", () => {
-    const render = () => {
-      shallow(
-        <StepList {...props}>
-          <div />
-          <div />
-        </StepList>
-      );
-    };
+  it("renders a description", () => {
+    const description = "Hello world";
 
-    expect(render).toThrowError();
+    const wrapper = shallow(
+      <StepList {...props} description={description}>
+        <Step
+          editable
+          title="Step 1"
+          stepHref="#"
+          status="not_started"
+          completedText="Completed"
+        >
+          Step Description
+        </Step>
+      </StepList>
+    );
+
+    expect(wrapper.find("p").text()).toBe(description);
   });
 
   it("passes Step props to children", () => {
     const wrapper = shallow(
       <StepList {...props}>
-        <Step title="Step 1" stepHref="#" status="not_started">
+        <Step
+          editable
+          title="Step 1"
+          stepHref="#"
+          status="not_started"
+          completedText="Completed"
+        >
           Step Description
         </Step>
-        <Step title="Step 2" stepHref="#" status="disabled">
+        <Step
+          editable
+          title="Step 2"
+          stepHref="#"
+          status="disabled"
+          completedText="Completed"
+        >
           Step Description
         </Step>
       </StepList>
@@ -64,19 +87,35 @@ describe("StepList", () => {
     expect(steps.get(1).props.editText).toEqual(props.editText);
   });
 
-  describe("when submitDisabled is true", () => {
-    it("disables button link", () => {
-      // must mount so disabled attribute
-      // can be passed to actual button element
-      const wrapper = shallow(
-        <StepList {...props} submitPageDisabled>
-          <Step title="Step 1" stepHref="#" status="not_started">
-            Step Description
-          </Step>
-        </StepList>
-      );
+  it("does not override a Step number if one is defined", () => {
+    const wrapper = shallow(
+      <StepList {...props}>
+        <Step
+          editable
+          number={4}
+          title="Upload documents"
+          stepHref="#"
+          status="not_started"
+          completedText="Completed"
+        >
+          Step Description
+        </Step>
+      </StepList>
+    );
 
-      expect(wrapper.find("ButtonLink").prop("disabled")).toBe(true);
-    });
+    const steps = wrapper.find("Step");
+    expect(steps.first().prop("number")).toBe(4);
+  });
+
+  it("renders when children are not steps", () => {
+    const TestComponent = () => <div />;
+    const wrapper = shallow(
+      <StepList {...props}>
+        <TestComponent />
+        <TestComponent />
+      </StepList>
+    );
+
+    expect(wrapper.find(TestComponent)).toHaveLength(2);
   });
 });

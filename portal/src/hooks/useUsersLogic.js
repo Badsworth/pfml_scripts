@@ -1,28 +1,27 @@
 import {
-  NetworkError,
+  UnauthorizedError,
   UserNotFoundError,
   UserNotReceivedError,
 } from "../errors";
+import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
 import UsersApi from "../api/UsersApi";
-import routes from "../routes";
+import tracker from "../services/tracker";
 import { useRouter } from "next/router";
 
 /**
  * Hook that defines user state
  * @param {object} props
  * @param {object} props.appErrorsLogic - Utilities for set application's error  state
- * @param {Function} props.appErrorsLogic.setAppErrors - Set application error state
+ * @param {boolean} props.isLoggedIn
  * @param {object} props.portalFlow - Utilities for navigating portal application
- * @param {Function} props.portalFlow.goToNextPage - Navigate to next page in application
  * @returns {object} { user: User, loadUser: Function }
  */
 const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
   const [user, setUser] = useState();
+  // TODO (CP-789): Remove dependency on next/router
   const router = useRouter();
-
-  let isLoadingUser = false;
 
   /**
    * Update user through a PATCH request to /users
@@ -31,6 +30,8 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
    * @param {Claim} [claim] - Update user in the context of a claim to determine the next page route.
    */
   const updateUser = async (user_id, patchData, claim) => {
+    appErrorsLogic.clearErrors();
+
     try {
       const { user } = await usersApi.updateUser(user_id, patchData);
 
@@ -39,8 +40,6 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
       const context = claim ? { claim, user } : { user };
       const params = claim ? { claim_id: claim.application_id } : null;
       portalFlow.goToNextPage(context, params);
-
-      appErrorsLogic.clearErrors();
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -51,39 +50,35 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
    * and add user to application's state
    */
   const loadUser = async () => {
+    appErrorsLogic.clearErrors();
+
     if (!isLoggedIn) {
       throw new Error("Cannot load user before logging in to Cognito");
     }
     // Caching logic: if user has already been loaded, just reuse the cached user
     if (user) return;
-    // Locking logic: prevent simultaneous calls to the same API
-    // TODO (CP-757): Abstract out this pattern
-    if (isLoadingUser) return;
 
     try {
-      isLoadingUser = true;
-      const { user, success } = await usersApi.getCurrentUser();
+      const { user } = await usersApi.getCurrentUser();
 
-      if (success && user) {
-        setUser(user);
-        appErrorsLogic.clearErrors();
-      } else {
-        throw new UserNotReceivedError();
+      if (!user) {
+        throw new UserNotReceivedError("User not received in loadUser");
       }
+
+      setUser(user);
     } catch (error) {
-      // Show user not found error unless it's a network error
-      let errorToSet;
+      if (error instanceof UnauthorizedError) {
+        // API returns a 401 (UnauthorizedError) if they don't find a matching
+        // user in the database. This could mean our post-confirmation hook
+        // timed out or failed. We redirect the user to the password reset
+        // page, which triggers the post confirmation hook again upon a reset.
+        tracker.noticeError(new UserNotFoundError(error.message));
+        portalFlow.goTo(routes.auth.resetPassword, { "user-not-found": true });
 
-      if (error instanceof NetworkError) {
-        errorToSet = error;
-      } else {
-        errorToSet = new UserNotFoundError();
-        // We still want to log original error
-        console.error(error);
+        return;
       }
-      appErrorsLogic.catchError(errorToSet);
-    } finally {
-      isLoadingUser = false;
+
+      appErrorsLogic.catchError(error);
     }
   };
 
@@ -95,14 +90,41 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     if (!user) throw new Error("User not loaded");
     if (
       !user.consented_to_data_sharing &&
-      // TODO CP-732: Once we switch to using a custom router we can probably use portalFlow instead of directly checking the router pathname
+      // TODO (CP-732): Once we switch to using a custom router we can probably use portalFlow instead of directly checking the router pathname
       !router.pathname.includes(routes.user.consentToDataSharing)
     ) {
       router.push(routes.user.consentToDataSharing);
     }
   };
 
-  return { user, updateUser, loadUser, requireUserConsentToDataAgreement };
+  /**
+   * Redirect to Employer Portal if role is employer and current page is claims route
+   * redirect to Claimant Portal if role is not employer and current page is employers route
+   */
+  const requireUserRole = () => {
+    //  Allow roles to view data sharing consent page
+    const route = router.pathname;
+    if (route === routes.user.consentToDataSharing) return;
+
+    // Portal currently does not support hybrid account (both Employer AND Claimant account)
+    // If user has Employer role, they cannot access Claimant Portal regardless of multiple roles
+    if (!user.hasEmployerRole && isEmployersRoute(route)) {
+      router.push(routes.applications.dashboard);
+      return;
+    }
+
+    if (user.hasEmployerRole && isApplicationsRoute(route)) {
+      router.push(routes.employers.dashboard);
+    }
+  };
+
+  return {
+    user,
+    updateUser,
+    loadUser,
+    requireUserConsentToDataAgreement,
+    requireUserRole,
+  };
 };
 
 export default useUsersLogic;

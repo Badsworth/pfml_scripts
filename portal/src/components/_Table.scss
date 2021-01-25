@@ -1,0 +1,19 @@
+// Further theme the USWDS table component. These properties
+// don't have themeable Sass variables, so we use CSS for these.
+.c-table {
+  thead th,
+  thead td {
+    // USWDS removes the background for borderless tables, but we
+    // always want the table headers to have a background
+    background-color: color($theme-table-header-background-color);
+  }
+
+  tr {
+    // Increase size of the border
+    border-bottom: 2px solid color($theme-table-border-color);
+  }
+
+  th:first-child {
+    padding-left: units(2);
+  }
+}

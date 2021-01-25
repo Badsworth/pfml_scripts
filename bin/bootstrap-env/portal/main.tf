@@ -36,9 +36,7 @@ output "cognito_user_pool_client_id" {
 module "massgov_pfml" {
   cognito_extra_redirect_urls = []
   cognito_extra_logout_urls   = []
-
-  # Integrations
-  cognito_post_confirmation_lambda_arn = null
+  cognito_enable_provisioned_concurrency = false
 
   # You probably don't need to change the variables below:
   source                 = "../../template"

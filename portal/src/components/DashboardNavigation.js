@@ -13,11 +13,11 @@ function DashboardNavigation(props) {
 
   const links = [
     {
-      href: routes.home,
+      href: routes.applications.dashboard,
       label: t("components.dashboardNavigation.createApplicationLink"),
     },
     {
-      href: routes.applications,
+      href: routes.applications.index,
       label: t("components.dashboardNavigation.applicationsLink"),
     },
   ];

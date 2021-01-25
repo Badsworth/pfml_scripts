@@ -1,240 +1,435 @@
+import PaymentPreference, {
+  PaymentPreferenceMethod,
+} from "../../src/models/PaymentPreference";
+import { Auth } from "@aws-amplify/auth";
 import Claim from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import ClaimsApi from "../../src/api/ClaimsApi";
-import User from "../../src/models/User";
-import portalRequest from "../../src/api/portalRequest";
 
-jest.mock("../../src/api/portalRequest");
+jest.mock("@aws-amplify/auth");
+jest.mock("../../src/services/tracker");
+
+const mockFetch = ({
+  response = { data: [], errors: [], warnings: [] },
+  ok = true,
+  status = 200,
+}) => {
+  return jest.fn().mockResolvedValueOnce({
+    json: jest.fn().mockResolvedValueOnce(response),
+    ok,
+    status,
+  });
+};
 
 describe("ClaimsApi", () => {
-  let user;
   /** @type {ClaimsApi} */
   let claimsApi;
+  const accessTokenJwt =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
+  const baseRequestHeaders = {
+    Authorization: `Bearer ${accessTokenJwt}`,
+    "Content-Type": "application/json",
+  };
 
   beforeEach(() => {
+    process.env.featureFlags = {};
     jest.resetAllMocks();
-    user = new User({ user_id: "mock-user-id" });
-    claimsApi = new ClaimsApi({ user });
+    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
+      Promise.resolve({
+        accessToken: { jwtToken: accessTokenJwt },
+      })
+    );
+
+    claimsApi = new ClaimsApi();
+  });
+
+  describe("getClaim", () => {
+    let claim;
+
+    beforeEach(() => {
+      claim = new Claim({ application_id: "mock-application_id" });
+      global.fetch = mockFetch({
+        response: {
+          data: claim,
+          warnings: [
+            {
+              field: "first_name",
+              type: "required",
+              message: "First name is required",
+            },
+          ],
+        },
+      });
+    });
+
+    it("sends GET request to /applications/:application_id", async () => {
+      await claimsApi.getClaim(claim.application_id);
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}`,
+        {
+          body: null,
+          headers: baseRequestHeaders,
+          method: "GET",
+        }
+      );
+    });
+
+    it("includes feature flag headers when relevant feature flags are enabled", async () => {
+      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
+
+      await claimsApi.getClaim(claim.application_id);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Require-Other-Leaves": true,
+          },
+        })
+      );
+    });
+
+    it("resolves with claim, and warnings properties", async () => {
+      const { claim: claimResponse, ...rest } = await claimsApi.getClaim(
+        claim.application_id
+      );
+
+      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toEqual(claim);
+      expect(rest).toMatchInlineSnapshot(`
+        Object {
+          "warnings": Array [
+            Object {
+              "field": "first_name",
+              "message": "First name is required",
+              "type": "required",
+            },
+          ],
+        }
+      `);
+    });
   });
 
   describe("getClaims", () => {
     describe("successful request", () => {
-      beforeEach(() => {
-        portalRequest.mockResolvedValueOnce({
-          data: [
-            {
-              application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
-            },
-          ],
-          status: 200,
-          success: true,
-        });
+      let claim;
 
-        // Needed for workaround in claimsApi.getClaims
-        // This won't be needed once https://lwd.atlassian.net/browse/API-290 is complete
-        // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-        portalRequest.mockResolvedValueOnce({
-          data: {
-            application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
+      beforeEach(() => {
+        claim = new Claim({ application_id: "mock-application_id" });
+        global.fetch = mockFetch({
+          response: {
+            data: [
+              {
+                ...claim,
+              },
+            ],
           },
-          status: 200,
-          success: true,
         });
       });
 
       it("sends GET request to /applications", async () => {
         await claimsApi.getClaims();
-        expect(portalRequest).toHaveBeenCalledWith(
-          "GET",
-          "/applications",
-          null,
+        expect(fetch).toHaveBeenCalledWith(
+          `${process.env.apiUrl}/applications`,
           {
-            user_id: user.user_id,
+            body: null,
+            headers: baseRequestHeaders,
+            method: "GET",
           }
         );
       });
 
-      it("resolves with success, status, and claim instance", async () => {
-        const result = await claimsApi.getClaims();
-        expect(result).toEqual({
-          claims: expect.any(ClaimCollection),
-          status: 200,
-          success: true,
-        });
-        expect(result.claims.items).toEqual([
-          new Claim({ application_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f" }),
-        ]);
+      it("resolves with claims properties", async () => {
+        const { claims: claimsResponse } = await claimsApi.getClaims();
+
+        expect(claimsResponse).toBeInstanceOf(ClaimCollection);
+        expect(claimsResponse.items).toEqual([claim]);
       });
     });
   });
 
   describe("createClaim", () => {
     describe("successful request", () => {
+      let claim;
+
       beforeEach(() => {
-        portalRequest.mockResolvedValueOnce({
-          data: {
-            application_id: "mock-application_id",
+        claim = new Claim({ application_id: "mock-application_id" });
+
+        global.fetch = mockFetch({
+          response: {
+            data: {
+              ...claim,
+            },
           },
-          status: 200,
-          success: true,
+          status: 201,
         });
       });
 
       it("sends POST request to /applications", async () => {
         await claimsApi.createClaim();
-        expect(portalRequest).toHaveBeenCalledWith(
-          "POST",
-          "/applications",
-          null,
+        expect(fetch).toHaveBeenCalledWith(
+          `${process.env.apiUrl}/applications`,
           {
-            user_id: user.user_id,
+            body: null,
+            headers: baseRequestHeaders,
+            method: "POST",
           }
         );
       });
 
-      it("resolves with success, status, and claim instance", async () => {
-        const { claim: claimResponse, ...rest } = await claimsApi.createClaim();
+      it("resolves with claim properties", async () => {
+        const { claim: claimResponse } = await claimsApi.createClaim();
 
         expect(claimResponse).toBeInstanceOf(Claim);
-        expect(rest).toMatchInlineSnapshot(`
-          Object {
-            "status": 200,
-            "success": true,
-          }
-        `);
+        expect(claimResponse).toEqual(claim);
       });
     });
 
     describe("unsuccessful request", () => {
       beforeEach(() => {
-        portalRequest.mockResolvedValueOnce({
-          data: null,
+        global.fetch = mockFetch({
+          response: { data: null },
           status: 400,
-          success: false,
+          ok: false,
         });
       });
 
-      it("resolves with success, status, and and no claim instance", async () => {
-        const result = await claimsApi.createClaim();
-
-        expect(result).toMatchInlineSnapshot(`
-          Object {
-            "claim": null,
-            "status": 400,
-            "success": false,
-          }
-        `);
+      it("throws error", async () => {
+        await expect(claimsApi.createClaim()).rejects.toThrow();
       });
     });
   });
 
-  describe("updateClaim", () => {
-    let mockResponseData;
-    const claim = new Claim({
-      application_id: "mock-application_id",
-      duration_type: "type",
-    });
+  describe("completeClaim", () => {
+    let claim;
 
     beforeEach(() => {
-      mockResponseData = {
+      claim = new Claim({
         application_id: "mock-application_id",
-        duration_type: "type",
-      };
+      });
 
-      portalRequest.mockResolvedValueOnce({
-        data: mockResponseData,
-        status: 200,
-        success: true,
+      global.fetch = mockFetch({
+        response: { data: { ...claim } },
+      });
+    });
+
+    it("sends POST request to /applications/:application_id/complete_application", async () => {
+      await claimsApi.completeClaim(claim.application_id);
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}/complete_application`,
+        {
+          body: null,
+          headers: baseRequestHeaders,
+          method: "POST",
+        }
+      );
+    });
+
+    it("includes feature flag headers when relevant feature flags are enabled", async () => {
+      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
+
+      await claimsApi.completeClaim(claim.application_id);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Require-Other-Leaves": true,
+          },
+        })
+      );
+    });
+
+    it("resolves with claim properties", async () => {
+      const { claim: claimResponse } = await claimsApi.completeClaim(
+        claim.application_id
+      );
+
+      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toEqual(claim);
+    });
+  });
+
+  describe("updateClaim", () => {
+    let claim;
+
+    beforeEach(() => {
+      claim = new Claim({
+        application_id: "mock-application_id",
+      });
+
+      global.fetch = mockFetch({
+        response: { data: { ...claim } },
       });
     });
 
     it("sends PATCH request to /applications/:application_id", async () => {
       await claimsApi.updateClaim(claim.application_id, claim);
-      const { employee_ssn, ...body } = claim;
 
-      expect(portalRequest).toHaveBeenCalledWith(
-        "PATCH",
-        "/applications/mock-application_id",
-        body,
-        { user_id: user.user_id }
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}`,
+        {
+          body: JSON.stringify(claim),
+          headers: baseRequestHeaders,
+          method: "PATCH",
+        }
       );
     });
 
-    // TODO (CP-716): Remove this test once PII can be sent to the API
-    it("excludes employee_ssn field when sendPii feature flag is not set", async () => {
-      delete process.env.featureFlags.sendPii;
-      await claimsApi.updateClaim(claim.application_id, {
-        employee_ssn: "123-12-3123",
-      });
-      const requestBody = portalRequest.mock.calls[0][2];
+    it("includes feature flag headers when relevant feature flags are enabled", async () => {
+      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
 
-      expect(requestBody).toEqual(
-        expect.not.objectContaining({ employee_ssn: expect.anything() })
+      await claimsApi.updateClaim(claim.application_id, claim);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Require-Other-Leaves": true,
+          },
+        })
       );
     });
 
-    it("sends employee_ssn field when sendPii feature flag is not set", async () => {
-      process.env.featureFlags = { sendPii: true };
-
-      await claimsApi.updateClaim(claim.application_id, {
-        employee_ssn: "123-12-3123",
-      });
-      const requestBody = portalRequest.mock.calls[0][2];
-
-      expect(requestBody).toEqual(
-        expect.objectContaining({ employee_ssn: "123-12-3123" })
+    it("resolves with claim, errors and warnings properties", async () => {
+      const { claim: claimResponse, ...rest } = await claimsApi.updateClaim(
+        claim.application_id,
+        claim
       );
-    });
 
-    it("responds with success status", async () => {
-      const response = await claimsApi.updateClaim(claim.application_id, claim);
-      expect(response.success).toBeTruthy();
-    });
-
-    it("responds with an instance of a Claim with claim request parameters as properties", async () => {
-      const response = await claimsApi.updateClaim(claim.application_id, claim);
-      expect(response.claim).toEqual(new Claim(mockResponseData));
+      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toEqual(claim);
+      expect(rest).toMatchInlineSnapshot(`
+        Object {
+          "errors": undefined,
+          "warnings": Array [],
+        }
+      `);
     });
   });
 
   describe("submitClaim", () => {
-    let mockResponseData;
-    const claim = new Claim({
-      application_id: "mock-application_id",
-      duration_type: "type",
-    });
+    let claim;
 
     beforeEach(() => {
-      mockResponseData = {
+      claim = new Claim({
         application_id: "mock-application_id",
-        duration_type: "type",
-      };
+      });
 
-      portalRequest.mockResolvedValueOnce({
-        data: mockResponseData,
-        status: 200,
-        success: true,
+      global.fetch = mockFetch({
+        response: { data: { ...claim } },
+        status: 201,
       });
     });
 
     it("sends POST request to /applications/:application_id/submit_application", async () => {
       await claimsApi.submitClaim(claim.application_id);
-      expect(portalRequest).toHaveBeenCalledWith(
-        "POST",
-        "/applications/mock-application_id/submit_application",
-        null,
-        { user_id: user.user_id }
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}/submit_application`,
+        {
+          body: null,
+          headers: baseRequestHeaders,
+          method: "POST",
+        }
       );
     });
 
-    it("responds with success status", async () => {
-      const response = await claimsApi.submitClaim(claim.application_id);
-      expect(response.success).toBeTruthy();
+    it("includes feature flag headers when relevant feature flags are enabled", async () => {
+      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
+
+      await claimsApi.submitClaim(claim.application_id);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Require-Other-Leaves": true,
+          },
+        })
+      );
     });
 
-    it("responds with an instance of a Claim with claim request parameters as properties", async () => {
-      const response = await claimsApi.submitClaim(claim.application_id);
-      expect(response.claim).toBeInstanceOf(Claim);
+    it("resolves with claim properties", async () => {
+      const { claim: claimResponse } = await claimsApi.submitClaim(
+        claim.application_id
+      );
+
+      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toEqual(claim);
+    });
+  });
+
+  describe("submitPaymentPreference", () => {
+    let claim, payment_preference;
+
+    beforeEach(() => {
+      payment_preference = new PaymentPreference({
+        payment_method: PaymentPreferenceMethod.check,
+      });
+
+      claim = new Claim({ payment_preference });
+
+      global.fetch = mockFetch({
+        response: { data: { ...claim } },
+        status: 201,
+      });
+    });
+
+    it("sends POST request to /applications/:application_id/submit_payment_preference", async () => {
+      await claimsApi.submitPaymentPreference(
+        claim.application_id,
+        payment_preference
+      );
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}/submit_payment_preference`,
+        {
+          body: JSON.stringify(payment_preference),
+          headers: baseRequestHeaders,
+          method: "POST",
+        }
+      );
+    });
+
+    it("includes feature flag headers when relevant feature flags are enabled", async () => {
+      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
+
+      await claimsApi.submitPaymentPreference(
+        claim.application_id,
+        payment_preference
+      );
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Require-Other-Leaves": true,
+          },
+        })
+      );
+    });
+
+    it("resolves with claim properties", async () => {
+      const {
+        claim: claimResponse,
+        ...rest
+      } = await claimsApi.submitPaymentPreference(
+        claim.application_id,
+        payment_preference
+      );
+
+      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toEqual(claim);
+      expect(rest).toMatchInlineSnapshot(`
+        Object {
+          "errors": undefined,
+          "warnings": Array [],
+        }
+      `);
     });
   });
 });

@@ -30,11 +30,4 @@ resource "aws_lb_target_group" "app" {
     healthy_threshold   = var.service_app_count
     unhealthy_threshold = var.service_app_count
   }
-
-  # stickiness is not supported for NLBs, but must be
-  # provided due to a terraform-provider-aws bug.
-  stickiness {
-    enabled = false
-    type    = "lb_cookie"
-  }
 }

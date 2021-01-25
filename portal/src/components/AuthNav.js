@@ -1,6 +1,8 @@
 import Button from "./Button";
+import ButtonLink from "./ButtonLink";
 import PropTypes from "prop-types";
 import React from "react";
+import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -9,29 +11,57 @@ import { useTranslation } from "../locales/i18n";
 const AuthNav = (props) => {
   const { t } = useTranslation();
   const user = props.user || {};
+  const isLoggedIn = !!user.email_address;
+
+  const back = (
+    <ButtonLink
+      href={routes.external.massgov.index}
+      className="width-auto"
+      inversed
+      variation="unstyled"
+      data-test-auth-nav="massgov_link"
+    >
+      {t("pages.authCreateAccount.backButton")}
+    </ButtonLink>
+  );
+
+  const login = (
+    <ButtonLink
+      href={routes.auth.login}
+      className="width-auto"
+      inversed
+      variation="unstyled"
+      data-test-auth-nav="login_link"
+    >
+      {t("pages.authCreateAccount.logInFooterLink")}
+    </ButtonLink>
+  );
+
+  const logout = (
+    <React.Fragment>
+      <span
+        className="display-inline-block margin-right-1"
+        data-test-auth-nav="email_address"
+      >
+        {user.email_address}
+      </span>
+      <Button
+        className="width-auto"
+        inversed
+        onClick={props.onLogout}
+        variation="unstyled"
+        data-test-auth-nav="logout_button"
+      >
+        {t("components.authNav.logOutButton")}
+      </Button>
+    </React.Fragment>
+  );
 
   return (
-    <div className="bg-primary font-body-sm text-white text-right">
-      <div className="grid-container">
-        <div className="grid-row">
-          <div className="grid-col-fill margin-y-1">
-            {user.email_address ? (
-              <React.Fragment>
-                <span className="display-inline-block margin-right-1">
-                  {user.email_address}
-                </span>
-                <Button
-                  className="width-auto"
-                  inversed
-                  onClick={props.onLogout}
-                  variation="unstyled"
-                >
-                  {t("components.authNav.logOutButton")}
-                </Button>
-              </React.Fragment>
-            ) : null}
-          </div>
-        </div>
+    <div className="flex-fill margin-y-1">
+      <div className="grid-row grid-gap">
+        {!isLoggedIn && <div className="grid-col">{back}</div>}
+        <div className="grid-col text-right">{isLoggedIn ? logout : login}</div>
       </div>
     </div>
   );
@@ -39,7 +69,7 @@ const AuthNav = (props) => {
 
 AuthNav.propTypes = {
   user: PropTypes.shape({
-    username: PropTypes.string,
+    email_address: PropTypes.string,
   }),
   onLogout: PropTypes.func.isRequired,
 };

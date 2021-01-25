@@ -52,6 +52,7 @@ InputChoiceGroup.propTypes = {
   choices: PropTypes.arrayOf(
     PropTypes.shape({
       checked: PropTypes.bool,
+      disabled: PropTypes.bool,
       hint: PropTypes.node,
       label: PropTypes.node.isRequired,
       value: PropTypes.oneOfType([PropTypes.number, PropTypes.string])

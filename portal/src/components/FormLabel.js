@@ -8,38 +8,54 @@ import classnames from "classnames";
  *
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/form-controls)
  */
-function FormLabel({ component = "label", small = false, ...props }) {
+function FormLabel({
+  component = "label",
+  small = false,
+  labelClassName = "text-bold",
+  ...props
+}) {
   const LabelElement = component;
   const errorMsgId = props.inputId + "_error";
   const hasError = !!props.errorMsg;
 
-  const labelClasses = classnames("usa-label maxw-none", {
+  const labelClasses = classnames(`usa-label ${labelClassName}`, {
     "usa-label--error": hasError,
     "usa-legend": component === "legend",
-    "font-heading-sm": component === "legend" && small,
-    "font-heading-lg line-height-sans-2 text-bold": !small,
+    "font-heading-xs measure-5": small,
+    "font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet": !small,
   });
 
-  const hintClasses = classnames({
-    // Apply hint text styling if the hint is a plain string
-    "display-block line-height-sans-5 usa-hint": typeof props.hint === "string",
-    // Add a bit more top margin between the label and hint when the label text is large
-    "margin-top-05": !small,
+  const hintClasses = classnames("display-block line-height-sans-5 measure-5", {
+    // Use hint styling for small labels
+    "usa-hint text-base-darkest": small,
+    // Use lead styling for regular labels
+    "usa-intro": !small,
   });
+
+  const exampleClasses =
+    "display-block line-height-sans-5 usa-hint text-base-dark measure-5";
 
   return (
     <React.Fragment>
       <LabelElement className={labelClasses} htmlFor={props.inputId}>
         {props.children}
         {props.optionalText && (
-          <span className="usa-hint text-normal"> {props.optionalText}</span>
+          <span className="usa-hint text-base-dark text-normal">
+            {" " + props.optionalText}
+          </span>
         )}
       </LabelElement>
 
       {props.hint && <span className={hintClasses}>{props.hint}</span>}
 
+      {props.example && <span className={exampleClasses}>{props.example}</span>}
+
       {hasError && (
-        <span className="usa-error-message" id={errorMsgId} role="alert">
+        <span
+          className="usa-error-message measure-5"
+          id={errorMsgId}
+          role="alert"
+        >
           {props.errorMsg}
         </span>
       )}
@@ -61,6 +77,10 @@ FormLabel.propTypes = {
    */
   errorMsg: PropTypes.node,
   /**
+   * Localized example text
+   */
+  example: PropTypes.string,
+  /**
    * Localized hint text
    */
   hint: PropTypes.node,
@@ -80,6 +100,10 @@ FormLabel.propTypes = {
    * Defaults to false
    */
   small: PropTypes.bool,
+  /**
+   * Override the label's default text-bold class
+   */
+  labelClassName: PropTypes.string,
 };
 
 export default FormLabel;

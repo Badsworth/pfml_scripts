@@ -4,7 +4,7 @@ output "security_groups" {
 
 output "ecs_task_arns" {
   value = {
-    for taskname in keys(aws_ecs_task_definition.ecs_tasks) :
-    taskname => aws_ecs_task_definition.ecs_tasks[taskname].arn
+    for task_name in keys(aws_ecs_task_definition.ecs_tasks) :
+    task_name => aws_ecs_task_definition.ecs_tasks[task_name].arn
   }
 }

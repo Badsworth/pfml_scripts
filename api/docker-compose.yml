@@ -1,8 +1,8 @@
-version: "3.4"
+version: "3.8"
 
 services:
   mass-pfml-db:
-    image: postgres:11.6-alpine
+    image: postgres:12.4-alpine
     container_name: "mass-pfml-db"
     ports:
       - "5432:5432"
@@ -28,40 +28,76 @@ services:
         - RUN_USER=${RUN_USER:-nodummy}
     image: mass-pfml-api:dev
     container_name: mass-pfml-api
+    init: true
     links:
       - mass-pfml-db
     ports:
       - "1550:1550"
-    # We set `:z` on the bind mounts to support Linux systems with SELinux, on
-    # other platforms it has no effect.
-    #
-    # https://docs.docker.com/storage/bind-mounts/
-    volumes:
-      # To make local development easier, mount project code so that we don't
-      # have to rebuild the docker container every time we run
-      - .:/app:z
     environment:
-      - ENVIRONMENT=local
-      - ENABLE_FULL_ERROR_LOGS=1
-      - PYTHONPATH=/app/
-      - DB_HOST=mass-pfml-db
-      - DB_NAME=pfml
-      - DB_USERNAME=pfml
-      - DB_PASSWORD=secret123
-      - CORS_ORIGINS=http://localhost:3000
-      - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json
+      # Misc. non-app settings
       - TERM=${TERM:-xterm-256color}
       - 'PS1=${DOCKER_PS1:-[docker] \w: }'
       - 'LSCOLORS=${DOCKER_LSCOLORS:- }'
-      - PY_RUN_CMD_OPT=POETRY
+      - RUN_CMD_OPT=NATIVE
+      - ENABLE_FULL_ERROR_LOGS=1
+      - PYTHONPATH=/app/
+      # Application configuration
+      - ENVIRONMENT=local
+      - DB_HOST=mass-pfml-db
+      - DB_NAME=pfml
+      - DB_ADMIN_USERNAME=pfml
+      - DB_ADMIN_PASSWORD=secret123
+      - DB_USERNAME=pfml_api
+      - DB_PASSWORD=secret123
+      - DB_NESSUS_PASSWORD=nessussecret123
+      - CORS_ORIGINS=http://localhost:3000
+      - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json
+      - DASHBOARD_PASSWORD=secret123
+      - LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG
       - ENABLE_EMPLOYEE_ENDPOINTS=1
-      - ENABLE_EMPLOYER_ENDPOINTS=1
+      - FOLDER_PATH=dor_mock
+      - FINEOS_FOLDER_PATH=fineos_mock
+      # Enable this variable after initial full load
+      # - ELIGIBILITY_FEED_MODE=updates
+      # Enable this variable to configure /rmv-check
+      - RMV_CHECK_BEHAVIOR=fully_mocked
+      - RMV_CHECK_MOCK_SUCCESS=1
       # Enable these variables to use a real FINEOS API instead of a mock:
-#      - FINEOS_CLIENT_CUSTOMER_API_URL=https://dt1-api.masspfml.fineos.com/customer-services/
-#      - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://dt1-claims-webapp.masspfml.fineos.com/wscomposer/
-#      - FINEOS_CLIENT_OAUTH2_URL=https://dt1-api.masspfml.fineos.com/oauth2/token
-#      - FINEOS_CLIENT_OAUTH2_CLIENT_ID=4gjtcl7d0rca0jleujea0veqrg
-#      - FINEOS_CLIENT_OAUTH2_CLIENT_SECRET=...
+      # - FINEOS_CLIENT_CUSTOMER_API_URL=https://idt-api.masspfml.fineos.com/customerapi/
+      # - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://idt-api.masspfml.fineos.com/integration-services/wscomposer/
+      # - FINEOS_CLIENT_GROUP_CLIENT_API_URL=https://idt-api.masspfml.fineos.com/groupclientapi/
+      # - FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL=https://idt-api.masspfml.fineos.com/integration-services/
+      # - FINEOS_CLIENT_OAUTH2_URL=https://idt-api.masspfml.fineos.com/oauth2/token
+      # - FINEOS_CLIENT_OAUTH2_CLIENT_ID=...
+      # - FINEOS_CLIENT_OAUTH2_CLIENT_SECRET=...
+      # - OAUTHLIB_INSECURE_TRANSPORT=1
+      # Disable this variable and set the following three variables to use a real Service Now API instead of a mock:
+      - ENABLE_MOCK_SERVICE_NOW_CLIENT=1
+      # - SERVICE_NOW_BASE_URL=...
+      # - SERVICE_NOW_USERNAME=...
+      # - SERVICE_NOW_PASSWORD=...
+      - PORTAL_BASE_URL=https://paidleave.mass.gov
+      - ENABLE_APPLICATION_FRAUD_CHECK=0
+      # Payments env vars
+      # - FINEOS_VENDOR_MAX_HISTORY_DATE=2021-01-01
+      # - FINEOS_PAYMENT_MAX_HISTORY_DATE=2021-01-01
+      # - PAYMENTS_GAX_BIEVNT_EMAIL=
+      # - PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL=
+      - DFML_PROJECT_MANAGER_EMAIL_ADDRESS=
+      - PFML_EMAIL_ADDRESS=noreplypfml@mass.gov
+      - BOUNCE_FORWARDING_EMAIL_ADDRESS=noreplypfml@mass.gov
+      # Uncomment and set these in order to run the FINEOS and CTR ECS tasks locally with real S3
+      # You'll also need to configure the mount for your ~/.aws/credentials in
+      # docker-compose.override.yml in order for this to work.
+      #- FINEOS_DATA_EXPORT_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/fake-fineos-export/
+      #- FINEOS_DATA_IMPORT_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/fake-fineos-import/
+      #- PFML_CTR_INBOUND_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/ctr/inbound
+      #- PFML_CTR_OUTBOUND_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/ctr/outbound
+      #- PFML_FINEOS_INBOUND_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/cps/inbound
+      #- PFML_FINEOS_OUTBOUND_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/cps/outbound
+      #- PFML_ERROR_REPORTS_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/error-reports/outbound
+      #- AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
+
     networks:
       main:
         aliases:

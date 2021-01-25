@@ -1,5 +1,3 @@
-import boto3
-
 import massgov.pfml.cognito_post_confirmation_lambda.lib as lib
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
@@ -7,9 +5,7 @@ import massgov.pfml.util.logging
 massgov.pfml.util.logging.init(__name__)
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-aws_ssm = boto3.client("ssm", region_name="us-east-1")
-
-db_config = db.get_config(aws_ssm)
+db_config = db.get_config()
 db_session_raw = db.init(db_config)
 
 

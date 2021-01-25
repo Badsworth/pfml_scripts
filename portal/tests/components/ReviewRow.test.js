@@ -7,13 +7,14 @@ function render(customProps = {}) {
     {
       children: "Medical",
       label: "Leave type",
+      level: "3",
     },
     customProps
   );
   const component = <ReviewRow {...props} />;
 
   return {
-    props: customProps,
+    props,
     wrapper: shallow(component),
   };
 }
@@ -33,6 +34,16 @@ describe("ReviewRow", () => {
     });
 
     expect(wrapper.find(".test-html")).toHaveLength(1);
+  });
+
+  it("excludes border classes when noBorder is set", () => {
+    const { wrapper: borderlessRow } = render({
+      noBorder: true,
+    });
+    const { wrapper: borderedRow } = render();
+
+    expect(borderedRow.prop("className")).toMatch("border");
+    expect(borderlessRow.prop("className")).not.toMatch("border");
   });
 
   describe("when editHref is defined", () => {

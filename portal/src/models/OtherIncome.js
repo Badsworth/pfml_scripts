@@ -12,6 +12,7 @@ class OtherIncome extends BaseModel {
       income_end_date: null,
       income_start_date: null,
       income_type: null,
+      other_income_id: null,
     };
   }
 }
@@ -19,20 +20,33 @@ class OtherIncome extends BaseModel {
 /**
  * Enums for the OtherIncome `income_type` field
  * @enum {string}
- * TODO: (CP-567) make sure these enum strings match the API's values
  */
 export const OtherIncomeType = {
-  // The ordering of these keys affects the order they're displayed to the user
   /* eslint-disable sort-keys */
-  workersCompensation: "Workers Comp",
-  unemployment: "Unemployment",
+  workersCompensation: "Workers Compensation",
+  unemployment: "Unemployment Insurance",
   ssdi: "SSDI",
-  retirementDisability: "Retirement Disability",
-  jonesAct: "Jones Act",
-  railroadRetirement: "Railroad Retirement",
-  otherEmployer: "Other Employer",
-  selfEmployment: "Self-Employment",
+  retirementDisability: "Disability benefits under Gov't retirement plan",
+  jonesAct: "Jones Act benefits",
+  railroadRetirement: "Railroad Retirement benefits",
+  otherEmployer: "Earnings from another employment/self-employment",
+  // Unknown may be displayed to Leave Admins, but isn't
+  // an option we display to Claimants
+  unknown: "Unknown",
   /* eslint-enable sort-keys */
+};
+
+/**
+ * Enums for the OtherIncome `income_amount_frequency` field
+ * @enum {string}
+ */
+export const OtherIncomeFrequency = {
+  // The ordering here defines the ordering of elements on the page so we override the linter rule
+  /* eslint-disable sort-keys */
+  daily: "Per Day",
+  weekly: "Per Week",
+  monthly: "Per Month",
+  inTotal: "In Total",
 };
 
 export default OtherIncome;

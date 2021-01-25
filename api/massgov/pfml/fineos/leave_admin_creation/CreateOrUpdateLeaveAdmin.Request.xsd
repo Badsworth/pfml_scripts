@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tns="http://www.fineos.com/frontoffice/externaluserprovisioning/external" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://www.fineos.com/frontoffice/externaluserprovisioning/external" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="CreateOrUpdateEmployerViewpointUserRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="partyReference" type="xs:string" />
+        <xs:element name="userID" type="xs:string" />
+        <xs:element name="fullName" type="xs:string" />
+        <xs:element name="emailAddress" type="xs:string" />
+        <xs:element name="phone">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="contactAreaCode" type="xs:string" />
+              <xs:element name="contactExtensionCode" type="xs:string" />
+              <xs:element name="contactInternationalCode" type="xs:string" />
+              <xs:element name="contactNumber" type="xs:string" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="userRole" type="xs:string" />
+        <xs:element name="enabled" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

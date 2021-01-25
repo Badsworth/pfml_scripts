@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ConsentToDataSharing renders the page 1`] = `
+exports[`ConsentToDataSharing shows the correct content for non-employers 1`] = `
 <form
-  className="usa-form measure-5"
+  className="usa-form"
   onSubmit={[Function]}
 >
   <Title>
@@ -11,7 +11,7 @@ exports[`ConsentToDataSharing renders the page 1`] = `
   <p
     className="margin-bottom-2"
   >
-    The information you provide on this website will be used to administer the Department of Family and Medical Leave (DFML) program.
+    The information you provide on this website will be used to administer the Paid Family and Medical Leave (PFML) program.
   </p>
   <Accordion>
     <AccordionItem
@@ -71,12 +71,104 @@ exports[`ConsentToDataSharing renders the page 1`] = `
     noIcon={true}
     state="info"
   >
-    By continuing, I am indicating that I have read and understood the above user agreements. I give the DFML permission to collect, share, and use my information consistent with the terms of the agreements linked above.
+    <p>
+      By continuing, I am indicating that I have read and understood the above user agreements. I give the Department of Family and Medical Leave permission to collect, share, and use my information consistent with the terms of the agreements linked above.
+    </p>
+    <Button
+      loading={false}
+      type="submit"
+    >
+      Agree and continue
+    </Button>
   </Alert>
-  <Button
-    type="submit"
+</form>
+`;
+
+exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
+<form
+  className="usa-form"
+  onSubmit={[Function]}
+>
+  <Title>
+    How this website uses your information
+  </Title>
+  <p
+    className="margin-bottom-2"
   >
-    Agree and Continue
-  </Button>
+    The information you provide on this website will be used to administer the Paid Family and Medical Leave (PFML) program.
+  </p>
+  <Accordion>
+    <AccordionItem
+      heading="Reviewing paid leave applications"
+    >
+      <p>
+        We need this information to:
+      </p>
+      <ul
+        className="usa-list"
+      >
+        <li
+          key="0"
+        >
+          Check eligibility for coverage
+        </li>
+        <li
+          key="1"
+        >
+          Determine your employee’s benefit amount
+        </li>
+        <li
+          key="2"
+        >
+          Administer the program and meet reporting requirements
+        </li>
+        <li
+          key="3"
+        >
+          Give you the best service possible
+        </li>
+      </ul>
+    </AccordionItem>
+    <AccordionItem
+      heading="How we use your data"
+    >
+      <p>
+        We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to a claim with health care providers and contracted private partners.
+      </p>
+    </AccordionItem>
+    <AccordionItem
+      heading="Full user agreements"
+    >
+      <p>
+        <Trans
+          components={
+            Object {
+              "informed-consent-link": <a
+                href="https://www.mass.gov/paidleave-informedconsent"
+              />,
+              "privacy-policy-link": <a
+                href="https://www.mass.gov/privacypolicy"
+              />,
+            }
+          }
+          i18nKey="pages.userConsentToDataSharing.fullUserAgreementBody"
+        />
+      </p>
+    </AccordionItem>
+  </Accordion>
+  <Alert
+    noIcon={true}
+    state="info"
+  >
+    <p>
+      By continuing, I am indicating that I have read and understood the above user agreements. I give the Department of Family and Medical Leave permission to collect, share, and use my information consistent with the terms of the agreements linked above.
+    </p>
+    <Button
+      loading={false}
+      type="submit"
+    >
+      Agree and continue
+    </Button>
+  </Alert>
 </form>
 `;

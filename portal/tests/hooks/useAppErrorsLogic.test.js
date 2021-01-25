@@ -1,4 +1,10 @@
-import { ForbiddenError, NetworkError } from "../../src/errors";
+import {
+  DocumentsLoadError,
+  DocumentsUploadError,
+  ForbiddenError,
+  NetworkError,
+  ValidationError,
+} from "../../src/errors";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { act } from "react-dom/test-utils";
@@ -35,7 +41,7 @@ describe("useAppErrorsLogic", () => {
         appErrorsLogic.catchError(new Error());
       });
 
-      expect(appErrorsLogic.appErrors.items[0].type).toEqual("Error");
+      expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
       expect(tracker.noticeError).toHaveBeenCalledTimes(1);
       expect(console.error).toHaveBeenCalledTimes(1);
     });
@@ -46,8 +52,9 @@ describe("useAppErrorsLogic", () => {
           appErrorsLogic.catchError(new Error("Default error message"));
         });
 
+        expect(appErrorsLogic.appErrors.items).toHaveLength(1);
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+          `"Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365."`
         );
       });
     });
@@ -58,9 +65,24 @@ describe("useAppErrorsLogic", () => {
           appErrorsLogic.catchError(new ForbiddenError());
         });
 
+        expect(appErrorsLogic.appErrors.items).toHaveLength(1);
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
           `"Sorry, an authorization error was encountered. Please log out and then log in to try again."`
         );
+      });
+
+      it("tracks the error as an event in New Relic", () => {
+        const error = new ForbiddenError("Failed with forbidden error");
+
+        act(() => {
+          appErrorsLogic.catchError(error);
+        });
+
+        expect(tracker.trackEvent).toHaveBeenCalledWith("ApiRequestError", {
+          errorMessage: error.message,
+          errorName: "ForbiddenError",
+        });
+        expect(tracker.noticeError).not.toHaveBeenCalled();
       });
     });
 
@@ -70,23 +92,291 @@ describe("useAppErrorsLogic", () => {
           appErrorsLogic.catchError(new NetworkError());
         });
 
+        expect(appErrorsLogic.appErrors.items).toHaveLength(1);
         expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
         );
+      });
+
+      it("tracks the error as JavaScriptError in New Relic", () => {
+        const error = new NetworkError();
+
+        act(() => {
+          appErrorsLogic.catchError(error);
+        });
+
+        expect(tracker.noticeError).toHaveBeenCalledWith(error);
+        expect(tracker.trackEvent).not.toHaveBeenCalled();
       });
     });
 
-    describe("when multiple errors are caught", () => {
-      it("adds adds all errors to the app errors list", () => {
+    describe("when DocumentsLoadError is thrown", () => {
+      it("displays an internationalized message", () => {
+        act(() => {
+          appErrorsLogic.catchError(
+            new DocumentsLoadError("mock-application-id")
+          );
+        });
+
+        expect(appErrorsLogic.appErrors.items).toHaveLength(1);
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at <contact-center-phone-link>(833) 344‑7365</contact-center-phone-link>"`
+        );
+        expect(appErrorsLogic.appErrors.items[0].meta).toEqual({
+          application_id: "mock-application-id",
+        });
+      });
+    });
+
+    describe("when DocumentsUploadError is thrown", () => {
+      it("displays an internationalized message", () => {
+        act(() => {
+          appErrorsLogic.catchError(
+            new DocumentsUploadError("mock-application-id")
+          );
+        });
+
+        expect(appErrorsLogic.appErrors.items).toHaveLength(1);
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at (833) 344‑7365."`
+        );
+        expect(appErrorsLogic.appErrors.items[0].meta).toEqual({
+          application_id: "mock-application-id",
+        });
+      });
+    });
+
+    describe("when ValidationError is thrown", () => {
+      it("sets field, rule, and type properties of AppErrorInfo", () => {
+        const issues = [
+          {
+            field: "tax_identifier",
+            type: "pattern",
+            message: "This field should have a custom error message",
+            rule: "/d{9}",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        const appErrorInfo = appErrorsLogic.appErrors.items[0];
+
+        expect(appErrorInfo).toEqual(
+          expect.objectContaining({
+            field: "tax_identifier",
+            type: "pattern",
+            rule: "/d{9}",
+          })
+        );
+      });
+
+      it("sets AppErrorInfo.message based on the issue's 'field' and 'type' properties", () => {
+        const issues = [
+          {
+            field: "tax_identifier",
+            type: "pattern",
+            message: "This field should have a custom error message",
+            rule: "/d{9}",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"Your Social Security Number or ITIN must be 9 digits."`
+        );
+      });
+
+      it("sets AppErrorInfo.message based on the issue's 'rule' property when 'field' property isn't set", () => {
+        const issues = [
+          {
+            rule: "min_leave_periods",
+            type: "multiFieldIssue",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"You must choose at least one kind of leave (continuous, reduced schedule, or intermittent)."`
+        );
+      });
+
+      it("sets AppErrorInfo.message based on the issue's 'type' property when 'field' and 'rule' properties aren't set", () => {
+        const issues = [
+          {
+            type: "fineos_client",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "documents"));
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at (833) 344‑7365."`
+        );
+      });
+
+      it("sets AppErrorInfo.message to generic field-level fallback based on the issue's 'type' when 'type' is 'pattern' and field-level message is missing", () => {
+        const issues = [
+          {
+            field: "shop_name",
+            type: "pattern",
+            message: "This validation should have a generic error message",
+            rule: "/d{9}",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"Field (shop_name) didn’t match expected format."`
+        );
+      });
+
+      it("sets AppErrorInfo.message based on the issue 'message' property when other fallback messages are missing", () => {
+        const issues = [
+          {
+            field: "unknown_field",
+            message: "does not match: [0-9]{7}",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"does not match: [0-9]{7}"`
+        );
+      });
+
+      it("sets AppErrorInfo.message to generic fallback message when issue 'message' property is not set and other fallback messages are missing", () => {
+        const issues = [
+          {
+            field: "validation_without_a_message",
+            type: "noMessage",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
+          `"Field (validation_without_a_message) has invalid value."`
+        );
+      });
+
+      it("sets appErrors in same order as issues", () => {
+        const issues = [
+          {
+            field: "first_name",
+            message: "first_name is required",
+            type: "required",
+          },
+          {
+            rule: "min_leave_periods",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(appErrorsLogic.appErrors.items).toHaveLength(2);
+        expect(appErrorsLogic.appErrors.items[0].field).toBe(issues[0].field);
+        expect(appErrorsLogic.appErrors.items[0].name).toBe("ValidationError");
+        expect(appErrorsLogic.appErrors.items[1].rule).toBe(issues[1].rule);
+      });
+
+      it("tracks each issue in New Relic", () => {
+        const issues = [
+          {
+            field: "tax_identifier",
+            type: "pattern",
+            message: "123123123 is invalid",
+            rule: "/d{9}",
+          },
+          {
+            field: "first_name",
+            type: "required",
+            message: "First name is required",
+          },
+        ];
+
+        act(() => {
+          appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+        });
+
+        expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+          issueField: "tax_identifier",
+          issueRule: "/d{9}",
+          issueType: "pattern",
+        });
+
+        expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+          issueField: "first_name",
+          issueType: "required",
+        });
+      });
+    });
+
+    describe("when multiple Errors are caught", () => {
+      beforeEach(() => {
         act(() => {
           appErrorsLogic.catchError(new Error("error 1"));
           appErrorsLogic.catchError(new Error("error 2"));
         });
+      });
 
+      it("adds adds all errors to the app errors list", () => {
         expect(appErrorsLogic.appErrors.items).toHaveLength(2);
+      });
+
+      it("tracks the errors as JavaScriptError in New Relic", () => {
         expect(tracker.noticeError).toHaveBeenCalledTimes(2);
+        expect(tracker.trackEvent).not.toHaveBeenCalled();
+      });
+
+      it("logs the errors to the console", () => {
         expect(console.error).toHaveBeenCalledTimes(2);
       });
+    });
+
+    it("returns Trans component when error type is fineos_case_creation_issues", () => {
+      const issues = [
+        {
+          message: "register_employee did not find a match",
+          type: "fineos_case_creation_issues",
+        },
+      ];
+
+      act(() => {
+        appErrorsLogic.catchError(new ValidationError(issues, "claims"));
+      });
+
+      expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(`
+        <Trans
+          components={
+            Object {
+              "mass-gov-form-link": <a
+                href="https://www.mass.gov/forms/apply-for-paid-leave-if-you-received-an-error"
+              />,
+            }
+          }
+          i18nKey="errors.claims.fineos_case_creation_issues"
+        />
+      `);
     });
   });
 

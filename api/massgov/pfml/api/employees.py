@@ -7,9 +7,8 @@ from werkzeug.exceptions import NotFound
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
-from massgov.pfml.db.models.employees import Employee
+from massgov.pfml.db.models.employees import Employee, TaxIdentifier
 from massgov.pfml.util.pydantic import PydanticBaseModel
-from massgov.pfml.util.pydantic.types import MaskedEmailStr
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 
@@ -34,8 +33,17 @@ class EmployeeResponse(PydanticBaseModel):
     middle_name: Optional[str]
     last_name: Optional[str]
     other_name: Optional[str]
-    email_address: Optional[MaskedEmailStr]
+    email_address: Optional[str]
     phone_number: Optional[str]
+
+    @classmethod
+    def from_orm(cls, employee: Employee) -> "EmployeeResponse":
+        employee_response = super().from_orm(employee)
+
+        if employee.tax_identifier:
+            employee_response.tax_identifier_last4 = employee.tax_identifier.tax_identifier_last4
+
+        return employee_response
 
 
 def employees_get(employee_id):
@@ -68,8 +76,23 @@ def employees_patch(employee_id):
 
 def employees_search():
     request = EmployeeSearchRequest.parse_obj(connexion.request.json)
+
     with app.db_session() as db_session:
-        employee = db_session.query(Employee).filter_by(**request.dict(exclude_none=True)).first()
+        employee_query = (
+            db_session.query(Employee)
+            .join(Employee.tax_identifier)
+            .filter(
+                TaxIdentifier.tax_identifier_last4 == request.tax_identifier_last4,  # type: ignore
+                Employee.first_name == request.first_name,
+                Employee.last_name == request.last_name,
+            )
+        )
+
+        if request.middle_name is not None:
+            employee_query.filter(Employee.middle_name == request.middle_name)
+
+        employee = employee_query.first()
+
     if employee is None:
         raise NotFound()
 

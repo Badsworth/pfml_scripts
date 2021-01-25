@@ -10,7 +10,7 @@ import PropTypes from "prop-types";
  * the URL resource.
  */
 const loadImagePreview = (file, setPreviewLoading, setImageSrc) => {
-  if (file.type.startsWith("image/")) {
+  if (file && file.type.startsWith("image/")) {
     const imageUrl = URL.createObjectURL(file);
     setImageSrc(imageUrl);
     setPreviewLoading(false);
@@ -29,7 +29,7 @@ const loadImagePreview = (file, setPreviewLoading, setImageSrc) => {
  * Displays a thumbnail preview for a file input field
  */
 const Thumbnail = (props) => {
-  const file = props.file;
+  const { file } = props;
   const [previewLoading, setPreviewLoading] = useState(true);
   const [imageSrc, setImageSrc] = useState();
 
@@ -42,8 +42,8 @@ const Thumbnail = (props) => {
     // Avoid showing a flash of the wrong content while we load a preview
     return null;
   }
-
   const hasImage = !!imageSrc;
+
   let thumbnailClass =
     "c-thumbnail border-1px border-base-lighter margin-right-2 display-flex";
   if (!hasImage) {
@@ -82,7 +82,7 @@ const Thumbnail = (props) => {
 
 Thumbnail.propTypes = {
   /** File we'll display a thumbnail for */
-  file: PropTypes.object.isRequired,
+  file: PropTypes.object,
 };
 
 export default Thumbnail;

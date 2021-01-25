@@ -6,11 +6,22 @@ data "aws_ecr_repository" "app" {
 }
 
 resource "aws_ecs_service" "app" {
-  name            = "${local.app_name}-${var.environment_name}"
-  task_definition = aws_ecs_task_definition.app.arn
-  cluster         = var.service_ecs_cluster_arn
-  launch_type     = "FARGATE"
-  desired_count   = var.service_app_count
+  name             = "${local.app_name}-${var.environment_name}"
+  task_definition  = aws_ecs_task_definition.app.arn
+  cluster          = var.service_ecs_cluster_arn
+  launch_type      = "FARGATE"
+  platform_version = "1.4.0"
+  desired_count    = var.service_app_count
+
+  # WORKAROUND: Increase health check grace period to 5 minutes to account for
+  # lag time in NLB starting to send requests to new tasks.
+  health_check_grace_period_seconds = 300
+
+  # Allow changes to the desired_count without differences in terraform plan.
+  # This allows autoscaling to manage the desired count for us.
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
 
   network_configuration {
     assign_public_ip = false
@@ -31,7 +42,7 @@ resource "aws_ecs_service" "app" {
 }
 
 resource "aws_ecs_task_definition" "app" {
-  family                = local.app_name
+  family                = "${local.app_name}-${var.environment_name}-server"
   execution_role_arn    = aws_iam_role.task_executor.arn
   task_role_arn         = aws_iam_role.api_service.arn
   container_definitions = data.template_file.container_definitions.rendered
@@ -40,30 +51,43 @@ resource "aws_ecs_task_definition" "app" {
   memory                   = "2048"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 data "template_file" "container_definitions" {
   template = file("${path.module}/container_definitions.json")
 
   vars = {
-    app_name                          = local.app_name
-    cpu                               = "512"
-    memory                            = "1024"
-    db_host                           = aws_db_instance.default.address
-    db_name                           = aws_db_instance.default.name
-    db_username                       = aws_db_instance.default.username
-    docker_image                      = "${data.aws_ecr_repository.app.repository_url}:${var.service_docker_tag}"
-    environment_name                  = var.environment_name
-    enable_full_error_logs            = var.enable_full_error_logs
-    cloudwatch_logs_group_name        = aws_cloudwatch_log_group.service_logs.name
-    aws_region                        = data.aws_region.current.name
-    cors_origins                      = join(",", var.cors_origins)
-    cognito_user_pool_keys_url        = var.cognito_user_pool_keys_url
-    rmv_client_certificate_binary_arn = var.rmv_client_certificate_binary_arn
-    rmv_client_base_url               = var.rmv_client_base_url
-    fineos_client_customer_api_url    = var.fineos_client_customer_api_url
-    fineos_client_wscomposer_api_url  = var.fineos_client_wscomposer_api_url
-    fineos_client_oauth2_url          = var.fineos_client_oauth2_url
-    fineos_client_oauth2_client_id    = var.fineos_client_oauth2_client_id
+    app_name                                   = local.app_name
+    cpu                                        = "1024"
+    memory                                     = "2048"
+    db_host                                    = aws_db_instance.default.address
+    db_name                                    = aws_db_instance.default.name
+    db_username                                = "pfml_api"
+    docker_image                               = "${data.aws_ecr_repository.app.repository_url}:${var.service_docker_tag}"
+    environment_name                           = var.environment_name
+    enable_full_error_logs                     = var.enable_full_error_logs
+    cloudwatch_logs_group_name                 = aws_cloudwatch_log_group.service_logs.name
+    aws_region                                 = data.aws_region.current.name
+    cors_origins                               = join(",", var.cors_origins)
+    cognito_user_pool_keys_url                 = var.cognito_user_pool_keys_url
+    logging_level                              = var.logging_level
+    rmv_client_certificate_binary_arn          = var.rmv_client_certificate_binary_arn
+    rmv_client_base_url                        = var.rmv_client_base_url
+    rmv_check_behavior                         = var.rmv_check_behavior
+    rmv_check_mock_success                     = var.rmv_check_mock_success
+    fineos_client_customer_api_url             = var.fineos_client_customer_api_url
+    fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
+    fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
+    fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
+    fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
+    fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
+    fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
+    service_now_base_url                       = var.service_now_base_url
+    portal_base_url                            = var.portal_base_url
+    enable_application_fraud_check             = var.enable_application_fraud_check
   }
 }

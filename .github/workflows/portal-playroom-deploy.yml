@@ -1,0 +1,64 @@
+# Build and deploy the Portal's Playroom environment so non-engineers can use it
+# Similar to portal-deploy.yml except without the Cloudfront dependency
+#
+name: Portal Playroom Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - "portal/**"
+      - "!portal/__mocks__/**"
+      - "!portal/storybook/**"
+      - "!portal/tests/**"
+
+env:
+  nodeVersion: 12.x
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  terraformVersion: 0.12.24
+  terraformBaseDir: ./infra/portal/environments/
+  # Map branch name to environment name. This is used to set the portal_env variable below in combination with git refs.
+  refs/heads/master: test
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set portal_env Value
+        # see https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
+        # github.ref will give the branch or tag reference that triggered the workflow
+        # e.g refs/heads/master or refs/heads/deploy/portal/stage
+        run: echo "portal_env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-to-assume: ci-run-deploys
+
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.nodeVersion }}
+
+      - name: Install
+        run: npm ci --prefix portal
+
+      - name: Build
+        run: npm run playroom:build --prefix portal
+
+      - name: Sync S3 Bucket
+        env:
+          BUCKET_NAME: massgov-pfml-${{ env.portal_env }}-playroom-builds
+          OUTPUT_DIR: ./portal/builds/playroom
+        run: |
+          aws s3 sync $OUTPUT_DIR s3://$BUCKET_NAME/ --exclude "*.html" --cache-control max-age=31536000,public &&
+          aws s3 sync $OUTPUT_DIR s3://$BUCKET_NAME/ --exclude "*" --include "*.html" --cache-control s-maxage=86400,max-age=0,must-revalidate

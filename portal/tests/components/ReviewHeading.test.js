@@ -6,13 +6,14 @@ function render(customProps = {}) {
   const props = Object.assign(
     {
       children: "Who is taking leave?",
+      level: "2",
     },
     customProps
   );
   const component = <ReviewHeading {...props} />;
 
   return {
-    props: customProps,
+    props,
     wrapper: shallow(component),
   };
 }

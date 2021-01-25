@@ -2,9 +2,14 @@
 # Custom validation implementations to support custom API response formats
 #
 
+import flask
 import jsonschema
 from connexion.decorators.response import ResponseValidator
-from connexion.decorators.validation import RequestBodyValidator, ResponseBodyValidator
+from connexion.decorators.validation import (
+    ParameterValidator,
+    RequestBodyValidator,
+    ResponseBodyValidator,
+)
 from connexion.json_schema import Draft4RequestValidator, Draft4ResponseValidator
 from connexion.utils import is_null
 
@@ -34,24 +39,56 @@ DefaultsEnforcingDraft4ResponseValidator = extend_with_set_default(Draft4Respons
 
 
 def validate_schema_util(validator_decorator, data, error_message):
+    # Should this header string be defined as a global constant? If so, where?
+    warn_on_required = flask.request.headers.get("X-PFML-Warn-On-Missing-Required-Fields", None)
+
     errors = list(validator_decorator.validator.iter_errors(data))
     if errors:
-        errorList = []
+        error_list = []
         for error in errors:
-            field_path = list(error.path)
-            errorList.append(
+            # Fix an error where items in error.path are ints. Convert to strings.
+            field_path = list(map(lambda x: str(x), list(error.path)))
+            error_list.append(
                 ValidationErrorDetail(
                     message=error.message,
                     type=error.validator,
                     rule=error.validator_value,
-                    field=".".join(field_path) if field_path else None,
+                    field=".".join(field_path) if field_path else "",
                 )
             )
 
-        invalid_data_payload = data.get("data", data)
-        raise ValidationException(
-            errors=errorList, message=error_message, data=invalid_data_payload
-        )
+        if warn_on_required:
+            warning_list = list(filter(lambda error: error.type == "required", error_list))
+            error_list = list(filter(lambda error: error.type != "required", error_list))
+
+            flask.request.warning_list = warning_list
+
+            if len(error_list) > 0:
+                invalid_data_payload = data.get("data", data)
+                raise ValidationException(
+                    errors=error_list, message=error_message, data=invalid_data_payload
+                )
+        else:
+            invalid_data_payload = data.get("data", data)
+            raise ValidationException(
+                errors=error_list, message=error_message, data=invalid_data_payload
+            )
+
+
+class CustomParameterValidator(ParameterValidator):
+    def __init__(self, *args, **kwargs):
+        super(CustomParameterValidator, self).__init__(*args, **kwargs)
+
+    def validate_formdata_parameter_list(self, request):
+        # In multipart/form-data requests in the OpenAPI spec requestBody, the payload is sent as formBody elements. Connexion tries to validate these as parameters and will fail since those properties are included as part of the request body. Example: https://swagger.io/docs/specification/describing-request-body/multipart-requests/
+        # Below we check if the requestBody is multipart/form-data and skip parameter validation.The validation will be handled by RequestBodyValidator.validate_formdata_parameter_list (https://github.com/zalando/connexion/blob/master/connexion/decorators/validation.py#L125)
+        is_multi_part_form = request.headers.get("Content-Type") and request.headers.get(
+            "Content-Type"
+        ).startswith("multipart/form-data")
+        if is_multi_part_form:
+            return None
+
+        return ParameterValidator.validate_formdata_parameter_list(self, request)
 
 
 class CustomRequestBodyValidator(RequestBodyValidator):
@@ -63,6 +100,13 @@ class CustomRequestBodyValidator(RequestBodyValidator):
     def validate_schema(self, data, url):
         if self.is_null_value_valid and is_null(data):
             return None
+
+        if not self.is_null_value_valid and is_null(data):
+            errors = [
+                ValidationErrorDetail(field="", message="Missing request body", type="required")
+            ]
+
+            raise ValidationException(errors=errors, message="Request Validation Error", data=data)
 
         validate_schema_util(self, data, "Request Validation Error")
 
@@ -88,7 +132,15 @@ class CustomResponseValidator(ResponseValidator):
         v.validate_schema(data, url)
 
     def validate_response(self, data, status_code, headers, url):
+        # Only validate json responses
+        if headers.get("Content-Type") != "application/json":
+            return True
+
         response_body = self.operation.json_loads(data)
+
+        # Do not validate GET responses.
+        if flask.request.method == "GET":
+            return True
 
         if url.endswith("/status"):
             return True

@@ -1,32 +1,52 @@
 import Alert from "../components/Alert";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
+import InputPassword from "../components/InputPassword";
 import InputText from "../components/InputText";
 import Link from "next/link";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
-import useHandleInputChange from "../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
+import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
-import valueWithFallback from "../utils/valueWithFallback";
 
 export const Login = (props) => {
   const { appLogic, query } = props;
-  const { appErrors, auth } = appLogic;
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState({});
-  const username = valueWithFallback(formState.username);
-  const password = valueWithFallback(formState.password);
-  const handleInputChange = useHandleInputChange(updateFields);
-  const accountVerified = query["account-verified"] === "true";
 
-  const handleSubmit = (event) => {
+  const { formState, updateFields } = useFormState({
+    password: "",
+    username: "",
+  });
+
+  const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    auth.login(username, password);
-  };
+    if (query.next) {
+      await appLogic.auth.login(
+        formState.username,
+        formState.password,
+        query.next
+      );
+    } else {
+      await appLogic.auth.login(formState.username, formState.password);
+    }
+  });
+
+  const accountVerified = query["account-verified"] === "true";
+  const sessionTimedOut = query["session-timed-out"] === "true";
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
+  const showSelfRegistration = isFeatureEnabled(
+    "employerShowSelfRegistrationForm"
+  );
 
   return (
     <React.Fragment>
@@ -40,41 +60,83 @@ export const Login = (props) => {
           {t("pages.authLogin.accountVerified")}
         </Alert>
       )}
-      <form className="usa-form usa-form--large" onSubmit={handleSubmit}>
+
+      {sessionTimedOut && (
+        <Alert
+          className="margin-bottom-3"
+          heading={t("pages.authLogin.sessionTimedOutHeading")}
+          name="session-timed-out-message"
+          state="info"
+        >
+          {t("pages.authLogin.sessionTimedOut")}
+        </Alert>
+      )}
+
+      <form className="usa-form" onSubmit={handleSubmit}>
         <Title>{t("pages.authLogin.title")}</Title>
-        <Trans
-          i18nKey="pages.authLogin.createAccountLink"
-          components={{
-            // Trans doesn't seem to work with the NextJS <Link> component so we'll
-            // use a regular link here
-            "create-account-link": <a href={routes.auth.createAccount} />,
-          }}
-        />
         <InputText
+          {...getFunctionalInputProps("username")}
           type="email"
-          name="username"
-          value={username}
           label={t("pages.authLogin.usernameLabel")}
-          errorMsg={appErrors.fieldErrorMessage("username")}
-          onChange={handleInputChange}
           smallLabel
         />
-        <InputText
-          type="password"
-          name="password"
-          value={password}
+        <InputPassword
+          {...getFunctionalInputProps("password")}
           label={t("pages.authLogin.passwordLabel")}
-          errorMsg={appErrors.fieldErrorMessage("password")}
-          onChange={handleInputChange}
           smallLabel
         />
-        <div className="margin-top-1">
+        <p>
           <Link href={routes.auth.forgotPassword}>
             <a>{t("pages.authLogin.forgotPasswordLink")}</a>
           </Link>
-        </div>
+        </p>
 
-        <Button type="submit">{t("pages.authLogin.loginButton")}</Button>
+        <Button type="submit" loading={handleSubmit.isThrottled}>
+          {t("pages.authLogin.loginButton")}
+        </Button>
+
+        <div className="border-top-2px border-base-lighter margin-top-4 padding-top-4 text-base-dark">
+          <div>
+            {/*
+              Empty <div> above is a hacky fix to an issue where React was outputting the wrong href for
+              the create-account-link on initial page load, when it is hidden behind the feature flag.
+              The empty <div> isn't necessary once this content is no longer behind a feature flag
+             */}
+            <p>
+              <Trans
+                i18nKey="pages.authLogin.createClaimantAccount"
+                components={{
+                  "create-account-link": (
+                    <a
+                      className="display-inline-block"
+                      href={routes.auth.createAccount}
+                    />
+                  ),
+                }}
+              />
+            </p>
+          </div>
+
+          <p>
+            <Trans
+              i18nKey="pages.authLogin.createEmployerAccount"
+              components={{
+                "create-employer-account-link": (
+                  <a
+                    className="display-inline-block"
+                    href={routes.employers.createAccount}
+                  />
+                ),
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+              tOptions={{
+                context: showSelfRegistration ? null : "contactCallCenter",
+              }}
+            />
+          </p>
+        </div>
       </form>
     </React.Fragment>
   );
@@ -89,6 +151,8 @@ Login.propTypes = {
   }).isRequired,
   query: PropTypes.shape({
     "account-verified": PropTypes.string,
+    "session-timed-out": PropTypes.string,
+    next: PropTypes.string,
   }).isRequired,
 };
 

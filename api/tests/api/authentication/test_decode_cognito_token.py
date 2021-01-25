@@ -46,6 +46,12 @@ def test_decode_cognito_token_success(set_auth_public_keys, auth_claims, auth_to
     assert decoded == auth_claims
 
 
+def test_decode_oauth_token_success(set_auth_public_keys, oauth_claims, oauth_auth_token):
+    decoded = authentication._decode_cognito_token(oauth_auth_token)
+
+    assert decoded == oauth_claims
+
+
 def test_decode_cognito_token_invalid_key(monkeypatch, auth_token):
     monkeypatch.setattr(authentication, "public_keys", "nope")
     with pytest.raises(JWTError, match="Signature verification failed."):
@@ -72,7 +78,7 @@ def test_without_token(client, auth_token):
     response_body = response.get_json()
 
     assert response.status_code == 200
-    assert response_body["status"] == "ok"
+    assert response_body["message"] == "Service healthy"
 
 
 def test_current_user_is_set_successfully(client, app, user, auth_token):

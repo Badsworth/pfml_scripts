@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Applications when no claims exist renders the empty page state 1`] = `
+<Fragment>
+  <DashboardNavigation
+    activeHref="/applications"
+  />
+  <Title
+    hidden={false}
+  >
+    View your applications
+  </Title>
+  <p>
+    You don’t have any applications yet.
+  </p>
+</Fragment>
+`;

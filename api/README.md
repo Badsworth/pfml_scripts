@@ -1,19 +1,56 @@
 # Massachusetts PFML API
 
-This is the API for the Massachusetts Paid Family and Medical Leave program.
+This is the API for the Massachusetts Paid Family and Medical Leave program. See [this Confluence page](https://lwd.atlassian.net/wiki/spaces/API/pages/227770663/Paid+Leave+API) for a technical overview.
 
-- [Docker Developer Setup](#docker-developer-setup)
-- [Running the Application (Docker)](#running-the-application-docker)
-  - [Common commands](#common-commands)
-  - [Running migrations](#running-migrations)
-  - [Creating new migrations](#creating-new-migrations)
-- [Native Developer Setup](#native-developer-setup)
-- [Try it out](#try-it-out)
-- [Tests](#tests)
-- [Environment Configuration](#environment-configuration)
-- [Directory Structure](#directory-structure)
+1. [Getting Started](#getting-started)
+    1. [Quickstart](#quickstart)
+    2. [Setup Your Development Environment](#setup-your-development-environment)
+        1. [(Preferred) Docker + GNU Make](#preferred-docker--gnu-make)
+        2. [Native Developer Setup](#native-developer-setup)
+    3. [Development Workflow](#development-workflow)
+2. [Running the Application (Docker)](#running-the-application-docker)
+    1. [Initializing dependencies](#initializing-dependencies)
+    2. [Common commands](#common-commands)
+    3. [Managing the container environment](#managing-the-container-environment)
+    4. [Running migrations](#running-migrations)
+    5. [Creating new migrations](#creating-new-migrations)
+    6. [Multi-head situations](#multi-head-situations)
+3. [Try it out](#try-it-out)
+    1. [Getting local authentication credentials](#getting-local-authentication-credentials)
+4. [Tests](#tests)
+    1. [During Development](#during-development)
+5. [Environment Configuration](#environment-configuration)
+6. [Monitoring and Alerting](#monitoring-and-alerting)
+7. [Releases](#releases)
+8. [Directory Structure](#directory-structure)
 
-## Docker Developer Setup
+**You may also be interested in:**
+
+- [Setting up project tooling](../README.md)
+- [Development practices](../docs/contributing.md)
+- [Adding fields and validations](../docs/api/fields-and-validations.md)
+- [Additional API-specific documentation](../docs/api/)
+
+## Getting Started
+
+### Quickstart
+
+0. Install [Docker](https://docs.docker.com/get-docker)
+1. `cd pfml/api` (or otherwise move to this directory)
+2. `make init`
+3. `make start`
+4. Navigate to the Swagger UI at [http://localhost:1550/v1/docs/](http://localhost:1550/v1/docs/)
+5. [Setup local authentication](#getting-local-authentication-credentials)
+6. Review documentation in `/docs`, especially [contributing.md](/docs/contributing.md) for guidelines on how to contribute code
+
+### Setup Your Development Environment
+
+You can set up your development environment in one of the following ways:
+
+1. (Preferred) Docker + GNU Make
+2. Native developer setup: Install dependencies directly on your OS
+
+#### (Preferred) Docker + GNU Make
 
 Docker is heavily recommended for a local development environment. It sets up Python,
 Poetry and installs development dependencies automatically, and can create a full environment
@@ -23,19 +60,19 @@ Follow instructions here to [install Docker](https://docs.docker.com/get-docker/
 
 In a docker-centric environment, we support a couple different developer workflows:
 
-| Start command from: | Container Lifetime | PY_RUN_CMD_OPT |
-| ------------------- | ------------------ | -------------- |
-| your host 🙋‍♀️        | Long-running       | DOCKER_EXEC    |
-| inside docker 🐳    | Long-running       | N/A            |
-| your host 🙋‍♀️        | Single-use         | DOCKER_RUN     |
-| Mixed               | Mixed              | Mixed          |
+| Start command from: | Container Lifetime | RUN_CMD_OPT |
+| ------------------- | ------------------ | ----------- |
+| your host 🙋‍♀️        | Long-running       | DOCKER_EXEC |
+| inside docker 🐳    | Long-running       | N/A         |
+| your host 🙋‍♀️        | Single-use         | DOCKER_RUN  |
+| Mixed               | Mixed              | Mixed       |
 
 The default is `DOCKER_RUN` and should always just work™. But this spins up a
 new container for every command, which can be slow. If you are working on the
 API a lot, you may want to consider one of the alternative setups below and/or
 the [Native Developer Setup](#native-developer-setup).
 
-Some tasks will usually need to be run with `DOCKER_RUN` regardless of the
+**Note: Some tasks, including initial setup, will usually need to be run with `DOCKER_RUN`** regardless of the
 workflow used otherwise. Examples include generating an initial local JWKS
 (`make jwks.json`) or running migrations (`make db-upgrade`).
 
@@ -43,10 +80,10 @@ workflow used otherwise. Examples include generating an initial local JWKS
 <p>
 If you want to re-use a docker application for various Python and development
  <code>make</code> commands (e.g. linting and testing), you should set
- <code>PY_RUN_CMD_OPT</code> to <code>DOCKER_EXEC</code>.
+ <code>RUN_CMD_OPT</code> to <code>DOCKER_EXEC</code>.
 
 ```sh
-$ export PY_RUN_CMD_OPT=DOCKER_EXEC
+$ export RUN_CMD_OPT=DOCKER_EXEC
 $ make test
 ```
 
@@ -55,7 +92,7 @@ $ make test
 
 <details><summary>Log into a docker container to run commands</summary>
 <p>If you intend to start a Docker environment and log into it like a remote server,
- you can leave <code>PY_RUN_CMD_OPT</code> alone and use <code>make login</code> instead.
+ you can leave <code>RUN_CMD_OPT</code> alone and use <code>make login</code> instead.
 
 ```sh
 $ make login
@@ -67,10 +104,10 @@ $ make login
 
 <details><summary>Start a new docker container for every command</summary>
 <p>If you plan to run commands through temporary, single-use Docker containers, you
- should set your <code>PY_RUN_CMD_OPT</code> to <code>DOCKER_RUN</code>:
+ should set your <code>RUN_CMD_OPT</code> to <code>DOCKER_RUN</code>:
 
 ```sh
-$ export PY_RUN_CMD_OPT=DOCKER_RUN
+$ export RUN_CMD_OPT=DOCKER_RUN
 $ make test
 ```
 
@@ -80,17 +117,54 @@ Note this is the default setting.
 </details>
 
 <details><summary>Mix and Match</summary>
- <p>If you plan to mix and match things, you'll have to juggle <code>PY_RUN_CMD_OPT</code> yourself.
+ <p>If you plan to mix and match things, you'll have to juggle <code>RUN_CMD_OPT</code> yourself.
 
 For example:
 
-- running static lints outside of Docker with native developer setup: <code>PY_RUN_CMD_OPT=POETRY make lint</code>
-- running tests inside of Docker after a <code>make start</code>: <code>PY_RUN_CMD_OPT=DOCKER_EXEC make test</code>
+- running static lints outside of Docker with native developer setup: <code>RUN_CMD_OPT=NATIVE make lint</code>
+- running tests inside of Docker after a <code>make start</code>: <code>RUN_CMD_OPT=DOCKER_EXEC make test</code>
 
 </p>
 </details>
 
+#### Native Developer Setup
+
+To setup a development environment outside of Docker, you'll need to install a
+few things.
+
+1. Install at least Python 3.8.
+  [pyenv](https://github.com/pyenv/pyenv#installation) is one popular option for
+  installing Python, or [asdf](https://asdf-vm.com/).
+2. After installing and activating the right version of Python, install
+  [poetry](https://python-poetry.org/docs/#installation).
+3. Then set `RUN_CMD_OPT` to `NATIVE` in your development environment.
+4. Then run `make deps` to install Python dependencies and development tooling.
+
+You should now be set up to run developer tooling natively, like linting. To run
+the application, set up a PostgreSQL database and see `docker-compose.yml` for
+environment variables needed.
+
+### Development Workflow
+
+All mandatory checks are run as part of the Github CI pull request process. See
+the `api-*.yml` files in pfml/.github/workflows to see what gets run.
+
+You can run these checks on your local machine before the PR stage (such as
+befor each commit or before pushing to Github):
+
+- `make check` to run checks (e.g. linting, testing)
+- `make format` to fix any formatting issues
+
 ## Running the Application (Docker)
+
+#### Initializing dependencies
+
+The application requires a running database with some minimum level of
+migrations already run as well as database users created and various other
+things.
+
+`make init` will perform the prep tasks necessary to get the application off the
+ground.
 
 #### Common commands
 
@@ -107,7 +181,7 @@ make stop     # Stop all running containers
 
 Under most circumstances, a local copy of the API will run with `use_reloader=True`,
 a flag given to Connexion that automatically restarts the the API's Python process if any modules have changed.
-Most of the time, the `use_reloader` flag should take care of things for you, but there are 
+Most of the time, the `use_reloader` flag should take care of things for you, but there are
 a few scenarios where you'll need to make a manual intervention in order to properly manage your container's state.
 
 If you're doing work on a local environment, please be aware that any changes to *environment variables* or *config files*
@@ -118,7 +192,7 @@ _unless_ you're changing code that runs before the `connexion_app.run` command i
 [__main__.py](https://github.com/EOLWD/pfml/blob/master/api/massgov/pfml/api/__main__.py#L57).
 In this case only, you'll need to restart the Docker containers with `make stop` followed by `make start`.
 
-These scenarios are most relevant to developers who habitually work in `DOCKER_EXEC` mode, 
+These scenarios are most relevant to developers who habitually work in `DOCKER_EXEC` mode,
 with long-lived application and DB containers.
 
 #### Running migrations
@@ -139,6 +213,34 @@ If you've changed a python object model, auto-generate a migration file for the 
 $ make db-migrate-create MIGRATE_MSG="<brief description of change>"
 $ make db-upgrade
 ```
+
+<details>
+    <summary>Example: Adding a new column to an existing table:</summary>
+
+1. Manually update the database models with the changes (`massgov/pfml/db/models/employees.py` in this example)
+```python
+class Address(Base):
+    ...
+    created_at = Column(TIMESTAMP(timezone=True)) # Newly added line
+```
+
+2. Automatically generate a migration file with `make db-migrate-create MIGRATE_MSG="Add created_at timestamp to address table"`
+```python
+...
+def upgrade():
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.add_column("address", sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True))
+    # ### end Alembic commands ###
+
+
+def downgrade():
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_column("address", "created_at")
+    # ### end Alembic commands ###
+```
+
+3. Manually adjust the migration file as needed. Some changes will not fully auto-generate (like foreign keys), so make sure that all desired changes are included.
+</details>
 
 #### Multi-head situations
 
@@ -176,24 +278,14 @@ When branched migrations do need to happen in a defined order, then manually
 update the `down_revision` of one that should happen second to reference to the
 migration that should happen first.
 
-## Native Developer Setup
+#### Create application DB users
 
-To setup a development environment outside of Docker, you'll need to install a
-few things.
+The migrations set up the DB roles and permissions. After the migrations have
+been run, actual DB users need to be connected for the application to use.
 
-### Dependencies
-
-- Install at least Python 3.8.
-  [pyenv](https://github.com/pyenv/pyenv#installation) is one popular option for
-  installing Python, or [asdf](https://asdf-vm.com/).
-- After installing and activating the right version of Python, install
-  [poetry](https://python-poetry.org/docs/#installation).
-- Then set `PY_RUN_CMD_OPT` to `POETRY` in your development environment.
-- Then run `make deps` to install Python dependencies and development tooling.
-
-You should now be set up to run developer tooling natively, like linting. To run
-the application, set up a PostgreSQL database and see `docker-compose.yml` for
-environment variables needed.
+```sh
+make db-create-users
+```
 
 ## Try it out
 
@@ -206,7 +298,7 @@ The spec is available at:
 - [http://localhost:1550/v1/openapi.json](http://localhost:1550/v1/openapi.json) (JSON) or
 - [http://localhost:1550/v1/openapi.yaml](http://localhost:1550/v1/openapi.yaml) (YAML)
 
-### Getting local authentication credentials
+## Getting local authentication credentials
 
 In order to make requests to the API, an authentication token must be included.
 Currently this is a JWT set in the `Authorization` HTTP header. A JWT signed by
@@ -313,12 +405,27 @@ And instead of running that command manually, you can kick off a process to
 automatically run the tests when files change with:
 
 ```sh
-make test-watch
+make test-watch-changed
 ```
+
+To run tests decorated with `@pytest.mark.dev_focus` whenever a file is saved:
+
+```sh
+make test-watch-focus
+```
+
+`test-watch-focus` is a wrapper around the more flexible `test-watch` Makefile target
+that we can use to re-run specific tests whenever a file changes, for instance.
+
+```sh
+make test-watch args=tests/api/test_users.py::test_users_get
+```
+
+Arguments for `test-watch` are the same as args for `make test` as discussed in the section above.
 
 ## Environment Configuration
 
-Environment variables for the local app in the `docker-compose.yml` file.
+Environment variables for the local app are in the `docker-compose.yml` file.
 
 ```yaml
 services:
@@ -331,23 +438,128 @@ services:
     - ...
 ```
 
+Changes here will be picked up next time `make start` is run.
+
 ## Monitoring and Alerting
 
 The API is monitored with New Relic's Python agent.
 Config variables and env-specific settings for New Relic live inside `newrelic.ini` and `container_definitions.json`.
 See [environment-variables.md](/docs/api/environment-variables.md) for more about how env vars are pulled in at runtime.
 
+## Releases
+
+More details about how to handle releases are available in the [release
+runbook](https://lwd.atlassian.net/wiki/spaces/DD/pages/818184193/API+and+Portal+Runbook).
+
+As a part of the release process it is useful to include some technical notes on
+what the release includes. There is a make target to help automate some of this:
+
+```sh
+make release-notes
+```
+
+This will generate a list of the commits impacting an API release. For the
+commits that follow the project convention for commit messages, the Jira ticket
+will be linked. Everyone does not follow the convention nor will every commit
+have a Jira ticket associated.
+
+But this will provide a starting point. By default it will generate the list of
+commits that are different between what is deployed to stage (indicated by the
+`deploy/api/stage` branch) and what is on `master`. You can change the range of
+commits it considers by passing in `refs`, for example only looking for changes
+between release candidates:
+
+```sh
+make release-notes refs="api/v1.3.0-rc1..api/v1.3.0-rc2"
+```
+
+The work will generally fall into one of a number of categories, with changes to:
+- ECS tasks for background jobs
+- The API service itself
+- CI tweaks
+
+It's useful to group the release notes broadly by these buckets to clarify what
+this particular release will impact.
+
+It's also usually useful to group the tickets by team, which piping to `sort`
+can help facilitate:
+
+```sh
+make release-notes | sort
+```
+
+Ultimately culminating in something like the notes for
+[api/v1.3.0](https://github.com/EOLWD/pfml/releases/tag/api%2Fv1.3.0).
+
+## Figuring out what's released where
+
+There are a couple other make targets that could be useful. Note these all work
+off of your local git repo, so can only be as accurate as your local checkout
+is. You will generally want to run `git fetch origin` before these if you want
+the most up-to-date info.
+
+`where-ticket` will search the release branches for references to the provided
+ticket number:
+
+```sh
+❯ make where-ticket ticket=API-1000
+## origin/master ##
+e7fb31752 API-1000: Do not add "MA PFML - Limit" plan to FINEOS service agreements (#2272)
+
+## origin/deploy/api/stage ##
+e7fb31752 API-1000: Do not add "MA PFML - Limit" plan to FINEOS service agreements (#2272)
+
+## origin/deploy/api/prod ##
+e7fb31752 API-1000: Do not add "MA PFML - Limit" plan to FINEOS service agreements (#2272)
+
+## origin/deploy/api/performance ##
+e7fb31752 API-1000: Do not add "MA PFML - Limit" plan to FINEOS service agreements (#2272)
+
+## origin/deploy/api/training ##
+
+```
+
+So in this example, API-1000 has been deployed to every environment but `training`.
+
+`whats-released` lists some info about the lastest commits on the release branches:
+
+```sh
+❯ make whats-released
+## origin/master ##
+ * Closest tag: api/v1.3.0-rc2-48-g4465cfb72
+ * Latest commit: 4465cfb72 (origin/master, master) END-338: Convert employer response and remove notification checking (#2386)
+
+## origin/deploy/api/stage ##
+ * Closest tag: api/v1.3.0
+ * Latest commit: 6e86eab29 (tag: api/v1.3.0-rc3, tag: api/v1.3.0, origin/deploy/api/stage, origin/deploy/api/prod) EMPLOYER-685 Add logging reqs to LA FINEOS registration script (#2349)
+
+## origin/deploy/api/prod ##
+ * Closest tag: api/v1.3.0
+ * Latest commit: 6e86eab29 (tag: api/v1.3.0-rc3, tag: api/v1.3.0, origin/deploy/api/stage, origin/deploy/api/prod) EMPLOYER-685 Add logging reqs to LA FINEOS registration script (#2349)
+
+## origin/deploy/api/performance ##
+ * Closest tag: api/v1.3.0-rc2
+ * Latest commit: 13ba0f2c3 (tag: api/v1.3.0-rc2, origin/deploy/api/performance) remove ecr scan github action (#2333)
+
+## origin/deploy/api/training ##
+ * Closest tag: api/v1.1.0-rc1-48-ga6fb1f6bc
+ * Latest commit: a6fb1f6bc (origin/deploy/api/training) API-999 Prod-Check Not Working as Expected (#2322)
+```
+
+So here can see `api/v1.3.0` is on both `stage` and `prod`, `performance` is on
+`api/v1.3.0-rc2`, and something a little ahead of `api/v1.1.0-rc1` is on
+`training`.
+
 ## Directory Structure
 
 ```
 .
-├── massgov
+├── massgov                     Python package directory
 │   └── pfml
 │       └── api                 Application code
-│       └── db                  Migrations config
-│       └── data-integrations
-│           └── */lambda        Data ingestion lambda for an agency
-│           └── */mock          Mock data generator for an agency
+│       └── db
+│           └── migrations      Migrations config
+│               └── versions    Migrations themselves
 ├── tests
 │   └── api             Application tests
 ├── Dockerfile          Multi-stage Docker build file for project

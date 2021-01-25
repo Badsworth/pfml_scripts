@@ -4,6 +4,15 @@
  */
 
 /**
+ * Module level global variable keeping track of custom attributes that should be added to all events within a single page,
+ * including errors, events, and browser interactions.
+ * @type {object.<string, string|number>}
+ */
+const moduleGlobal = {
+  customPageAttributes: {},
+};
+
+/**
  * Configure our monitoring services with environment-specific key/ids
  */
 function initialize() {
@@ -15,15 +24,15 @@ function initialize() {
   window.NREUM.loader_config = {
     agentID: `${process.env.newRelicAppId}`,
     applicationID: `${process.env.newRelicAppId}`,
-    accountID: "1606654",
+    accountID: "2837112",
     trustKey: "1606654",
-    licenseKey: "0c7a02d605",
+    licenseKey: "NRJS-9852fe81d192bbc09c5",
   };
   window.NREUM.info = {
     applicationID: `${process.env.newRelicAppId}`,
     beacon: "bam.nr-data.net",
     errorBeacon: "bam.nr-data.net",
-    licenseKey: "0c7a02d605",
+    licenseKey: "NRJS-9852fe81d192bbc09c5",
     sa: 1,
   };
 }
@@ -46,18 +55,30 @@ function newrelicReady() {
  */
 function noticeError(error, customAttributes) {
   if (newrelicReady()) {
-    newrelic.noticeError(error, customAttributes);
+    newrelic.noticeError(error, {
+      ...moduleGlobal.customPageAttributes,
+      ...customAttributes,
+      environment: process.env.buildEnv,
+    });
   }
 }
 
 /**
- * Give a route in New Relic more accurate names.
+ * Track Single Page App (SPA) route changes in New Relic and give them more accurate names.
+ * @see https://docs.newrelic.com/docs/browser/new-relic-browser/guides/guide-using-browser-spa-apis
  * @see https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/spa-set-current-route-name
- * @param {string} routeName - Route names should represent a routing pattern
+ * @param {string} routeName Route names should represent a routing pattern
+ * @param {object.<string, string|number>} [customPageAttributes] Optional custom attributes to set for the page and for subsequent events on the same page
  *  rather than a specific resource. For example /claims/:id rather than /claims/123
  */
-function setCurrentRouteName(routeName) {
+function startPageView(routeName, customPageAttributes) {
   if (newrelicReady()) {
+    // First end previous interaction if that's still in progress
+    newrelic.interaction().end();
+
+    moduleGlobal.customPageAttributes = customPageAttributes || {};
+    newrelic.interaction();
+    setPageAttributesOnInteraction();
     newrelic.setCurrentRouteName(routeName);
   }
 }
@@ -70,14 +91,52 @@ function setCurrentRouteName(routeName) {
  */
 function trackEvent(name, customAttributes) {
   if (newrelicReady()) {
-    newrelic.addPageAction(name, customAttributes);
+    newrelic.addPageAction(name, {
+      ...moduleGlobal.customPageAttributes,
+      ...customAttributes,
+      environment: process.env.buildEnv,
+    });
   }
-  // TODO: Send the event to Google Analytics as well (https://lwd.atlassian.net/browse/CP-433)
+}
+
+/**
+ * For New Relic, Fetch requests are only recorded if they are executed during a BrowserInteraction event,
+ * which by default happens during the initial page load and any time the route is changed. That means
+ * for other cases, we need to manually initiate a BrowserInteraction so the request is tracked.
+ * @see https://docs.newrelic.com/docs/browser/new-relic-browser/troubleshooting/troubleshoot-ajax-data-collection
+ * @param {string} requestName - URL being fetched (if known) or name representing the request
+ * @example trackFetchRequest('https://paidleave-api.mass.gov/applications'); request(...);
+ */
+function trackFetchRequest(requestName) {
+  if (newrelicReady()) {
+    // First end previous interaction if that's still in progress
+    newrelic.interaction().end();
+
+    const trackedName = requestName.replace("https://", "");
+    newrelic.interaction().setName(`fetch: ${trackedName}`);
+    newrelic.interaction().setAttribute("environment", process.env.buildEnv);
+    setPageAttributesOnInteraction();
+    newrelic.interaction().save();
+  }
+}
+
+/**
+ * @private
+ */
+function setPageAttributesOnInteraction() {
+  if (newrelicReady()) {
+    for (const [name, value] of Object.entries(
+      moduleGlobal.customPageAttributes
+    )) {
+      newrelic.interaction().setAttribute(name, value);
+    }
+  }
 }
 
 export default {
   initialize,
   noticeError,
-  setCurrentRouteName,
+  startPageView,
   trackEvent,
+  trackFetchRequest,
 };

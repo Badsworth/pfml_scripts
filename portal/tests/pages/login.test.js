@@ -8,6 +8,8 @@ import useAppLogic from "../../src/hooks/useAppLogic";
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("Login", () => {
+  const email = "email@test.com";
+  const password = "TestP@ssw0rd!";
   let appLogic, changeField, query, submitForm, wrapper;
 
   function render(customProps = {}) {
@@ -25,8 +27,12 @@ describe("Login", () => {
     render();
   });
 
-  it("renders the empty page", () => {
+  it("renders the page", () => {
     expect(wrapper).toMatchSnapshot();
+
+    wrapper
+      .find("Trans")
+      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
   describe("when account-verified query param is true", () => {
@@ -43,37 +49,46 @@ describe("Login", () => {
     });
   });
 
+  describe("when session-timed-out query param is true", () => {
+    it("displays session timed out info message", () => {
+      query = {
+        "session-timed-out": "true",
+      };
+      render();
+      const sessionTimedOutMessageWrapper = wrapper.find({
+        name: "session-timed-out-message",
+      });
+      expect(sessionTimedOutMessageWrapper).toHaveLength(1);
+      expect(sessionTimedOutMessageWrapper).toMatchSnapshot();
+    });
+  });
+
   describe("when the form is submitted", () => {
     it("calls login", async () => {
-      const email = "email@test.com";
-      const password = "TestP@ssw0rd!";
-
       changeField("username", email);
       changeField("password", password);
-      submitForm();
+
+      await submitForm();
+
       expect(appLogic.auth.login).toHaveBeenCalledWith(email, password);
     });
 
-    it("calls login with empty string when username is undefined", () => {
-      const password = "TestP@ssw0rd!";
-
-      submitForm();
-      expect(appLogic.auth.login).toHaveBeenCalledWith("", "");
-
-      changeField("password", password);
-      submitForm();
-      expect(appLogic.auth.login).toHaveBeenCalledWith("", password);
-    });
-
-    it("calls login with empty string when password is undefined", () => {
-      const email = "email@test.com";
-
-      submitForm();
-      expect(appLogic.auth.login).toHaveBeenCalledWith("", "");
-
+    it("calls login with query param", async () => {
+      const nextPage = "/next-page";
+      query = {
+        next: nextPage,
+      };
+      render();
       changeField("username", email);
-      submitForm();
-      expect(appLogic.auth.login).toHaveBeenCalledWith(email, "");
+      changeField("password", password);
+
+      await submitForm();
+
+      expect(appLogic.auth.login).toHaveBeenCalledWith(
+        email,
+        password,
+        nextPage
+      );
     });
   });
 });

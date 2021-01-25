@@ -27,12 +27,18 @@ terraform {
 module "pfml" {
   source = "../../template"
 
-  environment_name = "$ENV_NAME"
-  # TODO: This will revert back to '/api/' once we have a custom domain name.
-  #       For now, we're relying on the API Gateway-provided URL which prepends
-  #       the "$ENV_NAME" stage.
-  forwarded_path    = "'/$ENV_NAME/api/'"
-  nlb_name          = "\${local.vpc}-nlb"
-  nlb_vpc_link_name = "\${local.vpc}-nlb-vpc-link"
-  nlb_port          = CHOOSE_UNIQUE_PROXY_PORT_FOR_ENVIRONMENT
+  # Disable custom domain names by default for a new environment.
+  #
+  # Follow the steps in /docs/creating-environments.md to
+  # set up custom mass.gov domain names.
+  #
+  enable_pretty_domain = false
+  environment_name     = "$ENV_NAME"
+  nlb_name             = "\${local.vpc}-nlb"
+  nlb_vpc_link_name    = "\${local.vpc}-nlb-vpc-link"
+  nlb_port             = CHOOSE_UNIQUE_PROXY_PORT_FOR_ENVIRONMENT
+
+  # AWS WAF ACL settings
+  enable_regional_rate_based_acl = true
+  enable_fortinet_managed_rules  = false
 }

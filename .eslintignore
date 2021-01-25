@@ -1,7 +1,5 @@
 .next
 __snapshots__
-build
-out
 coverage
 examples
 node_modules
@@ -9,5 +7,10 @@ node_modules
 */public/**/*.css
 */public/**/*.js
 new-relic.js
+# Compiled code
+portal/.next
+portal/build
+portal/out
+portal/out-storybook
 # Subdirectories with their own lint process
 e2e/

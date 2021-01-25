@@ -45,24 +45,26 @@ class FakeResponse:
 
 
 def simulate_requests(full_error_logs=False):
-    access.access_log(FakeRequest("GET", "/one/1"), FakeResponse(200), full_error_logs)
-    access.access_log(FakeRequest("POST", "/two/2"), FakeResponse(404), full_error_logs)
-    access.access_log(FakeRequest("GET", "/v1/status"), FakeResponse(200), full_error_logs)
-    access.access_log(FakeRequest("GET", "/v1/status"), FakeResponse(500), full_error_logs)
+    access.access_log_end(FakeRequest("GET", "/one/1"), FakeResponse(200), 100, full_error_logs)
+    access.access_log_end(FakeRequest("POST", "/two/2"), FakeResponse(404), 100, full_error_logs)
+    access.access_log_end(FakeRequest("GET", "/v1/status"), FakeResponse(200), 100, full_error_logs)
+    access.access_log_end(FakeRequest("GET", "/v1/status"), FakeResponse(500), 100, full_error_logs)
     # 5th request should not be logged as it's a successful load balancer health check:
-    access.access_log(
+    access.access_log_end(
         FakeRequest("GET", "/v1/status", "ELB-HealthChecker/2.0"),
         FakeResponse(200),
+        100,
         full_error_logs,
     )
-    access.access_log(
+    access.access_log_end(
         FakeRequest("GET", "/v1/status", "ELB-HealthChecker/2.0"),
         FakeResponse(500),
+        100,
         full_error_logs,
     )
 
 
-def test_access_log(caplog):
+def test_access_log_end(caplog):
     caplog.set_level(logging.INFO)  # noqa: B1
 
     simulate_requests()
@@ -76,6 +78,7 @@ def test_access_log(caplog):
         ("access_log_error", "WARNING", "500 GET /v1/status?", 500),
     ]
     assert all([r.name == "massgov.pfml.util.logging.access" for r in caplog.records])
+    assert all([r.response_time_ms == 100 for r in caplog.records])
 
 
 def test_full_request_data_not_logged_by_default(caplog):

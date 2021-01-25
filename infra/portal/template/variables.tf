@@ -15,6 +15,12 @@ variable "cognito_extra_logout_urls" {
   default     = []
 }
 
+variable "cognito_enable_provisioned_concurrency" {
+  description = "Enable or disable provisioned concurrency (and new-version publishing) for Cognito lambdas."
+  type        = bool
+  default     = false
+}
+
 variable "domain" {
   description = "Domain name to point to CloudFront distribution (including TLD)"
   type        = string
@@ -30,10 +36,4 @@ variable "ses_email_address" {
   description = "Email address used to send Cognito emails. Note that in order to use it at production scale or to send to out-of-domain email addresses we'll need to manually request that the SES email be removed from the SES sandbox"
   type        = string
   default     = "noreplypfml@mass.gov"
-}
-
-variable "cognito_post_confirmation_lambda_arn" {
-  description = "Optional. ARN of AWS Lambda to connect to the post-confirmation event on the Cognito User Pool."
-  type        = string
-  default     = null
 }

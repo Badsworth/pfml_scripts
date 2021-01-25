@@ -12,6 +12,19 @@ We then use the environment variable to configure the New Relic snippet by setti
 
 🚨 If we ever update the New Relic snippet, we should ensure that the configuration portion at the bottom is removed, so that we're not overwriting `window.NREUM.loader_config` or `window.NREUM.info`.
 
+#### Content Security Policy
+
+In order for the New Relic script to run, we need to make sure the [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) set by CloudFront in [cloudfront-handler.js](../../infra/portal/template/cloudfront-handler.js) allows:
+
+- Scripts from `https://js-agent.newrelic.com/`
+- Scripts from `https://bam.nr-data.net/`
+
+#### Correlating Events Across Systems
+
+In order to correlate New Relic events and logs between the frontend and backend, we enabled a New Relic feature called [Distributed Tracing](https://docs.newrelic.com/docs/understand-dependencies/distributed-tracing/get-started/introduction-distributed-tracing). This feature is enabled through the JavaScript snippet at the top of `new-relic.js`. Note that the ability to enable and disable this feature through the Application Settings in the New Relic Browser UI does not actually have any effect, and is therefore not used.
+
+In order for Distributed Tracing to work, all of the API environment origins need to be added to the list of `allowed_origins` at the top of `new-relic.js`.
+
 ### JS Errors
 
 New Relic Browser is used for monitoring JS Errors. JS Errors are reported to New Relic in a variety of ways:

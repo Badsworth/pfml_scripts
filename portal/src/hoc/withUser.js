@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
 import routes from "../routes";
-import { useRouter } from "next/router";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -19,8 +18,7 @@ import { useTranslation } from "../locales/i18n";
 const withUser = (Component) => {
   const ComponentWithUser = (props) => {
     const { appLogic } = props;
-    const { auth, users } = appLogic;
-    const router = useRouter();
+    const { auth, portalFlow, users } = appLogic;
     const { t } = useTranslation();
 
     useEffect(() => {
@@ -29,26 +27,34 @@ const withUser = (Component) => {
       // isn't yet defined, then it'll be defined on a subsequent render, so we won't be able to
       // use the value on this render even if we used `await`
       auth.requireLogin();
-      if (auth.isLoggedIn) {
+      if (auth.isLoggedIn && appLogic.appErrors.isEmpty) {
         users.loadUser();
       }
-    });
+
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [auth.isLoggedIn, appLogic.appErrors.isEmpty]);
 
     useEffect(() => {
       if (users.user) {
         users.requireUserConsentToDataAgreement();
+        users.requireUserRole();
       }
+
       // Only trigger this effect when the user is set/updated
       // or when the user attempts to navigate to another page
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [users.user, router.pathname]);
+    }, [users.user, portalFlow.pathname]);
 
     if (!users.user)
-      return <Spinner aria-valuetext={t("components.withUser.loadingLabel")} />;
+      return (
+        <div className="margin-top-8 text-center">
+          <Spinner aria-valuetext={t("components.withUser.loadingLabel")} />
+        </div>
+      );
 
     if (
       !users.user.consented_to_data_sharing &&
-      router.pathname !== routes.user.consentToDataSharing
+      portalFlow.pathname !== routes.user.consentToDataSharing
     )
       return null;
 
@@ -61,11 +67,16 @@ const withUser = (Component) => {
         isLoggedIn: PropTypes.bool,
         requireLogin: PropTypes.func.isRequired,
       }),
+      portalFlow: PropTypes.shape({
+        pathname: PropTypes.string.isRequired,
+      }),
       users: PropTypes.shape({
         loadUser: PropTypes.func.isRequired,
         requireUserConsentToDataAgreement: PropTypes.func.isRequired,
+        requireUserRole: PropTypes.func.isRequired,
         user: PropTypes.instanceOf(User),
       }).isRequired,
+      appErrors: PropTypes.object.isRequired,
     }).isRequired,
   };
 

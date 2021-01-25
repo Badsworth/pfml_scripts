@@ -4,23 +4,26 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************
 
-import { Application } from "../../src/types";
-
 /**
  * This command selects an input by the HTML label "for" value.
  */
 Cypress.Commands.add("labelled", (label: string) => {
-  return cy.contains("label", label, { matchCase: false }).and(($el) => {
+  return cy.contains("label", label, { matchCase: false }).then(($el) => {
     const labelFor = $el.attr("for");
-    if (!labelFor || labelFor.length < 1) {
-      throw new Error(
-        `Unable to find for attribute on label. Got: ${labelFor}`
-      );
+
+    if (labelFor && labelFor.length > 0) {
+      // Use Cypress.$ because cy.get seems to be scoped to the label.
+      // Also, escape "(" and ")" in the selector. Fineos uses these in some of its IDs, and Cypress
+      // does not like them.
+      return Cypress.$(`#${labelFor.replace(/(?<!\\)([()])/g, "\\$1")}`);
     }
-    // Use Cypress.$ because cy.get seems to be scoped to the label.
-    // Also, escape "(" and ")" in the selector. Fineos uses these in some of its IDs, and Cypress
-    // does not like them.
-    return Cypress.$(`#${labelFor.replace(/(?<!\\)([()])/g, "\\$1")}`);
+
+    // Support elements where the label is simply wrapped around the input (eg: file inputs).
+    const nestedElement = Cypress.$("input", $el);
+    if (nestedElement && nestedElement.length === 1) {
+      return nestedElement;
+    }
+    throw new Error(`Unable to find for attribute or nested input for label.`);
   });
 });
 
@@ -44,80 +47,6 @@ Cypress.Commands.add(
       .type(chars, { ...options, log: false });
   }
 );
-
-/**
- * This command populates the idVerification portion of an application with a PDF version of a license.
- *
- * This command will generate the PDF files on the fly.
- */
-Cypress.Commands.add(
-  "generateIdVerification",
-  (application: Pick<Application, "firstName" | "lastName">) => {
-    const fillData = {
-      "Given Name Text Box": application.firstName,
-      "Family Name Text Box": application.lastName,
-    };
-    return cy
-      .task("fillPDF", { source: "form.pdf", data: fillData })
-      .then((front) => {
-        return cy
-          .task("fillPDF", { source: "form.pdf", data: fillData })
-          .then((back) => {
-            return {
-              ...application,
-              idVerification: {
-                front: {
-                  fileContent: Cypress.Blob.binaryStringToBlob(
-                    (front as unknown) as string
-                  ),
-                  fileName: "id.front.pdf",
-                  mimeType: "application/pdf",
-                  encoding: "utf-8",
-                },
-                back: {
-                  fileContent: Cypress.Blob.binaryStringToBlob(
-                    (back as unknown) as string
-                  ),
-                  fileName: "id.back.pdf",
-                  mimeType: "application/pdf",
-                  encoding: "utf-8",
-                },
-              },
-            };
-          });
-      });
-  }
-);
-
-/**
- * Adds a generated HCP form to the application.
- *
- * The HCP form will be a generated PDF file.
- */
-Cypress.Commands.add("generateHCPForm", (application: Application) => {
-  const fillData = {
-    "Given Name Text Box": application.firstName,
-    "Family Name Text Box": application.lastName,
-  };
-  return cy
-    .task("fillPDF", { source: "form.pdf", data: fillData })
-    .then((providerForm) => {
-      return {
-        ...application,
-        claim: {
-          ...application.claim,
-          providerForm: {
-            fileContent: Cypress.Blob.binaryStringToBlob(
-              (providerForm as unknown) as string
-            ),
-            fileName: "hcp.pdf",
-            mimeType: "application/pdf",
-            encoding: "utf-8",
-          },
-        },
-      };
-    });
-});
 
 // Simple hash function (see: https://stackoverflow.com/a/8831937)
 function simpleHash(string: string) {
@@ -160,21 +89,35 @@ Cypress.Commands.add("unstash", (key: string) => {
   const testId = Cypress.spec.name;
   const hash = simpleHash(`${runId}-${testId}`);
 
-  return cy
-    .readFile(`/tmp/${hash}/${key}`, { log: false })
-    .then(function (contents) {
-      const data = JSON.parse(contents);
-      Cypress.log({
-        name: "unstash",
-        message: key,
-        consoleProps() {
-          return {
-            hash: hash,
-            key: key,
-            data: data,
-          };
-        },
-      });
-      return data;
-    });
+  return (
+    cy
+      // Short timeout because by definition this file has to exist before unstash is called.
+      .readFile(`/tmp/${hash}/${key}`, { log: false, timeout: 1000 })
+      .then(function (contents) {
+        const data = JSON.parse(contents);
+        Cypress.log({
+          name: "unstash",
+          message: key,
+          consoleProps() {
+            return {
+              hash: hash,
+              key: key,
+              data: data,
+            };
+          },
+        });
+        return data;
+      })
+  );
 });
+
+Cypress.Commands.add(
+  "stashLog",
+  (key: string, data: string | null | undefined) => {
+    if (!data) {
+      throw new Error("Cannot stash undefined data");
+    }
+    cy.stash(key, data);
+    cy.log(data);
+  }
+);

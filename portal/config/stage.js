@@ -7,5 +7,5 @@ module.exports = {
   // Not finding what you're looking for? Check default.js
   envName: "stage",
   domain: "paidleave-stage.mass.gov",
-  newRelicAppId: "747093012",
+  newRelicAppId: "847043861",
 };

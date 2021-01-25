@@ -18,5 +18,7 @@ module.exports = {
     auth: "M4sQ_RNEqsKttKJFMho1Mg",
     preview: "env-3",
   },
-  newRelicAppId: "747096155",
+  // See docs/portal/maintenance-pages.md
+  // maintenancePageRoutes: [],
+  newRelicAppId: "847045300",
 };

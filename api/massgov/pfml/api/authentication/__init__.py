@@ -5,8 +5,9 @@
 import json
 
 import flask
+import jose
 import requests
-from jose import JWTError, jwt
+from jose import jwt
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from werkzeug.exceptions import Unauthorized
 
@@ -44,22 +45,33 @@ def _decode_cognito_token(token):
 
 
 def decode_cognito_token(token):
+    """Decode a Bearer token and validate signature against public keys.
+
+    This is called automatically by Connexion. See x-bearerInfoFunc and x-tokenInfoFunc lines in
+    openapi.yaml.
+
+    See also https://connexion.readthedocs.io/en/latest/security.html
+    """
     try:
         decoded_token = _decode_cognito_token(token)
+        auth_id = decoded_token.get("sub")
         with app.db_session() as db_session:
-            user = (
-                db_session.query(User)
-                .filter(User.active_directory_id == decoded_token.get("sub"))
-                .one()
-            )
+            user = db_session.query(User).filter(User.active_directory_id == auth_id).one()
 
             flask.g.current_user = user
 
-        logger.info("Auth token decode successful")
+            # Read attributes for logging, so that db calls are not made during logging.
+            flask.g.current_user_user_id = str(user.user_id)
+            flask.g.current_user_auth_id = str(user.active_directory_id)
+            flask.g.current_user_role_ids = ",".join(str(role.role_id) for role in user.roles)
+
+        logger.info("auth token decode succeeded", extra={"current_user.auth_id": auth_id})
         return decoded_token
-    except JWTError:
-        logger.info("Auth token decode unsuccessful")
+    except jose.JOSEError as e:
+        logger.error("auth token decode failed: %s %s", type(e), str(e), extra={"error": e})
         raise Unauthorized
     except (NoResultFound, MultipleResultsFound) as e:
-        logger.error("Auth token decode unsuccessful", extra={"error": e})
+        logger.error(
+            "user query failed: %s", type(e), extra={"current_user.auth_id": auth_id, "error": e,}
+        )
         raise Unauthorized

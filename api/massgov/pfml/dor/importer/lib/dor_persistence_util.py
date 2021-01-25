@@ -1,5 +1,4 @@
-import json
-from dataclasses import asdict
+import uuid
 
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
@@ -11,8 +10,8 @@ from massgov.pfml.db.models.employees import (
     Employee,
     Employer,
     EmployerAddress,
+    EmployerQuarterlyContribution,
     GeoState,
-    ImportLog,
     TaxIdentifier,
     WagesAndContributions,
 )
@@ -21,8 +20,58 @@ from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
 logger = logging.get_logger(__name__)
 
 
-def create_employer(db_session, employer_info, import_log_entry_id):
-    emp = Employer(
+def employer_id_address_id_to_model(employer_id, address_id):
+    return EmployerAddress(employer_id=employer_id, address_id=address_id)
+
+
+def dict_to_employee(employee_info, import_log_entry_id, uuid=uuid.uuid4, tax_identifier_id=None):
+    employee = Employee(
+        employee_id=uuid,
+        first_name=employee_info["employee_first_name"],
+        last_name=employee_info["employee_last_name"],
+        latest_import_log_id=import_log_entry_id,
+        tax_identifier_id=tax_identifier_id,
+    )
+
+    return employee
+
+
+def dict_to_wages_and_contributions(
+    employee_wage_info, employee_id, employer_id, import_log_entry_id
+):
+    wage = WagesAndContributions(
+        account_key=employee_wage_info["account_key"],
+        filing_period=employee_wage_info["filing_period"],
+        employee_id=employee_id,
+        employer_id=employer_id,
+        is_independent_contractor=employee_wage_info["independent_contractor"],
+        is_opted_in=employee_wage_info["opt_in"],
+        employee_ytd_wages=employee_wage_info["employee_ytd_wages"],
+        employee_qtr_wages=employee_wage_info["employee_qtr_wages"],
+        employee_med_contribution=employee_wage_info["employee_medical"],
+        employer_med_contribution=employee_wage_info["employer_medical"],
+        employee_fam_contribution=employee_wage_info["employee_family"],
+        employer_fam_contribution=employee_wage_info["employer_family"],
+        latest_import_log_id=import_log_entry_id,
+    )
+
+    return wage
+
+
+def dict_to_employer_quarter_contribution(employer_info, employer_id, import_log_entry_id):
+    return EmployerQuarterlyContribution(
+        employer_id=employer_id,
+        filing_period=employer_info["filing_period"],
+        employer_total_pfml_contribution=employer_info["total_pfml_contribution"],
+        pfm_account_id=employer_info["pfm_account_id"],
+        dor_received_date=employer_info["received_date"],
+        dor_updated_date=employer_info["updated_date"],
+        latest_import_log_id=import_log_entry_id,
+    )
+
+
+def dict_to_employer(employer_info, import_log_entry_id, uuid=uuid.uuid4):
+    return Employer(
         account_key=employer_info["account_key"],
         employer_fein=employer_info["fein"],
         employer_name=employer_info["employer_name"],
@@ -33,34 +82,45 @@ def create_employer(db_session, employer_info, import_log_entry_id):
         exemption_cease_date=employer_info["exemption_cease_date"],
         dor_updated_date=employer_info["updated_date"],
         latest_import_log_id=import_log_entry_id,
+        employer_id=uuid,
     )
-    db_session.add(emp)
 
+
+def employer_dict_to_country_and_state_values(employer_info):
+    """
+    Get employer country and state values for persistence.
+    Will throw a KeyError if state is invalid for a USA country code.
+    """
+    state_id = None
+    state_text = None
+
+    country_id = None
     try:
-        state = find_state(db_session, employer_info["employer_address_state"])
-        country = find_country(db_session, "US")
-    except (NoResultFound, MultipleResultsFound) as e:
-        logger.error("Error trying to find address lookup values", extra={"error": e})
-        raise ValueError("Error trying to find address lookup values")
+        country_id = Country.get_id(employer_info["employer_address_country"])
+    except Exception:
+        logger.info("Country not found %s", employer_info["employer_address_country"])
 
-    address = Address(
+    if Country.USA.country_id == country_id:
+        state_id = GeoState.get_id(employer_info["employer_address_state"])
+    else:
+        state_text = employer_info["employer_address_state"]
+
+    return country_id, state_id, state_text
+
+
+def dict_to_address(employer_info, uuid=uuid.uuid4):
+    country_id, state_id, state_text = employer_dict_to_country_and_state_values(employer_info)
+
+    return Address(
         address_type_id=AddressType.BUSINESS.address_type_id,
         address_line_one=employer_info["employer_address_street"],
         city=employer_info["employer_address_city"],
-        geo_state_id=state.geo_state_id,
+        geo_state_id=state_id,
+        geo_state_text=state_text,
         zip_code=employer_info["employer_address_zip"],
-        country_id=country.country_id,
+        country_id=country_id,
+        address_id=uuid,
     )
-    db_session.add(address)
-
-    db_session.flush()
-    db_session.refresh(emp)
-    db_session.refresh(address)
-
-    emp_address = EmployerAddress(employer_id=emp.employer_id, address_id=address.address_id)
-    db_session.add(emp_address)
-
-    return emp
 
 
 def update_employer(db_session, existing_employer, employer_info, import_log_entry_id):
@@ -91,20 +151,23 @@ def update_employer(db_session, existing_employer, employer_info, import_log_ent
         )
         raise ValueError("Address row not found by id")
 
-    try:
-        state = find_state(db_session, employer_info["employer_address_state"])
-        country = find_country(db_session, "US")
-    except (NoResultFound, MultipleResultsFound) as e:
-        logger.error("Error trying to find address lookup values", extra={"error": e})
-        raise ValueError("Error trying to find address lookup values")
+    country_id, state_id, state_text = employer_dict_to_country_and_state_values(employer_info)
 
     existing_address.address_line_one = employer_info["employer_address_street"]
     existing_address.city = employer_info["employer_address_city"]
-    existing_address.geo_state_id = state.geo_state_id
+    existing_address.geo_state_id = state_id
+    existing_address.geo_state_text = state_text
     existing_address.zip_code = employer_info["employer_address_zip"]
-    existing_address.country_id = country.country_id
+    existing_address.country_id = country_id
 
     return existing_employer
+
+
+def tax_id_from_dict(employee_id, tax_identifier, uuid=uuid.uuid4):
+    formatted_tax_id = TaxIdUnformattedStr.validate_type(tax_identifier)
+    tax_identifier = TaxIdentifier(tax_identifier_id=employee_id, tax_identifier=formatted_tax_id,)
+
+    return tax_identifier
 
 
 def create_tax_id(db_session, tax_id):
@@ -136,6 +199,19 @@ def create_employee(db_session, employee_info, import_log_entry_id):
     return employee
 
 
+def check_and_update_employee(db_session, existing_employee, employee_info, import_log_entry_id):
+    do_update = (
+        existing_employee.first_name != employee_info["employee_first_name"]
+        or existing_employee.last_name != employee_info["employee_last_name"]
+    )
+
+    if not do_update:
+        return False
+
+    update_employee(db_session, existing_employee, employee_info, import_log_entry_id)
+    return True
+
+
 def update_employee(db_session, existing_employee, employee_info, import_log_entry_id):
     existing_employee.first_name = employee_info["employee_first_name"]
     existing_employee.last_name = employee_info["employee_last_name"]
@@ -144,32 +220,69 @@ def update_employee(db_session, existing_employee, employee_info, import_log_ent
     return existing_employee
 
 
+def check_and_update_employer_quarlerly_contribution(
+    db_session, existing_employer_quarlerly_contribution, employer_info, import_log_entry_id
+):
+    do_update = (
+        existing_employer_quarlerly_contribution.employer_total_pfml_contribution
+        != employer_info["total_pfml_contribution"]
+        or existing_employer_quarlerly_contribution.dor_received_date.date()
+        != employer_info["received_date"]
+        or existing_employer_quarlerly_contribution.dor_updated_date.date()
+        != employer_info["updated_date"].date()
+        or existing_employer_quarlerly_contribution.pfm_account_id
+        != employer_info["pfm_account_id"]
+    )
+
+    if not do_update:
+        return False
+
+    existing_employer_quarlerly_contribution.employer_total_pfml_contribution = employer_info[
+        "total_pfml_contribution"
+    ]
+    existing_employer_quarlerly_contribution.pfm_account_id = employer_info["pfm_account_id"]
+    existing_employer_quarlerly_contribution.dor_received_date = employer_info["received_date"]
+    existing_employer_quarlerly_contribution.dor_updated_date = employer_info["updated_date"]
+    existing_employer_quarlerly_contribution.latest_import_log_id = import_log_entry_id
+
+    return True
+
+
 def create_wages_and_contributions(
     db_session, employee_wage_info, employee_id, employer_id, import_log_entry_id
 ):
-    wage = WagesAndContributions(
-        account_key=employee_wage_info["account_key"],
-        filing_period=employee_wage_info["filing_period"],
-        employee_id=employee_id,
-        employer_id=employer_id,
-        is_independent_contractor=employee_wage_info["independent_contractor"],
-        is_opted_in=employee_wage_info["opt_in"],
-        employee_ytd_wages=employee_wage_info["employee_ytd_wages"],
-        employee_qtr_wages=employee_wage_info["employee_qtr_wages"],
-        employee_med_contribution=employee_wage_info["employee_medical"],
-        employer_med_contribution=employee_wage_info["employer_medical"],
-        employee_fam_contribution=employee_wage_info["employee_family"],
-        employer_fam_contribution=employee_wage_info["employer_family"],
-        latest_import_log_id=import_log_entry_id,
+    wage = dict_to_wages_and_contributions(
+        employee_wage_info, employee_id, employer_id, import_log_entry_id
     )
     db_session.add(wage)
 
     return wage
 
 
-def update_wages_and_contributions(
+def check_and_update_wages_and_contributions(
     db_session, existing_wages_and_contributions, employee_wage_info, import_log_entry_id
 ):
+    do_update = (
+        existing_wages_and_contributions.is_independent_contractor
+        != employee_wage_info["independent_contractor"]
+        or existing_wages_and_contributions.is_opted_in != employee_wage_info["opt_in"]
+        or existing_wages_and_contributions.employee_ytd_wages
+        != employee_wage_info["employee_ytd_wages"]
+        or existing_wages_and_contributions.employee_qtr_wages
+        != employee_wage_info["employee_qtr_wages"]
+        or existing_wages_and_contributions.employee_med_contribution
+        != employee_wage_info["employee_medical"]
+        or existing_wages_and_contributions.employer_med_contribution
+        != employee_wage_info["employer_medical"]
+        or existing_wages_and_contributions.employee_fam_contribution
+        != employee_wage_info["employee_family"]
+        or existing_wages_and_contributions.employer_fam_contribution
+        != employee_wage_info["employer_family"]
+    )
+
+    if not do_update:
+        return False
+
     existing_wages_and_contributions.is_independent_contractor = employee_wage_info[
         "independent_contractor"
     ]
@@ -190,58 +303,44 @@ def update_wages_and_contributions(
     ]
     existing_wages_and_contributions.latest_import_log_id = import_log_entry_id
 
-    return existing_wages_and_contributions
-
-
-def create_import_log_entry(db_session, report):
-    """Creating a a report log entry in the database"""
-    logger.info("Adding report to import log")
-    import_log = ImportLog(
-        source="DOR",
-        import_type="Initial",
-        status=report.status,
-        report=json.dumps(asdict(report), indent=2),
-        start=report.start,
-        end=report.end,
-    )
-    db_session.add(import_log)
-    db_session.flush()
-    db_session.refresh(import_log)
-    logger.info("Added report to import log")
-    return import_log
-
-
-def update_import_log_entry(db_session, existing_import_log, report):
-    """Updating an existing import log entry with the supplied report"""
-    logger.info("Updating report in import log")
-    existing_import_log.status = report.status
-    existing_import_log.report = json.dumps(asdict(report), indent=2)
-    existing_import_log.start = report.start
-    existing_import_log.end = report.end
-    db_session.add(existing_import_log)
-    db_session.flush()
-    db_session.refresh(existing_import_log)
-    logger.info("Finished saving import report in log")
-    return existing_import_log
+    return True
 
 
 # == Query Helpers ==
 
 
-def get_employee_by_ssn(db_session, ssn):
-    tax_id_row = (
-        db_session.query(TaxIdentifier)
-        .filter(TaxIdentifier.tax_identifier == TaxIdUnformattedStr.validate_type(ssn))
-        .one_or_none()
+def get_employer_quarterly_info_by_employer_id(db_session, employer_ids):
+    employer_rows = (
+        db_session.query(EmployerQuarterlyContribution)
+        .filter(EmployerQuarterlyContribution.employer_id.in_(employer_ids))
+        .all()
     )
-    if tax_id_row is None:
-        return None
-    employee_row = (
+    return employer_rows
+
+
+def get_tax_ids(db_session, ssns):
+    tax_id_rows = (
+        db_session.query(TaxIdentifier).filter(TaxIdentifier.tax_identifier.in_(ssns)).all()
+    )
+    return tax_id_rows
+
+
+def get_employees_by_ssn(db_session, ssns):
+    employee_rows = (
         db_session.query(Employee)
-        .filter(Employee.tax_identifier_id == tax_id_row.tax_identifier_id)
-        .one_or_none()
+        .join(TaxIdentifier)
+        .filter(TaxIdentifier.tax_identifier.in_(ssns))
+        .all()
     )
-    return employee_row
+    return employee_rows
+
+
+def get_wages_and_contributions_by_employee_ids(db_session, employee_ids):
+    return list(
+        db_session.query(WagesAndContributions).filter(
+            WagesAndContributions.employee_id.in_(employee_ids),
+        )
+    )
 
 
 def get_wages_and_contributions_by_employee_id_and_filling_period(
@@ -269,6 +368,25 @@ def get_tax_id(db_session, tax_id):
     return tax_id_row
 
 
+def get_all_employers_fein(db_session):
+    employer_rows = (
+        db_session.query(Employer)
+        .with_entities(Employer.employer_id, Employer.employer_fein, Employer.dor_updated_date)
+        .all()
+    )
+    return employer_rows
+
+
+def get_employers_account_key(db_session, account_keys):
+    employer_rows = (
+        db_session.query(Employer)
+        .filter(Employer.account_key.in_(account_keys))
+        .with_entities(Employer.employer_id, Employer.account_key, Employer.dor_updated_date)
+        .all()
+    )
+    return employer_rows
+
+
 def get_employer_by_fein(db_session, fein):
     employer_row = db_session.query(Employer).filter(Employer.employer_fein == fein).one_or_none()
     return employer_row
@@ -284,15 +402,3 @@ def get_employer_address(db_session, employer_id):
 def get_address(db_session, address_id):
     address_row = db_session.query(Address).filter(Address.address_id == address_id).one()
     return address_row
-
-
-# TODO find the state by state_name after lookup is fully populated
-def find_state(db_session, state_name):
-    state = db_session.query(GeoState).filter(GeoState.geo_state_description == "MA").one()
-    return state
-
-
-# TODO find the country by country_name after lookup is fully populated
-def find_country(db_session, country_name):
-    country = db_session.query(Country).filter(Country.country_description == "US").one()
-    return country

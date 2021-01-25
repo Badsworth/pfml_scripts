@@ -1,4 +1,4 @@
-import Head from "next/head"; // https://nextjs.org/docs/api-reference/next/head
+import { Helmet } from "react-helmet"; // we don't use next/head because of https://lwd.atlassian.net/browse/CP-1071
 import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
@@ -11,20 +11,25 @@ const Title = ({ component = "h1", small = false, ...props }) => {
   const TitleElement = component;
   const marginBottom = props.marginBottom ? props.marginBottom : "2";
 
-  const classes = classnames(`margin-top-0 margin-bottom-${marginBottom}`, {
-    "font-heading-lg line-height-sans-2": !small,
-    "font-heading-sm line-height-sans-3": small,
-    "usa-legend": component === "legend",
-    "usa-sr-only": !!props.hidden,
-  });
+  const classes = classnames(
+    `js-title margin-top-0 margin-bottom-${marginBottom}`,
+    {
+      "font-heading-lg line-height-sans-2": !small,
+      "font-heading-sm line-height-sans-3": small,
+      "usa-legend": component === "legend",
+      "usa-sr-only": !!props.hidden,
+    }
+  );
   const seoTitle = props.seoTitle ? props.seoTitle : props.children;
 
   return (
     <React.Fragment>
-      <Head>
+      <Helmet>
         <title>{seoTitle}</title>
-      </Head>
-      <TitleElement className={classes}>{props.children}</TitleElement>
+      </Helmet>
+      <TitleElement tabIndex="-1" className={classes}>
+        {props.children}
+      </TitleElement>
     </React.Fragment>
   );
 };

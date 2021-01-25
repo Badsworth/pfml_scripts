@@ -53,21 +53,21 @@ describe("createRouteWithQuery", () => {
 
 describe("routeWithParams", () => {
   it("creates a URL string of route and query parameters", () => {
-    const routeName = "claims.name";
+    const routeName = "applications.name";
     const params = {
       param1: "value1",
       param2: "value2",
     };
 
     expect(routeWithParams(routeName, params)).toEqual(
-      routes.claims.name + "?param1=value1&param2=value2"
+      routes.applications.name + "?param1=value1&param2=value2"
     );
   });
 
   it("throws error if route does not exist", () => {
     console.error = jest.fn();
 
-    const routeName = "claims.nomnom";
+    const routeName = "applications.nomnom";
 
     const makeRoute = () => routeWithParams(routeName, { test: "value1" });
     expect(makeRoute).toThrowError();

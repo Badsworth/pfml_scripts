@@ -8,6 +8,7 @@ function render(customProps = {}) {
       label: "Field Label",
       name: "field-name",
       value: "field-value",
+      disabled: false,
     },
     customProps
   );
@@ -35,6 +36,14 @@ describe("InputChoice", () => {
     const field = wrapper.find("input");
 
     expect(field.prop("value")).toBe(value);
+  });
+
+  it("sets the input's disabled attribute", () => {
+    const disabled = true;
+    const { wrapper } = render({ disabled });
+    const field = wrapper.find("input");
+
+    expect(field.prop("disabled")).toBe(disabled);
   });
 
   it("generates a unique id if none is provided", () => {
@@ -65,6 +74,15 @@ describe("InputChoice", () => {
       const hint = wrapper.find("label .usa-hint");
 
       expect(hint.text()).toMatch(props.hint);
+    });
+  });
+
+  describe("when ariaControls prop is set", () => {
+    it("renders an aria-controls attribute", () => {
+      const { wrapper } = render({ ariaControls: "my-element" });
+      const input = wrapper.find("input");
+
+      expect(input.prop("aria-controls")).toBe("my-element");
     });
   });
 

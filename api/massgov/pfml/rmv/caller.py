@@ -1,8 +1,9 @@
 import abc
 import os
 import urllib
+from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 import boto3
 import zeep
@@ -74,5 +75,66 @@ class LazyZeepApiCaller(LazyApiCaller[zeep.proxy.ServiceProxy]):
         )
 
     def get(self) -> ApiCaller[zeep.proxy.ServiceProxy]:
-        url = urllib.parse.urljoin(self.base_url, "/vs/gateway/VendorLicenseInquiry/?WSDL")
+        url = urllib.parse.urljoin(self.base_url, "/gateway/VendorLicenseInquiry/?WSDL")
         return zeep.Client(url, transport=Transport(session=self.session)).service
+
+
+class MockZeepCaller(LazyApiCaller[dict], ApiCaller[dict]):
+    """
+    Zeep caller object mock to track calls and provided arguments.
+
+    Takes in an response object to always return for VendorLicenseInquiry
+    requests.
+    """
+
+    def __init__(self, response: Optional[Dict[str, Any]] = None):
+
+        self.args: Dict[str, List[Any]] = defaultdict(lambda: [])
+        self.calls: Dict[str, int] = defaultdict(int)
+
+        default_response = {
+            "CustomerKey": "12345",
+            "LicenseID": "ABC12345",
+            "License1ExpirationDate": "20210204",
+            "LicenseSSN": "12345678",
+            "CustomerInActive": False,
+            "CFLSanctions": False,
+            "CFLSanctionsActive": False,
+            "Street1": "",
+            "Street2": "",
+            "City": "",
+            "Zip": "",
+            "OtherStuff": None,
+            "Acknowledgement": None,
+        }
+
+        if response:
+            if response.get("Acknowledgement", None) is not None:
+                # When the RMV responds with an Acknowledgement value, all other
+                # fields in the response are None
+                empty_response = dict.fromkeys(default_response, None)
+                empty_response.update(response)
+
+                response = empty_response
+            else:
+                response = {
+                    **default_response,
+                    **response,
+                }
+        else:
+            response = default_response
+
+        class AttrDict(dict):
+            def __init__(self, *args, **kwargs):
+                super(AttrDict, self).__init__(*args, **kwargs)
+                self.__dict__ = self
+
+        self.response = AttrDict(**response)
+
+    def get(self) -> ApiCaller[dict]:
+        return self
+
+    def VendorLicenseInquiry(self, **kwargs: Any) -> CallerResponse:
+        self.args["VendorLicenseInquiry"].append(kwargs)
+        self.calls["VendorLicenseInquiry"] += 1
+        return self.response

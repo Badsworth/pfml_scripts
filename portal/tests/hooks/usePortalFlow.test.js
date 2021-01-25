@@ -1,5 +1,5 @@
 import RouteTransitionError from "../../src/errors";
-import machineConfigs from "../../src/routes/claim-flow-configs";
+import machineConfigs from "../../src/flows";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
 import { testHook } from "../test-utils";
@@ -11,7 +11,7 @@ describe("usePortalFlow", () => {
   describe("goToPageFor", () => {
     let expectedRoute, portalFlow;
     beforeEach(() => {
-      mockRouter.pathname = "/";
+      mockRouter.pathname = routes.applications.start;
       expectedRoute =
         machineConfigs.states[mockRouter.pathname].on.CREATE_CLAIM;
       testHook(() => {
@@ -52,11 +52,52 @@ describe("usePortalFlow", () => {
     });
   });
 
+  describe("getNextPageRoute", () => {
+    let expectedRoute, portalFlow;
+    beforeEach(() => {
+      mockRouter.pathname = routes.applications.checklist;
+      expectedRoute = machineConfigs.states[mockRouter.pathname].on.VERIFY_ID;
+      testHook(() => {
+        portalFlow = usePortalFlow();
+      });
+    });
+
+    it("returns the url with the provided event", () => {
+      const result = portalFlow.getNextPageRoute("VERIFY_ID", {});
+      expect(result).toBe(expectedRoute);
+    });
+
+    describe("when params are passed", () => {
+      it("adds params to url", () => {
+        const params = { param1: "test" };
+        const result = portalFlow.getNextPageRoute("VERIFY_ID", {}, params);
+
+        expect(result).toBe(`${expectedRoute}?param1=${params.param1}`);
+      });
+    });
+
+    describe("when path is not defined", () => {
+      it("throws error", () => {
+        mockRouter.pathname = "/not/in/configs";
+
+        testHook(() => {
+          portalFlow = usePortalFlow();
+        });
+
+        const testGoToPageFor = () => {
+          portalFlow.getNextPageRoute();
+        };
+
+        expect(testGoToPageFor).toThrowError(RouteTransitionError);
+      });
+    });
+  });
+
   describe("goToNextPage", () => {
     let nextPageRoute, portalFlow;
 
     beforeEach(() => {
-      mockRouter.pathname = routes.claims.name;
+      mockRouter.pathname = routes.applications.ssn;
       nextPageRoute = machineConfigs.states[mockRouter.pathname].on.CONTINUE;
       testHook(() => {
         portalFlow = usePortalFlow();
@@ -93,6 +134,31 @@ describe("usePortalFlow", () => {
 
         expect(testNextPage).toThrowError(RouteTransitionError);
       });
+    });
+  });
+
+  describe("page", () => {
+    it("returns the active page's state node", () => {
+      let portalFlow;
+      mockRouter.pathname = routes.applications.ssn;
+
+      testHook(() => {
+        portalFlow = usePortalFlow();
+      });
+
+      expect(portalFlow.page).toMatchInlineSnapshot(`
+        Object {
+          "meta": Object {
+            "fields": Array [
+              "claim.tax_identifier",
+            ],
+            "step": "VERIFY_ID",
+          },
+          "on": Object {
+            "CONTINUE": "/applications/checklist",
+          },
+        }
+      `);
     });
   });
 });

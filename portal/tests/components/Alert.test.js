@@ -46,6 +46,20 @@ describe("Alert", () => {
     `);
   });
 
+  it("renders an h3 when headingLevel is set to 3", () => {
+    const { wrapper } = render({ heading: "Alert heading", headingLevel: "3" });
+
+    expect(wrapper.find("Heading").prop("level")).toBe("3");
+    expect(wrapper.find("Heading").prop("size")).toBeUndefined();
+  });
+
+  it("renders overrides the Heading size when headingSize is set to 3", () => {
+    const { wrapper } = render({ heading: "Alert heading", headingSize: "3" });
+
+    expect(wrapper.find("Heading").prop("level")).toBe("2");
+    expect(wrapper.find("Heading").prop("size")).toBe("3");
+  });
+
   it("renders the 'error' state by default", () => {
     const { wrapper } = render();
 
@@ -111,5 +125,20 @@ describe("Alert", () => {
   it("renders without an icon when the noIcon prop is set", () => {
     const { wrapper } = render({ noIcon: true });
     expect(wrapper.hasClass("usa-alert--no-icon")).toBe(true);
+  });
+
+  it("renders slim when the slim prop is set", () => {
+    const { wrapper } = render({ slim: true });
+    expect(wrapper.hasClass("usa-alert--slim")).toBe(true);
+  });
+
+  it("renders with a neutral background color when the neutral prop is set", () => {
+    const { wrapper } = render({ neutral: true });
+    expect(wrapper.hasClass("c-alert--neutral")).toBe(true);
+  });
+
+  it("renders auto-width when the autoWidth prop is set", () => {
+    const { wrapper } = render({ autoWidth: true });
+    expect(wrapper.hasClass("c-alert--auto-width")).toBe(true);
   });
 });

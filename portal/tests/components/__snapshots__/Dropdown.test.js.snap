@@ -2,7 +2,7 @@
 
 exports[`Dropdown renders select field with list of options 1`] = `
 <select
-  className="usa-select"
+  className="usa-select maxw-mobile-lg"
   id="Dropdown1"
   name="field-name"
   onChange={[MockFunction]}

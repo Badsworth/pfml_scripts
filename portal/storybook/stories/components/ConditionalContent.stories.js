@@ -31,7 +31,7 @@ export const Example = () => {
     updateFormState({ ...formState, ...fields });
   };
 
-  const removeField = (fieldName) => {
+  const clearField = (fieldName) => {
     updateFormState({
       ...formState,
       [fieldName]: "",
@@ -40,7 +40,7 @@ export const Example = () => {
 
   // Render the form component!
   return (
-    <form className="usa-form usa-form--large">
+    <form className="usa-form">
       <InputChoiceGroup
         choices={[
           {
@@ -64,7 +64,7 @@ export const Example = () => {
       <ConditionalContent
         fieldNamesClearedWhenHidden={["fullName"]}
         getField={getField}
-        removeField={removeField}
+        clearField={clearField}
         updateFields={updateFields}
         visible={formState.fileClaim === "yes"}
       >

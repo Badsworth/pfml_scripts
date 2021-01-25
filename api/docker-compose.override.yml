@@ -1,0 +1,24 @@
+version: "3.8"
+
+# Default override file for local development. This is used by default
+# alongside docker-compose.yml when running docker-compose without -f flags.
+#
+# This is split from the normal docker-compose.yml file in order to support
+# docker-compose.release.yml, which runs the release build locally. Instead
+# of usiing the development files, it prebuilds the python wheel, so the
+# /app directory should not be overridden.
+#
+services:
+  mass-pfml-api:
+    # We set `:z` on the bind mounts to support Linux systems with SELinux, on
+    # other platforms it has no effect.
+    #
+    # https://docs.docker.com/storage/bind-mounts/
+    volumes:
+      # To make local development easier, mount project code so that we don't
+      # have to rebuild the docker container every time we run
+      - .:/app:z
+      # You can make your aws credentials accessible in the container by
+      # uncommenting this line with the path to your aws credentials folder
+      # On a mac, this will generally be in a folder with your name
+      # - /Users/{yourname}/.aws:/home/{yourname}/.aws:ro

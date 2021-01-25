@@ -8,9 +8,11 @@ import classnames from "classnames";
 
 const Step = (props) => {
   const disabled = props.status === "disabled";
+  const notStarted = props.status === "not_started";
+  const inProgress = props.status === "in_progress";
   const completed = props.status === "completed";
-  const not_started = props.status === "not_started";
-  const active = ["in_progress", "not_started"].includes(props.status);
+  const notApplicable = props.status === "not_applicable";
+  const showChildren = inProgress || notStarted || notApplicable;
 
   const editCompletedStep = (
     <React.Fragment>
@@ -26,33 +28,39 @@ const Step = (props) => {
         </span>
         {props.completedText}
       </div>
-      <div className="margin-top-1">
-        <Link href={props.stepHref}>
-          <a
-            className="usa-link"
-            aria-label={`${props.editText}: ${props.title}`}
-          >
-            {props.editText}
-          </a>
-        </Link>
-      </div>
+      {props.stepHref && (
+        <div className="margin-top-1">
+          <Link href={props.stepHref}>
+            <a
+              className="usa-link"
+              aria-label={`${props.editText}: ${props.title}`}
+            >
+              {props.editText}
+            </a>
+          </Link>
+        </div>
+      )}
     </React.Fragment>
   );
 
-  const buttonText = not_started ? props.startText : props.resumeText;
-  const startResumeButton = (
-    <ButtonLink href={props.stepHref} className="width-auto">
-      {buttonText}
+  const startButton = (
+    <ButtonLink
+      href={props.stepHref}
+      className="width-auto"
+      ariaLabel={`${props.startText}: ${props.title}`}
+    >
+      {props.startText}
     </ButtonLink>
   );
-
-  const actionColumn = () => {
-    if (completed) {
-      return editCompletedStep;
-    }
-
-    return startResumeButton;
-  };
+  const resumeButton = (
+    <ButtonLink
+      href={props.stepHref}
+      className="width-auto"
+      ariaLabel={`${props.resumeScreenReaderText}: ${props.title}`}
+    >
+      {props.resumeText}
+    </ButtonLink>
+  );
 
   // classes for wrapping element
   const classes = classnames(
@@ -79,8 +87,8 @@ const Step = (props) => {
   // column with the title and description
   const titleDescriptionColumnClasses = "tablet:grid-col-8";
 
-  // lighten title color if step is disabled
-  const titleClasses = classnames({ "text-base": disabled });
+  // lighten title color if step is disabled or not applicable
+  const titleClasses = classnames({ "text-base": disabled || notApplicable });
 
   // column with user action links/button (edit, start, or resume)
   const actionColumnClasses = classnames(
@@ -104,14 +112,16 @@ const Step = (props) => {
       </StepNumber>
       <div className={collapsibleColumnClasses}>
         <div className={titleDescriptionColumnClasses}>
-          <Heading level="2" className={titleClasses}>
+          <Heading level="3" className={titleClasses}>
             {props.title}
           </Heading>
-          {active && <p>{props.children}</p>}
+          {showChildren && <div className="usa-prose">{props.children}</div>}
         </div>
-        {!disabled && (
-          <div className={actionColumnClasses}>{actionColumn()}</div>
-        )}
+        <div className={actionColumnClasses}>
+          {notStarted && startButton}
+          {inProgress && resumeButton}
+          {completed && props.editable && editCompletedStep}
+        </div>
       </div>
     </div>
   );
@@ -121,12 +131,13 @@ Step.propTypes = {
   /**
    * Href to question page.
    */
-  stepHref: PropTypes.string.isRequired,
+  stepHref: PropTypes.string,
   /**
    * Status of step.
    */
   status: PropTypes.oneOf([
     "disabled",
+    "not_applicable",
     "not_started",
     "in_progress",
     "completed",
@@ -140,6 +151,10 @@ Step.propTypes = {
    */
   children: PropTypes.node,
   /**
+   * Whether or not the step is editable by the user
+   */
+  editable: PropTypes.bool.isRequired,
+  /**
    * Localized text for the start button.
    * This can also be passed by parent StepList component.
    */
@@ -150,15 +165,20 @@ Step.propTypes = {
    */
   resumeText: PropTypes.string,
   /**
+   * Localized text for the resume button's aria-label,
+   * needed for screen readers, since VoiceOver reads "résumé".
+   * This can also be passed by parent StepList component.
+   */
+  resumeScreenReaderText: PropTypes.string,
+  /**
    * Localized text for the edit link.
    * This can also be passed by parent StepList component.
    */
   editText: PropTypes.string,
   /**
    * Localized text for the completed button.
-   * This can also be passed by parent StepList component.
    */
-  completedText: PropTypes.string,
+  completedText: PropTypes.string.isRequired,
   /**
    * The number of the step in the step list.
    * This can also be passed by parent StepList component.

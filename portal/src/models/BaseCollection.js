@@ -35,10 +35,14 @@ class BaseCollection {
     throw new Error("Not implemented");
   }
 
+  get isEmpty() {
+    return this.items.length === 0;
+  }
+
   /**
    * Return a single item from the id of the item or
    * undefined if the item is not in the collection
-   * @todo Rename to getItem to be consistent with other methods
+   * TODO (CP-887): Rename to getItem to be consistent with other methods
    * @param {string} itemId - item id
    * @returns {BaseModel|undefined} item - instance of item
    */
@@ -64,6 +68,21 @@ class BaseCollection {
     }
     const newItems = this.items.concat(item);
     return new this.constructor(newItems);
+  }
+
+  /**
+   * Adds items to the collection. Returns a new collection with the items added.
+   * Does not modify the original collection.
+   * @param {BaseModel[]} items The items to add to the collection
+   * @returns {BaseCollection}
+   */
+  addItems(items) {
+    if (!Array.isArray(items)) {
+      throw new Error(`Items must be an array`);
+    }
+    return items.reduce((collection, item) => {
+      return collection.addItem(item);
+    }, this);
   }
 
   /**

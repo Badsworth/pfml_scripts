@@ -16,7 +16,12 @@ resource "aws_lambda_function" "cloudfront_handler" {
   handler          = "cloudfront-handler.handler"
   source_code_hash = data.archive_file.cloudfront_handler.output_base64sha256
   runtime          = "nodejs12.x"
-  publish          = true
+
+  # Cloudfront lambda function associations need to use published, static version
+  publish = true
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch" {
@@ -24,4 +29,20 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.cloudfront_handler.function_name
   principal     = "events.amazonaws.com"
+}
+
+resource "aws_cloudwatch_log_group" "lambda_cloudfront_handler" {
+  // Edge functions have a us-east-1 region prefix.
+  name = "/aws/lambda/us-east-1.${aws_lambda_function.cloudfront_handler.function_name}"
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_cloudfront_handler" {
+  name            = "nr_lambda_cloudfront_handler"
+  log_group_name  = aws_cloudwatch_log_group.lambda_cloudfront_handler.name
+  filter_pattern  = ""
+  destination_arn = local.newrelic_log_ingestion_lambda
 }

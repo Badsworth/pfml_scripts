@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
+import { groupBy, map } from "lodash";
 import Alert from "./Alert";
 import PropTypes from "prop-types";
+import { Trans } from "react-i18next";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -18,7 +20,7 @@ function ErrorsSummary(props) {
    * Make sure the user sees the errors summary anytime the list of errors changes
    */
   useEffect(() => {
-    if (errors && errors.items.length > 0) {
+    if (!errors.isEmpty) {
       window.scrollTo(0, 0);
       // Move focus to the alert so screen readers immediately announce that there are errors
       alertRef.current.focus();
@@ -30,13 +32,31 @@ function ErrorsSummary(props) {
     return null;
   }
 
+  // TODO (CP-1532): Remove once links in error messages are fully supported
+  const getUniqueMessageKey = (error) => {
+    if (error.message.type === Trans) {
+      return error.message.props.i18nKey;
+    }
+
+    return error.message;
+  };
+
+  // Condense the list to only unique messages, combining any that are redundant
+  // TODO (CP-1532): Simplify once links in error messages are fully supported
+  const visibleErrorMessages = map(
+    groupBy(errors.items, getUniqueMessageKey),
+    (errors) => errors[0].message
+  );
+
   const errorMessages = () => {
     if (errors.items.length === 1) return <p>{errors.items[0].message}</p>;
 
     return (
       <ul className="usa-list">
-        {errors.items.map((error) => (
-          <li key={error.key}>{error.message}</li>
+        {visibleErrorMessages.map((message) => (
+          <li key={message.type ? message.props.i18nKey : message}>
+            {message}
+          </li>
         ))}
       </ul>
     );
@@ -46,7 +66,7 @@ function ErrorsSummary(props) {
     <Alert
       className="margin-bottom-3"
       heading={t("components.errorsSummary.genericHeading", {
-        count: errors.items.length,
+        count: visibleErrorMessages.length,
       })}
       ref={alertRef}
       role="alert"
@@ -58,6 +78,7 @@ function ErrorsSummary(props) {
 
 ErrorsSummary.propTypes = {
   errors: PropTypes.shape({
+    isEmpty: PropTypes.bool,
     items: PropTypes.array,
     itemsById: PropTypes.object,
   }),

@@ -50,7 +50,12 @@ update_component () {
         exit 1
     fi
 
-    find "$SCRIPT_PATH/$COMPONENT" -type f -name "*.tf" | while read -r file; do shab "$file" > $COMPONENT_PATH/${file#"$SCRIPT_PATH/$COMPONENT"}; done
+    mkdir -p $COMPONENT_PATH
+
+    find "$SCRIPT_PATH/$COMPONENT" -type f | while read -r file; do
+        mkdir -p $COMPONENT_PATH$(dirname ${file#"$SCRIPT_PATH/$COMPONENT"})
+        shab "$file" > $COMPONENT_PATH${file#"$SCRIPT_PATH/$COMPONENT"};
+    done
 }
 
 update_component

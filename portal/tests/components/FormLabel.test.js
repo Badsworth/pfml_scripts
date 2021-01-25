@@ -51,38 +51,56 @@ describe("FormLabel", () => {
     });
   });
 
+  describe("when component prop is set to label", () => {
+    it("renders label with expected classes", () => {
+      const { wrapper } = render({ component: "label" });
+
+      expect(wrapper).toMatchSnapshot();
+    });
+  });
+
   describe("when hint prop is set", () => {
-    describe("and the hint is a string", () => {
-      it("styles the hint text with hint classes", () => {
-        const { wrapper } = render({ hint: "Hint text" });
+    it("styles the hint as usa-intro", () => {
+      const { wrapper } = render({ hint: "Hint text" });
+      const hint = wrapper.find(".usa-intro").last();
+
+      expect(hint).toMatchInlineSnapshot(`
+        <span
+          className="display-block line-height-sans-5 measure-5 usa-intro"
+        >
+          Hint text
+        </span>
+      `);
+    });
+
+    describe("when the label is small", () => {
+      it("styles the hint text as usa-hint", () => {
+        const { wrapper } = render({ hint: "Hint text", small: true });
         const hint = wrapper.find(".usa-hint").last();
 
         expect(hint).toMatchInlineSnapshot(`
           <span
-            className="display-block line-height-sans-5 usa-hint margin-top-05"
+            className="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
           >
             Hint text
           </span>
         `);
       });
     });
+  });
 
-    describe("and the hint is not a string", () => {
-      it("does not style the hint", () => {
-        const hintElement = <p>Hint paragraph</p>;
-        const { wrapper } = render({ hint: hintElement });
-        const hint = wrapper.find("span").last();
+  describe("when example prop is set", () => {
+    it("it renders the example text with expected classes", () => {
+      const { wrapper } = render({ example: "Example text" });
+      const example = wrapper.find(".usa-hint").last();
 
-        expect(hint).toMatchInlineSnapshot(`
-          <span
-            className="margin-top-05"
-          >
-            <p>
-              Hint paragraph
-            </p>
-          </span>
-        `);
-      });
+      expect(example).toMatchInlineSnapshot(`
+        <span
+          className="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
+        >
+          Example text
+        </span>
+      `);
     });
   });
 
@@ -93,10 +111,9 @@ describe("FormLabel", () => {
 
       expect(node).toMatchInlineSnapshot(`
         <span
-          className="usa-hint text-normal"
+          className="usa-hint text-base-dark text-normal"
         >
-           
-          (optional)
+           (optional)
         </span>
       `);
     });
@@ -127,7 +144,7 @@ describe("FormLabel", () => {
       const label = wrapper.find(".usa-label");
 
       expect(label.prop("className")).toMatchInlineSnapshot(
-        `"usa-label maxw-none"`
+        `"usa-label text-bold font-heading-xs measure-5"`
       );
     });
 
@@ -137,18 +154,18 @@ describe("FormLabel", () => {
       const label = wrapper.find(".usa-label");
 
       expect(label.prop("className")).toMatchInlineSnapshot(
-        `"usa-label maxw-none usa-legend font-heading-sm"`
+        `"usa-label text-bold usa-legend font-heading-xs measure-5"`
       );
     });
+  });
 
-    it("doesn't include a margin on hint text", () => {
-      const { wrapper } = render({ small: true, hint: "Hint text" });
+  describe("when `labelClassName` is set", () => {
+    it("overrides the .text-bold class", () => {
+      const { wrapper } = render({ labelClassName: "text-normal" });
+      const label = wrapper.find(".usa-label");
 
-      const hint = wrapper.find(".usa-hint").last();
-
-      expect(hint.prop("className")).toMatchInlineSnapshot(
-        `"display-block line-height-sans-5 usa-hint"`
-      );
+      expect(label.hasClass("text-normal")).toBe(true);
+      expect(label.hasClass("text-bold")).toBe(false);
     });
   });
 });

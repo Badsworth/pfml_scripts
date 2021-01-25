@@ -12,15 +12,15 @@ $spinner-size: units(4);
   &::after {
     border-radius: 50%;
     border-style: solid;
-    border-width: ($spinner-size / 8);
+    border-width: calc(100% / 8);
     box-sizing: border-box;
     content: "";
     display: block;
-    height: $spinner-size;
+    height: 100%;
     left: 0;
     position: absolute;
     top: 0;
-    width: $spinner-size;
+    width: 100%;
   }
 
   // Full circle

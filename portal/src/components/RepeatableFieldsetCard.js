@@ -11,14 +11,14 @@ import useUniqueId from "../hooks/useUniqueId";
 const RepeatableFieldsetCard = (props) => {
   const id = useUniqueId("RepeatableFieldsetCard");
 
-  const handleRemoveClick = () => {
-    props.onRemoveClick(props.entry, props.index);
+  const handleRemoveClick = async () => {
+    await props.onRemoveClick(props.entry, props.index);
   };
 
   return (
     <div
       key={id}
-      className={`margin-bottom-3 measure-6 padding-3 border-2px border-base-lighter ${props.className}`}
+      className={`margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter ${props.className}`}
     >
       <fieldset className="usa-fieldset">
         <legend className="usa-legend font-heading-lg text-normal">

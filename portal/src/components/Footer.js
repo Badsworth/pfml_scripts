@@ -1,6 +1,8 @@
+import DFMLLogo from "./DFMLLogo.svg";
 import FooterSlim from "@massds/mayflower-react/dist/FooterSlim";
+import PFMLLogo from "./PFMLLogo.svg";
 import React from "react";
-import SiteLogo from "./SiteLogo";
+import SiteLogo from "@massds/mayflower-react/dist/SiteLogo";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
@@ -21,7 +23,35 @@ const Footer = () => {
         href: routes.external.massgov.dfml,
       },
     },
-    siteLogo: <SiteLogo />,
+    stackedLogo: true,
+    siteLogo: (
+      <React.Fragment>
+        <SiteLogo
+          url={{
+            domain: routes.index,
+          }}
+          image={{
+            src: DFMLLogo,
+            alt: t("components.siteLogo.dfmlAlt"),
+            width: 165,
+            height: 45,
+          }}
+          title={t("components.footer.logoTitle")}
+        />
+        <SiteLogo
+          url={{
+            domain: routes.index,
+          }}
+          image={{
+            src: PFMLLogo,
+            alt: t("components.siteLogo.pfmlAlt"),
+            width: 118,
+            height: 45,
+          }}
+          title={t("components.footer.logoTitle")}
+        />
+      </React.Fragment>
+    ),
   };
 
   return <FooterSlim {...footerSlimProps} />;

@@ -1,25 +1,32 @@
-from pydantic import UUID4
+import flask
+from sqlalchemy import desc
+from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
-from massgov.pfml.api.authorization.flask import READ, ensure
-from massgov.pfml.db.models.employees import Employer
-from massgov.pfml.util.pydantic import PydanticBaseModel
-from massgov.pfml.util.sqlalchemy import get_or_404
+import massgov.pfml.util.logging
+from massgov.pfml.api.authorization.flask import READ, requires
+from massgov.pfml.db.models.employees import EmployerQuarterlyContribution
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-class EmployerResponse(PydanticBaseModel):
-    # Only return these fields in the API for now.
-    employer_id: UUID4
-    employer_fein: str
-    employer_dba: str
-
-
-def employers_get(employer_id):
+@requires(READ, "EMPLOYER_API")
+def employer_get_most_recent_withholding_dates(employer_id: str) -> flask.Response:
     with app.db_session() as db_session:
-        employer = get_or_404(db_session, Employer, employer_id)
-        ensure(READ, employer)
+
+        contribution = (
+            db_session.query(EmployerQuarterlyContribution)
+            .filter(EmployerQuarterlyContribution.employer_id == employer_id)
+            .order_by(desc(EmployerQuarterlyContribution.filing_period))
+            .first()
+        )
+
+        if contribution is None:
+            raise NotFound(description="No contributions found")
+
+        response = {"filing_period": contribution.filing_period}
+
         return response_util.success_response(
-            message="Successfully retrieved employer",
-            data=EmployerResponse.from_orm(employer).dict(),
+            message="Successfully retrieved quarterly contribution", data=response, status_code=200
         ).to_api_response()

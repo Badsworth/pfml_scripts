@@ -13,5 +13,5 @@ module.exports = {
     // preview: "env-5",
   },
   // This is the same New Relic app as the Test environment
-  newRelicAppId: "706309942",
+  newRelicAppId: "847038274",
 };

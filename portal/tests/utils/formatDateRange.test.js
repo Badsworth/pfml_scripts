@@ -9,6 +9,14 @@ describe("formatDateRange", () => {
     });
   });
 
+  describe("when start and date range are masked", () => {
+    it("returns formatted date range with masked fields still masked", () => {
+      const formattedDate = formatDateRange("****-09-01", "****-**-**");
+
+      expect(formattedDate).toBe("9/1/**** – **/**/****");
+    });
+  });
+
   describe("when start and end dates are invalid ISO 8601 strings", () => {
     it("returns empty string", () => {
       const formattedDate = formatDateRange("1990--", "1990--31");

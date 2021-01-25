@@ -46,6 +46,20 @@ describe("BaseCollection", () => {
     });
   });
 
+  describe("#isEmpty", () => {
+    const item1 = { testId: "123" };
+    const item2 = { testId: "456" };
+    const collectionWith2Items = new TestCollection([item1, item2]);
+    const collectionWith1Item = new TestCollection([item1]);
+    const collectionWithNoItems = new TestCollection();
+
+    it("evaluates if collection has any items", () => {
+      expect(collectionWith2Items.isEmpty).toBe(false);
+      expect(collectionWith1Item.isEmpty).toBe(false);
+      expect(collectionWithNoItems.isEmpty).toBe(true);
+    });
+  });
+
   describe("#addItem", () => {
     let initialCollection, item1, item2;
 
@@ -72,6 +86,43 @@ describe("BaseCollection", () => {
       expect(() => {
         initialCollection.addItem(item1);
       }).toThrow(/Item with testId 123 already exists/);
+    });
+  });
+
+  describe("#addItems", () => {
+    let initialCollection, item1, item2, newItems;
+
+    beforeEach(() => {
+      item1 = { testId: "123" };
+      item2 = { testId: "456" };
+      initialCollection = new TestCollection([item1, item2]);
+
+      newItems = [{ testId: "abc" }, { testId: "def" }];
+    });
+
+    it("creates a new collection with additonal items", () => {
+      const collection = initialCollection.addItems(newItems);
+
+      expect(initialCollection.items).toEqual([item1, item2]);
+      expect(collection.items).toEqual([item1, item2, ...newItems]);
+    });
+
+    it("throws if item is missing an id", () => {
+      expect(() => {
+        initialCollection.addItems([{}]);
+      }).toThrow(/Item testId is null or undefined/);
+    });
+
+    it("throws if item is already in collection", () => {
+      expect(() => {
+        initialCollection.addItems([item1]);
+      }).toThrow(/Item with testId 123 already exists/);
+    });
+
+    it("throws if items is not an array", () => {
+      expect(() => {
+        initialCollection.addItems({});
+      }).toThrow(/Items must be an array/);
     });
   });
 

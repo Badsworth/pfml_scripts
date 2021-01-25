@@ -34,6 +34,22 @@ resource "aws_security_group" "tasks" {
     security_groups = [data.aws_security_group.rds_postgresql.id]
   }
 
+  # MMARS Data Mart connection
+  egress {
+    cidr_blocks = ["10.0.0.0/8"]
+    from_port   = 1433
+    to_port     = 1433
+    protocol    = "tcp"
+  }
+
+  # MOVEit connection
+  egress {
+    cidr_blocks = ["10.0.0.0/8"]
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+  }
+
   # Outgoing UDP/TCP to DNS servers that are in peer VPCs.
   #
   # This is needed since EOTSS provides us with VPCs that have

@@ -1,4 +1,4 @@
-import machineConfigs, { guards } from "../routes/claim-flow-configs";
+import machineConfigs, { guards } from "../flows";
 import { Machine } from "xstate";
 import { RouteTransitionError } from "../errors";
 import { createRouteWithQuery } from "../utils/routeWithParams";
@@ -7,14 +7,27 @@ import { useRouter } from "next/router";
 
 /**
  * Hook that provides methods for convenient page routing
- * @returns {object} { goToNextPage: Function, goToPageFor: Function, goTo: Function, page: string }
+ * @returns {object} { goToNextPage: Function, goToPageFor: Function, goTo: Function, page: object, pathname: string, pathWithParams: string }
  */
 const usePortalFlow = () => {
+  /**
+   * @type {Machine}
+   * @see https://xstate.js.org/docs/guides/machines.html
+   */
   const routingMachine = useMemo(() => Machine(machineConfigs, { guards }), []);
-  // TODO use custom useRouter: see https://github.com/EOLWD/pfml/pull/561/files#r448590332
+
+  // TODO (CP-732) use custom useRouter
   const router = useRouter();
+
   // State representing current page route
-  const { pathname: page } = router;
+  const { pathname, asPath: pathWithParams } = router;
+
+  /**
+   * The routing machine's active State Node
+   * @type {{ meta?: { applicableRules?: string[], fields?: string[], step?: string }, on: object}}
+   * @see https://xstate.js.org/docs/guides/statenodes.html
+   */
+  const page = machineConfigs.states[pathname];
 
   /**
    * Navigate to a page route
@@ -27,21 +40,30 @@ const usePortalFlow = () => {
   };
 
   /**
+   * Compose urls based on the given state transition event
+   * @param {string} event - name of transition event defined in the state machine's configs
+   * @param {object} context - additional context used to evaluate action
+   * @param {object} params - query parameters to append to page route
+   * @returns {string}
+   */
+  const getNextPageRoute = (event, context, params) => {
+    const nextRoutingMachine = routingMachine.withContext(context);
+    const nextPageRoute = nextRoutingMachine.transition(pathname, event);
+    if (!nextPageRoute) {
+      throw new RouteTransitionError(`Next page not found for: ${event}`);
+    }
+    return createRouteWithQuery(nextPageRoute.value, params);
+  };
+
+  /**
    * Navigate to the page for the given state transition event
    * @param {string} event - name of transition event defined in the state machine's configs
    * @param {object} context - additional context used to evaluate action
    * @param {object} params - query parameters to append to page route
    */
   const goToPageFor = (event, context, params) => {
-    const nextRoutingMachine = routingMachine.withContext(context);
-
-    const nextPageRoute = nextRoutingMachine.transition(page, event);
-
-    if (!nextPageRoute) {
-      throw new RouteTransitionError();
-    }
-
-    goTo(nextPageRoute.value, params);
+    const nextPage = getNextPageRoute(event, context, params);
+    goTo(nextPage);
   };
 
   /**
@@ -49,11 +71,19 @@ const usePortalFlow = () => {
    * @param {object} context - additional context used to evaluate action
    * @param {object} params - query parameters to append to page route
    */
-  const goToNextPage = (context, params = {}) => {
-    goToPageFor("CONTINUE", context, params);
+  const goToNextPage = (context, params = {}, event = "CONTINUE") => {
+    goToPageFor(event, context, params);
   };
 
-  return { page, goToNextPage, goToPageFor };
+  return {
+    page,
+    pathname,
+    pathWithParams,
+    getNextPageRoute,
+    goTo,
+    goToNextPage,
+    goToPageFor,
+  };
 };
 
 export default usePortalFlow;

@@ -1,13 +1,25 @@
 import re
+from typing import Optional, Union
+
+import massgov.pfml.util.pydantic.mask as mask
+from massgov.pfml.db.models.employees import TaxIdentifier
 
 
 class Regexes:
     TAX_ID = re.compile(r"^\d{9}$")
     TAX_ID_FORMATTED = re.compile(r"^\d{3}-\d{2}-\d{4}$")
+    TAX_ID_MASKED = re.compile(r"^((\*{3}-\*{2}-\d{4})|(\*{3}\*{2}\d{4}))$")
     FEIN = re.compile(r"^\d{9}$")
     FEIN_FORMATTED = re.compile(r"^\d{2}-\d{7}$")
     STREET_NUMBER = re.compile(r"^\d+")
-    MASS_ID = re.compile(r"^\d{9}$")
+    MASS_ID = re.compile(r"^(\d{9}|S(\d{8}|A\d{7}))$")
+    ROUTING_NUMBER = re.compile(
+        r"^((0[0-9])|(1[0-2])|(2[1-9])|(3[0-2])|(6[1-9])|(7[0-2])|80)([0-9]{7})$"
+    )
+    MASKED_ACCOUNT_NUMBER = re.compile(r"^\*{2,13}\d{4}$")
+    DATE_OF_BIRTH = re.compile(r"^\*{4}-\d{2}-\d{2}$")
+    MASKED_ZIP = re.compile(r"^[0-9]{5}-\*{4}$")
+    MASKED_PHONE = re.compile(r"^\*{3}\-?\*{3}\-?[0-9]{4}$")
 
 
 class TaxIdUnformattedStr(str):
@@ -52,7 +64,23 @@ class TaxIdFormattedStr(str):
         )
 
 
-class FEINStr(str):
+class MaskedTaxIdFormattedStr(str):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_type
+
+    @classmethod
+    def validate_type(cls, val: Optional[Union[TaxIdentifier, str]]) -> Optional[str]:
+        if val is None:
+            return None
+
+        if isinstance(val, TaxIdentifier):
+            return mask.mask_tax_identifier(val.tax_identifier)
+
+        return mask.mask_tax_identifier(val)
+
+
+class FEINUnformattedStr(str):
     @classmethod
     def __get_validators__(cls):
         yield cls.validate_type
@@ -71,22 +99,21 @@ class FEINStr(str):
         raise ValueError(f"does not match one of: {Regexes.FEIN.pattern}, {Regexes.FEIN_FORMATTED}")
 
 
-class MaskedEmailStr(str):
+class FEINFormattedStr(str):
     @classmethod
     def __get_validators__(cls):
         yield cls.validate_type
 
     @classmethod
     def validate_type(cls, val):
-        if not isinstance(val, str):
-            raise TypeError("is not a str")
+        if val is None:
+            return None
 
-        else:
-            at_sign_index = val.find("@")
-            domain = val[at_sign_index:]
+        elif Regexes.FEIN.match(val):
+            return "{}-{}".format(val[:2], val[2:])
 
-            masked_email = val[0] + "*****" + domain
-            return masked_email
+        elif Regexes.FEIN_FORMATTED.match(val):
+            return val
 
 
 class MaskedFinancialAcctNum(str):
@@ -99,13 +126,36 @@ class MaskedFinancialAcctNum(str):
         if not isinstance(val, str):
             raise TypeError("is not a str")
 
-        else:
-            length = len(val)
-            masked_digits = "*" * (length - 4)
-            last_four = val[(length - 4) :]
-            partial_acct_num = masked_digits + last_four
+        return mask.mask_financial_account_number(val)
 
-            return partial_acct_num
+
+class FinancialRoutingNumber(str):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_type
+
+    @classmethod
+    def validate_type(cls, val):
+        if not isinstance(val, str):
+            raise TypeError("is not a str")
+
+        elif Regexes.ROUTING_NUMBER.match(val):
+            return val
+
+        raise ValueError(f"does not match: {Regexes.ROUTING_NUMBER.pattern}")
+
+
+class MaskedFinancialRoutingNumber(str):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_type
+
+    @classmethod
+    def validate_type(cls, val):
+        if not isinstance(val, str):
+            raise TypeError("is not a str")
+
+        return mask.mask_routing_number(val)
 
 
 class MassIdStr(str):
@@ -135,6 +185,19 @@ class MaskedMassIdStr(str):
             raise TypeError("is not a str")
 
         elif Regexes.MASS_ID.match(val):
-            return "*********"
+            return mask.mask_mass_id(val)
 
         raise ValueError(f"does not match: {Regexes.MASS_ID.pattern}")
+
+
+class MaskedDateStr(str):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_type
+
+    @classmethod
+    def validate_type(cls, val):
+        if val is None:
+            return None
+
+        return mask.mask_date(val)

@@ -1,11 +1,15 @@
 # Set up a terraform bucket for each environment.
 #
 locals {
-  # When you need a new environment bucket, add your environment name here.
+  # When you need a new environment bucket, add your environment name here and to
+  # the environment_tags output in infra/constants/outputs.tf.
+  #
   # The for_each logic below will automagically define your S3 bucket, so you
   # can go straight to running terraform apply.
-  environments = ["test", "stage", "prod"]
+  environments = ["test", "stage", "prod", "performance", "training", "uat"]
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_s3_bucket" "terraform" {
   for_each = toset(local.environments)
@@ -26,7 +30,7 @@ resource "aws_s3_bucket" "terraform" {
   }
 
   tags = merge(module.constants.common_tags, {
-    environment = each.key
+    environment = module.constants.environment_tags[each.key]
     public      = "no"
     Name        = "pfml-${each.key}-env-mgmt"
   })
@@ -41,6 +45,47 @@ resource "aws_s3_bucket_public_access_block" "terraform_block_public_access" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+# Create S3 buckets to store data imported from Formstack
+
+resource "aws_s3_bucket" "formstack_import" {
+  for_each = toset(local.environments)
+
+  bucket = "massgov-pfml-${each.key}-formstack-data"
+  acl    = "private"
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+
+  versioning {
+    enabled = "true"
+  }
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[each.key]
+    public      = "no"
+    Name        = "massgov-pfml-${each.key}-formstack-data"
+  })
+}
+
+resource "aws_s3_bucket_public_access_block" "formstack_import_block_public_access" {
+  for_each = aws_s3_bucket.formstack_import
+  bucket   = each.value.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
 
 # Create S3 buckets to receive agency data.
 #
@@ -70,7 +115,7 @@ resource "aws_s3_bucket" "agency_transfer" {
   }
 
   tags = merge(module.constants.common_tags, {
-    environment = each.key == "nonprod" ? "stage" : each.key
+    environment = module.constants.environment_tags[each.key]
     Name        = "massgov-pfml-${each.key}-agency-transfer"
     public      = "no"
   })
@@ -85,6 +130,8 @@ resource "aws_s3_bucket_public_access_block" "agency_transfer_block_public_acces
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_s3_bucket" "lambda_build" {
   bucket = "massgov-pfml-api-lambda-builds"
@@ -114,18 +161,14 @@ resource "aws_s3_bucket_public_access_block" "lambda_build_block_public_access" 
   restrict_public_buckets = true
 }
 
-# Create S3 buckets to transfer eligibility feed files to FINEOS environments.
-#
-# Eligibility feed files will be generated on our end by a schedule lambda,
-# and FINEOS will periodically poll this S3 bucket using cross-account permissions
-# that are specified in iam-fineos.tf.
-#
-resource "aws_s3_bucket" "fineos_transfer" {
-  for_each = toset(local.environments)
+# ----------------------------------------------------------------------------------------------------------------------
 
-  bucket = "massgov-pfml-${each.key}-fineos-transfer"
+# Create S3 buckets to store CSVs that will be linked in emails sent to
+# Third-Party Administrators (TPAs)
+
+resource "aws_s3_bucket" "tpa_csv_storage" {
+  bucket = "massgov-pfml-tpa-csv-storage"
   acl    = "private"
-  policy = data.aws_iam_policy_document.fineos_s3_access_policy[each.key].json
 
   server_side_encryption_configuration {
     rule {
@@ -135,21 +178,44 @@ resource "aws_s3_bucket" "fineos_transfer" {
     }
   }
 
-  versioning {
-    enabled = "true"
-  }
-
   tags = merge(module.constants.common_tags, {
-    environment = each.key
-    Name        = "massgov-pfml-${each.key}-fineos-transfer"
+    environment = "prod"
     public      = "no"
+    Name        = "massgov-pfml-tpa-csv-storage"
   })
 }
 
-resource "aws_s3_bucket_public_access_block" "fineos_transfer_block_public_access" {
-  for_each = aws_s3_bucket.fineos_transfer
-  bucket   = each.value.id
+resource "aws_s3_bucket_public_access_block" "tpa_csv_storage_block_public_access" {
+  bucket = aws_s3_bucket.tpa_csv_storage.id
 
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_s3_bucket" "ses_to_newrelic_dlq" {
+  bucket = "massgov-pfml-ses-to-newrelic-dlq"
+  tags = merge(module.constants.common_tags, {
+    environment = "prod"
+    public      = "no"
+    Name        = "massgov-pfml-ses-to-newrelic-dlq"
+  })
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm     = "aws:kms"
+        kms_master_key_id = aws_kms_key.ses_newrelic_dlq.arn
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "ses_to_newrelic_dlq" {
+  bucket                  = aws_s3_bucket.ses_to_newrelic_dlq.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true

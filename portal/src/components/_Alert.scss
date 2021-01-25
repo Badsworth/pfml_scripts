@@ -1,0 +1,16 @@
+@use "~@massds/mayflower-assets/scss/00-base/_color-tokens.scss" as *;
+
+.c-alert--neutral {
+  background-color: $c-gray-lightest;
+
+  &::before {
+    background-color: $c-gray-light;
+  }
+}
+
+.c-alert--auto-width {
+  // `display:table` lets an Alert remain a block-level element yet only be as
+  // wide as its content requires. This is preferable to `inline-block` which
+  // causes layout issues with inline adjacent siblings.
+  display: table;
+}

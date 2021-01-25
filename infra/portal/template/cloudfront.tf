@@ -14,6 +14,12 @@ resource "random_password" "s3_user_agent_password" {
 }
 
 resource "aws_cloudfront_distribution" "portal_web_distribution" {
+  # AWS Web Application Firewall
+  # If environment is performance, do nothing; else connect the rate-limit firewall
+  web_acl_id = var.environment_name == "performance" ? (null) : (
+    aws_wafv2_web_acl.cloudfront_rate_based_acl[0].arn
+  )
+
   origin {
     domain_name = aws_s3_bucket.portal_web.website_endpoint
     origin_id   = aws_s3_bucket.portal_web.id
@@ -37,17 +43,21 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
     }
   }
 
+  comment             = "PFML Claimant Portal (${var.environment_name})"
   enabled             = true
   is_ipv6_enabled     = true
   http_version        = "http2"
   default_root_object = "index.html"
-  aliases             = [local.domain]
+  aliases             = local.domain == null ? null : [local.domain]
   price_class         = "PriceClass_100"
   retain_on_delete    = true
   # Terraform will exit as soon as it’s made all the updates
   # to AWS API objects and won’t poll for the distribution to become ready,
   # which can take 15 to 20 minutes
   wait_for_deployment = false
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
@@ -104,7 +114,7 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
     ssl_support_method = "sni-only"
 
     # If we're using cloudfront_default_certificate, TLSv1 must be specified.
-    minimum_protocol_version = "TLSv1.2_2018"
+    minimum_protocol_version = "TLSv1.2_2019"
   }
 
   restrictions {

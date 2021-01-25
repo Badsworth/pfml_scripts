@@ -1,57 +1,71 @@
 /* eslint-disable jsdoc/require-returns */
+import BaseApi from "./BaseApi";
 import Claim from "../models/Claim";
 import ClaimCollection from "../models/ClaimCollection";
 import { isFeatureEnabled } from "../services/featureFlags";
-import merge from "lodash/merge";
-import portalRequest from "./portalRequest";
 import routes from "../routes";
 
 /**
- * @typedef {{ success: boolean, claim: Claim }} ClaimsApiSingleResult
- * @property {number} status - Status code
- * @property {boolean} success - Did the request succeed or fail?
+ * @typedef {object} ClaimsApiSingleResult
  * @property {Claim} [claim] - If the request succeeded, this will contain the created claim
+ * @property {{ field: string, message: string, rule: string, type: string }[]} [warnings] - Validation warnings
  */
 
 /**
- * @typedef {{ success: boolean, claims: ClaimCollection }} ClaimsApiListResult
- * @property {number} status - Status code
- * @property {boolean} success - Did the request succeed or fail?
+ * @typedef {object} ClaimsApiListResult
  * @property {ClaimCollection} [claims] - If the request succeeded, this will contain the created user
  */
 
-export default class ClaimsApi {
-  constructor({ user }) {
-    // if (!user) {
-    //   throw new Error("ClaimsApi expects an instance of a user.");
-    // }
+export default class ClaimsApi extends BaseApi {
+  get basePath() {
+    return routes.api.claims;
+  }
 
-    this.user = user;
+  get i18nPrefix() {
+    return "claims";
   }
 
   /**
-   * Private method used by other methods in this class to make REST API requests
-   * related to the /applications resource.
+   * Pass feature flags to the API as headers to enable
+   * API functionality that can be toggled on/off.
    * @private
-   * @param {string} method HTTP method
-   * @param {string} [subPath] Sub-path of the /applications resource to use
-   * @param {object} [body] Request body
-   * @param {object} [additionalHeaders] Additional headers to add to the request
+   * @returns {object}
    */
-  claimsRequest = async (
-    method,
-    subPath = "",
-    body = null,
-    additionalHeaders = {}
-  ) => {
-    const apiPath = `${routes.api.claims}${subPath}`;
-    const baseHeaders = { user_id: this.user.user_id };
-    const headers = {
-      ...baseHeaders,
-      ...additionalHeaders,
-    };
+  get featureFlagHeaders() {
+    const headers = {};
 
-    return portalRequest(method, apiPath, body, headers);
+    if (isFeatureEnabled("claimantShowOtherLeaveStep")) {
+      // Enable validation on fields in the Other Leave step
+      headers["X-FF-Require-Other-Leaves"] = true;
+    }
+
+    return headers;
+  }
+
+  /**
+   * Send an authenticated API request, with feature flag headers
+   * @example const response = await this.request("GET", "users/current");
+   *
+   * @param {string} method - i.e GET, POST, etc
+   * @param {string} subPath - relative path without a leading forward slash
+   * @param {object|FormData} [body] - request body
+   * @returns {Promise<{ data: object, warnings?: object[]}>} response - rejects on non-2xx status codes
+   */
+  request(method, subPath, body) {
+    return super.request(method, subPath, body, this.featureFlagHeaders);
+  }
+
+  /**
+   * Fetches a single claim
+   * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
+   */
+  getClaim = async (application_id) => {
+    const { data, warnings } = await this.request("GET", application_id);
+
+    return {
+      claim: new Claim(data),
+      warnings,
+    };
   };
 
   /**
@@ -59,33 +73,43 @@ export default class ClaimsApi {
    * @returns {Promise<ClaimsApiListResult>} The result of the API call
    */
   getClaims = async () => {
-    const { data, success, status } = await this.claimsRequest("GET");
+    const { data } = await this.request("GET");
 
-    let claims = null;
-    if (success) {
-      claims = data.map((claimData) => new Claim(claimData));
-      claims = new ClaimCollection(claims);
-    }
+    let claims = data.map((claimData) => new Claim(claimData));
+    claims = new ClaimCollection(claims);
 
     return {
-      success,
-      status,
       claims,
     };
   };
 
   /**
+   * Signal the data entry is complete and application is ready
+   * for intake to be marked as complete in the claims processing system.
+   *
+   * @param {string} application_id
+   * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
+   */
+  completeClaim = async (application_id) => {
+    const { data } = await this.request(
+      "POST",
+      `${application_id}/complete_application`
+    );
+
+    return {
+      claim: new Claim(data),
+    };
+  };
+
+  /**
    * Create a new claim through a POST request to /applications
-   * @todo Document the structure of error responses once we know what it looks like
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   createClaim = async () => {
-    const { data, success, status } = await this.claimsRequest("POST");
+    const { data } = await this.request("POST");
 
     return {
-      success,
-      status,
-      claim: success ? new Claim(data) : null,
+      claim: new Claim(data),
     };
   };
 
@@ -96,59 +120,48 @@ export default class ClaimsApi {
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   updateClaim = async (application_id, patchData) => {
-    // TODO (CP-716): Send SSN in the API payload once production can accept PII
-    const { employee_ssn, ...patchDataWithoutExcludedPii } = patchData;
-    const requestData = isFeatureEnabled("sendPii")
-      ? patchData
-      : patchDataWithoutExcludedPii;
-
-    const { data, success, status } = await this.claimsRequest(
+    const { data, errors, warnings } = await this.request(
       "PATCH",
-      `/${application_id}`,
-      requestData
+      application_id,
+      patchData
     );
 
-    // Currently the API doesn't return the claim data in the response
-    // so we're manually constructing the body based on client data.
-    // We will change the PATCH applications endpoint to return the full
-    // application in this ticket: https://lwd.atlassian.net/browse/API-276
-    // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-    const workaroundData = merge({ ...data, application_id }, patchData);
-    // </ end workaround >
-
     return {
-      success,
-      status,
-      claim: success ? new Claim(workaroundData) : null,
+      claim: new Claim(data),
+      errors,
+      warnings,
     };
   };
 
   /**
-   * Signal the data entry is complete and application is ready
+   * Signal data entry for Part 1 is complete and ready
    * to be submitted to the claims processing system.
    *
-   * Corresponds to this API endpoint: /application/{application_id}/submit_application
-   * @todo Document the possible errors
    * @param {string} application_id ID of the Claim
    * @returns {Promise<ClaimsApiSingleResult>} The result of the API call
    */
   submitClaim = async (application_id) => {
-    const { data, status, success } = await this.claimsRequest(
+    const { data } = await this.request(
       "POST",
-      `/${application_id}/submit_application`
+      `${application_id}/submit_application`
     );
 
-    // Currently the API doesn't return the claim data in the response.
-    // We will change the PATCH applications endpoint to return the full
-    // application in this ticket: https://lwd.atlassian.net/browse/API-276
-    // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-    const workaroundData = { ...data, application_id };
-    // </ end workaround >
+    return {
+      claim: new Claim(data),
+    };
+  };
+
+  submitPaymentPreference = async (application_id, paymentPreferenceData) => {
+    const { data, errors, warnings } = await this.request(
+      "POST",
+      `${application_id}/submit_payment_preference`,
+      paymentPreferenceData
+    );
 
     return {
-      claim: success ? new Claim(workaroundData) : null,
-      status,
-      success,
+      claim: new Claim(data),
+      errors,
+      warnings,
     };
   };
 }

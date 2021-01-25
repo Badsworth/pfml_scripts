@@ -14,13 +14,23 @@ describe("AuthNav", () => {
     it("doesn't render the user's name", () => {
       const wrapper = shallow(<AuthNav onLogout={jest.fn()} />);
 
-      expect(wrapper.text()).toEqual("");
+      expect(wrapper.exists("[data-test-auth-nav='email_address']")).toBe(
+        false
+      );
     });
 
     it("doesn't render a log out link", () => {
       const wrapper = shallow(<AuthNav onLogout={jest.fn()} />);
 
-      expect(wrapper.exists("Button")).toBe(false);
+      expect(wrapper.exists("[data-test-auth-nav='logout_button']")).toBe(
+        false
+      );
+    });
+
+    it("renders a Mass.gov link", () => {
+      const wrapper = shallow(<AuthNav onLogout={jest.fn()} />);
+
+      expect(wrapper.exists("[data-test-auth-nav='massgov_link']")).toBe(true);
     });
   });
 
@@ -41,7 +51,15 @@ describe("AuthNav", () => {
     it("renders the user's name", () => {
       const wrapper = shallow(<AuthNav user={user} onLogout={jest.fn()} />);
 
-      expect(wrapper.text()).toMatch(user.email_address);
+      expect(wrapper.text("[data-test-auth-nav='email_address']")).toMatch(
+        user.email_address
+      );
+    });
+
+    it("doesn't render a Mass.gov link", () => {
+      const wrapper = shallow(<AuthNav user={user} onLogout={jest.fn()} />);
+
+      expect(wrapper.exists("[data-test-auth-nav='massgov_link']")).toBe(false);
     });
 
     it("renders a log out link", () => {
@@ -49,9 +67,11 @@ describe("AuthNav", () => {
         <AuthNav user={user} onLogout={() => jest.fn()} />
       );
 
-      expect(wrapper.find("Button")).toMatchInlineSnapshot(`
+      expect(wrapper.find("[data-test-auth-nav='logout_button']"))
+        .toMatchInlineSnapshot(`
         <Button
           className="width-auto"
+          data-test-auth-nav="logout_button"
           inversed={true}
           onClick={[Function]}
           variation="unstyled"
@@ -65,7 +85,9 @@ describe("AuthNav", () => {
       it("logs the user out", async () => {
         const signOut = jest.fn();
         const wrapper = shallow(<AuthNav user={user} onLogout={signOut} />);
-        await wrapper.find("Button").simulate("click");
+        await wrapper
+          .find("[data-test-auth-nav='logout_button']")
+          .simulate("click");
 
         expect(signOut.mock.calls.length).toBe(1);
       });

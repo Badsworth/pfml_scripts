@@ -4,14 +4,20 @@
 # This is only needed if the API has changed. The output files should be committed to version control.
 #
 
-WSCOMPOSER_URL := https://idt-claims-webapp.masspfml.fineos.com/wscomposer/webservice?userid=CONTENT
+WSCOMPOSER_URL := https://idt-api.masspfml.fineos.com/integration-services/wscomposer/webservice?userid=CONTENT
 CURL := curl --fail
 TIDY := tidy -xml -indent -wrap 120
 
 TARGETS = EmployeeRegisterService.Request.xsd \
        EmployeeRegisterService.Response.xsd \
        ReadEmployer.Request.xsd \
-       ReadEmployer.Response.xsd
+       ReadEmployer.Response.xsd \
+       UpdateOrCreateParty.Request.xsd \
+       UpdateOrCreateParty.Response.xsd \
+       ServiceAgreementService.Request.xsd \
+       ServiceAgreementService.Response.xsd \
+       OccupationDetailUpdateService.Request.xsd \
+       OccupationDetailUpdateService.Response.xsd
 
 update: $(TARGETS)
 

@@ -1,17 +1,13 @@
 from functools import cached_property
-from typing import Optional
+from typing import Optional, Union
 
+import flask
+import newrelic.agent
 import zeep.helpers as zeep_helpers
 
 import massgov.pfml.util.logging
 from massgov.pfml.rmv.caller import ApiCaller, LazyApiCaller, LazyZeepApiCaller
-from massgov.pfml.rmv.errors import (
-    RmvMultipleCustomersError,
-    RmvNoCredentialError,
-    RmvUnexpectedResponseError,
-    RmvUnknownError,
-    RmvValidationError,
-)
+from massgov.pfml.rmv.errors import RmvUnknownError
 from massgov.pfml.rmv.models import (
     RmvAcknowledgement,
     VendorLicenseInquiryRequest,
@@ -35,15 +31,11 @@ class RmvClient:
 
     def vendor_license_inquiry(
         self, request: VendorLicenseInquiryRequest
-    ) -> Optional[VendorLicenseInquiryResponse]:
+    ) -> Union[VendorLicenseInquiryResponse, RmvAcknowledgement]:
         """
         Does a lookup for a valid license.
 
-        @returns a response if the license was found, or None if license was not found.
-
         @raises RmvUnknownError - an unknown error occurred.
-                RmvValidationError - the request body had RMV-side validation errors.
-                RmvUnexpectedResponseError - the RMV API returned an unexpected acknowledgement response.
         """
         req_body = request.dict(by_alias=True)
         req_body["DOB"] = req_body["DOB"].strftime("%Y%m%d")
@@ -52,18 +44,28 @@ class RmvClient:
             res = self._caller.VendorLicenseInquiry(**req_body)
         except Exception as e:
             logger.exception("Error making RMV VendorLicenseInquiry request")
+
+            has_flask_context = flask.has_request_context()
+            newrelic.agent.record_custom_event(
+                "RmvError",
+                {
+                    "error.class": type(e).__name__,
+                    "error.message": str(e),
+                    "request.method": flask.request.method if has_flask_context else None,
+                    "request.uri": flask.request.path if has_flask_context else None,
+                    "request.headers.x-amzn-requestid": flask.request.headers.get(
+                        "x-amzn-requestid", None
+                    )
+                    if has_flask_context
+                    else None,
+                },
+            )
+
             raise RmvUnknownError(cause=e)
 
-        acknowledgement = res.Acknowledgement
-        if acknowledgement == RmvAcknowledgement.CUSTOMER_NOT_FOUND.value:
-            return None
-        elif acknowledgement == RmvAcknowledgement.REQUIRED_FIELDS_MISSING.value:
-            raise RmvValidationError()
-        elif acknowledgement == RmvAcknowledgement.MULTIPLE_CUSTOMERS_FOUND.value:
-            raise RmvMultipleCustomersError()
-        elif acknowledgement == RmvAcknowledgement.CREDENTIAL_NOT_FOUND.value:
-            raise RmvNoCredentialError()
-        elif acknowledgement:
-            raise RmvUnexpectedResponseError(acknowledgement)
+        # If the RMV responds with an Acknowledgement value, all other fields
+        # will be None, so just return the Acknowledgement
+        if res.Acknowledgement:
+            return RmvAcknowledgement(res.Acknowledgement)
 
         return VendorLicenseInquiryResponse(**zeep_helpers.serialize_object(res))

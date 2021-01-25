@@ -1,0 +1,193 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LeavePeriodContinuous renders the page with bonding leave content 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Leave details"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    hint={null}
+    label="Do you need to take off work completely for a period of time (continuous leave)?"
+    name="has_continuous_leave_periods"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
+  <ConditionalContent
+    clearField={[Function]}
+    fieldNamesClearedWhenHidden={
+      Array [
+        "leave_details.continuous_leave_periods",
+      ]
+    }
+    getField={[Function]}
+    updateFields={[Function]}
+    visible={null}
+  >
+    <Heading
+      level="2"
+      size="1"
+    >
+      Enter the start and end dates for your continuous leave.
+    </Heading>
+    <Lead>
+      <Trans
+        i18nKey="pages.claimsLeavePeriodContinuous.datesLead"
+        tOptions={
+          Object {
+            "context": "bonding",
+          }
+        }
+      />
+    </Lead>
+    <InputDate
+      dayLabel="Day"
+      example="mm / dd / yyyy"
+      label="First day of leave"
+      monthLabel="Month"
+      name="leave_details.continuous_leave_periods[0].start_date"
+      onChange={[Function]}
+      smallLabel={true}
+      value=""
+      yearLabel="Year"
+    />
+    <InputDate
+      dayLabel="Day"
+      example="mm / dd / yyyy"
+      label="Last day of leave"
+      monthLabel="Month"
+      name="leave_details.continuous_leave_periods[0].end_date"
+      onChange={[Function]}
+      smallLabel={true}
+      value=""
+      yearLabel="Year"
+    />
+  </ConditionalContent>
+</QuestionPage>
+`;
+
+exports[`LeavePeriodContinuous renders the page with bonding leave content 2`] = `
+Array [
+  "If you have already taken some or all of your family leave, tell us when you first missed work and your last day of leave.",
+  <br
+    key="br-1"
+  />,
+  <br
+    key="br-2"
+  />,
+  "Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
+]
+`;
+
+exports[`LeavePeriodContinuous renders the page with medical leave content 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Leave details"
+>
+  <Alert
+    neutral={true}
+    state="info"
+  >
+    You will need a completed Certification of a Serious Health Condition form for this section.
+  </Alert>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    hint="Refer to Question 26 in the Certification of a Serious Health Condition form (page 7)."
+    label="Do you need to take off work completely for a period of time (continuous leave)?"
+    name="has_continuous_leave_periods"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
+  <ConditionalContent
+    clearField={[Function]}
+    fieldNamesClearedWhenHidden={
+      Array [
+        "leave_details.continuous_leave_periods",
+      ]
+    }
+    getField={[Function]}
+    updateFields={[Function]}
+    visible={null}
+  >
+    <Heading
+      level="2"
+      size="1"
+    >
+      Enter the start and end dates for your continuous leave.
+    </Heading>
+    <Lead>
+      <Trans
+        i18nKey="pages.claimsLeavePeriodContinuous.datesLead"
+        tOptions={
+          Object {
+            "context": "medical",
+          }
+        }
+      />
+    </Lead>
+    <InputDate
+      dayLabel="Day"
+      example="mm / dd / yyyy"
+      label="First day of leave"
+      monthLabel="Month"
+      name="leave_details.continuous_leave_periods[0].start_date"
+      onChange={[Function]}
+      smallLabel={true}
+      value=""
+      yearLabel="Year"
+    />
+    <InputDate
+      dayLabel="Day"
+      example="mm / dd / yyyy"
+      label="Last day of leave"
+      monthLabel="Month"
+      name="leave_details.continuous_leave_periods[0].end_date"
+      onChange={[Function]}
+      smallLabel={true}
+      value=""
+      yearLabel="Year"
+    />
+  </ConditionalContent>
+</QuestionPage>
+`;
+
+exports[`LeavePeriodContinuous renders the page with medical leave content 2`] = `
+Array [
+  "If you have already taken some or all of your leave for this condition, tell us when you first missed work and your last day of leave.",
+  <br
+    key="br-1"
+  />,
+  <br
+    key="br-2"
+  />,
+  "Refer to Question 29 in the Certification of a Serious Health Condition form (page 7).",
+]
+`;

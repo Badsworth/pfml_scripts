@@ -1,0 +1,586 @@
+import {
+  DurationBasis,
+  FrequencyIntervalBasis,
+  IntermittentLeavePeriod,
+} from "../../../src/models/Claim";
+import EmployerBenefit, {
+  EmployerBenefitFrequency,
+  EmployerBenefitType,
+} from "../../../src/models/EmployerBenefit";
+import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
+import OtherIncome, {
+  OtherIncomeFrequency,
+  OtherIncomeType,
+} from "../../../src/models/OtherIncome";
+import Review, {
+  EmployerBenefitList,
+  OtherIncomeList,
+  OtherLeaveEntry,
+  PreviousLeaveList,
+} from "../../../src/pages/applications/review";
+import { DateTime } from "luxon";
+import React from "react";
+import { mockRouter } from "next/router";
+import routes from "../../../src/routes";
+import { shallow } from "enzyme";
+
+// Dive more levels to account for withClaimDocuments HOC
+const diveLevels = 4;
+
+describe("Part 1 Review Page", () => {
+  describe("when all data is present", () => {
+    beforeEach(() => {
+      mockRouter.pathname = routes.applications.review;
+    });
+    it("renders Review page with Part 1 content and edit links", () => {
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: new MockClaimBuilder()
+          .part1Complete()
+          .mailingAddress()
+          .fixedWorkPattern()
+          .create(),
+        diveLevels,
+      });
+
+      expect(wrapper).toMatchSnapshot();
+    });
+  });
+
+  it("does not render strings 'null', 'undefined', or missing translations", () => {
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder().part1Complete().create(),
+      diveLevels,
+    });
+
+    const html = wrapper.html();
+
+    expect(html).not.toMatch("null");
+    expect(html).not.toMatch("undefined");
+    expect(html).not.toMatch("pages.claimsReview");
+  });
+
+  it("submits the application when the user clicks Submit", () => {
+    const { appLogic, claim, wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder().part1Complete().create(),
+      diveLevels,
+    });
+    const submitSpy = jest.spyOn(appLogic.claims, "submit");
+    const completeSpy = jest.spyOn(appLogic.claims, "complete");
+    wrapper.find("Button").simulate("click");
+
+    expect(submitSpy).toHaveBeenCalledWith(claim.application_id);
+    expect(completeSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("Final Review Page", () => {
+  let appLogic, claim, wrapper;
+
+  describe("when the claim is complete", () => {
+    beforeEach(() => {
+      ({ appLogic, claim, wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: new MockClaimBuilder().complete().create(),
+        diveLevels,
+      }));
+    });
+
+    it("renders Review page with final review page content and only edit links for Part 2/3 sections", () => {
+      expect(wrapper).toMatchSnapshot();
+      expect(
+        wrapper
+          .find("Trans[i18nKey='pages.claimsReview.partDescription']")
+          .dive()
+      ).toMatchSnapshot();
+    });
+
+    it("completes the application when the user clicks Submit", () => {
+      const submitSpy = jest.spyOn(appLogic.claims, "submit");
+      const completeSpy = jest.spyOn(appLogic.claims, "complete");
+      wrapper.find("Button").simulate("click");
+
+      expect(submitSpy).not.toHaveBeenCalled();
+      expect(completeSpy).toHaveBeenCalledWith(claim.application_id);
+    });
+
+    it("renders a spinner for loading documents", () => {
+      expect(wrapper.find("Spinner")).toHaveLength(1);
+      expect(wrapper.exists({ label: "Number of files uploaded" })).toBe(false);
+    });
+  });
+
+  it("conditionally renders Other Leave section based on presence of Yes/No fields", () => {
+    const claimAttrs = new MockClaimBuilder().complete().create();
+    claimAttrs.has_previous_leaves = false;
+    claimAttrs.has_other_incomes = false;
+    claimAttrs.has_employer_benefits = false;
+
+    // Renders when false
+    ({ wrapper } = renderWithAppLogic(Review, {
+      claimAttrs,
+      diveLevels,
+    }));
+
+    expect(wrapper.exists("[data-test='other-leave']")).toBe(true);
+
+    // But doesn't render when null
+    delete claimAttrs.has_previous_leaves;
+    delete claimAttrs.has_other_incomes;
+    delete claimAttrs.has_employer_benefits;
+
+    ({ wrapper } = renderWithAppLogic(Review, {
+      claimAttrs,
+      diveLevels,
+    }));
+
+    expect(wrapper.exists("[data-test='other-leave']")).toBe(false);
+  });
+});
+
+describe("Work patterns", () => {
+  it("has internationalized strings for each work pattern type", () => {
+    expect.assertions();
+
+    ["Fixed", "Variable"].forEach((work_pattern_type) => {
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: new MockClaimBuilder()
+          .part1Complete()
+          .workPattern({ work_pattern_type })
+          .create(),
+        diveLevels,
+      });
+
+      expect(
+        wrapper.find({ label: "Work schedule type" }).prop("children")
+      ).toMatchSnapshot();
+    });
+  });
+
+  it("shows work pattern days if work pattern type is fixed", () => {
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder()
+        .part1Complete()
+        .fixedWorkPattern()
+        .create(),
+      diveLevels,
+    });
+
+    expect(
+      wrapper.find({ label: "Weekly work hours" }).prop("children")
+    ).toMatchSnapshot();
+    expect(wrapper.find({ label: "Average weekly hours" }).exists()).toBe(
+      false
+    );
+  });
+
+  it("shows average weekly hours if work pattern type is variable", () => {
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder()
+        .part1Complete()
+        .variableWorkPattern()
+        .create(),
+      diveLevels,
+    });
+
+    expect(
+      wrapper.find({ label: "Average weekly hours" }).prop("children")
+    ).toMatchSnapshot();
+    expect(wrapper.find({ label: "Weekly work hours" }).exists()).toBe(false);
+  });
+});
+
+describe("Payment Information", () => {
+  describe("When payment method is paper", () => {
+    it("does not render 'Payment details' row", () => {
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: new MockClaimBuilder().complete().check().create(),
+        diveLevels,
+      });
+      expect(wrapper.find({ label: "Payment details" })).toHaveLength(0);
+    });
+  });
+});
+
+describe("Upload Document", () => {
+  it("renders the correct number of documents", () => {
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder().complete().create(),
+      diveLevels,
+      hasLoadedClaimDocuments: true,
+    });
+    expect(wrapper.exists("Spinner")).toBe(false);
+    expect(wrapper.find({ label: "Number of files uploaded" })).toHaveLength(2);
+  });
+
+  it("renders Alert when there is an error for loading documents", () => {
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder().complete().create(),
+      diveLevels,
+      hasLoadingDocumentsError: true,
+    });
+
+    expect(wrapper.exists("Alert")).toBe(true);
+    expect(wrapper.exists({ label: "Number of files uploaded" })).toBe(false);
+  });
+
+  it("does not render certification document for bonding leave in advance", () => {
+    const futureDate = DateTime.local().plus({ months: 1 }).toISODate();
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: new MockClaimBuilder()
+        .complete()
+        .bondingBirthLeaveReason(futureDate)
+        .hasFutureChild()
+        .create(),
+      diveLevels,
+      hasLoadedClaimDocuments: true,
+    });
+    expect(wrapper.find({ label: "Number of files uploaded" })).toHaveLength(1);
+  });
+});
+
+describe("Employer info", () => {
+  describe("when claimant is not Employed", () => {
+    it("does not render 'Notified employer' row or FEIN row", () => {
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: new MockClaimBuilder().complete().create(),
+        diveLevels,
+      });
+
+      expect(wrapper.text()).not.toContain("Notified employer");
+      expect(wrapper.text()).not.toContain("Employer's FEIN");
+    });
+  });
+});
+
+describe("Leave reason", () => {
+  const pregnancyOrRecentBirthLabel = "Medical leave for pregnancy or birth";
+  const familyLeaveTypeLabel = "Family leave type";
+
+  describe("When the reason is medical leave", () => {
+    it("renders pregnancyOrRecentBirthLabel row", () => {
+      const claim = new MockClaimBuilder().completed().create();
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: claim,
+        diveLevels,
+      });
+      expect(
+        wrapper.find({ label: pregnancyOrRecentBirthLabel }).exists()
+      ).toBe(true);
+      expect(wrapper.find({ label: familyLeaveTypeLabel }).exists()).toBe(
+        false
+      );
+    });
+  });
+
+  describe("When the reason is bonding leave", () => {
+    it("renders family leave type row", () => {
+      const claim = new MockClaimBuilder()
+        .completed()
+        .bondingBirthLeaveReason()
+        .create();
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: claim,
+        diveLevels,
+      });
+      expect(
+        wrapper.find({ label: pregnancyOrRecentBirthLabel }).exists()
+      ).toBe(false);
+      expect(wrapper.find({ label: familyLeaveTypeLabel }).exists()).toBe(true);
+    });
+  });
+});
+
+describe("Reduced leave", () => {
+  it("renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed", () => {
+    const claim = new MockClaimBuilder()
+      .part1Complete()
+      .fixedWorkPattern()
+      .reducedSchedule()
+      .create();
+
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: claim,
+      diveLevels,
+    });
+
+    expect(wrapper.find({ label: "Hours off per week" })).toMatchSnapshot();
+  });
+
+  it("renders total time for the reduced leave period when work pattern is Variable", () => {
+    const claim = new MockClaimBuilder()
+      .part1Complete()
+      .variableWorkPattern()
+      .reducedSchedule()
+      .create();
+
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: claim,
+      diveLevels,
+    });
+
+    expect(wrapper.find({ label: "Hours off per week" })).toMatchSnapshot();
+  });
+});
+
+describe("Intermittent leave frequency", () => {
+  // Generate all possible combinations of Duration/Frequency for an Intermittent Leave Period:
+  const durations = Object.values(DurationBasis);
+  const frequencyIntervals = Object.values(FrequencyIntervalBasis);
+  const intermittentLeavePeriodPermutations = [];
+
+  durations.forEach((duration_basis) => {
+    frequencyIntervals.forEach((frequency_interval_basis) => {
+      intermittentLeavePeriodPermutations.push(
+        new IntermittentLeavePeriod({
+          duration_basis,
+          frequency_interval_basis,
+          frequency: 2,
+          duration: 3,
+        })
+      );
+    });
+
+    intermittentLeavePeriodPermutations.push(
+      new IntermittentLeavePeriod({
+        duration_basis,
+        frequency_interval: 6, // irregular over 6 months
+        frequency_interval_basis: FrequencyIntervalBasis.months,
+        frequency: 2,
+        duration: 3,
+      })
+    );
+  });
+
+  it("renders the leave frequency and duration in plain language", () => {
+    expect.assertions();
+
+    intermittentLeavePeriodPermutations.forEach((intermittentLeavePeriod) => {
+      const claim = new MockClaimBuilder().part1Complete().create();
+      claim.leave_details.intermittent_leave_periods = [
+        intermittentLeavePeriod,
+      ];
+
+      const { wrapper } = renderWithAppLogic(Review, {
+        claimAttrs: claim,
+        diveLevels,
+      });
+      const contentElement = wrapper.find({
+        i18nKey: "pages.claimsReview.intermittentFrequencyDuration",
+      });
+
+      expect(contentElement.dive()).toMatchSnapshot();
+    });
+  });
+
+  it("does not render the intermittent leave frequency when a claim has no intermittent leave", () => {
+    const claim = new MockClaimBuilder()
+      .part1Complete({ excludeLeavePeriod: true })
+      .create();
+
+    const { wrapper } = renderWithAppLogic(Review, {
+      claimAttrs: claim,
+    });
+    const contentElement = wrapper.find({
+      i18nKey: "pages.claimsReview.intermittentFrequencyDuration",
+    });
+
+    expect(contentElement.exists()).toBe(false);
+  });
+});
+
+describe("EmployerBenefitList", () => {
+  const entries = [
+    new EmployerBenefit({
+      benefit_amount_dollars: "250",
+      benefit_amount_frequency: EmployerBenefitFrequency.monthly,
+      benefit_end_date: "2021-12-30",
+      benefit_start_date: "2021-08-12",
+      benefit_type: EmployerBenefitType.paidLeave,
+    }),
+    new EmployerBenefit({
+      benefit_amount_dollars: "250",
+      benefit_amount_frequency: EmployerBenefitFrequency.monthly,
+      benefit_end_date: "2021-12-30",
+      benefit_start_date: "2021-08-12",
+      benefit_type: EmployerBenefitType.shortTermDisability,
+    }),
+    new EmployerBenefit({
+      benefit_amount_dollars: "250",
+      benefit_amount_frequency: EmployerBenefitFrequency.monthly,
+      benefit_end_date: "2021-12-30",
+      benefit_start_date: "2021-08-12",
+      benefit_type: EmployerBenefitType.permanentDisability,
+    }),
+    new EmployerBenefit({
+      benefit_amount_dollars: "250",
+      benefit_amount_frequency: EmployerBenefitFrequency.monthly,
+      benefit_end_date: "2021-12-30",
+      benefit_start_date: "2021-08-12",
+      benefit_type: EmployerBenefitType.familyOrMedicalLeave,
+    }),
+  ];
+
+  describe("when all data are present", () => {
+    it("renders all data fields", () => {
+      const wrapper = shallow(
+        <EmployerBenefitList entries={entries} reviewRowLevel="4" />
+      );
+
+      expect(wrapper).toMatchSnapshot();
+    });
+  });
+
+  describe("when amount fields are missing", () => {
+    it("doesn't render missing data", () => {
+      const entries = [
+        new EmployerBenefit({
+          benefit_end_date: "2021-12-30",
+          benefit_start_date: "2021-08-12",
+          benefit_type: EmployerBenefitType.permanentDisability,
+        }),
+      ];
+      const wrapper = shallow(
+        <EmployerBenefitList entries={entries} reviewRowLevel="4" />
+      );
+
+      expect(wrapper).toMatchSnapshot();
+    });
+  });
+});
+
+describe("OtherIncomeList", () => {
+  describe("when all data are present", () => {
+    it("renders all data fields", () => {
+      const entries = [
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.workersCompensation,
+        }),
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.unemployment,
+        }),
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.ssdi,
+        }),
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.retirementDisability,
+        }),
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.jonesAct,
+        }),
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.railroadRetirement,
+        }),
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.otherEmployer,
+        }),
+      ];
+      const wrapper = shallow(
+        <OtherIncomeList entries={entries} reviewRowLevel="4" />
+      );
+
+      expect(wrapper).toMatchSnapshot();
+    });
+  });
+
+  describe("when amount fields are missing", () => {
+    it("doesn't render missing data", () => {
+      const entries = [
+        new OtherIncome({
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.otherEmployer,
+        }),
+      ];
+      const wrapper = shallow(
+        <OtherIncomeList entries={entries} reviewRowLevel="4" />
+      );
+
+      expect(wrapper).toMatchSnapshot();
+    });
+  });
+});
+
+describe("PreviousLeaveList", () => {
+  it("renders review info for a previous leave entry", () => {
+    const claim = new MockClaimBuilder()
+      .previousLeavePregnancyFromOtherEmployer()
+      .create();
+
+    const wrapper = shallow(
+      <PreviousLeaveList
+        previous_leaves={claim.previous_leaves}
+        reviewRowLevel="4"
+      />
+    );
+
+    expect(wrapper).toMatchSnapshot();
+  });
+});
+
+describe("OtherLeaveEntry", () => {
+  describe("when all data are present", () => {
+    it("renders all data fields", () => {
+      const label = "Benefit 1";
+      const type = "Medical or family leave";
+      const dates = "07-22-2020 - 09-22-2020";
+      const amount = "$250 per month";
+      const wrapper = shallow(
+        <OtherLeaveEntry
+          label={label}
+          type={type}
+          dates={dates}
+          amount={amount}
+          reviewRowLevel="4"
+        />
+      );
+
+      expect(wrapper).toMatchSnapshot();
+    });
+  });
+
+  describe("when amount is missing", () => {
+    it("doesn't render missing data", () => {
+      const label = "Benefit 1";
+      const type = "Medical or family leave";
+      const dates = "07-22-2020 - 09-22-2020";
+      const wrapper = shallow(
+        <OtherLeaveEntry
+          label={label}
+          type={type}
+          dates={dates}
+          amount={null}
+          reviewRowLevel="4"
+        />
+      );
+
+      expect(wrapper).toMatchSnapshot();
+    });
+  });
+});

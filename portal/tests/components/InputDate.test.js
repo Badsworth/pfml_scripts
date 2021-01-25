@@ -49,6 +49,7 @@ describe("InputDate", () => {
     const { wrapper } = render({
       label: "Legend text",
       hint: "Legend hint",
+      example: "Legend example",
       optionalText: "Optional",
     });
 

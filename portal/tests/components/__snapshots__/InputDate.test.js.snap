@@ -3,6 +3,7 @@
 exports[`InputDate renders a legend for the fieldset 1`] = `
 <FormLabel
   component="legend"
+  example="Legend example"
   hint="Legend hint"
   optionalText="Optional"
 >
@@ -22,6 +23,7 @@ Array [
       }
     }
     label="Test Month"
+    labelClassName="text-normal margin-top-05"
     maxLength="2"
     name="test-date-field_month"
     onBlur={[Function]}
@@ -39,6 +41,7 @@ Array [
       }
     }
     label="Test Day"
+    labelClassName="text-normal margin-top-05"
     maxLength="2"
     name="test-date-field_day"
     onBlur={[Function]}
@@ -56,6 +59,7 @@ Array [
       }
     }
     label="Test Year"
+    labelClassName="text-normal margin-top-05"
     maxLength="4"
     name="test-date-field_year"
     onBlur={[Function]}

@@ -1,0 +1,60 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Feedback renders the component 1`] = `
+<Fragment>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": true,
+          "disabled": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    label={
+      <ReviewHeading
+        level="2"
+      >
+        Do you have any additional comments or concerns?
+      </ReviewHeading>
+    }
+    name="shouldShowCommentBox"
+    onChange={[Function]}
+    smallLabel={true}
+    type="radio"
+  />
+  <ConditionalContent
+    clearField={[Function]}
+    getField={[Function]}
+    updateFields={[Function]}
+    visible={false}
+  >
+    <FormLabel
+      className="usa-label"
+      htmlFor="comment"
+      small={true}
+    >
+      <Trans
+        i18nKey="components.employersFeedback.commentSolicitation"
+        tOptions={
+          Object {
+            "context": "",
+          }
+        }
+      />
+    </FormLabel>
+    <textarea
+      className="usa-textarea margin-top-3"
+      name="comment"
+      onChange={[Function]}
+    />
+  </ConditionalContent>
+</Fragment>
+`;

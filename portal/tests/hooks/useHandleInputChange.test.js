@@ -1,5 +1,5 @@
+import { createInputElement, testHook } from "../test-utils";
 import { act } from "react-dom/test-utils";
-import { testHook } from "../test-utils";
 import useFormState from "../../src/hooks/useFormState";
 import useHandleInputChange from "../../src/hooks/useHandleInputChange";
 
@@ -17,12 +17,11 @@ describe("useHandleInputChange", () => {
     it("changes form state", () => {
       act(() => {
         const event = {
-          target: {
-            checked: null,
+          target: createInputElement({
             name: "foo",
             type: "input",
             value: "bar",
-          },
+          }),
         };
         handleInputChange(event);
       });

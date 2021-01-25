@@ -150,6 +150,7 @@ function InputDate(props) {
    * @param {SyntheticEvent} originalEvent - Original event that triggered this change
    */
   function dispatchChange(value, originalEvent) {
+    // TODO (CP-1667): Stop hijacking the target, and pass back a proper HTMLElement
     props.onChange({
       _originalEvent: originalEvent,
       target: {
@@ -166,6 +167,7 @@ function InputDate(props) {
         component="legend"
         errorMsg={props.errorMsg}
         hint={props.hint}
+        example={props.example}
         optionalText={props.optionalText}
         small={props.smallLabel}
       >
@@ -179,6 +181,7 @@ function InputDate(props) {
           inputMode="numeric"
           inputRef={inputTextRefs.month}
           label={props.monthLabel}
+          labelClassName="text-normal margin-top-05"
           maxLength="2"
           name={`${props.name}_month`}
           onBlur={handleBlur}
@@ -193,6 +196,7 @@ function InputDate(props) {
           inputMode="numeric"
           inputRef={inputTextRefs.day}
           label={props.dayLabel}
+          labelClassName="text-normal margin-top-05"
           maxLength="2"
           name={`${props.name}_day`}
           onBlur={handleBlur}
@@ -207,6 +211,7 @@ function InputDate(props) {
           inputMode="numeric"
           inputRef={inputTextRefs.year}
           label={props.yearLabel}
+          labelClassName="text-normal margin-top-05"
           maxLength="4"
           name={`${props.name}_year`}
           onBlur={handleBlur}
@@ -232,6 +237,10 @@ InputDate.propTypes = {
    * Localized error message. Setting this enables the error state styling.
    */
   errorMsg: PropTypes.node,
+  /**
+   * Localized example text for the entire fieldset
+   */
+  example: PropTypes.string,
   /**
    * Localized hint text for the entire fieldset
    */

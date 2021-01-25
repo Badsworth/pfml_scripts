@@ -9,6 +9,8 @@ resource "aws_iam_user" "agency_department_of_revenue" {
   name     = "pfml-department-of-revenue-moveit-${each.key}"
 }
 
+// NOTE: If you change this policy, please also change the policy
+// in iam-e2e.tf
 data "aws_iam_policy_document" "dor_s3_access_policy" {
   for_each = toset(local.vpcs)
 

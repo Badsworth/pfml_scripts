@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DateOfBirth renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Your identity"
+>
+  <InputDate
+    dayLabel="Day"
+    example="mm / dd / yyyy"
+    label="What’s your date of birth?"
+    monthLabel="Month"
+    name="date_of_birth"
+    onChange={[Function]}
+    value="2019-02-28"
+    yearLabel="Year"
+  />
+</QuestionPage>
+`;

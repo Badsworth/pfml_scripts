@@ -1,0 +1,9 @@
+@use "~@massds/mayflower-assets/scss/00-base/configure" as *;
+
+.c-beta-banner {
+  @include ma-container;
+  text-align: center;
+  @media (min-width: units("tablet")) {
+    text-align: left;
+  }
+}

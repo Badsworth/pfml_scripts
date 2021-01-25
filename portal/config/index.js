@@ -9,4 +9,7 @@ module.exports = {
   test: merge({}, defaultEnvVariables, require("./test")),
   stage: merge({}, defaultEnvVariables, require("./stage")),
   prod: merge({}, defaultEnvVariables, require("./prod")),
+  training: merge({}, defaultEnvVariables, require("./training")),
+  performance: merge({}, defaultEnvVariables, require("./performance")),
+  uat: merge({}, defaultEnvVariables, require("./uat")),
 };

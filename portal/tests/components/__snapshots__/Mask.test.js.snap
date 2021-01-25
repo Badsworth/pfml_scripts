@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Mask renders mask 1`] = `
+exports[`Mask renders ssn mask 1`] = `
 <div
   className=""
 >
@@ -9,6 +9,7 @@ exports[`Mask renders mask 1`] = `
     inputMode="numeric"
     name="foo"
     onBlur={[Function]}
+    onKeyDown={[Function]}
     type="text"
   />
 </div>

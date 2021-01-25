@@ -1,3 +1,5 @@
+import { isEqual, merge } from "lodash";
+
 /**
  * Class representing the base class for the application's models
  */
@@ -18,8 +20,7 @@ export default class BaseModel {
       // Ignore top-level attributes that aren't part of the model class's defaults array
       if (!this.defaults.hasOwnProperty(property)) {
         // Log a warning since it might indicate a missing field on the model or API, indicating a potential bug.
-        // TODO: Don't log a warning when the field is a temporary field, in which case it's expected that this field doesn't exist in the API yet
-        // https://lwd.atlassian.net/browse/CP-694
+        // TODO (CP-694): Don't log a warning when the field is a temporary field, in which case it's expected that this field doesn't exist in the API yet
         // eslint-disable-next-line no-console
         console.warn(
           'Received unexpected attribute: "%s"\nThe model may need updated if this is a new field.',
@@ -29,7 +30,7 @@ export default class BaseModel {
         continue;
       }
 
-      this[property] = value;
+      merge(this, { [property]: value });
     }
   }
 
@@ -43,5 +44,13 @@ export default class BaseModel {
    */
   get defaults() {
     throw new Error("Not implemented");
+  }
+
+  /**
+   * Check to see if this object is set to the default values
+   * @returns {boolean} true if this object has default values and false otherwise
+   */
+  isDefault() {
+    return isEqual(this, new this.constructor());
   }
 }

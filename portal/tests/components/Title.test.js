@@ -9,19 +9,31 @@ describe("Title", () => {
 
       expect(wrapper).toMatchInlineSnapshot(`
         <Fragment>
-          <Head>
+          <HelmetWrapper
+            defer={true}
+            encodeSpecialCharacters={true}
+          >
             <title>
               Hello world
             </title>
-          </Head>
+          </HelmetWrapper>
           <h1
-            className="margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+            className="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+            tabIndex="-1"
           >
             Hello world
           </h1>
         </Fragment>
       `);
     });
+  });
+
+  it("adds a tabIndex and js-title class to the heading so we can manually move user focus to it", () => {
+    const wrapper = shallow(<Title>Hello world</Title>);
+    const h1 = wrapper.find("h1");
+
+    expect(h1.hasClass("js-title")).toBe(true);
+    expect(h1.prop("tabIndex")).toBe("-1");
   });
 
   describe("when the `bottomMargin` prop is set", () => {
@@ -44,20 +56,6 @@ describe("Title", () => {
       const wrapper = shallow(<Title component="legend">Hello world</Title>);
 
       expect(wrapper.find("legend").hasClass("usa-legend")).toBe(true);
-      expect(wrapper).toMatchInlineSnapshot(`
-        <Fragment>
-          <Head>
-            <title>
-              Hello world
-            </title>
-          </Head>
-          <legend
-            className="margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-legend"
-          >
-            Hello world
-          </legend>
-        </Fragment>
-      `);
     });
   });
 
@@ -85,7 +83,7 @@ describe("Title", () => {
       const wrapper = shallow(<Title small>Hello world</Title>);
 
       expect(wrapper.find("h1").prop("className")).toMatchInlineSnapshot(
-        `"margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"`
+        `"js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"`
       );
     });
   });

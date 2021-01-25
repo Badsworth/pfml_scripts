@@ -32,6 +32,12 @@ const simulateEvent = (eventType, uri = "/") => {
 };
 
 describe("Cloudfront Lambda@Edge Function", () => {
+  it("is an async handler", () => {
+    const event = simulateEvent("origin-request", "/test/");
+
+    expect(handler(event) instanceof Promise).toBe(true);
+  });
+
   describe("when eventType is origin-request", () => {
     describe("when URI has trailing slash", () => {
       it("does not add a trailing slash to the URI", async () => {

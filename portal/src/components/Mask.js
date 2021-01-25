@@ -6,6 +6,8 @@ import classnames from "classnames";
 const maskDeliminatedRegex = {
   ssn: /([*\d]{3})([*\d]{1,2})?([*\d]+)?/,
   fein: /([*\d]{2})([*\d]+)?/,
+  phone: /([*\d]{3})([*\d]{1,3})?([*\d]+)?/,
+  zip: /([*\d]{5})([*\d]+)?/,
 };
 
 // Overlays in specific contexts
@@ -32,12 +34,12 @@ function deliminateRegexGroups(value, rx) {
 }
 
 /**
- * Remove all non-digits
+ * Remove all non-digits, except masking character (*)
  * @param {string} value
  * @returns {string}
  */
 function toDigits(value) {
-  return value.replace(/[^\d]/g, "");
+  return value.replace(/[^\d*]/g, "");
 }
 
 /**
@@ -90,7 +92,7 @@ function toNumber(value) {
  * @returns {string}
  */
 export function maskValue(value, mask) {
-  if (mask === "currency") {
+  if (mask === "currency" || mask === "hours") {
     // Format number with commas. If the number includes a decimal,
     // ensure it includes two decimal points
     const number = toNumber(value);
@@ -115,12 +117,29 @@ function Mask(props) {
    * To avoid a jarring experience for screen readers, we only
    * add/remove characters after the field has been blurred,
    * rather than when the user is typing in the field
-   * @param {object} evt
+   * @param {object} event
    */
-  const handleBlur = (evt) => {
-    const maskedValue = maskValue(evt.target.value, props.mask);
+  const handleBlur = (event) => {
+    maskAndDispatchChangeFromEvent(event);
 
-    dispatchChange(maskedValue, evt);
+    if (field.props.onBlur) {
+      field.props.onBlur(event);
+    }
+  };
+
+  /**
+   * To ensure we only submit the masked value, we need to
+   * mask the input when the Enter key is pressed
+   * @param {object} event
+   */
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      maskAndDispatchChangeFromEvent(event);
+    }
+
+    if (field.props.onKeyDown) {
+      field.props.onKeyDown(event);
+    }
   };
 
   /**
@@ -132,6 +151,7 @@ function Mask(props) {
    * @param {SyntheticEvent} originalEvent - Original event that triggered this change
    */
   const dispatchChange = (value, originalEvent) => {
+    // TODO (CP-1667): Stop hijacking the target, and pass back a proper HTMLElement
     field.props.onChange({
       _originalEvent: originalEvent,
       target: {
@@ -142,13 +162,27 @@ function Mask(props) {
     });
   };
 
+  /**
+   * Apply the mask and update the field state
+   * @param {object} event
+   */
+  const maskAndDispatchChangeFromEvent = (event) => {
+    const maskedValue = maskValue(event.target.value, props.mask);
+
+    dispatchChange(maskedValue, event);
+  };
+
   const modifiedInputText = React.cloneElement(field, {
     defaultValue: undefined,
-    inputMode: "numeric",
-    type: "text",
+    inputMode:
+      props.mask === "currency" || props.mask === "hours"
+        ? "decimal"
+        : "numeric",
+    type: props.mask === "phone" ? "tel" : "text",
     value: field.props.value,
     onBlur: handleBlur,
     onChange: field.props.onChange,
+    onKeyDown: handleKeyDown,
     className: classnames(field.props.className, {
       "c-inputtext-field--currency": props.mask === "currency",
     }),
@@ -181,7 +215,7 @@ Mask.propTypes = {
   /**
    * The mask type to be applied.
    */
-  mask: PropTypes.oneOf(["currency", "fein", "ssn"]),
+  mask: PropTypes.oneOf(["currency", "fein", "hours", "phone", "ssn", "zip"]),
 };
 
 export default Mask;

@@ -14,9 +14,21 @@ function Dropdown(props) {
   const hasError = !!props.errorMsg;
   const inputId = useUniqueId("Dropdown");
 
-  const formGroupClasses = classnames("usa-form-group", {
-    "usa-form-group--error": hasError,
-  });
+  const fieldClasses = classnames(
+    "usa-select maxw-mobile-lg",
+    props.selectClassName,
+    {
+      "usa-input--error": hasError,
+    }
+  );
+
+  const formGroupClasses = classnames(
+    "usa-form-group",
+    props.formGroupClassName,
+    {
+      "usa-form-group--error": hasError,
+    }
+  );
 
   return (
     <div className={formGroupClasses}>
@@ -26,19 +38,22 @@ function Dropdown(props) {
         inputId={inputId}
         optionalText={props.optionalText}
         small={props.smallLabel}
+        labelClassName={props.labelClassName}
       >
         {props.label}
       </FormLabel>
 
       <select
-        className="usa-select"
+        className={fieldClasses}
         id={inputId}
         name={props.name}
         onChange={props.onChange}
         value={props.value}
       >
-        {/* Include a blank initial option, which will be chosen if no option has been selected yet */}
-        <option value="">{props.emptyChoiceLabel}</option>
+        {/* Include a blank initial option which will be chosen if no option has been selected yet */}
+        {!props.hideEmptyChoice && (
+          <option value="">{props.emptyChoiceLabel}</option>
+        )}
 
         {props.choices.map((choice) => (
           <option key={choice.value} value={choice.value}>
@@ -65,7 +80,7 @@ Dropdown.propTypes = {
   /**
    * Localized label for the initially selected option when no value is set
    */
-  emptyChoiceLabel: PropTypes.string.isRequired,
+  emptyChoiceLabel: PropTypes.string,
   /**
    * Localized error message. Setting this enables the error state styling.
    */
@@ -74,6 +89,18 @@ Dropdown.propTypes = {
    * Localized hint text
    */
   hint: PropTypes.node,
+  /**
+   * Additional classes to include on the HTML select
+   */
+  selectClassName: PropTypes.string,
+  /**
+   * Override the label's default text-bold class
+   */
+  labelClassName: PropTypes.string,
+  /**
+   * Additional classes to include on the containing form group element
+   */
+  formGroupClassName: PropTypes.string,
   /**
    * Localized label
    */
@@ -94,8 +121,12 @@ Dropdown.propTypes = {
    * Enable the smaller label variant
    */
   smallLabel: PropTypes.bool,
+  /**
+   * Flag to hide empty choice as first option
+   */
+  hideEmptyChoice: PropTypes.bool,
   /** The `value` of the selected choice */
-  value: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default Dropdown;

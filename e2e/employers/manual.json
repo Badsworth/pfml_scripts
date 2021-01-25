@@ -1,0 +1,26 @@
+[
+  {
+    "accountKey": "12345678912",
+    "name": "Aperture Science",
+    "fein": "92-9292929",
+    "street": "1 Borealis Way",
+    "city": "Boston",
+    "state": "MA",
+    "zip": "02101-1234",
+    "dba": "",
+    "family_exemption": false,
+    "medical_exemption": false
+  },
+  {
+    "accountKey": "12345678913",
+    "name": "Burns Industries",
+    "fein": "81-8181818",
+    "street": "1 Burns Lane",
+    "city": "Springfield",
+    "state": "MA",
+    "zip": "01020-1234",
+    "dba": "",
+    "family_exemption": false,
+    "medical_exemption": false
+  }
+]

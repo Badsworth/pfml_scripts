@@ -8,10 +8,11 @@ import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import routes from "../../routes";
+import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
-const ConsentToDataSharing = (props) => {
+export const ConsentToDataSharing = (props) => {
   const { t } = useTranslation();
   const { appLogic, user } = props;
   const { updateUser } = appLogic.users;
@@ -21,13 +22,15 @@ const ConsentToDataSharing = (props) => {
       consented_to_data_sharing: true,
     });
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
     await handleSave();
-  };
+  });
+
+  const roleContext = user.hasEmployerRole ? "employer" : "user";
 
   return (
-    <form onSubmit={handleSubmit} className="usa-form measure-5">
+    <form onSubmit={handleSubmit} className="usa-form">
       <Title>{t("pages.userConsentToDataSharing.title")}</Title>
       <p className="margin-bottom-2">
         {t("pages.userConsentToDataSharing.intro")}
@@ -35,22 +38,31 @@ const ConsentToDataSharing = (props) => {
 
       <Accordion>
         <AccordionItem
-          heading={t("pages.userConsentToDataSharing.applicationUsageHeading")}
+          heading={t("pages.userConsentToDataSharing.applicationUsageHeading", {
+            context: roleContext,
+          })}
         >
           <p>{t("pages.userConsentToDataSharing.applicationUsageIntro")}</p>
           <ul className="usa-list">
             {t("pages.userConsentToDataSharing.applicationUsageList", {
               returnObjects: true,
+              context: roleContext,
             }).map((listItemContent, index) => (
               <li key={index}>{listItemContent}</li>
             ))}
           </ul>
         </AccordionItem>
+
         <AccordionItem
           heading={t("pages.userConsentToDataSharing.dataUsageHeading")}
         >
-          <p>{t("pages.userConsentToDataSharing.dataUsageBody")}</p>
+          <p>
+            {t("pages.userConsentToDataSharing.dataUsageBody", {
+              context: roleContext,
+            })}
+          </p>
         </AccordionItem>
+
         <AccordionItem
           heading={t("pages.userConsentToDataSharing.fullUserAgreementHeading")}
         >
@@ -74,13 +86,12 @@ const ConsentToDataSharing = (props) => {
         </AccordionItem>
       </Accordion>
 
-      <Alert noIcon state="info">
-        {t("pages.userConsentToDataSharing.agreementBody")}
+      <Alert state="info" noIcon>
+        <p>{t("pages.userConsentToDataSharing.agreementBody")}</p>
+        <Button type="submit" loading={handleSubmit.isThrottled}>
+          {t("pages.userConsentToDataSharing.continueButton")}
+        </Button>
       </Alert>
-
-      <Button type="submit">
-        {t("pages.userConsentToDataSharing.continueButton")}
-      </Button>
     </form>
   );
 };

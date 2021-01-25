@@ -22,7 +22,7 @@ module.exports = {
    *  when building the static version of storybook.
    * @returns {object} Altered Webpack config
    */
-  webpackFinal: async (config, { configType }) => {
+  webpackFinal: (config, { configType }) => {
     // Set our environment variables so things like Cognito integration works in the sandbox
     config.plugins.push(new webpack.EnvironmentPlugin(nextConfig.env));
 
@@ -34,14 +34,15 @@ module.exports = {
         {
           loader: "sass-loader",
           options: {
-            sassOptions: {
-              includePaths: nextConfig.sassOptions.includePaths,
-            },
+            sassOptions: nextConfig.sassOptions,
           },
         },
       ],
       include: [path.resolve(__dirname, "../styles")],
     });
+
+    // So that we can use the node.js __filename
+    config.node = { __filename: true };
 
     // Simplify import paths in our Story files
     // For example, we can do:
@@ -51,6 +52,8 @@ module.exports = {
     config.resolve = config.resolve || {};
     config.resolve.alias = Object.assign(config.resolve.alias, {
       src: path.resolve(__dirname, "../src"),
+      storybook: path.resolve(__dirname),
+      tests: path.resolve(__dirname, "../tests"),
     });
 
     return config;

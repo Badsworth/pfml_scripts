@@ -1,60 +1,104 @@
+import Alert from "../components/Alert";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
+import InputPassword from "../components/InputPassword";
 import InputText from "../components/InputText";
 import Link from "next/link";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
+import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
-import useHandleInputChange from "../hooks/useHandleInputChange";
+import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
+import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
-import valueWithFallback from "../utils/valueWithFallback";
 
 export const CreateAccount = (props) => {
-  const { appErrors, auth } = props.appLogic;
+  const { appLogic } = props;
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState({});
-  const username = valueWithFallback(formState.username);
-  const password = valueWithFallback(formState.password);
-  const handleInputChange = useHandleInputChange(updateFields);
 
-  const handleSubmit = (event) => {
+  const { formState, updateFields } = useFormState({
+    password: "",
+    username: "",
+  });
+
+  const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    auth.createAccount(username, password);
-  };
+    await appLogic.auth.createAccount(formState.username, formState.password);
+  });
+
+  const getFunctionalInputProps = useFunctionalInputProps({
+    appErrors: appLogic.appErrors,
+    formState,
+    updateFields,
+  });
+
+  const showSelfRegistration = isFeatureEnabled(
+    "employerShowSelfRegistrationForm"
+  );
 
   return (
-    <form className="usa-form usa-form--large" onSubmit={handleSubmit}>
+    <form className="usa-form" onSubmit={handleSubmit}>
+      <Alert
+        state="info"
+        heading={t("pages.authCreateAccount.alertHeading")}
+        className="margin-bottom-3"
+        neutral
+      >
+        <Trans
+          i18nKey="pages.authCreateAccount.alertBody"
+          components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
+            "mass-benefits-timeline-link": (
+              <a
+                href={routes.external.massgov.benefitsTimeline_2020December2}
+              />
+            ),
+            p: <p />,
+          }}
+        />
+      </Alert>
       <Title>{t("pages.authCreateAccount.title")}</Title>
       <InputText
+        {...getFunctionalInputProps("username")}
         type="email"
-        name="username"
-        value={username}
         label={t("pages.authCreateAccount.usernameLabel")}
-        errorMsg={appErrors.fieldErrorMessage("username")}
-        onChange={handleInputChange}
         smallLabel
       />
-      <InputText
+      <InputPassword
+        {...getFunctionalInputProps("password")}
         autoComplete="new-password"
-        type="password"
-        name="password"
-        value={password}
         hint={t("pages.authCreateAccount.passwordHint")}
         label={t("pages.authCreateAccount.passwordLabel")}
-        errorMsg={appErrors.fieldErrorMessage("password")}
-        onChange={handleInputChange}
         smallLabel
       />
-      <Button type="submit">
+      <Button type="submit" loading={handleSubmit.isThrottled}>
         {t("pages.authCreateAccount.createAccountButton")}
       </Button>
-      <div className="margin-top-2 text-base text-bold">
-        {t("pages.authCreateAccount.haveAnAccountFooterLabel")}
+      <div className="border-top-2px border-base-lighter margin-top-4" />
+      <div className="margin-top-4 text-base-darkest">
+        <strong>{t("pages.authCreateAccount.haveAnAccountFooterLabel")}</strong>
         <Link href={routes.auth.login}>
-          <a>{t("pages.authCreateAccount.logInFooterLink")}</a>
+          <a className="display-inline-block margin-left-1 text-bold">
+            {t("pages.authCreateAccount.logInFooterLink")}
+          </a>
         </Link>
+        {!showSelfRegistration && (
+          <p>
+            <Trans
+              i18nKey="pages.authCreateAccount.createEmployerAccount"
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
+          </p>
+        )}
       </div>
     </form>
   );
@@ -65,6 +109,9 @@ CreateAccount.propTypes = {
     appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
     auth: PropTypes.shape({
       createAccount: PropTypes.func.isRequired,
+    }).isRequired,
+    portalFlow: PropTypes.shape({
+      goTo: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
 };

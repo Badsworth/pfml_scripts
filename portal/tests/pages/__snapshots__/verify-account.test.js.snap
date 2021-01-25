@@ -2,27 +2,20 @@
 
 exports[`VerifyAccount renders the empty page 1`] = `
 <form
-  className="usa-form usa-form--large"
+  className="usa-form"
   onSubmit={[Function]}
 >
+  <BackButton
+    href="/login"
+    label="Back to log in"
+  />
   <Title>
     Verify your email address
   </Title>
   <Lead>
-    We sent a 6-digit verification code to your email address. Enter the code to verify your email.
+    We sent a 6 digit verification code to your email address. Enter the code to verify your email.
   </Lead>
   <InputText
-    autoComplete="off"
-    errorMsg={null}
-    inputMode="numeric"
-    label="6-digit code"
-    name="code"
-    onChange={[Function]}
-    smallLabel={true}
-    value=""
-  />
-  <InputText
-    errorMsg={null}
     label="Email address"
     name="username"
     onChange={[Function]}
@@ -30,9 +23,19 @@ exports[`VerifyAccount renders the empty page 1`] = `
     type="email"
     value=""
   />
+  <InputText
+    autoComplete="off"
+    inputMode="numeric"
+    label="6-digit code"
+    name="code"
+    onChange={[Function]}
+    smallLabel={true}
+    value=""
+  />
   <div>
     <Button
-      className="margin-top-2"
+      className="margin-top-1"
+      loading={false}
       name="resend-code-button"
       onClick={[Function]}
       variation="unstyled"
@@ -40,21 +43,65 @@ exports[`VerifyAccount renders the empty page 1`] = `
       Send a new code
     </Button>
   </div>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    label="Are you creating an employer account to manage leave for your company?"
+    name="isEmployer"
+    onChange={[Function]}
+    smallLabel={true}
+    type="radio"
+    value=""
+  />
+  <ConditionalContent
+    clearField={[Function]}
+    fieldNamesClearedWhenHidden={
+      Array [
+        "ein",
+      ]
+    }
+    getField={[Function]}
+    updateFields={[Function]}
+    visible={null}
+  >
+    <InputText
+      label="Employer ID number (EIN)"
+      mask="fein"
+      name="ein"
+      onChange={[Function]}
+      smallLabel={true}
+      value=""
+    />
+  </ConditionalContent>
   <Button
+    loading={false}
     type="submit"
   >
     Submit
   </Button>
-  <div
-    className="margin-top-2 text-bold"
-  >
-    <Link
-      href="/login"
-    >
-      <a>
-        Back to log in
-      </a>
-    </Link>
-  </div>
 </form>
+`;
+
+exports[`VerifyAccount shows success message after code is resent 1`] = `
+<Alert
+  className="margin-bottom-3 margin-top-0"
+  heading="New verification code sent"
+  name="code-resent-message"
+  role="alert"
+  state="success"
+>
+  We sent a new 6 digit verification code to your email address. Enter the new code to verify your email.
+</Alert>
 `;

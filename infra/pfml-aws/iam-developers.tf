@@ -8,16 +8,36 @@ data "aws_iam_role" "developers" {
 data "aws_iam_policy_document" "developers_access_policy" {
   statement {
     actions = [
+      # Allow individuals to view AWS health statuses affecting our resources.
+      "health:*",
+
       # Allow individuals to manage secrets in SSM Parameter Store.
       "ssm:*",
 
       # Allow individuals to request direct support from AWS, e.g.
       # for requesting new limits on services that our applications use.
-      "support:*"
+      "support:*",
+
+      # Allow access to performance insights
+      "pi:*"
     ]
 
     resources = [
       "*"
+    ]
+  }
+
+  statement {
+    sid = "FINEOSAssumeRoleAccess"
+    actions = [
+      # Allow individuals to assume the FINEOS cross-account role in test/stage.
+      "sts:AssumeRole",
+      "sts:TagSession"
+    ]
+
+    resources = [
+      "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B",
+      "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
     ]
   }
 

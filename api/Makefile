@@ -19,21 +19,25 @@ INFO_TAG := $(DATE).$(USER)
 # default. -T is needed for Github Actions to work properly with its version of
 # docker-compose.
 ifdef CI
-	DOCKER_EXEC_ARGS := -T
+	DOCKER_EXEC_ARGS := -T -e CI -e PYTEST_ADDOPTS="--color=yes"
 endif
 
-# For running Python things in the local environment (which could be when running inside a Docker container)
-PY_RUN_CMD_POETRY := poetry run
-# For running Python things in Docker, as one-off processes, starting container if needed
-PY_RUN_CMD_DOCKER_RUN := docker-compose run $(DOCKER_EXEC_ARGS) --rm $(APP_NAME) poetry run
-# For running Python things in a running Docker container
-PY_RUN_CMD_DOCKER_EXEC := docker-compose exec $(DOCKER_EXEC_ARGS) $(APP_NAME) poetry run
+# Path to Open API file for spectral linting
+OPEN_API_PATH := openapi.yaml
 
-PY_RUN_CMD_OPT ?= DOCKER_RUN
+# For running things in the local environment (which could be when running inside a Docker container)
+RUN_CMD_NATIVE :=
+# For running things in Docker, as one-off processes, starting container if needed
+RUN_CMD_DOCKER_RUN := docker-compose run $(DOCKER_EXEC_ARGS) --rm $(APP_NAME)
+# For running things in a running Docker container
+RUN_CMD_DOCKER_EXEC := docker-compose exec $(DOCKER_EXEC_ARGS) $(APP_NAME)
 
-PY_RUN_CMD := $(PY_RUN_CMD_$(PY_RUN_CMD_OPT))
+RUN_CMD_OPT ?= DOCKER_RUN
+RUN_CMD := $(RUN_CMD_$(RUN_CMD_OPT))
 
-POETRY_CMD := $(subst poetry run,poetry,$(PY_RUN_CMD))
+PY_RUN_CMD := $(RUN_CMD) poetry run
+
+POETRY_CMD := $(RUN_CMD) poetry
 
 DECODE_LOG := 2>&1 | python3 -u massgov/pfml/util/logging/decodelog.py
 
@@ -72,17 +76,21 @@ check-static: ## Run static code checks
 check-static: format-check lint
 
 clean: ## Remove intermediate, cache, or build artifacts
-	find . -type f -name '*.py[co]' -delete
+	find . -type f -name '*.py[cod]' -delete
 	find . -type d -name __pycache__ -print -exec rm -r {} +
 	find . -type d -name '*.egg-info' -print -exec rm -r {} +
 	find . -type d -name .mypy_cache -print -exec rm -r {} +
+	find . -type d -name .pytest_cache -print -exec rm -r {} +
 	rm -rf dist
-	-$(PY_RUN_CMD) coverage erase # takes care of .coverage file
+	rm -f .coverage coverage.* .testmondata
 	rm -rf .coverage_report
-	rm -f .testmondata
+	find lambdas/ -type f -iname Makefile -exec sh -c '$(MAKE) -C $$(dirname {}) clean' \;
 
-clean-docker: ## Remove project docker artifacts
+clean-docker: ## Remove project docker artifacts (which includes the DB)
 	docker-compose down --remove-orphans --rmi all --volumes
+
+clean-node: ## Remove project Node.js modules
+	rm -rf node_modules
 
 clean-venv: ## Remove active poetry virtualenv
 	rm -rf $(shell poetry env info --path)
@@ -100,17 +108,65 @@ build-app: ## Build app container
 		.
 
 create-user: ## Create local API User
-	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-user.py
+	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-user.py $(args)
 
 deps: ## Install dependencies
-	$(POETRY_CMD) install --no-root
+	$(POETRY_CMD) install --no-root --extras mssql-server
+	$(RUN_CMD) npm install --only=dev
 
 deps-check:
 	$(PY_RUN_CMD) safety check --full-report
 
+distclean: ## Remove all artifacts that can be regenerated
+distclean: clean clean-node clean-venv
+	rm -f jwks.json
+	rm -rf dor_mock/ eligibility_export/ fineos_daily_mock/
+
+dor-generate: ## Generate fake DOR data
+	$(PY_RUN_CMD) dor-generate --folder dor_mock --count 1000 $(DECODE_LOG)
+
+dor-generate-for-update: ## Generate fake update DOR data (mutation of subset of data from `make dor-generate`)
+	$(PY_RUN_CMD) dor-generate --folder dor_mock --count 1000 --update $(DECODE_LOG)
+
+fineos-daily-generate: ## Generate fake FINEOS employee extract
+	$(PY_RUN_CMD) fineos-daily-generate --folder fineos_daily_mock --count 1000 $(DECODE_LOG)
+
+fineos-import-employee-updates: ## Generate fake FINEOS employee extract
+	FINEOS_FOLDER_PATH=fineos_daily_mock FINEOS_AWS_IAM_ROLE_ARN="arn" FINEOS_AWS_IAM_ROLE_EXTERNAL_ID="1" $(PY_RUN_CMD) fineos-import-employee-updates $(DECODE_LOG)
+
+dor-import: ## Run a DOR import using fake data (see dor-generate)
+	FOLDER_PATH=dor_mock $(PY_RUN_CMD) dor-import $(DECODE_LOG)
+
+load-employers-to-fineos: ## Send employers from our database to the FINEOS API
+	$(PY_RUN_CMD) load-employers-to-fineos $(DECODE_LOG)
+
+fineos-eligibility-feed-export: ## Run an eligibility feed export
+	mkdir -p eligibility_export/absence-eligibility/upload
+	OUTPUT_DIRECTORY_PATH=eligibility_export FINEOS_AWS_IAM_ROLE_ARN="arn" FINEOS_AWS_IAM_ROLE_EXTERNAL_ID="1" $(PY_RUN_CMD) fineos-eligibility-feed-export $(DECODE_LOG)
+
+fineos-payments-mock-generate:
+	mkdir -p mock_fineos_payments_files
+	rm -rf mock_fineos_payments_files/*
+	$(PY_RUN_CMD) fineos-payments-mock-generate --folder mock_fineos_payments_files --fein 102000000 --ssn 252000000
+
+payments-fineos-process: # Run the Payments FINEOS import process (Just the vendor extract parts for VCC right now)
+	$(PY_RUN_CMD) payments-fineos-process --steps vendor-extract error-report
+
+payments-ctr-process: # Run the Payments Comptroller processes (Just the VCC parts right now)
+	$(PY_RUN_CMD) payments-ctr-process --steps vcc data-mart error-report
+
+fineos-test-vendor-export-generate:
+	mkdir -p mock_fineos_test_vendor_export
+	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export --fein 103000000 --ssn 253000000 --cvalue 5100 --employeecustomernumber 200 --absencecaseid 200 $(DECODE_LOG)
+
+fineos-test-vendor-export-generate-more:
+	mkdir -p mock_fineos_test_vendor_export_more
+	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export_more --fein 104000000 --ssn 254000000 --cvalue 5200 --employeecustomernumber 300 --absencecaseid 300 $(DECODE_LOG)
+
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
-	ecr_login_cmd="$$(aws ecr get-login --no-include-email)" && $$ecr_login_cmd
+	aws ecr get-login-password --region 'us-east-1' | \
+	docker login --username AWS --password-stdin 498823821309.dkr.ecr.us-east-1.amazonaws.com
 
 format: ## Format code
 	$(PY_RUN_CMD) isort --atomic --apply
@@ -119,6 +175,12 @@ format: ## Format code
 format-check: ## Check format of code
 	$(PY_RUN_CMD) isort --atomic --check-only
 	$(PY_RUN_CMD) black . --check
+
+generate-verification-codes: ## Generate verification codes
+	$(PY_RUN_CMD) generate-verification-codes --input=$(input) --output=$(output)
+
+init: ## Initialize project to run locally
+init: build deps start-db jwks.json db-upgrade db-create-users
 
 jwks.json: ## Generate a local JSON Web Key Set to use for local API Authentication
 	$(PY_RUN_CMD) bin/create-jwks.py > $@
@@ -137,11 +199,15 @@ else
 endif
 
 lint: ## Run linting
+lint: lint-spectral
 	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests bin
 	$(PY_RUN_CMD) mypy massgov bin
 
 lint-security: ## Run security linting
 	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101 -ll
+
+lint-spectral: ## Run OpenAPI Spec linting
+	$(RUN_CMD) npx spectral lint $(OPEN_API_PATH) --ruleset .spectral.yaml
 
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) bash
@@ -149,19 +215,34 @@ login: start ## Start shell in running container
 login-db: ## Start psql with project environment variables
 	PGPASSWORD=$$DB_PASSWORD psql --host=$$DB_HOST --username=$$DB_USERNAME $$DB_NAME
 
+login-db-admin: ## Start psql with project environment variables and admin user
+	PGPASSWORD=$$DB_ADMIN_PASSWORD psql --host=$$DB_HOST --username=$$DB_ADMIN_USERNAME $$DB_NAME
+
 logs: start ## View API logs
 	docker-compose logs --follow --no-color $(APP_NAME) $(DECODE_LOG)
 
 logs-db: start ## View DB logs
 	docker-compose logs --follow mass-pfml-db
 
+process-tpa-csv: ## Creates mailable CSVs per email address in input file
+	$(PY_RUN_CMD) python bin/process-tpa-csv.py \
+		--aws-access-key-id=$(aws-access-key-id) \
+		--aws-secret-access-key=$(aws-secret-access-key) \
+		--aws-session-token=$(aws-session-token) \
+		--input=$(input) \
+		--output-dir=$(output-dir) \
+		--url-expiration-days=$(url-expiration-days)
+
 psql: login-db
 
-start: ## Start containers
+start: ## Start all containers
 start: jwks.json
 	docker-compose up --detach
 
-stop: ## Stop running containers
+start-db: ## Start DB container
+	docker-compose up --detach mass-pfml-db
+
+stop: ## Stop all running containers
 	docker-compose down
 
 release: ## Build and publish release image
@@ -175,6 +256,14 @@ release-build: ## Build release image
 		--build-arg RUN_USER=container \
 		--build-arg RUN_UID=4000 \
 		.
+
+release-start-api: jwks.json
+	docker-compose --file docker-compose.yml --file docker-compose.release.yml up --detach
+
+release-stop-api:
+	docker-compose --file docker-compose.yml --file docker-compose.release.yml down
+
+release-test: db-upgrade db-create-users release-start-api run-test
 
 # Since we have a time-based tag INFO_TAG, tagging and pushing are usually best
 # to be done together, but you could tag then later push by setting INFO_TAG
@@ -190,14 +279,21 @@ release-tag: ## Tag release image for registry
 	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(RELEASE_TAG)
 	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
 
+run-test: # The second parameter is the number of retries (each followed by
+		  # a second of wait) until a state is determined by the docker daemon
+	./bin/check_container_health.sh 60
+
 run: ## Run docker-compose
 run: start logs
 
+db-create-users: ## Create database users
+	$(PY_RUN_CMD) db-admin-create-db-users $(DECODE_LOG)
+
 db-upgrade: ## Apply pending migrations to db
-	$(PY_RUN_CMD) db-migrate-up $(DECODE_LOG)
+	$(PY_RUN_CMD) db-migrate-up  $(DECODE_LOG)
 
 db-downgrade: ## Rollback last migration in db
-	$(PY_RUN_CMD) db-migrate-down $(DECODE_LOG)
+	$(PY_RUN_CMD) db-migrate-down  $(DECODE_LOG)
 
 db-downgrade-all: ## Rollback all migrations
 	$(PY_RUN_CMD) db-migrate-down-all $(DECODE_LOG)
@@ -253,8 +349,39 @@ test-coverage-report: ## Open HTML test coverage report
 	$(PY_RUN_CMD) coverage html --directory .coverage_report
 	$(OPEN_CMD) .coverage_report/index.html
 
-test-watch: ## Watch and run tests on file changes
+define run_test_watch
+	$(PY_RUN_CMD) pytest-watch -- $(1)
+endef
+
+test-watch: ## Watch and run tests on file changes, set $args to pass flags to `pytest`
+	$(call run_test_watch, $(args))
+
+test-watch-changed: ## Watch and run `make test-changed` on file changes
 	$(PY_RUN_CMD) pytest-watch --runner "make test-changed"
+
+test-watch-focus: ## Watch and run tests decorated with `@pytest.mark.dev_focus` on file changes
+	$(call run_test_watch,-m dev_focus $(args))
+
+API_PATHS := . ../infra/api ../infra/ecs-tasks ../infra/env-shared ../.github/workflows/api-deploy.yml
+release-notes: refs=origin/deploy/api/stage..origin/master
+release-notes: ## Generate API release notes for $refs (defaults between stage and test)
+	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
+	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
+	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'
+
+API_RELEASE_BRANCHES := $(addprefix origin/, master deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat)
+where-ticket: ## Search release branches for $ticket
+	@for b in $(API_RELEASE_BRANCHES); do echo "## $$b ##"; \
+		git --no-pager log --oneline --decorate --grep=$(ticket) $$b; \
+		echo ""; \
+	done
+
+whats-released: ## List latest commit on release branches
+	@for b in $(API_RELEASE_BRANCHES); do echo "## $$b ##"; \
+		echo " * Closest tag: $$(git describe --tags --match api/v* $$b)"; \
+		echo " * Latest commit: $$(git --no-pager log --oneline --decorate --color -n 1 $$b)"; \
+		echo ""; \
+	done
 
 help: ## Displays this help screen
 	@grep -Eh '^[[:print:]]+:.*?##' $(MAKEFILE_LIST) | \
@@ -264,7 +391,7 @@ help: ## Displays this help screen
 	@echo ""
 	@echo "APP_NAME=$(APP_NAME)"
 	@echo "INFO_TAG=$(INFO_TAG)"
-	@echo "PY_RUN_CMD_OPT=$(PY_RUN_CMD_OPT)"
+	@echo "RUN_CMD_OPT=$(RUN_CMD_OPT)"
 	@echo "RELEASE_TAG=$(RELEASE_TAG)"
 	@echo "RUN_UID=$(RUN_UID)"
 	@echo "RUN_USER=$(RUN_USER)"

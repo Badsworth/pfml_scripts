@@ -28,6 +28,7 @@ resource "aws_lb" "nlbs" {
     Name   = "${each.key}-nlb"
     # nonprod is not a valid environment, so we use stage here.
     environment = each.key == "prod" ? "prod" : "stage"
+    "SMX:Asset" = "v1:${each.key}-nlb:${module.constants.smartronix_environment_tags[each.key == "prod" ? "prod" : "stage"]}:NLB:PFML:Advanced:None"
   })
 }
 

@@ -9,7 +9,7 @@ describe("<ConditionalContent>", () => {
       {
         children: <h1>Hello</h1>,
         fieldNamesClearedWhenHidden: [],
-        removeField: jest.fn(),
+        clearField: jest.fn(),
         getField: jest.fn(),
         updateFields: jest.fn(),
         visible: true,
@@ -70,12 +70,12 @@ describe("<ConditionalContent>", () => {
 
     it("clears all fields when component is hidden", () => {
       const mountComponent = true;
-      const removeField = jest.fn();
+      const clearField = jest.fn();
       const { wrapper } = render(
         {
           visible: true,
           fieldNamesClearedWhenHidden: ["foo", "bar"],
-          removeField,
+          clearField,
         },
         mountComponent
       );
@@ -84,39 +84,39 @@ describe("<ConditionalContent>", () => {
         wrapper.setProps({ visible: false });
       });
 
-      expect(removeField).toHaveBeenCalledTimes(2);
-      expect(removeField).toHaveBeenNthCalledWith(1, "foo");
-      expect(removeField).toHaveBeenNthCalledWith(2, "bar");
+      expect(clearField).toHaveBeenCalledTimes(2);
+      expect(clearField).toHaveBeenNthCalledWith(1, "foo");
+      expect(clearField).toHaveBeenNthCalledWith(2, "bar");
     });
 
     it("does not attempt clearing fields when component re-renders", () => {
-      const removeField = jest.fn();
+      const clearField = jest.fn();
       const mountComponent = true;
       const { wrapper } = render(
         {
           visible: true,
-          removeField,
+          clearField,
           fieldNamesClearedWhenHidden: ["foo", "bar"],
         },
         mountComponent
       );
 
       wrapper.update();
-      expect(removeField).toHaveBeenCalledTimes(0);
+      expect(clearField).toHaveBeenCalledTimes(0);
     });
   });
 
   describe("given fieldNamesClearedWhenHidden is not defined", () => {
     it("does not attempting clearing fields when component is hidden", () => {
-      const removeField = jest.fn();
+      const clearField = jest.fn();
       const mountComponent = true;
       const { wrapper } = render(
-        { removeField, visible: false },
+        { clearField, visible: false },
         mountComponent
       );
       wrapper.setProps({ visible: false });
 
-      expect(removeField).toHaveBeenCalledTimes(0);
+      expect(clearField).toHaveBeenCalledTimes(0);
     });
   });
 });

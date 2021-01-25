@@ -1,5 +1,6 @@
 import pytest
 
+import tests.api
 from massgov.pfml.db.models.factories import EmployeeFactory
 
 
@@ -23,18 +24,24 @@ def test_employees_get_invalid(client, consented_user_token):
         "/v1/employees/{}".format("9e243bae-3b1e-43a4-aafe-aca3c6517cf0"),
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
-    assert response.status_code == 404
+    tests.api.validate_error_response(response, 404)
+
+
+def test_employees_get_fineos_user_forbidden(client, employee, fineos_user_token):
+    # Fineos role cannot access this endpoint
+    response = client.get(
+        "/v1/employees/{}".format(employee.employee_id),
+        headers={"Authorization": "Bearer {}".format(fineos_user_token)},
+    )
+
+    assert response.status_code == 403
 
 
 def test_employees_search_valid(client, employee, consented_user_token):
-    first_name = employee.first_name
-    last_name = employee.last_name
-    tax_identifier_last4 = employee.tax_identifier_last4
-
     body = {
-        "first_name": first_name,
-        "last_name": last_name,
-        "tax_identifier_last4": tax_identifier_last4,
+        "first_name": employee.first_name,
+        "last_name": employee.last_name,
+        "tax_identifier_last4": employee.tax_identifier.tax_identifier_last4,
     }
     response = client.post(
         "/v1/employees/search",
@@ -44,26 +51,42 @@ def test_employees_search_valid(client, employee, consented_user_token):
     assert response.status_code == 200
 
 
-def test_employees_get_masked_email(client, consented_user_token):
-    new_employee = EmployeeFactory.create(email_address="jane@example.com")
-    response = client.get(
-        "/v1/employees/{}".format(new_employee.employee_id),
-        headers={"Authorization": "Bearer {}".format(consented_user_token)},
+def test_employees_search_valid_with_middle_name(client, employee, consented_user_token):
+    # create identical employee except for middle name
+    EmployeeFactory.create(
+        first_name=employee.first_name,
+        last_name=employee.last_name,
+        tax_identifier=employee.tax_identifier,
     )
 
-    response_body = response.get_json().get("data")
-    assert response.status_code == 200
-    assert response_body.get("email_address") == "j*****@example.com"
+    body = {
+        "first_name": employee.first_name,
+        "last_name": employee.last_name,
+        "middle_name": employee.middle_name,
+        "tax_identifier_last4": employee.tax_identifier.tax_identifier_last4,
+    }
 
-
-def test_employees_search_missing_param(client, consented_user_token):
-    body = {"last_name": "Doe", "tax_identifier": "000-00-0000"}
     response = client.post(
         "/v1/employees/search",
         json=body,
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
-    assert response.status_code == 400
+
+    assert response.status_code == 200
+
+    response_data = response.get_json().get("data")
+
+    assert response_data.get("middle_name") == employee.middle_name
+
+
+def test_employees_search_missing_param(client, consented_user_token):
+    body = {"last_name": "Doe", "foo": "bar"}
+    response = client.post(
+        "/v1/employees/search",
+        json=body,
+        headers={"Authorization": "Bearer {}".format(consented_user_token)},
+    )
+    tests.api.validate_error_response(response, 400)
 
 
 def test_employees_search_nonexisting_employee(client, consented_user_token):
@@ -73,7 +96,23 @@ def test_employees_search_nonexisting_employee(client, consented_user_token):
         json=body,
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
-    assert response.status_code == 404
+
+    tests.api.validate_error_response(response, 404)
+
+
+def test_employees_search_fineos_user_forbidden(client, employee, fineos_user_token):
+    # Fineos role cannot access this endpoint
+    body = {
+        "first_name": employee.first_name,
+        "last_name": employee.last_name,
+        "tax_identifier_last4": employee.tax_identifier.tax_identifier_last4,
+    }
+    response = client.post(
+        "/v1/employees/search",
+        json=body,
+        headers={"Authorization": "Bearer {}".format(fineos_user_token)},
+    )
+    assert response.status_code == 403
 
 
 def test_employees_patch(client, employee, consented_user_token):
@@ -104,7 +143,7 @@ def test_employees_patch_empty(client, employee, consented_user_token):
         json=body,
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
-    assert response.status_code == 400
+    tests.api.validate_error_response(response, 400)
 
     updated_employee = client.get(
         "/v1/employees/{}".format(employee.employee_id),
@@ -124,7 +163,7 @@ def test_employees_patch_404(client, consented_user_token):
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
 
-    assert response.status_code == 404
+    tests.api.validate_error_response(response, 404)
 
 
 def test_employee_auth_get(disable_employee_endpoint, client, employee, consented_user_token):
@@ -135,7 +174,7 @@ def test_employee_auth_get(disable_employee_endpoint, client, employee, consente
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
 
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
 
 
 def test_employee_auth_patch(disable_employee_endpoint, client, employee, consented_user_token):
@@ -149,4 +188,15 @@ def test_employee_auth_patch(disable_employee_endpoint, client, employee, consen
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
 
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
+
+
+def test_employee_patch_fineos_user_forbidden(client, employee, fineos_user_token):
+    # Fineos role cannot access this endpoint
+    body = {"first_name": "James", "last_name": "Brown"}
+    response = client.patch(
+        "/v1/employees/{}".format(employee.employee_id),
+        json=body,
+        headers={"Authorization": "Bearer {}".format(fineos_user_token)},
+    )
+    tests.api.validate_error_response(response, 403)

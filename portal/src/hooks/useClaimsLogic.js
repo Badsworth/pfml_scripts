@@ -1,8 +1,10 @@
-import Claim from "../models/Claim";
+import { NotFoundError, ValidationError } from "../errors";
+import { useMemo, useState } from "react";
+import ClaimCollection from "../models/ClaimCollection";
 import ClaimsApi from "../api/ClaimsApi";
-import merge from "lodash/merge";
+import getRelevantIssues from "../utils/getRelevantIssues";
+import routes from "../routes";
 import useCollectionState from "./useCollectionState";
-import { useMemo } from "react";
 
 const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   // State representing the collection of claims for the current user.
@@ -11,59 +13,165 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   // new claims
   const {
     collection: claims,
-    // addItem: addClaim, // TODO: uncomment once the workaround in createClaim is removed: https://lwd.atlassian.net/browse/CP-701
+    addItem: addClaim,
     updateItem: setClaim,
     setCollection: setClaims,
-  } = useCollectionState(null); // Set initial value to null to lazy load claims
+  } = useCollectionState(new ClaimCollection());
+
+  // Track whether the loadAll method has been called. Checking that claims
+  // is set isn't sufficient, since it may only include a subset of applications
+  // if loadAll hasn't been called yet
+  const [hasLoadedAll, setHasLoadedAll] = useState(false);
 
   const claimsApi = useMemo(() => new ClaimsApi({ user }), [user]);
 
-  let isLoadingClaims = false;
+  // Cache the validation warnings associated with each claim. Primarily
+  // used for controlling the status of Checklist steps.
+  const [warningsLists, setWarningsLists] = useState({});
 
   /**
-   * Load all claims for user
-   * This must be called before claims are available
-   * @param {boolean} [forceReload] Whether or not to force a reload of the claims from the API even if the claims have already been loaded. Defaults to false.
+   * Store warnings for a specific claim
+   * @param {string} application_id
+   * @param {Array} warnings
+   * @private
    */
-  const load = async (forceReload = false) => {
-    if (!user) throw new Error("Cannot load claims before user is loaded");
-    if (claims && !forceReload) return;
-    if (isLoadingClaims) return;
+  const setClaimWarnings = (application_id, warnings) => {
+    setWarningsLists((prevWarningsList) => {
+      return {
+        ...prevWarningsList,
+        [application_id]: warnings,
+      };
+    });
+  };
+
+  /**
+   * Check if a claim and its warnings have been loaded. This helps
+   * our withClaim higher-order component accurately display a loading state.
+   *
+   * @param {string} application_id
+   * @returns {boolean}
+   */
+  const hasLoadedClaimAndWarnings = (application_id) => {
+    // !! so we always return a Boolean
+    return !!(
+      warningsLists.hasOwnProperty(application_id) && claims.get(application_id)
+    );
+  };
+
+  /**
+   * Load a single claim
+   * @param {string} application_id - ID of claim to load
+   */
+  const load = async (application_id) => {
+    if (!user) throw new Error("Cannot load claim before user is loaded");
+
+    // Skip API request if we already have the claim AND its validation warnings.
+    // It's important we load the claim if warnings haven't been fetched yet,
+    // since the Checklist needs those to be present in order to accurately
+    // determine what steps are completed.
+    if (claims && hasLoadedClaimAndWarnings(application_id)) return;
+
+    appErrorsLogic.clearErrors();
 
     try {
-      isLoadingClaims = true;
+      const { claim, warnings } = await claimsApi.getClaim(application_id);
+
+      if (claims.get(application_id)) {
+        setClaim(claim);
+      } else {
+        addClaim(claim);
+      }
+
+      setClaimWarnings(application_id, warnings);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        portalFlow.goTo(routes.applications.index);
+        return;
+      }
+
+      appErrorsLogic.catchError(error);
+    }
+  };
+
+  /**
+   * Load all claims for the authenticated user
+   */
+  const loadAll = async () => {
+    if (!user) throw new Error("Cannot load claims before user is loaded");
+    if (hasLoadedAll) return;
+
+    appErrorsLogic.clearErrors();
+
+    try {
       const { claims } = await claimsApi.getClaims();
+
       setClaims(claims);
-      appErrorsLogic.clearErrors();
+      setHasLoadedAll(true);
     } catch (error) {
       appErrorsLogic.catchError(error);
-    } finally {
-      isLoadingClaims = false;
     }
   };
 
   /**
    * Update the claim in the API and set application errors if any
    * @param {string} application_id - application id for claim
-   * @param {object} patchData - subset of claim data that will be updated
+   * @param {object} patchData - subset of claim data that will be updated, and
+   * used as the list of fields to filter validation warnings by
    */
   const update = async (application_id, patchData) => {
     if (!user) return;
-    try {
-      let { claim } = await claimsApi.updateClaim(application_id, patchData);
+    appErrorsLogic.clearErrors();
 
-      // Currently the API doesn't return the claim data in the response
-      // so we're manually constructing the body based on client data.
-      // We will change the PATCH applications endpoint to return the full
-      // application in this ticket: https://lwd.atlassian.net/browse/API-276
-      // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-      claim = new Claim(merge(claims.get(application_id), patchData));
-      // </ end workaround >
+    try {
+      const { claim, errors, warnings } = await claimsApi.updateClaim(
+        application_id,
+        patchData
+      );
+
+      const issues = getRelevantIssues(errors, warnings, [portalFlow.page]);
+
+      // If there were any validation errors, then throw *before*
+      // the claim is updated in our state, to avoid overriding
+      // the user's in-progress answers
+      if (errors && errors.length) {
+        throw new ValidationError(issues, "claims");
+      }
+
       setClaim(claim);
+      setClaimWarnings(application_id, warnings);
+
+      // If there were only validation warnings, then throw *after*
+      // the claim has been updated in our state, so our local claim
+      // state remains consistent with the claim state stored in the API,
+      // which still received the updates in the request. This is important
+      // for situations like leave periods, where the API passes us back
+      // a leave_period_id field for making subsequent updates.
+      if (issues.length) {
+        throw new ValidationError(issues, "claims");
+      }
+
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage({ claim, user }, params);
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
 
-      appErrorsLogic.clearErrors();
+  /**
+   * Complete the claim in the API
+   * @param {string} application_id
+   */
+  const complete = async (application_id) => {
+    if (!user) return;
+    appErrorsLogic.clearErrors();
+
+    try {
+      const { claim } = await claimsApi.completeClaim(application_id);
+
+      setClaim(claim);
+      const context = { claim, user };
+      const params = { claim_id: claim.application_id };
+      portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -78,22 +186,13 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim, success } = await claimsApi.createClaim();
+      const { claim } = await claimsApi.createClaim();
 
-      if (success) {
-        if (!claims) {
-          await load();
-        } else {
-          // The API currently doesn't return the claim in POST /applications, so for now just reload all the claims
-          // TODO: Remove this workaround and use `addClaim(claim)` instead: https://lwd.atlassian.net/browse/CP-701
-          // addClaim(claim);
-          await load(true);
-        }
+      addClaim(claim);
 
-        const context = { claim, user };
-        const params = { claim_id: claim.application_id };
-        portalFlow.goToPageFor("CREATE_CLAIM", context, params);
-      }
+      const context = { claim, user };
+      const params = { claim_id: claim.application_id };
+      portalFlow.goToPageFor("CREATE_CLAIM", context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -108,28 +207,58 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      let { claim, success } = await claimsApi.submitClaim(application_id);
+      const { claim } = await claimsApi.submitClaim(application_id);
 
-      if (success) {
-        // Currently the API doesn't return the claim data in the response
-        // so we're manually constructing the body based on client data.
-        // We will change the PATCH applications endpoint to return the full
-        // application in this ticket: https://lwd.atlassian.net/browse/API-276
-        // TODO: Remove workaround once above ticket is complete: https://lwd.atlassian.net/browse/CP-577
-        claim = new Claim({
-          ...claims.get(application_id),
-          ...{
-            status: "Completed",
-          },
-        });
-        // </ end workaround >
+      setClaim(claim);
 
-        setClaim(claim);
+      const context = { claim, user };
+      const params = {
+        claim_id: claim.application_id,
+        "part-one-submitted": "true",
+      };
+      portalFlow.goToNextPage(context, params);
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
 
-        const context = { claim, user };
-        const params = { claim_id: claim.application_id };
-        portalFlow.goToNextPage(context, params);
+  const submitPaymentPreference = async (
+    application_id,
+    paymentPreferenceData
+  ) => {
+    if (!user) return;
+    appErrorsLogic.clearErrors();
+
+    try {
+      const {
+        claim,
+        errors,
+        warnings,
+      } = await claimsApi.submitPaymentPreference(
+        application_id,
+        paymentPreferenceData
+      );
+
+      // This endpoint should only return errors relevant to this page so no need to filter
+      const issues = getRelevantIssues(errors, warnings, []);
+
+      if (errors && errors.length) {
+        throw new ValidationError(issues, "claims");
       }
+
+      setClaim(claim);
+      setClaimWarnings(application_id, warnings);
+
+      if (issues && issues.length) {
+        throw new ValidationError(issues, "claims");
+      }
+
+      const context = { claim, user };
+      const params = {
+        claim_id: claim.application_id,
+        "payment-pref-submitted": "true",
+      };
+      portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -137,11 +266,16 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
   return {
     claims,
-    load,
+    complete,
     create,
+    hasLoadedAll,
+    hasLoadedClaimAndWarnings,
+    load,
+    loadAll,
     update,
     submit,
-    setClaims,
+    submitPaymentPreference,
+    warningsLists,
   };
 };
 

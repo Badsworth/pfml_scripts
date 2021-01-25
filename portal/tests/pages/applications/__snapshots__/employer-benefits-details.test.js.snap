@@ -1,0 +1,162 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] = `
+<Fragment>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "hint": "For example, vacation time, sick leave, or personal time",
+          "label": "Accrued paid leave",
+          "value": "Accrued paid leave",
+        },
+        Object {
+          "checked": false,
+          "hint": "Also known as temporary disability insurance",
+          "label": "Short-term disability insurance",
+          "value": "Short-term disability insurance",
+        },
+        Object {
+          "checked": false,
+          "hint": "Also known as a permanent disability policy",
+          "label": "Permanent disability insurance",
+          "value": "Permanent disability insurance",
+        },
+        Object {
+          "checked": false,
+          "hint": "For example, a paid maternity leave policy",
+          "label": "Family or medical leave insurance",
+          "value": "Family or medical leave insurance",
+        },
+      ]
+    }
+    label="What kind of benefit is it?"
+    name="employer_benefits[0].benefit_type"
+    onChange={[Function]}
+    smallLabel={true}
+    type="radio"
+    value=""
+  />
+  <InputDate
+    dayLabel="Day"
+    example="mm / dd / yyyy"
+    label="When will you start using the benefit?"
+    monthLabel="Month"
+    name="employer_benefits[0].benefit_start_date"
+    onChange={[Function]}
+    smallLabel={true}
+    value=""
+    yearLabel="Year"
+  />
+  <InputDate
+    dayLabel="Day"
+    example="mm / dd / yyyy"
+    label="When will you stop using the benefit?"
+    monthLabel="Month"
+    name="employer_benefits[0].benefit_end_date"
+    onChange={[Function]}
+    smallLabel={true}
+    value=""
+    yearLabel="Year"
+  />
+  <Fieldset>
+    <FormLabel
+      component="legend"
+      optionalText="(optional)"
+      small={true}
+    >
+      How much will you receive?
+    </FormLabel>
+    <InputNumber
+      formGroupClassName="margin-top-05"
+      label="Amount"
+      labelClassName="text-normal margin-top-0"
+      mask="currency"
+      name="employer_benefits[0].benefit_amount_dollars"
+      onChange={[Function]}
+      smallLabel={true}
+      value=""
+      width="medium"
+    />
+    <Dropdown
+      choices={
+        Array [
+          Object {
+            "label": "Daily",
+            "value": "Per Day",
+          },
+          Object {
+            "label": "Weekly",
+            "value": "Per Week",
+          },
+          Object {
+            "label": "Monthly",
+            "value": "Per Month",
+          },
+          Object {
+            "label": "All at once",
+            "value": "In Total",
+          },
+        ]
+      }
+      formGroupClassName="margin-top-1"
+      label="Frequency"
+      labelClassName="text-normal margin-top-0"
+      name="employer_benefits[0].benefit_amount_frequency"
+      onChange={[Function]}
+      smallLabel={true}
+      value=""
+    />
+  </Fieldset>
+</Fragment>
+`;
+
+exports[`EmployerBenefitDetails when the user's claim has employer benefits renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Other leave, income, and benefits"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.
+  </Heading>
+  <LeaveDatesAlert
+    endDate="2021-06-01"
+    headingLevel="3"
+    startDate="2021-01-01"
+  />
+  <RepeatableFieldset
+    addButtonLabel="Add another benefit"
+    entries={
+      Array [
+        EmployerBenefit {
+          "benefit_amount_dollars": 500,
+          "benefit_amount_frequency": "Per Week",
+          "benefit_end_date": "2021-02-01",
+          "benefit_start_date": "2021-01-01",
+          "benefit_type": "Family or medical leave insurance",
+          "employer_benefit_id": null,
+        },
+        EmployerBenefit {
+          "benefit_amount_dollars": 700,
+          "benefit_amount_frequency": "Per Month",
+          "benefit_end_date": "2021-02-05",
+          "benefit_start_date": "2021-01-05",
+          "benefit_type": "Accrued paid leave",
+          "employer_benefit_id": null,
+        },
+      ]
+    }
+    headingPrefix="Benefit"
+    limit={4}
+    limitMessage="You can only add up to 4 benefits"
+    onAddClick={[Function]}
+    onRemoveClick={[Function]}
+    removeButtonLabel="Remove benefit"
+    render={[Function]}
+  />
+</QuestionPage>
+`;

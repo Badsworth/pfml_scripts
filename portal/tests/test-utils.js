@@ -1,10 +1,40 @@
+import {
+  BankAccountType,
+  PaymentPreferenceMethod,
+} from "../src/models/PaymentPreference";
 import Claim, {
+  ClaimStatus,
   ContinuousLeavePeriod,
+  DurationBasis,
+  EmploymentStatus,
+  FrequencyIntervalBasis,
   IntermittentLeavePeriod,
+  PhoneType,
+  ReasonQualifier,
   ReducedScheduleLeavePeriod,
+  WorkPattern,
+  WorkPatternDay,
+  WorkPatternType,
 } from "../src/models/Claim";
+import Document, { DocumentType } from "../src/models/Document";
+import EmployerBenefit, {
+  EmployerBenefitFrequency,
+  EmployerBenefitType,
+} from "../src/models/EmployerBenefit";
+import OtherIncome, {
+  OtherIncomeFrequency,
+  OtherIncomeType,
+} from "../src/models/OtherIncome";
+import PreviousLeave, {
+  PreviousLeaveReason,
+} from "../src/models/PreviousLeave";
 import { mount, shallow } from "enzyme";
+import Address from "../src/models/Address";
+import AppErrorInfo from "../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../src/models/AppErrorInfoCollection";
 import ClaimCollection from "../src/models/ClaimCollection";
+import EmployerClaim from "../src/models/EmployerClaim";
+import LeaveReason from "../src/models/LeaveReason";
 import React from "react";
 import User from "../src/models/User";
 import { act } from "react-dom/test-utils";
@@ -12,6 +42,250 @@ import merge from "lodash/merge";
 import set from "lodash/set";
 import times from "lodash/times";
 import useAppLogic from "../src/hooks/useAppLogic";
+
+export class BaseMockClaimBuilder {
+  employed() {
+    set(this.claimAttrs, "employer_fein", "12-3456789");
+    set(this.claimAttrs, "leave_details.employer_notified", true);
+    set(this.claimAttrs, "hours_worked_per_week", 30);
+    set(
+      this.claimAttrs,
+      "leave_details.employer_notification_date",
+      "2021-01-01"
+    );
+    return this;
+  }
+
+  /**
+   * @returns {BaseMockClaimBuilder}
+   */
+  absenceId() {
+    set(this.claimAttrs, "fineos_absence_id", "NTN-111-ABS-01");
+    return this;
+  }
+
+  address(attrs) {
+    set(
+      this.claimAttrs,
+      "residential_address",
+      attrs
+        ? new Address(attrs)
+        : new Address({
+            city: "Boston",
+            line_1: "1234 My St.",
+            line_2: null,
+            state: "MA",
+            zip: "00000",
+          })
+    );
+    return this;
+  }
+
+  continuous(leavePeriodAttrs = {}) {
+    set(
+      this.claimAttrs,
+      "leave_details.continuous_leave_periods[0]",
+      new ContinuousLeavePeriod(
+        Object.assign(
+          {
+            leave_period_id: "mock-leave-period-id",
+            start_date: "2021-01-01",
+            end_date: "2021-06-01",
+          },
+          leavePeriodAttrs
+        )
+      )
+    );
+    return this;
+  }
+
+  intermittent(leavePeriodAttrs = {}) {
+    set(
+      this.claimAttrs,
+      "leave_details.intermittent_leave_periods[0]",
+      new IntermittentLeavePeriod(
+        Object.assign(
+          {
+            leave_period_id: "mock-leave-period-id",
+            start_date: "2021-02-01",
+            end_date: "2021-07-01",
+            duration: 3,
+            duration_basis: DurationBasis.hours,
+            frequency: 6,
+            frequency_interval: 6,
+            frequency_interval_basis: FrequencyIntervalBasis.months,
+          },
+          leavePeriodAttrs
+        )
+      )
+    );
+    return this;
+  }
+
+  reducedSchedule(leavePeriodAttrs = {}) {
+    set(
+      this.claimAttrs,
+      "leave_details.reduced_schedule_leave_periods[0]",
+      new ReducedScheduleLeavePeriod(
+        Object.assign(
+          {
+            leave_period_id: "mock-leave-period-id",
+            start_date: "2021-02-01",
+            end_date: "2021-07-01",
+          },
+          leavePeriodAttrs
+        )
+      )
+    );
+    return this;
+  }
+
+  bondingLeaveReason() {
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.bonding);
+    return this;
+  }
+
+  medicalLeaveReason() {
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
+    return this;
+  }
+
+  otherIncome(attrs) {
+    set(
+      this.claimAttrs,
+      "other_incomes",
+      attrs
+        ? attrs.map((attr) => new OtherIncome(attr))
+        : [
+            new OtherIncome({
+              income_amount_dollars: 125,
+              income_amount_frequency: OtherIncomeFrequency.weekly,
+              income_end_date: "2021-01-01",
+              income_start_date: "2021-01-30",
+              income_type: OtherIncomeType.otherEmployer,
+            }),
+          ]
+    );
+    return this;
+  }
+
+  otherIncomeFromUnemployment() {
+    set(this.claimAttrs, "other_incomes", [
+      new OtherIncome({
+        income_amount_dollars: 125,
+        income_amount_frequency: OtherIncomeFrequency.weekly,
+        income_end_date: "2021-01-01",
+        income_start_date: "2021-01-30",
+        income_type: OtherIncomeType.unemployment,
+      }),
+    ]);
+    set(this.claimAttrs, "has_other_incomes", true);
+    set(this.claimAttrs, "other_incomes_awaiting_approval", false);
+    return this;
+  }
+
+  previousLeavePregnancyFromOtherEmployer() {
+    set(this.claimAttrs, "previous_leaves", [
+      new PreviousLeave({
+        previous_leave_id: 1,
+        is_for_current_employer: false,
+        leave_end_date: "2021-02-01",
+        leave_reason: PreviousLeaveReason.pregnancy,
+        leave_start_date: "2021-01-01",
+      }),
+    ]);
+    return this;
+  }
+
+  previousLeaveMedicalFromCurrentEmployer() {
+    set(this.claimAttrs, "previous_leaves", [
+      new PreviousLeave({
+        previous_leave_id: 1,
+        is_for_current_employer: true,
+        leave_end_date: "2021-02-01",
+        leave_reason: PreviousLeaveReason.medical,
+        leave_start_date: "2021-01-01",
+      }),
+    ]);
+    return this;
+  }
+
+  employerBenefit(attrs) {
+    set(
+      this.claimAttrs,
+      "employer_benefits",
+      attrs
+        ? attrs.map((attr) => new EmployerBenefit(attr))
+        : [
+            new EmployerBenefit({
+              benefit_amount_dollars: 500,
+              benefit_amount_frequency: EmployerBenefitFrequency.weekly,
+              benefit_end_date: "2021-02-01",
+              benefit_start_date: "2021-01-01",
+              benefit_type: EmployerBenefitType.familyOrMedicalLeave,
+              employer_benefit_id: 1,
+            }),
+          ]
+    );
+    return this;
+  }
+}
+
+/**
+ * @class Employer Claim
+ * @example
+ *  new MockEmployerClaimBuilder()
+ *    .completed()
+ *    .create();
+ */
+export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
+  constructor(middleName = "") {
+    super();
+    this.claimAttrs = {
+      employer_dba: "Work Inc.",
+      first_name: "Jane",
+      middle_name: middleName,
+      last_name: "Doe",
+      date_of_birth: "****-07-17",
+      tax_identifier: "***-**-1234",
+      follow_up_date: "2020-10-10",
+    };
+  }
+
+  /**
+   * @returns {MockEmployerClaimBuilder}
+   */
+  completed(isIntermittent = false) {
+    this.employed();
+    this.address();
+    if (isIntermittent) {
+      this.intermittent();
+    } else {
+      this.continuous();
+      this.reducedSchedule();
+    }
+    this.previousLeavePregnancyFromOtherEmployer();
+    this.employerBenefit();
+    this.absenceId();
+    set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
+    return this;
+  }
+
+  /**
+   * @returns {MockEmployerClaimBuilder}
+   */
+  reviewable(setting = true) {
+    set(this.claimAttrs, "is_reviewable", !!setting);
+    return this;
+  }
+
+  /**
+   * @returns {EmployerClaim}
+   */
+  create() {
+    return new EmployerClaim(this.claimAttrs);
+  }
+}
 
 /**
  * A class that has chainable functions for conveniently creating mock claims
@@ -24,9 +298,13 @@ import useAppLogic from "../src/hooks/useAppLogic";
  *    .intermittent()
  *    .create();
  */
-export class MockClaimBuilder {
+export class MockClaimBuilder extends BaseMockClaimBuilder {
   constructor() {
-    this.claimAttrs = { application_id: "mock_application_id" };
+    super();
+    this.claimAttrs = {
+      application_id: "mock_application_id",
+      status: ClaimStatus.started,
+    };
   }
 
   /**
@@ -38,35 +316,216 @@ export class MockClaimBuilder {
   }
 
   /**
+   * @param {object} [leavePeriodAttrs]
    * @returns {MockClaimBuilder}
    */
-  continuous(attrs = {}) {
+  continuous(leavePeriodAttrs = {}) {
+    set(this.claimAttrs, "has_continuous_leave_periods", true);
+    super.continuous(leavePeriodAttrs);
+    return this;
+  }
+
+  /**
+   * Sets payment method to paper check
+   * @returns {MockClaimBuilder}
+   */
+  check() {
     set(
       this.claimAttrs,
-      "temp.leave_details.continuous_leave_periods[0]",
-      new ContinuousLeavePeriod(attrs)
+      "payment_preference.payment_method",
+      PaymentPreferenceMethod.check
     );
+    return this;
+  }
 
-    // TODO (CP-720): These are the only fields currently available in the API
-    // remove once continuous leave is fully integrated with API
-    const { leave_period_id, start_date, end_date } = attrs;
-
-    set(this.claimAttrs, "leave_details.continuous_leave_periods[0]", {
-      leave_period_id,
-      start_date,
-      end_date,
-    });
+  /**
+   * Sets payment method to direct deposit
+   * @returns {MockClaimBuilder}
+   */
+  directDeposit() {
+    set(
+      this.claimAttrs,
+      "payment_preference.payment_method",
+      PaymentPreferenceMethod.ach
+    );
+    set(this.claimAttrs, "payment_preference.account_number", "091000022");
+    set(
+      this.claimAttrs,
+      "payment_preference.bank_account_type",
+      BankAccountType.checking
+    );
+    set(this.claimAttrs, "payment_preference.routing_number", "1234567890");
     return this;
   }
 
   /**
    * @returns {MockClaimBuilder}
    */
-  intermittent(attrs) {
+  hasOtherId() {
+    set(this.claimAttrs, "has_state_id", false);
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  hasStateId() {
+    set(this.claimAttrs, "has_state_id", true);
+    set(this.claimAttrs, "mass_id", "*********");
+    return this;
+  }
+
+  /**
+   * @param {object} [leavePeriodAttrs]
+   * @returns {MockClaimBuilder}
+   */
+  intermittent(leavePeriodAttrs = {}) {
+    set(this.claimAttrs, "has_intermittent_leave_periods", true);
+    super.intermittent(leavePeriodAttrs);
+    return this;
+  }
+
+  /**
+   * @param {object} [leavePeriodAttrs]
+   * @returns {MockClaimBuilder}
+   */
+  reducedSchedule(leavePeriodAttrs = {}) {
+    set(this.claimAttrs, "has_reduced_schedule_leave_periods", true);
+    super.reducedSchedule({
+      monday_off_minutes: 6.5 * 60,
+      friday_off_minutes: 8 * 60,
+      ...leavePeriodAttrs,
+    });
+    return this;
+  }
+
+  /**
+   * @param {string} birthDate Child's birth date in ISO-8601 format. Defaults
+   * to "2012-02-12"
+   * @returns {MockClaimBuilder}
+   */
+  bondingBirthLeaveReason(birthDate = "2012-02-12") {
+    this.bondingLeaveReason();
     set(
       this.claimAttrs,
-      "leave_details.intermittent_leave_periods[0]",
-      new IntermittentLeavePeriod(attrs)
+      "leave_details.reason_qualifier",
+      ReasonQualifier.newBorn
+    );
+    set(this.claimAttrs, "leave_details.child_birth_date", birthDate);
+    return this;
+  }
+
+  /**
+   * @param {string} placementDate Child's placement date in ISO-8601 format. Defaults
+   * to "2020-02-14"
+   * @returns {MockClaimBuilder}
+   */
+  bondingAdoptionLeaveReason(placementDate = "2012-02-14") {
+    this.bondingLeaveReason();
+    set(
+      this.claimAttrs,
+      "leave_details.reason_qualifier",
+      ReasonQualifier.adoption
+    );
+    set(this.claimAttrs, "leave_details.child_placement_date", placementDate);
+    return this;
+  }
+
+  /**
+   * @param {string} placementDate Child's placement date in ISO-8601 format. Defaults
+   * to "2020-02-14"
+   * @returns {MockClaimBuilder}
+   */
+  bondingFosterCareLeaveReason(placementDate = "2012-02-14") {
+    this.bondingLeaveReason();
+    set(
+      this.claimAttrs,
+      "leave_details.reason_qualifier",
+      ReasonQualifier.fosterCare
+    );
+    set(this.claimAttrs, "leave_details.child_placement_date", placementDate);
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  hasFutureChild() {
+    this.bondingLeaveReason();
+    set(this.claimAttrs, "leave_details.has_future_child_date", true);
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  employed() {
+    set(this.claimAttrs, "employment_status", EmploymentStatus.employed);
+    super.employed();
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  noOtherLeave() {
+    set(this.claimAttrs, "has_employer_benefits", false);
+    this.noOtherIncomes();
+    this.noPreviousLeave();
+    return this;
+  }
+
+  noOtherIncomes() {
+    set(this.claimAttrs, "has_other_incomes", false);
+    set(this.claimAttrs, "other_incomes_awaiting_approval", false);
+    return this;
+  }
+
+  noPreviousLeave() {
+    set(this.claimAttrs, "has_previous_leaves", false);
+    return this;
+  }
+
+  previousLeave(attrs) {
+    set(
+      this.claimAttrs,
+      "previous_leaves",
+      attrs
+        ? attrs.map((attr) => new PreviousLeave(attr))
+        : [
+            new PreviousLeave({
+              previous_leave_id: 1,
+              is_for_current_employer: false,
+              leave_end_date: "2020-02-01",
+              leave_reason: PreviousLeaveReason.pregnancy,
+              leave_start_date: "2020-01-01",
+            }),
+          ]
+    );
+    return this;
+  }
+
+  previousLeavePregnancyFromOtherEmployer() {
+    super.previousLeavePregnancyFromOtherEmployer();
+    set(this.claimAttrs, "has_previous_leaves", true);
+    return this;
+  }
+
+  previousLeaveMedicalFromCurrentEmployer() {
+    super.previousLeaveMedicalFromCurrentEmployer();
+    set(this.claimAttrs, "has_previous_leaves", true);
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  notifiedEmployer() {
+    set(this.claimAttrs, "leave_details.employer_notified", true);
+    set(
+      this.claimAttrs,
+      "leave_details.employer_notification_date",
+      "2020-08-26"
     );
     return this;
   }
@@ -74,22 +533,209 @@ export class MockClaimBuilder {
   /**
    * @returns {MockClaimBuilder}
    */
-  reducedSchedule(attrs = {}) {
+  notNotifiedEmployer() {
+    set(this.claimAttrs, "leave_details.employer_notified", false);
+    set(this.claimAttrs, "leave_details.employer_notification_date", null);
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  pregnant() {
+    set(this.claimAttrs, "leave_details.pregnant_or_recent_birth", true);
+    return this;
+  }
+
+  /**
+   * All required data is present but the claim hasn't been marked
+   * as Completed yet in the API
+   * @returns {MockClaimBuilder}
+   */
+  complete() {
+    this.submitted();
+    this.paymentPrefSubmitted();
+    return this;
+  }
+
+  /**
+   * Claim has all required data and has been marked as completed in the API
+   * @returns {MockClaimBuilder}
+   */
+  completed() {
+    this.complete();
+    set(this.claimAttrs, "status", ClaimStatus.completed);
+
+    return this;
+  }
+
+  /**
+   * Part 1 steps are complete but not yet submitted to API
+   * @param {object} [options]
+   * @param {boolean} [options.excludeLeavePeriod]
+   * @returns {MockClaimBuilder}
+   */
+  part1Complete(options = {}) {
+    this.verifiedId();
+    this.medicalLeaveReason();
+    this.employed();
+    this.noOtherLeave();
+    this.address();
+    this.workPattern({ work_pattern_type: WorkPatternType.fixed });
+
+    if (!options.excludeLeavePeriod) this.continuous();
+
+    return this;
+  }
+
+  /**
+   * Part 1 steps are complete and submitted to API
+   * @returns {MockClaimBuilder}
+   */
+  submitted() {
+    this.part1Complete();
+    this.absenceId();
+    set(this.claimAttrs, "status", ClaimStatus.submitted);
+
+    return this;
+  }
+
+  /**
+   * Part 2 step is completed and submitted to API
+   * @returns {MockClaimBuilder}
+   */
+  paymentPrefSubmitted() {
+    this.submitted();
+    this.directDeposit();
+    set(this.claimAttrs, "has_submitted_payment_preference", true);
+
+    return this;
+  }
+
+  /**
+   * @param {object} attrs Address object
+   * @returns {MockClaimBuilder}
+   */
+  address(attrs) {
+    set(this.claimAttrs, "has_mailing_address", false);
+    super.address(attrs);
+    return this;
+  }
+
+  /**
+   * @param {object} attrs Address object
+   * @returns {MockClaimBuilder}
+   */
+  mailingAddress(attrs) {
+    set(this.claimAttrs, "has_mailing_address", true);
     set(
       this.claimAttrs,
-      "temp.leave_details.reduced_schedule_leave_periods[0]",
-      new ReducedScheduleLeavePeriod(attrs)
+      "mailing_address",
+      attrs
+        ? new Address(attrs)
+        : new Address({
+            city: "Boston",
+            line_1: "124 My St.",
+            line_2: null,
+            state: "MA",
+            zip: "00000",
+          })
+    );
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  verifiedId(middleName) {
+    set(this.claimAttrs, "first_name", "Jane");
+    set(this.claimAttrs, "middle_name", middleName || "");
+    set(this.claimAttrs, "last_name", "Doe");
+    set(this.claimAttrs, "phone", {
+      phone_number: "123-456-****",
+      phone_type: PhoneType.cell,
+    });
+    set(this.claimAttrs, "date_of_birth", "****-07-17");
+    set(this.claimAttrs, "tax_identifier", "***-**-****");
+    this.address();
+    this.hasStateId();
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  workPattern(attrs = {}) {
+    set(this.claimAttrs, "work_pattern", new WorkPattern(attrs));
+
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  fixedWorkPattern() {
+    set(
+      this.claimAttrs,
+      "work_pattern",
+      new WorkPattern({
+        work_pattern_type: WorkPatternType.fixed,
+        work_pattern_days: [
+          new WorkPatternDay({
+            day_of_week: "Sunday",
+            week_number: 1,
+            minutes: 0,
+          }),
+          new WorkPatternDay({
+            day_of_week: "Monday",
+            week_number: 1,
+            minutes: 8 * 60,
+          }),
+          new WorkPatternDay({
+            day_of_week: "Tuesday",
+            week_number: 1,
+            minutes: 8 * 60,
+          }),
+          new WorkPatternDay({
+            day_of_week: "Wednesday",
+            week_number: 1,
+            minutes: 8 * 60,
+          }),
+          new WorkPatternDay({
+            day_of_week: "Thursday",
+            week_number: 1,
+            minutes: 8 * 60,
+          }),
+          new WorkPatternDay({
+            day_of_week: "Friday",
+            week_number: 1,
+            minutes: 8 * 60,
+          }),
+          new WorkPatternDay({
+            day_of_week: "Saturday",
+            week_number: 1,
+            minutes: 0,
+          }),
+        ],
+      })
     );
 
-    // TODO (CP-714): These are the only fields currently available in the API
-    // remove once reduced leave is fully integrated with API
-    const { leave_period_id, start_date, end_date } = attrs;
+    set(this.claimAttrs, "hours_worked_per_week", 40);
 
-    set(this.claimAttrs, "leave_details.reduced_schedule_leave_periods[0]", {
-      leave_period_id,
-      start_date,
-      end_date,
+    return this;
+  }
+
+  /**
+   * @returns {MockClaimBuilder}
+   */
+  variableWorkPattern() {
+    const workPattern = WorkPattern.createWithWeek(40 * 60, {
+      work_pattern_type: WorkPatternType.variable,
     });
+
+    set(this.claimAttrs, "work_pattern", workPattern);
+    set(this.claimAttrs, "hours_worked_per_week", 40);
+
     return this;
   }
 
@@ -109,10 +755,16 @@ export class MockClaimBuilder {
  * @param {object} [options.claimAttrs] - Additional attributes to set on the Claim
  * @param {number} [options.diveLevels] - number of levels to dive before returning the enzyme wrapper.
  *    This is needed to return the desired component when the component is wrapped in higher-order components.
- *    Defaults to 3 since most claim pages are wrapped by `withUser(withClaims(withClaim(Page)))`.
+ *    Defaults to 2 since most claim pages are wrapped by `withUser(withClaim(Page))`.
  * @param {object} [options.props] - Additional props to set on the PageComponent
  * @param {"mount"|"shallow"} [options.render] - Enzyme render method. Shallow renders by default.
  * @param {object} [options.userAttrs] - Additional attributes to set on the User
+ * @param {boolean} [options.hasLoadedClaimDocuments] - Additional attributes to indicate document loading is finished
+ * @param {boolean} [options.hasUploadedCertificationDocuments] - Additional attributes to set certification documents
+ * @param {boolean} [options.hasUploadedIdDocuments] - Additional attributes to set id documents
+ * @param {boolean} [options.hasLoadingDocumentsError] - Additional attributs to set errors for loading documents
+ * @param {boolean} [options.hasLegalNotices] - Create legal notices for claim
+ * @param {object} [options.warningsLists] - Mock appLogic.claims.warningsLists
  * @returns {{ appLogic: object, claim: Claim, wrapper: object }}
  */
 export const renderWithAppLogic = (PageComponent, options = {}) => {
@@ -120,16 +772,17 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
   options = merge(
     {
       claimAttrs: {},
-      diveLevels: 3,
+      diveLevels: 2,
+      employerClaimAttrs: {},
       props: {},
 
       // whether to use shallow() or mount()
       render: "shallow",
       userAttrs: {},
+      warningsLists: {},
     },
     options
   );
-
   // Add claim and user instances to appLogic
   testHook(() => {
     appLogic = useAppLogic();
@@ -139,12 +792,64 @@ export const renderWithAppLogic = (PageComponent, options = {}) => {
     ...options.claimAttrs,
   });
   appLogic.claims.claims = new ClaimCollection([claim]);
+  appLogic.claims.hasLoadedClaimAndWarnings = jest
+    .fn()
+    .mockReturnValue(options.hasLoadedClaimAndWarnings || true);
+  appLogic.claims.warningsLists = options.warningsLists;
+  appLogic.employers.claim = new EmployerClaim(options.employerClaimAttrs);
   appLogic.auth.isLoggedIn = true;
+  appLogic.users.requireUserConsentToDataAgreement = jest.fn();
   appLogic.users.user = new User({
     consented_to_data_sharing: true,
     user_id: "mock_user_id",
     ...options.userAttrs,
   });
+
+  if (options.hasLoadedClaimDocuments) {
+    appLogic.documents.hasLoadedClaimDocuments = jest
+      .fn()
+      .mockImplementation(() => true);
+  }
+
+  if (options.hasUploadedIdDocuments) {
+    appLogic.documents.documents = appLogic.documents.documents.addItem(
+      new Document({
+        application_id: "mock_application_id",
+        fineos_document_id: 1,
+        document_type: DocumentType.identityVerification,
+      })
+    );
+  }
+
+  if (options.hasUploadedCertificationDocuments) {
+    appLogic.documents.documents = appLogic.documents.documents.addItem(
+      new Document({
+        application_id: "mock_application_id",
+        fineos_document_id: 2,
+        document_type: DocumentType.medicalCertification,
+      })
+    );
+  }
+
+  if (options.hasLoadingDocumentsError) {
+    appLogic.appErrors = new AppErrorInfoCollection([
+      new AppErrorInfo({
+        meta: { application_id: "mock_application_id" },
+        name: "DocumentsLoadError",
+      }),
+    ]);
+  }
+
+  if (options.hasLegalNotices) {
+    appLogic.documents.documents = appLogic.documents.documents.addItem(
+      new Document({
+        application_id: "mock_application_id",
+        created_at: "2021-01-01",
+        document_type: DocumentType.approvalNotice,
+        fineos_document_id: 3,
+      })
+    );
+  }
 
   // Render the withClaim-wrapped page
   const component = (
@@ -223,6 +928,23 @@ export const makeFile = (attrs = {}) => {
 };
 
 /**
+ * Create an HTML <input> for a test's event.target
+ * @param {object} attrs - HTML attributes for the input
+ * @returns {HTMLInputElement}
+ */
+export function createInputElement(attrs) {
+  const input = document.createElement("input");
+
+  Object.entries(attrs).forEach(([attributeName, value]) => {
+    input.setAttribute(attributeName, value);
+  });
+
+  if (attrs.checked === false) input.checked = false;
+
+  return input;
+}
+
+/**
  * Export convenience functions to simulate events like typing
  * into input fields and submitting forms, and run the simulated
  * events in Enzyme's `act` function to ensure any re-rendering
@@ -236,7 +958,7 @@ export const makeFile = (attrs = {}) => {
  *
  * changeField("username", "jane.doe@test.com");
  * changeField("password", "P@ssw0rd");
- * submitForm();
+ * await submitForm();
  * @param {React.Component} wrapper React wrapper component
  * @returns {{ changeField: Function, submitForm: Function }}
  */
@@ -250,24 +972,64 @@ export const simulateEvents = (wrapper) => {
    */
   function changeField(name, value, type, checked) {
     act(() => {
-      wrapper.find({ name }).simulate("change", {
-        target: { checked, name, type, value },
+      wrapper
+        .find({ name })
+        .last() // in cases where we use `mount` to render, we want the actual input component, which comes last in order
+        .simulate("change", {
+          target: { checked, name, type, value, getAttribute: jest.fn() },
+        });
+    });
+  }
+
+  /**
+   * Simulate selecting an option that lives within a component
+   * @param {string} name Name of input field
+   * @param {string} value Value for input field
+   * @param {string} [id] ID attribute for input field
+   */
+  function changeRadioGroup(name, value, id) {
+    act(() => {
+      wrapper
+        .find({ name })
+        .last() // in cases where we use `mount` to render, we want the actual input component, which comes last in order
+        .simulate("change", {
+          target: {
+            checked: true,
+            id,
+            name,
+            type: "radio",
+            value,
+            getAttribute: jest.fn(),
+          },
+        });
+    });
+  }
+
+  /**
+   * Simulate selecting/deselecting a checkbox
+   * @param {string} name Name of input field
+   * @param {boolean} checked Select (true) or deselect (false)
+   */
+  function changeCheckbox(name, checked) {
+    act(() => {
+      const input = wrapper.find({ name }).last();
+      const value = input.prop("value");
+
+      input.simulate("change", {
+        target: {
+          checked,
+          name,
+          type: "checkbox",
+          value,
+          getAttribute: jest.fn(),
+        },
       });
     });
   }
 
   /**
-   * Simulate typing into an input field that lives within a component
-   * @param {string} name Name of input field
-   * @param {strign} value Value for input field
-   */
-  function changeRadioGroup(name, value) {
-    changeField(name, value, "radio", true);
-  }
-
-  /**
    * Simulate clicking on an element, such as a button or link
-   * @param {*} enzymeSelector Enzym selector. See https://enzymejs.github.io/enzyme/docs/api/selector.html
+   * @param {*} enzymeSelector Enzyme selector. See https://enzymejs.github.io/enzyme/docs/api/selector.html
    */
   function click(enzymeSelector) {
     act(() => {
@@ -279,14 +1041,26 @@ export const simulateEvents = (wrapper) => {
 
   /**
    * Simulate submitting a form contained within a component
+   * @returns {Promise}
    */
-  function submitForm() {
-    act(() => {
-      wrapper.find("form").simulate("submit", {
+  async function submitForm() {
+    let eventName, form;
+
+    const formComponent = wrapper.find("form");
+    if (formComponent.exists()) {
+      form = formComponent;
+      eventName = "submit";
+    } else {
+      form = wrapper.find("QuestionPage");
+      eventName = "save";
+    }
+
+    await act(async () => {
+      await form.simulate(eventName, {
         preventDefault: jest.fn(),
       });
     });
   }
 
-  return { changeField, changeRadioGroup, click, submitForm };
+  return { changeField, changeRadioGroup, click, changeCheckbox, submitForm };
 };

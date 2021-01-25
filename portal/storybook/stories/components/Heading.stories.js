@@ -1,4 +1,5 @@
 import Heading from "src/components/Heading";
+import HeadingPrefix from "src/components/HeadingPrefix";
 import React from "react";
 import Title from "src/components/Title";
 
@@ -16,6 +17,13 @@ export const Default = () => (
     <Heading level="5">Level 5 (h5): Your account has been created</Heading>
     <Heading level="6">Level 6 (h6): Your account has been created</Heading>
   </React.Fragment>
+);
+
+export const WithPrefix = () => (
+  <Heading level="2" size="1">
+    <HeadingPrefix>Part 1</HeadingPrefix>
+    Tell us about yourself and your leave
+  </Heading>
 );
 
 export const CustomSizes = () => (

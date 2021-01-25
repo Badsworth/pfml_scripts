@@ -9,7 +9,8 @@ on:
 
 env:
   working-dir: ./infra
-  tf-version: 0.12.24
+  tf-version-monitoring: 0.13.6
+  tf-version-default: 0.12.24
 
 jobs:
   tf-format:
@@ -21,7 +22,7 @@ jobs:
       - name: tf-format-check
         uses: hashicorp/terraform-github-actions@master
         with:
-          tf_actions_version: ${{ env.tf-version }}
+          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
           tf_actions_subcommand: "fmt"
           tf_actions_working_dir: ${{ env.working-dir }}
           tf_actions_comment: false
@@ -38,8 +39,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component: ["portal", "api", "env-shared"]
-        environment: ["test", "stage", "prod"]
+        component: ["portal", "api", "env-shared", "ecs-tasks"]
+        environment: ["test", "stage", "prod", "performance", "training", "uat"]
+        include:
+        - component: "constants"
+        - component: "pfml-aws"
+        - component: "monitoring"
 
     steps:
       - uses: actions/checkout@v2
@@ -53,15 +58,25 @@ jobs:
         # Check whether the config has changed within the PR.
         # This is done by comparing the PR's base branch (usually master) against the current PR commit.
         run: |
-          tf_dir=${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
-          template_dir=${{ env.working-dir }}/${{ matrix.component }}/template
+          echo "::set-output name=has-changes::false"
 
-          if [ -n "$(git --no-pager diff --name-only origin/${{ env.baseref }} ${GITHUB_SHA} -- ${tf_dir})" ] ||
-             [ -n "$(git --no-pager diff --name-only origin/${{ env.baseref }} ${GITHUB_SHA} -- ${template_dir})" ]; then
-            echo "::set-output name=has-changes::true"
+          if [ -z "${{ matrix.environment }}" ]; then
+            tf_dir=${{ env.working-dir }}/${{ matrix.component }}
+            folders=${tf_dir}
           else
-            echo "::set-output name=has-changes::false"
+            tf_dir=${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
+            template_dir=${{ env.working-dir }}/${{ matrix.component }}/template
+            folders="${tf_dir} ${template_dir}"
           fi
+
+          echo "::set-output name=tf_working_dir::${tf_dir}"
+
+          for folder in $folders; do
+            if [ -n "$(git --no-pager diff --name-only origin/${{ env.baseref }} ${GITHUB_SHA} -- ${folder})" ]; then
+              echo "::set-output name=has-changes::true"
+              break
+            fi
+          done
 
       - name: Configure AWS Credentials
         if: steps.check-for-changes.outputs.has-changes == 'true'
@@ -77,16 +92,16 @@ jobs:
         if: steps.check-for-changes.outputs.has-changes == 'true'
         uses: hashicorp/terraform-github-actions@master
         with:
-          tf_actions_version: ${{ env.tf-version }}
+          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
           tf_actions_subcommand: "init"
-          tf_actions_working_dir: ${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
+          tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
           tf_actions_comment: false
 
       - name: tf-validate
         if: steps.check-for-changes.outputs.has-changes == 'true'
         uses: hashicorp/terraform-github-actions@master
         with:
-          tf_actions_version: ${{ env.tf-version }}
+          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
           tf_actions_subcommand: "validate"
-          tf_actions_working_dir: ${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
+          tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
           tf_actions_comment: false

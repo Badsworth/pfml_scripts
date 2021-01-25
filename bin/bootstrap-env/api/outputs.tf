@@ -1,15 +1,7 @@
-output "subnets" {
-  value = data.aws_subnet_ids.vpc_app.ids
+output "ecs_cluster_arn" {
+  value = data.aws_ecs_cluster.$ENV_NAME.arn
 }
 
-output "security_groups" {
-  value = module.api.security_groups
-}
-
-output "migrate_up_task_arn" {
-  value = module.api.migrate_up_task_arn
-}
-
-output "cognito_post_confirmation_lambda_arn" {
-  value = module.api.cognito_post_confirmation_lambda_arn
+output "ecs_service_id" {
+  value = module.api.ecs_service_id
 }

@@ -16,4 +16,10 @@ describe("Spinner", () => {
       />
     `);
   });
+
+  it("renders a small spinner when small prop is passed", () => {
+    const wrapper = shallow(<Spinner aria-valuetext="Loading!" small />);
+
+    expect(wrapper.find("span").hasClass("height-3")).toBe(true);
+  });
 });

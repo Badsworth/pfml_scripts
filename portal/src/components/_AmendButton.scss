@@ -1,0 +1,7 @@
+.c-amend-button {
+  @media (max-width: units("tablet-lg")) {
+    .edit-icon {
+      display: none;
+    }
+  }
+}

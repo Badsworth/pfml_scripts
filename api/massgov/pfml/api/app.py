@@ -3,6 +3,7 @@
 #
 
 import os
+import time
 from contextlib import contextmanager
 from typing import Generator, List, Optional, Union
 
@@ -14,6 +15,7 @@ from flask import Flask, current_app, g
 
 import massgov.pfml.api.authorization.flask
 import massgov.pfml.api.authorization.rules
+import massgov.pfml.api.dashboards
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.access
 from massgov.pfml import db
@@ -33,7 +35,7 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
         config = get_config()
 
     # Initialize the db
-    db_session_factory = db.init(config.db)
+    db_session_factory = db.init(config.db, sync_lookups=True)
 
     # Enable mock responses for unimplemented paths.
     resolver = connexion.mock.MockResolver(mock_all=False)
@@ -60,7 +62,7 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
 
     # Set up bouncer
     authorization_path = massgov.pfml.api.authorization.rules.create_authorization(
-        config.enable_employee_endpoints, config.enable_employer_endpoints
+        config.enable_employee_endpoints
     )
     bouncer = massgov.pfml.api.authorization.flask.Bouncer(flask_app)
     bouncer.authorization_method(authorization_path)
@@ -72,6 +74,8 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
     @flask_app.before_request
     def push_db():
         g.db = db_session_factory
+        g.start_time = time.monotonic()
+        massgov.pfml.util.logging.access.access_log_start(flask.request)
 
     @flask_app.teardown_request
     def close_db(exception=None):
@@ -86,11 +90,14 @@ def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
             pass
 
     @flask_app.after_request
-    def access_log(response):
-        massgov.pfml.util.logging.access.access_log(
-            flask.request, response, get_app_config().enable_full_error_logs
+    def access_log_end(response):
+        response_time_ms = 1000 * (time.monotonic() - g.get("start_time"))
+        massgov.pfml.util.logging.access.access_log_end(
+            flask.request, response, response_time_ms, get_app_config().enable_full_error_logs
         )
         return response
+
+    massgov.pfml.api.dashboards.init(app, config.dashboard_password)
 
     return app
 

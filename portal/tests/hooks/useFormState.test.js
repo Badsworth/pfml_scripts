@@ -2,20 +2,16 @@ import { act } from "react-dom/test-utils";
 import { testHook } from "../test-utils";
 import useFormState from "../../src/hooks/useFormState";
 
+/** @typedef {import("../../src/hooks/useFormState").FormState} FormState */
+
 describe("useFormState", () => {
-  let formState, getField, removeField, updateFields;
+  /** @type {FormState} */
+  let formState;
 
   beforeEach(() => {
     testHook(() => {
-      ({ formState, getField, updateFields, removeField } = useFormState());
+      formState = useFormState();
     });
-  });
-
-  it("returns empty form state and callback functions", () => {
-    expect(formState).toEqual({});
-    expect(typeof updateFields).toBe("function");
-    expect(typeof removeField).toBe("function");
-    expect(typeof getField).toBe("function");
   });
 
   describe("when called with initialState parameter", () => {
@@ -25,10 +21,10 @@ describe("useFormState", () => {
         bar: "watermelon",
       };
       testHook(() => {
-        ({ formState } = useFormState(initialState));
+        formState = useFormState(initialState);
       });
 
-      expect(formState).toStrictEqual(initialState);
+      expect(formState.formState).toStrictEqual(initialState);
     });
   });
 
@@ -40,56 +36,54 @@ describe("useFormState", () => {
         },
       };
       testHook(() => {
-        ({ formState, updateFields } = useFormState(initialState));
+        formState = useFormState(initialState);
       });
 
       act(() => {
-        updateFields({
+        formState.updateFields({
           application_nickname: "Hip replacement",
           "leave_details.employer_notification_method": "In writing",
           "leave_details.employer_notified": true,
-          "payment_preferences[0].payment_method": "ACH",
+          "payment_preference.payment_method": "Elec Funds Transfer",
         });
       });
 
-      expect(formState).toMatchInlineSnapshot(`
+      expect(formState.formState).toMatchInlineSnapshot(`
         Object {
           "application_nickname": "Hip replacement",
           "leave_details": Object {
             "employer_notification_method": "In writing",
             "employer_notified": true,
           },
-          "payment_preferences": Array [
-            Object {
-              "payment_method": "ACH",
-            },
-          ],
+          "payment_preference": Object {
+            "payment_method": "Elec Funds Transfer",
+          },
         }
       `);
     });
 
     it("remains stable across renders", () => {
-      const updateFields1 = updateFields;
+      const updateFields1 = formState.updateFields;
       act(() => {
         updateFields1({ field1: "aaa" });
       });
-      const updateFields2 = updateFields;
+      const updateFields2 = formState.updateFields;
       expect(updateFields2).toBe(updateFields1);
     });
 
     it("handles multiple calls to updateFields in same render call", () => {
       act(() => {
-        updateFields({ f1: "aaa" });
-        updateFields({ f2: "bbb" });
+        formState.updateFields({ f1: "aaa" });
+        formState.updateFields({ f2: "bbb" });
       });
-      expect(formState).toEqual({
+      expect(formState.formState).toEqual({
         f1: "aaa",
         f2: "bbb",
       });
     });
   });
 
-  describe("removeField", () => {
+  describe("clearField", () => {
     beforeEach(() => {
       const initialState = {
         foo: "banana",
@@ -104,15 +98,16 @@ describe("useFormState", () => {
         },
       };
       testHook(() => {
-        ({ formState, removeField } = useFormState(initialState));
+        formState = useFormState(initialState);
       });
     });
-    it("removes field from formState", () => {
+    it("set field from formState to null", () => {
       act(() => {
-        removeField("bar");
+        formState.clearField("bar");
       });
-      expect(formState).toStrictEqual({
+      expect(formState.formState).toStrictEqual({
         foo: "banana",
+        bar: null,
         cat: "pineapple",
         nested: {
           human: "being",
@@ -125,21 +120,23 @@ describe("useFormState", () => {
     });
 
     it("remains stable across renders", () => {
-      const removeField1 = removeField;
+      const clearField1 = formState.clearField;
       act(() => {
-        removeField1("bar");
+        clearField1("bar");
       });
-      const removeField2 = removeField;
-      expect(removeField2).toBe(removeField1);
+      const clearField2 = formState.clearField;
+      expect(clearField2).toBe(clearField1);
     });
 
-    it("handles multiple calls to removeField in same render call", () => {
+    it("handles multiple calls to clearField in same render call", () => {
       act(() => {
-        removeField("cat");
-        removeField("foo");
+        formState.clearField("cat");
+        formState.clearField("foo");
       });
-      expect(formState).toEqual({
+      expect(formState.formState).toEqual({
+        foo: null,
         bar: "watermelon",
+        cat: null,
         nested: {
           human: "being",
           farm: {
@@ -150,11 +147,11 @@ describe("useFormState", () => {
       });
     });
 
-    it("removes nested states", () => {
+    it("clears nested states", () => {
       act(() => {
-        removeField("nested.farm.duck");
+        formState.clearField("nested.farm.duck");
       });
-      expect(formState).toEqual({
+      expect(formState.formState).toEqual({
         foo: "banana",
         bar: "watermelon",
         cat: "pineapple",
@@ -162,6 +159,7 @@ describe("useFormState", () => {
           human: "being",
           farm: {
             cow: "pig",
+            duck: null,
           },
         },
       });
@@ -178,14 +176,14 @@ describe("useFormState", () => {
         },
       };
       testHook(() => {
-        ({ formState, getField, updateFields } = useFormState(initialState));
+        formState = useFormState(initialState);
       });
     });
 
     it("gets field from formState", () => {
       let employer_fein;
       act(() => {
-        employer_fein = getField("employer_fein");
+        employer_fein = formState.getField("employer_fein");
       });
       expect(employer_fein).toStrictEqual("12-1234567");
     });
@@ -193,7 +191,7 @@ describe("useFormState", () => {
     it("gets nested states", () => {
       let employer_notification_method;
       act(() => {
-        employer_notification_method = getField(
+        employer_notification_method = formState.getField(
           "leave_details.employer_notification_method"
         );
       });
@@ -203,7 +201,7 @@ describe("useFormState", () => {
     it("gets new value on formState update", () => {
       let employer_name;
       act(() => {
-        updateFields({
+        formState.updateFields({
           employment_status: "employed",
           employer_fein: "12-1234567",
           employer_name: "Foo",
@@ -214,18 +212,18 @@ describe("useFormState", () => {
       });
 
       act(() => {
-        employer_name = getField("employer_name");
+        employer_name = formState.getField("employer_name");
       });
 
       expect(employer_name).toStrictEqual("Foo");
     });
 
     it("remains stable across renders if formState does not change", () => {
-      const getField1 = getField;
+      const getField1 = formState.getField;
       act(() => {
         getField1("employment_status");
       });
-      const getField2 = getField;
+      const getField2 = formState.getField;
       expect(getField2).toBe(getField1);
     });
   });

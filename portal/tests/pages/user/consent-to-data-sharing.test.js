@@ -1,11 +1,7 @@
-import { simulateEvents, testHook } from "../../test-utils";
+import { renderWithAppLogic, simulateEvents } from "../../test-utils";
 import ConsentToDataSharing from "../../../src/pages/user/consent-to-data-sharing";
-import React from "react";
-import User from "../../../src/models/User";
-import { mockRouter } from "next/router";
+import { UserRole } from "../../../src/models/User";
 import routes from "../../../src/routes";
-import { shallow } from "enzyme";
-import useAppLogic from "../../../src/hooks/useAppLogic";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -13,26 +9,41 @@ describe("ConsentToDataSharing", () => {
   let appLogic, wrapper;
   const user_id = "mock-user-id";
 
+  const renderWithUserParams = (user) => {
+    ({ appLogic, wrapper } = renderWithAppLogic(ConsentToDataSharing, {
+      diveLevels: 1,
+      userAttrs: { ...user },
+    }));
+    appLogic.portalFlow.pathName = routes.user.consentToDataSharing;
+  };
+
   beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
-
-    mockRouter.pathname = routes.user.consentToDataSharing;
-    appLogic.users.user = new User({ user_id });
-
-    // Dive once since ConsentToDataSharing is wrapped by withUser
-    wrapper = shallow(<ConsentToDataSharing appLogic={appLogic} />).dive();
+    renderWithUserParams({ user_id });
   });
 
-  it("renders the page", () => {
+  it("shows the correct content for non-employers", () => {
+    expect(wrapper.find("AccordionItem").at(0).prop("heading")).toEqual(
+      "Applying for PFML"
+    );
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("shows the correct contents for employers", () => {
+    renderWithUserParams({
+      user_id,
+      roles: [new UserRole({ role_description: "Employer" })],
+    });
+
+    expect(wrapper.find("AccordionItem").at(0).prop("heading")).toEqual(
+      "Reviewing paid leave applications"
+    );
     expect(wrapper).toMatchSnapshot();
   });
 
   describe("when the user agrees and submits the form", () => {
     beforeEach(async () => {
       const { submitForm } = simulateEvents(wrapper);
-      submitForm();
+      await submitForm();
     });
 
     it("sets user's consented_to_data_sharing field to true", () => {

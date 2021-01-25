@@ -1,26 +1,36 @@
+#!/usr/bin/env bash
 # Script to run migrations within an environment through an ECS task.
 #
 # This relies on resources and outputs created in infra/api, which should
 # be updated prior to running this script.
 #
-set -eo pipefail
+set -o errexit -o pipefail
 
 DIR=$(dirname "${BASH_SOURCE[0]}")
 
+usage() {
+  echo "Usage: ./run-task.sh ENV_NAME TASK_NAME [AUTHOR] [COMMAND ...]"
+  echo "ex: ./run-task.sh test db-migrate-up first_name.last_name"
+  exit 1
+}
+
 ENV_NAME=$1
 TASK_NAME=$2
+shift 2 || usage
 
 if ! [ -z "$CI" ]; then
     AUTHOR=github-actions
 else
-    AUTHOR=$3
+    AUTHOR=$1
+    shift || usage
 fi
 
+COMMAND=("$@")
+
 if [ -z "$ENV_NAME" ] || [ -z "$TASK_NAME" ] || [ -z "$AUTHOR" ]; then
-    echo "Usage: ./run-task.sh ENV_NAME TASK_NAME [AUTHOR]"
-    echo "ex: ./run-task.sh test db-migrate-up first_name.last_name"
-    exit 1
+  usage
 fi
+
 
 pushd $DIR/../../infra/ecs-tasks/environments/$ENV_NAME
 TF_OUTPUTS=$(terraform output -json || (terraform init && terraform output -json))
@@ -33,21 +43,42 @@ NETWORK_CONFIG=$(jq \
      .awsvpcConfiguration.securityGroups=$SECURITY_GROUPS' \
     $DIR/network_config.json.tpl)
 
-TASK_DEFINITION=$(echo $TF_OUTPUTS | jq ".ecs_task_arns.value.\"pfml-api-$TASK_NAME\"" | cut -d'/' -f2 | sed -e 's/^"//' -e 's/"$//')
+TASK_DEFINITION="pfml-api-$ENV_NAME-$TASK_NAME"
+echo "Task definition $TASK_DEFINITION"
 
-echo "Running $TASK_DEFINITION..."
+# Construct command overrides as JSON from COMMAND array
+COMMAND_JSON=$(printf '%s\n' "${COMMAND[@]}" | jq -R . | jq -s .)
+OVERRIDES=$(jq --compact-output \
+    --arg TASK_NAME "$TASK_NAME" \
+    --argjson COMMAND "$COMMAND_JSON" \
+    '.containerOverrides[0].name=$TASK_NAME |
+     .containerOverrides[0].command=$COMMAND' \
+    $DIR/container_overrides.json.tpl)
+
+# Construct aws command arguments
+AWS_ARGS=("--region=us-east-1"
+    ecs run-task
+    "--cluster=$ENV_NAME"
+    "--started-by=$AUTHOR"
+    "--task-definition=$TASK_DEFINITION"
+    "--launch-type=FARGATE"
+    "--platform-version=1.4.0"
+    --network-configuration "$NETWORK_CONFIG"
+    )
+
+if [ ${#COMMAND[@]} -ne 0 ]
+then
+  AWS_ARGS+=(--overrides "$OVERRIDES")
+fi
+
+echo "Running aws"
+printf " ... %s\n" "${AWS_ARGS[@]}"
 
 # Start the ECS task
-RUN_TASK=$(aws --region=us-east-1 \
-    ecs run-task \
-    --cluster $ENV_NAME \
-    --started-by "$AUTHOR" \
-    --task-definition "$TASK_DEFINITION" \
-    --launch-type "FARGATE" \
-    --network-configuration "$(echo $NETWORK_CONFIG)")
+RUN_TASK=$(aws "${AWS_ARGS[@]}")
 
 echo "Started task:"
-echo $RUN_TASK | jq .
+echo "$RUN_TASK" | jq .
 
 TASK_ARN=$(echo $RUN_TASK | jq '.tasks[0].taskArn' | sed -e 's/^"//' -e 's/"$//')
 

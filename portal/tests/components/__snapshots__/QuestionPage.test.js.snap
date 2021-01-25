@@ -4,7 +4,7 @@ exports[`QuestionPage renders the form 1`] = `
 <Fragment>
   <BackButton />
   <form
-    className="usa-form usa-form--large"
+    className="usa-form"
     onSubmit={[Function]}
   >
     <Title
@@ -17,9 +17,10 @@ exports[`QuestionPage renders the form 1`] = `
     </div>
     <Button
       className="margin-top-4"
+      loading={false}
       type="submit"
     >
-      Continue
+      Save and continue
     </Button>
   </form>
 </Fragment>

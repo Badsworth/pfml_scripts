@@ -8,18 +8,29 @@ name: API CI Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        required: false
+        description: |
+          ⬆️️ Env to deploy to. For test deploys, select master or a feature branch.
+          For all other envs, select "deploy/api/*".
+          --------------------------------------
+          ⬇️ Tag or branch to be deployed. For deploys to test, leave blank to deploy master.
+          For all other deploys, select an appropriate tag or feature branch.
+        default: null
   push:
     branches:
       - master
-      - deploy/api/stage
-      - deploy/api/prod
     paths:
       - api/**
       - infra/api/**
+      - infra/ecs-tasks/**
+      - infra/env-shared/**
 
 env:
   working-dir: ./api
-  terraform-dir: ./infra/api/environments
+  terraform-api-dir: ./infra/api/environments
+  terraform-env-shared-dir: ./infra/env-shared/environments
   terraform-ecs-tasks-dir: ./infra/ecs-tasks/environments
   terraform-version: 0.12.24
   python-version: 3.8
@@ -34,14 +45,117 @@ env:
   refs/heads/master: test
   refs/heads/deploy/api/stage: stage
   refs/heads/deploy/api/prod: prod
+  refs/heads/deploy/api/performance: performance
+  refs/heads/deploy/api/training: training
+  refs/heads/deploy/api/uat: uat
 
 jobs:
+  prod-check:
+    # run if environment is production
+    runs-on: ubuntu-latest
+    steps:
+      - name: check users
+        if: contains(github.ref, 'deploy/api/prod')
+        id: get_teams
+        env:
+          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+        uses: octokit/graphql-action@v2.x
+        with:
+          query: |
+            query {
+              organization(login:"EOLWD"){
+                team(slug:"pfml-devops"){
+                  members(membership: ALL, query:"${{ github.actor }}"){
+                    nodes {
+                      login
+                    }
+                  }
+                }
+              }
+            }
+
+      - name: fail if not a member
+        if: contains(github.ref, 'deploy/api/prod') && contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
+        run: |
+          echo "Not part of pfml-devops, cancelling workflow"
+          exit 1
+
+  update-the-deploy-branch:
+    name: Update archival branch
+    needs: prod-check
+    runs-on: ubuntu-latest
+
+    outputs:
+      commit_hash: ${{ steps.commit_and_push.outputs.commit_hash || github.sha }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Commit and push new code to archival branch
+        id: commit_and_push
+        if: github.event.inputs.version && contains(github.ref, 'deploy/api')
+        run: |
+          git config user.name "PFMLDevOps"
+          git config user.email "68565627+PFMLDevOps@users.noreply.github.com"
+          branch_or_tag=$(echo ${{github.ref}} | sed -E 's/^refs\/(heads|tags)\///')
+          if commit_hash=$(git rev-parse origin/${{github.event.inputs.version}} 2>/dev/null); then
+            echo "Received branch"
+          else
+            commit_hash=$(git rev-parse ${{github.event.inputs.version}})
+            echo "Received tag"
+          fi
+          echo "about to commit $commit_hash to $branch_or_tag..."
+          git pull origin $branch_or_tag --ff-only
+          git reset --hard $commit_hash
+          git push -f origin HEAD
+          echo "::set-output name=commit_hash::$commit_hash"
+
+  start-deployment-status:
+    name: Start deployment status
+    needs: update-the-deploy-branch
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_id: ${{ steps.create-deployment.outputs.deployment_id }}
+
+    steps:
+      - name: Set api-env Value
+        run: echo "api-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
+
+      - name: Set deployed-url Value
+        run: |
+          if [[ "${{ env.api-env }}" == 'prod' ]]; then
+            echo "deployed-url=https://paidleave-api.mass.gov/api/docs/" >> $GITHUB_ENV
+          else
+            echo "deployed-url=https://paidleave-api-${{ env.api-env }}.mass.gov/api/docs/" >> $GITHUB_ENV
+          fi
+
+      - uses: chrnorm/deployment-action@releases/v1
+        name: Create GitHub deployment
+        id: create-deployment
+        with:
+          # NOTE: If you are intending for this GitHub deployment to trigger another
+          #       workflow that's listening for on: [deployment], you need to update this
+          #       to secrets.PFML_DEVOPS_TOKEN (same for the update step at the end.)
+          #
+          #       This is intentionally using the github.token right now to avoid unintended
+          #       side-effects from happening off of the automated deployments.
+          #
+          token: "${{ github.token }}"
+          target_url: ${{ env.deployed-url }}
+          environment: "API (${{ env.api-env }})"
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
   api-build:
     name: Build docker image
+    needs: update-the-deploy-branch
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -51,22 +165,36 @@ jobs:
           aws-region: us-east-1
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
+          
+      - name: Check if the image exist in ECR
+        id: ecr-check
+        run: |
+          make ecr-login
+          aws ecr describe-images --repository-name=pfml-api --image-ids=imageTag=${{ needs.update-the-deploy-branch.outputs.commit_hash }} --region us-east-1
+        continue-on-error: true
+        working-directory: ${{ env.working-dir }}
+        
+      - name: Echo message
+        if: steps.ecr-check.outcome == 'success'
+        run: echo "Docker image already built; skipping rebuild."
 
       - name: Build and upload docker image artifact
+        if: steps.ecr-check.outcome == 'failure'
         run: make release
         working-directory: ${{ env.working-dir }}
 
-  dor-import-build:
-    name: Build lambda function for DOR import
+  formstack-import-build:
+    name: Build lambda function for Formstack import
+    needs: update-the-deploy-branch
     runs-on: ubuntu-latest
     env:
-      infra-working-dir: ./api/import_infra/dor
-    outputs:
-      s3_key: ${{ steps.get_s3_key.outputs.s3_key }}
-      dependencies_s3_key: ${{ steps.get_dependencies_s3_key.outputs.dependencies_s3_key }}
+      infra-working-dir: ./api/lambdas/formstack_import
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
       - uses: actions/setup-python@v1
         with:
           python-version: ${{ env.python-version }}
@@ -80,43 +208,55 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - name: Check if lambda packages exist in S3 before the build
+        id: s3-check
+        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+        continue-on-error: true
+        working-directory: ${{ env.infra-working-dir }}
+
+      - name: Echo message about the package
+        if: steps.s3-check.outcome == 'success'
+        run: echo "The Lambda package already exists in S3 bucket; skipping rebuild."
+
       - name: Install API Package Dependencies
+        if: steps.s3-check.outcome == 'failure'
         run: pip install wheel setuptools poetry
         working-directory: ${{ env.working-dir }}
 
       - name: Build API package
+        if: steps.s3-check.outcome == 'failure'
         run: poetry build
         working-directory: ${{ env.working-dir }}
 
       - name: Install Lambda CLI Dependencies
-        run: pip install setuptools awscli aws-sam-cli
+        if: steps.s3-check.outcome == 'failure'
+        run: pip install boto3 setuptools awscli aws-sam-cli
         working-directory: ${{ env.infra-working-dir }}
 
       - name: Lambda Build, Package and Upload to S3
-        run: make upload-release
+        if: steps.s3-check.outcome == 'failure'
+        run: make release
         working-directory: ${{ env.infra-working-dir }}
 
-      - name: Get Package S3 Key
-        id: get_s3_key
-        run: echo "::set-output name=s3_key::$(python3 get-lambda-build.py)"
+      - name: Rename the Lambda for Formstack Import
+        id: rename
+        if: steps.s3-check.outcome == 'failure'
+        run: |
+          aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
         working-directory: ${{ env.infra-working-dir }}
 
-      - name: Get Dependencies S3 Key
-        id: get_dependencies_s3_key
-        run: echo "::set-output name=dependencies_s3_key::$(python3 get-lambda-dependencies.py)"
-        working-directory: ${{ env.infra-working-dir }}
-
-  cognito-post-confirmation-build:
-    name: Build and upload Lambda function for Cognito Post Confirmation hook
+  eligibility-feed-build:
+    name: Build lambda function for FINEOS eligibility feed
+    needs: update-the-deploy-branch
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./api/lambdas/cognito_post_confirmation
-    outputs:
-      s3_key: ${{ steps.get_s3_key.outputs.s3_key }}
+    env:
+      infra-working-dir: ./api/lambdas/fineos/eligibility_export_feed
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
       - uses: actions/setup-python@v1
         with:
           python-version: ${{ env.python-version }}
@@ -130,18 +270,148 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - name: Check if lambda packages exist in S3 before the build
+        id: s3-check
+        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+        continue-on-error: true
+        working-directory: ${{ env.infra-working-dir }}
+
+      - name: Echo message about the package
+        if: steps.s3-check.outcome == 'success'
+        run: echo "The Lambda package already exists in S3 bucket; skipping rebuild."
+
       - name: Install API Package Dependencies
+        if: steps.s3-check.outcome == 'failure'
+        run: pip install wheel setuptools poetry
+        working-directory: ${{ env.working-dir }}
+
+      - name: Build API package
+        if: steps.s3-check.outcome == 'failure'
+        run: poetry build
+        working-directory: ${{ env.working-dir }}
+
+      - name: Install Lambda CLI Dependencies
+        if: steps.s3-check.outcome == 'failure'
+        run: pip install boto3 setuptools awscli aws-sam-cli
+        working-directory: ${{ env.infra-working-dir }}
+
+      - name: Lambda Build, Package and Upload to S3
+        if: steps.s3-check.outcome == 'failure'
+        run: make release
+        working-directory: ${{ env.infra-working-dir }}
+
+      - name: Rename the Lambda for FINEOS Eligibility Feed  
+        id: rename
+        if: steps.s3-check.outcome == 'failure'
+        run: |
+          aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+        working-directory: ${{ env.infra-working-dir }}
+
+  cognito-pre-signup-build:
+    name: Build and upload Lambda function for Cognito Pre Signup hook
+    needs: update-the-deploy-branch
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api/lambdas/cognito_pre_signup
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Check if lambda packages exist in S3 before the build
+        id: s3-check
+        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+        continue-on-error: true
+
+      - name: Echo message about the package
+        if: steps.s3-check.outcome == 'success'
+        run: echo "The Lambda package already exists in S3 bucket; skipping rebuild."
+
+      - name: Install API Package Dependencies
+        if: steps.s3-check.outcome == 'failure'
         run: pip install wheel setuptools poetry
 
       - name: Install Lambda CLI Dependencies
-        run: pip install setuptools awscli aws-sam-cli
+        if: steps.s3-check.outcome == 'failure'
+        run: pip install boto3 setuptools awscli aws-sam-cli
 
       - name: Lambda Build, Package and Upload to S3
+        if: steps.s3-check.outcome == 'failure'
         run: make release
 
-      - name: Get Package S3 Key
-        id: get_s3_key
-        run: echo "::set-output name=s3_key::$(make get-release-key)"
+      - name: Rename the Lambda for Cognito Pre Signup
+        id: rename
+        if: steps.s3-check.outcome == 'failure'
+        run: |
+          aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
+  cognito-post-confirmation-build:
+    name: Build and upload Lambda function for Cognito Post Confirmation hook
+    needs: update-the-deploy-branch
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api/lambdas/cognito_post_confirmation
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Check if lambda packages exist in S3 before the build
+        id: s3-check
+        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+        continue-on-error: true
+
+      - name: Echo message about the package
+        if: steps.s3-check.outcome == 'success'
+        run: echo "The Lambda package already exists in S3 bucket; skipping rebuild."
+
+      - name: Install API Package Dependencies
+        if: steps.s3-check.outcome == 'failure'
+        run: pip install wheel setuptools poetry
+
+      - name: Install Lambda CLI Dependencies
+        if: steps.s3-check.outcome == 'failure'
+        run: pip install boto3 setuptools awscli aws-sam-cli
+
+      - name: Lambda Build, Package and Upload to S3
+        if: steps.s3-check.outcome == 'failure'
+        run: make release
+        
+      - name: Rename the Lambda for Cognito Post Confirmation
+        id: rename
+        if: steps.s3-check.outcome == 'failure'
+        run: |
+          aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
   api-db-migrate-up:
     name: Run migrations
@@ -149,16 +419,18 @@ jobs:
     # This step doesn't really depend on any steps except api-build,
     # but for good measure we should make sure everything builds before
     # we deploy any updates to ECS tasks or services.
-    needs: [api-build, dor-import-build, cognito-post-confirmation-build]
+    needs: [update-the-deploy-branch, api-build, formstack-import-build, cognito-pre-signup-build, cognito-post-confirmation-build, eligibility-feed-build]
 
     env:
-      TF_VAR_service_docker_tag: ${{ github.sha }}
+      TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
       - name: Set api-env Value
-        run: echo "::set-env name=api-env::${{ env[github.ref] || 'test' }}"
+        run: echo "api-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -169,52 +441,85 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: 0.12.24
+          terraform_wrapper: false
+
       - name: Terraform Init
         id: terraform_init
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: init
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
+        run: terraform init
+        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
 
       - name: Terraform Plan with new docker image
         id: terraform_plan
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: plan
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
-          args: "-out=plan.tfplan"
+        run: terraform plan -out=plan.tfplan
+        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
 
       - name: Terraform Apply from execution plan
         id: terraform_apply
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: apply
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
-          args: "plan.tfplan"
+        run: terraform apply plan.tfplan
+        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
 
       - name: Start migration ECS task
         run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ env.api-env }} db-migrate-up
         working-directory: ${{ env.working-dir }}
 
-  api-release:
-    name: Release
+  api-create-db-users:
+    name: Create/update database users
     runs-on: ubuntu-latest
-    needs: [api-build, dor-import-build, cognito-post-confirmation-build, api-db-migrate-up]
+    needs: [update-the-deploy-branch, api-db-migrate-up]
 
     env:
-      TF_VAR_service_docker_tag: ${{ github.sha }}
-      TF_VAR_dor_lambda_artifact_s3_key: ${{ needs.dor-import-build.outputs.s3_key }}
-      TF_VAR_dor_import_lambda_dependencies_s3_key: ${{ needs.dor-import-build.outputs.dependencies_s3_key }}
-      TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.cognito-post-confirmation-build.outputs.s3_key }}
+      TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
+      - name: Set api-env Value
+        run: echo "api-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: 0.12.24
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        id: terraform_init
+        run: terraform init
+        working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ env.api-env }}
+
+      - name: Start DB user create ECS task
+        run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ env.api-env }} db-admin-create-db-users
+        working-directory: ${{ env.working-dir }}
+
+  api-release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [update-the-deploy-branch, api-build, cognito-post-confirmation-build, cognito-pre-signup-build, eligibility-feed-build, api-db-migrate-up, formstack-import-build]
+
+    env:
+      TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      TF_VAR_formstack_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      TF_VAR_cognito_pre_signup_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      TF_VAR_fineos_eligibility_transfer_lambda_build_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
       # Map the github.ref (the branch or tag that triggered the workflow) to an environment name.
       #   e.g refs/heads/master or refs/heads/deploy/api/stage
@@ -222,7 +527,7 @@ jobs:
       # For more info, see:
       # https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
       - name: Set api-env Value
-        run: echo "::set-env name=api-env::${{ env[github.ref] || 'test' }}"
+        run: echo "api-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -240,7 +545,7 @@ jobs:
           tf_actions_version: ${{ env.terraform-version }}
           tf_actions_subcommand: init
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
+          tf_actions_working_dir: ${{ env.terraform-api-dir }}/${{ env.api-env }}
 
       - name: Terraform Plan with new docker image
         id: terraform_plan
@@ -249,7 +554,7 @@ jobs:
           tf_actions_version: ${{ env.terraform-version }}
           tf_actions_subcommand: plan
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
+          tf_actions_working_dir: ${{ env.terraform-api-dir }}/${{ env.api-env }}
           args: "-out=plan.tfplan"
 
       - name: Terraform Apply from execution plan
@@ -259,7 +564,7 @@ jobs:
           tf_actions_version: ${{ env.terraform-version }}
           tf_actions_subcommand: apply
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
+          tf_actions_working_dir: ${{ env.terraform-api-dir }}/${{ env.api-env }}
           args: "plan.tfplan"
 
       - name: Terraform Output
@@ -268,7 +573,7 @@ jobs:
         with:
           tf_actions_version: ${{ env.terraform-version }}
           tf_actions_subcommand: output
-          tf_actions_working_dir: ${{ env.terraform-dir }}/${{ env.api-env }}
+          tf_actions_working_dir: ${{ env.terraform-api-dir }}/${{ env.api-env }}
 
       - name: Wait for stable ECS service
         env:
@@ -281,3 +586,120 @@ jobs:
           SVC_ID=$(echo $TF_OUTPUT | jq -r '.ecs_service_id.value')
           (aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID ||
            aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
+
+  api-gateway-release:
+    name: API Gateway Release
+    runs-on: ubuntu-latest
+    needs: [update-the-deploy-branch, api-build, cognito-post-confirmation-build, cognito-pre-signup-build, eligibility-feed-build, api-db-migrate-up, formstack-import-build]
+         
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
+      - name: Set api-env Value
+        run: echo "api-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Terraform Init
+        id: terraform_init
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: init
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ env.api-env }}
+
+      - name: Terraform Plan with new docker image
+        id: terraform_plan
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: plan
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ env.api-env }}
+          args: "-out=plan.tfplan"
+
+      - name: Terraform Apply from execution plan
+        id: terraform_apply
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: apply
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ env.api-env }}
+          args: "plan.tfplan"
+
+      - name: Terraform Output
+        id: terraform_output
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraform-version }}
+          tf_actions_subcommand: output
+          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ env.api-env }}
+
+  update-deployment-status:
+    name: Update deployment status
+    needs: [start-deployment-status, api-release, api-gateway-release]
+    runs-on: ubuntu-latest
+    if: always() && needs.start-deployment-status.result == 'success'
+
+    steps:
+      - name: Set deploy-state Value to true
+        run: |
+          if [[ $API_RESULT == 'success' ]] && [[ $GATEWAY_RESULT == 'success' ]]
+          then
+            echo "deploy-state=success" >> $GITHUB_ENV
+          else
+            echo "deploy-state=failure" >> $GITHUB_ENV
+          fi
+        env:
+          API_RESULT: ${{ needs.api-release.result }}
+          GATEWAY_RESULT: ${{ needs.api-gateway-release.result }}
+
+      - name: Set api-env Value
+        run: echo "api-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
+
+      - name: Set deployed-url Value
+        run: |
+          if [[ "${{ env.api-env }}" == 'prod' ]]; then
+            echo "deployed-url=https://paidleave-api.mass.gov/api/docs/" >> $GITHUB_ENV
+          else
+            echo "deployed-url=https://paidleave-api-${{ env.api-env }}.mass.gov/api/docs/" >> $GITHUB_ENV
+          fi
+
+      - uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: ${{ github.token }}
+          # This should match target_url in start-deployment-status.
+          # see: https://github.com/chrnorm/deployment-status/issues/13#issuecomment-734731491
+          environment_url: ${{ env.deployed-url }}
+          state: ${{ env.deploy-state }}
+          deployment_id: ${{ needs.start-deployment-status.outputs.deploy_id }}
+
+  end-to-end:
+    name: End-to-End Test Deployment
+    runs-on: ubuntu-latest
+    needs: [update-the-deploy-branch, api-release, api-gateway-release]
+    if: github.ref != 'refs/heads/deploy/api/prod' && github.ref != 'refs/heads/deploy/api/uat'
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
+      - uses: ./.github/actions/trigger-cypress
+        name: "Trigger Cypress Run"
+        with:
+          target_environment: ${{ env[github.ref] || 'test' }}
+          cypress_tags: "Deploy,Deploy-API"
+          github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          # Limit to "stable" suite for any environment but test.
+          only_stable: ${{ (env[github.ref] || 'test') == 'test' && 'false' || 'true' }}

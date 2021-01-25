@@ -16,12 +16,3 @@
 // Import commands.js using ES2015 syntax:
 import "./commands";
 import "cypress-file-upload";
-
-// Suppress a particular error message that is causing immediate failure due to a JS
-// error on the client side.
-Cypress.on("uncaught:exception", (e) => {
-  // Suppress failures due to this error, which we can't do anything about.
-  if (e.message.indexOf(`Cannot set property 'status' of undefined`)) {
-    return false;
-  }
-});

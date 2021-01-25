@@ -18,15 +18,13 @@ exports.handler = (event, _context, callback) => {
     messageType === "CustomMessage_ResendCode"
   ) {
     messageStrings = {
-      line1:
-        "To activate your account, you need to verify your email address. Return to the Portal and enter this 6-digit code:",
+      line1: `To activate your account, you need to verify your email address. <a href="https://${process.env.PORTAL_DOMAIN}/verify-account" rel="noopener" target="_blank">Return to the application</a> and enter this 6-digit code:`,
       line2: "This code is only valid for 24 hours.",
       subject: "Verify your Paid Family and Medical Leave account",
     };
   } else if (messageType === "CustomMessage_ForgotPassword") {
     messageStrings = {
-      line1:
-        "We received a request to reset your Paid Family and Medical Leave account password. Return to the Portal and enter this 6-digit code:",
+      line1: `We received a request to reset your Paid Family and Medical Leave account password. <a href="https://${process.env.PORTAL_DOMAIN}/reset-password" rel="noopener" target="_blank">Return to the application</a> and enter this 6-digit code:`,
       line2:
         "This code is only valid for 24 hours. If you didn’t request a password reset, please ignore this email. Your password won’t be changed.",
       subject: "Reset your Paid Family and Medical Leave password",
@@ -62,42 +60,182 @@ function generateVerificationEmail(messageStrings, codeParam) {
     Body text: 16px
     Small text: 12px
   */
+
   return `
-    <table align="center" cellspacing="0" style="font-family: Helvetica, Arial, sans-serif; font-size: 16px; text-align: left; max-width: 800px;" width="100%">
+      <table width="100%" style="font-family: Open Sans,Helvetica
+      Neue,Helvetica,Arial,sans-serif;
+      font-size: 16px;
+      text-align: left;"
+      cellpadding="0"
+      cellspacing="0">
       <tbody>
-        <tr>
-          <td style="background: #388557; height: 24px;"></td>
-        </tr>
-        <tr>
-          <td style="background: #14558F; color: #fff; font-size: 22px; font-weight: bold; padding: 16px 32px;">
-            Department of Family and Medical Leave
-          </td>
-        </tr>
-        <tr>
-          <td style="padding: 32px;">
-            ${messageStrings.line1}
-          </td>
-        </tr>
+          <tr>
+              <td style="background: #14558f; height: 24px"></td>
+          </tr>
+          <tr>
+              <td
+                  style="background: #be5817;
+                  padding: 16px 32px;">
+                  <table
+                      align="center"
+                      cellspacing="0"
+                      style="max-width: 600px;"
+                      width="100%">
+                      <tbody>
+                          <tr>
+                              <td>
+                                  <img
+                                      alt="Massachusetts Paid Family and Medical Leave"
+                                      src="https://mcusercontent.com/0757f7959581770082e8f2fd9/images/4665cf36-af48-4bce-9032-33a7786052de.png"
+                                      width="264"
+                                      style="padding-bottom: 0;"
+                                      class="mcnImage"
+                                      />
+                              </td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </td>
+          </tr>
+          <tr>
+              <td>
+                  <table
+                      align="center"
+                      style="line-height: 150%;
+                      text-align: left;
+                      max-width: 600px;
+                      color:#535353;padding-bottom: 32px;" width="100%">
+                      <tbody>
+                      <tr>
+                      <td style="padding: 32px;">
+                        ${messageStrings.line1}
+                      </td>
+                    </tr>
+            
+                    <tr>
+                      <td style="text-align: center">
+                        <strong style="display: inline-block; font-size: 22px;">${codeParam}</strong>
+                      </td>
+                    </tr>
+            
+                    <tr>
+                      <td style="padding: 32px; text-align: center;">
+                        ${messageStrings.line2}
+                      </td>
+                    </tr>
+                      </tbody>
+                  </table>
+              </td>
+          </tr>
+          <tr>
+              <td style="background: #FAFAFA; border-top: 3px solid
+                  #EAEAEA;">
+                  <table
+                      align="center"
+                      style="max-width: 600px;"
+                      width="100%">
+                      <tbody>
+                          <tr>
+                              <td>
+                                  <img
+                                      align="center"
+                                      alt=""
+                                      src="https://mcusercontent.com/0757f7959581770082e8f2fd9/images/a163a15d-9150-4959-9b02-998caa00bca4.png"
+                                      width="564"
+                                      style="max-width: 903px;
+                                      padding: 0 18px;
+                                      display: inline;
+                                      vertical-align: bottom;" />
+                              </td>
+                          </tr>
 
-        <tr>
-          <td style="text-align: center">
-            <strong style="background: #14558F; color: #fff; display: inline-block; font-size: 22px; padding: 16px 32px;">${codeParam}</strong>
-          </td>
-        </tr>
+                          <tr>
+                              <td style="padding:0px 18px 9px;
+                                  text-align: left;
+                                  color: #656565; font-size: 12px;">
+                                  <div>
+                                      <a
+                                          href="https://www.mass.gov/orgs/department-of-family-and-medical-leave"
+                                          rel="noopener"
+                                          target="_blank"
+                                          data-saferedirecturl="https://www.google.com/url?hl=en&amp;q=https://www.mass.gov/orgs/department-of-family-and-medical-leave&amp;source=gmail&amp;ust=1607720450081000&amp;usg=AFQjCNF21ULm-5y7N8G5cZXEVu-uHldNPg">
+                                          Department of Family &
+                                          Medical Leave
+                                      </a>
+                                  </div>
+                                  <div>P.O. Box 838, Lawrence, MA
+                                      01842</div>
+                                  <div>(833) 344-7365 from 8am–5pm ET</div>
+                              </td>
+                          </tr>
 
-        <tr>
-          <td style="padding: 32px; text-align: center;">
-            ${messageStrings.line2}
-          </td>
-        </tr>
+                          <tr>
+                              <td style="font-size: 12px;
+                                  font-style: italic; padding: 18px;">
+                                  This e-mail message is for the sole
+                                  use of the intended recipient and
+                                  may contain confidential and
+                                  privileged information. Any
+                                  unauthorized review, use,
+                                  disclosure, or distribution is
+                                  strictly prohibited. If you are not
+                                  the intended recipient, please
+                                  contact us at (833) 344-7365 from
+                                  8am–5pm ET and then destroy all
+                                  copies of the original message.
+                              </td>
+                          </tr>
 
-        <tr>
-          <td style="background: #F2F2F2; color: #535353; font-size: 12px; font-style: italic; padding: 32px;">
-            This is an automatically generated message from Commonwealth of Massachusetts
-            <a href="https://www.mass.gov/orgs/department-of-family-and-medical-leave">Department of Family and Medical Leave</a>.
-            Replies are not monitored or answered.
-          </td>
-        </tr>
+                          <tr>
+                              <td style="border-top:1px solid
+                                  #EAEAEA;padding: 18px;
+                                  text-align: center;">
+                                  <a
+                                      href="https://www.facebook.com/MassPFML/"
+                                      target="_blank"
+                                      style="padding: 10px; display:
+                                      inline-block;">
+                                      <img
+                                          src="https://cdn-images.mailchimp.com/icons/social-block-v2/color-facebook-48.png"
+                                          alt="Facebook"
+                                          style="display: block"
+                                          height="24"
+                                          width="24"
+                                          />
+                                  </a>
+                                  <a
+                                      href="https://twitter.com/MassPfml"
+                                      target="_blank"
+                                      style="padding: 10px;display:
+                                      inline-block;">
+                                      <img
+                                          src="https://cdn-images.mailchimp.com/icons/social-block-v2/color-twitter-48.png"
+                                          alt="Twitter"
+                                          style="display: block"
+                                          height="24"
+                                          width="24"
+                                          />
+                                  </a>
+                                  <a
+                                      href="https://www.linkedin.com/company/masspfml"
+                                      target="_blank"
+                                      style="padding: 10px;display:
+                                      inline-block;">
+                                      <img
+                                          src="https://cdn-images.mailchimp.com/icons/social-block-v2/color-linkedin-48.png"
+                                          alt="LinkedIn"
+                                          style="display: block"
+                                          height="24"
+                                          width="24"
+                                          />
+                                  </a>
+                              </td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </td>
+          </tr>
       </tbody>
-  </table>`;
+    </table>
+  `;
 }

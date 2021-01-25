@@ -1,41 +1,39 @@
-import Claim, { ClaimStatus } from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
+import { MockClaimBuilder } from "../test-utils";
 
 describe("ClaimCollection", () => {
-  let collection, completedClaim, inProgressClaim, submittedClaim;
+  let collection, completedClaim, startedClaim, submittedClaim;
 
   beforeEach(() => {
-    inProgressClaim = new Claim({
-      application_id: "1",
-      status: ClaimStatus.started,
-    });
-    completedClaim = new Claim({
-      application_id: "2",
-      status: ClaimStatus.completed,
-    });
-    submittedClaim = new Claim({
-      application_id: "3",
-      status: ClaimStatus.submitted,
-    });
+    startedClaim = new MockClaimBuilder().create();
+    completedClaim = new MockClaimBuilder().completed().create();
+    submittedClaim = new MockClaimBuilder().submitted().create();
     collection = new ClaimCollection([
-      inProgressClaim,
+      startedClaim,
       completedClaim,
       submittedClaim,
     ]);
   });
 
   describe("#inProgress", () => {
-    it("returns only the 'Started' claims", () => {
-      expect(collection.inProgress).toHaveLength(1);
-      expect(collection.inProgress).toEqual([inProgressClaim]);
+    it("returns only the 'Started' and 'Submitted' claims", () => {
+      expect(collection.inProgress).toHaveLength(2);
+      expect(collection.inProgress).toContain(startedClaim);
+      expect(collection.inProgress).toContain(submittedClaim);
     });
   });
 
   describe("#submitted", () => {
     it("returns 'Completed' and 'Submitted' claims", () => {
-      expect(collection.submitted).toHaveLength(2);
-      expect(collection.submitted).toContain(completedClaim);
-      expect(collection.submitted).toContain(submittedClaim);
+      expect(collection.submitted).toHaveLength(1);
+      expect(collection.submitted).toEqual([submittedClaim]);
+    });
+  });
+
+  describe("#completed", () => {
+    it("returns 'Completed' claims", () => {
+      expect(collection.completed).toHaveLength(1);
+      expect(collection.completed).toEqual([completedClaim]);
     });
   });
 });

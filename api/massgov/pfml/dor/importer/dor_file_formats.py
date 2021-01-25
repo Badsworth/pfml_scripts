@@ -3,7 +3,9 @@
 from datetime import datetime
 from decimal import Decimal
 
-from massgov.pfml.util.files.file_format import FieldFormat
+import pytz
+
+from massgov.pfml.util.files.file_format import FieldFormat, FileFormat
 
 
 def parse_date(date_str):
@@ -12,7 +14,7 @@ def parse_date(date_str):
 
 
 def parse_datetime(datetime_str):
-    return datetime.strptime(datetime_str, "%Y%m%d%H%M%S")
+    return pytz.UTC.localize(datetime.strptime(datetime_str, "%Y%m%d%H%M%S"))
 
 
 def parse_boolean(boolean_str):
@@ -24,46 +26,60 @@ def parse_dollar_amount(dollar_amount_str):
     return Decimal(dollar_amount_str)
 
 
-EMPLOYER_FILE_FORMAT = (
-    FieldFormat("account_key", 11),
-    FieldFormat("employer_name", 255),
-    FieldFormat("fein", 9),
-    FieldFormat("employer_address_street", 255),
-    FieldFormat("employer_address_city", 30),
-    FieldFormat("employer_address_state", 2),
-    FieldFormat("employer_address_zip", 9),
-    FieldFormat("employer_dba", 255),
-    FieldFormat("family_exemption", 1, parse_boolean),
-    FieldFormat("medical_exemption", 1, parse_boolean),
-    FieldFormat("exemption_commence_date", 8, parse_date),
-    FieldFormat("exemption_cease_date", 8, parse_date),
-    FieldFormat("updated_date", 14, parse_datetime),
+EMPLOYER_FILE_FORMAT = FileFormat(
+    (
+        FieldFormat("account_key", 11),
+        FieldFormat("employer_name", 255),
+        FieldFormat("fein", 14),
+        FieldFormat("employer_address_street", 255),
+        FieldFormat("employer_address_city", 30),
+        FieldFormat("employer_address_state", 2),
+        FieldFormat("employer_address_zip", 9),
+        FieldFormat("employer_address_country", 3),
+        FieldFormat("employer_dba", 255),
+        FieldFormat("family_exemption", 1, parse_boolean),
+        FieldFormat("medical_exemption", 1, parse_boolean),
+        FieldFormat("exemption_commence_date", 8, parse_date),
+        FieldFormat("exemption_cease_date", 8, parse_date),
+        FieldFormat("updated_date", 14, parse_datetime),
+    )
 )
 
-EMPLOYER_QUARTER_INFO_FORMAT = (
-    FieldFormat("record_type", 1),
-    FieldFormat("account_key", 11),
-    FieldFormat("filing_period", 8, parse_date),
-    FieldFormat("employer_name", 255),
-    FieldFormat("employer_fein", 9),
-    FieldFormat("amended_flag", 1, parse_boolean),
-    FieldFormat("received_date", 8, parse_date),
-    FieldFormat("updated_date", 14, parse_datetime),
+# numbers correspond to format cols above
+EMPLOYER_FILE_ROW_LENGTH = 11 + 255 + 14 + 255 + 30 + 2 + 9 + 255 + 1 + 1 + 8 + 8 + 14 + 3
+
+EMPLOYER_QUARTER_INFO_FORMAT = FileFormat(
+    (
+        FieldFormat("record_type", 1),
+        FieldFormat("account_key", 11),
+        FieldFormat("filing_period", 8, parse_date),
+        FieldFormat("employer_name", 255),
+        FieldFormat("employer_fein", 14),
+        FieldFormat("amended_flag", 1, parse_boolean),
+        FieldFormat("pfm_account_id", 14),
+        FieldFormat("total_pfml_contribution", 20, parse_dollar_amount),
+        FieldFormat("received_date", 8, parse_date),
+        FieldFormat("updated_date", 14, parse_datetime),
+    )
 )
 
-EMPLOYEE_FORMAT = (
-    FieldFormat("record_type", 1),
-    FieldFormat("account_key", 11),
-    FieldFormat("filing_period", 8, parse_date),
-    FieldFormat("employee_first_name", 255),
-    FieldFormat("employee_last_name", 255),
-    FieldFormat("employee_ssn", 9),
-    FieldFormat("independent_contractor", 1, parse_boolean),
-    FieldFormat("opt_in", 1, parse_boolean),
-    FieldFormat("employee_ytd_wages", 20, parse_dollar_amount),
-    FieldFormat("employee_qtr_wages", 20, parse_dollar_amount),
-    FieldFormat("employee_medical", 20, parse_dollar_amount),
-    FieldFormat("employer_medical", 20, parse_dollar_amount),
-    FieldFormat("employee_family", 20, parse_dollar_amount),
-    FieldFormat("employer_family", 20, parse_dollar_amount),
+EMPLOYEE_FORMAT = FileFormat(
+    (
+        FieldFormat("record_type", 1),
+        FieldFormat("account_key", 11),
+        FieldFormat("filing_period", 8, parse_date),
+        FieldFormat("employee_first_name", 255),
+        FieldFormat("employee_last_name", 255),
+        FieldFormat("employee_ssn", 9),
+        FieldFormat("independent_contractor", 1, parse_boolean),
+        FieldFormat("opt_in", 1, parse_boolean),
+        FieldFormat("employee_ytd_wages", 20, parse_dollar_amount),
+        FieldFormat("employee_qtr_wages", 20, parse_dollar_amount),
+        FieldFormat("employee_medical", 20, parse_dollar_amount),
+        FieldFormat("employer_medical", 20, parse_dollar_amount),
+        FieldFormat("employee_family", 20, parse_dollar_amount),
+        FieldFormat("employer_family", 20, parse_dollar_amount),
+    )
 )
+
+EMPLOYEE_FILE_ROW_LENGTH = 1 + 11 + 8 + 255 + 255 + 9 + 1 + 1 + 20 + 20 + 20 + 20 + 20 + 20

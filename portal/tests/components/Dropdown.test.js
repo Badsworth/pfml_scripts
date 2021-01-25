@@ -107,6 +107,13 @@ describe("Dropdown", () => {
 
       expect(formGroup.hasClass("usa-form-group--error")).toBe(true);
     });
+
+    it("adds error classes to the field", () => {
+      const { wrapper } = render({ errorMsg: "Oh no." });
+      const formGroup = wrapper.find(".usa-select");
+
+      expect(formGroup.hasClass("usa-input--error")).toBe(true);
+    });
   });
 
   describe("when `smallLabel` is true", () => {
@@ -127,6 +134,58 @@ describe("Dropdown", () => {
       wrapper.find(".usa-select").simulate("change");
 
       expect(props.onChange).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("when `labelClassName` is set", () => {
+    it("overrides the FormLabel .text-bold class", () => {
+      const { wrapper } = render({ labelClassName: "text-normal" });
+      const label = wrapper.find("FormLabel");
+
+      expect(label.prop("labelClassName")).toBe("text-normal");
+    });
+  });
+
+  describe("when formGroupClassName prop is set", () => {
+    it("includes the formGroupClassName on the containing element", () => {
+      const { wrapper } = render({ formGroupClassName: "custom-input-class" });
+
+      expect(wrapper.hasClass("custom-input-class")).toBe(true);
+    });
+  });
+
+  describe("when selectClassName prop is set", () => {
+    it("includes the formGroupClassName on the containing element", () => {
+      const { wrapper } = render({ selectClassName: "custom-input-class" });
+
+      expect(wrapper.find("select").hasClass("custom-input-class")).toBe(true);
+    });
+  });
+
+  describe("when `hideEmptyChoice` is not set", () => {
+    it("displays empty choice as first option by default", () => {
+      const { wrapper } = render();
+
+      expect(wrapper.find("option")).toHaveLength(3);
+      expect(wrapper.find("option").first().prop("value")).toEqual("");
+    });
+  });
+
+  describe("when `hideEmptyChoice` is false", () => {
+    it("displays empty choice as first option", () => {
+      const { wrapper } = render({ hideEmptyChoice: false });
+
+      expect(wrapper.find("option")).toHaveLength(3);
+      expect(wrapper.find("option").first().prop("value")).toEqual("");
+    });
+  });
+
+  describe("when `hideEmptyChoice` is true", () => {
+    it("hides empty choice as first option", () => {
+      const { wrapper } = render({ hideEmptyChoice: true });
+
+      expect(wrapper.find("option")).toHaveLength(2);
+      expect(wrapper.find("option").first().prop("value")).toEqual("a");
     });
   });
 });

@@ -11,7 +11,7 @@ import zipObject from "lodash/zipObject";
 const ConditionalContent = (props) => {
   const {
     fieldNamesClearedWhenHidden,
-    removeField,
+    clearField,
     getField,
     updateFields,
     visible,
@@ -30,8 +30,8 @@ const ConditionalContent = (props) => {
         fieldNamesClearedWhenHidden.map(getField)
       );
       setHiddenFieldsValues(dataToSave);
-      fieldNamesClearedWhenHidden.forEach((field) => removeField(field));
-      // Creating an anon function because `forEach` passes in extra parameters (index, array) that removeField does not need
+      fieldNamesClearedWhenHidden.forEach((field) => clearField(field));
+      // Creating an anon function because `forEach` passes in extra parameters (index, array) that clearField does not need
     }
     // Component changes from hidden to visible
     else if (previouslyVisible === false && visible) {
@@ -48,15 +48,15 @@ ConditionalContent.propTypes = {
   /** Fields and other markup to be conditionally displayed */
   children: PropTypes.node.isRequired,
   /**
-   * Field names, individually passed into `removeField` when the
+   * Field names, individually passed into `clearField` when the
    * content is hidden and this component unmounts. If you include
-   * this prop, then remember to also pass in the `removeField` prop.
+   * this prop, then remember to also pass in the `clearField` prop.
    */
   fieldNamesClearedWhenHidden: PropTypes.arrayOf(PropTypes.string),
   /**
    * Method called to remove a field's value from your app's state.
    */
-  removeField: PropTypes.func,
+  clearField: PropTypes.func,
   /**
    * Method called to cache the value of each field listed in `fieldNamesClearedWhenHidden`
    */

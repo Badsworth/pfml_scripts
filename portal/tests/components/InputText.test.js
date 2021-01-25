@@ -60,11 +60,32 @@ describe("InputText", () => {
     expect(label1.prop("inputId")).toBe(input1.prop("id"));
   });
 
+  describe("when inputId prop is set", () => {
+    it("uses the passed id instead of the generated one", () => {
+      const { wrapper } = render({ inputId: "my-unique-id" });
+
+      const input = wrapper.find(".usa-input");
+      const label = wrapper.find("FormLabel");
+
+      expect(input.prop("id")).toBe("my-unique-id");
+      expect(label.prop("inputId")).toBe(input.prop("id"));
+    });
+  });
+
   it("renders a label component", () => {
     const { props, wrapper } = render();
     const label = wrapper.find("FormLabel");
 
     expect(label.prop("children")).toBe(props.label);
+  });
+
+  it("prevents usage of HTML number type", () => {
+    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+    const { wrapper } = render({ type: "number" });
+    const field = wrapper.find(".usa-input");
+
+    expect(field.prop("type")).toBe("text");
+    expect(field.prop("inputMode")).toBe("numeric");
   });
 
   describe("when autoComplete prop is set", () => {
@@ -102,6 +123,15 @@ describe("InputText", () => {
     });
   });
 
+  describe("when example prop is set", () => {
+    it("passes the example to FormLabel", () => {
+      const { props, wrapper } = render({ example: "123" });
+      const label = wrapper.find("FormLabel");
+
+      expect(label.prop("example")).toBe(props.example);
+    });
+  });
+
   describe("when inputMode prop is set", () => {
     it("includes the inputMode on the input field", () => {
       const { wrapper } = render({ inputMode: "decimal" });
@@ -111,12 +141,12 @@ describe("InputText", () => {
     });
   });
 
-  describe("when pattern prop is set", () => {
-    it("includes the pattern on the input field", () => {
-      const { wrapper } = render({ pattern: "[0-9]*" });
+  describe("when valueType prop is set", () => {
+    it("sets the data-value-type attribute on the input field", () => {
+      const { wrapper } = render({ valueType: "integer" });
       const input = wrapper.find("input");
 
-      expect(input.prop("pattern")).toBe("[0-9]*");
+      expect(input.prop("data-value-type")).toBe("integer");
     });
   });
 
@@ -178,6 +208,15 @@ describe("InputText", () => {
     });
   });
 
+  describe("when `labelClassName` is set", () => {
+    it("overrides the FormLabel .text-bold class", () => {
+      const { wrapper } = render({ labelClassName: "text-normal" });
+      const label = wrapper.find("FormLabel");
+
+      expect(label.prop("labelClassName")).toBe("text-normal");
+    });
+  });
+
   describe("when `smallLabel` is true", () => {
     it("sets the FormLabel small prop to true", () => {
       const { wrapper } = render({ smallLabel: true });
@@ -208,6 +247,20 @@ describe("InputText", () => {
       wrapper.find(".usa-input").simulate("blur");
 
       expect(props.onBlur).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("when pii prop is true", () => {
+    it("uses pii handleBlur and handleFocus", () => {
+      const { props, wrapper } = render({
+        pii: true,
+        onBlur: jest.fn(),
+        onFocus: jest.fn(),
+      });
+      expect(wrapper.find("input").props().onBlur).toBeInstanceOf(Function);
+      expect(wrapper.find("input").props().onBlur).not.toEqual(props.onBlur);
+      expect(wrapper.find("input").props().onFocus).toBeInstanceOf(Function);
+      expect(wrapper.find("input").props().onFocus).not.toEqual(props.onFocus);
     });
   });
 });

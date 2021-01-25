@@ -1,4 +1,11 @@
 /// Entry point for all of our app's global styles
+@forward "~@massds/mayflower-assets/scss/00-base/configure" with (
+  $assets-path: "~@massds/mayflower-assets/static",
+  // Controls whether to load and render additional fonts for language support
+  $fonts-langs-support: false,
+  // Controls whether to allow rtl scripts to render rtl
+  $fonts-enable-rtl: false
+);
 
 @use "uswds-theme-general" as *;
 @use "uswds-theme-color" as *;
@@ -7,23 +14,31 @@
 @use "uswds-theme-utilities" as *;
 
 // Mayflower design system global and component styles
-@import "~@massds/mayflower-assets/scss/00-base/elements";
-@import "~@massds/mayflower-assets/scss/03-organisms/footer-slim";
-
+@use "~@massds/mayflower-assets/scss/00-base/elements";
+@use "~@massds/mayflower-assets/scss/03-organisms/footer-slim";
+@use "~@massds/mayflower-assets/scss/03-organisms/header-slim";
 // U.S. Web Design System global and component styles
 // !! Important !! This should come AFTER the Mayflower styles, otherwise
 // spacing styles we rely on are overridden
 @import "~uswds/dist/scss/uswds";
 
+@import "~@fortawesome/fontawesome-svg-core/styles";
+
 // Include default USWDS h1-h6 style (size, weight, spacing) rulesets
 @include usa-headings-styles;
 
 // Custom PFML styles
-@import "./layout";
+@import "./pfml";
+@import "../src/components/Alert";
+@import "../src/components/AmendButton";
+@import "../src/components/AmendmentForm";
 @import "../src/components/ButtonLink";
 @import "../src/components/Details";
 @import "../src/components/FileCard";
 @import "../src/components/FileCardList";
+@import "../src/components/BetaBanner";
 @import "../src/components/InputText";
 @import "../src/components/Spinner";
+@import "../src/components/Table";
 @import "../src/components/Thumbnail";
+@import "../src/components/UnsupportedBrowserBanner";

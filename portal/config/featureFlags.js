@@ -7,14 +7,48 @@ const flagsConfig = {
   // Define a default or all feature flags here.
   // Environments will fallback to these default values.
   defaults: {
-    example: false,
+    // When this flag is enabled, the user can see the "Employment status"
+    // question in the claimant flow (CP-1204)
+    // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
+    claimantShowEmploymentStatus: false,
+
+    // When this flag is enabled, the military leave options are selectable on
+    // the Leave Reason page in the claimant flow (CP-1145)
+    // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
+    claimantShowMilitaryLeaveTypes: false,
+
+    // When this flag is enabled, the "Other leave, income, and benefits" step of
+    // the Claim flow becomes visible, and its validation rules are applied via
+    // a X-FF-Require-Other-Leaves header on API requests.
+    // TODO (CP-1346): Show this step once it's been integrated w/ the API.
+    claimantShowOtherLeaveStep: false,
+
+    // When this flag is enabled, adjudication status is visible on the Status page
+    // TODO (EMPLOYER-656): Show adjudication status once it is retrieved from FINEOS
+    employerShowAdjudicationStatus: false,
+
+    // When this flag is enabled, file upload is visible on the Review page
+    // TODO (EMPLOYER-665): Show file upload once the endpoint is available
+    employerShowFileUpload: false,
+
+    // When this flag is enabled, the "Previous leaves" section on Review page is visible
+    // TODO (EMPLOYER-718): Remove flag
+    employerShowPreviousLeaves: false,
+
+    // When this flag is enabled, the form on Employer Create Account page is visible
+    // TODO (EMPLOYER-718): Remove flag
+    employerShowSelfRegistrationForm: false,
+
+    // When this flag true, you can BYPASS maintenance pages that are currently present.
+    // See docs/portal/maintenance-pages.md for more details.
+    noMaintenance: false,
+
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this
     // flag in a cookie, you can rename this flag to something else (and also
     // update the reference to it in _app.js), but try to keep it prefixed with pfml.
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
-    sendPii: true,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
@@ -23,10 +57,13 @@ const flagsConfig = {
     example: true,
     pfmlTerriyay: true,
   },
+  test: {},
+  stage: {},
+  training: {},
+  performance: {},
+  uat: {},
   prod: {
-    // Temporarily exclude certain PII from being sent in Production user tests
-    // https://lwd.atlassian.net/browse/CP-745
-    sendPii: false,
+    pfmlTerriyay: true,
   },
 };
 

@@ -9,6 +9,4 @@
 /portal/ @EOLWD/pfml-portal
 /docs/portal/ @EOLWD/pfml-portal
 /infra/portal/ @EOLWD/pfml-portal
-/api/openapi.yaml @EOLWD/pfml-portal
-/portal/src/models/Claim.js @EOLWD/pfml-api
-/portal/src/models/User.js @EOLWD/pfml-api
+/e2e/ @EOLWD/pfml-e2e

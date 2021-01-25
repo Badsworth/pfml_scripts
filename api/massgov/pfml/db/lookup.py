@@ -57,9 +57,9 @@ class LookupTable:
     column_names: tuple = ()
     # Map from template model instance (specified in the class declaration) to persistent or
     # detached model instance.
-    template_instance_to_db_instance: Dict[type, type] = {}
+    template_instance_to_db_instance: Dict[type, type]
     # Map from description (2nd column) to persistent or detached model instance.
-    description_to_db_instance: Dict[str, type] = {}
+    description_to_db_instance: Dict[str, type]
 
     @classmethod
     def repr(cls):
@@ -72,13 +72,22 @@ class LookupTable:
         Should be called once during process initialization.
 
         In test cases, called once per temporary database schema."""
+
+        cls.template_instance_to_db_instance = {}
+        cls.description_to_db_instance = {}
+
+        # Optimization: read all rows into db_session's identity map. This makes the get() in
+        # sync_row_to_database() get the row from the identity map instead of making a query.
+        _cache = db_session.query(cls.model).all()  # noqa: F841
+
         row_update_count = 0
         for key, value in vars(cls).items():
             if not isinstance(value, cls.model):
                 continue
             if cls.sync_row_to_database(db_session, key, value):
                 row_update_count += 1
-        logger.info("%s: row update count %i", cls.repr(), row_update_count)
+        if row_update_count:
+            logger.info("%s: row update count %i", cls.repr(), row_update_count)
         return row_update_count
 
     @classmethod

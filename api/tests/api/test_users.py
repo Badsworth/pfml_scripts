@@ -2,6 +2,7 @@ import uuid
 
 import pytest
 
+import tests.api
 from massgov.pfml.db.models.factories import UserFactory
 
 # every test in here requires real resources
@@ -16,6 +17,7 @@ def test_users_get(client, user, auth_token):
 
     assert response.status_code == 200
     assert response_body.get("data")["user_id"] == str(user.user_id)
+    assert response_body.get("data")["roles"] == []
 
 
 def test_users_unauthorized_get(client, user, auth_token):
@@ -25,7 +27,7 @@ def test_users_unauthorized_get(client, user, auth_token):
         "/v1/users/{}".format(user_2.user_id), headers={"Authorization": f"Bearer {auth_token}"}
     )
 
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
 
 
 def test_users_get_404(client, auth_token):
@@ -33,26 +35,37 @@ def test_users_get_404(client, auth_token):
         "/v1/users/{}".format("00000000-0000-0000-0000-000000000000"),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
-    assert response.status_code == 404
+    tests.api.validate_error_response(response, 404)
 
 
-def test_users_get_current(client, user, auth_token):
-    response = client.get("/v1/users/current", headers={"Authorization": f"Bearer {auth_token}"})
-    response_body = response.get_json()
-
-    assert response.status_code == 200
-    assert response_body.get("data")["user_id"] == str(user.user_id)
-
-
-def test_users_get_mask_email(client, user, auth_token):
+def test_users_get_fineos_forbidden(client, fineos_user, fineos_user_token):
+    # Fineos role cannot access this endpoint
     response = client.get(
-        "/v1/users/{}".format(user.user_id), headers={"Authorization": f"Bearer {auth_token}"}
+        "/v1/users/{}".format(fineos_user.user_id),
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+    )
+    assert response.status_code == 403
+
+
+def test_users_get_current(client, employer_user, employer_auth_token):
+    response = client.get(
+        "/v1/users/current", headers={"Authorization": f"Bearer {employer_auth_token}"}
     )
     response_body = response.get_json()
-    email = response_body.get("data")["email_address"]
 
     assert response.status_code == 200
-    assert "*****" in email
+    assert response_body.get("data")["user_id"] == str(employer_user.user_id)
+    assert response_body.get("data")["roles"] == [
+        {"role": {"role_description": "Employer", "role_id": 3}}
+    ]
+
+
+def test_users_get_current_fineos_forbidden(client, fineos_user_token):
+    # Fineos role cannot access this endpoint
+    response = client.get(
+        "/v1/users/current", headers={"Authorization": f"Bearer {fineos_user_token}"}
+    )
+    assert response.status_code == 403
 
 
 def test_users_patch(client, user, auth_token, test_db_session):
@@ -82,7 +95,7 @@ def test_users_unauthorized_patch(client, user, auth_token, test_db_session):
         json=body,
     )
 
-    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403)
 
     test_db_session.refresh(user_2)
     assert user_2.consented_to_data_sharing is False
@@ -121,4 +134,16 @@ def test_users_patch_404(client, auth_token):
         json=body,
         headers={"Authorization": f"Bearer {auth_token}"},
     )
-    assert response.status_code == 404
+
+    tests.api.validate_error_response(response, 404)
+
+
+def test_users_patch_fineos_forbidden(client, fineos_user, fineos_user_token):
+    # Fineos role cannot access this endpoint
+    body = {"consented_to_data_sharing": True}
+    response = client.patch(
+        "v1/users/{}".format(fineos_user.user_id),
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=body,
+    )
+    tests.api.validate_error_response(response, 403)

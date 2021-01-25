@@ -26,6 +26,7 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       "acm:Describe*",
       "acm:Get*",
       "acm:List*",
+      "acm:AddTagsToCertificate",
 
       # Allow teams to configure logging and monitoring.
       "cloudtrail:*",
@@ -45,6 +46,9 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       # Allow teams to read and store data in S3. Also allows the Portal
       # team to deploy the application to S3-hosted buckets.
       "s3:*",
+
+      # Allow teams to manage SNS topics and subscriptions.
+      "sns:*",
 
       # Allow teams to manage security groups.
       "ec2:AuthorizeSecurityGroupEgress",
@@ -86,12 +90,21 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       # - Docker container management on ECR + ECS
       # - RDS data storage
       # - Lambdas for data pipelining.
+      # - Web Application Firewall (WAF)
+      # - Firehose (for WAF logs)
       "apigateway:*",
       "ecr:*",
       "ecs:*",
       "elasticloadbalancing:*",
       "rds:*",
-      "lambda:*"
+      "lambda:*",
+      "application-autoscaling:*",
+      "wafv2:*",
+      "waf-regional:*",
+      "firehose:*",
+
+      # Allow API team to deploy Step Functions, such as the DOR Import.
+      "states:*"
     ]
 
     resources = [

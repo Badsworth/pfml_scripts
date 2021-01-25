@@ -2,116 +2,105 @@
 /**
  * @file Benefits application model and enum values
  */
+import { compact, get, isNil, merge, sum, sumBy, zip, zipObject } from "lodash";
+import BaseClaim from "./BaseClaim";
 import BaseModel from "./BaseModel";
-import { get } from "lodash";
+import { DateTime } from "luxon";
+import LeaveReason from "./LeaveReason";
+import assert from "assert";
+import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
 
-class Claim extends BaseModel {
+class Claim extends BaseClaim {
   get defaults() {
-    return {
-      application_id: null,
-      created_at: null,
-      date_of_birth: null,
-      employee_ssn: null,
-      employer_benefits: [],
-      employer_fein: null,
+    return merge({
+      ...super.defaults,
       employment_status: null,
-      first_name: null,
-      // TODO: this field doesn't exist in the API yet: https://lwd.atlassian.net/browse/CP-567
+      has_continuous_leave_periods: null,
       has_employer_benefits: null,
-      // TODO: this field doesn't exist in the API yet: https://lwd.atlassian.net/browse/CP-567
+      has_intermittent_leave_periods: null,
+      has_mailing_address: null,
       has_other_incomes: null,
-      // TODO: this field doesn't exist in the API yet: https://lwd.atlassian.net/browse/CP-567
       has_previous_leaves: null,
-      last_name: null,
+      has_reduced_schedule_leave_periods: null,
+      has_state_id: null,
+      has_submitted_payment_preference: null,
       leave_details: {
-        continuous_leave_periods: [],
-        employer_notification_date: null,
+        child_birth_date: null,
+        child_placement_date: null,
         employer_notified: null,
-        intermittent_leave_periods: [],
-        reason: null,
-        reduced_schedule_leave_periods: [],
+        has_future_child_date: null,
+        pregnant_or_recent_birth: null,
+        reason_qualifier: null,
       },
-      middle_name: null,
+      // address object. See Address model
+      mailing_address: null, // default value to null
+      mass_id: null,
+      // array of OtherIncome objects. See the OtherIncome model
       other_incomes: [],
-      pregnant_or_recent_birth: null,
-      previous_leaves: [],
-      status: null,
-      /**
-       * Fields within the `temp` object haven't been connected to the API yet, and
-       * should have a ticket in Jira related to eventually moving them out of
-       * this temporary space.
-       */
-      temp: {
-        leave_details: {
-          // TODO (CP-719): Connect intermittent leave fields to the API
-          avg_weekly_work_hours: null,
-          // TODO: create ticket for connecting bonding field to API
-          bonding: {
-            date_of_child: null,
-          },
-          // TODO: connect with continuous schedule periods fields to the API: https://lwd.atlassian.net/browse/CP-720
-          continuous_leave_periods: [],
-          // TODO (CP-724): Connect start and end date to API
-          end_date: null,
-          // TODO: connect with reduced schedule periods fields to the API: https://lwd.atlassian.net/browse/CP-714
-          reduced_schedule_leave_periods: [],
-          // TODO (CP-724): Connect start and end date to API
-          start_date: null,
-        },
-        // TODO: Connect payment preference entry fields to the API: https://lwd.atlassian.net/browse/CP-703
-        payment_preferences: [
-          {
-            // Fields for ACH details
-            account_details: {
-              account_number: null,
-              routing_number: null,
-            },
-            // Fields for where to send the debit card
-            destination_address: {
-              city: null,
-              line_1: null,
-              line_2: null,
-              state: null,
-              zip: null,
-            },
-            payment_method: null, // PaymentPreferenceMethod
-            payment_preference_id: null,
-          },
-        ],
+      other_incomes_awaiting_approval: null,
+      // See PaymentPreference model
+      payment_preference: null,
+      phone: {
+        int_code: null,
+        phone_number: null,
+        phone_type: null, // PhoneType
       },
-    };
+      work_pattern: null,
+    });
   }
 
   /**
-   * Determine if claim is a continuous leave claim
+   * Determine if claim is a Bonding Leave claim
    * @returns {boolean}
    */
-  get isContinuous() {
-    // TODO (CP-720): Remove once continuous leave is integrated with API
-    return (
-      !!get(this, "temp.leave_details.continuous_leave_periods[0]") ||
-      !!get(this, "leave_details.continuous_leave_periods[0]")
-    );
+  get isBondingLeave() {
+    return get(this, "leave_details.reason") === LeaveReason.bonding;
   }
 
   /**
-   * Determine if claim is an intermittent leave claim
+   * Determine if applicable leave period start date(s) are in the future.
    * @returns {boolean}
    */
-  get isIntermittent() {
-    return !!get(this, "leave_details.intermittent_leave_periods[0]");
+  get isLeaveStartDateInFuture() {
+    const startDates = compact([
+      get(this, "leave_details.continuous_leave_periods[0].start_date"),
+      get(this, "leave_details.intermittent_leave_periods[0].start_date"),
+      get(this, "leave_details.reduced_schedule_leave_periods[0].start_date"),
+    ]);
+
+    if (!startDates.length) return false;
+
+    const now = DateTime.local().toISODate();
+    return startDates.every((startDate) => {
+      // Compare the two dates lexicographically. This works since they're both in
+      // ISO-8601 format, eg "2020-10-13"
+      return startDate > now;
+    });
   }
 
   /**
-   * Determine if claim is a reduced schedule leave claim
+   * Check if Claim has been marked as completed yet.
    * @returns {boolean}
    */
-  get isReducedSchedule() {
-    // TODO (CP-714): Remove once reduced schedule is integrated with API
-    return (
-      !!get(this, "temp.leave_details.reduced_schedule_leave_periods[0]") ||
-      !!get(this, "leave_details.reduced_schedule_leave_periods[0]")
-    );
+  get isCompleted() {
+    return this.status === ClaimStatus.completed;
+  }
+
+  /**
+   * Determine if claim is a Medical Leave claim
+   * @returns {boolean}
+   */
+  get isMedicalLeave() {
+    return get(this, "leave_details.reason") === LeaveReason.medical;
+  }
+
+  /**
+   * Check if Claim has been submitted yet. This affects the editability
+   * of some fields, and as a result, the user experience.
+   * @returns {boolean}
+   */
+  get isSubmitted() {
+    return this.status === ClaimStatus.submitted;
   }
 }
 
@@ -139,24 +128,21 @@ export const EmploymentStatus = {
 };
 
 /**
- * Enums for the Application's `leave_details.reason` field
+ * Enums for the Application's `leave_details.reason_qualifier` field
  * @enum {string}
  */
-export const LeaveReason = {
-  // TODO: We need to map some of these to the correct API fields,
-  // once those enum values exist within the API
-  // https://lwd.atlassian.net/browse/CP-515
-  activeDutyFamily: "Care For A Family Member",
-  bonding: "Child Bonding",
-  medical: "Serious Health Condition - Employee",
-  serviceMemberFamily: "Pregnancy/Maternity",
+export const ReasonQualifier = {
+  adoption: "Adoption",
+  fosterCare: "Foster Care",
+  newBorn: "Newborn",
 };
 
 export class ContinuousLeavePeriod extends BaseModel {
   get defaults() {
     return {
+      end_date: null,
       leave_period_id: null,
-      weeks: null,
+      start_date: null,
     };
   }
 }
@@ -168,6 +154,7 @@ export class IntermittentLeavePeriod extends BaseModel {
       duration: null,
       // How long will an absence typically last?
       duration_basis: null,
+      end_date: null,
       // Estimate how many absences {per week|per month|over the next 6 months}
       frequency: null,
       // Implied by input selection of "over the next 6 months"
@@ -176,6 +163,91 @@ export class IntermittentLeavePeriod extends BaseModel {
       // How often might you need to be absent from work?
       frequency_interval_basis: null,
       leave_period_id: null,
+      start_date: null,
+    };
+  }
+}
+
+export class WorkPattern extends BaseModel {
+  constructor(attrs) {
+    super(attrs);
+    const work_pattern_days = get(attrs, "work_pattern_days");
+
+    if (work_pattern_days) {
+      // Defaults only override null or undefined values
+      // We should also use defaults for empty work_pattern_days
+      if (work_pattern_days.length === 0) {
+        merge(this, { work_pattern_days: this.defaults.work_pattern_days });
+      } else {
+        assert(
+          work_pattern_days.length === 7,
+          `${work_pattern_days.length} work_pattern_days length must be 7. Consider using WorkPattern's static createWithWeek.`
+        );
+      }
+    }
+  }
+
+  get defaults() {
+    return {
+      pattern_start_date: null,
+      work_pattern_days: OrderedDaysOfWeek.map(
+        (day_of_week) =>
+          new WorkPatternDay({ day_of_week, minutes: null, week_number: 1 })
+      ),
+      work_pattern_type: null,
+      work_week_starts: "Sunday",
+    };
+  }
+
+  /**
+   * Return total minutes worked for work pattern days. Returns null if no minutes are defined for work pattern days
+   * @returns {(number|null)}
+   */
+  get minutesWorkedPerWeek() {
+    const hasNoMinutes = this.work_pattern_days.every(
+      (day) => day.minutes === null
+    );
+    if (hasNoMinutes) {
+      return null;
+    }
+
+    return sumBy(this.work_pattern_days, "minutes");
+  }
+
+  /**
+   * Create a WorkPattern with a week, splitting provided minutes across 7 work_pattern_days.
+   * @param {number} minutesWorkedPerWeek - average minutes worked per week. Must be an integer. Will split minutes evenly across 7 day week
+   * @param {WorkPattern} [workPattern] - optional, work pattern attributes to apply to new WorkPattern
+   * @returns {WorkPattern}
+   */
+  static createWithWeek(minutesWorkedPerWeek, workPattern = {}) {
+    assert(!isNil(minutesWorkedPerWeek));
+    const minutesOverWeek = spreadMinutesOverWeek(minutesWorkedPerWeek);
+
+    const newWeek = zip(OrderedDaysOfWeek, minutesOverWeek).map(
+      ([day_of_week, minutes]) =>
+        new WorkPatternDay({
+          day_of_week,
+          minutes,
+          week_number: 1,
+        })
+    );
+
+    return new WorkPattern({
+      ...workPattern,
+      work_pattern_days: newWeek,
+    });
+  }
+}
+
+export class WorkPatternDay extends BaseModel {
+  get defaults() {
+    return {
+      day_of_week: null,
+      // API represents hours in minutes
+      minutes: null,
+      // an integer between 1 and 4
+      week_number: null,
     };
   }
 }
@@ -185,7 +257,9 @@ export class IntermittentLeavePeriod extends BaseModel {
  * @enum {string}
  */
 export const FrequencyIntervalBasis = {
-  days: "Days",
+  // Days is also a valid enum in the API, however the Portal
+  // doesn't offer this as an option to the user
+  // days: "Days",
   months: "Months",
   weeks: "Weeks",
 };
@@ -197,27 +271,89 @@ export const FrequencyIntervalBasis = {
 export const DurationBasis = {
   days: "Days",
   hours: "Hours",
-  minutes: "Minutes",
+  // Minutes is also a valid enum in the API, however the Portal
+  // doesn't offer this as an option to the user
+  // minutes: "Minutes",
 };
 
 export class ReducedScheduleLeavePeriod extends BaseModel {
   get defaults() {
     return {
-      hours_per_week: null,
+      end_date: null,
+      friday_off_minutes: null,
       leave_period_id: null,
-      weeks: null,
+      monday_off_minutes: null,
+      saturday_off_minutes: null,
+      start_date: null,
+      sunday_off_minutes: null,
+      thursday_off_minutes: null,
+      tuesday_off_minutes: null,
+      wednesday_off_minutes: null,
     };
+  }
+
+  /**
+   * @returns {number?} Sum of all *_off_minutes fields.
+   */
+  get totalMinutesOff() {
+    const fieldsWithMinutes = compact([
+      this.friday_off_minutes,
+      this.monday_off_minutes,
+      this.saturday_off_minutes,
+      this.sunday_off_minutes,
+      this.thursday_off_minutes,
+      this.tuesday_off_minutes,
+      this.wednesday_off_minutes,
+    ]);
+
+    if (fieldsWithMinutes.length) {
+      return sum(fieldsWithMinutes);
+    }
+
+    return null;
   }
 }
 
 /**
- * Enums for the Application's `payment_preferences[].payment_method` field
+ * Enums for the Application's `phone.phone_type` field
  * @enum {string}
  */
-export const PaymentPreferenceMethod = {
-  ach: "ACH",
-  // TODO: Map to a valid enum for debit https://lwd.atlassian.net/browse/CP-703
-  debit: "Debit",
+export const PhoneType = {
+  cell: "Cell",
+  phone: "Phone",
 };
+
+/**
+ * Enums for the Application's `work_pattern.work_pattern_type` field
+ * @enum {string}
+ */
+export const WorkPatternType = {
+  fixed: "Fixed",
+  rotating: "Rotating",
+  variable: "Variable",
+};
+
+/**
+ * Ordered days of the week
+ */
+export const OrderedDaysOfWeek = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+/**
+ * Enums for the Application's `work_pattern.work_week_starts` and `work_pattern.work_pattern_days[].day_of_week` fields
+ * Produces object: { sunday: "Sunday", monday: "Monday", ... }
+ * @enum {string}
+ */
+export const DayOfWeek = zipObject(
+  OrderedDaysOfWeek.map((day) => day.toLowerCase()),
+  OrderedDaysOfWeek
+);
 
 export default Claim;

@@ -12,19 +12,6 @@ import { shallow } from "enzyme";
 describe("Thumbnail", () => {
   const file = new File(["foo"], "foo.png", { type: "image/png" });
 
-  beforeAll(() => {
-    // URL.createObjectURL() hasn't been implemented in the jest DOM yet but will be
-    // eventually. When it is (and this error triggers) we should remove this mock.
-    // Read more: https://github.com/jsdom/jsdom/issues/1721
-    if (URL.createObjectURL) {
-      throw new Error(
-        "jest DOM has added URL.createObjectURL() -- we can remove this hack now"
-      );
-    }
-    URL.createObjectURL = () => "image.png";
-    URL.revokeObjectURL = jest.fn();
-  });
-
   describe("when initially loading the preview", () => {
     it("renders nothing", () => {
       const wrapper = shallow(<Thumbnail file={file} />);
@@ -34,7 +21,7 @@ describe("Thumbnail", () => {
   });
 
   describe("when selected file is a PDF", () => {
-    it("renders placeholder thumbnail", async () => {
+    it("renders placeholder thumbnail", () => {
       useEffect.mockImplementationOnce((didUpdate) => didUpdate());
       const pdfFile = new File(["foo"], "bar.pdf", { type: "application/pdf" });
 
@@ -45,7 +32,7 @@ describe("Thumbnail", () => {
   });
 
   describe("when selected file is an image", () => {
-    it("renders the img using a created URL", async () => {
+    it("renders the img using a created URL", () => {
       useEffect.mockImplementationOnce((f) => f());
       const createUrlSpy = jest.spyOn(URL, "createObjectURL");
 
@@ -59,7 +46,7 @@ describe("Thumbnail", () => {
       `);
     });
 
-    it("cleans up the created URL", async () => {
+    it("cleans up the created URL", () => {
       useEffect.mockImplementationOnce((f) => {
         const unmount = f();
         unmount();

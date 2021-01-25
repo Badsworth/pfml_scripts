@@ -4,7 +4,11 @@
  */
 module.exports = {
   clearMocks: true,
-  coveragePathIgnorePatterns: ["/node_modules/", "<rootDir>/tests/lib/"],
+  coveragePathIgnorePatterns: [
+    "/node_modules/",
+    "<rootDir>/tests/lib/",
+    "<rootDir>/tests/test-utils.js",
+  ],
   coverageReporters: ["text"],
   moduleFileExtensions: ["js", "mjs", "json", "jsx", "ts", "tsx", "node"],
   moduleNameMapper: {
@@ -18,8 +22,6 @@ module.exports = {
     "<rootDir>/node_modules/",
     "<rootDir>/config",
     "<rootDir>/tests/lib/",
-    // Exclude E2E tests since those are part of a separate Jest config (jest-e2e.config.js)
-    "<rootDir>/tests/end-to-end",
     "<rootDir>/tests/test-utils.js",
   ],
   testRegex: "(/tests/.*|(\\.|/)(test|spec))\\.[jt]sx?$",

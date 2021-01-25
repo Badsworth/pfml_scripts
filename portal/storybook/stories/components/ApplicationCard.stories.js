@@ -1,62 +1,149 @@
-import Claim, { ClaimStatus, LeaveReason } from "src/models/Claim";
-import ApplicationCard from "src/components/ApplicationCard";
+import Document, { DocumentType } from "src/models/Document";
+import AppErrorInfo from "src/models/AppErrorInfo";
+import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import { ApplicationCard } from "src/components/ApplicationCard";
+import Claim from "src/models/Claim";
+import { MockClaimBuilder } from "tests/test-utils";
 import React from "react";
 
 export default {
   title: "Components/ApplicationCard",
   component: ApplicationCard,
   args: {
+    number: 1,
+  },
+  argTypes: {
     claim: {
-      application_id: "mock-claim-id",
-      employer_fein: "00-0000000",
-      leave_details: {
-        continuous_leave_periods: [
-          {
-            end_date: "2021-12-30",
-            start_date: "2021-09-21",
-          },
+      defaultValue: "Submitted",
+      control: {
+        type: "radio",
+        options: [
+          "Empty",
+          "Hybrid leave",
+          "Intermittent leave",
+          "Submitted",
+          "Submitted + Denial notice",
+          "Completed",
+          "Future Newborn + No cert",
+          "Future Adoption + No cert",
+          "Approved",
+          "Denied",
         ],
-        employer_notified: true,
-        reason: LeaveReason.medical,
-        status: ClaimStatus.started,
       },
     },
-    number: 1,
+    errors: {
+      defaultValue: "None",
+      control: { type: "radio", options: ["DocumentsLoadError"] },
+    },
   },
 };
 
-export const InProgressClaim = ({ claim, ...args }) => {
-  return <ApplicationCard claim={new Claim(claim)} {...args} />;
-};
+export const Story = ({ claim, documents, ...args }) => {
+  let attachedDocuments = [];
+  let claimAttrs;
+  const errors = [];
 
-export const EmptyClaim = () => (
-  <ApplicationCard
-    claim={
-      new Claim({
-        application_id: "mock-claim-id",
-        status: ClaimStatus.started,
+  if (claim === "Empty") {
+    claimAttrs = new MockClaimBuilder().create();
+  } else if (claim === "Hybrid leave") {
+    claimAttrs = new MockClaimBuilder()
+      .employed()
+      .continuous()
+      .reducedSchedule()
+      .create();
+  } else if (claim === "Intermittent leave") {
+    claimAttrs = new MockClaimBuilder().employed().intermittent().create();
+  } else if (claim === "Submitted") {
+    claimAttrs = new MockClaimBuilder().submitted().create();
+  } else if (claim === "Submitted + Denial notice") {
+    claimAttrs = new MockClaimBuilder().submitted().create();
+    attachedDocuments = [
+      new Document({
+        created_at: "2021-01-15",
+        document_type: DocumentType.denialNotice,
+        fineos_document_id: "a",
+      }),
+    ];
+  } else if (claim === "Completed") {
+    claimAttrs = new MockClaimBuilder().completed().create();
+  } else if (claim === "Future Newborn + No cert") {
+    claimAttrs = new MockClaimBuilder()
+      .completed()
+      .bondingBirthLeaveReason()
+      .hasFutureChild()
+      .create();
+    attachedDocuments = [
+      new Document({
+        created_at: "2021-01-15",
+        document_type: DocumentType.identityVerification,
+        fineos_document_id: "a",
+      }),
+    ];
+  } else if (claim === "Future Adoption + No cert") {
+    claimAttrs = new MockClaimBuilder()
+      .completed()
+      .bondingAdoptionLeaveReason()
+      .hasFutureChild()
+      .create();
+    attachedDocuments = [
+      new Document({
+        created_at: "2021-01-15",
+        document_type: DocumentType.identityVerification,
+        fineos_document_id: "a",
+      }),
+    ];
+  } else if (claim === "Approved") {
+    claimAttrs = new MockClaimBuilder().completed().create();
+    attachedDocuments = [
+      new Document({
+        created_at: "2021-01-15",
+        document_type: DocumentType.requestForInfoNotice,
+        fineos_document_id: "a",
+      }),
+      new Document({
+        created_at: "2021-01-30",
+        document_type: DocumentType.approvalNotice,
+        fineos_document_id: "b",
+      }),
+    ];
+  } else if (claim === "Denied") {
+    claimAttrs = new MockClaimBuilder().completed().create();
+    attachedDocuments = [
+      new Document({
+        created_at: "2021-01-15",
+        document_type: DocumentType.requestForInfoNotice,
+        fineos_document_id: "a",
+      }),
+      new Document({
+        created_at: "2021-01-30",
+        document_type: DocumentType.denialNotice,
+        fineos_document_id: "b",
+      }),
+    ];
+  }
+
+  if (args.errors === "DocumentsLoadError") {
+    // There wouldn't be documents in this case
+    attachedDocuments = [];
+
+    errors.push(
+      new AppErrorInfo({
+        meta: { application_id: claimAttrs.application_id },
+        name: "DocumentsLoadError",
       })
-    }
-    number={1}
-  />
-);
+    );
+  }
 
-export const CompletedClaim = () => {
-  const claim = new Claim({
-    application_id: "mock-claim-id",
-    employer_fein: "00-0000000",
-    leave_details: {
-      continuous_leave_periods: [
-        {
-          end_date: "2021-12-30",
-          start_date: "2021-09-21",
-        },
-      ],
-      employer_notified: true,
-      reason: LeaveReason.medical,
-      status: ClaimStatus.completed,
-    },
-  });
+  const appLogic = {
+    appErrors: new AppErrorInfoCollection(errors),
+  };
 
-  return <ApplicationCard claim={claim} number={1} />;
+  return (
+    <ApplicationCard
+      appLogic={appLogic}
+      claim={new Claim(claimAttrs)}
+      {...args}
+      documents={attachedDocuments}
+    />
+  );
 };

@@ -2,7 +2,7 @@
 
 exports[`RepeatableFieldsetCard renders with the given content 1`] = `
 <div
-  className="margin-bottom-3 measure-6 padding-3 border-2px border-base-lighter custom-class-name"
+  className="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter custom-class-name"
   key="RepeatableFieldsetCard1"
 >
   <fieldset

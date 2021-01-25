@@ -25,27 +25,40 @@ describe("withClaims", () => {
   });
 
   it("Shows spinner when claims are not loaded", () => {
-    appLogic.claims.claims = null;
+    appLogic.claims.claims = new ClaimCollection();
     act(() => {
       wrapper = shallow(<WrappedComponent appLogic={appLogic} />);
     });
     expect(wrapper.dive()).toMatchInlineSnapshot(`
-      <Spinner
-        aria-valuetext="Loading claims"
-      />
+      <div
+        className="margin-top-8 text-center"
+      >
+        <Spinner
+          aria-valuetext="Loading claims"
+        />
+      </div>
     `);
   });
 
   it("loads claims", () => {
+    appLogic.claims.claims = new ClaimCollection();
     render();
-    expect(appLogic.claims.load).toHaveBeenCalledTimes(1);
+    expect(appLogic.claims.loadAll).toHaveBeenCalledTimes(1);
   });
 
   it("does not load claims if user has not yet loaded", () => {
     appLogic.user = appLogic.users.user = null;
     render();
     wrapper.update();
-    expect(appLogic.claims.load).not.toHaveBeenCalled();
+    expect(appLogic.claims.loadAll).not.toHaveBeenCalled();
+  });
+
+  it("does not load claims if claims have already been loaded", () => {
+    appLogic.claims.claims = new ClaimCollection([]);
+    appLogic.claims.hasLoadedAll = true;
+
+    render();
+    expect(appLogic.claims.loadAll).not.toHaveBeenCalled();
   });
 
   describe("when claims are loaded", () => {
@@ -55,6 +68,7 @@ describe("withClaims", () => {
       const claim = new Claim({ application_id: "mock-application-id" });
       const claims = new ClaimCollection([claim]);
       appLogic.claims.claims = claims;
+      appLogic.claims.hasLoadedAll = true;
       render();
     });
 

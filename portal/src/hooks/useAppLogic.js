@@ -2,6 +2,9 @@
 import useAppErrorsLogic from "./useAppErrorsLogic";
 import useAuthLogic from "./useAuthLogic";
 import useClaimsLogic from "./useClaimsLogic";
+import useDocumentsLogic from "./useDocumentsLogic";
+import useEmployersLogic from "./useEmployersLogic";
+import useOtherLeavesLogic from "./useOtherLeavesLogic";
 import usePortalFlow from "./usePortalFlow";
 import useUsersLogic from "./useUsersLogic";
 
@@ -11,7 +14,7 @@ const useAppLogic = () => {
 
   // State representing currently visible errors and warnings
   const { appErrors, ...appErrorsLogic } = useAppErrorsLogic();
-  const auth = useAuthLogic({ appErrorsLogic });
+  const auth = useAuthLogic({ appErrorsLogic, portalFlow });
 
   // State representing the Portal's user object.
   // Initialize to empty user but will be populated upon the first API call
@@ -24,20 +27,36 @@ const useAppLogic = () => {
 
   // user will be eventually set through a `login` method
   // const [user, setUser] = useState();
-  // TODO: remove user from configs and write login method
+  // TODO (CP-885): remove user from configs and write login method
   const claims = useClaimsLogic({
     appErrorsLogic,
     portalFlow,
     user: users.user,
   });
 
+  const documents = useDocumentsLogic({
+    appErrorsLogic,
+    portalFlow,
+  });
+
+  const employers = useEmployersLogic({
+    appErrorsLogic,
+    portalFlow,
+  });
+
+  const otherLeaves = useOtherLeavesLogic({ appErrorsLogic });
+
   return {
     appErrors,
     auth,
+    catchError: appErrorsLogic.catchError,
     claims,
-    // TODO: remove once all API calls are behind appLogic
+    // TODO (CP-886): remove once all API calls are behind appLogic
     clearErrors: appErrorsLogic.clearErrors,
-    goToNextPage: portalFlow.goToNextPage,
+    documents,
+    employers,
+    otherLeaves,
+    portalFlow,
     setAppErrors: appErrorsLogic.setAppErrors,
     users,
   };

@@ -47,7 +47,7 @@ jobs:
           node-version: ${{ env.nodeVersion }}
 
       - name: install
-        run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --prefix portal
+        run: npm ci --prefix portal
 
       - name: test
         run: npm run test:ci --prefix portal
@@ -58,21 +58,3 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: "./portal/coverage/lcov.info"
           base-path: "./portal"
-
-  test-e2e:
-    name: End-to-end tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Use Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ env.nodeVersion }}
-
-      - name: install
-        run: npm ci --prefix portal
-
-      - name: Headless browser tests
-        run: npm run test:e2e:ci --prefix portal

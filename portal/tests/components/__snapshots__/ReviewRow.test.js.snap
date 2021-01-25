@@ -2,7 +2,7 @@
 
 exports[`ReviewRow when editHref is defined renders with an edit link 1`] = `
 <div
-  className="border-bottom-2px border-base-lighter margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+  className="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
 >
   <div
     className="margin-right-2"

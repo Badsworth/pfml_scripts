@@ -1,8 +1,10 @@
 locals {
-  # you cannot lookup certs by a SAN, so we lookup based on the first domain
-  # as specified in the infra/pfml-aws/acm.tf file.
-  cert_domain = var.environment_name == "prod" ? "paidleave.mass.gov" : "paidleave-test.mass.gov"
-  domain      = var.environment_name == "prod" ? "paidleave.mass.gov" : "paidleave-${var.environment_name}.mass.gov"
+  domains = {
+    "${var.environment_name}" = "paidleave-${var.environment_name}.mass.gov"
+    "prod"                    = "paidleave.mass.gov"
+  }
+  cert_domain = module.constants.cert_domains[var.environment_name]
+  domain      = lookup(local.domains, var.environment_name)
 }
 
 // NOTE: These must be requested through the AWS Console instead of terraform in order

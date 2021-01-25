@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import ClaimCollection from "../models/ClaimCollection";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
@@ -22,17 +23,26 @@ const withClaims = (Component) => {
     // Since we are within a withUser higher order component, user should always be set
     assert(users.user);
 
-    useEffect(() => {
-      appLogic.claims.load();
-    });
+    const claims = appLogic.claims.claims;
+    const shouldLoad = !appLogic.claims.hasLoadedAll;
 
-    if (!appLogic.claims.claims) {
+    useEffect(() => {
+      if (shouldLoad) {
+        appLogic.claims.loadAll();
+      }
+
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [shouldLoad]);
+
+    if (shouldLoad) {
       return (
-        <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
+        <div className="margin-top-8 text-center">
+          <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
+        </div>
       );
-    } else {
-      return <Component {...props} claims={appLogic.claims.claims} />;
     }
+
+    return <Component {...props} claims={claims} />;
   };
 
   ComponentWithClaims.propTypes = {
@@ -41,8 +51,11 @@ const withClaims = (Component) => {
         user: PropTypes.instanceOf(User).isRequired,
       }).isRequired,
       claims: PropTypes.shape({
-        load: PropTypes.func.isRequired,
+        claims: PropTypes.instanceOf(ClaimCollection),
+        hasLoadedAll: PropTypes.bool.isRequired,
+        loadAll: PropTypes.func.isRequired,
       }).isRequired,
+      appErrors: PropTypes.object.isRequired,
     }).isRequired,
   };
 

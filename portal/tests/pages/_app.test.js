@@ -1,12 +1,12 @@
-import React, { useEffect } from "react";
 import { mount, shallow } from "enzyme";
 import { App } from "../../src/pages/_app";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import React from "react";
 import { act } from "react-dom/test-utils";
 import { mockRouterEvents } from "next/router";
 import tracker from "../../src/services/tracker";
 
+// see https://github.com/vercel/next.js/issues/5416
+jest.mock("next/dynamic", () => () => (_props) => null);
 jest.mock("../../src/services/tracker");
 jest.mock("../../src/api/UsersApi");
 jest.mock("lodash/uniqueId", () => {
@@ -14,27 +14,26 @@ jest.mock("lodash/uniqueId", () => {
 });
 
 function render(customProps = {}, mountComponent = false) {
-  const TestComponent = () => <div>Hello world</div>;
-
   const props = Object.assign(
     {
-      Component: TestComponent, // allows us to do .find("TestComponent")
-      pageProps: {
-        title: "Test page",
-      },
-      initialAuthState: "signedIn",
-      initialAuthData: {
-        attributes: { email: "mocked-header-user@example.com" },
-      },
+      Component: () => <div>Hello world</div>,
     },
     customProps
   );
 
   const component = <App {...props} />;
+  const container = document.createElement("div");
+  container.id = "enzymeContainer";
+  document.body.appendChild(container);
 
   return {
     props,
-    wrapper: mountComponent ? mount(component) : shallow(component),
+    wrapper: mountComponent
+      ? mount(component, {
+          // attachTo the body so document.activeElement works (https://github.com/enzymejs/enzyme/issues/2337#issuecomment-608984530)
+          attachTo: container,
+        })
+      : shallow(component),
   };
 }
 
@@ -49,25 +48,9 @@ describe("App", () => {
     };
   });
 
-  describe("when the 'pfmlTerriyay' feature flag is disabled", () => {
-    it("doesn't render the site", () => {
-      process.env.featureFlags = {
-        pfmlTerriyay: false,
-      };
-
-      const { wrapper } = render();
-
-      expect(wrapper).toMatchInlineSnapshot(`
-        <code>
-          Hello world (◕‿◕)
-        </code>
-      `);
-    });
-  });
-
   describe("Router events", () => {
-    it("displays the spinner when a route change starts", async () => {
-      expect.assertions(2);
+    it("sets isLoading to true when a route change starts", async () => {
+      expect.assertions();
 
       // We need to mount the component so that useEffect is called
       const mountComponent = true;
@@ -85,11 +68,10 @@ describe("App", () => {
 
       wrapper.update();
 
-      expect(wrapper.find("Spinner").exists()).toBe(true);
-      expect(wrapper.find("TestComponent").exists()).toBe(false);
+      expect(wrapper.find("PageWrapper").prop("isLoading")).toBe(true);
     });
 
-    it("hides spinner and sets New Relic route name when a route change completes", async () => {
+    it("sets isLoading to false and sets New Relic route name when a route change completes", async () => {
       expect.assertions();
 
       // We need to mount the component so that useEffect is called
@@ -116,14 +98,16 @@ describe("App", () => {
         wrapper.update();
       });
 
-      expect(wrapper.find("Spinner").exists()).toBe(false);
-      expect(wrapper.find("TestComponent").exists()).toBe(true);
-      expect(tracker.setCurrentRouteName).toHaveBeenCalledTimes(1);
-      expect(tracker.setCurrentRouteName).toHaveBeenCalledWith("/claims");
+      expect(wrapper.find("PageWrapper").prop("isLoading")).toBe(false);
+      expect(tracker.startPageView).toHaveBeenCalledTimes(1);
+      expect(tracker.startPageView).toHaveBeenCalledWith(
+        "/claims",
+        expect.objectContaining({ query_claim_id: "123" })
+      );
     });
 
-    it("hides spinner when a route change throws an error", async () => {
-      expect.assertions(2);
+    it("sets isLoading to false when a route change throws an error", async () => {
+      expect.assertions();
 
       // We need to mount the component so that useEffect is called
       const mountComponent = true;
@@ -147,9 +131,7 @@ describe("App", () => {
         wrapper.update();
       });
 
-      // Spinner hidden when route change ended
-      expect(wrapper.find("Spinner").exists()).toBe(false);
-      expect(wrapper.find("TestComponent").exists()).toBe(true);
+      expect(wrapper.find("PageWrapper").prop("isLoading")).toBe(false);
     });
 
     it("scrolls to the top of the window after a route change", async () => {
@@ -180,31 +162,39 @@ describe("App", () => {
 
       expect(scrollToSpy).toHaveBeenCalled();
     });
-  });
 
-  describe("displaying errors", () => {
-    it("displays errors that child pages set", async () => {
-      const ChildPage = (props) => {
-        const {
-          appLogic: { setAppErrors }, // eslint-disable-line react/prop-types
-        } = props;
-        useEffect(() => {
-          const message = "A test error happened";
-          setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo({ message })])
-          );
-        }, [setAppErrors]);
-        return <React.Fragment />;
-      };
+    it("moves focus to .js-title after a route change completes", () => {
+      expect.assertions(1);
 
-      let wrapper;
+      // Mount the component so that useEffect is called.
+      const mountComponent = true;
+      // Create page content that includes the h1 with expected markup
+      const TestComponent = () => (
+        <div>
+          <h1 tabIndex="-1" className="js-title">
+            Page title
+          </h1>
+        </div>
+      );
+      const { wrapper } = render(
+        {
+          Component: TestComponent,
+        },
+        mountComponent
+      );
+
+      const routeChangeComplete = mockRouterEvents.find(
+        (evt) => evt.name === "routeChangeComplete"
+      );
 
       act(() => {
-        wrapper = render({ Component: ChildPage }, true).wrapper;
+        // Trigger routeChangeComplete
+        routeChangeComplete.callback();
       });
-      wrapper.update();
 
-      expect(wrapper.find("ErrorsSummary").prop("errors")).toMatchSnapshot();
+      const h1 = wrapper.find("h1").last().getDOMNode();
+
+      expect(document.activeElement).toBe(h1);
     });
   });
 });

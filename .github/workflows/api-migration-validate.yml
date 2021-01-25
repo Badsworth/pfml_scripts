@@ -14,26 +14,83 @@ on:
         description: 'The head ref to diff against, typically HEAD of a feature branch'
 
 jobs:
-  # Check for no conflicting Alembic migrations
-  check-migration-heads:
+  conflict-check:
     runs-on: ubuntu-latest
 
     env:
+      github_api: "https://api.github.com/repos/EOLWD/pfml"
+      pfml_devops_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
       baseref: ${{ github.base_ref || github.event.inputs.baseref }}
       headref: ${{ github.head_ref || github.event.inputs.headref }}
+      ctx: "Pre-Merge Migration Check"
+      pending_message: "Checking branch for migration conflicts..."
+      success_message: "No migration conflicts detected."
+      failure_message: "Your branch has migration conflicts."
+      oob_failure_message: "Base branch updates caused a migration conflict."
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: get migration diff
+      # GitHub actions don't provide a self-link at execution time, but we can make an API call to retrieve one.
+      # TODO (API-805): Repair or remove this code.
+#      - name: generate self link
+#        run: |
+#          self_link=$(curl -Ls "${{ env.github_api }}/commits/${{ github.sha }}/check-runs" \
+#          -H 'Authorization: Token ${{ env.pfml_devops_token }}' \
+#          -H 'Accept: application/vnd.github.v3+json' | \
+#          jq -c '.check_runs[] | select( .name == "conflict-check") | .details_url')
+#          echo "self_link=$self_link" >> $GITHUB_ENV
+
+      # Most of the GitHub checks API is only usable by GitHub Apps, so we cannot alter check statuses directly.
+      # As a workaround, we create and maintain a pseudo-check using the statuses API.
+      - name: create or update check state
+        run: |
+          pending_status='{"state": "pending", "description": "${{ env.pending_message }}", "context": "${{ env.ctx }}"}'
+
+          curl -Ls -X POST "${{ env.github_api }}/statuses/${{ github.sha }}" \
+          -H 'Authorization: Token ${{ env.pfml_devops_token }}' \
+          -H 'Accept: application/vnd.github.v3+json' \
+          --data "$pending_status"
+
+      # Run the actual conflict check: diff the base and head branches for inconsistent migration files.
+      # 'success' and 'failure' are specific status strings expected by the checks API, as is 'pending' above.
+      - name: check for migration conflicts
         run: |
           git fetch origin $baseref $headref
           git diff --diff-filter=D --name-only origin/$baseref origin/$headref -- ./api/massgov/pfml/db/migrations/versions > migrations.log
           if [ -s migrations.log ]; then
+            echo "CHECK_STATUS=failure" >> $GITHUB_ENV
+          else
+            echo "CHECK_STATUS=success" >> $GITHUB_ENV
+          fi
+
+      - name: set check status message
+        run: |
+          if [[ $CHECK_STATUS = "failure" ]]; then
+            if [ ${{ github.event_name }} == 'workflow_dispatch' ]; then
+              echo "STATUS_MESSAGE=${{ env.oob_failure_message }}" >> $GITHUB_ENV
+            else
+              echo "STATUS_MESSAGE=${{ env.failure_message }}" >> $GITHUB_ENV
+            fi
+          else
+            echo "STATUS_MESSAGE=${{ env.success_message }}" >> $GITHUB_ENV
+          fi
+
+      # Update both the pseudo-check through the checks API, and the result of *this* check through the exit code.
+      - name: finish and synchronize check state
+        run: |
+          check_data='{"state": "${{ env.CHECK_STATUS }}", "description": "${{ env.STATUS_MESSAGE }}", "context": "${{ env.ctx }}"}'
+
+          curl -Ls -X POST "${{ env.github_api }}/statuses/${{ github.sha }}" \
+          -H 'Authorization: Token ${{ env.pfml_devops_token }}' \
+          -H 'Accept: application/vnd.github.v3+json' \
+          --data "$check_data"
+
+          if [[ $CHECK_STATUS = "failure" ]]; then
             echo "The following migrations are missing, please update your branch with master:"
             cat migrations.log
             exit 1
           else
-            echo "No migration conflicts"
+            echo "${{ env.success_message }}"
             exit 0
           fi

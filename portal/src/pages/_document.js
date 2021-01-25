@@ -1,5 +1,6 @@
 import Document, { Head, Html, Main, NextScript } from "next/document";
 import React from "react";
+import UnsupportedBrowserBanner from "../components/UnsupportedBrowserBanner";
 
 /**
  * Overrides the default Next.js Document so that we can customize the
@@ -15,7 +16,7 @@ import React from "react";
 class MyDocument extends Document {
   render() {
     return (
-      <Html>
+      <Html lang="en-US">
         <Head>
           {/* New Relic script must be towards the top of the <head> and before our other scripts */}
           <script src="/new-relic.js" />
@@ -32,11 +33,12 @@ class MyDocument extends Document {
           />
 
           <link href="/favicon.png" rel="shortcut icon" type="image/png" />
-
-          {/* Block search engine indexing during development: https://lwd.atlassian.net/browse/CP-458 */}
-          <meta name="robots" content="noindex" />
+          {process.env.BUILD_ENV !== "prod" && (
+            <meta name="robots" content="noindex" />
+          )}
         </Head>
         <body>
+          <UnsupportedBrowserBanner />
           <Main />
           <NextScript />
         </body>

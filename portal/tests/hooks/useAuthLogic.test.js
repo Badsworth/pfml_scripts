@@ -1,37 +1,47 @@
 import { Auth } from "@aws-amplify/auth";
 import { act } from "react-dom/test-utils";
-import { mockRouter } from "next/router";
 import routes from "../../src/routes";
 import { testHook } from "../test-utils";
+import tracker from "../../src/services/tracker";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useAuthLogic from "../../src/hooks/useAuthLogic";
+import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("@aws-amplify/auth");
+jest.mock("../../src/services/tracker");
 
 describe("useAuthLogic", () => {
   let appErrors,
     authData,
     createAccount,
+    createEmployerAccount,
+    ein,
     forgotPassword,
     isLoggedIn,
     login,
     logout,
     password,
+    portalFlow,
     requireLogin,
+    resendForgotPasswordCode,
     resendVerifyAccountCode,
+    resetEmployerPasswordAndCreateEmployerApiAccount,
     resetPassword,
     setAppErrors,
     username,
     verificationCode,
-    verifyAccount;
+    verifyAccount,
+    verifyEmployerAccount;
 
   beforeEach(() => {
     jest.resetAllMocks();
     username = "test@email.com";
     password = "TestP@ssw0rd!";
+    ein = "12-3456789";
     verificationCode = "123456";
     testHook(() => {
       const appErrorsLogic = useAppErrorsLogic();
+      portalFlow = usePortalFlow();
       ({ appErrors, setAppErrors } = appErrorsLogic);
       ({
         authData,
@@ -40,12 +50,17 @@ describe("useAuthLogic", () => {
         logout,
         isLoggedIn,
         createAccount,
+        createEmployerAccount,
         requireLogin,
         resendVerifyAccountCode,
+        resendForgotPasswordCode,
+        resetEmployerPasswordAndCreateEmployerApiAccount,
         resetPassword,
         verifyAccount,
+        verifyEmployerAccount,
       } = useAuthLogic({
         appErrorsLogic,
+        portalFlow,
       }));
     });
   });
@@ -58,11 +73,34 @@ describe("useAuthLogic", () => {
       expect(Auth.forgotPassword).toHaveBeenCalledWith(username);
     });
 
-    it("trims whitespace from username", async () => {
+    it("routes to next page when successful", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+
       await act(async () => {
-        await forgotPassword(`  ${username} `);
+        await forgotPassword(username);
       });
-      expect(Auth.forgotPassword).toHaveBeenCalledWith(username);
+
+      expect(spy).toHaveBeenCalledWith("SEND_CODE");
+    });
+
+    it("does not change page when Cognito request fails", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+
+      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "UserNotFoundException",
+          message: "An account with the given email does not exist.",
+          name: "UserNotFoundException",
+        };
+      });
+
+      await act(async () => {
+        await forgotPassword(username);
+      });
+
+      expect(spy).not.toHaveBeenCalled();
     });
 
     it("stores username in authData for Reset Password page", async () => {
@@ -72,16 +110,39 @@ describe("useAuthLogic", () => {
 
       expect(authData.resetPasswordUsername).toBe(username);
     });
+  });
 
-    it("sets app errors when username is empty", () => {
+  describe("resendForgotPasswordCode", () => {
+    it("calls forgotPassword with whitespace trimmed from username", async () => {
+      await act(async () => {
+        await resendForgotPasswordCode(`  ${username} `);
+      });
+      expect(Auth.forgotPassword).toHaveBeenCalledWith(username);
+    });
+
+    it("tracks request", async () => {
+      await act(async () => {
+        await resendForgotPasswordCode(username);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+    });
+
+    it("requires all fields to not be empty and tracks the errors", () => {
       username = "";
       act(() => {
-        forgotPassword(username);
+        resendForgotPasswordCode(username);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Enter your email address"`
       );
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+
       expect(Auth.forgotPassword).not.toHaveBeenCalled();
     });
 
@@ -96,7 +157,7 @@ describe("useAuthLogic", () => {
         };
       });
       act(() => {
-        forgotPassword(username);
+        resendForgotPasswordCode(username);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
@@ -116,11 +177,49 @@ describe("useAuthLogic", () => {
         };
       });
       act(() => {
-        forgotPassword(username);
+        resendForgotPasswordCode(username);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Please enter all required information"`
+        `"Enter all required information"`
+      );
+    });
+
+    it("sets app errors when Auth.forgotPassword throws NotAuthorizedException due to security reasons", () => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "NotAuthorizedException",
+          message: "Request not allowed due to security reasons.",
+          name: "NotAuthorizedException",
+        };
+      });
+      act(() => {
+        resendForgotPasswordCode(username);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at (833) 344‑7365."`
+      );
+    });
+
+    it("sets app errors when Auth.forgotPassword throws LimitExceededException due to too many forget password requests", () => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "LimitExceededException",
+          message: "Attempt limit exceeded, please try after some time.",
+          name: "LimitExceededException",
+        };
+      });
+      act(() => {
+        resendForgotPasswordCode(username);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again."`
       );
     });
 
@@ -129,18 +228,35 @@ describe("useAuthLogic", () => {
         throw new Error("Some unknown error");
       });
       act(() => {
-        forgotPassword(username);
+        resendForgotPasswordCode(username);
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
       );
+    });
+
+    it("tracks Cognito request errors", async () => {
+      const error = new Error("Some unknown error");
+      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+        throw error;
+      });
+
+      await act(async () => {
+        await resendForgotPasswordCode(username);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("AuthError", {
+        errorCode: undefined,
+        errorMessage: error.message,
+        errorName: error.name,
+      });
     });
 
     it("clears existing errors", async () => {
       await act(async () => {
         setAppErrors([{ message: "Pre-existing error" }]);
-        await forgotPassword(username);
+        await resendForgotPasswordCode(username);
       });
       expect(appErrors.items).toHaveLength(0);
     });
@@ -152,6 +268,14 @@ describe("useAuthLogic", () => {
         await login(username, password);
       });
       expect(Auth.signIn).toHaveBeenCalledWith(username, password);
+    });
+
+    it("tracks request", async () => {
+      await act(async () => {
+        await login(username, password);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
     });
 
     it("sets isLoggedIn to true", async () => {
@@ -168,12 +292,9 @@ describe("useAuthLogic", () => {
       expect(Auth.signIn).toHaveBeenCalledWith(username, password);
     });
 
-    it("requires fields to not be empty", async () => {
-      username = "";
-      password = "";
-
+    it("requires fields to not be empty and tracks the errors", async () => {
       await act(async () => {
-        await login(username, password);
+        await login();
       });
 
       expect(appErrors.items).toHaveLength(2);
@@ -183,6 +304,16 @@ describe("useAuthLogic", () => {
           "Enter your password",
         ]
       `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "password",
+        issueType: "required",
+      });
+
       expect(Auth.signIn).not.toHaveBeenCalled();
     });
 
@@ -221,7 +352,91 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Please enter all required information"`
+        `"Enter all required information"`
+      );
+    });
+
+    it("sets app errors when Auth.signIn throws NotAuthorizedException due to security reasons", async () => {
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "NotAuthorizedException",
+          message: "Unable to login because of security reasons.",
+          name: "NotAuthorizedException",
+        };
+      });
+      await act(async () => {
+        await login(username, password);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We’ve also sent you an email to confirm your identity."`
+      );
+    });
+
+    it("sets app errors when Auth.signIn throws NotAuthorizedException due to incorrect username or password", async () => {
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "NotAuthorizedException",
+          message: "Incorrect username or password.",
+          name: "NotAuthorizedException",
+        };
+      });
+      await act(async () => {
+        await login(username, password);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Incorrect email or password"`
+      );
+    });
+
+    it("sets app errors when Auth.signIn throws NotAuthorizedException due to too many failed login attempts", () => {
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "NotAuthorizedException",
+          message: "Password attempts exceeded",
+          name: "NotAuthorizedException",
+        };
+      });
+      act(() => {
+        login(username, password);
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Your account is temporarily locked because of too many failed login attempts. Wait 15 minutes before trying again."`
+      );
+    });
+
+    it("sets app errors and tracks event when Auth.signIn throws NotAuthorizedException with unexpected message", async () => {
+      const cognitoError = {
+        code: "NotAuthorizedException",
+        message:
+          "This message wasn't expected by Portal code and is the error from Cognito.",
+        name: "NotAuthorizedException",
+      };
+
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw cognitoError;
+      });
+      await act(async () => {
+        await login(username, password);
+      });
+
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"This message wasn't expected by Portal code and is the error from Cognito."`
+      );
+      expect(tracker.trackEvent).toHaveBeenLastCalledWith(
+        "Unknown_NotAuthorizedException",
+        expect.objectContaining({ errorMessage: cognitoError.message })
       );
     });
 
@@ -242,7 +457,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Please enter all required information"`
+        `"Enter all required information"`
       );
     });
 
@@ -255,8 +470,25 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
       );
+    });
+
+    it("tracks Cognito request errors", async () => {
+      const error = new Error("Some unknown error");
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        throw error;
+      });
+
+      await act(async () => {
+        await login(username, password);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("AuthError", {
+        errorCode: undefined,
+        errorMessage: error.message,
+        errorName: error.name,
+      });
     });
 
     it("clears existing errors", async () => {
@@ -265,6 +497,43 @@ describe("useAuthLogic", () => {
         await login(username, password);
       });
       expect(appErrors.items).toHaveLength(0);
+    });
+
+    it("redirects to the specific page while passing next param", async () => {
+      const next = "/applications";
+      const spy = jest.spyOn(portalFlow, "goTo");
+      await act(async () => {
+        await login(username, password, next);
+      });
+      expect(spy).toHaveBeenCalledWith(next);
+      spy.mockRestore();
+    });
+
+    it("calls goToPageFor func while no next param", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      await act(async () => {
+        await login(username, password);
+      });
+      expect(spy).toHaveBeenCalledWith("LOG_IN");
+      spy.mockRestore();
+    });
+
+    it("redirects to verify account page while receiving UserNotConfirmedException error", () => {
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "UserNotConfirmedException",
+          message: "User is not confirmed.",
+          name: "UserNotConfirmedException",
+        };
+      });
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      act(() => {
+        login(username, password);
+      });
+      expect(spy).toHaveBeenCalledWith("UNCONFIRMED_ACCOUNT");
+      spy.mockRestore();
     });
   });
 
@@ -286,18 +555,45 @@ describe("useAuthLogic", () => {
       Object.getOwnPropertyDescriptor(window, "location").get.mockRestore();
     });
 
-    it("calls Auth.signOut", () => {
-      act(() => {
-        logout();
+    describe("when called with no parameters", () => {
+      beforeEach(async () => {
+        await act(async () => {
+          await logout();
+        });
       });
-      expect(Auth.signOut).toHaveBeenCalledTimes(1);
+
+      it("calls Auth.signOut", () => {
+        expect(Auth.signOut).toHaveBeenCalledTimes(1);
+        expect(Auth.signOut).toHaveBeenCalledWith({ global: true });
+      });
+
+      it("redirects to home page", () => {
+        expect(window.location.assign).toHaveBeenCalledWith(routes.auth.login);
+      });
     });
 
-    it("redirects to home page", async () => {
+    describe("when called with sessionTimedOut parameter", () => {
+      beforeEach(async () => {
+        await act(async () => {
+          await logout({
+            sessionTimedOut: true,
+          });
+        });
+      });
+
+      it("redirects to login page with session timed out query parameter", () => {
+        expect(window.location.assign).toHaveBeenCalledWith(
+          `${routes.auth.login}?session-timed-out=true`
+        );
+      });
+    });
+
+    it("tracks request", async () => {
       await act(async () => {
         await logout();
       });
-      expect(window.location.assign).toHaveBeenCalledWith(routes.auth.login);
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -309,20 +605,33 @@ describe("useAuthLogic", () => {
       expect(Auth.signUp).toHaveBeenCalledWith({ username, password });
     });
 
-    it("routes to Verify Account page", async () => {
+    it("tracks request", async () => {
       await act(async () => {
         await createAccount(username, password);
       });
 
-      expect(mockRouter.push).toHaveBeenCalledWith(routes.auth.verifyAccount);
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
     });
 
-    it("stores username in authData for Verify Account page", async () => {
+    it("routes to Verify Account page", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
       await act(async () => {
         await createAccount(username, password);
       });
 
-      expect(authData.createAccountUsername).toBe(username);
+      expect(spy).toHaveBeenCalledWith("CREATE_ACCOUNT");
+      spy.mockRestore();
+    });
+
+    it("sets authData for reference on Verify Account page", async () => {
+      await act(async () => {
+        await createAccount(username, password);
+      });
+
+      expect(authData).toEqual({
+        createAccountUsername: username,
+        createAccountFlow: "claimant",
+      });
     });
 
     it("trims whitespace from username", async () => {
@@ -332,20 +641,28 @@ describe("useAuthLogic", () => {
       expect(Auth.signUp).toHaveBeenCalledWith({ username, password });
     });
 
-    it("requires fields to not be empty", () => {
-      username = "";
-      password = "";
+    it("requires fields to not be empty and tracks the errors", () => {
       act(() => {
-        createAccount(username, password);
+        createAccount();
       });
 
       expect(appErrors.items).toHaveLength(2);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-        Array [
-          "Enter your email address",
-          "Enter your password",
-        ]
-      `);
+          Array [
+            "Enter your email address",
+            "Enter your password",
+          ]
+        `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "password",
+        issueType: "required",
+      });
+
       expect(Auth.signUp).not.toHaveBeenCalled();
     });
 
@@ -398,7 +715,7 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("sets app errors when Auth.signUp throws InvalidPasswordException", () => {
+    it("sets app errors when Auth.signUp throws InvalidPasswordException due to non-conforming password", () => {
       const invalidPasswordErrorMessages = [
         "Password did not conform with policy: Password not long enough",
         "Password did not conform with policy: Password must have uppercase characters",
@@ -408,9 +725,9 @@ describe("useAuthLogic", () => {
 
       const cognitoErrors = invalidPasswordErrorMessages.map((message) => {
         return {
-          code: "InvalidParameterException",
+          code: "InvalidPasswordException",
           message,
-          name: "InvalidParameterException",
+          name: "InvalidPasswordException",
         };
       });
 
@@ -433,6 +750,38 @@ describe("useAuthLogic", () => {
       }
     });
 
+    it("sets app errors when Auth.signUp throws InvalidPasswordException due to insecure password", () => {
+      const invalidPasswordErrorMessages = [
+        "Provided password cannot be used for security reasons.",
+      ];
+
+      const cognitoErrors = invalidPasswordErrorMessages.map((message) => {
+        return {
+          code: "InvalidPasswordException",
+          message,
+          name: "InvalidPasswordException",
+        };
+      });
+
+      expect.assertions(cognitoErrors.length * 2);
+
+      for (const cognitoError of cognitoErrors) {
+        jest.resetAllMocks();
+        jest.spyOn(Auth, "signUp").mockImplementation(() => {
+          // Ignore lint rule since AWS Auth class actually throws an object literal
+          // eslint-disable-next-line no-throw-literal
+          throw cognitoError;
+        });
+        act(() => {
+          createAccount(username, password);
+        });
+        expect(appErrors.items).toHaveLength(1);
+        expect(appErrors.items[0].message).toMatchInlineSnapshot(
+          `"Choose a different password. Avoid commonly used passwords and avoid using the same password on multiple websites."`
+        );
+      }
+    });
+
     it("sets system error message when Auth.signUp throws unanticipated error", () => {
       jest.spyOn(Auth, "signUp").mockImplementation(() => {
         throw new Error("Some unknown error");
@@ -442,8 +791,25 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
       );
+    });
+
+    it("tracks Cognito request errors", async () => {
+      const error = new Error("Some unknown error");
+      jest.spyOn(Auth, "signUp").mockImplementation(() => {
+        throw error;
+      });
+
+      await act(async () => {
+        await createAccount(username, password);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("AuthError", {
+        errorCode: undefined,
+        errorMessage: error.message,
+        errorName: error.name,
+      });
     });
 
     it("clears existing errors", async () => {
@@ -452,6 +818,103 @@ describe("useAuthLogic", () => {
         await createAccount(username, password);
       });
       expect(appErrors.items).toHaveLength(0);
+    });
+  });
+
+  describe("createEmployerAccount", () => {
+    it("calls Auth.signUp with username, password, and ein as a custom attribute", async () => {
+      await act(async () => {
+        await createEmployerAccount(username, password, ein);
+      });
+      expect(Auth.signUp).toHaveBeenCalledWith({
+        username,
+        password,
+        clientMetadata: {
+          ein,
+        },
+      });
+    });
+
+    it("routes to Verify Account page", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      await act(async () => {
+        await createEmployerAccount(username, password, ein);
+      });
+
+      expect(spy).toHaveBeenCalledWith("CREATE_ACCOUNT");
+      spy.mockRestore();
+    });
+
+    it("sets authData for reference on Verify Account page", async () => {
+      await act(async () => {
+        await createEmployerAccount(username, password, ein);
+      });
+
+      expect(authData).toEqual({
+        createAccountUsername: username,
+        createAccountFlow: "employer",
+        employerIdNumber: ein,
+      });
+    });
+
+    it("trims whitespace from username", async () => {
+      await act(async () => {
+        await createEmployerAccount(`  ${username} `, password, ein);
+      });
+      expect(Auth.signUp).toHaveBeenCalledWith({
+        username,
+        password,
+        clientMetadata: {
+          ein,
+        },
+      });
+    });
+
+    it("requires fields to not be empty and tracks the errors", () => {
+      act(() => {
+        createEmployerAccount();
+      });
+
+      expect(appErrors.items).toHaveLength(3);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+        Array [
+          "Enter your email address",
+          "Enter your password",
+          "Enter your 9-digit Employer Identification Number.",
+        ]
+      `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "password",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "ein",
+        issueType: "required",
+      });
+
+      expect(Auth.signUp).not.toHaveBeenCalled();
+    });
+
+    it("sets app errors when an employer ID number is invalid", () => {
+      jest.spyOn(Auth, "signUp").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "UnexpectedLambdaException",
+        };
+      });
+      act(() => {
+        createEmployerAccount(username, password, "11-1111111");
+      });
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Invalid employer ID number. Please try again."`
+      );
     });
   });
 
@@ -466,10 +929,12 @@ describe("useAuthLogic", () => {
       });
 
       it("doesn't redirect to the login page", async () => {
+        const spy = jest.spyOn(portalFlow, "goTo");
         await act(async () => {
           await requireLogin();
         });
-        expect(mockRouter.push).not.toHaveBeenCalled();
+        expect(spy).not.toHaveBeenCalled();
+        spy.mockRestore();
       });
 
       it("sets isLoggedIn", async () => {
@@ -514,23 +979,39 @@ describe("useAuthLogic", () => {
     });
 
     describe("when user is not logged in", () => {
+      let spy;
       beforeEach(() => {
+        spy = jest.spyOn(portalFlow, "goTo");
         Auth.currentUserInfo.mockResolvedValueOnce(null);
+      });
+
+      afterEach(() => {
+        spy.mockRestore();
       });
 
       it("redirects to login page", async () => {
         await act(async () => {
           await requireLogin();
         });
-        expect(mockRouter.push).toHaveBeenCalledWith(routes.auth.login);
+        expect(spy).toHaveBeenCalledWith(routes.auth.login, { next: "" });
       });
 
       it("doesn't redirect if route is already set to login page", async () => {
-        mockRouter.pathname = routes.auth.login;
+        portalFlow.pathname = routes.auth.login;
         await act(async () => {
           await requireLogin();
         });
-        expect(mockRouter.push).not.toHaveBeenCalled();
+        expect(spy).not.toHaveBeenCalled();
+      });
+
+      it("redirects to login page with nextUrl", async () => {
+        portalFlow.pathWithParams = routes.applications.checklist;
+        await act(async () => {
+          await requireLogin();
+        });
+        expect(spy).toHaveBeenCalledWith(routes.auth.login, {
+          next: routes.applications.checklist,
+        });
       });
     });
   });
@@ -543,7 +1024,15 @@ describe("useAuthLogic", () => {
       expect(Auth.resendSignUp).toHaveBeenCalledWith(username);
     });
 
-    it("sets app errors when username is empty", () => {
+    it("tracks request", async () => {
+      await act(async () => {
+        await resendVerifyAccountCode(username);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+    });
+
+    it("requires all fields to not be empty and tracks the errors", () => {
       username = "";
       act(() => {
         resendVerifyAccountCode(username);
@@ -552,6 +1041,12 @@ describe("useAuthLogic", () => {
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
         `"Enter your email address"`
       );
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+
       expect(Auth.resendSignUp).not.toHaveBeenCalled();
     });
 
@@ -564,8 +1059,25 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
       );
+    });
+
+    it("tracks Cognito request errors", async () => {
+      const error = new Error("Some unknown error");
+      jest.spyOn(Auth, "resendSignUp").mockImplementation(() => {
+        throw error;
+      });
+
+      await act(async () => {
+        await resendVerifyAccountCode(username);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("AuthError", {
+        errorCode: undefined,
+        errorMessage: error.message,
+        errorName: error.name,
+      });
     });
 
     it("clears existing errors", () => {
@@ -586,37 +1098,55 @@ describe("useAuthLogic", () => {
       expect(Auth.forgotPasswordSubmit).toHaveBeenCalledWith(
         username,
         verificationCode,
-        password
+        password,
+        {}
       );
     });
 
-    it("routes to login page with account verified success message", async () => {
+    it("tracks request", async () => {
       await act(async () => {
         await resetPassword(username, verificationCode, password);
       });
 
-      expect(mockRouter.push).toHaveBeenCalledWith(
-        "/login?account-verified=true"
-      );
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
     });
 
-    it("requires all fields to not be empty", () => {
-      username = "";
-      password = "";
-      verificationCode = "";
+    it("routes to login page", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      await act(async () => {
+        await resetPassword(username, verificationCode, password);
+      });
 
+      expect(spy).toHaveBeenCalledWith("SET_NEW_PASSWORD");
+    });
+
+    it("requires all fields to not be empty and tracks the errors", () => {
       act(() => {
-        resetPassword(username, verificationCode, password);
+        resetPassword();
       });
 
       expect(appErrors.items).toHaveLength(3);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
         Array [
-          "Enter the 6-digit code sent to your email",
+          "Enter the 6 digit code sent to your email",
           "Enter your email address",
           "Enter your password",
         ]
       `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "password",
+        issueType: "required",
+      });
+
       expect(Auth.forgotPasswordSubmit).not.toHaveBeenCalled();
     });
 
@@ -680,11 +1210,11 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Please check the requirements and try again. Ensure all required information is entered and the password meets the requirements."`
+        `"Check the requirements and try again. Ensure all required information is entered and the password meets the requirements."`
       );
     });
 
-    it("sets app errors when InvalidPasswordException is thrown", () => {
+    it("sets app errors when InvalidPasswordException is thrown due to non-conforming password", () => {
       jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
@@ -705,6 +1235,27 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("sets app errors when InvalidPasswordException is thrown due to insecure password", () => {
+      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "InvalidPasswordException",
+          message: "Provided password cannot be used for security reasons.",
+          name: "InvalidPasswordException",
+        };
+      });
+
+      act(() => {
+        resetPassword(username, verificationCode, password);
+      });
+
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Choose a different password. Avoid commonly used passwords and avoid using the same password on multiple websites."`
+      );
+    });
+
     it("sets app errors when UserNotConfirmedException is thrown", () => {
       jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
@@ -722,7 +1273,7 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Please first confirm your account by following the instructions in the verification email sent to your inbox."`
+        `"Confirm your account by following the instructions in the verification email sent to your inbox."`
       );
     });
 
@@ -747,10 +1298,95 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("tracks Cognito request errors", async () => {
+      const error = new Error("Some unknown error");
+      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
+        throw error;
+      });
+
+      await act(async () => {
+        await resetPassword(username, verificationCode, password);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("AuthError", {
+        errorCode: undefined,
+        errorMessage: error.message,
+        errorName: error.name,
+      });
+    });
+
     it("clears existing errors", () => {
       act(() => {
         setAppErrors([{ message: "Pre-existing error" }]);
         resetPassword(username, verificationCode, password);
+      });
+      expect(appErrors.items).toHaveLength(0);
+    });
+  });
+
+  describe("resetEmployerPasswordAndCreateEmployerApiAccount", () => {
+    it("requires all fields to not be empty and tracks the errors", () => {
+      act(() => {
+        resetEmployerPasswordAndCreateEmployerApiAccount();
+      });
+
+      expect(appErrors.items).toHaveLength(4);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+        Array [
+          "Enter the 6 digit code sent to your email",
+          "Enter your email address",
+          "Enter your password",
+          "Enter your 9-digit Employer Identification Number.",
+        ]
+      `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "password",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "ein",
+        issueType: "required",
+      });
+
+      expect(Auth.forgotPasswordSubmit).not.toHaveBeenCalled();
+    });
+
+    it("calls Auth.forgotPasswordSubmit with EIN", () => {
+      act(() => {
+        resetEmployerPasswordAndCreateEmployerApiAccount(
+          username,
+          verificationCode,
+          password,
+          "123456789"
+        );
+      });
+
+      expect(Auth.forgotPasswordSubmit).toHaveBeenCalledWith(
+        username,
+        verificationCode,
+        password,
+        { ein: "123456789" }
+      );
+    });
+
+    it("clears existing errors", () => {
+      act(() => {
+        setAppErrors([{ message: "Pre-existing error" }]);
+        resetEmployerPasswordAndCreateEmployerApiAccount(
+          username,
+          verificationCode,
+          password,
+          "123456789"
+        );
       });
       expect(appErrors.items).toHaveLength(0);
     });
@@ -767,6 +1403,14 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("tracks request", async () => {
+      await act(async () => {
+        await verifyAccount(username, verificationCode);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+    });
+
     it("trims whitespace from code", () => {
       act(() => {
         verifyAccount(username, `  ${verificationCode} `);
@@ -777,46 +1421,56 @@ describe("useAuthLogic", () => {
       );
     });
 
-    it("sets app errors when username is empty", () => {
+    it("requires all fields to not be empty and tracks the errors", () => {
       username = "";
-      act(() => {
-        verifyAccount(username, verificationCode);
-      });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter your email address"`
-      );
-      expect(Auth.confirmSignUp).not.toHaveBeenCalled();
-    });
-
-    it("sets app errors when verification code is empty", () => {
       verificationCode = "";
+
       act(() => {
         verifyAccount(username, verificationCode);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter the 6-digit code sent to your email"`
-      );
+
+      expect(appErrors.items).toHaveLength(2);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+        Array [
+          "Enter the 6 digit code sent to your email",
+          "Enter your email address",
+        ]
+      `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueType: "required",
+      });
+
       expect(Auth.confirmSignUp).not.toHaveBeenCalled();
     });
 
-    it("sets app errors when verification code is malformed", () => {
+    it("validates verification code format and tracks when it's invalid", () => {
       const malformedCodes = [
         "12345", // too short,
         "1234567", // too long,
         "123A5", // has digits
         "123.4", // has punctuation
       ];
-      expect.assertions(malformedCodes.length * 3);
+      expect.assertions(malformedCodes.length * 4);
       for (const code of malformedCodes) {
         act(() => {
           verifyAccount(username, code);
         });
         expect(appErrors.items).toHaveLength(1);
         expect(appErrors.items[0].message).toEqual(
-          "Enter the 6-digit code sent to your email and ensure it does not include any punctuation."
+          "Enter the 6 digit code sent to your email and ensure it does not include any punctuation."
         );
+
+        expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+          issueField: "code",
+          issueType: "pattern",
+        });
+
         expect(Auth.confirmSignUp).not.toHaveBeenCalled();
       }
     });
@@ -859,6 +1513,35 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("redirects to the login page when account is already verified", () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "NotAuthorizedException",
+          message: "User cannot be confirmed. Current status is CONFIRMED",
+          name: "NotAuthorizedException",
+        };
+      });
+
+      act(() => {
+        verifyAccount(username, verificationCode);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith(
+        "AuthError",
+        expect.any(Object)
+      );
+      expect(spy).toHaveBeenCalledWith(
+        "SUBMIT",
+        {},
+        {
+          "account-verified": true,
+        }
+      );
+    });
+
     it("sets app errors when Auth.confirmSignIn throws AuthError", () => {
       const authErrorMessages = [
         "Username cannot be empty",
@@ -887,7 +1570,7 @@ describe("useAuthLogic", () => {
         });
         expect(appErrors.items).toHaveLength(1);
         expect(appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
         );
       }
     });
@@ -901,8 +1584,25 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (XXX) XXX-XXXX"`
+        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
       );
+    });
+
+    it("tracks Cognito request errors", async () => {
+      const error = new Error("Some unknown error");
+      jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+        throw error;
+      });
+
+      await act(async () => {
+        await verifyAccount(username, verificationCode);
+      });
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("AuthError", {
+        errorCode: undefined,
+        errorMessage: error.message,
+        errorName: error.name,
+      });
     });
 
     it("clears existing errors", () => {
@@ -911,6 +1611,113 @@ describe("useAuthLogic", () => {
         verifyAccount(username, verificationCode);
       });
       expect(appErrors.items).toHaveLength(0);
+    });
+
+    it("routes to login page with account verified message", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      await act(async () => {
+        await verifyAccount(username, verificationCode);
+      });
+
+      expect(spy).toHaveBeenCalledWith(
+        "SUBMIT",
+        {},
+        {
+          "account-verified": true,
+        }
+      );
+    });
+  });
+
+  describe("verifyEmployerAccount", () => {
+    it("calls Auth.confirmSignUp", () => {
+      act(() => {
+        verifyEmployerAccount(username, verificationCode, ein);
+      });
+      expect(Auth.confirmSignUp).toHaveBeenCalledWith(
+        username,
+        verificationCode,
+        {
+          clientMetadata: { ein },
+        }
+      );
+    });
+
+    it("tracks request", async () => {
+      await act(async () => {
+        await verifyEmployerAccount(username, verificationCode, ein);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+    });
+
+    it("trims whitespace from code and ein", () => {
+      act(() => {
+        verifyEmployerAccount(username, `  ${verificationCode} `, ` ${ein} `);
+      });
+      expect(Auth.confirmSignUp).toHaveBeenCalledWith(
+        username,
+        verificationCode,
+        {
+          clientMetadata: { ein },
+        }
+      );
+    });
+
+    it("requires all fields to not be empty and tracks the errors", () => {
+      username = "";
+      verificationCode = "";
+      ein = "";
+      act(() => {
+        verifyEmployerAccount(username, verificationCode, ein);
+      });
+
+      expect(appErrors.items).toHaveLength(3);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+        Array [
+          "Enter the 6 digit code sent to your email",
+          "Enter your email address",
+          "Enter your 9-digit Employer Identification Number.",
+        ]
+      `);
+
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "username",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueType: "required",
+      });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "ein",
+        issueType: "required",
+      });
+
+      expect(Auth.confirmSignUp).not.toHaveBeenCalled();
+    });
+
+    it("clears existing errors", () => {
+      act(() => {
+        setAppErrors([{ message: "Pre-existing error" }]);
+        verifyEmployerAccount(username, verificationCode, ein);
+      });
+      expect(appErrors.items).toHaveLength(0);
+    });
+
+    it("routes to login page with account verified message", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      await act(async () => {
+        await verifyEmployerAccount(username, verificationCode, ein);
+      });
+
+      expect(spy).toHaveBeenCalledWith(
+        "SUBMIT",
+        {},
+        {
+          "account-verified": true,
+        }
+      );
     });
   });
 });

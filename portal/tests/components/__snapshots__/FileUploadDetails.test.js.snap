@@ -6,7 +6,7 @@ exports[`FileUploadDetails renders the details with text 1`] = `
 >
   <div>
     <p>
-      Files should be 22 MB or smaller. If your file is larger than 22 MB, try resizing it or splitting it into separate files.
+      Files should be 3.5 MB or smaller. If your file is larger than 3.5 MB, try resizing it or splitting it into separate files.
     </p>
     <List
       key="0"
@@ -15,7 +15,7 @@ exports[`FileUploadDetails renders the details with text 1`] = `
           "listHeading": "This website only accepts:",
           "listItems": Array [
             "PDF documents",
-            "Images (.jpg, .jpeg, .png, .gif, .webp)",
+            "Images (.jpg, .jpeg, .png)",
           ],
         }
       }
@@ -37,10 +37,10 @@ exports[`FileUploadDetails renders the details with text 1`] = `
       key="2"
       list={
         Object {
-          "listHeading": "If you're taking a picture of your document:",
+          "listHeading": "If you’re taking a picture of your document:",
           "listItems": Array [
             "Take a picture of each document page and upload the pictures individually",
-            "If you're uploading an ID card, upload separate pictures for both the front and back of the card",
+            "If you’re uploading an ID card, upload separate pictures for both the front and back of the card",
             "Make sure the picture is clear and readable",
           ],
         }

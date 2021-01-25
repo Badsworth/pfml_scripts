@@ -10,16 +10,21 @@ import { testDependencies } from "./lib/jest-dependency-tests";
  */
 const dependencyRules = [
   {
-    // TODO: reorganize components into subfolders for "core" reusable components and "pfml"-specific components
+    // TODO (CP-798): reorganize components into subfolders for "core" reusable components and "pfml"-specific components
     // core components should additionally be forbidden from requiring anything PFML-specific, such as "./src/models"
-    // TODO: refactor components to remove dependency on next/link, and add "next/link" to forbidden dependencies for all `components`
+    // TODO (CP-623): refactor components to remove dependency on next/link, and add "next/link" to forbidden dependencies for all `components`
     moduleOrDirRelPath: "./src/components",
     description:
       "does not depend on framework or PFML-specific application logic",
     forbiddenDependencies: [
       {
         moduleOrDirRelPath: "./src/hooks",
-        allowedDependencies: ["usePreviousValue", "useUniqueId"],
+        allowedDependencies: [
+          "usePreviousValue",
+          "useUniqueId",
+          "usePiiHandlers",
+          "useThrottledHandler",
+        ],
         reason:
           "Components should not depend on application code. Consider exposing events that clients handle.",
       },

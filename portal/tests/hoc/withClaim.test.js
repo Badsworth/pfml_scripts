@@ -1,8 +1,8 @@
 import Claim from "../../src/models/Claim";
+import ClaimCollection from "../../src/models/ClaimCollection";
 import React from "react";
-import User from "../../src/models/User";
-import merge from "lodash/merge";
-import { renderWithAppLogic } from "../test-utils";
+import { act } from "react-dom/test-utils";
+import { mount } from "enzyme";
 import useAppLogic from "../../src/hooks/useAppLogic";
 import withClaim from "../../src/hoc/withClaim";
 
@@ -11,44 +11,86 @@ jest.mock("../../src/hooks/useAppLogic");
 describe("withClaim", () => {
   let appLogic, claim_id, wrapper;
 
-  function render(options = {}) {
-    // define component that needs a claim prop
-    // eslint-disable-next-line react/prop-types
-    const PageComponent = (props) => <div>{props.claim.application_id}</div>;
-    const WrappedComponent = withClaim(PageComponent);
-    // Go three levels deep to get to PageComponent since withClaim is also wrapped by withClaims which is wrapped by withUser
-    ({ wrapper } = renderWithAppLogic(
-      WrappedComponent,
-      merge(
-        {
-          diveLevels: 2,
-          props: {
-            appLogic,
-            query: { claim_id },
-          },
-        },
-        options
-      )
-    ));
+  const PageComponent = () => <div />;
+  const WrappedComponent = withClaim(PageComponent);
+
+  function render() {
+    act(() => {
+      wrapper = mount(
+        <WrappedComponent appLogic={appLogic} query={{ claim_id }} />
+      );
+    });
   }
 
   beforeEach(() => {
+    claim_id = "mock-application-id";
     appLogic = useAppLogic();
-    claim_id = "12345";
   });
 
-  it("sets the 'claim' prop on the passed component to the claim identified in the query", () => {
-    // Mock initial state of the app
-    // these values would be passed from _app.js
-    const claim = new Claim({ application_id: claim_id });
-    appLogic.claims.claims = appLogic.claims.claims.addItem(claim);
-    appLogic.user = new User();
+  it("Shows spinner when claim is not loaded", () => {
+    appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(false);
 
     render();
 
-    expect(wrapper.prop("claim")).toBeInstanceOf(Claim);
-    expect(wrapper.prop("claim")).toEqual(claim);
+    expect(wrapper.find("Spinner").exists()).toBe(true);
+    expect(wrapper.find("PageComponent").exists()).toBe(false);
   });
 
-  it.todo("redirects to applications page if claim is not in claim collection");
+  it("Shows spinner when claim's warnings aren't loaded", () => {
+    const claim = new Claim({ application_id: claim_id });
+    appLogic.claims.claims = new ClaimCollection([claim]);
+    appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(false);
+
+    render();
+
+    expect(wrapper.find("Spinner").exists()).toBe(true);
+    expect(wrapper.find("PageComponent").exists()).toBe(false);
+  });
+
+  it("loads the claim", () => {
+    appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(false);
+
+    render();
+
+    expect(appLogic.claims.load).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not load claim if user has not yet loaded", () => {
+    appLogic.user = appLogic.users.user = null;
+    render();
+    wrapper.update();
+    expect(appLogic.claims.load).not.toHaveBeenCalled();
+  });
+
+  describe("when claim is loaded", () => {
+    let claim;
+
+    beforeEach(() => {
+      claim = new Claim({ application_id: claim_id });
+      appLogic.claims.claims = new ClaimCollection([claim]);
+      appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(true);
+    });
+
+    it("passes through the 'user' prop from the withUser higher order component", () => {
+      render();
+
+      expect(wrapper.find("PageComponent").prop("user")).toEqual(
+        appLogic.users.user
+      );
+    });
+
+    it("sets the 'claim' prop on the passed component", () => {
+      render();
+
+      expect(wrapper.find("PageComponent").prop("claim")).toBeInstanceOf(Claim);
+      expect(wrapper.find("PageComponent").prop("claim")).toEqual(claim);
+    });
+
+    it("renders the wrapped component", () => {
+      render();
+
+      expect(wrapper.find("PageComponent").exists()).toBe(true);
+      expect(wrapper.find("Spinner").exists()).toBe(false);
+    });
+  });
 });

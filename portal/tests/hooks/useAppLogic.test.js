@@ -1,4 +1,6 @@
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import ClaimCollection from "../../src/models/ClaimCollection";
+import DocumentCollection from "../../src/models/DocumentCollection";
 import { testHook } from "../test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
@@ -6,9 +8,13 @@ describe("useAppLogic", () => {
   it("returns app state and getter and setter methods", () => {
     let appErrors,
       auth,
+      catchError,
       claims,
       clearErrors,
-      goToNextPage,
+      documents,
+      employers,
+      otherLeaves,
+      portalFlow,
       rest,
       setAppErrors,
       users;
@@ -17,9 +23,13 @@ describe("useAppLogic", () => {
       ({
         appErrors,
         auth,
+        catchError,
         claims,
+        documents,
+        employers,
         clearErrors,
-        goToNextPage,
+        portalFlow,
+        otherLeaves,
         setAppErrors,
         users,
         ...rest
@@ -29,15 +39,25 @@ describe("useAppLogic", () => {
     expect(appErrors).toBeInstanceOf(AppErrorInfoCollection);
     expect(appErrors.items).toHaveLength(0);
     expect(auth).toEqual(expect.anything());
-    expect(claims.claims).toBeNull();
+    expect(catchError).toBeInstanceOf(Function);
+    expect(claims.claims).toBeInstanceOf(ClaimCollection);
     expect(clearErrors).toBeInstanceOf(Function);
-    expect(goToNextPage).toBeInstanceOf(Function);
+    expect(portalFlow).toEqual(expect.anything());
+    expect(claims.hasLoadedAll).toEqual(expect.any(Boolean));
     expect(claims.load).toBeInstanceOf(Function);
+    expect(claims.loadAll).toBeInstanceOf(Function);
     expect(claims.create).toBeInstanceOf(Function);
     expect(claims.update).toBeInstanceOf(Function);
     expect(users.updateUser).toBeInstanceOf(Function);
     expect(setAppErrors).toBeInstanceOf(Function);
     expect(claims.submit).toBeInstanceOf(Function);
+    expect(documents.documents).toBeInstanceOf(DocumentCollection);
+    expect(documents.loadAll).toBeInstanceOf(Function);
+    expect(documents.attach).toBeInstanceOf(Function);
+    expect(employers.submit).toBeInstanceOf(Function);
+    expect(otherLeaves.removeEmployerBenefit).toBeInstanceOf(Function);
+    expect(otherLeaves.removeOtherIncome).toBeInstanceOf(Function);
+    expect(otherLeaves.removePreviousLeave).toBeInstanceOf(Function);
     expect(users.user).toBeUndefined();
     expect(users).toEqual(expect.anything());
     // there should be no other properties;

@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DateOfChild renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Leave details"
+>
+  <InputDate
+    dayLabel="Day"
+    example="mm / dd / yyyy"
+    hint={null}
+    label="pages.claimsBondingDateOfChild.sectionLabel"
+    monthLabel="Month"
+    name="leave_details.child_placement_date"
+    onChange={[Function]}
+    value=""
+    yearLabel="Year"
+  />
+</QuestionPage>
+`;

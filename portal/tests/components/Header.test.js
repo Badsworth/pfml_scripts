@@ -1,23 +1,50 @@
+import User, { RoleDescription, UserRole } from "../../src/models/User";
 import Header from "../../src/components/Header";
 import React from "react";
 import { shallow } from "enzyme";
 
 describe("Header", () => {
   it("includes a Skip Nav link as its first link", () => {
-    const wrapper = shallow(<Header logout={jest.fn()} />);
-    const links = wrapper.find("a");
+    const wrapper = shallow(<Header onLogout={jest.fn()} />);
 
-    expect(links.first().prop("href")).toBe("#main");
+    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("HeaderSlim").prop("skipNav").props.href).toBe("#main");
   });
 
-  it("passes the user into AuthNav", () => {
-    const user = {
-      username: "Foo Bar",
-    };
+  it("renders Header for logged in claimant", () => {
+    const user = new User({
+      email_address: "email@address.com",
+      user_id: "mock-user-id",
+    });
 
-    const wrapper = shallow(<Header user={user} logout={jest.fn()} />);
-    const authNav = wrapper.find("AuthNav");
+    const wrapper = shallow(<Header user={user} onLogout={jest.fn()} />);
 
-    expect(authNav.prop("user")).toBe(user);
+    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("HeaderSlim").prop("utilityNav").props.user).toBe(user);
+  });
+
+  it("doesn't render beta banner when user isn't logged in", () => {
+    const wrapper = shallow(<Header onLogout={jest.fn()} />);
+
+    expect(wrapper.find("BetaBanner").exists()).toBe(false);
+  });
+
+  it("renders beta banner with employer feedback link when user is an employer", () => {
+    const user = new User({
+      email_address: "email@address.com",
+      user_id: "mock-user-id",
+      roles: [
+        new UserRole({
+          role_description: RoleDescription.employer,
+        }),
+      ],
+    });
+    const wrapper = shallow(<Header user={user} onLogout={jest.fn()} />);
+
+    expect(
+      wrapper.find("BetaBanner").prop("feedbackUrl")
+    ).toMatchInlineSnapshot(
+      `"https://www.mass.gov/paidleave-employer-feedback"`
+    );
   });
 });

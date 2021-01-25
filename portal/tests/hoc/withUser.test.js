@@ -1,4 +1,6 @@
 import { mount, shallow } from "enzyme";
+import AppErrorInfo from "../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import React from "react";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
@@ -30,9 +32,13 @@ describe("withUser", () => {
       wrapper = shallow(<WrappedComponent appLogic={appLogic} />);
     });
     expect(wrapper).toMatchInlineSnapshot(`
-      <Spinner
-        aria-valuetext="Loading account"
-      />
+      <div
+        className="margin-top-8 text-center"
+      >
+        <Spinner
+          aria-valuetext="Loading account"
+        />
+      </div>
     `);
   });
 
@@ -57,6 +63,12 @@ describe("withUser", () => {
     expect(appLogic.users.loadUser).not.toHaveBeenCalled();
   });
 
+  it("does not load user if there is an error", () => {
+    appLogic.appErrors = new AppErrorInfoCollection([new AppErrorInfo()]);
+    render();
+    expect(appLogic.users.loadUser).not.toHaveBeenCalled();
+  });
+
   it("calls requireLogin in all situations", () => {
     appLogic.users.user = new User();
     render();
@@ -74,7 +86,7 @@ describe("withUser", () => {
   });
 
   describe("when authenticated user consented to data sharing", () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       appLogic.users.user = new User({ consented_to_data_sharing: true });
       render();
     });
@@ -94,7 +106,7 @@ describe("withUser", () => {
   });
 
   describe("when authenticated user hasn't consented to data sharing", () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       appLogic.users.user = new User({ consented_to_data_sharing: false });
       render();
     });

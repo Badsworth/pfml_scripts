@@ -4,7 +4,7 @@ import { testHook } from "../test-utils";
 import useCollectionState from "../../src/hooks/useCollectionState";
 
 describe("useCollectionState", () => {
-  let addItem, collection, removeItem, setCollection, updateItem;
+  let addItem, addItems, collection, removeItem, setCollection, updateItem;
 
   class TestCollection extends BaseCollection {
     get idProperty() {
@@ -24,6 +24,7 @@ describe("useCollectionState", () => {
           collection,
           setCollection,
           addItem,
+          addItems,
           updateItem,
           removeItem,
         } = useCollectionState(null));
@@ -38,6 +39,18 @@ describe("useCollectionState", () => {
 
         expect(render).toThrow(
           /Cannot read property 'addItem' of (null|undefined)/
+        );
+      });
+    });
+
+    describe("addItems", () => {
+      it("throws null pointer error", () => {
+        const render = () => {
+          act(() => addItems([{ testId: "1234" }, { testId: "5678" }]));
+        };
+
+        expect(render).toThrow(
+          /Cannot read property 'addItems' of (null|undefined)/
         );
       });
     });

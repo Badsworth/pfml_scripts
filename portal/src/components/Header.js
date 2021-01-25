@@ -1,7 +1,12 @@
 import AuthNav from "./AuthNav";
-import Link from "next/link";
+import BetaBanner from "./BetaBanner";
+import HeaderSlim from "@massds/mayflower-react/dist/HeaderSlim";
 import PropTypes from "prop-types";
 import React from "react";
+import SiteLogo from "@massds/mayflower-react/dist/SiteLogo";
+import User from "../models/User";
+import logo from "@massds/mayflower-assets/static/images/logo/stateseal.png";
+import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -9,34 +14,45 @@ import { useTranslation } from "../locales/i18n";
  */
 const Header = (props) => {
   const { t } = useTranslation();
+  const isLoggedIn = props.user;
+  const feedbackUrl =
+    props.user && props.user.hasEmployerRole
+      ? routes.external.massgov.feedbackEmployer
+      : routes.external.massgov.feedbackClaimant;
 
-  return (
-    <React.Fragment>
+  const headerProps = {
+    siteLogo: (
+      <SiteLogo
+        url={{
+          domain: routes.index,
+        }}
+        image={{
+          src: logo,
+          alt: t("components.siteLogo.sealAlt"),
+          width: 45,
+          height: 45,
+        }}
+        siteName={t("components.header.appTitle")}
+      />
+    ),
+    skipNav: (
       <a href="#main" className="usa-skipnav">
         {t("components.header.skipToContent")}
       </a>
+    ),
+    utilityNav: <AuthNav user={props.user} onLogout={props.onLogout} />,
+  };
 
-      <AuthNav user={props.user} onLogout={props.onLogout} />
-
-      <header className="bg-base-lightest">
-        <div className="grid-container">
-          <div className="grid-row">
-            <div className="grid-col-fill margin-left-0 margin-y-3 desktop:margin-y-4">
-              <Link href="/">
-                <a className="usa-logo__text font-heading-lg text-no-underline text-secondary">
-                  {t("components.header.appTitle")}
-                </a>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+  return (
+    <React.Fragment>
+      {isLoggedIn && <BetaBanner feedbackUrl={feedbackUrl} />}
+      <HeaderSlim {...headerProps} />
     </React.Fragment>
   );
 };
 
 Header.propTypes = {
-  user: PropTypes.object,
+  user: PropTypes.instanceOf(User),
   onLogout: PropTypes.func.isRequired,
 };
 

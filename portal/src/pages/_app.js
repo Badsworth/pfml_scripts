@@ -1,23 +1,15 @@
 import "../../styles/app.scss";
 import React, { useEffect, useState } from "react";
-import { initializeI18n, useTranslation } from "../locales/i18n";
 import { Auth } from "@aws-amplify/auth";
-import ErrorBoundary from "../components/ErrorBoundary";
-import ErrorsSummary from "../components/ErrorsSummary";
-import Head from "next/head";
-import Header from "../components/Header";
+import PageWrapper from "../components/PageWrapper";
 import PropTypes from "prop-types";
-import Spinner from "../components/Spinner";
-import dynamic from "next/dynamic";
-import { isFeatureEnabled } from "../services/featureFlags";
+import { initializeI18n } from "../locales/i18n";
+import { snakeCase } from "lodash";
 import tracker from "../services/tracker";
 import useAppLogic from "../hooks/useAppLogic";
 import useFeatureFlagsFromQueryEffect from "../hooks/useFeatureFlagsFromQueryEffect";
 import { useRouter } from "next/router";
-
-// Lazy-loaded components
-// https://nextjs.org/docs/advanced-features/dynamic-import
-const Footer = dynamic(() => import("../components/Footer"));
+import useSessionTimeout from "../hooks/useSessionTimeout";
 
 // Configure Amplify for Auth behavior throughout the app
 Auth.configure({
@@ -27,8 +19,9 @@ Auth.configure({
     // We use env.domain instead of env.NODE_ENV here since our end-to-end test suite is
     // ran against a production build on localhost.
     secure: process.env.domain !== "localhost",
-    // Cookie expiration, in days (defaults to a year, which is wild)
-    expires: 1,
+    // Set cookie expiration to expire at end of session.
+    // (Amplify defaults to a year, which is wild)
+    expires: null,
     // path: '/', (optional)
   },
   mandatorySignIn: false,
@@ -47,48 +40,67 @@ initializeI18n();
  * @returns {React.Component}
  */
 export const App = ({ Component, pageProps }) => {
-  const { t } = useTranslation();
   const router = useRouter();
   useFeatureFlagsFromQueryEffect();
 
   const appLogic = useAppLogic();
+  useSessionTimeout(
+    process.env.session.secondsOfInactivityUntilLogout,
+    appLogic.auth
+  );
 
   // Global UI state, such as whether to display the loading indicator
   const [ui, setUI] = useState({ isLoading: false });
 
   /**
-   * Event handler for when a page route transition has ended
-   * (either successfully or unsuccessfully).
-   * Scrolls the window to the top of the document upon route changes.
-   */
-  const handleRouteChangeEnd = () => {
-    setUI({ ...ui, isLoading: false });
-    window.scrollTo(0, 0);
-  };
-
-  /**
-   * Event handler for when a page route is transitioning
-   */
-  const handleRouteChangeStart = () => {
-    appLogic.clearErrors();
-    setUI({ ...ui, isLoading: true });
-  };
-
-  /**
-   * Fires when a route changed completely
-   * @param {string} url - New route URL
-   */
-  const handleRouteChangeComplete = (url = "") => {
-    handleRouteChangeEnd();
-
-    const routeName = url.split("?")[0];
-    tracker.setCurrentRouteName(routeName);
-  };
-
-  /**
    * Attach route change event handlers
    */
   useEffect(() => {
+    /**
+     * Event handler for when a page route transition has ended
+     * (either successfully or unsuccessfully).
+     * Scrolls the window to the top of the document upon route changes.
+     */
+    const handleRouteChangeEnd = () => {
+      setUI((ui) => {
+        return { ...ui, isLoading: false };
+      });
+      window.scrollTo(0, 0);
+    };
+
+    /**
+     * Event handler for when a page route is transitioning
+     */
+    const handleRouteChangeStart = (url = "") => {
+      const [routeName, queryString] = url.split("?");
+
+      const pageAttributes = {
+        ...getPageAttributesFromQueryString(queryString),
+        ...getPageAttributesFromUser(appLogic.users.user),
+      };
+      tracker.startPageView(routeName, pageAttributes);
+
+      appLogic.clearErrors();
+      setUI((ui) => {
+        return { ...ui, isLoading: true };
+      });
+    };
+
+    /**
+     * Fires when a route changed completely
+     * @param {string} url - New route URL
+     */
+    const handleRouteChangeComplete = (url = "") => {
+      handleRouteChangeEnd();
+
+      // For screen readers, we want to move their active focus towards the top
+      // of the page so they become aware of the page change and can navigate
+      // through the new page content. This relies on our pages utilizing the <Title>
+      // component, which includes the markup to support this.
+      const pageHeading = document.querySelector(".js-title");
+      if (pageHeading) pageHeading.focus();
+    };
+
     // Track route events so we can provide a visual indicator when a page is loading
     router.events.on("routeChangeStart", handleRouteChangeStart);
     router.events.on("routeChangeComplete", handleRouteChangeComplete);
@@ -97,71 +109,66 @@ export const App = ({ Component, pageProps }) => {
     // Passing this empty array causes this effect to be run only once upon mount. See:
     // https://reactjs.org/docs/hooks-effect.html#tip-optimizing-performance-by-skipping-effects
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  /**
-   * Render the page body based on the current state of the application
-   */
-  const renderPageContent = () => {
-    if (ui.isLoading) {
-      return (
-        <div className="margin-top-8 text-center">
-          <Spinner aria-valuetext={t("components.spinner.label")} />
-        </div>
-      );
-    }
-
-    return (
-      <section id="page">
-        <Component appLogic={appLogic} query={router.query} {...pageProps} />
-      </section>
-    );
-  };
-
-  // Prevent site from being rendered if this feature flag isn't enabled.
-  // We render a vague but recognizable message that serves as an indicator
-  // to folks who are aware, that the site is working as expected and they
-  // need to enable the feature flag.
-  // See: https://lwd.atlassian.net/browse/CP-459
-  if (!isFeatureEnabled("pfmlTerriyay")) return <code>Hello world (◕‿◕)</code>;
+    return function cleanup() {
+      router.events.off("routeChangeStart", handleRouteChangeStart);
+      router.events.off("routeChangeComplete", handleRouteChangeComplete);
+      router.events.off("routeChangeError", handleRouteChangeEnd);
+    };
+  }, [router, appLogic]);
 
   return (
-    <ErrorBoundary>
-      <Head>
-        <title>{t("pages.app.siteTitle")}</title>
-        <meta name="description" content={t("pages.app.siteDescription")} />
-      </Head>
-      <div className="l-container">
-        <div>
-          {/* Wrap header children in a div because its parent is a flex container */}
-          <Header user={appLogic.users.user} onLogout={appLogic.auth.logout} />
-        </div>
-        <main
-          id="main"
-          className="l-main grid-container margin-top-5 margin-bottom-8"
-        >
-          <div className="grid-row">
-            <div className="grid-col-fill">
-              {/* Include a second ErrorBoundary here so that we still render a site header if we catch an error before it bubbles up any further */}
-              <ErrorBoundary>
-                <ErrorsSummary errors={appLogic.appErrors} />
-                {renderPageContent()}
-              </ErrorBoundary>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    </ErrorBoundary>
+    <PageWrapper
+      appLogic={appLogic}
+      isLoading={ui.isLoading}
+      maintenancePageRoutes={process.env.maintenancePageRoutes || []}
+    >
+      <Component appLogic={appLogic} query={router.query} {...pageProps} />
+    </PageWrapper>
   );
 };
 
 App.propTypes = {
-  // Next.js sets Component for us
+  // Next.js sets Component for us. This is the React component
+  // exported from our pages/*.js files
   Component: PropTypes.elementType.isRequired,
   // Next.js sets pageProps for us
   pageProps: PropTypes.object,
 };
+
+/**
+ * Given a query string, returns an object containing custom attributes to send to New Relic.
+ * For each query string key the object will contain a key of the form "page_[query_string_key]"
+ * where query_string_key is a snake cased version of the query string key. The value will be
+ * the query string value. We should never put PII in query strings, so we should also be comfortable
+ * sending all of these values to New Relic as custom attributes.
+ * @param {string} [queryString] Optional query string
+ * @returns {object}
+ */
+function getPageAttributesFromQueryString(queryString) {
+  const pageAttributes = {};
+  // note that URLSearchParams accepts null/undefined in its constructor
+  for (const [key, value] of new URLSearchParams(queryString)) {
+    pageAttributes[`query_${snakeCase(key)}`] = value;
+  }
+  return pageAttributes;
+}
+
+/**
+ * Given the current user object, returns an object containing custom attributes to send to New Relic.
+ * @param {?User} user The user object or null
+ */
+function getPageAttributesFromUser(user) {
+  if (!user) {
+    return {
+      "user.is_logged_in": false,
+    };
+  } else {
+    return {
+      "user.is_logged_in": true,
+      "user.auth_id": user.auth_id,
+      "user.has_employer_role": user.hasEmployerRole,
+    };
+  }
+}
 
 export default App;

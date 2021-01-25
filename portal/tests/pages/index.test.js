@@ -1,35 +1,74 @@
-import { simulateEvents, testHook } from "../test-utils";
+import { Auth } from "@aws-amplify/auth";
 import Index from "../../src/pages/index";
-import React from "react";
-import { shallow } from "enzyme";
-import useAppLogic from "../../src/hooks/useAppLogic";
+import { act } from "react-dom/test-utils";
+import { renderWithAppLogic } from "../test-utils";
 
+jest.mock("@aws-amplify/auth");
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("Index", () => {
-  let appLogic, wrapper;
+  it("renders landing page content", () => {
+    const { wrapper } = renderWithAppLogic(Index, {
+      diveLevels: 0,
+    });
+    expect(wrapper).toMatchSnapshot();
+    wrapper
+      .find("Trans")
+      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
+  });
 
-  beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic();
+  it("does not render employer information when employerShowSelfRegistrationForm is true", () => {
+    process.env.featureFlags = { employerShowSelfRegistrationForm: true };
+    const { wrapper } = renderWithAppLogic(Index, {
+      diveLevels: 0,
+    });
+    expect(wrapper).toMatchSnapshot();
+    wrapper
+      .find("Trans")
+      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
+  });
+
+  describe("when user is logged in", () => {
+    beforeEach(() => {
+      Auth.currentUserInfo.mockResolvedValue({
+        attributes: {
+          email: "test@email.com",
+        },
+      });
     });
 
-    // Dive once since Index is wrapped by withUser
-    wrapper = shallow(<Index appLogic={appLogic} />).dive();
+    it("redirects to dashboard", async () => {
+      const { appLogic, wrapper } = renderWithAppLogic(Index, {
+        diveLevels: 0,
+        render: "mount",
+      });
+      await act(async () => {
+        await wrapper.update();
+      });
+
+      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith("/dashboard");
+    });
   });
 
-  it("renders dashboard content", () => {
-    expect(wrapper).toMatchSnapshot();
-  });
+  describe("when user is not logged in", () => {
+    beforeEach(() => {
+      Auth.currentUserInfo.mockResolvedValue();
+    });
 
-  describe("when Create Application form is submitted", () => {
-    it("creates a new claim", async () => {
-      jest.spyOn(appLogic.claims, "create").mockResolvedValueOnce();
-      const { submitForm } = simulateEvents(wrapper);
+    it("does not redirect to dashboard", async () => {
+      const { appLogic, wrapper } = renderWithAppLogic(Index, {
+        diveLevels: 0,
+        render: "mount",
+      });
 
-      submitForm();
+      await act(async () => {
+        // Wait for repaint
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
 
-      expect(appLogic.claims.create).toHaveBeenCalled();
+      wrapper.update();
+
+      expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
     });
   });
 });
