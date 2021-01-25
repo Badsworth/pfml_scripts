@@ -474,96 +474,6 @@ data "aws_iam_policy_document" "fineos_feeds_role_policy" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
-# IAM role and policies for Leave Admin export query scheduled task
-# ----------------------------------------------------------------------------------------------------------------------
-
-resource "aws_iam_role" "cloudwatch_events_export_leave_admins_created_role" {
-  name               = "${local.app_name}-${var.environment_name}-export-leave-admins-created-role"
-  assume_role_policy = data.aws_iam_policy_document.cloudwatch_events_export_leave_admins_created_assume_policy.json
-}
-
-data "aws_iam_policy_document" "cloudwatch_events_export_leave_admins_created_assume_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["events.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role_policy" "cloudwatch_events_export_leave_admins_created_role_policy" {
-  name   = "${local.app_name}-${var.environment_name}-export-leave-admins-created-role-policy"
-  role   = aws_iam_role.cloudwatch_events_export_leave_admins_created_role.id
-  policy = data.aws_iam_policy_document.cloudwatch_events_export_leave_admins_created_role_policy.json
-}
-
-data "aws_iam_policy_document" "cloudwatch_events_export_leave_admins_created_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["ecs:RunTask"]
-
-    resources = ["arn:aws:ecs:us-east-1:${data.aws_caller_identity.current.account_id}:task-definition/${aws_ecs_task_definition.ecs_tasks["execute-sql"].family}:*"]
-  }
-
-  statement {
-    effect  = "Allow"
-    actions = ["iam:PassRole"]
-
-    resources = [
-      aws_iam_role.task_executor.arn,
-      aws_iam_role.task_execute_sql_task_role.arn
-    ]
-  }
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-# IAM role and policies for Registering Admins to FINEOS scheduler
-# ----------------------------------------------------------------------------------------------------------------------
-
-resource "aws_iam_role" "cloudwatch_events_register_admins_role" {
-  name               = "${local.app_name}-${var.environment_name}-register-admins-events-role"
-  assume_role_policy = data.aws_iam_policy_document.cloudwatch_events_register_admins_role_assume_policy.json
-}
-
-data "aws_iam_policy_document" "cloudwatch_events_register_admins_role_assume_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["events.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role_policy" "cloudwatch_events_register_admins_role_policy" {
-  name   = "${local.app_name}-${var.environment_name}-register-admins-events-role-policy"
-  role   = aws_iam_role.cloudwatch_events_register_admins_role.id
-  policy = data.aws_iam_policy_document.cloudwatch_events_register_admins_role_policy.json
-}
-
-data "aws_iam_policy_document" "cloudwatch_events_register_admins_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["ecs:RunTask"]
-
-    resources = ["arn:aws:ecs:us-east-1:${data.aws_caller_identity.current.account_id}:task-definition/${aws_ecs_task_definition.ecs_tasks["register-leave-admins-with-fineos"].family}:*"]
-  }
-
-  statement {
-    effect  = "Allow"
-    actions = ["iam:PassRole"]
-
-    resources = [
-      aws_iam_role.task_executor.arn,
-      aws_iam_role.register_admins_task_role.arn
-    ]
-  }
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for payments-fineos-process
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -651,51 +561,6 @@ data "aws_iam_policy_document" "payments_fineos_process_task_role_extras" {
     resources = ["*"]
 
     effect = "Allow"
-  }
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-# IAM role and policies for payments-fineos-process scheduler
-# ----------------------------------------------------------------------------------------------------------------------
-
-resource "aws_iam_role" "cloudwatch_events_payments_fineos_scheduler_role" {
-  name               = "${local.app_name}-${var.environment_name}-payments-fineos-scheduler-events-role"
-  assume_role_policy = data.aws_iam_policy_document.cloudwatch_events_payments_fineos_scheduler_role_assume_policy.json
-}
-
-data "aws_iam_policy_document" "cloudwatch_events_payments_fineos_scheduler_role_assume_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["events.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role_policy" "cloudwatch_events_payments_fineos_scheduler_role_policy" {
-  name   = "${local.app_name}-${var.environment_name}-payments-fineos-scheduler-events-role-policy"
-  role   = aws_iam_role.cloudwatch_events_payments_fineos_scheduler_role.id
-  policy = data.aws_iam_policy_document.cloudwatch_events_payments_fineos_scheduler_role_policy.json
-}
-
-data "aws_iam_policy_document" "cloudwatch_events_payments_fineos_scheduler_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["ecs:RunTask"]
-
-    resources = ["arn:aws:ecs:us-east-1:${data.aws_caller_identity.current.account_id}:task-definition/${aws_ecs_task_definition.ecs_tasks["payments-fineos-process"].family}:*"]
-  }
-
-  statement {
-    effect  = "Allow"
-    actions = ["iam:PassRole"]
-
-    resources = [
-      aws_iam_role.task_executor.arn,
-      aws_iam_role.payments_fineos_process_task_role.arn
-    ]
   }
 }
 
@@ -832,51 +697,6 @@ data "aws_iam_policy_document" "payments_ctr_import_execution_role_extras" {
     resources = [
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
       "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}"
-    ]
-  }
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-# IAM role and policies for payments-ctr-process scheduler
-# ----------------------------------------------------------------------------------------------------------------------
-
-resource "aws_iam_role" "cloudwatch_events_payments_ctr_scheduler_role" {
-  name               = "${local.app_name}-${var.environment_name}-payments-ctr-scheduler-events-role"
-  assume_role_policy = data.aws_iam_policy_document.cloudwatch_events_payments_ctr_scheduler_role_assume_policy.json
-}
-
-data "aws_iam_policy_document" "cloudwatch_events_payments_ctr_scheduler_role_assume_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["events.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role_policy" "cloudwatch_events_payments_ctr_scheduler_role_policy" {
-  name   = "${local.app_name}-${var.environment_name}-payments-ctr-scheduler-events-role-policy"
-  role   = aws_iam_role.cloudwatch_events_payments_ctr_scheduler_role.id
-  policy = data.aws_iam_policy_document.cloudwatch_events_payments_ctr_scheduler_role_policy.json
-}
-
-data "aws_iam_policy_document" "cloudwatch_events_payments_ctr_scheduler_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["ecs:RunTask"]
-
-    resources = ["arn:aws:ecs:us-east-1:${data.aws_caller_identity.current.account_id}:task-definition/${aws_ecs_task_definition.ecs_tasks["payments-ctr-process"].family}:*"]
-  }
-
-  statement {
-    effect  = "Allow"
-    actions = ["iam:PassRole"]
-
-    resources = [
-      aws_iam_role.task_executor.arn,
-      aws_iam_role.payments_ctr_process_task_role.arn
     ]
   }
 }

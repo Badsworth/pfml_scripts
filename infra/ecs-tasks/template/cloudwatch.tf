@@ -33,59 +33,86 @@ resource "aws_lambda_permission" "ecs_permission_tasks_logging" {
 }
 
 # ----------------------------------------------------------------------------------------------
+# Scheduled tasks
 
-resource "aws_cloudwatch_event_rule" "every_15_minutes" {
-  name                = "register-admins-${var.environment_name}-every-15-minutes"
-  description         = "Fires every 15 minutes"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Run register-leave-admins-with-fineos every 15 minutes.
+module "register_leave_admins_with_fineos_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_register_admins_job
+
+  task_name           = "register-leave-admins-with-fineos"
   schedule_expression = "rate(15 minutes)"
-  is_enabled          = var.enable_register_admins_job
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["register-leave-admins-with-fineos"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["register-leave-admins-with-fineos"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.register_admins_task_role.arn
 }
 
-resource "aws_cloudwatch_event_target" "register_admins_event_target_ecs" {
-  arn       = data.aws_ecs_cluster.cluster.arn
-  target_id = "register_admins_${var.environment_name}_ecs_event_target"
-  rule      = aws_cloudwatch_event_rule.every_15_minutes.name
-  role_arn  = aws_iam_role.cloudwatch_events_register_admins_role.arn
+# Run payments-ctr-process daily at 9am EST (10am EDT) (2pm UTC)
+module "payments_ctr_process_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_recurring_payments_schedule
 
-  ecs_target {
-    task_count          = 1
-    task_definition_arn = aws_ecs_task_definition.ecs_tasks["register-leave-admins-with-fineos"].arn
-    launch_type         = "FARGATE"
-    platform_version    = "1.4.0"
+  task_name           = "payments-ctr-process"
+  schedule_expression = "cron(0 14 * * ? *)"
+  environment_name    = var.environment_name
 
-    network_configuration {
-      assign_public_ip = false
-      subnets          = var.app_subnet_ids
-      security_groups  = [aws_security_group.tasks.id]
-    }
-  }
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["payments-ctr-process"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["payments-ctr-process"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.payments_ctr_process_task_role.arn
 }
-# -- Export daily registered users via execute-sql ------------------------------------------
 
-resource "aws_cloudwatch_event_rule" "every_24_hours" {
-  name                = "export-leave-admins-created-${var.environment_name}-every-24-hours"
-  description         = "Fires every 24 hours"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Run payments-fineos-process daily at 8pm EST (9pm EDT) (1am UTC)
+module "payments_fineos_process_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_recurring_payments_schedule
+
+  task_name           = "payments-fineos-process"
+  schedule_expression = "cron(0 1 * * ? *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["payments-fineos-process"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["payments-fineos-process"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.payments_fineos_process_task_role.arn
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Run execute-sql daily to export a report to S3 of leave admins created
+module "export_leave_admins_created_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
+
+  task_name           = "export-leave-admins-created"
   schedule_expression = "rate(24 hours)"
-}
+  environment_name    = var.environment_name
 
-resource "aws_cloudwatch_event_target" "export_leave_admins_created_target_ecs" {
-  arn       = data.aws_ecs_cluster.cluster.arn
-  target_id = "export_leave_admins_${var.environment_name}_ecs_event_target"
-  rule      = aws_cloudwatch_event_rule.every_24_hours.name
-  role_arn  = aws_iam_role.cloudwatch_events_export_leave_admins_created_role.arn
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
 
-  ecs_target {
-    task_count          = 1
-    task_definition_arn = aws_ecs_task_definition.ecs_tasks["execute-sql"].arn
-    launch_type         = "FARGATE"
-    platform_version    = "1.4.0"
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["execute-sql"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["execute-sql"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.task_execute_sql_task_role.arn
 
-    network_configuration {
-      assign_public_ip = false
-      subnets          = var.app_subnet_ids
-      security_groups  = [aws_security_group.tasks.id]
-    }
-  }
   input = <<DOC
 {
   "containerOverrides": [
@@ -102,72 +129,4 @@ resource "aws_cloudwatch_event_target" "export_leave_admins_created_target_ecs" 
         ]
 }
 DOC
-}
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Payments ECS Task using Cloudwatch Events (Eventbridge)
-resource "aws_cloudwatch_event_target" "trigger_payments_ctr_process_ecs_task_daily_at_9_am_et" {
-  count = var.enable_recurring_payments_schedule == true ? 1 : 0
-
-  rule      = aws_cloudwatch_event_rule.payments_ctr_process_ecs_task_daily_at_9_am_et.name
-  arn       = data.aws_ecs_cluster.cluster.arn
-  target_id = "payments_ctr_process_${var.environment_name}_cloudwatch_event_target"
-  role_arn  = aws_iam_role.cloudwatch_events_payments_ctr_scheduler_role.arn
-
-  ecs_target {
-    task_count          = 1
-    task_definition_arn = aws_ecs_task_definition.ecs_tasks["payments-ctr-process"].arn
-    launch_type         = "FARGATE"
-    platform_version    = "1.4.0"
-
-    network_configuration {
-      assign_public_ip = false
-      subnets          = var.app_subnet_ids
-      security_groups  = [aws_security_group.tasks.id]
-    }
-  }
-}
-
-resource "aws_cloudwatch_event_rule" "payments_ctr_process_ecs_task_daily_at_9_am_et" {
-  name        = "${var.environment_name}-payments-ctr-process-ecs-task-daily-at-9-am-et"
-  description = "Fires the ${var.environment_name} Payments CTR Process ECS task daily at 9am US EDT/2pm UTC"
-  # The time of day can only be specified in UTC and will need to be updated when daylight savings changes occur, if the 9AM US ET is desired to be consistent.
-  schedule_expression = "cron(0 14 * * ? *)"
-  tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
-  })
-}
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# payments-fineos-process task using Cloudwatch Events (Eventbridge)
-resource "aws_cloudwatch_event_target" "trigger_payments_fineos_process_ecs_task_daily_at_8_pm_et" {
-  count = var.enable_recurring_payments_schedule == true ? 1 : 0
-
-  rule      = aws_cloudwatch_event_rule.payments_fineos_process_ecs_task_daily_at_8_pm_et.name
-  arn       = data.aws_ecs_cluster.cluster.arn
-  target_id = "payments_fineos_process_${var.environment_name}_cloudwatch_event_target"
-  role_arn  = aws_iam_role.cloudwatch_events_payments_fineos_scheduler_role.arn
-
-  ecs_target {
-    task_count          = 1
-    task_definition_arn = aws_ecs_task_definition.ecs_tasks["payments-fineos-process"].arn
-    launch_type         = "FARGATE"
-    platform_version    = "1.4.0"
-
-    network_configuration {
-      assign_public_ip = false
-      subnets          = var.app_subnet_ids
-      security_groups  = [aws_security_group.tasks.id]
-    }
-  }
-}
-
-resource "aws_cloudwatch_event_rule" "payments_fineos_process_ecs_task_daily_at_8_pm_et" {
-  name        = "${var.environment_name}-payments-fineos-process-ecs-task-daily-at-8-pm-et"
-  description = "Fires the ${var.environment_name} Payments FINEOS Process ECS task daily at 8pm US EDT/1am UTC"
-  # The time of day can only be specified in UTC and will need to be updated when daylight savings changes occur, if the 8PM US ET is desired to be consistent.
-  schedule_expression = "cron(0 1 * * ? *)"
-  tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
-  })
 }
