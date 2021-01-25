@@ -37,12 +37,12 @@ describe("Thumbnail", () => {
       const createUrlSpy = jest.spyOn(URL, "createObjectURL");
 
       const wrapper = shallow(<Thumbnail file={file} />);
-
       expect(createUrlSpy).toHaveBeenCalledTimes(1);
-      expect(wrapper.prop("style")).toMatchInlineSnapshot(`
-        Object {
-          "backgroundImage": "url(image.png)",
-        }
+      expect(wrapper.find("img")).toMatchInlineSnapshot(`
+        <img
+          alt=""
+          src="image.png"
+        />
       `);
     });
 

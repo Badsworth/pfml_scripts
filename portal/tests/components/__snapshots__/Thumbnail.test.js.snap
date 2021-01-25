@@ -2,7 +2,7 @@
 
 exports[`Thumbnail when selected file is a PDF renders placeholder thumbnail 1`] = `
 <div
-  className="c-thumbnail border-1px border-base-lighter margin-right-2 display-flex c-thumbnail--fallback"
+  className="c-thumbnail margin-right-2 display-flex c-thumbnail--fallback border-1px border-base-lighter"
 >
   <svg
     fill="none"

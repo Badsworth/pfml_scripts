@@ -44,22 +44,17 @@ const Thumbnail = (props) => {
   }
   const hasImage = !!imageSrc;
 
-  let thumbnailClass =
-    "c-thumbnail border-1px border-base-lighter margin-right-2 display-flex";
+  let thumbnailClass = "c-thumbnail margin-right-2 display-flex";
   if (!hasImage) {
-    thumbnailClass = thumbnailClass + " c-thumbnail--fallback";
+    thumbnailClass =
+      thumbnailClass + " c-thumbnail--fallback border-1px border-base-lighter";
   }
 
   return (
-    <div
-      className={thumbnailClass}
-      style={
-        imageSrc && {
-          backgroundImage: `url(${imageSrc})`,
-        }
-      }
-    >
-      {hasImage ? null : (
+    <div className={thumbnailClass}>
+      {hasImage ? (
+        <img src={imageSrc} alt="" />
+      ) : (
         <svg
           width="30"
           height="40"
