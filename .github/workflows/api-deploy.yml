@@ -587,6 +587,45 @@ jobs:
           (aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID ||
            aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
 
+  update-newrelic:
+    name: Update New Relic
+    runs-on: ubuntu-latest
+    needs: [update-the-deploy-branch, api-release]
+    
+    steps:
+      - name: Set api-env Value
+        run: echo "api-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull the newrelic API key from parameter store  
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/pfml-api/newrelic-api-key"
+          env_variable_name: "newrelic_api_key"
+      
+      - name: Create a deployment marker 
+        uses: newrelic/deployment-marker-action@v1
+        env: 
+          prod: "868501894"
+          performance: "980622863"
+          test: "847219405"
+          stage: "847267539"
+          uat: "1114117515"
+          training: "980608199"
+        with:
+          apiKey: ${{ env.NEWRELIC_API_KEY }}
+          accountId: "2837112"
+          applicationId: ${{ env[env.api-env] }}   
+          revision: ${{ github.event.inputs.version || needs.update-the-deploy-branch.outputs.commit_hash }}
+
   api-gateway-release:
     name: API Gateway Release
     runs-on: ubuntu-latest
