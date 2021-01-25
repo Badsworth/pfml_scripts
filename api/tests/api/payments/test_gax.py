@@ -42,6 +42,7 @@ def get_payment(
     start_date: datetime.date,
     end_date: datetime.date,
     payment_method_id: int,
+    fineos_pei_i_value: str,
 ) -> Payment:
     employee = EmployeeFactory(
         ctr_vendor_customer_code=ctr_vendor_code, payment_method_id=payment_method_id
@@ -53,6 +54,7 @@ def get_payment(
         period_start_date=start_date,
         period_end_date=end_date,
         amount=amount,
+        fineos_pei_i_value=fineos_pei_i_value,
         claim=ClaimFactory(
             employee=employee,
             employer_id=employer.employer_id,
@@ -73,6 +75,7 @@ def get_payments() -> List[Payment]:
             start_date=datetime(2020, 8, 1).date(),
             end_date=datetime(2020, 12, 1).date(),
             payment_method_id=PaymentMethod.CHECK.payment_method_id,
+            fineos_pei_i_value="1",
         ),
         get_payment(
             fineos_absence_id="NTN-1234-ABS-02",
@@ -83,6 +86,7 @@ def get_payments() -> List[Payment]:
             start_date=datetime(2020, 2, 15).date(),
             end_date=datetime(2020, 4, 15).date(),
             payment_method_id=PaymentMethod.ACH.payment_method_id,
+            fineos_pei_i_value="2",
         ),
     ]
 
@@ -156,6 +160,7 @@ def test_build_individual_gax_document(initialize_factories_session, test_db_ses
         start_date=datetime(2020, 8, 1).date(),
         end_date=datetime(2020, 12, 1).date(),
         payment_method_id=PaymentMethod.ACH.payment_method_id,
+        fineos_pei_i_value="1",
     )
     test_db_session.add(payment)
     test_db_session.commit()
@@ -216,7 +221,7 @@ def test_build_individual_gax_document(initialize_factories_session, test_db_ses
         "BFY": "2021",
         "FY_DC": "2021",
         "PER_DC": "1",
-        "VEND_INV_NO": "NTN-1234-ABS-01_2020-07-01",
+        "VEND_INV_NO": "NTN-1234-ABS-01_1",
         "VEND_INV_DT": "2020-07-01",
         "CHK_DSCR": "PFML PAYMENT NTN-1234-ABS-01",
         "RFED_DOC_ID": "PFMLFAMLFY2170030632",

@@ -134,7 +134,6 @@ def test_e2e_process(
     caplog.set_level(logging.INFO)  # noqa: B1
     monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2019-12-31")
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
-
     # Common
     s3_config = payments_config.get_s3_config()
     move_it_config = payments_config.get_moveit_config()

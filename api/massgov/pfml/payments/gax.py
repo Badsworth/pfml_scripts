@@ -177,6 +177,26 @@ def build_individual_gax_document(
     absence_case_id = payments_util.validate_db_input(
         key="fineos_absence_id", db_object=claim, required=True, max_length=19, truncate=False
     )
+    # I value has a max of 10 so when it gets combines with absence_case_id (and _)
+    # it is a maximum of 30 characters.
+    i_value = payments_util.validate_db_input(
+        key="fineos_pei_i_value", db_object=payment, required=True, max_length=10, truncate=False
+    )
+    # Log a warning if absence case IDs or I values are getting close to the max length
+    if len(cast(str, absence_case_id)) > 17 or len(cast(str, i_value)) > 8:
+        # If you're coming to this because you saw this warning, here's some more info:
+        # We combine absence_case_id and i_value into a vendor_invoice_number below.
+        # This value has a max length of 30 as designated by the program. If we're
+        # getting close to this value, we'll need to address this maximum.
+        # See discussion on https://github.com/EOLWD/pfml/pull/2837
+        logger.warning(
+            "Absence case ID or FINEOS PEI I value are approaching their max length",
+            extra={
+                "absence_case_id": absence_case_id,
+                "fineos_pei_i_value": i_value,
+                "payment_id": payment.payment_id,
+            },
+        )
 
     today = now.date()
     start = cast(datetime, payment.period_start_date)
@@ -209,7 +229,7 @@ def build_individual_gax_document(
     rfed_doc_id = get_rfed_doc_id(claim.claim_type.claim_type_id)
     disbursement_format = get_disbursement_format(employee.payment_method)
 
-    vendor_invoice_number = f"{absence_case_id}_{payment_date_str}"
+    vendor_invoice_number = f"{absence_case_id}_{i_value}"
     check_description = f"PFML PAYMENT {absence_case_id}"[:250]
 
     # Create the root of the document
