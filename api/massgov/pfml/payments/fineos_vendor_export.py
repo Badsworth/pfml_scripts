@@ -212,6 +212,7 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
     requested_absences = extract_data.requested_absence_info.indexed_data.values()
     updated_employees = []
 
+    updated_employee_ids = set()
     for requested_absence in requested_absences:
         absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
         if absence_case_id is not None:
@@ -241,13 +242,23 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
         )
 
         if employee_pfml_entry is not None:
-            generate_employee_reference_file(
-                db_session, extract_data, employee_pfml_entry, validation_container
-            )
-            manage_state_log(db_session, extract_data, employee_pfml_entry, validation_container)
+            if employee_pfml_entry.employee_id not in updated_employee_ids:
+                generate_employee_reference_file(
+                    db_session, extract_data, employee_pfml_entry, validation_container
+                )
 
-            if db_session.is_modified(employee_pfml_entry):
-                updated_employees.append(employee_pfml_entry)
+                manage_state_log(
+                    db_session, extract_data, employee_pfml_entry, validation_container
+                )
+
+                updated_employee_ids.add(employee_pfml_entry.employee_id)
+
+                if db_session.is_modified(employee_pfml_entry):
+                    updated_employees.append(employee_pfml_entry)
+            else:
+                logger.info(
+                    f"Skipping adding a reference file and state_log for employee {employee_pfml_entry.employee_id}"
+                )
 
     return updated_employees
 
