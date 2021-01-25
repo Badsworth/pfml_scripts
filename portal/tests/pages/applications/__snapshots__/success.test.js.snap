@@ -160,7 +160,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 4`] = `
   <li
     key="1"
   >
-    Your employer has 10 days to provide feedback on your application.
+    Your employer has 10 business days to provide feedback on your application.
   </li>
    
   <li
@@ -177,7 +177,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 4`] = `
   <li
     key="6"
   >
-    If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.
+    Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every other week.
   </li>
 </ul>
 `;
@@ -854,7 +854,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 4`] = `
   <li
     key="1"
   >
-    Your employer has 10 days to provide feedback on your application.
+    Your employer has 10 business days to provide feedback on your application.
   </li>
    
   <li
@@ -871,7 +871,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 4`] = `
   <li
     key="6"
   >
-    If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.
+    Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every other week.
   </li>
 </ul>
 `;
@@ -1056,7 +1056,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 4`] = `
   <li
     key="1"
   >
-    Your employer has 10 days to provide feedback on your application.
+    Your employer has 10 business days to provide feedback on your application.
   </li>
    
   <li
@@ -1073,7 +1073,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 4`] = `
   <li
     key="6"
   >
-    If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.
+    Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every other week.
   </li>
 </ul>
 `;
@@ -1268,7 +1268,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 4`] = `
   <li
     key="1"
   >
-    Your employer has 10 days to provide feedback on your application.
+    Your employer has 10 business days to provide feedback on your application.
   </li>
    
   <li
@@ -1285,7 +1285,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 4`] = `
   <li
     key="6"
   >
-    If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.
+    Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every other week.
   </li>
 </ul>
 `;

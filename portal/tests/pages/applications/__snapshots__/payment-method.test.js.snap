@@ -44,7 +44,24 @@ exports[`PaymentMethod renders the page 1`] = `
           },
         ]
       }
-      hint="Your choice will be applied to any previous claims you have submitted."
+      hint={
+        <React.Fragment>
+          <p>
+            Your choice will be applied to any previous claims you have submitted.
+          </p>
+          <Details
+            label="When will I get paid?"
+          >
+            <div
+              className="margin-bottom-5"
+            >
+              <Trans
+                i18nKey="pages.claimsPaymentMethod.whenWillIGetPaidDetails"
+              />
+            </div>
+          </Details>
+        </React.Fragment>
+      }
       label="How do you want to get your weekly benefit?"
       name="payment_preference.payment_method"
       onChange={[Function]}

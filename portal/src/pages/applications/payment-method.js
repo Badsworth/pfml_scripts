@@ -8,6 +8,7 @@ import BackButton from "../../components/BackButton";
 import Button from "../../components/Button";
 import Claim from "../../models/Claim";
 import ConditionalContent from "../../components/ConditionalContent";
+import Details from "../../components/Details";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -100,7 +101,18 @@ export const PaymentMethod = (props) => {
           ]}
           label={t("pages.claimsPaymentMethod.sectionLabel")}
           type="radio"
-          hint={t("pages.claimsPaymentMethod.sectionLabelHint")}
+          hint={
+            <React.Fragment>
+              <p>{t("pages.claimsPaymentMethod.sectionLabelHint")}</p>
+              <Details
+                label={t("pages.claimsPaymentMethod.whenWillIGetPaidLabel")}
+              >
+                <div className="margin-bottom-5">
+                  <Trans i18nKey="pages.claimsPaymentMethod.whenWillIGetPaidDetails" />
+                </div>
+              </Details>
+            </React.Fragment>
+          }
         />
 
         <ConditionalContent
