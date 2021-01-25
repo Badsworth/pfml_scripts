@@ -1,8 +1,0 @@
-{
-  "containerOverrides": [
-    {
-      "name": "string",
-      "command": []
-    }
-  ]
-}

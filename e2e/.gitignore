@@ -1,9 +1,0 @@
-cypress/videos
-node_modules
-.env
-*-users.json
-data
-tmp
-dist
-scripts/*
-!scripts/*.sh
