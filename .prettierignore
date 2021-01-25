@@ -1,8 +1,0 @@
-out
-.next
-.terraform
-__snapshots__
-new-relic.js
-
-# Some of these are "invalid" in the eyes of Prettier and will result in Prettier failing
-infra/api/template/**/*.json
