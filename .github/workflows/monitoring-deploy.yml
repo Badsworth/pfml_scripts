@@ -1,0 +1,62 @@
+# This workflow automatically deploys changes to the monitoring modeule whenever the master branch is updated
+#
+#
+name: Monitoring Deploy
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - infra/monitoring/**
+      - infra/modules/alarms_api/**
+      - infra/modules/alarms_portal/**
+      - infra/modules/newrelic_baseline_error_rate/**
+
+
+jobs:
+  monitoring-deploy:
+    runs-on: ubuntu-latest
+      
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Terraform Init
+        id: terraform_init
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: "0.13.6"
+          tf_actions_subcommand: init
+          tf_actions_comment: false
+          tf_actions_working_dir: infra/monitoring
+
+      - name: Terraform Plan with new docker image
+        id: terraform_plan
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: "0.13.6"
+          tf_actions_subcommand: plan
+          tf_actions_comment: false
+          tf_actions_working_dir: infra/monitoring
+          args: "-out=plan.tfplan"
+
+      - name: Terraform Apply from execution plan
+        id: terraform_apply
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: "0.13.6"
+          tf_actions_subcommand: apply
+          tf_actions_comment: false
+          tf_actions_working_dir: infra/monitoring
+          args: "plan.tfplan"
+
+     
