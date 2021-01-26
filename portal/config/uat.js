@@ -6,13 +6,13 @@
 module.exports = {
   envName: "uat",
   // API UAT environment (https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments)
-  apiUrl: "https://0mv19lqx41.execute-api.us-east-1.amazonaws.com/uat/api/v1",
+  apiUrl: "https://paidleave-api-uat.mass.gov/api/v1",
   awsConfig: {
     // Cognito UAT environment (must match whatever API environment we're targeting)
     cognitoUserPoolId: "us-east-1_29j6fKBDT",
     cognitoUserPoolWebClientId: "1ajh0c38bs21k60bjtttegspvp",
   },
-  domain: "d31sked9ffq37g.cloudfront.net",
+  domain: "paidleave-uat.mass.gov",
   gtmConfig: {},
   newRelicAppId: "1062794160",
 };

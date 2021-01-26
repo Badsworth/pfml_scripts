@@ -53,7 +53,9 @@ module "api" {
   cors_origins = [
     # Allow requests from the API Gateway (Swagger) and Portal performance environments.
     "https://lk64ifbnn4.execute-api.us-east-1.amazonaws.com",
-    "https://dijouhh49zeeb.cloudfront.net"
+    "https://dijouhh49zeeb.cloudfront.net",
+    "https://paidleave-api-performance.mass.gov",
+    "https://paidleave-performance.mass.gov"
   ]
   formstack_import_lambda_build_s3_key = local.formstack_lambda_artifact_s3_key
 

@@ -6,14 +6,13 @@
 module.exports = {
   envName: "training",
   // API Training environment (https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments)
-  apiUrl:
-    "https://mo0nk02mkg.execute-api.us-east-1.amazonaws.com/training/api/v1",
+  apiUrl: "https://paidleave-api-training.mass.gov/api/v1/",
   awsConfig: {
     // Cognito Training environment (must match whatever API environment we're targeting)
     cognitoUserPoolId: "us-east-1_gHLjkp4A8",
     cognitoUserPoolWebClientId: "2hr6bckdopamvq92jahr542p5p",
   },
-  domain: "dist3ws941qq9.cloudfront.net",
+  domain: "paidleave-training.mass.gov",
   gtmConfig: {},
   newRelicAppId: "982303878",
 };

@@ -26,8 +26,8 @@
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "training": {
-    "PORTAL_BASEURL": "https://dist3ws941qq9.cloudfront.net",
-    "API_BASEURL": "https://mo0nk02mkg.execute-api.us-east-1.amazonaws.com/training/api/v1",
+    "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
+    "API_BASEURL": "https://paidleave-api-training.mass.gov/api/v1",
     "FINEOS_BASEURL": "https://trn-claims-webapp.masspfml.fineos.com/",
     "PORTAL_USERNAME": "rob+training@lastcallmedia.com",
     "FINEOS_USERNAME": "CONTENT",
@@ -37,8 +37,8 @@
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "performance": {
-    "PORTAL_BASEURL": "https://dijouhh49zeeb.cloudfront.net",
-    "API_BASEURL": "https://lk64ifbnn4.execute-api.us-east-1.amazonaws.com/performance/api/v1",
+    "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
+    "API_BASEURL": "https://paidleave-api-performance.mass.gov/api/v1",
     "FINEOS_BASEURL": "https://perf-claims-webapp.masspfml.fineos.com/",
     "PORTAL_USERNAME": "rob+pfml-performance@lastcallmedia.com",
     "FINEOS_USERNAME": "CONTENT",
