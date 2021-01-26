@@ -36,6 +36,7 @@ from massgov.pfml.db.models.applications import (
 )
 from massgov.pfml.db.models.employees import Address, Country, Employer, PaymentMethod, User
 from massgov.pfml.fineos.exception import FINEOSNotFound
+from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EFormBody
 from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
 
 logger = logging.get_logger(__name__)
@@ -984,3 +985,12 @@ def resolve_leave_plans(family_exemption: bool, medical_exemption: bool) -> Set[
             }
 
     return leave_plans
+
+
+def create_eform(
+    application: Application, db_session: massgov.pfml.db.Session, eform: EFormBody
+) -> None:
+    fineos = massgov.pfml.fineos.create_client()
+    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+    fineos_absence_id = get_fineos_absence_id_from_application(application)
+    fineos.customer_create_eform(fineos_user_id, fineos_absence_id, eform)

@@ -1,20 +1,10 @@
 from itertools import chain
-from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.fineos.models.group_client_api import EFormAttribute, ModelEnum
-from massgov.pfml.fineos.transforms.to_fineos.base import TransformEformAttributes
-
-
-# TODO use EForm from group_client_api model here
-class EFormBody(BaseModel):
-    eformType: str = Field(
-        None, description="Name of the EForm document type", min_length=0, max_length=200
-    )
-    eformId: Optional[int]
-    eformAttributes: List[EFormAttribute] = Field(None, description="An array of EForm attributes.")
+from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody, TransformEformAttributes
 
 
 class TransformEmployerBenefit(TransformEformAttributes):

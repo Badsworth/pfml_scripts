@@ -8,7 +8,7 @@ from massgov.pfml.api.models.claims.common import (
     PreviousLeave,
 )
 from massgov.pfml.fineos.models.group_client_api import EFormAttribute
-from massgov.pfml.fineos.transforms.to_fineos.eforms import (
+from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     TransformEmployerBenefit,
     TransformEmployerClaimReview,
     TransformOtherInfo,

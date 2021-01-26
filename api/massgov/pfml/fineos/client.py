@@ -6,7 +6,7 @@ import abc
 import typing
 from decimal import Decimal
 
-from massgov.pfml.fineos.transforms.to_fineos.eforms import EFormBody
+from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 
 from . import models
 
@@ -123,6 +123,9 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
+        pass
+
+    def customer_create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         pass
 
     @abc.abstractmethod

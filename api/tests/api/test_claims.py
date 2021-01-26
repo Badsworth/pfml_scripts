@@ -6,7 +6,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import ClaimFactory, EmployerFactory
 from massgov.pfml.fineos.models.group_client_api import EFormAttribute
-from massgov.pfml.fineos.transforms.to_fineos.eforms import EFormBody
+from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 
 
 def test_non_employers_cannot_download_documents(client, auth_token):

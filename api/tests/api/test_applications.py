@@ -3760,6 +3760,58 @@ def test_application_post_submit_app_failure_after_absence_case_creation(
     assert response.status_code == 403
 
 
+def test_application_post_submit_creates_previous_leaves_eform(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    application.hours_worked_per_week = 40
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    application.previous_leaves = [
+        PreviousLeaveFactory.create(application_id=application.application_id)
+    ]
+
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    captures = massgov.pfml.fineos.mock_client.get_capture()
+
+    assert response.status_code == 201
+    assert "customer_create_eform" in map(lambda capture: capture[0], captures)
+
+
+def test_application_post_submit_no_previous_leaves_does_not_create_eform(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    application.hours_worked_per_week = 40
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    captures = massgov.pfml.fineos.mock_client.get_capture()
+
+    assert response.status_code == 201
+    assert "customer_create_eform" not in map(lambda capture: capture[0], captures)
+
+
 def test_application_post_complete_app(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     application.tax_identifier = TaxIdentifier(tax_identifier="999004444")

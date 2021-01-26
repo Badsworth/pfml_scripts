@@ -23,7 +23,7 @@ from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformOtherIncomeEform,
     TransformOtherLeaveEform,
 )
-from massgov.pfml.fineos.transforms.to_fineos.eforms import EFormBody
+from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EFormBody
 
 LEAVE_ADMIN_INFO_REQUEST_TYPE = "Employer Confirmation of Leave Data"
 

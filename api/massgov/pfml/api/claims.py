@@ -23,7 +23,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministrator
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
-from massgov.pfml.fineos.transforms.to_fineos.eforms import TransformEmployerClaimReview
+from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import TransformEmployerClaimReview
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)

@@ -26,6 +26,7 @@ from massgov.pfml.api.models.applications.responses import ApplicationResponse, 
 from massgov.pfml.api.services.applications import get_document_by_id
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
+    create_eform,
     download_document,
     get_documents,
     mark_documents_as_received,
@@ -44,6 +45,7 @@ from massgov.pfml.db.models.applications import (
     OtherIncome,
     PreviousLeave,
 )
+from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import TransformPreviousLeaves
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -278,6 +280,12 @@ def applications_submit(application_id):
                 extra=log_attributes,
             )
             return get_fineos_submit_issues_response(complete_intake_issues, existing_application)
+
+        # Send previous leaves to fineos
+        if existing_application.previous_leaves:
+            eform = TransformPreviousLeaves.to_fineos(existing_application)
+            create_eform(existing_application, db_session, eform)
+            logger.info("Created Other Leaves eform", extra=log_attributes)
 
         logger.info("applications_submit success", extra=log_attributes)
 
