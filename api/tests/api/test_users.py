@@ -3,21 +3,44 @@ import uuid
 import pytest
 
 import tests.api
-from massgov.pfml.db.models.factories import UserFactory
+from massgov.pfml.db.models.employees import UserLeaveAdministrator
+from massgov.pfml.db.models.factories import EmployerFactory, UserFactory
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
 
 
-def test_users_get(client, user, auth_token):
+def test_users_get(client, employer_user, employer_auth_token, test_db_session):
+    employer = EmployerFactory.create()
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
     response = client.get(
-        "/v1/users/{}".format(user.user_id), headers={"Authorization": f"Bearer {auth_token}"}
+        "/v1/users/{}".format(employer_user.user_id),
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
     )
     response_body = response.get_json()
 
     assert response.status_code == 200
-    assert response_body.get("data")["user_id"] == str(user.user_id)
-    assert response_body.get("data")["roles"] == []
+    assert response_body.get("data")["user_id"] == str(employer_user.user_id)
+    assert response_body.get("data")["roles"] == [
+        {"role": {"role_description": "Employer", "role_id": 3}}
+    ]
+    assert response_body.get("data")["user_leave_administrators"] == [
+        {
+            "employer": {
+                "employer_dba": employer.employer_dba,
+                "employer_fein": employer.employer_fein,
+                "employer_id": str(employer.employer_id),
+            },
+            "verified": False,
+        }
+    ]
 
 
 def test_users_unauthorized_get(client, user, auth_token):
@@ -47,7 +70,16 @@ def test_users_get_fineos_forbidden(client, fineos_user, fineos_user_token):
     assert response.status_code == 403
 
 
-def test_users_get_current(client, employer_user, employer_auth_token):
+def test_users_get_current(client, employer_user, employer_auth_token, test_db_session):
+    employer = EmployerFactory.create()
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
     response = client.get(
         "/v1/users/current", headers={"Authorization": f"Bearer {employer_auth_token}"}
     )
@@ -57,6 +89,16 @@ def test_users_get_current(client, employer_user, employer_auth_token):
     assert response_body.get("data")["user_id"] == str(employer_user.user_id)
     assert response_body.get("data")["roles"] == [
         {"role": {"role_description": "Employer", "role_id": 3}}
+    ]
+    assert response_body.get("data")["user_leave_administrators"] == [
+        {
+            "employer": {
+                "employer_dba": employer.employer_dba,
+                "employer_fein": employer.employer_fein,
+                "employer_id": str(employer.employer_id),
+            },
+            "verified": False,
+        }
     ]
 
 

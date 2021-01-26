@@ -1145,6 +1145,39 @@ components:
         consented_to_data_sharing:
           type: boolean
           example: false
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserRoleResponse"
+        user_leave_administrators:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserLeaveAdminResponse"
+
+    RoleResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        role_id:
+          type: integer
+        role_description:
+          type: string
+
+    UserRoleResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        role:
+          $ref: "#/components/schemas/RoleResponse"
+
+    UserLeaveAdminResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        employer:
+          $ref: "#/components/schemas/EmployerResponse"
+        verified:
+          type: boolean
 
     UserUpdateRequest:
       type: object

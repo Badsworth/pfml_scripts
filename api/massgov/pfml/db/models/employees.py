@@ -584,6 +584,9 @@ class User(Base):
     )
 
     roles = relationship("UserRole", back_populates="user", uselist=True)
+    user_leave_administrators = relationship(
+        "UserLeaveAdministrator", back_populates="user", uselist=True
+    )
 
 
 class UserRole(Base):

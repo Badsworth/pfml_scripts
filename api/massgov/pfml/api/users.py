@@ -75,6 +75,17 @@ class RoleResponse(PydanticBaseModel):
     role_description: str
 
 
+class EmployerResponse(PydanticBaseModel):
+    employer_dba: str
+    employer_fein: str
+    employer_id: UUID4
+
+
+class UserLeaveAdminResponse(PydanticBaseModel):
+    employer: EmployerResponse
+    verified: bool
+
+
 class UserRoleResponse(PydanticBaseModel):
     role: RoleResponse
 
@@ -87,6 +98,7 @@ class UserResponse(PydanticBaseModel):
     email_address: str
     consented_to_data_sharing: bool
     roles: List[UserRoleResponse]
+    user_leave_administrators: List[UserLeaveAdminResponse]
 
 
 def user_response(user: User) -> Dict[str, Any]:
