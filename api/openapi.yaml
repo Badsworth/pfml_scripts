@@ -1174,8 +1174,16 @@ components:
       type: object
       additionalProperties: false
       properties:
-        employer:
-          $ref: "#/components/schemas/EmployerResponse"
+        employer_id:
+          type: string
+          format: uuid
+          example: "009fa369-291b-403f-a85a-15e938c26f2f"
+        employer_fein:
+          type: string
+          example: "41-9904348"
+        employer_dba:
+          type: string
+          example: "The Super Store"
         verified:
           type: boolean
 
@@ -1267,25 +1275,6 @@ components:
           type: string
           example: "1234"
       required: ["employee_id", "tax_identifier_last4"]
-
-    EmployerResponse:
-      type: object
-      properties:
-        employer_id:
-          type: string
-          format: uuid
-          example: "009fa369-291b-403f-a85a-15e938c26f2f"
-        employer_fein:
-          type: string
-          example: "41-9904348"
-        employer_dba:
-          type: string
-          example: "The Super Store"
-      additionalProperties: false
-      required:
-        - employer_id
-        - employer_fein
-        - employer_dba
 
     EmployerClaimRequestBody:
       type: object

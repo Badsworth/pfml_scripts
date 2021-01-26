@@ -33,11 +33,9 @@ def test_users_get(client, employer_user, employer_auth_token, test_db_session):
     ]
     assert response_body.get("data")["user_leave_administrators"] == [
         {
-            "employer": {
-                "employer_dba": employer.employer_dba,
-                "employer_fein": employer.employer_fein,
-                "employer_id": str(employer.employer_id),
-            },
+            "employer_dba": employer.employer_dba,
+            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_id": str(employer.employer_id),
             "verified": False,
         }
     ]
@@ -92,11 +90,9 @@ def test_users_get_current(client, employer_user, employer_auth_token, test_db_s
     ]
     assert response_body.get("data")["user_leave_administrators"] == [
         {
-            "employer": {
-                "employer_dba": employer.employer_dba,
-                "employer_fein": employer.employer_fein,
-                "employer_id": str(employer.employer_id),
-            },
+            "employer_dba": employer.employer_dba,
+            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_id": str(employer.employer_id),
             "verified": False,
         }
     ]

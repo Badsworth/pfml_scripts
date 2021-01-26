@@ -102,4 +102,25 @@ class UserResponse(PydanticBaseModel):
 
 
 def user_response(user: User) -> Dict[str, Any]:
-    return UserResponse.from_orm(user).dict()
+    response = UserResponse.from_orm(user).dict()
+    response["user_leave_administrators"] = [
+        normalize_user_leave_admin_response(ula) for ula in response["user_leave_administrators"]
+    ]
+    return response
+
+
+def normalize_user_leave_admin_response(
+    leave_admin_response: UserLeaveAdminResponse,
+) -> Dict[str, Any]:
+    leave_admin_dict = dict(leave_admin_response)
+    return {
+        "employer_dba": leave_admin_dict["employer"]["employer_dba"],
+        "employer_fein": mask_fein(leave_admin_dict["employer"]["employer_fein"]),
+        "employer_id": leave_admin_dict["employer"]["employer_id"],
+        "verified": leave_admin_dict["verified"],
+    }
+
+
+def mask_fein(fein: str) -> str:
+    # Log only last 4 of FEIN
+    return f"**-***{fein[5:]}"
