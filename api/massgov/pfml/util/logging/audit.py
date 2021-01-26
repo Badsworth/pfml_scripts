@@ -43,6 +43,9 @@ def audit_hook(event_name, args):
     if event_name == "os.chmod" and type(args[0]) is int:
         # Gunicorn generates a high volume of these events in normal operation (see workertmp.py)
         return
+    # Disable audit log for timezone files. See API-1290
+    if event_name == "open" and isinstance(args[0], str) and "/pytz/" in args[0]:
+        return
 
     audit_log("%s %r" % (event_name, args))
 
