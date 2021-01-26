@@ -1,5 +1,7 @@
 import { IconMail, IconPdf } from "@massds/mayflower-react/dist/Icon";
+import Alert from "../../components/Alert";
 import Heading from "../../components/Heading";
+import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
@@ -14,7 +16,7 @@ const IconWait = (props) => (
   </svg>
 );
 
-export const Index = () => {
+export const Index = (props) => {
   const { t } = useTranslation();
   const iconProps = {
     className: "margin-right-2 text-secondary text-middle",
@@ -22,12 +24,30 @@ export const Index = () => {
     width: 30,
     fill: "currentColor",
   };
+  const hasUnverifiedEmployer = props.appLogic.users.user.hasUnverifiedEmployer;
 
   return (
     <div className="grid-container">
       <div className="grid-row">
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersDashboard.welcomeTitle")}</Title>
+          {hasUnverifiedEmployer && (
+            <Alert state="warning">
+              <Heading level="2">
+                {t("pages.employersDashboard.verificationTitle")}
+              </Heading>
+              <p>
+                <Trans
+                  i18nKey="pages.employersDashboard.verificationBody"
+                  components={{
+                    "your-organizations-link": (
+                      <a href={routes.employers.organizations} />
+                    ),
+                  }}
+                />
+              </p>
+            </Alert>
+          )}
           <p>{t("pages.employersDashboard.welcomeBody")}</p>
 
           <Heading level="2">
@@ -93,6 +113,10 @@ export const Index = () => {
       </div>
     </div>
   );
+};
+
+Index.propTypes = {
+  appLogic: PropTypes.object.isRequired,
 };
 
 export default withUser(Index);

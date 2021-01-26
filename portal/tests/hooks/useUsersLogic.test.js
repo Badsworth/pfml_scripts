@@ -1,9 +1,5 @@
 import { NetworkError, UnauthorizedError } from "../../src/errors";
-import User, {
-  RoleDescription,
-  UserLeaveAdministrator,
-  UserRole,
-} from "../../src/models/User";
+import User, { RoleDescription, UserRole } from "../../src/models/User";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import Claim from "../../src/models/Claim";
@@ -249,94 +245,6 @@ describe("useUsersLogic", () => {
         usersLogic.requireUserRole();
 
         expect(mockRouter.push).not.toHaveBeenCalled();
-      });
-    });
-
-    describe("when user has unverified employer", () => {
-      it("redirects to Verify Business", async () => {
-        const unverifiedEmployer = [
-          new UserLeaveAdministrator({
-            employer_dba: "Dunder Mifflin",
-            employer_fein: "11-111111",
-            employer_id: "123",
-            verified: false,
-          }),
-        ];
-        await preloadUser(
-          new User({
-            roles: employerRole,
-            user_leave_administrators: unverifiedEmployer,
-            consented_to_data_sharing: true,
-          })
-        );
-        mockRouter.pathname = routes.applications.dashboard;
-        usersLogic.requireUserRole();
-
-        expect(mockRouter.push).toHaveBeenCalledWith(
-          "/employers/verify-business/?employer_id=123"
-        );
-      });
-
-      it("redirects to Employers dashboard if employer is invalid", async () => {
-        const nonexistentEmployer = [null];
-        await preloadUser(
-          new User({
-            roles: employerRole,
-            user_leave_administrators: nonexistentEmployer,
-            consented_to_data_sharing: true,
-          })
-        );
-        mockRouter.pathname = routes.applications.dashboard;
-        usersLogic.requireUserRole();
-
-        expect(mockRouter.push).toHaveBeenCalledWith("/employers");
-      });
-
-      it("redirects to Employers dashboard if id is invalid", async () => {
-        const unverifiedEmployer = [
-          new UserLeaveAdministrator({
-            employer_dba: "Dunder Mifflin",
-            employer_fein: "11-111111",
-            employer_id: null,
-            verified: false,
-          }),
-        ];
-        await preloadUser(
-          new User({
-            roles: employerRole,
-            user_leave_administrators: unverifiedEmployer,
-            consented_to_data_sharing: true,
-          })
-        );
-        mockRouter.pathname = routes.applications.dashboard;
-        usersLogic.requireUserRole();
-
-        expect(mockRouter.push).toHaveBeenCalledWith("/employers");
-      });
-    });
-
-    describe("when user has verified employer", () => {
-      it("redirects to Employers dashboard", async () => {
-        const verifiedEmployer = [
-          new UserLeaveAdministrator({
-            employer_dba: "Dunder Mifflin",
-            employer_fein: "11-111111",
-            employer_id: "123",
-            verified: true,
-          }),
-        ];
-
-        await preloadUser(
-          new User({
-            roles: employerRole,
-            user_leave_administrators: verifiedEmployer,
-            consented_to_data_sharing: true,
-          })
-        );
-        mockRouter.pathname = routes.applications.dashboard;
-        usersLogic.requireUserRole();
-
-        expect(mockRouter.push).toHaveBeenCalledWith("/employers");
       });
     });
 
