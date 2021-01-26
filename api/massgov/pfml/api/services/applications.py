@@ -375,6 +375,8 @@ def update_from_request(
     db_session.flush()
     db_session.commit()
     db_session.refresh(application)
+    if application.work_pattern is not None:
+        db_session.refresh(application.work_pattern)
 
     return application
 
@@ -619,7 +621,7 @@ def add_or_update_work_pattern(
                     )
                 )
 
-                work_pattern.work_pattern_days = work_pattern_days
+            work_pattern.work_pattern_days = work_pattern_days
     if "work_week_starts" in fieldset:
         if api_work_pattern.work_week_starts:
             work_pattern.work_week_starts_id = DayOfWeek.get_id(

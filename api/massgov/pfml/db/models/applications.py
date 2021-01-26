@@ -2,8 +2,20 @@ import datetime
 from decimal import Decimal
 from enum import Enum
 
-from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
+from sqlalchemy import (
+    JSON,
+    TIMESTAMP,
+    Boolean,
+    Column,
+    Date,
+    ForeignKey,
+    Integer,
+    Numeric,
+    Text,
+    case,
+)
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 import massgov.pfml.util.logging
@@ -435,7 +447,12 @@ class WorkPattern(Base):
     applications = relationship("Application", back_populates="work_pattern", uselist=True)
     work_pattern_type = relationship(LkWorkPatternType)
     work_week_starts = relationship(LkDayOfWeek)
-    work_pattern_days = relationship("WorkPatternDay", back_populates="work_pattern", uselist=True)
+    work_pattern_days = relationship(
+        "WorkPatternDay",
+        back_populates="work_pattern",
+        uselist=True,
+        order_by="asc(WorkPatternDay.sort_order)",
+    )
 
 
 class WorkPatternDay(Base):
@@ -451,6 +468,12 @@ class WorkPatternDay(Base):
     work_pattern = relationship("WorkPattern", back_populates="work_pattern_days", uselist=False)
     day_of_week = relationship(LkDayOfWeek)
     relationship(WorkPattern, back_populates="work_pattern_days")
+
+    @hybrid_property
+    def sort_order(self):
+        """Set sort order of Sunday to 0"""
+        day_of_week_is_sunday = self.day_of_week_id == 7
+        return case([(day_of_week_is_sunday, 0),], else_=self.day_of_week_id)  # type: ignore
 
 
 class WorkPatternType(LookupTable):

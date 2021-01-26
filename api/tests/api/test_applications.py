@@ -1351,13 +1351,13 @@ def test_application_patch_add_work_pattern(client, user, auth_token, test_db_se
                 "pattern_start_date": "2021-01-03",
                 "work_week_starts": "Sunday",
                 "work_pattern_days": [
-                    {"day_of_week": "Sunday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Monday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Tuesday", "week_number": 1, "minutes": 60 * 8},
                     {"day_of_week": "Wednesday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Thursday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Monday", "week_number": 1, "minutes": 60 * 8},
                     {"day_of_week": "Friday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Thursday", "week_number": 1, "minutes": 60 * 8},
                     {"day_of_week": "Saturday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Tuesday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Sunday", "week_number": 1, "minutes": 60 * 8},
                 ],
             }
         },
@@ -1372,6 +1372,18 @@ def test_application_patch_add_work_pattern(client, user, auth_token, test_db_se
     assert work_pattern.get("pattern_start_date") == "2021-01-03"
     assert work_pattern.get("work_week_starts") == "Sunday"
     assert len(work_pattern.get("work_pattern_days")) == 7
+    work_pattern_days_of_week = [
+        day.get("day_of_week") for day in work_pattern.get("work_pattern_days")
+    ]
+    assert work_pattern_days_of_week == [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+    ]
 
 
 def test_application_patch_update_work_pattern(client, user, auth_token, test_db_session):
@@ -3026,6 +3038,9 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
                     patternStatus=None,
                     workPatternDays=[
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
                             dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
@@ -3042,9 +3057,6 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
                             dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
                         ),
                     ],
                 )
@@ -3061,6 +3073,9 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
                     patternStatus=None,
                     workPatternDays=[
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
                             dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
@@ -3077,9 +3092,6 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
                             dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
                         ),
                     ],
                 )
@@ -3256,6 +3268,9 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     patternStatus=None,
                     workPatternDays=[
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
                             dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
@@ -3272,9 +3287,6 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                         ),
                         massgov.pfml.fineos.models.customer_api.WorkPatternDay(
                             dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
                         ),
                     ],
                 )

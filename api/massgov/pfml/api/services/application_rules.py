@@ -871,15 +871,15 @@ def get_reduced_schedule_leave_minutes_issues(
     """
 
     issues = []
-    # These fields should be ordered in the same order as DayOfWeek (Monday–Sunday)
+    # These fields should be ordered in the same order as DayOfWeek (Sunday–Saturday)
     minute_fields = [
+        "sunday_off_minutes",
         "monday_off_minutes",
         "tuesday_off_minutes",
         "wednesday_off_minutes",
         "thursday_off_minutes",
         "friday_off_minutes",
         "saturday_off_minutes",
-        "sunday_off_minutes",
     ]
     minutes_each_day = [getattr(leave_period, field, None) or 0 for field in minute_fields]
 
@@ -916,11 +916,7 @@ def get_reduced_schedule_leave_minutes_issues(
 
         # There should only ever be one week of days since the length is validated in validate_work_pattern_days
         if len(minute_fields) == len(list(work_pattern_days)):
-            work_pattern_minutes_each_day = [
-                day.minutes
-                # TODO (CP-1344): Guarantee the order of work_pattern_days closer to the DB query rather than here
-                for day in sorted(work_pattern_days, key=lambda day: day.day_of_week_id)
-            ]
+            work_pattern_minutes_each_day = [day.minutes for day in work_pattern_days]
 
             for field, work_pattern_minutes in zip(minute_fields, work_pattern_minutes_each_day):
                 leave_period_minutes: int = getattr(leave_period, field, None) or 0

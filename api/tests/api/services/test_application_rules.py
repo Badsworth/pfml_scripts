@@ -1219,38 +1219,38 @@ def test_reduced_leave_period_maximum_minutes(test_db_session, initialize_factor
     assert [
         Issue(
             type=IssueType.maximum,
-            message="monday_off_minutes cannot exceed the work pattern minutes for the same day, which is 1",
+            message="sunday_off_minutes cannot exceed the work pattern minutes for the same day, which is 1",
+            field="leave_details.reduced_schedule_leave_periods[0].sunday_off_minutes",
+        ),
+        Issue(
+            type=IssueType.maximum,
+            message="monday_off_minutes cannot exceed the work pattern minutes for the same day, which is 2",
             field="leave_details.reduced_schedule_leave_periods[0].monday_off_minutes",
         ),
         Issue(
             type=IssueType.maximum,
-            message="tuesday_off_minutes cannot exceed the work pattern minutes for the same day, which is 2",
+            message="tuesday_off_minutes cannot exceed the work pattern minutes for the same day, which is 3",
             field="leave_details.reduced_schedule_leave_periods[0].tuesday_off_minutes",
         ),
         Issue(
             type=IssueType.maximum,
-            message="wednesday_off_minutes cannot exceed the work pattern minutes for the same day, which is 3",
+            message="wednesday_off_minutes cannot exceed the work pattern minutes for the same day, which is 4",
             field="leave_details.reduced_schedule_leave_periods[0].wednesday_off_minutes",
         ),
         Issue(
             type=IssueType.maximum,
-            message="thursday_off_minutes cannot exceed the work pattern minutes for the same day, which is 4",
+            message="thursday_off_minutes cannot exceed the work pattern minutes for the same day, which is 5",
             field="leave_details.reduced_schedule_leave_periods[0].thursday_off_minutes",
         ),
         Issue(
             type=IssueType.maximum,
-            message="friday_off_minutes cannot exceed the work pattern minutes for the same day, which is 5",
+            message="friday_off_minutes cannot exceed the work pattern minutes for the same day, which is 6",
             field="leave_details.reduced_schedule_leave_periods[0].friday_off_minutes",
         ),
         Issue(
             type=IssueType.maximum,
-            message="saturday_off_minutes cannot exceed the work pattern minutes for the same day, which is 6",
+            message="saturday_off_minutes cannot exceed the work pattern minutes for the same day, which is 7",
             field="leave_details.reduced_schedule_leave_periods[0].saturday_off_minutes",
-        ),
-        Issue(
-            type=IssueType.maximum,
-            message="sunday_off_minutes cannot exceed the work pattern minutes for the same day, which is 7",
-            field="leave_details.reduced_schedule_leave_periods[0].sunday_off_minutes",
         ),
     ] == issues
 
