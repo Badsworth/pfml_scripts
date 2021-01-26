@@ -244,6 +244,18 @@ class VerificationFactory(BaseFactory):
     verification_type_id = factory.LazyAttribute(lambda a: a.verification_type.verification_type_id)
 
 
+class EmployeeLogFactory(BaseFactory):
+    class Meta:
+        model = employee_models.EmployeeLog
+
+    employee_log_id = Generators.UuidObj
+    employee_id = Generators.UuidObj
+    employer_id = Generators.UuidObj
+    action = "UPDATE_NEW_EMPLOYER"
+    modified_at = Generators.UtcNow
+    process_id = 1
+
+
 class WagesAndContributionsFactory(BaseFactory):
     class Meta:
         model = employee_models.WagesAndContributions

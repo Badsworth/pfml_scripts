@@ -21,6 +21,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     EmployeeFactory,
+    EmployeeLogFactory,
     EmployerFactory,
     WagesAndContributionsFactory,
 )
@@ -691,18 +692,34 @@ def test_get_most_recent_employer_to_employee_info_for_single_employee_different
         size=5, employee=employee
     )
 
-    most_recent_wages = sorted(
+    employee_log_one = EmployeeLogFactory.create(
+        employee_id=employee.employee_id,
+        employer_id=wages_for_single_employee_different_employers[0].employer_id,
+    )
+
+    employee_log_two = EmployeeLogFactory.create(
+        employee_id=employee.employee_id,
+        employer_id=wages_for_single_employee_different_employers[1].employer_id,
+    )
+
+    sorted_wages = sorted(
         wages_for_single_employee_different_employers, key=lambda w: w.filing_period, reverse=True
-    )[0]
+    )
 
-    most_recent_employer = most_recent_wages.employer
+    most_recent_wages = sorted_wages[0]
+    most_recent_employer = most_recent_wages.employer.employer_id
 
-    employer_id_to_employee_ids = ef.get_most_recent_employer_to_employee_info(
+    employer_id_to_employee_ids = ef.get_most_recent_employer_and_employee_log_employers_to_employee_info(
         test_db_session, [employee.employee_id]
     )
 
-    assert len(employer_id_to_employee_ids) == 1
-    assert employer_id_to_employee_ids[most_recent_employer.employer_id] == [employee.employee_id]
+    employer_id_set = {
+        most_recent_employer,
+        employee_log_one.employer_id,
+        employee_log_two.employer_id,
+    }
+
+    assert len(employer_id_to_employee_ids) == len(employer_id_set)
 
 
 def test_process_employee_updates_simple(

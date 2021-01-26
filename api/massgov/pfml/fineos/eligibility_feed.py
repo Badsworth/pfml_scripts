@@ -277,13 +277,18 @@ def query_employees_for_employer(query: "Query[_T]", employer: Employer) -> "Que
     )
 
 
+class EmployerEmployeeLogPairQueryResult(db.RowProxy):
+    employer_id: EmployerId
+    employee_id: EmployeeId
+
+
 class EmployerEmployeePairQueryResult(db.RowProxy):
     employer_id: EmployerId
     employee_id: EmployeeId
     maxdate: date
 
 
-def get_most_recent_employer_to_employee_info(
+def get_most_recent_employer_and_employee_log_employers_to_employee_info(
     db_session: db.Session, employee_ids: Iterable[EmployeeId]
 ) -> Dict[EmployerId, List[EmployeeId]]:
     employer_employee_pairs: List[EmployerEmployeePairQueryResult] = (
@@ -306,12 +311,27 @@ def get_most_recent_employer_to_employee_info(
         employer_employee_pairs
     )
 
+    employee_log_employers: List[EmployerEmployeeLogPairQueryResult] = (
+        db_session.query(EmployeeLog.employee_id, EmployeeLog.employer_id)
+        .filter(EmployeeLog.employer_id.isnot(None), EmployeeLog.employee_id.in_(employee_ids))
+        .group_by(EmployeeLog.employer_id, EmployeeLog.employee_id)
+        .all()
+    )
+
     # Organize pairs into the structure we want
     employer_id_to_employee_ids: Dict[EmployerId, List[EmployeeId]] = {}
     for employer_employee_pair in most_recent_employer_employee_pairs:
         employer_id_to_employee_ids.setdefault(employer_employee_pair.employer_id, []).append(
             employer_employee_pair.employee_id
         )
+
+    for employee_log_employer in employee_log_employers:
+        if employee_log_employer.employee_id not in employer_id_to_employee_ids.setdefault(
+            employee_log_employer.employer_id, []
+        ):
+            employer_id_to_employee_ids.setdefault(employee_log_employer.employer_id, []).append(
+                employee_log_employer.employee_id
+            )
 
     return employer_id_to_employee_ids
 
@@ -458,7 +478,7 @@ def process_employee_batch(
     export_file_number_limit: Optional[int] = None,
 ) -> Set[EmployeeId]:
     # Want information for the only most recent Employer for a given Employee
-    employer_id_to_employee_ids = get_most_recent_employer_to_employee_info(
+    employer_id_to_employee_ids = get_most_recent_employer_and_employee_log_employers_to_employee_info(
         db_session, batch_of_employee_ids
     )
 

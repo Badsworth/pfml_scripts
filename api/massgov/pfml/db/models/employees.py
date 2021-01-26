@@ -395,6 +395,7 @@ class EmployeeLog(Base):
     action = Column(Text, index=True)
     modified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
     process_id = Column(Integer, index=True)
+    employer_id = Column(UUID(as_uuid=True), index=True)
 
 
 class Claim(Base):

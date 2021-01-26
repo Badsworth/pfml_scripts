@@ -989,6 +989,7 @@ def log_employees_with_new_employers(
             employee_log = EmployeeLog(
                 employee_log_id=str(uuid.uuid4()),
                 employee_id=employee_id,
+                employer_id=employer_id,
                 action="UPDATE_NEW_EMPLOYER",
                 modified_at=modified_at,
                 process_id=None,
