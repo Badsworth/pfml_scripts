@@ -1,15 +1,34 @@
 import path from "path";
-import { execScript } from "./deployLST";
+import { CommandModule } from "yargs";
+import { deploymentId, execScript } from "./deployLST";
+import { SystemWideArgs } from "../../cli";
 
-const command = "bundle";
-const desc = "Generates a Flood file bundle";
-const builder = {};
-const handler = async (): Promise<void> => {
-  const bundleDir = path.join(__dirname, "../../../scripts");
-  await execScript(
-    `cd ${bundleDir} && ${path.join(bundleDir, "makeFloodBundle.sh")}`,
-    `Flood bundle was successfully generated in \`${bundleDir}\``
-  );
+type BundleLSTArgs = {
+  bundleDir: string;
+} & SystemWideArgs;
+
+const cmd: CommandModule<SystemWideArgs, BundleLSTArgs> = {
+  command: "bundle",
+  describe: "Builds an LST bundle to run in Flood.io",
+  builder: {
+    bundleDir: {
+      alias: "d",
+      string: true,
+      desc: "Directory name to store the new bundle",
+      default: deploymentId,
+    },
+  },
+  async handler(args) {
+    args.logger.profile("bundle");
+    args.logger.info("Bundling...");
+    const scriptDir = path.join(__dirname, "../../../scripts");
+    const script = path.join(scriptDir, "makeFloodBundle.sh");
+    await execScript(`cd ${scriptDir} && ${script} -d "${args.bundleDir}"`);
+    args.logger.info(
+      `Bundled successfully. Check \n${path.join(scriptDir, args.bundleDir)}`
+    );
+    args.logger.profile("bundle");
+  },
 };
 
-export { command, desc, builder, handler };
+export const { command, describe, builder, handler } = cmd;

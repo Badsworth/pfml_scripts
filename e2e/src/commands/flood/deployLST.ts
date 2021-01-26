@@ -52,42 +52,59 @@ const logDeployment = (title: string, data?: Record<string, unknown>): void => {
   }`;
 };
 
-const deploymentId = new Date().toISOString().slice(0, 19).replace(/-|:/g, "");
+export const deploymentId = new Date()
+  .toISOString()
+  .slice(0, 19)
+  .replace(/-|:/g, "");
 
 const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
   command: "deployLST",
   describe: "Builds and deploys a bundle to run in Flood.io",
   builder: {
-    token: {
-      alias: "u",
-      string: true,
-      desc: "Flood API token <https://app.flood.io/account/api>",
-    },
-    tool: { alias: "l", string: true, desc: "Testing tool to use" },
-    project: { alias: "p", string: true, desc: "Flood project name" },
-    name: { alias: "n", string: true, desc: "Name of test" },
-    privacy: { alias: "v", string: true, desc: "Privacy" },
-    threads: {
-      alias: "t",
-      number: true,
-      desc: "Number of concurrent users",
-    },
-    rampup: { alias: "m", number: true, desc: "Ramp-up (minutes)" },
-    duration: { alias: "d", number: true, desc: "Duration (minutes)" },
-    infrastructure: { alias: "i", string: true, desc: "Grid type" },
-    instanceQuantity: {
-      alias: "q",
-      number: true,
-      desc: "Grid instance quantity",
-    },
-    region: { alias: "r", string: true, desc: "Region" },
-    instanceType: { alias: "y", string: true, desc: "Grid instance type" },
-    stopAfter: {
-      alias: "s",
-      number: true,
-      desc: "Stop grid after N minutes (where N > 0 and N <= 2,880 [48 hours])",
-    },
+    // --env $INPUT_ENV
+    env: { string: true },
+    // --token $INPUT_TOKEN
+    token: { string: true },
+    // --startFlood $INPUT_STARTFLOOD
     startFlood: { boolean: true },
+    // --tool $INPUT_TOOL
+    tool: { string: true },
+    // --project $INPUT_PROJECT
+    project: { string: true },
+    // --name $INPUT_NAME
+    name: { string: true },
+    // --threads $INPUT_THREADS
+    threads: { number: true },
+    // --duration $INPUT_DURATION
+    duration: { number: true },
+    // --rampup $INPUT_RAMPUP
+    rampup: { number: true },
+    // --privacy $INPUT_PRIVACY
+    privacy: { string: true },
+    // --region $INPUT_REGION
+    region: { string: true },
+    // --infrastructure $INPUT_INFRASTRUCTURE
+    infrastructure: { string: true },
+    // --instanceQuantity $INPUT_INSTANCEQUANTITY
+    instanceQuantity: { number: true },
+    // --instanceType $INPUT_INSTANCETYPE
+    instanceType: { string: true },
+    // --stopAfter $INPUT_STOPAFTER
+    stopAfter: { string: true },
+    // --speed $INPUT_SPEED
+    speed: { number: true },
+    // --generateData $INPUT_GENERATEDATA
+    generateData: { boolean: true },
+    // --numRecords $INPUT_NUMRECORDS
+    numRecords: { number: true },
+    // --dataOutput $INPUT_DATAOUTPUT
+    dataOutput: { string: true },
+    // --scenario $INPUT_SCENARIO
+    scenario: { string: true },
+    // --chance $INPUT_CHANCE
+    chance: { number: true },
+    // --eligible $INPUT_ELIGIBLE
+    eligible: { number: true },
   },
   async handler(args) {
     // Flood LST deployment unique identifier for file structures
@@ -107,13 +124,13 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
     // Relevant directories
     const scriptDir = path.join(__dirname, "../../../scripts");
     const buildDir = path.join(scriptDir, deploymentId);
-    const docsDir = path.join(buildDir, "deployed.md");
+    const docsDir = path.join(buildDir, "bundleInfo.md");
     const envJson = path.join(__dirname, "../../flood/data", "env.json");
     // Asks for target environment and whether we need new test data
-    const { env, speed, createNewTestData }: PromptRes = await autoFillPrompt([
+    const { env, speed, generateData }: PromptRes = await autoFillPrompt([
       prompts.env,
       prompts.speed,
-      prompts.createNewTestData,
+      prompts.generateData,
     ]);
     // Holds new environment vars
     const newEnvConfig: Partial<BothConfig> = {
@@ -121,8 +138,7 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
     };
 
     let assignedChance = 0;
-    if (createNewTestData) {
-
+    if (generateData) {
       // Finds out how much data we need and where to put it
       const { dataOutput, numRecords }: PromptRes = await autoFillPrompt([
         prompts.numRecords,
@@ -160,7 +176,8 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
       await execScript(
         `npm run cli -- simulation generate -f ./src/simulation/scenarios/controlLST.ts -d ./src/flood/data/${dataOutput} -n "${numRecords}" -G "${escape(
           JSON.stringify(newDataConfig)
-        )}" -E ${config("EMPLOYERS_FILE")}`
+        )}" -E ${config("EMPLOYERS_FILE")}`,
+        true
       );
       // Log deployment details
       logDeployment("Generated new data:", {
@@ -176,11 +193,7 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
     logDeployment("Environment variables:", newEnvVars);
     args.logger.info("Generated local env.json for flood bundle!");
     // Builds a new LST bundle
-    args.logger.info("Building...");
-    await execScript(
-      `${path.join(scriptDir, "makeFloodBundle.sh")} -f "${deploymentId}"`
-    );
-    args.logger.info(`Built successfully. Check ./scripts/${deploymentId}`);
+    await execScript(`npm run cli -- flood bundle -d "${deploymentId}"`, true);
 
     // Ask if we need to launch a flood
     const { startFlood }: PromptRes = await autoFillPrompt([
@@ -292,9 +305,9 @@ export const prompts = {
     initial: 1,
     required: true,
   },
-  createNewTestData: {
+  generateData: {
     type: "confirm",
-    name: "createNewTestData",
+    name: "generateData",
     message: "Generate new test data?",
     initial: false,
     required: true,
@@ -532,11 +545,12 @@ export const scenarioChoices = [
 
 const asyncExec = util.promisify(exec);
 
-export const execScript = async (command: string): Promise<void> => {
+export const execScript = async (
+  command: string,
+  showLogs = false
+): Promise<void> => {
   const { stderr, stdout } = await asyncExec(command);
-  if (stderr) {
+  if (stderr)
     throw new Error(`Failed to run command "${command}":\n${stderr}\n`);
-  } else {
-    console.log(stdout);
-  }
+  if (showLogs) console.log(stdout);
 };

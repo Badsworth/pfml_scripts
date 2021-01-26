@@ -1,0 +1,104 @@
+name: E2E LST Flood
+
+on:
+  # Manual runs.
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: "Target Environment"
+        required: true
+        default: "performance"
+      speed:
+        description: "Simulation Speed"
+        required: true
+        default: "0.1"
+      # numRecords:
+      #   description: "How many records are needed?"
+      #   required: true
+      #   default: "1000"
+      scenario:
+        description: "Which scenario?"
+        required: true
+        default: "PortalClaimSubmit"
+      # until we can specify multiple scenarios, "chance" defaults to "100"
+      # chance:
+      #   description: "With a frequency of (max. 100%)?"
+      #   required: true
+      #   default: "100"
+      eligible:
+        description: "Employee eligibility rate (max. 100%)?"
+        required: true
+        default: "100"
+      name:
+        description: "Name"
+        required: true
+        default: "GHA_LST"
+      threads:
+        description: "Number of concurrent users"
+        required: true
+        default: "1"
+      duration:
+        description: "Duration (in minutes)"
+        required: true
+        default: "15"
+      rampup:
+        description: "Ramp-up (in minutes)"
+        required: true
+        default: "0"
+
+defaults:
+  run:
+    working-directory: e2e
+
+jobs:
+  deploy_lst:
+    name: Deploy LST
+    runs-on: ubuntu-latest
+    env:
+      # Setup any secret overrides that are necessary here.
+      # Most other environment variables will come from /e2e/config.json,
+      # as determined by the E2E_ENVIRONMENT variable set above.
+      E2E_FLOOD_API_TOKEN: ${{ secrets.E2E_FLOOD_API_TOKEN }}
+      E2E_SIMULATION_SPEED: ${{ secrets.E2E_SIMULATION_SPEED }}
+      E2E_FLOOD_DATA_BASEURL: ${{ secrets.E2E_FLOOD_DATA_BASEURL }}
+      E2E_FINEOS_USERS: ${{ secrets.E2E_FINEOS_USERS }}
+      E2E_EMPLOYER_PORTAL_USERNAME: ${{ secrets.E2E_EMPLOYER_PORTAL_USERNAME }}
+      E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
+      E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+      E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with: { node-version: 12.x }
+      - name: "Install Dependencies"
+        run: npm ci
+      - name: Set variables for manual run
+        if: github.event_name == 'workflow_dispatch'
+        run: echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
+      - name: "Deploy"
+        run: |
+          npm run cli -- flood deployLST
+          --env $E2E_ENVIRONMENT
+          --startFlood "true"
+          --token $E2E_FLOOD_API_TOKEN
+          --name $INPUT_NAME
+          --threads $INPUT_THREADS
+          --duration $INPUT_DURATION
+          --rampup $INPUT_RAMPUP
+          --region "us-east-1"
+          --tool "flood-chrome"
+          --project "PFML"
+          --privacy "public"
+          --infrastructure "demand"
+          --instanceQuantity 1
+          --instanceType "m5.xlarge"
+          --stopAfter 180
+          --speed $INPUT_SPEED
+          --generateData "true"
+          --numRecords 1000
+          --dataOutput "GHWorkflow"
+          --scenario $INPUT_SCENARIO
+          --chance 100
+          --eligible $INPUT_ELIGIBLE

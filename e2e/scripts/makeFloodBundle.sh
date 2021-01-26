@@ -1,13 +1,8 @@
 #!/bin/bash
-# show all commands
-set -o xtrace
-# change to this script's directory
-cd "$(dirname "$0")"
 # get parameters
-output=$(date +%s)
-while getopts ":f:" opt; do
+while getopts ":d:" opt; do
   case $opt in
-    f) output="$OPTARG"
+    d) output="$OPTARG"
     ;;
     \?) echo "Invalid argument $opt"
     ;;
@@ -43,11 +38,12 @@ for f in flood/*.ts; do
 done
 
 # clear previous builds
-rm -rf ../scripts/$output
-mkdir ../scripts/$output
+cd ../scripts
+rm -rf $output
+mkdir $output
 
 # build `.zip` flood bundle
-cd flood/
+cd ../src/flood
 zip -9 -r ../../scripts/$output/floodBundle.zip * -x '*index.perf.ts' '*tmp*' '*.git*' '*.md' '*.DS_Store'
 cd ..
 
