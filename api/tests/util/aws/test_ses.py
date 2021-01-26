@@ -54,6 +54,21 @@ def test_send_email(mock_ses):
     assert response["MessageId"] is not None
     assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
 
+    # Add a test to remove CC and BCC
+    recipient_to_only = conn.EmailRecipient(to_addresses=["test@example.com"])
+    response_to_only = conn.send_email(
+        recipient_to_only,
+        subject,
+        body_text,
+        sender,
+        bounce_forwarding_email_address_arn,
+        attachments,
+    )
+
+    assert response_to_only is not None
+    assert response_to_only["MessageId"] is not None
+    assert response_to_only["ResponseMetadata"]["HTTPStatusCode"] == 200
+
 
 def test_send_email_attachments(mock_ses):
     message = get_raw_email_msg_object()

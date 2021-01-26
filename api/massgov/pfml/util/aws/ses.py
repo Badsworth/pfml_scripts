@@ -80,6 +80,9 @@ def send_email(
     msg["CC"] = ", ".join(recipient.cc_addresses if recipient.cc_addresses else [])
     msg["Bcc"] = ", ".join(recipient.bcc_addresses if recipient.bcc_addresses else [])
 
+    # Ensure no empty destinations are included.
+    destinations: List[str] = list(filter(None, [msg["To"], msg["CC"], msg["Bcc"]]))
+
     msg_body = MIMEMultipart("alternative")
     msg_text = MIMEText(str(body_text.encode(CHARSET)), "plain", CHARSET)
     msg_body.attach(msg_text)
@@ -93,7 +96,7 @@ def send_email(
     try:
         response = aws_ses.send_raw_email(
             Source=msg["From"],
-            Destinations=[msg["To"], msg["CC"], msg["Bcc"]],
+            Destinations=destinations,
             RawMessage={"Data": msg.as_string(),},
             ReturnPathArn=bounce_forwarding_email_address_arn,
         )
@@ -102,7 +105,9 @@ def send_email(
         return response
     except ClientError as e:
         error_message = e.response["Error"]["Message"]
-        logger.exception("Error sending email: %s", error_message)
+        logger.exception(
+            "Error sending email from %s, to %s: %s", msg["From"], msg["To"], error_message
+        )
         raise RuntimeError("Error sending email: %s", error_message)
 
 
