@@ -224,6 +224,7 @@ def format_absence_data() -> Tuple[vendor_export.ExtractData, Dict[str, str]]:
         "ABSENCE_CASESTATUS": "Adjudication",
         "ABSENCEPERIOD_START": "2021-02-14",
         "ABSENCEPERIOD_END": "2021-02-28",
+        "ABSENCEREASON_COVERAGE": "Family",
         "LEAVEREQUEST_EVIDENCERESULTTYPE": "Satisfied",
         "EMPLOYEE_CUSTOMERNO": "12345",
     }
