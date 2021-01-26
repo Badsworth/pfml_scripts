@@ -236,10 +236,12 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             db_session, extract_data, requested_absence
         )
 
+        employee_pfml_entry = None
         # Update employee info
-        employee_pfml_entry = update_employee_info(
-            db_session, extract_data, requested_absence, claim, validation_container
-        )
+        if claim is not None:
+            employee_pfml_entry = update_employee_info(
+                db_session, extract_data, requested_absence, claim, validation_container
+            )
 
         if employee_pfml_entry is not None:
             if employee_pfml_entry.employee_id not in updated_employee_ids:
@@ -265,7 +267,7 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
 
 def create_or_update_claim(
     db_session: db.Session, extract_data: ExtractData, requested_absence: Dict[str, str]
-) -> Tuple[payments_util.ValidationContainer, Claim]:
+) -> Tuple[payments_util.ValidationContainer, Optional[Claim]]:
     absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
     validation_container = payments_util.ValidationContainer(absence_case_id)
 
@@ -316,6 +318,7 @@ def create_or_update_claim(
         validation_container.add_validation_issue(
             payments_util.ValidationReason.MISSING_DATASET, error_msg,
         )
+        return validation_container, None
     else:
         # Translating FINEOS known values to PFML values.
         # If no transaltion value found leave value as is and
@@ -511,8 +514,9 @@ def update_employee_info(
     #     if employer_pfml_entry is not None:
     #         claim.employer_id = employer_pfml_entry.employer_id
 
-    db_session.add(employee_pfml_entry)
-    db_session.add(claim)
+    if len(validation_container.validation_issues) == 0:
+        db_session.add(employee_pfml_entry)
+        db_session.add(claim)
 
     return employee_pfml_entry
 
