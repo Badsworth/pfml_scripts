@@ -7,15 +7,20 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import User from "../../models/User";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
+import withUser from "../../hoc/withUser";
 
 export const VerifyBusiness = (props) => {
-  const { appLogic } = props;
+  const { appLogic, query, user } = props;
   const { t } = useTranslation();
+  const employer = user.user_leave_administrators.find((employer) => {
+    return employer.employer_id === query.employer_id;
+  });
 
   const { formState, updateFields } = useFormState({
     withholdingAmount: "",
@@ -24,7 +29,10 @@ export const VerifyBusiness = (props) => {
   // TODO (EMPLOYER-471): This isn't actually implemented yet, send withholding amount to API
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await appLogic.employers.verifyBusiness(formState.withholdingAmount);
+    await appLogic.employers.verifyBusiness(
+      query.employer_id,
+      formState.withholdingAmount
+    );
   });
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -39,12 +47,12 @@ export const VerifyBusiness = (props) => {
       <Lead>
         <Trans
           i18nKey="pages.employersAuthVerifyBusiness.companyNameLabel"
-          tOptions={{ company: "XXXXX" }}
+          tOptions={{ company: employer.employer_dba }}
         />
         <br />
         <Trans
           i18nKey="pages.employersAuthVerifyBusiness.employerIdNumberLabel"
-          tOptions={{ ein: "XX-XXXXXX" }}
+          tOptions={{ ein: employer.employer_fein }}
         />
       </Lead>
       <Lead>
@@ -108,6 +116,10 @@ VerifyBusiness.propTypes = {
       verifyBusiness: PropTypes.func,
     }),
   }).isRequired,
+  query: PropTypes.shape({
+    employer_id: PropTypes.string.isRequired,
+  }).isRequired,
+  user: PropTypes.instanceOf(User),
 };
 
-export default VerifyBusiness;
+export default withUser(VerifyBusiness);

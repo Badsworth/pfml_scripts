@@ -106,6 +106,22 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     const route = router.pathname;
     if (route === routes.user.consentToDataSharing) return;
 
+    // If user has an unverified employer, redirect them to Verify Business page
+    if (
+      user.hasEmployerRole &&
+      user.hasUnverifiedEmployer &&
+      route !== routes.employers.verifyBusiness
+    ) {
+      const employer = user.user_leave_administrators.find(
+        (employer) => employer.verified === false
+      );
+      const id = employer.employer_id;
+      if (employer && id) {
+        router.push(`${routes.employers.verifyBusiness}/?employer_id=${id}`);
+        return;
+      }
+    }
+
     // Portal currently does not support hybrid account (both Employer AND Claimant account)
     // If user has Employer role, they cannot access Claimant Portal regardless of multiple roles
     if (!user.hasEmployerRole && isEmployersRoute(route)) {

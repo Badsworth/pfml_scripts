@@ -13,7 +13,7 @@ exports[`VerifyBusiness renders the page 1`] = `
       i18nKey="pages.employersAuthVerifyBusiness.companyNameLabel"
       tOptions={
         Object {
-          "company": "XXXXX",
+          "company": "Company Name",
         }
       }
     />
@@ -22,7 +22,7 @@ exports[`VerifyBusiness renders the page 1`] = `
       i18nKey="pages.employersAuthVerifyBusiness.employerIdNumberLabel"
       tOptions={
         Object {
-          "ein": "XX-XXXXXX",
+          "ein": "11-111111",
         }
       }
     />
@@ -91,7 +91,7 @@ Array [
   >
     Organization:
   </strong>,
-  " XXXXX",
+  " Company Name",
 ]
 `;
 
@@ -102,7 +102,7 @@ Array [
   >
     Employer ID number (EIN):
   </strong>,
-  " XX-XXXXXX",
+  " 11-111111",
 ]
 `;
 

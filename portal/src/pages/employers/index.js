@@ -73,7 +73,6 @@ export const Index = () => {
                 <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05" />
               ),
               li: <li />,
-              // TODO (EMPLOYER-555) Add links
               "mass-employer-role-link": (
                 <a
                   href={routes.external.massgov.employersGuide}

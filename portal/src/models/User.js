@@ -19,6 +19,12 @@ class User extends BaseModel {
       (userRole) => userRole.role_description === RoleDescription.employer
     );
   }
+
+  get hasUnverifiedEmployer() {
+    return this.user_leave_administrators.some(
+      (employer) => employer && employer.verified === false
+    );
+  }
 }
 
 export class UserRole extends BaseModel {
