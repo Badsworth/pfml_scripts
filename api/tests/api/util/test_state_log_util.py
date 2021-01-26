@@ -334,6 +334,60 @@ def test_get_all_latest_state_logs_in_end_state(initialize_factories_session, te
     assert created_state_logs == []
 
 
+def test_has_been_in_end_state(test_db_session, initialize_factories_session):
+    payment = PaymentFactory.create()
+
+    # Add a few state logs that are not in GAX_SENT
+    state_log_util.create_finished_state_log(
+        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        end_state=State.PAYMENT_PROCESS_INITIATED,
+        outcome=state_log_util.build_outcome("success"),
+        associated_model=payment,
+        db_session=test_db_session,
+    )
+    state_log_util.create_finished_state_log(
+        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        end_state=State.MARK_AS_EXTRACTED_IN_FINEOS,
+        outcome=state_log_util.build_outcome("success"),
+        associated_model=payment,
+        db_session=test_db_session,
+    )
+    state_log_util.create_finished_state_log(
+        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        end_state=State.ADD_TO_GAX,
+        outcome=state_log_util.build_outcome("success"),
+        associated_model=payment,
+        db_session=test_db_session,
+    )
+
+    assert not state_log_util.has_been_in_end_state(payment, test_db_session, State.GAX_SENT)
+
+    # Add another few state logs with GAX_SENT in there
+    state_log_util.create_finished_state_log(
+        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        outcome=state_log_util.build_outcome("success"),
+        associated_model=payment,
+        db_session=test_db_session,
+    )
+    state_log_util.create_finished_state_log(
+        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        end_state=State.GAX_SENT,  # This will cause the method to return True
+        outcome=state_log_util.build_outcome("success"),
+        associated_model=payment,
+        db_session=test_db_session,
+    )
+    state_log_util.create_finished_state_log(
+        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        end_state=State.ADD_TO_GAX_ERROR_REPORT,
+        outcome=state_log_util.build_outcome("success"),
+        associated_model=payment,
+        db_session=test_db_session,
+    )
+
+    assert state_log_util.has_been_in_end_state(payment, test_db_session, State.GAX_SENT)
+
+
 def test_get_time_since_ended(initialize_factories_session, test_db_session):
     # Note that setup_state_log will always create records with end time
     # 2020-01-01 00:00:00 (assuming just one state log passed in)

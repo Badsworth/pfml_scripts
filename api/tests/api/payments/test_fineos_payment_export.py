@@ -5,6 +5,7 @@ import boto3
 import pytest
 from freezegun import freeze_time
 
+import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.fineos_payment_export as exporter
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
@@ -93,7 +94,9 @@ def add_db_records(
 
         # Payment needs to be attached to a claim
         if add_payment:
-            PaymentFactory.create(claim=claim)
+            PaymentFactory.create(
+                claim=claim, fineos_pei_c_value=c_value, fineos_pei_i_value=i_value
+            )
 
 
 def setup_process_tests(
@@ -391,6 +394,55 @@ def test_process_extract_data_one_bad_record(
     assert employee_log_count_after == employee_log_count_before
 
 
+def test_process_extract_data_one_previously_in_gax(
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    test_db_session,
+    tmp_path,
+    initialize_factories_session,
+    monkeypatch,
+    create_triggers,
+):
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    setup_process_tests(mock_s3_bucket, test_db_session, add_payment=True)
+
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 9
+
+    # Grab the a payment and give it a previous state log entry
+    # that indicates it has been in a GAX before
+    payment = (
+        test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == "301")
+        .one_or_none()
+    )
+
+    state_log_util.create_finished_state_log(
+        start_state=State.PAYMENT_PROCESS_INITIATED,
+        end_state=State.GAX_SENT,
+        outcome=state_log_util.build_outcome("GAX sent"),
+        associated_model=payment,
+        db_session=test_db_session,
+    )
+
+    exporter.process_extract_data(tmp_path, test_db_session)
+
+    # It should have two state logs, the one we added
+    # and one in ADD_TO_PAYMENT_EXPORT_ERROR_REPORT
+    test_db_session.refresh(payment)
+    assert len(payment.state_logs) == 2
+    states = [state_log.end_state.state_id for state_log in payment.state_logs]
+    assert set([State.GAX_SENT.state_id, State.ADD_TO_PAYMENT_EXPORT_ERROR_REPORT.state_id]) == set(
+        states
+    )
+
+    # The other two payments should only have a single happy state
+    payments = test_db_session.query(Payment).filter(Payment.payment_id != payment.payment_id).all()
+    for payment in payments:
+        assert len(payment.state_logs) == 1
+        assert payment.state_logs[0].end_state_id == State.MARK_AS_EXTRACTED_IN_FINEOS.state_id
+
+
 def test_process_extract_data_rollback(
     mock_s3_bucket,
     set_exporter_env_vars,
@@ -625,6 +677,9 @@ def test_process_extract_data_existing_payment(
         assert state_log.outcome == EXPECTED_OUTCOME
         assert state_log.start_state_id == State.PAYMENT_PROCESS_INITIATED.state_id
         assert state_log.end_state_id == State.MARK_AS_EXTRACTED_IN_FINEOS.state_id
+
+    payment_count_after = test_db_session.query(Payment).count()
+    assert payment_count_after == 3
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before

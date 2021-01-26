@@ -7,7 +7,6 @@ from typing import Any, Dict, Generator, List, Optional, Union
 from sqlalchemy.orm.exc import MultipleResultsFound
 
 import massgov.pfml.db as db
-import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
@@ -19,6 +18,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFile,
     StateLog,
 )
+from massgov.pfml.payments.payments_util import ValidationContainer
 
 logger = logging.get_logger(__name__)
 
@@ -281,6 +281,26 @@ def get_all_latest_state_logs_regardless_of_associated_class(
     )
 
 
+def has_been_in_end_state(
+    associated_model: AssociatedModel, db_session: db.Session, end_state: LkState
+) -> bool:
+    filter_params = [StateLog.end_state_id == end_state.state_id]
+
+    if isinstance(associated_model, Employee):
+        filter_params.append(StateLog.employee_id == associated_model.employee_id)
+    elif isinstance(associated_model, Payment):
+        filter_params.append(StateLog.payment_id == associated_model.payment_id)
+    elif isinstance(associated_model, ReferenceFile):
+        filter_params.append(StateLog.reference_file_id == associated_model.reference_file_id)
+
+    # Query is effectively (for an employee):
+    # SELECT count(*) FROM state_log
+    # WHERE state_log.end_state_id == {end_state.state_id} AND
+    #       state_log.employee_id == {employee.employee_id}
+    count = db_session.query(StateLog).filter(*filter_params).count()
+    return count > 0
+
+
 def get_state_logs_stuck_in_state(
     associated_class: AssociatedClass,
     end_state: LkState,
@@ -343,7 +363,7 @@ def _get_time_since_ended(
 
 
 def build_outcome(
-    message: str, validation_container: Optional[payments_util.ValidationContainer] = None
+    message: str, validation_container: Optional[ValidationContainer] = None
 ) -> Dict[str, Any]:
     outcome: Dict[str, Any] = {}
     outcome["message"] = message

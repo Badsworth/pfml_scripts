@@ -313,6 +313,27 @@ def build_gax_dat(
     # field with something useful.
     for i, payment in enumerate(payments):
         try:
+            if state_log_util.has_been_in_end_state(payment, db_session, State.GAX_SENT):
+                # We never want to send the same payment twice in a GAX
+                # as that could potentially lead to double-paying someone
+                # This SHOULD have been caught in the `fineos_payment_export.py`
+                # and shouldn't be possible, but the check is here as a safety
+                # precaution.
+                logger.error(
+                    "Attempted to add a payment that was already sent in a GAX previously",
+                    extra={"payment_id": payment.payment_id},
+                )
+                state_log_util.create_finished_state_log(
+                    associated_model=payment,
+                    start_state=STATE_LOG_PICKUP_STATE,
+                    end_state=State.ADD_TO_GAX_ERROR_REPORT,
+                    outcome=state_log_util.build_outcome(
+                        "Received a duplicate payment that has already been sent in a GAX"
+                    ),
+                    db_session=db_session,
+                )
+                continue
+
             ctr_doc_id = CtrDocumentIdentifier(
                 ctr_document_identifier=get_doc_id(), document_date=now.date(), document_counter=i,
             )

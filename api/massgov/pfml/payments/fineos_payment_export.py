@@ -530,14 +530,36 @@ def _setup_state_log(
     validation_container: payments_util.ValidationContainer,
     db_session: db.Session,
 ) -> None:
-    end_state = (
-        State.MARK_AS_EXTRACTED_IN_FINEOS
-        if was_successful
-        else State.ADD_TO_PAYMENT_EXPORT_ERROR_REPORT
-    )
-    message = "Success" if was_successful else "Error processing payment record"
 
     if payment:
+        # If a payment has already been in a GAX, we do not want to
+        # send it again (ideally we should never receive duplicate payments, but it is possible)
+        # We do not want to consider these successful regardless of the
+        # validation and want to send them in the error report to alert
+        # someone that duplicate payments are coming through.
+        was_previously_in_gax = state_log_util.has_been_in_end_state(
+            payment, db_session, State.GAX_SENT
+        )
+
+        # All error scenarios end up in ADD_TO_PAYMENT_EXPORT_ERROR_REPORT
+        if was_successful and not was_previously_in_gax:
+            end_state = State.MARK_AS_EXTRACTED_IN_FINEOS
+        else:
+            end_state = State.ADD_TO_PAYMENT_EXPORT_ERROR_REPORT
+
+        if was_previously_in_gax:
+            # Useful IDs will be added during the error report generation.
+            message = "Received a duplicate payment record from FINEOS"
+            # Unset the validation container issues to keep
+            # the error message simple in the report
+            # Don't set the whole container to None as we want
+            # the CI Value key added still.
+            validation_container.validation_issues = []
+        elif not was_successful:
+            message = "Error processing payment record"
+        else:
+            message = "Success"
+
         state_log_util.create_finished_state_log(
             start_state=State.PAYMENT_PROCESS_INITIATED,
             end_state=end_state,
@@ -567,8 +589,10 @@ def _setup_state_log(
         # TODO save with employee id and claim for traceability
         state_log_util.create_state_log_without_associated_model(
             start_state=State.PAYMENT_PROCESS_INITIATED,
-            end_state=end_state,
-            outcome=state_log_util.build_outcome(message, validation_container),
+            end_state=State.ADD_TO_PAYMENT_EXPORT_ERROR_REPORT,
+            outcome=state_log_util.build_outcome(
+                "Error processing payment record", validation_container
+            ),
             associated_class=state_log_util.AssociatedClass.PAYMENT,
             db_session=db_session,
         )

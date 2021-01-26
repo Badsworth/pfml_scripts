@@ -337,6 +337,43 @@ def test_build_gax_files(
             assert abs_doc_actg.attrib == {"AMSDataObject": "Y"}
 
 
+@freeze_time("2021-01-01 12:00:00")
+def test_build_gax_files_previously_processed(
+    initialize_factories_session, test_db_session, mock_s3_bucket, set_exporter_env_vars, mock_ses
+):
+    payments = get_payments()
+    # The first payment will have been previously processed based on the state log
+    previously_processed_payment = payments[0]
+    state_log_util.create_finished_state_log(
+        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        end_state=State.GAX_SENT,  # Any payment with this is sent to an error state
+        outcome=state_log_util.build_outcome("success"),
+        associated_model=previously_processed_payment,
+        db_session=test_db_session,
+    )
+
+    # Need to add the ADD_TO_GAX state second so it's the latest
+    for payment in payments:
+        create_add_to_gax_state_log_for_payment(payment, test_db_session)
+
+    ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
+    (dat_filepath, inf_filepath) = gax.build_gax_files(test_db_session, ctr_outbound_path)
+
+    # Only the one payment errors here
+    errored_state_log = (
+        test_db_session.query(StateLog)
+        .filter(StateLog.end_state_id == State.ADD_TO_GAX_ERROR_REPORT.state_id)
+        .one_or_none()
+    )
+    assert errored_state_log.payment.payment_id == previously_processed_payment.payment_id
+
+    # Not validating everything, but verify that only one record was added
+    with smart_open.open(inf_filepath) as inf_file:
+        assert inf_filepath.split("/")[-1] == "EOL20210101GAX10.INF"
+        inf_file_contents = "".join(line for line in inf_file)
+        assert "NewMmarsTransCount = 1;" in inf_file_contents
+
+
 def test_build_gax_files_no_eligible_payments(test_db_session, mock_s3_bucket):
     ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
     assert gax.build_gax_files(test_db_session, ctr_outbound_path) == (
