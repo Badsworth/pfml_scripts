@@ -73,7 +73,7 @@ The easiest way to set up resources in a new environment is using the templates 
 
 1. Add the new environment to the [CI build matrix](/.github/workflows/infra-validate.yml) so it can be validated when it's changed.
 
-# Setting up Custom Domains
+## Setting up Custom Domains
 
 If you need a custom mass.gov domain for your environment, please follow these steps:
 
@@ -95,13 +95,21 @@ If you need a custom mass.gov domain for your environment, please follow these s
 4. After merging and applying the changes, ask Vijay to create a ServiceNow request for CNAME entries for the Portal and Gateway. 
 
    These should all be cloudfront URLs. Check the AWS Console under API Gateway > Custom Domain Names for the API Gateway Cloudfront URLs.
-   
-   |App|CNAME|URL|
-   |---|-----|---|
-   |API perf|paidleave-api-performance.mass.gov|https://abcd123.cloudfront.net|
-   |API training|paidleave-api-training.mass.gov|https://zaww123.cloudfront.net|
-   |Portal perf|paidleave-performance.mass.gov|https://vfcs123.cloudfront.net|
-   |Portal training|paidleave-training.mass.gov|https://qwer123.cloudfront.net|
 
+   | App             | CNAME                              | URL                            |
+   | --------------- | ---------------------------------- | ------------------------------ |
+   | API perf        | paidleave-api-performance.mass.gov | https://abcd123.cloudfront.net |
+   | API training    | paidleave-api-training.mass.gov    | https://zaww123.cloudfront.net |
+   | Portal perf     | paidleave-performance.mass.gov     | https://vfcs123.cloudfront.net |
+   | Portal training | paidleave-training.mass.gov        | https://qwer123.cloudfront.net |
 
 5. After they create the CNAME entries, the custom domains should direct to the appropriate applications.
+
+## Configuring Cognito
+
+Our Terraform scripts enable Advanced Security, however at the time of writing, [Terraform didn't support more granular configuration of the Advanced Security settings](https://github.com/hashicorp/terraform-provider-aws/issues/7007), so there are some manual steps needed:
+
+1. Log into the AWS Console and navigate to the Cognito User Pool for this environment.
+1. Click "Advanced Security" in the sidebar
+1. [Configure the adaptive authentication behavior](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-settings-advanced-security.html#cognito-user-pool-configure-advanced-security). In production and stage environments we block high-risk login attempts. This can also be configured for other environments if desired. High-risk login attempts aren't blocked in environments used for testing (test, perf, and training) so that automated test scripts don't get blocked.
+1. On the same page in AWS customize the email notification messages by copy-and-pasting the HTML email templates from [`infra/portal/templates/emails`](../infra/portal/templates/emails/).
