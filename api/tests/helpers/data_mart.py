@@ -30,6 +30,7 @@ def run_test_process_success_no_pending_payment(
     test_db_session, mock_data_mart_client, mocker, state_log, process_func
 ):
     employee = state_log.employee
+    previous_end_state_id = state_log.end_state.state_id
 
     if employee.ctr_vendor_customer_code is None:
         employee.ctr_vendor_customer_code = "foo"
@@ -44,11 +45,18 @@ def run_test_process_success_no_pending_payment(
         employee
     )
 
+    # just be sure all the setup is written to the DB
+    test_db_session.commit()
+
     state_log_count_before = test_db_session.query(StateLog).count()
     assert state_log_count_before == 1
 
     # run process
     process_func(test_db_session, mock_data_mart_client)
+
+    # we do not want to test things that are not committed, so close the session
+    # so the asserts below are against only the data that exists in the DB
+    test_db_session.close()
 
     state_log_count_after = test_db_session.query(StateLog).count()
     assert state_log_count_after == 2
@@ -61,4 +69,4 @@ def run_test_process_success_no_pending_payment(
 
     assert new_state_log
     assert new_state_log.state_log_id != state_log.state_log_id
-    assert new_state_log.start_state_id == state_log.end_state.state_id
+    assert new_state_log.start_state_id == previous_end_state_id
