@@ -137,7 +137,7 @@ module "fineos_bucket_tool_scheduler" {
           "fineos-bucket-tool",
           "--recursive", 
           "--copy_dir", "${var.fineos_data_export_path}", 
-          "--to_dir", "${data.aws_s3_bucket.business_intelligence_tool.arn}", 
+          "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/dataexports", 
           "--file_prefixes", "${join(",", local.fineos_data_extract_prefixes)}"
         ]
       }
