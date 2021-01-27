@@ -64,11 +64,7 @@ describe(
         cy.visit("/");
 
         cy.unstash<Submission>("submission").then((submission) => {
-          cy.unstash<SimulationClaim>("claim").then((claim) => {
-            fineos.modifyDates(submission);
-            fineos.checkPaymentPreference(claim);
-            fineos.claimAdjudicationFlow(submission.fineos_absence_id);
-          });
+          fineos.claimAdjudicationFlow(submission.fineos_absence_id);
         });
       }
     );
