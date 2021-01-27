@@ -28,6 +28,8 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    env:
+      TF_CLI_ARGS: '-lock-timeout=120s'
 
     steps:
       - uses: actions/checkout@v2

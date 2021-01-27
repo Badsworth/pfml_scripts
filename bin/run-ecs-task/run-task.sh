@@ -33,7 +33,7 @@ fi
 
 
 pushd $DIR/../../infra/ecs-tasks/environments/$ENV_NAME
-TF_OUTPUTS=$(terraform output -json || (terraform init && terraform output -json))
+TF_OUTPUTS=$(terraform output -json || (terraform init -lock-timeout=120s && terraform output -json))
 popd
 
 NETWORK_CONFIG=$(jq \
