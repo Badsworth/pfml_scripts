@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import User from "../../models/User";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
@@ -24,7 +25,7 @@ export const Index = (props) => {
     width: 30,
     fill: "currentColor",
   };
-  const hasUnverifiedEmployer = props.appLogic.users.user.hasUnverifiedEmployer;
+  const hasUnverifiedEmployer = props.user.hasUnverifiedEmployer;
 
   return (
     <div className="grid-container">
@@ -32,10 +33,10 @@ export const Index = (props) => {
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersDashboard.welcomeTitle")}</Title>
           {hasUnverifiedEmployer && (
-            <Alert state="warning">
-              <Heading level="2">
-                {t("pages.employersDashboard.verificationTitle")}
-              </Heading>
+            <Alert
+              state="warning"
+              heading={t("pages.employersDashboard.verificationTitle")}
+            >
               <p>
                 <Trans
                   i18nKey="pages.employersDashboard.verificationBody"
@@ -116,7 +117,7 @@ export const Index = (props) => {
 };
 
 Index.propTypes = {
-  appLogic: PropTypes.object.isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
 };
 
 export default withUser(Index);

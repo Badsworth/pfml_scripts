@@ -14,13 +14,9 @@ exports[`Employer index renders page 1`] = `
         Welcome
       </Title>
       <Alert
+        heading="Verify your account to continue"
         state="warning"
       >
-        <Heading
-          level="2"
-        >
-          Verify your account to continue
-        </Heading>
         <p>
           <Trans
             components={
