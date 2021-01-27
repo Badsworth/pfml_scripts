@@ -89,6 +89,9 @@ clean: ## Remove intermediate, cache, or build artifacts
 clean-docker: ## Remove project docker artifacts (which includes the DB)
 	docker-compose down --remove-orphans --rmi all --volumes
 
+clean-docker-volumes: ## Remove project docker volumes (which includes the DB state)
+	docker-compose down --volumes
+
 clean-node: ## Remove project Node.js modules
 	rm -rf node_modules
 
@@ -180,7 +183,10 @@ generate-verification-codes: ## Generate verification codes
 	$(PY_RUN_CMD) generate-verification-codes --input=$(input) --output=$(output)
 
 init: ## Initialize project to run locally
-init: build deps start-db jwks.json db-upgrade db-create-users
+init: build deps jwks.json init-db
+
+init-db: ## Initialize local DB
+init-db: start-db db-upgrade db-create-users
 
 jwks.json: ## Generate a local JSON Web Key Set to use for local API Authentication
 	$(PY_RUN_CMD) bin/create-jwks.py > $@
@@ -323,6 +329,9 @@ db-migrate-merge-heads: ## Create a new migration that depends on all existing `
 
 db-migrate-run: ## Run alembic with $args
 	$(alembic_cmd) $(args)
+
+db-recreate: ## Destroy current DB, setup new one
+db-recreate: clean-docker-volumes init-db
 
 check-migrate-msg:
 ifndef MIGRATE_MSG
