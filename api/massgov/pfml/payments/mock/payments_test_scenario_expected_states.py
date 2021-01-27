@@ -8,7 +8,7 @@ from massgov.pfml.db.models.employees import LkState, State
 from massgov.pfml.payments.mock.payments_test_scenario_generator import ScenarioName
 
 
-class TestStage(Enum):
+class ScenarioStage(Enum):
     FINEOS_PROCESS_VENDOR_FILES = enum.auto()
     CTR_EXPORT_VCC = enum.auto()
     FINEOS_PROCESS_PAYMENT_FILES = enum.auto()
@@ -19,7 +19,7 @@ class TestStage(Enum):
 
 @dataclass
 class ScenarioExpectedState:
-    test_stage: TestStage
+    test_stage: ScenarioStage
     associated_class: AssociatedClass
     scenario_name: ScenarioName
     expected_state: LkState
@@ -29,7 +29,7 @@ class ScenarioExpectedState:
 
 
 def generate_expected_state_for_scenarios(
-    test_stage: TestStage,
+    test_stage: ScenarioStage,
     associated_class: AssociatedClass,
     expected_state: LkState,
     scenario_names: List[ScenarioName],
@@ -53,7 +53,7 @@ SCENARIO_EXPECTED_STATES: List[ScenarioExpectedState] = []
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.FINEOS_PROCESS_VENDOR_FILES,
+        ScenarioStage.FINEOS_PROCESS_VENDOR_FILES,
         AssociatedClass.EMPLOYEE,
         State.IDENTIFY_MMARS_STATUS,
         [
@@ -80,7 +80,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.FINEOS_PROCESS_VENDOR_FILES,
+        ScenarioStage.FINEOS_PROCESS_VENDOR_FILES,
         AssociatedClass.EMPLOYEE,
         State.EFT_REQUEST_RECEIVED,
         [
@@ -96,7 +96,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.FINEOS_PROCESS_VENDOR_FILES,
+        ScenarioStage.FINEOS_PROCESS_VENDOR_FILES,
         AssociatedClass.EMPLOYEE,
         State.VENDOR_EXPORT_ERROR_REPORT_SENT,
         [
@@ -116,7 +116,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.CTR_EXPORT_VCC,
+        ScenarioStage.CTR_EXPORT_VCC,
         AssociatedClass.EMPLOYEE,
         State.VCC_SENT,
         [
@@ -140,7 +140,7 @@ SCENARIO_EXPECTED_STATES.extend(
 # TODO enable once this state workflow is available
 # SCENARIO_EXPECTED_STATES.extend(
 #     generate_expected_state_for_scenarios(
-#         TestStage.CTR_EXPORT_VCC,
+#         ScenarioStage.CTR_EXPORT_VCC,
 #         AssociatedClass.EMPLOYEE,
 #         State.EFT_PENDING,
 #         [
@@ -156,7 +156,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.CTR_EXPORT_VCC,
+        ScenarioStage.CTR_EXPORT_VCC,
         AssociatedClass.EMPLOYEE,
         State.MMARS_STATUS_CONFIRMED,
         [ScenarioName.SCENARIO_N,],
@@ -165,7 +165,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.CTR_EXPORT_VCC,
+        ScenarioStage.CTR_EXPORT_VCC,
         AssociatedClass.EMPLOYEE,
         State.VCM_REPORT_SENT,
         [ScenarioName.SCENARIO_U, ScenarioName.SCENARIO_V, ScenarioName.SCENARIO_W,],
@@ -181,7 +181,7 @@ SCENARIO_EXPECTED_STATES.extend(
 # Payment States
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.FINEOS_PROCESS_PAYMENT_FILES,
+        ScenarioStage.FINEOS_PROCESS_PAYMENT_FILES,
         AssociatedClass.PAYMENT,
         State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         [
@@ -196,7 +196,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.FINEOS_PROCESS_PAYMENT_FILES,
+        ScenarioStage.FINEOS_PROCESS_PAYMENT_FILES,
         AssociatedClass.PAYMENT,
         State.PAYMENT_EXPORT_ERROR_REPORT_SENT,
         [
@@ -217,7 +217,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.CTR_EXPORT_GAX,
+        ScenarioStage.CTR_EXPORT_GAX,
         AssociatedClass.EMPLOYEE,
         State.MMARS_STATUS_CONFIRMED,
         [
@@ -240,7 +240,7 @@ SCENARIO_EXPECTED_STATES.extend(
 # TODO enable once this state workflow is available
 # SCENARIO_EXPECTED_STATES.extend(
 #     generate_expected_state_for_scenarios(
-#         TestStage.CTR_EXPORT_GAX,
+#         ScenarioStage.CTR_EXPORT_GAX,
 #         AssociatedClass.EMPLOYEE,
 #         State.EFT_PENDING,
 #         [
@@ -253,7 +253,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.CTR_EXPORT_GAX,
+        ScenarioStage.CTR_EXPORT_GAX,
         AssociatedClass.EMPLOYEE,
         State.EFT_ERROR_REPORT_SENT,
         [ScenarioName.SCENARIO_X,],
@@ -262,7 +262,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.CTR_EXPORT_GAX,
+        ScenarioStage.CTR_EXPORT_GAX,
         AssociatedClass.EMPLOYEE,
         State.EFT_ELIGIBLE,
         [ScenarioName.SCENARIO_Y,],
@@ -272,7 +272,7 @@ SCENARIO_EXPECTED_STATES.extend(
 # TODO enable once this state workflow is available
 # SCENARIO_EXPECTED_STATES.extend(
 #     generate_expected_state_for_scenarios(
-#         TestStage.CTR_EXPORT_GAX,
+#         ScenarioStage.CTR_EXPORT_GAX,
 #         AssociatedClass.EMPLOYEE,
 #         State.VCC_ERROR_REPORT_SENT,
 #         [
@@ -285,7 +285,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.CTR_EXPORT_GAX,
+        ScenarioStage.CTR_EXPORT_GAX,
         AssociatedClass.PAYMENT,
         State.GAX_SENT,
         [
@@ -300,7 +300,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.CTR_EXPORT_GAX,
+        ScenarioStage.CTR_EXPORT_GAX,
         AssociatedClass.PAYMENT,
         State.PAYMENT_EXPORT_ERROR_REPORT_SENT,
         [ScenarioName.SCENARIO_R, ScenarioName.SCENARIO_S,],
@@ -317,7 +317,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.CTR_PROCESS_OUTBOUND_STATUS_PAYMENT_RETURNS,
+        ScenarioStage.CTR_PROCESS_OUTBOUND_STATUS_PAYMENT_RETURNS,
         AssociatedClass.PAYMENT,
         State.SEND_PAYMENT_DETAILS_TO_FINEOS,
         [
@@ -331,7 +331,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.CTR_PROCESS_OUTBOUND_STATUS_PAYMENT_RETURNS,
+        ScenarioStage.CTR_PROCESS_OUTBOUND_STATUS_PAYMENT_RETURNS,
         AssociatedClass.PAYMENT,
         State.GAX_ERROR_REPORT_SENT,
         [ScenarioName.SCENARIO_Z,],
@@ -348,7 +348,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.FINEOS_PEI_WRITEBACK,
+        ScenarioStage.FINEOS_PEI_WRITEBACK,
         AssociatedClass.PAYMENT,
         State.PAYMENT_COMPLETE,
         [
@@ -362,7 +362,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
-        TestStage.FINEOS_PEI_WRITEBACK,
+        ScenarioStage.FINEOS_PEI_WRITEBACK,
         AssociatedClass.PAYMENT,
         State.GAX_ERROR_REPORT_SENT,
         [ScenarioName.SCENARIO_Z,],
@@ -371,7 +371,7 @@ SCENARIO_EXPECTED_STATES.extend(
 
 
 def get_scenario_expected_states(
-    test_stage: TestStage, associated_class: AssociatedClass
+    test_stage: ScenarioStage, associated_class: AssociatedClass
 ) -> Tuple[List[ScenarioExpectedState], Dict[ScenarioName, List[ScenarioExpectedState]]]:
     expected_states = [
         scenario_expected_state

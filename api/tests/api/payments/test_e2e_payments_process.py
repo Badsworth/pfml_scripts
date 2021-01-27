@@ -48,7 +48,7 @@ from massgov.pfml.payments.mock.fineos_extract_generator import (
     FINEOS_VENDOR_EXPORT_FILES,
 )
 from massgov.pfml.payments.mock.payments_test_scenario_expected_states import (
-    TestStage,
+    ScenarioStage,
     get_scenario_expected_states,
 )
 from massgov.pfml.payments.mock.payments_test_scenario_generator import (
@@ -65,7 +65,7 @@ from massgov.pfml.payments.process_payments import _fineos_process as run_fineos
 
 
 # == Helper data structures
-class TestScenarioDataSet:
+class ScenarioDataSet:
     def __init__(self, scenario_dataset: List[ScenarioData]):
         self.scenario_dataset = scenario_dataset
 
@@ -155,7 +155,7 @@ def test_e2e_process(
         test_scenario_config
     )
 
-    test_scenario_dataset = TestScenarioDataSet(scenario_dataset=scenario_dataset)
+    test_scenario_dataset = ScenarioDataSet(scenario_dataset=scenario_dataset)
     total_scenario_count = test_scenario_dataset.get_total_count()
 
     # Confirm generated data expectations in db
@@ -209,7 +209,7 @@ def test_e2e_process(
 
         # Confirm employee state logs
         assert_employee_state_log_by_scenario(
-            test_db_session, test_scenario_dataset, TestStage.FINEOS_PROCESS_VENDOR_FILES
+            test_db_session, test_scenario_dataset, ScenarioStage.FINEOS_PROCESS_VENDOR_FILES
         )
 
         # Confirm that files were moved to s3 pfml processed folder
@@ -331,7 +331,7 @@ def test_e2e_process(
 
         # Confirm emplpyee state logs
         assert_employee_state_log_by_scenario(
-            test_db_session, test_scenario_dataset, TestStage.CTR_EXPORT_VCC
+            test_db_session, test_scenario_dataset, ScenarioStage.CTR_EXPORT_VCC
         )
 
         # Confirm VCC file in pfml S3
@@ -446,12 +446,12 @@ def test_e2e_process(
 
         # Confirm employee state logs have not been altered
         assert_employee_state_log_by_scenario(
-            test_db_session, test_scenario_dataset, TestStage.CTR_EXPORT_VCC
+            test_db_session, test_scenario_dataset, ScenarioStage.CTR_EXPORT_VCC
         )
 
         # Confirm payment state logs
         assert_payment_state_log_by_scenario(
-            test_db_session, test_scenario_dataset, TestStage.FINEOS_PROCESS_PAYMENT_FILES
+            test_db_session, test_scenario_dataset, ScenarioStage.FINEOS_PROCESS_PAYMENT_FILES
         )
 
         # Confirm that files were moved to s3 pfml processed folder
@@ -538,12 +538,12 @@ def test_e2e_process(
 
         # Confirm emplpyee state logs
         assert_employee_state_log_by_scenario(
-            test_db_session, test_scenario_dataset, TestStage.CTR_EXPORT_GAX
+            test_db_session, test_scenario_dataset, ScenarioStage.CTR_EXPORT_GAX
         )
 
         # Confirm payment state logs
         assert_payment_state_log_by_scenario(
-            test_db_session, test_scenario_dataset, TestStage.CTR_EXPORT_GAX
+            test_db_session, test_scenario_dataset, ScenarioStage.CTR_EXPORT_GAX
         )
 
         # Confirm GAX files in s3 folder
@@ -634,12 +634,12 @@ def test_e2e_process(
 
         # Confirm emplpyee state logs were not altered
         assert_employee_state_log_by_scenario(
-            test_db_session, test_scenario_dataset, TestStage.CTR_EXPORT_GAX
+            test_db_session, test_scenario_dataset, ScenarioStage.CTR_EXPORT_GAX
         )
 
         # Confirm payment state logs were not altered
         assert_payment_state_log_by_scenario(
-            test_db_session, test_scenario_dataset, TestStage.CTR_EXPORT_GAX
+            test_db_session, test_scenario_dataset, ScenarioStage.CTR_EXPORT_GAX
         )
 
         # Confirm error report files in pfml S3 (but empty as it is a no-op)
@@ -720,14 +720,14 @@ def test_e2e_process(
 
         # Confirm emplpyee state logs were not altered
         assert_employee_state_log_by_scenario(
-            test_db_session, test_scenario_dataset, TestStage.CTR_EXPORT_GAX
+            test_db_session, test_scenario_dataset, ScenarioStage.CTR_EXPORT_GAX
         )
 
         # Confirm payment state logs
         assert_payment_state_log_by_scenario(
             test_db_session,
             test_scenario_dataset,
-            TestStage.CTR_PROCESS_OUTBOUND_STATUS_PAYMENT_RETURNS,
+            ScenarioStage.CTR_PROCESS_OUTBOUND_STATUS_PAYMENT_RETURNS,
         )
 
         # Confirm error report files in pfml S3
@@ -767,12 +767,12 @@ def test_e2e_process(
 
         # Confirm previous employee states not altered
         assert_employee_state_log_by_scenario(
-            test_db_session, test_scenario_dataset, TestStage.CTR_EXPORT_GAX
+            test_db_session, test_scenario_dataset, ScenarioStage.CTR_EXPORT_GAX
         )
 
         # Confirm payment states
         assert_payment_state_log_by_scenario(
-            test_db_session, test_scenario_dataset, TestStage.FINEOS_PEI_WRITEBACK,
+            test_db_session, test_scenario_dataset, ScenarioStage.FINEOS_PEI_WRITEBACK,
         )
 
         # Confirm PEI Writeback file in pfml archive s3 + fineos s3
@@ -812,12 +812,12 @@ def test_e2e_process(
 
         # Confirm emplpyee state logs were not altered
         assert_employee_state_log_by_scenario(
-            test_db_session, test_scenario_dataset, TestStage.CTR_EXPORT_GAX
+            test_db_session, test_scenario_dataset, ScenarioStage.CTR_EXPORT_GAX
         )
 
         # Confirm payment state logs were not altered
         assert_payment_state_log_by_scenario(
-            test_db_session, test_scenario_dataset, TestStage.FINEOS_PEI_WRITEBACK,
+            test_db_session, test_scenario_dataset, ScenarioStage.FINEOS_PEI_WRITEBACK,
         )
 
         # Confirm error report files in pfml S3 (but empty as it is a no-op)
@@ -893,7 +893,7 @@ def assert_reference_file(
 
 def assert_employee_reference_file(
     db_session: db.Session,
-    test_scenario_dataset: TestScenarioDataSet,
+    test_scenario_dataset: ScenarioDataSet,
     reference_file_type: LkReferenceFileType,
     file_location: str,
     exclude_scenarios: List[ScenarioName],
@@ -920,7 +920,7 @@ def assert_employee_reference_file(
 
 
 def assert_payment_state_log_by_scenario(
-    db_session: db.Session, test_scenario_dataset: TestScenarioDataSet, test_stage: TestStage
+    db_session: db.Session, test_scenario_dataset: ScenarioDataSet, test_stage: ScenarioStage
 ):
     # Get the expected states
     (expected_states, expected_state_by_scenario_name,) = get_scenario_expected_states(
@@ -965,7 +965,7 @@ def assert_payment_state_log_by_scenario(
 
 
 def assert_employee_state_log_by_scenario(
-    db_session: db.Session, test_scenario_dataset: TestScenarioDataSet, test_stage: TestStage,
+    db_session: db.Session, test_scenario_dataset: ScenarioDataSet, test_stage: ScenarioStage,
 ):
     # Get employees and create map
     filter_params = [
@@ -1002,7 +1002,7 @@ def assert_employee_state_log_by_scenario(
 
 
 def assert_no_employee_state_logs_by_scenario(
-    db_session: db.Session, test_scenario_dataset: TestScenarioDataSet, scenario_name: ScenarioName,
+    db_session: db.Session, test_scenario_dataset: ScenarioDataSet, scenario_name: ScenarioName,
 ):
     filter_params = [
         StateLog.associated_type == AssociatedClass.EMPLOYEE.value,
@@ -1149,9 +1149,7 @@ def assert_email_sent_count(log_counts, previous_count, expected_count):
 
 
 def refersh_scenario_dataset(
-    db_session: db.Session,
-    test_scenario_dataset: TestScenarioDataSet,
-    include_payment: bool = False,
+    db_session: db.Session, test_scenario_dataset: ScenarioDataSet, include_payment: bool = False,
 ):
     payments: List[Payment] = db_session.query(Payment).all()
     payment_by_claim_id = {payment.claim_id: payment for payment in payments}

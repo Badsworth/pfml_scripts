@@ -48,7 +48,7 @@ class EmailRecipient(BaseModel):
     @classmethod
     def check_email_format(cls, email):
         # https://stackoverflow.com/questions/37289172/python-regex-for-email-addresses-need-to-weed-out-dot-dash
-        regex = "^(?!.*\.-.*$|.*-\..*$)([a-zA-Z0-9._-]+)([a-zA-Z0-9]@[a-zA-Z0-9])([a-zA-Z0-9.-]+)([a-zA-Z0-9]\.[a-zA-Z]{2,3})$"  # noqa: W605
+        regex = r"^(?!.*\.-.*$|.*-\..*$)([a-zA-Z0-9._-]+)([a-zA-Z0-9]@[a-zA-Z0-9])([a-zA-Z0-9.-]+)([a-zA-Z0-9]\.[a-zA-Z]{2,3})$"
         if not re.match(regex, email):
             validation_error = ValidationErrorDetail(
                 message=f"Email format has to match {regex}", type="incorrect_email_format",
