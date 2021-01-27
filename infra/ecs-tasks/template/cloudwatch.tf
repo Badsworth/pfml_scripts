@@ -14,6 +14,21 @@ locals {
   # This lambda ingests CloudWatch logs from several sources, and packages them for transmission to New Relic's servers.
   # This lambda was modified post-installation to fix an apparent bug in the processing/packaging of its telemetry data.
   newrelic_log_ingestion_lambda = module.constants.newrelic_log_ingestion_arn
+  fineos_data_extract_prefixes = [
+    "VBI_CASE",
+    "VBI_EPISODICABSENCEPERIOD",
+    "VBI_REDUCEDSCHEDABSENCEPERIOD",
+    "VBI_REQUESTEDABSENCE",
+    "VBI_REQUESTEDABSENCE_SOM",
+    "VBI_TIMEOFFABSENCEPERIOD",
+    "vtaskreport",
+    "VBI_MANAGEDREQUIREMENT",
+    "VBI_OTHERINCOME",
+    "VBI_ABSENCEAPPEALCASES",
+    "VBI_ABSENCECASEByOrg",
+    "VBI_ABSENCECASEByStage",
+    "VBI_ABSENCECASE"
+  ]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "ecs_task_logging" {
@@ -95,6 +110,43 @@ module "payments_fineos_process_scheduler" {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Run fineos-bucket-tool daily at 8am EST (9am EDT) (1pm UTC)
+module "fineos_bucket_tool_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_recurring_payments_schedule
+
+  task_name           = "fineos-bucket-tool"
+  schedule_expression = "cron(0 13 * * ? *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.payments_fineos_process_task_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "fineos-bucket-tool",
+        "command": [
+          "fineos-bucket-tool",
+          "--recursive", 
+          "--copy_dir", "${var.fineos_data_export_path}", 
+          "--to_dir", "${data.aws_s3_bucket.business_intelligence_tool.arn}", 
+          "--file_prefixes", "${join(",", local.fineos_data_extract_prefixes)}"
+        ]
+      }
+    ]
+  }
+  JSON
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run execute-sql daily to export a report to S3 of leave admins created
 module "export_leave_admins_created_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
@@ -114,7 +166,7 @@ module "export_leave_admins_created_scheduler" {
   ecs_task_role              = aws_iam_role.task_execute_sql_task_role.arn
 
   input = <<DOC
-{
+  {
   "containerOverrides": [
           {
             "name": "execute-sql",
@@ -127,6 +179,6 @@ module "export_leave_admins_created_scheduler" {
             ]
           }
         ]
-}
-DOC
+  }
+  DOC
 }
