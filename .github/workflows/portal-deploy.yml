@@ -13,7 +13,14 @@ on:
           --------------------------------------
           ⬇️ Tag or branch to be deployed. For deploys to test, leave blank to deploy master.
           For all other deploys, select an appropriate tag or feature branch.
-        default: null
+        default: ''
+      extraUatDeploy:
+        required: false
+        default: "true"
+        description: |
+          --------------------------------------
+          ⬇️ (For staging deploys only) Also deploy the above version to UAT?
+
   push:
     branches:
       - master
@@ -135,6 +142,30 @@ jobs:
           target_url: ${{ env.deployed-url }}
           environment: "Portal (${{ env.portal-env }})"
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
+  extra-uat-deploy:
+    if: contains(github.ref, 'deploy/portal/stage') && github.event.inputs.extraUatDeploy == 'true'
+    name: (Stage) Extra UAT deploy
+    needs: update-the-deploy-branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      - name: Start a UAT deploy
+        env:
+          GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
+          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          UAT_DEPLOYMENT_VERSION: ${{ github.event.inputs.version || 'master' }}
+          WORKFLOW_NAME: "portal-deploy.yml"
+        run: |
+          echo "*** A Portal staging deploy is now in progress. Enqueuing an extra deployment to UAT... ***"
+          curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
+                        -H "Authorization: Bearer $GITHUB_TOKEN" \
+                        -H "Accept: application/vnd.github.v3+json" \
+                        -d '{ "ref": "deploy/portal/uat", "inputs": { "version": "$UAT_DEPLOYMENT_VERSION" } }'
+          echo "Done."
 
   deploy:
     name: Deploy

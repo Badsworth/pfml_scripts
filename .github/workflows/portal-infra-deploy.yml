@@ -9,6 +9,7 @@ on:
       - deploy/portal/prod
       - deploy/portal/performance
       - deploy/portal/training
+      - deploy/portal/uat
     paths:
       - infra/portal/**
 
@@ -21,6 +22,7 @@ env:
   refs/heads/deploy/portal/prod: prod
   refs/heads/deploy/portal/performance: performance
   refs/heads/deploy/portal/training: training
+  refs/heads/deploy/portal/uat: uat
 
 jobs:
   release:
