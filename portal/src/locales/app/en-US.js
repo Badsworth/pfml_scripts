@@ -6,6 +6,7 @@
  */
 
 // When editing this file, be mindful that many of its strings use non-breaking
+// hyphen and non-breaking space characters.
 // https://alignedonline.com/non%E2%80%91breaking-spaces
 const chars = {
   // Non-breaking hyphen characters are used in phone and fax numbers to avoid
