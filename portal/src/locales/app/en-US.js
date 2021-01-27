@@ -6,7 +6,6 @@
  */
 
 // When editing this file, be mindful that many of its strings use non-breaking
-// hyphen and non-breaking space characters.
 // https://alignedonline.com/non%E2%80%91breaking-spaces
 const chars = {
   // Non-breaking hyphen characters are used in phone and fax numbers to avoid
@@ -1675,6 +1674,9 @@ const pages = {
     respondBody:
       "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
     respondTitle: "Respond to applications within 10 business days",
+    settingsLinks:
+      "<ul><li><your-organizations-link>Your organizations</your-organizations-link></li></ul>",
+    settingsTitle: "Settings",
     verificationBody:
       "We require every employer to verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team.",
     verificationTitle: "Verify your account to continue",

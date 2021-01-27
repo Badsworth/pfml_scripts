@@ -96,6 +96,25 @@ exports[`Employer index renders page 1`] = `
       <Heading
         level="2"
       >
+        Settings
+      </Heading>
+      <Trans
+        components={
+          Object {
+            "li": <li />,
+            "ul": <ul
+              className="usa-list desktop:font-body-2xs desktop:padding-top-05"
+            />,
+            "your-organizations-link": <a
+              href="/employers/organizations"
+            />,
+          }
+        }
+        i18nKey="pages.employersDashboard.settingsLinks"
+      />
+      <Heading
+        level="2"
+      >
         Learn more
       </Heading>
       <Trans
@@ -153,6 +172,24 @@ Array [
 `;
 
 exports[`Employer index renders page 4`] = `
+<ul
+  className="usa-list desktop:font-body-2xs desktop:padding-top-05"
+  key="0"
+>
+  <li
+    key="0"
+  >
+    <a
+      href="/employers/organizations"
+      key="0"
+    >
+      Your organizations
+    </a>
+  </li>
+</ul>
+`;
+
+exports[`Employer index renders page 5`] = `
 <ul
   className="usa-list desktop:font-body-2xs desktop:padding-top-05"
   key="0"

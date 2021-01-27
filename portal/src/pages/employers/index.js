@@ -85,6 +85,21 @@ export const Index = (props) => {
         <div className="grid-col-fill" />
         <aside className="desktop:grid-col-3 margin-top-7 desktop:margin-top-1">
           <Heading level="2">
+            {t("pages.employersDashboard.settingsTitle")}
+          </Heading>
+          <Trans
+            i18nKey="pages.employersDashboard.settingsLinks"
+            components={{
+              ul: (
+                <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05" />
+              ),
+              li: <li />,
+              "your-organizations-link": (
+                <a href={routes.employers.organizations} />
+              ),
+            }}
+          />
+          <Heading level="2">
             {t("pages.employersDashboard.learnMoreTitle")}
           </Heading>
           <Trans
