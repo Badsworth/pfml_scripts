@@ -15,7 +15,6 @@ pytestmark = pytest.mark.integration
 def create_identify_mmars_status_state_log(test_db_session):
     state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT],
         end_states=[State.IDENTIFY_MMARS_STATUS],
         test_db_session=test_db_session,
     )
@@ -46,7 +45,6 @@ def test_process_identify_mmars_status_no_vendor(
 
     assert new_state_log
     assert new_state_log.state_log_id != state_log.state_log_id
-    assert new_state_log.start_state_id == State.IDENTIFY_MMARS_STATUS.state_id
 
 
 def test_process_identify_mmars_status_add_to_vcm(
@@ -74,7 +72,6 @@ def test_process_identify_mmars_status_add_to_vcm(
 
     assert new_state_log
     assert new_state_log.state_log_id != state_log.state_log_id
-    assert new_state_log.start_state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert new_state_log.outcome == state_log_util.build_outcome(
         "Queried Data Mart: Vendor does not match",
         payments_util.ValidationContainer(
@@ -127,7 +124,6 @@ def test_process_identify_mmars_status_unexpected_internal_exception_for_state_l
 
     assert new_state_log_for_failed
     assert new_state_log_for_failed.state_log_id != state_logs[0].state_log_id
-    assert new_state_log_for_failed.start_state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert new_state_log_for_failed.end_state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert new_state_log_for_failed.outcome["message"] == "Hit exception: Exception"
 
@@ -140,7 +136,6 @@ def test_process_identify_mmars_status_unexpected_internal_exception_for_state_l
 
     assert new_state_log_for_success
     assert new_state_log_for_success.state_log_id != state_logs[1].state_log_id
-    assert new_state_log_for_success.start_state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert new_state_log_for_success.end_state_id == State.ADD_TO_VCC.state_id
 
 

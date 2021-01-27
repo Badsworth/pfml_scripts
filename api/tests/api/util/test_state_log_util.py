@@ -16,7 +16,6 @@ from tests.helpers.state_log import default_outcome, setup_state_log
 def single_ended_employee(test_db_session):
     return setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.CLAIMANT_LIST_CREATED],
         end_states=[State.CLAIMANT_LIST_SUBMITTED],
         test_db_session=test_db_session,
     )
@@ -26,7 +25,6 @@ def single_ended_employee(test_db_session):
 def single_ended_payment(test_db_session):
     return setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        start_states=[State.PAYMENTS_RETRIEVED],
         end_states=[State.PAYMENTS_STORED_IN_DB],
         test_db_session=test_db_session,
     )
@@ -36,7 +34,6 @@ def single_ended_payment(test_db_session):
 def simple_employee_with_end_state(test_db_session):
     return setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS, State.ADD_TO_GAX, State.GAX_SENT,],
         end_states=[State.ADD_TO_GAX, State.GAX_SENT, State.CONFIRM_PAYMENT,],
         test_db_session=test_db_session,
     )
@@ -46,7 +43,6 @@ def simple_employee_with_end_state(test_db_session):
 def employee_stuck_state_log(test_db_session):
     return setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.GAX_SENT, State.GAX_SENT, State.GAX_SENT,],
         end_states=[State.CONFIRM_PAYMENT, State.CONFIRM_PAYMENT, State.CONFIRM_PAYMENT,],
         test_db_session=test_db_session,
     )
@@ -61,13 +57,11 @@ def test_create_finished_state_log(initialize_factories_session, test_db_session
     employee = EmployeeFactory.create()
     employee_state_log = state_log_util.create_finished_state_log(
         associated_model=employee,
-        start_state=State.VERIFY_VENDOR_STATUS,
         end_state=State.DFML_REPORT_SUBMITTED,
         outcome=default_outcome(),
         db_session=test_db_session,
     )
 
-    assert employee_state_log.start_state_id == State.VERIFY_VENDOR_STATUS.state_id
     assert employee_state_log.end_state_id == State.DFML_REPORT_SUBMITTED.state_id
     assert employee_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
     assert employee_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
@@ -81,13 +75,11 @@ def test_create_finished_state_log(initialize_factories_session, test_db_session
     payment = PaymentFactory.create()
     payment_state_log = state_log_util.create_finished_state_log(
         associated_model=payment,
-        start_state=State.PAYMENTS_RETRIEVED,
         end_state=State.DFML_REPORT_SUBMITTED,
         outcome=default_outcome(),
         db_session=test_db_session,
     )
 
-    assert payment_state_log.start_state_id == State.PAYMENTS_RETRIEVED.state_id
     assert payment_state_log.end_state_id == State.DFML_REPORT_SUBMITTED.state_id
     assert payment_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
     assert payment_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
@@ -101,14 +93,12 @@ def test_create_finished_state_log(initialize_factories_session, test_db_session
     reference_file = ReferenceFileFactory.create()
     reference_file_state_log = state_log_util.create_finished_state_log(
         associated_model=reference_file,
-        start_state=State.DFML_REPORT_CREATED,
         end_state=State.DFML_REPORT_SUBMITTED,
         outcome=default_outcome(),
         db_session=test_db_session,
         start_time=datetime(2019, 1, 1),
     )
 
-    assert reference_file_state_log.start_state_id == State.DFML_REPORT_CREATED.state_id
     assert reference_file_state_log.end_state_id == State.DFML_REPORT_SUBMITTED.state_id
     assert reference_file_state_log.started_at.isoformat() == "2019-01-01T00:00:00"
     assert reference_file_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
@@ -127,7 +117,6 @@ def test_create_finished_state_log_same_flow(initialize_factories_session, test_
     payment = PaymentFactory.create()
     payment_state_log_prev = state_log_util.create_finished_state_log(
         associated_model=payment,
-        start_state=State.MARK_AS_EXTRACTED_IN_FINEOS,
         end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         outcome={"message": "A"},
         db_session=test_db_session,
@@ -135,7 +124,6 @@ def test_create_finished_state_log_same_flow(initialize_factories_session, test_
 
     payment_state_log = state_log_util.create_finished_state_log(
         associated_model=payment,
-        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         end_state=State.ADD_TO_GAX,  # Still a PAYMENT flow state
         outcome={"message": "B"},
         db_session=test_db_session,
@@ -146,7 +134,6 @@ def test_create_finished_state_log_same_flow(initialize_factories_session, test_
     # Create yet another state log and make sure they're all chained together properly.
     another_payment_state_log = state_log_util.create_finished_state_log(
         associated_model=payment,
-        start_state=State.ADD_TO_GAX,
         end_state=State.GAX_SENT,  # Still a PAYMENT flow state
         outcome={"message": "C"},
         db_session=test_db_session,
@@ -188,7 +175,6 @@ def test_create_finished_state_log_different_flow(initialize_factories_session, 
 
     state_log_1 = state_log_util.create_finished_state_log(
         associated_model=payment,
-        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         end_state=State.ADD_TO_GAX,  # A PAYMENT flow state
         outcome=default_outcome(),
         db_session=test_db_session,
@@ -196,7 +182,6 @@ def test_create_finished_state_log_different_flow(initialize_factories_session, 
 
     state_log_2 = state_log_util.create_finished_state_log(
         associated_model=payment,
-        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         end_state=State.EFT_DETECTED_IN_VENDOR_EXPORT,  # A VENDOR_EFT flow state
         outcome=default_outcome(),
         db_session=test_db_session,
@@ -204,7 +189,6 @@ def test_create_finished_state_log_different_flow(initialize_factories_session, 
 
     state_log_3 = state_log_util.create_finished_state_log(
         associated_model=payment,
-        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         end_state=State.VCC_SENT,  # A VENDOR_CHECK flow state
         outcome=default_outcome(),
         db_session=test_db_session,
@@ -225,14 +209,12 @@ def test_create_finished_state_log_different_flow(initialize_factories_session, 
 @freeze_time("2020-01-01 12:00:00")
 def test_create_state_log_without_associated_model(initialize_factories_session, test_db_session):
     unattached_state_log = state_log_util.create_state_log_without_associated_model(
-        start_state=State.VERIFY_VENDOR_STATUS,
         end_state=State.PAYMENTS_RETRIEVED,
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
         outcome=default_outcome(),
         db_session=test_db_session,
     )
 
-    assert unattached_state_log.start_state_id == State.VERIFY_VENDOR_STATUS.state_id
     assert unattached_state_log.end_state_id == State.PAYMENTS_RETRIEVED.state_id
     assert unattached_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
     assert unattached_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
@@ -251,7 +233,6 @@ def test_create_state_log_without_associated_model(initialize_factories_session,
     # have no object to index on in the latest state log table
     # to find it. This is fine and expected
     state_log_util.create_state_log_without_associated_model(
-        start_state=State.VERIFY_VENDOR_STATUS,
         end_state=State.PAYMENTS_RETRIEVED,
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
         outcome=default_outcome(),
@@ -265,7 +246,6 @@ def test_create_state_log_without_associated_model(initialize_factories_session,
     # it won't create a new previous state log entry and will properly
     # link them
     state_log_util.create_state_log_without_associated_model(
-        start_state=State.VERIFY_VENDOR_STATUS,
         end_state=State.PAYMENTS_RETRIEVED,
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
         outcome=default_outcome(),
@@ -305,7 +285,6 @@ def test_get_all_latest_state_logs_in_end_state(initialize_factories_session, te
     # 2 State Logs, ends with CONFIRM_PAYMENT
     test_setup2 = setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.ADD_TO_GAX, State.GAX_SENT],
         end_states=[State.GAX_SENT, State.CONFIRM_PAYMENT],
         test_db_session=test_db_session,
     )
@@ -314,7 +293,6 @@ def test_get_all_latest_state_logs_in_end_state(initialize_factories_session, te
     # Will not be present in results
     setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.GAX_SENT, State.CONFIRM_PAYMENT],
         end_states=[State.CONFIRM_PAYMENT, State.ADD_TO_GAX],
         test_db_session=test_db_session,
     )
@@ -339,21 +317,18 @@ def test_has_been_in_end_state(test_db_session, initialize_factories_session):
 
     # Add a few state logs that are not in GAX_SENT
     state_log_util.create_finished_state_log(
-        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         end_state=State.PAYMENT_PROCESS_INITIATED,
         outcome=state_log_util.build_outcome("success"),
         associated_model=payment,
         db_session=test_db_session,
     )
     state_log_util.create_finished_state_log(
-        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         end_state=State.MARK_AS_EXTRACTED_IN_FINEOS,
         outcome=state_log_util.build_outcome("success"),
         associated_model=payment,
         db_session=test_db_session,
     )
     state_log_util.create_finished_state_log(
-        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         end_state=State.ADD_TO_GAX,
         outcome=state_log_util.build_outcome("success"),
         associated_model=payment,
@@ -364,21 +339,18 @@ def test_has_been_in_end_state(test_db_session, initialize_factories_session):
 
     # Add another few state logs with GAX_SENT in there
     state_log_util.create_finished_state_log(
-        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         outcome=state_log_util.build_outcome("success"),
         associated_model=payment,
         db_session=test_db_session,
     )
     state_log_util.create_finished_state_log(
-        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         end_state=State.GAX_SENT,  # This will cause the method to return True
         outcome=state_log_util.build_outcome("success"),
         associated_model=payment,
         db_session=test_db_session,
     )
     state_log_util.create_finished_state_log(
-        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         end_state=State.ADD_TO_GAX_ERROR_REPORT,
         outcome=state_log_util.build_outcome("success"),
         associated_model=payment,
@@ -483,7 +455,6 @@ def test_build_outcome():
 def test_process_state(test_db_session, initialize_factories_session):
     state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT],
         end_states=[State.IDENTIFY_MMARS_STATUS],
         test_db_session=test_db_session,
     )
@@ -494,7 +465,7 @@ def test_process_state(test_db_session, initialize_factories_session):
     # an exception will set end state to the same start state
     with pytest.raises(Exception):
         with state_log_util.process_state(
-            start_state=State.IDENTIFY_MMARS_STATUS,
+            prior_state=State.IDENTIFY_MMARS_STATUS,
             associated_model=employee,
             db_session=test_db_session,
         ):
@@ -504,6 +475,5 @@ def test_process_state(test_db_session, initialize_factories_session):
     state_log = state_log_util.get_latest_state_log_in_end_state(
         employee, State.IDENTIFY_MMARS_STATUS, test_db_session
     )
-    assert state_log.start_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
-    assert state_log.end_state == state_log.start_state
+    assert state_log.end_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert state_log.outcome["message"] == "Hit exception: Exception"

@@ -398,7 +398,6 @@ def build_vcc_dat(
             # Record in StateLog that we've added this employee to the VCC.
             state_log_util.create_finished_state_log(
                 associated_model=employee,
-                start_state=STATE_LOG_PICKUP_STATE,
                 end_state=State.VCC_SENT,
                 outcome=state_log_util.build_outcome("Added vendor to VCC"),
                 db_session=db_session,
@@ -408,7 +407,6 @@ def build_vcc_dat(
             if employee.eft and employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
                 state_log_util.create_finished_state_log(
                     associated_model=employee,
-                    start_state=State.EFT_REQUEST_RECEIVED,
                     end_state=State.EFT_PENDING,
                     outcome=state_log_util.build_outcome(
                         "Added vendor to VCC, EFT data is included"

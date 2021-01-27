@@ -684,7 +684,6 @@ def manage_state_log(
     validation_container.record_key = employee_pfml_entry.employee_id
     if validation_container.has_validation_issues():
         state_log_util.create_finished_state_log(
-            start_state=State.VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT,
             end_state=State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT,
             associated_model=employee_pfml_entry,
             outcome=state_log_util.build_outcome(
@@ -695,7 +694,6 @@ def manage_state_log(
         )
     else:
         state_log_util.create_finished_state_log(
-            start_state=State.VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT,
             end_state=State.IDENTIFY_MMARS_STATUS,
             associated_model=employee_pfml_entry,
             outcome=state_log_util.build_outcome(
@@ -709,7 +707,6 @@ def manage_state_log(
             and employee_pfml_entry.payment_method_id == PaymentMethod.ACH.payment_method_id
         ):
             state_log_util.create_finished_state_log(
-                start_state=State.EFT_DETECTED_IN_VENDOR_EXPORT,
                 end_state=State.EFT_REQUEST_RECEIVED,
                 associated_model=employee_pfml_entry,
                 outcome=state_log_util.build_outcome(

@@ -181,7 +181,6 @@ def test_process_outbound_status_return_success(
 
     assert len(state_logs) == 1
     state_log_1 = state_logs[0]
-    assert state_log_1.start_state_id == State.GAX_SENT.state_id
     assert state_log_1.end_state_id == State.CONFIRM_PAYMENT.state_id
     assert state_log_1.payment_id == payment_1.payment_id
     assert state_log_1.outcome == {
@@ -194,7 +193,6 @@ def test_process_outbound_status_return_success(
 
     assert len(state_logs) == 1
     state_log_2 = state_logs[0]
-    assert state_log_2.start_state_id == State.GAX_SENT.state_id
     assert state_log_2.end_state_id == State.CONFIRM_PAYMENT.state_id
     assert state_log_2.payment_id == payment_2.payment_id
     assert state_log_2.outcome == {
@@ -207,7 +205,6 @@ def test_process_outbound_status_return_success(
 
     assert len(state_logs) == 1
     state_log_3 = state_logs[0]
-    assert state_log_3.start_state_id == State.VCC_SENT.state_id
     assert state_log_3.end_state_id == State.VCC_SENT.state_id
     assert state_log_3.employee_id == employee_1.employee_id
     assert state_log_3.outcome == {

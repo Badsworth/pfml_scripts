@@ -57,7 +57,6 @@ def get_now() -> datetime:
 
 def create_finished_state_log(
     associated_model: AssociatedModel,
-    start_state: LkState,
     end_state: LkState,
     outcome: Dict[str, str],
     db_session: db.Session,
@@ -68,7 +67,6 @@ def create_finished_state_log(
     associated_class = AssociatedClass.get_associated_type(associated_model)
 
     return _create_state_log(
-        start_state=start_state,
         end_state=end_state,
         associated_model=associated_model,
         associated_class=associated_class,
@@ -81,7 +79,6 @@ def create_finished_state_log(
 def _create_state_log(
     associated_model: Optional[AssociatedModel],
     associated_class: AssociatedClass,
-    start_state: LkState,
     end_state: LkState,
     outcome: Dict[str, str],
     db_session: db.Session,
@@ -90,7 +87,6 @@ def _create_state_log(
 ) -> StateLog:
     now = get_now()
     state_log = StateLog(
-        start_state_id=start_state.state_id,
         end_state_id=end_state.state_id,
         outcome=outcome,
         started_at=start_time,
@@ -184,7 +180,6 @@ def _create_or_update_latest_state_log(
 
 
 def create_state_log_without_associated_model(
-    start_state: LkState,
     end_state: LkState,
     associated_class: AssociatedClass,
     outcome: Dict[str, str],
@@ -195,7 +190,6 @@ def create_state_log_without_associated_model(
     start_state_time = start_time if start_time else get_now()
 
     return _create_state_log(
-        start_state=start_state,
         end_state=end_state,
         associated_model=None,
         associated_class=associated_class,
@@ -376,7 +370,7 @@ def build_outcome(
 
 @contextmanager
 def process_state(
-    start_state: LkState, associated_model: AssociatedModel, db_session: db.Session
+    prior_state: LkState, associated_model: AssociatedModel, db_session: db.Session
 ) -> Generator[None, None, None]:
     """Log an exception if an error occurs while processing a state
     """
@@ -385,8 +379,7 @@ def process_state(
         yield
     except Exception as e:
         create_finished_state_log(
-            start_state=start_state,
-            end_state=start_state,  # Create the error, but don't change the state
+            end_state=prior_state,  # Create the error, but don't change the state
             associated_model=associated_model,
             outcome=build_outcome(f"Hit exception: {type(e).__name__}"),
             db_session=db_session,

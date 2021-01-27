@@ -33,10 +33,6 @@ def setup_state_log_in_end_state(associated_class, end_state, test_db_session, a
     # from State.PAYMENTS_RETRIVED -> State.VERIFY_VENDOR_STATUS (both unused states)
     state_log_results = setup_state_log(
         associated_class=associated_class,
-        start_states=[
-            State.PAYMENTS_RETRIEVED,
-            State.VERIFY_VENDOR_STATUS,
-        ],  # This isn't used by this logic, so make it always the same
         end_states=[State.VERIFY_VENDOR_STATUS, end_state],
         test_db_session=test_db_session,
         additional_params=additional_params,
@@ -83,7 +79,6 @@ def add_mmars_payments_for_claim(claim, test_db_session):
     payments = test_db_session.query(Payment).filter(Payment.claim_id == claim.claim_id).all()
     for payment in payments:
         state_log_util.create_finished_state_log(
-            start_state=State.VERIFY_VENDOR_STATUS,  # not relevant to test
             end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
             associated_model=payment,
             db_session=test_db_session,

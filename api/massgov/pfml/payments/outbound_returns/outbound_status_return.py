@@ -202,7 +202,6 @@ def process_ams_document(
         if found_model_type == PAYMENT_STR:
             state_log = state_log_util.create_finished_state_log(
                 associated_model=found_model,
-                start_state=State.GAX_SENT,
                 end_state=State.ADD_TO_GAX_ERROR_REPORT,
                 outcome=state_log_util.build_outcome(
                     "Validation issues found", ams_doc_data.validation_container
@@ -212,7 +211,6 @@ def process_ams_document(
         else:
             state_log = state_log_util.create_finished_state_log(
                 associated_model=found_model,
-                start_state=State.VCC_SENT,
                 end_state=State.ADD_TO_VCC_ERROR_REPORT,
                 outcome=state_log_util.build_outcome(
                     "Validation issues found", ams_doc_data.validation_container
@@ -250,7 +248,6 @@ def process_ams_document(
     if found_model_type == PAYMENT_STR:
         state_log = state_log_util.create_finished_state_log(
             associated_model=found_model,
-            start_state=State.GAX_SENT,
             end_state=State.CONFIRM_PAYMENT,
             outcome=state_log_util.build_outcome(success_message),
             db_session=db_session,
@@ -258,7 +255,6 @@ def process_ams_document(
     else:
         state_log = state_log_util.create_finished_state_log(
             associated_model=found_model,
-            start_state=State.VCC_SENT,
             end_state=State.VCC_SENT,  # For VCCs, we rely on Data Mart to update state
             outcome=state_log_util.build_outcome(success_message),
             db_session=db_session,

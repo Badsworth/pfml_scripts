@@ -48,7 +48,7 @@ class PeiWritebackRecord:
 class PeiWritebackItem:
     writeback_record: PeiWritebackRecord
     payment: Payment
-    start_state: LkState
+    prior_state: LkState
     end_state: LkState
     encoded_row: Dict[str, str]
     post_writeback_hook: Optional[Callable] = None
@@ -98,14 +98,14 @@ def get_records_to_writeback(db_session: db.Session) -> List[PeiWritebackItem]:
 
     extracted_writeback_items = _get_writeback_items_for_state(
         db_session=db_session,
-        start_state=State.MARK_AS_EXTRACTED_IN_FINEOS,
+        prior_state=State.MARK_AS_EXTRACTED_IN_FINEOS,
         end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         writeback_record_converter=_extracted_payment_to_pei_writeback_record,
         post_writeback_hook=_after_vendor_check_initiated,
     )
     disbursed_writeback_items = _get_writeback_items_for_state(
         db_session=db_session,
-        start_state=State.SEND_PAYMENT_DETAILS_TO_FINEOS,
+        prior_state=State.SEND_PAYMENT_DETAILS_TO_FINEOS,
         end_state=State.PAYMENT_COMPLETE,
         writeback_record_converter=_disbursed_payment_to_pei_writeback_record,
         post_writeback_hook=None,
@@ -116,7 +116,7 @@ def get_records_to_writeback(db_session: db.Session) -> List[PeiWritebackItem]:
 
 def _get_writeback_items_for_state(
     db_session: db.Session,
-    start_state: LkState,
+    prior_state: LkState,
     end_state: LkState,
     writeback_record_converter: Callable,
     post_writeback_hook: Optional[Callable] = None,
@@ -125,7 +125,7 @@ def _get_writeback_items_for_state(
 
     state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        end_state=start_state,
+        end_state=prior_state,
         db_session=db_session,
     )
 
@@ -138,7 +138,7 @@ def _get_writeback_items_for_state(
                 PeiWritebackItem(
                     payment=payment,
                     writeback_record=writeback_record,
-                    start_state=start_state,
+                    prior_state=prior_state,
                     end_state=end_state,
                     encoded_row=csv_util.encode_row(writeback_record, PEI_WRITEBACK_CSV_ENCODERS),
                     post_writeback_hook=post_writeback_hook,
@@ -234,7 +234,6 @@ def upload_writeback_csv_and_save_reference_files(
     try:
         state_log_util.create_finished_state_log(
             associated_model=reference_file,
-            start_state=State.SEND_PEI_WRITEBACK,
             end_state=State.PEI_WRITEBACK_SENT,
             outcome=state_log_util.build_outcome("Archived PEI writeback after sending to FINEOS"),
             db_session=db_session,
@@ -268,7 +267,6 @@ def _create_db_records_for_payments(
             db_session.add(payment_ref_file)
             state_log_util.create_finished_state_log(
                 associated_model=item.payment,
-                start_state=item.start_state,
                 end_state=item.end_state,
                 outcome=state_log_util.build_outcome("Added Payment to PEI Writeback"),
                 db_session=db_session,
@@ -374,7 +372,6 @@ def _after_vendor_check_initiated(payment: Payment, db_session: db.Session) -> N
     ):
         state_log_util.create_finished_state_log(
             associated_model=employee,
-            start_state=State.VENDOR_CHECK_INITIATED_BY_PAYMENT_EXPORT,
             end_state=State.IDENTIFY_MMARS_STATUS,
             outcome=state_log_util.build_outcome(
                 "Start Vendor Check flow after receiving payment in payment extract"

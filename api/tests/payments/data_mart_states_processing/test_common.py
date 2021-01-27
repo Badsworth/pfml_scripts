@@ -29,7 +29,6 @@ pytestmark = pytest.mark.integration
 def create_identify_mmars_status_state_log(test_db_session):
     state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT],
         end_states=[State.IDENTIFY_MMARS_STATUS],
         test_db_session=test_db_session,
     )
@@ -603,7 +602,6 @@ def test_process_data_mart_issues_no_issues_pending_payment_updated(
 
     payment_state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        start_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         end_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         test_db_session=test_db_session,
     )
@@ -647,7 +645,7 @@ def test_process_data_mart_issues_no_issues_pending_payment_updated(
     )
 
     assert new_payment_state_log
-    assert new_payment_state_log.start_state_id == State.CONFIRM_VENDOR_STATUS_IN_MMARS.state_id
+    assert new_payment_state_log.end_state_id != payment_state_log.end_state_id
 
 
 def test_process_data_mart_issues_no_issues_multiple_pending_payment_updated(
@@ -657,7 +655,6 @@ def test_process_data_mart_issues_no_issues_multiple_pending_payment_updated(
 
     first_payment_state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        start_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         end_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         test_db_session=test_db_session,
     )
@@ -669,7 +666,6 @@ def test_process_data_mart_issues_no_issues_multiple_pending_payment_updated(
 
     second_payment_state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        start_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         end_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         test_db_session=test_db_session,
     )
@@ -681,7 +677,6 @@ def test_process_data_mart_issues_no_issues_multiple_pending_payment_updated(
 
     third_payment_state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        start_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         end_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         test_db_session=test_db_session,
     )
@@ -692,7 +687,6 @@ def test_process_data_mart_issues_no_issues_multiple_pending_payment_updated(
 
     different_employee_payment_state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        start_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         end_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         test_db_session=test_db_session,
     )
@@ -739,7 +733,7 @@ def test_process_data_mart_issues_no_issues_multiple_pending_payment_updated(
         )
 
         assert new_payment_state_log
-        assert new_payment_state_log.start_state_id == State.CONFIRM_VENDOR_STATUS_IN_MMARS.state_id
+        assert new_payment_state_log.end_state_id != State.CONFIRM_VENDOR_STATUS_IN_MMARS.state_id
 
     # *should not* have a `ADD_TO_GAX` state for the payment for the employee we have not confirmed
     new_different_employee_payment_state_log = state_log_util.get_latest_state_log_in_end_state(
@@ -758,7 +752,6 @@ def test_process_data_mart_issues_no_issues_only_new_pending_payment_updated(
 
     first_payment_state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        start_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         end_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         test_db_session=test_db_session,
     )
@@ -772,7 +765,6 @@ def test_process_data_mart_issues_no_issues_only_new_pending_payment_updated(
     # claim and employee
     second_payment_state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        start_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS, State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         end_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS, State.ADD_TO_GAX],
         test_db_session=test_db_session,
     )
@@ -785,7 +777,6 @@ def test_process_data_mart_issues_no_issues_only_new_pending_payment_updated(
 
     third_payment_state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        start_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS, State.CONFIRM_VENDOR_STATUS_IN_MMARS],
         end_states=[State.CONFIRM_VENDOR_STATUS_IN_MMARS, State.ADD_TO_GAX],
         test_db_session=test_db_session,
     )
@@ -834,7 +825,7 @@ def test_process_data_mart_issues_no_issues_only_new_pending_payment_updated(
     )
 
     assert new_payment_state_log
-    assert new_payment_state_log.start_state_id == State.CONFIRM_VENDOR_STATUS_IN_MMARS.state_id
+    assert new_payment_state_log.end_state_id != first_payment_state_log.end_state_id
 
     # the other payments should not have any state change
     for unchanged_payment_state_log in [
@@ -858,13 +849,12 @@ def test_process_catches_exceptions_and_continues(
     employee_to_fail_processing = state_logs[0].employee
 
     def mock_process_state_log_func(
-        pfml_db_session, data_mart_client, start_state, employee, tax_id
+        pfml_db_session, data_mart_client, prior_state, employee, tax_id
     ):
         if employee.employee_id == employee_to_fail_processing.employee_id:
             raise Exception
         else:
             state_log_util.create_finished_state_log(
-                start_state=start_state,
                 end_state=State.ADD_TO_VCC,
                 associated_model=employee,
                 outcome=state_log_util.build_outcome(
@@ -897,7 +887,7 @@ def test_process_catches_exceptions_and_continues(
     assert len(failed_log_records) == 1
     failed_log_record_dict = failed_log_records[0].__dict__
     assert failed_log_record_dict["employee_id"] == employee_to_fail_processing.employee_id
-    assert failed_log_record_dict["start_state"] == State.IDENTIFY_MMARS_STATUS.state_description
+    assert failed_log_record_dict["prior_state"] == State.IDENTIFY_MMARS_STATUS.state_description
 
     # first employee should be in same state as start due to exception
     new_state_log_for_failed = state_log_util.get_latest_state_log_in_end_state(
@@ -908,7 +898,6 @@ def test_process_catches_exceptions_and_continues(
 
     assert new_state_log_for_failed
     assert new_state_log_for_failed.state_log_id != state_logs[0].state_log_id
-    assert new_state_log_for_failed.start_state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert new_state_log_for_failed.end_state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert new_state_log_for_failed.outcome["message"] == "Hit exception: Exception"
     # and the related log message should have the correct info
@@ -922,7 +911,6 @@ def test_process_catches_exceptions_and_continues(
 
     assert new_state_log_for_success
     assert new_state_log_for_success.state_log_id != state_logs[1].state_log_id
-    assert new_state_log_for_success.start_state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert new_state_log_for_success.end_state_id == State.ADD_TO_VCC.state_id
 
 

@@ -26,7 +26,6 @@ def process_state_log(
 
     if not vendor_info:
         state_log_util.create_finished_state_log(
-            start_state=current_state,
             end_state=current_state,
             associated_model=employee,
             outcome=state_log_util.build_outcome("Queried Data Mart: Vendor does not exist yet"),
@@ -41,7 +40,6 @@ def process_state_log(
         or vendor_info.eft_status is data_mart.EFTStatus.PRENOTE_PENDING
     ):
         state_log_util.create_finished_state_log(
-            start_state=current_state,
             end_state=current_state,
             associated_model=employee,
             outcome=state_log_util.build_outcome("Queried Data Mart: EFT pending"),
@@ -55,7 +53,6 @@ def process_state_log(
         or vendor_info.eft_status is data_mart.EFTStatus.PRENOTE_REJECTED
     ):
         state_log_util.create_finished_state_log(
-            start_state=current_state,
             end_state=State.ADD_TO_EFT_ERROR_REPORT,
             associated_model=employee,
             outcome=state_log_util.build_outcome(
@@ -66,7 +63,6 @@ def process_state_log(
     elif vendor_info.eft_status is data_mart.EFTStatus.ELIGIBILE_FOR_EFT:
         if vendor_info.generate_eft_payment is True:
             state_log_util.create_finished_state_log(
-                start_state=current_state,
                 end_state=State.EFT_ELIGIBLE,
                 associated_model=employee,
                 outcome=state_log_util.build_outcome("Valid EFT information"),
@@ -74,7 +70,6 @@ def process_state_log(
             )
         else:
             state_log_util.create_finished_state_log(
-                start_state=current_state,
                 end_state=State.ADD_TO_EFT_ERROR_REPORT,
                 associated_model=employee,
                 outcome=state_log_util.build_outcome(

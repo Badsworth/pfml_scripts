@@ -297,7 +297,6 @@ def test_process_extract_data(
         assert len(state_logs) == 1
         state_log = state_logs[0]
         assert state_log.outcome == EXPECTED_OUTCOME
-        assert state_log.start_state_id == State.PAYMENT_PROCESS_INITIATED.state_id
         assert state_log.end_state_id == State.MARK_AS_EXTRACTED_IN_FINEOS.state_id
 
         eft = employee.eft
@@ -418,7 +417,6 @@ def test_process_extract_data_one_previously_in_gax(
     )
 
     state_log_util.create_finished_state_log(
-        start_state=State.PAYMENT_PROCESS_INITIATED,
         end_state=State.GAX_SENT,
         outcome=state_log_util.build_outcome("GAX sent"),
         associated_model=payment,
@@ -612,7 +610,6 @@ def test_process_extract_data_no_existing_claim_address_eft(
         assert len(state_logs) == 1
         state_log = state_logs[0]
         assert state_log.outcome == EXPECTED_OUTCOME
-        assert state_log.start_state_id == State.PAYMENT_PROCESS_INITIATED.state_id
         assert state_log.end_state_id == State.MARK_AS_EXTRACTED_IN_FINEOS.state_id
 
         eft = employee.eft
@@ -675,7 +672,6 @@ def test_process_extract_data_existing_payment(
         assert len(state_logs) == 1
         state_log = state_logs[0]
         assert state_log.outcome == EXPECTED_OUTCOME
-        assert state_log.start_state_id == State.PAYMENT_PROCESS_INITIATED.state_id
         assert state_log.end_state_id == State.MARK_AS_EXTRACTED_IN_FINEOS.state_id
 
     payment_count_after = test_db_session.query(Payment).count()

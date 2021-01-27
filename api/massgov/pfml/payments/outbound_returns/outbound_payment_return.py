@@ -187,7 +187,6 @@ def process_pymt_retn_doc(
         )
         state_log = state_log_util.create_finished_state_log(
             associated_model=payment,
-            start_state=State.GAX_SENT,
             end_state=State.ADD_TO_GAX_ERROR_REPORT,
             outcome=state_log_util.build_outcome(
                 "Validation issues found", payment_return_doc_data.validation_container
@@ -253,7 +252,6 @@ def process_pymt_retn_doc(
     success_message = f"Successfully processed payment with PY_ID {payment_return_doc_data.py_id} from Outbound Payment Return"
     state_log = state_log_util.create_finished_state_log(
         associated_model=payment,
-        start_state=State.GAX_SENT,
         end_state=State.SEND_PAYMENT_DETAILS_TO_FINEOS,
         outcome=state_log_util.build_outcome(success_message),
         db_session=db_session,

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Callable, Iterable, List, Tuple, Union
+from typing import Callable, Iterable, List, Tuple, Union, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as pfml_db
@@ -208,7 +208,6 @@ def process_data_mart_issues(
             raise missing_vendor_state
 
         state_log_util.create_finished_state_log(
-            start_state=current_state,
             end_state=missing_vendor_state,
             associated_model=employee,
             outcome=state_log_util.build_outcome("Queried Data Mart: Vendor does not exist yet"),
@@ -218,7 +217,6 @@ def process_data_mart_issues(
 
     if issues_and_updates.issues.has_validation_issues():
         state_log_util.create_finished_state_log(
-            start_state=current_state,
             end_state=mismatched_data_state,
             associated_model=employee,
             outcome=state_log_util.build_outcome(
@@ -229,7 +227,6 @@ def process_data_mart_issues(
 
     else:
         state_log_util.create_finished_state_log(
-            start_state=current_state,
             end_state=State.MMARS_STATUS_CONFIRMED,
             associated_model=employee,
             outcome=state_log_util.build_outcome("Vendor confirmed in MMARS."),
@@ -281,7 +278,6 @@ def process_payments_waiting_on_vendor_confirmation(
 
         # Create and finish state log entry to move the payment along to ADD_TO_GAX
         new_payment_state_log = state_log_util.create_finished_state_log(
-            start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
             end_state=State.ADD_TO_GAX,
             outcome=state_log_util.build_outcome("Vendor confirmed in MMARS."),
             associated_model=payment,
@@ -296,24 +292,24 @@ def process_payments_waiting_on_vendor_confirmation(
 def process_employees_in_state(
     pfml_db_session: pfml_db.Session,
     data_mart_client: data_mart.Client,
-    end_state: LkState,
+    prior_state: LkState,
     process_state_log: Callable[
         [pfml_db.Session, data_mart.Client, LkState, Employee, TaxIdentifier], None
     ],
 ) -> None:
     logger.info(
-        f"Starting processing of {end_state.state_description} records",
-        extra={"start_state": end_state.state_description},
+        f"Starting processing of {prior_state.state_description} records",
+        extra={"prior_state": prior_state.state_description},
     )
 
     state_logs_for_employees = get_latest_state_logs_with_employees_in_state_for_processing(
-        db_session=pfml_db_session, end_state=end_state
+        db_session=pfml_db_session, prior_state=prior_state
     )
 
     for _prev_state_log, employee in state_logs_for_employees:
         try:
             with state_log_util.process_state(
-                start_state=end_state, associated_model=employee, db_session=pfml_db_session,
+                prior_state=prior_state, associated_model=employee, db_session=pfml_db_session,
             ):
 
                 tax_id = employee.tax_identifier
@@ -325,9 +321,9 @@ def process_employees_in_state(
                     )
                     raise ValueError("Employee does not have a tax id. Skipping.")
 
-                process_state_log(pfml_db_session, data_mart_client, end_state, employee, tax_id)
+                process_state_log(pfml_db_session, data_mart_client, prior_state, employee, tax_id)
         except Exception:
-            extra = {"start_state": end_state.state_description}
+            extra = {"prior_state": prior_state.state_description}
 
             if employee:
                 extra["employee_id"] = employee.employee_id
@@ -338,34 +334,34 @@ def process_employees_in_state(
             pfml_db_session.commit()
 
     logger.info(
-        f"Done processing {end_state.state_description} records",
-        extra={"start_state": end_state.state_description},
+        f"Done processing {prior_state.state_description} records",
+        extra={"prior_state": prior_state.state_description},
     )
 
 
 def get_latest_state_logs_with_employees_in_state_for_processing(
-    db_session: pfml_db.Session, end_state: LkState
+    db_session: pfml_db.Session, prior_state: LkState
 ) -> Iterable[Tuple[StateLog, Employee]]:
     state_logs_for_employees = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=end_state,
+        end_state=prior_state,
         db_session=db_session,
     )
 
     if not state_logs_for_employees:
         logger.info(
-            f"No records in {end_state.state_description}",
-            extra={"end_state": end_state.state_description},
+            f"No records in {prior_state.state_description}",
+            extra={"end_state": prior_state.state_description},
         )
         return []
 
     state_logs_for_employees_with_logging = logging.log_every(
         logger,
         state_logs_for_employees,
-        item_name=f"Employee in {end_state.state_description} state",
+        item_name=f"Employee in {prior_state.state_description} state",
         total_count=len(state_logs_for_employees),
         start_time=datetime_util.utcnow(),
-        extra={"start_state": end_state.state_description},
+        extra={"prior_state": prior_state.state_description},
     )
 
     return only_state_logs_with_employees(state_logs_for_employees_with_logging)
@@ -385,12 +381,12 @@ def only_state_logs_with_employees(
             # But if it does we can't really update the state log since
             # the new entry will have the same issue. Requires manual
             # intervention. The DB is broken.
+
+            extra = {"state_log_id": state_log.state_log_id}
+            if state_log.end_state:
+                extra["end_state"] = cast(str, state_log.end_state.state_description)
             logger.error(
-                "No employee for given state log. Skipping.",
-                extra={
-                    "state_log_id": state_log.state_log_id,
-                    "start_state": state_log.start_state.state_description,
-                },
+                "No employee for given state log. Skipping.", extra=extra,
             )
             continue
 

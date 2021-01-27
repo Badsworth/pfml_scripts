@@ -55,7 +55,6 @@ def generate_extracted_payment(test_db_session):
     )
     setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        start_states=[State.PAYMENT_EXPORT_ERROR_REPORT_SENT],
         end_states=[State.MARK_AS_EXTRACTED_IN_FINEOS],
         test_db_session=test_db_session,
         additional_params=AdditionalParams(payment=payment),
@@ -74,7 +73,6 @@ def generate_disbursed_payment(test_db_session):
     )
     setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        start_states=[State.PAYMENT_COMPLETE],
         end_states=[State.SEND_PAYMENT_DETAILS_TO_FINEOS],
         test_db_session=test_db_session,
         additional_params=AdditionalParams(payment=payment),
@@ -238,7 +236,7 @@ def test_create_db_records_for_payments(
             writeback.PeiWritebackItem(
                 payment=payment,
                 writeback_record=writeback_record,
-                start_state=State.SEND_PAYMENT_DETAILS_TO_FINEOS,
+                prior_state=State.SEND_PAYMENT_DETAILS_TO_FINEOS,
                 end_state=State.PAYMENT_COMPLETE,
                 encoded_row=csv_util.encode_row(
                     writeback_record, writeback.PEI_WRITEBACK_CSV_ENCODERS
@@ -402,7 +400,7 @@ def test_writeback_files_uploaded_to_s3(
         writeback.PeiWritebackItem(
             payment=disbursed_payment,
             writeback_record=disbursed_payment_writeback_record,
-            start_state=State.SEND_PAYMENT_DETAILS_TO_FINEOS,
+            prior_state=State.SEND_PAYMENT_DETAILS_TO_FINEOS,
             end_state=State.PAYMENT_COMPLETE,
             encoded_row=csv_util.encode_row(
                 disbursed_payment_writeback_record, writeback.PEI_WRITEBACK_CSV_ENCODERS
@@ -418,7 +416,7 @@ def test_writeback_files_uploaded_to_s3(
         writeback.PeiWritebackItem(
             payment=extracted_payment,
             writeback_record=extracted_payment_writeback_record,
-            start_state=State.MARK_AS_EXTRACTED_IN_FINEOS,
+            prior_state=State.MARK_AS_EXTRACTED_IN_FINEOS,
             end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
             encoded_row=csv_util.encode_row(
                 extracted_payment_writeback_record, writeback.PEI_WRITEBACK_CSV_ENCODERS
@@ -477,7 +475,6 @@ def test_after_vendor_check_initiated_logs_error_for_existing_employee_state_log
     payment = generate_extracted_payment(test_db_session)
     state_log_util.create_finished_state_log(
         associated_model=payment.claim.employee,
-        start_state=State.VENDOR_CHECK_INITIATED_BY_PAYMENT_EXPORT,
         end_state=State.ADD_TO_VCM_REPORT,
         outcome=state_log_util.build_outcome(
             "Start Vendor Check flow after receiving payment in payment extract"

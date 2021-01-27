@@ -815,7 +815,6 @@ class EmployeeReferenceFile(Base):
 class StateLog(Base):
     __tablename__ = "state_log"
     state_log_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    start_state_id = Column(Integer, ForeignKey("lk_state.state_id"), nullable=False)
     end_state_id = Column(Integer, ForeignKey("lk_state.state_id"))
     started_at = Column(TIMESTAMP(timezone=True))
     ended_at = Column(TIMESTAMP(timezone=True), index=True)
@@ -828,7 +827,6 @@ class StateLog(Base):
     prev_state_log_id = Column(UUID(as_uuid=True), ForeignKey("state_log.state_log_id"))
     associated_type = Column(Text, index=True)
 
-    start_state = relationship(LkState, foreign_keys=[start_state_id])
     end_state = cast("Optional[LkState]", relationship(LkState, foreign_keys=[end_state_id]))
     payment = relationship("Payment", back_populates="state_logs")
     reference_file = relationship("ReferenceFile", back_populates="state_logs")

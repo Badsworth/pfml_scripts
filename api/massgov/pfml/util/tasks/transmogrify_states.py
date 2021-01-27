@@ -157,7 +157,6 @@ def _transmogrify_states(db_session: db.Session, config: Configuration) -> None:
         )
         state_log_util.create_finished_state_log(
             associated_model=associated_model,
-            start_state=current_state,
             end_state=new_state,
             outcome=state_log_util.build_outcome(config.outcome),
             db_session=db_session,

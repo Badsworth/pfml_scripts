@@ -124,7 +124,6 @@ class PaymentScenariosGenerator:
             # Set states to ADD_TO_VCC.
             for employee in employee_chunk:
                 massgov.pfml.api.util.state_log_util.create_finished_state_log(
-                    start_state=State.IDENTIFY_MMARS_STATUS,
                     end_state=State.ADD_TO_VCC,
                     associated_model=employee,
                     db_session=self.db_session,
@@ -139,7 +138,6 @@ class PaymentScenariosGenerator:
 
             for employee in employee_chunk:
                 massgov.pfml.api.util.state_log_util.create_finished_state_log(
-                    start_state=State.ADD_TO_VCC,
                     end_state=State.VCC_SENT,
                     associated_model=employee,
                     db_session=self.db_session,

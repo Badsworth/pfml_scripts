@@ -321,7 +321,6 @@ def _build_state_log(
 
     if associated_model:
         state_log_util.create_finished_state_log(
-            start_state=current_state,
             end_state=next_state,
             associated_model=associated_model,
             outcome=state_log_util.build_outcome("Successfully sent email"),
@@ -329,7 +328,6 @@ def _build_state_log(
         )
     else:  # For the payment edge case where it has no associated model
         state_log_util.create_state_log_without_associated_model(
-            start_state=current_state,
             end_state=next_state,
             associated_class=associated_class,
             prev_state_log=current_state_log,
@@ -354,7 +352,6 @@ def _build_state_log(
         if employee.eft and employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
             state_log_util.create_finished_state_log(
                 associated_model=associated_model,
-                start_state=State.EFT_REQUEST_RECEIVED,
                 end_state=State.EFT_PENDING,
                 outcome=state_log_util.build_outcome(
                     "Added vendor to VCM Report, EFT data is included"

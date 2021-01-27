@@ -446,7 +446,6 @@ def process_ams_document(
 
     if validation_container.has_validation_issues():
         state_log = state_log_util.create_finished_state_log(
-            start_state=State.VCC_SENT,
             end_state=State.VCC_SENT,
             associated_model=dependencies.employee,
             outcome=state_log_util.build_outcome("Validation issues found", validation_container),
@@ -463,7 +462,6 @@ def process_ams_document(
         )
 
         state_log = state_log_util.create_finished_state_log(
-            start_state=State.VCC_SENT,
             end_state=State.VCC_SENT,
             associated_model=dependencies.employee,
             outcome=state_log_util.build_outcome(

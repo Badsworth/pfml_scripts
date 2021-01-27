@@ -10,7 +10,6 @@ def setup_state_logs(test_db_session):
     employee1 = EmployeeFactory.create()
     employee_state_log1 = state_log_util.create_finished_state_log(
         associated_model=employee1,
-        start_state=State.IDENTIFY_MMARS_STATUS,
         end_state=State.ADD_TO_VCM_REPORT,
         outcome=state_log_util.build_outcome("success"),
         db_session=test_db_session,
@@ -19,7 +18,6 @@ def setup_state_logs(test_db_session):
     employee2 = EmployeeFactory.create()
     employee_state_log2 = state_log_util.create_finished_state_log(
         associated_model=employee2,
-        start_state=State.IDENTIFY_MMARS_STATUS,
         end_state=State.ADD_TO_VCM_REPORT,
         outcome=state_log_util.build_outcome("success"),
         db_session=test_db_session,
@@ -28,7 +26,6 @@ def setup_state_logs(test_db_session):
     employee3 = EmployeeFactory.create()
     employee_state_log3 = state_log_util.create_finished_state_log(
         associated_model=employee3,
-        start_state=State.IDENTIFY_MMARS_STATUS,
         end_state=State.ADD_TO_VCM_REPORT,
         outcome=state_log_util.build_outcome("success"),
         db_session=test_db_session,
@@ -37,7 +34,6 @@ def setup_state_logs(test_db_session):
     employee4 = EmployeeFactory.create()
     state_log_util.create_finished_state_log(
         associated_model=employee4,
-        start_state=State.IDENTIFY_MMARS_STATUS,
         end_state=State.MMARS_STATUS_CONFIRMED,  # a different state that should be successfully ignored
         outcome=state_log_util.build_outcome("success"),
         db_session=test_db_session,
@@ -74,7 +70,6 @@ def test_transmogrify_states(initialize_factories_session, test_db_session):
     for state_log in state_logs:
         assert state_log.employee_id and state_log.employee_id in employee_ids
         assert state_log.outcome == {"message": "Test outcome"}
-        assert state_log.start_state_id == State.ADD_TO_VCM_REPORT.state_id
         assert state_log.end_state_id == State.VCM_REPORT_SENT.state_id
 
 

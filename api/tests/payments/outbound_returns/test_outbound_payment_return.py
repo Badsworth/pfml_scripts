@@ -172,7 +172,6 @@ def test_process_outbound_payment_return_success(
 
     assert len(state_logs) == 1
     state_log_1 = state_logs[0]
-    assert state_log_1.start_state_id == State.GAX_SENT.state_id
     assert state_log_1.end_state_id == State.SEND_PAYMENT_DETAILS_TO_FINEOS.state_id
     assert state_log_1.payment_id == payment_1.payment_id
     assert state_log_1.outcome == {
@@ -185,7 +184,6 @@ def test_process_outbound_payment_return_success(
 
     assert len(state_logs) == 1
     state_log_2 = state_logs[0]
-    assert state_log_2.start_state_id == State.GAX_SENT.state_id
     assert state_log_2.end_state_id == State.SEND_PAYMENT_DETAILS_TO_FINEOS.state_id
     assert state_log_2.payment_id == payment_2.payment_id
     assert state_log_2.outcome == {

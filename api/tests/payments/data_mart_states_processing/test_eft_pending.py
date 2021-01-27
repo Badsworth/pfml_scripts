@@ -13,7 +13,6 @@ pytestmark = pytest.mark.integration
 def create_eft_pending_state_log(test_db_session):
     state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.EFT_REQUEST_RECEIVED],
         end_states=[State.EFT_PENDING],
         test_db_session=test_db_session,
     )
@@ -56,8 +55,6 @@ def test_process_eft_pending_waits(
 
     assert new_state_log
     assert new_state_log.state_log_id != state_log.state_log_id
-    assert new_state_log.start_state_id == new_state_log.end_state_id
-    assert new_state_log.start_state_id == State.EFT_PENDING.state_id
 
 
 @pytest.mark.parametrize(
@@ -98,7 +95,6 @@ def test_process_eft_pending_error_report(
 
     assert new_state_log
     assert new_state_log.state_log_id != state_log.state_log_id
-    assert new_state_log.start_state_id == State.EFT_PENDING.state_id
 
 
 def test_process_eft_pending_eligible_status_but_false_generate(
@@ -128,7 +124,6 @@ def test_process_eft_pending_eligible_status_but_false_generate(
 
     assert new_state_log
     assert new_state_log.state_log_id != state_log.state_log_id
-    assert new_state_log.start_state_id == State.EFT_PENDING.state_id
 
 
 def test_process_eft_pending_eligible(
@@ -156,4 +151,3 @@ def test_process_eft_pending_eligible(
 
     assert new_state_log
     assert new_state_log.state_log_id != state_log.state_log_id
-    assert new_state_log.start_state_id == State.EFT_PENDING.state_id

@@ -14,7 +14,6 @@ pytestmark = pytest.mark.integration
 def create_vcm_report_sent_state_log(test_db_session):
     state_log_setup = setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        start_states=[State.ADD_TO_VCM_REPORT],
         end_states=[State.VCM_REPORT_SENT],
         test_db_session=test_db_session,
     )
@@ -45,7 +44,6 @@ def test_process_vcm_report_sent_no_vendor(
 
     assert new_state_log
     assert new_state_log.state_log_id != state_log.state_log_id
-    assert new_state_log.start_state_id == State.VCM_REPORT_SENT.state_id
 
     assert new_state_log.outcome == {"message": "Hit exception: ValueError"}
 
@@ -75,7 +73,6 @@ def test_process_vcm_report_sent_mismatched_data(
 
     assert new_state_log
     assert new_state_log.state_log_id != state_log.state_log_id
-    assert new_state_log.start_state_id == State.VCM_REPORT_SENT.state_id
 
 
 def test_process_vcm_report_sent_success(

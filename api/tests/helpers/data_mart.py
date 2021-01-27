@@ -69,4 +69,4 @@ def run_test_process_success_no_pending_payment(
 
     assert new_state_log
     assert new_state_log.state_log_id != state_log.state_log_id
-    assert new_state_log.start_state_id == previous_end_state_id
+    assert new_state_log.end_state_id != previous_end_state_id

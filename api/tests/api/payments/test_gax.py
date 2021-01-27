@@ -93,7 +93,6 @@ def get_payments() -> List[Payment]:
 
 def create_add_to_gax_state_log_for_payment(payment: Payment, db_session: db.Session) -> None:
     state_log_util.create_finished_state_log(
-        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         end_state=State.ADD_TO_GAX,
         outcome=state_log_util.build_outcome("success"),
         associated_model=payment,
@@ -345,7 +344,6 @@ def test_build_gax_files_previously_processed(
     # The first payment will have been previously processed based on the state log
     previously_processed_payment = payments[0]
     state_log_util.create_finished_state_log(
-        start_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
         end_state=State.GAX_SENT,  # Any payment with this is sent to an error state
         outcome=state_log_util.build_outcome("success"),
         associated_model=previously_processed_payment,

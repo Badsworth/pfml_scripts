@@ -426,7 +426,6 @@ def test_state_log_creation_with_no_validation_issues(
     )
 
     assert validation_container.has_validation_issues() is False
-    assert state_log.start_state_id == State.VCC_SENT.state_id
     assert state_log.employee == employee
     assert state_log.payment is None
     assert state_log.reference_file is None
@@ -460,7 +459,6 @@ def test_state_log_with_validation_issues(test_db_session, initialize_factories_
     )
 
     assert validation_container.has_validation_issues() is True
-    assert state_log.start_state_id == State.VCC_SENT.state_id
     assert state_log.employee == employee
     assert state_log.payment is None
     assert state_log.reference_file is None
@@ -570,7 +568,6 @@ def test_finish_state_log_with_validation_issues(
 
     assert len(state_log) == 1
     state_log = state_log[0]
-    assert state_log.start_state_id == State.VCC_SENT.state_id
     assert state_log.end_state_id == State.VCC_SENT.state_id
     assert state_log.employee_id == employee.employee_id
     assert state_log.outcome == {
@@ -622,7 +619,6 @@ def test_finish_state_log_with_no_validation_issues(
 
     assert len(state_log) == 1
     state_log = state_log[0]
-    assert state_log.start_state_id == State.VCC_SENT.state_id
     assert state_log.end_state_id == State.VCC_SENT.state_id
     assert state_log.employee_id == employee.employee_id
     assert state_log.outcome == {"message": "No validation issues found"}

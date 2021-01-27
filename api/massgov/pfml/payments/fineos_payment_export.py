@@ -561,7 +561,6 @@ def _setup_state_log(
             message = "Success"
 
         state_log_util.create_finished_state_log(
-            start_state=State.PAYMENT_PROCESS_INITIATED,
             end_state=end_state,
             outcome=state_log_util.build_outcome(message, validation_container),
             associated_model=payment,
@@ -572,7 +571,6 @@ def _setup_state_log(
             employee = payment.claim.employee
             if employee.eft and employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
                 state_log_util.create_finished_state_log(
-                    start_state=State.EFT_DETECTED_IN_PAYMENT_EXPORT,
                     end_state=State.EFT_REQUEST_RECEIVED,
                     associated_model=employee,
                     outcome=state_log_util.build_outcome(
@@ -588,7 +586,6 @@ def _setup_state_log(
         # but no actual payment.
         # TODO save with employee id and claim for traceability
         state_log_util.create_state_log_without_associated_model(
-            start_state=State.PAYMENT_PROCESS_INITIATED,
             end_state=State.ADD_TO_PAYMENT_EXPORT_ERROR_REPORT,
             outcome=state_log_util.build_outcome(
                 "Error processing payment record", validation_container

@@ -82,19 +82,17 @@ def setup_db_for_state_log(associated_class, additional_params=None):
 
 # Utility method for creating state logs
 def setup_state_log(
-    associated_class, start_states, end_states, test_db_session, additional_params=None,
+    associated_class, end_states, test_db_session, additional_params=None,
 ):
     associated_model = setup_db_for_state_log(associated_class, additional_params)
 
     state_logs = []
     outcome = additional_params.outcome if additional_params and additional_params.outcome else {}
 
-    for index, start_state in enumerate(start_states):
-        end_state = end_states[index]
+    for index, end_state in enumerate(end_states):
 
         with freeze_time(f"2020-01-0{index + 1} 00:00:00"):
             state_log = state_log_util.create_finished_state_log(
-                start_state=start_state,
                 end_state=end_state,
                 outcome=outcome,
                 associated_model=associated_model,

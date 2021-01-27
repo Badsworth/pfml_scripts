@@ -325,7 +325,6 @@ def build_gax_dat(
                 )
                 state_log_util.create_finished_state_log(
                     associated_model=payment,
-                    start_state=STATE_LOG_PICKUP_STATE,
                     end_state=State.ADD_TO_GAX_ERROR_REPORT,
                     outcome=state_log_util.build_outcome(
                         "Received a duplicate payment that has already been sent in a GAX"
@@ -352,7 +351,6 @@ def build_gax_dat(
             # Record in StateLog that we've added this payment to the GAX.
             state_log_util.create_finished_state_log(
                 associated_model=payment,
-                start_state=STATE_LOG_PICKUP_STATE,
                 end_state=State.GAX_SENT,
                 outcome=state_log_util.build_outcome("Added Payment to GAX"),
                 db_session=db_session,
