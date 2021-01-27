@@ -3,15 +3,15 @@ import OtherIncome, {
   OtherIncomeType,
 } from "../../models/OtherIncome";
 import React, { useEffect, useRef } from "react";
-import { cloneDeep, get, isFinite, isNil, pick } from "lodash";
+import { get, pick } from "lodash";
 import Claim from "../../models/Claim";
 import Dropdown from "../../components/Dropdown";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
+import InputCurrency from "../../components/InputCurrency";
 import InputDate from "../../components/InputDate";
-import InputNumber from "../../components/InputNumber";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -57,19 +57,8 @@ export const OtherIncomesDetails = (props) => {
     updateFields({ other_incomes: claim.other_incomes });
   }, [claim.other_incomes, updateFields]);
 
-  const handleSave = async () => {
-    // Make sure income_amount_dollars is a number.
-    // TODO (CP-1528): Refactor Currency Masking
-    // There's a similar function in EmployerBenefitDetails.
-    const patchData = cloneDeep(formState);
-    patchData.other_incomes = patchData.other_incomes.map((income) => {
-      const val = income.income_amount_dollars;
-      const number =
-        isFinite(val) || isNil(val) ? val : Number(val.replace(/,/g, ""));
-      return { ...income, income_amount_dollars: number };
-    });
-    await appLogic.claims.update(claim.application_id, patchData);
-  };
+  const handleSave = () =>
+    appLogic.claims.update(claim.application_id, formState);
 
   const handleAddClick = () => {
     // Add a new blank entry
@@ -221,14 +210,14 @@ export const OtherIncomeCard = (props) => {
         >
           {t("pages.claimsOtherIncomesDetails.amountLegend")}
         </FormLabel>
-        <InputNumber
+        <InputCurrency
           {...getFunctionalInputProps(
-            `other_incomes[${index}].income_amount_dollars`
+            `other_incomes[${index}].income_amount_dollars`,
+            { fallbackValue: null }
           )}
           label={t("pages.claimsOtherIncomesDetails.amountLabel")}
           labelClassName="text-normal margin-top-0"
           formGroupClassName="margin-top-05"
-          mask="currency"
           width="medium"
           smallLabel
         />

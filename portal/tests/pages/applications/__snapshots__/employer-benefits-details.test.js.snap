@@ -68,15 +68,14 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
     >
       How much will you receive?
     </FormLabel>
-    <InputNumber
+    <InputCurrency
       formGroupClassName="margin-top-05"
       label="Amount"
       labelClassName="text-normal margin-top-0"
-      mask="currency"
       name="employer_benefits[0].benefit_amount_dollars"
       onChange={[Function]}
       smallLabel={true}
-      value=""
+      value={null}
       width="medium"
     />
     <Dropdown

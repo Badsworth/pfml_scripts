@@ -115,31 +115,6 @@ describe("OtherIncomesDetails", () => {
           }
         );
       });
-
-      it("calls claims.update without coercing an undefined amount to null", async () => {
-        expect.assertions();
-
-        delete claim.other_incomes[0].income_amount_dollars;
-
-        ({ appLogic, wrapper } = renderWithAppLogic(OtherIncomesDetails, {
-          claimAttrs: claim,
-          render: "mount",
-        }));
-
-        const { submitForm } = simulateEvents(wrapper);
-        await submitForm();
-
-        expect(appLogic.claims.update).toHaveBeenCalledWith(
-          claim.application_id,
-          {
-            other_incomes: expect.arrayContaining([
-              expect.objectContaining({
-                income_amount_dollars: undefined,
-              }),
-            ]),
-          }
-        );
-      });
     });
 
     describe("when the user clicks 'Add another'", () => {

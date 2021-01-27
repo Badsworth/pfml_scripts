@@ -3,15 +3,15 @@ import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
 import React, { useEffect, useRef } from "react";
-import { cloneDeep, get, isFinite, isNil, pick } from "lodash";
+import { get, pick } from "lodash";
 import Claim from "../../models/Claim";
 import Dropdown from "../../components/Dropdown";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
+import InputCurrency from "../../components/InputCurrency";
 import InputDate from "../../components/InputDate";
-import InputNumber from "../../components/InputNumber";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -56,20 +56,8 @@ export const EmployerBenefitsDetails = (props) => {
     updateFields({ employer_benefits: claim.employer_benefits });
   }, [claim.employer_benefits, updateFields]);
 
-  const handleSave = async () => {
-    // Make sure benefit_amount_dollars is a number.
-    // TODO (CP-1528): Refactor Currency Masking
-    // There's a similar function in OtherIncomedDetails.
-    const patchData = cloneDeep(formState);
-    patchData.employer_benefits = patchData.employer_benefits.map((benefit) => {
-      const val = benefit.benefit_amount_dollars;
-      const number =
-        isFinite(val) || isNil(val) ? val : Number(val.replace(/,/g, ""));
-      return { ...benefit, benefit_amount_dollars: number };
-    });
-
-    await appLogic.claims.update(claim.application_id, patchData);
-  };
+  const handleSave = () =>
+    appLogic.claims.update(claim.application_id, formState);
 
   const handleAddClick = () => {
     // Add a new blank entry
@@ -226,14 +214,14 @@ export const EmployerBenefitCard = (props) => {
         >
           {t("pages.claimsEmployerBenefitDetails.amountLegend")}
         </FormLabel>
-        <InputNumber
+        <InputCurrency
           {...getFunctionalInputProps(
-            `employer_benefits[${index}].benefit_amount_dollars`
+            `employer_benefits[${index}].benefit_amount_dollars`,
+            { fallbackValue: null }
           )}
           label={t("pages.claimsEmployerBenefitDetails.amountLabel")}
           labelClassName="text-normal margin-top-0"
           formGroupClassName="margin-top-05"
-          mask="currency"
           width="medium"
           smallLabel
         />

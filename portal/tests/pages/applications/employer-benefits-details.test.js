@@ -115,31 +115,6 @@ describe("EmployerBenefitDetails", () => {
           }
         );
       });
-
-      it("calls claims.update without coercing an undefined amount to null", async () => {
-        expect.assertions();
-
-        delete claim.employer_benefits[0].benefit_amount_dollars;
-
-        ({ appLogic, wrapper } = renderWithAppLogic(EmployerBenefitDetails, {
-          claimAttrs: claim,
-          render: "mount",
-        }));
-
-        const { submitForm } = simulateEvents(wrapper);
-        await submitForm();
-
-        expect(appLogic.claims.update).toHaveBeenCalledWith(
-          claim.application_id,
-          {
-            employer_benefits: expect.arrayContaining([
-              expect.objectContaining({
-                benefit_amount_dollars: undefined,
-              }),
-            ]),
-          }
-        );
-      });
     });
 
     describe("when the user clicks 'Add another'", () => {
