@@ -371,7 +371,7 @@ def build_vcc_dat(
                     "Reached limit of %d VCC documents per day. Started current batch from offset %d. Made it through %d VCC documents in current batch before reaching daily limit",
                     MAX_VCC_DOCUMENTS_PER_DAY,
                     doc_count_offset,
-                    count,
+                    count - 1,
                 )
                 break
 
