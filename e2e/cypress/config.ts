@@ -27,7 +27,9 @@ export function getFineosBaseUrl(): string {
 
 export function getLeaveAdminCredentials(fein: string): Credentials {
   // Backward compatibility - throw error if the employer is not one of our "blessed" employers.
-  if (!["84-7847847", "99-9999999"].includes(fein)) {
+  if (
+    !["84-7847847", "99-9999999", "92-9292929", "81-8181818"].includes(fein)
+  ) {
     throw new Error(`Unable to determine Leave Admin credentials for ${fein}`);
   }
   const password = Cypress.env("E2E_EMPLOYER_PORTAL_PASSWORD");
