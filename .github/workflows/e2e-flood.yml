@@ -78,27 +78,4 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
       - name: "Deploy"
-        run: |
-          npm run cli -- flood deployLST
-          --env $E2E_ENVIRONMENT
-          --startFlood "true"
-          --token $E2E_FLOOD_API_TOKEN
-          --name $INPUT_NAME
-          --threads $INPUT_THREADS
-          --duration $INPUT_DURATION
-          --rampup $INPUT_RAMPUP
-          --region "us-east-1"
-          --tool "flood-chrome"
-          --project "PFML"
-          --privacy "public"
-          --infrastructure "demand"
-          --instanceQuantity 1
-          --instanceType "m5.xlarge"
-          --stopAfter 180
-          --speed $INPUT_SPEED
-          --generateData "true"
-          --numRecords 1000
-          --dataOutput "GHWorkflow"
-          --scenario $INPUT_SCENARIO
-          --chance 100
-          --eligible $INPUT_ELIGIBLE
+        run: npm run cli -- flood deployLST --env $E2E_ENVIRONMENT --startFlood "true" --token $E2E_FLOOD_API_TOKEN --name ${{ github.event.inputs.name }} --threads ${{ github.event.inputs.threads }} --duration ${{ github.event.inputs.duration }} --rampup ${{ github.event.inputs.rampup }} --region "us-east-1" --tool "flood-chrome" --project "PFML" --privacy "public" --infrastructure "demand" --instanceQuantity 1 --instanceType "m5.xlarge" --stopAfter 180 --speed ${{ github.event.inputs.speed }} --generateData "true" --numRecords 100 --dataOutput "GHWorkflow" --scenario ${{ github.event.inputs.scenario }} --chance 100 --eligible ${{ github.event.inputs.eligible }}

@@ -8,24 +8,32 @@ import { CommandModule } from "yargs";
 import { prompt } from "enquirer";
 import { exec } from "child_process";
 import { SystemWideArgs } from "../../cli";
-import * as Cfg from "../../flood/config";
+import { LSTScenario } from "../../flood/config";
 import { factory as EnvFactory, BothConfig } from "../../config";
 
 type DeployLSTArgs = {
+  env: string;
   token: string;
+  startFlood: boolean;
   tool: string;
   project: string;
   name: string;
-  privacy: string;
   threads: number;
-  rampup: number;
   duration: number;
+  rampup: number;
+  privacy: string;
+  region: string;
   infrastructure: string;
   instanceQuantity: number;
-  region: string;
   instanceType: string;
   stopAfter: number;
-  startFlood: boolean;
+  speed: number;
+  generateData: boolean;
+  numRecords: number;
+  dataOutput: string;
+  scenario: string;
+  chance: number;
+  eligible: number;
 } & SystemWideArgs;
 
 type PromptRes = Record<string, string>;
@@ -39,7 +47,7 @@ interface Choice {
 }
 
 export type LSTDataConfig = {
-  scenario: Cfg.LSTScenario;
+  scenario: LSTScenario;
   chance: number;
   eligible?: number;
   // type?: Cfg.ClaimType;
@@ -61,60 +69,47 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
   command: "deployLST",
   describe: "Builds and deploys a bundle to run in Flood.io",
   builder: {
-    // --env $INPUT_ENV
     env: { string: true },
-    // --token $INPUT_TOKEN
     token: { string: true },
-    // --startFlood $INPUT_STARTFLOOD
     startFlood: { boolean: true },
-    // --tool $INPUT_TOOL
     tool: { string: true },
-    // --project $INPUT_PROJECT
     project: { string: true },
-    // --name $INPUT_NAME
     name: { string: true },
-    // --threads $INPUT_THREADS
     threads: { number: true },
-    // --duration $INPUT_DURATION
     duration: { number: true },
-    // --rampup $INPUT_RAMPUP
     rampup: { number: true },
-    // --privacy $INPUT_PRIVACY
     privacy: { string: true },
-    // --region $INPUT_REGION
     region: { string: true },
-    // --infrastructure $INPUT_INFRASTRUCTURE
     infrastructure: { string: true },
-    // --instanceQuantity $INPUT_INSTANCEQUANTITY
     instanceQuantity: { number: true },
-    // --instanceType $INPUT_INSTANCETYPE
     instanceType: { string: true },
-    // --stopAfter $INPUT_STOPAFTER
-    stopAfter: { string: true },
-    // --speed $INPUT_SPEED
+    stopAfter: { number: true },
     speed: { number: true },
-    // --generateData $INPUT_GENERATEDATA
     generateData: { boolean: true },
-    // --numRecords $INPUT_NUMRECORDS
     numRecords: { number: true },
-    // --dataOutput $INPUT_DATAOUTPUT
     dataOutput: { string: true },
-    // --scenario $INPUT_SCENARIO
     scenario: { string: true },
-    // --chance $INPUT_CHANCE
     chance: { number: true },
-    // --eligible $INPUT_ELIGIBLE
     eligible: { number: true },
   },
   async handler(args) {
     // Flood LST deployment unique identifier for file structures
     args.logger.profile(`deployLST ${deploymentId}`);
     // Skips the prompt if this script is called with arguments
+    const cliArgs = Object.entries(args).reduce((all, [k, v]) => {
+      if (k !== "logger") {
+        all[k] = v as string;
+        if (["duration", "rampup"].includes(k)) {
+          all[k] = minutesToSecs(all[k]);
+        }
+      }
+      return all;
+    }, {} as PromptRes);
     const autoFillPrompt = async (
       promptConfig: Record<string, unknown>[]
     ): Promise<PromptRes> => {
-      if (promptConfig.every((p) => (p.name as string) in args)) {
-        return args as PromptRes;
+      if (promptConfig.every((p) => (p.name as string) in cliArgs)) {
+        return cliArgs;
       } else {
         return prompt(promptConfig as []);
       }
@@ -122,10 +117,10 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
     // Holds configuration of newly generated claims.json
     const newDataConfig: LSTDataConfig[] = [];
     // Relevant directories
-    const scriptDir = path.join(__dirname, "../../../scripts");
+    const scriptDir = path.resolve("./scripts");
     const buildDir = path.join(scriptDir, deploymentId);
     const docsDir = path.join(buildDir, "bundleInfo.md");
-    const envJson = path.join(__dirname, "../../flood/data", "env.json");
+    const envJson = path.resolve("./src/flood/data", "env.json");
     // Asks for target environment and whether we need new test data
     const { env, speed, generateData }: PromptRes = await autoFillPrompt([
       prompts.env,
@@ -135,6 +130,7 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
     // Holds new environment vars
     const newEnvConfig: Partial<BothConfig> = {
       SIMULATION_SPEED: speed,
+      FLOOD_API_TOKEN: cliArgs.token || undefined,
     };
 
     let assignedChance = 0;
@@ -161,7 +157,7 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
         }
         // Builds the new test data configuration
         const dataConfig: LSTDataConfig = {
-          scenario: scenario as Cfg.LSTScenario,
+          scenario: scenario as LSTScenario,
           chance: parseFloat(chance),
           eligible: parseFloat(eligible),
         };
@@ -188,6 +184,7 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
       });
     }
     // Recreate local env.json with new configurations
+    args.logger.info("Generating environment json...");
     const newEnvVars = getEnvJson(env, newEnvConfig);
     await fs.promises.writeFile(envJson, JSON.stringify(newEnvVars, null, 2));
     logDeployment("Environment variables:", newEnvVars);
@@ -202,7 +199,7 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
     if (startFlood) {
       // Asks for all needed info to launch/deploy a flood
       const flood: PromptRes = await autoFillPrompt([
-        prompts.token(await Cfg.floodToken),
+        prompts.token(newEnvVars["E2E_FLOOD_API_TOKEN"]),
         prompts.tool,
         prompts.project,
         prompts.name,

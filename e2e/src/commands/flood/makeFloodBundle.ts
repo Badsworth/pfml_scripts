@@ -21,9 +21,9 @@ const cmd: CommandModule<SystemWideArgs, BundleLSTArgs> = {
   async handler(args) {
     args.logger.profile("bundle");
     args.logger.info("Bundling...");
-    const scriptDir = path.join(__dirname, "../../../scripts");
+    const scriptDir = path.resolve("./scripts");
     const script = path.join(scriptDir, "makeFloodBundle.sh");
-    await execScript(`cd ${scriptDir} && ${script} -d "${args.bundleDir}"`);
+    await execScript(`${script} -d "${args.bundleDir}"`);
     args.logger.info(
       `Bundled successfully. Check \n${path.join(scriptDir, args.bundleDir)}`
     );

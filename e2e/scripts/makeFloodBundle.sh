@@ -1,5 +1,6 @@
 #!/bin/bash
 # get parameters
+cd $(dirname ${BASH_SOURCE})
 while getopts ":d:" opt; do
   case $opt in
     d) output="$OPTARG"
@@ -25,16 +26,25 @@ cp simulation/types.ts flood/simulation;
 cp simulation/documents.ts flood/simulation;
 cp ../forms/hcp-real.pdf flood/forms;
 
+# conditional command syntax 
+# https://stackoverflow.com/questions/43171648/sed-gives-sed-cant-read-no-such-file-or-directory
+_SED=""
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  _SED="sed -i ''"
+else
+  _SED="sed -i"
+fi
+
 # change import paths to link to `src/flood/simulation`
-sed -i '' -e 's|"\.\./api"|"\./api"|g' flood/simulation/types.ts
+$_SED -e 's|"\.\./api"|"\./api"|g' flood/simulation/types.ts
 
 for ff in flood/*/*.ts; do
-  sed -i '' -e 's|"\.\./\.\./simulation/types"|"\.\./simulation/types"|g' $ff
-  sed -i '' -e 's|"\.\./\.\./api"|"\.\./simulation/api"|g' $ff
+  $_SED -e 's|"\.\./\.\./simulation/types"|"\.\./simulation/types"|g' $ff
+  $_SED -e 's|"\.\./\.\./api"|"\.\./simulation/api"|g' $ff
 done
 for f in flood/*.ts; do
-  sed -i '' -e 's|"\.\./simulation/types"|"\./simulation/types"|g' $f
-  sed -i '' -e 's|"\.\./api"|"\./simulation/api"|g' $f
+  $_SED -e 's|"\.\./simulation/types"|"\./simulation/types"|g' $f
+  $_SED -e 's|"\.\./api"|"\./simulation/api"|g' $f
 done
 
 # clear previous builds
@@ -52,12 +62,12 @@ cp flood/index.perf.ts ../scripts/$output
 
 # change import paths back to original
 for ff in flood/*/*.ts; do
-  sed -i '' -e 's|"\.\./simulation/types"|"\.\./\.\./simulation/types"|g' $ff
-  sed -i '' -e 's|"\.\./simulation/api"|"\.\./\.\./api"|g' $ff
+  $_SED -e 's|"\.\./simulation/types"|"\.\./\.\./simulation/types"|g' $ff
+  $_SED -e 's|"\.\./simulation/api"|"\.\./\.\./api"|g' $ff
 done
 for f in flood/*.ts; do
-  sed -i '' -e 's|"\./simulation/types"|"\.\./simulation/types"|g' $f
-  sed -i '' -e 's|"\./simulation/api"|"\.\./api"|g' $f
+  $_SED -e 's|"\./simulation/types"|"\.\./simulation/types"|g' $f
+  $_SED -e 's|"\./simulation/api"|"\.\./api"|g' $f
 done
 
 # remove temporary `src/flood/simulation` folder
