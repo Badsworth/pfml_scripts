@@ -690,15 +690,16 @@
 <p>Unlike deployments to <code>test</code>, all deployments to <code>training, performance, stage</code> and <code>prod</code> are triggered manually.</p>
 <hr />
 <h3 id="triggering-a-deployment">Triggering a deployment</h3>
-<p>To deploy the API:
-- Visit <a href="https://github.com/EOLWD/pfml/actions?query=workflow%3A%22API+CI+Deploy%22">the API CI Deploy action homepage</a> on GitHub.
-- Click the "Run workflow" button, and fill in the inputs:
-  - For the "Use workflow from" dropdown, select the <strong>deployment branch</strong> corresponding to your target environment using the table below.
-    This input identifies the environment you will be deploying to.
-  - For the second input, provide a <code>version</code> to deploy. A <code>version</code> can be either the name of a git tag, or the name of any git branch.
-    The commit at this tag, or at the tip of this branch, is what will be deployed to your chosen environment.
-    To deploy the tip of <code>master</code>, leave this input blank.
-- Click the green "Run workflow" button.</p>
+<p>To deploy the API:</p>
+<ul>
+<li>Visit <a href="https://github.com/EOLWD/pfml/actions?query=workflow%3A%22API+CI+Deploy%22">the API CI Deploy action homepage</a> on GitHub.</li>
+<li>Click the "Run workflow" button, and fill in the inputs:<ul>
+<li>For the "Use workflow from" dropdown, select the <strong>deployment branch</strong> corresponding to your target environment using the table below. This input identifies the environment you will be deploying to.</li>
+<li>For the second input, provide a <code>version</code> to deploy. A <code>version</code> can be either the name of a git tag, or the name of any git branch.</li>
+</ul>
+</li>
+<li>Click the green "Run workflow" button.</li>
+</ul>
 <h4 id="branch-to-environment-mapping">Branch-to-environment mapping</h4>
 <blockquote>
 <p>In the past, pushes to these 'deployment branches' were the triggering event that caused new deployments to begin.
@@ -735,10 +736,12 @@ Today, these branches serve an archival role: they record what commit was deploy
 </tbody>
 </table>
 <h3 id="communications">Communications</h3>
-<p>If you are testing a feature branch on the test environment, please go through the following additional steps:
-- Communicate to #mass-pfml-engineering. "⚠️ I'll be using the API test environment soon, please let me know if you have any concerns."
-- After running the workflow, click the "Disable Workflow" button (see below) to prevent auto-deploys from overriding your deployment.
-+ After testing is finished, click the "Enable Workflow" button and update the Slack channel.</p>
+<p>If you are testing a feature branch on the test environment, please go through the following additional steps:</p>
+<ul>
+<li>Communicate to #mass-pfml-engineering. "⚠️ I'll be using the API test environment soon, please let me know if you have any concerns."</li>
+<li>After running the workflow, click the "Disable Workflow" button (see below) to prevent auto-deploys from overriding your deployment.</li>
+<li>After testing is finished, click the "Enable Workflow" button and update the Slack channel.</li>
+</ul>
 <p><img alt="" src="../assets/deploys-disable-autodeploy.png" />
 <img alt="" src="../assets/deploys-enable-autodeploy.png" /></p>
                 

@@ -699,16 +699,20 @@
                 
                 
                 <h1 id="database-users">Database Users</h1>
-<p>Access to the database is broken into two parts:
-- Roles, which are the permission sets for data access
-- Users, what authenticates with the database and are granted Roles</p>
+<p>Access to the database is broken into two parts:</p>
+<ul>
+<li>Roles, which are the permission sets for data access</li>
+<li>Users, what authenticates with the database and are granted Roles</li>
+</ul>
 <h2 id="roles">Roles</h2>
 <p>Database roles are managed through the migrations (search for <code>CREATE ROLE</code> or
 <code>GRANT</code>/<code>REVOKE</code> in the migrations).</p>
-<p>Current roles:
-- <code>app</code>, general purpose role with wide access, automatically granted all
+<p>Current roles:</p>
+<ul>
+<li><code>app</code>, general purpose role with wide access, automatically granted all
   permissions on any table created in the application schema (currently
-  <code>public</code>)</p>
+  <code>public</code>)</li>
+</ul>
 <h2 id="users">Users</h2>
 <p>Database users are declared in
 <a href="/api/massgov/pfml/db/admin.py">/api/massgov/pfml/db/admin.py</a> in the
@@ -736,15 +740,17 @@ action.</p>
 <p>AWS database users use <a href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html">IAM
 authentication</a>
 instead of regular passwords.</p>
-<p>High level implications of IAM auth:
-- RDS IAM authentication requires connecting to DB over SSL
-- DB users needing to authenticate with IAM must be granted the <code>rds_iam</code> role
-- IAM policy attached to service IAM roles/users allowing connection to DB as
-  given user
-- Output of the RDS SDK <code>generate_db_auth_token()</code> function used as password
+<p>High level implications of IAM auth:</p>
+<ul>
+<li>RDS IAM authentication requires connecting to DB over SSL</li>
+<li>DB users needing to authenticate with IAM must be granted the <code>rds_iam</code> role</li>
+<li>IAM policy attached to service IAM roles/users allowing connection to DB as
+  given user</li>
+<li>Output of the RDS SDK <code>generate_db_auth_token()</code> function used as password
   when connecting as user. These tokens are only valid for 15 minutes, so this
   function should be called to get a valid token any time a connection is to be
-  made.</p>
+  made.</li>
+</ul>
                 
               
               
