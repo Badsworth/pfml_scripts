@@ -39,7 +39,7 @@ def encode_row(obj: Any, encoders: Optional[Encoders] = None) -> Dict[str, str]:
             result[f.name] = value
         return result
 
-    if isinstance(dict, obj):
+    if isinstance(obj, dict):
         return {k: encode_value(v, encoders) for k, v in obj.items()}
 
     raise TypeError(f"Object of type '{obj.__class__.__name__}' is not a dataclass or dictionary")
