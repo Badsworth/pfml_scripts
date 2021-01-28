@@ -718,15 +718,23 @@
 <p>Unlike deployments to <code>test</code>, all deployments to <code>training, performance, stage</code> and <code>prod</code> are triggered manually.</p>
 <hr />
 <h2 id="triggering-a-deployment">Triggering a deployment</h2>
-<p>To deploy the portal:
-- Visit <a href="https://github.com/EOLWD/pfml/actions?query=workflow%3A%22Portal+deploy%22">the Portal Deploy action homepage</a> on GitHub.
-- Click the "Run workflow" button, and fill in the inputs:
-  - For the "Use workflow from" dropdown, select the <strong>deployment branch</strong> corresponding to your target environment using the table below.
-    This input identifies the environment you will be deploying to.
-  - For the second input, provide a <code>version</code> to deploy. A <code>version</code> can be either the name of a git tag, or the name of any git branch.
-    The commit at this tag, or at the tip of this branch, is what will be deployed to your chosen environment.
-    To deploy the tip of <code>master</code>, leave this input blank.
-- Click the green "Run workflow" button.</p>
+<p>To deploy the portal:</p>
+<ul>
+<li>
+<p>Visit <a href="https://github.com/EOLWD/pfml/actions?query=workflow%3A%22Portal+deploy%22">the Portal Deploy action homepage</a> on GitHub.</p>
+</li>
+<li>
+<p>Click the "Run workflow" button, and fill in the inputs:</p>
+<ul>
+<li>For the "Use workflow from" dropdown, select the <strong>deployment branch</strong> corresponding to your target environment using the table below.
+This input identifies the environment you will be deploying to.</li>
+<li>For the second input, provide a <code>version</code> to deploy. A <code>version</code> can be either the name of a git tag, or the name of any git branch.</li>
+</ul>
+</li>
+<li>
+<p>Click the green "Run workflow" button.</p>
+</li>
+</ul>
 <h3 id="branch-to-environment-mapping">Branch-to-environment mapping</h3>
 <blockquote>
 <p>In the past, pushes to these 'deployment branches' were the triggering event that caused new deployments to begin.
@@ -763,12 +771,14 @@ Today, these branches serve an archival role: they record what commit was deploy
 </tbody>
 </table>
 <h3 id="communications">Communications</h3>
-<p>If you are testing a feature branch on the test environment, please go through the following additional steps:<br />
-- Communicate to #mass-pfml-engineering. "⚠️ I'll be using the Portal test environment soon, please let me know if you have any concerns."<br />
-- After running the workflow, click the "Disable Workflow" button (see below) to prevent auto-deploys from overriding your deployment.<br />
-+ After testing is finished, click the "Enable Workflow" button and update the Slack channel.   </p>
-<p><img alt="" src="/docs/api/assets/deploys-disable-autodeploy.png" />  <br />
-<img alt="" src="/docs/api/assets/deploys-enable-autodeploy.png" /></p>
+<p>If you are testing a feature branch on the test environment, please go through the following additional steps:  </p>
+<ul>
+<li>Communicate to #mass-pfml-engineering. "⚠️ I'll be using the Portal test environment soon, please let me know if you have any concerns."  </li>
+<li>After running the workflow, click the "Disable Workflow" button (see below) to prevent auto-deploys from overriding your deployment.  </li>
+<li>After testing is finished, click the "Enable Workflow" button and update the Slack channel.   </li>
+</ul>
+<p><img alt="" src="../../api/assets/deploys-disable-autodeploy.png" /> <br />
+<img alt="" src="../../api/assets/deploys-enable-autodeploy.png" /></p>
 <hr />
 <h2 id="storybook">Storybook</h2>
 <p>The <a href="http://massgov-pfml-test-storybook-builds.s3-website-us-east-1.amazonaws.com">Storybook site</a>,
