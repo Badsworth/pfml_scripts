@@ -3,7 +3,7 @@
 # Deploy steps:
 # - Build a docker release image and upload it to ECR, tagged with its latest git commit hash.
 # - Apply the terraform changes, pointing it to the docker image that was uploaded.
-#
+##
 name: API CI Deploy
 
 on:

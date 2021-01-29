@@ -3,9 +3,9 @@
 name: Infra CI Validation
 
 on:
-  pull_request:
+  pull_request: 
     paths:
-      - infra/**/*.tf
+      - infra/**
 
 env:
   working-dir: ./infra
@@ -33,6 +33,7 @@ jobs:
 
     env:
       baseref: ${{ github['base_ref'] }}
+      TF_CLI_ARGS: '-lock-timeout=120s'
 
     # Run a job for each combination of a component and environment.
     # e.g. portal/test, portal/stage, env-shared/test, env-shared/stage
@@ -97,11 +98,11 @@ jobs:
           tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
           tf_actions_comment: false
 
-      - name: tf-validate
+      - name: tf-plan
         if: steps.check-for-changes.outputs.has-changes == 'true'
         uses: hashicorp/terraform-github-actions@master
         with:
           tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
-          tf_actions_subcommand: "validate"
+          tf_actions_subcommand: "plan"
           tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
           tf_actions_comment: false
