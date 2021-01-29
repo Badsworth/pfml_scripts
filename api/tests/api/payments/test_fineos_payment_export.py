@@ -842,3 +842,31 @@ def test_validation_lookup_validators(set_exporter_env_vars):
             ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYMENTADD6"),
         ]
     ).issubset(set(payment_data.validation_container.validation_issues))
+
+
+def test_validation_payment_amount(set_exporter_env_vars):
+    # When doing validation, we verify that payment amounts
+    # are greater than 0
+
+    ci_index = exporter.CiIndex("1", "1")
+    extract_data = exporter.ExtractData(exporter.expected_file_names, "2020-01-01-11-30-00")
+    extract_data.pei.indexed_data = {ci_index: {"AMOUNT_MONAMT": "0.00"}}
+    extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
+    extract_data.claim_details.indexed_data = {ci_index: {"isdata": "1"}}
+
+    payment_data = exporter.PaymentData(
+        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
+    )
+
+    assert set([ValidationIssue(ValidationReason.INVALID_VALUE, "AMOUNT_MONAMT")]).issubset(
+        set(payment_data.validation_container.validation_issues)
+    )
+
+    # Verify negatives are caught as well
+    extract_data.pei.indexed_data[ci_index]["AMOUNT_MONAMT"] = "-0.01"
+    payment_data = exporter.PaymentData(
+        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
+    )
+    assert set([ValidationIssue(ValidationReason.INVALID_VALUE, "AMOUNT_MONAMT")]).issubset(
+        set(payment_data.validation_container.validation_issues)
+    )

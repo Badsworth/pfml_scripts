@@ -222,7 +222,7 @@ class PaymentData:
 
         def amount_validator(amount_str: str) -> Optional[payments_util.ValidationReason]:
             amount = float(amount_str)
-            if amount < 0:
+            if amount <= 0:
                 return payments_util.ValidationReason.INVALID_VALUE
             return None
 
