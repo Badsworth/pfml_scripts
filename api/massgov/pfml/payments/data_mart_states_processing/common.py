@@ -333,6 +333,9 @@ def process_employees_in_state(
                 extra["employee_id"] = employee.employee_id
 
             logger.exception("Hit error processing record", extra=extra)
+        finally:
+            # Ensure StateLog updates hit the DB
+            pfml_db_session.commit()
 
     logger.info(
         f"Done processing {end_state.state_description} records",

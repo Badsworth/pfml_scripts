@@ -103,7 +103,6 @@ def test_process_identify_mmars_status_unexpected_internal_exception_for_state_l
         else:
             return None
 
-    # mock_data_mart_client.get_vendor_info = mocker.Mock(wraps=mock_get_vendor_info)
     mock_data_mart_client.get_vendor_info = mocker.Mock(wraps=mock_get_vendor_info)
 
     state_log_count_before = test_db_session.query(StateLog).count()
@@ -111,6 +110,10 @@ def test_process_identify_mmars_status_unexpected_internal_exception_for_state_l
 
     # run process
     identify_mmars_status.process(test_db_session, mock_data_mart_client)
+
+    # we do not want to test things that are not committed, so close the session
+    # so the asserts below are against only the data that exists in the DB
+    test_db_session.close()
 
     state_log_count_after = test_db_session.query(StateLog).count()
     assert state_log_count_after == 4
