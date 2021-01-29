@@ -3,12 +3,12 @@ import {
   getClaimMock,
   getDocumentsMock,
   submitClaimReviewMock,
+  submitWithholdingMock,
 } from "../../src/api/EmployersApi";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { BadRequestError } from "../../src/errors";
 import { act } from "react-dom/test-utils";
-import routes from "../../src/routes";
 import { testHook } from "../test-utils";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
@@ -196,7 +196,7 @@ describe("useEmployersLogic", () => {
     });
   });
 
-  describe("submit", () => {
+  describe("submitClaimReview", () => {
     const patchData = {
       employer_notification_date: "01-01-2021",
       employer_benefits: [],
@@ -206,12 +206,12 @@ describe("useEmployersLogic", () => {
     };
 
     it("returns submit as instance of function", () => {
-      expect(employersLogic.submit).toBeInstanceOf(Function);
+      expect(employersLogic.submitClaimReview).toBeInstanceOf(Function);
     });
 
     it("submits with absence id and patch data", async () => {
       await act(async () => {
-        await employersLogic.submit(absenceId, patchData);
+        await employersLogic.submitClaimReview(absenceId, patchData);
       });
 
       expect(submitClaimReviewMock).toHaveBeenCalledWith(absenceId, patchData);
@@ -228,47 +228,77 @@ describe("useEmployersLogic", () => {
         });
 
         await act(async () => {
-          await employersLogic.submit(absenceId, {});
+          await employersLogic.submitClaimReview(absenceId, {});
         });
 
         expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
       });
-    });
 
-    it("redirects to login with next query if there is a 'No current user' error", async () => {
-      portalFlow.pathWithParams = `${routes.employers.review}?absence_id=${absenceId}`;
-      let spy;
-
-      act(() => {
-        spy = jest.spyOn(portalFlow, "goTo").mockImplementation(jest.fn());
-        submitClaimReviewMock.mockImplementationOnce(() => {
-          // eslint-disable-next-line no-throw-literal
-          throw "No current user";
+      it("clears prior errors", async () => {
+        act(() => {
+          appErrorsLogic.setAppErrors(
+            new AppErrorInfoCollection([new AppErrorInfo()])
+          );
         });
-      });
 
-      await act(async () => {
-        await employersLogic.submit(absenceId, {});
-      });
+        await act(async () => {
+          await employersLogic.submitClaimReview(absenceId, patchData);
+        });
 
-      expect(spy).toHaveBeenCalledWith(routes.auth.login, {
-        next:
-          "/employers/applications/review?absence_id=mock-fineos-absence-id-1",
+        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
       });
     });
+  });
 
-    it("clears prior errors", async () => {
-      act(() => {
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
-      });
+  describe("submitWithholding", () => {
+    const postData = {
+      employer_id: "mock_employer_id",
+      withholding_amount: "123",
+      withholding_quarter: "2020-10-10",
+    };
 
+    it("returns submitWithholding as instance of function", () => {
+      expect(employersLogic.submitWithholding).toBeInstanceOf(Function);
+    });
+
+    it("makes API call with POST data", async () => {
       await act(async () => {
-        await employersLogic.submit(absenceId, patchData);
+        await employersLogic.submitWithholding(postData);
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(submitWithholdingMock).toHaveBeenCalledWith(postData);
+    });
+
+    describe("errors", () => {
+      beforeEach(() => {
+        jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+      });
+
+      it("catches error", async () => {
+        submitWithholdingMock.mockImplementationOnce(() => {
+          throw new Error();
+        });
+
+        await act(async () => {
+          await employersLogic.submitWithholding(absenceId, {});
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+      });
+
+      it("clears prior errors", async () => {
+        act(() => {
+          appErrorsLogic.setAppErrors(
+            new AppErrorInfoCollection([new AppErrorInfo()])
+          );
+        });
+
+        await act(async () => {
+          await employersLogic.submitWithholding(postData);
+        });
+
+        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      });
     });
   });
 });

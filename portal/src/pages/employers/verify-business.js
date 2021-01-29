@@ -26,13 +26,16 @@ export const VerifyBusiness = (props) => {
     withholdingAmount: "",
   });
 
-  // TODO (EMPLOYER-471): This isn't actually implemented yet, send withholding amount to API
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await appLogic.employers.verifyBusiness(
-      query.employer_id,
-      formState.withholdingAmount
-    );
+
+    const payload = {
+      employer_id: query.employer_id,
+      withholding_amount: formState.withholdingAmount,
+      withholding_quarter: "2020-10-10", // TODO (EMPLOYER-470): Change based on actual variable
+    };
+
+    await appLogic.employers.submitWithholding(payload);
   });
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -113,7 +116,7 @@ VerifyBusiness.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
     employers: PropTypes.shape({
-      verifyBusiness: PropTypes.func,
+      submitWithholding: PropTypes.func.isRequired,
     }),
   }).isRequired,
   query: PropTypes.shape({

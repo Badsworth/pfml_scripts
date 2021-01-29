@@ -86,6 +86,11 @@ const mockClaimReview = {
     },
   ],
 };
+const mockWithholding = {
+  employer_id: "mock_employer_id",
+  withholding_amount: "123",
+  withholding_quarter: "2020-10-10",
+};
 
 describe("EmployersApi", () => {
   let employersApi;
@@ -240,6 +245,33 @@ describe("EmployersApi", () => {
         await employersApi.submitClaimReview(absenceId, mockClaimReview);
 
         expect(fetch).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  describe("submitWithholding", () => {
+    describe("successful request", () => {
+      beforeEach(() => {
+        global.fetch = mockFetch({
+          response: {
+            data: null,
+          },
+          status: 200,
+        });
+      });
+
+      it("sends POST request to /employers/verifications", async () => {
+        await employersApi.submitWithholding(mockWithholding);
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(fetch).toHaveBeenCalledWith(
+          `${process.env.apiUrl}/employers/verifications`,
+          expect.objectContaining({
+            body: JSON.stringify(mockWithholding),
+            headers,
+            method: "POST",
+          })
+        );
       });
     });
   });

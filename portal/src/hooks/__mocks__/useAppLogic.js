@@ -56,7 +56,8 @@ export default jest.fn(() => ({
       () => new EmployerClaim({ fineos_absence_id: "NTN-111-ABS-01" })
     ),
     loadDocuments: jest.fn(() => new DocumentCollection()),
-    submit: jest.fn(),
+    submitClaimReview: jest.fn(),
+    submitWithholding: jest.fn(),
   },
   portalFlow: {
     getNextPageRoute: jest.fn(),

@@ -33,5 +33,10 @@ export default {
         CONTINUE: routes.employers.review,
       },
     },
+    [routes.employers.verifyBusiness]: {
+      on: {
+        CONTINUE: routes.employers.verificationSuccess,
+      },
+    },
   },
 };

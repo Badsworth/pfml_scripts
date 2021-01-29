@@ -39,11 +39,19 @@ export const submitClaimReviewMock = jest
     };
   });
 
+export const submitWithholdingMock = jest.fn().mockResolvedValue(() => {
+  return {
+    status: 200,
+    success: true,
+  };
+});
+
 const employersApi = jest.fn().mockImplementation(() => ({
   getClaim: getClaimMock,
   getDocuments: getDocumentsMock,
   downloadDocument: downloadDocumentMock,
   submitClaimReview: submitClaimReviewMock,
+  submitWithholding: submitWithholdingMock,
 }));
 
 export default employersApi;

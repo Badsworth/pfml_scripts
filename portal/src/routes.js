@@ -70,6 +70,7 @@ const routes = {
     review: "/employers/applications/review",
     status: "/employers/applications/status",
     success: "/employers/applications/success",
+    verificationSuccess: "/employers/verification-success",
     verifyBusiness: "/employers/verify-business",
   },
   external: {

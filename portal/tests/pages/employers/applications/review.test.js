@@ -87,15 +87,18 @@ describe("Review", () => {
   it("submits a claim with the correct options", async () => {
     await simulateEvents(wrapper).submitForm();
 
-    expect(appLogic.employers.submit).toHaveBeenCalledWith("NTN-111-ABS-01", {
-      comment: expect.any(String),
-      employer_benefits: expect.any(Array),
-      employer_decision: undefined, // undefined by default
-      fraud: undefined, // undefined by default
-      hours_worked_per_week: expect.any(Number),
-      previous_leaves: expect.any(Array),
-      has_amendments: false,
-    });
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
+      "NTN-111-ABS-01",
+      {
+        comment: expect.any(String),
+        employer_benefits: expect.any(Array),
+        employer_decision: undefined, // undefined by default
+        fraud: undefined, // undefined by default
+        hours_worked_per_week: expect.any(Number),
+        previous_leaves: expect.any(Array),
+        has_amendments: false,
+      }
+    );
   });
 
   it("sets 'comment' based on the Feedback", async () => {
@@ -106,7 +109,7 @@ describe("Review", () => {
 
     await await simulateEvents(wrapper).submitForm();
 
-    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
       expect.objectContaining({ comment: "my comment" })
     );
@@ -122,7 +125,7 @@ describe("Review", () => {
 
     await simulateEvents(wrapper).submitForm();
 
-    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
       expect.objectContaining({ employer_decision: "Approve" })
     );
@@ -136,7 +139,7 @@ describe("Review", () => {
 
     await simulateEvents(wrapper).submitForm();
 
-    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
       expect.objectContaining({ fraud: "No" })
     );
@@ -152,7 +155,7 @@ describe("Review", () => {
 
     await simulateEvents(wrapper).submitForm();
 
-    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
       expect.objectContaining({ hours_worked_per_week: 50.5 })
     );
@@ -196,7 +199,7 @@ describe("Review", () => {
   it("sets 'has_amendments' to false if nothing is amended", async () => {
     await simulateEvents(wrapper).submitForm();
 
-    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
       expect.objectContaining({ has_amendments: false })
     );
@@ -212,7 +215,7 @@ describe("Review", () => {
 
     await simulateEvents(wrapper).submitForm();
 
-    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
       expect.objectContaining({ has_amendments: true })
     );
@@ -228,7 +231,7 @@ describe("Review", () => {
 
     await simulateEvents(wrapper).submitForm();
 
-    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
       expect.objectContaining({ has_amendments: true })
     );
@@ -241,7 +244,7 @@ describe("Review", () => {
 
     await simulateEvents(wrapper).submitForm();
 
-    expect(appLogic.employers.submit).toHaveBeenCalledWith(
+    expect(appLogic.employers.submitClaimReview).toHaveBeenCalledWith(
       "NTN-111-ABS-01",
       expect.objectContaining({ has_amendments: true })
     );

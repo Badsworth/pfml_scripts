@@ -156,7 +156,7 @@ export const Review = (props) => {
         !isEqual(amendedHours, claim.hours_worked_per_week),
     };
 
-    await props.appLogic.employers.submit(absenceId, payload);
+    await props.appLogic.employers.submitClaimReview(absenceId, payload);
   });
 
   return (
@@ -244,7 +244,7 @@ Review.propTypes = {
     appErrors: PropTypes.object.isRequired,
     employers: PropTypes.shape({
       claim: PropTypes.instanceOf(EmployerClaim),
-      submit: PropTypes.func.isRequired,
+      submitClaimReview: PropTypes.func.isRequired,
     }).isRequired,
     portalFlow: PropTypes.shape({
       goTo: PropTypes.func.isRequired,

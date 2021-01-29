@@ -102,4 +102,14 @@ export default class EmployersApi extends BaseApi {
   submitClaimReview = async (absenceId, patchData) => {
     await this.request("PATCH", `claims/${absenceId}/review`, patchData);
   };
+
+  /**
+   * Submit withholding amount for validation
+   *
+   * @param {object} postData - POST data (includes email, employer id, withholding amount & quarter)
+   * @returns {Promise}
+   */
+  submitWithholding = async (postData) => {
+    await this.request("POST", `verifications`, postData);
+  };
 }

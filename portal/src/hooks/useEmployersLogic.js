@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import EmployersApi from "../api/EmployersApi";
-import routes from "../routes";
 
 const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
   const [claim, setClaim] = useState(null);
@@ -62,7 +61,7 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} absenceId - FINEOS absence id
    * @param {object} data - claim review data
    */
-  const submit = async (absenceId, data) => {
+  const submitClaimReview = async (absenceId, data) => {
     appErrorsLogic.clearErrors();
 
     try {
@@ -71,13 +70,22 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
       portalFlow.goToNextPage({}, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
-      // Cognito error due to expired user session
-      // Redirect to login; upon successful login, redirect back to Review page
-      // TODO (EMPLOYER-724): Move logic to handle scenario throughout Portal
-      if (error === "No current user") {
-        const { pathWithParams } = portalFlow;
-        portalFlow.goTo(routes.auth.login, { next: pathWithParams });
-      }
+    }
+  };
+
+  /**
+   * Submit withholding data to the API for verification
+   * @param {object} data - user info and employer data
+   */
+  const submitWithholding = async (data) => {
+    appErrorsLogic.clearErrors();
+
+    try {
+      await employersApi.submitWithholding(data);
+      const params = { employer_id: data.employer_id };
+      portalFlow.goToNextPage({}, params);
+    } catch (error) {
+      appErrorsLogic.catchError(error);
     }
   };
 
@@ -87,7 +95,8 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
     downloadDocument,
     loadClaim,
     loadDocuments,
-    submit,
+    submitClaimReview,
+    submitWithholding,
   };
 };
 
