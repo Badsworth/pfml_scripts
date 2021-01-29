@@ -610,12 +610,12 @@ def test_send_ctr_payments_errors_eft_pending(
         assert state_log.end_state_id == State.EFT_PENDING.state_id
 
 
-@freeze_time("2020-02-01 12:00:00")
+@freeze_time("2020-04-01 12:00:00")
 def test_send_ctr_payments_errors_time_based_reports(
     test_db_session, initialize_factories_session, tmp_path, mock_ses, set_exporter_env_vars
 ):
     # Note, for the sake of this test, all state logs are too old/stuck
-    # The utilities used in this test create the records on 2020-01-01, so we've set "now" to 2020-02-01
+    # The utilities used in this test create the records on 2020-01-01, so we've set "now" to 2020-04-01
 
     # Gax error report stuck setup
     setup_state_log_in_end_state(
@@ -760,7 +760,7 @@ def test_send_ctr_payments_errors_time_based_reports(
     file_names = file_util.list_files(str(tmp_path))
     assert len(file_names) == 7  # 7 total reports
     file_names.sort()
-    validate_ctr_files("2020-02-01-07-00-00", file_names)
+    validate_ctr_files("2020-04-01-08-00-00", file_names)
 
     eft_audit_records = parse_csv(tmp_path / file_names[0])
     assert len(eft_audit_records) == 2

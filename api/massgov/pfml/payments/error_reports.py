@@ -434,7 +434,7 @@ def _get_time_based_errors(
     state_logs = state_log_util.get_state_logs_stuck_in_state(
         associated_class=associated_class,
         end_state=current_state,
-        days_stuck=30,  # TODO - after launch, set this back to days_stuck, we don't want to send stuck messages while we've half-processed data before launch
+        days_stuck=60,  # TODO - after launch, set this back to days_stuck, we don't want to send stuck messages while we've half-processed data before launch
         db_session=db_session,
         now=now,
     )
