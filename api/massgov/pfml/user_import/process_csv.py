@@ -10,6 +10,7 @@ from smart_open import open as smart_open
 
 import massgov.pfml.util.logging
 from massgov.pfml import db, fineos
+from massgov.pfml.util.strings import mask_fein
 from massgov.pfml.util.users import create_or_update_user_record
 
 #
@@ -60,11 +61,6 @@ def pivot_csv_file(file: str) -> dict:
 
 def clean_fein(fein: str) -> str:
     return fein.replace("-", "").zfill(9)
-
-
-def mask_fein(fein: str) -> str:
-    # Log only last 4 of FEIN
-    return f"**-***{fein[5:]}"
 
 
 def process_by_email(

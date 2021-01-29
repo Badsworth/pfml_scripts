@@ -11,6 +11,7 @@ from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.db.models.employees import User
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.sqlalchemy import get_or_404
+from massgov.pfml.util.strings import mask_fein
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -119,8 +120,3 @@ def normalize_user_leave_admin_response(
         "employer_id": leave_admin_dict["employer"]["employer_id"],
         "verified": leave_admin_dict["verified"],
     }
-
-
-def mask_fein(fein: str) -> str:
-    # Log only last 4 of FEIN
-    return f"**-***{fein[5:]}"

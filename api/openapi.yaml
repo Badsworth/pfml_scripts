@@ -176,6 +176,36 @@ paths:
         $ref: "#/components/requestBodies/EmployeeSearchRequest"
 
 
+  /employers/add:
+    post:
+      tags:
+        - Employers
+      summary: Add an FEIN to the logged in Leave Administrator
+      operationId: massgov.pfml.api.employers.employer_add_fein
+      requestBody:
+        $ref: '#/components/requestBodies/EmployerAddFeinRequestBody'
+      responses:
+        "201":
+          description: FEIN added without errors
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessfulResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/EmployerAddFeinResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "503":
+          description: Error while adding FEIN
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+
+
   /employers/withholding/{employer_id}:
     get:
       summary: Retrieves the last withholding date for the FEIN specified
@@ -951,6 +981,11 @@ components:
           schema:
             $ref: "#/components/schemas/PaymentPreferenceRequestBody"
       required: true
+    EmployerAddFeinRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/EmployerAddFeinRequestBody"
 
   responses:
     ApplicationResponse:
@@ -1725,6 +1760,19 @@ components:
           format: date
           example: "1970-06-01"
 
+    EmployerAddFeinResponse:
+      type: object
+      properties:
+        employer_id:
+          type: string
+          format: uuid
+          example: "fabd09ed-0ea9-4091-843e-2e37d2c61482"
+        employer_fein:
+          type: string
+          example: "12-3456789"
+        employer_dba:
+          type: string
+
     ClaimDocumentResponse:
       type: object
       properties:
@@ -1813,6 +1861,14 @@ components:
         payment_preference:
           nullable: false
           $ref: "#/components/schemas/PaymentPreference"
+
+    EmployerAddFeinRequestBody:
+      type: object
+      properties:
+        employer_fein:
+          type: string
+          example: "12-3456789"
+          nullable: false
 
     EligibilityRequest:
       type: object

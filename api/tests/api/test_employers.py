@@ -3,6 +3,62 @@ from decimal import Decimal
 
 from massgov.pfml.db.models.employees import EmployerQuarterlyContribution, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
+from massgov.pfml.util.strings import mask_fein
+
+
+def test_employers_receive_201_from_add_fein(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    current_employer = EmployerFactory.create()
+    employer_to_add = EmployerFactory.create(employer_fein="999999999")
+
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=current_employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    post_body = {"employer_fein": "999999999"}
+
+    response = client.post(
+        "/v1/employers/add",
+        json=post_body,
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    response_data = response.get_json()["data"]
+    assert response.status_code == 201
+    assert response_data["employer_dba"] == employer_to_add.employer_dba
+    assert response_data["employer_fein"] == mask_fein(employer_to_add.employer_fein)
+    assert type(response_data["employer_id"]) is str
+
+
+def test_employers_receive_400_from_bad_fein(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    current_employer = EmployerFactory.create()
+
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=current_employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    post_body = {"employer_fein": "999999999"}
+
+    response = client.post(
+        "/v1/employers/add",
+        json=post_body,
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 400
 
 
 def test_employers_receive_200_and_most_recent_date_from_get_withholding_dates(
