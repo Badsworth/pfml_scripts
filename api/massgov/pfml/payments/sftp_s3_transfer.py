@@ -163,7 +163,16 @@ def _copy_files_in_set_for_reference_file(
 
 @retry(stop=stop_after_attempt(3))
 def _copy_file_from_s3_to_sftp_with_retry(source, dest, sftp):
-    file_util.copy_file_from_s3_to_sftp(source=source, dest=dest, sftp=sftp)
+    try:
+        file_util.copy_file_from_s3_to_sftp(source=source, dest=dest, sftp=sftp)
+    except Exception:
+        # Add additional logging when we encounter an SFTP error because tenacity's retry
+        # appears to be eating the original Exception.
+        logger.exception(
+            "Failed to copy_file_from_s3_to_sftp",
+            extra={"s3_source": source, "sftp_destination": dest},
+        )
+        raise
 
 
 def copy_from_sftp_to_s3_and_archive_files(
@@ -242,4 +251,13 @@ def copy_from_sftp_to_s3_and_archive_files(
 
 @retry(stop=stop_after_attempt(3))
 def _copy_file_from_sftp_to_s3_with_retry(source, dest, sftp):
-    file_util.copy_file_from_sftp_to_s3(source=source, dest=dest, sftp=sftp)
+    try:
+        file_util.copy_file_from_sftp_to_s3(source=source, dest=dest, sftp=sftp)
+    except Exception:
+        # Add additional logging when we encounter an SFTP error because tenacity's retry
+        # appears to be eating the original Exception.
+        logger.exception(
+            "Failed to copy_file_from_sftp_to_s3",
+            extra={"sftp_source": source, "s3_destination": dest},
+        )
+        raise
