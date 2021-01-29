@@ -709,13 +709,13 @@
 </ul>
 <h2 id="users">Users</h2>
 <p>Database users are declared in
-<a href="/api/massgov/pfml/db/admin.py">/api/massgov/pfml/db/admin.py</a> in the
+<a href="https://github/com/EOLWD/pfml/tree/master/api/massgov/pfml/db/admin.py">/api/massgov/pfml/db/admin.py</a> in the
 <code>user_configs</code> variable, where the list of roles (as created in migrations) they
 should have.</p>
 <p>For AWS environments, an IAM policy needs to be created and connected to the
 systems that should be able to connect as that user.</p>
 <p>There is a helper script,
-<a href="/api/bin/create-db-user-config.py">/api/bin/create-db-user-config.py</a>, that
+<a href="https://github/com/EOLWD/pfml/tree/master/api/bin/create-db-user-config.py">/api/bin/create-db-user-config.py</a>, that
 will print out the configuration required for adding a new user.</p>
 <h3 id="local-environment">Local environment</h3>
 <p>To create the database users locally, run:

@@ -655,7 +655,7 @@
                 <h1 id="environment-variables">Environment Variables</h1>
 <p>We configure the application by using <a href="https://12factor.net/config">environment variables</a>.</p>
 <h2 id="local-development">Local Development</h2>
-<p>During local development, we specify environment variables through <a href="/api/docker-compose.yml">docker-compose.yml</a>.</p>
+<p>During local development, we specify environment variables through <a href="https://github/com/EOLWD/pfml/tree/master/api/docker-compose.yml">docker-compose.yml</a>.</p>
 <div class="highlight"><pre><span></span><code><span class="nt">mass-pfml-api</span><span class="p">:</span>
   <span class="l l-Scalar l-Scalar-Plain">...</span>
   <span class="l l-Scalar l-Scalar-Plain">environment</span><span class="p p-Indicator">:</span>
@@ -669,7 +669,7 @@
 in order to rebuild your container and pick up the new values.</p>
 <h2 id="deployed-environments">Deployed Environments</h2>
 <p>In deployed environments, variables are pulled in through AWS Elastic Container Service (ECS) 
-as listed in the <a href="/infra/api/template/container_definitions.json">container definition</a>. 
+as listed in the <a href="https://github/com/EOLWD/pfml/tree/master/infra/api/template/container_definitions.json">container definition</a>. 
 Non-sensitive values are encoded into the definition when Terraform generates it:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">&quot;environment&quot;</span><span class="p">:</span> <span class="p">[</span>
   <span class="p">{</span> <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ENVIRONMENT&quot;</span><span class="p">,</span> <span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;${environment_name}&quot;</span> <span class="p">},</span>
@@ -687,20 +687,20 @@ Non-sensitive values are encoded into the definition when Terraform generates it
 <span class="p">]</span>
 </code></pre></div>
 <p>To view or update non-sensitive values in the container definition file, 
-set them in the <code>container_definitions</code> resource in <a href="/infra/api/template/service.tf">service.tf</a>.</p>
+set them in the <code>container_definitions</code> resource in <a href="https://github/com/EOLWD/pfml/tree/master/infra/api/template/service.tf">service.tf</a>.</p>
 <p>To recap for non-sensitive values:</p>
 <ol>
 <li>If it's a variable that should be configured explicitly for each environment:<ol>
-<li>Add new variable to the <a href="/infra/api/template/variables.tf">API template
+<li>Add new variable to the <a href="https://github/com/EOLWD/pfml/tree/master/infra/api/template/variables.tf">API template
    variables.tf</a></li>
-<li>Set the new variables in each <a href="/infra/api/environments">environment
+<li>Set the new variables in each <a href="https://github/com/EOLWD/pfml/tree/master/infra/api/environments">environment
    configuration</a></li>
 </ol>
 </li>
-<li>Add and set variable in <a href="/infra/api/template/service.tf">service.tf</a>, either
+<li>Add and set variable in <a href="https://github/com/EOLWD/pfml/tree/master/infra/api/template/service.tf">service.tf</a>, either
    referring to variables from step 1 or to other Terraform resources.</li>
 <li>Use variable set in service.tf to set environment variable in
-   <a href="/infra/api/template/container_definitions.json">container_definitions.json</a></li>
+   <a href="https://github/com/EOLWD/pfml/tree/master/infra/api/template/container_definitions.json">container_definitions.json</a></li>
 </ol>
 <p>To view or update sensitive values:</p>
 <ol>

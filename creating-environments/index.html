@@ -657,7 +657,7 @@ $ terraform apply -var<span class="o">=</span><span class="s1">&#39;service_dock
 <p><a href="../portal/creating-environments/">Additional steps for new Portal environments</a></p>
 </li>
 <li>
-<p>Add the new environment to the <a href="/.github/workflows/infra-validate.yml">CI build matrix</a> so it can be validated when it's changed.</p>
+<p>Add the new environment to the <a href="https://github/com/EOLWD/pfml/tree/master/.github/workflows/infra-validate.yml">CI build matrix</a> so it can be validated when it's changed.</p>
 </li>
 </ol>
 <h1 id="setting-up-custom-domains">Setting up Custom Domains</h1>
@@ -687,9 +687,9 @@ $ terraform apply -var<span class="o">=</span><span class="s1">&#39;service_dock
 <p>Once EOTSS has approved the certificate, update the cert_domains map in the following files:</p>
 </li>
 <li>
-<p><a href="/infra/portal/template/acm.tf">infra/portal/template/acm.tf</a></p>
+<p><a href="https://github/com/EOLWD/pfml/tree/master/infra/portal/template/acm.tf">infra/portal/template/acm.tf</a></p>
 </li>
-<li><a href="/infra/env-shared/template/acm.tf">infra/env-shared/template/acm.tf</a></li>
+<li><a href="https://github/com/EOLWD/pfml/tree/master/infra/env-shared/template/acm.tf">infra/env-shared/template/acm.tf</a></li>
 </ol>
 <p>and flip enable_pretty_domains to <code>true</code> in infra/env-shared/environments/$ENV/main.tf.</p>
 <ol>
