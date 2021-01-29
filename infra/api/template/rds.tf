@@ -32,6 +32,11 @@ resource "aws_db_subnet_group" "rds_postgres_dbprivate" {
 }
 
 resource "aws_db_parameter_group" "postgres11" {
+
+  lifecycle {
+    ignore_changes = all
+  }
+
   name_prefix = "${local.app_name}-${var.environment_name}-${var.postgres_parameter_group_family}-"
   family      = var.postgres_parameter_group_family
   description = "PSQL 11 RDS parameters for ${local.app_name}-${var.environment_name}"
@@ -129,10 +134,13 @@ resource "aws_db_instance" "default" {
       # goes into "storage-optimization" status, which can last anywhere from 
       # minutes to hours. Plan changes to these configs with this in mind, and
       # any changes must be made in AWS Console first, then in Terraform as a follow-up.
-      #
+      # 
+      # "engine_version" and "parameter_group_name" will be managed manually
       # -----------------------------------------------------------------------#
+      engine_version,
       instance_class,
-      storage_type
+      storage_type,
+      parameter_group_name
     ]
   }
 
