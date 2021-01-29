@@ -752,6 +752,9 @@ class ReferenceFile(Base):
     agency_reduction_payment = relationship(
         "AgencyReductionPaymentReferenceFile", back_populates="reference_file"
     )
+    created_at = Column(
+        TIMESTAMP(timezone=True), nullable=True, default=utc_timestamp_gen, server_default=sqlnow(),
+    )
 
 
 class AgencyReductionPaymentReferenceFile(Base):
