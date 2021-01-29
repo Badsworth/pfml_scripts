@@ -57,12 +57,12 @@ def parse_csv(path):
         return records
 
 
-def validate_ctr_files(date_str, file_names):
+def validate_fineos_files(date_str, file_names):
     assert file_names[0] == f"{date_str}-CPS-payment-export-error-report.csv"
     assert file_names[1] == f"{date_str}-CPS-vendor-export-error-report.csv"
 
 
-def validate_other_files(date_str, file_names):
+def validate_ctr_files(date_str, file_names):
     assert file_names[0] == f"{date_str}-EFT-audit-error-report.csv"
     assert file_names[1] == f"{date_str}-EFT-error-report.csv"
     assert file_names[2] == f"{date_str}-GAX-error-report.csv"
@@ -244,7 +244,7 @@ def test_send_fineos_payments_errors_empty_db(
     file_names = file_util.list_files(str(tmp_path))
     assert len(file_names) == 2  # 2 total reports
     file_names.sort()
-    validate_ctr_files("2020-01-01", file_names)
+    validate_fineos_files("2020-01-01-07-00-00", file_names)
 
     for file_name in file_names:
         with open(tmp_path / file_name) as csv_file:
@@ -271,7 +271,7 @@ def test_send_ctr_payments_errors_empty_db(
     file_names = file_util.list_files(str(tmp_path))
     assert len(file_names) == 7  # 7 total reports
     file_names.sort()
-    validate_other_files("2020-01-01", file_names)
+    validate_ctr_files("2020-01-01-07-00-00", file_names)
 
     for file_name in file_names:
         with open(tmp_path / file_name) as csv_file:
@@ -330,7 +330,7 @@ def test_send_fineos_payments_errors(
     file_names = file_util.list_files(str(tmp_path))
     assert len(file_names) == 2  # 2 total reports
     file_names.sort()
-    validate_ctr_files("2020-01-01", file_names)
+    validate_fineos_files("2020-01-01-07-00-00", file_names)
 
     cps_payment_records = parse_csv(tmp_path / file_names[0])
     assert len(cps_payment_records) == 1
@@ -477,7 +477,7 @@ def test_send_ctr_payments_errors_simple_reports(
     file_names = file_util.list_files(str(tmp_path))
     assert len(file_names) == 7  # 7 total reports
     file_names.sort()
-    validate_other_files("2020-01-01", file_names)
+    validate_ctr_files("2020-01-01-07-00-00", file_names)
 
     eft_records = parse_csv(tmp_path / file_names[1])
     assert len(eft_records) == 2
@@ -760,7 +760,7 @@ def test_send_ctr_payments_errors_time_based_reports(
     file_names = file_util.list_files(str(tmp_path))
     assert len(file_names) == 7  # 7 total reports
     file_names.sort()
-    validate_other_files("2020-02-01", file_names)
+    validate_ctr_files("2020-02-01-07-00-00", file_names)
 
     eft_audit_records = parse_csv(tmp_path / file_names[0])
     assert len(eft_audit_records) == 2

@@ -1026,7 +1026,7 @@ def assert_error_reports(file_to_errored_scenarios, test_scenario_dataset):
     # Error reports are based on UTC (via the datetime_util)
     # so can't use the payments_util.get_now() here.
     today = datetime_util.utcnow()  # We freeze time for "day" of the run
-    today_str = today.strftime("%Y-%m-%d")
+    today_str = today.strftime("%Y-%m-%d-%H-%M-%S")
     s3_config = payments_config.get_s3_config()
     folder_path = os.path.join(s3_config.pfml_error_reports_path, today_str)
 

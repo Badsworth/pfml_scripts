@@ -115,7 +115,10 @@ class ErrorLogs:
 
 def _build_file_path(working_directory: pathlib.Path, file_name: str) -> pathlib.Path:
     # eg. "my_file" -> my_file-2020-01-01.csv
-    return working_directory / f"{payments_util.get_now().strftime('%Y-%m-%d')}-{file_name}.csv"
+    return (
+        working_directory
+        / f"{payments_util.get_now().strftime('%Y-%m-%d-%H-%M-%S')}-{file_name}.csv"
+    )
 
 
 def _parse_outcome(state_log: StateLog) -> Outcome:
@@ -489,7 +492,7 @@ def _send_errors_email(subject: str, body: str, error_files: List[pathlib.Path])
     s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
 
     for error_file in error_files:
-        # upload the error reports to a path like: s3://bucket/path/2020-01-01/2020-01-01-CPS-payment-export-error-report.csv
+        # upload the error reports to a path like: s3://bucket/path/2020-01-01/2020-01-01-12-00-00-CPS-payment-export-error-report.csv
         output_path = os.path.join(
             s3_prefix, payments_util.get_now().strftime("%Y-%m-%d"), error_file.name
         )
