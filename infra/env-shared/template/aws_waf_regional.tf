@@ -38,7 +38,7 @@ resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
 
     statement {
       rate_based_statement {
-        limit              = 3000 # This is arbitrary until we get some baseline usage data
+        limit              = 1000
         aggregate_key_type = "IP"
       }
     }
