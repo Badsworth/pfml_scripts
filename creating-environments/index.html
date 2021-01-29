@@ -595,7 +595,7 @@
                 <h1 id="setting-up-a-new-environment">Setting up a new environment</h1>
 <p>The easiest way to set up resources in a new environment is using the templates in <a href="../bin/bootstrap-env">/bin/bootstrap-env/</a>.</p>
 <ol>
-<li>The S3 bucket for holding tfstate files must be created first in <a href="../infra/pfml-aws/s3.tf">infra/pfml-aws/s3.tf</a></li>
+<li>The S3 bucket for holding tfstate files must be created first in <a href="https://github.com/EOLWD/pfml/tree/master/infra/pfml-aws/s3.tf">infra/pfml-aws/s3.tf</a></li>
 <li>Then, individual terraform components (<code>env-shared</code>, <code>api</code>, or <code>portal</code>) may be set up.</li>
 </ol>
 <div class="highlight"><pre><span></span><code>pfml$ bin/bootstrap-env/bootstrap-env.sh &lt;new-env&gt; &lt;component&gt;
