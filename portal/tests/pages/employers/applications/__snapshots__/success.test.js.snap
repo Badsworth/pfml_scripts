@@ -5,6 +5,9 @@ exports[`Success renders Success page 1`] = `
   <Title>
     Thanks for reviewing the application
   </Title>
+  <AccountVerificationBanner
+    className="margin-bottom-2"
+  />
   <Trans
     i18nKey="pages.employersClaimsSuccess.applicationIdLabel"
     values={

@@ -13,6 +13,7 @@ exports[`Employer index renders page 1`] = `
       <Title>
         Welcome
       </Title>
+      <AccountVerificationBanner />
       <Alert
         heading="Verify your account to continue"
         state="warning"

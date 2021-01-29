@@ -1,4 +1,5 @@
 import { IconMail, IconPdf } from "@massds/mayflower-react/dist/Icon";
+import { AccountVerificationBanner } from "../../components/employers/AccountVerificationBanner";
 import Alert from "../../components/Alert";
 import Heading from "../../components/Heading";
 import PropTypes from "prop-types";
@@ -32,6 +33,7 @@ export const Index = (props) => {
       <div className="grid-row">
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersDashboard.welcomeTitle")}</Title>
+          <AccountVerificationBanner />
           {hasUnverifiedEmployer && (
             <Alert
               state="warning"

@@ -1742,6 +1742,11 @@ const pages = {
 };
 
 const components = {
+  accountVerificationBanner: {
+    body:
+      "Later this month, we'll ask you to verify your paid leave contributions to secure your account. <learn-more-link>Learn more.</learn-more-link>",
+    header: "Account verification is coming soon",
+  },
   amendButton: {
     amend: "Amend",
   },

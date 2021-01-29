@@ -1,3 +1,4 @@
+import { AccountVerificationBanner } from "../../../components/employers/AccountVerificationBanner";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../../components/Title";
@@ -14,6 +15,7 @@ export const Success = (props) => {
   return (
     <React.Fragment>
       <Title>{t("pages.employersClaimsSuccess.title")}</Title>
+      <AccountVerificationBanner className="margin-bottom-2" />
       <Trans
         i18nKey="pages.employersClaimsSuccess.applicationIdLabel"
         values={{ absenceId: absence_id }}
