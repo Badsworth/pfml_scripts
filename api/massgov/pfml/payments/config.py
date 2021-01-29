@@ -97,16 +97,16 @@ class PaymentsMoveItConfig:
     ## ---- MOVEit paths
     # CTR/MMARS generates Outbound Return files for PFML API to pick up
     # This is the MOVEit location where those files are available to us
-    # Ex: DFML/Comptroller_Office/Incoming/nmmarsload/
+    # Ex: /DFML/Comptroller_Office/Incoming/nmmarsload/
     ctr_moveit_incoming_path: str
     # Once PFML API picks up files from MOVEit, we need to put them into the
     # Archive folder
     # This is the MOVEit location where we archive folders
-    # Ex: DFML/Comptroller_Office/Archive
+    # Ex: /DFML/Comptroller_Office/Archive
     ctr_moveit_archive_path: str
     # PFML API generates files for CTR/MMARS to process
     # This is where CTR/MMARS picks up files from us
-    # Ex: DFML/Comptroller_Office/Outgoing/nmmarsload/
+    # Ex: /DFML/Comptroller_Office/Outgoing/nmmarsload/
     ctr_moveit_outgoing_path: str
 
     ## --- MOVEit connection details
