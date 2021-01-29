@@ -78,7 +78,7 @@ def notifications_post():
                 status_code=BadRequest,
                 message="Multiple employers found for specified FEIN",
                 errors=[],
-            )
+            ).to_api_response()
 
         if employer is None:
 
@@ -102,7 +102,7 @@ def notifications_post():
                 status_code=BadRequest,
                 message="Failed to lookup the specified FEIN to add Claim record on Notification POST request",
                 errors=[],
-            )
+            ).to_api_response()
 
         if claim is None:
             new_claim = Claim(
