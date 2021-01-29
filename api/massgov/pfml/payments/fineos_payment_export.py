@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple, cast
 
+from sqlalchemy.exc import SQLAlchemyError
+
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.fineos.util.log_tables as fineos_log_tables_util
@@ -288,6 +290,16 @@ class PaymentData:
         if end_periods:
             self.payment_end_period = max(end_periods)
 
+    def get_traceable_details(self) -> Dict[str, Optional[str]]:
+        # For logging purposes, this returns useful, traceable details
+        # about a payment that isn't PII. Recommended usage is as:
+        # logger.info("...", extra=payment_data.get_traceable_details())
+        return {
+            "c_value": self.c_value,
+            "i_value": self.i_value,
+            "absence_case_number": self.absence_case_number,
+        }
+
 
 def payment_period_date_validator(
     payment_period_date_str: str,
@@ -380,28 +392,38 @@ def get_employee_and_claim(
     payment_data: PaymentData, db_session: db.Session
 ) -> Tuple[Optional[Employee], Optional[Claim]]:
     # Get the TIN, employee and claim associated with the payment to be made
-    tax_identifier = (
-        db_session.query(TaxIdentifier).filter_by(tax_identifier=payment_data.tin).one_or_none()
-    )
-    if not tax_identifier:
-        payment_data.validation_container.add_validation_issue(
-            payments_util.ValidationReason.MISSING_IN_DB, "tax_identifier"
+    try:
+        tax_identifier = (
+            db_session.query(TaxIdentifier).filter_by(tax_identifier=payment_data.tin).one_or_none()
         )
-        return None, None
-    employee = db_session.query(Employee).filter_by(tax_identifier=tax_identifier).one_or_none()
-    if not employee:
-        payment_data.validation_container.add_validation_issue(
-            payments_util.ValidationReason.MISSING_IN_DB, "employee"
-        )
-        return None, None
+        if not tax_identifier:
+            payment_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_IN_DB, "tax_identifier"
+            )
+            return None, None
 
-    claim = (
-        db_session.query(Claim)
-        .filter_by(
-            fineos_absence_id=payment_data.absence_case_number, employee_id=employee.employee_id
+        employee = db_session.query(Employee).filter_by(tax_identifier=tax_identifier).one_or_none()
+        if not employee:
+            payment_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_IN_DB, "employee"
+            )
+            return None, None
+
+        claim = (
+            db_session.query(Claim)
+            .filter_by(
+                fineos_absence_id=payment_data.absence_case_number, employee_id=employee.employee_id
+            )
+            .one_or_none()
         )
-        .one_or_none()
-    )
+    except SQLAlchemyError as e:
+        logger.exception(
+            "Unexpected error %s with one_or_none when querying for tin/employee/claim",
+            type(e),
+            extra=payment_data.get_traceable_details(),
+        )
+        raise
+
     # claim might not exist because the employee used the call center, if so, create the claim now
     if not claim:
         claim = Claim(employee=employee, fineos_absence_id=payment_data.absence_case_number,)
@@ -449,14 +471,22 @@ def create_or_update_payment(
     payment_data: PaymentData, claim: Claim, db_session: db.Session
 ) -> Payment:
     # First check if a payment already exists
-    payment = (
-        db_session.query(Payment)
-        .filter(
-            Payment.fineos_pei_c_value == payment_data.c_value,
-            Payment.fineos_pei_i_value == payment_data.i_value,
+    try:
+        payment = (
+            db_session.query(Payment)
+            .filter(
+                Payment.fineos_pei_c_value == payment_data.c_value,
+                Payment.fineos_pei_i_value == payment_data.i_value,
+            )
+            .one_or_none()
         )
-        .one_or_none()
-    )
+    except SQLAlchemyError as e:
+        logger.exception(
+            "Unexpected error %s with one_or_none when querying for payment",
+            type(e),
+            extra=payment_data.get_traceable_details(),
+        )
+        raise
 
     if not payment:
         payment = Payment()
@@ -611,6 +641,8 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                 _setup_state_log(None, False, payment_data.validation_container, db_session)
                 continue
 
+            logger.info("Processing payment record", extra=payment_data.get_traceable_details())
+
             payment, updated_employee = process_payment_data_record(
                 payment_data, extract_data.reference_file, db_session
             )
@@ -761,8 +793,8 @@ def process_extract_data(download_directory: pathlib.Path, db_session: db.Sessio
                         db_session, updated_employee
                     )
                 db_session.commit()
-        except Exception as e:
+        except Exception:
             db_session.rollback()
             logger.exception("Error processing FINEOS payment export")
             move_files_from_received_to_error(extract_data, db_session)
-            raise e
+            raise

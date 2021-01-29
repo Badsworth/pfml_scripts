@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, Generator, List, Optional, Union
 
-from sqlalchemy.orm.exc import MultipleResultsFound
+from sqlalchemy.exc import SQLAlchemyError
 
 import massgov.pfml.db as db
 import massgov.pfml.util.datetime as datetime_util
@@ -139,14 +139,16 @@ def _create_or_update_latest_state_log(
                 .filter(*latest_query_params)
                 .one_or_none()
             )
-        except MultipleResultsFound:
-            logger.warning(
-                "Unexpected error with one_or_none()",
+        except SQLAlchemyError as e:
+            logger.exception(
+                "Unexpected error %s with one_or_none() when querying for latest state log",
+                type(e),
                 extra={
                     "state_log_id": state_log.state_log_id,
                     "payment_id": state_log.payment_id,
                     "employee_id": state_log.employee_id,
                     "reference_file_id": state_log.reference_file_id,
+                    "query_params": str(*latest_query_params),
                 },
             )
             raise

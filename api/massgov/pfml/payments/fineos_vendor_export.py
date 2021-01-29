@@ -4,6 +4,8 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple, cast
 
+from sqlalchemy.exc import SQLAlchemyError
+
 import massgov.pfml.fineos.util.log_tables as fineos_log_tables_util
 import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.payments_util as payments_util
@@ -231,17 +233,23 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                 )
             continue
 
-        # Add / update entry on claim table
-        validation_container, claim = create_or_update_claim(
-            db_session, extract_data, requested_absence
-        )
+        try:
+            # Add / update entry on claim table
+            validation_container, claim = create_or_update_claim(
+                db_session, extract_data, requested_absence
+            )
 
-        employee_pfml_entry = None
-        # Update employee info
-        if claim is not None:
+            # Update employee info
             employee_pfml_entry = update_employee_info(
                 db_session, extract_data, requested_absence, claim, validation_container
             )
+        except Exception as e:
+            # TODO - this should create a validation container and associate it with an
+            #        unassociated employee state_log (see fineos_payment_export for similar logic for payments)
+            logger.exception(
+                "An exception occurred", type(e), extra={"absence_case_id": absence_case_id}
+            )
+            continue
 
         if employee_pfml_entry is not None:
             if employee_pfml_entry.employee_id not in updated_employee_ids:
@@ -267,13 +275,20 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
 
 def create_or_update_claim(
     db_session: db.Session, extract_data: ExtractData, requested_absence: Dict[str, str]
-) -> Tuple[payments_util.ValidationContainer, Optional[Claim]]:
+) -> Tuple[payments_util.ValidationContainer, Claim]:
     absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
     validation_container = payments_util.ValidationContainer(absence_case_id)
-
-    claim_pfml: Optional[Claim] = db_session.query(Claim).filter(
-        Claim.fineos_absence_id == absence_case_id
-    ).one_or_none()
+    try:
+        claim_pfml: Optional[Claim] = db_session.query(Claim).filter(
+            Claim.fineos_absence_id == absence_case_id
+        ).one_or_none()
+    except SQLAlchemyError as e:
+        logger.exception(
+            "Unexpected error %s with one_or_none when querying for claim",
+            type(e),
+            extra={"absence_case_id": absence_case_id},
+        )
+        raise
 
     if claim_pfml is None:
         claim_pfml = Claim()
@@ -434,17 +449,28 @@ def update_employee_info(
     employee_pfml_entry = None
 
     if employee_tax_identifier is not None:
-        tax_identifier_id = (
-            db_session.query(TaxIdentifier.tax_identifier_id)
-            .filter(TaxIdentifier.tax_identifier == employee_tax_identifier)
-            .one_or_none()
-        )
-        if tax_identifier_id is not None:
-            employee_pfml_entry = (
-                db_session.query(Employee)
-                .filter(Employee.tax_identifier_id == tax_identifier_id)
+        try:
+            tax_identifier_id = (
+                db_session.query(TaxIdentifier.tax_identifier_id)
+                .filter(TaxIdentifier.tax_identifier == employee_tax_identifier)
                 .one_or_none()
             )
+            if tax_identifier_id is not None:
+                employee_pfml_entry = (
+                    db_session.query(Employee)
+                    .filter(Employee.tax_identifier_id == tax_identifier_id)
+                    .one_or_none()
+                )
+        except SQLAlchemyError as e:
+            logger.exception(
+                "Unexpected error %s with one_or_none when querying for tin/employee",
+                type(e),
+                extra={
+                    "absence_case_id": absence_case_id,
+                    "fineos_customer_number": fineos_customer_number,
+                },
+            )
+            raise
 
     # Assumption is we should not be creating employees in the PFML DB through this extract.
     if employee_pfml_entry is None:

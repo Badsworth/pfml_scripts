@@ -254,6 +254,7 @@ def get_employee(ams_document_id: str, db_session: db.Session,) -> Optional[Empl
             ams_document_id,
             extra={"ctr_document_identifier": ams_document_id},
         )
+        raise
 
     # This should never happen, but if it does: it means that no employee
     # record was found associated with this DOC_ID. Our db may be in a bad
@@ -326,14 +327,16 @@ def get_ctr_document_identifier(
             ams_document_id,
             extra={"ams_document_id": ams_document_id},
         )
-        return ctr_document_identifier
-    except SQLAlchemyError:
+        raise
+    except SQLAlchemyError as e:
         # Unknown other SQLAlchemy errors
         logger.exception(
-            "SQLAlchemyError while querying for DOC_ID %s",
+            "SQLAlchemyError %s while querying for DOC_ID %s",
+            type(e),
             ams_document_id,
             extra={"ctr_document_identifier": ams_document_id},
         )
+        raise
 
     # This should never happen, but if it does:
     # 1. CTR has sent us a DOC_ID we never sent them OR
@@ -347,6 +350,7 @@ def get_ctr_document_identifier(
             ams_document_id,
             extra={"ctr_document_identifier": ams_document_id},
         )
+        # TODO - should we raise an exception in this scenario?
 
     return ctr_document_identifier
 
@@ -388,13 +392,23 @@ def check_dependencies(
     else:
         checked_dependencies.vc_doc_vcust = vc_doc_vcust
 
-    ctr_document_identifier = get_ctr_document_identifier(ams_document_id, db_session)
+    ctr_document_identifier = None
+    try:
+        ctr_document_identifier = get_ctr_document_identifier(ams_document_id, db_session)
+    except Exception:
+        logger.exception("An error occurred while attempting to fetch the ctr_document_identifier")
+
     if not ctr_document_identifier:
         return checked_dependencies
     else:
         checked_dependencies.ctr_document_identifier = ctr_document_identifier
 
-    employee = get_employee(ams_document_id, db_session)
+    employee = None
+    try:
+        employee = get_employee(ams_document_id, db_session)
+    except Exception:
+        logger.exception("An error occurred while attempting to fetch the employee")
+
     if not employee:
         return checked_dependencies
     else:

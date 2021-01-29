@@ -707,7 +707,7 @@ def get_inf_data_from_reference_file(
         if ctr_batch and ctr_batch.inf_data:
             # convert to Dict from sql alchemy JSON data type which has type Union[Dict, List]
             return cast(Dict, ctr_batch.inf_data)
-    except MultipleResultsFound as e:
+    except SQLAlchemyError as e:
         logger.exception(
             "CtrBatchIdentifier query failed: %s",
             type(e),

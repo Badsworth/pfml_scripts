@@ -1,3 +1,4 @@
+import logging  # noqa: B1
 from datetime import datetime, timezone
 
 import pytest
@@ -358,6 +359,49 @@ def test_has_been_in_end_state(test_db_session, initialize_factories_session):
     )
 
     assert state_log_util.has_been_in_end_state(payment, test_db_session, State.GAX_SENT)
+
+
+def test_create_or_update_latest_state_log_one_or_none_issue(
+    initialize_factories_session, test_db_session, logging_fix, caplog
+):
+    # This test is setup in a non-real use case for simplicity
+    # We call the underlying method directly with a query
+    # that will fail the one_or_none query to validate the error
+    # is thrown properly
+
+    # First create some prior states as normal
+    payment1 = PaymentFactory.create()
+    payment2 = PaymentFactory.create()
+
+    state_log_util.create_finished_state_log(
+        end_state=State.ADD_TO_GAX,
+        outcome=state_log_util.build_outcome("success"),
+        associated_model=payment1,
+        db_session=test_db_session,
+    )
+
+    state_log_util.create_finished_state_log(
+        end_state=State.ADD_TO_GAX,
+        outcome=state_log_util.build_outcome("success"),
+        associated_model=payment2,
+        db_session=test_db_session,
+    )
+
+    # Call it with query params that will cause both
+    # of the created state logs to be returned
+    new_state_log = StateLog()
+    query_params = [StateLog.associated_type == state_log_util.AssociatedClass.PAYMENT.value]
+
+    caplog.set_level(logging.ERROR)  # noqa: B1
+    with pytest.raises(Exception, match="Multiple rows were found for one_or_none()"):
+        state_log_util._create_or_update_latest_state_log(
+            new_state_log, query_params, None, test_db_session
+        )
+
+    assert (
+        caplog.records[0].message
+        == "Unexpected error <class 'sqlalchemy.orm.exc.MultipleResultsFound'> with one_or_none() when querying for latest state log"
+    )
 
 
 def test_get_time_since_ended(initialize_factories_session, test_db_session):

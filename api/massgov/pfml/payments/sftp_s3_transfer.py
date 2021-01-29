@@ -57,6 +57,8 @@ def copy_to_sftp_and_archive_s3_files(
                 .one_or_none()
             )
         except MultipleResultsFound:
+            # TODO - API-1311 - Extend this method to have a flag that determines whether
+            #                   to error out entirely here or to continue
             logger.exception(
                 "Found more than one ReferenceFile with the same file_location. Skipping",
                 extra={"file_location": source_file_location},
@@ -208,6 +210,8 @@ def copy_from_sftp_to_s3_and_archive_files(
                 .one_or_none()
             )
         except MultipleResultsFound:
+            # TODO - API-1311 - Extend this method to have a flag that determines whether
+            #                   to error out entirely here or to continue
             logger.exception(
                 "Found more than one ReferenceFile with the same file_location:", source_filepath,
             )

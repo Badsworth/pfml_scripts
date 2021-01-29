@@ -24,6 +24,7 @@ import tempfile
 from typing import Dict, Optional
 
 import smart_open
+from sqlalchemy.exc import SQLAlchemyError
 
 import massgov.pfml.db
 import massgov.pfml.util.batch.log
@@ -230,12 +231,19 @@ def process_payment_record(
 
 def get_mmars_vendor_code(tax_identifier, db_session):
     """Get Comptroller vendor code for the given SSN from the database."""
-    employee = (
-        db_session.query(Employee)
-        .join(TaxIdentifier)
-        .filter(TaxIdentifier.tax_identifier == tax_identifier)
-        .one_or_none()
-    )
+    try:
+        employee = (
+            db_session.query(Employee)
+            .join(TaxIdentifier)
+            .filter(TaxIdentifier.tax_identifier == tax_identifier)
+            .one_or_none()
+        )
+    except SQLAlchemyError as e:
+        logger.exception(
+            "Experienced error %s with one_or_none query when fetching employee for mmars_vendor_code",
+            type(e),
+        )
+        raise
     if employee:
         if employee.ctr_vendor_customer_code:
             return employee.ctr_vendor_customer_code
