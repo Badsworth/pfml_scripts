@@ -1,7 +1,7 @@
 resource "aws_cloudwatch_event_target" "task" {
   rule      = aws_cloudwatch_event_rule.scheduled_rule.name
   arn       = var.cluster_arn
-  target_id = "${var.task_name}_${var.environment_name}_cloudwatch_event_target"
+  target_id = "${var.task_name}_${module.constants.environment_shorthand[var.environment_name]}_cloudwatch_event_target"
   role_arn  = aws_iam_role.scheduler.arn
 
   ecs_target {
