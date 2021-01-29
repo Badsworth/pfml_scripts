@@ -63,6 +63,12 @@ from massgov.pfml.payments.process_ctr_payments import _ctr_process as run_ctr_e
 from massgov.pfml.payments.process_payments import Configuration as FineosTaskConfiguration
 from massgov.pfml.payments.process_payments import _fineos_process as run_fineos_ecs_task
 
+# The number of times each scenario should be created
+# This should be left at 1 except when doing manual testing
+# as otherwise it makes this test incredibly long.
+# This has been tested locally to work at up to 750 (which takes 2 hours)
+SCENARIO_DUPLICATION_COUNT = 1
+
 
 # == Helper data structures
 class ScenarioDataSet:
@@ -127,7 +133,6 @@ def test_e2e_process(
     set_exporter_env_vars,
     initialize_factories_session,
     monkeypatch,
-    logging_fix,
     caplog,
     create_triggers,
 ):
@@ -146,7 +151,8 @@ def test_e2e_process(
 
     # Setup the testing scenario data (generate one of each)
     test_scenarios_with_count: List[ScenarioNameWithCount] = [
-        ScenarioNameWithCount(scenario_name, 1) for scenario_name in SCENARIO_DESCRIPTORS.keys()
+        ScenarioNameWithCount(scenario_name, SCENARIO_DUPLICATION_COUNT)
+        for scenario_name in SCENARIO_DESCRIPTORS.keys()
     ]
     test_scenario_config: ScenarioDataConfig = ScenarioDataConfig(
         scenario_config=test_scenarios_with_count
@@ -241,8 +247,8 @@ def test_e2e_process(
 
         # Confirm employee reference files were created
         employee_reference_files = test_db_session.query(EmployeeReferenceFile).all()
-        assert (
-            len(employee_reference_files) == total_scenario_count - 5
+        assert len(employee_reference_files) == total_scenario_count - (
+            5 * SCENARIO_DUPLICATION_COUNT
         )  # for skipped E, F, K, L, T
 
         exclude_scenarios: List[ScenarioName] = [
@@ -442,7 +448,7 @@ def test_e2e_process(
 
         # Confirm expected number of payments (Success: A-D, Z, Error: O-S)
         payments = test_db_session.query(Payment).all()
-        assert len(payments) == 5
+        assert len(payments) == (5 * SCENARIO_DUPLICATION_COUNT)
 
         # Confirm employee state logs have not been altered
         assert_employee_state_log_by_scenario(
@@ -517,7 +523,6 @@ def test_e2e_process(
         # ========================================================================
         # [Day 2] Run CTR ECS task - Process Vendor Outbound Files, Send GAX Export
         # ========================================================================
-
         # Setup Data Mart mock for round 2
         monkeypatch.setenv("CTR_DATA_MART_MOCK_ROUND", "round2")
 
@@ -1044,7 +1049,7 @@ def assert_error_reports(file_to_errored_scenarios, test_scenario_dataset):
         with smart_open(path) as csv_file:
             dict_reader = csv.DictReader(csv_file, delimiter=",")
             error_records = list(dict_reader)
-            assert len(error_records) == len(error_scenarios)
+            assert len(error_records) == len(error_scenarios) * SCENARIO_DUPLICATION_COUNT
 
             if file_type == "CPS-payment-export-error-report.csv":
                 # Because payment validation can fail before we
@@ -1115,7 +1120,7 @@ def assert_pei_writeback(is_disbursed, expected_scenarios, test_scenario_dataset
     with smart_open(path) as csv_file:
         dict_reader = csv.DictReader(csv_file, delimiter=",")
         records = list(dict_reader)
-        assert len(records) == len(expected_scenarios)
+        assert len(records) == len(expected_scenarios) * SCENARIO_DUPLICATION_COUNT
 
         # Convert the records into a lookup dict using the C/I values as keys
         ci_records = {}
