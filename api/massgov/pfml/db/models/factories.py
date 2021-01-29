@@ -660,3 +660,18 @@ class WorkPatternRotatingFactory(WorkPatternFixedFactory):
             for i in range(28)
         ]
     )
+
+
+class DuaReductionPaymentFactory(BaseFactory):
+    class Meta:
+        model = employee_models.DuaReductionPayment
+
+    absence_case_id = Generators.FineosAbsenceId
+    employer_fein = Generators.Fein
+    payment_date = factory.Faker("date_object")
+    request_week_begin_date = factory.Faker("date_object")
+    gross_payment_amount_cents = random.randint(100, 100000)
+    payment_amount_cents = random.randint(100, 100000)
+    fraud_indicator = None
+    benefit_year_begin_date = factory.Faker("date_object")
+    benefit_year_end_date = factory.Faker("date_object")

@@ -513,3 +513,31 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                 report.longrepr.reprcrash.message,
             )
         )
+
+
+# This fixture was necessary at the time of this PR as
+# the test_db_via_migration was not working. Will refactor
+# once that fixture is fixed. The code here is functionally
+# equal to migration file:
+# 2021_01_29_15_51_16_14155f78d8e6_create_dua_reduction_payment_table.py
+@pytest.fixture
+def dua_reduction_payment_unique_index(initialize_factories_session):
+    import massgov.pfml.db as db
+
+    engine = db.create_engine()
+    with engine.connect() as connection:
+        connection.execute(
+            """
+            create unique index on dua_reduction_payment (
+                absence_case_id,
+                coalesce(employer_fein, ''),
+                coalesce(payment_date, '1788-02-06'),
+                coalesce(request_week_begin_date, '1788-02-06'),
+                coalesce(gross_payment_amount_cents, 99999999),
+                coalesce(payment_amount_cents, 99999999),
+                coalesce(fraud_indicator, ''),
+                coalesce(benefit_year_end_date, '1788-02-06'),
+                coalesce(benefit_year_begin_date, '1788-02-06')
+            )
+        """
+        )

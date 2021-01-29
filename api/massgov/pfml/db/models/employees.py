@@ -853,6 +853,34 @@ class LatestStateLog(Base):
     reference_file = relationship("ReferenceFile")
 
 
+class DuaReductionPayment(Base):
+    __tablename__ = "dua_reduction_payment"
+    dua_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+
+    absence_case_id = Column(Text, nullable=False)
+    employer_fein = Column(Text)
+    payment_date = Column(Date)
+    request_week_begin_date = Column(Date)
+    gross_payment_amount_cents = Column(Integer)
+    payment_amount_cents = Column(Integer)
+    fraud_indicator = Column(Text)
+    benefit_year_begin_date = Column(Date)
+    benefit_year_end_date = Column(Date)
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    # Each row should be unique. This enables us to load only new rows from a CSV and ensures that
+    # we don't include payments twice as two different rows. Almost all fields are nullable so we
+    # have to coalesce those null values to empty strings. We've manually adjusted the migration
+    # that adds this unique constraint to coalesce those nullable fields.
+    # See: 2021_01_29_15_51_16_14155f78d8e6_create_dua_reduction_payment_table.py
+
+
 class AbsenceStatus(LookupTable):
     model = LkAbsenceStatus
     column_names = ("absence_status_id", "absence_status_description")
