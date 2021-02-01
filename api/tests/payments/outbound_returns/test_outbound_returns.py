@@ -153,7 +153,7 @@ def test_internal_process_outbound_returns(
     outbound_returns._process_outbound_returns(outbound_return_data)
 
     # Assert functions were called once each
-    assert mocked_process_outbound_payment_return.call_count == 1
+    assert mocked_process_outbound_status_return.call_count == 1
     assert mocked_process_outbound_vendor_customer_return.call_count == 1
     assert mocked_process_outbound_payment_return.call_count == 1
 
@@ -180,8 +180,8 @@ def test_internal_process_outbound_returns_status_error(
         outbound_returns._process_outbound_returns(outbound_return_data)
 
     # All functions should have been called
+    assert mocked_process_outbound_vendor_customer_return.call_count == 1
     assert mocked_process_outbound_status_return.call_count == 1
-    assert mocked_process_outbound_vendor_customer_return.call_count == 0
     assert mocked_process_outbound_payment_return.call_count == 0
 
 
@@ -209,7 +209,7 @@ def test_internal_process_outbound_returns_vendor_error(
         outbound_returns._process_outbound_returns(outbound_return_data)
 
     # First two functions should have been called
-    assert mocked_process_outbound_status_return.call_count == 1
+    assert mocked_process_outbound_status_return.call_count == 0
     assert mocked_process_outbound_vendor_customer_return.call_count == 1
     assert mocked_process_outbound_payment_return.call_count == 0
 

@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
 
 import faker
 
+import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     BankAccountType,
     Claim,
@@ -38,6 +39,7 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.payments.fineos_payment_export import CiIndex
 
+logger = logging.get_logger(__name__)
 fake = faker.Faker()
 
 # Constants
@@ -601,6 +603,10 @@ def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
                 fineos_notification_id = f"NTN-{ssn_part_str}"
                 employee_customer_number = ssn_part_str.rjust(9, "5")
                 vendor_customer_code = ssn_part_str.rjust(9, "6")
+
+                logger.info(
+                    f"scenario_name: {scenario_name}, vendor_customer_code: {vendor_customer_code}"
+                )
 
                 scenario_data = generate_scenario_data_db(
                     scenario_descriptor,

@@ -745,3 +745,47 @@ def test_vcc_outbound_status_errors(initialize_factories_session):
             )
 
         doc_count += 1
+
+
+def test_build_vcc_dat_employee_has_been_in_vcc(test_db_session, initialize_factories_session):
+    now = payments_util.get_now()
+    ctr_outbound_path = "path/to/nowhere"
+
+    # Setup some employees
+    employees = []
+    for _ in range(2):
+        employee = EmployeeFactory.create(payment_method_id=PaymentMethod.CHECK.payment_method_id)
+        ctr_address = CtrAddressPairFactory.create()
+        employee.ctr_address_pair = ctr_address
+        employees.append(employee)
+
+    # Set first employee to have already been added to some VCC in the past
+    state_log_util.create_finished_state_log(
+        end_state=State.VCC_SENT,
+        outcome=state_log_util.build_outcome("Foo"),
+        associated_model=employees[0],
+        db_session=test_db_session,
+    )
+
+    # Then put them both in ADD_TO_VCC
+    for employee in employees:
+        state_log_util.create_finished_state_log(
+            end_state=State.ADD_TO_VCC,
+            outcome=state_log_util.build_outcome("Foo"),
+            associated_model=employee,
+            db_session=test_db_session,
+        )
+
+    test_db_session.commit()
+    test_db_session.expire_all()
+
+    # Setup the reference file
+    ctr_batch_id, ref_file, filename = payments_util.create_batch_id_and_reference_file(
+        now, ReferenceFileType.VCC, test_db_session, ctr_outbound_path
+    )
+
+    # Build the VCC xml
+    dat_xml_document, added_employees = vcc.build_vcc_dat(employees, now, ref_file, test_db_session)
+
+    assert employees[0] not in added_employees
+    assert employees[1] in added_employees

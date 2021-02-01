@@ -585,7 +585,7 @@ def test_e2e_process(
                 "EFT-audit-error-report.csv": [],
                 "EFT-error-report.csv": [ScenarioName.SCENARIO_X],
                 "GAX-error-report.csv": [],
-                "VCC-error-report.csv": [],  # Add Scenario_M here once we fix it
+                "VCC-error-report.csv": [ScenarioName.SCENARIO_M],
                 "VCM-report.csv": [],
                 "payment-audit-error-report.csv": [],
                 "vendor-audit-error-report.csv": [],

@@ -12,6 +12,7 @@ import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     AddressType,
     BankAccountType,
+    Employee,
     EmployeeAddress,
     EmployeeLog,
     GeoState,
@@ -259,6 +260,7 @@ def test_process_extract_data(
         assert payment.payment_date.strftime("%Y-%m-%d") == f"2021-01-0{index}"
         assert payment.fineos_extraction_date == date(2021, 1, 13)
         assert str(payment.amount) == f"{index * 3}.99"  # eg. 111.99
+        assert payment.has_address_update is True
 
         claim = payment.claim
         assert claim
@@ -306,6 +308,7 @@ def test_process_extract_data(
         if index == "2":
             assert employee.payment_method_id == PaymentMethod.CHECK.payment_method_id
             assert not mailing_address.address_line_two
+            assert payment.has_eft_update is False
 
         else:
             assert employee.payment_method_id == PaymentMethod.ACH.payment_method_id
@@ -313,6 +316,7 @@ def test_process_extract_data(
             assert str(eft.routing_nbr) == index * 9
             assert str(eft.account_nbr) == index * 9
             assert eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+            assert payment.has_eft_update is True
 
             # Verify that there is exactly one successful state log per employee that uses ACH
             state_logs = employee.state_logs
@@ -599,6 +603,7 @@ def test_process_extract_data_no_existing_claim_address_eft(
         assert mailing_address.geo_state_id == GeoState.MA.geo_state_id
         assert mailing_address.zip_code == index * 5  # eg. 11111
         assert mailing_address.address_type_id == AddressType.MAILING.address_type_id
+        assert payment.has_address_update is True
 
         employee_addresses = employee.addresses.all()
         assert len(employee_addresses) == 1  # Just the 1 we added
@@ -620,6 +625,7 @@ def test_process_extract_data_no_existing_claim_address_eft(
             assert not mailing_address.address_line_two
 
             assert not eft  # Not set by factory logic, shouldn't be set at all now
+            assert payment.has_eft_update is False
 
         else:
             assert employee.payment_method_id == PaymentMethod.ACH.payment_method_id
@@ -627,6 +633,7 @@ def test_process_extract_data_no_existing_claim_address_eft(
             assert str(eft.routing_nbr) == index * 9
             assert str(eft.account_nbr) == index * 9
             assert eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+            assert payment.has_eft_update is True
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -870,3 +877,109 @@ def test_validation_payment_amount(set_exporter_env_vars):
     assert set([ValidationIssue(ValidationReason.INVALID_VALUE, "AMOUNT_MONAMT")]).issubset(
         set(payment_data.validation_container.validation_issues)
     )
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_update_eft_no_update(
+    test_db_session,
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    monkeypatch,
+    initialize_factories_session,
+    tmp_path,
+):
+    # update_eft() has 3 possible outcomes:
+    #   1. There is no change to EFT
+    #   2. There is no existing EFT, so we add one
+    #   3. There is an existing EFT, but it's different, so we update it
+    # In this test, we cover #1. 2 & 3 are covered by other tests.
+
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    setup_process_tests(mock_s3_bucket, test_db_session)
+
+    # Set an employee to have the same EFT we know is going to be extracted
+    employee = (
+        test_db_session.query(Employee)
+        .join(TaxIdentifier)
+        .filter(TaxIdentifier.tax_identifier == "1" * 9)
+        .first()
+    )
+    assert employee is not None
+    assert employee.eft is not None
+    employee.eft.routing_nbr = "1" * 9
+    employee.eft.account_nbr = "1" * 9
+    employee.eft.bank_account_type_id = BankAccountType.CHECKING.bank_account_type_id
+    test_db_session.commit()
+
+    # Run the process
+    exporter.process_extract_data(tmp_path, test_db_session)
+    test_db_session.expire_all()
+
+    # Verify the payment isn't marked as having an EFT update
+    payment = (
+        test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == "301")
+        .first()
+    )
+    assert payment is not None
+    assert payment.has_eft_update is False
+
+    # There should not be a EFT_REQUEST_RECEIVED record
+    employee_state_logs_after = (
+        test_db_session.query(StateLog).filter(StateLog.employee_id == employee.employee_id).all()
+    )
+    assert len(employee_state_logs_after) == 0
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_update_ctr_address_pair_fineos_address_no_update(
+    test_db_session,
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    monkeypatch,
+    initialize_factories_session,
+    tmp_path,
+):
+    # update_ctr_address_pair_fineos_address() has 2 possible outcomes:
+    #   1. There is no change to address
+    #   2. We create a new CtrAddressPair
+    # In this test, we cover #1. #2 is covered by other tests.
+
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    setup_process_tests(mock_s3_bucket, test_db_session)
+
+    # Set an employee to have the same address we know is going to be extracted
+    employee = (
+        test_db_session.query(Employee)
+        .join(TaxIdentifier)
+        .filter(TaxIdentifier.tax_identifier == "1" * 9)
+        .first()
+    )
+    assert employee is not None
+    assert employee.ctr_address_pair is not None
+    employee.ctr_address_pair.fineos_address.address_line_one = "AddressLine1-1"
+    employee.ctr_address_pair.fineos_address.address_line_two = "AddressLine2-1"
+    employee.ctr_address_pair.fineos_address.city = "City1"
+    employee.ctr_address_pair.fineos_address.geo_state_id = GeoState.MA.geo_state_id
+    employee.ctr_address_pair.fineos_address.zip_code = "11111"
+    test_db_session.commit()
+
+    # Run the process
+    exporter.process_extract_data(tmp_path, test_db_session)
+    test_db_session.expire_all()
+
+    # Verify the payment isn't marked as having an address update
+    payment = (
+        test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == "301")
+        .first()
+    )
+    assert payment is not None
+    assert payment.has_address_update is False
+
+    # There should be a EFT_REQUEST_RECEIVED record
+    employee_state_logs_after = (
+        test_db_session.query(StateLog).filter(StateLog.employee_id == employee.employee_id).all()
+    )
+    assert len(employee_state_logs_after) == 1
+    assert employee_state_logs_after[0].end_state_id == State.EFT_REQUEST_RECEIVED.state_id

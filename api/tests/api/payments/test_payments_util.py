@@ -3,6 +3,7 @@ import xml.dom.minidom as minidom
 from datetime import datetime, timedelta
 
 import boto3
+import faker
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -11,6 +12,8 @@ import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
+    EFT,
+    BankAccountType,
     Country,
     CtrBatchIdentifier,
     GeoState,
@@ -29,9 +32,12 @@ from massgov.pfml.payments.payments_util import (
     get_inf_data_as_plain_text,
     get_inf_data_from_reference_file,
     is_same_address,
+    is_same_eft,
     move_reference_file,
 )
 from tests.api.payments.conftest import upload_file_to_s3
+
+fake = faker.Faker()
 
 TEST_FILENAME = "test.txt"
 TEST_SRC_DIR = "received"
@@ -536,6 +542,23 @@ def test_same_address(initialize_factories_session):
     )
     assert is_same_address(first, second) is True
 
+    # Test that None == ""
+    third = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two="",
+        city="boston",
+        zip_code="02110",
+        country_id=Country.USA.country_id,
+    )
+    fourth = AddressFactory(
+        address_line_one="1234 main st",
+        address_line_two=None,
+        city="boston",
+        zip_code="02110",
+        country_id=Country.USA.country_id,
+    )
+    assert is_same_address(third, fourth) is True
+
 
 def test_same_address_comparable(initialize_factories_session):
     first = AddressFactory(
@@ -652,6 +675,93 @@ def test_address_line_two(initialize_factories_session):
         zip_code="02110",
     )
     assert is_same_address(third, fourth) is False
+
+
+@pytest.mark.parametrize(
+    "routing_nbr, account_nbr, bank_account_type_id",
+    (
+        (
+            fake.random_number(digits=9, fix_len=True),
+            fake.random_number(digits=40, fix_len=False),
+            BankAccountType.SAVINGS.bank_account_type_id,
+        ),
+        (
+            fake.random_number(digits=9, fix_len=True),
+            fake.random_number(digits=40, fix_len=False),
+            BankAccountType.CHECKING.bank_account_type_id,
+        ),
+    ),
+)
+def test_is_same_eft(routing_nbr, account_nbr, bank_account_type_id, initialize_factories_session):
+    # Verify that the EFT data is the same even in the very contrived and
+    # not real case where the EFT record is tied to different employees
+    employee1 = EmployeeFactory.create()
+    employee2 = EmployeeFactory.create()
+
+    first = EFT(
+        routing_nbr=routing_nbr,
+        account_nbr=account_nbr,
+        bank_account_type_id=bank_account_type_id,
+        employee=employee1,
+    )
+    second = EFT(
+        routing_nbr=routing_nbr,
+        account_nbr=account_nbr,
+        bank_account_type_id=bank_account_type_id,
+        employee=employee2,
+    )
+
+    assert first != second
+    assert is_same_eft(first, second) is True
+
+
+def test_is_same_eft_different_routing_number():
+    account_nbr = fake.random_number(digits=40, fix_len=False)
+    first = EFT(
+        routing_nbr=fake.random_number(digits=9, fix_len=True),
+        account_nbr=account_nbr,
+        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+    )
+    second = EFT(
+        routing_nbr=fake.random_number(digits=9, fix_len=True),
+        account_nbr=account_nbr,
+        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+    )
+
+    assert is_same_eft(first, second) is False
+
+
+def test_is_same_eft_different_account_number():
+    routing_nbr = fake.random_number(digits=9, fix_len=True)
+    first = EFT(
+        routing_nbr=routing_nbr,
+        account_nbr=fake.random_number(digits=40, fix_len=False),
+        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+    )
+    second = EFT(
+        routing_nbr=routing_nbr,
+        account_nbr=fake.random_number(digits=40, fix_len=False),
+        bank_account_type_id=BankAccountType.SAVINGS.bank_account_type_id,
+    )
+
+    assert is_same_eft(first, second) is False
+
+
+def test_is_same_eft_different_bank_account_type():
+    routing_nbr = fake.random_number(digits=9, fix_len=True)
+    account_nbr = fake.random_number(digits=40, fix_len=False)
+    first = EFT(
+        routing_nbr=routing_nbr,
+        account_nbr=account_nbr,
+        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+    )
+    second = EFT(
+        routing_nbr=routing_nbr,
+        account_nbr=account_nbr,
+        bank_account_type_id=BankAccountType.SAVINGS.bank_account_type_id,
+    )
+
+    assert is_same_eft(first, second) is False
 
 
 def test_get_inf_data_from_reference_file(test_db_session, initialize_factories_session):

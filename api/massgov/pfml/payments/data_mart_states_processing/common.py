@@ -203,35 +203,58 @@ def process_data_mart_issues(
     missing_vendor_state: Union[LkState, BaseException],
     mismatched_data_state: LkState,
 ) -> None:
-    if issues_and_updates.vendor_exists is False:
-        if isinstance(missing_vendor_state, BaseException):
-            raise missing_vendor_state
+    # Check to see if we've already sent this employee in a VCC. If so, do not
+    # add to another VCC.
+    has_been_in_vcc = state_log_util.has_been_in_end_state(
+        employee, pfml_db_session, State.VCC_SENT
+    )
 
-        state_log_util.create_finished_state_log(
-            end_state=missing_vendor_state,
-            associated_model=employee,
-            outcome=state_log_util.build_outcome("Queried Data Mart: Vendor does not exist yet"),
-            db_session=pfml_db_session,
-        )
-        return
+    if issues_and_updates.vendor_exists is False:
+        if not has_been_in_vcc:
+            if isinstance(missing_vendor_state, BaseException):
+                raise missing_vendor_state
+
+            message = "Queried Data Mart: Vendor does not exist yet"
+            state_log_util.create_finished_state_log(
+                end_state=missing_vendor_state,
+                associated_model=employee,
+                outcome=state_log_util.build_outcome(message),
+                db_session=pfml_db_session,
+            )
+            logger.info(message, extra={"fineos_customer_number": employee.fineos_customer_number})
+            return
+        else:
+            message = (
+                "Queried Data Mart: Vendor does not exist yet, but already sent in a previous VCC"
+            )
+            state_log_util.create_finished_state_log(
+                end_state=mismatched_data_state,
+                associated_model=employee,
+                outcome=state_log_util.build_outcome(message),
+                db_session=pfml_db_session,
+            )
+            logger.info(message, extra={"fineos_customer_number": employee.fineos_customer_number})
+            return
 
     if issues_and_updates.issues.has_validation_issues():
+        message = "Queried Data Mart: Vendor does not match"
         state_log_util.create_finished_state_log(
             end_state=mismatched_data_state,
             associated_model=employee,
-            outcome=state_log_util.build_outcome(
-                "Queried Data Mart: Vendor does not match", issues_and_updates.issues
-            ),
+            outcome=state_log_util.build_outcome(message, issues_and_updates.issues),
             db_session=pfml_db_session,
         )
+        logger.info(message, extra={"fineos_customer_number": employee.fineos_customer_number})
 
     else:
+        message = "Queried Data Mart: Vendor confirmed in MMARS."
         state_log_util.create_finished_state_log(
             end_state=State.MMARS_STATUS_CONFIRMED,
             associated_model=employee,
-            outcome=state_log_util.build_outcome("Vendor confirmed in MMARS."),
+            outcome=state_log_util.build_outcome(message),
             db_session=pfml_db_session,
         )
+        logger.info(message, extra={"fineos_customer_number": employee.fineos_customer_number})
 
         # If we've successfully confirmed the Employee info with what's in
         # MMARS, look for any payments for the Employee that have been waiting

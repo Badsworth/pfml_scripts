@@ -124,19 +124,10 @@ def _process_outbound_returns(outbound_return_data: OutboundReturnData) -> None:
     outbound_return_data.sort_returns()
     db_session = outbound_return_data.db_session
 
-    # 1. Outbound Status Returns
-    for ref_file in outbound_return_data.outbound_status_return_files:
-        try:
-            outbound_status_return.process_outbound_status_return(db_session, ref_file)
-        except Exception:
-            logger.exception(
-                "Fatal error while processing Outbound Status Return %s",
-                ref_file.file_location,
-                extra={"file_location", ref_file.file_location},
-            )
-            raise
-
-    # 2. Outbound Vendor Customer Returns
+    # 1. Outbound Vendor Customer Returns
+    # TODO: Outbound Vendor Customer Returns should not change the existing
+    #       state. Instead it should query for the current state and remain
+    #       in that state.
     for ref_file in outbound_return_data.outbound_vendor_customer_return_files:
         try:
             outbound_vendor_customer_return.process_outbound_vendor_customer_return(
@@ -145,6 +136,18 @@ def _process_outbound_returns(outbound_return_data: OutboundReturnData) -> None:
         except Exception:
             logger.exception(
                 "Fatal error while processing Outbound Vendor Return %s",
+                ref_file.file_location,
+                extra={"file_location", ref_file.file_location},
+            )
+            raise
+
+    # 2. Outbound Status Returns
+    for ref_file in outbound_return_data.outbound_status_return_files:
+        try:
+            outbound_status_return.process_outbound_status_return(db_session, ref_file)
+        except Exception:
+            logger.exception(
+                "Fatal error while processing Outbound Status Return %s",
                 ref_file.file_location,
                 extra={"file_location", ref_file.file_location},
             )

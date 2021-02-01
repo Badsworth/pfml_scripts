@@ -23,6 +23,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     EmployeeAddress,
     EmployeeReferenceFile,
+    Flow,
     GeoState,
     PaymentMethod,
     ReferenceFile,
@@ -233,6 +234,7 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                 )
             continue
 
+        employee_pfml_entry = None
         try:
             # Add / update entry on claim table
             validation_container, claim = create_or_update_claim(
@@ -240,9 +242,10 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             )
 
             # Update employee info
-            employee_pfml_entry = update_employee_info(
-                db_session, extract_data, requested_absence, claim, validation_container
-            )
+            if claim is not None:
+                employee_pfml_entry, has_vendor_update = update_employee_info(
+                    db_session, extract_data, requested_absence, claim, validation_container
+                )
         except Exception as e:
             # TODO - this should create a validation container and associate it with an
             #        unassociated employee state_log (see fineos_payment_export for similar logic for payments)
@@ -258,7 +261,11 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                 )
 
                 manage_state_log(
-                    db_session, extract_data, employee_pfml_entry, validation_container
+                    db_session,
+                    extract_data,
+                    employee_pfml_entry,
+                    validation_container,
+                    has_vendor_update,
                 )
 
                 updated_employee_ids.add(employee_pfml_entry.employee_id)
@@ -410,7 +417,8 @@ def update_employee_info(
     requested_absence: Dict[str, str],
     claim: Claim,
     validation_container: payments_util.ValidationContainer,
-) -> Optional[Employee]:
+) -> Tuple[Optional[Employee], bool]:
+    """Returns True if there is an address or EFT update; False otherwise"""
     fineos_customer_number = payments_util.validate_csv_input(
         "EMPLOYEE_CUSTOMERNO", requested_absence, validation_container, True
     )
@@ -440,7 +448,7 @@ def update_employee_info(
                 "fineos_customer_number": fineos_customer_number,
             },
         )
-        return None
+        return None, False
 
     employee_tax_identifier = payments_util.validate_csv_input(
         "NATINSNO", employee_feed_entry, validation_container, True
@@ -477,7 +485,7 @@ def update_employee_info(
         logger.exception(
             f"Employee in employee file with customer nbr {fineos_customer_number} not found in PFML DB."
         )
-        return None
+        return None, False
 
     # Use employee feed entry to update PFML DB
     date_of_birth = payments_util.validate_csv_input(
@@ -487,7 +495,7 @@ def update_employee_info(
     if date_of_birth is not None:
         employee_pfml_entry.date_of_birth = payments_util.datetime_str_to_date(date_of_birth)
 
-    update_mailing_address(
+    has_address_update = update_mailing_address(
         db_session, employee_feed_entry, employee_pfml_entry, validation_container
     )
 
@@ -508,7 +516,9 @@ def update_employee_info(
         except KeyError:
             pass
 
-    update_eft_info(db_session, employee_feed_entry, employee_pfml_entry, validation_container)
+    has_eft_update = update_eft_info(
+        db_session, employee_feed_entry, employee_pfml_entry, validation_container
+    )
 
     fineos_customer_number = payments_util.validate_csv_input(
         "CUSTOMERNO", employee_feed_entry, validation_container, True
@@ -544,7 +554,9 @@ def update_employee_info(
         db_session.add(employee_pfml_entry)
         db_session.add(claim)
 
-    return employee_pfml_entry
+    has_vendor_update = has_address_update or has_eft_update
+
+    return employee_pfml_entry, has_vendor_update
 
 
 def update_mailing_address(
@@ -552,7 +564,8 @@ def update_mailing_address(
     employee_feed_entry: Dict[str, str],
     employee_pfml_entry: Employee,
     validation_container: payments_util.ValidationContainer,
-) -> None:
+) -> bool:
+    """Return True if there are mailing address updates; False otherwise"""
     nbr_of_validation_errors = len(validation_container.validation_issues)
 
     address_line_one = payments_util.validate_csv_input(
@@ -590,7 +603,7 @@ def update_mailing_address(
         ctr_address_pair = employee_pfml_entry.ctr_address_pair
         if ctr_address_pair:
             if payments_util.is_same_address(ctr_address_pair.fineos_address, mailing_address):
-                return
+                return False
 
         new_ctr_address_pair = CtrAddressPair(fineos_address=mailing_address)
         employee_pfml_entry.ctr_address_pair = new_ctr_address_pair
@@ -601,6 +614,9 @@ def update_mailing_address(
         # We also want to make sure the address is linked in the EmployeeAddress table
         employee_address = EmployeeAddress(employee=employee_pfml_entry, address=mailing_address)
         db_session.add(employee_address)
+        return True
+
+    return False
 
 
 def update_eft_info(
@@ -608,7 +624,8 @@ def update_eft_info(
     employee_feed_entry: Dict[str, str],
     employee_pfml_entry: Employee,
     validation_container: payments_util.ValidationContainer,
-) -> None:
+) -> bool:
+    """Returns True if there have been EFT updates; False otherwise"""
     nbr_of_validation_errors = len(validation_container.validation_issues)
     eft_required = employee_pfml_entry.payment_method_id == ELECTRONIC_FUNDS_TRANSFER
 
@@ -634,15 +651,50 @@ def update_eft_info(
     )
 
     if eft_required and nbr_of_validation_errors == len(validation_container.validation_issues):
-        eft = employee_pfml_entry.eft
-        if not eft:
-            eft = EFT()
+        existing_eft = employee_pfml_entry.eft
+
+        new_eft = EFT()
         # Cast is to satisfy picky linting
-        eft.routing_nbr = cast(str, routing_nbr)
-        eft.account_nbr = cast(str, account_nbr)
-        eft.bank_account_type_id = BankAccountType.get_id(account_type)
-        db_session.add(eft)
-        employee_pfml_entry.eft = eft
+        new_eft.routing_nbr = cast(str, routing_nbr)
+        new_eft.account_nbr = cast(str, account_nbr)
+        new_eft.bank_account_type_id = BankAccountType.get_id(account_type)
+
+        current_vendor_eft_state = state_log_util.get_latest_state_log_in_flow(
+            employee_pfml_entry, Flow.VENDOR_EFT, db_session
+        )
+
+        # If the employee has no existing EFT, then we set it to the new one.
+        if not existing_eft:
+            employee_pfml_entry.eft = new_eft
+            db_session.add(new_eft)
+
+        # If there have been no changes to the EFT data, do nothing.
+        elif (
+            payments_util.is_same_eft(existing_eft, new_eft)
+            and current_vendor_eft_state is not None
+        ):
+            return False
+
+        # If there have been changes, update the existing EFT.
+        else:
+            employee_pfml_entry.eft.routing_nbr = new_eft.routing_nbr
+            employee_pfml_entry.eft.account_nbr = new_eft.account_nbr
+            employee_pfml_entry.eft.bank_account_type_id = new_eft.bank_account_type_id
+
+        # Only initiate the VENDOR_EFT flow if there have been changes OR
+        # If this employee has never been in the VENDOR_EFT flow before.
+        # The early return if is_same_eft() is True will prevent reaching
+        # this statement.
+        state_log_util.create_finished_state_log(
+            end_state=State.EFT_REQUEST_RECEIVED,
+            associated_model=employee_pfml_entry,
+            outcome=state_log_util.build_outcome(
+                f"Initiated VENDOR_EFT flow for Employee {employee_pfml_entry.employee_id}"
+            ),
+            db_session=db_session,
+        )
+        return True
+    return False
 
 
 def generate_employee_reference_file(
@@ -705,9 +757,15 @@ def manage_state_log(
     extract_data: ExtractData,
     employee_pfml_entry: Employee,
     validation_container: payments_util.ValidationContainer,
+    has_vendor_update: bool,
 ) -> None:
-
+    """Manages the VENDOR_CHECK states"""
     validation_container.record_key = employee_pfml_entry.employee_id
+    current_state = state_log_util.get_latest_state_log_in_flow(
+        employee_pfml_entry, Flow.VENDOR_CHECK, db_session
+    )
+
+    # If there are validation issues, add to vendor export error report.
     if validation_container.has_validation_issues():
         state_log_util.create_finished_state_log(
             end_state=State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT,
@@ -718,7 +776,10 @@ def manage_state_log(
             ),
             db_session=db_session,
         )
-    else:
+
+    # If there are MMARS-relevant vendor updates OR the employee has not been
+    # through in the VENDOR_CHECK flow before, restart VENDOR_CHECK flow.
+    elif has_vendor_update or current_state is None:
         state_log_util.create_finished_state_log(
             end_state=State.IDENTIFY_MMARS_STATUS,
             associated_model=employee_pfml_entry,
@@ -728,15 +789,18 @@ def manage_state_log(
             db_session=db_session,
         )
 
-        if (
-            employee_pfml_entry.eft
-            and employee_pfml_entry.payment_method_id == PaymentMethod.ACH.payment_method_id
-        ):
+    # It's most likely unsafe to move to a new state, because it could be
+    # in-progress. Safer to move to the same state and add a note.
+    else:
+        # Adding check for typing. This should never happen in practice.
+        if current_state.end_state is None:
+            logger.error("An unexpected error occurred where the latest state_log has no end_state")
+        else:
             state_log_util.create_finished_state_log(
-                end_state=State.EFT_REQUEST_RECEIVED,
+                end_state=current_state.end_state,
                 associated_model=employee_pfml_entry,
                 outcome=state_log_util.build_outcome(
-                    f"Initiated VENDOR_EFT flow for Employee {employee_pfml_entry.employee_id} from FINEOS vendor export {extract_data.date_str}"
+                    f"No changes to employee {employee_pfml_entry.employee_id} successfully extracted from FINEOS vendor export {extract_data.date_str}"
                 ),
                 db_session=db_session,
             )

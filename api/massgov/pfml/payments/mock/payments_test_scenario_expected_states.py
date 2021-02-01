@@ -137,22 +137,21 @@ SCENARIO_EXPECTED_STATES.extend(
     )
 )
 
-# TODO enable once this state workflow is available
-# SCENARIO_EXPECTED_STATES.extend(
-#     generate_expected_state_for_scenarios(
-#         ScenarioStage.CTR_EXPORT_VCC,
-#         AssociatedClass.EMPLOYEE,
-#         State.EFT_PENDING,
-#         [
-#             ScenarioName.SCENARIO_C,
-#             ScenarioName.SCENARIO_D,
-#             ScenarioName.SCENARIO_Q,
-#             ScenarioName.SCENARIO_W,
-#             ScenarioName.SCENARIO_X,
-#             ScenarioName.SCENARIO_Y,
-#         ],
-#     )
-# )
+SCENARIO_EXPECTED_STATES.extend(
+    generate_expected_state_for_scenarios(
+        ScenarioStage.CTR_EXPORT_VCC,
+        AssociatedClass.EMPLOYEE,
+        State.EFT_PENDING,
+        [
+            ScenarioName.SCENARIO_C,
+            ScenarioName.SCENARIO_D,
+            ScenarioName.SCENARIO_Q,
+            ScenarioName.SCENARIO_W,
+            ScenarioName.SCENARIO_X,
+            ScenarioName.SCENARIO_Y,
+        ],
+    )
+)
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
@@ -237,19 +236,14 @@ SCENARIO_EXPECTED_STATES.extend(
     )
 )
 
-# TODO enable once this state workflow is available
-# SCENARIO_EXPECTED_STATES.extend(
-#     generate_expected_state_for_scenarios(
-#         ScenarioStage.CTR_EXPORT_GAX,
-#         AssociatedClass.EMPLOYEE,
-#         State.EFT_PENDING,
-#         [
-#             ScenarioName.SCENARIO_C,
-#             ScenarioName.SCENARIO_D,
-#             ScenarioName.SCENARIO_Q,
-#         ],
-#     )
-# )
+SCENARIO_EXPECTED_STATES.extend(
+    generate_expected_state_for_scenarios(
+        ScenarioStage.CTR_EXPORT_GAX,
+        AssociatedClass.EMPLOYEE,
+        State.EFT_PENDING,
+        [ScenarioName.SCENARIO_C, ScenarioName.SCENARIO_D, ScenarioName.SCENARIO_Q,],
+    )
+)
 
 SCENARIO_EXPECTED_STATES.extend(
     generate_expected_state_for_scenarios(
@@ -270,16 +264,14 @@ SCENARIO_EXPECTED_STATES.extend(
 )
 
 # TODO enable once this state workflow is available
-# SCENARIO_EXPECTED_STATES.extend(
-#     generate_expected_state_for_scenarios(
-#         ScenarioStage.CTR_EXPORT_GAX,
-#         AssociatedClass.EMPLOYEE,
-#         State.VCC_ERROR_REPORT_SENT,
-#         [
-#             ScenarioName.SCENARIO_M,
-#         ],
-#     )
-# )
+SCENARIO_EXPECTED_STATES.extend(
+    generate_expected_state_for_scenarios(
+        ScenarioStage.CTR_EXPORT_GAX,
+        AssociatedClass.EMPLOYEE,
+        State.VCC_ERROR_REPORT_SENT,
+        [ScenarioName.SCENARIO_M,],
+    )
+)
 
 # Payment States
 

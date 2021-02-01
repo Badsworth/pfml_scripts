@@ -52,6 +52,7 @@ def generate_extracted_payment(test_db_session):
         fineos_pei_c_value=EXTRACTED_WRITEBACK_RECORD_PEI_C_VALUE,
         fineos_pei_i_value=EXTRACTED_WRITEBACK_RECORD_PEI_I_VALUE,
         fineos_extraction_date=PENDING_WRITEBACK_EXTRACTION_DATE,
+        has_address_update=True,
     )
     setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
@@ -468,11 +469,13 @@ def test_writeback_files_uploaded_to_s3(
     )
 
 
-def test_after_vendor_check_initiated_logs_error_for_existing_employee_state_log(
+def test_after_vendor_check_initiated_no_updates(
     test_db_session, initialize_factories_session, caplog
 ):
     # Create a payment associated with an employee with a StateLog in a non-restartable state.
     payment = generate_extracted_payment(test_db_session)
+    payment.has_address_update = False
+    payment.has_eft_update = False
     state_log_util.create_finished_state_log(
         associated_model=payment.claim.employee,
         end_state=State.ADD_TO_VCM_REPORT,
@@ -490,9 +493,12 @@ def test_after_vendor_check_initiated_logs_error_for_existing_employee_state_log
     )
     assert len(employee_state_logs_before) == 1
 
-    caplog.set_level(logging.WARNING)  # noqa: B1
+    caplog.set_level(logging.INFO)  # noqa: B1
     writeback._after_vendor_check_initiated(payment, test_db_session)
-    assert "Files are already in flight to CTR. Not sure what to do." in caplog.text
+    assert (
+        f"Payment (C: {payment.fineos_pei_c_value}, I: {payment.fineos_pei_i_value}) has no address or EFT updates. Not initiating VENDOR_CHECK flow."
+        in caplog.text
+    )
 
     employee_state_logs_after = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,

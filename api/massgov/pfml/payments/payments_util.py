@@ -25,6 +25,7 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.lookup import LookupTable
 from massgov.pfml.db.models.employees import (
+    EFT,
     Address,
     ClaimType,
     CtrBatchIdentifier,
@@ -61,26 +62,38 @@ class Constants:
     S3_INBOUND_PROCESSED_DIR = "processed"
     S3_INBOUND_ERROR_DIR = "error"
 
-    # Metadata for Employee-related States
-    RESTARTABLE_EMPLOYEE_STATES = [
+    # === Metadata for states in the VENDOR_CHECK flow ===
+    # Employees might need to be restarted in the VENDOR_CHECK flow in the
+    # following cases (not exhaustive):
+    # - a payment arrives
+    # - an employee submits a claim for first employer and then submits a
+    #   claim for their second employer
+    # - an employee submits multiple different types of claims
+
+    # These states are restartable.
+    RESTARTABLE_VENDOR_CHECK_STATES = [
         State.VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT.state_id,
         State.VENDOR_EXPORT_ERROR_REPORT_SENT.state_id,
         State.VENDOR_CHECK_INITIATED_BY_PAYMENT_EXPORT.state_id,
         State.IDENTIFY_MMARS_STATUS.state_id,
         State.MMARS_STATUS_CONFIRMED.state_id,
         State.VCM_REPORT_SENT.state_id,
-        # State.VCC_SENT.state_id,
         State.VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED.state_id,
         State.VCC_ERROR_REPORT_SENT.state_id,
     ]
 
     # At the end of a full ECS task run, no employees should be in these
     # states. If they are, something went wrong during the ECS task
-    MID_TASK_EMPLOYEE_STATES = [
+    MID_TASK_VENDOR_CHECK_STATES = [
         State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT.state_id,
         State.ADD_TO_VCM_REPORT.state_id,
         State.ADD_TO_VCC.state_id,
         State.ADD_TO_VCC_ERROR_REPORT.state_id,
+    ]
+
+    # These states are not restartable.
+    NOT_RESTARTABLE_VENDOR_CHECK_STATES = [
+        State.VCC_SENT.state_id,
     ]
 
 
@@ -668,6 +681,11 @@ def compare_address_fields(first: Address, second: Address, field: str) -> bool:
     if type(value2) is str:
         value2 = value2.strip().lower()
 
+    if value1 is None:
+        value1 = ""
+    if value2 is None:
+        value2 = ""
+
     return value1 == value2
 
 
@@ -679,6 +697,18 @@ def is_same_address(first: Address, second: Address) -> bool:
         and compare_address_fields(first, second, "geo_state_id")
         and compare_address_fields(first, second, "country_id")
         and compare_address_fields(first, second, "address_line_two")
+    ):
+        return True
+    else:
+        return False
+
+
+def is_same_eft(first: EFT, second: EFT) -> bool:
+    """Returns true if all EFT fields match"""
+    if (
+        first.routing_nbr == second.routing_nbr
+        and first.account_nbr == second.account_nbr
+        and first.bank_account_type_id == second.bank_account_type_id
     ):
         return True
     else:
@@ -870,6 +900,14 @@ def move_reference_file(
         ref_file.file_location = new_location
         db_session.add(ref_file)
         db_session.commit()
+        logger.info(
+            "Successfully moved Reference File",
+            extra={
+                "file_location": ref_file.file_location,
+                "src_dir": src_dir,
+                "dest_dir": dest_dir,
+            },
+        )
     except SQLAlchemyError:
         # Rollback the database transaction
         db_session.rollback()

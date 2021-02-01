@@ -8,6 +8,7 @@ from sqlalchemy import func
 import massgov.pfml.payments.fineos_vendor_export as vendor_export
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
+from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     BankAccountType,
@@ -15,6 +16,7 @@ from massgov.pfml.db.models.employees import (
     ClaimType,
     Employee,
     EmployeeLog,
+    Flow,
     GeoState,
     PaymentMethod,
     ReferenceFileType,
@@ -22,7 +24,10 @@ from massgov.pfml.db.models.employees import (
     StateLog,
 )
 from massgov.pfml.db.models.factories import (
+    AddressFactory,
     ClaimFactory,
+    CtrAddressPairFactory,
+    EftFactory,
     EmployeeFactory,
     EmployerFactory,
     ReferenceFileFactory,
@@ -204,6 +209,9 @@ def test_process_vendor_extract_data_no_employee(
 
     assert claim is None
 
+    state_logs = test_db_session.query(StateLog).all()
+    assert len(state_logs) == 0
+
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
 
@@ -379,7 +387,7 @@ def test_update_employee_info_happy_path(
     absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
     validation_container = payments_util.ValidationContainer(record_key=absence_case_id)
 
-    employee = vendor_export.update_employee_info(
+    employee, has_vendor_update = vendor_export.update_employee_info(
         test_db_session, extract_data, requested_absence, formatted_claim, validation_container
     )
 
@@ -387,6 +395,7 @@ def test_update_employee_info_happy_path(
     assert employee is not None
     assert employee.date_of_birth == datetime.date(1967, 4, 27)
     assert employee.payment_method_id == PaymentMethod.ACH.payment_method_id
+    assert has_vendor_update is True
 
 
 def test_update_employee_info_not_in_db(
@@ -401,11 +410,12 @@ def test_update_employee_info_not_in_db(
     absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
     validation_container = payments_util.ValidationContainer(record_key=absence_case_id)
 
-    employee = vendor_export.update_employee_info(
+    employee, has_vendor_update = vendor_export.update_employee_info(
         test_db_session, extract_data, requested_absence, formatted_claim, validation_container
     )
 
     assert employee is None
+    assert has_vendor_update is False
 
 
 def test_update_mailing_address_happy_path(test_db_session, initialize_factories_session):
@@ -419,7 +429,7 @@ def test_update_mailing_address_happy_path(test_db_session, initialize_factories
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    vendor_export.update_mailing_address(
+    has_address_update = vendor_export.update_mailing_address(
         test_db_session, feed_entry, employee, validation_container
     )
 
@@ -432,6 +442,7 @@ def test_update_mailing_address_happy_path(test_db_session, initialize_factories
     assert updated_employee.ctr_address_pair.fineos_address.city == "New York"
     assert updated_employee.ctr_address_pair.fineos_address.geo_state_id == GeoState.NY.geo_state_id
     assert updated_employee.ctr_address_pair.fineos_address.zip_code == "11020"
+    assert has_address_update is True
 
 
 def test_process_extract_unprocessed_folder_files(
@@ -529,7 +540,7 @@ def test_update_mailing_address_validation_issues(test_db_session, initialize_fa
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    vendor_export.update_mailing_address(
+    has_address_update = vendor_export.update_mailing_address(
         test_db_session, feed_entry, employee, validation_container
     )
 
@@ -538,8 +549,8 @@ def test_update_mailing_address_validation_issues(test_db_session, initialize_fa
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 1
-
     assert updated_employee.ctr_address_pair is None
+    assert has_address_update is False
 
     # Invalid Geo State Code
     feed_entry = {
@@ -551,7 +562,7 @@ def test_update_mailing_address_validation_issues(test_db_session, initialize_fa
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    vendor_export.update_mailing_address(
+    has_address_update = vendor_export.update_mailing_address(
         test_db_session, feed_entry, employee, validation_container
     )
 
@@ -560,8 +571,8 @@ def test_update_mailing_address_validation_issues(test_db_session, initialize_fa
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 1
-
     assert updated_employee.ctr_address_pair is None
+    assert has_address_update is False
 
     # Missing address line 1 and incorrect Geo State Code
     feed_entry = {
@@ -573,7 +584,7 @@ def test_update_mailing_address_validation_issues(test_db_session, initialize_fa
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    vendor_export.update_mailing_address(
+    has_address_update = vendor_export.update_mailing_address(
         test_db_session, feed_entry, employee, validation_container
     )
 
@@ -582,17 +593,21 @@ def test_update_mailing_address_validation_issues(test_db_session, initialize_fa
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 2
-
     assert updated_employee.ctr_address_pair is None
+    assert has_address_update is False
 
 
 def test_update_eft_info_happy_path(test_db_session, initialize_factories_session):
-    employee = EmployeeFactory(payment_method_id=PaymentMethod.ACH.payment_method_id)
+    employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
+
+    assert employee.eft is None
 
     eft_entry = {"SORTCODE": "123456789", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    vendor_export.update_eft_info(test_db_session, eft_entry, employee, validation_container)
+    has_eft_update = vendor_export.update_eft_info(
+        test_db_session, eft_entry, employee, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
@@ -603,6 +618,136 @@ def test_update_eft_info_happy_path(test_db_session, initialize_factories_sessio
     assert (
         updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
     )
+    assert has_eft_update is True
+
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        employee, Flow.VENDOR_EFT, test_db_session
+    )
+    assert state_log
+    assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
+
+
+def test_update_eft_info_update_existing(test_db_session, initialize_factories_session):
+    employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
+    eft = EftFactory.create()
+    employee.eft = eft
+    test_db_session.add(employee)
+    test_db_session.add(eft)
+    test_db_session.commit()
+
+    assert employee.eft is not None
+
+    eft_entry = {"SORTCODE": "123456789", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
+    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
+
+    has_eft_update = vendor_export.update_eft_info(
+        test_db_session, eft_entry, employee, validation_container
+    )
+
+    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
+        Employee.employee_id == employee.employee_id
+    ).one_or_none()
+
+    assert updated_employee.eft.eft_id == eft.eft_id
+    assert updated_employee.eft.routing_nbr == "123456789"
+    assert updated_employee.eft.account_nbr == "123456789"
+    assert (
+        updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+    )
+    assert has_eft_update is True
+
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        employee, Flow.VENDOR_EFT, test_db_session
+    )
+    assert state_log
+    assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
+
+
+def test_update_eft_info_is_same_eft_no_prior_state(test_db_session, initialize_factories_session):
+    employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
+    eft = EftFactory.create()
+    employee.eft = eft
+    test_db_session.add(employee)
+    test_db_session.add(eft)
+    test_db_session.commit()
+
+    assert employee.eft is not None
+
+    eft_entry = {
+        "SORTCODE": eft.routing_nbr,
+        "ACCOUNTNO": eft.account_nbr,
+        "ACCOUNTTYPE": eft.bank_account_type.bank_account_type_description,
+    }
+    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
+
+    has_eft_update = vendor_export.update_eft_info(
+        test_db_session, eft_entry, employee, validation_container
+    )
+
+    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
+        Employee.employee_id == employee.employee_id
+    ).one_or_none()
+
+    assert updated_employee.eft.eft_id == eft.eft_id
+    assert updated_employee.eft.routing_nbr == eft.routing_nbr
+    assert updated_employee.eft.account_nbr == eft.account_nbr
+    assert (
+        updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+    )
+    assert has_eft_update is True
+
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        employee, Flow.VENDOR_EFT, test_db_session
+    )
+    assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
+
+
+def test_update_eft_info_is_same_eft_has_prior_eft_state(
+    test_db_session, initialize_factories_session
+):
+    employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
+    eft = EftFactory.create()
+    employee.eft = eft
+    test_db_session.add(employee)
+    test_db_session.add(eft)
+    test_db_session.commit()
+
+    assert employee.eft is not None
+
+    eft_entry = {
+        "SORTCODE": eft.routing_nbr,
+        "ACCOUNTNO": eft.account_nbr,
+        "ACCOUNTTYPE": eft.bank_account_type.bank_account_type_description,
+    }
+    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
+
+    state_log_util.create_finished_state_log(
+        associated_model=employee,
+        end_state=State.EFT_PENDING,
+        outcome=state_log_util.build_outcome("Foo"),
+        db_session=test_db_session,
+    )
+
+    has_eft_update = vendor_export.update_eft_info(
+        test_db_session, eft_entry, employee, validation_container
+    )
+
+    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
+        Employee.employee_id == employee.employee_id
+    ).one_or_none()
+
+    assert updated_employee.eft.eft_id == eft.eft_id
+    assert updated_employee.eft.routing_nbr == eft.routing_nbr
+    assert updated_employee.eft.account_nbr == eft.account_nbr
+    assert (
+        updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+    )
+    assert has_eft_update is False
+
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        employee, Flow.VENDOR_EFT, test_db_session
+    )
+    assert state_log.end_state_id == State.EFT_PENDING.state_id
 
 
 def test_update_eft_info_validation_issues(test_db_session, initialize_factories_session):
@@ -612,15 +757,17 @@ def test_update_eft_info_validation_issues(test_db_session, initialize_factories
     eft_entry = {"SORTCODE": "12345678", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    vendor_export.update_eft_info(test_db_session, eft_entry, employee, validation_container)
+    has_eft_update = vendor_export.update_eft_info(
+        test_db_session, eft_entry, employee, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 1
-
     assert updated_employee.eft is None
+    assert has_eft_update is False
 
     # Account number incorrect length.
     eft_entry = {
@@ -630,15 +777,17 @@ def test_update_eft_info_validation_issues(test_db_session, initialize_factories
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    vendor_export.update_eft_info(test_db_session, eft_entry, employee, validation_container)
+    has_eft_update = vendor_export.update_eft_info(
+        test_db_session, eft_entry, employee, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 1
-
     assert updated_employee.eft is None
+    assert has_eft_update is False
 
     # Account type incorrect.
     eft_entry = {
@@ -648,15 +797,17 @@ def test_update_eft_info_validation_issues(test_db_session, initialize_factories
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    vendor_export.update_eft_info(test_db_session, eft_entry, employee, validation_container)
+    has_eft_update = vendor_export.update_eft_info(
+        test_db_session, eft_entry, employee, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 1
-
     assert updated_employee.eft is None
+    assert has_eft_update is False
 
     # Account type and Routing number incorrect.
     eft_entry = {
@@ -666,12 +817,107 @@ def test_update_eft_info_validation_issues(test_db_session, initialize_factories
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    vendor_export.update_eft_info(test_db_session, eft_entry, employee, validation_container)
+    has_eft_update = vendor_export.update_eft_info(
+        test_db_session, eft_entry, employee, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 2
-
     assert updated_employee.eft is None
+    assert has_eft_update is False
+
+
+# TODO: Add test if there are no validation issues with EFT
+def test_process_records_to_db_validation_issues(
+    test_db_session, initialize_factories_session, formatted_claim
+):
+    # Setup
+    extract_data, requested_absence = format_absence_data()
+    add_employee_feed(extract_data)
+    # Create some validation issues
+    extract_data.employee_feed.indexed_data["12345"]["SORTCODE"] = ""
+    requested_absence["ABSENCEPERIOD_END"] = ""
+    extract_data.requested_absence_info = vendor_export.Extract("test/location/requested_absence")
+    extract_data.requested_absence_info.indexed_data["NTN-001-ABS-01"] = requested_absence
+
+    tax_identifier = TaxIdentifierFactory(tax_identifier="123456789")
+    EmployeeFactory(tax_identifier=tax_identifier)
+
+    # Run the process
+    vendor_export.process_records_to_db(extract_data, test_db_session)
+
+    # Verify the state logs
+    state_logs = test_db_session.query(StateLog).all()
+    assert len(state_logs) == 1
+
+    state_log = state_logs[0]
+    assert state_log.end_state_id == State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT.state_id
+
+
+def test_process_records_to_db_no_vendor_updates_has_prior_eft_state(
+    test_db_session, initialize_factories_session, formatted_claim
+):
+    # Setup
+    extract_data, requested_absence = format_absence_data()
+    add_employee_feed(extract_data)
+    extract_data.requested_absence_info = vendor_export.Extract("test/location/requested_absence")
+    extract_data.requested_absence_info.indexed_data["NTN-001-ABS-01"] = requested_absence
+
+    # Create an employee with address and EFT that exactly matches the input
+    # Make the DOB different. That should not trigger the VENDOR_CHECK state change
+    tax_identifier = TaxIdentifierFactory.create(tax_identifier="123456789")
+    eft = EftFactory.create(
+        routing_nbr=extract_data.employee_feed.indexed_data["12345"]["SORTCODE"],
+        account_nbr=extract_data.employee_feed.indexed_data["12345"]["ACCOUNTNO"],
+        bank_account_type_id=2,
+    )
+    address = AddressFactory.create(
+        address_line_one=extract_data.employee_feed.indexed_data["12345"]["ADDRESS1"],
+        address_line_two=extract_data.employee_feed.indexed_data["12345"]["ADDRESS2"],
+        city=extract_data.employee_feed.indexed_data["12345"]["ADDRESS4"],
+        geo_state_id=GeoState.NY.geo_state_id,
+        zip_code=extract_data.employee_feed.indexed_data["12345"]["POSTCODE"],
+    )
+    ctr_address_pair = CtrAddressPairFactory.create(fineos_address=address,)
+    employee = EmployeeFactory.create(
+        tax_identifier=tax_identifier,
+        date_of_birth="1967-04-27",
+        eft=eft,
+        ctr_address_pair=ctr_address_pair,
+    )
+
+    # Create a statelog for this employee to verify the state doesn't change
+    state_log_util.create_finished_state_log(
+        associated_model=employee,
+        end_state=State.VCC_ERROR_REPORT_SENT,
+        outcome=state_log_util.build_outcome("Foo"),
+        db_session=test_db_session,
+    )
+
+    # Create a state log for the VENDOR_EFT flow
+    state_log_util.create_finished_state_log(
+        associated_model=employee,
+        end_state=State.EFT_PENDING,
+        outcome=state_log_util.build_outcome("Foo"),
+        db_session=test_db_session,
+    )
+
+    # Verify the state log
+    state_logs = test_db_session.query(StateLog).all()
+    assert len(state_logs) == 2
+
+    # Run the process
+    vendor_export.process_records_to_db(extract_data, test_db_session)
+
+    # Verify both state logs are in the same state
+    state_logs = test_db_session.query(StateLog).all()
+    assert len(state_logs) == 3
+
+    for state_log in state_logs:
+        assert state_log.end_state_id in [
+            State.VCC_ERROR_REPORT_SENT.state_id,
+            State.EFT_PENDING.state_id,
+        ]

@@ -362,13 +362,37 @@ def _run_post_writeback_hooks(
 def _after_vendor_check_initiated(payment: Payment, db_session: db.Session) -> None:
     employee = payment.claim.employee
 
+    # Skip if there are no address or EFT updates
+    if not payment.has_address_update and not payment.has_eft_update:
+        logger.info(
+            "Payment (C: %s, I: %s) has no address or EFT updates. Not initiating VENDOR_CHECK flow.",
+            payment.fineos_pei_c_value,
+            payment.fineos_pei_i_value,
+            extra={
+                "fineos_pei_c_value": payment.fineos_pei_c_value,
+                "fineos_pei_i_value": payment.fineos_pei_i_value,
+            },
+        )
+        return
+
+    # Get the latest state log for the employee
     latest_state_log = state_log_util.get_latest_state_log_in_flow(
         employee, Flow.VENDOR_CHECK, db_session
     )
 
-    if latest_state_log is None or (
-        latest_state_log.end_state
-        and latest_state_log.end_state.state_id in Constants.RESTARTABLE_EMPLOYEE_STATES
+    # An employee can only be restarted in the VENDOR_CHECK flow if:
+    # 1. The employee has never been through the VENDOR_CHECK flow (unlikely)
+    # 2. The employee is in a restartable state in the VENDOR_CHECK flow
+    # 3. The employee is not in a restartable state BUT this payment includes
+    #    either an address or payment update
+    if (
+        latest_state_log is None
+        or (
+            latest_state_log.end_state
+            and latest_state_log.end_state.state_id in Constants.RESTARTABLE_VENDOR_CHECK_STATES
+        )
+        or payment.has_address_update
+        or payment.has_eft_update
     ):
         state_log_util.create_finished_state_log(
             associated_model=employee,
@@ -379,7 +403,9 @@ def _after_vendor_check_initiated(payment: Payment, db_session: db.Session) -> N
             db_session=db_session,
         )
     else:
-        logger.warning(
-            "Files are already in flight to CTR. Not sure what to do.",
+        # This should never happen. If it does, it means that something went
+        # wrong.
+        logger.error(
+            "Vendor files are already in flight to CTR. This case should not have happened.",
             extra={"employee_id": employee.employee_id},
         )

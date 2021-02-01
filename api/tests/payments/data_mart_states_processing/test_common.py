@@ -534,6 +534,39 @@ def test_process_data_mart_issues_no_vendor(test_db_session, initialize_factorie
     )
 
 
+def test_process_data_mart_issues_no_vendor_but_has_been_in_vcc(
+    test_db_session, initialize_factories_session
+):
+    state_log_setup_result = setup_state_log(
+        state_log_util.AssociatedClass.EMPLOYEE, [State.VCC_SENT], test_db_session,
+    )
+    employee = state_log_setup_result.associated_model
+
+    # signal couldn't find vendor
+    issues = common.DataMartIssuesAndUpdates(vendor_exists=False)
+
+    state_log_count_before = test_db_session.query(StateLog).count()
+    assert state_log_count_before == 1
+
+    common.process_data_mart_issues(
+        test_db_session,
+        State.IDENTIFY_MMARS_STATUS,
+        employee,
+        issues,
+        missing_vendor_state=State.ADD_TO_VCC,
+        mismatched_data_state=State.ADD_TO_VCM_REPORT,
+    )
+
+    state_logs_after = test_db_session.query(StateLog).order_by(StateLog.ended_at.asc()).all()
+    assert len(state_logs_after) == 2
+
+    state_log = state_logs_after[1]
+    assert state_log.end_state_id == State.ADD_TO_VCM_REPORT.state_id
+    assert state_log.outcome == state_log_util.build_outcome(
+        "Queried Data Mart: Vendor does not exist yet, but already sent in a previous VCC"
+    )
+
+
 def test_process_data_mart_issues_mismatched_data(test_db_session, initialize_factories_session):
     employee = setup_db_for_state_log(associated_class=state_log_util.AssociatedClass.EMPLOYEE)
 
@@ -592,7 +625,9 @@ def test_process_data_mart_issues_no_issues_no_pending_payment(
 
     state_log = state_logs_after[0]
     assert state_log.end_state_id == State.MMARS_STATUS_CONFIRMED.state_id
-    assert state_log.outcome == state_log_util.build_outcome("Vendor confirmed in MMARS.")
+    assert state_log.outcome == state_log_util.build_outcome(
+        "Queried Data Mart: Vendor confirmed in MMARS."
+    )
 
 
 def test_process_data_mart_issues_no_issues_pending_payment_updated(

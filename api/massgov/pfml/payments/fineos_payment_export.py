@@ -437,7 +437,12 @@ def get_employee_and_claim(
 
 def update_ctr_address_pair_fineos_address(
     payment_data: PaymentData, employee: Employee, db_session: db.Session
-) -> None:
+) -> bool:
+    """Create or update the employee's EFT record
+
+    Returns:
+        bool: True if payment_data has address updates; False otherwise
+    """
     # Construct an Address from the payment_data
     payment_data_address = Address(
         address_line_one=payment_data.address_line_one,
@@ -454,7 +459,7 @@ def update_ctr_address_pair_fineos_address(
     ctr_address_pair = employee.ctr_address_pair
     if ctr_address_pair:
         if payments_util.is_same_address(ctr_address_pair.fineos_address, payment_data_address):
-            return
+            return False
 
     new_ctr_address_pair = CtrAddressPair(fineos_address=payment_data_address)
     employee.ctr_address_pair = new_ctr_address_pair
@@ -465,6 +470,7 @@ def update_ctr_address_pair_fineos_address(
     # We also want to make sure the address is linked in the EmployeeAddress table
     employee_address = EmployeeAddress(employee=employee, address=payment_data_address)
     db_session.add(employee_address)
+    return True
 
 
 def create_or_update_payment(
@@ -506,26 +512,52 @@ def create_or_update_payment(
     return payment
 
 
-def update_eft(payment_data: PaymentData, employee: Employee, db_session: db.Session) -> None:
+def update_eft(payment_data: PaymentData, employee: Employee, db_session: db.Session) -> bool:
+    """Create or update the employee's EFT record
+
+    Returns:
+        bool: True if the payment_data includes EFT updates; False otherwise
+    """
+
     # Only update if the employee is using ACH for payments
     if payment_data.raw_payment_method != PaymentMethod.ACH.payment_method_description:
         # We deliberately do not delete an EFT record in the case they switched from
         # EFT to Check for payment method. In the event they switch back, we'll update accordingly later.
-        return
+        return False
 
-    eft = employee.eft
+    # Need to cast these values as str rather than Optional[str] as we've
+    # already validated they're not None for linting
+    routing_nbr = cast(str, payment_data.routing_nbr)
+    account_nbr = cast(str, payment_data.account_nbr)
+    bank_account_type_id = BankAccountType.get_id(payment_data.raw_account_type)
 
-    if not eft:
-        eft = EFT()
+    # Construct an EFT object.
+    new_eft = EFT(
+        routing_nbr=routing_nbr, account_nbr=account_nbr, bank_account_type_id=bank_account_type_id
+    )
 
-    # Need to cast these values as str rather than Optional[str]
-    # as we've already validated they're not None for linting
-    eft.routing_nbr = cast(str, payment_data.routing_nbr)
-    eft.account_nbr = cast(str, payment_data.account_nbr)
-    eft.bank_account_type_id = BankAccountType.get_id(payment_data.raw_account_type)
+    # Retrieve the employee's existing EFT data, if any
+    existing_eft = employee.eft
 
-    employee.eft = eft
-    db_session.add(eft)
+    # If the employee has no existing EFT data, set it to the new data
+    if not existing_eft:
+        employee.eft = new_eft
+        db_session.add(new_eft)
+        return True
+
+    # If the employee's existing EFT data is the same as the new data, then
+    # do nothing
+    elif payments_util.is_same_eft(existing_eft, new_eft):
+        return False
+
+    # If the employee's existing EFT data is NOT the same as the new data,
+    # then overwrite the old data
+    else:
+        existing_eft.routing_nbr = routing_nbr
+        existing_eft.account_nbr = account_nbr
+        existing_eft.bank_account_type_id = bank_account_type_id
+        db_session.add(existing_eft)
+        return True
 
 
 def process_payment_data_record(
@@ -541,11 +573,23 @@ def process_payment_data_record(
     claim = cast(Claim, claim)
 
     # Update the mailing address with values from FINEOS
-    update_ctr_address_pair_fineos_address(payment_data, employee, db_session)
+    has_address_update = update_ctr_address_pair_fineos_address(payment_data, employee, db_session)
+
     # Update the EFT info with values from FINEOS
-    update_eft(payment_data, employee, db_session)
+    has_eft_update = update_eft(payment_data, employee, db_session)
+
     # Create the payment record
     payment = create_or_update_payment(payment_data, claim, db_session)
+
+    # Specify whether the Payment has an EFT update
+    # This gets used later in the pipeline (such as during the PEI Writeback
+    # step)
+    payment.has_address_update = has_address_update
+
+    # Specify whether the Payment has an EFT update
+    # This gets used later in the pipeline (such as during the PEI Writeback
+    # step)
+    payment.has_eft_update = has_eft_update
 
     # Link the payment object to the payment_reference_file
     payment_reference_file = PaymentReferenceFile(payment=payment, reference_file=reference_file,)
@@ -597,17 +641,16 @@ def _setup_state_log(
             db_session=db_session,
         )
 
-        if was_successful:
+        if was_successful and payment.has_eft_update and payment.claim and payment.claim.employee:
             employee = payment.claim.employee
-            if employee.eft and employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
-                state_log_util.create_finished_state_log(
-                    end_state=State.EFT_REQUEST_RECEIVED,
-                    associated_model=employee,
-                    outcome=state_log_util.build_outcome(
-                        f"Initiated VENDOR_EFT flow for Employee {employee.employee_id} from FINEOS payment export"
-                    ),
-                    db_session=db_session,
-                )
+            state_log_util.create_finished_state_log(
+                end_state=State.EFT_REQUEST_RECEIVED,
+                associated_model=employee,
+                outcome=state_log_util.build_outcome(
+                    f"Initiated VENDOR_EFT flow for Employee {employee.employee_id} from FINEOS payment export"
+                ),
+                db_session=db_session,
+            )
 
     else:
         # In the most problematic cases, the state log

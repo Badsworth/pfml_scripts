@@ -451,6 +451,8 @@ class Payment(Base):
     disb_check_eft_issue_date = Column(Date)
     disb_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     disb_amount = Column(Numeric(asdecimal=True))
+    has_address_update = Column(Boolean, default=False, server_default="FALSE", nullable=False)
+    has_eft_update = Column(Boolean, default=False, server_default="FALSE", nullable=False)
 
     claim = relationship(Claim)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)

@@ -365,6 +365,19 @@ def build_vcc_dat(
                 employee.fineos_customer_number,
                 extra={"fineos_customer_number": employee.fineos_customer_number},
             )
+
+            # If an employee has already been added to a VCC, don't add them
+            # again. The only legitimate case where an employee can be added
+            # to multiple VCCs is if the BIEVNT was not created in time and
+            # we need to recreate the VCC.
+            if state_log_util.has_been_in_end_state(employee, db_session, State.VCC_SENT):
+                logger.warning(
+                    "Employee with customer number %s has already been added to a VCC.",
+                    employee.fineos_customer_number,
+                    extra={"fineos_customer_number": employee.fineos_customer_number},
+                )
+                continue
+
             doc_count = count + doc_count_offset
             if doc_count > MAX_VCC_DOCUMENTS_PER_DAY:
                 logger.error(
