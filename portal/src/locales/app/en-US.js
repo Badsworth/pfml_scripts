@@ -548,6 +548,10 @@ const shared = {
   amountPerFrequency_monthly: "{{amount, currency}} per month",
   amountPerFrequency_weekly: "{{amount, currency}} per week",
   backToLoginLink: "Back to log in",
+  bondingRegsLeavePeriodDetailsLabel:
+    "Do you work in an acute care hospital or the teaching hospital of the University of Massachusetts Medical School?",
+  bondingRegsLeavePeriodDetailsSummary:
+    "If you had a child join your family in 2020, you may be eligible for paid leave anytime in 2021. <emergency-bonding-regs-worker-link>Learn more about emergency Covid-19 regulations for hospital workers.</emergency-bonding-regs-worker-link>.",
   choiceNo: "No",
   choicePendingOtherIncomes:
     "I’ve applied for another benefit that hasn’t been approved$t(chars.nbsp)yet.",
@@ -944,6 +948,9 @@ const pages = {
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsLeavePeriodContinuous: {
+    bondingRegsDetailsLabel: "$t(shared.bondingRegsLeavePeriodDetailsLabel)",
+    bondingRegsDetailsSummary:
+      "$t(shared.bondingRegsLeavePeriodDetailsSummary)",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
@@ -962,6 +969,9 @@ const pages = {
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsLeavePeriodIntermittent: {
+    bondingRegsDetailsLabel: "$t(shared.bondingRegsLeavePeriodDetailsLabel)",
+    bondingRegsDetailsSummary:
+      "$t(shared.bondingRegsLeavePeriodDetailsSummary)",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
@@ -986,6 +996,9 @@ const pages = {
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsLeavePeriodReducedSchedule: {
+    bondingRegsDetailsLabel: "$t(shared.bondingRegsLeavePeriodDetailsLabel)",
+    bondingRegsDetailsSummary:
+      "$t(shared.bondingRegsLeavePeriodDetailsSummary)",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
@@ -1042,6 +1055,10 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsNotifiedEmployer: {
+    bondingRegsEmployerNotifiedDetailsLabel:
+      "Do you work in an acute care hospital or the teaching hospital of the University of Massachusetts Medical School?",
+    bondingRegsEmployerNotifiedDetailsSummary:
+      "If so, and you had a child join your family in 2020, you may be eligible for paid leave anytime in 2021. You must get approval from your employer by no later than March 21, 2021 and apply for benefits with the Department of Paid Family and Medical Leave not more than 60 days before your anticipated delayed start date. <emergency-bonding-regs-worker-link>Learn more about emergency Covid-19 regulations for hospital workers</emergency-bonding-regs-worker-link>.",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     employerNotificationDateHint: "This can be an approximate date.",

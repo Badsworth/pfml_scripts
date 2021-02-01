@@ -3,6 +3,7 @@ import { cloneDeep, get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
 import Claim from "../../models/Claim";
 import ConditionalContent from "../../components/ConditionalContent";
+import Details from "../../components/Details";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
@@ -11,6 +12,7 @@ import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
+import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -131,6 +133,31 @@ export const LeavePeriodContinuous = (props) => {
             tOptions={{ context: contentContext }}
           />
         </Lead>
+        {claim.isBondingLeave && (
+          <div className="measure-6">
+            <Details
+              label={t(
+                "pages.claimsLeavePeriodContinuous.bondingRegsDetailsLabel"
+              )}
+            >
+              <Trans
+                i18nKey="pages.claimsLeavePeriodContinuous.bondingRegsDetailsSummary"
+                components={{
+                  "emergency-bonding-regs-worker-link": (
+                    <a
+                      target="_blank"
+                      rel="noopener"
+                      href={
+                        routes.external.massgov
+                          .emergencyBondingRegulationsWorker
+                      }
+                    />
+                  ),
+                }}
+              />
+            </Details>
+          </div>
+        )}
 
         <InputDate
           {...getFunctionalInputProps(`${leavePeriodPath}.start_date`)}
