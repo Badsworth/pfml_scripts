@@ -80,6 +80,7 @@ class WritebackCSV:
     status_effective_date: str
     status_reason: str
     transaction_status: str
+    stock_no: str
 
 
 WRITEBACK_CSV_HEADERS = WritebackCSV(
@@ -89,6 +90,7 @@ WRITEBACK_CSV_HEADERS = WritebackCSV(
     status_effective_date="statusEffectiveDate",
     status_reason="statusReason",
     transaction_status="transactionStatus",
+    stock_no="stockNo",
 )
 
 

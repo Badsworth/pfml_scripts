@@ -333,6 +333,7 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "status": "Active",
         "status_effective_date": "",
         "status_reason": "Manual payment voucher",
+        "stock_no": "",
         "transaction_status": "Preapproved for payment",
     }
 
@@ -434,6 +435,7 @@ def test_process_payment_record_multiple_details(test_db_session, initialize_fac
         "status": "Active",
         "status_effective_date": "",
         "status_reason": "Manual payment voucher",
+        "stock_no": "",
         "transaction_status": "Preapproved for payment",
     }
 
