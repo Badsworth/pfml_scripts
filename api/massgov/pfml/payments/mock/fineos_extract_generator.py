@@ -170,7 +170,7 @@ def _create_files(
     return file_name_to_fineos_payment_file_info
 
 
-def _generate_single_fineos_payment_row(
+def _generate_fineos_payment_rows_for_scenario(
     scenario_data: scenario_generator.ScenarioData,
     file_name_to_file_info: Dict[str, FineosPaymentsExportCsvWriter],
 ):
@@ -187,7 +187,8 @@ def _generate_single_fineos_payment_row(
 
     # Get db models
     employee = scenario_data.employee
-    claim = scenario_data.claim
+    claims = scenario_data.claims
+    payment_amounts = scenario_data.payment_amounts
 
     # PEI File
     is_eft = employee.eft is not None
@@ -195,86 +196,92 @@ def _generate_single_fineos_payment_row(
 
     payment_date = payments_util.get_now()
 
-    vpei_row = OrderedDict()
-    vpei_row["C"] = scenario_data.ci_index.c
-    vpei_row["I"] = scenario_data.ci_index.i
-    vpei_row["PAYEESOCNUMBE"] = employee.tax_identifier.tax_identifier
-    vpei_row["PAYMENTADD1"] = address.address_line_one
-    vpei_row["PAYMENTADD2"] = address.address_line_two
-    vpei_row["PAYMENTADD4"] = address.city
-    vpei_row["PAYMENTADD6"] = (
-        address.geo_state_text
-        if address.geo_state_id is None
-        else address.geo_state.geo_state_description
-    )
-    if (
-        scenario_descriptor.non_existent_address_update
-    ):  # TODO is this accurate change for scenario P
-        vpei_row["PAYMENTADD1"] = "123 Fictional Address"
-        vpei_row["PAYMENTADD4"] = "Nowhere"
-        vpei_row["PAYMENTADD6"] = "Massachusetts"
+    for index, payment_amount in enumerate(payment_amounts):
+        payment_ci_index = scenario_data.ci_provider.get_payment_ci(next=True)
+        vpei_row = OrderedDict()
+        vpei_row["C"] = payment_ci_index.c
+        vpei_row["I"] = payment_ci_index.i
+        vpei_row["PAYEESOCNUMBE"] = employee.tax_identifier.tax_identifier
+        vpei_row["PAYMENTADD1"] = address.address_line_one
+        vpei_row["PAYMENTADD2"] = address.address_line_two
+        vpei_row["PAYMENTADD4"] = address.city
+        vpei_row["PAYMENTADD6"] = (
+            address.geo_state_text
+            if address.geo_state_id is None
+            else address.geo_state.geo_state_description
+        )
+        if (
+            scenario_descriptor.non_existent_address_update
+        ):  # TODO is this accurate change for scenario P
+            vpei_row["PAYMENTADD1"] = "123 Fictional Address"
+            vpei_row["PAYMENTADD4"] = "Nowhere"
+            vpei_row["PAYMENTADD6"] = "Massachusetts"
 
-    vpei_row["PAYMENTPOSTCO"] = address.zip_code
-    vpei_row["PAYMENTMETHOD"] = (
-        PaymentMethod.ACH.payment_method_description
-        if is_eft
-        else PaymentMethod.CHECK.payment_method_description
-    )
-    if scenario_descriptor.payee_payment_method_update:
-        vpei_row["PAYMENTMETHOD"] = PaymentMethod.DEBIT.payment_method_description
+        vpei_row["PAYMENTPOSTCO"] = address.zip_code
+        vpei_row["PAYMENTMETHOD"] = (
+            PaymentMethod.ACH.payment_method_description
+            if is_eft
+            else PaymentMethod.CHECK.payment_method_description
+        )
+        if scenario_descriptor.payee_payment_method_update:
+            vpei_row["PAYMENTMETHOD"] = PaymentMethod.DEBIT.payment_method_description
 
-    vpei_row["PAYMENTDATE"] = payment_date.strftime("%Y-%m-%d %H:%M:%S")
-    vpei_row["AMOUNT_MONAMT"] = "{:.2f}".format(scenario_data.payment_amount)
-    if scenario_descriptor.negative_payment_update:
-        vpei_row["AMOUNT_MONAMT"] = "{:.2f}".format(scenario_data.payment_amount * -1)
+        vpei_row["PAYMENTDATE"] = payment_date.strftime("%Y-%m-%d %H:%M:%S")
+        vpei_row["AMOUNT_MONAMT"] = "{:.2f}".format(payment_amount)
+        if scenario_descriptor.negative_payment_update:
+            vpei_row["AMOUNT_MONAMT"] = "{:.2f}".format(payment_amount * -1)
 
-    # TODO do we still want this
-    # if missing_field:
-    #     vpei_row["AMOUNT_MONAMT"] = ""
+        # TODO do we still want this
+        # if missing_field:
+        #     vpei_row["AMOUNT_MONAMT"] = ""
 
-    if is_eft:
-        vpei_row["PAYEEBANKCODE"] = employee.eft.routing_nbr
-        if scenario_descriptor.routing_number_ten_digits_update:
-            vpei_row["PAYEEBANKCODE"] = employee.eft.routing_nbr.rjust(
-                10, "8"
-            )  # routing number is originally 9 digits
+        if is_eft:
+            vpei_row["PAYEEBANKCODE"] = employee.eft.routing_nbr
+            if scenario_descriptor.routing_number_ten_digits_update:
+                vpei_row["PAYEEBANKCODE"] = employee.eft.routing_nbr.rjust(
+                    10, "8"
+                )  # routing number is originally 9 digits
 
-        vpei_row["PAYEEACCOUNTN"] = employee.eft.account_nbr
-        vpei_row["PAYEEACCOUNTT"] = employee.eft.bank_account_type.bank_account_type_description
+            vpei_row["PAYEEACCOUNTN"] = employee.eft.account_nbr
+            vpei_row["PAYEEACCOUNTT"] = employee.eft.bank_account_type.bank_account_type_description
 
-    pei_csv_writer.writerow(vpei_row)
+        pei_csv_writer.writerow(vpei_row)
 
-    # PEI Payment Details File
-    payment_start = payment_date - timedelta(weeks=random.randint(5, 8))
-    payment_end = payment_date - timedelta(weeks=random.randint(1, 4))
+        # PEI Payment Details File
+        payment_start = payment_date - timedelta(weeks=random.randint(5, 8))
+        payment_end = payment_date - timedelta(weeks=random.randint(1, 4))
 
-    if scenario_descriptor.future_payment_benefit_week_update:
-        payment_start = payments_util.get_now() + timedelta(weeks=1)
-        payment_start = payments_util.get_now() + timedelta(weeks=2)
+        if scenario_descriptor.future_payment_benefit_week_update:
+            payment_start = payments_util.get_now() + timedelta(weeks=1)
+            payment_start = payments_util.get_now() + timedelta(weeks=2)
 
-    vpei_payment_details_row = OrderedDict()
-    vpei_payment_details_row["PECLASSID"] = scenario_data.ci_index.c
-    vpei_payment_details_row["PEINDEXID"] = scenario_data.ci_index.i
-    vpei_payment_details_row["PAYMENTSTARTP"] = payment_start.strftime("%Y-%m-%d %H:%M:%S")
-    vpei_payment_details_row["PAYMENTENDPER"] = payment_end.strftime("%Y-%m-%d %H:%M:%S")
+        vpei_payment_details_row = OrderedDict()
+        vpei_payment_details_row[
+            "PECLASSID"
+        ] = payment_ci_index.c  # Current setup: 1 payment period per payment
+        vpei_payment_details_row["PEINDEXID"] = payment_ci_index.i
+        vpei_payment_details_row["PAYMENTSTARTP"] = payment_start.strftime("%Y-%m-%d %H:%M:%S")
+        vpei_payment_details_row["PAYMENTENDPER"] = payment_end.strftime("%Y-%m-%d %H:%M:%S")
 
-    # TODO do we still want this
-    # if invalid_row:
-    #     vpei_payment_details_row["PECLASSID"] = "NON_EXISTENT_C_ID"
-    #     vpei_payment_details_row["PEINDEXID"] = "NON_EXISTENT_I_ID"
+        # TODO do we still want this
+        # if invalid_row:
+        #     vpei_payment_details_row["PECLASSID"] = "NON_EXISTENT_C_ID"
+        #     vpei_payment_details_row["PEINDEXID"] = "NON_EXISTENT_I_ID"
 
-    pei_payment_details_csv_writer.writerow(vpei_payment_details_row)
+        pei_payment_details_csv_writer.writerow(vpei_payment_details_row)
 
-    # PEI Claim Details File
-    vpei_claim_details_row = OrderedDict()
-    vpei_claim_details_row["PECLASSID"] = scenario_data.ci_index.c
-    vpei_claim_details_row["PEINDEXID"] = scenario_data.ci_index.i
-    vpei_claim_details_row["ABSENCECASENU"] = claim.fineos_absence_id
+        # PEI Claim Details File
+        vpei_claim_details_row = OrderedDict()
+        vpei_claim_details_row["PECLASSID"] = payment_ci_index.c
+        vpei_claim_details_row["PEINDEXID"] = payment_ci_index.i
+        vpei_claim_details_row["ABSENCECASENU"] = claims[
+            index
+        ].fineos_absence_id  # Current setup: 1 payment per claim
 
-    pei_claim_details_csv_writer.writerow(vpei_claim_details_row)
+        pei_claim_details_csv_writer.writerow(vpei_claim_details_row)
 
 
-def _generate_single_fineos_vendor_row(
+def _generate_fineos_vendor_rows_for_scenario(
     scenario_data: scenario_generator.ScenarioData,
     file_name_to_file_info: Dict[str, FineosPaymentsExportCsvWriter],
 ):
@@ -286,7 +293,7 @@ def _generate_single_fineos_vendor_row(
     scenario_descriptor = scenario_data.scenario_descriptor
     employee = scenario_data.employee
     employer = scenario_data.employer
-    claim = scenario_data.claim
+    claims = scenario_data.claims
 
     # shared variables
     is_eft = employee.eft is not None
@@ -297,25 +304,26 @@ def _generate_single_fineos_vendor_row(
     absence_start = application_date + timedelta(weeks=random.randint(1, 3))
     absence_end = application_date + timedelta(weeks=random.randint(4, 12))
 
-    requested_absence_row = {}
-    requested_absence_row["ABSENCE_CASENUMBER"] = claim.fineos_absence_id
-    requested_absence_row["NOTIFICATION_CASENUMBER"] = claim.fineos_absence_id[:8]
-    requested_absence_row[
-        "ABSENCE_CASESTATUS"
-    ] = AbsenceStatus.ADJUDICATION.absence_status_description
-    requested_absence_row["ABSENCEPERIOD_START"] = absence_start.strftime("%Y-%m-%d %H:%M:%S")
-    requested_absence_row["ABSENCEPERIOD_END"] = absence_end.strftime("%Y-%m-%d %H:%M:%S")
-    requested_absence_row["LEAVEREQUEST_EVIDENCERESULTTYPE"] = (
-        "Not Satisfied" if not scenario_descriptor.evidence_satisfied else "Satisfied"
-    )
-    requested_absence_row["ABSENCEREASON_COVERAGE"] = CLAIM_TYPE_TRANSLATION[
-        scenario_descriptor.leave_type.claim_type_description
-    ]
+    for claim in claims:
+        requested_absence_row = {}
+        requested_absence_row["ABSENCE_CASENUMBER"] = claim.fineos_absence_id
+        requested_absence_row["NOTIFICATION_CASENUMBER"] = claim.fineos_absence_id[:8]
+        requested_absence_row[
+            "ABSENCE_CASESTATUS"
+        ] = AbsenceStatus.ADJUDICATION.absence_status_description
+        requested_absence_row["ABSENCEPERIOD_START"] = absence_start.strftime("%Y-%m-%d %H:%M:%S")
+        requested_absence_row["ABSENCEPERIOD_END"] = absence_end.strftime("%Y-%m-%d %H:%M:%S")
+        requested_absence_row["LEAVEREQUEST_EVIDENCERESULTTYPE"] = (
+            "Not Satisfied" if not scenario_descriptor.evidence_satisfied else "Satisfied"
+        )
+        requested_absence_row["ABSENCEREASON_COVERAGE"] = CLAIM_TYPE_TRANSLATION[
+            scenario_descriptor.leave_type.claim_type_description
+        ]
 
-    requested_absence_row["EMPLOYEE_CUSTOMERNO"] = scenario_data.employee_customer_number
-    requested_absence_row["EMPLOYER_CUSTOMERNO"] = employer.fineos_employer_id
+        requested_absence_row["EMPLOYEE_CUSTOMERNO"] = scenario_data.employee_customer_number
+        requested_absence_row["EMPLOYER_CUSTOMERNO"] = employer.fineos_employer_id
 
-    requested_absence_csv_writer.writerow(requested_absence_row)
+        requested_absence_csv_writer.writerow(requested_absence_row)
 
     # Employee Feed file
     if scenario_descriptor.missing_from_employee_feed:
@@ -328,9 +336,11 @@ def _generate_single_fineos_vendor_row(
     else:
         ssn_to_use = employee.tax_identifier.tax_identifier
 
+    vendor_ci_index = scenario_data.ci_provider.get_vendor_ci()
+
     employee_feed_row = {}
-    employee_feed_row["C"] = scenario_data.ci_index.c
-    employee_feed_row["I"] = scenario_data.ci_index.i
+    employee_feed_row["C"] = vendor_ci_index.c
+    employee_feed_row["I"] = vendor_ci_index.i
     employee_feed_row["DEFPAYMENTPREF"] = (
         "N" if not scenario_descriptor.default_payment_preference else "Y"
     )
@@ -378,7 +388,7 @@ def generate_vendor_extract_files(
 
     for scenario_data in scenario_data_set:
         try:
-            _generate_single_fineos_vendor_row(scenario_data, file_name_to_file_info)
+            _generate_fineos_vendor_rows_for_scenario(scenario_data, file_name_to_file_info)
         except Exception as e:
             logger.exception(
                 "Error during fineos vendor generation for: %s",
@@ -400,7 +410,7 @@ def generate_payment_extract_files(
 
     for scenario_data in scenario_data_set:
         try:
-            _generate_single_fineos_payment_row(scenario_data, file_name_to_file_info)
+            _generate_fineos_payment_rows_for_scenario(scenario_data, file_name_to_file_info)
         except Exception as e:
             logger.exception(
                 "Error during fineos payment extract generation for: %s",
@@ -413,7 +423,7 @@ def generate_payment_extract_files(
         file_info.file.close()
 
 
-def generate(config: ScenarioDataConfig, folder_path: str):
+def generate(config: ScenarioDataConfig, folder_path: str) -> List[ScenarioData]:
     # Generate the data set
     scenario_dataset = scenario_generator.generate_scenario_dataset(config)
 
@@ -421,6 +431,8 @@ def generate(config: ScenarioDataConfig, folder_path: str):
     date_prefix = payments_util.get_now().strftime("%Y-%m-%d-%H-%M-%S-")
     generate_vendor_extract_files(scenario_dataset, folder_path, date_prefix)
     generate_payment_extract_files(scenario_dataset, folder_path, date_prefix)
+
+    return scenario_dataset
 
 
 DEFAULT_SCENARIOS_CONFIG: List[ScenarioNameWithCount] = [

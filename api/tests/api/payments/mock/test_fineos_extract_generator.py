@@ -1,10 +1,20 @@
 import os
 import tempfile
+from typing import List
 
 import massgov.pfml.payments.mock.fineos_extract_generator as fineos_extract_generator
 import massgov.pfml.util.files as file_util
+from massgov.pfml.payments.mock.fineos_extract_generator import (
+    EMPLOYEE_FEED_FILE_NAME,
+    LEAVE_PLAN_FILE_NAME,
+    PEI_CLAIM_DETAILS_FILE_NAME,
+    PEI_FILE_NAME,
+    PEI_PAYMENT_DETAILS_FILE_NAME,
+    REQUESTED_ABSENCES_FILE_NAME,
+)
 from massgov.pfml.payments.mock.payments_test_scenario_generator import (
-    SCENARIO_DESCRIPTORS,
+    EmployeePaymentScenarioDescriptor,
+    ScenarioData,
     ScenarioDataConfig,
 )
 
@@ -21,51 +31,40 @@ def test_generate_to_s3(test_db_session, mock_s3_bucket, initialize_factories_se
 
 def generate_and_validate(db_session, folder_path):
     config = ScenarioDataConfig(scenario_config=fineos_extract_generator.DEFAULT_SCENARIOS_CONFIG)
-    fineos_extract_generator.generate(config, folder_path)
+    scenario_dataset: List[ScenarioData] = fineos_extract_generator.generate(config, folder_path)
 
     files = file_util.list_files(folder_path)
-    assert len(files) == len(list(fineos_extract_generator.FINEOS_EXPORT_FILES.keys()))
+    assert len(files) == 6
+
+    line_counts = {}
+    line_counts[REQUESTED_ABSENCES_FILE_NAME] = 0
+    line_counts[EMPLOYEE_FEED_FILE_NAME] = 0
+    line_counts[LEAVE_PLAN_FILE_NAME] = 0  # this file is no longer used, TODO remove
+    line_counts[PEI_FILE_NAME] = 0
+    line_counts[PEI_PAYMENT_DETAILS_FILE_NAME] = 0
+    line_counts[PEI_CLAIM_DETAILS_FILE_NAME] = 0
+
+    # build the expected count map
+    for scenario_data in scenario_dataset:
+        scenario_descriptor: EmployeePaymentScenarioDescriptor = scenario_data.scenario_descriptor
+
+        line_counts[REQUESTED_ABSENCES_FILE_NAME] += scenario_descriptor.absence_claims_count
+
+        if not scenario_descriptor.missing_from_employee_feed:
+            line_counts[EMPLOYEE_FEED_FILE_NAME] += 1
+
+        if scenario_descriptor.has_payment_extract:
+            line_counts[PEI_FILE_NAME] += scenario_descriptor.absence_claims_count
+            line_counts[PEI_PAYMENT_DETAILS_FILE_NAME] += scenario_descriptor.absence_claims_count
+            line_counts[PEI_CLAIM_DETAILS_FILE_NAME] += scenario_descriptor.absence_claims_count
 
     for filename in files:
-        if filename.endswith(fineos_extract_generator.LEAVE_PLAN_FILE_NAME):
-            continue  # this file is no longer used
-
-        count = get_total_log_count(filename)
-        file_content = file_util.read_file(os.path.join(folder_path, filename))
-        assert file_content.strip()
-        assert file_content.count("\n") == count + 1  # account for header row
-
-
-def get_total_log_count(filename: str):
-    # Scenarios that have the missing_from_employee_feed attribute will be missing from the
-    # employee feed FINEOS extract.
-    data_lines_in_employee_feed = 0
-    for scenario_descriptor in SCENARIO_DESCRIPTORS.values():
-        if not scenario_descriptor.missing_from_employee_feed:
-            data_lines_in_employee_feed = data_lines_in_employee_feed + 1
-
-    # Scenarios will only be included in the payment extract files if they have the
-    # has_payment_extract attribute.
-    data_lines_in_payment_extract = 0
-    for scenario_descriptor in SCENARIO_DESCRIPTORS.values():
-        if scenario_descriptor.has_payment_extract:
-            data_lines_in_payment_extract = data_lines_in_payment_extract + 1
-
-    row_count_for_file = {
-        fineos_extract_generator.EMPLOYEE_FEED_FILE_NAME: data_lines_in_employee_feed,
-        fineos_extract_generator.PEI_FILE_NAME: data_lines_in_payment_extract,
-        fineos_extract_generator.PEI_CLAIM_DETAILS_FILE_NAME: data_lines_in_payment_extract,
-        fineos_extract_generator.PEI_PAYMENT_DETAILS_FILE_NAME: data_lines_in_payment_extract,
-    }
-
-    for filename_ending, count in row_count_for_file.items():
-        if filename.endswith(filename_ending):
-            return count
-
-    # If we have not defined any special case for this filename then we assume that all scenarios
-    # should be included in the extract file.
-    all_scenario_count = 0
-    for sc in fineos_extract_generator.DEFAULT_SCENARIOS_CONFIG:
-        all_scenario_count += sc.count
-
-    return all_scenario_count
+        for expected_filename, expected_count in line_counts.items():
+            if filename.endswith(expected_filename):
+                file_content = file_util.read_file(os.path.join(folder_path, filename))
+                file_content.strip()
+                file_line_count = file_content.count("\n")
+                # account for header row
+                assert (
+                    file_line_count == expected_count + 1
+                ), f"Unexpected number of lines in extract file  - file name: {expected_filename}, found: {file_line_count}, expected: {expected_count + 1}"

@@ -105,6 +105,7 @@ class EmployeePaymentScenarioDescriptor:
     missing_ssn: bool = False
     default_payment_preference: bool = True
     evidence_satisfied: bool = True
+    absence_claims_count: int = 1
 
     has_payment_extract: bool = False
     missing_from_employee_feed: bool = False
@@ -145,6 +146,7 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_A] = EmployeePaymentScenarioDescripto
     has_vcc_status_return=True,
     has_gax_status_return=True,
     has_outbound_payment_return=True,
+    absence_claims_count=2,
 )
 
 # EmployeeB with real address, payment method is check, leave type is bonding leave
@@ -395,17 +397,73 @@ class ScenarioDataConfig:
     fein_id_base: int = 250000000
 
 
+index_counter = {"index": 100}
+
+
+def _new_index():
+    index_counter["index"] += 1
+    return index_counter["index"]
+
+
+class CiProvider:
+    vendor_c_i: CiIndex
+    claim_ci: Optional[CiIndex]
+    payment_ci: Optional[CiIndex]
+    payment_period_ci: Optional[CiIndex]
+
+    claim_ci_indices: List[CiIndex]
+    payment_ci_indices: List[CiIndex]
+    payment_period_ci_indices: List[CiIndex]
+
+    def __init__(self):
+        self.vendor_c_i = CiIndex(c=str(_new_index()), i=str(_new_index()))
+        self.claim_ci = None
+        self.payment_ci = None
+        self.payment_period_ci = None
+
+        self.claim_ci_indices = []
+        self.payment_ci_indices = []
+        self.payment_period_ci_indices = []
+
+    def get_vendor_ci(self):
+        return self.vendor_c_i
+
+    def get_claim_ci(self, next: bool = False) -> CiIndex:
+        # TODO do we need to associate with vendor?
+        if self.claim_ci is None or next:
+            self.claim_ci = CiIndex(c=str(_new_index()), i=str(_new_index()))
+            self.claim_ci_indices.append(self.claim_ci)
+
+        return self.claim_ci
+
+    def get_payment_ci(self, next: bool = False) -> CiIndex:
+        # TODO confirm I value should equal claim I value
+        if self.payment_ci is None or next:
+            self.payment_ci = CiIndex(c=str(_new_index()), i=self.get_claim_ci().i)
+            self.payment_ci_indices.append(self.payment_ci)
+
+        return self.payment_ci
+
+    def get_payment_period_ci(self) -> CiIndex:
+        # TODO do we need to associate with payment?
+        if self.payment_period_ci is None or next:
+            self.payment_period_ci = CiIndex(c=str(_new_index()), i=str(_new_index()))
+            self.payment_period_ci_indices.append(self.payment_period_ci)
+
+        return self.payment_period_ci
+
+
 @dataclass
 class ScenarioData:
     scenario_descriptor: EmployeePaymentScenarioDescriptor
     employee: Employee
     employer: Employer
-    payment: Optional[Payment]
-    claim: Claim
+    claims: List[Claim]
+    payment_amounts: List[decimal.Decimal]
+    payments: Optional[List[Payment]]
     employee_customer_number: str
     vendor_customer_code: str
-    payment_amount: decimal.Decimal
-    ci_index: CiIndex
+    ci_provider: CiProvider
 
     def __repr__(self):
         return f"[Name: {self.scenario_descriptor.scenario_name}, Employee: {self.employee.employee_id}"
@@ -418,10 +476,9 @@ def generate_scenario_data_db(
     ssn: str,
     fein: str,
     fineos_employer_id: str,
-    absence_case_id: str,
+    fineos_notification_id: str,
     employee_customer_number: str,
     vendor_customer_code: str,
-    ci_index: CiIndex,
     build_reference_files: bool = False,
 ) -> ScenarioData:
     eft = None
@@ -465,45 +522,60 @@ def generate_scenario_data_db(
     employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
 
     employer = EmployerFactory.create(employer_fein=fein, fineos_employer_id=fineos_employer_id)
-    claim = ClaimFactory.create(
-        employer_id=employer.employer_id, employee=employee, fineos_absence_id=absence_case_id,
-    )
 
-    # Create a random payment amount between $1-1000
-    payment_amount = decimal.Decimal(random.uniform(1, 1000))
+    claims: List[Claim] = []
+    payment_amounts: List[decimal.Decimal] = []
+    payments: List[Payment] = []
 
-    payment = None
-    if build_reference_files:
-        if (
-            scenario_descriptor.has_vcc_status_return
-            or scenario_descriptor.has_outbound_vendor_return
-        ):
-            emp_ref_file = EmployeeReferenceFileFactory.create(employee=employee)
-            emp_ref_file.reference_file.ctr_batch_identifier = CtrBatchIdentifierFactory.create()
+    for c in range(scenario_descriptor.absence_claims_count):
+        absence_case_index = c + 1
+        absence_case_id = (
+            f"{fineos_notification_id}-ABS-{str(absence_case_index)}"  # maximum length of 19
+        )
 
-        if (
-            scenario_descriptor.has_gax_status_return
-            or scenario_descriptor.has_outbound_payment_return
-        ):
-            payment = PaymentFactory.create(claim=claim)
-            payment_ref_file = PaymentReferenceFileFactory.create(payment=payment)
-            payment_ref_file.reference_file.ctr_batch_identifier = (
-                CtrBatchIdentifierFactory.create()
-            )
-            payment_ref_file.reference_file.reference_file_type_id = (
-                ReferenceFileType.GAX.reference_file_type_id
-            )
+        claim = ClaimFactory.create(
+            employer_id=employer.employer_id, employee=employee, fineos_absence_id=absence_case_id,
+        )
+        claims.append(claim)
+
+        # Create a random payment amount between $1-1000
+        payment_amount = decimal.Decimal(random.uniform(1, 1000))
+        payment_amounts.append(payment_amount)
+
+        if build_reference_files:
+            if (
+                scenario_descriptor.has_vcc_status_return
+                or scenario_descriptor.has_outbound_vendor_return
+            ):
+                emp_ref_file = EmployeeReferenceFileFactory.create(employee=employee)
+                emp_ref_file.reference_file.ctr_batch_identifier = (
+                    CtrBatchIdentifierFactory.create()
+                )
+
+            if (
+                scenario_descriptor.has_gax_status_return
+                or scenario_descriptor.has_outbound_payment_return
+            ):
+                payment = PaymentFactory.create(claim=claim)
+                payment_ref_file = PaymentReferenceFileFactory.create(payment=payment)
+                payment_ref_file.reference_file.ctr_batch_identifier = (
+                    CtrBatchIdentifierFactory.create()
+                )
+                payment_ref_file.reference_file.reference_file_type_id = (
+                    ReferenceFileType.GAX.reference_file_type_id
+                )
+                payments.append(payment)
 
     return ScenarioData(
         scenario_descriptor=scenario_descriptor,
         employee=employee,
         employer=employer,
-        payment=payment,
-        claim=claim,
+        claims=claims,
+        payment_amounts=payment_amounts,
+        payments=payments,
         employee_customer_number=employee_customer_number,
         vendor_customer_code=vendor_customer_code,
-        payment_amount=payment_amount,
-        ci_index=ci_index,
+        ci_provider=CiProvider(),
     )
 
 
@@ -525,9 +597,8 @@ def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
                 ssn_part_str = str(ssn)[2:]
                 fein_part_str = str(fein)[2:]
 
-                ci_index = CiIndex(ssn_part_str.rjust(9, "1"), fein_part_str.rjust(9, "2"))
                 fineos_employer_id = fein_part_str.rjust(9, "3")
-                absence_case_id = f"NTN-{ssn_part_str}-ABS-01"  # maximum length of 19
+                fineos_notification_id = f"NTN-{ssn_part_str}"
                 employee_customer_number = ssn_part_str.rjust(9, "5")
                 vendor_customer_code = ssn_part_str.rjust(9, "6")
 
@@ -536,10 +607,9 @@ def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
                     ssn=str(ssn),
                     fein=str(fein),
                     fineos_employer_id=fineos_employer_id,
-                    absence_case_id=absence_case_id,
+                    fineos_notification_id=fineos_notification_id,
                     vendor_customer_code=vendor_customer_code,
                     employee_customer_number=employee_customer_number,
-                    ci_index=ci_index,
                 )
                 scenario_dataset.append(scenario_data)
 

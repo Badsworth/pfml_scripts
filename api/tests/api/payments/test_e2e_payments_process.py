@@ -112,9 +112,12 @@ class ScenarioDataSet:
     def get_payment_ci_index_by_scenario(self, scenario_name: ScenarioName) -> List[str]:
         if not self.scenario_dataset_map.get(scenario_name):
             return []
-        return [
-            scenario_data.ci_index for scenario_data in self.scenario_dataset_map.get(scenario_name)
-        ]
+
+        scenario_payment_ci_indices = []
+        for scenario_data in self.scenario_dataset_map.get(scenario_name):
+            scenario_payment_ci_indices.extend(scenario_data.ci_provider.payment_ci_indices)
+
+        return scenario_payment_ci_indices
 
     def get_all_employee_ids(self) -> List[uuid.UUID]:
         return [scenario_data.employee.employee_id for scenario_data in self.scenario_dataset]
@@ -172,7 +175,9 @@ def test_e2e_process(
 
     assert len(employees) == total_scenario_count
     assert len(employers) == total_scenario_count
-    assert len(claims) == total_scenario_count
+    assert len(claims) == total_scenario_count + (
+        1 * SCENARIO_DUPLICATION_COUNT
+    )  # account for extra claim for scenario A
     assert len(payments) == 0
 
     employer_logs_start = test_db_session.query(EmployerLog).all()
@@ -448,7 +453,9 @@ def test_e2e_process(
 
         # Confirm expected number of payments (Success: A-D, Z, Error: O-S)
         payments = test_db_session.query(Payment).all()
-        assert len(payments) == (5 * SCENARIO_DUPLICATION_COUNT)
+        assert len(payments) == (5 * SCENARIO_DUPLICATION_COUNT) + (
+            1 * SCENARIO_DUPLICATION_COUNT
+        )  # account for extra claim for scenario A
 
         # Confirm employee state logs have not been altered
         assert_employee_state_log_by_scenario(
@@ -1120,7 +1127,9 @@ def assert_pei_writeback(is_disbursed, expected_scenarios, test_scenario_dataset
     with smart_open(path) as csv_file:
         dict_reader = csv.DictReader(csv_file, delimiter=",")
         records = list(dict_reader)
-        assert len(records) == len(expected_scenarios) * SCENARIO_DUPLICATION_COUNT
+        assert len(records) == (len(expected_scenarios) * SCENARIO_DUPLICATION_COUNT) + (
+            1 * SCENARIO_DUPLICATION_COUNT
+        )  # account for extra claim for scenario A
 
         # Convert the records into a lookup dict using the C/I values as keys
         ci_records = {}
@@ -1161,10 +1170,17 @@ def refersh_scenario_dataset(
 
     for scenario_data in test_scenario_dataset.scenario_dataset:
         db_session.refresh(scenario_data.employee)
-        db_session.refresh(scenario_data.claim)
 
-        if include_payment:
-            scenario_data.payment = payment_by_claim_id.get(scenario_data.claim.claim_id)
+        if scenario_data.payments is None:
+            scenario_data.payments = []
+
+        for claim in scenario_data.claims:
+            db_session.refresh(claim)
+
+            if include_payment:
+                payment = payment_by_claim_id.get(claim.claim_id)
+                if payment is not None:
+                    scenario_data.payments.append(payment)
 
 
 def assert_expected_files_ends_in_list(files_to_check, expected_files):

@@ -262,46 +262,47 @@ def _generate_outbound_payment_return(scenario_datasets: List[scenario_generator
             continue
 
         # We assume that this scenario has an associated PaymentReferenceFile
-        payment_reference_files = [
-            ref_file
-            for ref_file in scenario_data.payment.reference_files
-            if ref_file.__class__ == PaymentReferenceFile
-            and ref_file.reference_file.reference_file_type_id
-            == ReferenceFileType.GAX.reference_file_type_id
-        ]
-        payment_reference_file_count = len(payment_reference_files)
-        if not payment_reference_file_count == 1:
-            raise Exception(
-                f"Expect a single PaymentReferenceFile for this scenario. Found {payment_reference_file_count} PaymentReferenceFiles."
-            )
+        for payment in scenario_data.payments:
+            payment_reference_files = [
+                ref_file
+                for ref_file in payment.reference_files
+                if ref_file.__class__ == PaymentReferenceFile
+                and ref_file.reference_file.reference_file_type_id
+                == ReferenceFileType.GAX.reference_file_type_id
+            ]
+            payment_reference_file_count = len(payment_reference_files)
+            if not payment_reference_file_count == 1:
+                raise Exception(
+                    f"Expect a single PaymentReferenceFile for this scenario. Found {payment_reference_file_count} PaymentReferenceFiles."
+                )
 
-        payment_reference_file = payment_reference_files[0]
-        doc_id = payment_reference_file.ctr_document_identifier.ctr_document_identifier
+            payment_reference_file = payment_reference_files[0]
+            doc_id = payment_reference_file.ctr_document_identifier.ctr_document_identifier
 
-        # Pull all the values out first that we'll need
-        vendor_code = scenario_data.employee.ctr_vendor_customer_code
+            # Pull all the values out first that we'll need
+            vendor_code = scenario_data.employee.ctr_vendor_customer_code
 
-        # Calculate a few values that just use the incrementing count
-        py_id = doc_id
-        chk_no = "{:011}".format(count)
-        now = payments_util.get_now().strftime("%Y-%m-%d")
-        amount = "{:0.2f}".format(scenario_data.payment_amount)
+            # Calculate a few values that just use the incrementing count
+            py_id = doc_id
+            chk_no = "{:011}".format(count)
+            now = payments_util.get_now().strftime("%Y-%m-%d")
+            amount = payment.amount
 
-        # Add the PYMT_RETN_DOC
-        pymt_retn_doc = xml_document.createElement("PYMT_RETN_DOC")
-        document_root.appendChild(pymt_retn_doc)
+            # Add the PYMT_RETN_DOC
+            pymt_retn_doc = xml_document.createElement("PYMT_RETN_DOC")
+            document_root.appendChild(pymt_retn_doc)
 
-        # Add the individual PYMT_RETN_DOC values
-        pymt_retn_doc_elements = {
-            "PY_ID": py_id,
-            "VEND_CD": vendor_code,
-            "LINE_AMT": amount,  # We don't check this field in processing
-            "CHK_NO": chk_no,
-            "CHK_AM": amount,
-            "CHK_EFT_ISS_DT": now,
-        }
-        pymt_retn_doc_elements.update(pymt_retn_doc_attributes.copy())
-        payments_util.add_cdata_elements(pymt_retn_doc, xml_document, pymt_retn_doc_elements)
+            # Add the individual PYMT_RETN_DOC values
+            pymt_retn_doc_elements = {
+                "PY_ID": py_id,
+                "VEND_CD": vendor_code,
+                "LINE_AMT": amount,  # We don't check this field in processing
+                "CHK_NO": chk_no,
+                "CHK_AM": amount,
+                "CHK_EFT_ISS_DT": now,
+            }
+            pymt_retn_doc_elements.update(pymt_retn_doc_attributes.copy())
+            payments_util.add_cdata_elements(pymt_retn_doc, xml_document, pymt_retn_doc_elements)
 
     return xml_document
 
@@ -329,51 +330,59 @@ def _generate_outbound_status_return_xml_document(
             scenario_data.scenario_descriptor.has_gax_status_return
             and ref_file_type.reference_file_type_id == ReferenceFileType.GAX.reference_file_type_id
         ):
-            doc = _generate_outbound_status_return_document_for_gax(xml_document, scenario_data)
-            document_root.appendChild(doc)
+            docs = _generate_outbound_status_return_document_for_gax(xml_document, scenario_data)
+            for doc in docs:
+                document_root.appendChild(doc)
 
     return xml_document
 
 
 def _generate_outbound_status_return_document_for_gax(
-    xml_document: minidom.Document, scenario_data: List[scenario_generator.ScenarioData]
-) -> minidom.Element:
+    xml_document: minidom.Document, scenario_data: scenario_generator.ScenarioData
+) -> List[minidom.Element]:
     transaction_type = "GAX"
 
     phase_code = payments_util.Constants.DOC_PHASE_CD_FINAL_STATUS
     if scenario_data.scenario_descriptor.has_gax_status_pending_ctr_action:
         phase_code = "2 - Pending"
 
+    status_returns = []
+
     # We assume that this scenario has an associated PaymentReferenceFile
-    payment_reference_files = [
-        ref_file
-        for ref_file in scenario_data.payment.reference_files
-        if ref_file.__class__ == PaymentReferenceFile
-        and ref_file.reference_file.reference_file_type_id
-        == ReferenceFileType.GAX.reference_file_type_id
-    ]
-    payment_reference_file_count = len(payment_reference_files)
-    if not payment_reference_file_count == 1:
-        raise Exception(
-            f"Expect a single PaymentReferenceFile for this scenario. Found {payment_reference_file_count} PaymentReferenceFiles."
+    for payment in scenario_data.payments:
+        payment_reference_files = [
+            ref_file
+            for ref_file in payment.reference_files
+            if ref_file.__class__ == PaymentReferenceFile
+            and ref_file.reference_file.reference_file_type_id
+            == ReferenceFileType.GAX.reference_file_type_id
+        ]
+        payment_reference_file_count = len(payment_reference_files)
+        if not payment_reference_file_count == 1:
+            raise Exception(
+                f"Expect a single PaymentReferenceFile for this scenario. Found {payment_reference_file_count} PaymentReferenceFiles."
+            )
+
+        payment_reference_file = payment_reference_files[0]
+        batch_id = payment_reference_file.reference_file.ctr_batch_identifier.ctr_batch_identifier
+        document_id = payment_reference_file.ctr_document_identifier.ctr_document_identifier
+
+        attrs = {
+            "TRAN_CD": transaction_type,
+            # Comptroller will return the following elements but our code does not inspect them.
+            "BATCH_ID": batch_id,
+            "IMP_DT": payments_util.get_now().strftime("%Y-%m-%d"),
+        }
+
+        elems = {"DOC_CD": transaction_type, "DOC_ID": document_id, "DOC_PHASE_CD": phase_code}
+
+        has_errors = scenario_data.scenario_descriptor.has_gax_status_return_errors
+
+        status_returns.append(
+            _generate_outbound_status_return_document(xml_document, attrs, elems, has_errors)
         )
 
-    payment_reference_file = payment_reference_files[0]
-    batch_id = payment_reference_file.reference_file.ctr_batch_identifier.ctr_batch_identifier
-    document_id = payment_reference_file.ctr_document_identifier.ctr_document_identifier
-
-    attrs = {
-        "TRAN_CD": transaction_type,
-        # Comptroller will return the following elements but our code does not inspect them.
-        "BATCH_ID": batch_id,
-        "IMP_DT": payments_util.get_now().strftime("%Y-%m-%d"),
-    }
-
-    elems = {"DOC_CD": transaction_type, "DOC_ID": document_id, "DOC_PHASE_CD": phase_code}
-
-    has_errors = scenario_data.scenario_descriptor.has_gax_status_return_errors
-
-    return _generate_outbound_status_return_document(xml_document, attrs, elems, has_errors)
+    return status_returns
 
 
 def _generate_outbound_status_return_document_for_vcc(
