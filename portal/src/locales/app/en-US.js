@@ -1951,6 +1951,10 @@ const components = {
   },
   employersLeaveDetails: {
     applicationIdLabel: "Application ID",
+    bondingRegsReviewDetailsLabel:
+      "Does the employee work at an acute care hospital, or the teaching hospital of the University of Massachusetts Medical School?",
+    bondingRegsReviewDetailsSummary:
+      "If so, this employee may be eligible to take their paid family leave anytime in 2021, <emergency-bonding-regs-employer-link>due to emergency Covid-19 regulations for hospital workers</emergency-bonding-regs-employer-link>.",
     header: "Leave details",
     leaveDurationLabel: "Leave duration",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",

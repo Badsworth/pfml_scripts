@@ -90,7 +90,8 @@ const routes = {
       dfml: "https://www.mass.gov/orgs/department-of-family-and-medical-leave",
       dfmlRegulations:
         "https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1",
-      // TODO (CP-1742): Update with correct URL
+      emergencyBondingRegulationsEmployer:
+        "https://www.mass.gov/pfml-acute-employer",
       emergencyBondingRegulationsWorker:
         "https://www.mass.gov/pfml-acute-claimant",
       employerAccount:

@@ -1,11 +1,14 @@
+import Details from "../Details";
 import EmployerClaim from "../../models/EmployerClaim";
 import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
+import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
+import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -28,6 +31,33 @@ const LeaveDetails = (props) => {
       <ReviewHeading level="2">
         {t("components.employersLeaveDetails.header")}
       </ReviewHeading>
+      {props.claim.isBondingLeave && (
+        <div className="measure-6">
+          <Details
+            label={t(
+              "components.employersLeaveDetails.bondingRegsReviewDetailsLabel"
+            )}
+          >
+            <p>
+              <Trans
+                i18nKey="components.employersLeaveDetails.bondingRegsReviewDetailsSummary"
+                components={{
+                  "emergency-bonding-regs-employer-link": (
+                    <a
+                      target="_blank"
+                      rel="noopener"
+                      href={
+                        routes.external.massgov
+                          .emergencyBondingRegulationsEmployer
+                      }
+                    />
+                  ),
+                }}
+              />
+            </p>
+          </Details>
+        </div>
+      )}
       <ReviewRow
         level="3"
         label={t("components.employersLeaveDetails.leaveTypeLabel")}

@@ -98,15 +98,6 @@ describe("Claim", () => {
     });
   });
 
-  it("#isBondingLeave returns true when the Claim reason is bonding", () => {
-    const claimWithReason = new MockClaimBuilder()
-      .bondingBirthLeaveReason()
-      .create();
-
-    expect(emptyClaim.isMedicalLeave).toBe(false);
-    expect(claimWithReason.isBondingLeave).toBe(true);
-  });
-
   it("#isMedicalLeave returns true when the Claim reason is medical", () => {
     const claimWithReason = new MockClaimBuilder()
       .medicalLeaveReason()

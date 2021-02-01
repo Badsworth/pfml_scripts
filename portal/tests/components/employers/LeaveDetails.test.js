@@ -16,6 +16,16 @@ describe("LeaveDetails", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it("renders the emergency regs content when claim is for Bonding", () => {
+    const bondingClaim = new MockEmployerClaimBuilder()
+      .completed()
+      .bondingLeaveReason()
+      .create();
+    const bondingWrapper = shallow(<LeaveDetails claim={bondingClaim} />);
+
+    expect(bondingWrapper.find("Details Trans").dive()).toMatchSnapshot();
+  });
+
   it("renders formatted leave reason as sentence case", () => {
     expect(wrapper.find(ReviewRow).first().children().first().text()).toEqual(
       "Medical leave"

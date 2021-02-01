@@ -5,6 +5,7 @@
 import { compact, get, map } from "lodash";
 import Address from "./Address";
 import BaseModel from "./BaseModel";
+import LeaveReason from "./LeaveReason";
 
 class BaseClaim extends BaseModel {
   get defaults() {
@@ -33,6 +34,14 @@ class BaseClaim extends BaseModel {
       status: null,
       tax_identifier: null,
     };
+  }
+
+  /**
+   * Determine if claim is a Bonding Leave claim
+   * @returns {boolean}
+   */
+  get isBondingLeave() {
+    return get(this, "leave_details.reason") === LeaveReason.bonding;
   }
 
   /**

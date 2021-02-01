@@ -50,14 +50,6 @@ class Claim extends BaseClaim {
   }
 
   /**
-   * Determine if claim is a Bonding Leave claim
-   * @returns {boolean}
-   */
-  get isBondingLeave() {
-    return get(this, "leave_details.reason") === LeaveReason.bonding;
-  }
-
-  /**
    * Determine if applicable leave period start date(s) are in the future.
    * @returns {boolean}
    */

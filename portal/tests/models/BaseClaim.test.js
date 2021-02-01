@@ -89,6 +89,16 @@ describe("BaseClaim", () => {
     });
   });
 
+  it("#isBondingLeave returns true when the Claim reason is bonding", () => {
+    const emptyClaim = new BaseClaim();
+    const claimWithReason = new MockTestClaimBuilder()
+      .bondingLeaveReason()
+      .create();
+
+    expect(emptyClaim.isBondingLeave).toBe(false);
+    expect(claimWithReason.isBondingLeave).toBe(true);
+  });
+
   describe("#isContinuous", () => {
     it("returns true if continuous leave data is set", () => {
       expect(claimWithContinuousLeave.isContinuous).toBe(true);

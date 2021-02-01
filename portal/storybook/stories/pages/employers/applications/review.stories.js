@@ -23,6 +23,13 @@ export default {
         ],
       },
     },
+    "Leave reason": {
+      defaultValue: "Medical",
+      control: {
+        type: "radio",
+        options: ["Bonding", "Medical"],
+      },
+    },
     errorTypes: {
       control: {
         type: "check",
@@ -39,20 +46,33 @@ export default {
   },
 };
 
-export const Default = ({ claimOption, errorTypes = [] }) => {
+export const Default = (args) => {
+  const { claimOption } = args;
+  const errorTypes = args.errorTypes || [];
+
   const user = new User();
   const query = { absence_id: "mock-absence-id" };
   const leavePeriodType = claimOption.split("-")[0];
   const documentationOption = claimOption.split("-")[1];
   const isIntermittent = !!leavePeriodType.includes("Intermittent");
 
+  let claim = new MockEmployerClaimBuilder()
+    .completed(isIntermittent)
+    .reviewable();
+
+  switch (args["Leave reason"]) {
+    case "Bonding":
+      claim = claim.bondingLeaveReason();
+      break;
+    case "Medical":
+      claim = claim.medicalLeaveReason();
+      break;
+  }
+
   const appLogic = {
     appErrors: getAppErrorInfoCollection(errorTypes),
     employers: {
-      claim: new MockEmployerClaimBuilder()
-        .completed(isIntermittent)
-        .reviewable()
-        .create(),
+      claim: claim.create(),
       documents: getDocuments(documentationOption),
       downloadDocument: () => {},
       loadClaim: () => {},
