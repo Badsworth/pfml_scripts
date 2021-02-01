@@ -66,7 +66,7 @@ resource "pagerduty_schedule" "mass_pfml_portal_primary" {
     start                        = "2020-11-04T13:00:00-05:00"
     rotation_virtual_start       = "2020-10-28T13:00:00-05:00"
     rotation_turn_length_seconds = 604800 # 1 week
-    users                        = local.oncall_rotation_portal_engineers
+    users                        = [data.pagerduty_user.mass_pfml["Sheldon Bachstein"].id]
   }
 }
 
@@ -85,7 +85,7 @@ resource "pagerduty_schedule" "mass_pfml_portal_secondary" {
     start                        = "2020-11-04T13:00:00-05:00"
     rotation_virtual_start       = "2020-11-04T13:00:00-05:00"
     rotation_turn_length_seconds = 604800 # 1 week
-    users                        = local.oncall_rotation_portal_engineers
+    users                        = [data.pagerduty_user.mass_pfml["Sheldon Bachstein"].id]
   }
 }
 
@@ -104,7 +104,7 @@ resource "pagerduty_schedule" "mass_pfml_portal_delivery" {
     start                        = "2020-11-04T13:00:00-05:00"
     rotation_virtual_start       = "2020-11-04T13:00:00-05:00"
     rotation_turn_length_seconds = 1209600 # 2 weeks
-    users                        = local.oncall_rotation_portal_delivery
+    users                        = [data.pagerduty_user.mass_pfml["Jim Delloso"].id]
   }
 }
 
