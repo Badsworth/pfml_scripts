@@ -1,5 +1,5 @@
 import DateOfBirth from "../../../src/pages/applications/date-of-birth";
-import pick from "lodash/pick";
+import { pick } from "lodash";
 import { renderWithAppLogic } from "../../test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");

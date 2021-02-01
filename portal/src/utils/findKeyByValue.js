@@ -1,4 +1,4 @@
-import invert from "lodash/invert";
+import { invert } from "lodash";
 
 /**
  * Get the first key in an object that has a value matching `value`

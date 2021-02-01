@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import usePreviousValue from "../hooks/usePreviousValue";
-import zipObject from "lodash/zipObject";
+import { zipObject } from "lodash";
 
 /**
  * Conditionally displays the content passed into it, and clears any

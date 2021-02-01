@@ -11,7 +11,7 @@ import download from "downloadjs";
 import findDocumentsByTypes from "../utils/findDocumentsByTypes";
 import findKeyByValue from "../utils/findKeyByValue";
 import formatDateRange from "../utils/formatDateRange";
-import get from "lodash/get";
+import { get } from "lodash";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
 import routeWithParams from "../utils/routeWithParams";
 import routes from "../routes";

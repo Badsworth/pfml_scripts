@@ -10,7 +10,7 @@ import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import Document from "../../src/models/Document";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import { act } from "react-dom/test-utils";
-import { uniqueId } from "xstate/lib/utils";
+import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useDocumentsLogic from "../../src/hooks/useDocumentsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";

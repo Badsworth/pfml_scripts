@@ -1,3 +1,4 @@
+import { chain, find, first, get, map, upperFirst } from "lodash";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import Claim from "src/models/Claim";
@@ -5,7 +6,6 @@ import DocumentCollection from "src/models/DocumentCollection";
 import { MockClaimBuilder } from "tests/test-utils";
 import React from "react";
 import User from "../../src/models/User";
-import _ from "lodash";
 import englishLocale from "src/locales/app/en-US";
 import { useTranslation } from "src/locales/i18n";
 
@@ -31,7 +31,7 @@ export default function generateClaimPageStory(
   mockClaims = null
 ) {
   // e.g. applications/leave-duration --> LeaveDuration
-  const componentName = _.chain(claimsPageSubpath)
+  const componentName = chain(claimsPageSubpath)
     .split("/")
     .last()
     .camelCase()
@@ -80,7 +80,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
   }
 
   // Just take the first claim in the list of mockClaims as the defaultClaim
-  const defaultClaim = _.first(Object.entries(mockClaims))[0];
+  const defaultClaim = first(Object.entries(mockClaims))[0];
 
   const DefaultStory = (args) => {
     const errorDisplayStrs = args.errors || [];
@@ -89,7 +89,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
     const { t } = useTranslation();
     const appErrors = new AppErrorInfoCollection(
       errorDisplayStrs.map((displayStr) => {
-        const errorInfo = _.find(possibleErrors, { displayStr });
+        const errorInfo = find(possibleErrors, { displayStr });
         const { field, i18nKey } = errorInfo;
         return new AppErrorInfo({
           message: t(i18nKey),
@@ -131,7 +131,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
     errors: {
       control: {
         type: "check",
-        options: _.map(possibleErrors, "displayStr"),
+        options: map(possibleErrors, "displayStr"),
       },
     },
   };
@@ -176,7 +176,7 @@ function getPossibleErrorsForField(field, translation) {
   // i.e. convert foo[0].bar[1].cat to foo.bar.cat
   const claimFieldKey = field.replace(/\[(\d+)\]/g, "");
   const errorTypes = Object.keys(
-    _.get(translation.errors.claims, claimFieldKey) || {}
+    get(translation.errors.claims, claimFieldKey) || {}
   );
   const possibleErrors = errorTypes.map((type) => {
     return {
@@ -192,6 +192,6 @@ function getPossibleErrorsForField(field, translation) {
 function kebabCaseToTitleCase(str) {
   return str
     .split("-")
-    .map((word) => _.upperFirst(word))
+    .map((word) => upperFirst(word))
     .join(" ");
 }

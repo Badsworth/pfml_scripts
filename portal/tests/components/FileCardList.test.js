@@ -1,3 +1,4 @@
+/* eslint-disable lodash/import-scope */
 import React, { useState } from "react";
 import _, { uniqueId } from "lodash";
 import { makeFile, testHook } from "../test-utils";

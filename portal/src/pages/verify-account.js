@@ -10,7 +10,7 @@ import InputText from "../components/InputText";
 import Lead from "../components/Lead";
 import PropTypes from "prop-types";
 import Title from "../components/Title";
-import get from "lodash/get";
+import { get } from "lodash";
 import routes from "../routes";
 import tracker from "../services/tracker";
 import useFormState from "../hooks/useFormState";

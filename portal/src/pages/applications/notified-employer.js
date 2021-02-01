@@ -1,3 +1,4 @@
+import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
 import Claim from "../../models/Claim";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -8,8 +9,6 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
-import get from "lodash/get";
-import pick from "lodash/pick";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";

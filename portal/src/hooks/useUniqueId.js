@@ -1,4 +1,4 @@
-import uniqueId from "lodash/uniqueId";
+import { uniqueId } from "lodash";
 import { useState } from "react";
 
 /**

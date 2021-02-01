@@ -3,7 +3,7 @@ import Button from "./Button";
 import PropTypes from "prop-types";
 import RepeatableFieldsetCard from "./RepeatableFieldsetCard";
 import classnames from "classnames";
-import uniqueId from "lodash/uniqueId";
+import { uniqueId } from "lodash";
 import usePreviousValue from "../hooks/usePreviousValue";
 
 /**

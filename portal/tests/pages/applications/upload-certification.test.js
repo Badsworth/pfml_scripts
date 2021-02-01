@@ -1,3 +1,4 @@
+/* eslint-disable lodash/import-scope */
 import Document, { DocumentType } from "../../../src/models/Document";
 import {
   MockClaimBuilder,

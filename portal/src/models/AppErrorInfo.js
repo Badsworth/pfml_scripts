@@ -1,5 +1,5 @@
 import BaseModel from "./BaseModel";
-import uniqueId from "lodash/uniqueId";
+import { uniqueId } from "lodash";
 
 /**
  * Provides a consistent interface for creating error messages displayed to the user.

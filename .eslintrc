@@ -23,8 +23,9 @@
         "jsx": true
       }
     },
-    "plugins": ["jest", "jsdoc", "jsx-a11y", "react-hooks", "todo-plz"],
+    "plugins": ["jest", "jsdoc", "jsx-a11y", "lodash", "react-hooks", "todo-plz"],
     "rules": {
+        "camelcase": "off",
         "jest/consistent-test-it": ["error", { "fn": "it" }],
         "jest/no-conditional-expect": "off",
         "jest/no-try-expect": "off",
@@ -41,7 +42,8 @@
         "jsdoc/no-undefined-types": "off",
         "jsx-a11y/anchor-has-content": "off",
         "jsx-a11y/no-onchange": "off",
-        "camelcase": "off",
+        "lodash/import-scope": ["error", "member"],
+        "lodash/path-style": ["error", "string"],
         "no-console": ["error", { "allow": ["error"] }],
         "no-irregular-whitespace": ["error", { "skipTemplates": true }],
         "no-prototype-builtins": "off",

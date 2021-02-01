@@ -1,6 +1,6 @@
+import { clone, get, merge } from "lodash";
 import EmployerBenefit from "../models/EmployerBenefit";
 import PreviousLeave from "../models/PreviousLeave";
-import _ from "lodash";
 
 /**
  * Returns an updated array (for employer benefits or previous leaves) with amended data
@@ -14,11 +14,11 @@ const updateAmendment = (amendments, updatedValue) => {
     const idKey = getIdKey(amendment);
 
     if (idKey) {
-      const amendmentId = _.get(amendment, idKey);
-      const updatedValueId = _.get(updatedValue, idKey);
+      const amendmentId = get(amendment, idKey);
+      const updatedValueId = get(updatedValue, idKey);
 
       if (amendmentId === updatedValueId) {
-        return _.merge(_.clone(amendment), updatedValue);
+        return merge(clone(amendment), updatedValue);
       }
     }
 

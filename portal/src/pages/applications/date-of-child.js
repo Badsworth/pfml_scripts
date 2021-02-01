@@ -1,11 +1,10 @@
-import { pick, set } from "lodash";
+import { get, pick, set } from "lodash";
 import { DateTime } from "luxon";
 import InputDate from "../../components/InputDate";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { ReasonQualifier } from "../../models/Claim";
-import get from "lodash/get";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";

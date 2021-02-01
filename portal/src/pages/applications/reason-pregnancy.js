@@ -1,10 +1,9 @@
+import { get, pick } from "lodash";
 import Claim from "../../models/Claim";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import get from "lodash/get";
-import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";

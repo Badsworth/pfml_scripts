@@ -1,6 +1,4 @@
-import { get } from "lodash";
-import isNil from "lodash/isNil";
-import omitBy from "lodash/omitBy";
+import { get, isNil, omitBy } from "lodash";
 import routes from "../routes";
 
 /**

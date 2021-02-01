@@ -28,6 +28,7 @@ import OtherIncome, {
 import PreviousLeave, {
   PreviousLeaveReason,
 } from "../src/models/PreviousLeave";
+import { merge, set, times } from "lodash";
 import { mount, shallow } from "enzyme";
 import Address from "../src/models/Address";
 import AppErrorInfo from "../src/models/AppErrorInfo";
@@ -38,9 +39,6 @@ import LeaveReason from "../src/models/LeaveReason";
 import React from "react";
 import User from "../src/models/User";
 import { act } from "react-dom/test-utils";
-import merge from "lodash/merge";
-import set from "lodash/set";
-import times from "lodash/times";
 import useAppLogic from "../src/hooks/useAppLogic";
 
 export class BaseMockClaimBuilder {
