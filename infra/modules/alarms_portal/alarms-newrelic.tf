@@ -234,7 +234,7 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
   enabled        = true
 
   nrql {
-    query             = "SELECT count(errorMessage) / count(pageUrl) from JavaScriptError, PageView WHERE environment = '${var.environment_name}'"
+    query             = "SELECT count(errorMessage) / filter(count(browserInteractionName), WHERE browserInteractionName NOT LIKE 'fetch:%') FROM JavaScriptError, BrowserInteraction WHERE appName = 'PFML-Portal-${upper(var.environment_name)}'"
     evaluation_offset = 1
   }
 
