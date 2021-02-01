@@ -10,7 +10,7 @@
       
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.6">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.7">
     
     
       
@@ -709,23 +709,23 @@
                 <h1 id="environment-variables">Environment variables</h1>
 <p>Environment variables include <a href="../feature-flags/">feature flags</a>, <a href="../maintenance-pages/">maintenance pages</a>, and URLs and keys for external resources such as Cognito and the API.</p>
 <h2 id="configuring-environment-variables">Configuring environment variables</h2>
-<p>Default environment variables live in <a href="https://github.com/EOLWD/pfml/tree/master/portal/config/default.js"><code>portal/config/default.js</code></a>.</p>
-<p>Each environment has a corresponding configuration file in <a href="../../portal/config/"><code>portal/config</code></a>, for example <code>production.js</code></p>
-<p>The default environment variables are merged with the environment-specific config file in <a href="https://github.com/EOLWD/pfml/tree/master/portal/config/index.js"><code>portal/config/index.js</code></a>. A default environment variable can be overridden in the environment-specific config file.</p>
+<p>Default environment variables live in <a href="https://github/com/EOLWD/pfml/tree/master/portal/config/default.js"><code>portal/config/default.js</code></a>.</p>
+<p>Each environment has a corresponding configuration file in <a href="https://github/com/EOLWD/pfml/tree/master/portal/config/"><code>portal/config</code></a>, for example <code>production.js</code></p>
+<p>The default environment variables are merged with the environment-specific config file in <a href="https://github/com/EOLWD/pfml/tree/master/portal/config/index.js"><code>portal/config/index.js</code></a>. A default environment variable can be overridden in the environment-specific config file.</p>
 <ul>
 <li><strong>Portal environment variables should never include a secret!</strong> Since the Portal is only served on the client-side, these environment variables will be publicly accessible.</li>
-<li>Each time you add a new environment variable, ensure that you add it to each environment's config file, so that an environment isn't missing anything. If the variable value is shared across many environments, consider adding it as a default environment variable in <a href="https://github.com/EOLWD/pfml/tree/master/portal/config/default.js"><code>portal/config/default.js</code></a>.</li>
+<li>Each time you add a new environment variable, ensure that you add it to each environment's config file, so that an environment isn't missing anything. If the variable value is shared across many environments, consider adding it as a default environment variable in <a href="https://github/com/EOLWD/pfml/tree/master/portal/config/default.js"><code>portal/config/default.js</code></a>.</li>
 </ul>
 <h2 id="referencing-an-environment-variable">Referencing an environment variable</h2>
 <p>Within our codebase, environment variables are referenced from <code>process.env</code>. For example:</p>
 <div class="highlight"><pre><span></span><code><span class="nx">Amplify</span><span class="p">.</span><span class="nx">config</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">myCustomKey</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="how-it-works">How it works</h2>
-<p>We use environment specific NPM scripts in <a href="https://github.com/EOLWD/pfml/tree/master/portal/package.json"><code>portal/package.json</code></a> to bundle builds with the correct configuration. For example <code>build:stage</code>.</p>
+<p>We use environment specific NPM scripts in <a href="https://github/com/EOLWD/pfml/tree/master/portal/package.json"><code>portal/package.json</code></a> to bundle builds with the correct configuration. For example <code>build:stage</code>.</p>
 <p>The target environment is set as the <code>BUILD_ENV</code>. For example:</p>
 <div class="highlight"><pre><span></span><code>BUILD_ENV=stage npm run build
 </code></pre></div>
-<p>When the build script is ran, the contents of the configuration file corresponding to <code>BUILD_ENV</code> are assigned to the <a href="https://nextjs.org/docs/api-reference/next.config.js/environment-variables">Next.js <code>env</code> config option</a> in <a href="https://github.com/EOLWD/pfml/tree/master/portal/next.config.js"><code>portal/next.config.js</code></a>. Next.js replaces <code>process.env</code> references with their values at build time.</p>
+<p>When the build script is ran, the contents of the configuration file corresponding to <code>BUILD_ENV</code> are assigned to the <a href="https://nextjs.org/docs/api-reference/next.config.js/environment-variables">Next.js <code>env</code> config option</a> in <a href="https://github/com/EOLWD/pfml/tree/master/portal/next.config.js"><code>portal/next.config.js</code></a>. Next.js replaces <code>process.env</code> references with their values at build time.</p>
 <h3 id="node_env">NODE_ENV</h3>
 <p>The <code>NODE_ENV</code> environment variable is automatically set by Next.js during development and builds. For our test scripts, we manually set this in the test's NPM scripts.</p>
 <p>This variable determines whether our JS bundle includes the <a href="https://reactjs.org/docs/optimizing-performance.html#use-the-production-build">production build of React or the dev build</a>.</p>

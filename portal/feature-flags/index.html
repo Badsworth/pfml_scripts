@@ -10,7 +10,7 @@
       
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.6">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.7">
     
     
       
@@ -695,7 +695,7 @@
                 <h1 id="feature-flags">Feature flags</h1>
 <p><a href="https://lwd.atlassian.net/wiki/x/4oAPD">Original tech spec for feature flags is available on Confluence</a></p>
 <h2 id="defining-feature-flags">Defining feature flags</h2>
-<p>Feature flags are defined in <a href="https://github.com/EOLWD/pfml/tree/master/portal/config/featureFlags.js"><code>portal/config/featureFlags.js</code></a>. These flags are then set as environment variables in <code>portal/next.config.js</code> at initial build time (so they don't live reload when running locally). <strong>If you define a new feature flag during local development, you will need to restart the dev server in order for the flag to become available</strong>.</p>
+<p>Feature flags are defined in <a href="https://github/com/EOLWD/pfml/tree/master/portal/config/featureFlags.js"><code>portal/config/featureFlags.js</code></a>. These flags are then set as environment variables in <code>portal/next.config.js</code> at initial build time (so they don't live reload when running locally). <strong>If you define a new feature flag during local development, you will need to restart the dev server in order for the flag to become available</strong>.</p>
 <p>Feature flags should be named so that the absence of a default value is interpreted as <code>false</code> – this way if someone forgets to define a feature flag, it doesn’t unintentionally enable the feature for everyone.</p>
 <h2 id="checking-feature-flags-in-the-code">Checking feature flags in the code</h2>
 <p>The <code>services/featureFlags.js</code> file includes methods for checking the value of a feature flag, as well as a method for overriding environment-level feature flags through the URL's query string.</p>
@@ -721,7 +721,7 @@
 <h3 id="preventing-allowing-the-site-to-be-rendered">Preventing / Allowing the site to be rendered</h3>
 <p>While the site is under development, <a href="https://lwd.atlassian.net/browse/CP-459">we don't want it to be visible to the press or the public</a>. As a low-tech solution, we use a feature flag prefixed with <code>pfml</code> to determine whether the site should be rendered.</p>
 <p><strong>To render the site, enable the <code>pfmlTerriyay</code> flag</strong> by visiting: <code>{Site URL}?_ff=pfmlTerriyay:true</code></p>
-<p>⚠️ The exact flag name may change if we need to force the site to be hidden for people who previously enabled the flag through through browser. If the above flag doesn't work, you should check <a href="https://github.com/EOLWD/pfml/tree/master/portal/config/featureFlags.js"><code>config/featureFlags.js</code></a> to verify whether it's still the correct flag name we're using.</p>
+<p>⚠️ The exact flag name may change if we need to force the site to be hidden for people who previously enabled the flag through through browser. If the above flag doesn't work, you should check <a href="https://github/com/EOLWD/pfml/tree/master/portal/config/featureFlags.js"><code>config/featureFlags.js</code></a> to verify whether it's still the correct flag name we're using.</p>
                 
               
               

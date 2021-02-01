@@ -10,7 +10,7 @@
       
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.6">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.7">
     
     
       
@@ -768,7 +768,7 @@
 <p>We then use the environment variable to configure the New Relic snippet by setting the <code>window.NREUM</code> global variable, in <code>services/tracker.js</code>.</p>
 <p>🚨 If we ever update the New Relic snippet, we should ensure that the configuration portion at the bottom is removed, so that we're not overwriting <code>window.NREUM.loader_config</code> or <code>window.NREUM.info</code>.</p>
 <h4 id="content-security-policy">Content Security Policy</h4>
-<p>In order for the New Relic script to run, we need to make sure the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP">Content Security Policy</a> set by CloudFront in <a href="https://github.com/EOLWD/pfml/tree/master/infra/portal/template/cloudfront-handler.js">cloudfront-handler.js</a> allows:</p>
+<p>In order for the New Relic script to run, we need to make sure the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP">Content Security Policy</a> set by CloudFront in <a href="https://github/com/EOLWD/pfml/tree/master/infra/portal/template/cloudfront-handler.js">cloudfront-handler.js</a> allows:</p>
 <ul>
 <li>Scripts from <code>https://js-agent.newrelic.com/</code></li>
 <li>Scripts from <code>https://bam.nr-data.net/</code></li>
