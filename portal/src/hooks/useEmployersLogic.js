@@ -76,13 +76,14 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
   /**
    * Submit withholding data to the API for verification
    * @param {object} data - user info and employer data
+   * @param {string} next - query param to navigate to next page
    */
-  const submitWithholding = async (data) => {
+  const submitWithholding = async (data, next) => {
     appErrorsLogic.clearErrors();
 
     try {
       await employersApi.submitWithholding(data);
-      const params = { employer_id: data.employer_id };
+      const params = { employer_id: data.employer_id, next };
       portalFlow.goToNextPage({}, params);
     } catch (error) {
       appErrorsLogic.catchError(error);

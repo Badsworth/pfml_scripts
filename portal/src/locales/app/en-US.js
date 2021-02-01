@@ -1714,6 +1714,14 @@ const pages = {
     title: "Your organizations",
     verificationRequired: "Verification required",
   },
+  employersVerificationSuccess: {
+    companyNameLabel: "<strong>Organization:</strong> {{company}}",
+    continueButton: "Continue",
+    employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
+    instructions:
+      "You can now review paid leave applications for this organization. If anyone else on your team needs to review applications, they'll also need to complete the <learn-more-link>verification process</learn-more-link>.",
+    title: "Thanks for verifying your paid leave contributions",
+  },
   index: {
     claimantCardBody: "You can now apply for Paid Family and Medical Leave.",
     claimantCreateAccountButton: "Create an account",

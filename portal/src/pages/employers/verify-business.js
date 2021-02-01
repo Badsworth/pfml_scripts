@@ -35,7 +35,7 @@ export const VerifyBusiness = (props) => {
       withholding_quarter: "2020-10-10", // TODO (EMPLOYER-470): Change based on actual variable
     };
 
-    await appLogic.employers.submitWithholding(payload);
+    await appLogic.employers.submitWithholding(payload, query.next);
   });
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -117,6 +117,7 @@ VerifyBusiness.propTypes = {
   }).isRequired,
   query: PropTypes.shape({
     employer_id: PropTypes.string.isRequired,
+    next: PropTypes.string.isRequired,
   }).isRequired,
   user: PropTypes.instanceOf(User),
 };

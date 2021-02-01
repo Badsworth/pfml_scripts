@@ -8,7 +8,10 @@ jest.mock("../../../src/hooks/useAppLogic");
 
 describe("VerifyBusiness", () => {
   let changeField, submitForm;
-  const query = { employer_id: "mock_employer_id" };
+  const query = {
+    employer_id: "mock_employer_id",
+    next: "/employers/applications/new-application/?absence_id=mock_absence_id",
+  };
   mockRouter.pathname = routes.employers.VerifyBusiness;
 
   const { wrapper, appLogic } = renderWithAppLogic(VerifyBusiness, {
@@ -40,10 +43,13 @@ describe("VerifyBusiness", () => {
     changeField("withholdingAmount", "123");
     await submitForm();
 
-    expect(appLogic.employers.submitWithholding).toHaveBeenCalledWith({
-      employer_id: "mock_employer_id",
-      withholding_amount: "123",
-      withholding_quarter: "2020-10-10",
-    });
+    expect(appLogic.employers.submitWithholding).toHaveBeenCalledWith(
+      {
+        employer_id: "mock_employer_id",
+        withholding_amount: "123",
+        withholding_quarter: "2020-10-10",
+      },
+      query.next
+    );
   });
 });
