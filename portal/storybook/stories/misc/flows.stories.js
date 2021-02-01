@@ -1,10 +1,20 @@
-import { stateMachineToSmcat, stateMachineToSvg } from "./stateMachineToSvg";
 import React from "react";
 import Step from "src/models/Step";
+import auth from "src/flows/auth";
+import claimant from "src/flows/claimant";
+import employer from "src/flows/employer";
 import machineConfig from "src/flows";
+import { stateMachineToSvg } from "./stateMachineToSvg";
+import { uniqueId } from "lodash";
 
 export default {
   title: "Misc/Flows",
+};
+
+export const Intro = () => {
+  return (
+    <p>The diagrams below represent the routing logic currently implemented.</p>
+  );
 };
 
 /**
@@ -14,45 +24,29 @@ export default {
  * @see https://state-machine-cat.js.org/
  * @returns {React.Component}
  */
-export const Default = () => {
+const FlowDiagram = (props) => {
+  const svg = stateMachineToSvg(props.states);
+  const maxWidth = props.maxWidth || "100%";
+  const id = uniqueId("flow");
+
   return (
     <React.Fragment>
-      <style>{`svg { height: auto; max-width: 100% }`}</style>
-      <p style={{ fontSize: 12, marginTop: 0, marginBottom: 30 }}>
-        The diagram below represents the routing logic currently implemented.
-        You can open this preview in a new tab, by clicking the up arrow icon in
-        the toolbar above, to view this in a larger window.
-      </p>
+      <style>{`#${id} svg { height: auto; max-width: ${maxWidth} }`}</style>
       <div
-        dangerouslySetInnerHTML={{ __html: stateMachineToSvg(machineConfig) }}
+        id={id}
+        style={{
+          border: "1px solid #eee",
+          overflow: "auto",
+        }}
+        dangerouslySetInnerHTML={{ __html: svg }}
       />
     </React.Fragment>
   );
 };
 
-export const Smcat = () => {
-  return (
-    <React.Fragment>
-      <p>
-        smcat stands for{" "}
-        <a href="https://github.com/sverweij/state-machine-cat">
-          state machine cat
-        </a>{" "}
-        and is a shorthand syntax for writing{" "}
-        <a href="https://statecharts.github.io/">statecharts</a>. Mainly, it
-        helps us generate a somewhat legible statechart (shown above), so we're
-        using it until we find a better library for generating statecharts. You
-        can copy the text below and paste it into the{" "}
-        <a href="https://state-machine-cat.js.org/">smcat visualizer</a> to play
-        around with the diagram.
-      </p>
-
-      <pre style={{ fontSize: 11, padding: 20, border: "1px solid #999" }}>
-        {stateMachineToSmcat(machineConfig)}
-      </pre>
-    </React.Fragment>
-  );
-};
+export const Auth = () => <FlowDiagram states={auth} />;
+export const Employer = () => <FlowDiagram states={employer} />;
+export const Claimant = () => <FlowDiagram states={claimant} maxWidth="200%" />;
 
 export const ClaimFlowFields = () => {
   const steps = Step.createClaimStepsFromMachine(machineConfig, { claim: {} });

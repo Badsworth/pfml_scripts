@@ -45,18 +45,19 @@ export function stateMachineToSmcat(machineConfig) {
   // smcat requires root nodes (nodes without a parent) to be output
   // slightly differently, so we need to separate them from nested nodes
   const { _root, ...steps } = groups;
-
-  // Since we're outputting a nested state machine, our root nodes
-  // need defined at the top of the smcat first, before we output
-  // any transitions to them
-  for (const route in _root) {
-    smcatOutput.push(`"${route}",`); // Outputs: "/routeA",
-  }
-
   // We need a way to identify whether we've reached the last step
   // so that we can use the correct delimiter in smcat output
   const totalSteps = Object.keys(steps).length;
   let delimiterCounter = 0;
+
+  // Since we're outputting a nested state machine, our root nodes
+  // need defined at the top of the smcat first, before we output
+  // any transitions to them
+  if (totalSteps > 0) {
+    for (const route in _root) {
+      smcatOutput.push(`"${route}",`); // Outputs: "/routeA",
+    }
+  }
 
   // Output each nested state machine
   for (const stepName in steps) {
@@ -80,10 +81,6 @@ export function stateMachineToSmcat(machineConfig) {
   smcatOutput = smcatOutput.concat(smcatTransitionGroup(_root));
 
   const smcatString = smcatOutput.join("\n\n"); // adding line breaks for readability
-
-  // You can copy and paste the smcat output into https://state-machine-cat.js.org
-  // eslint-disable-next-line no-console
-  console.log(smcatString);
 
   return smcatString;
 }
