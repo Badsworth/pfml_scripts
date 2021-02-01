@@ -234,9 +234,45 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Setting up a new environment
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Setting up a new environment
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setting-up-custom-domains" class="md-nav__link">
+    Setting up Custom Domains
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuring-cognito" class="md-nav__link">
+    Configuring Cognito
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -577,6 +613,28 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setting-up-custom-domains" class="md-nav__link">
+    Setting up Custom Domains
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuring-cognito" class="md-nav__link">
+    Configuring Cognito
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -660,7 +718,7 @@ $ terraform apply -var<span class="o">=</span><span class="s1">&#39;service_dock
 <p>Add the new environment to the <a href="https://github.com/EOLWD/pfml/tree/master/.github/workflows/infra-validate.yml">CI build matrix</a> so it can be validated when it's changed.</p>
 </li>
 </ol>
-<h1 id="setting-up-custom-domains">Setting up Custom Domains</h1>
+<h2 id="setting-up-custom-domains">Setting up Custom Domains</h2>
 <p>If you need a custom mass.gov domain for your environment, please follow these steps:</p>
 <ol>
 <li>Request an ACM cert in the AWS Console, with Email Verification. Example:</li>
@@ -729,6 +787,14 @@ $ terraform apply -var<span class="o">=</span><span class="s1">&#39;service_dock
 </table>
 <ol>
 <li>After they create the CNAME entries, the custom domains should direct to the appropriate applications.</li>
+</ol>
+<h2 id="configuring-cognito">Configuring Cognito</h2>
+<p>Our Terraform scripts enable Advanced Security, however at the time of writing, <a href="https://github.com/hashicorp/terraform-provider-aws/issues/7007">Terraform didn't support more granular configuration of the Advanced Security settings</a>, so there are some manual steps needed:</p>
+<ol>
+<li>Log into the AWS Console and navigate to the Cognito User Pool for this environment.</li>
+<li>Click "Advanced Security" in the sidebar</li>
+<li><a href="https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-settings-advanced-security.html#cognito-user-pool-configure-advanced-security">Configure the adaptive authentication behavior</a>. In production and stage environments we block high-risk login attempts. This can also be configured for other environments if desired. High-risk login attempts aren't blocked in environments used for testing (test, perf, and training) so that automated test scripts don't get blocked.</li>
+<li>On the same page in AWS customize the email notification messages by copy-and-pasting the HTML email templates from <a href="https://github.com/EOLWD/pfml/tree/master/infra/portal/templates/emails/"><code>infra/portal/templates/emails</code></a>.</li>
 </ol>
                 
               
