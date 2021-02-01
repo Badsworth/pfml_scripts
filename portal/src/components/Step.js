@@ -1,3 +1,4 @@
+import Button from "./Button";
 import ButtonLink from "./ButtonLink";
 import Heading from "./Heading";
 import Link from "next/link";
@@ -43,6 +44,16 @@ const Step = (props) => {
     </React.Fragment>
   );
 
+  const disabledStartButton = (
+    <Button
+      className="width-auto"
+      ariaLabel={`${props.startText}: ${props.title}`}
+      disabled
+    >
+      {props.startText}
+    </Button>
+  );
+
   const startButton = (
     <ButtonLink
       href={props.stepHref}
@@ -52,6 +63,7 @@ const Step = (props) => {
       {props.startText}
     </ButtonLink>
   );
+
   const resumeButton = (
     <ButtonLink
       href={props.stepHref}
@@ -118,6 +130,7 @@ const Step = (props) => {
           {showChildren && <div className="usa-prose">{props.children}</div>}
         </div>
         <div className={actionColumnClasses}>
+          {disabled && disabledStartButton}
           {notStarted && startButton}
           {inProgress && resumeButton}
           {completed && props.editable && editCompletedStep}

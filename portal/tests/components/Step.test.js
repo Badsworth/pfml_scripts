@@ -100,7 +100,7 @@ describe("Step", () => {
   });
 
   describe("when status is disabled", () => {
-    it("does not show children, shows no action links/buttons", () => {
+    it("does not show children, shows a disabled start button", () => {
       const wrapper = shallow(
         <Step {...props} status="disabled">
           <Child />
@@ -111,6 +111,10 @@ describe("Step", () => {
 
       expect(wrapper.find(".usa-link")).toHaveLength(0);
       expect(wrapper.contains("ButtonLink")).toBe(false);
+
+      const button = wrapper.find("Button");
+      expect(button.prop("children")).toEqual(props.startText);
+      expect(button.prop("disabled")).toBe(true);
     });
   });
 });
