@@ -397,7 +397,8 @@ def test_copy_from_sftp_to_s3_and_archive_files_success(
         filepath = os.path.join(config.s3_bucket_uri, config.dest_dir, filename)
         assert _first_ref_file(filepath, test_db_session) is None
 
-    copy_from_sftp_to_s3_and_archive_files(config=config, db_session=test_db_session)
+    ref_files = copy_from_sftp_to_s3_and_archive_files(config=config, db_session=test_db_session)
+    assert len(ref_files) == len(default_filenames)
 
     # Expect to find ReferenceFiles for each file after copying them from SFTP to S3.
     for filename in default_filenames:

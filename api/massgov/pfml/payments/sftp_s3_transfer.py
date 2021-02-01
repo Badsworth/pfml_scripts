@@ -179,7 +179,7 @@ def _copy_file_from_s3_to_sftp_with_retry(source, dest, sftp):
 
 def copy_from_sftp_to_s3_and_archive_files(
     config: SftpS3TransferConfig, db_session: db.Session
-) -> None:
+) -> List[ReferenceFile]:
     sftp_client = file_util.get_sftp_client(
         uri=config.sftp_uri, ssh_key_password=config.ssh_key_password, ssh_key=config.ssh_key,
     )
@@ -187,12 +187,14 @@ def copy_from_sftp_to_s3_and_archive_files(
     source_filenames = sftp_client.listdir(config.source_dir)
     if len(source_filenames) == 0:
         logger.info("Did not find any files in source SFTP directory: %s", config.source_dir)
-        return
+        return []
 
     # Remove any leading (and trailing) slashes so that we include the config.s3_bucket_uri when
     # constructing the dest_filepath. If the dest_dir has a leading slash os.path.join() will
     # ignore config.s3_bucket_uri and start the path at dest_dir.
     dest_dir = config.dest_dir.strip("/")
+
+    reference_files = []
 
     for filename in source_filenames:
         source_filepath = os.path.join(config.source_dir, filename)
@@ -237,6 +239,7 @@ def copy_from_sftp_to_s3_and_archive_files(
             reference_file = ReferenceFile(file_location=dest_filepath)
             db_session.add(reference_file)
             db_session.commit()
+            reference_files.append(reference_file)
         except Exception as e:
             logger.error(
                 "Saved file '{}' into S3 but could not create a ReferenceFile record in database.".format(
@@ -251,6 +254,8 @@ def copy_from_sftp_to_s3_and_archive_files(
         except Exception as e:
             logger.info("Failed to archive file '{}' in SFTP server.".format(source_filepath))
             raise e
+
+    return reference_files
 
 
 @retry(stop=stop_after_attempt(3))
