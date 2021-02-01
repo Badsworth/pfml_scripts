@@ -593,9 +593,9 @@
                 
                 
                 <h1 id="setting-up-a-new-environment">Setting up a new environment</h1>
-<p>The easiest way to set up resources in a new environment is using the templates in <a href="https://github/com/EOLWD/pfml/tree/master/bin/bootstrap-env">/bin/bootstrap-env/</a>.</p>
+<p>The easiest way to set up resources in a new environment is using the templates in <a href="https://github.com/EOLWD/pfml/tree/master/bin/bootstrap-env">/bin/bootstrap-env/</a>.</p>
 <ol>
-<li>The S3 bucket for holding tfstate files must be created first in <a href="https://github/com/EOLWD/pfml/tree/master/infra/pfml-aws/s3.tf">infra/pfml-aws/s3.tf</a></li>
+<li>The S3 bucket for holding tfstate files must be created first in <a href="https://github.com/EOLWD/pfml/tree/master/infra/pfml-aws/s3.tf">infra/pfml-aws/s3.tf</a></li>
 <li>Then, individual terraform components (<code>env-shared</code>, <code>api</code>, or <code>portal</code>) may be set up.</li>
 </ol>
 <div class="highlight"><pre><span></span><code>pfml$ bin/bootstrap-env/bootstrap-env.sh &lt;new-env&gt; &lt;component&gt;
@@ -657,7 +657,7 @@ $ terraform apply -var<span class="o">=</span><span class="s1">&#39;service_dock
 <p><a href="../portal/creating-environments/">Additional steps for new Portal environments</a></p>
 </li>
 <li>
-<p>Add the new environment to the <a href="https://github/com/EOLWD/pfml/tree/master/.github/workflows/infra-validate.yml">CI build matrix</a> so it can be validated when it's changed.</p>
+<p>Add the new environment to the <a href="https://github.com/EOLWD/pfml/tree/master/.github/workflows/infra-validate.yml">CI build matrix</a> so it can be validated when it's changed.</p>
 </li>
 </ol>
 <h1 id="setting-up-custom-domains">Setting up Custom Domains</h1>
@@ -687,9 +687,9 @@ $ terraform apply -var<span class="o">=</span><span class="s1">&#39;service_dock
 <p>Once EOTSS has approved the certificate, update the cert_domains map in the following files:</p>
 </li>
 <li>
-<p><a href="https://github/com/EOLWD/pfml/tree/master/infra/portal/template/acm.tf">infra/portal/template/acm.tf</a></p>
+<p><a href="https://github.com/EOLWD/pfml/tree/master/infra/portal/template/acm.tf">infra/portal/template/acm.tf</a></p>
 </li>
-<li><a href="https://github/com/EOLWD/pfml/tree/master/infra/env-shared/template/acm.tf">infra/env-shared/template/acm.tf</a></li>
+<li><a href="https://github.com/EOLWD/pfml/tree/master/infra/env-shared/template/acm.tf">infra/env-shared/template/acm.tf</a></li>
 </ol>
 <p>and flip enable_pretty_domains to <code>true</code> in infra/env-shared/environments/$ENV/main.tf.</p>
 <ol>
