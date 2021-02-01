@@ -240,6 +240,14 @@ class MockCSVWriter:
         self.rows.append(row)
 
 
+class MockLogEntry:
+    def set_metrics(self, **metrics):
+        pass
+
+    def increment(self, metric):
+        pass
+
+
 @freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
 def test_process_payment_record(test_db_session, initialize_factories_session):
     input_files = [
@@ -282,13 +290,15 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         writeback_csv,
         datetime.date(2021, 1, 18),
         test_db_session,
+        MockLogEntry(),
     )
 
     assert len(output_csv.rows) == 1
     doc_id = output_csv.rows[0]["doc_id"]
-    assert re.match("^GAXMDFMLAAAA........$", doc_id)
+    assert re.match("^INTFDFMLAAAA........$", doc_id)
     assert output_csv.rows[0] == {
         "absence_case_number": "NTN-308848-ABS-01",
+        "activity_code": "7247",
         "address_code": "AD010",
         "address_line_1": "47 Washington St",
         "address_line_2": "",
@@ -323,6 +333,7 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "status": "Active",
         "status_effective_date": "",
         "status_reason": "Manual payment voucher",
+        "transaction_status": "Preapproved for payment",
     }
 
 
@@ -380,13 +391,15 @@ def test_process_payment_record_multiple_details(test_db_session, initialize_fac
         writeback_csv,
         datetime.date(2021, 1, 18),
         test_db_session,
+        MockLogEntry(),
     )
 
     assert len(output_csv.rows) == 1
     doc_id = output_csv.rows[0]["doc_id"]
-    assert re.match("^GAXMDFMLAAAA........$", doc_id)
+    assert re.match("^INTFDFMLAAAA........$", doc_id)
     assert output_csv.rows[0] == {
         "absence_case_number": "NTN-308848-ABS-01",
+        "activity_code": "7247",
         "address_code": "AD010",
         "address_line_1": "47 Washington St",
         "address_line_2": "",
@@ -421,6 +434,7 @@ def test_process_payment_record_multiple_details(test_db_session, initialize_fac
         "status": "Active",
         "status_effective_date": "",
         "status_reason": "Manual payment voucher",
+        "transaction_status": "Preapproved for payment",
     }
 
 
@@ -455,7 +469,7 @@ def test_process_extracts_to_payment_voucher(
     random.seed(1)
 
     payment_voucher.process_extracts_to_payment_voucher(
-        input_path, tmp_path, None, None, test_db_session
+        input_path, tmp_path, None, None, test_db_session, MockLogEntry()
     )
 
     csv_output = open(os.path.join(tmp_path, "20210121_080000_payment_voucher.csv")).readlines()
