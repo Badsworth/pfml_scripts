@@ -575,6 +575,8 @@ const shared = {
   day_Thursday: "Thursday",
   day_Tuesday: "Tuesday",
   day_Wednesday: "Wednesday",
+  departmentOfRevenuePhoneNumber:
+    "(617)$t(chars.nbsp)466$t(chars.nbhyphen)3950",
   // TODO (CP-1335): Add i18next formatter for time
   displayTime: "{{hours}}h {{minutes}}m",
   // TODO (CP-1335): Add i18next formatter for time
@@ -1577,7 +1579,7 @@ const pages = {
     companyNameLabel: "<strong>Organization:</strong> {{company}}",
     detailsLabel: "Where to find your paid leave contributions",
     detailsList:
-      "Log into <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> or contact your payroll department to complete these steps:<ol><li>On the <strong>Accounts</strong> tab, select <strong>Paid Family and Medical Leave</strong>.</li><li>On the <strong>Recent Periods</strong> tab, select the <strong>{DD-MMM-YYYY}</strong> period.</li><li>Copy the <strong>XXX</strong> amount from the <strong>Summary</strong> section.</li></ol>If you have any questions about your paid leave contributions, please contact the <contact-dor-link>Department of Revenue</contact-dor-link>.",
+      "Log into <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> or contact your payroll department to complete these steps:<ol><li>On the <strong>Accounts</strong> tab, select <strong>Paid Family and Medical Leave</strong>.</li><li>On the <strong>Recent Periods</strong> tab, select the <strong>{DD-MMM-YYYY}</strong> period.</li><li>Copy the <strong>XXX</strong> amount from the <strong>Summary</strong> section.</li></ol>If you have any questions about your paid leave contributions, please contact the Department of Revenue at <dor-phone-link><strong>$t(shared.departmentOfRevenuePhoneNumber)</strong></dor-phone-link> from 9am-4pm ET.",
     employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     lead:

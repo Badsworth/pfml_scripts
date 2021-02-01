@@ -83,12 +83,8 @@ export const VerifyBusiness = (props) => {
                 rel="noopener"
               />
             ),
-            "contact-dor-link": (
-              <a
-                href={routes.external.massgov.contactDepartmentOfRevenue}
-                target="_blank"
-                rel="noopener"
-              />
+            "dor-phone-link": (
+              <a href={`tel:${t("shared.departmentOfRevenuePhoneNumber")}`} />
             ),
             ol: <ol className="usa-list" />,
             li: <li />,
