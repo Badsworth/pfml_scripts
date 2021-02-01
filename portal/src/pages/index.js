@@ -31,25 +31,27 @@ export const Index = (props) => {
 
   return (
     <React.Fragment>
-      <Title seoTitle={t("pages.index.seoTitle")}>
-        <Trans
-          i18nKey="pages.index.title"
-          components={{
-            "mass-paid-leave-link": (
-              <a
-                target="_blank"
-                rel="noopener"
-                href={routes.external.massgov.paidLeave}
-              />
-            ),
-          }}
-        />
-      </Title>
+      <div className="maxw-desktop">
+        <Title seoTitle={t("pages.index.seoTitle")}>
+          <Trans
+            i18nKey="pages.index.title"
+            components={{
+              "mass-paid-leave-link": (
+                <a
+                  target="_blank"
+                  rel="noopener"
+                  href={routes.external.massgov.paidLeave}
+                />
+              ),
+            }}
+          />
+        </Title>
+      </div>
       <div className="margin-top-6 measure-7">
         <Heading level="2">{t("pages.index.createAccountHeading")}</Heading>
 
         <div className="grid-row grid-gap">
-          <article className="margin-bottom-3 measure-3">
+          <article className="grid-col-12 mobile-lg:grid-col margin-bottom-3">
             <div className="bg-base-lightest padding-3">
               <Heading level="3">{t("pages.index.claimantHeading")}</Heading>
               <p>{t("pages.index.claimantCardBody")}</p>
@@ -70,7 +72,7 @@ export const Index = (props) => {
             </div>
           </article>
           {!showSelfRegistration && (
-            <article className="measure-3">
+            <article className="grid-col-12 mobile-lg:grid-col">
               <div className="bg-base-lightest padding-3">
                 <Heading level="3">{t("pages.index.employerHeading")}</Heading>
                 <p>

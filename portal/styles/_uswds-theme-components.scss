@@ -6,6 +6,7 @@ Read more about settings and USWDS style tokens in the documentation:
 https://designsystem.digital.gov/design-tokens
 --------------------------------------------------------------------------------
 */
+@use "~@massds/mayflower-assets/scss/00-base/variables" as mayflower;
 
 // Accordion
 $theme-accordion-border-width: 2px;
@@ -15,6 +16,13 @@ $theme-button-border-radius: 0;
 
 // Form and input
 $theme-checkbox-border-radius: 0;
+
+// Grid
+$theme-grid-container-max-width: mayflower.$max-width;
+$theme-site-margins-breakpoint: "tablet";
+// Use USWDS spacing unit values that roughly match Mayflower's margin values (40px, 20px)
+$theme-site-margins-width: 5;
+$theme-site-margins-mobile-width: 2.5;
 
 // Table
 $theme-table-border-color: "base-lighter";

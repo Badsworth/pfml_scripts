@@ -160,7 +160,7 @@ export const Review = (props) => {
   });
 
   return (
-    <React.Fragment>
+    <div className="maxw-desktop-lg">
       <BackButton />
       <Title>
         {t("pages.employersClaimsReview.title", {
@@ -235,7 +235,7 @@ export const Review = (props) => {
           {t("pages.employersClaimsReview.submitButton")}
         </Button>
       </form>
-    </React.Fragment>
+    </div>
   );
 };
 
