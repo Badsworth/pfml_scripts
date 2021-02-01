@@ -322,7 +322,6 @@ def write_writeback_row(index, writeback_csv):
         i_value=index.i,
         status="Active",
         status_effective_date="",
-        status_reason="Manual payment voucher",
         transaction_status="Preapproved for payment",
         stock_no="",
     )
