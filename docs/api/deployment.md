@@ -1,4 +1,4 @@
-# Deploy
+# Deployment
 
 Deployments to all environments are managed through GitHub Actions.
 
@@ -11,13 +11,11 @@ Unlike deployments to `test`, all deployments to `training, performance, stage` 
 ### Triggering a deployment
 
 To deploy the API:
+
 - Visit [the API CI Deploy action homepage](https://github.com/EOLWD/pfml/actions?query=workflow%3A%22API+CI+Deploy%22) on GitHub.
 - Click the "Run workflow" button, and fill in the inputs:
-  - For the "Use workflow from" dropdown, select the **deployment branch** corresponding to your target environment using the table below.
-    This input identifies the environment you will be deploying to.
-  - For the second input, provide a `version` to deploy. A `version` can be either the name of a git tag, or the name of any git branch.
-    The commit at this tag, or at the tip of this branch, is what will be deployed to your chosen environment.
-    To deploy the tip of `master`, leave this input blank.
+    - For the "Use workflow from" dropdown, select the **deployment branch** corresponding to your target environment using the table below. This input identifies the environment you will be deploying to.
+    - For the second input, provide a `version` to deploy. A `version` can be either the name of a git tag, or the name of any git branch.
 - Click the green "Run workflow" button.
 
 #### Branch-to-environment mapping
@@ -36,9 +34,10 @@ Today, these branches serve an archival role: they record what commit was deploy
 ### Communications
 
 If you are testing a feature branch on the test environment, please go through the following additional steps:
+
 - Communicate to #mass-pfml-engineering. "⚠️ I'll be using the API test environment soon, please let me know if you have any concerns."
 - After running the workflow, click the "Disable Workflow" button (see below) to prevent auto-deploys from overriding your deployment.
-+ After testing is finished, click the "Enable Workflow" button and update the Slack channel.
+- After testing is finished, click the "Enable Workflow" button and update the Slack channel.
 
 ![](assets/deploys-disable-autodeploy.png)
 ![](assets/deploys-enable-autodeploy.png)

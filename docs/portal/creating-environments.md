@@ -37,4 +37,4 @@ env:
   refs/heads/deploy/<<environment_name>>: <<environment_name>>
 ```
 
-Also update the [deploy](./deploy.md) doc with details about deploying to the new environment.
+Also update the [deploy](./deployment.md) doc with details about deploying to the new environment.

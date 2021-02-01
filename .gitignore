@@ -21,6 +21,9 @@ portal/builds/
 # terraform plan files
 plan.out
 
+# documentation site builds
+site/
+
 # Files generated with the "archive_file" Terraform resource
 infra/portal/template/.zip
 

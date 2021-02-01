@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "Tools and scripts for the Mass PFML project",
   "scripts": {
+    "docs": "docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material",
+    "docs:build": "docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build",
     "lint:ci": "npm run lint:js && npm run lint:tf",
     "lint:js": "eslint --ext .js ./",
     "lint:tf": "./bin/tf-fmt.sh",

@@ -1,0 +1,45 @@
+# Build and deploy the engineering documentation to GitHub Pages.
+#
+# This site is accessible only by folks with access to the repository.
+# https://eolwd.github.io/pfml
+#
+name: GH Pages deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - "docs/**"
+
+env:
+  python-version: 3.8
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Install ghp-import
+        run: pip install ghp-import
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set git config
+        run: |
+          git config user.name "PFMLDevOps"
+          git config user.email "68565627+PFMLDevOps@users.noreply.github.com"
+
+      - name: Build and Update Links
+        run: |
+          python ./bin/hardcode_doc_links.py
+          npm run docs:build
+
+      - name: Deploy
+        run: ghp-import -p -m "Update docs to ${{ github.sha }}" site

@@ -1,6 +1,7 @@
 # Database Users
 
 Access to the database is broken into two parts:
+
 - Roles, which are the permission sets for data access
 - Users, what authenticates with the database and are granted Roles
 
@@ -10,6 +11,7 @@ Database roles are managed through the migrations (search for `CREATE ROLE` or
 `GRANT`/`REVOKE` in the migrations).
 
 Current roles:
+
 - `app`, general purpose role with wide access, automatically granted all
   permissions on any table created in the application schema (currently
   `public`)
@@ -55,6 +57,7 @@ authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWith
 instead of regular passwords.
 
 High level implications of IAM auth:
+
 - RDS IAM authentication requires connecting to DB over SSL
 - DB users needing to authenticate with IAM must be granted the `rds_iam` role
 - IAM policy attached to service IAM roles/users allowing connection to DB as
