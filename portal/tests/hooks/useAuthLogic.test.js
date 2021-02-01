@@ -40,8 +40,8 @@ describe("useAuthLogic", () => {
     ein = "12-3456789";
     verificationCode = "123456";
     testHook(() => {
-      const appErrorsLogic = useAppErrorsLogic();
       portalFlow = usePortalFlow();
+      const appErrorsLogic = useAppErrorsLogic({ portalFlow });
       ({ appErrors, setAppErrors } = appErrorsLogic);
       ({
         authData,

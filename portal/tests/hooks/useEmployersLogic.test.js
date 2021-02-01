@@ -24,8 +24,8 @@ describe("useEmployersLogic", () => {
 
   function renderHook() {
     testHook(() => {
-      appErrorsLogic = useAppErrorsLogic();
       portalFlow = usePortalFlow();
+      appErrorsLogic = useAppErrorsLogic({ portalFlow });
       employersLogic = useEmployersLogic({ appErrorsLogic, portalFlow });
     });
   }

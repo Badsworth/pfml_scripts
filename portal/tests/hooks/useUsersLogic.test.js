@@ -29,7 +29,7 @@ describe("useUsersLogic", () => {
   function renderHook() {
     testHook(() => {
       portalFlow = usePortalFlow();
-      appErrorsLogic = useAppErrorsLogic();
+      appErrorsLogic = useAppErrorsLogic({ portalFlow });
       usersLogic = useUsersLogic({ appErrorsLogic, isLoggedIn, portalFlow });
     });
   }

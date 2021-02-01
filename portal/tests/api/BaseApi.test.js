@@ -1,5 +1,6 @@
 import {
   ApiRequestError,
+  AuthSessionMissingError,
   BadRequestError,
   ForbiddenError,
   InternalServerError,
@@ -478,6 +479,16 @@ describe("BaseApi", () => {
 
         expect(tracker.noticeError).toHaveBeenCalledWith(expect.any(Error));
       });
+    });
+
+    it("throws AuthSessionMissingError when Cognito session fails to be retrieved", async () => {
+      jest
+        .spyOn(Auth, "currentSession")
+        .mockRejectedValueOnce("No current user");
+
+      await expect(testsApi.request("GET", "users")).rejects.toThrow(
+        AuthSessionMissingError
+      );
     });
   });
 });

@@ -10,6 +10,7 @@ import { act } from "react-dom/test-utils";
 import { testHook } from "../test-utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useOtherLeavesLogic from "../../src/hooks/useOtherLeavesLogic";
+import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/services/tracker");
 
@@ -19,7 +20,8 @@ describe("useOtherLeavesLogic", () => {
 
   function renderHook() {
     testHook(() => {
-      appErrorsLogic = useAppErrorsLogic();
+      const portalFlow = usePortalFlow();
+      appErrorsLogic = useAppErrorsLogic({ portalFlow });
       otherLeavesLogic = useOtherLeavesLogic({
         appErrorsLogic,
       });

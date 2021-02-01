@@ -1,4 +1,5 @@
 import {
+  AuthSessionMissingError,
   DocumentsLoadError,
   DocumentsUploadError,
   ForbiddenError,
@@ -11,15 +12,17 @@ import { act } from "react-dom/test-utils";
 import { testHook } from "../test-utils";
 import tracker from "../../src/services/tracker";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
+import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/services/tracker");
 
 describe("useAppErrorsLogic", () => {
-  let appErrorsLogic;
+  let appErrorsLogic, portalFlow;
 
   beforeEach(() => {
     testHook(() => {
-      appErrorsLogic = useAppErrorsLogic();
+      portalFlow = usePortalFlow();
+      appErrorsLogic = useAppErrorsLogic({ portalFlow });
     });
   });
 
@@ -107,6 +110,40 @@ describe("useAppErrorsLogic", () => {
 
         expect(tracker.noticeError).toHaveBeenCalledWith(error);
         expect(tracker.trackEvent).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("when AuthSessionMissingError is thrown", () => {
+      it("redirects to /login page", () => {
+        const goToSpy = jest.spyOn(portalFlow, "goTo");
+        portalFlow.pathWithParams = "/foo?bar=true";
+
+        act(() => {
+          appErrorsLogic.catchError(
+            new AuthSessionMissingError("No current user")
+          );
+        });
+
+        expect(goToSpy).toHaveBeenCalledWith("/login", {
+          next: "/foo?bar=true",
+        });
+      });
+
+      it("tracks the error as an event in New Relic", () => {
+        const error = new AuthSessionMissingError("No current user");
+
+        act(() => {
+          appErrorsLogic.catchError(error);
+        });
+
+        expect(tracker.trackEvent).toHaveBeenCalledWith(
+          "AuthSessionMissingError",
+          {
+            errorMessage: error.message,
+            errorName: "AuthSessionMissingError",
+          }
+        );
+        expect(tracker.noticeError).not.toHaveBeenCalled();
       });
     });
 

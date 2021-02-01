@@ -13,7 +13,7 @@ const useAppLogic = () => {
   const portalFlow = usePortalFlow();
 
   // State representing currently visible errors and warnings
-  const { appErrors, ...appErrorsLogic } = useAppErrorsLogic();
+  const { appErrors, ...appErrorsLogic } = useAppErrorsLogic({ portalFlow });
   const auth = useAuthLogic({ appErrorsLogic, portalFlow });
 
   // State representing the Portal's user object.

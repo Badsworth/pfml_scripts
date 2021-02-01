@@ -1,5 +1,6 @@
 import {
   ApiRequestError,
+  AuthSessionMissingError,
   DocumentsLoadError,
   DocumentsUploadError,
   ValidationError,
@@ -15,9 +16,11 @@ import { useTranslation } from "../locales/i18n";
 
 /**
  * React hook for creating and managing the state of app errors in an AppErrorInfoCollection
+ * @param {object} params
+ * @param {object} params.portalFlow
  * @returns {{ appErrors: AppErrorInfoCollection, setAppErrors: Function, catchError: catchErrorFunction, clearErrors: clearErrorsFunction }}
  */
-const useAppErrorsLogic = () => {
+const useAppErrorsLogic = ({ portalFlow }) => {
   const { t } = useTranslation();
 
   /**
@@ -37,7 +40,9 @@ const useAppErrorsLogic = () => {
    * @param {Error} error - Error or custom subclass of Error
    */
   const catchError = (error) => {
-    if (error instanceof ValidationError) {
+    if (error instanceof AuthSessionMissingError) {
+      handleAuthSessionMissingError(error);
+    } else if (error instanceof ValidationError) {
       handleValidationError(error);
     } else if (
       error instanceof DocumentsLoadError ||
@@ -137,6 +142,19 @@ const useAppErrorsLogic = () => {
     // 4. Display API message if present
     // 5. Otherwise fallback to a generic validation failure message
     return message || t("errors.validationFallback.invalid", { field });
+  };
+
+  /**
+   * Handle and track the AuthSessionMissingError
+   * @param {AuthSessionMissingError} error
+   */
+  const handleAuthSessionMissingError = (error) => {
+    tracker.trackEvent("AuthSessionMissingError", {
+      errorMessage: error.message,
+      errorName: error.name,
+    });
+
+    portalFlow.goTo(routes.auth.login, { next: portalFlow.pathWithParams });
   };
 
   /**

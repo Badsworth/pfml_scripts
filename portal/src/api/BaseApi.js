@@ -1,5 +1,6 @@
 import {
   ApiRequestError,
+  AuthSessionMissingError,
   BadRequestError,
   ForbiddenError,
   InternalServerError,
@@ -170,10 +171,17 @@ export function createRequestUrl(...paths) {
 /**
  * Retrieve auth token header
  * @returns {{Authorization: string}}
+ * @throws {AuthSessionMissingError}
  */
 export async function getAuthorizationHeader() {
-  const { accessToken } = await Auth.currentSession();
-  return { Authorization: `Bearer ${accessToken.jwtToken}` };
+  try {
+    const { accessToken } = await Auth.currentSession();
+    return { Authorization: `Bearer ${accessToken.jwtToken}` };
+  } catch (error) {
+    // Amplify returns a string for the error...
+    const message = typeof error === "string" ? error : error.message;
+    throw new AuthSessionMissingError(message);
+  }
 }
 
 /**

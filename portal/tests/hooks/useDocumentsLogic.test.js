@@ -13,6 +13,7 @@ import { act } from "react-dom/test-utils";
 import { uniqueId } from "xstate/lib/utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useDocumentsLogic from "../../src/hooks/useDocumentsLogic";
+import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/api/DocumentsApi");
 jest.mock("../../src/services/tracker");
@@ -26,7 +27,8 @@ describe("useDocumentsLogic", () => {
 
   function renderHook() {
     testHook(() => {
-      appErrorsLogic = useAppErrorsLogic();
+      const portalFlow = usePortalFlow();
+      appErrorsLogic = useAppErrorsLogic({ portalFlow });
       documentsLogic = useDocumentsLogic({ appErrorsLogic });
     });
   }

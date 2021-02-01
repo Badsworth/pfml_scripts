@@ -30,8 +30,8 @@ describe("useClaimsLogic", () => {
 
   function renderHook() {
     testHook(() => {
-      appErrorsLogic = useAppErrorsLogic();
       portalFlow = usePortalFlow();
+      appErrorsLogic = useAppErrorsLogic({ portalFlow });
       claimsLogic = useClaimsLogic({ appErrorsLogic, user, portalFlow });
     });
   }
