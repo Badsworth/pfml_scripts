@@ -34,7 +34,7 @@ from massgov.pfml.db.models.applications import (
     RelationshipQualifier,
     RelationshipToCaregiver,
 )
-from massgov.pfml.db.models.employees import Address, Country, Employer, PaymentMethod, User
+from massgov.pfml.db.models.employees import Address, Claim, Country, Employer, PaymentMethod, User
 from massgov.pfml.fineos.exception import FINEOSNotFound
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EFormBody
 from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
@@ -134,6 +134,12 @@ def send_to_fineos(
         application.fineos_absence_id = new_case.absenceId
         application.fineos_notification_case_id = new_case.notificationCaseId
 
+        new_claim = Claim(
+            fineos_absence_id=new_case.absenceId, fineos_notification_id=new_case.notificationCaseId
+        )
+
+        application.claim = new_claim
+
         updated_contact_details = fineos.update_customer_contact_details(
             fineos_user_id, contact_details
         )
@@ -141,6 +147,8 @@ def send_to_fineos(
         if phone_numbers is not None and len(phone_numbers) > 0:
             application.phone.fineos_phone_id = phone_numbers[0].id
 
+        db_session.add(application)
+        db_session.add(new_claim)
         db_session.commit()
 
         if application.leave_reason_qualifier_id in [

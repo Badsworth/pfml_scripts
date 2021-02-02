@@ -147,14 +147,15 @@ def test_send_to_fineos(user, test_db_session):
     continuous_leave_period = ContinuousLeavePeriodFactory.create()
     application.continuous_leave_periods.append(continuous_leave_period)
 
-    assert application.fineos_absence_id is None
-    assert application.fineos_notification_case_id is None
+    assert application.claim_id is None
 
     fineos_actions.send_to_fineos(application, test_db_session, user)
 
     updated_application = test_db_session.query(Application).get(application.application_id)
 
-    assert updated_application.fineos_absence_id is not None
+    assert updated_application.claim_id is not None
+    assert str(updated_application.claim.fineos_absence_id).startswith("NTN")
+    assert str(updated_application.claim.fineos_absence_id).__contains__("ABS")
     assert str(updated_application.fineos_absence_id).startswith("NTN")
     assert str(updated_application.fineos_absence_id).__contains__("ABS")
 

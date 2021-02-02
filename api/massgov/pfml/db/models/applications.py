@@ -21,6 +21,7 @@ from sqlalchemy.orm import relationship
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
     Address,
+    Claim,
     Employee,
     Employer,
     LkBankAccountType,
@@ -230,6 +231,7 @@ class Application(Base):
     )
     nickname = Column(Text)
     requestor = Column(Integer)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), nullable=True, unique=True)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), index=True)
     has_mailing_address = Column(Boolean)
@@ -288,6 +290,7 @@ class Application(Base):
     has_previous_leaves = Column(Boolean)
 
     user = relationship(User)
+    claim = relationship(Claim)
     employer = relationship(Employer)
     employee = relationship(Employee)
     occupation = relationship(LkOccupation)
