@@ -11,6 +11,7 @@ class PaymentVoucherCSV:
     """Manual payment voucher CSV format."""
 
     leave_type: str
+    activity_code: str
     payment_doc_id_code: str
     payment_doc_id_dept: str
     doc_id: str
@@ -40,6 +41,7 @@ class PaymentVoucherCSV:
 
 PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
     leave_type="Leave type",
+    activity_code="Activity code",
     payment_doc_id_code="Payment doc ID CODE",
     payment_doc_id_dept="Payment doc ID DEPT",
     doc_id="DOC ID",
@@ -77,6 +79,8 @@ class WritebackCSV:
     status: str
     status_effective_date: str
     status_reason: str
+    transaction_status: str
+    stock_no: str
 
 
 WRITEBACK_CSV_HEADERS = WritebackCSV(
@@ -85,6 +89,8 @@ WRITEBACK_CSV_HEADERS = WritebackCSV(
     status="status",
     status_effective_date="statusEffectiveDate",
     status_reason="statusReason",
+    transaction_status="transactionStatus",
+    stock_no="stockNo",
 )
 
 

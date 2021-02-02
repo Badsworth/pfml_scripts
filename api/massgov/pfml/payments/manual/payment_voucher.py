@@ -14,7 +14,6 @@
 import argparse
 import dataclasses
 import datetime
-import json
 import os.path
 import pathlib
 import random
@@ -61,12 +60,17 @@ def main():
     )
 
     try:
-        with massgov.pfml.util.batch.log.log_entry(
-            db_session_raw, "Payment voucher", ""
+        with massgov.pfml.util.batch.log.LogEntry(
+            db_session_raw, "Payment voucher"
         ) as log_entry, massgov.pfml.db.session_scope(db_session_raw) as db_session:
-            log_entry.report = json.dumps(vars(args))
+            log_entry.set_metrics(**vars(args))
             process_extracts_to_payment_voucher(
-                args.input_path, args.output_path, args.payment_date, args.writeback, db_session
+                args.input_path,
+                args.output_path,
+                args.payment_date,
+                args.writeback,
+                db_session,
+                log_entry,
             )
     except Exception as ex:
         logger.exception("%s", ex)
@@ -86,7 +90,7 @@ def parse_args():
 
 
 def process_extracts_to_payment_voucher(
-    input_path, output_path, payment_date, writeback, db_session
+    input_path, output_path, payment_date, writeback, db_session, log_entry
 ):
     """Get FINEOS extract files from input path and write to payment voucher CSV."""
     if payment_date is None:
@@ -120,6 +124,7 @@ def process_extracts_to_payment_voucher(
             writeback_file,
             payment_date,
             db_session,
+            log_entry,
         )
 
     # Optionally copy the writeback CSV to a destination location.
@@ -154,11 +159,19 @@ def copy_input_files_to_output_path(input_path, output_path):
 
 
 def process_payment_records(
-    extract_data, requested_absence_extract, output_file, writeback_file, payment_date, db_session
+    extract_data,
+    requested_absence_extract,
+    output_file,
+    writeback_file,
+    payment_date,
+    db_session,
+    log_entry,
 ):
     """Process the extracted records and write to output CSV."""
     output_csv = payment_voucher_csv_writer(output_file)
     writeback_csv = writeback_csv_writer(writeback_file)
+
+    log_entry.set_metrics(total=len(extract_data.pei.indexed_data))
 
     for index, record in massgov.pfml.util.logging.log_every(
         logger,
@@ -177,6 +190,7 @@ def process_payment_records(
             writeback_csv,
             payment_date,
             db_session,
+            log_entry,
         )
 
 
@@ -195,6 +209,7 @@ def process_payment_record(
     writeback_csv,
     payment_date,
     db_session,
+    log_entry,
 ):
     """Process a single payment record with the given index."""
     extra: Dict[str, Optional[str]] = {}
@@ -220,12 +235,15 @@ def process_payment_record(
         write_writeback_row(index, writeback_csv)
 
         logger.info("wrote payment row", extra=extra)
+        log_entry.increment("success")
 
     except PaymentRowError as err:
         logger.warning("%s", err, extra=extra)
+        log_entry.increment("error")
 
     except Exception:
         logger.exception("exception for payment row", extra=extra)
+        log_entry.increment("exception")
 
 
 def get_mmars_vendor_code(tax_identifier, db_session):
@@ -254,6 +272,7 @@ def write_row_to_output(
 
     payment_row = PaymentVoucherCSV(
         leave_type=get_leave_type(requested_absence),
+        activity_code=get_activity_code(requested_absence),
         payment_doc_id_code="GAX",
         payment_doc_id_dept="EOL",
         doc_id=get_doc_id(),
@@ -296,6 +315,8 @@ def write_writeback_row(index, writeback_csv):
         status="Active",
         status_effective_date="",
         status_reason="Manual payment voucher",
+        transaction_status="Preapproved for payment",
+        stock_no="",
     )
     writeback_csv.writerow(dataclasses.asdict(writeback_row))
 
@@ -306,7 +327,16 @@ def get_leave_type(absence_info):
         return "PFMLFAMLFY2170030632"
     elif reason_coverage == "Employee":
         return "PFMLMEDIFY2170030632"
-    return "Error (unknown absence reason %s)" % reason_coverage
+    raise PaymentRowError("unknown absence reason %s" % reason_coverage)
+
+
+def get_activity_code(absence_info):
+    reason_coverage = absence_info["ABSENCEREASON_COVERAGE"]
+    if reason_coverage == "Family":
+        return "7246"
+    elif reason_coverage == "Employee":
+        return "7247"
+    raise PaymentRowError("unknown absence reason %s" % reason_coverage)
 
 
 def get_doc_id() -> str:
@@ -316,7 +346,7 @@ def get_doc_id() -> str:
     identify manual payments.
     """
     return (
-        "GAXMDFMLAAAA" + "".join(random.choices(string.ascii_letters + string.digits, k=8)).upper()
+        "INTFDFMLAAAA" + "".join(random.choices(string.ascii_letters + string.digits, k=8)).upper()
     )
 
 
