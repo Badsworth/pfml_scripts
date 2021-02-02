@@ -206,14 +206,17 @@ class FINEOSClient(client.AbstractFINEOSClient):
             logger.error("%s %s => %r", method, url, ex)
             # Make sure New Relic records errors from FINEOS, even if the API does not ultimately
             # return an error.
+            # Specify fields based on API or FINEOS origin
             newrelic.agent.record_custom_event(
                 "FineosError",
                 {
-                    "error.class": type(ex).__name__,
-                    "error.message": str(ex),
-                    "request.method": flask.request.method if has_flask_context else None,
-                    "request.uri": flask.request.path if has_flask_context else None,
-                    "request.headers.x-amzn-requestid": flask.request.headers.get(
+                    "fineos.error.class": type(ex).__name__,
+                    "fineos.error.message": str(ex),
+                    "fineos.request.method": method,
+                    "fineos.request.uri": url,
+                    "api.request.method": flask.request.method if has_flask_context else None,
+                    "api.request.uri": flask.request.path if has_flask_context else None,
+                    "api.request.headers.x-amzn-requestid": flask.request.headers.get(
                         "x-amzn-requestid", None
                     )
                     if has_flask_context
@@ -241,12 +244,15 @@ class FINEOSClient(client.AbstractFINEOSClient):
             newrelic.agent.record_custom_event(
                 "FineosError",
                 {
-                    "error.class": "FINEOSClientBadResponse",
-                    "error.message": response.text,
-                    "response.status": response.status_code,
-                    "request.method": flask.request.method if has_flask_context else None,
-                    "request.uri": flask.request.path if has_flask_context else None,
-                    "request.headers.x-amzn-requestid": flask.request.headers.get(
+                    "fineos.error.class": "FINEOSClientBadResponse",
+                    "fineos.error.message": response.text,
+                    "fineos.response.status": response.status_code,
+                    "fineos.request.method": method,
+                    "fineos.request.uri": url,
+                    "fineos.request.response_millis": response.elapsed / MILLISECOND,
+                    "api.request.method": flask.request.method if has_flask_context else None,
+                    "api.request.uri": flask.request.path if has_flask_context else None,
+                    "api.request.headers.x-amzn-requestid": flask.request.headers.get(
                         "x-amzn-requestid", None
                     )
                     if has_flask_context
