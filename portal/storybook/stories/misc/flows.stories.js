@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { pick, pickBy, uniqueId } from "lodash";
 import Step from "src/models/Step";
 import auth from "src/flows/auth";
 import claimant from "src/flows/claimant";
 import employer from "src/flows/employer";
 import machineConfig from "src/flows";
+import routes from "src/routes";
 import { stateMachineToSvg } from "./stateMachineToSvg";
-import { uniqueId } from "lodash";
 
 export default {
   title: "Misc/Flows",
@@ -18,20 +19,28 @@ export const Intro = () => {
 };
 
 /**
- * Convert the XState representation of our flow into
- * State Machine cat (smcat) syntax and resulting state chart
- * @see https://github.com/sverweij/state-machine-cat
- * @see https://state-machine-cat.js.org/
+ * Convert the XState representation of our flow into an SVG flowchart
  * @returns {React.Component}
  */
-const FlowDiagram = (props) => {
-  const svg = stateMachineToSvg(props.states);
+const FlowDiagram = ({ direction = "TB", ...props }) => {
+  const { states } = props;
   const maxWidth = props.maxWidth || "100%";
   const id = uniqueId("flow");
 
+  const [svg, setSvg] = useState();
+  useEffect(() => {
+    stateMachineToSvg(states, { direction })
+      .then((svgOutput) => {
+        setSvg(svgOutput);
+      })
+      .catch(console.error);
+  }, [direction, states, setSvg]);
+
+  if (!svg) return <p>Loading</p>;
+
   return (
     <React.Fragment>
-      <style>{`#${id} svg { height: auto; max-width: ${maxWidth} }`}</style>
+      <style>{`#${id} svg { height: auto; width: auto; max-width: ${maxWidth} !important; }`}</style>
       <div
         id={id}
         style={{
@@ -44,11 +53,27 @@ const FlowDiagram = (props) => {
   );
 };
 
-export const Auth = () => <FlowDiagram states={auth} />;
-export const Employer = () => <FlowDiagram states={employer} />;
-export const Claimant = () => <FlowDiagram states={claimant} maxWidth="200%" />;
+export const Auth = () => <FlowDiagram states={auth.states} />;
 
-export const ClaimFlowFields = () => {
+export const Employer = () => <FlowDiagram states={employer.states} />;
+
+export const ClaimantChecklistAndReview = () => (
+  <React.Fragment>
+    <FlowDiagram
+      states={pick(claimant.states, [routes.applications.checklist])}
+    />
+    <FlowDiagram states={pick(claimant.states, [routes.applications.review])} />
+  </React.Fragment>
+);
+
+export const ClaimantSteps = () => (
+  <FlowDiagram
+    states={pickBy(claimant.states, (s) => s.meta && s.meta.step)}
+    maxWidth="200%"
+  />
+);
+
+export const ClaimantFields = () => {
   const steps = Step.createClaimStepsFromMachine(machineConfig, { claim: {} });
 
   return steps.map((step) => {

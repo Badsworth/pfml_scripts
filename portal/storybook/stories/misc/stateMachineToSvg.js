@@ -1,36 +1,58 @@
-import { get } from "lodash";
-import smcat from "state-machine-cat";
+import { camelCase, get } from "lodash";
+import mermaid from "mermaid";
+
+// Hopefully enough colors to cover the number of potential state node groups
+const fills = [
+  "#c5ee93",
+  "#ffe396",
+  "#83fcd4",
+  "#7efbe1",
+  "#a8f2ff",
+  "#cfe8ff",
+  "#e0e0ff",
+  "#ede3ff",
+  "#ffddea",
+  "#ffddea",
+  "#fdb8ae",
+];
 
 /**
  * Convert a state machine to an SVG state chart.
- * @param {object} machineConfig
- * @param {{initial: string, meta: object, on: string|Array[]}} machineConfig.states
+ * @param {Array<{meta: object, on: string|Array[]}>} states
+ * @param {object} options
+ * @param {'TB'|'LR'} options.direction
  * @returns {string} SVG markup
  */
-export function stateMachineToSvg(machineConfig) {
-  const smcatString = stateMachineToSmcat(machineConfig);
-  const svg = smcat.render(smcatString, {
-    outputType: "svg",
+export function stateMachineToSvg(states, options = {}) {
+  mermaid.mermaidAPI.initialize({
+    startOnLoad: false,
+    securityLevel: "loose", // allow HTML tags
   });
 
-  return svg;
+  const graphDefinition = stateMachineToMermaid(states, options);
+
+  return new Promise((resolve) => {
+    mermaid.mermaidAPI.render("graphDiv", graphDefinition, (svg) =>
+      resolve(svg)
+    );
+  });
 }
 
 /**
- * Convert a state machine to a smcat syntax.
- * smcat is a markup language for state machines.
- * We first convert our state machine to smcat,
+ * Convert a state machine to Mermaid flowchart syntax.
+ * We first convert our state machine to Mermaid,
  * so that we can then use the library to export
  * it as an SVG
- * @see https://github.com/sverweij/state-machine-cat
- * @param {object} machineConfig
- * @param {{initial: string, meta: object, on: string|Array[]}} machineConfig.states
- * @returns {string} SVG markup
+ * @see https://mermaid-js.github.io/mermaid/#/flowchart
+ * @param {Array<{meta: object, on: string|Array[]}>} states
+ * @param {object} options
+ * @param {'TB'|'LR'} options.direction
+ * @returns {string} Mermaid graph definition
  */
-export function stateMachineToSmcat(machineConfig) {
-  let smcatOutput = [];
-  const states = machineConfig.states;
+export function stateMachineToMermaid(states, options) {
+  let mermaidOutput = [`flowchart ${options.direction}\n`];
   const groups = {};
+  let fillIndex = 0;
 
   // Create hierarchical state nodes, grouping by the meta.step attribute on each state node
   for (const route in states) {
@@ -42,56 +64,40 @@ export function stateMachineToSmcat(machineConfig) {
     groups[groupName][route] = node;
   }
 
-  // smcat requires root nodes (nodes without a parent) to be output
-  // slightly differently, so we need to separate them from nested nodes
+  // Separate out root nodes (nodes without a parent) to be output
   const { _root, ...steps } = groups;
-  // We need a way to identify whether we've reached the last step
-  // so that we can use the correct delimiter in smcat output
-  const totalSteps = Object.keys(steps).length;
-  let delimiterCounter = 0;
 
-  // Since we're outputting a nested state machine, our root nodes
-  // need defined at the top of the smcat first, before we output
-  // any transitions to them
-  if (totalSteps > 0) {
-    for (const route in _root) {
-      smcatOutput.push(`"${route}",`); // Outputs: "/routeA",
-    }
+  if (_root) {
+    mermaidOutput = mermaidOutput.concat(
+      mermaidTransitionGroup(_root, fills[fillIndex])
+    );
   }
 
   // Output each nested state machine
   for (const stepName in steps) {
-    delimiterCounter++;
+    fillIndex++;
     const states = steps[stepName];
 
-    // Start nested state node grouping
-    smcatOutput.push(`${stepName} {`); // Outputs:  stepA {
-
     // Add a transition for every node
-    smcatOutput = smcatOutput.concat(smcatTransitionGroup(states));
-
-    // Last nested state machine needs a semi-colon
-    const delimiter = delimiterCounter < totalSteps ? "," : ";";
-
-    // Close nested state machine
-    smcatOutput.push(`}${delimiter}`); // Outputs:  },
+    mermaidOutput = mermaidOutput.concat(
+      mermaidTransitionGroup(states, fills[fillIndex])
+    );
   }
 
-  // After all of the nested state nodes, output transitions for every top-level state node
-  smcatOutput = smcatOutput.concat(smcatTransitionGroup(_root));
+  // adding line breaks for readability
+  const mermaidString = mermaidOutput.join("\n\n");
 
-  const smcatString = smcatOutput.join("\n\n"); // adding line breaks for readability
-
-  return smcatString;
+  return mermaidString;
 }
 
 /**
- * Generate smcat syntax for a collection of state nodes
+ * Generate Mermaid syntax for a collection of state nodes
  * @param {object[]} states
- * @returns {string[]} smcat transitions
+ * @param {string} fill - HEX color
+ * @returns {string[]} Mermaid transitions
  */
-function smcatTransitionGroup(states) {
-  const smcatOutput = [];
+function mermaidTransitionGroup(states, fill) {
+  const mermaidOutput = [];
 
   for (const route in states) {
     const node = states[route];
@@ -102,7 +108,9 @@ function smcatTransitionGroup(states) {
 
       if (typeof action === "string") {
         const nextRoute = action;
-        smcatOutput.push(smcatTransition(route, nextRoute, eventName));
+        mermaidOutput.push(
+          mermaidTransition(fill, route, nextRoute, eventName)
+        );
         continue;
       }
 
@@ -112,31 +120,43 @@ function smcatTransitionGroup(states) {
         const condition = conditionalAction.cond;
 
         if (condition) {
-          return smcatOutput.push(
-            smcatTransition(route, nextRoute, eventName, condition)
+          return mermaidOutput.push(
+            mermaidTransition(fill, route, nextRoute, eventName, condition)
           );
         }
 
-        smcatOutput.push(smcatTransition(route, nextRoute, eventName));
+        mermaidOutput.push(
+          mermaidTransition(fill, route, nextRoute, eventName)
+        );
       });
     }
   }
 
-  return smcatOutput;
+  return mermaidOutput;
 }
 
 /**
- * Generate smcat syntax for a transition between one state to the next
+ * Generate Mermaid flowchart syntax for a transition between one state to the next
+ * @param {string} fill - HEX color
  * @param {string} from
  * @param {string} to
  * @param {string} event
  * @param {string} [condition]
  * @returns {string}
  */
-function smcatTransition(from, to, event, condition) {
-  let output = `"${from}" => "${to}": ${event}`;
-  if (condition) output += ` [${condition}]`;
+function mermaidTransition(fill, from, to, event, condition) {
+  event = condition ? `${event} - ${condition}` : event;
 
-  // Example output: `"/page-a" => "/page-b": CONTINUE [answeredYes]`
-  return `${output};`;
+  // Use dotted arrows for specific transitions
+  const arrow = to === "/applications/checklist" ? "-.->" : "-->";
+  const fromId = camelCase(from);
+  const toId = camelCase(to);
+
+  // Mermaid doesn't support slashes in the node IDs, so we call camelCase on those
+  // Example output: login["/login"] --> |CONTINUE| dashboard["/dashboard"]
+  return [
+    `${fromId}["${from}"] ${arrow} |${event}| ${toId}["${to}"]`,
+    `style ${fromId} fill:${fill},stroke:transparent`,
+    `style ${toId} fill:${fill},stroke:transparent`,
+  ].join("\n");
 }
