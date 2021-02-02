@@ -2,6 +2,8 @@ from datetime import date
 from decimal import Decimal
 from typing import List, Optional
 
+from pydantic import UUID4
+
 from massgov.pfml.api.models.claims.common import (
     Address,
     EmployerBenefit,
@@ -20,7 +22,8 @@ class ClaimReviewResponse(PydanticBaseModel):
     date_of_birth: Optional[MaskedDateStr]
     employer_benefits: Optional[List[EmployerBenefit]]
     employer_dba: str
-    employer_fein: Optional[FEINFormattedStr]
+    employer_fein: FEINFormattedStr
+    employer_id: UUID4
     fineos_absence_id: Optional[str]
     first_name: Optional[str]
     hours_worked_per_week: Optional[Decimal]

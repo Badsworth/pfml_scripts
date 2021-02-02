@@ -236,6 +236,7 @@ def get_claim_as_leave_admin(
             employer_benefits=other_incomes,
             employer_fein=employer.employer_fein,
             employer_dba=employer.employer_dba,
+            employer_id=employer.employer_id,
             fineos_absence_id=absence_id,
             first_name=customer_info["firstName"],
             hours_worked_per_week=hours_worked_per_week,

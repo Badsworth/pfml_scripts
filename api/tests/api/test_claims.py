@@ -176,6 +176,7 @@ def test_employers_receive_200_from_get_claim_review(
     assert response_data["hours_worked_per_week"] == 37.5
     assert response_data["employer_dba"] == "Acme Co"
     assert response_data["employer_fein"] == "99-9999999"
+    assert response_data["employer_id"] == str(employer.employer_id)
     assert response_data["is_reviewable"]
     # The fields below are set in mock_client.py::mock_customer_info
     assert response_data["date_of_birth"] == "****-12-25"

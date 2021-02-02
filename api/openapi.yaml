@@ -1367,6 +1367,9 @@ components:
             $ref: "#/components/schemas/EmployerBenefit"
         employer_dba:
           type: string
+        employer_id:
+          type: string
+          format: uuid
         employer_fein:
           $ref: "#/components/schemas/Fein"
         fineos_absence_id:
