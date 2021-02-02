@@ -1414,6 +1414,14 @@ class State(LookupTable):
         43, "PEI writeback sent to FINEOS", Flow.PEI_WRITEBACK_FILES.flow_id
     )
 
+    # DUA payment list retrieval.
+    DUA_PAYMENT_LIST_SAVED_TO_S3 = LkState(
+        44, "DUA payment list saved to S3", Flow.DUA_PAYMENT_LIST.flow_id
+    )
+    DUA_PAYMENT_LIST_SAVED_TO_DB = LkState(
+        45, "New DUA payments stored in database", Flow.DUA_PAYMENT_LIST.flow_id
+    )
+
 
 class ReferenceFileType(LookupTable):
     model = LkReferenceFileType
