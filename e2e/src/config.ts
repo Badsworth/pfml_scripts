@@ -36,12 +36,12 @@ export interface LSTConfig {
   EMPLOYER_PORTAL_USERNAME: string;
 }
 
-export type BothConfig = E2EConfig & LSTConfig;
+export type E2ELSTConfig = E2EConfig & LSTConfig;
 
-export type BothConfigFunction = (name: keyof BothConfig) => string;
+export type E2ELSTConfigFunction = (name: keyof E2ELSTConfig) => string;
 
-export function factory(env: string | undefined): BothConfigFunction {
-  let config: Partial<BothConfig> = {};
+export function factory(env: string | undefined): E2ELSTConfigFunction {
+  let config: Partial<E2ELSTConfig> = {};
   if (env) {
     if (env in configs) {
       config = configs[env as keyof typeof configs];

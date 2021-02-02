@@ -1,5 +1,5 @@
 import { chance, SimulationGenerator } from "../simulate";
-import { LSTDataConfig } from "../../commands/flood/deployLST";
+import { LSTDataConfig } from "../../commands/flood/common";
 import * as LSTGenerators from "./pilot4LST";
 
 export const customizable = true;

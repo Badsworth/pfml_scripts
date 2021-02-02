@@ -28,11 +28,9 @@ cp ../forms/hcp-real.pdf flood/forms;
 
 # conditional command syntax 
 # https://stackoverflow.com/questions/43171648/sed-gives-sed-cant-read-no-such-file-or-directory
-_SED=""
+_SED="sed -i"
 if [[ "$OSTYPE" == "darwin"* ]]; then
   _SED="sed -i ''"
-else
-  _SED="sed -i"
 fi
 
 # change import paths to link to `src/flood/simulation`
@@ -49,8 +47,8 @@ done
 
 # clear previous builds
 cd ../scripts
-rm -rf $output
-mkdir $output
+rm -rf $output/floodBundle.zip
+rm -rf $output/index.perf.ts
 
 # build `.zip` flood bundle
 cd ../src/flood
