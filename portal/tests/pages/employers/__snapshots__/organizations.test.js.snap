@@ -19,6 +19,11 @@ exports[`Organizations renders the page 1`] = `
         >
           Organization
         </th>
+        <th
+          scope="col"
+        >
+          Employer ID number (EIN)
+        </th>
       </tr>
     </thead>
     <tbody>

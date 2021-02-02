@@ -32,7 +32,9 @@ describe("Organizations", () => {
   it("displays a table row for each user leave administrator", () => {
     const rows = wrapper.find("LeaveAdministratorRow");
     const titles = rows.map((row) => row.dive().find("span").first().text());
+    const eins = rows.map((row) => row.dive().find("td").text());
     expect(titles).toEqual(["Book Bindings 'R Us", "Knitting Castle"]);
+    expect(eins).toEqual(["1298391823", "390293443"]);
   });
 
   it('shows the "Verification required" tag if not verified', () => {

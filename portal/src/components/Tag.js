@@ -13,7 +13,7 @@ const Tag = ({ label, state }) => {
     {
       "text-success": state === "success",
       "bg-success-lighter": state === "success",
-      "text-base-darker": state === "warning",
+      "text-base-darkest": state === "warning",
       "bg-warning-lighter": state === "warning",
     }
   );

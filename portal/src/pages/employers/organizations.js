@@ -23,6 +23,9 @@ export const Organizations = ({ appLogic }) => {
             <th scope="col">
               {t("pages.employersOrganizations.organizationsTableHeader")}
             </th>
+            <th scope="col">
+              {t("pages.employersOrganizations.einTableHeader")}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -54,12 +57,14 @@ Organizations.propTypes = {
   }).isRequired,
 };
 
-const LeaveAdministratorRow = ({ employer_dba, verified }) => {
+const LeaveAdministratorRow = ({ employer_dba, employer_fein, verified }) => {
   const { t } = useTranslation();
+  const employerDbaClassName = !verified ? "margin-right-3" : undefined;
+
   return (
     <tr>
       <th scope="row">
-        <span>{employer_dba}</span>
+        <span className={employerDbaClassName}>{employer_dba}</span>
         {!verified && (
           <Tag
             label={t("pages.employersOrganizations.verificationRequired")}
@@ -67,12 +72,14 @@ const LeaveAdministratorRow = ({ employer_dba, verified }) => {
           />
         )}
       </th>
+      <td>{employer_fein}</td>
     </tr>
   );
 };
 
 LeaveAdministratorRow.propTypes = {
   employer_dba: PropTypes.string.isRequired,
+  employer_fein: PropTypes.string.isRequired,
   verified: PropTypes.bool.isRequired,
 };
 
