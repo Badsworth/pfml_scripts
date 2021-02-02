@@ -406,6 +406,7 @@ export function createNotification(
 ): void {
   cy.contains("span", "Create Notification").click();
   cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.labelled("Hours worked per week").type(`{selectall}{backspace}40`);
   cy.get("span[id='nextContainer']").first().find("input").click();
   if (claimType === "military care leave") {
     cy.contains("div", "Out of work for another reason")
