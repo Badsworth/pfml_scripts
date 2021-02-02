@@ -254,6 +254,9 @@ class Employer(Base):
     employer_occupations: "Query[EmployeeOccupation]" = dynamic_loader(
         "EmployeeOccupation", back_populates="employer"
     )
+    employer_quarterly_contribution: "Query[EmployerQuarterlyContribution]" = dynamic_loader(
+        "EmployerQuarterlyContribution", back_populates="employer"
+    )
 
 
 class EmployerQuarterlyContribution(Base):
@@ -267,6 +270,8 @@ class EmployerQuarterlyContribution(Base):
     dor_received_date = Column(TIMESTAMP(timezone=True))
     dor_updated_date = Column(TIMESTAMP(timezone=True))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
+
+    employer = relationship("Employer", back_populates="employer_quarterly_contribution")
 
 
 class EmployerLog(Base):

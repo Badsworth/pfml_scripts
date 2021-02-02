@@ -244,6 +244,17 @@ class VerificationFactory(BaseFactory):
     verification_type_id = factory.LazyAttribute(lambda a: a.verification_type.verification_type_id)
 
 
+class EmployerQuarterlyContributionFactory(BaseFactory):
+    class Meta:
+        model = employee_models.EmployerQuarterlyContribution
+
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda w: w.employer.employer_id)
+    filing_period = datetime.now().strftime("%Y-%m-%d")
+    employer_total_pfml_contribution = factory.Faker("random_int")
+    pfm_account_id = factory.Faker("random_int")
+
+
 class EmployeeLogFactory(BaseFactory):
     class Meta:
         model = employee_models.EmployeeLog
