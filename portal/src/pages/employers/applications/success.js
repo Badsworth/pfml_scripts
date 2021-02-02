@@ -1,9 +1,10 @@
-import { AccountVerificationBanner } from "../../../components/employers/AccountVerificationBanner";
+import { NewsBanner } from "../../../components/employers/NewsBanner";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import UserFeedback from "../../../components/UserFeedback";
+import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
@@ -11,11 +12,12 @@ import withUser from "../../../hoc/withUser";
 export const Success = (props) => {
   const { t } = useTranslation();
   const { absence_id } = props.query;
+  const showNewsBanner = isFeatureEnabled("employerShowNewsBanner");
 
   return (
     <React.Fragment>
       <Title>{t("pages.employersClaimsSuccess.title")}</Title>
-      <AccountVerificationBanner className="margin-bottom-2" />
+      {showNewsBanner && <NewsBanner className="margin-bottom-2" />}
       <Trans
         i18nKey="pages.employersClaimsSuccess.applicationIdLabel"
         values={{ absenceId: absence_id }}

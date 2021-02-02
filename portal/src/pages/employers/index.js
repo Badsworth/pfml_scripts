@@ -1,12 +1,13 @@
 import { IconMail, IconPdf } from "@massds/mayflower-react/dist/Icon";
-import { AccountVerificationBanner } from "../../components/employers/AccountVerificationBanner";
 import Alert from "../../components/Alert";
 import Heading from "../../components/Heading";
+import { NewsBanner } from "../../components/employers/NewsBanner";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
@@ -27,13 +28,14 @@ export const Index = (props) => {
     fill: "currentColor",
   };
   const hasUnverifiedEmployer = props.user.hasUnverifiedEmployer;
+  const showNewsBanner = isFeatureEnabled("employerShowNewsBanner");
 
   return (
     <div className="grid-container">
       <div className="grid-row">
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersDashboard.welcomeTitle")}</Title>
-          <AccountVerificationBanner />
+          {showNewsBanner && <NewsBanner />}
           {hasUnverifiedEmployer && (
             <Alert
               state="warning"

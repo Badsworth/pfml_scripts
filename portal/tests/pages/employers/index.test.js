@@ -23,4 +23,11 @@ describe("Employer index", () => {
       .find("Trans")
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
+
+  it("displays coming soon banner when employerShowComingSoonBanner is true", () => {
+    process.env.featureFlags = { employerShowNewsBanner: true };
+    wrapper = shallow(<Index appLogic={appLogic} />).dive();
+
+    expect(wrapper.find("NewsBanner").exists()).toEqual(true);
+  });
 });

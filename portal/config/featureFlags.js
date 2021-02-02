@@ -27,6 +27,10 @@ const flagsConfig = {
     // TODO (EMPLOYER-656): Show adjudication status once it is retrieved from FINEOS
     employerShowAdjudicationStatus: false,
 
+    // When this flag is enabled, the News Banner is visible
+    // This will be reused to announce future features and comms
+    employerShowNewsBanner: false,
+
     // When this flag is enabled, file upload is visible on the Review page
     // TODO (EMPLOYER-665): Show file upload once the endpoint is available
     employerShowFileUpload: false,

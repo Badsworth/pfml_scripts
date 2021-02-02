@@ -5,21 +5,20 @@ import React from "react";
 import routes from "../../routes";
 
 /**
- * Banner that tells the user that they will soon need to verify their
- * accounts.
+ * Banner that announces upcoming features and comms in Employer Portal
  */
-export const AccountVerificationBanner = ({ className }) => {
+export const NewsBanner = ({ className }) => {
   const { t } = useTranslation();
 
   return (
     <Alert
       className={className}
       state="info"
-      heading={t("components.accountVerificationBanner.header")}
+      heading={t("components.newsBanner.header")}
     >
       <p>
         <Trans
-          i18nKey="components.accountVerificationBanner.body"
+          i18nKey="components.newsBanner.body"
           components={{
             "learn-more-link": (
               <a
@@ -35,6 +34,6 @@ export const AccountVerificationBanner = ({ className }) => {
   );
 };
 
-AccountVerificationBanner.propTypes = {
+NewsBanner.propTypes = {
   className: PropTypes.string,
 };

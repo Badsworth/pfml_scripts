@@ -1770,11 +1770,6 @@ const pages = {
 };
 
 const components = {
-  accountVerificationBanner: {
-    body:
-      "Later this month, we'll ask you to verify your paid leave contributions to secure your account. <learn-more-link>Learn more.</learn-more-link>",
-    header: "Account verification is coming soon",
-  },
   amendButton: {
     amend: "Amend",
   },
@@ -2118,6 +2113,11 @@ const components = {
     lead:
       "This page is currently unavailable while the site is undergoing maintenance. Please check back$t(chars.nbsp)shortly.",
     title: "We’re undergoing maintenance",
+  },
+  newsBanner: {
+    body:
+      "Later this month, we'll ask you to verify your paid leave contributions to secure your account. <learn-more-link>Learn more.</learn-more-link>",
+    header: "Account verification is coming soon",
   },
   signUp: {
     createAccountButton: "Create an account to apply for paid leave",
