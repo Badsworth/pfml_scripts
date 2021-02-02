@@ -1,3 +1,4 @@
+import tracker from "../services/tracker";
 import { useEffect } from "react";
 // Reference the module directly to fix an IE11 bug:
 // https://github.com/streamich/react-use/issues/1189
@@ -14,6 +15,8 @@ const useSessionTimeout = (secondsOfInactivityUntilLogout, authLogic) => {
   const isIdle = useIdle(idleMilliseconds);
   useEffect(() => {
     if (isLoggedIn && isIdle) {
+      tracker.trackEvent("Session timed out");
+
       logout({
         sessionTimedOut: true,
       });
