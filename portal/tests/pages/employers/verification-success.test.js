@@ -1,6 +1,7 @@
 import { UserLeaveAdministrator } from "../../../src/models/User";
 import VerificationSuccess from "../../../src/pages/employers/verification-success";
 import { renderWithAppLogic } from "../../test-utils";
+import routes from "../../../src/routes";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -28,50 +29,69 @@ describe("VerificationSuccess", () => {
     }));
   };
 
-  it("renders the page", () => {
-    renderPage(query);
+  describe('when "employerShowVerificationPages" feature flag is disabled', () => {
+    beforeEach(() => {
+      process.env.featureFlags = { employerShowVerificationPages: false };
+      renderPage(query);
+    });
 
-    expect(wrapper).toMatchSnapshot();
-    wrapper.find("Trans").forEach((trans) => {
-      expect(trans.dive()).toMatchSnapshot();
+    it("redirects to the employer welcome page", () => {
+      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+        routes.employers.dashboard
+      );
     });
   });
 
-  describe("upon clicking 'Continue' button", () => {
-    it("navigates to Organizations page", () => {
+  describe('when "employerShowVerificationPages" feature flag is enabled', () => {
+    beforeEach(() => {
+      process.env.featureFlags = { employerShowVerificationPages: true };
+    });
+
+    it("renders the page", () => {
       renderPage(query);
 
-      wrapper.find("Button").simulate("click");
-      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        "/employers/organizations"
-      );
+      expect(wrapper).toMatchSnapshot();
+      wrapper.find("Trans").forEach((trans) => {
+        expect(trans.dive()).toMatchSnapshot();
+      });
     });
 
-    it("navigates to Organizations page by default if query param is invalid", () => {
-      const queryWithoutNextParam = {
-        employer_id: "mock_employer_id",
-        next: "",
-      };
-      renderPage(queryWithoutNextParam);
+    describe("upon clicking 'Continue' button", () => {
+      it("navigates to Organizations page", () => {
+        renderPage(query);
 
-      wrapper.find("Button").simulate("click");
-      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        "/employers/organizations"
-      );
-    });
+        wrapper.find("Button").simulate("click");
+        expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+          "/employers/organizations"
+        );
+      });
 
-    it("navigates to New Application page based on next param", () => {
-      const queryWithNextParam = {
-        employer_id: "mock_employer_id",
-        next:
-          "/employers/applications/new-application/?absence_id=mock_absence_id",
-      };
-      renderPage(queryWithNextParam);
+      it("navigates to Organizations page by default if query param is invalid", () => {
+        const queryWithoutNextParam = {
+          employer_id: "mock_employer_id",
+          next: "",
+        };
+        renderPage(queryWithoutNextParam);
 
-      wrapper.find("Button").simulate("click");
-      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        "/employers/applications/new-application/?absence_id=mock_absence_id"
-      );
+        wrapper.find("Button").simulate("click");
+        expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+          "/employers/organizations"
+        );
+      });
+
+      it("navigates to New Application page based on next param", () => {
+        const queryWithNextParam = {
+          employer_id: "mock_employer_id",
+          next:
+            "/employers/applications/new-application/?absence_id=mock_absence_id",
+        };
+        renderPage(queryWithNextParam);
+
+        wrapper.find("Button").simulate("click");
+        expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+          "/employers/applications/new-application/?absence_id=mock_absence_id"
+        );
+      });
     });
   });
 });

@@ -7,49 +7,82 @@ import routes from "../../../src/routes";
 jest.mock("../../../src/hooks/useAppLogic");
 
 describe("VerifyBusiness", () => {
-  let changeField, submitForm;
+  let appLogic, changeField, submitForm, wrapper;
   const query = {
     employer_id: "mock_employer_id",
     next: "/employers/applications/new-application/?absence_id=mock_absence_id",
   };
   mockRouter.pathname = routes.employers.VerifyBusiness;
 
-  const { wrapper, appLogic } = renderWithAppLogic(VerifyBusiness, {
-    diveLevels: 1,
-    props: {
-      query,
-    },
-    userAttrs: {
-      user_leave_administrators: [
-        new UserLeaveAdministrator({
-          employer_dba: "Company Name",
-          employer_fein: "11-111111",
-          employer_id: "mock_employer_id",
-          verified: false,
-        }),
-      ],
-    },
-  });
+  describe('when "employerShowVerificationPages" feature flag is disabled', () => {
+    beforeEach(() => {
+      process.env.featureFlags = { employerShowVerificationPages: false };
+      ({ wrapper, appLogic } = renderWithAppLogic(VerifyBusiness, {
+        diveLevels: 1,
+        props: {
+          query,
+        },
+        userAttrs: {
+          user_leave_administrators: [
+            new UserLeaveAdministrator({
+              employer_dba: "Company Name",
+              employer_fein: "11-111111",
+              employer_id: "mock_employer_id",
+              verified: false,
+            }),
+          ],
+        },
+      }));
+    });
 
-  it("renders the page", () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper.find("Trans").forEach((trans) => {
-      expect(trans.dive()).toMatchSnapshot();
+    it("redirects to the employer welcome page", () => {
+      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+        routes.employers.dashboard
+      );
     });
   });
 
-  it("submits withholding data with correct values", async () => {
-    ({ changeField, submitForm } = simulateEvents(wrapper));
-    changeField("withholdingAmount", "123");
-    await submitForm();
+  describe('when "employerShowVerificationPages" feature flag is enabled', () => {
+    beforeEach(() => {
+      process.env.featureFlags = { employerShowVerificationPages: true };
+      ({ wrapper, appLogic } = renderWithAppLogic(VerifyBusiness, {
+        diveLevels: 1,
+        props: {
+          query,
+        },
+        userAttrs: {
+          user_leave_administrators: [
+            new UserLeaveAdministrator({
+              employer_dba: "Company Name",
+              employer_fein: "11-111111",
+              employer_id: "mock_employer_id",
+              verified: false,
+            }),
+          ],
+        },
+      }));
+    });
 
-    expect(appLogic.employers.submitWithholding).toHaveBeenCalledWith(
-      {
-        employer_id: "mock_employer_id",
-        withholding_amount: "123",
-        withholding_quarter: "2020-10-10",
-      },
-      query.next
-    );
+    it("renders the page", () => {
+      expect(wrapper).toMatchSnapshot();
+      wrapper.find("Trans").forEach((trans) => {
+        expect(trans.dive()).toMatchSnapshot();
+      });
+    });
+
+    it("submits withholding data with correct values", async () => {
+      ({ changeField, submitForm } = simulateEvents(wrapper));
+      changeField("withholdingAmount", "123");
+      await submitForm();
+
+      expect(appLogic.employers.submitWithholding).toHaveBeenCalledWith(
+        {
+          employer_id: "mock_employer_id",
+          withholding_amount: "123",
+          withholding_quarter: "2020-10-10",
+        },
+        query.next
+      );
+    });
   });
 });

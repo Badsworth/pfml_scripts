@@ -8,6 +8,7 @@ import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -18,6 +19,11 @@ import withUser from "../../hoc/withUser";
 export const VerifyBusiness = (props) => {
   const { appLogic, query, user } = props;
   const { t } = useTranslation();
+
+  if (!isFeatureEnabled("employerShowVerificationPages")) {
+    appLogic.portalFlow.goTo(routes.employers.dashboard);
+  }
+
   const employer = user.user_leave_administrators.find((employer) => {
     return employer.employer_id === query.employer_id;
   });
@@ -114,6 +120,9 @@ VerifyBusiness.propTypes = {
     employers: PropTypes.shape({
       submitWithholding: PropTypes.func.isRequired,
     }),
+    portalFlow: PropTypes.shape({
+      goTo: PropTypes.func.isRequired,
+    }).isRequired,
   }).isRequired,
   query: PropTypes.shape({
     employer_id: PropTypes.string.isRequired,

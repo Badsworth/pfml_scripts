@@ -4,6 +4,7 @@ import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
@@ -11,6 +12,11 @@ import withUser from "../../hoc/withUser";
 export const VerificationSuccess = (props) => {
   const { appLogic, query, user } = props;
   const { t } = useTranslation();
+
+  if (!isFeatureEnabled("employerShowVerificationPages")) {
+    appLogic.portalFlow.goTo(routes.employers.dashboard);
+  }
+
   const employer = user.user_leave_administrators.find((employer) => {
     return employer.employer_id === query.employer_id;
   });
@@ -55,7 +61,11 @@ export const VerificationSuccess = (props) => {
 };
 
 VerificationSuccess.propTypes = {
-  appLogic: PropTypes.object.isRequired,
+  appLogic: PropTypes.shape({
+    portalFlow: PropTypes.shape({
+      goTo: PropTypes.func.isRequired,
+    }).isRequired,
+  }).isRequired,
   query: PropTypes.shape({
     employer_id: PropTypes.string.isRequired,
     next: PropTypes.string.isRequired,
