@@ -22,7 +22,7 @@ export const NewsBanner = ({ className }) => {
           components={{
             "learn-more-link": (
               <a
-                href={routes.external.massgov.employerAccount}
+                href={routes.external.massgov.verifyEmployer}
                 target="_blank"
                 rel="noopener"
               />
