@@ -118,7 +118,7 @@ module "fineos_bucket_tool_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_recurring_payments_schedule
 
-  task_name           = "fineos-bucket-tool"
+  task_name           = "fineos-data-export-tool"
   schedule_expression = "cron(0 13 * * ? *)"
   environment_name    = var.environment_name
 
@@ -155,7 +155,7 @@ module "fineos_error_extract_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_recurring_payments_schedule
 
-  task_name           = "fineos-bucket-tool"
+  task_name           = "fineos-error-extract-tool"
   schedule_expression = "cron(0 13 * * ? *)"
   environment_name    = var.environment_name
 
