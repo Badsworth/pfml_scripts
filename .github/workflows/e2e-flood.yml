@@ -8,43 +8,10 @@ on:
         description: "Target Environment"
         required: true
         default: "performance"
-      speed:
-        description: "Simulation Speed"
+      preset:
+        description: "Preset: <'base' | 'basePlus' | 'basePlusSpikes'>"
         required: true
-        default: "0.1"
-      # numRecords:
-      #   description: "How many records are needed?"
-      #   required: true
-      #   default: "1000"
-      scenario:
-        description: "Which scenario?"
-        required: true
-        default: "PortalClaimSubmit"
-      # until we can specify multiple scenarios, "chance" defaults to "100"
-      # chance:
-      #   description: "With a frequency of (max. 100%)?"
-      #   required: true
-      #   default: "100"
-      eligible:
-        description: "Employee eligibility rate (max. 100%)?"
-        required: true
-        default: "100"
-      name:
-        description: "Name"
-        required: true
-        default: "GHA_LST"
-      threads:
-        description: "Number of concurrent users"
-        required: true
-        default: "1"
-      duration:
-        description: "Duration (in minutes)"
-        required: true
-        default: "15"
-      rampup:
-        description: "Ramp-up (in minutes)"
-        required: true
-        default: "0"
+        default: "base"
 
 defaults:
   run:
@@ -78,4 +45,4 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
       - name: "Deploy"
-        run: npm run cli -- flood deployLST --env $E2E_ENVIRONMENT --startFlood "true" --token $E2E_FLOOD_API_TOKEN --name ${{ github.event.inputs.name }} --threads ${{ github.event.inputs.threads }} --duration ${{ github.event.inputs.duration }} --rampup ${{ github.event.inputs.rampup }} --region "us-east-1" --tool "flood-chrome" --project "PFML" --privacy "public" --infrastructure "demand" --instanceQuantity 1 --instanceType "m5.xlarge" --stopAfter 180 --speed ${{ github.event.inputs.speed }} --generateData "true" --numRecords 100 --dataOutput "GHWorkflow" --scenario ${{ github.event.inputs.scenario }} --chance 100 --eligible ${{ github.event.inputs.eligible }}
+        run: npm run cli -- flood preset ${{ github.event.inputs.preset }}
