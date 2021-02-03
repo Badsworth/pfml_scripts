@@ -5,10 +5,10 @@ import path from "path";
 import puppeteer from "puppeteer";
 import delay from "delay";
 import { CommandModule } from "yargs";
-import SimulationStorage from "../SimulationStorage";
+import SimulationStorage from "../../simulation/SimulationStorage";
 import { SystemWideArgs } from "../../cli";
 import * as actions from "../../utils";
-import { getFineosBaseUrl } from "./simulate";
+import { getFineosBaseUrl } from "../../commands/simulation/simulate";
 
 type ExtractPaymentDataArgs = {
   directory: string;

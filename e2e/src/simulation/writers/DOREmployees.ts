@@ -40,7 +40,7 @@ export function transformDOREmployeesEmployerLines(
     write(employer: Employer, encoding, callback) {
       const lines = filingPeriods.map((period) =>
         format(
-          "A%s%s%s%s%s%s%s\n",
+          "A%s%s%s%s%s%s%s%s%s\n",
           employer.accountKey,
           formatISODate(period),
           employer.name.padEnd(255),

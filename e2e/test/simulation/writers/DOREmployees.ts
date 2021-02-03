@@ -15,8 +15,8 @@ describe("DOR Employee File Generator", function () {
     );
 
     expect(contents).toMatchInlineSnapshot(`
-      "A0000120200630John Hancock                                                                                                                                                                                                                                                   1212315       F1212315                   60000.00
-       20200630 20200630000000"
+      "A0000120200630John Hancock                                                                                                                                                                                                                                                   1212315       F1212315                   60000.002020063020200630000000
+      "
     `);
   });
 
