@@ -102,6 +102,7 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       "wafv2:*",
       "waf-regional:*",
       "firehose:*",
+      "kinesis:*",
 
       # Allow API team to deploy Step Functions, such as the DOR Import.
       "states:*"
