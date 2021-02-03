@@ -29,6 +29,9 @@ locals {
     "VBI_ABSENCECASEByStage",
     "VBI_ABSENCECASE"
   ]
+  fineos_error_extract_prefixes = [
+    "EmployeeFileError"
+  ]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "ecs_task_logging" {
@@ -139,6 +142,43 @@ module "fineos_bucket_tool_scheduler" {
           "--copy_dir", "${var.fineos_data_export_path}", 
           "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/dataexports", 
           "--file_prefixes", "${join(",", local.fineos_data_extract_prefixes)}"
+        ]
+      }
+    ]
+  }
+  JSON
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Run fineos-bucket-tool daily at 8am EST (9am EDT) (1pm UTC)
+module "fineos_error_extract_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_recurring_payments_schedule
+
+  task_name           = "fineos-bucket-tool"
+  schedule_expression = "cron(0 13 * * ? *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.payments_fineos_process_task_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "fineos-bucket-tool",
+        "command": [
+          "fineos-bucket-tool",
+          "--recursive", 
+          "--copy_dir", "${var.fineos_error_export_path}", 
+          "--to_dir", "s3://${data.aws_s3_bucket.agency_transfer.bucket}/cps-errors/received/", 
+          "--file_prefixes", "${join(",", local.fineos_error_extract_prefixes)}"
         ]
       }
     ]

@@ -107,6 +107,12 @@ variable "fineos_data_import_path" {
   default     = ""
 }
 
+variable "fineos_error_export_path" {
+  description = "FINEOS generates error export files for PFML API to pick up"
+  type        = string
+  default     = ""
+}
+
 variable "pfml_fineos_inbound_path" {
   description = "PFML API stores a copy of all files that FINEOS generates for us"
   type        = string
