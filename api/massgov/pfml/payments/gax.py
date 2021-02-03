@@ -2,7 +2,7 @@ import decimal
 import random
 import string
 import xml.dom.minidom as minidom
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
@@ -140,6 +140,27 @@ def get_payment_amount(amount: decimal.Decimal) -> str:
         raise ValueError(f"Payment amount needs to be greater than 0: '{amount}'")
 
 
+def get_check_description(
+    absence_case_id: str, payment_start_period: date, payment_end_period: date
+) -> str:
+    return (
+        "PFML Payment %s [%s-%s]"
+        % (
+            absence_case_id,
+            payment_start_period.strftime("%m/%d/%Y"),
+            payment_end_period.strftime("%m/%d/%Y"),
+        )
+    )[:250]
+
+
+def get_vendor_invoice_number(absence_case_id: str, i_value: str) -> str:
+    return f"{absence_case_id}_{i_value}"
+
+
+def get_vendor_invoice_date_str(payment_end_period: date) -> str:
+    return (payment_end_period + timedelta(days=1)).isoformat()
+
+
 def build_individual_gax_document(
     xml_document: minidom.Document, payment: Payment, now: datetime
 ) -> minidom.Element:
@@ -149,7 +170,7 @@ def build_individual_gax_document(
     except Exception as e:
         raise Exception(f"Required payment model not present {str(e)}")
 
-    payment_date_str = payments_util.validate_db_input(
+    payments_util.validate_db_input(
         key="payment_date",
         db_object=payment,
         required=True,
@@ -174,16 +195,26 @@ def build_individual_gax_document(
         max_length=10,  # the 10 is not a limitation that comes from MMARS
         func=get_payment_amount,
     )
-    absence_case_id = payments_util.validate_db_input(
-        key="fineos_absence_id", db_object=claim, required=True, max_length=19, truncate=False
+    absence_case_id = cast(
+        str,
+        payments_util.validate_db_input(
+            key="fineos_absence_id", db_object=claim, required=True, max_length=19, truncate=False
+        ),
     )
     # I value has a max of 10 so when it gets combines with absence_case_id (and _)
     # it is a maximum of 30 characters.
-    i_value = payments_util.validate_db_input(
-        key="fineos_pei_i_value", db_object=payment, required=True, max_length=10, truncate=False
+    i_value = cast(
+        str,
+        payments_util.validate_db_input(
+            key="fineos_pei_i_value",
+            db_object=payment,
+            required=True,
+            max_length=10,
+            truncate=False,
+        ),
     )
     # Log a warning if absence case IDs or I values are getting close to the max length
-    if len(cast(str, absence_case_id)) > 17 or len(cast(str, i_value)) > 8:
+    if len(absence_case_id) > 17 or len(i_value) > 8:
         # If you're coming to this because you saw this warning, here's some more info:
         # We combine absence_case_id and i_value into a vendor_invoice_number below.
         # This value has a max length of 30 as designated by the program. If we're
@@ -199,8 +230,8 @@ def build_individual_gax_document(
         )
 
     today = now.date()
-    start = cast(datetime, payment.period_start_date)
-    end = cast(datetime, payment.period_end_date)
+    start = cast(date, payment.period_start_date)
+    end = cast(date, payment.period_end_date)
 
     if end > today or start > end:
         raise Exception(
@@ -229,8 +260,8 @@ def build_individual_gax_document(
     rfed_doc_id = get_rfed_doc_id(claim.claim_type.claim_type_id)
     disbursement_format = get_disbursement_format(employee.payment_method)
 
-    vendor_invoice_number = f"{absence_case_id}_{i_value}"
-    check_description = f"PFML PAYMENT {absence_case_id}"[:250]
+    vendor_invoice_number = get_vendor_invoice_number(absence_case_id, i_value)
+    check_description = get_check_description(absence_case_id, start, end)
 
     # Create the root of the document
     ams_document_attributes = {"DOC_ID": doc_id}
@@ -283,7 +314,7 @@ def build_individual_gax_document(
         "FY_DC": fiscal_year,
         "PER_DC": doc_period,
         "VEND_INV_NO": vendor_invoice_number,
-        "VEND_INV_DT": payment_date_str,
+        "VEND_INV_DT": get_vendor_invoice_date_str(end),
         "CHK_DSCR": check_description,
         "RFED_DOC_ID": rfed_doc_id,
         "ACTV_CD": activity_code,

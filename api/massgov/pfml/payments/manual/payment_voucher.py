@@ -32,7 +32,7 @@ import massgov.pfml.util.files
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.audit
 from massgov.pfml.db.models.employees import Employee, TaxIdentifier
-from massgov.pfml.payments import fineos_payment_export, fineos_vendor_export
+from massgov.pfml.payments import fineos_payment_export, fineos_vendor_export, gax
 from massgov.pfml.payments.manual.payment_voucher_csv import (
     PaymentVoucherCSV,
     WritebackCSV,
@@ -297,15 +297,16 @@ def write_row_to_output(
         vendor_single_payment="Yes",
         event_type="AP01",
         payment_amount=payment_data.payment_amount,
-        description="PFML Payment %s [%s-%s]"
-        % (
-            payment_data.absence_case_number,
-            payment_start_period.strftime("%m/%d/%Y"),
-            payment_end_period.strftime("%m/%d/%Y"),
+        description=gax.get_check_description(
+            absence_case_id=payment_data.absence_case_number,
+            payment_start_period=payment_start_period,
+            payment_end_period=payment_end_period,
         ),
-        vendor_invoice_number="%s_%s" % (payment_data.absence_case_number, index.i),
+        vendor_invoice_number=gax.get_vendor_invoice_number(
+            payment_data.absence_case_number, index.i
+        ),
         vendor_invoice_line="1",
-        vendor_invoice_date=(payment_end_period + datetime.timedelta(days=1)).isoformat(),
+        vendor_invoice_date=gax.get_vendor_invoice_date_str(payment_end_period),
         payment_period_start_date=payment_start_period.isoformat(),
         payment_period_end_date=payment_end_period.isoformat(),
         absence_case_number=payment_data.absence_case_number,
