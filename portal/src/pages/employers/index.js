@@ -29,6 +29,7 @@ export const Index = (props) => {
   };
   const hasUnverifiedEmployer = props.user.hasUnverifiedEmployer;
   const showNewsBanner = isFeatureEnabled("employerShowNewsBanner");
+  const showVerifications = isFeatureEnabled("employerShowVerifications");
 
   return (
     <div className="grid-container">
@@ -36,7 +37,7 @@ export const Index = (props) => {
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersDashboard.welcomeTitle")}</Title>
           {showNewsBanner && <NewsBanner />}
-          {hasUnverifiedEmployer && (
+          {showVerifications && hasUnverifiedEmployer && (
             <Alert
               state="warning"
               heading={t("pages.employersDashboard.verificationTitle")}
@@ -88,21 +89,25 @@ export const Index = (props) => {
         </div>
         <div className="grid-col-fill" />
         <aside className="desktop:grid-col-3 margin-top-7 desktop:margin-top-1">
-          <Heading level="2">
-            {t("pages.employersDashboard.settingsTitle")}
-          </Heading>
-          <Trans
-            i18nKey="pages.employersDashboard.settingsLinks"
-            components={{
-              ul: (
-                <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05" />
-              ),
-              li: <li />,
-              "your-organizations-link": (
-                <a href={routes.employers.organizations} />
-              ),
-            }}
-          />
+          {showVerifications && (
+            <React.Fragment>
+              <Heading level="2">
+                {t("pages.employersDashboard.settingsTitle")}
+              </Heading>
+              <Trans
+                i18nKey="pages.employersDashboard.settingsLinks"
+                components={{
+                  ul: (
+                    <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05" />
+                  ),
+                  li: <li />,
+                  "your-organizations-link": (
+                    <a href={routes.employers.organizations} />
+                  ),
+                }}
+              />
+            </React.Fragment>
+          )}
           <Heading level="2">
             {t("pages.employersDashboard.learnMoreTitle")}
           </Heading>
