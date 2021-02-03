@@ -2,6 +2,7 @@ import csv
 import decimal
 import os
 import pathlib
+import uuid
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -495,7 +496,7 @@ def create_or_update_payment(
         raise
 
     if not payment:
-        payment = Payment()
+        payment = Payment(payment_id=uuid.uuid4().__str__())
 
     payment.claim = claim
     payment.period_start_date = payments_util.datetime_str_to_date(

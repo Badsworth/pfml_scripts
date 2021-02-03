@@ -934,6 +934,9 @@ def assert_employee_reference_file(
 def assert_payment_state_log_by_scenario(
     db_session: db.Session, test_scenario_dataset: ScenarioDataSet, test_stage: ScenarioStage
 ):
+    # force fetch from the db - this avoids string cast manually set UUID values fetched from the current db session
+    db_session.expire_all()
+
     # Get the expected states
     (expected_states, expected_state_by_scenario_name,) = get_scenario_expected_states(
         test_stage, AssociatedClass.PAYMENT
@@ -979,6 +982,9 @@ def assert_payment_state_log_by_scenario(
 def assert_employee_state_log_by_scenario(
     db_session: db.Session, test_scenario_dataset: ScenarioDataSet, test_stage: ScenarioStage,
 ):
+    # force fetch from the db - this avoids string cast manually set UUID values fetched from the current db session
+    db_session.expire_all()
+
     # Get employees and create map
     filter_params = [
         StateLog.associated_type == AssociatedClass.EMPLOYEE.value,
