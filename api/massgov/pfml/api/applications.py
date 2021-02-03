@@ -1,6 +1,5 @@
 import base64
-from datetime import datetime
-from typing import Dict, Optional, Type, Union
+from typing import Type, Union
 
 import connexion
 import flask
@@ -46,6 +45,7 @@ from massgov.pfml.db.models.applications import (
     PreviousLeave,
 )
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import TransformPreviousLeaves
+from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -747,71 +747,3 @@ def payment_preference_submit(application_id: str) -> Response:
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             errors=[],
         ).to_api_response()
-
-
-def get_application_log_attributes(application: Application) -> Dict[str, Optional[str]]:
-    attributes_to_log = [
-        "application_id",
-        "employer_id",
-        "leave_type",
-        "has_state_id",
-        "has_continuous_leave_periods",
-        "has_employer_benefits",
-        "has_future_child_date",
-        "has_intermittent_leave_periods",
-        "has_mailing_address",
-        "has_other_incomes",
-        "has_reduced_schedule_leave_periods",
-        "has_submitted_payment_preference",
-        "start_time",
-        "updated_time",
-        "completed_time",
-        "submitted_time",
-    ]
-
-    timestamp_attributes_to_log = [
-        "start_time",
-        "updated_time",
-        "completed_time",
-        "submitted_time",
-    ]
-
-    result = {}
-    for name in attributes_to_log:
-        value = getattr(application, name)
-        result[f"application.{name}"] = str(value) if value is not None else None
-
-    for name in timestamp_attributes_to_log:
-        dt_value: Optional[datetime] = getattr(application, name)
-        result[f"application.{name}.timestamp"] = (
-            str(dt_value.timestamp()) if dt_value is not None else None
-        )
-
-    # Use a different attribute name for other_incomes_awaiting_approval to be consistent with other booleans
-    has_other_incomes_awaiting_approval = application.other_incomes_awaiting_approval
-    result["application.has_other_incomes_awaiting_approval"] = (
-        str(has_other_incomes_awaiting_approval)
-        if has_other_incomes_awaiting_approval is not None
-        else None
-    )
-
-    # Use a different attribute name for fineos_absence_id to avoid using vendor specific names
-    result["application.absence_case_id"] = application.fineos_absence_id
-
-    # leave_reason and leave_reason_qualifier are objects, so get the underlying string description
-    result["application.leave_reason"] = (
-        application.leave_reason.leave_reason_description if application.leave_reason else None
-    )
-    result["application.leave_reason_qualifier"] = (
-        application.leave_reason_qualifier.leave_reason_qualifier_description
-        if application.leave_reason_qualifier
-        else None
-    )
-
-    result["work_pattern.work_pattern_type"] = (
-        application.work_pattern.work_pattern_type.work_pattern_type_description
-        if application.work_pattern and application.work_pattern.work_pattern_type
-        else None
-    )
-
-    return result
