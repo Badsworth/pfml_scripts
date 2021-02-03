@@ -105,7 +105,11 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       "kinesis:*",
 
       # Allow API team to deploy Step Functions, such as the DOR Import.
-      "states:*"
+      "states:*",
+
+      # Allow teams to deploy CloudFormation stacks to manage resources
+      # Terraform can not
+      "cloudformation:*",
     ]
 
     resources = [
