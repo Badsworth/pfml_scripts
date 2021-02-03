@@ -126,6 +126,8 @@ export async function gotoCase(
     .then((el) => click(page, el));
   await clickTab(page, "Case");
   await labelled(page, "Case Number").then((el) => el.type(id));
+  // Uncheck "Search Case Alias".
+  await labelled(page, "Search Case Alias").then((el) => el.click());
   await page
     .$('input[type="submit"][value="Search"]')
     .then((el) => click(page, el));
