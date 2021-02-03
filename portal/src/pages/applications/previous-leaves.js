@@ -1,7 +1,6 @@
 import Claim from "../../models/Claim";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -60,10 +59,6 @@ export const PreviousLeaves = (props) => {
         type="radio"
         hint={
           <div>
-            <LeaveDatesAlert
-              startDate={claim.leaveStartDate}
-              endDate={claim.leaveEndDate}
-            />
             <Details label={t("pages.claimsPreviousLeaves.detailsLabel")}>
               <p>{t("pages.claimsPreviousLeaves.hintHeader")}</p>
               <ul className="usa-list">

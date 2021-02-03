@@ -1189,7 +1189,8 @@ const pages = {
     leaveReasonLabel: "What was the qualifying reason for your leave?",
     limitMessage: "You can only add up to 6 leaves",
     removeButton: "Remove leave",
-    sectionLabel: "Tell us about previous paid or unpaid leave",
+    sectionLabel:
+      "Tell us about previous paid or unpaid leave since January 1, 2021",
     startDateLabel: "When did your leave begin?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
