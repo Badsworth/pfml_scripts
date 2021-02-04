@@ -9,7 +9,7 @@ exports[`Confirmation renders the page 1`] = `
     i18nKey="pages.employersClaimsConfirmation.applicationIdLabel"
     values={
       Object {
-        "absenceId": "test-absence-id",
+        "absenceId": "mock-absence-id",
       }
     }
   />
@@ -22,7 +22,7 @@ exports[`Confirmation renders the page 1`] = `
     i18nKey="pages.employersClaimsConfirmation.instructionsFollowUpDateLabel"
     values={
       Object {
-        "date": "1/1/2022",
+        "date": "10/10/2020",
       }
     }
   />
@@ -57,7 +57,7 @@ Array [
   >
     Application ID:
   </strong>,
-  " test-absence-id",
+  " mock-absence-id",
 ]
 `;
 
@@ -70,7 +70,7 @@ exports[`Confirmation renders the page 3`] = `
   >
     Review by:
   </strong>
-   1/1/2022 at 11:59 p.m. Eastern time
+   10/10/2020 at 11:59 p.m. Eastern time
 </div>
 `;
 

@@ -25,7 +25,7 @@ describe("Employer index", () => {
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
-  it("displays coming soon banner when employerShowNewsBanner is true", () => {
+  it("displays banner when employerShowNewsBanner is true", () => {
     process.env.featureFlags = { employerShowNewsBanner: true };
     wrapper = shallow(<Index appLogic={appLogic} />).dive();
 

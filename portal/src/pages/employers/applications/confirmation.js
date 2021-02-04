@@ -1,3 +1,4 @@
+import EmployerClaim from "../../../models/EmployerClaim";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../../components/Title";
@@ -6,11 +7,16 @@ import UserFeedback from "../../../components/UserFeedback";
 import formatDateRange from "../../../utils/formatDateRange";
 import routes from "../../../../src/routes";
 import { useTranslation } from "../../../locales/i18n";
-import withUser from "../../../hoc/withUser";
+import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 export const Confirmation = (props) => {
   const { t } = useTranslation();
-  const { absence_id, follow_up_date } = props.query;
+  const {
+    appLogic: {
+      employers: { claim },
+    },
+    query: { absence_id },
+  } = props;
 
   return (
     <React.Fragment>
@@ -19,15 +25,13 @@ export const Confirmation = (props) => {
         i18nKey="pages.employersClaimsConfirmation.applicationIdLabel"
         values={{ absenceId: absence_id }}
       />
-      {follow_up_date && (
-        <Trans
-          i18nKey="pages.employersClaimsConfirmation.instructionsFollowUpDateLabel"
-          values={{ date: formatDateRange(follow_up_date) }}
-          components={{
-            div: <div />,
-          }}
-        />
-      )}
+      <Trans
+        i18nKey="pages.employersClaimsConfirmation.instructionsFollowUpDateLabel"
+        values={{ date: formatDateRange(claim.follow_up_date) }}
+        components={{
+          div: <div />,
+        }}
+      />
       <Trans
         i18nKey="pages.employersClaimsConfirmation.instructions"
         components={{
@@ -50,10 +54,14 @@ export const Confirmation = (props) => {
 };
 
 Confirmation.propTypes = {
+  appLogic: PropTypes.shape({
+    employers: PropTypes.shape({
+      claim: PropTypes.instanceOf(EmployerClaim),
+    }).isRequired,
+  }).isRequired,
   query: PropTypes.shape({
     absence_id: PropTypes.string.isRequired,
-    follow_up_date: PropTypes.string,
   }).isRequired,
 };
 
-export default withUser(Confirmation);
+export default withEmployerClaim(Confirmation);

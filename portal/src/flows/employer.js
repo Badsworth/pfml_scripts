@@ -39,5 +39,6 @@ export default {
         CONTINUE: routes.employers.verificationSuccess,
       },
     },
+    [routes.employers.verificationSuccess]: {},
   },
 };

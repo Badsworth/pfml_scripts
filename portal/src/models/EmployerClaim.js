@@ -10,6 +10,7 @@ class EmployerClaim extends BaseClaim {
     return merge({
       ...super.defaults,
       employer_dba: null,
+      employer_id: null,
       follow_up_date: null,
       is_reviewable: null,
     });

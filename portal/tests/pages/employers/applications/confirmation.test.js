@@ -1,34 +1,43 @@
+import {
+  MockEmployerClaimBuilder,
+  renderWithAppLogic,
+  testHook,
+} from "../../../test-utils";
 import Confirmation from "../../../../src/pages/employers/applications/confirmation";
-import { renderWithAppLogic } from "../../../test-utils";
+import { act } from "react-dom/test-utils";
+import useAppLogic from "../../../../src/hooks/useAppLogic";
+
+jest.mock("../../../../src/hooks/useAppLogic");
 
 describe("Confirmation", () => {
-  let wrapper;
+  const claim = new MockEmployerClaimBuilder()
+    .completed()
+    .reviewable(true)
+    .create();
+  const query = { absence_id: "mock-absence-id" };
+  let appLogic, wrapper;
 
-  const renderPage = (query) => {
-    ({ wrapper } = renderWithAppLogic(Confirmation, {
-      diveLevels: 1,
-      props: { query },
-    }));
-  };
+  beforeEach(() => {
+    testHook(() => {
+      appLogic = useAppLogic();
+    });
+    appLogic.employers.claim = claim;
+
+    act(() => {
+      ({ wrapper } = renderWithAppLogic(Confirmation, {
+        employerClaimAttrs: claim,
+        props: {
+          appLogic,
+          query,
+        },
+      }));
+    });
+  });
 
   it("renders the page", () => {
-    const query = {
-      absence_id: "test-absence-id",
-      follow_up_date: "2022-01-01",
-    };
-    renderPage(query);
-
     expect(wrapper).toMatchSnapshot();
     wrapper.find("Trans").forEach((trans) => {
       expect(trans.dive()).toMatchSnapshot();
     });
-    expect(wrapper.find("Trans")).toHaveLength(3);
-  });
-
-  it("does not display due date if not provided", () => {
-    const query = { absence_id: "test-absence-id", follow_up_date: null };
-    renderPage(query);
-
-    expect(wrapper.find("Trans")).toHaveLength(2);
   });
 });

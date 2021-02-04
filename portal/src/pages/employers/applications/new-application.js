@@ -12,7 +12,7 @@ import StatusRow from "../../../components/StatusRow";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import formatDateRange from "../../../utils/formatDateRange";
-import routes from "../../../routes";
+import routes from "../../../../src/routes";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
@@ -21,6 +21,7 @@ export const NewApplication = (props) => {
   const {
     appLogic: {
       employers: { claim },
+      portalFlow,
     },
     query: { absence_id: absenceId },
   } = props;
@@ -29,7 +30,7 @@ export const NewApplication = (props) => {
   // temporarily allows the redirect behavior to work even
   // if the API has not been updated to populate the field.
   if (claim.is_reviewable === false) {
-    props.appLogic.portalFlow.goTo(routes.employers.status, {
+    portalFlow.goTo(routes.employers.status, {
       absence_id: absenceId,
     });
   }
@@ -38,13 +39,9 @@ export const NewApplication = (props) => {
     event.preventDefault();
 
     if (formState.hasReviewerVerified === "true") {
-      props.appLogic.portalFlow.goToNextPage({}, { absence_id: absenceId });
+      portalFlow.goToNextPage({}, { absence_id: absenceId });
     } else if (formState.hasReviewerVerified === "false") {
-      props.appLogic.portalFlow.goToPageFor(
-        "CONFIRMATION",
-        {},
-        { absence_id: absenceId, follow_up_date: claim.follow_up_date }
-      );
+      portalFlow.goToPageFor("CONFIRMATION", {}, { absence_id: absenceId });
     }
   };
 
