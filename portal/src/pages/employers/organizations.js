@@ -1,22 +1,47 @@
+import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import PropTypes from "prop-types";
 import React from "react";
 import Table from "../../components/Table";
 import Tag from "../../components/Tag";
 import Title from "../../components/Title";
+import { Trans } from "react-i18next";
 import User from "../../models/User";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
 export const Organizations = ({ appLogic }) => {
   const { t } = useTranslation();
-  const { user_leave_administrators } = appLogic.users.user;
+  const {
+    hasUnverifiedEmployer,
+    user_leave_administrators,
+  } = appLogic.users.user;
+  const showVerificationPages = isFeatureEnabled(
+    "employerShowVerificationPages"
+  );
 
   return (
     <React.Fragment>
       <BackButton />
       <Title>{t("pages.employersOrganizations.title")}</Title>
+      {showVerificationPages && hasUnverifiedEmployer && (
+        <Alert
+          state="warning"
+          heading={t("pages.employersDashboard.verificationTitle")}
+        >
+          <p>
+            <Trans
+              i18nKey="pages.employersDashboard.verificationBody"
+              components={{
+                "your-organizations-link": <React.Fragment />,
+              }}
+            />
+          </p>
+        </Alert>
+      )}
       <p>{t("pages.employersOrganizations.nearFutureAvailability")}</p>
+
       <Table className="width-full">
         <thead>
           <tr>
