@@ -16,14 +16,16 @@ jest.mock("../../src/api/UsersApi");
 jest.mock("next/router");
 
 describe("useUsersLogic", () => {
-  let appErrorsLogic, isLoggedIn, portalFlow, usersApi, usersLogic;
+  let appErrorsLogic, goToSpy, isLoggedIn, portalFlow, usersApi, usersLogic;
 
   async function preloadUser(user) {
-    usersApi.getCurrentUser.mockResolvedValueOnce({
-      success: true,
-      user,
+    await act(async () => {
+      usersApi.getCurrentUser.mockResolvedValueOnce({
+        success: true,
+        user,
+      });
+      await usersLogic.loadUser();
     });
-    await usersLogic.loadUser();
   }
 
   function renderHook() {
@@ -31,6 +33,8 @@ describe("useUsersLogic", () => {
       portalFlow = usePortalFlow();
       appErrorsLogic = useAppErrorsLogic({ portalFlow });
       usersLogic = useUsersLogic({ appErrorsLogic, isLoggedIn, portalFlow });
+
+      goToSpy = jest.spyOn(portalFlow, "goTo");
     });
   }
 
@@ -41,7 +45,6 @@ describe("useUsersLogic", () => {
     usersApi = new UsersApi();
     isLoggedIn = true;
     jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-    renderHook();
   });
 
   describe("updateUser", () => {
@@ -50,6 +53,7 @@ describe("useUsersLogic", () => {
 
     beforeEach(async () => {
       await act(async () => {
+        renderHook();
         await usersLogic.updateUser(user_id, patchData);
       });
     });
@@ -119,6 +123,10 @@ describe("useUsersLogic", () => {
   });
 
   describe("loadUser", () => {
+    beforeEach(() => {
+      renderHook();
+    });
+
     it("fetches current user from api", async () => {
       await act(async () => {
         await usersLogic.loadUser();
@@ -191,6 +199,8 @@ describe("useUsersLogic", () => {
   describe("requireUserConsentToDataAgreement", () => {
     describe("when user is not loaded", () => {
       it("throws error if user not loaded", () => {
+        renderHook();
+
         expect(usersLogic.requireUserConsentToDataAgreement).toThrow(
           /User not loaded/
         );
@@ -199,34 +209,36 @@ describe("useUsersLogic", () => {
 
     describe("when user consented to data sharing", () => {
       beforeEach(async () => {
+        renderHook();
         await preloadUser(new User({ consented_to_data_sharing: true }));
       });
 
       it("doesn't redirect to the consent page", () => {
         usersLogic.requireUserConsentToDataAgreement();
 
-        expect(mockRouter.push).not.toHaveBeenCalled();
+        expect(goToSpy).not.toHaveBeenCalled();
       });
     });
 
     describe("when user didn't consent to data sharing", () => {
-      beforeEach(async () => {
+      it("redirects to consent page if user isn't already there", async () => {
+        renderHook();
         await preloadUser(new User({ consented_to_data_sharing: false }));
-      });
 
-      it("redirects to consent page if user isn't already there", () => {
         usersLogic.requireUserConsentToDataAgreement();
 
-        expect(mockRouter.push).toHaveBeenCalledWith(
-          "/user/consent-to-data-sharing"
-        );
+        expect(goToSpy).toHaveBeenCalledWith("/user/consent-to-data-sharing");
       });
 
-      it("doesn't redirect if route is already set to consent page", () => {
+      it("doesn't redirect if route is already set to consent page", async () => {
         mockRouter.pathname = "/user/consent-to-data-sharing";
+
+        renderHook();
+        await preloadUser(new User({ consented_to_data_sharing: false }));
+
         usersLogic.requireUserConsentToDataAgreement();
 
-        expect(mockRouter.push).not.toHaveBeenCalled();
+        expect(goToSpy).not.toHaveBeenCalled();
       });
     });
   });
@@ -242,34 +254,44 @@ describe("useUsersLogic", () => {
     describe("when user is currently on Consent to Data Sharing page", () => {
       it("does not redirect to another page", () => {
         mockRouter.pathname = "/user/consent-to-data-sharing";
+        renderHook();
+
         usersLogic.requireUserRole();
 
-        expect(mockRouter.push).not.toHaveBeenCalled();
+        expect(goToSpy).not.toHaveBeenCalled();
       });
     });
 
     describe("when user has roles", () => {
       it("redirects to Employers dashboard if user has Employer role", async () => {
+        mockRouter.pathname = routes.applications.dashboard;
+
+        renderHook();
         await preloadUser(
           new User({ roles: employerRole, consented_to_data_sharing: true })
         );
-        mockRouter.pathname = routes.applications.dashboard;
+
         usersLogic.requireUserRole();
 
-        expect(mockRouter.push).toHaveBeenCalledWith("/employers");
+        expect(goToSpy).toHaveBeenCalledWith("/employers");
       });
 
       it("does not redirect if user has Employer role and currently in Employer Portal", async () => {
+        mockRouter.pathname = routes.employers.dashboard;
+
+        renderHook();
         await preloadUser(
           new User({ roles: employerRole, consented_to_data_sharing: true })
         );
-        mockRouter.pathname = routes.employers.dashboard;
+
         usersLogic.requireUserRole();
 
-        expect(mockRouter.push).not.toHaveBeenCalled();
+        expect(goToSpy).not.toHaveBeenCalled();
       });
 
       it("redirects to Employers dashboard if user has multiple roles, including Employer", async () => {
+        mockRouter.pathname = routes.applications.dashboard;
+
         const userRole = [
           new UserRole({
             role_id: 2,
@@ -277,23 +299,27 @@ describe("useUsersLogic", () => {
           }),
         ];
         const multipleRoles = employerRole.concat(userRole);
+
+        renderHook();
         await preloadUser(
           new User({ roles: multipleRoles, consented_to_data_sharing: true })
         );
-        mockRouter.pathname = routes.applications.dashboard;
+
         usersLogic.requireUserRole();
 
-        expect(mockRouter.push).toHaveBeenCalledWith("/employers");
+        expect(goToSpy).toHaveBeenCalledWith("/employers");
       });
 
       it("redirects to Claims dashboard if user does not have a role", async () => {
+        mockRouter.pathname = routes.employers.dashboard;
+        renderHook();
         await preloadUser(
           new User({ roles: [], consented_to_data_sharing: true })
         );
-        mockRouter.pathname = routes.employers.dashboard;
+
         usersLogic.requireUserRole();
 
-        expect(mockRouter.push).toHaveBeenCalledWith("/dashboard");
+        expect(goToSpy).toHaveBeenCalledWith("/dashboard");
       });
     });
   });

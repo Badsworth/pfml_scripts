@@ -7,7 +7,6 @@ import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
 import UsersApi from "../api/UsersApi";
 import tracker from "../services/tracker";
-import { useRouter } from "next/router";
 
 /**
  * Hook that defines user state
@@ -20,8 +19,6 @@ import { useRouter } from "next/router";
 const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
   const [user, setUser] = useState();
-  // TODO (CP-789): Remove dependency on next/router
-  const router = useRouter();
 
   /**
    * Update user through a PATCH request to /users
@@ -90,10 +87,9 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     if (!user) throw new Error("User not loaded");
     if (
       !user.consented_to_data_sharing &&
-      // TODO (CP-732): Once we switch to using a custom router we can probably use portalFlow instead of directly checking the router pathname
-      !router.pathname.includes(routes.user.consentToDataSharing)
+      !portalFlow.pathname.includes(routes.user.consentToDataSharing)
     ) {
-      router.push(routes.user.consentToDataSharing);
+      portalFlow.goTo(routes.user.consentToDataSharing);
     }
   };
 
@@ -103,18 +99,18 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
    */
   const requireUserRole = () => {
     //  Allow roles to view data sharing consent page
-    const route = router.pathname;
-    if (route === routes.user.consentToDataSharing) return;
+    const pathname = portalFlow.pathname;
+    if (pathname === routes.user.consentToDataSharing) return;
 
     // Portal currently does not support hybrid account (both Employer AND Claimant account)
     // If user has Employer role, they cannot access Claimant Portal regardless of multiple roles
-    if (!user.hasEmployerRole && isEmployersRoute(route)) {
-      router.push(routes.applications.dashboard);
+    if (!user.hasEmployerRole && isEmployersRoute(pathname)) {
+      portalFlow.goTo(routes.applications.dashboard);
       return;
     }
 
-    if (user.hasEmployerRole && isApplicationsRoute(route)) {
-      router.push(routes.employers.dashboard);
+    if (user.hasEmployerRole && isApplicationsRoute(pathname)) {
+      portalFlow.goTo(routes.employers.dashboard);
     }
   };
 
