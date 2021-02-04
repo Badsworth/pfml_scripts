@@ -3,6 +3,7 @@ import os
 import urllib
 from collections import defaultdict
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 import boto3
@@ -95,7 +96,8 @@ class MockZeepCaller(LazyApiCaller[dict], ApiCaller[dict]):
         default_response = {
             "CustomerKey": "12345",
             "LicenseID": "ABC12345",
-            "License1ExpirationDate": "20210204",
+            # Set the expiration date to some date in the future.
+            "License1ExpirationDate": (datetime.now() + timedelta(days=30)).strftime("%Y%m%d"),
             "LicenseSSN": "12345678",
             "CustomerInActive": False,
             "CFLSanctions": False,

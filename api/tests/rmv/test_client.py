@@ -53,7 +53,8 @@ def test_rmv_client_vendor_license_inquiry_200_none_acknowledgement(inquiry_requ
 
     assert response.customer_key == caller.response["CustomerKey"]
     assert response.license_id == caller.response["LicenseID"]
-    assert response.license1_expiration_date == date(2021, 2, 4)
+    assert isinstance(response.license1_expiration_date, date)
+    assert response.license1_expiration_date > date.today()
     assert response.cfl_sanctions is False
     assert response.cfl_sanctions_active is False
     assert response.is_customer_inactive is False
