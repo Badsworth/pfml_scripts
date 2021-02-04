@@ -324,6 +324,7 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "vendor_invoice_number": "NTN-308848-ABS-01_249",
         "vendor_single_payment": "Yes",
         "zip": "02169",
+        "case_status": "Approved",
     }
 
     assert len(writeback_csv.rows) == 1
@@ -426,6 +427,7 @@ def test_process_payment_record_multiple_details(test_db_session, initialize_fac
         "vendor_invoice_number": "NTN-308848-ABS-01_249",
         "vendor_single_payment": "Yes",
         "zip": "02169",
+        "case_status": "Approved",
     }
 
     assert len(writeback_csv.rows) == 1

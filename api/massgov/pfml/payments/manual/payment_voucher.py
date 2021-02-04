@@ -312,6 +312,7 @@ def write_row_to_output(
         absence_case_number=payment_data.absence_case_number,
         c_value=index.c,
         i_value=index.i,
+        case_status=requested_absence["ABSENCE_CASESTATUS"],
     )
     output_csv.writerow(dataclasses.asdict(payment_row))
 
