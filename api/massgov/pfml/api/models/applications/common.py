@@ -102,7 +102,7 @@ class EmployerNotificationMethod(str, LookupEnum):
 
     @classmethod
     def get_lookup_model(cls):
-        return db_application_models.NotificationMethod
+        return db_application_models.LkNotificationMethod
 
 
 class ReducedScheduleLeavePeriods(PydanticBaseModel):

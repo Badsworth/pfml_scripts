@@ -213,7 +213,10 @@ def test_application_patch(client, user, auth_token, test_db_session):
     update_request_body = sqlalchemy_object_as_dict(application)
     # Change last name
     update_request_body["last_name"] = "Perez"
-    update_request_body["leave_details"] = {"relationship_to_caregiver": "Parent"}
+    update_request_body["leave_details"] = {
+        "relationship_to_caregiver": "Parent",
+        "employer_notification_method": "In Writing",
+    }
     update_request_body["middle_name"] = "Mike"
     update_request_body["tax_identifier"] = "123-45-6789"
     update_request_body["employer_fein"] = "22-7777777"
@@ -265,6 +268,10 @@ def test_application_patch(client, user, auth_token, test_db_session):
 
     assert (
         response_body.get("data").get("leave_details").get("relationship_to_caregiver") == "Parent"
+    )
+    assert (
+        response_body.get("data").get("leave_details").get("employer_notification_method")
+        == "In Writing"
     )
 
     # Formatted / masked fields:
