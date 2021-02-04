@@ -478,8 +478,10 @@ def send_bievnt_email(ref_file: ReferenceFile, db_session: db.Session) -> None:
         email_config = payments_config.get_email_config()
         gax_bienvt_email = email_config.ctr_gax_bievnt_email_address
         project_manager_email = email_config.dfml_project_manager_email_address
+        dfml_business_operations_email_address = email_config.dfml_business_operations_email_address
         email_recipient = EmailRecipient(
-            to_addresses=[gax_bienvt_email], cc_addresses=[project_manager_email]
+            to_addresses=[gax_bienvt_email],
+            cc_addresses=[project_manager_email, dfml_business_operations_email_address],
         )
 
         email_inf_data(ref_file, db_session, email_recipient, subject)
