@@ -84,7 +84,7 @@ def send_email(
     destinations: List[str] = list(filter(None, [msg["To"], msg["CC"], msg["Bcc"]]))
 
     msg_body = MIMEMultipart("alternative")
-    msg_text = MIMEText(str(body_text.encode(CHARSET)), "plain", CHARSET)
+    msg_text = MIMEText(body_text, "plain", CHARSET)
     msg_body.attach(msg_text)
 
     msg.attach(msg_body)
