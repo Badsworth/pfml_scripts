@@ -124,13 +124,6 @@ export function searchScenario(claimNumber: string): void {
   cy.get('input[type="submit"][value="Search"]').click();
 }
 
-export function searchClaimant(firstName: string, lastName: string): void {
-  cy.get('a[aria-label="Parties"]').click();
-  cy.get("input[name*='First_Name']").type(firstName as string);
-  cy.get("input[name*='Last_Name']").type(lastName as string);
-  cy.get('input[type="submit"][value="Search"]').click();
-}
-
 export function findClaim(claimNumber: string): void {
   cy.get("h2 > span").should("contain.text", claimNumber);
 }

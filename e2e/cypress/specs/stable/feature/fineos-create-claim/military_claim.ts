@@ -16,12 +16,16 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
       }).then((claim: SimulationClaim) => {
         cy.log("generated claim", claim.claim);
         cy.stash("claim", claim.claim);
-        if (!claim.claim.first_name || !claim.claim.last_name) {
-          throw new Error("Claim does not have a first or last name.");
+        if (
+          !claim.claim.first_name ||
+          !claim.claim.last_name ||
+          !claim.claim.tax_identifier
+        ) {
+          throw new Error("Claim is missing a first name, last name, or SSN.");
         }
 
         cy.visit("/");
-        fineos.searchClaimant(claim.claim.first_name, claim.claim.last_name);
+        fineos.searchClaimantSSN(claim.claim.tax_identifier);
         fineos.clickBottomWidgetButton("OK");
         fineos.assertOnClaimantPage(
           claim.claim.first_name,
