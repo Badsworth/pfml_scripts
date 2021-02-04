@@ -96,6 +96,8 @@ def _create_state_log(
 
     latest_query_params = None
     if associated_model:
+        _raise_exception_if_associated_model_has_no_id(associated_model)
+
         latest_query_params = []
         # Depending on whether it's a payment/employee/reference_file, need to setup
         # the object and query params differently
@@ -207,6 +209,8 @@ def get_latest_state_log_in_flow(
 ) -> Optional[StateLog]:
     filter_params = [LkState.flow_id == flow.flow_id]
 
+    _raise_exception_if_associated_model_has_no_id(associated_model)
+
     if isinstance(associated_model, Employee):
         filter_params.append(LatestStateLog.employee_id == associated_model.employee_id)
     elif isinstance(associated_model, Payment):
@@ -227,6 +231,8 @@ def get_latest_state_log_in_end_state(
     associated_model: AssociatedModel, end_state: LkState, db_session: db.Session,
 ) -> Optional[StateLog]:
     filter_params = [StateLog.end_state_id == end_state.state_id]
+
+    _raise_exception_if_associated_model_has_no_id(associated_model)
 
     if isinstance(associated_model, Employee):
         filter_params.append(LatestStateLog.employee_id == associated_model.employee_id)
@@ -281,6 +287,8 @@ def has_been_in_end_state(
     associated_model: AssociatedModel, db_session: db.Session, end_state: LkState
 ) -> bool:
     filter_params = [StateLog.end_state_id == end_state.state_id]
+
+    _raise_exception_if_associated_model_has_no_id(associated_model)
 
     if isinstance(associated_model, Employee):
         filter_params.append(StateLog.employee_id == associated_model.employee_id)
@@ -388,3 +396,12 @@ def process_state(
         )
         # then re-raise the exception
         raise
+
+
+def _raise_exception_if_associated_model_has_no_id(associated_model: AssociatedModel) -> None:
+    if isinstance(associated_model, Employee) and associated_model.employee_id is None:
+        raise ValueError("Employee model associated with StateLog has no employee_id")
+    elif isinstance(associated_model, Payment) and associated_model.payment_id is None:
+        raise ValueError("Payment model associated with StateLog has no payment_id")
+    elif isinstance(associated_model, ReferenceFile) and associated_model.reference_file_id is None:
+        raise ValueError("ReferenceFile model associated with StateLog has no reference_file_id")

@@ -6,7 +6,15 @@ from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.payments_util as payments_util
-from massgov.pfml.db.models.employees import LatestStateLog, State, StateLog
+from massgov.pfml.db.models.employees import (
+    Employee,
+    Flow,
+    LatestStateLog,
+    Payment,
+    ReferenceFile,
+    State,
+    StateLog,
+)
 from massgov.pfml.db.models.factories import EmployeeFactory, PaymentFactory, ReferenceFileFactory
 from tests.helpers.state_log import default_outcome, setup_state_log
 
@@ -521,3 +529,118 @@ def test_process_state(test_db_session, initialize_factories_session):
     )
     assert state_log.end_state.state_id == State.IDENTIFY_MMARS_STATUS.state_id
     assert state_log.outcome["message"] == "Hit exception: Exception"
+
+
+@pytest.mark.parametrize(
+    "associated_model, end_state, err_msg",
+    (
+        (
+            Employee(),
+            State.ADD_TO_VCC,
+            "Employee model associated with StateLog has no employee_id",
+        ),
+        (
+            Payment(),
+            State.PAYMENTS_STORED_IN_DB,
+            "Payment model associated with StateLog has no payment_id",
+        ),
+        (
+            ReferenceFile(),
+            State.DUA_PAYMENT_LIST_SAVED_TO_S3,
+            "ReferenceFile model associated with StateLog has no reference_file_id",
+        ),
+    ),
+)
+def test_create_finished_state_log_for_associated_model_without_id_fails(
+    test_db_session, associated_model, end_state, err_msg
+):
+    with pytest.raises(ValueError, match=err_msg):
+        state_log_util.create_finished_state_log(
+            associated_model=associated_model,
+            end_state=end_state,
+            outcome={},
+            db_session=test_db_session,
+        )
+
+
+@pytest.mark.parametrize(
+    "associated_model, flow, err_msg",
+    (
+        (
+            Employee(),
+            Flow.VENDOR_CHECK,
+            "Employee model associated with StateLog has no employee_id",
+        ),
+        (Payment(), Flow.PAYMENT, "Payment model associated with StateLog has no payment_id",),
+        (
+            ReferenceFile(),
+            Flow.DUA_PAYMENT_LIST,
+            "ReferenceFile model associated with StateLog has no reference_file_id",
+        ),
+    ),
+)
+def test_get_latest_state_log_in_flow_for_associated_model_without_id_fails(
+    test_db_session, associated_model, flow, err_msg
+):
+    with pytest.raises(ValueError, match=err_msg):
+        state_log_util.get_latest_state_log_in_flow(
+            associated_model=associated_model, flow=flow, db_session=test_db_session
+        )
+
+
+@pytest.mark.parametrize(
+    "associated_model, end_state, err_msg",
+    (
+        (
+            Employee(),
+            State.ADD_TO_VCC,
+            "Employee model associated with StateLog has no employee_id",
+        ),
+        (
+            Payment(),
+            State.PAYMENTS_STORED_IN_DB,
+            "Payment model associated with StateLog has no payment_id",
+        ),
+        (
+            ReferenceFile(),
+            State.DUA_PAYMENT_LIST_SAVED_TO_S3,
+            "ReferenceFile model associated with StateLog has no reference_file_id",
+        ),
+    ),
+)
+def test_get_latest_state_log_in_end_state_for_associated_model_without_id_fails(
+    test_db_session, associated_model, end_state, err_msg
+):
+    with pytest.raises(ValueError, match=err_msg):
+        state_log_util.get_latest_state_log_in_end_state(
+            associated_model=associated_model, end_state=end_state, db_session=test_db_session
+        )
+
+
+@pytest.mark.parametrize(
+    "associated_model, end_state, err_msg",
+    (
+        (
+            Employee(),
+            State.ADD_TO_VCC,
+            "Employee model associated with StateLog has no employee_id",
+        ),
+        (
+            Payment(),
+            State.PAYMENTS_STORED_IN_DB,
+            "Payment model associated with StateLog has no payment_id",
+        ),
+        (
+            ReferenceFile(),
+            State.DUA_PAYMENT_LIST_SAVED_TO_S3,
+            "ReferenceFile model associated with StateLog has no reference_file_id",
+        ),
+    ),
+)
+def test_has_been_in_end_state_for_associated_model_without_id_fails(
+    test_db_session, associated_model, end_state, err_msg
+):
+    with pytest.raises(ValueError, match=err_msg):
+        state_log_util.has_been_in_end_state(
+            associated_model=associated_model, end_state=end_state, db_session=test_db_session
+        )
