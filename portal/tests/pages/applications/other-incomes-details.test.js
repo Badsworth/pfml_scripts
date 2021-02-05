@@ -67,54 +67,6 @@ describe("OtherIncomesDetails", () => {
           }
         );
       });
-
-      it("calls claims.update with amount string changed to a number", async () => {
-        expect.assertions();
-
-        ({ appLogic, wrapper } = renderWithAppLogic(OtherIncomesDetails, {
-          claimAttrs: claim,
-          render: "mount",
-        }));
-        const { changeField, submitForm } = simulateEvents(wrapper);
-
-        changeField("other_incomes[0].income_amount_dollars", "1,000,000");
-        await submitForm();
-
-        expect(appLogic.claims.update).toHaveBeenCalledWith(
-          claim.application_id,
-          {
-            other_incomes: expect.arrayContaining([
-              expect.objectContaining({
-                income_amount_dollars: 1000000,
-              }),
-            ]),
-          }
-        );
-      });
-
-      it("calls claims.update with empty amount string changed to null", async () => {
-        expect.assertions();
-
-        ({ appLogic, wrapper } = renderWithAppLogic(OtherIncomesDetails, {
-          claimAttrs: claim,
-          render: "mount",
-        }));
-        const { changeField, submitForm } = simulateEvents(wrapper);
-
-        changeField("other_incomes[0].income_amount_dollars", "");
-        await submitForm();
-
-        expect(appLogic.claims.update).toHaveBeenCalledWith(
-          claim.application_id,
-          {
-            other_incomes: expect.arrayContaining([
-              expect.objectContaining({
-                income_amount_dollars: null,
-              }),
-            ]),
-          }
-        );
-      });
     });
 
     describe("when the user clicks 'Add another'", () => {

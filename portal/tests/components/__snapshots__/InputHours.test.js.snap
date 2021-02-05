@@ -9,7 +9,7 @@ exports[`InputHours renders component 1`] = `
   >
     Label
   </FormLabel>
-  <InputText
+  <InputNumber
     formGroupClassName="display-inline-block margin-right-3"
     inputClassName=""
     inputMode="numeric"

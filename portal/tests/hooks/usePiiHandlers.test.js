@@ -1,4 +1,4 @@
-import { testHook } from "../test-utils";
+import { createInputElement, testHook } from "../test-utils";
 import usePiiHandlers from "../../src/hooks/usePiiHandlers";
 
 describe("usePiiHandlers", () => {
@@ -20,9 +20,7 @@ describe("usePiiHandlers", () => {
     });
 
     event = {
-      target: {
-        value: "test event",
-      },
+      target: createInputElement({ value: "test event" }),
     };
   });
 
@@ -38,14 +36,7 @@ describe("usePiiHandlers", () => {
 
       handleBlur(event);
 
-      expect(props.onChange).toHaveBeenCalledWith({
-        _originalEvent: event,
-        target: {
-          name: props.name,
-          type: props.type,
-          value: initialValue,
-        },
-      });
+      expect(props.onChange.mock.calls[0][0].target.value).toBe(initialValue);
     });
 
     it("does not reset to initialValue if value is present", () => {
@@ -64,14 +55,7 @@ describe("usePiiHandlers", () => {
     it("clears value on first call", () => {
       handleFocus(event);
 
-      expect(props.onChange).toHaveBeenCalledWith({
-        _originalEvent: event,
-        target: {
-          name: props.name,
-          type: props.type,
-          value: "",
-        },
-      });
+      expect(props.onChange.mock.calls[0][0].target.value).toBe("");
     });
 
     it("does not clear value on subsequent calls", () => {

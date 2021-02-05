@@ -136,7 +136,7 @@ InputNumber.propTypes = {
    * Set the expected value type. This is also used for
    * setting the default inputMode.
    */
-  valueType: PropTypes.oneOf(["integer", "string"]),
+  valueType: PropTypes.oneOf(["float", "integer", "string"]),
 };
 
 export default InputNumber;

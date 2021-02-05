@@ -2,18 +2,6 @@ import { createInputElement } from "../test-utils";
 import getInputValueFromEvent from "../../src/utils/getInputValueFromEvent";
 
 describe("getInputValueFromEvent", () => {
-  it("supports an event target that is a plain object", () => {
-    const target = {
-      name: "date",
-      value: "2012-01-1980",
-      type: "text",
-    };
-
-    const value = getInputValueFromEvent({ target });
-
-    expect(value).toBe("2012-01-1980");
-  });
-
   describe("given field type is radio", () => {
     it("converts 'true' string into a boolean", () => {
       const target = createInputElement({

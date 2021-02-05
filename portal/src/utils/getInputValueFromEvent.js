@@ -17,13 +17,7 @@ export default function getInputValueFromEvent(event) {
 
   const { checked, type, value } = event.target;
 
-  const valueType =
-    // Some components, like InputDate, hijack the change event and pass in a plain object
-    // TODO (CP-1667): This condition shouldn't be required once our components stop
-    // hijacking event.target
-    typeof event.target.getAttribute === "function"
-      ? event.target.getAttribute("data-value-type")
-      : null;
+  const valueType = event.target.getAttribute("data-value-type");
 
   let result = value;
   if (type === "checkbox" || type === "radio") {
@@ -36,7 +30,11 @@ export default function getInputValueFromEvent(event) {
         result = !checked;
         break;
     }
-  } else if (valueType === "integer" && value && value.trim() !== "") {
+  } else if (
+    (valueType === "integer" || valueType === "float") &&
+    value &&
+    value.trim() !== ""
+  ) {
     // Support comma-delimited numbers
     const transformedValue = value.replace(/,/g, "");
     if (isNaN(transformedValue)) return result;

@@ -1,5 +1,6 @@
 import InputCurrency from "../../src/components/InputCurrency";
 import React from "react";
+import { createInputElement } from "../test-utils";
 import { shallow } from "enzyme";
 
 function render(customProps = {}, mountComponent = false) {
@@ -60,13 +61,15 @@ describe("InputCurrency", () => {
       });
 
       wrapper.find("InputNumber").simulate("change", {
-        target: {
-          name: "money",
-          value: maskedValue,
-        },
+        target: createInputElement({ name: "money", value: maskedValue }),
       });
-
-      expect(props.onChange.mock.calls[0][0].target.value).toBe(expectedValue);
+      if (expectedValue) {
+        expect(props.onChange.mock.calls[0][0].target.value).toBe(
+          String(expectedValue)
+        );
+      } else {
+        expect(props.onChange.mock.calls[0][0].target.value).toBe("");
+      }
     });
   });
 });

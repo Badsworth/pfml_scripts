@@ -24,13 +24,13 @@ const InputCurrency = (props) => {
     const maskedValue = event.target.value;
     setMaskedValue(maskedValue);
     const value = unmaskCurrency(maskedValue);
-    // TODO (CP-1667): Stop hijacking the target, and pass back a proper HTMLElement
+
+    const target = event.target.cloneNode(true);
+    target.value = value;
+
     props.onChange({
       _originalEvent: event._originalEvent || event,
-      target: {
-        name: props.name,
-        value,
-      },
+      target,
     });
   };
 
@@ -38,6 +38,7 @@ const InputCurrency = (props) => {
     <InputNumber
       {...props}
       value={maskedValue}
+      valueType="float"
       mask="currency"
       onChange={handleChange}
     />

@@ -2,6 +2,7 @@ import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import FieldsetAddress from "../../src/components/FieldsetAddress";
 import React from "react";
+import { createInputElement } from "../test-utils";
 import { shallow } from "enzyme";
 
 describe("FieldsetAddress", () => {
@@ -53,7 +54,13 @@ describe("FieldsetAddress", () => {
         .find("Mask")
         .dive()
         .find("input")
-        .simulate("blur", { target: { value: "205001234" } });
+        .simulate("blur", {
+          target: createInputElement({
+            name: "zip",
+            type: "text",
+            value: "205001234",
+          }),
+        });
 
       expect(props.onChange.mock.calls[0][0].target.value).toBe("20500-1234");
     });
@@ -67,7 +74,13 @@ describe("FieldsetAddress", () => {
         .find("Mask")
         .dive()
         .find("input")
-        .simulate("blur", { target: { value: "20500-1234" } });
+        .simulate("blur", {
+          target: createInputElement({
+            name: "zip",
+            type: "text",
+            value: "20500-1234",
+          }),
+        });
 
       expect(props.onChange.mock.calls[0][0].target.value).toBe("20500-1234");
     });

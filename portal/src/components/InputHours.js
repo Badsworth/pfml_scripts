@@ -2,7 +2,7 @@ import { isNil, range } from "lodash";
 import Dropdown from "./Dropdown";
 import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
-import InputText from "./InputText";
+import InputNumber from "./InputNumber";
 import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
@@ -69,14 +69,16 @@ const InputHours = (props) => {
    * @param {SyntheticEvent} originalEvent - Original event that triggered this change
    */
   function dispatchChange(value, originalEvent) {
-    // TODO (CP-1667): Stop hijacking the target, and pass back a proper HTMLElement
+    const target = document.createElement("input");
+    target.setAttribute("name", props.name);
+    target.setAttribute("value", value);
+    target.setAttribute("data-value-type", "integer");
+    target.name = props.name;
+    target.value = value;
+
     props.onChange({
       _originalEvent: originalEvent,
-      target: {
-        name: props.name,
-        type: "numeric",
-        value,
-      },
+      target,
     });
   }
 
@@ -93,7 +95,7 @@ const InputHours = (props) => {
       >
         {props.label}
       </FormLabel>
-      <InputText
+      <InputNumber
         formGroupClassName={inputFormGroupClasses.hours}
         inputClassName={inputClasses.hours}
         name="hours"

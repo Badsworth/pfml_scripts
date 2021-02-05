@@ -1,6 +1,7 @@
 import { mount, shallow } from "enzyme";
 import InputHours from "../../src/components/InputHours";
 import React from "react";
+import { createInputElement } from "../test-utils";
 
 function render(customProps = {}, mountComponent = false) {
   const props = Object.assign(
@@ -36,7 +37,7 @@ describe("InputHours", () => {
 
     expect(
       wrapper
-        .find("InputText")
+        .find("InputNumber")
         .props()
         .formGroupClassName.includes("margin-top-neg-105")
     ).toBe(true);
@@ -64,7 +65,7 @@ describe("InputHours", () => {
 
     expect(
       wrapper
-        .find("InputText")
+        .find("InputNumber")
         .props()
         .inputClassName.includes("usa-input--error")
     ).toBe(true);
@@ -84,25 +85,25 @@ describe("InputHours", () => {
   it("renders correctly if there are 0 hours", () => {
     const { wrapper } = render({ value: 15 });
 
-    expect(wrapper.find("InputText").props().value).toEqual(0);
+    expect(wrapper.find("InputNumber").props().value).toEqual(0);
     expect(wrapper.find("Dropdown").props().value).toEqual(15);
   });
 
   it("renders correctly with 0 minutes", () => {
     const { wrapper } = render({ value: 60 });
-    expect(wrapper.find("InputText").props().value).toEqual(1);
+    expect(wrapper.find("InputNumber").props().value).toEqual(1);
     expect(wrapper.find("Dropdown").props().value).toEqual(0);
   });
 
   it("renders correctly if both hours and minutes are 0", () => {
     const { wrapper } = render({ value: 0 });
-    expect(wrapper.find("InputText").props().value).toEqual(0);
+    expect(wrapper.find("InputNumber").props().value).toEqual(0);
     expect(wrapper.find("Dropdown").props().value).toEqual(0);
   });
 
   it("renders empty hours and minutes if value is undefined", () => {
     const { wrapper } = render({ value: undefined });
-    expect(wrapper.find("InputText").props().value).toEqual("");
+    expect(wrapper.find("InputNumber").props().value).toEqual("");
     expect(wrapper.find("Dropdown").props().value).toEqual("");
   });
 
@@ -112,7 +113,7 @@ describe("InputHours", () => {
       .mockImplementationOnce(() => {});
 
     const { wrapper } = render({ value: 33, minutesIncrement: 15 });
-    expect(wrapper.find("InputText").props().value).toEqual(0);
+    expect(wrapper.find("InputNumber").props().value).toEqual(0);
     expect(wrapper.find("Dropdown").props().value).toEqual(33);
     expect(warnSpy).toHaveBeenCalled();
   });
@@ -120,56 +121,40 @@ describe("InputHours", () => {
   it("renders empty hours if hours value is erased and minutes value is 0", () => {
     const { wrapper, props } = render({ value: 8 * 60 });
 
-    wrapper.find("InputText").simulate("change", {
-      target: { value: "" },
+    wrapper.find("InputNumber").simulate("change", {
+      target: createInputElement({ value: "" }),
     });
 
-    expect(props.onChange).toHaveBeenCalledWith(
-      expect.objectContaining({
-        target: { name: props.name, type: "numeric", value: null },
-      })
-    );
+    expect(props.onChange.mock.calls[0][0].target.value).toBe("");
   });
 
   it("sets hours to 0 if hours are erased and minutes are greater than 0", () => {
     const { wrapper, props } = render({ value: 8 * 60 + 15 });
 
-    wrapper.find("InputText").simulate("change", {
-      target: { value: "" },
+    wrapper.find("InputNumber").simulate("change", {
+      target: createInputElement({ value: "" }),
     });
 
-    expect(props.onChange).toHaveBeenCalledWith(
-      expect.objectContaining({
-        target: { name: props.name, type: "numeric", value: 0 * 60 + 15 },
-      })
-    );
+    expect(props.onChange.mock.calls[0][0].target.value).toBe("15");
   });
 
   it("renders empty hours if minutes value is erased and hours value is 0", () => {
     const { wrapper, props } = render({ value: 15 });
 
     wrapper.find("Dropdown").simulate("change", {
-      target: { value: "" },
+      target: createInputElement({ value: "" }),
     });
 
-    expect(props.onChange).toHaveBeenCalledWith(
-      expect.objectContaining({
-        target: { name: props.name, type: "numeric", value: null },
-      })
-    );
+    expect(props.onChange.mock.calls[0][0].target.value).toBe("");
   });
 
   it("sets minutes to 0 if minutes are erased and hours are greater than 0", () => {
     const { wrapper, props } = render({ value: 8 * 60 + 15 });
 
     wrapper.find("Dropdown").simulate("change", {
-      target: { value: "" },
+      target: createInputElement({ value: "" }),
     });
 
-    expect(props.onChange).toHaveBeenCalledWith(
-      expect.objectContaining({
-        target: { name: props.name, type: "numeric", value: 8 * 60 + 0 },
-      })
-    );
+    expect(props.onChange.mock.calls[0][0].target.value).toBe("480");
   });
 });

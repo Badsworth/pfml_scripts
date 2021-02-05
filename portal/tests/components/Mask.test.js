@@ -1,6 +1,7 @@
 import Mask, { maskValue } from "../../src/components/Mask";
 import { mount, shallow } from "enzyme";
 import React from "react";
+import { createInputElement } from "../test-utils";
 
 const masks = ["currency", "fein", "hours", "phone", "ssn", "zip"];
 
@@ -99,7 +100,9 @@ describe("Mask", () => {
 
     const input = wrapper.find("input");
 
-    input.simulate("blur", { target: { value: "12345678" } });
+    input.simulate("blur", {
+      target: createInputElement({ value: "12345678" }),
+    });
 
     expect(inputOnChange).toHaveBeenCalledTimes(1);
   });
@@ -113,7 +116,9 @@ describe("Mask", () => {
 
     const input = wrapper.find("input");
 
-    input.simulate("blur", { target: { value: "123456789" } });
+    input.simulate("blur", {
+      target: createInputElement({ value: "123456789" }),
+    });
 
     expect(inputOnChange.mock.calls[0][0].target.value).toBe("123-45-6789");
   });
@@ -127,7 +132,10 @@ describe("Mask", () => {
 
     const input = wrapper.find("input");
 
-    input.simulate("keyDown", { key: "Enter", target: { value: "123456789" } });
+    input.simulate("keyDown", {
+      key: "Enter",
+      target: createInputElement({ value: "123456789" }),
+    });
 
     expect(inputOnChange.mock.calls[0][0].target.value).toBe("123-45-6789");
   });

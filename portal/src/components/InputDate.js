@@ -150,14 +150,14 @@ function InputDate(props) {
    * @param {SyntheticEvent} originalEvent - Original event that triggered this change
    */
   function dispatchChange(value, originalEvent) {
-    // TODO (CP-1667): Stop hijacking the target, and pass back a proper HTMLElement
+    const target = originalEvent.target.cloneNode(true);
+    // Replace day/month/year field name with actual date field name
+    target.name = props.name;
+    target.value = value;
+
     props.onChange({
       _originalEvent: originalEvent,
-      target: {
-        name: props.name,
-        type: "text",
-        value,
-      },
+      target,
     });
   }
 

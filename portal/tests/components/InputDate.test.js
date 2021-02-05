@@ -141,13 +141,7 @@ describe("InputDate", () => {
 
       expect(props.onChange).toHaveBeenCalledTimes(1);
       // Read the event passed into the onChange function
-      expect(props.onChange.mock.calls[0][0].target).toMatchInlineSnapshot(`
-        Object {
-          "name": "full-date-field",
-          "type": "text",
-          "value": "2020-07-04",
-        }
-      `);
+      expect(props.onChange.mock.calls[0][0].target.value).toBe("2020-07-04");
     });
   });
 
