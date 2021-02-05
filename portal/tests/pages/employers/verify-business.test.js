@@ -72,13 +72,13 @@ describe("VerifyBusiness", () => {
 
     it("submits withholding data with correct values", async () => {
       ({ changeField, submitForm } = simulateEvents(wrapper));
-      changeField("withholdingAmount", "123");
+      changeField("withholdingAmount", "1,234.560");
       await submitForm();
 
       expect(appLogic.employers.submitWithholding).toHaveBeenCalledWith(
         {
           employer_id: "mock_employer_id",
-          withholding_amount: "123",
+          withholding_amount: 1234.56,
           withholding_quarter: "2020-10-10",
         },
         query.next

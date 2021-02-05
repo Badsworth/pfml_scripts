@@ -34,10 +34,13 @@ export const VerifyBusiness = (props) => {
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
+    const withholdingAmount = parseFloat(
+      formState.withholdingAmount.replace(/,/g, "")
+    );
 
     const payload = {
       employer_id: query.employer_id,
-      withholding_amount: formState.withholdingAmount,
+      withholding_amount: withholdingAmount,
       withholding_quarter: "2020-10-10", // TODO (EMPLOYER-470): Change based on actual variable
     };
 
@@ -126,7 +129,7 @@ VerifyBusiness.propTypes = {
   }).isRequired,
   query: PropTypes.shape({
     employer_id: PropTypes.string.isRequired,
-    next: PropTypes.string.isRequired,
+    next: PropTypes.string,
   }).isRequired,
   user: PropTypes.instanceOf(User),
 };
