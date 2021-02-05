@@ -39,7 +39,10 @@ export default function getInputValueFromEvent(event) {
     const transformedValue = value.replace(/,/g, "");
     if (isNaN(transformedValue)) return result;
 
-    result = parseInt(transformedValue);
+    result =
+      valueType === "integer"
+        ? parseInt(transformedValue)
+        : Number(transformedValue);
   } else if (typeof value === "string" && value.trim() === "") {
     // An empty or empty-looking string will be interpreted as valid
     // in our application_rules, even if it's required. We want to

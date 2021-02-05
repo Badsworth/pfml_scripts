@@ -1,7 +1,8 @@
+import { createInputElement, testHook } from "../test-utils";
+import { mount, shallow } from "enzyme";
 import InputCurrency from "../../src/components/InputCurrency";
 import React from "react";
-import { createInputElement } from "../test-utils";
-import { shallow } from "enzyme";
+import useHandleInputChange from "../../src/hooks/useHandleInputChange";
 
 function render(customProps = {}, mountComponent = false) {
   const props = Object.assign(
@@ -17,7 +18,7 @@ function render(customProps = {}, mountComponent = false) {
 
   return {
     props,
-    wrapper: shallow(component),
+    wrapper: mountComponent ? mount(component) : shallow(component),
   };
 }
 
@@ -53,23 +54,30 @@ describe("InputCurrency", () => {
     });
   });
 
-  it("propogates the number value for onChange events", () => {
+  it("updates state with the number value when used with useHandleInputChange", () => {
     values.forEach(([expectedValue, maskedValue]) => {
-      const { props, wrapper } = render({
-        label: "Money",
-        name: "money",
+      const updateFields = jest.fn();
+      let onChange;
+      testHook(() => {
+        onChange = useHandleInputChange(updateFields);
       });
+      const { wrapper } = render(
+        {
+          label: "Money",
+          name: "money",
+          onChange,
+        },
+        true
+      );
 
-      wrapper.find("InputNumber").simulate("change", {
-        target: createInputElement({ name: "money", value: maskedValue }),
+      const input = wrapper.find("input");
+
+      input.simulate("change", {
+        // create element with all the necessary attributes for
+        // parsing value
+        target: createInputElement({ ...input.props(), value: maskedValue }),
       });
-      if (expectedValue) {
-        expect(props.onChange.mock.calls[0][0].target.value).toBe(
-          String(expectedValue)
-        );
-      } else {
-        expect(props.onChange.mock.calls[0][0].target.value).toBe("");
-      }
+      expect(updateFields.mock.calls[0][0].money).toBe(expectedValue);
     });
   });
 });

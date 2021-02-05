@@ -176,6 +176,67 @@ describe("getInputValueFromEvent", () => {
     });
   });
 
+  describe("given data-value-type is 'float'", () => {
+    it("converts string to float, removing any commas", () => {
+      const target = createInputElement({
+        name: "Foo",
+        value: "1,200,000.3",
+        "data-value-type": "float",
+      });
+      const value = getInputValueFromEvent({ target });
+
+      expect(value).toBe(1200000.3);
+    });
+
+    it("does not convert mixed strings/numbers", () => {
+      const target = createInputElement({
+        name: "Foo",
+        value: "4hockey4.33",
+        "data-value-type": "float",
+      });
+      const value = getInputValueFromEvent({ target });
+
+      expect(value).toBe("4hockey4.33");
+    });
+
+    it("converts empty string to null", () => {
+      const target = createInputElement({
+        name: "Foo",
+        value: " ",
+        "data-value-type": "float",
+      });
+      const value = getInputValueFromEvent({ target });
+
+      expect(value).toBeNull();
+    });
+
+    it("does not convert undefined", () => {
+      // Mock target as plain object so we can mock an undefined value
+      const target = {
+        name: "Foo",
+        value: undefined,
+        "data-value-type": "float",
+        getAttribute: jest.fn().mockReturnValue("float"),
+      };
+      const value = getInputValueFromEvent({ target });
+
+      expect(value).toBe(undefined);
+    });
+
+    it("does not convert null to 0", () => {
+      // Mock target as plain object so we can mock a null value
+      const target = {
+        name: "Foo",
+        value: null,
+        "data-value-type": "float",
+        getAttribute: jest.fn().mockReturnValue("float"),
+      };
+      const value = getInputValueFromEvent({ target });
+
+      expect(value).toBe(null);
+    });
+  });
+
   describe("bad input", () => {
     it("returns undefined if no parameter is passed", () => {
       const value = getInputValueFromEvent();

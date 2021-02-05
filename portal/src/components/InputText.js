@@ -188,7 +188,7 @@ InputText.propTypes = {
    * what value type the field should be converted to before
    * saving it back to the API.
    */
-  valueType: PropTypes.oneOf(["integer", "string"]),
+  valueType: PropTypes.oneOf(["integer", "float", "string"]),
 };
 
 export default InputText;

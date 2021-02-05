@@ -1,18 +1,9 @@
 import React, { useState } from "react";
 import InputNumber from "./InputNumber";
 import PropTypes from "prop-types";
-import { isFinite } from "lodash";
 import { maskValue } from "./Mask";
 
 const maskCurrency = (value) => maskValue(String(value || ""), "currency");
-
-const unmaskCurrency = (value) => {
-  if (value === "") {
-    return null;
-  } else {
-    return isFinite(value) ? value : Number(value.replace(/,/g, ""));
-  }
-};
 
 /**
  * Input field that displays number values to users as en-us currency
@@ -22,16 +13,10 @@ const InputCurrency = (props) => {
 
   const handleChange = (event) => {
     const maskedValue = event.target.value;
+    // getInputValueFromEvent will strip comma masks from value
+    // store masked value to be displayed to user
     setMaskedValue(maskedValue);
-    const value = unmaskCurrency(maskedValue);
-
-    const target = event.target.cloneNode(true);
-    target.value = value;
-
-    props.onChange({
-      _originalEvent: event._originalEvent || event,
-      target,
-    });
+    props.onChange(event);
   };
 
   return (
