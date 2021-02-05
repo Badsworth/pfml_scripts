@@ -1,25 +1,44 @@
 import AppErrorInfo from "../models/AppErrorInfo";
-import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Document from "../models/Document";
 import FileCard from "./FileCard";
 import PropTypes from "prop-types";
 import React from "react";
+import TempFile from "../models/TempFile";
+import TempFileCollection from "../models/TempFileCollection";
+import { ValidationError } from "../errors";
+import { snakeCase } from "lodash";
+import { t } from "../locales/i18n";
 import tracker from "../services/tracker";
-import { uniqueId } from "lodash";
-import { useTranslation } from "../locales/i18n";
 
 // Only image and pdf files are allowed to be uploaded
-const allowedFileTypes = ["image/png", "image/jpeg", "application/pdf"];
+const defaultAllowedFileTypes = ["image/png", "image/jpeg", "application/pdf"];
 
 // Max file size in bytes
-const maximumFileSize = 3500000;
+const defaultMaximumFileSize = 3500000;
 
-// Exclusion reasons reasons
+// Exclusion reasons
 const disallowedReasons = {
   size: "size",
   sizeAndType: "sizeAndType",
   type: "type",
 };
+
+/**
+ * Return ValidationError issues for disallowed file
+ * @param {File} disallowedFile - file that is not allowed
+ * @param {string} disallowedReason - reason file is not allowed (size, sizeAndType, or type)
+ * @returns {Issue}
+ */
+function getIssueForDisallowedFile(disallowedFile, disallowedReason) {
+  const i18nKey = `errors.invalidFile_${disallowedReason}`;
+
+  return {
+    message: t(i18nKey, {
+      context: disallowedReason,
+      disallowedFileNames: disallowedFile.name,
+    }),
+  };
+}
 
 /**
  * Filter a list of files into sets of allowed files and disallowed files based on file types and sizes.
@@ -28,25 +47,21 @@ const disallowedReasons = {
  * @returns {Array.<Array.<File>>} Arrays of Files -- [allowedFiles, disallowedFilesForSize, disallowedFilesForType, disallowedFilesForSizeAndType]
  * @example const [allowedFiles, disallowedFilesForSize, disallowedFilesForType, disallowedFilesForSizeAndType] = filterAllowedFiles(files);
  */
-function filterAllowedFiles(files) {
+function filterAllowedFiles(files, { allowedFileTypes, maximumFileSize }) {
   const allowedFiles = [];
-  const disallowedFilesForSize = [];
-  const disallowedFilesForType = [];
-  const disallowedFilesForSizeAndType = [];
+  const issues = [];
 
   files.forEach((file) => {
-    let disallowedForSize = false;
-    let disallowedForType = false;
-    let disallowedForSizeAndType = false;
+    let disallowedReason = null;
 
     if (file.size > maximumFileSize) {
-      disallowedForSize = true;
+      disallowedReason = disallowedReasons.size;
     }
     if (!allowedFileTypes.includes(file.type)) {
-      if (disallowedForSize) {
-        disallowedForSizeAndType = true;
+      if (disallowedReason === disallowedReasons.size) {
+        disallowedReason = disallowedReasons.sizeAndType;
       } else {
-        disallowedForType = true;
+        disallowedReason = disallowedReasons.type;
       }
     }
 
@@ -54,25 +69,13 @@ function filterAllowedFiles(files) {
       fileSize: file.size,
       fileType: file.type,
     };
-    if (disallowedForSizeAndType) {
-      disallowedFilesForSizeAndType.push(file);
-      tracker.trackEvent("ValidationError", {
+
+    if (disallowedReason) {
+      issues.push(getIssueForDisallowedFile(file, disallowedReason));
+      // TODO (CP-1771): Remove tracking once error handling supports additional event data
+      tracker.trackEvent("FileValidationError", {
         ...fileTrackingData,
-        issueType: "invalid_size_and_type",
-        issueField: "file",
-      });
-    } else if (disallowedForSize) {
-      disallowedFilesForSize.push(file);
-      tracker.trackEvent("ValidationError", {
-        ...fileTrackingData,
-        issueType: "invalid_size",
-        issueField: "file",
-      });
-    } else if (disallowedForType) {
-      disallowedFilesForType.push(file);
-      tracker.trackEvent("ValidationError", {
-        ...fileTrackingData,
-        issueType: "invalid_type",
+        issueType: `invalid_${snakeCase(disallowedReason)}`,
         issueField: "file",
       });
     } else {
@@ -81,90 +84,27 @@ function filterAllowedFiles(files) {
     }
   });
 
-  return [
+  return {
     allowedFiles,
-    disallowedFilesForSize,
-    disallowedFilesForType,
-    disallowedFilesForSizeAndType,
-  ];
-}
-
-/**
- * Returns i18n reason for excluding files from being uploaded, with interpolated filenames.
- * @param {File[]} disallowedFiles - Array of excluded files
- * @param {string} disallowedReason - Enum for exclusion reason
- * @param {Function} t - Localization method
- * @returns {string} Message explaining why the files are disallowed
- */
-function getDisallowedMessage(disallowedFiles, disallowedReason, t) {
-  let message;
-  if (disallowedFiles.length) {
-    const disallowedFileNames = disallowedFiles
-      .map((file) => file.name)
-      .join(", ");
-
-    message = t("errors.invalidFile", {
-      context: disallowedReason,
-      disallowedFileNames,
-    });
-  }
-  return message;
-}
-
-/**
- * Generate error messages for disallowed files and display messages using AppErrors.
- * @param {Array.<Array.<File>>} disallowedFiles - Array of array of File objects
- * @param {Function} setAppErrors - Collection method to update AppErrors
- * @param {Function} t - Localization method
- */
-function disallowedFilesMessageHandler(disallowedFiles, setAppErrors, t) {
-  const [
-    disallowedFilesForSize,
-    disallowedFilesForType,
-    disallowedFilesForSizeAndType,
-  ] = disallowedFiles;
-  const errorsCollection = [];
-
-  const sizeMessage = getDisallowedMessage(
-    disallowedFilesForSize,
-    disallowedReasons.size,
-    t
-  );
-  const typeMessage = getDisallowedMessage(
-    disallowedFilesForType,
-    disallowedReasons.type,
-    t
-  );
-  const sizeAndTypeMessage = getDisallowedMessage(
-    disallowedFilesForSizeAndType,
-    disallowedReasons.sizeAndType,
-    t
-  );
-
-  if (sizeMessage) {
-    errorsCollection.push(new AppErrorInfo({ message: sizeMessage }));
-  }
-  if (typeMessage) {
-    errorsCollection.push(new AppErrorInfo({ message: typeMessage }));
-  }
-  if (sizeAndTypeMessage) {
-    errorsCollection.push(new AppErrorInfo({ message: sizeAndTypeMessage }));
-  }
-
-  if (errorsCollection.length) {
-    setAppErrors(new AppErrorInfoCollection(errorsCollection));
-  }
+    issues,
+  };
 }
 
 /**
  * Return an onChange handler which filters out invalid file types and then saves any new
- * files with setFiles.
- * @param {Function} setFiles a setter function for updating the files state
- * @param {Function} setAppErrors - Collection method to update AppErrors
- * @param {Function} t - Localization method
+ * files with onAddTempFiles.
+ * @param {Function} onAddTempFiles a setter function for updating the files state
+ * @param {Function} onInvalidFilesError a setter function for updating the files state
+ * @param {number} maximumFileSize Maximum allowed file size
+ * @param {string[]} allowedFileTypes Array of allowed file mimetypes
  * @returns {Function} onChange handler function
  */
-function useChangeHandler(setFiles, setAppErrors, t) {
+function useChangeHandler(
+  onAddTempFiles,
+  onInvalidFilesError,
+  maximumFileSize,
+  allowedFileTypes
+) {
   return (event) => {
     // This will only have files selected this time, not previously selected files
     // e.target.files is a FileList type which isn't an array, but we can turn it into one
@@ -181,58 +121,47 @@ function useChangeHandler(setFiles, setAppErrors, t) {
     // this step will reset event.target.files to an empty FileList.
     event.target.value = "";
 
-    const [allowedFiles, ...disallowedFiles] = filterAllowedFiles(files);
-
-    disallowedFilesMessageHandler(disallowedFiles, setAppErrors, t);
-
-    const newFiles = allowedFiles.map((file) => {
-      return {
-        // Generate unique ID for each file so React can keep track of them in a list and we can
-        // reference specific files to delete
-        id: uniqueId("File"),
-        file,
-      };
+    const { allowedFiles, issues } = filterAllowedFiles(files, {
+      maximumFileSize,
+      allowedFileTypes,
     });
 
-    setFiles((filesWithUniqueId) => [...filesWithUniqueId, ...newFiles]);
+    onAddTempFiles(allowedFiles.map((file) => new TempFile({ file })));
+
+    if (issues.length > 0) {
+      const i18nPrefix = "files";
+      onInvalidFilesError(new ValidationError(issues, i18nPrefix));
+    }
   };
 }
 
 /**
  * Render a FileCard. This handles some busy work such as creating a onRemove handler and
  * interpolating a heading string for the file. Renders the FileCard inside of a <li> element.
- * @param {{id:string, file: File}} fileWithUniqueId The file to render as a FileCard
+ * @param {TempFile} tempFile The file to render as a FileCard
  * @param {integer} index The zero-based index of the file in the list. This is used to
  * to interpolate a heading for the file.
- * @param {Function} setFiles Setter function for updating the list of files. This is needed
- * for the onRemoveClick handler function that we pass into each FileCard.
+ * @param {Function} onRemoveTempFile Handler for removing a single file.
  * @param {string} fileHeadingPrefix A string prefix we'll use as a heading in each FileCard. We
  * will use the index param to interpolate the heading.
  * @param {string} [errorMsg]
  * @returns {React.Component} A <li> element containing the rendered FileCard.
  */
 function renderFileCard(
-  fileWithUniqueId,
+  tempFile,
   index,
-  setFiles,
+  onRemoveTempFile,
   fileHeadingPrefix,
   errorMsg = null
 ) {
-  const removeFile = (id) => {
-    // Given a file id remove it from the list of files
-    setFiles((files) => {
-      return files.filter((file) => file.id !== id);
-    });
-  };
-
-  const handleRemoveClick = () => removeFile(fileWithUniqueId.id);
+  const handleRemoveClick = () => onRemoveTempFile(tempFile.id);
   const heading = `${fileHeadingPrefix} ${index + 1}`;
 
   return (
-    <li key={fileWithUniqueId.id}>
+    <li key={tempFile.id}>
       <FileCard
         heading={heading}
-        file={fileWithUniqueId.file}
+        file={tempFile.file}
         onRemoveClick={handleRemoveClick}
         errorMsg={errorMsg}
       />
@@ -268,10 +197,14 @@ function renderDocumentFileCard(document, index, fileHeadingPrefix) {
 const FileCardList = (props) => {
   const {
     documents,
-    filesWithUniqueId,
-    setFiles,
+    tempFiles,
+    onAddTempFiles,
+    onInvalidFilesError,
+    onRemoveTempFile,
     fileHeadingPrefix,
     fileErrors,
+    maximumFileSize,
+    allowedFileTypes,
   } = props;
 
   let documentFileCount = 0;
@@ -284,7 +217,7 @@ const FileCardList = (props) => {
     );
   }
 
-  const fileCards = filesWithUniqueId.map((file, index) => {
+  const fileCards = tempFiles.items.map((file, index) => {
     const fileError = fileErrors.find(
       (appErrorInfo) => appErrorInfo.meta.file_id === file.id
     );
@@ -292,19 +225,22 @@ const FileCardList = (props) => {
     return renderFileCard(
       file,
       index + documentFileCount,
-      setFiles,
+      onRemoveTempFile,
       fileHeadingPrefix,
       errorMsg
     );
   });
 
-  const button = filesWithUniqueId.length
-    ? props.addAnotherFileButtonText
-    : props.addFirstFileButtonText;
+  const button = tempFiles.isEmpty
+    ? props.addFirstFileButtonText
+    : props.addAnotherFileButtonText;
 
-  const { t } = useTranslation();
-  const setAppErrors = props.setAppErrors;
-  const handleChange = useChangeHandler(setFiles, setAppErrors, t);
+  const handleChange = useChangeHandler(
+    onAddTempFiles,
+    onInvalidFilesError,
+    maximumFileSize,
+    allowedFileTypes
+  );
 
   return (
     <div className="margin-bottom-4">
@@ -326,32 +262,31 @@ const FileCardList = (props) => {
   );
 };
 
+FileCardList.defaultProps = {
+  allowedFileTypes: defaultAllowedFileTypes,
+  maximumFileSize: defaultMaximumFileSize,
+};
+
 FileCardList.propTypes = {
   /**
-   * Array of files to be rendered as FileCards. This should be a state variable which can be set
-   * with setFiles below.
+   * Instance of TempFileCollection representing files selected by the user but not yet uploaded
+   * and are rendered as FileCards. This should be a state variable which can be set
+   * with onAddTempFiles below.
    */
-  filesWithUniqueId: PropTypes.arrayOf(
-    PropTypes.shape({
-      /** A unique ID for each file */
-      id: PropTypes.string.isRequired,
-      /**
-       * Note that this should actually be a File instance. However the File class is a
-       * browser feature, not a Node.js feature, and so it isn't available for server-side
-       * rendering. For that reason we specify a custom shape here but in reality we expect
-       * a File. See [File docs]( https://developer.mozilla.org/en-US/docs/Web/API/File).
-       */
-      file: PropTypes.shape({
-        name: PropTypes.string.isRequired,
-        type: PropTypes.string.isRequired,
-      }).isRequired,
-    })
-  ).isRequired,
+  tempFiles: PropTypes.instanceOf(TempFileCollection).isRequired,
   fileErrors: PropTypes.arrayOf(PropTypes.instanceOf(AppErrorInfo)),
-  /** Errors setter function to use when there are errors in the file upload */
-  setAppErrors: PropTypes.func.isRequired,
-  /** Setter to update the application's files state */
-  setFiles: PropTypes.func.isRequired,
+  /**
+   * Files change event handler. Receives array of allowed files
+   *
+   */
+  onAddTempFiles: PropTypes.func.isRequired,
+  /**
+   * Invalid file error handler. Receives ValidationError with list of
+   * validation issues
+   */
+  onInvalidFilesError: PropTypes.func.isRequired,
+  /** Remove file event handlers. Receives a single file instance */
+  onRemoveTempFile: PropTypes.func.isRequired,
   /**
    * File descriptor prefix. This will be displayed in each file card. For example
    * if you specify "Document" file headings will be "Document 1", "Document 2", etc.
@@ -363,6 +298,10 @@ FileCardList.propTypes = {
   addAnotherFileButtonText: PropTypes.string.isRequired,
   /** Documents that need to be rendered as read-only FileCards, representing previously uploaded files */
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  /** Maximum allowed file size in bytes */
+  maximumFileSize: PropTypes.number,
+  /** Array of allowed file mimetypes */
+  allowedFileTypes: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default FileCardList;

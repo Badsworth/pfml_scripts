@@ -1,40 +1,37 @@
-/* eslint-disable lodash/import-scope */
-import React, { useState } from "react";
-import _, { uniqueId } from "lodash";
 import { makeFile, testHook } from "../test-utils";
 import Document from "../../src/models/Document";
 import FileCard from "../../src/components/FileCard";
 import FileCardList from "../../src/components/FileCardList";
+import React from "react";
+import TempFile from "../../src/models/TempFile";
+import TempFileCollection from "../../src/models/TempFileCollection";
+import { ValidationError } from "../../src/errors";
 import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
 import tracker from "../../src/services/tracker";
+import useCollectionState from "../../src/hooks/useCollectionState";
 
 jest.mock("../../src/services/tracker");
 
 const makeFileObject = (attrs = {}) => {
-  const { id, type } = Object.assign(
-    {
-      id: uniqueId("File"),
-      type: "application/pdf",
-    },
-    attrs
-  );
+  const file = new TempFile({ id: attrs.id });
+  const name = attrs.name || `${file.id}.pdf`;
+  const type = attrs.type || "application/pdf";
 
-  const name = attrs.name || `${id}.pdf`;
+  file.file = makeFile({ name, type });
 
-  const file = makeFile({ name, type });
-  return { id, file };
+  return file;
 };
 
 describe("FileCardList", () => {
   function render(customProps = {}) {
     const props = Object.assign(
       {
-        filesWithUniqueId: [],
+        tempFiles: new TempFileCollection(),
         fileErrors: [],
-        setFiles: jest.fn(),
-        appErrors: [],
-        setAppErrors: jest.fn(),
+        onAddTempFiles: jest.fn(),
+        onInvalidFilesError: jest.fn(),
+        onRemoveTempFile: jest.fn(),
         fileHeadingPrefix: "Document",
         addFirstFileButtonText: "Choose a document",
         addAnotherFileButtonText: "Choose another document",
@@ -63,33 +60,45 @@ describe("FileCardList", () => {
   });
 
   describe("with previously-selected files", () => {
-    const filesWithUniqueId = [makeFileObject()];
+    const tempFiles = new TempFileCollection([makeFileObject()]);
 
     it("renders a list of the files", () => {
-      const wrapper = render({ filesWithUniqueId });
+      const wrapper = render({ tempFiles });
 
       expect(wrapper).toMatchSnapshot();
     });
 
     it("renders the 'Add another file' button text", () => {
       const addAnotherFileButtonText = "Choose more files!";
-      const wrapper = render({ filesWithUniqueId, addAnotherFileButtonText });
+      const wrapper = render({ tempFiles, addAnotherFileButtonText });
 
       expect(wrapper.find("label").text()).toBe(addAnotherFileButtonText);
     });
   });
 
-  it("removes a file when the remove handler is called", () => {
-    const initialFiles = [makeFileObject()];
-    let files, setFiles;
+  it("calls onRemoveTempFile when user clicks remove file", () => {
+    const initialFiles = new TempFileCollection([makeFileObject()]);
+    let removeTempFile, tempFiles;
     testHook(() => {
-      [files, setFiles] = useState(initialFiles);
+      ({
+        collection: tempFiles,
+        removeItem: removeTempFile,
+      } = useCollectionState(initialFiles));
     });
+
+    const removeTempFileMock = jest
+      .fn()
+      .mockImplementation((id) => removeTempFile(id));
+
     act(() => {
-      const wrapper = render({ filesWithUniqueId: files, setFiles });
+      const wrapper = render({
+        tempFiles,
+        onRemoveTempFile: removeTempFileMock,
+      });
       wrapper.find("FileCard").simulate("removeClick");
     });
-    expect(files).toEqual([]);
+    expect(removeTempFileMock).toHaveBeenCalledWith(initialFiles.items[0].id);
+    expect(tempFiles.items).toEqual([]);
   });
 
   describe("when the user selects file(s)", () => {
@@ -97,44 +106,69 @@ describe("FileCardList", () => {
       jest.restoreAllMocks();
     });
 
-    it("adds a single file when the user selects a single file", () => {
-      const initialFiles = [makeFileObject()];
-      const id = "FileX";
-      const newFile = makeFileObject({ id });
-      jest.spyOn(_, "uniqueId").mockImplementationOnce(() => id);
+    it("calls onAddTempFiles with a single file when the user selects a single file", () => {
+      const initialFiles = new TempFileCollection([
+        makeFileObject({ name: "file-1.png" }),
+      ]);
+      const newFile = makeFile({ name: "file-2.png" });
 
-      let files, setFiles;
+      let addFiles, tempFiles;
       testHook(() => {
-        [files, setFiles] = useState(initialFiles);
+        ({ collection: tempFiles, addItems: addFiles } = useCollectionState(
+          initialFiles
+        ));
       });
 
+      const addFilesMock = jest
+        .fn()
+        .mockImplementation((files) => addFiles(files));
+
       act(() => {
-        const wrapper = render({ files, setFiles });
+        const wrapper = render({ tempFiles, onAddTempFiles: addFilesMock });
         // simulate the user selecting a single file
         const input = wrapper.find("input");
         input.simulate("change", {
           target: {
-            files: [newFile.file],
+            files: [newFile],
           },
         });
       });
 
-      expect(files).toEqual([...initialFiles, newFile]);
+      expect(addFilesMock).toHaveBeenCalledWith([
+        expect.objectContaining({
+          id: expect.any(String),
+          file: expect.objectContaining({ name: "file-2.png" }),
+        }),
+      ]);
+
+      expect(tempFiles.items.map((file) => file.file.name)).toEqual([
+        "file-1.png",
+        "file-2.png",
+      ]);
     });
 
-    it("adds multiple files when the user selects multiple files", () => {
-      const initialFiles = [makeFileObject()];
-      const id = "FileX";
-      const newFiles = [makeFileObject({ id }), makeFileObject({ id })];
-      jest.spyOn(_, "uniqueId").mockImplementation(() => id);
+    it("calls onAddTempFiles with multiple files when the user selects multiple files", () => {
+      const initialFiles = new TempFileCollection([
+        makeFileObject({ name: "file-1.png" }),
+      ]);
+      const newFiles = [
+        makeFileObject({ name: "file-2.png" }),
+        makeFileObject({ name: "file-3.png" }),
+      ];
 
-      let files, setFiles;
+      let addFiles, tempFiles;
       testHook(() => {
-        [files, setFiles] = useState(initialFiles);
+        ({ collection: tempFiles, addItems: addFiles } = useCollectionState(
+          initialFiles
+        ));
       });
 
+      const addFilesMock = jest
+        .fn()
+        .mockImplementation((files) => addFiles(files));
+
       act(() => {
-        const wrapper = render({ files, setFiles });
+        const wrapper = render({ tempFiles, onAddTempFiles: addFilesMock });
         // simulate the user selecting multiple files
         const input = wrapper.find("input");
         input.simulate("change", {
@@ -144,7 +178,22 @@ describe("FileCardList", () => {
         });
       });
 
-      expect(files).toEqual([...initialFiles, ...newFiles]);
+      expect(addFilesMock).toHaveBeenCalledWith([
+        expect.objectContaining({
+          id: expect.any(String),
+          file: expect.objectContaining({ name: "file-2.png" }),
+        }),
+        expect.objectContaining({
+          id: expect.any(String),
+          file: expect.objectContaining({ name: "file-3.png" }),
+        }),
+      ]);
+
+      expect(tempFiles.items.map((file) => file.file.name)).toEqual([
+        "file-1.png",
+        "file-2.png",
+        "file-3.png",
+      ]);
     });
 
     it("retrieves the selected files before resetting the input's value", () => {
@@ -202,20 +251,42 @@ describe("FileCardList", () => {
 
     describe("when the user selects disallowed files", () => {
       describe("when the file is not allowed because of the file type", () => {
-        it("filters out invalid files based on type", () => {
-          const initialFiles = [makeFileObject()];
-          const id = "FileX";
-          const validFile = makeFileObject({ id, type: "application/pdf" });
-          const invalidFile = makeFileObject({ id, type: "application/exe" });
-          jest.spyOn(_, "uniqueId").mockImplementation(() => id);
-
-          let files, setFiles, wrapper;
-          testHook(() => {
-            [files, setFiles] = useState(initialFiles);
+        let addFilesMock,
+          handleInvalidFilesError,
+          initialFiles,
+          tempFiles,
+          validFile;
+        beforeEach(() => {
+          let addFiles;
+          initialFiles = new TempFileCollection([
+            makeFileObject({ name: "file-1.png" }),
+          ]);
+          handleInvalidFilesError = jest.fn();
+          validFile = makeFileObject({
+            name: "valid-file.pdf",
+            type: "application/pdf",
+          });
+          const invalidFile = makeFileObject({
+            name: "invalid-file.exe",
+            type: "application/exe",
           });
 
+          testHook(() => {
+            ({ collection: tempFiles, addItems: addFiles } = useCollectionState(
+              initialFiles
+            ));
+          });
+
+          addFilesMock = jest
+            .fn()
+            .mockImplementation((files) => addFiles(files));
+
           act(() => {
-            wrapper = render({ files, setFiles });
+            const wrapper = render({
+              tempFiles,
+              onAddTempFiles: addFilesMock,
+              onInvalidFilesError: handleInvalidFilesError,
+            });
             // simulate the user selecting files, including an invalid one
             const input = wrapper.find("input");
             input.simulate("change", {
@@ -224,272 +295,209 @@ describe("FileCardList", () => {
               },
             });
           });
-
-          expect(files).toEqual([...initialFiles, validFile]);
         });
 
-        it("displays an AppError message for file with invalid type", () => {
-          const invalidFile = makeFile({
-            name: "file.exe",
-            type: "application/exe",
-          });
+        it("filters out invalid files based on type", () => {
+          expect(addFilesMock).toHaveBeenCalledWith([
+            expect.objectContaining({
+              id: expect.any(String),
+              file: expect.objectContaining({ name: "valid-file.pdf" }),
+            }),
+          ]);
+          expect(tempFiles.items.map((file) => file.file.name)).toEqual([
+            "file-1.png",
+            "valid-file.pdf",
+          ]);
+        });
 
-          let appErrors, setAppErrors, wrapper;
-          testHook(() => {
-            [appErrors, setAppErrors] = useState([]);
-          });
-
-          act(() => {
-            wrapper = render({ appErrors, setAppErrors });
-            wrapper.find("input").simulate("change", {
-              target: {
-                files: [invalidFile],
+        it("calls onInvalidFilesError handler", () => {
+          const error = handleInvalidFilesError.mock.calls[0][0];
+          expect(error).toBeInstanceOf(ValidationError);
+          expect(error.issues).toMatchInlineSnapshot(`
+            Array [
+              Object {
+                "message": "We could not upload: invalid-file.exe. Choose a PDF or an image file (.jpg, .jpeg, .png).",
               },
-            });
-          });
-
-          expect(appErrors.items).toHaveLength(1);
-          expect(appErrors.items[0].message).toMatchInlineSnapshot(
-            `"We could not upload: file.exe. Choose a PDF or an image file (.jpg, .jpeg, .png)."`
-          );
+            ]
+          `);
         });
 
         it("tracks the error event", () => {
-          const invalidFile = makeFile({
-            name: "file.exe",
-            type: "application/exe",
-          });
-
-          act(() => {
-            const wrapper = render();
-            wrapper.find("input").simulate("change", {
-              target: {
-                files: [invalidFile],
-              },
-            });
-          });
-
           expect(tracker.trackEvent).toHaveBeenCalledWith(
-            "ValidationError",
+            "FileValidationError",
             expect.any(Object)
           );
         });
       });
       describe("when the file is not allowed because of the file size", () => {
+        let addFilesMock,
+          handleInvalidFilesError,
+          initialFiles,
+          tempFiles,
+          validFile;
+        beforeEach(() => {
+          let addFiles;
+          handleInvalidFilesError = jest.fn();
+          initialFiles = new TempFileCollection([
+            makeFileObject({ name: "file-1.png" }),
+          ]);
+          validFile = makeFileObject({
+            name: "valid-file.pdf",
+            type: "application/pdf",
+          });
+          const invalidFile = makeFileObject({
+            name: "invalid-file.pdf",
+            type: "application/pdf",
+          });
+          Object.defineProperty(invalidFile.file, "size", {
+            get: () => 3500001,
+          });
+          testHook(() => {
+            ({ collection: tempFiles, addItems: addFiles } = useCollectionState(
+              initialFiles
+            ));
+          });
+
+          addFilesMock = jest
+            .fn()
+            .mockImplementation((files) => addFiles(files));
+
+          act(() => {
+            const wrapper = render({
+              tempFiles,
+              onAddTempFiles: addFilesMock,
+              onInvalidFilesError: handleInvalidFilesError,
+            });
+            // simulate the user selecting files, including the invalid file
+            const input = wrapper.find("input");
+            input.simulate("change", {
+              target: {
+                files: [validFile.file, invalidFile.file],
+              },
+            });
+          });
+        });
+
         it("filters out invalid files based on size", () => {
-          const initialFiles = [makeFileObject()];
-          const id = "FileX";
-          const validFile = makeFileObject({ id, type: "application/pdf" });
-          const invalidFile = makeFileObject({ id, type: "application/pdf" });
-          Object.defineProperty(invalidFile.file, "size", {
-            get: () => 3500001,
-          });
-          jest.spyOn(_, "uniqueId").mockImplementation(() => id);
-
-          let files, setFiles, wrapper;
-          testHook(() => {
-            [files, setFiles] = useState(initialFiles);
-          });
-
-          act(() => {
-            wrapper = render({ files, setFiles });
-            // simulate the user selecting files, including the invalid file
-            const input = wrapper.find("input");
-            input.simulate("change", {
-              target: {
-                files: [validFile.file, invalidFile.file],
-              },
-            });
-          });
-
-          expect(files).toEqual([...initialFiles, validFile]);
+          expect(addFilesMock).toHaveBeenCalledWith([
+            expect.objectContaining({
+              id: expect.any(String),
+              file: expect.objectContaining({ name: "valid-file.pdf" }),
+            }),
+          ]);
+          expect(tempFiles.items.map((file) => file.file.name)).toEqual([
+            "file-1.png",
+            "valid-file.pdf",
+          ]);
         });
 
-        it("displays an AppError message for the file with invalid size", () => {
-          const invalidFile = makeFile({
-            name: "file.pdf",
-            type: "application/pdf",
-          });
-          Object.defineProperty(invalidFile, "size", {
-            get: () => 3500001,
-          });
-
-          let appErrors, setAppErrors, wrapper;
-          testHook(() => {
-            [appErrors, setAppErrors] = useState([]);
-          });
-
-          act(() => {
-            wrapper = render({ appErrors, setAppErrors });
-            wrapper.find("input").simulate("change", {
-              target: {
-                files: [invalidFile],
-              },
-            });
-          });
-
-          expect(appErrors.items).toHaveLength(1);
-          expect(appErrors.items[0].message).toMatchInlineSnapshot(
-            `"We could not upload: file.pdf. Files must be smaller than 3.5 MB."`
-          );
-        });
-        it("tracks the error event", () => {
-          const invalidFile = makeFile({
-            name: "file.pdf",
-            type: "application/pdf",
-          });
-          Object.defineProperty(invalidFile, "size", {
-            get: () => 3500001,
-          });
-
-          act(() => {
-            const wrapper = render();
-            wrapper.find("input").simulate("change", {
-              target: {
-                files: [invalidFile],
-              },
-            });
-          });
-
-          expect(tracker.trackEvent).toHaveBeenCalledWith(
-            "ValidationError",
-            expect.any(Object)
-          );
-        });
-      });
-      describe("when the file is not allowed because of file type and size", () => {
-        it("filters out invalid files based on type and size", () => {
-          const initialFiles = [makeFileObject()];
-          const id = "FileX";
-          const validFile = makeFileObject({ id, type: "application/pdf" });
-          const invalidFile = makeFileObject({ id, type: "application/exe" });
-          Object.defineProperty(invalidFile.file, "size", {
-            get: () => 3500001,
-          });
-          jest.spyOn(_, "uniqueId").mockImplementation(() => id);
-
-          let files, setFiles, wrapper;
-          testHook(() => {
-            [files, setFiles] = useState(initialFiles);
-          });
-
-          act(() => {
-            wrapper = render({ files, setFiles });
-            // simulate the user selecting files, including the invalid file
-            const input = wrapper.find("input");
-            input.simulate("change", {
-              target: {
-                files: [validFile.file, invalidFile.file],
-              },
-            });
-          });
-
-          expect(files).toEqual([...initialFiles, validFile]);
-        });
-
-        it("displays an AppError message for the file with invalid type and size", () => {
-          const invalidFile = makeFile({
-            name: "file.exe",
-            type: "application/exe",
-          });
-          Object.defineProperty(invalidFile, "size", {
-            get: () => 3500001,
-          });
-
-          let appErrors, setAppErrors, wrapper;
-          testHook(() => {
-            [appErrors, setAppErrors] = useState([]);
-          });
-
-          act(() => {
-            wrapper = render({ appErrors, setAppErrors });
-            wrapper.find("input").simulate("change", {
-              target: {
-                files: [invalidFile],
-              },
-            });
-          });
-
-          expect(appErrors.items).toHaveLength(1);
-          expect(appErrors.items[0].message).toMatchInlineSnapshot(
-            `"We could not upload: file.exe. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 3.5 MB."`
-          );
-        });
-        it("tracks the error event", () => {
-          const invalidFile = makeFile({
-            name: "file.exe",
-            type: "application/exe",
-          });
-          Object.defineProperty(invalidFile, "size", {
-            get: () => 3500001,
-          });
-
-          act(() => {
-            const wrapper = render();
-            wrapper.find("input").simulate("change", {
-              target: {
-                files: [invalidFile],
-              },
-            });
-          });
-
-          expect(tracker.trackEvent).toHaveBeenCalledWith(
-            "ValidationError",
-            expect.any(Object)
-          );
-        });
-      });
-      describe("when files are invalid for multiple reasons", () => {
-        it("displays an AppError for each reason", () => {
-          const invalidTypeFiles = [
-            makeFile({ name: "type1.exe", type: "application/exe" }),
-            makeFile({ name: "type2.gif", type: "image/gif" }),
-          ];
-          const invalidSizeFiles = [
-            makeFile({ name: "size1.pdf", type: "application/pdf" }),
-            makeFile({ name: "size2.pdf", type: "application/pdf" }),
-          ];
-
-          invalidSizeFiles.forEach((file) =>
-            Object.defineProperty(file, "size", { get: () => 3500001 })
-          );
-          const invalidSizeAndTypeFiles = [
-            makeFile({ name: "sizeAndType1.exe", type: "application/exe" }),
-            makeFile({ name: "sizeAndType2.gif", type: "application/gif" }),
-          ];
-          invalidSizeAndTypeFiles.forEach((file) =>
-            Object.defineProperty(file, "size", { get: () => 3500001 })
-          );
-
-          let appErrors, setAppErrors, wrapper;
-          testHook(() => {
-            [appErrors, setAppErrors] = useState([]);
-          });
-
-          act(() => {
-            wrapper = render({ appErrors, setAppErrors });
-            wrapper.find("input").simulate("change", {
-              target: {
-                files: [
-                  ...invalidTypeFiles,
-                  ...invalidSizeFiles,
-                  ...invalidSizeAndTypeFiles,
-                ],
-              },
-            });
-          });
-
-          expect(appErrors.items).toHaveLength(3);
-          expect(appErrors.items.map((item) => item.message))
-            .toMatchInlineSnapshot(`
+        it("calls onInvalidFilesError handler", () => {
+          const error = handleInvalidFilesError.mock.calls[0][0];
+          expect(error).toBeInstanceOf(ValidationError);
+          expect(error.issues).toMatchInlineSnapshot(`
             Array [
-              "We could not upload: size1.pdf, size2.pdf. Files must be smaller than 3.5 MB.",
-              "We could not upload: type1.exe, type2.gif. Choose a PDF or an image file (.jpg, .jpeg, .png).",
-              "We could not upload: sizeAndType1.exe, sizeAndType2.gif. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 3.5 MB.",
+              Object {
+                "message": "We could not upload: invalid-file.pdf. Files must be smaller than 3.5 MB.",
+              },
             ]
           `);
         });
-        it("tracks the event", () => {
+
+        it("tracks the error event", () => {
+          expect(tracker.trackEvent).toHaveBeenCalledWith(
+            "FileValidationError",
+            expect.any(Object)
+          );
+        });
+      });
+
+      describe("when the file is not allowed because of file type and size", () => {
+        let addFilesMock,
+          handleInvalidFilesError,
+          initialFiles,
+          tempFiles,
+          validFile;
+        beforeEach(() => {
+          let addFiles;
+          handleInvalidFilesError = jest.fn();
+          initialFiles = new TempFileCollection([
+            makeFileObject({ name: "file-1.png" }),
+          ]);
+          validFile = makeFileObject({
+            name: "valid-file.pdf",
+            type: "application/pdf",
+          });
+          const invalidFile = makeFileObject({
+            name: "invalid-file.exe",
+            type: "application/exe",
+          });
+          Object.defineProperty(invalidFile.file, "size", {
+            get: () => 3500001,
+          });
+          testHook(() => {
+            ({ collection: tempFiles, addItems: addFiles } = useCollectionState(
+              initialFiles
+            ));
+          });
+
+          addFilesMock = jest
+            .fn()
+            .mockImplementation((files) => addFiles(files));
+
+          act(() => {
+            const wrapper = render({
+              tempFiles,
+              onAddTempFiles: addFilesMock,
+              onInvalidFilesError: handleInvalidFilesError,
+            });
+            // simulate the user selecting files, including the invalid file
+            const input = wrapper.find("input");
+            input.simulate("change", {
+              target: {
+                files: [validFile.file, invalidFile.file],
+              },
+            });
+          });
+        });
+
+        it("filters out invalid files based on type and size", () => {
+          expect(addFilesMock).toHaveBeenCalledWith([
+            expect.objectContaining({
+              id: expect.any(String),
+              file: expect.objectContaining({ name: "valid-file.pdf" }),
+            }),
+          ]);
+          expect(tempFiles.items.map((file) => file.file.name)).toEqual([
+            "file-1.png",
+            "valid-file.pdf",
+          ]);
+        });
+
+        it("calls onInvalidFilesError handler", () => {
+          const error = handleInvalidFilesError.mock.calls[0][0];
+          expect(error).toBeInstanceOf(ValidationError);
+          expect(error.issues).toMatchInlineSnapshot(`
+            Array [
+              Object {
+                "message": "We could not upload: invalid-file.exe. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 3.5 MB.",
+              },
+            ]
+          `);
+        });
+
+        it("tracks the error event", () => {
+          expect(tracker.trackEvent).toHaveBeenCalledWith(
+            "FileValidationError",
+            expect.any(Object)
+          );
+        });
+      });
+
+      describe("when files are invalid for multiple reasons", () => {
+        let addFilesMock, handleInvalidFilesError, tempFiles, wrapper;
+        beforeEach(() => {
+          let addFiles;
+          handleInvalidFilesError = jest.fn();
           const invalidTypeFiles = [
             makeFile({ name: "type1.exe", type: "application/exe" }),
             makeFile({ name: "type2.gif", type: "image/gif" }),
@@ -510,13 +518,22 @@ describe("FileCardList", () => {
             Object.defineProperty(file, "size", { get: () => 3500001 })
           );
 
-          let appErrors, setAppErrors, wrapper;
           testHook(() => {
-            [appErrors, setAppErrors] = useState([]);
+            ({ collection: tempFiles, addItems: addFiles } = useCollectionState(
+              new TempFileCollection()
+            ));
           });
 
+          addFilesMock = jest
+            .fn()
+            .mockImplementation((files) => addFiles(files));
+
           act(() => {
-            wrapper = render({ appErrors, setAppErrors });
+            wrapper = render({
+              tempFiles,
+              onAddTempFiles: addFilesMock,
+              onInvalidFilesError: handleInvalidFilesError,
+            });
             wrapper.find("input").simulate("change", {
               target: {
                 files: [
@@ -527,7 +544,41 @@ describe("FileCardList", () => {
               },
             });
           });
+        });
 
+        it("filters out invalid files based on type and size", () => {
+          expect(addFilesMock).toHaveBeenCalledWith([]);
+          expect(tempFiles.items).toEqual([]);
+        });
+
+        it("calls onInvalidFilesError handler", () => {
+          const error = handleInvalidFilesError.mock.calls[0][0];
+          expect(error).toBeInstanceOf(ValidationError);
+          expect(error.issues).toMatchInlineSnapshot(`
+            Array [
+              Object {
+                "message": "We could not upload: type1.exe. Choose a PDF or an image file (.jpg, .jpeg, .png).",
+              },
+              Object {
+                "message": "We could not upload: type2.gif. Choose a PDF or an image file (.jpg, .jpeg, .png).",
+              },
+              Object {
+                "message": "We could not upload: size1.pdf. Files must be smaller than 3.5 MB.",
+              },
+              Object {
+                "message": "We could not upload: size2.pdf. Files must be smaller than 3.5 MB.",
+              },
+              Object {
+                "message": "We could not upload: sizeAndType1.exe. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 3.5 MB.",
+              },
+              Object {
+                "message": "We could not upload: sizeAndType2.gif. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 3.5 MB.",
+              },
+            ]
+          `);
+        });
+
+        it("tracks the event", () => {
           expect(tracker.trackEvent).toHaveBeenCalledTimes(6);
         });
       });
@@ -561,20 +612,20 @@ describe("FileCardList", () => {
       it("renders a FileCard for the old and new files", () => {
         const newFile = makeFileObject({ id: "newFile" });
         const wrapper = render({
-          filesWithUniqueId: [newFile],
+          tempFiles: new TempFileCollection([newFile]),
           documents: [newDoc1, newDoc2],
         });
         expect(wrapper.find(FileCard)).toHaveLength(3);
       });
 
       it("continues numbering of the new FileCards from where it left off", () => {
-        const newFiles = [
+        const newFiles = new TempFileCollection([
           makeFileObject({ id: "newFile1" }),
           makeFileObject({ id: "newFile2" }),
           makeFileObject({ id: "newFile3" }),
-        ];
+        ]);
         const wrapper = render({
-          filesWithUniqueId: newFiles,
+          tempFiles: newFiles,
           documents: [newDoc1, newDoc2],
         });
 

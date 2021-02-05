@@ -38,6 +38,7 @@ export default jest.fn(() => ({
     update: jest.fn(),
     warningsLists: {},
   },
+  clearErrors: jest.fn(),
   documents: {
     attach: jest.fn((application_id, files, documentType) => {
       const uploadPromises = [];

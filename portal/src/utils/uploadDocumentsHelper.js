@@ -7,23 +7,25 @@ import { every, zip } from "lodash";
  * handling of errors and navigation in parent page.
  *
  * @param {Promise[]} uploadPromises - array of Promises returned by documentsLogic.attach
- * @param {{id: string, file: File}[]} files - array of {id: string, file: File} objects
- * @param {Function} setFiles - setter function for updating the list of files
+ * @param {TempFileCollection} tempFiles - instance of TempFileCollection
+ * @param {Function} removeTempFile - function for removing succesfully uploaded file from tempFiles
  * @returns {object} - {success: bool}
  */
-const uploadDocumentsHelper = async (uploadPromises, files, setFiles) => {
+const uploadDocumentsHelper = async (
+  uploadPromises,
+  tempFiles,
+  removeTempFile
+) => {
   if (!uploadPromises) {
     return { success: false };
   }
   const success = every(
     await Promise.all(
-      zip(files, uploadPromises).map(
+      zip(tempFiles.items, uploadPromises).map(
         async ([successfullyUploadedFile, uploadPromise]) => {
           const { success } = await uploadPromise;
           if (success) {
-            setFiles((files) =>
-              files.filter((file) => file.id !== successfullyUploadedFile.id)
-            );
+            removeTempFile(successfullyUploadedFile.id);
             return success;
           }
           return false;

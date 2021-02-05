@@ -5,8 +5,10 @@ import FormLabel from "../FormLabel";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
+import TempFileCollection from "../../models/TempFileCollection";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../services/featureFlags";
+import useTempFileCollection from "../../hooks/useTempFileCollection";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -24,12 +26,19 @@ const Feedback = ({
 }) => {
   // TODO (EMPLOYER-583) add frontend validation
   const { t } = useTranslation();
-  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const {
+    tempFiles,
+    addTempFiles,
+    removeTempFile,
+    setTempFiles,
+  } = useTempFileCollection(new TempFileCollection(), {
+    clearErrors: appLogic.clearErrors,
+  });
   const [shouldShowCommentBox, setShouldShowCommentBox] = useState(false);
 
   useEffect(() => {
     if (!shouldShowCommentBox) {
-      setUploadedFiles([]);
+      setTempFiles(new TempFileCollection());
       setComment("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -108,9 +117,10 @@ const Feedback = ({
                 {t("components.employersFeedback.supportingDocumentationLabel")}
               </FormLabel>
               <FileCardList
-                filesWithUniqueId={uploadedFiles}
-                setFiles={setUploadedFiles}
-                setAppErrors={appLogic.setAppErrors}
+                tempFiles={tempFiles}
+                onAddTempFiles={addTempFiles}
+                onRemoveTempFile={removeTempFile}
+                onInvalidFilesError={appLogic.catchError}
                 fileHeadingPrefix={t(
                   "components.employersFeedback.fileHeadingPrefix"
                 )}
@@ -131,7 +141,8 @@ const Feedback = ({
 
 Feedback.propTypes = {
   appLogic: PropTypes.shape({
-    setAppErrors: PropTypes.func.isRequired,
+    clearErrors: PropTypes.func.isRequired,
+    catchError: PropTypes.func.isRequired,
   }).isRequired,
   isReportingFraud: PropTypes.bool,
   isDenyingRequest: PropTypes.bool,

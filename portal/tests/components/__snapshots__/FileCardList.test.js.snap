@@ -36,7 +36,7 @@ exports[`FileCardList with previously-selected files renders a list of the files
     className="usa-list usa-list--unstyled measure-5"
   >
     <li
-      key="File1"
+      key="TempFile1"
     >
       <FileCard
         errorMsg={null}

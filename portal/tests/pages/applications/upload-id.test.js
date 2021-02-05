@@ -1,4 +1,3 @@
-/* eslint-disable lodash/import-scope */
 import Document, { DocumentType } from "../../../src/models/Document";
 import {
   MockClaimBuilder,
@@ -6,10 +5,12 @@ import {
   renderWithAppLogic,
   testHook,
 } from "../../test-utils";
-import _, { uniqueId } from "lodash";
 import ClaimCollection from "../../../src/models/ClaimCollection";
+import TempFile from "../../../src/models/TempFile";
 import UploadId from "../../../src/pages/applications/upload-id";
+import { ValidationError } from "../../../src/errors";
 import { act } from "react-dom/test-utils";
+import { uniqueId } from "lodash";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
 jest.mock("../../../src/hooks/useAppLogic");
@@ -17,6 +18,9 @@ jest.mock("../../../src/services/tracker");
 
 // Dive more levels to account for withClaimDocuments HOC
 const diveLevels = 4;
+
+const makeTempFile = (fileAttrs = {}) =>
+  new TempFile({ file: makeFile(fileAttrs) });
 
 describe("UploadId", () => {
   let appLogic, claim, wrapper;
@@ -77,9 +81,13 @@ describe("UploadId", () => {
     });
 
     describe("when the user has a Mass ID", () => {
-      const filesWithUniqueId = [
-        { id: "1", file: makeFile({ name: "file1" }) },
-        { id: "2", file: makeFile({ name: "file2" }) },
+      const expectedTempFiles = [
+        expect.objectContaining({
+          file: expect.objectContaining({ name: "file1" }),
+        }),
+        expect.objectContaining({
+          file: expect.objectContaining({ name: "file2" }),
+        }),
       ];
       beforeEach(() => {
         claim = new MockClaimBuilder().medicalLeaveReason().create();
@@ -107,36 +115,60 @@ describe("UploadId", () => {
       describe("when the user uploads files", () => {
         it("renders filecards for the files", () => {
           render();
-          const files = [makeFile(), makeFile(), makeFile()];
-          const event = {
-            target: {
-              files,
-            },
-          };
+          const tempFiles = [makeTempFile(), makeTempFile(), makeTempFile()];
 
-          const input = wrapper.find("FileCardList").dive().find("input");
           act(() => {
-            input.simulate("change", event);
+            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
           });
 
           expect(wrapper).toMatchSnapshot();
         });
 
+        it("clears errors", () => {
+          render();
+          const tempFiles = [makeTempFile(), makeTempFile(), makeTempFile()];
+          act(() => {
+            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
+          });
+
+          expect(appLogic.clearErrors).toHaveBeenCalledTimes(1);
+        });
+
+        it("catches invalid files", () => {
+          render();
+
+          act(() => {
+            wrapper
+              .find("FileCardList")
+              .simulate(
+                "invalidFilesError",
+                new ValidationError([{ message: "Validation message." }])
+              );
+          });
+
+          const error = appLogic.catchError.mock.calls[0][0];
+          expect(error).toBeInstanceOf(ValidationError);
+          expect(error.issues).toMatchInlineSnapshot(`
+            Array [
+              Object {
+                "message": "Validation message.",
+              },
+            ]
+          `);
+        });
+
         it("makes documents.attach request when no documents exist", async () => {
-          let id = 0;
-          jest.spyOn(_, "uniqueId").mockImplementation(() => String(++id));
           claim = new MockClaimBuilder().create();
           render();
 
           // Add files to the page state
-          const files = [makeFile(), makeFile()];
-          const input = wrapper.find("FileCardList").dive().find("input");
+          const tempFiles = [
+            makeTempFile({ name: "file1" }),
+            makeTempFile({ name: "file2" }),
+          ];
+
           act(() => {
-            input.simulate("change", {
-              target: {
-                files,
-              },
-            });
+            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
           });
 
           await act(async () => {
@@ -145,7 +177,7 @@ describe("UploadId", () => {
 
           expect(appLogic.documents.attach).toHaveBeenCalledWith(
             claim.application_id,
-            filesWithUniqueId,
+            expect.arrayContaining(expectedTempFiles),
             expect.any(String),
             false
           );
@@ -153,16 +185,10 @@ describe("UploadId", () => {
 
         it("navigates the user to the next page if there are no errors", async () => {
           render();
-          const files = [makeFile(), makeFile(), makeFile()];
-          const event = {
-            target: {
-              files,
-            },
-          };
+          const tempFiles = [makeTempFile(), makeTempFile(), makeTempFile()];
 
-          const input = wrapper.find("FileCardList").dive().find("input");
           await act(async () => {
-            input.simulate("change", event);
+            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
             await wrapper.find("QuestionPage").simulate("save");
           });
 
@@ -176,16 +202,9 @@ describe("UploadId", () => {
               Promise.resolve({ success: false }),
             ]);
           render();
-          const files = [makeFile()];
-          const event = {
-            target: {
-              files,
-            },
-          };
-
-          const input = wrapper.find("FileCardList").dive().find("input");
+          const tempFiles = [makeTempFile()];
           await act(async () => {
-            input.simulate("change", event);
+            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
             await wrapper.find("QuestionPage").simulate("save");
           });
 
@@ -209,20 +228,14 @@ describe("UploadId", () => {
 
           render();
 
-          const files = [
-            makeFile({ name: "File1" }),
-            makeFile({ name: "File2" }),
-            makeFile({ name: "File3" }),
+          const tempFiles = [
+            makeTempFile({ name: "File1" }),
+            makeTempFile({ name: "File2" }),
+            makeTempFile({ name: "File3" }),
           ];
-          const event = {
-            target: {
-              files,
-            },
-          };
 
-          const input = wrapper.find("FileCardList").dive().find("input");
           act(() => {
-            input.simulate("change", event);
+            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
           });
 
           let removableFileCards = wrapper
@@ -306,20 +319,14 @@ describe("UploadId", () => {
 
           render();
 
-          const files = [
-            makeFile({ name: "File1" }),
-            makeFile({ name: "File2" }),
-            makeFile({ name: "File3" }),
+          const tempFiles = [
+            makeTempFile({ name: "File1" }),
+            makeTempFile({ name: "File2" }),
+            makeTempFile({ name: "File3" }),
           ];
-          const event = {
-            target: {
-              files,
-            },
-          };
 
-          const input = wrapper.find("FileCardList").dive().find("input");
           act(() => {
-            input.simulate("change", event);
+            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
           });
 
           let removableFileCards = wrapper
@@ -386,14 +393,9 @@ describe("UploadId", () => {
         appLogic.claims.claims = new ClaimCollection([claim]);
         render();
         // Add files to the page state
-        const files = [makeFile(), makeFile()];
-        const input = wrapper.find("FileCardList").dive().find("input");
+        const tempFiles = [makeTempFile(), makeTempFile()];
         act(() => {
-          input.simulate("change", {
-            target: {
-              files,
-            },
-          });
+          wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
         });
 
         await act(async () => {
@@ -427,8 +429,6 @@ describe("UploadId", () => {
         });
 
         it("makes API request when there are new files", async () => {
-          let id = 0;
-          jest.spyOn(_, "uniqueId").mockImplementation(() => String(++id));
           claim = new MockClaimBuilder().create();
           appLogic.documents.documents = appLogic.documents.documents.addItem(
             new Document({
@@ -441,20 +441,18 @@ describe("UploadId", () => {
           render();
 
           // Add files to the page state
-          const files = [makeFile(), makeFile()];
-          const input = wrapper.find("FileCardList").dive().find("input");
+          const tempFiles = [
+            makeTempFile({ name: "file1" }),
+            makeTempFile({ name: "file2" }),
+          ];
           await act(async () => {
-            input.simulate("change", {
-              target: {
-                files,
-              },
-            });
+            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
             await wrapper.find("QuestionPage").simulate("save");
           });
 
           expect(appLogic.documents.attach).toHaveBeenCalledWith(
             claim.application_id,
-            filesWithUniqueId,
+            expect.arrayContaining(expectedTempFiles),
             expect.any(String),
             false
           );

@@ -1,5 +1,4 @@
 import Document, { DocumentType } from "../../models/Document";
-import React, { useState } from "react";
 import Accordion from "../../components/Accordion";
 import AccordionItem from "../../components/AccordionItem";
 import Alert from "../../components/Alert";
@@ -9,21 +8,30 @@ import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
+import React from "react";
 import Spinner from "../../components/Spinner";
+import TempFileCollection from "../../models/TempFileCollection";
 import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routes from "../../routes";
 import uploadDocumentsHelper from "../../utils/uploadDocumentsHelper";
+import useTempFileCollection from "../../hooks/useTempFileCollection";
 import { useTranslation } from "../../locales/i18n";
 import withClaim from "../../hoc/withClaim";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 export const UploadId = (props) => {
   const { t } = useTranslation();
-  const [stateIdFiles, setStateIdFiles] = useState([]);
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
+  const {
+    tempFiles,
+    addTempFiles,
+    removeTempFile,
+  } = useTempFileCollection(new TempFileCollection(), {
+    clearErrors: appLogic.clearErrors,
+  });
   const { additionalDoc, showStateId } = query;
   let hasStateId;
   if (showStateId === "true") {
@@ -48,7 +56,7 @@ export const UploadId = (props) => {
   );
 
   const handleSave = async () => {
-    if (!stateIdFiles.length && idDocuments.length) {
+    if (tempFiles.isEmpty && idDocuments.length) {
       // Allow user to skip this page if they've previously uploaded documents
       portalFlow.goToNextPage({ claim }, { claim_id: claim.application_id });
       return;
@@ -56,15 +64,15 @@ export const UploadId = (props) => {
 
     const uploadPromises = appLogic.documents.attach(
       claim.application_id,
-      stateIdFiles,
+      tempFiles.items,
       DocumentType.identityVerification, // TODO (CP-962): set based on leave reason
       additionalDoc === "true"
     );
 
     const { success } = await uploadDocumentsHelper(
       uploadPromises,
-      stateIdFiles,
-      setStateIdFiles
+      tempFiles,
+      removeTempFile
     );
 
     if (success) {
@@ -156,10 +164,11 @@ export const UploadId = (props) => {
         {!isLoadingDocuments && (
           <FileCardList
             fileErrors={fileErrors}
-            filesWithUniqueId={stateIdFiles}
+            tempFiles={tempFiles}
             documents={idDocuments}
-            setFiles={setStateIdFiles}
-            setAppErrors={props.appLogic.setAppErrors}
+            onAddTempFiles={addTempFiles}
+            onRemoveTempFile={removeTempFile}
+            onInvalidFilesError={props.appLogic.catchError}
             fileHeadingPrefix={t("pages.claimsUploadId.fileHeadingPrefix")}
             addFirstFileButtonText={t(
               "pages.claimsUploadId.addFirstFileButton"
@@ -180,7 +189,7 @@ UploadId.propTypes = {
     catchError: PropTypes.func.isRequired,
     documents: PropTypes.object.isRequired,
     portalFlow: PropTypes.object.isRequired,
-    setAppErrors: PropTypes.func.isRequired,
+    clearErrors: PropTypes.func.isRequired,
   }).isRequired,
   claim: PropTypes.object.isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),

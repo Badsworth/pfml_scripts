@@ -78,12 +78,26 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
     <FileCardList
       addAnotherFileButtonText="Choose another file"
       addFirstFileButtonText="Choose a file"
+      allowedFileTypes={
+        Array [
+          "image/png",
+          "image/jpeg",
+          "application/pdf",
+        ]
+      }
       documents={Array []}
       fileErrors={Array []}
       fileHeadingPrefix="File"
-      filesWithUniqueId={Array []}
-      setAppErrors={[MockFunction]}
-      setFiles={[Function]}
+      maximumFileSize={3500000}
+      onAddTempFiles={[Function]}
+      onInvalidFilesError={[MockFunction]}
+      onRemoveTempFile={[Function]}
+      tempFiles={
+        TempFileCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        }
+      }
     />
   </div>
 </QuestionPage>
@@ -93,12 +107,26 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID r
 <FileCardList
   addAnotherFileButtonText="Choose another file"
   addFirstFileButtonText="Choose a file"
+  allowedFileTypes={
+    Array [
+      "image/png",
+      "image/jpeg",
+      "application/pdf",
+    ]
+  }
   documents={Array []}
   fileErrors={Array []}
   fileHeadingPrefix="File"
-  filesWithUniqueId={Array []}
-  setAppErrors={[MockFunction]}
-  setFiles={[Function]}
+  maximumFileSize={3500000}
+  onAddTempFiles={[Function]}
+  onInvalidFilesError={[MockFunction]}
+  onRemoveTempFile={[Function]}
+  tempFiles={
+    TempFileCollection {
+      "items": Array [],
+      "itemsById": Object {},
+    }
+  }
 />
 `;
 
@@ -139,12 +167,26 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID r
     <FileCardList
       addAnotherFileButtonText="Choose another file"
       addFirstFileButtonText="Choose a file"
+      allowedFileTypes={
+        Array [
+          "image/png",
+          "image/jpeg",
+          "application/pdf",
+        ]
+      }
       documents={Array []}
       fileErrors={Array []}
       fileHeadingPrefix="File"
-      filesWithUniqueId={Array []}
-      setAppErrors={[MockFunction]}
-      setFiles={[Function]}
+      maximumFileSize={3500000}
+      onAddTempFiles={[Function]}
+      onInvalidFilesError={[MockFunction]}
+      onRemoveTempFile={[Function]}
+      tempFiles={
+        TempFileCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        }
+      }
     />
   </div>
 </QuestionPage>
@@ -187,27 +229,52 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID w
     <FileCardList
       addAnotherFileButtonText="Choose another file"
       addFirstFileButtonText="Choose a file"
+      allowedFileTypes={
+        Array [
+          "image/png",
+          "image/jpeg",
+          "application/pdf",
+        ]
+      }
       documents={Array []}
       fileErrors={Array []}
       fileHeadingPrefix="File"
-      filesWithUniqueId={
-        Array [
-          Object {
-            "file": File {},
-            "id": "File1",
+      maximumFileSize={3500000}
+      onAddTempFiles={[Function]}
+      onInvalidFilesError={[MockFunction]}
+      onRemoveTempFile={[Function]}
+      tempFiles={
+        TempFileCollection {
+          "items": Array [
+            TempFile {
+              "file": File {},
+              "id": "TempFile1",
+            },
+            TempFile {
+              "file": File {},
+              "id": "TempFile3",
+            },
+            TempFile {
+              "file": File {},
+              "id": "TempFile5",
+            },
+          ],
+          "itemsById": Object {
+            "TempFile1": TempFile {
+              "file": File {},
+              "id": "TempFile1",
+            },
+            "TempFile3": TempFile {
+              "file": File {},
+              "id": "TempFile3",
+            },
+            "TempFile5": TempFile {
+              "file": File {},
+              "id": "TempFile5",
+            },
           },
-          Object {
-            "file": File {},
-            "id": "File2",
-          },
-          Object {
-            "file": File {},
-            "id": "File3",
-          },
-        ]
+        }
       }
-      setAppErrors={[MockFunction]}
-      setFiles={[Function]}
     />
   </div>
 </QuestionPage>
