@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`VerifyBusiness when "employerShowVerificationPages" feature flag is enabled renders the page 1`] = `
+exports[`VerifyBusiness when "employerShowVerifications" feature flag is enabled renders the page 1`] = `
 <form
   className="usa-form"
   onSubmit={[Function]}
@@ -82,7 +82,7 @@ exports[`VerifyBusiness when "employerShowVerificationPages" feature flag is ena
 </form>
 `;
 
-exports[`VerifyBusiness when "employerShowVerificationPages" feature flag is enabled renders the page 2`] = `
+exports[`VerifyBusiness when "employerShowVerifications" feature flag is enabled renders the page 2`] = `
 Array [
   <strong
     key="strong-0"
@@ -93,7 +93,7 @@ Array [
 ]
 `;
 
-exports[`VerifyBusiness when "employerShowVerificationPages" feature flag is enabled renders the page 3`] = `
+exports[`VerifyBusiness when "employerShowVerifications" feature flag is enabled renders the page 3`] = `
 Array [
   <strong
     key="strong-0"
@@ -104,7 +104,7 @@ Array [
 ]
 `;
 
-exports[`VerifyBusiness when "employerShowVerificationPages" feature flag is enabled renders the page 4`] = `
+exports[`VerifyBusiness when "employerShowVerifications" feature flag is enabled renders the page 4`] = `
 Array [
   "We need more information to verify your identity. We require every employer to verify recent ",
   <a
@@ -119,7 +119,7 @@ Array [
 ]
 `;
 
-exports[`VerifyBusiness when "employerShowVerificationPages" feature flag is enabled renders the page 5`] = `
+exports[`VerifyBusiness when "employerShowVerifications" feature flag is enabled renders the page 5`] = `
 Array [
   "Log into ",
   <a

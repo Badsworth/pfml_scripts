@@ -13,7 +13,7 @@ export const VerificationSuccess = (props) => {
   const { appLogic, query, user } = props;
   const { t } = useTranslation();
 
-  if (!isFeatureEnabled("employerShowVerificationPages")) {
+  if (!isFeatureEnabled("employerShowVerifications")) {
     appLogic.portalFlow.goTo(routes.employers.dashboard);
   }
 

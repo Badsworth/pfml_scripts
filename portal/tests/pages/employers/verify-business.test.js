@@ -14,9 +14,9 @@ describe("VerifyBusiness", () => {
   };
   mockRouter.pathname = routes.employers.VerifyBusiness;
 
-  describe('when "employerShowVerificationPages" feature flag is disabled', () => {
+  describe('when "employerShowVerifications" feature flag is disabled', () => {
     beforeEach(() => {
-      process.env.featureFlags = { employerShowVerificationPages: false };
+      process.env.featureFlags = { employerShowVerifications: false };
       ({ wrapper, appLogic } = renderWithAppLogic(VerifyBusiness, {
         diveLevels: 1,
         props: {
@@ -42,9 +42,9 @@ describe("VerifyBusiness", () => {
     });
   });
 
-  describe('when "employerShowVerificationPages" feature flag is enabled', () => {
+  describe('when "employerShowVerifications" feature flag is enabled', () => {
     beforeEach(() => {
-      process.env.featureFlags = { employerShowVerificationPages: true };
+      process.env.featureFlags = { employerShowVerifications: true };
       ({ wrapper, appLogic } = renderWithAppLogic(VerifyBusiness, {
         diveLevels: 1,
         props: {

@@ -11,7 +11,7 @@ describe("Organizations", () => {
   let appLogic, wrapper;
 
   beforeEach(() => {
-    process.env.featureFlags = { employerShowVerificationPages: false };
+    process.env.featureFlags = { employerShowVerifications: false };
     testHook(() => {
       appLogic = useAppLogic();
     });
@@ -51,9 +51,9 @@ describe("Organizations", () => {
     expect(row.dive().find("Tag").exists()).toBe(false);
   });
 
-  describe('when "employerShowVerificationPages" feature flag is enabled', () => {
+  describe('when "employerShowVerifications" feature flag is enabled', () => {
     beforeEach(() => {
-      process.env.featureFlags = { employerShowVerificationPages: true };
+      process.env.featureFlags = { employerShowVerifications: true };
     });
 
     it("shows an Alert telling the user to start verification if there are unverified employers", () => {
@@ -82,7 +82,7 @@ describe("Organizations", () => {
     });
   });
 
-  describe('when "employerShowVerificationPages" feature flag is disabled', () => {
+  describe('when "employerShowVerifications" feature flag is disabled', () => {
     it("does not show an Alert telling the user to start verification if there are unverified employers", () => {
       wrapper = shallow(<Organizations appLogic={appLogic} />).dive();
       expect(wrapper.find("Alert").exists()).toBe(false);

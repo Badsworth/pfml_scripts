@@ -17,15 +17,13 @@ export const Organizations = ({ appLogic }) => {
     hasUnverifiedEmployer,
     user_leave_administrators,
   } = appLogic.users.user;
-  const showVerificationPages = isFeatureEnabled(
-    "employerShowVerificationPages"
-  );
+  const showVerifications = isFeatureEnabled("employerShowVerifications");
 
   return (
     <React.Fragment>
       <BackButton />
       <Title>{t("pages.employersOrganizations.title")}</Title>
-      {showVerificationPages && hasUnverifiedEmployer && (
+      {showVerifications && hasUnverifiedEmployer && (
         <Alert
           state="warning"
           heading={t("pages.employersDashboard.verificationTitle")}

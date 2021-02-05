@@ -43,15 +43,9 @@ const flagsConfig = {
     // TODO (EMPLOYER-718): Remove flag
     employerShowSelfRegistrationForm: false,
 
-    // When this flag is enabled, links to Verification flow is visible
+    // When this flag is enabled, links to Verification flow is visible and Verification pages are enabled
     // TODO (EMPLOYER-852): Remove flag
     employerShowVerifications: false,
-
-    // When this flag is enabled, verification pages are enabled.
-    // Note that this hides the actual verification pages, whereas employerShowVerifications
-    // only hides links and references to these pages.
-    // TODO (EMPLOYER-854): Remove flag
-    employerShowVerificationPages: false,
 
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.

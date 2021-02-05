@@ -29,9 +29,9 @@ describe("VerificationSuccess", () => {
     }));
   };
 
-  describe('when "employerShowVerificationPages" feature flag is disabled', () => {
+  describe('when "employerShowVerifications" feature flag is disabled', () => {
     beforeEach(() => {
-      process.env.featureFlags = { employerShowVerificationPages: false };
+      process.env.featureFlags = { employerShowVerifications: false };
       renderPage(query);
     });
 
@@ -42,9 +42,9 @@ describe("VerificationSuccess", () => {
     });
   });
 
-  describe('when "employerShowVerificationPages" feature flag is enabled', () => {
+  describe('when "employerShowVerifications" feature flag is enabled', () => {
     beforeEach(() => {
-      process.env.featureFlags = { employerShowVerificationPages: true };
+      process.env.featureFlags = { employerShowVerifications: true };
     });
 
     it("renders the page", () => {
