@@ -375,6 +375,9 @@ def _make_simple_report(
     state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=associated_class, end_state=current_state, db_session=db_session
     )
+    logger.info(
+        f"Building error reports for {associated_class.value} with end state: {current_state.state_description} - found {len(state_logs)}"
+    )
 
     errors: List[ErrorReport] = []
 
@@ -497,6 +500,9 @@ def _send_errors_email(subject: str, body: str, error_files: List[pathlib.Path])
             s3_prefix, payments_util.get_now().strftime("%Y-%m-%d"), error_file.name
         )
         file_util.upload_to_s3(str(error_file), output_path)
+        logger.info(
+            f"Error report file written to S3: {output_path}", extra={"s3_path": output_path}
+        )
 
 
 def _send_fineos_payments_errors(working_directory: pathlib.Path, db_session: db.Session) -> None:
@@ -535,6 +541,8 @@ def _send_fineos_payments_errors(working_directory: pathlib.Path, db_session: db
 
 
 def send_fineos_error_reports(db_session: db.Session) -> None:
+    logger.info("Creating FINEOS payment reports")
+
     try:
         working_directory = pathlib.Path(tempfile.mkdtemp())
         _send_fineos_payments_errors(working_directory, db_session)
@@ -543,6 +551,7 @@ def send_fineos_error_reports(db_session: db.Session) -> None:
         # entries to the DB. The objects are already in a finished state
         # so they don't need to be modified/directly accessed here
         db_session.commit()
+        logger.info("Successfully created FINEOS payment reports")
     except Exception:
         logger.exception("Error creating FINEOS payment reports")
         db_session.rollback()

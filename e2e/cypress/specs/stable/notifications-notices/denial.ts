@@ -19,7 +19,7 @@ describe("Denial Notification and Notice", () => {
             credentials,
           } as SimulationClaim).then((responseData: ApplicationResponse) => {
             if (!responseData.fineos_absence_id) {
-              throw new Error("FINOES ID must be specified");
+              throw new Error("FINEOS ID must be specified");
             }
             cy.stash("claim", claim.claim);
             cy.stash("submission", {

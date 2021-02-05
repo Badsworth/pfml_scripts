@@ -397,7 +397,7 @@ def test_copy_fineos_data_to_archival_bucket_duplicate_suffix_error(
 
     with pytest.raises(
         Exception,
-        match=f"Duplicate files found for vpei.csv: s3://test_bucket/cps/inbound/received/{date_prefix}-ANOTHER-vpei.csv and s3://fineos_bucket/DT2/dataexports/{date_prefix}-vpei.csv",
+        match=f"Error while copying fineos extracts - duplicate files found for vpei.csv: s3://test_bucket/cps/inbound/received/{date_prefix}-ANOTHER-vpei.csv and s3://fineos_bucket/DT2/dataexports/{date_prefix}-vpei.csv",
     ):
         payments_util.copy_fineos_data_to_archival_bucket(
             test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.PAYMENT_EXTRACT,
@@ -417,7 +417,7 @@ def test_copy_fineos_data_to_archival_bucket_missing_file_error(
 
     with pytest.raises(
         Exception,
-        match=f"The following files were not found in S3 {date_prefix}-vpeiclaimdetails.csv,{date_prefix}-vpeipaymentdetails.csv",
+        match=f"Error while copying fineos extracts - The following expected files were not found {date_prefix}-vpeiclaimdetails.csv,{date_prefix}-vpeipaymentdetails.csv",
     ):
         payments_util.copy_fineos_data_to_archival_bucket(
             test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.PAYMENT_EXTRACT,

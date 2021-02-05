@@ -80,6 +80,8 @@ def process_payments_for_writeback(db_session: db.Session) -> None:
     """
     Top-level function that calls all the other functions in this file in order
     """
+    logger.info("Processing payments for PEI writeback")
+
     pei_writeback_items: List[PeiWritebackItem] = get_records_to_writeback(db_session=db_session)
     if not pei_writeback_items:
         logger.info("No payment records for PEI writeback. Exiting early.")
@@ -88,6 +90,8 @@ def process_payments_for_writeback(db_session: db.Session) -> None:
     upload_writeback_csv_and_save_reference_files(
         db_session=db_session, pei_writeback_items=pei_writeback_items
     )
+
+    logger.info("Successfully processed payments for PEI writeback")
 
 
 def get_records_to_writeback(db_session: db.Session) -> List[PeiWritebackItem]:
@@ -103,12 +107,23 @@ def get_records_to_writeback(db_session: db.Session) -> List[PeiWritebackItem]:
         writeback_record_converter=_extracted_payment_to_pei_writeback_record,
         post_writeback_hook=_after_vendor_check_initiated,
     )
+    logger.info(
+        "Found %i extracted writeback items in state: %s",
+        len(extracted_writeback_items),
+        State.MARK_AS_EXTRACTED_IN_FINEOS.state_description,
+    )
+
     disbursed_writeback_items = _get_writeback_items_for_state(
         db_session=db_session,
         prior_state=State.SEND_PAYMENT_DETAILS_TO_FINEOS,
         end_state=State.PAYMENT_COMPLETE,
         writeback_record_converter=_disbursed_payment_to_pei_writeback_record,
         post_writeback_hook=None,
+    )
+    logger.info(
+        "Found %i disbursed writeback items in state: %s",
+        len(disbursed_writeback_items),
+        State.PAYMENT_COMPLETE.state_description,
     )
 
     return extracted_writeback_items + disbursed_writeback_items
@@ -161,6 +176,8 @@ def upload_writeback_csv_and_save_reference_files(
     Upload PEI writeback CSV to FINEOS S3 bucket and PFML S3 bucket configured in payments_util
     Create and update reference files as uploads complete
     """
+    logger.info("Uploading writeback files to FINEOS S3")
+
     current_datetime = get_now()
     filename_to_upload = f"{current_datetime.strftime('%Y-%m-%d-%H-%M-%S')}-pei_writeback.csv"
 
@@ -185,10 +202,16 @@ def upload_writeback_csv_and_save_reference_files(
         # Commit after creating the file in S3 so that we have records in the database before we
         # attempt to move the file to FINEOS' S3 bucket.
         db_session.commit()
+
+        logger.info(
+            "Successfully saved writeback files to PFML S3",
+            extra={"s3_path": pfml_pei_writeback_ready_filepath},
+        )
     except Exception as e:
         db_session.rollback()
         logger.exception(
-            "Error writing writeback to S3", extra={"s3_path": pfml_pei_writeback_ready_filepath}
+            "Error saving writeback file to PFML S3",
+            extra={"s3_path": pfml_pei_writeback_ready_filepath},
         )
         raise e
 
@@ -198,6 +221,13 @@ def upload_writeback_csv_and_save_reference_files(
     )
     try:
         file_util.copy_file(pfml_pei_writeback_ready_filepath, fineos_pei_writeback_filepath)
+        logger.info(
+            "Successfully copied writeback files to FINEOS S3",
+            extra={
+                "s3_path": pfml_pei_writeback_ready_filepath,
+                "fineos_s3_path": fineos_pei_writeback_filepath,
+            },
+        )
     except Exception as e:
         logger.exception(
             "Error copying writeback to FINEOS",
@@ -215,7 +245,7 @@ def upload_writeback_csv_and_save_reference_files(
         )
         file_util.rename_file(pfml_pei_writeback_ready_filepath, pfml_pei_writeback_sent_filepath)
         logger.info(
-            f"Successfully renamed writeback CSV ${pfml_pei_writeback_ready_filepath} to ${pfml_pei_writeback_sent_filepath}",
+            "Successfully moved PEI writeback file",
             extra={
                 "pfml_pei_writeback_ready_filepath": pfml_pei_writeback_ready_filepath,
                 "pfml_pei_writeback_sent_filepath": pfml_pei_writeback_sent_filepath,
@@ -223,7 +253,7 @@ def upload_writeback_csv_and_save_reference_files(
         )
     except Exception as e:
         logger.exception(
-            f"Error moving writeback from {pfml_pei_writeback_ready_filepath} to {pfml_pei_writeback_sent_filepath}",
+            "Error moving PEI writeback files",
             extra={
                 "pfml_pei_writeback_ready_filepath": pfml_pei_writeback_ready_filepath,
                 "pfml_pei_writeback_sent_filepath": pfml_pei_writeback_sent_filepath,
@@ -245,10 +275,15 @@ def upload_writeback_csv_and_save_reference_files(
         _run_post_writeback_hooks(pei_writeback_items, db_session)
 
         db_session.commit()
+
+        logger.info("Successfully ran post writeback state transitions.")
     except Exception as e:
         db_session.rollback()
         logger.exception(
-            f"Error updating ReferenceFile {reference_file.reference_file_id} from {pfml_pei_writeback_ready_filepath} to {pfml_pei_writeback_sent_filepath}",
+            "Error updating ReferenceFile %s from %s to %s",
+            reference_file.reference_file_id,
+            pfml_pei_writeback_ready_filepath,
+            pfml_pei_writeback_sent_filepath,
             extra={
                 "reference_file_id": reference_file.reference_file_id,
                 "pfml_pei_writeback_ready_filepath": pfml_pei_writeback_ready_filepath,
@@ -257,10 +292,17 @@ def upload_writeback_csv_and_save_reference_files(
         )
         raise e
 
+    logger.info("Successfully uploaded writeback files to FINEOS S3")
+
 
 def _create_db_records_for_payments(
     pei_writeback_items: List[PeiWritebackItem], db_session: db.Session, ref_file: ReferenceFile
 ) -> None:
+    logger.info(
+        "Creating payment reference files and state log for writeback items. Count: %i",
+        len(pei_writeback_items),
+    )
+
     for item in pei_writeback_items:
         try:
             payment_ref_file = PaymentReferenceFile(reference_file=ref_file, payment=item.payment)
@@ -279,6 +321,11 @@ def _create_db_records_for_payments(
             )
             raise e
 
+    logger.info(
+        "Successfully created payment reference files and state log for writeback items. Count: %i",
+        len(pei_writeback_items),
+    )
+
 
 def _write_rows_to_s3_file(rows: List[Dict[str, str]], s3_dest: str) -> None:
     try:
@@ -291,10 +338,18 @@ def _write_rows_to_s3_file(rows: List[Dict[str, str]], s3_dest: str) -> None:
             pei_writer.writeheader()
             pei_writer.writerows(rows)
         logger.info(
-            f"Successfully uploaded writeback CSV to ${s3_dest}", extra={"s3_dest": s3_dest}
+            "Successfully uploaded PEI writeback to S3: %s, rows: %i",
+            s3_dest,
+            len(rows),
+            extra={"destination": s3_dest},
         )
     except Exception as e:
-        logger.exception("Error uploading PEI writeback to S3", extra={"s3_dest": s3_dest})
+        logger.exception(
+            "Error uploading PEI writeback to S3: %s, rows: %i",
+            s3_dest,
+            len(rows),
+            extra={"destination": s3_dest},
+        )
         raise e
 
 

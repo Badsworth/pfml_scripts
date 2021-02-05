@@ -495,6 +495,23 @@ def copy_fineos_data_to_archival_bucket(
     # If get_fineos_max_history_date() raises a ValueError, we have
     # a big problem and it should propagate up.
     max_history_date = get_fineos_max_history_date(export_type)
+    max_history_date_str = max_history_date.strftime("%Y-%m-%d")
+
+    logger.debug(
+        "Copying expected files from FINEOS folder: %s (%s)",
+        ", ".join(expected_file_names),
+        export_type.reference_file_type_description,
+        extra={
+            "src": source_folder,
+            "destination": destination_folder,
+            "max_history_date": max_history_date_str,
+        },
+    )
+
+    logger.info(
+        f"Copying fineos extract files to pfml received folder starting at {max_history_date}",
+        extra={"max_history_date": max_history_date},
+    )
 
     # copy all previously unprocessed files to the received folder
     # keep a mapping of expected to mapped files grouped by date
@@ -502,6 +519,8 @@ def copy_fineos_data_to_archival_bucket(
 
     def copy_files(files, folder, check_already_processed=False):
         previously_processed_date_group = set()
+
+        logger.debug("Copying files from folder: %s", folder)
 
         for file_path in files:
             date_str = get_date_group_str_from_path(file_path)
@@ -516,17 +535,18 @@ def copy_fineos_data_to_archival_bucket(
             except (ValueError, TypeError):
                 # There are non-timestamped folders that we don't want to
                 # process, so we skip ahead
-                logger.info(
-                    f"Skipping: FINEOS extract folder named {date_str} is not a parseable date"
+                logger.warning(
+                    "Skipping: FINEOS extract folder named %s is not a parseable date", date_str
                 )
                 continue
 
             # If the date of the folder is older than the max_history_date,
             # we skip ahead
             if date_of_folder < max_history_date:
-                max_history_date_str = max_history_date.strftime("%Y-%m-%d")
                 logger.info(
-                    f"Skipping: FINEOS extract folder dated {date_str} is prior to max_history_date {max_history_date_str}"
+                    "Skipping: FINEOS extract folder dated %s is prior to max_history_date %s",
+                    date_str,
+                    max_history_date_str,
                 )
                 continue
 
@@ -540,6 +560,9 @@ def copy_fineos_data_to_archival_bucket(
                             db_session, date_str, export_type
                         )
                     ):
+                        logger.info(
+                            f"Skipping: FINEOS extract folder dated {date_str} was previously processed"
+                        )
                         previously_processed_date_group.add(date_str)
                         continue
 
@@ -557,7 +580,7 @@ def copy_fineos_data_to_archival_bucket(
                     )
                     if existing_expected_file and existing_expected_file != source_file:
                         raise RuntimeError(
-                            f"Duplicate files found for {expected_file_name}: {existing_expected_file} and {source_file}"
+                            f"Error while copying fineos extracts - duplicate files found for {expected_file_name}: {existing_expected_file} and {source_file}"
                         )
 
                     file_util.copy_file(source_file, destination_file)
@@ -577,22 +600,29 @@ def copy_fineos_data_to_archival_bucket(
             date_of_folder = datetime.strptime(date_folder[:10], "%Y-%m-%d")
             if date_of_folder < max_history_date:
                 logger.info(
-                    f"Skipping FINEOS extract folder dated {date_folder} as it is prior to 12/17/2020"
+                    "Skipping FINEOS extract folder dated %s as it is prior to %s",
+                    date_folder,
+                    max_history_date_str,
                 )
                 continue
         except ValueError:
             # There are folders named config and logs that we don't want to process
-            logger.info(
-                f"Skipping FINEOS extract folder named {date_folder} as it is not a parseable date"
+            logger.warning(
+                "Skipping FINEOS extract folder named %s as it is not a parseable date", date_folder
             )
             continue
 
-        if not payment_extract_reference_file_exists_by_date_group(
+        if payment_extract_reference_file_exists_by_date_group(
             db_session, date_folder, export_type
         ):
-            subfolder_path = os.path.join(source_folder, date_folder)
-            subfolder_files = file_util.list_files(subfolder_path)
-            copy_files(subfolder_files, folder=date_folder, check_already_processed=False)
+            logger.info(
+                f"Skipping: FINEOS extract folder dated {date_folder} was previously processed"
+            )
+            continue
+
+        subfolder_path = os.path.join(source_folder, date_folder)
+        subfolder_files = file_util.list_files(subfolder_path)
+        copy_files(subfolder_files, folder=date_folder, check_already_processed=False)
 
     # check for missing files in each group
     missing_files = []
@@ -602,7 +632,21 @@ def copy_fineos_data_to_archival_bucket(
                 missing_files.append(f"{date_str}-{expected_file_name}")
 
     if missing_files:
-        raise Exception(f"The following files were not found in S3 {','.join(missing_files)}")
+        message = f"Error while copying fineos extracts - The following expected files were not found {','.join(missing_files)}"
+        logger.info(message)
+        raise Exception(message)
+
+    logger.debug(
+        "Successfully copied expected files from FINEOS folder: %s (%s)",
+        expected_file_names,
+        export_type.reference_file_type_description,
+        extra={
+            "src": source_folder,
+            "destination": destination_folder,
+            "max_history_date": max_history_date_str,
+            "copied_files": copied_file_mapping_by_date,
+        },
+    )
 
     return copied_file_mapping_by_date
 
@@ -613,7 +657,8 @@ def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str
     source_folder = os.path.join(
         s3_config.pfml_fineos_inbound_path, Constants.S3_INBOUND_RECEIVED_DIR
     )
-    logger.info(f"Grouping files by date in {source_folder}")
+    logger.debug("Grouping files by date in path: %s", source_folder)
+
     s3_objects = file_util.list_files(source_folder)
     s3_objects.sort()
 

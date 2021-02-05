@@ -929,7 +929,7 @@ def create_or_update_employer(
 
     employer_request_body = massgov.pfml.fineos.models.CreateOrUpdateEmployer(
         # `fineos_customer_nbr` is used as the Organization's CustomerNo
-        # attribute for the request, which FINOES uses to determine if this is a
+        # attribute for the request, which FINEOS uses to determine if this is a
         # create or update on their end.
         fineos_customer_nbr=str(employer.employer_id),
         employer_fein=employer.employer_fein,

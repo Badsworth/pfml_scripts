@@ -103,6 +103,7 @@ class ExtractData:
             file_location=file_location,
             reference_file_type_id=ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id,
         )
+        logger.debug("Intialized extract data: %s", self.reference_file.file_location)
 
 
 class PaymentData:
@@ -312,7 +313,16 @@ def payment_period_date_validator(
     return None
 
 
+# TODO move to payments_util
 def download_and_process_data(extract_data: ExtractData, download_directory: pathlib.Path) -> None:
+    logger.info(
+        "Downloading and indexing payment extract data files.",
+        extra={
+            "pei_file": extract_data.pei.file_location,
+            "payment_details_file": extract_data.payment_details.file_location,
+            "claim_details_file": extract_data.claim_details.file_location,
+        },
+    )
     # To make processing simpler elsewhere, we index each extract file object on a key
     # that will let us join it with the PEI file later.
 
@@ -321,6 +331,7 @@ def download_and_process_data(extract_data: ExtractData, download_directory: pat
     # This doesn't specifically need to be indexed, but it lets us be consistent
     for record in pei_data:
         extract_data.pei.indexed_data[CiIndex(record["C"], record["I"])] = record
+        logger.debug("indexed pei file row with CI: %s, %s", record["C"], record["I"])
 
     # Payment details file
     payment_details = download_and_parse_data(
@@ -333,6 +344,11 @@ def download_and_process_data(extract_data: ExtractData, download_directory: pat
         if index not in extract_data.payment_details.indexed_data:
             extract_data.payment_details.indexed_data[index] = []
         extract_data.payment_details.indexed_data[index].append(record)
+        logger.debug(
+            "indexed payment details file row with CI: %s, %s",
+            record["PECLASSID"],
+            record["PEINDEXID"],
+        )
 
     # Claim details file
     claim_details = download_and_parse_data(
@@ -344,6 +360,13 @@ def download_and_process_data(extract_data: ExtractData, download_directory: pat
         extract_data.claim_details.indexed_data[
             CiIndex(record["PECLASSID"], record["PEINDEXID"])
         ] = record
+        logger.debug(
+            "indexed claim details file row with CI: %s, %s",
+            record["PECLASSID"],
+            record["PEINDEXID"],
+        )
+
+    logger.info("Successfully downloaded and indexed payment extract data files.")
 
 
 def determine_field_names(download_location: pathlib.Path) -> List[str]:
@@ -496,6 +519,12 @@ def create_or_update_payment(
         raise
 
     if not payment:
+        logger.info(
+            "Creating new payment for CI: %s, %s",
+            payment_data.c_value,
+            payment_data.i_value,
+            extra=payment_data.get_traceable_details(),
+        )
         payment = Payment(payment_id=uuid.uuid4().__str__())
 
     payment.claim = claim
@@ -670,6 +699,8 @@ def _setup_state_log(
 
 
 def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> List[Employee]:
+    logger.info("Processing payment extract data into db: %s", extract_data.date_str)
+
     # Add the files to the DB
     # Note a single payment reference file is used for all files collectively
     db_session.add(extract_data.reference_file)
@@ -679,13 +710,17 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
         try:
             # Construct a payment data object for easier organization of the many params
             payment_data = PaymentData(extract_data, index, record)
+            logger.debug("Constructed payment data for extract with CI: %s, %s", index.c, index.i)
 
             # Some required parameter is missing, can't continue processing the record
             if payment_data.validation_container.has_validation_issues():
                 _setup_state_log(None, False, payment_data.validation_container, db_session)
                 continue
 
-            logger.info("Processing payment record", extra=payment_data.get_traceable_details())
+            logger.info(
+                f"Processing payment record - absence case number: {payment_data.absence_case_number}",
+                extra=payment_data.get_traceable_details(),
+            )
 
             payment, updated_employee = process_payment_data_record(
                 payment_data, extract_data.reference_file, db_session
@@ -703,6 +738,11 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
 
             if updated_employee:
                 updated_employees.append(updated_employee)
+
+            logger.info(
+                f"Done processing payment record - absence case number: {payment_data.absence_case_number}",
+                extra=payment_data.get_traceable_details(),
+            )
         except Exception as e:
             logger.exception("Validation error while processing payments %s", e)
 
@@ -720,6 +760,7 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             # Note if this errors, the whole process fails, if adding a DB record fails, that's probably desirable
             _setup_state_log(payment, False, validation_container, db_session)
 
+    logger.info("Successfully processed payment extract into db: %s", extract_data.date_str)
     return updated_employees
 
 
@@ -738,16 +779,34 @@ def move_files_from_received_to_processed(
         RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
+    logger.debug(
+        "Moved PEI file to processed folder.",
+        extra={"source": extract_data.pei.file_location, "destination": new_pei_s3_path},
+    )
 
     new_payment_s3_path = extract_data.payment_details.file_location.replace(
         RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
+    logger.debug(
+        "Moved payments details file to processed folder.",
+        extra={
+            "source": extract_data.payment_details.file_location,
+            "destination": new_payment_s3_path,
+        },
+    )
 
     new_claim_s3_path = extract_data.claim_details.file_location.replace(
         RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
+    logger.debug(
+        "Moved claim details file to processed folder.",
+        extra={
+            "source": extract_data.claim_details.file_location,
+            "destination": new_claim_s3_path,
+        },
+    )
 
     # Update the reference file DB record to point to the new folder for these files
     extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
@@ -757,6 +816,12 @@ def move_files_from_received_to_processed(
         extract_data.date_str, date_group_folder
     )
     db_session.add(extract_data.reference_file)
+    logger.debug(
+        "Updated reference file location for payment extract data.",
+        extra={"reference_file_location": extract_data.reference_file.file_location},
+    )
+
+    logger.info("Successfully moved payments files to processed folder.")
 
 
 # TODO move to payments_util
@@ -777,25 +842,52 @@ def move_files_from_received_to_error(
         "received", f"error/{date_group_folder}"
     )
     file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
+    logger.debug(
+        "Moved PEI file to error folder.",
+        extra={"source": extract_data.pei.file_location, "destination": new_pei_s3_path},
+    )
 
     new_payment_s3_path = extract_data.payment_details.file_location.replace(
         "received", f"error/{date_group_folder}"
     )
     file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
+    logger.debug(
+        "Moved payments details file to error folder.",
+        extra={
+            "source": extract_data.payment_details.file_location,
+            "destination": new_payment_s3_path,
+        },
+    )
 
     new_claim_s3_path = extract_data.claim_details.file_location.replace(
         "received", f"error/{date_group_folder}"
     )
     file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
+    logger.debug(
+        "Moved claim details file to error folder.",
+        extra={
+            "source": extract_data.claim_details.file_location,
+            "destination": new_claim_s3_path,
+        },
+    )
 
     # We still want to create the reference file, just use the one that is
     # created in the __init__ of the extract data object and set the path.
     # Note that this will not be attached to a payment
     extract_data.reference_file.file_location = file_util.get_directory(new_pei_s3_path)
     db_session.add(extract_data.reference_file)
+    logger.debug(
+        "Updated reference file location for payment extract data.",
+        extra={"reference_file_location": extract_data.reference_file.file_location},
+    )
+
+    logger.info("Successfully moved payments files to error folder.")
 
 
 def process_extract_data(download_directory: pathlib.Path, db_session: db.Session) -> None:
+
+    logger.info("Processing payment extract files")
+
     payments_util.copy_fineos_data_to_archival_bucket(
         db_session, expected_file_names, ReferenceFileType.PAYMENT_EXTRACT
     )
@@ -803,7 +895,12 @@ def process_extract_data(download_directory: pathlib.Path, db_session: db.Sessio
 
     previously_processed_date = set()
 
+    logger.info("Dates in /received folder: %s", ", ".join(data_by_date.keys()))
+
     for date_str, s3_file_locations in data_by_date.items():
+
+        logger.debug("Processing files in date group: %s", date_str, extra={"date_group": date_str})
+
         try:
             if (
                 date_str in previously_processed_date
@@ -812,9 +909,9 @@ def process_extract_data(download_directory: pathlib.Path, db_session: db.Sessio
                 )
             ):
                 logger.warning(
-                    "Found previously processed file(s) for date group still in received folder: %s",
+                    "Found existing ReferenceFile record for date group in /processed folder: %s",
                     date_str,
-                    extra={"date_str": date_str},
+                    extra={"date_group": date_str},
                 )
                 previously_processed_date.add(date_str)
                 continue
@@ -825,6 +922,11 @@ def process_extract_data(download_directory: pathlib.Path, db_session: db.Sessio
             with db_session.no_autoflush:
                 updated_employees = process_records_to_db(extract_data, db_session)
                 move_files_from_received_to_processed(extract_data, db_session)
+                logger.info(
+                    "Successfully processed payment extract files in date group: %s",
+                    date_str,
+                    extra={"date_group": date_str},
+                )
                 db_session.commit()
 
             # Remove rows from EmployeeLog table due to update trigger if there
@@ -837,8 +939,16 @@ def process_extract_data(download_directory: pathlib.Path, db_session: db.Sessio
                         db_session, updated_employee
                     )
                 db_session.commit()
+                logger.debug("Removed %i rows from the employee log", len(updated_employees))
+
         except Exception:
             db_session.rollback()
-            logger.exception("Error processing FINEOS payment export")
+            logger.exception(
+                "Error processing payment extract files in date_group: %s",
+                date_str,
+                extra={"date_group": date_str},
+            )
             move_files_from_received_to_error(extract_data, db_session)
             raise
+
+    logger.info("Successfully processed payment extract files")

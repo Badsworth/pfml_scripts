@@ -85,6 +85,16 @@ def _create_state_log(
     start_time: datetime,
     prev_state_log: Optional[StateLog] = None,
 ) -> StateLog:
+
+    logger.debug(
+        "create state log for %s - end state: %s (%s), has associated model: %s",
+        associated_class.value,
+        end_state.state_description,
+        end_state.state_id,
+        associated_model is not None,
+        extra={"outcome": outcome},
+    )
+
     now = get_now()
     state_log = StateLog(
         end_state_id=end_state.state_id,
@@ -94,29 +104,52 @@ def _create_state_log(
         ended_at=now,
     )
 
-    latest_query_params = None
-    if associated_model:
-        _raise_exception_if_associated_model_has_no_id(associated_model)
+    messages = []
+    try:
+        latest_query_params = None
+        if associated_model:
 
-        latest_query_params = []
-        # Depending on whether it's a payment/employee/reference_file, need to setup
-        # the object and query params differently
-        if isinstance(associated_model, Payment):
-            state_log.payment = associated_model
-            latest_query_params.append(LatestStateLog.payment_id == associated_model.payment_id)
-        elif isinstance(associated_model, Employee):
-            state_log.employee = associated_model
-            latest_query_params.append(LatestStateLog.employee_id == associated_model.employee_id)
-        elif isinstance(associated_model, ReferenceFile):
-            state_log.reference_file = associated_model
-            latest_query_params.append(
-                LatestStateLog.reference_file_id == associated_model.reference_file_id
-            )
-        # We also want the latest state log to be in the same flow and flow is attached to the states
-        latest_query_params.append(LkState.flow_id == end_state.flow_id)
+            _raise_exception_if_associated_model_has_no_id(associated_model)
 
-    db_session.add(state_log)
-    _create_or_update_latest_state_log(state_log, latest_query_params, prev_state_log, db_session)
+            latest_query_params = []
+            # Depending on whether it's a payment/employee/reference_file, need to setup
+            # the object and query params differently
+            if isinstance(associated_model, Payment):
+                state_log.payment = associated_model
+                latest_query_params.append(LatestStateLog.payment_id == associated_model.payment_id)
+                messages.append(
+                    f"Latest state log query for payment id: {associated_model.payment_id}"
+                )
+            elif isinstance(associated_model, Employee):
+                state_log.employee = associated_model
+                latest_query_params.append(
+                    LatestStateLog.employee_id == associated_model.employee_id
+                )
+                messages.append(
+                    f"Latest state log query for employee id: {associated_model.employee_id}"
+                )
+            elif isinstance(associated_model, ReferenceFile):
+                state_log.reference_file = associated_model
+                latest_query_params.append(
+                    LatestStateLog.reference_file_id == associated_model.reference_file_id
+                )
+                messages.append(
+                    f"Latest state log query for reference_file_id: {associated_model.reference_file_id}"
+                )
+
+            # We also want the latest state log to be in the same flow and flow is attached to the states
+            latest_query_params.append(LkState.flow_id == end_state.flow_id)
+            messages.append(f"Latest state log query for flow id: {end_state.flow_id}")
+
+        db_session.add(state_log)
+        _create_or_update_latest_state_log(
+            state_log, latest_query_params, prev_state_log, db_session
+        )
+    except Exception:
+        logger.exception(
+            "Error trying to create or update latest state log - %s", ",".join(messages)
+        )
+        raise
 
     return state_log
 
@@ -146,11 +179,10 @@ def _create_or_update_latest_state_log(
                 "Unexpected error %s with one_or_none() when querying for latest state log",
                 type(e),
                 extra={
-                    "state_log_id": state_log.state_log_id,
-                    "payment_id": state_log.payment_id,
-                    "employee_id": state_log.employee_id,
-                    "reference_file_id": state_log.reference_file_id,
-                    "query_params": str(*latest_query_params),
+                    "state_log_id": state_log.state_log_id or "Empty",
+                    "payment_id": state_log.payment_id or "Empty",
+                    "employee_id": state_log.employee_id or "Empty",
+                    "reference_file_id": state_log.reference_file_id or "Empty",
                 },
             )
             raise
@@ -211,20 +243,34 @@ def get_latest_state_log_in_flow(
 
     _raise_exception_if_associated_model_has_no_id(associated_model)
 
+    associated_model_id = None
     if isinstance(associated_model, Employee):
         filter_params.append(LatestStateLog.employee_id == associated_model.employee_id)
+        associated_model_id = associated_model.employee_id
     elif isinstance(associated_model, Payment):
         filter_params.append(LatestStateLog.payment_id == associated_model.payment_id)
+        associated_model_id = associated_model.payment_id
     elif isinstance(associated_model, ReferenceFile):
         filter_params.append(LatestStateLog.reference_file_id == associated_model.reference_file_id)
+        associated_model_id = associated_model.reference_file_id
 
-    return (
+    latest_state_log: Optional[StateLog] = (
         db_session.query(StateLog)
         .join(LatestStateLog)
         .join(LkState, StateLog.end_state_id == LkState.state_id)
         .filter(*filter_params)
         .one_or_none()
     )
+    logger.debug(
+        "Latest state log flow query result - associated class: %s, associated model id: %s, flow state: %s (%s), id: %s",
+        AssociatedClass.get_associated_type(associated_model).value,
+        associated_model_id,
+        flow.flow_description,
+        flow.flow_id,
+        ("None" if not latest_state_log else latest_state_log.state_log_id),
+    )
+
+    return latest_state_log
 
 
 def get_latest_state_log_in_end_state(
@@ -234,12 +280,16 @@ def get_latest_state_log_in_end_state(
 
     _raise_exception_if_associated_model_has_no_id(associated_model)
 
+    associated_model_id = None
     if isinstance(associated_model, Employee):
         filter_params.append(LatestStateLog.employee_id == associated_model.employee_id)
+        associated_model_id = associated_model.employee_id
     elif isinstance(associated_model, Payment):
         filter_params.append(LatestStateLog.payment_id == associated_model.payment_id)
+        associated_model_id = associated_model.payment_id
     elif isinstance(associated_model, ReferenceFile):
         filter_params.append(LatestStateLog.reference_file_id == associated_model.reference_file_id)
+        associated_model_id = associated_model.reference_file_id
 
     # Example query (for employee scenario)
     #
@@ -247,7 +297,19 @@ def get_latest_state_log_in_end_state(
     # WHERE state_log.end_state_id={end_state.state_id} AND
     #       latest_state_log.employee_id={associated_model.employee_id}
     # JOIN latest_state_log ON (state_log.state_log_id = latest_state_log.state_log_id)
-    return db_session.query(StateLog).join(LatestStateLog).filter(*filter_params).one_or_none()
+    latest_state_log: Optional[StateLog] = db_session.query(StateLog).join(LatestStateLog).filter(
+        *filter_params
+    ).one_or_none()
+    logger.debug(
+        "Latest state log query result - associated class: %s, associated model id: %s, end state: %s (%s), id: %s",
+        AssociatedClass.get_associated_type(associated_model).value,
+        associated_model_id,
+        end_state.state_description,
+        end_state.state_id,
+        ("None" if not latest_state_log else latest_state_log.state_log_id),
+    )
+
+    return latest_state_log
 
 
 def get_all_latest_state_logs_in_end_state(
@@ -264,7 +326,16 @@ def get_all_latest_state_logs_in_end_state(
     # WHERE state_log.end_state_id={end_state.state_id} AND
     #       latest_state_log.associated_class = "employee"
     # JOIN latest_state_log ON (state_log.state_log_id = latest_state_log.state_log_id)
-    return db_session.query(StateLog).join(LatestStateLog).filter(*filter_params).all()
+    latest_state_logs = db_session.query(StateLog).join(LatestStateLog).filter(*filter_params).all()
+    logger.debug(
+        "Latest state logs query result - associated class: %s, end state: %s (%s), count: %i",
+        associated_class.value,
+        end_state.state_description,
+        end_state.state_id,
+        len(latest_state_logs),
+    )
+
+    return latest_state_logs
 
 
 def get_all_latest_state_logs_regardless_of_associated_class(
@@ -275,12 +346,20 @@ def get_all_latest_state_logs_regardless_of_associated_class(
     # SELECT * from state_log
     # WHERE state_log.end_state_id={end_state.state_id}
     # JOIN latest_state_log ON (state_log.state_log_id = latest_state_log.state_log_id)
-    return (
+    latest_state_logs = (
         db_session.query(StateLog)
         .join(LatestStateLog)
         .filter(StateLog.end_state_id == end_state.state_id)
         .all()
     )
+    logger.debug(
+        "Latest state logs query result - end state: %s (%s), count: %i",
+        end_state.state_description,
+        end_state.state_id,
+        len(latest_state_logs),
+    )
+
+    return latest_state_logs
 
 
 def has_been_in_end_state(

@@ -72,7 +72,7 @@ def fineos_process():
 
 def _fineos_process(db_session: db.Session, config: Configuration) -> None:
     """Process FINEOS Payment Exports"""
-    logger.info("Start processing fineos payments")
+    logger.info("Start - FINEOS Payments ECS Task")
 
     # 1. Process Vendor Export files from FINEOS
     if config.do_vendor_extract:
@@ -103,3 +103,5 @@ def _fineos_process(db_session: db.Session, config: Configuration) -> None:
             send_fineos_error_reports(db_session)
         except Exception:
             logger.exception("Error sending FINEOS error reports")
+
+    logger.info("Done - FINEOS Payments ECS Task")

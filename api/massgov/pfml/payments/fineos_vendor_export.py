@@ -92,10 +92,13 @@ class ExtractData:
             reference_file_type_id=ReferenceFileType.VENDOR_CLAIM_EXTRACT.reference_file_type_id,
             reference_file_id=uuid.uuid4().__str__(),
         )
+        logger.debug("Intialized extract data: %s", self.reference_file.file_location)
 
 
 def process_vendor_extract_data(db_session: db.Session) -> None:
-    logger.info("Processing vendor extracts")
+
+    logger.info("Processing vendor extract files")
+
     payments_util.copy_fineos_data_to_archival_bucket(
         db_session, expected_file_names, ReferenceFileType.VENDOR_CLAIM_EXTRACT
     )
@@ -107,7 +110,9 @@ def process_vendor_extract_data(db_session: db.Session) -> None:
     logger.info("Dates in /received folder: %s", ", ".join(data_by_date.keys()))
 
     for date_str, s3_file_locations in data_by_date.items():
-        logger.info("Processing files in %s", date_str, extra={"folder_timestamp": date_str})
+
+        logger.info("Processing files in date group: %s", date_str, extra={"date_group": date_str})
+
         try:
             if (
                 date_str in previously_processed_date
@@ -118,7 +123,7 @@ def process_vendor_extract_data(db_session: db.Session) -> None:
                 logger.warning(
                     "Found existing ReferenceFile record for date group in /processed folder: %s",
                     date_str,
-                    extra={"date_str": date_str},
+                    extra={"date_group": date_str},
                 )
                 previously_processed_date.add(date_str)
                 continue
@@ -129,7 +134,9 @@ def process_vendor_extract_data(db_session: db.Session) -> None:
                 updated_employees = process_records_to_db(extract_data, db_session)
                 move_files_from_received_to_processed(extract_data, db_session)
                 logger.info(
-                    "Successfully processed %s", date_str, extra={"folder_timestamp": date_str}
+                    "Successfully processed vendor extract files in date group: %s",
+                    date_str,
+                    extra={"date_group": date_str},
                 )
                 db_session.commit()
 
@@ -143,17 +150,35 @@ def process_vendor_extract_data(db_session: db.Session) -> None:
                         db_session, updated_employee
                     )
                 db_session.commit()
+                logger.debug("Removed %i rows from the employee log", len(updated_employees))
+
         except Exception:
             # If there was a file-level exception anywhere in the processing,
             # we move the file from received to error
             # Add this function:
             db_session.rollback()
-            logger.exception("Error processing vendor extract data")
-            move_files_from_received_to_error(extract_data)
+            logger.exception(
+                "Error processing vendor extract files in date_group: %s",
+                date_str,
+                extra={"date_group": date_str},
+            )
+            move_files_from_received_to_error(extract_data, db_session)
             raise
 
+    logger.info("Done processing vendor extract files")
 
+
+# TODO move to payments_util
 def download_and_index_data(extract_data: ExtractData, download_directory: str) -> None:
+    logger.info(
+        "Downloading and indexing vendor extract data files.",
+        extra={
+            "employee_feed_file": extract_data.employee_feed.file_location,
+            "leave_plan_file": extract_data.leave_plan_info.file_location,
+            "requested_absence_file": extract_data.requested_absence_info.file_location,
+        },
+    )
+
     downloaded_employee_feed_file = download_file(
         extract_data.employee_feed.file_location, download_directory
     )
@@ -165,6 +190,9 @@ def download_and_index_data(extract_data: ExtractData, download_directory: str) 
         default_payment_flag = row.get("DEFPAYMENTPREF")
         if default_payment_flag is not None and default_payment_flag == "Y":
             employee_indexed_data[str(row.get("CUSTOMERNO"))] = row
+            logger.debug(
+                "indexed employee feed file row with Customer NO: %s", str(row.get("CUSTOMERNO"))
+            )
 
     extract_data.employee_feed.indexed_data = employee_indexed_data
 
@@ -177,6 +205,10 @@ def download_and_index_data(extract_data: ExtractData, download_directory: str) 
     leave_plan_info_rows = CSVSourceWrapper(downloaded_leave_plan_info_file)
     for row in leave_plan_info_rows:
         leave_plan_info_indexed_data[str(row.get("ABSENCE_CASENUMBER"))] = row
+        logger.debug(
+            "indexed leave plan file row with Absence case no: %s",
+            str(row.get("ABSENCE_CASENUMBER")),
+        )
 
     extract_data.leave_plan_info.indexed_data = leave_plan_info_indexed_data
 
@@ -188,14 +220,21 @@ def download_and_index_data(extract_data: ExtractData, download_directory: str) 
     requested_absence_rows = CSVSourceWrapper(downloaded_requested_absence_file)
     for row in requested_absence_rows:
         requested_absence_indexed_data[str(row.get("ABSENCE_CASENUMBER"))] = row
+        logger.debug(
+            "indexed requested absence file row with Absence case no: %s",
+            str(row.get("ABSENCE_CASENUMBER")),
+        )
 
     extract_data.requested_absence_info.indexed_data = requested_absence_indexed_data
+
+    logger.info("Successfully downloaded and indexed vendor extract data files.")
 
 
 def download_file(s3_path: str, download_directory: str) -> str:
     file_name = os.path.basename(s3_path)
     download_location = os.path.join(download_directory, file_name)
-    logger.info("download %s to %s", s3_path, download_location)
+    logger.debug("Download file: %s, to: %s", s3_path, download_location)
+
     try:
         if s3_path.startswith("s3:/"):
             file_util.download_from_s3(s3_path, download_location)
@@ -203,8 +242,9 @@ def download_file(s3_path: str, download_directory: str) -> str:
             file_util.copy_file(s3_path, download_location)
     except Exception as e:
         logger.exception(
-            "Error downloading file",
-            extra={"s3_path": s3_path, "download_directory": download_directory},
+            "Error downloading file: %s",
+            s3_path,
+            extra={"src": s3_path, "destination": download_directory},
         )
         raise e
 
@@ -212,12 +252,15 @@ def download_file(s3_path: str, download_directory: str) -> str:
 
 
 def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> List[Employee]:
+    logger.info("Processing vendor extract data into db: %s", extract_data.date_str)
+
     requested_absences = extract_data.requested_absence_info.indexed_data.values()
     updated_employees = []
 
     updated_employee_ids = set()
     for requested_absence in requested_absences:
         absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
+        # TODO should we skip if absence case id is None?
         if absence_case_id is not None:
             logger.info(
                 "Processing absence_case_id %s",
@@ -250,7 +293,10 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             # TODO - this should create a validation container and associate it with an
             #        unassociated employee state_log (see fineos_payment_export for similar logic for payments)
             logger.exception(
-                "An exception occurred", type(e), extra={"absence_case_id": absence_case_id}
+                "Unexpected error %s while processing vendor: %s",
+                type(e),
+                absence_case_id,
+                extra={"absence_case_id": absence_case_id},
             )
             continue
 
@@ -274,9 +320,11 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                     updated_employees.append(employee_pfml_entry)
             else:
                 logger.info(
-                    f"Skipping adding a reference file and state_log for employee {employee_pfml_entry.employee_id}"
+                    "Skipping adding a reference file and state_log for employee %s",
+                    employee_pfml_entry.employee_id,
                 )
 
+    logger.info("Successfully processed vendor extract data into db: %s", extract_data.date_str)
     return updated_employees
 
 
@@ -301,13 +349,13 @@ def create_or_update_claim(
         claim_pfml = Claim()
         claim_pfml.fineos_absence_id = absence_case_id
         logger.info(
-            "Will attempt to create new claim for absence_case_id %s",
+            "Creating new claim for absence_case_id: %s",
             absence_case_id,
             extra={"absence_case_id": absence_case_id},
         )
     else:
         logger.info(
-            "Existing claim for absence_case_id %s",
+            "Found existing claim for absence_case_id: %s",
             absence_case_id,
             extra={"absence_case_id": absence_case_id},
         )
@@ -483,7 +531,7 @@ def update_employee_info(
     # Assumption is we should not be creating employees in the PFML DB through this extract.
     if employee_pfml_entry is None:
         logger.exception(
-            f"Employee in employee file with customer nbr {fineos_customer_number} not found in PFML DB."
+            f"Employee in employee file with customer nbr {fineos_customer_number} not found in PFML DB.",
         )
         return None, False
 
@@ -794,7 +842,10 @@ def manage_state_log(
     else:
         # Adding check for typing. This should never happen in practice.
         if current_state.end_state is None:
-            logger.error("An unexpected error occurred where the latest state_log has no end_state")
+            logger.error(
+                "An unexpected error occurred where the latest state_log has no end_state: %s",
+                current_state.state_log_id,
+            )
         else:
             state_log_util.create_finished_state_log(
                 end_state=current_state.end_state,
@@ -823,16 +874,37 @@ def move_files_from_received_to_processed(
     file_util.rename_file(
         extract_data.requested_absence_info.file_location, new_requested_absence_info_s3_path
     )
+    logger.debug(
+        "Moved requested absence info file to processed folder.",
+        extra={
+            "source": extract_data.requested_absence_info.file_location,
+            "destination": new_requested_absence_info_s3_path,
+        },
+    )
 
     new_employee_feed_s3_path = extract_data.employee_feed.file_location.replace(
         RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.employee_feed.file_location, new_employee_feed_s3_path)
+    logger.debug(
+        "Moved employee feed file to processed folder.",
+        extra={
+            "source": extract_data.employee_feed.file_location,
+            "destination": new_employee_feed_s3_path,
+        },
+    )
 
     new_leave_plan_info_s3_path = extract_data.leave_plan_info.file_location.replace(
         RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.leave_plan_info.file_location, new_leave_plan_info_s3_path)
+    logger.debug(
+        "Moved leave plan file to processed folder.",
+        extra={
+            "source": extract_data.leave_plan_info.file_location,
+            "destination": new_leave_plan_info_s3_path,
+        },
+    )
 
     # Update the reference file DB record to point to the new folder for these files
     extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
@@ -842,10 +914,16 @@ def move_files_from_received_to_processed(
         extract_data.date_str, date_group_folder
     )
     db_session.add(extract_data.reference_file)
+    logger.debug(
+        "Updated reference file location for vendor extract data.",
+        extra={"reference_file_location": extract_data.reference_file.file_location},
+    )
+
+    logger.info("Successfully moved vendor files to processed folder.")
 
 
 # TODO move to payments_util
-def move_files_from_received_to_error(extract_data: ExtractData) -> None:
+def move_files_from_received_to_error(extract_data: ExtractData, db_session: db.Session) -> None:
     # Effectively, this method will move a file of path:
     # s3://bucket/path/to/received/2020-01-01-file.csv
     # to
@@ -859,13 +937,48 @@ def move_files_from_received_to_error(extract_data: ExtractData) -> None:
     file_util.rename_file(
         extract_data.requested_absence_info.file_location, new_requested_absence_info_s3_path
     )
+    logger.debug(
+        "Moved requested absence info file to error folder.",
+        extra={
+            "source": extract_data.requested_absence_info.file_location,
+            "destination": new_requested_absence_info_s3_path,
+        },
+    )
 
     new_employee_feed_s3_path = extract_data.employee_feed.file_location.replace(
         RECEIVED_FOLDER, f"{ERRORED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.employee_feed.file_location, new_employee_feed_s3_path)
+    logger.debug(
+        "Moved employee feed file to error folder.",
+        extra={
+            "source": extract_data.employee_feed.file_location,
+            "destination": new_employee_feed_s3_path,
+        },
+    )
 
     new_leave_plan_info_s3_path = extract_data.leave_plan_info.file_location.replace(
         RECEIVED_FOLDER, f"{ERRORED_FOLDER}/{date_group_folder}"
     )
     file_util.rename_file(extract_data.leave_plan_info.file_location, new_leave_plan_info_s3_path)
+    logger.debug(
+        "Moved leave plan file to error folder.",
+        extra={
+            "source": extract_data.leave_plan_info.file_location,
+            "destination": new_leave_plan_info_s3_path,
+        },
+    )
+
+    # We still want to create the reference file, just use the one that is
+    # created in the __init__ of the extract data object and set the path.
+    # Note that this will not be attached to a payment
+    extract_data.reference_file.file_location = file_util.get_directory(
+        new_requested_absence_info_s3_path
+    )
+    db_session.add(extract_data.reference_file)
+    logger.debug(
+        "Updated reference file location for vendor extract data.",
+        extra={"reference_file_location": extract_data.reference_file.file_location},
+    )
+
+    logger.info("Successfully moved vendor files to error folder.")

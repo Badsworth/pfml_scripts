@@ -231,7 +231,7 @@ class EligibilityFeedRecord(NoneMeansDefault):
     employeeCBACode: Optional[str] = None
     keyEmployee: Optional[bool] = None
     employeeWorkAtHome: Optional[bool] = None
-    # FINOES DB type is DECIMAL(5,2)
+    # FINEOS DB type is DECIMAL(5,2)
     # 5 digits of precision overall, 2 digits past the decimal if needed
     employeeDaysWorkedPerWeek: Optional[Decimal] = None
     employeeHoursWorkedPerYear: Optional[int] = None
