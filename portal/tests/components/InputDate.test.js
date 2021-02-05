@@ -244,17 +244,17 @@ describe("formatFieldsAsISO8601", () => {
   it("doesn't require each date part to be set", () => {
     const result = formatFieldsAsISO8601({ day: "", year: "" });
 
-    expect(result).toBe("--");
+    expect(result).toBe("");
   });
 
-  it("doesn't allow non-digits to be entered", () => {
+  it("returns empty string when non-digits are entered", () => {
     const result = formatFieldsAsISO8601({
       month: "a!",
       day: "b_",
       year: "c.",
     });
 
-    expect(result).toBe("--");
+    expect(result).toBe("");
   });
 });
 

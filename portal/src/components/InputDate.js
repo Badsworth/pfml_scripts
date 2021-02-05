@@ -38,6 +38,8 @@ export function formatFieldsAsISO8601({ month, day, year }, options = {}) {
     day = addLeadingZero(day);
   }
 
+  if (!month && !day && !year) return "";
+
   // It's okay if some of these date fields are empty (that will definitely happen).
   // A consuming project should worry about whether this string is valid or not as
   // part of its validation logic.
