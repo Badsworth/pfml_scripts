@@ -24,6 +24,7 @@ describe("Approval (notificatins/notices)", { retries: 0 }, () => {
             credentials,
           } as SimulationClaim).then((response: ApplicationResponse) => {
             console.log(response);
+            const timestamp_fromER = Date.now();
             cy.stash("submission", {
               application_id: response.application_id,
               fineos_absence_id: response.fineos_absence_id,
@@ -37,6 +38,19 @@ describe("Approval (notificatins/notices)", { retries: 0 }, () => {
               throw new Error("Response must include FINEOS absence ID");
             }
 
+            // As an employer, I should receive a notification about my response being required
+            cy.task<Email[]>("getEmails", {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: `Action required: Respond to ${claim.claim.first_name} ${claim.claim.last_name}'s paid leave application`,
+              timestamp_fromER,
+            }).then((emails) => {
+              expect(emails.length).to.be.greaterThan(0);
+              expect(emails[0].html).to.contain(
+                `/employers/applications/new-application/?absence_id=${response.fineos_absence_id}`
+              );
+            });
+
+            // Access and fill out ER form
             portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
             portal.respondToLeaveAdminRequest(
               response.fineos_absence_id,

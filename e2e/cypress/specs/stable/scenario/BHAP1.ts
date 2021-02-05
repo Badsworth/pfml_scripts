@@ -57,10 +57,11 @@ describe(
     });
 
     it(
-      "Should Modidy Leave Dates/Check Payment Preference/Prepare claim for Adjudication",
+      "CSR rep should prepare claim for Adjudication",
       { baseUrl: getFineosBaseUrl() },
       () => {
         beforeFineos();
+        cy.wait(1000);
         cy.visit("/");
 
         cy.unstash<Submission>("submission").then((submission) => {

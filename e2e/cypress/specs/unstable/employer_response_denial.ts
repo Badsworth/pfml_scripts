@@ -3,7 +3,7 @@ import { fineos, portal } from "../../tests/common/actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
 
 describe("Employer Responses", () => {
-  it("As an employer, I should be able to submit a response for a claim immediately after submission", () => {
+  it("As an employer, I should recieve an email asking for my response to a claim and also fill out the ER form", () => {
     beforePortal();
     cy.task("generateClaim", {
       claimType: "BHAP1",
@@ -15,7 +15,21 @@ describe("Employer Responses", () => {
       }
       cy.stash("claim", claim);
       cy.stash("timestamp_from", Date.now());
+      const timestamp_from = Date.now();
       cy.task("submitClaimToAPI", claim).then((response) => {
+        // As an employer, I should receive a notification about my response being required
+        cy.task("getEmails", {
+          address: "gqzap.notifications@inbox.testmail.app",
+          subject: `Action required: Respond to ${claim.claim.first_name} ${claim.claim.last_name}'s paid leave application`,
+          timestamp_from,
+        }).then((emails) => {
+          expect(emails.length).to.be.greaterThan(0);
+          expect(emails[0].html).to.contain(
+            `/employers/applications/new-application/?absence_id=${response.fineos_absence_id}`
+          );
+        });
+
+        // Access and fill out ER form
         cy.stash("fineos_absence_id", response.fineos_absence_id);
         cy.stash("applicationID", response.application_id);
         portal.login(getLeaveAdminCredentials(employer_fein));
@@ -41,30 +55,4 @@ describe("Employer Responses", () => {
       });
     }
   );
-
-  it("As an employer, I should receive a notification about my response being required", () => {
-    cy.unstash<SimulationClaim>("claim").then((claim) => {
-      if (
-        !claim.claim.employer_fein ||
-        !claim.claim.first_name ||
-        !claim.claim.last_name
-      ) {
-        throw new Error("This employer has no FEIN");
-      }
-      cy.unstash<string>("fineos_absence_id").then((caseNumber) => {
-        cy.unstash<number>("timestamp_from").then((timestamp_from) => {
-          cy.task("getEmails", {
-            address: "gqzap.notifications@inbox.testmail.app",
-            subject: `Action required: Respond to ${claim.claim.first_name} ${claim.claim.last_name}'s paid leave application`,
-            timestamp_from,
-          }).then((emails) => {
-            expect(emails.length).to.be.greaterThan(0);
-            expect(emails[0].html).to.contain(
-              `/employers/applications/new-application/?absence_id=${caseNumber}`
-            );
-          });
-        });
-      });
-    });
-  });
 });
