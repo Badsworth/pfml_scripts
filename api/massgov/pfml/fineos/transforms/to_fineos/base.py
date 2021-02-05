@@ -41,6 +41,9 @@ class TransformEformAttributes:
     @classmethod
     def to_attributes(cls, target: Any, suffix: Optional[str] = "") -> List[EFormAttribute]:
         transformed = []
+        """For examples of ATTRIBUTE_MAP check fineos/transforms/to_fineos/eforms/employer.py
+        keys come from front end, values are what fineos expects
+        """
         for key in cls.ATTRIBUTE_MAP.keys():
             attribute_name = f"{cls.ATTRIBUTE_MAP[key]['name']}{suffix}"
             attribute_type = cls.ATTRIBUTE_MAP[key]["type"]
@@ -54,9 +57,18 @@ class TransformEformAttributes:
             elif isinstance(attribute_value, date):
                 attribute_value = attribute_value.strftime("%Y-%m-%d")
             elif isinstance(attribute_value, Decimal):
+                """Decimals get turned into float because
+                fineos doesn't accept decimals
+                """
                 attribute_value = float(attribute_value)
             setattr(attribute, attribute_type, attribute_value)
             transformed.append(attribute)
+
+        """Fineos will only display additional objects after we've selected
+        yes to an additional objects selection, ex: 'Will the employee receive any other wage replacement?'
+        if there's a suffix that means there's additional objects
+        this will ensure we've selected yes for the additional object
+        """
         if suffix:
             attribute = cls.ADDITIONAL_OBJECT
             attribute_name = f"{attribute.name}{suffix}"
