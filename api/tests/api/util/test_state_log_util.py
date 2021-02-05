@@ -25,7 +25,7 @@ from tests.helpers.state_log import default_outcome, setup_state_log
 def single_ended_employee(test_db_session):
     return setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        end_states=[State.CLAIMANT_LIST_SUBMITTED],
+        end_states=[State.DIA_CLAIMANT_LIST_SUBMITTED],
         test_db_session=test_db_session,
     )
 

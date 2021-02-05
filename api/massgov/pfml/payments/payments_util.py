@@ -1,8 +1,6 @@
-import csv
 import os
 import pathlib
 import re
-import tempfile
 import xml.dom.minidom as minidom
 from collections import OrderedDict
 from dataclasses import dataclass, field
@@ -41,6 +39,7 @@ from massgov.pfml.db.models.employees import (
     State,
 )
 from massgov.pfml.util.aws.ses import EmailRecipient, send_email
+from massgov.pfml.util.files import create_csv_from_list
 
 logger = logging.get_logger(__package__)
 
@@ -814,7 +813,9 @@ def email_fineos_vendor_customer_numbers(
         ref_file
     )
     fieldnames = ["fineos_customer_number", "ctr_vendor_customer_code"]
-    csv_data_path = [create_csv_from_list(fineos_vendor_customer_numbers, fieldnames)]
+    file_name = f"{get_now():%Y-%m-%d}-VCC-BIEVNT-supplement"
+
+    csv_data_path = [create_csv_from_list(fineos_vendor_customer_numbers, fieldnames, file_name)]
 
     send_email(
         recipient,
@@ -834,22 +835,6 @@ def get_fineos_vendor_customer_numbers_from_reference_file(reference: ReferenceF
         }
         for emp in reference.employees
     ]
-
-
-def create_csv_from_list(customer_data: List[Dict], fieldnames: List[str]) -> pathlib.Path:
-    temp_file_name = f"{get_now():%Y-%m-%d}-VCC-BIEVNT-supplement"
-    directory = tempfile.mkdtemp()
-
-    csv_filepath = pathlib.Path(os.path.join(directory, f"{temp_file_name}.csv"))
-
-    with open(csv_filepath, mode="w") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-
-        writer.writeheader()
-        for data in customer_data:
-            writer.writerow(data)
-
-    return csv_filepath
 
 
 def read_reference_file(ref_file: ReferenceFile, ref_file_type: LkReferenceFileType) -> str:

@@ -2,8 +2,10 @@
 # Utilities for handling files.
 #
 
+import csv
 import io
 import os
+import pathlib
 import shutil
 import tempfile
 from typing import Dict, List, Optional
@@ -464,3 +466,20 @@ def remove_if_exists(path: str) -> None:
         os.remove(path)
     except FileNotFoundError:
         pass
+
+
+def create_csv_from_list(
+    customer_data: List[Dict], fieldnames: List[str], file_name: str
+) -> pathlib.Path:
+    directory = tempfile.mkdtemp()
+
+    csv_filepath = pathlib.Path(os.path.join(directory, f"{file_name}.csv"))
+
+    with open(csv_filepath, mode="w") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        for data in customer_data:
+            writer.writerow(data)
+
+    return csv_filepath

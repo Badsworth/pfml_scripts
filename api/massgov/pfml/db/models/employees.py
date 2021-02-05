@@ -1330,10 +1330,10 @@ class State(LookupTable):
     column_names = ("state_id", "state_description", "flow_id")
 
     VERIFY_VENDOR_STATUS = LkState(1, "Verify vendor status", Flow.UNUSED.flow_id)  # Not used
-    CLAIMANT_LIST_CREATED = LkState(
+    DIA_CLAIMANT_LIST_CREATED = LkState(
         2, "Create claimant list for DIA", Flow.DIA_CLAIMANT_LIST.flow_id
     )
-    CLAIMANT_LIST_SUBMITTED = LkState(
+    DIA_CLAIMANT_LIST_SUBMITTED = LkState(
         3, "Submit claimant list to DIA", Flow.DIA_CLAIMANT_LIST.flow_id
     )
     PAYMENTS_RETRIEVED = LkState(4, "Payments retrieved", Flow.UNUSED.flow_id)  # Not used

@@ -8,6 +8,7 @@ from pydantic import ValidationError
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.aws.ses as conn
 from massgov.pfml.api.validation.exceptions import ValidationException
+from massgov.pfml.util.files import create_csv_from_list
 
 
 def get_raw_email_msg_object():
@@ -24,7 +25,8 @@ def get_raw_email_msg_object():
     message.attach(msg_body)
 
     # Attachment
-    csv_file_path = [payments_util.create_csv_from_list([{"name": "test"}], ["name"])]
+    file_name = "test_file"
+    csv_file_path = [create_csv_from_list([{"name": "test"}], ["name"], file_name)]
     conn.create_email_attachments(message, csv_file_path)
     return message
 
@@ -41,11 +43,14 @@ def test_send_email(mock_ses):
 
     bounce_forwarding_email_address_arn = os.getenv("BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", "")
     fieldnames = ["fineos_customer_number", "ctr_vendor_customer_code"]
+    file_name = "test_file"
     fineos_vendor_customer_numbers = [
         {"fineos_customer_number": 1, "ctr_vendor_customer_code": 1},
         {"fineos_customer_number": 2, "ctr_vendor_customer_code": 2},
     ]
-    attachments = [payments_util.create_csv_from_list(fineos_vendor_customer_numbers, fieldnames)]
+    attachments = [
+        payments_util.create_csv_from_list(fineos_vendor_customer_numbers, fieldnames, file_name)
+    ]
     response = conn.send_email(
         recipient, subject, body_text, sender, bounce_forwarding_email_address_arn, attachments
     )
