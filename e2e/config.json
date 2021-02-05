@@ -39,7 +39,7 @@
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "performance": {
-    "PORTAL_BASEURL": "https://dijouhh49zeeb.cloudfront.net",
+    "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
     "API_BASEURL": "https://lk64ifbnn4.execute-api.us-east-1.amazonaws.com/performance/api/v1",
     "FINEOS_BASEURL": "https://perf-claims-webapp.masspfml.fineos.com/",
     "PORTAL_USERNAME": "rob+pfml-performance@lastcallmedia.com",
