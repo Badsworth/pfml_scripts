@@ -574,7 +574,7 @@ resource "aws_iam_role" "payments_ctr_process_task_role" {
 }
 
 resource "aws_iam_role_policy" "payments_ctr_process_task_role_extras" {
-  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-payments-fineos-process-extras"
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-payments-ctr-process-extras"
   role   = aws_iam_role.payments_ctr_process_task_role.id
   policy = data.aws_iam_policy_document.payments_ctr_process_task_role_extras.json
 }
