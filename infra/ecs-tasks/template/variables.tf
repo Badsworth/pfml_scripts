@@ -250,3 +250,9 @@ variable "enable_register_admins_job" {
   type        = bool
   default     = true
 }
+
+variable "task_failure_email_address_list" {
+  type        = list(string)
+  description = "List of email addresses"
+  default     = []
+}

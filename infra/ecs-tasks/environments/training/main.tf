@@ -37,4 +37,6 @@ module "tasks" {
   fineos_error_export_path                            = "s3://fin-somdev-data-export/TRN/errorExtracts"
 
   enable_register_admins_job = true
+
+  task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 }

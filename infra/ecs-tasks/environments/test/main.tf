@@ -65,4 +65,6 @@ module "tasks" {
 
   enable_recurring_payments_schedule = false
   enable_register_admins_job         = true
+
+  task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 }

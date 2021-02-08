@@ -21,8 +21,18 @@
           }
         }
       },
-      "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "failure"}],
+      "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "fineos_import_employee_updates_notify_failure"}],
       "Next": "dor_import"
+    },
+
+    "fineos_import_employee_updates_notify_failure": {
+      "Type": "Pass",
+      "Result": {
+        "task_name": "fineos-import-employee-updates",
+        "subject": "Task 'fineos-import-employee-updates' failed in ${environment_name}"
+      },
+      "ResultPath": "$.task_failure_details",
+      "Next": "failure_notification"
     },
 
     "dor_import": {
@@ -53,8 +63,18 @@
           }
         }
       },
-      "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "failure"}],
+      "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "dor_import_notify_failure"}],
       "Next": "load_employers_to_fineos_init"
+    },
+
+    "dor_import_notify_failure": {
+      "Type": "Pass",
+      "Result": {
+        "task_name": "dor-import",
+        "subject": "Task 'dor-import' failed in ${environment_name}"
+      },
+      "ResultPath": "$.task_failure_details",
+      "Next": "failure_notification"
     },
 
     "load_employers_to_fineos_init": {
@@ -113,8 +133,18 @@
         }
       },
 
-      "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "failure"}],
+      "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "load_employers_to_fineos_notify_failure"}],
       "Next": "fineos_eligibility_feed_export"
+    },
+
+    "load_employers_to_fineos_notify_failure": {
+      "Type": "Pass",
+      "Result": {
+        "task_name": "load-employers-to-fineos",
+        "subject": "Task 'load-employers-to-fineos' failed in ${environment_name}"
+      },
+      "ResultPath": "$.task_failure_details",
+      "Next": "failure_notification"
     },
 
     "fineos_eligibility_feed_export": {
@@ -146,13 +176,43 @@
           }
         }
       },
-      "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "failure"}],
+      "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "fineos_eligibility_feed_export_notify_failure"}],
       "Next": "success"
+    },
+
+    "fineos_eligibility_feed_export_notify_failure": {
+      "Type": "Pass",
+      "Result": {
+        "task_name": "fineos-eligibility-feed-export",
+        "subject": "Task 'fineos-eligibility-feed-export' failed in ${environment_name}"
+      },
+      "ResultPath": "$.task_failure_details",
+      "Next": "failure_notification"
     },
 
     "success": {
       "Comment": "Successful end state",
       "Type": "Succeed"
+    },
+
+    "failure_notification": {
+    %{if task_failure_notification_enabled}
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${sns_failure_topic_arn}",
+        "Subject.$": "$.task_failure_details.subject",
+        "Message": {
+          "task_name.$": "$.task_failure_details.task_name",
+          "environment": "${environment_name}",
+          "error.$": "$.Error",
+          "cause.$": "$.Cause"
+        }
+      },
+    %{else}
+      "Type": "Pass",
+    %{endif}
+      "Next": "failure"
     },
 
     "failure": {

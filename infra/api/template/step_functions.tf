@@ -21,6 +21,11 @@ data "aws_security_group" "tasks" {
   name = "${local.app_name}-${var.environment_name}-tasks"
 }
 
+# This is defined in ecs-tasks/template/sns.tf and referenced by name here.
+data "aws_sns_topic" "task_failure" {
+  name = "mass-pfml-${var.environment_name}-task-failure"
+}
+
 # These are defined in ecs-tasks/template/iam.tf and referenced by name here.
 data "aws_iam_role" "dor_import_task_role" {
   name = "${local.app_name}-${var.environment_name}-ecs-tasks-dor-import-task-role"
@@ -100,6 +105,16 @@ data "aws_iam_policy_document" "iam_policy_step_functions" {
     ]
     resources = [
       "arn:aws:events:us-east-1:${data.aws_caller_identity.current.account_id}:rule/StepFunctionsGetEventsForECSTaskRule"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "sns:Publish",
+    ]
+    resources = [
+      data.aws_sns_topic.task_failure.arn
     ]
   }
 }
