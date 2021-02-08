@@ -99,24 +99,6 @@ resource "newrelic_alert_condition" "api_error_rate" {
   }
 }
 
-resource "newrelic_alert_condition" "api_traffic_rate" {
-  # CRIT: traffic below 100 rpm (well below the "no one is using the app" traffic baseline) for at least five minutes
-  policy_id       = newrelic_alert_policy.api_alerts.id
-  name            = "API traffic below normal baseline"
-  type            = "apm_app_metric"
-  entities        = [data.newrelic_entity.pfml-api.application_id]
-  metric          = "throughput_web"
-  condition_scope = "application"
-
-  term {
-    priority      = "critical"
-    time_function = "all" # e.g. "for at least..."
-    duration      = 5     # units: minutes
-    operator      = "below"
-    threshold     = 100 # units: requests per minute
-  }
-}
-
 resource "newrelic_alert_condition" "api_response_time" {
   # WARN: Average response time above 250ms for at least ten minutes
   # CRIT: Average response time above 2½sec for at least ten minutes
