@@ -37,3 +37,13 @@ variable "ses_email_address" {
   type        = string
   default     = "noreplypfml@mass.gov"
 }
+
+variable "enforce_cloudfront_rate_limit" {
+  type    = bool
+  default = true
+}
+
+variable "enforce_cloudfront_fortinet_rules" {
+  type    = bool
+  default = true
+}

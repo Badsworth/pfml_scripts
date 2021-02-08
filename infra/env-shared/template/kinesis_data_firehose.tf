@@ -42,18 +42,3 @@ resource "aws_wafv2_web_acl_logging_configuration" "regional_rate_based_acl" {
   log_destination_configs = [aws_kinesis_firehose_delivery_stream.aws_waf.arn]
   resource_arn            = aws_wafv2_web_acl.regional_rate_based_acl[0].arn
 }
-
-#------------------------------------------------------------------------------#
-#                  AWS WAF CloudFront Rate Limit ACL                           #
-#------------------------------------------------------------------------------#
-data "aws_wafv2_web_acl" "cloudfront_rate_based_acl" {
-  count = var.enable_regional_rate_based_acl ? 1 : 0
-  name  = "mass-pfml-${var.environment_name}-cloudfront-rate-based-acl"
-  scope = "CLOUDFRONT"
-}
-
-resource "aws_wafv2_web_acl_logging_configuration" "cloudfront_rate_based_acl" {
-  count                   = var.enable_regional_rate_based_acl ? 1 : 0
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.aws_waf.arn]
-  resource_arn            = data.aws_wafv2_web_acl.cloudfront_rate_based_acl[0].arn
-}

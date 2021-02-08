@@ -37,6 +37,13 @@ module "massgov_pfml" {
   cognito_extra_redirect_urls = []
   cognito_extra_logout_urls   = []
 
+
+  # Firewall rules
+  # 'true' will set rule to 'BLOCK' (or 'NONE' which is equivalent)
+  # 'false' will set rule to 'COUNT' (counts traffic that meets rule(s) instead of blocking)
+  enforce_cloudfront_rate_limit     = true
+  enforce_cloudfront_fortinet_rules = true
+
   # You probably don't need to change the variables below:
   source                 = "../../template"
   environment_name       = "uat"
