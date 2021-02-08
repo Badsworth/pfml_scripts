@@ -159,8 +159,7 @@ def test_build_individual_vcc_document(initialize_factories_session):
 
     expected_doc_1_subelements = {
         "DOC_ID": doc_id,
-        "STR_1_NM": "123 FOO ST.",
-        "STR_2_NM": "APT #123",
+        "STR_1_NM": "123 FOO ST. APT #123",
         "CITY_NM": "CHICAGO",
         "ST": "IL",
         "ZIP": "12345",
@@ -177,8 +176,7 @@ def test_build_individual_vcc_document(initialize_factories_session):
 
     expected_doc_2_subelements = {
         "DOC_ID": doc_id,
-        "STR_1_NM": "123 FOO ST.",
-        "STR_2_NM": "APT #123",
+        "STR_1_NM": "123 FOO ST. APT #123",
         "CITY_NM": "CHICAGO",
         "ST": "IL",
         "ZIP": "12345",
@@ -312,7 +310,6 @@ def test_build_individual_vcc_document_truncated_values(initialize_factories_ses
     expected_doc_ad_subelements = {
         "DOC_ID": doc_id,
         "STR_1_NM": "D" * 75,
-        "STR_2_NM": "E" * 75,
         "CITY_NM": "F" * 60,
         "ST": "IL",
         "ZIP": "12345",

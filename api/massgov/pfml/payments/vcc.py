@@ -82,15 +82,13 @@ def get_state_str(geo_state: LkGeoState) -> Optional[str]:
     return geo_state.geo_state_description
 
 
-# TIN_AD has max length 40 chars
-# CTR says ok to truncate
-def get_tin_ad(address_line_one: Optional[str], address_line_two: Optional[str]) -> str:
+def combine_address_lines(address_line_one: Optional[str], address_line_two: Optional[str]) -> str:
     if address_line_one is None:
-        raise Exception("get_tin_ad: address_line_one cannot be None")
-    tin_ad = address_line_one
+        raise Exception("combine_address_lines: address_line_one cannot be None")
+    combined_address = address_line_one
     if address_line_two:
-        tin_ad += f" {address_line_two}"
-    return tin_ad[:40]
+        combined_address += f" {address_line_two}"
+    return combined_address
 
 
 def build_individual_vcc_document(
@@ -168,8 +166,6 @@ def build_individual_vcc_document(
     )
     payment_method = employee.payment_method
 
-    tin_ad = get_tin_ad(payment_address_line_1, payment_address_line_2)
-
     has_eft = payee_aba_num and payee_acct_type and payee_acct_num
 
     # If the payment method is ACH, all related params must be present
@@ -230,11 +226,14 @@ def build_individual_vcc_document(
     payments_util.add_attributes(vcc_doc_ad_pa, {"AMSDataObject": "Y"})
     root.appendChild(vcc_doc_ad_pa)
 
+    # MMARS needs the two address lines combined into a single line. The 75 character limit remains.
+    # (https://lwd.atlassian.net/browse/API-1312)
+    combined_address = combine_address_lines(payment_address_line_1, payment_address_line_2)[:75]
+
     # Add the PA individual VCC_DOC_AD values
     vcc_doc_ad_pa_elements = {
         "DOC_ID": doc_id,
-        "STR_1_NM": payment_address_line_1,
-        "STR_2_NM": payment_address_line_2,
+        "STR_1_NM": combined_address,
         "CITY_NM": city,
         "ST": state,
         "ZIP": zip_code,
@@ -252,8 +251,7 @@ def build_individual_vcc_document(
     # Add the PR individual VCC_DOC_AD values
     vcc_doc_ad_pr_elements = {
         "DOC_ID": doc_id,
-        "STR_1_NM": payment_address_line_1,
-        "STR_2_NM": payment_address_line_2,
+        "STR_1_NM": combined_address,
         "CITY_NM": city,
         "ST": state,
         "ZIP": zip_code,
@@ -271,7 +269,7 @@ def build_individual_vcc_document(
     # Add the individual VCC_DOC_1099 values
     vcc_doc_1099_elements = {
         "DOC_ID": doc_id,
-        "TIN_AD": tin_ad,
+        "TIN_AD": combined_address[:40],  # TIN_AD has max length 40 chars. CTR says ok to truncate
         "TIN_CITY_NM": city[:30],  # This has a max length of 30 despite it being 60 elsewhere
         "TIN_ST": state,
         "TIN_ZIP": zip_code,
