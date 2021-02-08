@@ -3221,6 +3221,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     reason="Serious Health Condition - Employee",
                     reasonQualifier1="Not Work Related",
                     reasonQualifier2="Sickness",
+                    notificationReason="Accident or treatment required for an injury",
                     primaryRelationship=None,
                     primaryRelQualifier1=None,
                     primaryRelQualifier2=None,

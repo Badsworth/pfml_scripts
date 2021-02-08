@@ -15,6 +15,7 @@
 import datetime
 import mimetypes
 import uuid
+from enum import Enum
 from typing import Dict, List, Optional, Set
 
 import phonenumbers
@@ -40,6 +41,17 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EFormBody
 from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
 
 logger = logging.get_logger(__name__)
+
+
+class LeaveNotificationReason(str, Enum):
+    PREGNANCY_BIRTH_OR_RELATED_MEDICAL_TREATMENT = "Pregnancy, birth or related medical treatment"
+    BONDING_WITH_A_NEW_CHILD = "Bonding with a new child (adoption/ foster care/ newborn)"
+    CARING_FOR_A_FAMILY_MEMBER = "Caring for a family member"
+    ACCIDENT_OR_TREATMENT_REQUIRED = "Accident or treatment required for an injury"
+    SICKNESS_TREATMENT_REQUIRED_FOR_MEDICAL_CONDITION = (
+        "Sickness, treatment required for a medical condition or any other medical procedure"
+    )
+    OUT_OF_WORK_FOR_ANOTHER_REASON = "Out of work for another reason"
 
 
 def register_employee(
@@ -504,6 +516,7 @@ def build_absence_case(
         reason_qualifier_1 = (
             LeaveReasonQualifier.POSTNATAL_DISABILITY.leave_reason_qualifier_description
         )
+        notification_reason = LeaveNotificationReason.PREGNANCY_BIRTH_OR_RELATED_MEDICAL_TREATMENT
 
     elif (
         application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
@@ -513,11 +526,13 @@ def build_absence_case(
             LeaveReasonQualifier.NOT_WORK_RELATED.leave_reason_qualifier_description
         )
         reason_qualifier_2 = LeaveReasonQualifier.SICKNESS.leave_reason_qualifier_description
+        notification_reason = LeaveNotificationReason.ACCIDENT_OR_TREATMENT_REQUIRED
 
     elif application.leave_reason_id == LeaveReason.CHILD_BONDING.leave_reason_id:
         reason = application.leave_reason.leave_reason_description
         reason_qualifier = application.leave_reason_qualifier
         reason_qualifier_1 = application.leave_reason_qualifier.leave_reason_qualifier_description
+        notification_reason = LeaveNotificationReason.BONDING_WITH_A_NEW_CHILD
         primary_relationship = RelationshipToCaregiver.CHILD.relationship_to_caregiver_description
 
         if (
@@ -539,6 +554,13 @@ def build_absence_case(
                 RelationshipQualifier.BIOLOGICAL.relationship_qualifier_description
             )
 
+    # Care for a family member option is not exposed to the Portal yet. There is a ticket to
+    # implement this option in the future.
+    elif application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id:
+        reason = application.leave_reason.leave_reason_description
+        reason_qualifier_1 = application.leave_reason_qualifier.leave_reason_qualifier_description
+        notification_reason = LeaveNotificationReason.CARING_FOR_A_FAMILY_MEMBER
+
     else:
         raise ValueError("Invalid application.leave_reason")
 
@@ -549,6 +571,7 @@ def build_absence_case(
         reason=reason,
         reasonQualifier1=reason_qualifier_1,
         reasonQualifier2=reason_qualifier_2,
+        notificationReason=notification_reason,
         timeOffLeavePeriods=continuous_leave_periods if continuous_leave_periods else None,
         reducedScheduleLeavePeriods=reduced_schedule_leave_periods
         if reduced_schedule_leave_periods

@@ -623,3 +623,62 @@ def test_resolve_leave_plans():
     leave_plans = fineos_actions.resolve_leave_plans(True, True)
     assert len(leave_plans) == 0
     assert ", ".join(leave_plans) == ""
+
+
+def test_determine_absence_notification_reason(user, test_db_session):
+    application = ApplicationFactory.create(
+        user=user,
+        leave_reason_id=LeaveReason.CHILD_BONDING.leave_reason_id,
+        leave_reason_qualifier_id=LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
+    )
+
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
+        application
+    )
+    assert (
+        absence_case.notificationReason
+        == fineos_actions.LeaveNotificationReason.BONDING_WITH_A_NEW_CHILD
+    )
+
+    application = ApplicationFactory.create(
+        user=user,
+        leave_reason_id=LeaveReason.PREGNANCY_MATERNITY.leave_reason_id,
+        leave_reason_qualifier_id=LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
+        pregnant_or_recent_birth=True,
+    )
+
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
+        application
+    )
+    assert (
+        absence_case.notificationReason
+        == fineos_actions.LeaveNotificationReason.PREGNANCY_BIRTH_OR_RELATED_MEDICAL_TREATMENT
+    )
+
+    application = ApplicationFactory.create(
+        user=user,
+        leave_reason_id=LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
+        leave_reason_qualifier_id=LeaveReasonQualifier.WORK_RELATED_ACCIDENT_INJURY.leave_reason_qualifier_id,
+    )
+
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
+        application
+    )
+    assert (
+        absence_case.notificationReason
+        == fineos_actions.LeaveNotificationReason.ACCIDENT_OR_TREATMENT_REQUIRED
+    )
+
+    application = ApplicationFactory.create(
+        user=user,
+        leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+        leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
+    )
+
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
+        application
+    )
+    assert (
+        absence_case.notificationReason
+        == fineos_actions.LeaveNotificationReason.CARING_FOR_A_FAMILY_MEMBER
+    )
