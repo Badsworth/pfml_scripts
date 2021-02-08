@@ -20,6 +20,7 @@ import massgov.pfml.api.app
 import massgov.pfml.api.authentication as authentication
 import massgov.pfml.api.employees
 import massgov.pfml.db.models.employees as employee_models
+import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.factories import UserFactory
 
@@ -283,6 +284,14 @@ def mock_sftp_client():
             self.calls = []
 
     return MockSftpClient()
+
+
+@pytest.fixture
+def setup_mock_sftp_client(monkeypatch, mock_sftp_client):
+    # Mock SFTP client so we can inspect the method calls we make later in the test.
+    monkeypatch.setattr(
+        file_util, "get_sftp_client", lambda uri, ssh_key_password, ssh_key: mock_sftp_client,
+    )
 
 
 @pytest.fixture

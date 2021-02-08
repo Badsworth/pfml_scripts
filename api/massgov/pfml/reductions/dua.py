@@ -13,7 +13,11 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.reductions.config import get_config
+from massgov.pfml.payments.sftp_s3_transfer import (
+    SftpS3TransferConfig,
+    copy_to_sftp_and_archive_s3_files,
+)
+from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 
 logger = logging.get_logger(__name__)
 
@@ -30,10 +34,34 @@ DUA_PAYMENT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
 }
 
 
+def copy_claimant_list_to_moveit(db_session: db.Session) -> None:
+    s3_config = get_s3_config()
+    moveit_config = get_moveit_config()
+
+    transfer_config = SftpS3TransferConfig(
+        s3_bucket_uri=s3_config.s3_bucket,
+        source_dir=s3_config.s3_dua_outbound_directory_path,
+        archive_dir=s3_config.s3_dua_archive_directory_path,
+        dest_dir=moveit_config.moveit_dua_inbound_path,
+        sftp_uri=moveit_config.moveit_sftp_uri,
+        ssh_key_password=moveit_config.moveit_ssh_key_password,
+        ssh_key=moveit_config.moveit_ssh_key,
+    )
+
+    copied_reference_files = copy_to_sftp_and_archive_s3_files(transfer_config, db_session)
+    for ref_file in copied_reference_files:
+        state_log_util.create_finished_state_log(
+            associated_model=ref_file,
+            end_state=State.DUA_CLAIMANT_LIST_SUBMITTED,
+            outcome=state_log_util.build_outcome("Sent list of claimants to DUA via MoveIt"),
+            db_session=db_session,
+        )
+
+
 def load_new_dua_payments(db_session: db.Session) -> None:
-    config = get_config()
-    pending_directory = os.path.join(config.s3_bucket, config.s3_dua_pending_directory_path)
-    archive_directory = os.path.join(config.s3_bucket, config.s3_dua_archive_directory_path)
+    s3_config = get_s3_config()
+    pending_directory = os.path.join(s3_config.s3_bucket, s3_config.s3_dua_pending_directory_path)
+    archive_directory = os.path.join(s3_config.s3_bucket, s3_config.s3_dua_archive_directory_path)
 
     for ref_file in _get_pending_dua_payment_reference_files(pending_directory, db_session):
         try:

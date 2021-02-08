@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 import paramiko
 from sqlalchemy.orm.exc import MultipleResultsFound
@@ -32,13 +32,15 @@ class SftpS3TransferConfig:
 
 def copy_to_sftp_and_archive_s3_files(
     config: SftpS3TransferConfig, db_session: db.Session,
-) -> None:
+) -> List[ReferenceFile]:
+    copied_reference_files: List[ReferenceFile] = []
+
     source_dir_path = os.path.join(config.s3_bucket_uri, config.source_dir)
     s3_filenames = file_util.list_s3_files_and_directories_by_level(source_dir_path)
     if len(s3_filenames.keys()) == 0:
         logger.info("No files found to move to SFTP")
         # If there are no new files in S3 return early to avoid the overhead of an SFTP connection.
-        return
+        return copied_reference_files
     logger.info(f"Copying {s3_filenames} to SFTP server")
 
     sftp_client = file_util.get_sftp_client(
@@ -74,9 +76,13 @@ def copy_to_sftp_and_archive_s3_files(
             )
             continue
 
-        _copy_files_in_set_for_reference_file(
+        copied_reference_file = _copy_files_in_set_for_reference_file(
             reference_file, files_in_set, dest_dir_filenames, config, sftp_client, db_session
         )
+        if copied_reference_file:
+            copied_reference_files.append(copied_reference_file)
+
+    return copied_reference_files
 
 
 def _copy_files_in_set_for_reference_file(
@@ -86,7 +92,7 @@ def _copy_files_in_set_for_reference_file(
     config: SftpS3TransferConfig,
     sftp_client: paramiko.SFTPClient,
     db_session: db.Session,
-) -> None:
+) -> Optional[ReferenceFile]:
     if reference_file.reference_file_type_id is None:
         logger.error(
             "ReferenceFile does not have associated ReferenceFileType",
@@ -95,7 +101,7 @@ def _copy_files_in_set_for_reference_file(
                 "reference_file_location": reference_file.file_location,
             },
         )
-        return
+        return None
 
     if not reference_file.reference_file_type.num_files_in_set == len(files_in_set):
         logger.error(
@@ -108,7 +114,7 @@ def _copy_files_in_set_for_reference_file(
                 "reference_file_location": reference_file.file_location,
             },
         )
-        return
+        return None
 
     source_dir_path = os.path.join(config.s3_bucket_uri, config.source_dir)
 
@@ -125,7 +131,7 @@ def _copy_files_in_set_for_reference_file(
                 "File already exists in destination directory. Skipping",
                 extra={"file_name": basename, "destination_directory": config.dest_dir},
             )
-            return
+            return None
 
         try:
             # Copy to MoveIt.
@@ -161,6 +167,8 @@ def _copy_files_in_set_for_reference_file(
         reference_file.file_location = archive_file_location
         db_session.add(reference_file)
         db_session.commit()
+
+    return reference_file
 
 
 @retry(stop=stop_after_attempt(3))

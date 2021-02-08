@@ -1427,6 +1427,14 @@ class State(LookupTable):
         45, "New DUA payments stored in database", Flow.DUA_PAYMENT_LIST.flow_id
     )
 
+    # DUA claimant list operations.
+    DUA_CLAIMANT_LIST_CREATED = LkState(
+        46, "Created claimant list for DUA", Flow.DUA_CLAIMANT_LIST.flow_id
+    )
+    DUA_CLAIMANT_LIST_SUBMITTED = LkState(
+        47, "Submitted claimant list to DIA", Flow.DUA_CLAIMANT_LIST.flow_id
+    )
+
 
 class ReferenceFileType(LookupTable):
     model = LkReferenceFileType

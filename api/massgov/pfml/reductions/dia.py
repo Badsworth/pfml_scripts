@@ -13,7 +13,7 @@ from massgov.pfml.db.models.employees import (
     State,
 )
 from massgov.pfml.payments.payments_util import get_now
-from massgov.pfml.reductions.config import get_config
+from massgov.pfml.reductions.config import get_s3_config
 from massgov.pfml.util.files import create_csv_from_list, upload_to_s3
 
 logger = logging.get_logger(__name__)
@@ -83,7 +83,7 @@ def get_approved_claims_info_csv_path(approved_claims: List[Dict]) -> pathlib.Pa
 
 
 def create_list_of_approved_claimants(db_session: db.Session) -> None:
-    config = get_config()
+    config = get_s3_config()
 
     # get approved claims
     approved_claims = get_approved_claims(db_session)

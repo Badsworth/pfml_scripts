@@ -66,7 +66,11 @@ def test_copy_to_sftp_and_archive_s3_files_success(
         ssh_key_password="No ssh_key_password used during mocked tests",
         ssh_key="No ssh_key used during mocked tests",
     )
-    copy_to_sftp_and_archive_s3_files(config=config, db_session=test_db_session)
+    copied_reference_files = copy_to_sftp_and_archive_s3_files(
+        config=config, db_session=test_db_session
+    )
+
+    assert len(copied_reference_files) == len(test_filenames)
 
     # Collect the files in the source and dest directories after the function ran.
     files_in_source_dir = file_util.list_files(
@@ -162,7 +166,11 @@ def test_multi_file_set_copy_to_sftp_and_archive_s3_files_success(
         ssh_key_password="No ssh_key_password used during mocked tests",
         ssh_key="No ssh_key used during mocked tests",
     )
-    copy_to_sftp_and_archive_s3_files(config=config, db_session=test_db_session)
+    copied_reference_files = copy_to_sftp_and_archive_s3_files(
+        config=config, db_session=test_db_session
+    )
+
+    assert len(copied_reference_files) == len(list(test_vcc_files_by_level.keys()))
 
     # Collect the files in the source and dest directories after the function ran.
     files_in_source_dir = file_util.list_s3_files_and_directories_by_level(
@@ -207,7 +215,11 @@ def test_copy_to_sftp_and_archive_s3_files_no_files_in_s3(
         ssh_key_password="No ssh_key_password used during mocked tests",
         ssh_key="No ssh_key used during mocked tests",
     )
-    copy_to_sftp_and_archive_s3_files(config=config, db_session=test_db_session)
+    copied_reference_files = copy_to_sftp_and_archive_s3_files(
+        config=config, db_session=test_db_session
+    )
+
+    assert len(copied_reference_files) == 0
 
     assert len(mock_sftp_client.calls) == 0, "Expect no SFTP commands when there are no files in S3"
 
@@ -256,7 +268,11 @@ def test_copy_to_sftp_and_archive_s3_files_file_exists_in_sftp_dest(
         ssh_key_password="No ssh_key_password used during mocked tests",
         ssh_key="No ssh_key used during mocked tests",
     )
-    copy_to_sftp_and_archive_s3_files(config=config, db_session=test_db_session)
+    copied_reference_files = copy_to_sftp_and_archive_s3_files(
+        config=config, db_session=test_db_session
+    )
+
+    assert len(copied_reference_files) == 0
 
     # Expect that the ReferenceFiles associated with the files in S3 were not updated because the
     # conflict in the destination SFTP server prevented the transfer.
@@ -297,7 +313,11 @@ def test_copy_to_sftp_and_archive_s3_files_no_reference_file_row_in_database(
         ssh_key_password="No ssh_key_password used during mocked tests",
         ssh_key="No ssh_key used during mocked tests",
     )
-    copy_to_sftp_and_archive_s3_files(config=config, db_session=test_db_session)
+    copied_reference_files = copy_to_sftp_and_archive_s3_files(
+        config=config, db_session=test_db_session
+    )
+
+    assert len(copied_reference_files) == 0
 
     assert (
         len(mock_sftp_client.calls) == 1

@@ -489,3 +489,73 @@ def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
         ).scalar()
         == 0
     )
+
+
+def test_copy_to_sftp_and_archive_s3_files(
+    initialize_factories_session,
+    test_db_session,
+    mock_s3_bucket,
+    mock_sftp_client,
+    setup_mock_sftp_client,
+    monkeypatch,
+):
+    # Mock out S3 and MoveIt configs.
+    s3_bucket_uri = f"s3://{mock_s3_bucket}"
+    source_directory_path = "reductions/dua/outbound"
+    archive_directory_path = "reductions/dua/archive"
+    moveit_dua_inbound_path = "/DFML/DUA/Inbound"
+
+    monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
+    monkeypatch.setenv("S3_DUA_OUTBOUND_DIRECTORY_PATH", source_directory_path)
+    monkeypatch.setenv("S3_DUA_ARCHIVE_DIRECTORY_PATH", archive_directory_path)
+    monkeypatch.setenv("MOVEIT_DUA_INBOUND_PATH", moveit_dua_inbound_path)
+
+    filenames = []
+    file_count = random.randint(1, 8)
+    for _i in range(file_count):
+        filename = _random_csv_filename()
+        row_count = random.randint(1, 5)
+        ref_file = _get_loaded_reference_file_in_s3(
+            mock_s3_bucket, filename, source_directory_path, row_count
+        )
+        ref_file.reference_file_type_id = ReferenceFileType.DUA_CLAIMANT_LIST.reference_file_type_id
+
+        filenames.append(filename)
+
+    # Save the changes to the reference file types.
+    test_db_session.commit()
+
+    s3_source_directory_uri = os.path.join(s3_bucket_uri, source_directory_path)
+    s3_archive_directory_uri = os.path.join(s3_bucket_uri, archive_directory_path)
+    assert len(file_util.list_files(s3_source_directory_uri)) == len(filenames)
+    assert len(file_util.list_files(s3_archive_directory_uri)) == 0
+
+    dua.copy_claimant_list_to_moveit(test_db_session)
+
+    # Expect to have moved all files from the source to the archive directory of S3.
+    assert len(file_util.list_files(s3_source_directory_uri)) == 0
+    assert len(file_util.list_files(s3_archive_directory_uri)) == len(filenames)
+
+    # Get files in the MoveIt server and s3 archive directory.
+    files_in_moveit = mock_sftp_client.listdir(moveit_dua_inbound_path)
+    files_in_s3_archive_dir = file_util.list_files(s3_archive_directory_uri)
+
+    # Confirm that we've moved every ReferenceFile, created a StateLog record, and updated the db.
+    for filename in filenames:
+        file_loc = os.path.join(s3_archive_directory_uri, filename)
+
+        ref_file = (
+            test_db_session.query(ReferenceFile)
+            .filter(ReferenceFile.file_location == file_loc)
+            .one_or_none()
+        )
+        assert ref_file
+        assert filename in files_in_s3_archive_dir
+        assert filename in files_in_moveit
+        assert (
+            test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            .filter(StateLog.end_state_id == State.DUA_CLAIMANT_LIST_SUBMITTED.state_id)
+            .filter(StateLog.reference_file_id == ref_file.reference_file_id)
+            .scalar()
+            == 1
+        )
