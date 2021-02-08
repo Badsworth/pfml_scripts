@@ -116,7 +116,7 @@ module "payments_fineos_process_scheduler" {
 # Run fineos-bucket-tool daily at 8am EST (9am EDT) (1pm UTC)
 module "fineos_bucket_tool_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
-  is_enabled = var.enable_recurring_payments_schedule
+  is_enabled = true
 
   task_name           = "fineos-data-export-tool"
   schedule_expression = "cron(0 13 * * ? *)"
@@ -153,7 +153,7 @@ module "fineos_bucket_tool_scheduler" {
 # Run fineos-bucket-tool daily at 8am EST (9am EDT) (1pm UTC)
 module "fineos_error_extract_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
-  is_enabled = var.enable_recurring_payments_schedule
+  is_enabled = true
 
   task_name           = "fineos-error-extract-tool"
   schedule_expression = "cron(0 13 * * ? *)"
