@@ -48,6 +48,8 @@ def create_fineos_user_helper(db_session: Session) -> None:
 
 
 def create_fineos_user():
+    massgov.pfml.util.logging.init("db-create-fineos-user")
+    massgov.pfml.util.logging.audit.init_security_logging()
     db_session_raw = db.init()
 
     with db.session_scope(db_session_raw) as db_session:
