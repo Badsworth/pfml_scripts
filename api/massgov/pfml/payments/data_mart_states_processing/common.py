@@ -1,3 +1,4 @@
+import uuid
 from dataclasses import dataclass, field
 from typing import Callable, Iterable, List, Tuple, Union, cast
 
@@ -185,6 +186,7 @@ def make_db_address_from_mmars_data(mmars_data: data_mart.VendorInfoResult) -> A
         )
 
     return Address(
+        address_id=uuid.uuid4().__str__(),
         address_line_one=mmars_data.street_1,
         address_line_two=mmars_data.street_2,
         city=mmars_data.city,

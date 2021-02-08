@@ -1,6 +1,7 @@
 import csv
 import dataclasses
 import os
+import uuid
 from dataclasses import dataclass
 from datetime import date
 from typing import Callable, Dict, List, Optional
@@ -191,6 +192,7 @@ def upload_writeback_csv_and_save_reference_files(
         reference_file = ReferenceFile(
             file_location=pfml_pei_writeback_ready_filepath,
             reference_file_type_id=ReferenceFileType.PEI_WRITEBACK.reference_file_type_id,
+            reference_file_id=uuid.uuid4().__str__(),
         )
         db_session.add(reference_file)
 

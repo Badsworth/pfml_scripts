@@ -102,6 +102,7 @@ class ExtractData:
         self.reference_file = ReferenceFile(
             file_location=file_location,
             reference_file_type_id=ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id,
+            reference_file_id=uuid.uuid4().__str__(),
         )
         logger.debug("Intialized extract data: %s", self.reference_file.file_location)
 
@@ -450,7 +451,11 @@ def get_employee_and_claim(
 
     # claim might not exist because the employee used the call center, if so, create the claim now
     if not claim:
-        claim = Claim(employee=employee, fineos_absence_id=payment_data.absence_case_number,)
+        claim = Claim(
+            claim_id=uuid.uuid4().__str__(),
+            employee=employee,
+            fineos_absence_id=payment_data.absence_case_number,
+        )
         db_session.add(claim)
 
     # Update the payment method ID of the employee
@@ -469,6 +474,7 @@ def update_ctr_address_pair_fineos_address(
     """
     # Construct an Address from the payment_data
     payment_data_address = Address(
+        address_id=uuid.uuid4().__str__(),
         address_line_one=payment_data.address_line_one,
         address_line_two=payment_data.address_line_two if payment_data.address_line_two else None,
         city=payment_data.city,
@@ -563,7 +569,10 @@ def update_eft(payment_data: PaymentData, employee: Employee, db_session: db.Ses
 
     # Construct an EFT object.
     new_eft = EFT(
-        routing_nbr=routing_nbr, account_nbr=account_nbr, bank_account_type_id=bank_account_type_id
+        eft_id=uuid.uuid4().__str__(),
+        routing_nbr=routing_nbr,
+        account_nbr=account_nbr,
+        bank_account_type_id=bank_account_type_id,
     )
 
     # Retrieve the employee's existing EFT data, if any

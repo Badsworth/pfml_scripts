@@ -1,6 +1,7 @@
 import decimal
 import random
 import string
+import uuid
 import xml.dom.minidom as minidom
 from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional, Tuple, cast
@@ -365,7 +366,10 @@ def build_gax_dat(
                 continue
 
             ctr_doc_id = CtrDocumentIdentifier(
-                ctr_document_identifier=get_doc_id(), document_date=now.date(), document_counter=i,
+                ctr_document_identifier_id=uuid.uuid4().__str__(),
+                ctr_document_identifier=get_doc_id(),
+                document_date=now.date(),
+                document_counter=i,
             )
             db_session.add(ctr_doc_id)
 

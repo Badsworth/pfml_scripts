@@ -1,6 +1,7 @@
 import os
 import pathlib
 import re
+import uuid
 import xml.dom.minidom as minidom
 from collections import OrderedDict
 from dataclasses import dataclass, field
@@ -355,6 +356,7 @@ def create_next_batch_id(
         now.strftime("%m%d"), file_type_descr, batch_counter
     )
     ctr_batch_id = CtrBatchIdentifier(
+        ctr_batch_identifier_id=uuid.uuid4().__str__(),
         ctr_batch_identifier=batch_id,
         year=now.year,
         batch_date=now.date(),
@@ -383,6 +385,7 @@ def create_batch_id_and_reference_file(
     dir_path = os.path.join(s3_path, batch_filename)
 
     ref_file = ReferenceFile(
+        reference_file_id=uuid.uuid4().__str__(),
         file_location=dir_path,
         reference_file_type_id=file_type.reference_file_type_id,
         ctr_batch_identifier=ctr_batch_id,

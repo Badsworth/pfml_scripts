@@ -346,7 +346,7 @@ def create_or_update_claim(
         raise
 
     if claim_pfml is None:
-        claim_pfml = Claim()
+        claim_pfml = Claim(claim_id=uuid.uuid4().__str__())
         claim_pfml.fineos_absence_id = absence_case_id
         logger.info(
             "Creating new claim for absence_case_id: %s",
@@ -638,6 +638,7 @@ def update_mailing_address(
 
     if nbr_of_validation_errors == len(validation_container.validation_issues):
         mailing_address = Address(
+            address_id=uuid.uuid4().__str__(),
             address_line_one=address_line_one,
             address_line_two=address_line_two,
             city=address_city,
@@ -701,7 +702,7 @@ def update_eft_info(
     if eft_required and nbr_of_validation_errors == len(validation_container.validation_issues):
         existing_eft = employee_pfml_entry.eft
 
-        new_eft = EFT()
+        new_eft = EFT(eft_id=uuid.uuid4().__str__())
         # Cast is to satisfy picky linting
         new_eft.routing_nbr = cast(str, routing_nbr)
         new_eft.account_nbr = cast(str, account_nbr)

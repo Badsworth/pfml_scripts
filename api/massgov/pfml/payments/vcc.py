@@ -1,3 +1,4 @@
+import uuid
 import xml.dom.minidom as minidom
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple, cast
@@ -390,6 +391,7 @@ def build_vcc_dat(
 
             doc_id = get_doc_id(now, doc_count)
             ctr_doc_id = CtrDocumentIdentifier(
+                ctr_document_identifier_id=uuid.uuid4().__str__(),
                 ctr_document_identifier=doc_id,
                 document_date=now.date(),
                 document_counter=doc_count,

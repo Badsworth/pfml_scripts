@@ -268,7 +268,6 @@ def test_create_or_update_claim_happy_path_new_claim(test_db_session, initialize
     assert len(validation_container.validation_issues) == 0
     assert claim is not None
     # New claim not yet persisted to DB
-    assert claim.claim_id is None
     assert claim.fineos_notification_id == "NTN-001"
     assert claim.fineos_absence_id == "NTN-001-ABS-01"
     # ClaimType logic commented out by other PR so commenting this assertion.

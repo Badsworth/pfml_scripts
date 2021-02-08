@@ -1,3 +1,4 @@
+import uuid
 from typing import List, Optional, Tuple
 from xml.etree.ElementTree import Element
 
@@ -217,7 +218,9 @@ def update_employee_data(
 
     # update address fields on the CTR half of the CtrAddressPair
     if not employee.ctr_address_pair.ctr_address:
-        ctr_address = Address(address_type_id=AddressType.MAILING.address_type_id)
+        ctr_address = Address(
+            address_id=uuid.uuid4().__str__(), address_type_id=AddressType.MAILING.address_type_id
+        )
         employee.ctr_address_pair.ctr_address = ctr_address
         db_session.add(employee)
 
