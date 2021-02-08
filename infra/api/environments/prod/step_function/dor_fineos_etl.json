@@ -154,7 +154,7 @@
               "Environment": [
                 { "Name": "ELIGIBILITY_FEED_MODE", "Value": "updates" },
                 { "Name": "ELIGIBILITY_FEED_UPDATE_BATCH_SIZE", "Value": "50000" },
-                { "Name": "ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT", "Value": "1" }
+                { "Name": "ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT", "Value": "15000" }
               ]
             }
           ]
