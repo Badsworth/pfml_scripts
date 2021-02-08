@@ -85,8 +85,8 @@ export type Employer = {
   dba: string;
   family_exemption: boolean;
   medical_exemption: boolean;
-  exemption_commence_date?: Date;
-  exemption_cease_date?: Date;
-  updated_date?: Date;
+  exemption_commence_date?: Date | string;
+  exemption_cease_date?: Date | string;
+  updated_date?: Date | string;
   size?: "small" | "medium" | "large";
 };

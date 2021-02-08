@@ -2,7 +2,8 @@ import { CommandModule } from "yargs";
 import SimulationStorage from "../../simulation/SimulationStorage";
 import fs from "fs";
 import path from "path";
-import quarters, { formatISODatetime } from "../../simulation/quarters";
+import quarters from "../../simulation/quarters";
+import { format as formatDate } from "date-fns";
 import { SystemWideArgs } from "../../cli";
 import * as EmployeeFactory from "../../simulation/EmployeeFactory";
 import * as EmployerFactory from "../../simulation/EmployerFactory";
@@ -157,14 +158,14 @@ const cmd: CommandModule<SystemWideArgs, GenerateArgs> = {
     const employerMap = makeEmployerMap(employers);
     const employersPromise = writeDOREmployers(
       storage.claimFile,
-      `${storage.directory}/DORDFMLEMP_${formatISODatetime(now)}`,
+      `${storage.directory}/DORDFMLEMP_${formatDate(now, "yyyyMMddHHmmss")}`,
       employerMap
     ).then(() => args.logger.info("Completed DOR employers file generation"));
 
     // Finally, write the employees DOR file.
     const employeesPromise = writeDOREmployees(
       storage.claimFile,
-      `${storage.directory}/DORDFML_${formatISODatetime(now)}`,
+      `${storage.directory}/DORDFML_${formatDate(now, "yyyyMMddHHmmss")}`,
       employerMap,
       quarters()
     ).then(() => {

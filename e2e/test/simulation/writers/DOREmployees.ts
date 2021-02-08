@@ -5,7 +5,7 @@ import {
 } from "../../../src/simulation/writers/DOREmployees";
 import { claims, employers, extract } from "./DOREmployers";
 
-const filingPeriods = [new Date("2020-06-30")];
+const filingPeriods = [new Date("2020-06-30 00:00:00")];
 
 describe("DOR Employee File Generator", function () {
   it("should generate a valid employer line", async function () {

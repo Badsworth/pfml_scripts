@@ -2,7 +2,8 @@ import stream from "stream";
 import { Employer, SimulationClaim } from "../types";
 import multipipe from "multipipe";
 import util from "util";
-import { formatISODate, formatISODatetime } from "../quarters";
+import { parseOrPassISODate } from "../quarters";
+import { format as formatDate } from "date-fns";
 
 // Date to fill in when no exemption is given.
 const NO_EXEMPTION_DATE = "99991231";
@@ -54,13 +55,22 @@ export default function transformDOREmployers(
           record.family_exemption ? "T" : "F",
           record.medical_exemption ? "T" : "F",
           record.exemption_commence_date
-            ? formatISODate(new Date(record.exemption_commence_date))
+            ? formatDate(
+                parseOrPassISODate(record.exemption_commence_date),
+                "yyyyMMdd"
+              )
             : NO_EXEMPTION_DATE,
           record.exemption_cease_date
-            ? formatISODate(new Date(record.exemption_cease_date))
+            ? formatDate(
+                parseOrPassISODate(record.exemption_cease_date),
+                "yyyyMMdd"
+              )
             : NO_EXEMPTION_DATE,
-          formatISODatetime(
-            record.updated_date ? new Date(record.updated_date) : new Date()
+          formatDate(
+            record.updated_date
+              ? parseOrPassISODate(record.updated_date)
+              : new Date(),
+            "yyyyMMddHHmmss"
           )
         ) + "\n";
       this.push(line);

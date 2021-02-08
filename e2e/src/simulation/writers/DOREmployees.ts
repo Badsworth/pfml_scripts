@@ -1,10 +1,19 @@
 import stream from "stream";
 import { Employer, SimulationClaim } from "../types";
 import { format } from "util";
-import { formatISODate, formatISODatetime } from "../quarters";
+import { format as formatDate } from "date-fns";
 import multipipe from "multipipe";
 
 const amt = (num: number): string => num.toFixed(2).padStart(20);
+
+/**
+ * Note: There's some weirdness with dates/formatting in this file.
+ * Things to know about JS dates:
+ *   * JS dates have no concept of timezone. They are always stored as UTC, and always output as local time.
+ *   * When creating a date that only has a date (eg: 2020-01-01), UTC will be assumed (making the EST version 2019-12-31).
+ * Because of this, we cannot detect what timezone a date was created with and adjust accordingly.
+ * We must always assume that the date has been created in local time, and should always be output in local time.
+ */
 
 export function transformDOREmployeesEmployerLines(
   employers: Map<string, Employer>,
@@ -42,14 +51,14 @@ export function transformDOREmployeesEmployerLines(
         format(
           "A%s%s%s%s%s%s%s%s%s\n",
           employer.accountKey,
-          formatISODate(period),
+          formatDate(period, "yyyyMMdd"),
           employer.name.padEnd(255),
           employer.fein.replace(/-/g, "").padEnd(14),
           "F",
           employer.fein.replace(/-/g, "").padEnd(14),
           amt(60000),
-          formatISODate(period),
-          formatISODatetime(period)
+          formatDate(period, "yyyyMMdd"),
+          formatDate(period, "yyyyMMddHHmmss")
         )
       );
       this.push(lines.join(""));
@@ -89,7 +98,7 @@ export function transformDOREmployeesWageLines(
           format(
             "B%s%s%s%s%s%s%s%s%s%s%s%s%s",
             employer.accountKey,
-            formatISODate(period),
+            formatDate(period, "yyyyMMdd"),
             employee.first_name?.padEnd(255),
             employee.last_name?.padEnd(255),
             employee.tax_identifier?.replace(/-/g, ""),

@@ -13,7 +13,7 @@ const employer = {
   dba: "",
   family_exemption: false,
   medical_exemption: false,
-  updated_date: new Date("2020-08-20"),
+  updated_date: new Date("2020-08-20 00:00:00"),
 };
 
 export const employers = new Map([[employer.fein, employer]]);
