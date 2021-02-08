@@ -1,5 +1,4 @@
 import yargs, { CommandModule } from "yargs";
-import PortalPuppeteerSubmitter from "../../simulation/PortalPuppeteerSubmitter";
 import SimulationRunner, {
   CredentialCallback,
 } from "../../simulation/SimulationRunner";
@@ -12,6 +11,7 @@ import { SystemWideArgs } from "../../cli";
 import config from "../../config";
 import AuthenticationManager from "../../simulation/AuthenticationManager";
 import { CognitoUserPool } from "amazon-cognito-identity-js";
+import PortalSubmitter from "../../simulation/PortalSubmitter";
 
 type SimulateArgs = {
   directory: string;
@@ -73,11 +73,7 @@ const cmd: CommandModule<SystemWideArgs, SimulateArgs> = {
         ClientId: config("COGNITO_CLIENTID"),
       })
     );
-    const submitter = new PortalPuppeteerSubmitter(
-      authenticator,
-      config("API_BASEURL"),
-      getFineosBaseUrl()
-    );
+    const submitter = new PortalSubmitter(authenticator, config("API_BASEURL"));
     const tracker = args.track
       ? new SimulationStateFileTracker(storage.stateFile)
       : new SimulationStateNullTracker();
