@@ -63,14 +63,26 @@ const flagsConfig = {
   // environment config files.
   development: {
     example: true,
+    employerShowNewsBanner: true,
     pfmlTerriyay: true,
   },
-  test: {},
-  stage: {},
-  training: {},
-  performance: {},
-  uat: {},
+  test: {
+    employerShowNewsBanner: true,
+  },
+  stage: {
+    employerShowNewsBanner: true,
+  },
+  training: {
+    employerShowNewsBanner: true,
+  },
+  performance: {
+    employerShowNewsBanner: true,
+  },
+  uat: {
+    employerShowNewsBanner: true,
+  },
   prod: {
+    employerShowNewsBanner: true,
     pfmlTerriyay: true,
   },
 };
