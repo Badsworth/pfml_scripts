@@ -1,3 +1,4 @@
+import logging  # noqa: B1
 import os
 import xml.dom.minidom as minidom
 from datetime import datetime, timedelta
@@ -251,10 +252,16 @@ def test_copy_fineos_data_to_archival_bucket(
 
 
 def test_copy_fineos_data_to_archival_bucket_skip_old_payment(
-    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
+    test_db_session,
+    mock_fineos_s3_bucket,
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    monkeypatch,
+    caplog,
 ):
     # Monkey path the max history date
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2020-01-02")
+    caplog.set_level(logging.INFO)  # noqa: B1
 
     # Add 3 top level files: should be processed
     expected_timestamp_1 = "2020-01-03-11-30-00"
@@ -302,6 +309,10 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_payment(
 
     # 2020-01-01 files should NOT be there
     assert copied_file_mapping_by_date.get(not_expected_timestamp_1) is None
+    assert (
+        "Skipping FINEOS extract folder dated 2020-01-01-11-30-00 as it is prior to 2020-01-02"
+        in [record.message for record in caplog.records]
+    )
 
 
 def test_copy_fineos_data_to_archival_bucket_skip_old_vendor(
