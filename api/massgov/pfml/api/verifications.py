@@ -101,6 +101,8 @@ def verifications():
         db_session.add(user_leave_administrator)
         db_session.commit()
 
+    logger.info("Successfully verified user.", extra=verification_request.dict())
+
     return response_util.success_response(
         message="Successfully verified user.", status_code=201, data={}
     ).to_api_response()

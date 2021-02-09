@@ -1,3 +1,5 @@
+import logging  # noqa: B1
+
 import pytest
 
 import tests.api
@@ -94,8 +96,14 @@ def test_error_if_withholding_amount_is_incorrect(
 
 
 def test_verification_successful_for_valid_data(
-    client, employer_auth_token, test_db_session, employer_quarterly_contribution, employer_user
+    caplog,
+    client,
+    employer_auth_token,
+    test_db_session,
+    employer_quarterly_contribution,
+    employer_user,
 ):
+    caplog.set_level(logging.INFO)  # noqa: B1
     link = UserLeaveAdministrator(
         user_id=employer_user.user_id,
         employer_id=employer_quarterly_contribution.employer_id,
@@ -127,3 +135,4 @@ def test_verification_successful_for_valid_data(
     )
     assert user_leave_administrator.employer_id == employer_quarterly_contribution.employer_id
     assert user_leave_administrator.verification_id == verification.verification_id
+    assert "Successfully verified user." in caplog.text
