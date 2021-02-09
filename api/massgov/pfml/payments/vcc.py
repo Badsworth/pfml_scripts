@@ -347,6 +347,8 @@ def get_vcc_doc_counter_offset_for_today(now: datetime, db_session: db.Session) 
 def build_vcc_dat(
     employees: List[Employee], now: datetime, ref_file: ReferenceFile, db_session: db.Session,
 ) -> Tuple[minidom.Document, List[Employee]]:
+    logger.info("Building VCC .DAT files for %i employee records", len(employees))
+
     # xml_document represents the overall XML object
     xml_document = minidom.Document()
     added_employees = []
@@ -408,6 +410,15 @@ def build_vcc_dat(
 
             db_session.add(emp_ref_file)
 
+            logger.debug(
+                "Added VCC document XML for employee: %s",
+                employee.employee_id,
+                extra={
+                    "ref_file": ref_file.file_location,
+                    "ctr_doc_id": ctr_doc_id.ctr_document_identifier,
+                },
+            )
+
             # Record in StateLog that we've added this employee to the VCC.
             state_log_util.create_finished_state_log(
                 associated_model=employee,
@@ -443,10 +454,14 @@ def build_vcc_dat(
         )
         raise Exception("No Employee records added to VCC")
 
+    logger.info("Successfully built VCC .DAT files for %i employee records", len(employees))
+
     return (xml_document, added_employees)
 
 
 def build_vcc_inf(employees: List[Employee], now: datetime, batch_id: str) -> Dict[str, str]:
+    logger.info("Building VCC .INF file for %i employee records", len(employees))
+
     return {
         "NewMmarsBatchID": batch_id,
         "NewMmarsBatchDeptCode": Constants.COMPTROLLER_DEPT_CODE,
@@ -470,11 +485,19 @@ def get_eligible_employees(db_session: db.Session) -> List[Employee]:
 
 
 def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str, str]:
+    logger.info("Creating VCC files")
+
     try:
         now = payments_util.get_now()
 
         ctr_batch_id, ref_file, filename = payments_util.create_batch_id_and_reference_file(
             now, ReferenceFileType.VCC, db_session, ctr_outbound_path
+        )
+
+        logger.info(
+            "Created VCC reference file and ctr batch id - reference file: %s, ctr batch id: %s ",
+            ref_file.file_location,
+            ctr_batch_id.ctr_batch_identifier,
         )
 
         employees = get_eligible_employees(db_session)
@@ -499,6 +522,8 @@ def build_vcc_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
         send_bievnt_email(ref_file, db_session)
 
         db_session.commit()
+
+        logger.info("Successfully created VCC files in: %s", ref_file.file_location)
 
         return (dat_filepath, inf_filepath)
     except Exception as e:

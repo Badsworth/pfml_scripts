@@ -41,7 +41,8 @@ def copy_to_sftp_and_archive_s3_files(
         logger.info("No files found to move to SFTP")
         # If there are no new files in S3 return early to avoid the overhead of an SFTP connection.
         return copied_reference_files
-    logger.info(f"Copying {s3_filenames} to SFTP server")
+
+    logger.info("Copying files to SFTP server: %s", ", ".join(s3_filenames))
 
     sftp_client = file_util.get_sftp_client(
         uri=config.sftp_uri, ssh_key_password=config.ssh_key_password, ssh_key=config.ssh_key,
@@ -142,7 +143,14 @@ def _copy_files_in_set_for_reference_file(
 
             # Move from ready directory to sent directory.
             archive_filepath = os.path.join(config.s3_bucket_uri, config.archive_dir, subfile)
+
+            logger.info(
+                "Copying file to archive folder - source: %s, destination: %s",
+                source_filepath,
+                archive_filepath,
+            )
             file_util.rename_file(source_filepath, archive_filepath)
+
             # Flip the arguments here to prepare for a potential rename back the other way.
             s3_files_to_return.append((archive_filepath, source_filepath))
         except Exception as e:
@@ -174,6 +182,7 @@ def _copy_files_in_set_for_reference_file(
 @retry(stop=stop_after_attempt(3))
 def _copy_file_from_s3_to_sftp_with_retry(source, dest, sftp):
     try:
+        logger.info("Copying file from S3 to SFTP - source: %s, destination: %s", source, dest)
         file_util.copy_file_from_s3_to_sftp(source=source, dest=dest, sftp=sftp)
     except Exception:
         # Add additional logging when we encounter an SFTP error because tenacity's retry
@@ -208,6 +217,13 @@ def copy_from_sftp_to_s3_and_archive_files(
         source_filepath = os.path.join(config.source_dir, filename)
         dest_filepath = os.path.join(config.s3_bucket_uri, dest_dir, filename)
         archive_filepath = os.path.join(config.archive_dir, filename)
+
+        logger.info(
+            "Copying file from SFTP to S3 - source: %s, destination: %s, archive: %s",
+            source_filepath,
+            dest_filepath,
+            archive_filepath,
+        )
 
         # If there is already a row in ReferenceFile for this file then skip it.
         # We may have retrieved it earlier but failed to move it to the archive directory in SFTP
@@ -260,7 +276,7 @@ def copy_from_sftp_to_s3_and_archive_files(
         try:
             sftp_client.rename(source_filepath, archive_filepath)
         except Exception as e:
-            logger.info("Failed to archive file '{}' in SFTP server.".format(source_filepath))
+            logger.exception("Failed to archive file '{}' in SFTP server.".format(source_filepath))
             raise e
 
     return reference_files

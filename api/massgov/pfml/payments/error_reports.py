@@ -376,7 +376,10 @@ def _make_simple_report(
         associated_class=associated_class, end_state=current_state, db_session=db_session
     )
     logger.info(
-        f"Building error reports for {associated_class.value} with end state: {current_state.state_description} - found {len(state_logs)}"
+        "Building error reports for %s with end state: %s - found %s",
+        associated_class.value,
+        current_state.state_description,
+        len(state_logs),
     )
 
     errors: List[ErrorReport] = []
@@ -440,6 +443,14 @@ def _get_time_based_errors(
         days_stuck=60,  # TODO - after launch, set this back to days_stuck, we don't want to send stuck messages while we've half-processed data before launch
         db_session=db_session,
         now=now,
+    )
+
+    logger.info(
+        "Building time based error reports for %s with end state: %s, days stuck: %i, - found %s",
+        associated_class.value,
+        current_state.state_description,
+        days_stuck,
+        len(state_logs),
     )
 
     errors: List[ErrorReport] = []
@@ -714,6 +725,8 @@ def _send_ctr_payments_errors(working_directory: pathlib.Path, db_session: db.Se
 
 
 def send_ctr_error_reports(db_session: db.Session) -> None:
+    logger.info("Creating CTR payment error reports")
+
     try:
         working_directory = pathlib.Path(tempfile.mkdtemp())
         _send_ctr_payments_errors(working_directory, db_session)
@@ -722,6 +735,8 @@ def send_ctr_error_reports(db_session: db.Session) -> None:
         # entries to the DB. The objects are already in a finished state
         # so they don't need to be modified/directly accessed here
         db_session.commit()
+
+        logger.info("Successfully created CTR payment error reports")
     except Exception:
-        logger.exception("Error creating CTR payment reports")
+        logger.exception("Error creating CTR payment error reports")
         db_session.rollback()

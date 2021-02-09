@@ -297,6 +297,8 @@ def process_outbound_status_return_xml(
 
 
 def process_outbound_status_return(db_session: db.Session, ref_file: ReferenceFile) -> None:
+    logger.info("Processing outbound status return file: %s", ref_file.file_location)
+
     # Read the ReferenceFile to string
     # Raise an error if the ReferenceFile is not readable
     try:

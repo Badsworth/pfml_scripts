@@ -96,7 +96,7 @@ def ctr_process():
 
 def _ctr_process(db_session: db.Session, config: Configuration) -> None:
     """Process CTR Payments"""
-    logger.info("Start processing CTR payments")
+    logger.info("Start - CTR Payments ECS Task")
 
     # If any of the first 3 steps fail
     # we should not steps 4-6 (GAX/VCC logic)
@@ -134,3 +134,5 @@ def _ctr_process(db_session: db.Session, config: Configuration) -> None:
     # 7. Send OSM Reports
     if config.make_error_report:
         send_ctr_error_reports(db_session)
+
+    logger.info("Done - CTR Payments ECS Task")

@@ -332,6 +332,8 @@ def build_individual_gax_document(
 def build_gax_dat(
     payments: List[Payment], now: datetime, ref_file: ReferenceFile, db_session: db.Session
 ) -> Tuple[minidom.Document, List[Payment]]:
+    logger.info("Building GAX .DAT files for %i payment records", len(payments))
+
     # xml_document represents the overall XML object
     xml_document = minidom.Document()
     added_payments = []
@@ -383,6 +385,15 @@ def build_gax_dat(
             )
             db_session.add(payment_ref_file)
 
+            logger.debug(
+                "Added GAX document XML for payment: %s",
+                payment.payment_id,
+                extra={
+                    "ref_file": ref_file.file_location,
+                    "ctr_doc_id": ctr_doc_id.ctr_document_identifier,
+                },
+            )
+
             # Record in StateLog that we've added this payment to the GAX.
             state_log_util.create_finished_state_log(
                 associated_model=payment,
@@ -407,10 +418,14 @@ def build_gax_dat(
         )
         raise Exception("No Payment records added to GAX")
 
+    logger.info("Successfully built GAX .DAT files for %i payment records", len(payments))
+
     return (xml_document, added_payments)
 
 
 def build_gax_inf(payments: List[Payment], now: datetime, batch_id: str) -> Dict[str, str]:
+    logger.info("Building GAX .INF file for %i payment records", len(payments))
+
     total_dollar_amount = decimal.Decimal(sum(payment.amount for payment in payments))
 
     return {
@@ -436,11 +451,19 @@ def get_eligible_payments(db_session: db.Session) -> List[Payment]:
 
 
 def build_gax_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str, str]:
+    logger.info("Creating GAX files")
+
     try:
         now = payments_util.get_now()
 
         ctr_batch_id, ref_file, filename = payments_util.create_batch_id_and_reference_file(
             now, ReferenceFileType.GAX, db_session, ctr_outbound_path
+        )
+
+        logger.info(
+            "Created GAX reference file and ctr batch id - reference file: %s, ctr batch id: %s ",
+            ref_file.file_location,
+            ctr_batch_id.ctr_batch_identifier,
         )
 
         payments = get_eligible_payments(db_session)
@@ -463,6 +486,8 @@ def build_gax_files(db_session: db.Session, ctr_outbound_path: str) -> Tuple[str
         send_bievnt_email(ref_file, db_session)
 
         db_session.commit()
+
+        logger.info("Successfully created GAX files in: %s", ref_file.file_location)
 
         return (dat_filepath, inf_filepath)
     except Exception as e:

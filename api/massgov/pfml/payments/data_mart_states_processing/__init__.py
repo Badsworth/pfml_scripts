@@ -10,6 +10,8 @@ logger = logging.get_logger(__name__)
 
 
 def process_all_states(pfml_db_session: pfml_db.Session) -> None:
+    logger.info("Processing payments data with Data Mart queries")
+
     data_mart_client: data_mart.Client
 
     try:
@@ -57,3 +59,5 @@ def process_all_states(pfml_db_session: pfml_db.Session) -> None:
 
     if hit_exception_during_processing:
         raise Exception("One or more Data Mart processing steps hit an exception")
+
+    logger.info("Successfully processed payments data with Data Mart queries")

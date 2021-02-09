@@ -82,6 +82,10 @@ def _set_outbound_reference_file_type(
         )
         return
 
+    logger.info(
+        "Identified outbound file type for file: %s, type: %s", ref_file.file_location, file_type
+    )
+
     # Handle Outbound Status Returns
     if file_type == ReferenceFileType.OUTBOUND_STATUS_RETURN:
         ref_file.reference_file_type_id = (
@@ -173,6 +177,8 @@ def process_outbound_returns(db_session: db.Session) -> None:
     then call the appropriate handler for elements in each list
     """
 
+    logger.info("Processing outbound return files")
+
     # Do setup
     s3_config = payments_config.get_s3_config()
     base_filepath = os.path.join(
@@ -182,16 +188,23 @@ def process_outbound_returns(db_session: db.Session) -> None:
     try:
         ctr_inbound_filenames = file_util.list_files_without_folder(base_filepath)
     except Exception:
-        logger.exception(f"Error connecting to S3 folder: {base_filepath}")
+        logger.exception("Error connecting to S3 folder: %s", base_filepath)
         raise
 
     # If we retrived nothing, exit early
     if not ctr_inbound_filenames:
         logger.warning(
-            f"Did not find any files in source S3 directory: {s3_config.pfml_ctr_inbound_path}",
+            "Did not find any files in source S3 directory: %s",
+            s3_config.pfml_ctr_inbound_path,
             extra={"pfml_ctr_inbound_path": s3_config.pfml_ctr_inbound_path},
         )
         return
+
+    logger.info(
+        "Found outbound files for processing at path: %s, files: %s",
+        base_filepath,
+        ", ".join(ctr_inbound_filenames),
+    )
 
     # Identify each file by opening it up and inspecting it
     try:
@@ -200,6 +213,7 @@ def process_outbound_returns(db_session: db.Session) -> None:
             source_filepath = os.path.join(base_filepath, filename)
 
             # Retrieve ReferenceFile
+            # TODO add documentation about why we expect an existing reference file here
             ref_file = payments_util.get_reference_file(source_filepath, db_session)
             if ref_file is None:
                 logger.warning(
@@ -221,3 +235,5 @@ def process_outbound_returns(db_session: db.Session) -> None:
 
     # Process each file
     _process_outbound_returns(outbound_return_data)
+
+    logger.info("Successfully processed outbound return files")

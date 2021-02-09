@@ -917,7 +917,7 @@ def test_process_catches_exceptions_and_continues(
     # message and it was tagged with the correct extra info
     assert len(caplog.records) > 0
     failed_log_records = list(
-        filter(lambda lr: lr.msg == "Hit error processing record", caplog.records)
+        filter(lambda lr: lr.msg.startswith("Hit error processing record"), caplog.records)
     )
     assert len(failed_log_records) == 1
     failed_log_record_dict = failed_log_records[0].__dict__

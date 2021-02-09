@@ -292,6 +292,8 @@ def process_outbound_payment_return_xml(
 def process_outbound_payment_return(db_session: db.Session, ref_file: ReferenceFile) -> None:
     """Process a single Outbound Payment Return file"""
 
+    logger.info("Processing outbound payment file: %s", ref_file.file_location)
+
     # Read the ReferenceFile to string
     # Raise an error if the ReferenceFile is not readable
     try:

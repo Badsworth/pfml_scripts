@@ -86,15 +86,6 @@ def _create_state_log(
     prev_state_log: Optional[StateLog] = None,
 ) -> StateLog:
 
-    logger.debug(
-        "create state log for %s - end state: %s (%s), has associated model: %s",
-        associated_class.value,
-        end_state.state_description,
-        end_state.state_id,
-        associated_model is not None,
-        extra={"outcome": outcome},
-    )
-
     now = get_now()
     state_log = StateLog(
         end_state_id=end_state.state_id,
@@ -117,29 +108,32 @@ def _create_state_log(
             if isinstance(associated_model, Payment):
                 state_log.payment = associated_model
                 latest_query_params.append(LatestStateLog.payment_id == associated_model.payment_id)
-                messages.append(
-                    f"Latest state log query for payment id: {associated_model.payment_id}"
-                )
+                messages.append(f"Query - payment id: {associated_model.payment_id}")
             elif isinstance(associated_model, Employee):
                 state_log.employee = associated_model
                 latest_query_params.append(
                     LatestStateLog.employee_id == associated_model.employee_id
                 )
-                messages.append(
-                    f"Latest state log query for employee id: {associated_model.employee_id}"
-                )
+                messages.append(f"Query - employee id: {associated_model.employee_id}")
             elif isinstance(associated_model, ReferenceFile):
                 state_log.reference_file = associated_model
                 latest_query_params.append(
                     LatestStateLog.reference_file_id == associated_model.reference_file_id
                 )
-                messages.append(
-                    f"Latest state log query for reference_file_id: {associated_model.reference_file_id}"
-                )
+                messages.append(f"Query - reference_file_id: {associated_model.reference_file_id}")
 
             # We also want the latest state log to be in the same flow and flow is attached to the states
             latest_query_params.append(LkState.flow_id == end_state.flow_id)
-            messages.append(f"Latest state log query for flow id: {end_state.flow_id}")
+            messages.append(f"Query - flow id: {end_state.flow_id}")
+
+        logger.debug(
+            "create state log for %s - end state: %s (%s), query: %s",
+            associated_class.value,
+            end_state.state_description,
+            end_state.state_id,
+            ", ".join(messages),
+            extra={"outcome": outcome},
+        )
 
         db_session.add(state_log)
         _create_or_update_latest_state_log(
@@ -147,7 +141,7 @@ def _create_state_log(
         )
     except Exception:
         logger.exception(
-            "Error trying to create or update latest state log - %s", ",".join(messages)
+            "Error trying to create or update latest state log - %s", ", ".join(messages)
         )
         raise
 

@@ -323,7 +323,8 @@ def process_employees_in_state(
     ],
 ) -> None:
     logger.info(
-        f"Starting processing of {prior_state.state_description} records",
+        "Starting processing of '%s' state records",
+        prior_state.state_description,
         extra={"prior_state": prior_state.state_description},
     )
 
@@ -353,13 +354,20 @@ def process_employees_in_state(
             if employee:
                 extra["employee_id"] = employee.employee_id
 
-            logger.exception("Hit error processing record", extra=extra)
+            logger.exception(
+                "Hit error processing record in state: %s, employee: %s",
+                prior_state.state_description,
+                employee.employee_id,
+                extra=extra,
+            )
         finally:
             # Ensure StateLog updates hit the DB
             pfml_db_session.commit()
 
     logger.info(
-        f"Done processing {prior_state.state_description} records",
+        "Done processing %i records for state '%s'",
+        len(list(state_logs_for_employees)),
+        prior_state.state_description,
         extra={"prior_state": prior_state.state_description},
     )
 
@@ -375,7 +383,8 @@ def get_latest_state_logs_with_employees_in_state_for_processing(
 
     if not state_logs_for_employees:
         logger.info(
-            f"No records in {prior_state.state_description}",
+            "No records in state: %s",
+            prior_state.state_description,
             extra={"end_state": prior_state.state_description},
         )
         return []

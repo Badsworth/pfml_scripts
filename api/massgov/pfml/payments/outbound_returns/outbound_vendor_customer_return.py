@@ -427,6 +427,8 @@ def process_ams_document(
     ams_document: Element, db_session: db.Session, reference_file: ReferenceFile
 ) -> Tuple[Optional[payments_util.ValidationContainer], Optional[state_log_util.StateLog]]:
 
+    logger.debug("Processing AMS document for reference file: %s", reference_file.file_location)
+
     # verify all dependencies exist
     dependencies = check_dependencies(ams_document, db_session, reference_file)
 
@@ -493,6 +495,8 @@ def process_ams_document(
 def process_outbound_vendor_customer_return(
     db_session: db.Session, ref_file: ReferenceFile
 ) -> None:
+    logger.info("Processing outbound vendor customer return file: %s", ref_file.file_location)
+
     # Read the ReferenceFile to string
     # Raise an error if the ReferenceFile is not readable
     try:
