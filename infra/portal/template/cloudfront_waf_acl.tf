@@ -102,5 +102,5 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
 resource "aws_wafv2_web_acl_logging_configuration" "cloudfront_acl" {
   depends_on              = [aws_wafv2_web_acl.cloudfront_waf_acl]
   log_destination_configs = [local.kinesis_data_firehose_arn]
-  resource_arn            = aws_cloudfront_distribution.portal_web_distribution.arn
+  resource_arn            = aws_wafv2_web_acl.cloudfront_waf_acl.arn
 }
