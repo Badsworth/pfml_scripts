@@ -6,6 +6,7 @@ import flask
 import puremagic
 from flask import Response
 from puremagic import PureError
+from sqlalchemy import desc
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable, Unauthorized
 
 import massgov.pfml.api.app as app
@@ -74,7 +75,13 @@ def applications_get():
         raise Unauthorized
 
     with app.db_session() as db_session:
-        applications = db_session.query(Application).filter(Application.user_id == user_id).all()
+        applications = (
+            db_session.query(Application)
+            .filter(Application.user_id == user_id)
+            .order_by(desc(Application.start_time))
+            .limit(50)  # Mitigate slow queries for end-to-end test user
+            .all()
+        )
 
         filtered_applications = filter(lambda a: can(READ, a), applications)
 
