@@ -2032,8 +2032,8 @@ const components = {
     reloadButton: "Reload this page",
   },
   errorsSummary: {
-    genericHeading: "An error was encountered",
-    genericHeading_plural: "{{count}} errors were encountered",
+    genericHeading: "An error occurred",
+    genericHeading_plural: "{{count}} errors occurred",
   },
   fieldsetAddress: {
     cityLabel: "City",

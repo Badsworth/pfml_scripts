@@ -194,7 +194,7 @@ function employerResponse(fineosId: string): Cfg.StoredStep {
         );
         error = await Util.maybeFindElement(
           browser,
-          By.visibleText("An error was encountered")
+          By.visibleText("An error occurred")
         );
         if (error) {
           // Waits 20 seconds for FINEOS to catch up.

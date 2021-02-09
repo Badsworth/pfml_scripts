@@ -51,7 +51,7 @@ describe("ErrorsSummary", () => {
       expect(wrapper).toMatchInlineSnapshot(`
         <Alert
           className="margin-bottom-3"
-          heading="An error was encountered"
+          heading="An error occurred"
           role="alert"
         >
           <p>
@@ -90,7 +90,7 @@ describe("ErrorsSummary", () => {
       const { wrapper } = render({ errors });
 
       expect(wrapper.prop("heading")).toMatchInlineSnapshot(
-        `"2 errors were encountered"`
+        `"2 errors occurred"`
       );
       expect(wrapper.find(".usa-list li")).toHaveLength(2);
     });
@@ -105,7 +105,7 @@ describe("ErrorsSummary", () => {
       const { wrapper } = render({ errors });
 
       expect(wrapper.prop("heading")).toMatchInlineSnapshot(
-        `"An error was encountered"`
+        `"An error occurred"`
       );
     });
 
