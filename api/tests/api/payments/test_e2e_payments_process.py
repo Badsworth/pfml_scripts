@@ -84,7 +84,6 @@ class ScenarioDataSet:
 
             if self.scenario_dataset_map.get(scenario_name) is None:
                 self.scenario_dataset_map[scenario_name] = []
-
             self.scenario_dataset_map[scenario_name].append(scenario_data)
 
             self.employee_id_scenario_name[scenario_data.employee.employee_id] = scenario_name
@@ -531,7 +530,21 @@ def test_e2e_process(
         # [Day 2] Run CTR ECS task - Process Vendor Outbound Files, Send GAX Export
         # ========================================================================
         # Setup Data Mart mock for round 2
+
+        # include vendor customer info in map
+        ssn_to_logical_id_map = {}
+        for scenario_data in scenario_dataset:
+            ssn = scenario_data.employee.tax_identifier.tax_identifier
+            scenario_name = scenario_data.scenario_descriptor.scenario_name.value
+            ssn_to_logical_id_map[ssn] = {
+                "scenario_name": scenario_name,
+                "vendor_customer_code": scenario_data.vendor_customer_code,
+            }
+
         monkeypatch.setenv("CTR_DATA_MART_MOCK_ROUND", "round2")
+        monkeypatch.setenv(
+            "CTR_DATA_MART_MOCK_SSN_TO_LOGICAL_ID_MAP", json.dumps(ssn_to_logical_id_map)
+        )
 
         # Run the task
         run_ctr_ecs_task(
