@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */
 import Link from "next/link";
 import PropTypes from "prop-types";
 import React from "react";
@@ -36,7 +37,11 @@ const ButtonLink = (props) => {
 
   return (
     <Link href={props.href}>
-      <a className={classes} aria-label={props.ariaLabel}>
+      <a
+        className={classes}
+        aria-label={props.ariaLabel}
+        onClick={props.onClick}
+      >
         {props.children}
       </a>
     </Link>
@@ -78,6 +83,7 @@ ButtonLink.propTypes = {
    * Apply the "inverse" style modifier
    */
   inversed: PropTypes.bool,
+  onClick: PropTypes.func,
 };
 
 export default ButtonLink;

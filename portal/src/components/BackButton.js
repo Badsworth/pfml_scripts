@@ -2,6 +2,7 @@ import Button from "./Button";
 import ButtonLink from "./ButtonLink";
 import PropTypes from "prop-types";
 import React from "react";
+import tracker from "../services/tracker";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -13,7 +14,10 @@ function BackButton(props) {
   const label = props.label || t("components.backButton.label");
 
   const handleClick = () => {
-    window.history.back();
+    tracker.trackEvent("BackButton clicked");
+    if (!props.href) {
+      window.history.back();
+    }
   };
 
   let Component, componentProps;
@@ -25,14 +29,12 @@ function BackButton(props) {
     };
   } else {
     Component = Button;
-    componentProps = {
-      onClick: handleClick,
-    };
   }
 
   return (
     <Component
       {...componentProps}
+      onClick={handleClick}
       className="margin-bottom-5"
       variation="unstyled"
     >

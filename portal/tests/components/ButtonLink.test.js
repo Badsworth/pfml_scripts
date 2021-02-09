@@ -43,6 +43,15 @@ describe("ButtonLink", () => {
     expect(anchor.hasClass("usa-button--outline")).toBe(true);
   });
 
+  it("accepts an onClick property", () => {
+    const onClick = jest.fn();
+    const { wrapper } = render({ onClick });
+
+    wrapper.find("a").simulate("click");
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
   describe("when className is set", () => {
     it("adds the className to the link", () => {
       const { wrapper } = render({ className: "custom-class" });
