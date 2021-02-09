@@ -272,7 +272,7 @@ export const Checklist = (props) => {
       )}
       <BackButton
         label={t("pages.claimsChecklist.backButtonLabel")}
-        href={routes.applications.dashboard}
+        href={routes.applications.index}
       />
       <Title hidden>{t("pages.claimsChecklist.title")}</Title>
 

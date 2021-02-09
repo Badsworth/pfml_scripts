@@ -787,7 +787,7 @@ const pages = {
       "I agree that I am a new parent by one of the routes listed and can provide certification to support this relationship.",
   },
   claimsChecklist: {
-    backButtonLabel: "Back to Dashboard",
+    backButtonLabel: "Back to Applications",
     completed_editable: "Completed",
     completed_uneditable: "Confirmed",
     documentsLoadError: "$t(shared.documentsLoadError)",

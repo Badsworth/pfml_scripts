@@ -237,8 +237,8 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
   className="measure-6"
 >
   <BackButton
-    href="/dashboard"
-    label="Back to Dashboard"
+    href="/applications"
+    label="Back to Applications"
   />
   <Title
     hidden={true}
