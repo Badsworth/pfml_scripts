@@ -111,6 +111,112 @@ Here’s what to look for in the report:
 
 Check out [this post](https://medium.com/webpack/webpack-bits-getting-the-most-out-of-the-commonschunkplugin-ab389e5f318) for an example of how a Webpack contributor used the bundle analyzer.
 
+## Releases
+
+More details about how to handle releases are available in the [release
+runbook](https://lwd.atlassian.net/wiki/spaces/DD/pages/818184193/API+and+Portal+Runbook).
+
+As a part of the release process it is useful to include some technical notes on
+what the release includes. There is a make target to help automate some of this:
+
+```sh
+make release-notes
+```
+
+This will generate a list of the commits impacting a PORTAL release. For the
+commits that follow the project convention for commit messages, the Jira ticket
+will be linked. Everyone does not follow the convention nor will every commit
+have a Jira ticket associated.
+
+But this will provide a starting point. By default it will generate the list of
+commits that are different between what is deployed to stage (indicated by the
+`deploy/portal/stage` branch) and what is on `master`. You can change the range of
+commits it considers by passing in `refs`, for example only looking for changes
+between release candidates:
+
+```sh
+make release-notes refs="portal/v6.1..portal/v7.0"
+```
+
+The work will generally fall into one of a number of categories, with changes to:
+- EMPLOYER
+- INFRA
+- CP
+
+It's useful to group the release notes broadly by these buckets to clarify what
+this particular release will impact.
+
+It's also usually useful to group the tickets by team, which piping to `sort`
+can help facilitate:
+
+```sh
+make release-notes | sort
+```
+
+Ultimately culminating in something like the notes for
+[api/v1.3.0](https://github.com/EOLWD/pfml/releases/tag/api%2Fv1.3.0).
+
+## Figuring out what's released where
+
+There are a couple other make targets that could be useful. Note these all work
+off of your local git repo, so can only be as accurate as your local checkout
+is. You will generally want to run `git fetch origin` before these if you want
+the most up-to-date info.
+
+`where-ticket` will search the release branches for references to the provided
+ticket number:
+
+```sh
+❯ make where-ticket ticket=CP-1709
+## origin/master ##
+3894541e CP-1701: add tel link to Contact Center phone numbers (#2818)
+
+## origin/deploy/portal/stage ##
+3894541e CP-1701: add tel link to Contact Center phone numbers (#2818)
+
+## origin/deploy/portal/prod ##
+
+## origin/deploy/portal/performance ##
+3894541e CP-1701: add tel link to Contact Center phone numbers (#2818)
+
+## origin/deploy/portal/training ##
+
+## origin/deploy/portal/uat ##
+3894541e CP-1701: add tel link to Contact Center phone numbers (#2818)
+
+```
+
+So in this example, CP-1709 has been deployed to every environment but `training` and `prod`.
+
+`whats-released` lists some info about the lastest commits on the release branches:
+
+```sh
+❯ make whats-released
+## origin/master ##
+ * Closest tag: portal/v7.0-38-g6316145e
+ * Latest commit: 6316145e (origin/master, origin/HEAD, master) Change resource_arn and web_acl_id references (#3035)
+
+## origin/deploy/portal/stage ##
+ * Closest tag: portal/v7.0
+ * Latest commit: 271323e8 (tag: portal/v7.0, origin/release/portal/v7.0, origin/deploy/portal/uat, origin/deploy/portal/stage, origin/deploy/portal/performance) API-1331: Explicitly set UUID for payment object in FINEOS payment processing code. (#2981)
+
+## origin/deploy/portal/prod ##
+ * Closest tag: portal/v6.0
+ * Latest commit: 64a18db5 (tag: portal/v6.0-rc2, tag: portal/v6.0, origin/deploy/portal/training, origin/deploy/portal/prod) INFRA-186: Add scheduler config for payments-fineos-process (#2792)
+
+## origin/deploy/portal/performance ##
+ * Closest tag: portal/v7.0
+ * Latest commit: 271323e8 (tag: portal/v7.0, origin/release/portal/v7.0, origin/deploy/portal/uat, origin/deploy/portal/stage, origin/deploy/portal/performance) API-1331: Explicitly set UUID for payment object in FINEOS payment processing code. (#2981)
+
+## origin/deploy/portal/training ##
+ * Closest tag: portal/v6.0
+ * Latest commit: 64a18db5 (tag: portal/v6.0-rc2, tag: portal/v6.0, origin/deploy/portal/training, origin/deploy/portal/prod) INFRA-186: Add scheduler config for payments-fineos-process (#2792)
+
+## origin/deploy/portal/uat ##
+ * Closest tag: portal/v7.0
+ * Latest commit: 271323e8 (tag: portal/v7.0, origin/release/portal/v7.0, origin/deploy/portal/uat, origin/deploy/portal/stage, origin/deploy/portal/performance) API-1331: Explicitly set UUID for payment object in FINEOS payment processing code. (#2981)
+```
+
 ## Directory Structure
 
 Below is an abbreviated representation of our directory structure, pointing out some of the main files to get you started. Refer to [`software-architecture.md`](../docs/portal/software-architecture.md) for more context.

@@ -1,0 +1,20 @@
+PORTAL_PATHS := . ../infra/portal ../.github/workflows/portal-deploy.yml
+release-notes: refs=origin/deploy/portal/stage..origin/master
+release-notes: ## Generate PORTAL release notes for $refs (defaults between stage and test)
+	@git log --pretty='format: * %s' $(refs) -- $(PORTAL_PATHS) | \
+	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
+	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'
+
+PORTAL_RELEASE_BRANCHES := $(addprefix origin/, master deploy/portal/stage deploy/portal/prod deploy/portal/performance deploy/portal/training deploy/portal/uat)
+where-ticket: ## Search release branches for $ticket
+	@for b in $(PORTAL_RELEASE_BRANCHES); do echo "## $$b ##"; \
+		git --no-pager log --oneline --decorate --grep=$(ticket) $$b; \
+		echo ""; \
+	done
+
+whats-released: ## List latest commit on release branches
+	@for b in $(PORTAL_RELEASE_BRANCHES); do echo "## $$b ##"; \
+		echo " * Closest tag: $$(git describe --tags --match portal/v* $$b)"; \
+		echo " * Latest commit: $$(git --no-pager log --oneline --decorate --color -n 1 $$b)"; \
+		echo ""; \
+	done
