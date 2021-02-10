@@ -129,7 +129,7 @@ module "fineos_bucket_tool_scheduler" {
   ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].arn
   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].family
   ecs_task_executor_role     = aws_iam_role.task_executor.arn
-  ecs_task_role              = aws_iam_role.payments_fineos_process_task_role.arn
+  ecs_task_role              = aws_iam_role.fineos_bucket_tool_role.arn
 
   input = <<JSON
   {
@@ -166,7 +166,7 @@ module "fineos_error_extract_scheduler" {
   ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].arn
   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].family
   ecs_task_executor_role     = aws_iam_role.task_executor.arn
-  ecs_task_role              = aws_iam_role.payments_fineos_process_task_role.arn
+  ecs_task_role              = aws_iam_role.fineos_bucket_tool_role.arn
 
   input = <<JSON
   {
