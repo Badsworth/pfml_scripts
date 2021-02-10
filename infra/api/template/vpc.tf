@@ -5,6 +5,6 @@ data "aws_vpc" "vpc" {
 }
 
 data "aws_subnet" "app" {
-  count = "${length(var.vpc_app_subnet_ids)}"
-  id    = "${var.vpc_app_subnet_ids[count.index]}"
+  count = length(var.vpc_app_subnet_ids)
+  id    = var.vpc_app_subnet_ids[count.index]
 }

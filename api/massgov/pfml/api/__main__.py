@@ -21,11 +21,14 @@ newrelic.agent.initialize(
     environment=os.environ.get("ENVIRONMENT", "local")
 )
 
+from sentry_sdk.integrations.flask import FlaskIntegration
+import sentry_sdk
 import massgov.pfml.api.app as app
 import massgov.pfml.api.authentication as authentication
 import massgov.pfml.util.logging.audit as audit_logging
 import massgov.pfml.util.logging
 
+from sentry_sdk.integrations.logging import ignore_logger
 from massgov.pfml.api.gunicorn_wrapper import GunicornAppWrapper
 # fmt: on
 
@@ -36,7 +39,27 @@ logger = massgov.pfml.util.logging.get_logger(__package__)
 def main():
     audit_logging.init_security_logging()
     massgov.pfml.util.logging.init(__package__)
+    initialize_flask_sentry()
     start_server()
+
+
+def initialize_flask_sentry():
+
+    if os.environ.get("ENABLE_SENTRY", "0") == "1":
+        sentry_sdk.init(
+            dsn="https://3d9b96c9cef846ae8cbd9630530e719c@o514801.ingest.sentry.io/5618604",
+            environment=os.environ.get("ENVIRONMENT", "local"),
+            integrations=[FlaskIntegration()],
+            request_bodies="never",
+            # Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring. We recommend adjusting this value in production.
+            traces_sample_rate=1.0,
+            # By default the SDK will try to use the SENTRY_RELEASE environment variable, or infer a git commit SHA as release, however you may want to set something more human-readable.
+            # release="myapp@1.0.0",
+            # debug can be enabled or disabled
+            # debug=True,
+        )
+        ignore_logger("massgov.pfml.util.logging.audit")
+        # app = Flask(__name__)
 
 
 def start_server():

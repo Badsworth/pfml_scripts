@@ -305,3 +305,9 @@ variable "cognito_provisioned_concurrency_level_min" {
   type        = number
   default     = 1
 }
+
+variable "enable_sentry" {
+  description = "enable sentry in main python function"
+  type        = string
+  default     = "0"
+}
