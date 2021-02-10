@@ -105,12 +105,19 @@ jobs:
           git config user.name "PFMLDevOps"
           git config user.email "68565627+PFMLDevOps@users.noreply.github.com"
           branch_or_tag=$(echo ${{github.ref}} | sed -E 's/^refs\/(heads|tags)\///')
+
           if commit_hash=$(git rev-parse origin/${{github.event.inputs.version}} 2>/dev/null); then
             echo "Received branch"
           else
             commit_hash=$(git rev-parse ${{github.event.inputs.version}})
             echo "Received tag"
           fi
+
+          if [[ -z $commit_hash ]]; then
+            echo "💣 No valid commit hash could be found in Git for the provided branch or tag '${{github.event.inputs.version}}'. This deploy can't proceed."
+            exit 1
+          fi
+
           echo "about to commit $commit_hash to $branch_or_tag..."
           git pull origin $branch_or_tag --ff-only
           git reset --hard $commit_hash
@@ -173,7 +180,7 @@ jobs:
           curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
                         -H "Authorization: Bearer $GITHUB_TOKEN" \
                         -H "Accept: application/vnd.github.v3+json" \
-                        -d '{ "ref": "deploy/api/uat", "inputs": { "version": "$UAT_DEPLOYMENT_VERSION" } }'
+                        -d '{ "ref": "deploy/api/uat", "inputs": { "version": "${{ env.UAT_DEPLOYMENT_VERSION }}" } }'
           echo "Done."
 
   api-build:
