@@ -21,6 +21,7 @@ describe("Submit a REDUCED LEAVE bonding claim and adjucation approval - BHAP8",
         password: Cypress.env("E2E_PORTAL_PASSWORD"),
       };
       portal.login(credentials);
+      portal.goToDashboardFromApplicationsPage();
 
       // Continue Creating Claim
       portal.startClaim();

@@ -514,7 +514,7 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await login(username, password);
       });
-      expect(spy).toHaveBeenCalledWith("LOG_IN");
+      expect(spy).toHaveBeenCalledWith("LOG_IN", {}, { "logged-in": true });
       spy.mockRestore();
     });
 

@@ -23,6 +23,7 @@ describe("Submit Part One of a claim, without documents, and then find in FINEOS
         password: Cypress.env("E2E_PORTAL_PASSWORD"),
       };
       portal.login(credentials);
+      portal.goToDashboardFromApplicationsPage();
 
       // Continue Creating Claim
       portal.startClaim();

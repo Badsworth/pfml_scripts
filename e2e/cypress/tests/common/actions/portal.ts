@@ -610,7 +610,13 @@ export function confirmSubmit(): void {
   cy.url({ timeout: 20000 }).should("include", "/applications/success");
 }
 
-export function goToDashboard(): void {
+export function goToDashboardFromApplicationsPage(): void {
+  cy.contains("Get ready to apply", {
+    timeout: 15000, // Dashboard can take awhile to load due to the number of claims the E2E user has
+  }).click();
+}
+
+export function goToDashboardFromSuccessPage(): void {
   cy.contains("Return to applications").click();
 }
 
@@ -827,6 +833,6 @@ export function submitClaimPartsTwoThree(
   reviewAndSubmit();
   onPage("review");
   confirmSubmit();
-  goToDashboard();
+  goToDashboardFromSuccessPage();
   cy.wait(3000);
 }

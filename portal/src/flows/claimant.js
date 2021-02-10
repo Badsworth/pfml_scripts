@@ -83,8 +83,9 @@ export default {
     [routes.applications.dashboard]: {
       meta: {},
       on: {
-        START: routes.applications.start,
         CONSENT_TO_DATA_SHARING: routes.user.consentToDataSharing,
+        START_APPLICATION: routes.applications.start,
+        SHOW_APPLICATIONS: routes.applications.index,
       },
     },
     [routes.applications.start]: {

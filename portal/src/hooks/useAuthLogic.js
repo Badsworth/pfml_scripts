@@ -134,7 +134,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
       if (next) {
         portalFlow.goTo(next);
       } else {
-        portalFlow.goToPageFor("LOG_IN");
+        portalFlow.goToPageFor("LOG_IN", {}, { "logged-in": true });
       }
     } catch (error) {
       trackAuthError(error);

@@ -25,6 +25,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
       };
       cy.stash("credentials", credentials);
       portal.login(credentials);
+      portal.goToDashboardFromApplicationsPage();
 
       // Continue Creating Claim
       portal.startClaim();

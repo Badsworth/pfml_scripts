@@ -6,6 +6,7 @@ import {
 } from "@fortawesome/free-regular-svg-icons";
 import Alert from "../components/Alert";
 import ButtonLink from "../components/ButtonLink";
+import ClaimCollection from "../models/ClaimCollection";
 import DashboardNavigation from "../components/DashboardNavigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Heading from "../components/Heading";
@@ -15,7 +16,7 @@ import Title from "../components/Title";
 import { Trans } from "react-i18next";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
-import withUser from "../hoc/withUser";
+import withClaims from "../hoc/withClaims";
 
 /**
  * "Dashboard" - Where a Claimant is redirected to after successfully authenticating.
@@ -23,6 +24,13 @@ import withUser from "../hoc/withUser";
 export const Dashboard = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
+
+  // We only want to redirect users who have claims when they
+  // first login, but don't want to prevent them from navigating
+  // to this page entirely
+  if (props.query["logged-in"] && !props.claims.isEmpty) {
+    appLogic.portalFlow.goToPageFor("SHOW_APPLICATIONS");
+  }
 
   const alertIconProps = {
     className: "margin-right-1 text-secondary text-middle",
@@ -124,7 +132,7 @@ export const Dashboard = (props) => {
 
         <ButtonLink
           className="margin-top-3 margin-bottom-8"
-          href={routes.applications.start}
+          href={appLogic.portalFlow.getNextPageRoute("START_APPLICATION")}
         >
           {t("pages.dashboard.createClaimButton")}
         </ButtonLink>
@@ -134,7 +142,17 @@ export const Dashboard = (props) => {
 };
 
 Dashboard.propTypes = {
-  appLogic: PropTypes.object.isRequired,
+  appLogic: PropTypes.shape({
+    portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
+      goToPageFor: PropTypes.func.isRequired,
+      pathname: PropTypes.string.isRequired,
+    }),
+  }).isRequired,
+  claims: PropTypes.instanceOf(ClaimCollection).isRequired,
+  query: PropTypes.shape({
+    "logged-in": PropTypes.string,
+  }).isRequired,
 };
 
-export default withUser(Dashboard);
+export default withClaims(Dashboard);
