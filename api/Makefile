@@ -378,6 +378,13 @@ release-notes: ## Generate API release notes for $refs (defaults between stage a
 	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
 	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'
 
+release-list: refs=origin/deploy/api/stage..origin/master
+release-list: ## Generate comma-separated list of ticket ids for $refs
+	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
+	grep -E '(API|CP|EDM|EMPLOYER|END|INFRA)-[0-9]+' | \
+	sed -E 's/.*((API|CP|EDM|EMPLOYER|END|INFRA)-[0-9]+)[] :]*(.*)/\1/g' | tr '\n' ',' | sed 's/,$$//'
+
+
 API_RELEASE_BRANCHES := $(addprefix origin/, master deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat)
 where-ticket: ## Search release branches for $ticket
 	@for b in $(API_RELEASE_BRANCHES); do echo "## $$b ##"; \
@@ -390,6 +397,11 @@ whats-released: ## List latest commit on release branches
 		echo " * Closest tag: $$(git describe --tags --match api/v* $$b)"; \
 		echo " * Latest commit: $$(git --no-pager log --oneline --decorate --color -n 1 $$b)"; \
 		echo ""; \
+	done
+
+whats-released-short: ## List latest version tag or commit on release branches
+	@for b in $(API_RELEASE_BRANCHES); do \
+		echo " * $$b: $$(git describe --tags --match api/v* --exact-match $$b 2> /dev/null || git rev-parse $$b)"; \
 	done
 
 help: ## Displays this help screen

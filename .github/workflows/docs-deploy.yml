@@ -3,6 +3,9 @@
 # This site is accessible only by folks with access to the repository.
 # https://eolwd.github.io/pfml
 #
+# This workflow is run on every commit to the main branch, and every time
+# a non-test deployment occurs. This keeps the release pages up to date.
+#
 name: GH Pages deploy
 
 on:
@@ -10,8 +13,6 @@ on:
   push:
     branches:
       - master
-    paths:
-      - "docs/**"
 
 env:
   python-version: 3.8
@@ -36,10 +37,13 @@ jobs:
           git config user.name "PFMLDevOps"
           git config user.email "68565627+PFMLDevOps@users.noreply.github.com"
 
-      - name: Build and Update Links
+      - name: Add release details and links
         run: |
-          python ./bin/hardcode_doc_links.py
-          npm run docs:build
+          python ./bin/docs/hardcode_doc_links.py
+          ./bin/docs/generate-release-docs.sh
+
+      - name: Build
+        run: npm run docs:build
 
       - name: Deploy
-        run: ghp-import -p -m "Update docs to ${{ github.sha }}" site
+        run: ghp-import -p -f -m "Update docs to ${{ github.sha }}" site

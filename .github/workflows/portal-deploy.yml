@@ -358,6 +358,14 @@ jobs:
           state: ${{ env.deploy-state }}
           deployment_id: ${{ needs.start-deployment-status.outputs.deploy_id }}
 
+      - name: Update release page
+        uses: benc-uk/workflow-dispatch@v1
+        if: contains(github.ref, 'deploy/portal')
+        with:
+          workflow: GH Pages deploy
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          ref: master
+
   end-to-end:
     name: End-to-End Test Deployment
     runs-on: ubuntu-latest
