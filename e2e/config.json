@@ -26,7 +26,7 @@
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "training": {
-    "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
+    "PORTAL_BASEURL": "https://dist3ws941qq9.cloudfront.net",
     "API_BASEURL": "https://paidleave-api-training.mass.gov/api/v1",
     "FINEOS_BASEURL": "https://trn-claims-webapp.masspfml.fineos.com/",
     "PORTAL_USERNAME": "rob+training@lastcallmedia.com",
