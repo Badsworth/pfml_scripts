@@ -551,7 +551,7 @@ const shared = {
   bondingRegsLeavePeriodDetailsLabel:
     "Do you work in an acute care hospital or the teaching hospital of the University of Massachusetts Medical School?",
   bondingRegsLeavePeriodDetailsSummary:
-    "If you had a child join your family in 2020, you may be eligible for paid leave anytime in 2021. <emergency-bonding-regs-worker-link>Learn more about emergency Covid-19 regulations for hospital workers.</emergency-bonding-regs-worker-link>.",
+    "If you had a child join your family in 2020, you may be eligible for paid leave anytime in 2021. <emergency-bonding-regs-worker-link>Learn more about emergency Covid-19 regulations for hospital workers.</emergency-bonding-regs-worker-link>",
   choiceNo: "No",
   choicePendingOtherIncomes:
     "I’ve applied for another benefit that hasn’t been approved$t(chars.nbsp)yet.",
