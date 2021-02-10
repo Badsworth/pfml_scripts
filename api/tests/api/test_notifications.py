@@ -78,6 +78,25 @@ def test_notifications_post_leave_admin(client, test_db_session, fineos_user_tok
     assert associated_claim.fineos_absence_id == "NTN-111-ABS-01"
 
 
+def test_notifications_update_claims(client, test_db_session, fineos_user_token, employer):
+    existing_claim = Claim(fineos_absence_id=leave_admin_body["absence_case_id"])
+    test_db_session.add(existing_claim)
+    test_db_session.commit()
+    response = client.post(
+        "/v1/notifications",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=leave_admin_body,
+    )
+    assert response.status_code == 201
+    claim_record = (
+        test_db_session.query(Claim)
+        .filter(Claim.fineos_absence_id == leave_admin_body["absence_case_id"])
+        .one_or_none()
+    )
+    assert claim_record
+    assert claim_record.employer_id == employer.employer_id
+
+
 def test_notifications_post_leave_admin_no_document_type(
     client, test_db_session, fineos_user_token, employer
 ):
