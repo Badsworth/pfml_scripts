@@ -112,6 +112,10 @@ def notifications_post():
 
             db_session.add(new_claim)
             db_session.commit()
+        elif claim.employer_id is None:
+            claim.employer_id = employer.employer_id
+            db_session.add(claim)
+            db_session.commit()
 
     # Send the request to Service Now
     send_notification_to_service_now(notification_request, employer)
