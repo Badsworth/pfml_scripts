@@ -734,14 +734,21 @@ def update_eft_info(
         # If this employee has never been in the VENDOR_EFT flow before.
         # The early return if is_same_eft() is True will prevent reaching
         # this statement.
-        state_log_util.create_finished_state_log(
-            end_state=State.EFT_REQUEST_RECEIVED,
-            associated_model=employee_pfml_entry,
-            outcome=state_log_util.build_outcome(
-                f"Initiated VENDOR_EFT flow for Employee {employee_pfml_entry.employee_id}"
-            ),
-            db_session=db_session,
+        logger.info(
+            "Initiated VENDOR_EFT flow for Employee",
+            extra={
+                "end_state_id": State.EFT_REQUEST_RECEIVED.state_id,
+                "employee_id": employee_pfml_entry.employee_id,
+            },
         )
+        # state_log_util.create_finished_state_log(
+        #     end_state=State.EFT_REQUEST_RECEIVED,
+        #     associated_model=employee_pfml_entry,
+        #     outcome=state_log_util.build_outcome(
+        #         f"Initiated VENDOR_EFT flow for Employee {employee_pfml_entry.employee_id}"
+        #     ),
+        #     db_session=db_session,
+        # )
         return True
     return False
 

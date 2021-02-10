@@ -163,16 +163,24 @@ def test_process_vendor_extract_data_happy_path(
 
     # Confirm StateLogs
     state_logs = test_db_session.query(StateLog).all()
-    assert len(state_logs) == 2
-    assert len(updated_employee.state_logs) == 2
 
+    # TODO: Restore this test after we have a long-term solution for the hotfix in API-1370.
+    #
+    # updated_employee_state_log_count = 2
+    updated_employee_state_log_count = 1
+
+    assert len(state_logs) == updated_employee_state_log_count
+    assert len(updated_employee.state_logs) == updated_employee_state_log_count
+
+    # TODO: Restore this test after we have a long-term solution for the hotfix in API-1370.
+    #
     # Confirm 1 state log for VENDOR_EFT flow
-    assert (
-        test_db_session.query(func.count(StateLog.state_log_id))
-        .filter(StateLog.end_state_id == State.EFT_REQUEST_RECEIVED.state_id)
-        .scalar()
-        == 1
-    )
+    # assert (
+    #     test_db_session.query(func.count(StateLog.state_log_id))
+    #     .filter(StateLog.end_state_id == State.EFT_REQUEST_RECEIVED.state_id)
+    #     .scalar()
+    #     == 1
+    # )
 
     # Confirm 1 state log for VENDOR_CHECK flow
     assert (
@@ -619,11 +627,13 @@ def test_update_eft_info_happy_path(test_db_session, initialize_factories_sessio
     )
     assert has_eft_update is True
 
-    state_log = state_log_util.get_latest_state_log_in_flow(
-        employee, Flow.VENDOR_EFT, test_db_session
-    )
-    assert state_log
-    assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
+    # TODO: Restore this test after we have a long-term solution for the hotfix in API-1370.
+    #
+    # state_log = state_log_util.get_latest_state_log_in_flow(
+    #     employee, Flow.VENDOR_EFT, test_db_session
+    # )
+    # assert state_log
+    # assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
 
 
 def test_update_eft_info_update_existing(test_db_session, initialize_factories_session):
@@ -655,11 +665,13 @@ def test_update_eft_info_update_existing(test_db_session, initialize_factories_s
     )
     assert has_eft_update is True
 
-    state_log = state_log_util.get_latest_state_log_in_flow(
-        employee, Flow.VENDOR_EFT, test_db_session
-    )
-    assert state_log
-    assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
+    # TODO: Restore this test after we have a long-term solution for the hotfix in API-1370.
+    #
+    # state_log = state_log_util.get_latest_state_log_in_flow(
+    #     employee, Flow.VENDOR_EFT, test_db_session
+    # )
+    # assert state_log
+    # assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
 
 
 def test_update_eft_info_is_same_eft_no_prior_state(test_db_session, initialize_factories_session):
@@ -695,10 +707,12 @@ def test_update_eft_info_is_same_eft_no_prior_state(test_db_session, initialize_
     )
     assert has_eft_update is True
 
-    state_log = state_log_util.get_latest_state_log_in_flow(
-        employee, Flow.VENDOR_EFT, test_db_session
-    )
-    assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
+    # TODO: Restore this test after we have a long-term solution for the hotfix in API-1370.
+    #
+    # state_log = state_log_util.get_latest_state_log_in_flow(
+    #     employee, Flow.VENDOR_EFT, test_db_session
+    # )
+    # assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
 
 
 def test_update_eft_info_is_same_eft_has_prior_eft_state(
