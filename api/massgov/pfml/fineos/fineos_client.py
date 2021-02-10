@@ -202,7 +202,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 response = self.oauth_session.request(
                     method, url, timeout=(6.1, request_timeout), headers=headers, **args
                 )
-        except requests.exceptions.RequestException as ex:
+        except (requests.exceptions.RequestException, requests.exceptions.Timeout) as ex:
             logger.error("%s %s => %r", method, url, ex)
             # Make sure New Relic records errors from FINEOS, even if the API does not ultimately
             # return an error.
