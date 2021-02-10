@@ -163,7 +163,11 @@ def test_applications_get_with_payment_preference(client, user, auth_token, test
 
 
 def test_applications_get_all_for_user(client, user, auth_token):
-    applications = [ApplicationFactory.create(user=user), ApplicationFactory.create(user=user)]
+    applications = sorted(
+        [ApplicationFactory.create(user=user), ApplicationFactory.create(user=user)],
+        key=lambda app: app.start_time,
+        reverse=True,
+    )
     unassociated_application = ApplicationFactory.create()
 
     response = client.get("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})
