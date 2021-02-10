@@ -25,13 +25,12 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
 export const UploadId = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
-  const {
-    tempFiles,
-    addTempFiles,
-    removeTempFile,
-  } = useTempFileCollection(new TempFileCollection(), {
-    clearErrors: appLogic.clearErrors,
-  });
+  const { tempFiles, addTempFiles, removeTempFile } = useTempFileCollection(
+    new TempFileCollection(),
+    {
+      clearErrors: appLogic.clearErrors,
+    }
+  );
   const { additionalDoc, showStateId } = query;
   let hasStateId;
   if (showStateId === "true") {

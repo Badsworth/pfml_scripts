@@ -1,8 +1,6 @@
 #
 # Utility functions to support custom validation handlers on connexion
 #
-import traceback
-
 import connexion.apps.flask_app
 import pydantic
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem, ProblemException
@@ -76,11 +74,8 @@ def internal_server_error_handler(error: InternalServerError) -> Response:
     # see: https://github.com/python/typeshed/pull/4210
     #
     exception = error.original_exception or error  # type: ignore
-    stacktrace = "".join(traceback.TracebackException.from_exception(exception).format())
 
-    logger.error(
-        str(exception), extra={"error.class": type(error).__name__, "traceback": stacktrace}
-    )
+    logger.exception(str(exception), extra={"error.class": type(exception).__name__})
 
     return http_exception_handler(error)
 
@@ -89,12 +84,22 @@ def add_error_handlers_to_app(connexion_app):
     connexion_app.add_error_handler(ValidationException, validation_request_handler)
     connexion_app.add_error_handler(BadRequestProblem, connexion_400_handler)
     connexion_app.add_error_handler(ExtraParameterProblem, connexion_400_handler)
+    connexion_app.add_error_handler(pydantic.ValidationError, handle_pydantic_validation_error)
+
     # These are all handled with the same generic exception handler to make them uniform in structure.
     connexion_app.add_error_handler(NotFound, http_exception_handler)
     connexion_app.add_error_handler(Forbidden, http_exception_handler)
     connexion_app.add_error_handler(Unauthorized, http_exception_handler)
-    connexion_app.add_error_handler(InternalServerError, internal_server_error_handler)
-    connexion_app.add_error_handler(pydantic.ValidationError, handle_pydantic_validation_error)
+
+    # Override the default internal server error handler to prevent Flask
+    # from using logging.error with a generic message. We want to log
+    # the original exception.
+    #
+    # We handle all 500s here but only expect InternalServerError instances,
+    # as indicated by the documentation. Calling out InterrnalServerError explicitly
+    # here would not override the default internal server error handler.
+    #
+    connexion_app.add_error_handler(500, internal_server_error_handler)
 
 
 def get_custom_validator_map():

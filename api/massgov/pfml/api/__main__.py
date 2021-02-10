@@ -29,6 +29,7 @@ import massgov.pfml.util.logging.audit as audit_logging
 import massgov.pfml.util.logging
 
 from sentry_sdk.integrations.logging import ignore_logger
+from massgov.pfml.util.sentry import sanitize_sentry_event
 from massgov.pfml.api.gunicorn_wrapper import GunicornAppWrapper
 # fmt: on
 
@@ -44,22 +45,20 @@ def main():
 
 
 def initialize_flask_sentry():
-
     if os.environ.get("ENABLE_SENTRY", "0") == "1":
         sentry_sdk.init(
             dsn="https://3d9b96c9cef846ae8cbd9630530e719c@o514801.ingest.sentry.io/5618604",
             environment=os.environ.get("ENVIRONMENT", "local"),
             integrations=[FlaskIntegration()],
             request_bodies="never",
+            before_send=sanitize_sentry_event,
             # Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring. We recommend adjusting this value in production.
             traces_sample_rate=1.0,
             # By default the SDK will try to use the SENTRY_RELEASE environment variable, or infer a git commit SHA as release, however you may want to set something more human-readable.
             # release="myapp@1.0.0",
-            # debug can be enabled or disabled
-            # debug=True,
+            debug=False,
         )
         ignore_logger("massgov.pfml.util.logging.audit")
-        # app = Flask(__name__)
 
 
 def start_server():

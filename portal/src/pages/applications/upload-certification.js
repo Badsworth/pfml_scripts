@@ -31,13 +31,12 @@ export const UploadCertification = (props) => {
   const claimReasonQualifier = claim.leave_details.reason_qualifier;
 
   const { appErrors, portalFlow } = appLogic;
-  const {
-    tempFiles,
-    addTempFiles,
-    removeTempFile,
-  } = useTempFileCollection(new TempFileCollection(), {
-    clearErrors: appLogic.clearErrors,
-  });
+  const { tempFiles, addTempFiles, removeTempFile } = useTempFileCollection(
+    new TempFileCollection(),
+    {
+      clearErrors: appLogic.clearErrors,
+    }
+  );
   const hasLoadingDocumentsError = hasDocumentsLoadError(
     appErrors,
     claim.application_id
