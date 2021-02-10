@@ -18,6 +18,7 @@ import {
   patchEmployersClaimsByFineosAbsenceIdReview,
   getEmployersClaimsByFineosAbsenceIdReview,
 } from "../api";
+import pRetry from "p-retry";
 import AuthenticationManager from "./AuthenticationManager";
 import { Credentials } from "../types";
 import { SimulatedEmployerResponse } from "./types";
@@ -117,9 +118,31 @@ export default class PortalSubmitter {
     response: SimulatedEmployerResponse
   ): Promise<void> {
     const options = await this.getOptions(employerCredentials);
-    const review = await getEmployersClaimsByFineosAbsenceIdReview(
-      { fineosAbsenceId },
-      options
+    // When we go to submit employer response, we need to first fetch the review doc.
+    // The review doc does not become available until Fineos has posted a notification back to the API.
+    // This can take several seconds, so we loop and wait until that notification has a chance to complete
+    // before proceeding. Without the retry here, we'd fail immediately.
+    const review = await pRetry(
+      async () => {
+        try {
+          return await getEmployersClaimsByFineosAbsenceIdReview(
+            { fineosAbsenceId },
+            options
+          );
+        } catch (e) {
+          if (
+            e.data &&
+            e.data.message === "Claim does not exist for given absence ID"
+          ) {
+            throw new Error(
+              `Unable to find claim as leave admin for ${fineosAbsenceId}.`
+            );
+          }
+          // Otherwise, abort immediately - there's some other problem.
+          throw new pRetry.AbortError(e);
+        }
+      },
+      { retries: 20, maxRetryTime: 30000 }
     );
     const { data } = review.data;
     if (!data || !data.employer_benefits || !data.previous_leaves) {
