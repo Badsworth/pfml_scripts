@@ -12,6 +12,7 @@ include = ["openapi.yaml", "newrelic.ini"]
 alembic = "^1.4.2"
 boto3 = "^1.13.7"
 boto3_extensions = "^0.14.1"
+cryptography = "^3.3.2"
 connexion = {extras = ["swagger-ui"], version = "^2.7.0"}
 csvsorter = "^1.4"
 ebcdic = "^1.1.1"
