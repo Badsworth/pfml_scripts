@@ -200,6 +200,9 @@ exports[`Dashboard renders dashboard content 1`] = `
           "medical-bonding-link": <a
             href="https://www.mass.gov/pfml-medical-bonding"
           />,
+          "tax-liability-link": <a
+            href="https://www.mass.gov/pfml-tax-liability"
+          />,
           "ul": <ul
             className="usa-list"
           />,
@@ -379,5 +382,17 @@ Array [
        taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.
     </li>
   </ul>,
+  <p
+    key="p-4"
+  >
+    If your application is approved. PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the 
+    <a
+      href="https://www.mass.gov/pfml-tax-liability"
+      key="1"
+    >
+      possible tax implications
+    </a>
+     of your paid leave benefits.
+  </p>,
 ]
 `;

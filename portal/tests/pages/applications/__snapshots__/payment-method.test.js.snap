@@ -12,21 +12,6 @@ exports[`PaymentMethod renders the page 1`] = `
     >
       Payment method
     </Title>
-    <Alert
-      neutral={true}
-      state="info"
-    >
-      <Trans
-        components={
-          Object {
-            "tax-liability-link": <a
-              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-benefit-payment-process"
-            />,
-          }
-        }
-        i18nKey="pages.claimsPaymentMethod.taxLiabilityAlert"
-      />
-    </Alert>
     <InputChoiceGroup
       choices={
         Array [
@@ -161,19 +146,6 @@ exports[`PaymentMethod renders the page 1`] = `
 `;
 
 exports[`PaymentMethod renders the page 2`] = `
-Array [
-  "Learn more about the ",
-  <a
-    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-benefit-payment-process"
-    key="1"
-  >
-    possible tax implications
-  </a>,
-  " of your paid leave benefits.",
-]
-`;
-
-exports[`PaymentMethod renders the page 3`] = `
 Array [
   <p
     key="p-0"

@@ -127,9 +127,11 @@ export const Dashboard = (props) => {
             ),
             ul: <ul className="usa-list" />,
             li: <li />,
+            "tax-liability-link": (
+              <a href={routes.external.massgov.taxLiability} />
+            ),
           }}
         />
-
         <ButtonLink
           className="margin-top-3 margin-bottom-8"
           href={appLogic.portalFlow.getNextPageRoute("START_APPLICATION")}

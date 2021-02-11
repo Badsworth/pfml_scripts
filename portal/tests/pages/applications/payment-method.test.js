@@ -16,7 +16,6 @@ describe("PaymentMethod", () => {
 
     expect(wrapper).toMatchSnapshot();
     expect(wrapper.find("Trans").first().dive()).toMatchSnapshot();
-    expect(wrapper.find("Trans").last().dive()).toMatchSnapshot();
   });
 
   describe("when ACH is selected as the payment method", () => {
