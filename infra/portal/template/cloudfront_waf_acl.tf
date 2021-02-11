@@ -22,7 +22,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   #                        Rate-limiting AWS WAF rule                            #
   #------------------------------------------------------------------------------#
   rule {
-    name     = "mass-pfml-${var.environment_name}--rate-based-acl"
+    name     = "mass-pfml-${var.environment_name}-rate-based-acl"
     priority = 0
 
     dynamic "action" {
@@ -48,7 +48,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "mass-pfml-${var.environment_name}--rate-limited"
+      metric_name                = "mass-pfml-${var.environment_name}-rate-limited"
       sampled_requests_enabled   = true
     }
   }
@@ -56,7 +56,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   #                      Fortinet OWASP 10 AWS WAF rule                          #
   #------------------------------------------------------------------------------#
   rule {
-    name     = "mass-pfml-${var.environment_name}--fortinet-managed-rules"
+    name     = "mass-pfml-${var.environment_name}-fortinet-managed-rules"
     priority = 1
 
 
@@ -83,14 +83,14 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "mass-pfml-${var.environment_name}--fortinet-blocked"
+      metric_name                = "mass-pfml-${var.environment_name}-fortinet-rule-group"
       sampled_requests_enabled   = true
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = "mass-pfml-${var.environment_name}--cloudfront-monitored"
+    metric_name                = "mass-pfml-${var.environment_name}-cloudfront-acl"
     sampled_requests_enabled   = true
   }
 }
