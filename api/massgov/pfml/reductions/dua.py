@@ -1,6 +1,7 @@
 import csv
 import io
 import os
+import pathlib
 from typing import Any, Dict, List, Optional
 
 import massgov.pfml.api.util.state_log_util as state_log_util
@@ -8,11 +9,14 @@ import massgov.pfml.db as db
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
+    Claim,
     DuaReductionPayment,
     ReferenceFile,
     ReferenceFileType,
     State,
 )
+from massgov.pfml.payments.payments_util import get_now
 from massgov.pfml.payments.sftp_s3_transfer import (
     SftpS3TransferConfig,
     copy_to_sftp_and_archive_s3_files,
@@ -21,17 +25,34 @@ from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 
 logger = logging.get_logger(__name__)
 
-DUA_PAYMENT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
-    "CASE_ID": "absence_case_id",
-    "EMPR_FEIN": "employer_fein",
-    "WARRANT_DT": "payment_date",
-    "RQST_WK_DT": "request_week_begin_date",
-    "WBA_ADDITIONS": "gross_payment_amount_cents",
-    "PAID_AM": "payment_amount_cents",
-    "FRAUD_IND": "fraud_indicator",
-    "BYB_DT": "benefit_year_begin_date",
-    "BYE_DT": "benefit_year_end_date",
-}
+
+class Constants:
+    DUA_PAYMENT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
+        "CASE_ID": "absence_case_id",
+        "EMPR_FEIN": "employer_fein",
+        "WARRANT_DT": "payment_date",
+        "RQST_WK_DT": "request_week_begin_date",
+        "WBA_ADDITIONS": "gross_payment_amount_cents",
+        "PAID_AM": "payment_amount_cents",
+        "FRAUD_IND": "fraud_indicator",
+        "BYB_DT": "benefit_year_begin_date",
+        "BYE_DT": "benefit_year_end_date",
+    }
+
+    CASE_ID_FIELD = "CASE_ID"
+    BENEFIT_START_DATE_FIELD = "START_DATE"
+    SSN_FIELD = "SSN"
+
+    CLAIMAINT_LIST_FIELDS = [
+        CASE_ID_FIELD,
+        SSN_FIELD,
+        BENEFIT_START_DATE_FIELD,
+    ]
+
+    TEMPORARY_BENEFIT_START_DATE = "20210101"
+
+    CLAIMAINT_LIST_FILENAME_PREFIX = "DFML_CLAIMANTS_FOR_DUA_"
+    CLAIMAINT_LIST_FILENAME_TIME_FORMAT = "%Y%m%d%H%M"
 
 
 def copy_claimant_list_to_moveit(db_session: db.Session) -> None:
@@ -56,6 +77,75 @@ def copy_claimant_list_to_moveit(db_session: db.Session) -> None:
             outcome=state_log_util.build_outcome("Sent list of claimants to DUA via MoveIt"),
             db_session=db_session,
         )
+
+
+def get_approved_claims(db_session: db.Session) -> List[Claim]:
+    return (
+        db_session.query(Claim)
+        .filter_by(fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id)
+        .all()
+    )
+
+
+def format_claims_for_dua_claimant_list(approved_claims: List[Claim]) -> List[Dict]:
+    approved_claims_info = []
+
+    for claim in approved_claims:
+        employee = claim.employee
+        if employee is not None:
+            _info = {
+                Constants.CASE_ID_FIELD: claim.fineos_absence_id,
+                Constants.SSN_FIELD: employee.tax_identifier.tax_identifier.replace("-", ""),
+                Constants.BENEFIT_START_DATE_FIELD: Constants.TEMPORARY_BENEFIT_START_DATE,
+            }
+
+            approved_claims_info.append(_info)
+
+    return approved_claims_info
+
+
+def get_approved_claims_info_csv_path(approved_claims: List[Dict]) -> pathlib.Path:
+    file_name = Constants.CLAIMAINT_LIST_FILENAME_PREFIX + get_now().strftime(
+        Constants.CLAIMAINT_LIST_FILENAME_TIME_FORMAT
+    )
+    return file_util.create_csv_from_list(
+        approved_claims, Constants.CLAIMAINT_LIST_FIELDS, file_name
+    )
+
+
+def create_list_of_claimants(db_session: db.Session) -> None:
+    config = get_s3_config()
+
+    approved_claims = get_approved_claims(db_session)
+
+    dua_claimant_info = format_claims_for_dua_claimant_list(approved_claims)
+
+    claimant_info_path = get_approved_claims_info_csv_path(dua_claimant_info)
+
+    s3_dest = os.path.join(
+        config.s3_bucket, config.s3_dua_outbound_directory_path, claimant_info_path.name
+    )
+    file_util.upload_to_s3(str(claimant_info_path), s3_dest)
+
+    # Update ReferenceFile and StateLog Tables
+    ref_file = ReferenceFile(
+        file_location=s3_dest,
+        reference_file_type_id=ReferenceFileType.DUA_CLAIMANT_LIST.reference_file_type_id,
+    )
+    db_session.add(ref_file)
+    # commit ref_file to db
+    db_session.commit()
+
+    # Update StateLog Tables
+    state_log_util.create_finished_state_log(
+        associated_model=ref_file,
+        end_state=State.DUA_CLAIMANT_LIST_CREATED,
+        outcome=state_log_util.build_outcome("Created claimant list for DUA"),
+        db_session=db_session,
+    )
+
+    # commit StateLog to db
+    db_session.commit()
 
 
 def load_new_dua_payments(db_session: db.Session) -> None:
@@ -118,7 +208,7 @@ def _get_pending_dua_payment_reference_files(
 def _convert_dict_with_csv_keys_to_db_keys(csv_data: Dict[str, Any]) -> Dict[str, Any]:
     # Load empty strings as null values.
     return {
-        DUA_PAYMENT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP[k]: None if v == "" else v
+        Constants.DUA_PAYMENT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP[k]: None if v == "" else v
         for k, v in csv_data.items()
     }
 

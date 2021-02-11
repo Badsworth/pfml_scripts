@@ -16,7 +16,7 @@ from massgov.pfml.payments.payments_util import get_now
 from massgov.pfml.reductions.dia import (
     Constants,
     create_list_of_approved_claimants,
-    format_employees_info_for_dia_claimant_list,
+    format_claims_for_dia_claimant_list,
     get_approved_claims,
     get_approved_claims_info_csv_path,
 )
@@ -56,15 +56,18 @@ def test_get_approved_claims(set_up, test_db_session):
     assert len(approved_claims) == 1
 
 
-def test_format_employees_info_for_dia_claimant_list(set_up):
+def test_format_claims_for_dia_claimant_list(set_up):
     approved_claims = set_up
     claim = approved_claims[0]
     employee = claim.employee
-    approved_claims_dia_info = format_employees_info_for_dia_claimant_list(approved_claims)
+    approved_claims_dia_info = format_claims_for_dia_claimant_list(approved_claims)
 
     for approved_claim in approved_claims_dia_info:
         assert approved_claim[Constants.CASE_ID_FIELD] == claim.fineos_absence_id
-        assert approved_claim[Constants.START_DATE_FIELD] == Constants.TEMPORARY_START_DATE
+        assert (
+            approved_claim[Constants.BENEFIT_START_DATE_FIELD]
+            == Constants.TEMPORARY_BENEFIT_START_DATE
+        )
         assert approved_claim[Constants.FIRST_NAME_FIELD] == employee.first_name
         assert approved_claim[Constants.LAST_NAME_FIELD] == employee.last_name
         assert approved_claim[Constants.BIRTH_DATE_FIELD] == employee.date_of_birth.strftime(
@@ -77,7 +80,7 @@ def test_format_employees_info_for_dia_claimant_list(set_up):
 
 def test_get_approved_claims_info_csv_path(set_up):
     approved_employees = set_up
-    approved_claims_dia_info = format_employees_info_for_dia_claimant_list(approved_employees)
+    approved_claims_dia_info = format_claims_for_dia_claimant_list(approved_employees)
     file_path = get_approved_claims_info_csv_path(approved_claims_dia_info)
     file_name = (
         Constants.CLAIMAINT_LIST_FILENAME_PREFIX
@@ -95,7 +98,7 @@ def test_create_list_of_approved_claimants(monkeypatch, mock_s3_bucket, test_db_
     monkeypatch.setenv("S3_DIA_OUTBOUND_DIRECTORY_PATH", dest_dir)
 
     approved_employees = set_up
-    approved_claims_dia_info = format_employees_info_for_dia_claimant_list(approved_employees)
+    approved_claims_dia_info = format_claims_for_dia_claimant_list(approved_employees)
     file_path = get_approved_claims_info_csv_path(approved_claims_dia_info)
 
     create_list_of_approved_claimants(test_db_session)

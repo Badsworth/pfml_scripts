@@ -15,6 +15,7 @@ import massgov.pfml.reductions.dua as dua
 import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
     DuaReductionPayment,
     LatestStateLog,
     ReferenceFile,
@@ -22,13 +23,13 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
-from massgov.pfml.db.models.factories import ReferenceFileFactory
+from massgov.pfml.db.models.factories import ClaimFactory, ReferenceFileFactory
 
 fake = faker.Faker()
 
 
 EXPECTED_DUA_PAYMENT_CSV_FILE_HEADERS = list(
-    dua.DUA_PAYMENT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP.keys()
+    dua.Constants.DUA_PAYMENT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP.keys()
 )
 
 
@@ -558,4 +559,166 @@ def test_copy_to_sftp_and_archive_s3_files(
             .filter(StateLog.reference_file_id == ref_file.reference_file_id)
             .scalar()
             == 1
+        )
+
+
+@pytest.mark.parametrize(
+    "approved_claims_count",
+    (
+        # No approved claims
+        (0),
+        # General case: Some small number of valid approved claims.
+        (random.randint(1, 5)),
+    ),
+)
+def test_format_claims_for_dua_claimant_list_expected_structure_is_generated(
+    initialize_factories_session, test_db_session, approved_claims_count
+):
+    approved_claims = [ClaimFactory.create() for _i in range(approved_claims_count)]
+
+    formatted_rows = dua.format_claims_for_dua_claimant_list(approved_claims)
+    expected_rows = [
+        {
+            dua.Constants.CASE_ID_FIELD: claim.fineos_absence_id,
+            dua.Constants.BENEFIT_START_DATE_FIELD: dua.Constants.TEMPORARY_BENEFIT_START_DATE,
+            dua.Constants.SSN_FIELD: claim.employee.tax_identifier.tax_identifier.replace("-", ""),
+        }
+        for claim in approved_claims
+    ]
+
+    assert len(formatted_rows) == len(approved_claims)
+    assert formatted_rows == expected_rows
+
+
+def test_format_claims_for_dua_claimant_list_expected_structure_with_missing_employee_is_generated(
+    initialize_factories_session, test_db_session
+):
+    approved_claims = [ClaimFactory.create() for _i in range(random.randint(1, 5))]
+    approved_claims[0].employee = None
+    expected_rows = [
+        {
+            dua.Constants.CASE_ID_FIELD: claim.fineos_absence_id,
+            dua.Constants.BENEFIT_START_DATE_FIELD: dua.Constants.TEMPORARY_BENEFIT_START_DATE,
+            dua.Constants.SSN_FIELD: claim.employee.tax_identifier.tax_identifier.replace("-", ""),
+        }
+        for claim in approved_claims[1:]
+    ]
+
+    formatted_rows = dua.format_claims_for_dua_claimant_list(approved_claims)
+
+    assert len(formatted_rows) == len(approved_claims) - 1
+    assert formatted_rows == expected_rows
+
+
+def test_format_claims_for_dua_claimant_list_null_absence_id(
+    initialize_factories_session, test_db_session
+):
+    approved_claims = [
+        ClaimFactory.create(fineos_absence_id=None) for _i in range(random.randint(1, 5))
+    ]
+
+    formatted_rows = dua.format_claims_for_dua_claimant_list(approved_claims)
+
+    assert len(formatted_rows) == len(approved_claims)
+
+    for i, row in enumerate(formatted_rows):
+        claim = approved_claims[i]
+        assert row == {
+            dua.Constants.CASE_ID_FIELD: None,
+            dua.Constants.BENEFIT_START_DATE_FIELD: dua.Constants.TEMPORARY_BENEFIT_START_DATE,
+            dua.Constants.SSN_FIELD: claim.employee.tax_identifier.tax_identifier.replace("-", ""),
+        }
+
+
+@pytest.mark.parametrize(
+    "approved_claims_count",
+    (
+        # No approved claims
+        (0),
+        # General case: Some small number of valid approved claims.
+        (random.randint(3, 9)),
+    ),
+)
+def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
+    initialize_factories_session,
+    test_db_session,
+    mock_s3_bucket,
+    monkeypatch,
+    approved_claims_count,
+):
+    # Set up environment variables.
+    s3_bucket_uri = "s3://" + mock_s3_bucket
+    dest_dir = "pfml/outbound-dir"
+    monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
+    monkeypatch.setenv("S3_DUA_OUTBOUND_DIRECTORY_PATH", dest_dir)
+
+    approved_claims = [
+        ClaimFactory.create(fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id)
+        for _i in range(approved_claims_count)
+    ]
+
+    # ReferenceFile.file_location uniqueness errors are possible but unlikely because the
+    # file_location values will include the current time in hours and minutes and we don't expect
+    # to run this function more than once each day. Not adding a test.
+    assert (
+        test_db_session.query(ReferenceFile)
+        .filter_by(
+            reference_file_type_id=ReferenceFileType.DUA_CLAIMANT_LIST.reference_file_type_id
+        )
+        .all()
+    ) == []
+
+    dua.create_list_of_claimants(test_db_session)
+
+    # We always expect this function to create a single DUA_CLAIMANT_LIST every time it runs.
+    claim_files_created_count = 1
+
+    ref_file = (
+        test_db_session.query(ReferenceFile)
+        .filter_by(
+            reference_file_type_id=ReferenceFileType.DUA_CLAIMANT_LIST.reference_file_type_id
+        )
+        .all()
+    )
+    state_log = (
+        test_db_session.query(StateLog)
+        .filter_by(end_state_id=State.DUA_CLAIMANT_LIST_CREATED.state_id)
+        .all()
+    )
+
+    # Expect a ReferenceFile and StateLog entry for each claim file created.
+    assert len(ref_file) == claim_files_created_count
+    assert len(state_log) == claim_files_created_count
+
+    # StateLog is properly associated with ReferenceFile.
+    assert state_log[0].reference_file == ref_file[0]
+
+    s3 = boto3.client("s3")
+
+    object_list = s3.list_objects(Bucket=mock_s3_bucket, Prefix=dest_dir)["Contents"]
+    assert len(object_list) == claim_files_created_count
+
+    object_in_s3 = object_list[0]
+    dest_filepath = os.path.join(s3_bucket_uri, object_in_s3["Key"])
+    assert dest_filepath == ref_file[0].file_location
+
+    csv_file_lines = list(file_util.read_file_lines(dest_filepath))
+    header_line = csv_file_lines.pop(0)
+
+    # The CSV file should always have an header in it
+    assert header_line == ",".join(dua.Constants.CLAIMAINT_LIST_FIELDS)
+
+    # We've removed the header line so the line counts should match.
+    assert len(csv_file_lines) == approved_claims_count
+
+    for i, csv_line in enumerate(csv_file_lines):
+        claim = approved_claims[i]
+        # This manual check against the CSV line is to make sure that the columns and
+        # data aren't misaligned. A parser can unintentionally give a false positive here.
+        assert csv_line == ",".join(
+            [
+                claim.fineos_absence_id,
+                claim.employee.tax_identifier.tax_identifier.replace("-", ""),
+                dua.Constants.TEMPORARY_BENEFIT_START_DATE,
+            ]
         )

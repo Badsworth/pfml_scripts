@@ -20,7 +20,7 @@ logger = logging.get_logger(__name__)
 
 
 class Constants:
-    TEMPORARY_START_DATE = "20210101"
+    TEMPORARY_BENEFIT_START_DATE = "20210101"
     DATE_OF_BIRTH_FORMAT = "%Y%m%d"
 
     CLAIMAINT_LIST_FILENAME_PREFIX = "DFML_DIA_CLAIMANTS_"
@@ -31,14 +31,14 @@ class Constants:
     FIRST_NAME_FIELD = "FIRST_NAME"
     LAST_NAME_FIELD = "LAST_NAME"
     BIRTH_DATE_FIELD = "BIRTH_DATE"
-    START_DATE_FIELD = "START_DATE"
+    BENEFIT_START_DATE_FIELD = "START_DATE"
     CLAIMAINT_LIST_FIELDS = [
         CASE_ID_FIELD,
         SSN_FIELD,
         FIRST_NAME_FIELD,
         LAST_NAME_FIELD,
         BIRTH_DATE_FIELD,
-        START_DATE_FIELD,
+        BENEFIT_START_DATE_FIELD,
     ]
 
 
@@ -50,7 +50,7 @@ def get_approved_claims(db_session: db.Session) -> List[Claim]:
     )
 
 
-def format_employees_info_for_dia_claimant_list(approved_claims: List[Claim]) -> List[Dict]:
+def format_claims_for_dia_claimant_list(approved_claims: List[Claim]) -> List[Dict]:
     approved_claims_info = []
 
     for claim in approved_claims:
@@ -63,7 +63,7 @@ def format_employees_info_for_dia_claimant_list(approved_claims: List[Claim]) ->
             )
             _info = {
                 Constants.CASE_ID_FIELD: claim.fineos_absence_id,
-                Constants.START_DATE_FIELD: Constants.TEMPORARY_START_DATE,
+                Constants.BENEFIT_START_DATE_FIELD: Constants.TEMPORARY_BENEFIT_START_DATE,
                 Constants.FIRST_NAME_FIELD: employee.first_name,
                 Constants.LAST_NAME_FIELD: employee.last_name,
                 Constants.BIRTH_DATE_FIELD: formatted_dob,
@@ -89,7 +89,7 @@ def create_list_of_approved_claimants(db_session: db.Session) -> None:
     approved_claims = get_approved_claims(db_session)
 
     # get dia info for approved claims
-    dia_claimant_info = format_employees_info_for_dia_claimant_list(approved_claims)
+    dia_claimant_info = format_claims_for_dia_claimant_list(approved_claims)
 
     # get csv claimant info path
     claimant_info_path = get_approved_claims_info_csv_path(dia_claimant_info)
