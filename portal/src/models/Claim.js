@@ -267,7 +267,6 @@ export const DurationBasis = {
   // doesn't offer this as an option to the user
   // minutes: "Minutes",
 };
-
 export class ReducedScheduleLeavePeriod extends BaseModel {
   get defaults() {
     return {
@@ -282,6 +281,42 @@ export class ReducedScheduleLeavePeriod extends BaseModel {
       tuesday_off_minutes: null,
       wednesday_off_minutes: null,
     };
+  }
+
+  /**
+   * @returns {{ minutes: number, day_of_week: string }[]}
+   */
+  get days() {
+    return [
+      {
+        day_of_week: DayOfWeek.sunday,
+        minutes: this.sunday_off_minutes,
+      },
+      {
+        day_of_week: DayOfWeek.monday,
+        minutes: this.monday_off_minutes,
+      },
+      {
+        day_of_week: DayOfWeek.tuesday,
+        minutes: this.tuesday_off_minutes,
+      },
+      {
+        day_of_week: DayOfWeek.wednesday,
+        minutes: this.wednesday_off_minutes,
+      },
+      {
+        day_of_week: DayOfWeek.thursday,
+        minutes: this.thursday_off_minutes,
+      },
+      {
+        day_of_week: DayOfWeek.friday,
+        minutes: this.friday_off_minutes,
+      },
+      {
+        day_of_week: DayOfWeek.saturday,
+        minutes: this.saturday_off_minutes,
+      },
+    ];
   }
 
   /**
@@ -341,6 +376,7 @@ export const OrderedDaysOfWeek = [
 /**
  * Enums for the Application's `work_pattern.work_week_starts` and `work_pattern.work_pattern_days[].day_of_week` fields
  * Produces object: { sunday: "Sunday", monday: "Monday", ... }
+ * @example DayOfWeek.sunday
  * @enum {string}
  */
 export const DayOfWeek = zipObject(

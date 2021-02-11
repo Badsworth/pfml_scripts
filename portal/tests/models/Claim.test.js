@@ -189,6 +189,51 @@ describe("Claim", () => {
 });
 
 describe("ReducedScheduleLeavePeriod", () => {
+  describe("days", () => {
+    it("returns array entries with each day's minutes and name", () => {
+      const leavePeriod = new ReducedScheduleLeavePeriod({
+        friday_off_minutes: 300,
+        monday_off_minutes: 60,
+        saturday_off_minutes: 360,
+        sunday_off_minutes: 0,
+        thursday_off_minutes: 240,
+        tuesday_off_minutes: 120,
+        wednesday_off_minutes: 180,
+      });
+
+      expect(leavePeriod.days).toEqual([
+        {
+          minutes: 0,
+          day_of_week: "Sunday",
+        },
+        {
+          minutes: 60,
+          day_of_week: "Monday",
+        },
+        {
+          minutes: 120,
+          day_of_week: "Tuesday",
+        },
+        {
+          minutes: 180,
+          day_of_week: "Wednesday",
+        },
+        {
+          minutes: 240,
+          day_of_week: "Thursday",
+        },
+        {
+          minutes: 300,
+          day_of_week: "Friday",
+        },
+        {
+          minutes: 360,
+          day_of_week: "Saturday",
+        },
+      ]);
+    });
+  });
+
   describe("totalMinutesOff", () => {
     it("returns null if no minutes fields are set yet", () => {
       const leavePeriod = new ReducedScheduleLeavePeriod();

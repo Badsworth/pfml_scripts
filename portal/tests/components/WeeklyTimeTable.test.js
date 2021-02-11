@@ -1,24 +1,53 @@
 import React from "react";
 import WeeklyTimeTable from "../../src/components/WeeklyTimeTable";
-import { range } from "lodash";
 import { shallow } from "enzyme";
 
-function render(minutesEachDay) {
-  const wrapper = shallow(<WeeklyTimeTable minutesEachDay={minutesEachDay} />);
+function render() {
+  const days = [
+    {
+      day_of_week: "Sunday",
+      minutes: 480,
+    },
+    {
+      day_of_week: "Monday",
+      minutes: 480,
+    },
+    {
+      day_of_week: "Tuesday",
+      minutes: 480,
+    },
+    {
+      day_of_week: "Wednesday",
+      minutes: 480,
+    },
+    {
+      day_of_week: "Thursday",
+      minutes: 480,
+    },
+    {
+      day_of_week: "Friday",
+      minutes: 480,
+    },
+    {
+      day_of_week: "Saturday",
+      minutes: 0,
+    },
+  ];
+  const wrapper = shallow(<WeeklyTimeTable days={days} />);
 
   return wrapper;
 }
 
 describe("WeeklyTimeTable", () => {
-  it("renders day names in the header", () => {
-    const wrapper = render(range(7));
+  it("renders a table with days of the week and times", () => {
+    const wrapper = render();
 
-    expect(wrapper.find("thead")).toMatchSnapshot();
+    expect(wrapper.find("Table")).toMatchSnapshot();
   });
 
-  it("hides minutes from the time if minutes are 0", () => {
-    const wrapper = render([0, 15, 60, 75, 90, 105, 120]);
+  it("only renders hours if minutes are 0", () => {
+    const wrapper = render();
 
-    expect(wrapper.find("tbody")).toMatchSnapshot();
+    expect(wrapper.find("td").last().text()).toBe("0h");
   });
 });

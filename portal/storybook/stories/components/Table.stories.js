@@ -45,7 +45,7 @@ export const Responsive = () => {
   const headings = ["Employee name", "Organization", "Application ID"];
 
   return (
-    <Table responsive>
+    <Table className="width-full" responsive>
       <thead>
         <tr>
           {headings.map((heading) => (

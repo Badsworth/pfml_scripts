@@ -70,7 +70,9 @@ exports[`PreviousLeaves renders the component 1`] = `
       </li>
     </ul>
   </Details>
-  <Table>
+  <Table
+    className="width-full"
+  >
     <thead>
       <tr>
         <th

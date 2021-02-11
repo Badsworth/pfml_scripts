@@ -1,71 +1,106 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`WeeklyTimeTable hides minutes from the time if minutes are 0 1`] = `
-<tbody>
-  <tr>
-    <td
+exports[`WeeklyTimeTable renders a table with days of the week and times 1`] = `
+<Table>
+  <thead>
+    <tr>
+      <th
+        scope="col"
+      >
+        Day
+      </th>
+      <th
+        scope="col"
+      >
+        Hours
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr
       key="0"
     >
-      0h
-    </td>
-    <td
+      <th
+        scope="row"
+      >
+        Sunday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr
       key="1"
     >
-      0h 15m
-    </td>
-    <td
+      <th
+        scope="row"
+      >
+        Monday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr
       key="2"
     >
-      1h
-    </td>
-    <td
+      <th
+        scope="row"
+      >
+        Tuesday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr
       key="3"
     >
-      1h 15m
-    </td>
-    <td
+      <th
+        scope="row"
+      >
+        Wednesday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr
       key="4"
     >
-      1h 30m
-    </td>
-    <td
+      <th
+        scope="row"
+      >
+        Thursday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr
       key="5"
     >
-      1h 45m
-    </td>
-    <td
+      <th
+        scope="row"
+      >
+        Friday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr
       key="6"
     >
-      2h
-    </td>
-  </tr>
-</tbody>
-`;
-
-exports[`WeeklyTimeTable renders day names in the header 1`] = `
-<thead>
-  <tr>
-    <th>
-      Sun
-    </th>
-    <th>
-      Mon
-    </th>
-    <th>
-      Tues
-    </th>
-    <th>
-      Wed
-    </th>
-    <th>
-      Thur
-    </th>
-    <th>
-      Fri
-    </th>
-    <th>
-      Sat
-    </th>
-  </tr>
-</thead>
+      <th
+        scope="row"
+      >
+        Saturday
+      </th>
+      <td>
+        0h
+      </td>
+    </tr>
+  </tbody>
+</Table>
 `;

@@ -15,7 +15,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
-import WorkPatternTable from "../../components/WorkPatternTable";
+import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
 import findKeyByValue from "../../utils/findKeyByValue";
 import spreadMinutesOverWeek from "../../utils/spreadMinutesOverWeek";
@@ -147,7 +147,7 @@ export const ReducedLeaveSchedule = (props) => {
             ...convertMinutesToHours(workPattern.minutesWorkedPerWeek),
           })
         ) : (
-          <WorkPatternTable days={workPattern.work_pattern_days} />
+          <WeeklyTimeTable days={workPattern.work_pattern_days} />
         )}
       </Details>
 

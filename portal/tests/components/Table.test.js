@@ -7,7 +7,7 @@ describe("Table", () => {
     const wrapper = shallow(<Table />);
 
     expect(wrapper.prop("className")).toBe(
-      "usa-table usa-table--borderless c-table width-full"
+      "usa-table usa-table--borderless c-table"
     );
   });
 
@@ -15,7 +15,7 @@ describe("Table", () => {
     const wrapper = shallow(<Table className="some-style additional-style" />);
 
     expect(wrapper.prop("className")).toBe(
-      "usa-table usa-table--borderless c-table width-full some-style additional-style"
+      "usa-table usa-table--borderless c-table some-style additional-style"
     );
   });
 

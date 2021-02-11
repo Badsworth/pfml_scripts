@@ -9,35 +9,34 @@ import { useTranslation } from "react-i18next";
  */
 export const WeeklyTimeTable = (props) => {
   const { t } = useTranslation();
-
+  const days = props.days;
   return (
-    <Table className={props.className} scrollable>
+    <Table className={props.className}>
       <thead>
         <tr>
-          <th>{t("components.weeklyTimeTable.dayAbbr_Sunday")}</th>
-          <th>{t("components.weeklyTimeTable.dayAbbr_Monday")}</th>
-          <th>{t("components.weeklyTimeTable.dayAbbr_Tuesday")}</th>
-          <th>{t("components.weeklyTimeTable.dayAbbr_Wednesday")}</th>
-          <th>{t("components.weeklyTimeTable.dayAbbr_Thursday")}</th>
-          <th>{t("components.weeklyTimeTable.dayAbbr_Friday")}</th>
-          <th>{t("components.weeklyTimeTable.dayAbbr_Saturday")}</th>
+          <th scope="col">{t("components.weeklyTimeTable.dayHeader")}</th>
+          <th scope="col">{t("components.weeklyTimeTable.hoursHeader")}</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          {props.minutesEachDay.map((minutes, index) => (
-            // Assumption here that the days are ordered, starting at Sunday
-            <td key={index}>
+        {days.map((day, index) => (
+          <tr key={index}>
+            <th scope="row">
+              {t("components.weeklyTimeTable.day", {
+                context: day.day_of_week,
+              })}
+            </th>
+            <td>
               {t("components.weeklyTimeTable.time", {
                 context:
-                  convertMinutesToHours(minutes).minutes === 0
+                  convertMinutesToHours(day.minutes).minutes === 0
                     ? "noMinutes"
                     : null,
-                ...convertMinutesToHours(minutes),
+                ...convertMinutesToHours(day.minutes),
               })}
             </td>
-          ))}
-        </tr>
+          </tr>
+        ))}
       </tbody>
     </Table>
   );
@@ -47,10 +46,15 @@ WeeklyTimeTable.propTypes = {
   /** Additional classNames to add */
   className: PropTypes.string,
   /**
-   * Array of daily minute totals, starting on Sunday.
-   * For example, minutesEachDay: [ 0, 240, 240, 240, 240, 240, 0 ]
+   * Data corresponding to 7 days
    */
-  minutesEachDay: PropTypes.arrayOf(PropTypes.number).isRequired,
+  days: PropTypes.arrayOf(
+    PropTypes.shape({
+      /** Sunday–Saturday */
+      day_of_week: PropTypes.string.isRequired,
+      minutes: PropTypes.number,
+    })
+  ).isRequired,
 };
 
 export default WeeklyTimeTable;

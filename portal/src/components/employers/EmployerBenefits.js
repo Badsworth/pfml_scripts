@@ -23,7 +23,7 @@ const EmployerBenefits = (props) => {
       <ReviewHeading level="2">
         {t("components.employersEmployerBenefits.header")}
       </ReviewHeading>
-      <Table>
+      <Table className="width-full">
         <caption>
           <p className="text-normal">
             <Trans

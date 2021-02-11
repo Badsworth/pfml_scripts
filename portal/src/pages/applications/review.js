@@ -38,7 +38,6 @@ import Spinner from "../../components/Spinner";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
-import WorkPatternTable from "../../components/WorkPatternTable";
 import claimantConfigs from "../../flows/claimant";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
@@ -310,7 +309,7 @@ export const Review = (props) => {
             label={t("pages.claimsReview.workPatternDaysFixedLabel")}
             noBorder
           >
-            <WorkPatternTable days={workPattern.work_pattern_days} />
+            <WeeklyTimeTable days={workPattern.work_pattern_days} />
           </ReviewRow>
         )}
 
@@ -444,15 +443,7 @@ export const Review = (props) => {
           {workPattern.work_pattern_type === WorkPatternType.fixed && (
             <WeeklyTimeTable
               className="margin-bottom-0"
-              minutesEachDay={[
-                "sunday_off_minutes",
-                "monday_off_minutes",
-                "tuesday_off_minutes",
-                "wednesday_off_minutes",
-                "thursday_off_minutes",
-                "friday_off_minutes",
-                "saturday_off_minutes",
-              ].map((field) => get(reducedLeavePeriod, field))}
+              days={reducedLeavePeriod.days}
             />
           )}
           {workPattern.work_pattern_type === WorkPatternType.variable &&

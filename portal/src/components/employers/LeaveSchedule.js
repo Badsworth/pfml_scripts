@@ -57,7 +57,7 @@ const LeaveSchedule = ({ appLogic, claim }) => {
       <ReviewHeading level="2">
         {t("components.employersLeaveSchedule.header")}
       </ReviewHeading>
-      <Table>
+      <Table className="width-full">
         <caption>
           <p className="text-normal">
             <Trans

@@ -9,7 +9,7 @@ import classnames from "classnames";
  */
 export const Table = (props) => {
   const tableClasses = classnames(
-    "usa-table usa-table--borderless c-table width-full",
+    "usa-table usa-table--borderless c-table",
     props.className,
     {
       "usa-table--stacked-header": props.responsive,

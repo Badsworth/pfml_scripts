@@ -520,7 +520,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     level="4"
     noBorder={true}
   >
-    <WorkPatternTable
+    <WeeklyTimeTable
       days={
         Array [
           WorkPatternDay {
@@ -676,15 +676,36 @@ exports[`Reduced leave renders WeeklyTimeTable for the reduced leave period when
 >
   <WeeklyTimeTable
     className="margin-bottom-0"
-    minutesEachDay={
+    days={
       Array [
-        null,
-        390,
-        null,
-        null,
-        null,
-        480,
-        null,
+        Object {
+          "day_of_week": "Sunday",
+          "minutes": null,
+        },
+        Object {
+          "day_of_week": "Monday",
+          "minutes": 390,
+        },
+        Object {
+          "day_of_week": "Tuesday",
+          "minutes": null,
+        },
+        Object {
+          "day_of_week": "Wednesday",
+          "minutes": null,
+        },
+        Object {
+          "day_of_week": "Thursday",
+          "minutes": null,
+        },
+        Object {
+          "day_of_week": "Friday",
+          "minutes": 480,
+        },
+        Object {
+          "day_of_week": "Saturday",
+          "minutes": null,
+        },
       ]
     }
   />
@@ -708,7 +729,7 @@ exports[`Work patterns has internationalized strings for each work pattern type 
 exports[`Work patterns shows average weekly hours if work pattern type is variable 1`] = `"40h"`;
 
 exports[`Work patterns shows work pattern days if work pattern type is fixed 1`] = `
-<WorkPatternTable
+<WeeklyTimeTable
   days={
     Array [
       WorkPatternDay {

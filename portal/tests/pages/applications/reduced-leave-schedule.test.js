@@ -54,13 +54,13 @@ describe("ReducedLeaveSchedule", () => {
       expect(wrapper.find("Heading")).toMatchSnapshot();
     });
 
-    it("renders the WorkPatternTable with the work schedule", () => {
+    it("renders the WeeklyTimeTable with the work schedule", () => {
       const { wrapper } = renderWithAppLogic(ReducedLeaveSchedule, {
         claimAttrs: mockClaim,
       });
 
       const details = wrapper.find("Details");
-      const table = wrapper.find("WorkPatternTable");
+      const table = wrapper.find("WeeklyTimeTable");
 
       expect(details.prop("label")).toMatchInlineSnapshot(
         `"View your work schedule"`
