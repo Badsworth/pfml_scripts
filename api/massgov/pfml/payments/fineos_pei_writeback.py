@@ -192,7 +192,7 @@ def upload_writeback_csv_and_save_reference_files(
         reference_file = ReferenceFile(
             file_location=pfml_pei_writeback_ready_filepath,
             reference_file_type_id=ReferenceFileType.PEI_WRITEBACK.reference_file_type_id,
-            reference_file_id=uuid.uuid4().__str__(),
+            reference_file_id=uuid.uuid4(),
         )
         db_session.add(reference_file)
 

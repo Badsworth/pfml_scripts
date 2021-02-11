@@ -8,6 +8,7 @@
 # This allows us to build mock data and insert them easily in the database for tests
 # and seeding.
 #
+import uuid
 from typing import TYPE_CHECKING, List, Optional, cast
 
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Index, Integer, Numeric, Text
@@ -15,18 +16,22 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Query, dynamic_loader, relationship
 from sqlalchemy.sql.expression import func
 from sqlalchemy.sql.functions import now as sqlnow
-from sqlalchemy.types import JSON
+from sqlalchemy.types import JSON, TypeEngine
 
 from ..lookup import LookupTable
 from .base import Base, utc_timestamp_gen, uuid_gen
 from .verifications import Verification
 
-# https://github.com/dropbox/sqlalchemy-stubs/issues/98
+# (typed_hybrid_property) https://github.com/dropbox/sqlalchemy-stubs/issues/98
+# (PostgreSQLUUID) https://github.com/dropbox/sqlalchemy-stubs/issues/94
 if TYPE_CHECKING:
     # Use this to make hybrid_property's have the same typing as a normal property until stubs are improved.
     typed_hybrid_property = property
+    PostgreSQLUUID = TypeEngine[uuid.UUID]
 else:
     from sqlalchemy.ext.hybrid import hybrid_property as typed_hybrid_property
+
+    PostgreSQLUUID = UUID(as_uuid=True)
 
 
 class LkAbsenceStatus(Base):
@@ -285,7 +290,7 @@ class EmployerLog(Base):
 
 class EFT(Base):
     __tablename__ = "eft"
-    eft_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    eft_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     routing_nbr = Column(Text, nullable=False)
     account_nbr = Column(Text, nullable=False)
     bank_account_type_id = Column(
@@ -405,7 +410,7 @@ class EmployeeLog(Base):
 
 class Claim(Base):
     __tablename__ = "claim"
-    claim_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    claim_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
     employer_id = Column(UUID(as_uuid=True), index=True)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
@@ -443,7 +448,7 @@ class Claim(Base):
 
 class Payment(Base):
     __tablename__ = "payment"
-    payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
     period_start_date = Column(Date)
     period_end_date = Column(Date)
@@ -480,7 +485,7 @@ class AuthorizedRepEmployee(Base):
 
 class Address(Base):
     __tablename__ = "address"
-    address_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    address_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     address_type_id = Column(Integer, ForeignKey("lk_address_type.address_type_id"))
     address_line_one = Column(Text)
     address_line_two = Column(Text)
@@ -506,7 +511,7 @@ class Address(Base):
 
 class CtrDocumentIdentifier(Base):
     __tablename__ = "ctr_document_identifier"
-    ctr_document_identifier_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    ctr_document_identifier_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     ctr_document_identifier = Column(Text, unique=True, index=True)
     document_date = Column(Date, nullable=False, index=True)
     document_counter = Column(Integer, nullable=False, index=True)
@@ -521,7 +526,7 @@ class CtrDocumentIdentifier(Base):
 
 class CtrBatchIdentifier(Base):
     __tablename__ = "ctr_batch_identifier"
-    ctr_batch_identifier_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    ctr_batch_identifier_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     ctr_batch_identifier = Column(Text, nullable=False)
     year = Column(Integer, nullable=False)
     batch_date = Column(Date, nullable=False)
@@ -739,7 +744,7 @@ class AgencyReductionPayment(Base):
 
 class ReferenceFile(Base):
     __tablename__ = "reference_file"
-    reference_file_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    reference_file_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     file_location = Column(Text, index=True, unique=True, nullable=False)
     reference_file_type_id = Column(
         Integer, ForeignKey("lk_reference_file_type.reference_file_type_id"), nullable=True
@@ -804,7 +809,7 @@ class EmployeeReferenceFile(Base):
     __tablename__ = "link_employee_reference_file"
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), primary_key=True)
     reference_file_id = Column(
-        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), primary_key=True
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), primary_key=True
     )
     ctr_document_identifier_id = Column(
         UUID(as_uuid=True),
