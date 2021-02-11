@@ -93,12 +93,11 @@ def load_updates(
         # we must commit or rollback the transaction for each item to ensure the
         # row lock put in place by `skip_locked_query` is released
         try:
-            is_create = employer.fineos_employer_id is None
-
-            fineos_actions.create_or_update_employer(fineos, employer)
-            fineos_actions.create_service_agreement_for_employer(fineos, employer)
-
-            db_session.commit()
+            with fineos_log_tables_util.update_entity_and_remove_log_entry(
+                db_session, employer, commit=True
+            ):
+                fineos_actions.create_or_update_employer(fineos, employer)
+                fineos_actions.create_service_agreement_for_employer(fineos, employer)
 
             report.loaded_employers_count += 1
 
@@ -108,19 +107,6 @@ def load_updates(
                 EmployerLog.process_id == process_id,
                 EmployerLog.employer_id == employer.employer_id,
             ).delete(synchronize_session=False)
-
-            # ...and clean up any entries we created in the process.
-            #
-            # Scoping the above delete to `process_id` will miss the
-            # "UPDATE" entry that could be added from updating the
-            # `employer.fineos_employer_id` column. So if we think we are
-            # creating the FINEOS employer and will therefore have updated
-            # the row in `employer`, delete the latest "UPDATE" event for
-            # that employer from EmployerLog.
-            if is_create:
-                fineos_log_tables_util.delete_most_recent_update_entry_for_employer(
-                    db_session, employer
-                )
 
             # finalize the deletes before moving on
             db_session.commit()

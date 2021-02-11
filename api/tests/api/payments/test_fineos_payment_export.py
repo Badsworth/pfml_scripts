@@ -281,7 +281,7 @@ def test_process_extract_data(
             len(employee_addresses) == 2
         )  # 1 created in setup_process_tests, 1 created during process_extract_data
         assert employee_addresses[1].employee_id == employee.employee_id
-        assert str(employee_addresses[1].address_id) == mailing_address.address_id
+        assert str(employee_addresses[1].address_id) == str(mailing_address.address_id)
 
         reference_files = payment.reference_files
         assert len(reference_files) == 1
@@ -608,7 +608,7 @@ def test_process_extract_data_no_existing_claim_address_eft(
         employee_addresses = employee.addresses.all()
         assert len(employee_addresses) == 1  # Just the 1 we added
         assert employee_addresses[0].employee_id == employee.employee_id
-        assert str(employee_addresses[0].address_id) == mailing_address.address_id
+        assert str(employee_addresses[0].address_id) == str(mailing_address.address_id)
 
         # Verify that there is exactly one successful state log per payment
         state_logs = payment.state_logs

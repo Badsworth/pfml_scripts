@@ -130,28 +130,14 @@ def process_vendor_extract_data(db_session: db.Session) -> None:
 
             extract_data = ExtractData(s3_file_locations, date_str)
             download_and_index_data(extract_data, download_directory)
-            with db_session.no_autoflush:
-                updated_employees = process_records_to_db(extract_data, db_session)
-                move_files_from_received_to_processed(extract_data, db_session)
-                logger.info(
-                    "Successfully processed vendor extract files in date group: %s",
-                    date_str,
-                    extra={"date_group": date_str},
-                )
-                db_session.commit()
-
-            # Remove rows from EmployeeLog table due to update trigger if there
-            # were changes to Employees committed.
-            #
-            # These updates should not be included in the Eligibility Feed.
-            if updated_employees:
-                for updated_employee in updated_employees:
-                    fineos_log_tables_util.delete_most_recent_update_entry_for_employee(
-                        db_session, updated_employee
-                    )
-                db_session.commit()
-                logger.debug("Removed %i rows from the employee log", len(updated_employees))
-
+            process_records_to_db(extract_data, db_session)
+            move_files_from_received_to_processed(extract_data, db_session)
+            logger.info(
+                "Successfully processed vendor extract files in date group: %s",
+                date_str,
+                extra={"date_group": date_str},
+            )
+            db_session.commit()
         except Exception:
             # If there was a file-level exception anywhere in the processing,
             # we move the file from received to error
@@ -251,12 +237,10 @@ def download_file(s3_path: str, download_directory: str) -> str:
     return download_location
 
 
-def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> List[Employee]:
+def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> None:
     logger.info("Processing vendor extract data into db: %s", extract_data.date_str)
 
     requested_absences = extract_data.requested_absence_info.indexed_data.values()
-    updated_employees = []
-
     updated_employee_ids = set()
     for requested_absence in requested_absences:
         absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
@@ -315,9 +299,6 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                 )
 
                 updated_employee_ids.add(employee_pfml_entry.employee_id)
-
-                if db_session.is_modified(employee_pfml_entry):
-                    updated_employees.append(employee_pfml_entry)
             else:
                 logger.info(
                     "Skipping adding a reference file and state_log for employee %s",
@@ -325,7 +306,7 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                 )
 
     logger.info("Successfully processed vendor extract data into db: %s", extract_data.date_str)
-    return updated_employees
+    return None
 
 
 def create_or_update_claim(
@@ -535,74 +516,79 @@ def update_employee_info(
         )
         return None, False
 
-    # Use employee feed entry to update PFML DB
-    date_of_birth = payments_util.validate_csv_input(
-        "DATEOFBIRTH", employee_feed_entry, validation_container, True
-    )
+    with fineos_log_tables_util.update_entity_and_remove_log_entry(
+        db_session, employee_pfml_entry, commit=False
+    ):
+        # Use employee feed entry to update PFML DB
+        date_of_birth = payments_util.validate_csv_input(
+            "DATEOFBIRTH", employee_feed_entry, validation_container, True
+        )
 
-    if date_of_birth is not None:
-        employee_pfml_entry.date_of_birth = payments_util.datetime_str_to_date(date_of_birth)
+        if date_of_birth is not None:
+            employee_pfml_entry.date_of_birth = payments_util.datetime_str_to_date(date_of_birth)
 
-    has_address_update = update_mailing_address(
-        db_session, employee_feed_entry, employee_pfml_entry, validation_container
-    )
+        has_address_update = update_mailing_address(
+            db_session, employee_feed_entry, employee_pfml_entry, validation_container
+        )
 
-    payment_method = payments_util.validate_csv_input(
-        "PAYMENTMETHOD",
-        employee_feed_entry,
-        validation_container,
-        True,
-        custom_validator_func=payments_util.lookup_validator(
-            PaymentMethod,
-            disallowed_lookup_values=[cast(str, PaymentMethod.DEBIT.payment_method_description)],
-        ),
-    )
+        payment_method = payments_util.validate_csv_input(
+            "PAYMENTMETHOD",
+            employee_feed_entry,
+            validation_container,
+            True,
+            custom_validator_func=payments_util.lookup_validator(
+                PaymentMethod,
+                disallowed_lookup_values=[
+                    cast(str, PaymentMethod.DEBIT.payment_method_description)
+                ],
+            ),
+        )
 
-    if payment_method is not None:
-        try:
-            employee_pfml_entry.payment_method_id = PaymentMethod.get_id(payment_method)
-        except KeyError:
-            pass
+        if payment_method is not None:
+            try:
+                employee_pfml_entry.payment_method_id = PaymentMethod.get_id(payment_method)
+            except KeyError:
+                pass
 
-    has_eft_update = update_eft_info(
-        db_session, employee_feed_entry, employee_pfml_entry, validation_container
-    )
+        has_eft_update = update_eft_info(
+            db_session, employee_feed_entry, employee_pfml_entry, validation_container
+        )
 
-    fineos_customer_number = payments_util.validate_csv_input(
-        "CUSTOMERNO", employee_feed_entry, validation_container, True
-    )
+        fineos_customer_number = payments_util.validate_csv_input(
+            "CUSTOMERNO", employee_feed_entry, validation_container, True
+        )
 
-    if fineos_customer_number is not None:
-        employee_pfml_entry.fineos_customer_number = fineos_customer_number
+        if fineos_customer_number is not None:
+            employee_pfml_entry.fineos_customer_number = fineos_customer_number
 
-    # Associate claim with employee in case it is a new claim.
-    claim.employee_id = employee_pfml_entry.employee_id
+        # Associate claim with employee in case it is a new claim.
+        claim.employee_id = employee_pfml_entry.employee_id
 
-    # TODO --
-    # Identify what the best way to handle multiple records is:
-    # It's technically possible for multiple Employers to have the same
-    # FINEOS employer ID because the database does not make it unique.
-    # Until then, we do not associate the claim with an employer.
+        # TODO --
+        # Identify what the best way to handle multiple records is:
+        # It's technically possible for multiple Employers to have the same
+        # FINEOS employer ID because the database does not make it unique.
+        # Until then, we do not associate the claim with an employer.
 
-    # Associate claim with employer as well, if found.
-    # employer_customer_nbr = payments_util.validate_csv_input(
-    #     "EMPLOYER_CUSTOMERNO", requested_absence, validation_container, False
-    # )
+        # Associate claim with employer as well, if found.
+        # employer_customer_nbr = payments_util.validate_csv_input(
+        #     "EMPLOYER_CUSTOMERNO", requested_absence, validation_container, False
+        # )
 
-    # if employer_customer_nbr is not None:
-    #     employer_pfml_entry = (
-    #         db_session.query(Employer)
-    #         .filter(Employer.fineos_employer_id == employer_customer_nbr)
-    #         .one_or_none()
-    #     )
-    #     if employer_pfml_entry is not None:
-    #         claim.employer_id = employer_pfml_entry.employer_id
+        # if employer_customer_nbr is not None:
+        #     employer_pfml_entry = (
+        #         db_session.query(Employer)
+        #         .filter(Employer.fineos_employer_id == employer_customer_nbr)
+        #         .one_or_none()
+        #     )
+        #     if employer_pfml_entry is not None:
+        #         claim.employer_id = employer_pfml_entry.employer_id
 
-    if len(validation_container.validation_issues) == 0:
-        db_session.add(employee_pfml_entry)
-        db_session.add(claim)
+        if len(validation_container.validation_issues) == 0:
+            db_session.add(employee_pfml_entry)
+            db_session.add(claim)
 
-    has_vendor_update = has_address_update or has_eft_update
+        has_vendor_update = has_address_update or has_eft_update
 
     return employee_pfml_entry, has_vendor_update
 

@@ -120,6 +120,47 @@ def test_load_updates_simple(test_db_session, initialize_factories_session, crea
     assert employer.fineos_employer_id is not None
 
 
+def test_load_updates_simple_no_updates_to_api_employer_model(
+    test_db_session, initialize_factories_session, create_triggers, mocker
+):
+    # employer.fineos_employer_id is the only thing we save on the API model in
+    # this process, so if the Employer already has one set and the same value is
+    # returned by fineos_client, this should still result in no log entries left
+    # over at the end
+    fineos_employer_id = 555
+
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+    mocker.patch.object(
+        fineos_client, "create_or_update_employer", return_value=("", fineos_employer_id)
+    )
+
+    employer = EmployerOnlyDORDataFactory.create(fineos_employer_id=fineos_employer_id)
+
+    employer_log_entries_before = (
+        test_db_session.query(EmployerLog)
+        .filter(EmployerLog.employer_id == employer.employer_id)
+        .all()
+    )
+    assert len(employer_log_entries_before) == 1
+
+    result = fineos_employers.load_updates(test_db_session, fineos_client)
+
+    assert result.total_employers_count == 1
+    assert result.loaded_employers_count == 1
+    assert result.errored_employers_count == 0
+
+    employer_log_entries_after = (
+        test_db_session.query(EmployerLog)
+        .filter(EmployerLog.employer_id == employer.employer_id)
+        .all()
+    )
+    assert len(employer_log_entries_after) == 0
+
+    test_db_session.refresh(employer)
+
+    assert employer.fineos_employer_id == fineos_employer_id
+
+
 def test_load_updates_multiple_log_entries_only_run_once(
     test_db_session, initialize_factories_session, create_triggers
 ):

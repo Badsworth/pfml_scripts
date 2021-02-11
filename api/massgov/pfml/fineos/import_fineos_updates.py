@@ -159,9 +159,9 @@ def process_csv_row(
         report.errored_employee_occupation_count += 1
         return
 
-    # no_autoflush here so we do not push changes to DB until we have collected
-    # them all and can commit them all at once
-    with db_session.no_autoflush:
+    with fineos_log_tables_util.update_entity_and_remove_log_entry(
+        db_session, employee, commit=True
+    ):
         title = row.get("EMPLOYEETITLE")
         title_id = (
             db_session.query(LkTitle.title_id)
@@ -300,17 +300,5 @@ def process_csv_row(
         occupation_qualifier = row.get("QUALIFIERDESCRIPTION")
         if occupation_qualifier is not None:
             employee_occupation.occupation_qualifier = occupation_qualifier
-
-        is_employee_modified = db_session.is_modified(employee)
-
-        db_session.commit()
-
-    # Remove row from EmployeeLog table due to update trigger if there were
-    # changes to the Employee committed.
-    #
-    # These updates should not be included in the Eligibility Feed
-    # on their own.
-    if is_employee_modified:
-        fineos_log_tables_util.delete_most_recent_update_entry_for_employee(db_session, employee)
 
     report.updated_employees_count += 1

@@ -50,22 +50,12 @@ def query_data_mart_for_issues_and_updates_save(
     Wrapper around query_data_mart_for_issues_and_updates_core that handles
     committing Employee updates and cleaning up EmployeeLog entries that result.
     """
-    # no_autoflush here so we do not push partial changes to DB, to ensure only
-    # one EmployeeLog entry is created
-    with pfml_db_session.no_autoflush:
+    with fineos_log_tables_util.update_entity_and_remove_log_entry(
+        pfml_db_session, employee, commit=True
+    ):
         issues_and_updates = query_data_mart_for_issues_and_updates_core(
             data_mart_client, employee, tax_id
         )
-
-    # commit any potential employee updates from above before processing
-    # potential issues
-    if issues_and_updates.employee_updates:
-        pfml_db_session.commit()
-
-        fineos_log_tables_util.delete_most_recent_update_entry_for_employee(
-            pfml_db_session, employee
-        )
-        pfml_db_session.commit()
 
     return issues_and_updates
 

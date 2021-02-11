@@ -458,9 +458,6 @@ def get_employee_and_claim(
         )
         db_session.add(claim)
 
-    # Update the payment method ID of the employee
-    employee.payment_method_id = PaymentMethod.get_id(payment_data.raw_payment_method)
-
     return employee, claim
 
 
@@ -601,40 +598,50 @@ def update_eft(payment_data: PaymentData, employee: Employee, db_session: db.Ses
 
 def process_payment_data_record(
     payment_data: PaymentData, reference_file: ReferenceFile, db_session: db.Session
-) -> Tuple[Optional[Payment], Optional[Employee]]:
+) -> Optional[Payment]:
     employee, claim = get_employee_and_claim(payment_data, db_session)
 
     # We weren't able to find the employee and claim, can't properly associate it
     if payment_data.validation_container.has_validation_issues():
-        return None, None
+        return None
     # cast the types here so the linter doesn't think these are potentially None below
     employee = cast(Employee, employee)
     claim = cast(Claim, claim)
 
-    # Update the mailing address with values from FINEOS
-    has_address_update = update_ctr_address_pair_fineos_address(payment_data, employee, db_session)
+    with fineos_log_tables_util.update_entity_and_remove_log_entry(
+        db_session, employee, commit=False
+    ):
+        # Update the payment method ID of the employee
+        employee.payment_method_id = PaymentMethod.get_id(payment_data.raw_payment_method)
 
-    # Update the EFT info with values from FINEOS
-    has_eft_update = update_eft(payment_data, employee, db_session)
+        # Update the mailing address with values from FINEOS
+        has_address_update = update_ctr_address_pair_fineos_address(
+            payment_data, employee, db_session
+        )
 
-    # Create the payment record
-    payment = create_or_update_payment(payment_data, claim, db_session)
+        # Update the EFT info with values from FINEOS
+        has_eft_update = update_eft(payment_data, employee, db_session)
 
-    # Specify whether the Payment has an EFT update
-    # This gets used later in the pipeline (such as during the PEI Writeback
-    # step)
-    payment.has_address_update = has_address_update
+        # Create the payment record
+        payment = create_or_update_payment(payment_data, claim, db_session)
 
-    # Specify whether the Payment has an EFT update
-    # This gets used later in the pipeline (such as during the PEI Writeback
-    # step)
-    payment.has_eft_update = has_eft_update
+        # Specify whether the Payment has an EFT update
+        # This gets used later in the pipeline (such as during the PEI Writeback
+        # step)
+        payment.has_address_update = has_address_update
 
-    # Link the payment object to the payment_reference_file
-    payment_reference_file = PaymentReferenceFile(payment=payment, reference_file=reference_file,)
-    db_session.add(payment_reference_file)
+        # Specify whether the Payment has an EFT update
+        # This gets used later in the pipeline (such as during the PEI Writeback
+        # step)
+        payment.has_eft_update = has_eft_update
 
-    return (payment, employee if db_session.is_modified(employee) else None)
+        # Link the payment object to the payment_reference_file
+        payment_reference_file = PaymentReferenceFile(
+            payment=payment, reference_file=reference_file,
+        )
+        db_session.add(payment_reference_file)
+
+    return payment
 
 
 def _setup_state_log(
@@ -707,14 +714,13 @@ def _setup_state_log(
         )
 
 
-def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> List[Employee]:
+def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> None:
     logger.info("Processing payment extract data into db: %s", extract_data.date_str)
 
     # Add the files to the DB
     # Note a single payment reference file is used for all files collectively
     db_session.add(extract_data.reference_file)
 
-    updated_employees = []
     for index, record in extract_data.pei.indexed_data.items():
         try:
             # Construct a payment data object for easier organization of the many params
@@ -731,7 +737,7 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                 extra=payment_data.get_traceable_details(),
             )
 
-            payment, updated_employee = process_payment_data_record(
+            payment = process_payment_data_record(
                 payment_data, extract_data.reference_file, db_session
             )
 
@@ -744,9 +750,6 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
                 payment_data.validation_container,
                 db_session,
             )
-
-            if updated_employee:
-                updated_employees.append(updated_employee)
 
             logger.info(
                 f"Done processing payment record - absence case number: {payment_data.absence_case_number}",
@@ -770,7 +773,7 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             _setup_state_log(payment, False, validation_container, db_session)
 
     logger.info("Successfully processed payment extract into db: %s", extract_data.date_str)
-    return updated_employees
+    return None
 
 
 # TODO move to payments_util
@@ -928,28 +931,14 @@ def process_extract_data(download_directory: pathlib.Path, db_session: db.Sessio
             extract_data = ExtractData(s3_file_locations, date_str)
             download_and_process_data(extract_data, download_directory)
 
-            with db_session.no_autoflush:
-                updated_employees = process_records_to_db(extract_data, db_session)
-                move_files_from_received_to_processed(extract_data, db_session)
-                logger.info(
-                    "Successfully processed payment extract files in date group: %s",
-                    date_str,
-                    extra={"date_group": date_str},
-                )
-                db_session.commit()
-
-            # Remove rows from EmployeeLog table due to update trigger if there
-            # were changes to Employees committed.
-            #
-            # These updates should not be included in the Eligibility Feed.
-            if updated_employees:
-                for updated_employee in updated_employees:
-                    fineos_log_tables_util.delete_most_recent_update_entry_for_employee(
-                        db_session, updated_employee
-                    )
-                db_session.commit()
-                logger.debug("Removed %i rows from the employee log", len(updated_employees))
-
+            process_records_to_db(extract_data, db_session)
+            move_files_from_received_to_processed(extract_data, db_session)
+            logger.info(
+                "Successfully processed payment extract files in date group: %s",
+                date_str,
+                extra={"date_group": date_str},
+            )
+            db_session.commit()
         except Exception:
             db_session.rollback()
             logger.exception(
