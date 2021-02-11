@@ -281,3 +281,49 @@ resource "newrelic_nrql_alert_condition" "unexpected_validation_violations" {
     threshold_occurrences = "at_least_once"
   }
 }
+
+resource "newrelic_nrql_alert_condition" "portal_synthetic_ping_failure" {
+  policy_id            = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
+  name                 = "Portal synthetic ping failed"
+  type                 = "static"
+  value_function       = "single_value"
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  # ignore performance and training environments
+  enabled = contains(["prod", "stage", "test"], var.environment_name)
+
+  nrql {
+    query             = "SELECT count(*) FROM SyntheticCheck WHERE monitorName = 'portal_ping--${var.environment_name}' AND result = 'FAILED'"
+    evaluation_offset = 5
+  }
+
+  critical {
+    threshold_duration    = 300
+    threshold             = 0
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "portal_synthetic_login_failure" {
+  policy_id            = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
+  name                 = "Portal scripted synthetic login failed"
+  type                 = "static"
+  value_function       = "single_value"
+  violation_time_limit = "TWENTY_FOUR_HOURS"
+
+  # ignore performance and training environments
+  enabled = contains(["prod", "stage", "test"], var.environment_name)
+
+  nrql {
+    query             = "SELECT count(*) FROM SyntheticCheck WHERE monitorName = 'portal_scripted_login--${var.environment_name}' AND result = 'FAILED'"
+    evaluation_offset = 5
+  }
+
+  critical {
+    threshold_duration    = 300
+    threshold             = 0
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+}
