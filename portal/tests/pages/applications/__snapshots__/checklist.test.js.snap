@@ -238,7 +238,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
 >
   <BackButton
     href="/applications"
-    label="Back to Applications"
+    label="Back to applications"
   />
   <Title
     hidden={true}
