@@ -64,14 +64,14 @@ exports[`VerifyBusiness when "employerShowVerifications" feature flag is enabled
       i18nKey="pages.employersAuthVerifyBusiness.detailsList"
     />
   </Details>
-  <InputNumber
+  <InputCurrency
     hint="Include the full amount with dollars and cents."
     label="Paid leave contributions for {DD-MMM-YYYY}"
     mask="currency"
     name="withholdingAmount"
     onChange={[Function]}
     smallLabel={true}
-    value=""
+    value={0}
   />
   <Button
     loading={false}

@@ -84,5 +84,20 @@ describe("VerifyBusiness", () => {
         query.next
       );
     });
+
+    it("submits withholding data as 0 if input is invalid", async () => {
+      ({ changeField, submitForm } = simulateEvents(wrapper));
+      changeField("withholdingAmount", null);
+      await submitForm();
+
+      expect(appLogic.employers.submitWithholding).toHaveBeenCalledWith(
+        {
+          employer_id: "mock_employer_id",
+          withholding_amount: 0,
+          withholding_quarter: "2020-10-10",
+        },
+        query.next
+      );
+    });
   });
 });

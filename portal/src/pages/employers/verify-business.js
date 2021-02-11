@@ -1,7 +1,7 @@
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import Button from "../../components/Button";
 import Details from "../../components/Details";
-import InputNumber from "../../components/InputNumber";
+import InputCurrency from "../../components/InputCurrency";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import React from "react";
@@ -29,18 +29,21 @@ export const VerifyBusiness = (props) => {
   });
 
   const { formState, updateFields } = useFormState({
-    withholdingAmount: "",
+    withholdingAmount: 0,
   });
+
+  const handleAmountChange = (event) => {
+    const value = event.target.value;
+    const amount = value ? Number(value.replace(/,/g, "")) : 0;
+    updateFields({ withholdingAmount: amount });
+  };
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    const withholdingAmount = parseFloat(
-      formState.withholdingAmount.replace(/,/g, "")
-    );
 
     const payload = {
       employer_id: query.employer_id,
-      withholding_amount: withholdingAmount,
+      withholding_amount: formState.withholdingAmount,
       withholding_quarter: "2020-10-10", // TODO (EMPLOYER-470): Change based on actual variable
     };
 
@@ -101,8 +104,9 @@ export const VerifyBusiness = (props) => {
         />
       </Details>
       {/* TODO (EMPLOYER-470): Display date based on GET request for latest filing period */}
-      <InputNumber
+      <InputCurrency
         {...getFunctionalInputProps("withholdingAmount")}
+        onChange={handleAmountChange}
         mask="currency"
         hint={t("pages.employersAuthVerifyBusiness.withholdingAmountHint")}
         label={t("pages.employersAuthVerifyBusiness.withholdingAmountLabel", {
