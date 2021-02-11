@@ -8,6 +8,8 @@ import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import { isFeatureEnabled } from "../../services/featureFlags";
+import routeWithParams from "../../utils/routeWithParams";
+import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
@@ -40,7 +42,7 @@ export const Organizations = ({ appLogic }) => {
       )}
       <p>{t("pages.employersOrganizations.nearFutureAvailability")}</p>
 
-      <Table className="width-full">
+      <Table responsive className="width-full">
         <thead>
           <tr>
             <th scope="col">
@@ -61,7 +63,7 @@ export const Organizations = ({ appLogic }) => {
             ))}
           {user_leave_administrators.length === 0 && (
             <tr>
-              <th scope="row">
+              <th scope="row" colSpan={2}>
                 <span>{t("shared.noneReported")}</span>
               </th>
             </tr>
@@ -80,22 +82,49 @@ Organizations.propTypes = {
   }).isRequired,
 };
 
-const LeaveAdministratorRow = ({ employer_dba, employer_fein, verified }) => {
+const LeaveAdministratorRow = ({
+  employer_dba,
+  employer_fein,
+  employer_id,
+  verified,
+}) => {
   const { t } = useTranslation();
-  const employerDbaClassName = !verified ? "margin-right-3" : undefined;
+  const shouldShowVerificationPrompts =
+    isFeatureEnabled("employerShowVerifications") && !verified;
+
+  const employerDbaTag = shouldShowVerificationPrompts ? (
+    // clickable variant of a table row. navigates to verify business page.
+    <a
+      className="margin-right-3"
+      href={routeWithParams("employers.verifyBusiness", {
+        employer_id,
+        next: routes.employers.organizations,
+      })}
+    >
+      {employer_dba}
+    </a>
+  ) : (
+    // non-clickable variant of a table row.
+    <span className="margin-right-3">{employer_dba}</span>
+  );
 
   return (
     <tr>
-      <th scope="row">
-        <span className={employerDbaClassName}>{employer_dba}</span>
-        {!verified && (
+      <th
+        scope="row"
+        data-label={t("pages.employersOrganizations.organizationsTableHeader")}
+      >
+        {employerDbaTag}
+        {shouldShowVerificationPrompts && (
           <Tag
             label={t("pages.employersOrganizations.verificationRequired")}
             state="warning"
           />
         )}
       </th>
-      <td>{employer_fein}</td>
+      <td data-label={t("pages.employersOrganizations.einTableHeader")}>
+        {employer_fein}
+      </td>
     </tr>
   );
 };
@@ -103,6 +132,7 @@ const LeaveAdministratorRow = ({ employer_dba, employer_fein, verified }) => {
 LeaveAdministratorRow.propTypes = {
   employer_dba: PropTypes.string.isRequired,
   employer_fein: PropTypes.string.isRequired,
+  employer_id: PropTypes.string.isRequired,
   verified: PropTypes.bool.isRequired,
 };
 

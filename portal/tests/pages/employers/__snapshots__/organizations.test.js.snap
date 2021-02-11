@@ -11,6 +11,7 @@ exports[`Organizations renders the page 1`] = `
   </p>
   <Table
     className="width-full"
+    responsive={true}
   >
     <thead>
       <tr>

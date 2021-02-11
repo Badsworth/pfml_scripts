@@ -6,10 +6,12 @@ const Tag = ({ label, state }) => {
   // TODO (EMPLOYER-421) consider other states.
   const classes = classnames(
     "usa-tag",
+    "display-inline-block",
     "text-bold",
     "padding-x-205",
     "padding-y-05",
     "radius-lg",
+    "text-no-wrap",
     {
       "text-success": state === "success",
       "bg-success-lighter": state === "success",
