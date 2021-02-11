@@ -3,6 +3,18 @@ import path from "path";
 import util from "util";
 import { exec } from "child_process";
 import { LSTScenario } from "../../flood/config";
+import configs from "../../../config.json";
+
+export const presetNames = ["base", "basePlus", "basePlusSpikes"] as const;
+export type PresetName = typeof presetNames[number];
+export type Presets = {
+  // Uses "mapped type" for key definition.
+  // @see https://www.typescriptlang.org/docs/handbook/2/mapped-types.html
+  [Property in PresetName]: DeployLST[];
+};
+
+export const environmentNames = Object.keys(configs);
+export type EnvironmentName = typeof environmentNames[number];
 
 const asyncExec = util.promisify(exec);
 
@@ -23,9 +35,21 @@ export const deploymentId = new Date()
 
 export const scriptsDir = path.resolve("./scripts");
 export const bundlerShell = path.join(scriptsDir, "makeFloodBundle.sh");
-export const buildDir = path.join(scriptsDir, deploymentId);
-export const docsDir = path.join(buildDir, "bundleInfo.md");
+let buildDir = path.join(scriptsDir, deploymentId);
+let docsDir = path.join(buildDir, "bundleInfo.md");
 export const envJson = path.resolve("./src/flood/data", "env.json");
+
+export function setBuildDir(folder: string): string {
+  if (folder.length > 0) {
+    buildDir = path.join(scriptsDir, folder);
+    docsDir = path.join(buildDir, "bundleInfo.md");
+  }
+  return buildDir;
+}
+
+export function minutesToSecs(minutes: string): string {
+  return (+minutes * 60).toString();
+}
 
 export const logDeployment = async (
   title: string,
@@ -60,6 +84,7 @@ interface Choice {
 
 export type BundleLST = {
   bundleDir: string;
+  token: string;
   env?: string;
   speed?: number;
   generateData?: boolean;
@@ -70,6 +95,7 @@ export type BundleLST = {
 };
 
 export type DeployLST = {
+  startAfter?: number;
   startFlood?: boolean;
   tool?: string;
   project?: string;
@@ -85,9 +111,37 @@ export type DeployLST = {
   stopAfter?: number;
 } & BundleLST;
 
-// type PromptOptions = Record<string, unknown> | ((...args: any) => Record<string, unknown>);
-// type BundlerPrompts = Record<keyof BundleLST, PromptOptions>
-// type DeployPrompts = Record<keyof DeployLST, PromptOptions>
+export const getChoiceIndexByName = (
+  choices: Choice[],
+  name: string
+): number | null => {
+  const index = choices.findIndex((element) => element.name === name);
+  return index !== -1 ? index : null;
+};
+
+export const scenarioChoices: Choice[] = [
+  {
+    name: "PortalClaimSubmit",
+    message: "Portal claim submission",
+  },
+  {
+    name: "FineosClaimSubmit",
+    message: "Fineos claim submission",
+  },
+  {
+    name: "LeaveAdminSelfRegistration",
+    message: "Leave Admin Self Registration",
+  },
+  { name: "SavilinxAgent", message: "Savilinx Agent" },
+  { name: "DFMLOpsAgent", message: "DFMLOps Agent" },
+];
+
+export const envChoices: Choice[] = [
+  { name: "test", message: "Test" },
+  { name: "stage", message: "Stage" },
+  { name: "performance", message: "Performance" },
+  { name: "training", message: "Training" },
+];
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const bundlerPrompts = (args: BundleLST) => ({
@@ -95,13 +149,8 @@ export const bundlerPrompts = (args: BundleLST) => ({
     type: "select",
     name: "env",
     message: "Target environment?",
-    choices: [
-      { name: "test", message: "Test" },
-      { name: "stage", message: "Stage" },
-      { name: "performance", message: "Performance" },
-      { name: "training", message: "Training" },
-    ],
-    initial: 2,
+    choices: envChoices,
+    initial: getChoiceIndexByName(envChoices, args.env || "performance"),
     required: true,
     skip: !!args.env,
   },
@@ -113,13 +162,13 @@ export const bundlerPrompts = (args: BundleLST) => ({
     max: 2,
     initial: args.speed || 1,
     required: true,
-    skip: !!args.speed,
+    skip: "speed" in args,
   },
   generateData: {
     type: "confirm",
     name: "generateData",
     message: "Generate new test data?",
-    initial: false,
+    initial: args.generateData,
     required: true,
     skip: !!args.generateData,
   },
@@ -134,7 +183,10 @@ export const bundlerPrompts = (args: BundleLST) => ({
       }
       return choices;
     }, [] as Choice[]),
-    initial: 0,
+    initial: getChoiceIndexByName(
+      scenarioChoices,
+      args.scenario || "PortalClaimSubmit"
+    ),
     required: true,
     skip: !!args.scenario,
   }),
@@ -144,9 +196,9 @@ export const bundlerPrompts = (args: BundleLST) => ({
     message: `With a frequency of (max. ${100 - occupied}%)?`,
     min: 0.01,
     max: 100 - occupied,
-    initial: 100 - occupied,
+    initial: args.chance || 100 - occupied,
     required: true,
-    skip: !!args.chance,
+    skip: "chance" in args,
   }),
   eligible: {
     type: "numeral",
@@ -154,9 +206,9 @@ export const bundlerPrompts = (args: BundleLST) => ({
     message: "Employee eligibility rate (max. 100%)?",
     min: 1,
     max: 100,
-    initial: 100,
+    initial: args.eligible || 100,
     required: true,
-    skip: !!args.eligible,
+    skip: "eligible" in args,
   },
   numRecords: {
     type: "numeral",
@@ -164,9 +216,9 @@ export const bundlerPrompts = (args: BundleLST) => ({
     message: "How many records?",
     min: 10,
     max: 10000,
-    initial: 10,
+    initial: args.numRecords || 10,
     required: true,
-    skip: !!args.numRecords,
+    skip: "numRecords" in args,
   },
   bundleDir: {
     type: "input",
@@ -177,34 +229,52 @@ export const bundlerPrompts = (args: BundleLST) => ({
   },
 });
 
+export const toolChoices: Choice[] = [
+  { name: "flood-chrome", message: "Flood Chrome" },
+  { name: "jmeter", message: "JMeter" },
+  { name: "gatling", message: "Gatling" },
+  { name: "java-selenium-chrome", message: "Selenium Chrome" },
+  { name: "java-selenium-firefox", message: "Selenium Firefox" },
+];
+
+export const privacyChoices: Choice[] = [
+  { name: "public", message: "Public" },
+  { name: "private", message: "Private" },
+];
+
+export const regionChoices: Choice[] = [
+  { name: "us-east-1", message: "US East (Virginia)" },
+  { name: "us-west-1", message: "US West (California)" },
+  { name: "us-west-2", message: "US West (Oregon)" },
+];
+
+export const infrastructureChoices: Choice[] = [
+  { name: "demand", message: "On-demand" },
+  { name: "hosted", message: "Hosted" },
+];
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const deployPrompts = (args: DeployLST) => ({
   tool: {
     type: "select",
     name: "tool",
     message: "Testing tool?",
-    choices: [
-      { name: "flood-chrome", message: "Flood Chrome" },
-      { name: "jmeter", message: "JMeter" },
-      { name: "gatling", message: "Gatling" },
-      { name: "java-selenium-chrome", message: "Selenium Chrome" },
-      { name: "java-selenium-firefox", message: "Selenium Firefox" },
-    ],
-    initial: 0,
-    skip: true,
+    choices: toolChoices,
+    initial: getChoiceIndexByName(toolChoices, args.tool || "flood-chrome"),
+    skip: !!args.tool,
   },
   project: {
     type: "input",
     name: "project",
     message: "Project's name?",
-    initial: "PFML",
+    initial: args.project || "PFML",
     skip: true,
   },
   name: {
     type: "input",
     name: "name",
     message: "Test's name?",
-    initial: deploymentId,
+    initial: args.name || deploymentId,
     required: true,
     skip: !!args.name,
   },
@@ -214,7 +284,7 @@ export const deployPrompts = (args: DeployLST) => ({
     message: "How many concurrent users?",
     min: 1,
     max: 500,
-    initial: 1,
+    initial: args.threads || 1,
     required: true,
     skip: !!args.threads,
   },
@@ -224,10 +294,10 @@ export const deployPrompts = (args: DeployLST) => ({
     message: "Duration (in minutes)?",
     min: 15,
     max: 180,
-    initial: 15,
+    initial: args.duration || 15,
     result: minutesToSecs,
     required: true,
-    skip: !!args.duration,
+    skip: "duration" in args,
   },
   rampup: {
     type: "numeral",
@@ -235,32 +305,25 @@ export const deployPrompts = (args: DeployLST) => ({
     message: "Ramp-up (in minutes)?",
     min: 0,
     max: 180,
-    initial: 0,
+    initial: args.rampup || 0,
     result: minutesToSecs,
     required: true,
-    skip: !!args.rampup,
+    skip: "rampup" in args,
   },
   privacy: {
     type: "select",
     name: "privacy",
     message: "Privacy?",
-    choices: [
-      { name: "public", message: "Public" },
-      { name: "private", message: "Private" },
-    ],
-    initial: 0,
-    skip: true,
+    choices: privacyChoices,
+    initial: getChoiceIndexByName(privacyChoices, args.privacy || "public"),
+    skip: !!args.privacy,
   },
   region: {
     type: "select",
     name: "region",
     message: "Region?",
-    choices: [
-      { name: "us-east-1", message: "US East (Virginia)" },
-      { name: "us-west-1", message: "US West (California)" },
-      { name: "us-west-2", message: "US West (Oregon)" },
-    ],
-    initial: 0,
+    choices: regionChoices,
+    initial: getChoiceIndexByName(regionChoices, args.region || "us-east-1"),
     required: true,
     skip: !!args.region,
   },
@@ -268,12 +331,12 @@ export const deployPrompts = (args: DeployLST) => ({
     type: "select",
     name: "infrastructure",
     message: "Grid type?",
-    choices: [
-      { name: "demand", message: "On-demand" },
-      { name: "hosted", message: "Hosted" },
-    ],
-    initial: 0,
-    skip: true,
+    choices: infrastructureChoices,
+    initial: getChoiceIndexByName(
+      infrastructureChoices,
+      args.infrastructure || "demand"
+    ),
+    skip: !!args.infrastructure,
   },
   instanceQuantity: {
     type: "numeral",
@@ -302,28 +365,7 @@ export const deployPrompts = (args: DeployLST) => ({
     type: "confirm",
     name: "startFlood",
     message: "Do you want to deploy this bundle to flood?",
-    initial: false,
+    initial: args.startFlood,
     skip: !!args.startFlood,
   },
 });
-
-export function minutesToSecs(minutes: string): string {
-  return (+minutes * 60).toString();
-}
-
-export const scenarioChoices: Choice[] = [
-  {
-    name: "PortalClaimSubmit",
-    message: "Portal claim submission",
-  },
-  {
-    name: "FineosClaimSubmit",
-    message: "Fineos claim submission",
-  },
-  {
-    name: "LeaveAdminSelfRegistration",
-    message: "Leave Admin Self Registration",
-  },
-  { name: "SavilinxAgent", message: "Savilinx Agent" },
-  { name: "DFMLOpsAgent", message: "DFMLOps Agent" },
-];

@@ -17,6 +17,7 @@ export const CLIArgs: Record<keyof Util.BundleLST, Options> = {
     default: Util.deploymentId,
   },
   env: { string: true },
+  token: { string: true },
   speed: { number: true },
   generateData: { boolean: true },
   numRecords: { number: true },
@@ -50,6 +51,7 @@ export async function makeBundle(args: BundleLSTArgs): Promise<void> {
 export async function prepareBundle(
   args: BundleLSTArgs
 ): Promise<Record<string, string>> {
+  Util.setBuildDir(args.bundleDir);
   // Holds configuration of newly generated claims.json
   const newDataConfig: Util.LSTDataConfig[] = [];
   // Asks for target environment and whether we need new test data

@@ -11,6 +11,7 @@ import * as Bundler from "./makeFloodBundle";
 type DeployLSTArgs = Util.DeployLST & SystemWideArgs;
 
 const CLIArgs: Record<keyof Util.DeployLST, Options> = {
+  startAfter: { number: true },
   startFlood: { boolean: true },
   tool: { string: true },
   project: { string: true },
@@ -34,6 +35,8 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
   async handler(args) {
     // Flood LST deployment unique identifier for file structures
     args.logger.profile(`deployLST ${Util.deploymentId}`);
+    // Set build directory
+    const buildDir = Util.setBuildDir(args.bundleDir);
     // Generates test data & environment variables
     const environmentVars = await Bundler.prepareBundle(args);
     // Builds a new LST bundle
@@ -89,12 +92,12 @@ const cmd: CommandModule<SystemWideArgs, DeployLSTArgs> = {
       }
       formData.append(
         "flood_files[]",
-        fs.createReadStream(path.join(Util.buildDir, "index.perf.ts")),
+        fs.createReadStream(path.join(buildDir, "index.perf.ts")),
         { contentType: "text/vnd.typescript" }
       );
       formData.append(
         "flood_files[]",
-        fs.createReadStream(path.join(Util.buildDir, "floodBundle.zip")),
+        fs.createReadStream(path.join(buildDir, "floodBundle.zip")),
         { contentType: "application/zip" }
       );
       // Creates the new flood in Flood.io

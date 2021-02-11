@@ -26,7 +26,7 @@ cp simulation/types.ts flood/simulation;
 cp simulation/documents.ts flood/simulation;
 cp ../forms/hcp-real.pdf flood/forms;
 
-# conditional command syntax 
+# conditional command syntax
 # https://stackoverflow.com/questions/43171648/sed-gives-sed-cant-read-no-such-file-or-directory
 _SED="sed -i"
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -47,8 +47,12 @@ done
 
 # clear previous builds
 cd ../scripts
-rm -rf $output/floodBundle.zip
-rm -rf $output/index.perf.ts
+if [[ -d $output ]]; then
+  rm $output/floodBundle.zip
+  rm $output/index.perf.ts
+else
+  mkdir $output
+fi
 
 # build `.zip` flood bundle
 cd ../src/flood

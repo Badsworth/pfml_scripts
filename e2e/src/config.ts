@@ -8,6 +8,7 @@ import { config as dotenv } from "dotenv";
  * to the environment variables. For detecting the proper "config environment"
  * to use, it uses the `E2E_ENVIRONMENT` environment variable.
  */
+
 export interface E2EConfig {
   PORTAL_BASEURL: string;
   COGNITO_POOL: string;
