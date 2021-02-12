@@ -7,7 +7,7 @@ module.exports = {
   coveragePathIgnorePatterns: [
     "/node_modules/",
     "<rootDir>/tests/lib/",
-    "<rootDir>/tests/test-utils.js",
+    "<rootDir>/tests/test-utils/",
   ],
   coverageReporters: ["text"],
   moduleFileExtensions: ["js", "mjs", "json", "jsx", "ts", "tsx", "node"],
@@ -22,7 +22,7 @@ module.exports = {
     "<rootDir>/node_modules/",
     "<rootDir>/config",
     "<rootDir>/tests/lib/",
-    "<rootDir>/tests/test-utils.js",
+    "<rootDir>/tests/test-utils/",
   ],
   testRegex: "(/tests/.*|(\\.|/)(test|spec))\\.[jt]sx?$",
   coverageThreshold: {
