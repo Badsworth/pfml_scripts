@@ -464,43 +464,78 @@ class FINEOSClient(client.AbstractFINEOSClient):
     def get_absence_period_decisions(
         self, user_id: str, absence_id: str
     ) -> models.group_client_api.PeriodDecisions:
-        response = self._group_client_api(
-            "GET", f"groupClient/absences/absence-period-decisions?absenceId={absence_id}", user_id
-        )
+        try:
+            response = self._group_client_api(
+                "GET",
+                f"groupClient/absences/absence-period-decisions?absenceId={absence_id}",
+                user_id,
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: get_absence_period_decisions",
+                extra={"method_name": "get_absence_period_decisions"},
+                exc_info=error,
+            )
+            error.method_name = "get_absence_period_decisions"
+            raise error
         return models.group_client_api.PeriodDecisions.parse_obj(response.json())
 
     def get_customer_info(
         self, user_id: str, customer_id: str
     ) -> models.group_client_api.CustomerInfo:
-        response = self._group_client_api(
-            "GET", f"groupClient/customers/{customer_id}/customer-info", user_id
-        )
+        try:
+            response = self._group_client_api(
+                "GET", f"groupClient/customers/{customer_id}/customer-info", user_id
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: get_customer_info",
+                extra={"method_name": "get_customer_info"},
+                exc_info=error,
+            )
+            error.method_name = "get_customer_info"
+            raise error
         json = response.json()
         set_empty_dates_to_none(json, ["dateOfBirth"])
-
         return models.group_client_api.CustomerInfo.parse_obj(json)
 
     def get_customer_occupations(
         self, user_id: str, customer_id: str
     ) -> models.group_client_api.CustomerOccupations:
-        response = self._group_client_api(
-            "GET", f"groupClient/customers/{customer_id}/customer-occupations", user_id
-        )
+        try:
+            response = self._group_client_api(
+                "GET", f"groupClient/customers/{customer_id}/customer-occupations", user_id
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: get_customer_occupations",
+                extra={"method_name": "get_customer_occupations"},
+                exc_info=error,
+            )
+            error.method_name = "get_customer_occupations"
+            raise error
         json = response.json()
         # Workaround empty strings in response instead of null. These cause parse_obj to fail.
         for item in json["elements"]:
             set_empty_dates_to_none(item, ["jobStartDate", "jobEndDate"])
-
         return models.group_client_api.CustomerOccupations.parse_obj(json)
 
     def get_outstanding_information(
         self, user_id: str, case_id: str
     ) -> List[models.group_client_api.OutstandingInformationItem]:
-        """Get outstanding information"""
-        response = self._group_client_api(
-            "GET", f"groupClient/cases/{case_id}/outstanding-information", user_id
-        )
-
+        try:
+            """Get outstanding information"""
+            response = self._group_client_api(
+                "GET", f"groupClient/cases/{case_id}/outstanding-information", user_id
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: get_outstanding_information",
+                extra={"method_name": "get_outstanding_information"},
+                exc_info=error,
+            )
+            error.method_name = "get_outstanding_information"
+            raise error
         return pydantic.parse_obj_as(
             List[models.group_client_api.OutstandingInformationItem], response.json()
         )
@@ -511,48 +546,82 @@ class FINEOSClient(client.AbstractFINEOSClient):
         case_id: str,
         outstanding_information: models.group_client_api.OutstandingInformationData,
     ) -> None:
-        """Update outstanding information received"""
-        self._group_client_api(
-            "POST",
-            f"groupClient/cases/{case_id}/outstanding-information-received",
-            user_id,
-            data=outstanding_information.json(exclude_none=True),
-        )
+        try:
+            """Update outstanding information received"""
+            self._group_client_api(
+                "POST",
+                f"groupClient/cases/{case_id}/outstanding-information-received",
+                user_id,
+                data=outstanding_information.json(exclude_none=True),
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: update_outstanding_information_as_received",
+                extra={"method_name": "update_outstanding_information_as_received"},
+                exc_info=error,
+            )
+            error.method_name = "update_outstanding_information_as_received"
+            raise error
 
     def get_eform_summary(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.EFormSummary]:
-        response = self._group_client_api("GET", f"groupClient/cases/{absence_id}/eforms", user_id)
+        try:
+            response = self._group_client_api(
+                "GET", f"groupClient/cases/{absence_id}/eforms", user_id
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: get_eform_summary",
+                extra={"method_name": "get_eform_summary"},
+                exc_info=error,
+            )
+            error.method_name = "get_eform_summary"
+            raise error
         json = response.json()
         # Workaround empty strings in response instead of null. These cause parse_obj to fail.
         for item in json:
             set_empty_dates_to_none(item, ["effectiveDateFrom", "effectiveDateTo"])
-
         return pydantic.parse_obj_as(List[models.group_client_api.EFormSummary], json)
 
     def get_eform(
         self, user_id: str, absence_id: str, eform_id: str
     ) -> models.group_client_api.EForm:
-        response = self._group_client_api(
-            "GET", f"groupClient/cases/{absence_id}/eforms/{eform_id}/readEform", user_id
-        )
+        try:
+            response = self._group_client_api(
+                "GET", f"groupClient/cases/{absence_id}/eforms/{eform_id}/readEform", user_id
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: get_eform",
+                extra={"method_name": "get_eform"},
+                exc_info=error,
+            )
+            error.method_name = "get_eform"
+            raise error
         json = response.json()
-
         for eformAttribute in json["eformAttributes"]:
             set_empty_dates_to_none(eformAttribute, ["dateValue"])
-
         return models.group_client_api.EForm.parse_obj(json)
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         encoded_eform_type = urllib.parse.quote(eform.eformType)
         eform_json = serialize_eform_body(eform)
-
-        self._group_client_api(
-            "POST",
-            f"groupClient/cases/{absence_id}/addEForm/{encoded_eform_type}",
-            user_id,
-            data=json.dumps(eform_json),
-        )
+        try:
+            self._group_client_api(
+                "POST",
+                f"groupClient/cases/{absence_id}/addEForm/{encoded_eform_type}",
+                user_id,
+                data=json.dumps(eform_json),
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: create_eform",
+                extra={"method_name": "create_eform"},
+                exc_info=error,
+            )
+            error.method_name = "create_eform"
+            raise error
 
     def customer_create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         encoded_eform_type = urllib.parse.quote(eform.eformType)
@@ -678,17 +747,24 @@ class FINEOSClient(client.AbstractFINEOSClient):
     def group_client_get_documents(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.GroupClientDocument]:
-        header_content_type = None
+        try:
+            header_content_type = None
 
-        response = self._group_client_api(
-            "GET",
-            f"groupClient/cases/{absence_id}/documents",
-            user_id,
-            header_content_type=header_content_type,
-        )
-
+            response = self._group_client_api(
+                "GET",
+                f"groupClient/cases/{absence_id}/documents",
+                user_id,
+                header_content_type=header_content_type,
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: group_client_get_documents",
+                extra={"method_name": "group_client_get_documents"},
+                exc_info=error,
+            )
+            error.method_name = "group_client_get_documents"
+            raise error
         documents = response.json()
-
         return [
             models.group_client_api.GroupClientDocument.parse_obj(
                 fineos_document_empty_dates_to_none(doc)
@@ -699,17 +775,25 @@ class FINEOSClient(client.AbstractFINEOSClient):
     def get_managed_requirements(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.ManagedRequirementDetails]:
-        header_content_type = None
+        try:
+            header_content_type = None
 
-        response = self._group_client_api(
-            "GET",
-            f"groupClient/cases/{absence_id}/managedRequirements",
-            user_id,
-            header_content_type=header_content_type,
-        )
+            response = self._group_client_api(
+                "GET",
+                f"groupClient/cases/{absence_id}/managedRequirements",
+                user_id,
+                header_content_type=header_content_type,
+            )
 
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: get_managed_requirements",
+                extra={"method_name": "get_managed_requirements"},
+                exc_info=error,
+            )
+            error.method_name = "get_managed_requirements"
+            raise error
         managed_reqs = response.json()
-
         return [
             models.group_client_api.ManagedRequirementDetails.parse_obj(
                 set_empty_dates_to_none(
@@ -748,22 +832,29 @@ class FINEOSClient(client.AbstractFINEOSClient):
     def download_document_as_leave_admin(
         self, user_id: str, absence_id: str, fineos_document_id: str
     ) -> models.group_client_api.Base64EncodedFileData:
-        header_content_type = None
+        try:
+            header_content_type = None
 
-        response = self._group_client_api(
-            "GET",
-            f"groupClient/cases/{absence_id}/documents/{fineos_document_id}/base64Download",
-            user_id,
-            header_content_type=header_content_type,
-        )
-
+            response = self._group_client_api(
+                "GET",
+                f"groupClient/cases/{absence_id}/documents/{fineos_document_id}/base64Download",
+                user_id,
+                header_content_type=header_content_type,
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: download_document_as_leave_admin",
+                extra={"method_name": "download_document_as_leave_admin"},
+                exc_info=error,
+            )
+            error.method_name = "download_document_as_leave_admin"
+            raise error
         response_json = response.json()
         # populate spec required field missing in fineos response
         if "fileSizeInBytes" not in response_json:
             response_json["fileSizeInBytes"] = len(
                 base64.b64decode(response_json["base64EncodedFileContents"].encode("ascii"))
             )
-
         return models.group_client_api.Base64EncodedFileData.parse_obj(response_json)
 
     def download_document(

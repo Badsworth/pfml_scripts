@@ -11,9 +11,11 @@ import xml.etree.ElementTree
 import defusedxml
 import pytest
 import requests
+from werkzeug.wrappers import Response
 
 import massgov.pfml.fineos.fineos_client
 import massgov.pfml.fineos.models
+from massgov.pfml.fineos.exception import FINEOSClientError
 from massgov.pfml.fineos.models.group_client_api import EForm, EFormAttribute, ModelEnum
 
 TEST_FOLDER = pathlib.Path(__file__).parent
@@ -447,3 +449,16 @@ def test_get_eform(httpserver, fineos_client):
             ),
         ],
     )
+
+
+def test_get_absence_period_decisions_with_error(caplog, httpserver, fineos_client):
+
+    httpserver.expect_ordered_request(
+        "/groupclientapi/groupClient/absences/absence-period-decisions?absenceId=NTN-251-ABS-01",
+        method="GET",
+        headers={"userid": "FINEOS_WEB_ID", "Content-Type": "application/json"},
+    ).respond_with_response(Response(FINEOSClientError))
+
+    with pytest.raises(FINEOSClientError):
+        fineos_client.get_absence_period_decisions("FINEOS_WEB_ID", "NTN-251-ABS-01")
+    assert "FINEOS Client Exception: get_absence_period_decisions" in caplog.text
