@@ -24,12 +24,13 @@ class TransformEformAttributes:
 
     @classmethod
     def sanitize_attribute(cls, item_value: Any) -> Optional[Any]:
+        # Removing white space
+        if type(item_value) is str:
+            item_value = item_value.strip()
         # Remove instances of "Please Select" - EMPLOYER-640
-        return (
-            DEFAULT_ENUM_REPLACEMENT_VALUE
-            if item_value == DEFAULT_ENUM_VALUE_UNSELECTED
-            else item_value
-        )
+        if item_value == DEFAULT_ENUM_VALUE_UNSELECTED:
+            item_value = DEFAULT_ENUM_REPLACEMENT_VALUE
+        return item_value
 
     @classmethod
     def list_to_props(cls, attributes: List[Any]) -> List[Dict]:

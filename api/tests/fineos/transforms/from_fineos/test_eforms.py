@@ -36,7 +36,7 @@ def other_income_eform():
                 },
                 {"name": "StartDate", "dateValue": "2020-10-01"},
                 {"name": "Spacer", "stringValue": ""},
-                {"name": "Frequency", "stringValue": "Per Month"},
+                {"name": "Frequency", "stringValue": "Per Month "},
                 {"name": "ProgramType", "stringValue": "Employer"},
                 {
                     "name": "ReceiveWageReplacement2",
