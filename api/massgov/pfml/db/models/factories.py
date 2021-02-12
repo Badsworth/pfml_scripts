@@ -312,10 +312,8 @@ class PaymentFactory(BaseFactory):
     payment_id = Generators.UuidObj
 
     amount = 100.00
-    # This is a workaround for claim which requires an employer_id, but
-    # doesn't actually set it as a foreign key. This doesn't actually
-    # point to any employer. This should be fixed post-MVP (in the claim model).
-    claim = factory.SubFactory(ClaimFactory, employer_id=Generators.UuidObj)
+
+    claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
 
 

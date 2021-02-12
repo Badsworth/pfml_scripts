@@ -4,7 +4,12 @@ import massgov.pfml.fineos.mock_client
 import tests.api
 from massgov.pfml.api.services.administrator_fineos_actions import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
-from massgov.pfml.db.models.factories import ClaimFactory, EmployerFactory
+from massgov.pfml.db.models.factories import (
+    ApplicationFactory,
+    ClaimFactory,
+    EmployeeFactory,
+    EmployerFactory,
+)
 from massgov.pfml.fineos.models.group_client_api import EFormAttribute
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 
@@ -975,3 +980,111 @@ def test_employer_confirmation_is_not_sent(
         {"case_id": "NTN-100-ABS-01"},
     )
     assert capture[1][0] == "create_eform"
+
+
+def test_get_claim_claim_does_not_exist(caplog, client, employer_auth_token):
+    response = client.get(
+        "/v1/claims/NTN-100-ABS-01", headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 400
+    tests.api.validate_error_response(response, 400, message="Claim not in database.")
+    assert "Claim not in database." in caplog.text
+
+
+def test_get_claim_user_has_no_access(caplog, client, employer_auth_token):
+    ClaimFactory.create(fineos_absence_id="NTN-100-ABS-01")
+
+    response = client.get(
+        "/v1/claims/NTN-100-ABS-01", headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 403
+    tests.api.validate_error_response(response, 403, message="User does not have access to claim.")
+    assert "User does not have access to claim." in caplog.text
+
+
+def test_get_claim_user_has_access_as_leave_admin(
+    caplog, client, employer_auth_token, employer_user, test_db_session
+):
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    claim = ClaimFactory.create(
+        fineos_absence_id="NTN-100-ABS-01",
+        employer=employer,
+        employee=employee,
+        fineos_absence_status_id=1,
+        claim_type_id=1,
+    )
+
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/claims/NTN-100-ABS-01", headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 200
+    response_body = response.get_json()
+    claim_data = response_body.get("data")
+    assert claim_data["absence_period_end_date"] == claim.absence_period_end_date
+    assert claim_data["absence_period_start_date"] == claim.absence_period_start_date
+    assert claim_data["fineos_absence_id"] == claim.fineos_absence_id
+    assert claim_data["fineos_notification_id"] == claim.fineos_notification_id
+    assert claim_data["employer"]["employer_dba"] == claim.employer.employer_dba
+    assert claim_data["employer"]["employer_fein"] == claim.employer.employer_fein
+    assert claim_data["employee"]["first_name"] == claim.employee.first_name
+    assert claim_data["employee"]["middle_name"] == claim.employee.middle_name
+    assert claim_data["employee"]["last_name"] == claim.employee.last_name
+    assert claim_data["employee"]["other_name"] == claim.employee.other_name
+    assert (
+        claim_data["fineos_absence_status"]["absence_status_description"]
+        == claim.fineos_absence_status.absence_status_description
+    )
+    assert (
+        claim_data["claim_type"]["claim_type_description"]
+        == claim.claim_type.claim_type_description
+    )
+
+
+def test_get_claim_user_has_access_as_claimant(caplog, client, auth_token, user):
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    claim = ClaimFactory.create(
+        fineos_absence_id="NTN-100-ABS-01",
+        employer=employer,
+        employee=employee,
+        fineos_absence_status_id=1,
+        claim_type_id=1,
+    )
+    ApplicationFactory.create(user=user, fineos_absence_id="NTN-100-ABS-01")
+    response = client.get(
+        "/v1/claims/NTN-100-ABS-01", headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+    response_body = response.get_json()
+    claim_data = response_body.get("data")
+    assert claim_data["absence_period_end_date"] == claim.absence_period_end_date
+    assert claim_data["absence_period_start_date"] == claim.absence_period_start_date
+    assert claim_data["fineos_absence_id"] == claim.fineos_absence_id
+    assert claim_data["fineos_notification_id"] == claim.fineos_notification_id
+    assert claim_data["employer"]["employer_dba"] == claim.employer.employer_dba
+    assert claim_data["employer"]["employer_fein"] == claim.employer.employer_fein
+    assert claim_data["employee"]["first_name"] == claim.employee.first_name
+    assert claim_data["employee"]["middle_name"] == claim.employee.middle_name
+    assert claim_data["employee"]["last_name"] == claim.employee.last_name
+    assert claim_data["employee"]["other_name"] == claim.employee.other_name
+    assert (
+        claim_data["fineos_absence_status"]["absence_status_description"]
+        == claim.fineos_absence_status.absence_status_description
+    )
+    assert (
+        claim_data["claim_type"]["claim_type_description"]
+        == claim.claim_type.claim_type_description
+    )

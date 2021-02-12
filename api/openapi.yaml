@@ -239,6 +239,39 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+
+  /claims/{fineos_absence_id}:
+    get:
+      summary: Retrieve a claim for a specified absence ID
+      operationId: massgov.pfml.api.claims.get_claim
+      tags:
+        - Claims
+      parameters:
+        - name: fineos_absence_id
+          in: path
+          schema:
+            type: string
+            example: "NTN-00-ABS-00"
+          description: "FINEOS absence ID of the claim data to be retrieved"
+          required: true
+      responses:
+        "200":
+          description: The claim information.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ClaimResponse"
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /employers/claims/{fineos_absence_id}/documents/{fineos_document_id}:
     get:
       summary: Retrieve a FINEOS documents for a specified absence ID and document ID
@@ -1794,6 +1827,23 @@ components:
         filing_period:
           format: date
           example: "1970-06-01"
+
+    ClaimResponse:
+      type: object
+      properties:
+        fineos_absence_id:
+          format: string
+          example: "NTN-01-ABS-01"
+        fineos_notification_id:
+          format: string
+          example: "NTN-01"
+        absence_period_start_date:
+          format: date
+          example: "1970-06-01"          
+        absence_period_end_date:
+          format: date
+          example: "1970-06-01"
+
 
     EmployerAddFeinResponse:
       type: object

@@ -245,6 +245,7 @@ class Employer(Base):
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
     fineos_employer_id = Column(Integer, index=True)
 
+    claims = cast(Optional[List["Claim"]], relationship("Claim", back_populates="employer"))
     wages_and_contributions: "Query[WagesAndContributions]" = dynamic_loader(
         "WagesAndContributions", back_populates="employer"
     )
@@ -407,7 +408,7 @@ class Claim(Base):
     __tablename__ = "claim"
     claim_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
-    employer_id = Column(UUID(as_uuid=True), index=True)
+    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), index=True)
     employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
     fineos_absence_id = Column(Text, index=True, unique=True)
     fineos_absence_status_id = Column(Integer, ForeignKey("lk_absence_status.absence_status_id"))
@@ -439,6 +440,7 @@ class Claim(Base):
     claim_type = relationship(LkClaimType)
     fineos_absence_status = relationship(LkAbsenceStatus)
     employee = relationship("Employee", back_populates="claims")
+    employer = relationship("Employer", back_populates="claims")
 
 
 class Payment(Base):
@@ -594,6 +596,7 @@ class User(Base):
     user_leave_administrators = relationship(
         "UserLeaveAdministrator", back_populates="user", uselist=True
     )
+    employers = relationship("Employer", secondary="link_user_leave_administrator", uselist=True)
 
 
 class UserRole(Base):

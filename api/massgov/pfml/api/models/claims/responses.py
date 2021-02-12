@@ -18,6 +18,37 @@ from massgov.pfml.util.pydantic.types import (
 )
 
 
+class FineosAbsenceStatusResponse(PydanticBaseModel):
+    absence_status_description: str
+
+
+class ClaimTypeResponse(PydanticBaseModel):
+    claim_type_description: str
+
+
+class EmployerResponse(PydanticBaseModel):
+    employer_dba: str
+    employer_fein: str
+
+
+class EmployeeResponse(PydanticBaseModel):
+    first_name: Optional[str]
+    middle_name: Optional[str]
+    last_name: Optional[str]
+    other_name: Optional[str]
+
+
+class ClaimResponse(PydanticBaseModel):
+    fineos_absence_id: Optional[str]
+    employer: Optional[EmployerResponse]
+    employee: Optional[EmployeeResponse]
+    fineos_notification_id: Optional[str]
+    absence_period_start_date: Optional[date]
+    absence_period_end_date: Optional[date]
+    fineos_absence_status: Optional[FineosAbsenceStatusResponse]
+    claim_type: Optional[ClaimTypeResponse]
+
+
 class ClaimReviewResponse(PydanticBaseModel):
     date_of_birth: Optional[MaskedDateStr]
     employer_benefits: Optional[List[EmployerBenefit]]

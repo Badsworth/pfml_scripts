@@ -9,8 +9,9 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.services.claim_rules as claim_rules
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
-from massgov.pfml.api.authorization.flask import READ, requires
+from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
+from massgov.pfml.api.models.claims.responses import ClaimResponse
 from massgov.pfml.api.services.administrator_fineos_actions import (
     DOWNLOADABLE_DOC_TYPES,
     awaiting_leave_info,
@@ -214,3 +215,56 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
         content_type=content_type,
         headers={"Content-Disposition": f"attachment; filename={document_data.fileName}"},
     )
+
+
+def user_has_access_to_claim(claim: Claim) -> bool:
+    current_user = app.current_user()
+    if current_user is None:
+        return False
+
+    if can(READ, "EMPLOYER_API") and claim.employer in current_user.employers:
+        # User is leave admin for the employer associated with claim
+        return True
+
+    with app.db_session() as db_session:
+        application = (
+            db_session.query(Application)
+            .filter(Application.fineos_absence_id == claim.fineos_absence_id)
+            .one_or_none()
+        )
+
+    if application and application.user == current_user:
+        # User is claimant and this is their claim
+        return True
+
+    return False
+
+
+def get_claim(fineos_absence_id: str) -> flask.Response:
+    with app.db_session() as db_session:
+        claim = (
+            db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == fineos_absence_id)
+            .one_or_none()
+        )
+
+    if claim is None:
+        logger.error("Claim not in database.")
+        return response_util.error_response(
+            status_code=BadRequest, message="Claim not in database.", errors=[], data={},
+        ).to_api_response()
+
+    if not user_has_access_to_claim(claim):
+        logger.error("User does not have access to claim.")
+        return response_util.error_response(
+            status_code=Forbidden,
+            message="User does not have access to claim.",
+            errors=[],
+            data={},
+        ).to_api_response()
+
+    return response_util.success_response(
+        message="Successfully retrieved claim",
+        data=ClaimResponse.from_orm(claim).dict(),
+        status_code=200,
+    ).to_api_response()
