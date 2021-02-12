@@ -54,6 +54,7 @@ describe("useAppLogic", () => {
     expect(documents.documents).toBeInstanceOf(DocumentCollection);
     expect(documents.loadAll).toBeInstanceOf(Function);
     expect(documents.attach).toBeInstanceOf(Function);
+    expect(employers.loadWithholding).toBeInstanceOf(Function);
     expect(employers.submitClaimReview).toBeInstanceOf(Function);
     expect(employers.submitWithholding).toBeInstanceOf(Function);
     expect(otherLeaves.removeEmployerBenefit).toBeInstanceOf(Function);

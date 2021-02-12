@@ -41,6 +41,19 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
   };
 
   /**
+   * Load withholding data from the API and set app errors if any.
+   * @param {string} employerId ID of the employer
+   * @returns {Object} withholding data
+   */
+  const loadWithholding = async (employerId) => {
+    try {
+      return await employersApi.getWithholding(employerId);
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
+
+  /**
    * Download document from the API and set app errors if any.
    *
    * @param {string} absenceId ID of the Claim
@@ -96,6 +109,7 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
     downloadDocument,
     loadClaim,
     loadDocuments,
+    loadWithholding,
     submitClaimReview,
     submitWithholding,
   };

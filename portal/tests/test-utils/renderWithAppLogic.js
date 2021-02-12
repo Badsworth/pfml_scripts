@@ -1,4 +1,5 @@
 import Document, { DocumentType } from "../../src/models/Document";
+import { merge, times } from "lodash";
 import { mount, shallow } from "enzyme";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
@@ -8,9 +9,7 @@ import EmployerClaim from "../../src/models/EmployerClaim";
 import React from "react";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
-import merge from "lodash/merge";
 import testHook from "./testHook";
-import times from "lodash/times";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
 /**

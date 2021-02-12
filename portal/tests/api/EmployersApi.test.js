@@ -217,6 +217,41 @@ describe("EmployersApi", () => {
     });
   });
 
+  describe("getWithholding", () => {
+    describe("successful request", () => {
+      let withholding;
+
+      beforeEach(() => {
+        withholding = { filing_period: "1970-06-01" };
+        global.fetch = mockFetch({
+          response: {
+            data: withholding,
+            status: 200,
+          },
+        });
+      });
+
+      it("sends GET request to /employers/withholding/:employer_id", async () => {
+        await employersApi.getWithholding("my-employer-id");
+        expect(fetch).toHaveBeenCalledWith(
+          `${process.env.apiUrl}/employers/withholding/my-employer-id`,
+          expect.objectContaining({
+            body: null,
+            headers,
+            method: "GET",
+          })
+        );
+      });
+
+      it("resolves with withholding data", async () => {
+        const response = await employersApi.getWithholding("my-employer-id");
+        expect(response).toEqual({
+          filing_period: "1970-06-01",
+        });
+      });
+    });
+  });
+
   describe("submitClaimReview", () => {
     describe("successful request", () => {
       beforeEach(() => {

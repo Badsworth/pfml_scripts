@@ -8,6 +8,8 @@ import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
+import Withholding from "../../models/Withholding";
+import formatDateRange from "../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
@@ -15,9 +17,13 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
+import withWithholding from "../../hoc/withWithholding";
 
 export const VerifyBusiness = (props) => {
-  const { appLogic, query, user } = props;
+  const { appLogic, query, withholding } = props;
+  const {
+    users: { user },
+  } = appLogic;
   const { t } = useTranslation();
 
   if (!isFeatureEnabled("employerShowVerifications")) {
@@ -44,7 +50,7 @@ export const VerifyBusiness = (props) => {
     const payload = {
       employer_id: query.employer_id,
       withholding_amount: formState.withholdingAmount,
-      withholding_quarter: "2020-10-10", // TODO (EMPLOYER-470): Change based on actual variable
+      withholding_quarter: withholding.filing_period,
     };
 
     await appLogic.employers.submitWithholding(payload, query.next);
@@ -87,6 +93,9 @@ export const VerifyBusiness = (props) => {
       <Details label={t("pages.employersAuthVerifyBusiness.detailsLabel")}>
         <Trans
           i18nKey="pages.employersAuthVerifyBusiness.detailsList"
+          values={{
+            date: formatDateRange(withholding.filing_period),
+          }}
           components={{
             "mass-tax-connect-link": (
               <a
@@ -103,14 +112,13 @@ export const VerifyBusiness = (props) => {
           }}
         />
       </Details>
-      {/* TODO (EMPLOYER-470): Display date based on GET request for latest filing period */}
       <InputCurrency
         {...getFunctionalInputProps("withholdingAmount")}
         onChange={handleAmountChange}
         mask="currency"
         hint={t("pages.employersAuthVerifyBusiness.withholdingAmountHint")}
         label={t("pages.employersAuthVerifyBusiness.withholdingAmountLabel", {
-          date: "{DD-MMM-YYYY}",
+          date: formatDateRange(withholding.filing_period),
         })}
         smallLabel
       />
@@ -130,12 +138,15 @@ VerifyBusiness.propTypes = {
     portalFlow: PropTypes.shape({
       goTo: PropTypes.func.isRequired,
     }).isRequired,
+    users: PropTypes.shape({
+      user: PropTypes.instanceOf(User),
+    }).isRequired,
   }).isRequired,
   query: PropTypes.shape({
     employer_id: PropTypes.string.isRequired,
     next: PropTypes.string,
   }).isRequired,
-  user: PropTypes.instanceOf(User),
+  withholding: PropTypes.instanceOf(Withholding).isRequired,
 };
 
-export default withUser(VerifyBusiness);
+export default withUser(withWithholding(VerifyBusiness));

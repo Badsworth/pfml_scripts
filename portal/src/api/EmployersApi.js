@@ -7,6 +7,7 @@ import BaseApi, {
 import Document from "../models/Document";
 import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
+import Withholding from "../models/Withholding";
 import routes from "../routes";
 
 /**
@@ -90,6 +91,16 @@ export default class EmployersApi extends BaseApi {
     return {
       documents,
     };
+  };
+
+  /**
+   * Retrieves the date for which the leave admin must search for withholding data from MTC.
+   * @param {string} employer_id - the ID of the employer to fetch the data for
+   * @returns {Promise}
+   */
+  getWithholding = async (employer_id) => {
+    const { data } = await this.request("GET", `withholding/${employer_id}`);
+    return new Withholding(data);
   };
 
   /**

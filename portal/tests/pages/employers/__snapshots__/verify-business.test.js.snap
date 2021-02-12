@@ -62,11 +62,16 @@ exports[`VerifyBusiness when "employerShowVerifications" feature flag is enabled
         }
       }
       i18nKey="pages.employersAuthVerifyBusiness.detailsList"
+      values={
+        Object {
+          "date": "11/20/2011",
+        }
+      }
     />
   </Details>
   <InputCurrency
     hint="Include the full amount with dollars and cents."
-    label="Paid leave contributions for {DD-MMM-YYYY}"
+    label="Paid leave contributions for 11/20/2011"
     mask="currency"
     name="withholdingAmount"
     onChange={[Function]}
@@ -165,7 +170,7 @@ Array [
       <strong
         key="strong-3"
       >
-        {DD-MMM-YYYY}
+        11/20/2011
       </strong>
        period.
     </li>

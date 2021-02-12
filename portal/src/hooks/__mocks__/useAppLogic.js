@@ -57,6 +57,7 @@ export default jest.fn(() => ({
       () => new EmployerClaim({ fineos_absence_id: "NTN-111-ABS-01" })
     ),
     loadDocuments: jest.fn(() => new DocumentCollection()),
+    loadWithholding: jest.fn(() => ({ filing_period: "2011-11-20" })),
     submitClaimReview: jest.fn(),
     submitWithholding: jest.fn(),
   },

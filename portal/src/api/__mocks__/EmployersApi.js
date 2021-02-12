@@ -1,5 +1,6 @@
 import Claim from "../../models/Claim";
 import DocumentCollection from "../../models/DocumentCollection";
+import Withholding from "../../models/Withholding";
 import { uniqueId } from "lodash";
 
 // Export mocked EmployersApi functions so we can spy on them
@@ -27,6 +28,12 @@ export const getDocumentsMock = jest.fn().mockResolvedValue((absenceId) => {
   };
 });
 
+export const getWithholdingMock = jest.fn().mockResolvedValue(() => {
+  return new Withholding({
+    filing_period: "2011-11-20",
+  });
+});
+
 export const downloadDocumentMock = jest.fn(() => new Blob());
 
 export const submitClaimReviewMock = jest
@@ -49,6 +56,7 @@ export const submitWithholdingMock = jest.fn().mockResolvedValue(() => {
 const employersApi = jest.fn().mockImplementation(() => ({
   getClaim: getClaimMock,
   getDocuments: getDocumentsMock,
+  getWithholding: getWithholdingMock,
   downloadDocument: downloadDocumentMock,
   submitClaimReview: submitClaimReviewMock,
   submitWithholding: submitWithholdingMock,

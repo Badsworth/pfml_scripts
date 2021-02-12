@@ -2,6 +2,7 @@ import {
   downloadDocumentMock,
   getClaimMock,
   getDocumentsMock,
+  getWithholdingMock,
   submitClaimReviewMock,
   submitWithholdingMock,
 } from "../../src/api/EmployersApi";
@@ -20,6 +21,7 @@ jest.mock("../../src/services/tracker");
 
 describe("useEmployersLogic", () => {
   const absenceId = "mock-fineos-absence-id-1";
+  const employerId = "mock-employer-id";
   let appErrorsLogic, employersLogic, portalFlow;
 
   function renderHook() {
@@ -128,6 +130,38 @@ describe("useEmployersLogic", () => {
         });
 
         expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      });
+    });
+  });
+
+  describe("loadWithholding", () => {
+    it("renders loadWithholding as instance of function", () => {
+      expect(employersLogic.loadWithholding).toBeInstanceOf(Function);
+    });
+
+    it("makes a call to retrive withholding data", async () => {
+      await act(async () => {
+        await employersLogic.loadWithholding(employerId);
+      });
+
+      expect(getWithholdingMock).toHaveBeenCalledWith(employerId);
+    });
+
+    describe("errors", () => {
+      beforeEach(() => {
+        jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+      });
+
+      it("catches error", async () => {
+        getWithholdingMock.mockImplementationOnce(() => {
+          throw new Error();
+        });
+
+        await act(async () => {
+          await employersLogic.loadWithholding(employerId);
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
       });
     });
   });
