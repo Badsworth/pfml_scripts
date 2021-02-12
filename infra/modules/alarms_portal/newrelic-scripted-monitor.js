@@ -8,10 +8,10 @@ const URI = "${uri}";
 // test login
 $browser
   .get(URI)
-  .then(function () {
+  .then(() => {
     return $browser.findElement($driver.By.linkText("Log in")).click();
   })
-  .then(function () {
+  .then(() => {
     return (
       $browser
         .findElement($driver.By.name("username"))
@@ -21,7 +21,7 @@ $browser
         .sendKeys($secure.PORTAL_USERNAME)
     );
   })
-  .then(function () {
+  .then(() => {
     return (
       $browser
         .findElement($driver.By.name("password"))
@@ -31,11 +31,11 @@ $browser
         .sendKeys($secure.PORTAL_PASSWORD)
     );
   })
-  .then(function () {
+  .then(() => {
     return $browser
       .findElement($driver.By.xpath("//button[@type='submit']"))
       .click();
   })
-  .then(function () {
+  .then(() => {
     return $browser.findElement($driver.By.linkText("Get ready to apply"));
   });
