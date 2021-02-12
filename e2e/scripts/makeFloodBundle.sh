@@ -48,8 +48,12 @@ done
 # clear previous builds
 cd ../scripts
 if [[ -d $output ]]; then
-  rm $output/floodBundle.zip
-  rm $output/index.perf.ts
+  if [[ -f $output/floodBundle.zip ]]; then
+    rm $output/floodBundle.zip
+  fi
+  if [[ -f $output/index.perf.ts ]]; then
+    rm $output/index.perf.ts
+  fi
 else
   mkdir $output
 fi
