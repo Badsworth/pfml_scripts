@@ -51,6 +51,19 @@
     "EMPLOYERS_FILE": "./employers/e2e.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
+  "uat": {
+    "PORTAL_BASEURL": "https://d31sked9ffq37g.cloudfront.net",
+    "API_BASEURL": "https://paidleave-api-uat.mass.gov/api/v1",
+    "FINEOS_BASEURL": "https://uat-claims-webapp.masspfml.fineos.com/",
+    "PORTAL_USERNAME": "rob+pfml-uat@lastcallmedia.com",
+    "FINEOS_USERNAME": "CONTENT",
+    "COGNITO_POOL": "us-east-1_29j6fKBDT",
+    "COGNITO_CLIENTID": "1ajh0c38bs21k60bjtttegspvp",
+    "TESTMAIL_NAMESPACE": "gqzap",
+    "EMPLOYEES_FILE": "./employees/uat.json",
+    "EMPLOYERS_FILE": "./employers/e2e.json",
+    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
+  },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
     "COGNITO_POOL": "us-east-1_HpL4XslLg",
