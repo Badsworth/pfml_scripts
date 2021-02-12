@@ -1591,20 +1591,6 @@ const pages = {
     title: "Finish setting up your account",
     usernameLabel: "$t(shared.usernameLabel)",
   },
-  employersAuthVerifyBusiness: {
-    companyNameLabel: "<strong>Organization:</strong> {{company}}",
-    detailsLabel: "Where to find your paid leave contributions",
-    detailsList:
-      "Log into <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> or contact your payroll department to complete these steps:<ol><li>On the <strong>Accounts</strong> tab, select <strong>Paid Family and Medical Leave</strong>.</li><li>On the <strong>Recent Periods</strong> tab, select the <strong>{{date}}</strong> period.</li><li>Copy the <strong>XXX</strong> amount from the <strong>Summary</strong> section.</li></ol>If you have any questions about your paid leave contributions, please contact the Department of Revenue at <dor-phone-link><strong>$t(shared.departmentOfRevenuePhoneNumber)</strong></dor-phone-link> from 9am-4pm ET.",
-    employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
-    haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
-    lead:
-      "We need more information to verify your identity. We require every employer to verify recent <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> data when creating an account. This helps protect your employees and your company information.",
-    submitButton: "Submit",
-    title: "Verify your paid leave contributions",
-    withholdingAmountHint: "Include the full amount with dollars and cents.",
-    withholdingAmountLabel: "Paid leave contributions for {{date}}",
-  },
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
     instructions:
@@ -1714,7 +1700,14 @@ const pages = {
     title: "Your organizations",
     verificationRequired: "Verification required",
   },
-  employersVerificationSuccess: {
+  employersOrganizationsAddOrganization: {
+    continueButton: "Continue",
+    employerIdNumberLabel: "Employer ID number (EIN)",
+    instructions:
+      "If you manage leave for multiple organizations, you can add them to your account. You’ll need to verify recent paid leave contributions from MassTaxConnect in the following step.",
+    title: "Add an organization",
+  },
+  employersOrganizationsSuccess: {
     companyNameLabel: "<strong>Organization:</strong> {{company}}",
     continueButton: "Continue",
     employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
@@ -1722,6 +1715,20 @@ const pages = {
       "You can now review paid leave applications for this organization. If anyone else on your team needs to review applications, they'll also need to complete the <learn-more-link>verification process</learn-more-link>.",
     title: "Thanks for verifying your paid leave contributions",
   },
+  employersOrganizationsVerifyContributions: {
+    companyNameLabel: "<strong>Organization:</strong> {{company}}",
+    detailsLabel: "Where to find your paid leave contributions",
+    detailsList:
+      "Log into <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> or contact your payroll department to complete these steps:<ol><li>On the <strong>Accounts</strong> tab, select <strong>Paid Family and Medical Leave</strong>.</li><li>On the <strong>Recent Periods</strong> tab, select the <strong>{{date}}</strong> period.</li><li>Copy the <strong>XXX</strong> amount from the <strong>Summary</strong> section.</li></ol>If you have any questions about your paid leave contributions, please contact the Department of Revenue at <dor-phone-link><strong>$t(shared.departmentOfRevenuePhoneNumber)</strong></dor-phone-link> from 9am-4pm ET.",
+    employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
+    haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
+    lead:
+      "We need more information to verify your identity. We require every employer to verify recent <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> data when creating an account. This helps protect your employees and your company information.",
+    submitButton: "Submit",
+    title: "Verify your paid leave contributions",
+    withholdingAmountHint: "Include the full amount with dollars and cents.",
+    withholdingAmountLabel: "Paid leave contributions for {{date}}",
+  }, 
   index: {
     claimantCardBody: "You can now apply for Paid Family and Medical Leave.",
     claimantCreateAccountButton: "Create an account",

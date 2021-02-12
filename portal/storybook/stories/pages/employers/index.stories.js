@@ -3,7 +3,7 @@ import React from "react";
 import User from "src/models/User";
 
 export default {
-  title: "Pages/Employers/Applications/Welcome",
+  title: "Pages/Employers/Welcome",
   component: Index,
   argTypes: {
     hasUnverifiedEmployer: {

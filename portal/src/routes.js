@@ -61,6 +61,7 @@ const routes = {
     verifyAccount: "/verify-account",
   },
   employers: {
+    addOrganization: "/employers/organizations/add-organization",
     confirmation: "/employers/applications/confirmation",
     createAccount: "/employers/create-account",
     dashboard: "/employers",
@@ -70,8 +71,8 @@ const routes = {
     review: "/employers/applications/review",
     status: "/employers/applications/status",
     success: "/employers/applications/success",
-    verificationSuccess: "/employers/verification-success",
-    verifyBusiness: "/employers/verify-business",
+    verificationSuccess: "/employers/organizations/success",
+    verifyContributions: "/employers/organizations/verify-contributions",
   },
   external: {
     massTaxConnect: "https://mtc.dor.state.ma.us/mtc/_/",

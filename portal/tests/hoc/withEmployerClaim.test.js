@@ -111,11 +111,11 @@ describe("withEmployerClaim", () => {
       appLogic.portalFlow.pathWithParams = "test-route";
     });
 
-    it("redirects to Verify Business page if employer id matches", () => {
+    it("redirects to Verify Contributions page if employer id matches", () => {
       render(appLogic);
 
       expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        "/employers/verify-business",
+        "/employers/organizations/verify-contributions",
         {
           employer_id: "dda903f-f093f-ff900",
           next: "test-route",
@@ -123,7 +123,7 @@ describe("withEmployerClaim", () => {
       );
     });
 
-    it("does not redirect to Verify Business page if employer is verified", () => {
+    it("does not redirect to Verify Contributions page if employer is verified", () => {
       appLogic.users.user = userWithVerifiedEmployer;
 
       render(appLogic);

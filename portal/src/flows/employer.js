@@ -34,7 +34,7 @@ export default {
       },
     },
     [routes.employers.verificationSuccess]: {},
-    [routes.employers.verifyBusiness]: {
+    [routes.employers.verifyContributions]: {
       on: {
         CONTINUE: routes.employers.verificationSuccess,
       },

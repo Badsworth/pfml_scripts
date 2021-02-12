@@ -1,11 +1,11 @@
 import User, { UserLeaveAdministrator } from "src/models/User";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import React from "react";
-import VerifyBusiness from "src/pages/employers/verify-business";
+import VerifyContributions from "src/pages/employers/organizations/verify-contributions";
 
 export default {
-  title: "Pages/Employers/Auth/Verify Business",
-  component: VerifyBusiness,
+  title: "Pages/Employers/Organizations/Verify Contributions",
+  component: VerifyContributions,
 };
 
 export const Default = () => {
@@ -33,7 +33,7 @@ export const Default = () => {
       requireLogin: () => {},
     },
     portalFlow: {
-      pathname: "/employers/verify-business",
+      pathname: "/employers/organizations/verify-contributions",
     },
     users: {
       loadUser: () => {},
@@ -42,5 +42,5 @@ export const Default = () => {
       user,
     },
   };
-  return <VerifyBusiness appLogic={appLogic} query={query} user={user} />;
+  return <VerifyContributions appLogic={appLogic} query={query} user={user} />;
 };

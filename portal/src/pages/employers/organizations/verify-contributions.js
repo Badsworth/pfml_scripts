@@ -1,25 +1,25 @@
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
-import Button from "../../components/Button";
-import Details from "../../components/Details";
-import InputCurrency from "../../components/InputCurrency";
-import Lead from "../../components/Lead";
+import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
+import Button from "../../../components/Button";
+import Details from "../../../components/Details";
+import InputCurrency from "../../../components/InputCurrency";
+import Lead from "../../../components/Lead";
 import PropTypes from "prop-types";
 import React from "react";
-import Title from "../../components/Title";
+import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import User from "../../models/User";
-import Withholding from "../../models/Withholding";
-import formatDateRange from "../../utils/formatDateRange";
-import { isFeatureEnabled } from "../../services/featureFlags";
-import routes from "../../routes";
-import useFormState from "../../hooks/useFormState";
-import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
-import useThrottledHandler from "../../hooks/useThrottledHandler";
-import { useTranslation } from "../../locales/i18n";
-import withUser from "../../hoc/withUser";
-import withWithholding from "../../hoc/withWithholding";
+import User from "../../../models/User";
+import Withholding from "../../../models/Withholding";
+import formatDateRange from "../../../utils/formatDateRange";
+import { isFeatureEnabled } from "../../../services/featureFlags";
+import routes from "../../../routes";
+import useFormState from "../../../hooks/useFormState";
+import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
+import useThrottledHandler from "../../../hooks/useThrottledHandler";
+import { useTranslation } from "../../../locales/i18n";
+import withUser from "../../../hoc/withUser";
+import withWithholding from "../../../hoc/withWithholding";
 
-export const VerifyBusiness = (props) => {
+export const VerifyContributions = (props) => {
   const { appLogic, query, withholding } = props;
   const {
     users: { user },
@@ -64,21 +64,23 @@ export const VerifyBusiness = (props) => {
 
   return (
     <form className="usa-form" onSubmit={handleSubmit}>
-      <Title>{t("pages.employersAuthVerifyBusiness.title")}</Title>
+      <Title>
+        {t("pages.employersOrganizationsVerifyContributions.title")}
+      </Title>
       <Lead>
         <Trans
-          i18nKey="pages.employersAuthVerifyBusiness.companyNameLabel"
+          i18nKey="pages.employersOrganizationsVerifyContributions.companyNameLabel"
           tOptions={{ company: employer.employer_dba }}
         />
         <br />
         <Trans
-          i18nKey="pages.employersAuthVerifyBusiness.employerIdNumberLabel"
+          i18nKey="pages.employersOrganizationsVerifyContributions.employerIdNumberLabel"
           tOptions={{ ein: employer.employer_fein }}
         />
       </Lead>
       <Lead>
         <Trans
-          i18nKey="pages.employersAuthVerifyBusiness.lead"
+          i18nKey="pages.employersOrganizationsVerifyContributions.lead"
           components={{
             "mass-tax-connect-link": (
               <a
@@ -90,9 +92,13 @@ export const VerifyBusiness = (props) => {
           }}
         />
       </Lead>
-      <Details label={t("pages.employersAuthVerifyBusiness.detailsLabel")}>
+      <Details
+        label={t(
+          "pages.employersOrganizationsVerifyContributions.detailsLabel"
+        )}
+      >
         <Trans
-          i18nKey="pages.employersAuthVerifyBusiness.detailsList"
+          i18nKey="pages.employersOrganizationsVerifyContributions.detailsList"
           values={{
             date: formatDateRange(withholding.filing_period),
           }}
@@ -116,20 +122,20 @@ export const VerifyBusiness = (props) => {
         {...getFunctionalInputProps("withholdingAmount")}
         onChange={handleAmountChange}
         mask="currency"
-        hint={t("pages.employersAuthVerifyBusiness.withholdingAmountHint")}
-        label={t("pages.employersAuthVerifyBusiness.withholdingAmountLabel", {
+        hint={t("pages.employersOrganizationsVerifyContributions.withholdingAmountHint")}
+        label={t("pages.employersOrganizationsVerifyContributions.withholdingAmountLabel", {
           date: formatDateRange(withholding.filing_period),
         })}
         smallLabel
       />
       <Button type="submit" loading={handleSubmit.isThrottled}>
-        {t("pages.employersAuthVerifyBusiness.submitButton")}
+        {t("pages.employersOrganizationsVerifyContributions.submitButton")}
       </Button>
     </form>
   );
 };
 
-VerifyBusiness.propTypes = {
+VerifyContributions.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
     employers: PropTypes.shape({
@@ -149,4 +155,4 @@ VerifyBusiness.propTypes = {
   withholding: PropTypes.instanceOf(Withholding).isRequired,
 };
 
-export default withUser(withWithholding(VerifyBusiness));
+export default withUser(withWithholding(VerifyContributions));

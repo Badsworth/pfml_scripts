@@ -1,22 +1,22 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
-import { UserLeaveAdministrator } from "../../../src/models/User";
-import { VerifyBusiness } from "../../../src/pages/employers/verify-business";
-import Withholding from "../../../src/models/Withholding";
+import { renderWithAppLogic, simulateEvents } from "../../../test-utils";
+import { UserLeaveAdministrator } from "../../../../src/models/User";
+import { VerifyContributions } from "../../../../src/pages/employers/organizations/verify-contributions";
+import Withholding from "../../../../src/models/Withholding";
 import { mockRouter } from "next/router";
-import routes from "../../../src/routes";
+import routes from "../../../../src/routes";
 
-jest.mock("../../../src/hooks/useAppLogic");
+jest.mock("../../../../src/hooks/useAppLogic");
 
-describe("VerifyBusiness", () => {
+describe("VerifyContributions", () => {
   let appLogic, changeField, submitForm, wrapper;
   const query = {
     employer_id: "mock_employer_id",
     next: "/employers/applications/new-application/?absence_id=mock_absence_id",
   };
-  mockRouter.pathname = routes.employers.VerifyBusiness;
+  mockRouter.pathname = routes.employers.verifyContributions;
 
   function render() {
-    return renderWithAppLogic(VerifyBusiness, {
+    return renderWithAppLogic(VerifyContributions, {
       diveLevels: 0,
       props: {
         query,

@@ -41,7 +41,7 @@ const withEmployerClaim = (Component) => {
             !employer.verified && claim.employer_id === employer.employer_id
         );
         if (employer && employer.employer_id) {
-          appLogic.portalFlow.goTo(routes.employers.verifyBusiness, {
+          appLogic.portalFlow.goTo(routes.employers.verifyContributions, {
             employer_id: employer.employer_id,
             next: appLogic.portalFlow.pathWithParams,
           });

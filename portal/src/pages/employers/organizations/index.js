@@ -1,19 +1,19 @@
-import Alert from "../../components/Alert";
-import BackButton from "../../components/BackButton";
+import Alert from "../../../components/Alert";
+import BackButton from "../../../components/BackButton";
 import PropTypes from "prop-types";
 import React from "react";
-import Table from "../../components/Table";
-import Tag from "../../components/Tag";
-import Title from "../../components/Title";
+import Table from "../../../components/Table";
+import Tag from "../../../components/Tag";
+import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import User from "../../models/User";
-import { isFeatureEnabled } from "../../services/featureFlags";
-import routeWithParams from "../../utils/routeWithParams";
-import routes from "../../routes";
-import { useTranslation } from "../../locales/i18n";
-import withUser from "../../hoc/withUser";
+import User from "../../../models/User";
+import { isFeatureEnabled } from "../../../services/featureFlags";
+import routeWithParams from "../../../utils/routeWithParams";
+import routes from "../../../routes";
+import { useTranslation } from "../../../locales/i18n";
+import withUser from "../../../hoc/withUser";
 
-export const Organizations = ({ appLogic }) => {
+export const Index = ({ appLogic }) => {
   const { t } = useTranslation();
   const {
     hasUnverifiedEmployer,
@@ -74,7 +74,7 @@ export const Organizations = ({ appLogic }) => {
   );
 };
 
-Organizations.propTypes = {
+Index.propTypes = {
   appLogic: PropTypes.shape({
     users: PropTypes.shape({
       user: PropTypes.instanceOf(User).isRequired,
@@ -96,7 +96,7 @@ const LeaveAdministratorRow = ({
     // clickable variant of a table row. navigates to verify business page.
     <a
       className="margin-right-3"
-      href={routeWithParams("employers.verifyBusiness", {
+      href={routeWithParams("employers.verifyContributions", {
         employer_id,
         next: routes.employers.organizations,
       })}
@@ -136,4 +136,4 @@ LeaveAdministratorRow.propTypes = {
   verified: PropTypes.bool.isRequired,
 };
 
-export default withUser(Organizations);
+export default withUser(Index);

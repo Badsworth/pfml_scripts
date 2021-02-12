@@ -1,14 +1,14 @@
-import { renderWithAppLogic, testHook } from "../../test-utils";
-import Organizations from "../../../src/pages/employers/organizations";
+import { renderWithAppLogic, testHook } from "../../../test-utils";
+import Index from "../../../../src/pages/employers/organizations";
 import React from "react";
-import { UserLeaveAdministrator } from "../../../src/models/User";
-import routeWithParams from "../../../src/utils/routeWithParams";
+import { UserLeaveAdministrator } from "../../../../src/models/User";
+import routeWithParams from "../../../../src/utils/routeWithParams";
 import { shallow } from "enzyme";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import useAppLogic from "../../../../src/hooks/useAppLogic";
 
-jest.mock("../../../src/hooks/useAppLogic");
+jest.mock("../../../../src/hooks/useAppLogic");
 
-describe("Organizations", () => {
+describe("Index", () => {
   let appLogic, wrapper;
 
   const renderPage = () => {
@@ -16,7 +16,7 @@ describe("Organizations", () => {
       appLogic = useAppLogic();
     });
 
-    wrapper = shallow(<Organizations appLogic={appLogic} />).dive();
+    wrapper = shallow(<Index appLogic={appLogic} />).dive();
   };
 
   beforeEach(() => {
@@ -29,7 +29,7 @@ describe("Organizations", () => {
   });
 
   it("shows the correct empty state", () => {
-    ({ wrapper } = renderWithAppLogic(Organizations, {
+    ({ wrapper } = renderWithAppLogic(Index, {
       diveLevels: 1,
     }));
 
@@ -50,7 +50,7 @@ describe("Organizations", () => {
     });
 
     it("shows an Alert telling the user to start verification if there are unverified employers", () => {
-      wrapper = shallow(<Organizations appLogic={appLogic} />).dive();
+      wrapper = shallow(<Index appLogic={appLogic} />).dive();
       expect(wrapper.find("Alert").exists()).toBe(true);
     });
 
@@ -69,7 +69,7 @@ describe("Organizations", () => {
           verified: true,
         }),
       ];
-      wrapper = shallow(<Organizations appLogic={appLogic} />).dive();
+      wrapper = shallow(<Index appLogic={appLogic} />).dive();
 
       expect(wrapper.find("Alert").exists()).toBe(false);
     });
@@ -90,7 +90,7 @@ describe("Organizations", () => {
       it("links to the correct Verify Business page", () => {
         const link = row.find("a");
         expect(link.prop("href")).toBe(
-          routeWithParams("employers.verifyBusiness", {
+          routeWithParams("employers.verifyContributions", {
             employer_id: "dda903f-f093f-ff900",
             next: "/employers/organizations",
           })
@@ -108,7 +108,7 @@ describe("Organizations", () => {
         expect(row.find("Tag").exists()).toBe(false);
       });
 
-      it("does not link to the Verify Business page", () => {
+      it("does not link to the Verify Contributions page", () => {
         expect(row.find("a").exists()).toBe(false);
       });
     });
@@ -116,7 +116,7 @@ describe("Organizations", () => {
 
   describe('when "employerShowVerifications" feature flag is disabled', () => {
     it("does not show an Alert telling the user to start verification if there are unverified employers", () => {
-      wrapper = shallow(<Organizations appLogic={appLogic} />).dive();
+      wrapper = shallow(<Index appLogic={appLogic} />).dive();
       expect(wrapper.find("Alert").exists()).toBe(false);
     });
 

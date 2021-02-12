@@ -1,11 +1,11 @@
-import { UserLeaveAdministrator } from "../../../src/models/User";
-import VerificationSuccess from "../../../src/pages/employers/verification-success";
-import { renderWithAppLogic } from "../../test-utils";
-import routes from "../../../src/routes";
+import Success from "../../../../src/pages/employers/organizations/success";
+import { UserLeaveAdministrator } from "../../../../src/models/User";
+import { renderWithAppLogic } from "../../../test-utils";
+import routes from "../../../../src/routes";
 
-jest.mock("../../../src/hooks/useAppLogic");
+jest.mock("../../../../src/hooks/useAppLogic");
 
-describe("VerificationSuccess", () => {
+describe("Success", () => {
   const query = {
     employer_id: "mock_employer_id",
     next: "/employers/organizations",
@@ -13,7 +13,7 @@ describe("VerificationSuccess", () => {
   let appLogic, wrapper;
 
   const renderPage = (query) => {
-    ({ wrapper, appLogic } = renderWithAppLogic(VerificationSuccess, {
+    ({ wrapper, appLogic } = renderWithAppLogic(Success, {
       diveLevels: 1,
       props: { query },
       userAttrs: {

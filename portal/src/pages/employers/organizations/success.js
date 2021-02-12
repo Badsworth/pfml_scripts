@@ -1,15 +1,15 @@
-import Button from "../../components/Button";
+import Button from "../../../components/Button";
 import PropTypes from "prop-types";
 import React from "react";
-import Title from "../../components/Title";
+import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import User from "../../models/User";
-import { isFeatureEnabled } from "../../services/featureFlags";
-import routes from "../../routes";
-import { useTranslation } from "../../locales/i18n";
-import withUser from "../../hoc/withUser";
+import User from "../../../models/User";
+import { isFeatureEnabled } from "../../../services/featureFlags";
+import routes from "../../../routes";
+import { useTranslation } from "../../../locales/i18n";
+import withUser from "../../../hoc/withUser";
 
-export const VerificationSuccess = (props) => {
+export const Success = (props) => {
   const { appLogic, query, user } = props;
   const { t } = useTranslation();
 
@@ -27,21 +27,21 @@ export const VerificationSuccess = (props) => {
 
   return (
     <React.Fragment>
-      <Title>{t("pages.employersVerificationSuccess.title")}</Title>
+      <Title>{t("pages.employersOrganizationsSuccess.title")}</Title>
       <p>
         <Trans
-          i18nKey="pages.employersVerificationSuccess.companyNameLabel"
+          i18nKey="pages.employersOrganizationsSuccess.companyNameLabel"
           tOptions={{ company: employer.employer_dba }}
         />
         <br />
         <Trans
-          i18nKey="pages.employersVerificationSuccess.employerIdNumberLabel"
+          i18nKey="pages.employersOrganizationsSuccess.employerIdNumberLabel"
           tOptions={{ ein: employer.employer_fein }}
         />
       </p>
       <p>
         <Trans
-          i18nKey="pages.employersVerificationSuccess.instructions"
+          i18nKey="pages.employersOrganizationsSuccess.instructions"
           components={{
             "learn-more-link": (
               <a
@@ -54,13 +54,13 @@ export const VerificationSuccess = (props) => {
         />
       </p>
       <Button onClick={navigateToNextPage}>
-        {t("pages.employersVerificationSuccess.continueButton")}
+        {t("pages.employersOrganizationsSuccess.continueButton")}
       </Button>
     </React.Fragment>
   );
 };
 
-VerificationSuccess.propTypes = {
+Success.propTypes = {
   appLogic: PropTypes.shape({
     portalFlow: PropTypes.shape({
       goTo: PropTypes.func.isRequired,
@@ -73,4 +73,4 @@ VerificationSuccess.propTypes = {
   user: PropTypes.instanceOf(User),
 };
 
-export default withUser(VerificationSuccess);
+export default withUser(Success);

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Organizations renders the page 1`] = `
+exports[`Index renders the page 1`] = `
 <Fragment>
   <BackButton />
   <Title>

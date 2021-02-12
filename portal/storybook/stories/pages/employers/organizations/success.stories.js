@@ -1,10 +1,10 @@
 import User, { UserLeaveAdministrator } from "src/models/User";
 import React from "react";
-import { VerificationSuccess } from "src/pages/employers/verification-success";
+import { Success } from "src/pages/employers/organizations/success";
 
 export default {
-  title: `Pages/Employers/VerificationSuccess`,
-  component: VerificationSuccess,
+  title: `Pages/Employers/Organizations/Verification Success`,
+  component: Success,
 };
 
 export const Default = () => {
@@ -27,5 +27,5 @@ export const Default = () => {
   const user = new User({
     user_leave_administrators,
   });
-  return <VerificationSuccess appLogic={appLogic} query={query} user={user} />;
+  return <Success appLogic={appLogic} query={query} user={user} />;
 };
