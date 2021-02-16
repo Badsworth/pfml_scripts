@@ -27,11 +27,6 @@ export function beforePortal(): void {
     url: "**/api/v1/applications/*/submit_application",
   }).as("submitClaimResponse");
 
-  cy.intercept({
-    method: "GET",
-    url: "**/api/v1/applications/*/documents",
-  }).as("documentClaimResponse");
-
   // Block new-relic.js outright due to issues with Cypress networking code.
   // Without this block, test retries on the portal error out due to fetch() errors.
   cy.intercept("**/new-relic.js", (req) => {
