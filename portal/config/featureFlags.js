@@ -23,6 +23,10 @@ const flagsConfig = {
     // TODO (CP-1346): Show this step once it's been integrated w/ the API.
     claimantShowOtherLeaveStep: false,
 
+    // When this flag is enabled, "Add Organization" button and navigation to page is enabled
+    // TODO (EMPLOYER-913): Remove flag
+    employerShowAddOrganization: false,
+
     // When this flag is enabled, adjudication status is visible on the Status page
     // TODO (EMPLOYER-656): Show adjudication status once it is retrieved from FINEOS
     employerShowAdjudicationStatus: false,
