@@ -40,7 +40,7 @@ export const CreateAccount = (props) => {
   );
 
   return (
-    <form className="usa-form" onSubmit={handleSubmit}>
+    <form className="usa-form" onSubmit={handleSubmit} method="post">
       <Alert
         state="info"
         heading={t("pages.authCreateAccount.alertHeading")}

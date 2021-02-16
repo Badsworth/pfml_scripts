@@ -30,7 +30,7 @@ export const ConsentToDataSharing = (props) => {
   const roleContext = user.hasEmployerRole ? "employer" : "user";
 
   return (
-    <form onSubmit={handleSubmit} className="usa-form">
+    <form onSubmit={handleSubmit} className="usa-form" method="post">
       <Title>{t("pages.userConsentToDataSharing.title")}</Title>
       <p className="margin-bottom-2">
         {t("pages.userConsentToDataSharing.intro")}

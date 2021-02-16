@@ -36,7 +36,7 @@ export const FinishAccountSetup = (props) => {
   });
 
   return (
-    <form className="usa-form" onSubmit={handleSubmit}>
+    <form className="usa-form" onSubmit={handleSubmit} method="post">
       <Title>{t("pages.employersAuthFinishAccountSetup.title")}</Title>
       <Lead>{t("pages.employersAuthFinishAccountSetup.lead")}</Lead>
 

@@ -80,6 +80,7 @@ export const NewApplication = (props) => {
         id="employer-verification-form"
         onSubmit={handleSubmit}
         className="usa-form"
+        method="post"
       >
         <div className="margin-bottom-2 padding-bottom-2">
           <InputChoiceGroup

@@ -20,7 +20,7 @@ export const BondingLeaveAttestation = (props) => {
   return (
     <React.Fragment>
       <BackButton />
-      <form onSubmit={handleSubmit} className="usa-form">
+      <form onSubmit={handleSubmit} className="usa-form" method="post">
         <Title>{t("pages.claimsBondingLeaveAttestation.title")}</Title>
         <Trans
           i18nKey="pages.claimsBondingLeaveAttestation.lead"

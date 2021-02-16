@@ -21,6 +21,7 @@ exports[`NewApplication renders the page 1`] = `
   <form
     className="usa-form"
     id="employer-verification-form"
+    method="post"
     onSubmit={[Function]}
   >
     <div

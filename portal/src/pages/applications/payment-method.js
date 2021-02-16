@@ -71,7 +71,7 @@ export const PaymentMethod = (props) => {
   return (
     <React.Fragment>
       <BackButton />
-      <form onSubmit={handleSubmit} className="usa-form">
+      <form onSubmit={handleSubmit} className="usa-form" method="post">
         <Title small>{t("pages.claimsPaymentMethod.title")}</Title>
         <Alert state="info" neutral>
           <Trans

@@ -24,7 +24,7 @@ export const QuestionPage = (props) => {
   return (
     <React.Fragment>
       <BackButton />
-      <form onSubmit={handleSubmit} className="usa-form">
+      <form onSubmit={handleSubmit} className="usa-form" method="post">
         <Title small>{props.title}</Title>
         {props.children}
         <Button

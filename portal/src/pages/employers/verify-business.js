@@ -51,7 +51,7 @@ export const VerifyBusiness = (props) => {
   });
 
   return (
-    <form className="usa-form" onSubmit={handleSubmit}>
+    <form className="usa-form" onSubmit={handleSubmit} method="post">
       <Title>{t("pages.employersAuthVerifyBusiness.title")}</Title>
       <Lead>
         <Trans

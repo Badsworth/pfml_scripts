@@ -3,6 +3,7 @@
 exports[`VerifyBusiness when "employerShowVerificationPages" feature flag is enabled renders the page 1`] = `
 <form
   className="usa-form"
+  method="post"
   onSubmit={[Function]}
 >
   <Title>

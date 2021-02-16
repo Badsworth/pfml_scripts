@@ -53,6 +53,7 @@ Array [
 exports[`CreateAccount renders the empty page 1`] = `
 <form
   className="usa-form"
+  method="post"
   onSubmit={[Function]}
 >
   <Alert

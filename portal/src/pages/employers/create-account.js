@@ -47,7 +47,7 @@ export const CreateAccount = (props) => {
 
   return (
     <React.Fragment>
-      <form className="usa-form" onSubmit={handleSubmit}>
+      <form className="usa-form" onSubmit={handleSubmit} method="post">
         <Title>{t("pages.employersAuthCreateAccount.title")}</Title>
         <Alert state="info" className="margin-bottom-3" neutral>
           <Trans
