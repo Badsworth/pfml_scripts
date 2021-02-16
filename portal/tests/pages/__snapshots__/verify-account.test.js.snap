@@ -3,6 +3,7 @@
 exports[`VerifyAccount renders the empty page 1`] = `
 <form
   className="usa-form"
+  method="post"
   onSubmit={[Function]}
 >
   <BackButton

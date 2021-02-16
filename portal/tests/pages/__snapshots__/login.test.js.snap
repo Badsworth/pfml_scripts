@@ -4,6 +4,7 @@ exports[`Login renders the page 1`] = `
 <Fragment>
   <form
     className="usa-form"
+    method="post"
     onSubmit={[Function]}
   >
     <Title>

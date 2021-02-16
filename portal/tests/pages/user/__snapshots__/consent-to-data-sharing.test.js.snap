@@ -3,6 +3,7 @@
 exports[`ConsentToDataSharing shows the correct content for non-employers 1`] = `
 <form
   className="usa-form"
+  method="post"
   onSubmit={[Function]}
 >
   <Title>
@@ -87,6 +88,7 @@ exports[`ConsentToDataSharing shows the correct content for non-employers 1`] = 
 exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
 <form
   className="usa-form"
+  method="post"
   onSubmit={[Function]}
 >
   <Title>

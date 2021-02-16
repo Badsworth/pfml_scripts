@@ -21,7 +21,7 @@ export const Start = (props) => {
   return (
     <React.Fragment>
       <BackButton />
-      <form onSubmit={handleSubmit} className="usa-form">
+      <form onSubmit={handleSubmit} className="usa-form" method="post">
         <Title>{t("pages.claimsStart.title")}</Title>
         <Trans
           i18nKey="pages.claimsStart.explanation"

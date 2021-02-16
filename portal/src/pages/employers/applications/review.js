@@ -189,7 +189,7 @@ export const Review = (props) => {
       <EmployeeInformation claim={claim} />
       <LeaveDetails claim={claim} />
       <LeaveSchedule appLogic={appLogic} claim={claim} />
-      <form id="employer-review-form" onSubmit={handleSubmit}>
+      <form id="employer-review-form" onSubmit={handleSubmit} method="post">
         <SupportingWorkDetails
           appErrors={appErrors}
           hoursWorkedPerWeek={claim.hours_worked_per_week}

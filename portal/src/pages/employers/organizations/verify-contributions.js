@@ -63,7 +63,7 @@ export const VerifyContributions = (props) => {
   });
 
   return (
-    <form className="usa-form" onSubmit={handleSubmit}>
+    <form className="usa-form" onSubmit={handleSubmit} method="post">
       <Title>
         {t("pages.employersOrganizationsVerifyContributions.title")}
       </Title>
@@ -122,10 +122,15 @@ export const VerifyContributions = (props) => {
         {...getFunctionalInputProps("withholdingAmount")}
         onChange={handleAmountChange}
         mask="currency"
-        hint={t("pages.employersOrganizationsVerifyContributions.withholdingAmountHint")}
-        label={t("pages.employersOrganizationsVerifyContributions.withholdingAmountLabel", {
-          date: formatDateRange(withholding.filing_period),
-        })}
+        hint={t(
+          "pages.employersOrganizationsVerifyContributions.withholdingAmountHint"
+        )}
+        label={t(
+          "pages.employersOrganizationsVerifyContributions.withholdingAmountLabel",
+          {
+            date: formatDateRange(withholding.filing_period),
+          }
+        )}
         smallLabel
       />
       <Button type="submit" loading={handleSubmit.isThrottled}>

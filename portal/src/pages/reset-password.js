@@ -119,7 +119,7 @@ export const ResetPassword = (props) => {
     : null;
 
   return (
-    <form className="usa-form" onSubmit={handleSubmit}>
+    <form className="usa-form" onSubmit={handleSubmit} method="post">
       <BackButton
         label={t("pages.authResetPassword.backToLoginLink")}
         href={routes.auth.login}

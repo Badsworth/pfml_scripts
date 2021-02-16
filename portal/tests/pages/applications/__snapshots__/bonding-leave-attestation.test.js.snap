@@ -5,6 +5,7 @@ exports[`BondingLeaveAttestation renders the page 1`] = `
   <BackButton />
   <form
     className="usa-form"
+    method="post"
     onSubmit={[Function]}
   >
     <Title>

@@ -72,7 +72,7 @@ export const Login = (props) => {
         </Alert>
       )}
 
-      <form className="usa-form" onSubmit={handleSubmit}>
+      <form className="usa-form" onSubmit={handleSubmit} method="post">
         <Title>{t("pages.authLogin.title")}</Title>
         <InputText
           {...getFunctionalInputProps("username")}

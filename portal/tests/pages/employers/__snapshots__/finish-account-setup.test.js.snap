@@ -3,6 +3,7 @@
 exports[`FinishAccountSetup renders the page 1`] = `
 <form
   className="usa-form"
+  method="post"
   onSubmit={[Function]}
 >
   <Title>

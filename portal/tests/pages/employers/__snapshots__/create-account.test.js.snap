@@ -4,6 +4,7 @@ exports[`CreateAccount when employerShowSelfRegistrationForm is set to true rend
 <Fragment>
   <form
     className="usa-form"
+    method="post"
     onSubmit={[Function]}
   >
     <Title>

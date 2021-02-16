@@ -97,7 +97,7 @@ export const VerifyAccount = (props) => {
   });
 
   return (
-    <form className="usa-form" onSubmit={handleSubmit}>
+    <form className="usa-form" onSubmit={handleSubmit} method="post">
       <BackButton
         label={t("pages.authVerifyAccount.backToLoginLink")}
         href={routes.auth.login}
