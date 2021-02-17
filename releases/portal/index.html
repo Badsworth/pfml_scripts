@@ -639,12 +639,12 @@
 <tbody>
 <tr>
 <td>test</td>
-<td>4e89c89a21cb9211c765b69329208c172b0f1797</td>
+<td>e6dbf8d4e6fcfd979438aa6271aea43e35d90c43</td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=portal+(test)">GitHub</a></td>
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/portal/v7.2">portal/v7.2</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/portal/v8.0-rc2">portal/v8.0-rc2</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=portal+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -670,83 +670,10 @@
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/819036412/Portal+Release+Notes">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (END-602,EMPLOYER-890,CP-1805,EMPLOYER-801,EMPLOYER-470,CP-1649,EMPLOYER-869,CP-1778,CP-1666,INFRA-255,EMPLOYER-833,CP-1751,CP-1778,INFRA-248,INFRA-239,CP-1792,INFRA-233,CP-1791,CP-1778,INFRA-195,EMPLOYER-814,EMPLOYER-881,INFRA-219,EMPLOYER-880,CP-1532,CP-1749,CP-1667,EMPLOYER-767,EMPLOYER-768,CP-789)">Jira List</a>):</p>
-<ul>
-<li>reorganize test-utils.js into test-utils/ (<a href="https://github.com/EOLWD/pfml/pull/2884">#2884</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-255">INFRA-255</a>: Fix Cloudfront ACL rule name and Cloudwatch metric names (<a href="https://github.com/EOLWD/pfml/pull/3062">#3062</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-248">INFRA-248</a>: Generate release page (<a href="https://github.com/EOLWD/pfml/pull/3042">#3042</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-239">INFRA-239</a>: Make automatic UAT deploys deploy the right thing (<a href="https://github.com/EOLWD/pfml/pull/3032">#3032</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-233">INFRA-233</a>: Remove parameters and variables from sentry event logs (<a href="https://github.com/EOLWD/pfml/pull/3003">#3003</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-219">INFRA-219</a>: Add Fortinet OWASP 10 AWS WAF rule to CloudFront (<a href="https://github.com/EOLWD/pfml/pull/2971">#2971</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-195">INFRA-195</a>: Make command to pull portal tickets from GitHub (<a href="https://github.com/EOLWD/pfml/pull/3037">#3037</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/END-602">END-602</a>: Doc Upload File sizes (<a href="https://github.com/EOLWD/pfml/pull/2855">#2855</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-890">EMPLOYER-890</a>: Set up feature flag for MELA (<a href="https://github.com/EOLWD/pfml/pull/3084">#3084</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-881">EMPLOYER-881</a>: Content change to coming soon banner (<a href="https://github.com/EOLWD/pfml/pull/3022">#3022</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-880">EMPLOYER-880</a>: Enable the news banner in all environments (<a href="https://github.com/EOLWD/pfml/pull/3017">#3017</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-869">EMPLOYER-869</a>: Handle input for withholding amount (<a href="https://github.com/EOLWD/pfml/pull/3041">#3041</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-833">EMPLOYER-833</a>: Enable navigation to verification page from organizations (<a href="https://github.com/EOLWD/pfml/pull/2979">#2979</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-814">EMPLOYER-814</a>: changed error message (<a href="https://github.com/EOLWD/pfml/pull/2991">#2991</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-801">EMPLOYER-801</a>: Create Add Organization page (+ file restructuring) (<a href="https://github.com/EOLWD/pfml/pull/3060">#3060</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-768">EMPLOYER-768</a>: Redirect from info request to verification flow (<a href="https://github.com/EOLWD/pfml/pull/2983">#2983</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-767">EMPLOYER-767</a>: Prompt user to verify any unverified organizations (<a href="https://github.com/EOLWD/pfml/pull/2994">#2994</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-470">EMPLOYER-470</a>: Request withholding data on verify business page via HOC (<a href="https://github.com/EOLWD/pfml/pull/3002">#3002</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-789">CP-789</a>: Remove next/router from useUsersLogic (<a href="https://github.com/EOLWD/pfml/pull/2950">#2950</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1805">CP-1805</a>: Add method attribute to form elements (<a href="https://github.com/EOLWD/pfml/pull/3087">#3087</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1792">CP-1792</a>: Deleted an extra period (<a href="https://github.com/EOLWD/pfml/pull/3049">#3049</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1791">CP-1791</a>: - Track interactions with UI back button (<a href="https://github.com/EOLWD/pfml/pull/3008">#3008</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1778">CP-1778</a>: point checklist back link to applications.index (<a href="https://github.com/EOLWD/pfml/pull/3019">#3019</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1778">CP-1778</a>: Redirect logged in users who have claims to /applications (<a href="https://github.com/EOLWD/pfml/pull/3014">#3014</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1778">CP-1778</a>: Fix Dashboard storybook and content casing (<a href="https://github.com/EOLWD/pfml/pull/3065">#3065</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1751">CP-1751</a>: Update Next.js to 10.0.6 (<a href="https://github.com/EOLWD/pfml/pull/2951">#2951</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1749">CP-1749</a>: Return empty string when date is blank (<a href="https://github.com/EOLWD/pfml/pull/2997">#2997</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1667">CP-1667</a>: Refactor <code>onChange</code> called with a HTMLElement (<a href="https://github.com/EOLWD/pfml/pull/2922">#2922</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1666">CP-1666</a>: Move tax liability content elsewhere and update the mass.gov URL (<a href="https://github.com/EOLWD/pfml/pull/3015">#3015</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1649">CP-1649</a>: Display weekly time tables in 2-column design (<a href="https://github.com/EOLWD/pfml/pull/2999">#2999</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1532">CP-1532</a>: Refactor FileCardsList error handling (<a href="https://github.com/EOLWD/pfml/pull/2955">#2955</a>)</li>
-<li>Set withholding amount as number; make next query param optional (<a href="https://github.com/EOLWD/pfml/pull/3000">#3000</a>)</li>
-<li>Fix training config (<a href="https://github.com/EOLWD/pfml/pull/3073">#3073</a>) (#3074)</li>
-<li>Consolidate verification-related feature flags (<a href="https://github.com/EOLWD/pfml/pull/2998">#2998</a>)</li>
-<li>Change resource_arn and web_acl_id references (<a href="https://github.com/EOLWD/pfml/pull/3035">#3035</a>)</li>
-<li>CP: Update float handling and currency input (<a href="https://github.com/EOLWD/pfml/pull/3006">#3006</a>)</li>
-</ul>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in ()">Jira List</a>):</p>
 <details>
 <summary>Raw</summary>
- <br>* reorganize test-utils.js into test-utils/ ([#2884](https://github.com/EOLWD/pfml/pull/2884))
- <br>* [INFRA-255](https://lwd.atlassian.net/browse/INFRA-255): Fix Cloudfront ACL rule name and Cloudwatch metric names ([#3062](https://github.com/EOLWD/pfml/pull/3062))
- <br>* [INFRA-248](https://lwd.atlassian.net/browse/INFRA-248): Generate release page ([#3042](https://github.com/EOLWD/pfml/pull/3042))
- <br>* [INFRA-239](https://lwd.atlassian.net/browse/INFRA-239): Make automatic UAT deploys deploy the right thing ([#3032](https://github.com/EOLWD/pfml/pull/3032))
- <br>* [INFRA-233](https://lwd.atlassian.net/browse/INFRA-233): Remove parameters and variables from sentry event logs ([#3003](https://github.com/EOLWD/pfml/pull/3003))
- <br>* [INFRA-219](https://lwd.atlassian.net/browse/INFRA-219): Add Fortinet OWASP 10 AWS WAF rule to CloudFront ([#2971](https://github.com/EOLWD/pfml/pull/2971))
- <br>* [INFRA-195](https://lwd.atlassian.net/browse/INFRA-195): Make command to pull portal tickets from GitHub ([#3037](https://github.com/EOLWD/pfml/pull/3037))
- <br>* [END-602](https://lwd.atlassian.net/browse/END-602): Doc Upload File sizes ([#2855](https://github.com/EOLWD/pfml/pull/2855))
- <br>* [EMPLOYER-890](https://lwd.atlassian.net/browse/EMPLOYER-890): Set up feature flag for MELA ([#3084](https://github.com/EOLWD/pfml/pull/3084))
- <br>* [EMPLOYER-881](https://lwd.atlassian.net/browse/EMPLOYER-881): Content change to coming soon banner ([#3022](https://github.com/EOLWD/pfml/pull/3022))
- <br>* [EMPLOYER-880](https://lwd.atlassian.net/browse/EMPLOYER-880): Enable the news banner in all environments ([#3017](https://github.com/EOLWD/pfml/pull/3017))
- <br>* [EMPLOYER-869](https://lwd.atlassian.net/browse/EMPLOYER-869): Handle input for withholding amount ([#3041](https://github.com/EOLWD/pfml/pull/3041))
- <br>* [EMPLOYER-833](https://lwd.atlassian.net/browse/EMPLOYER-833): Enable navigation to verification page from organizations ([#2979](https://github.com/EOLWD/pfml/pull/2979))
- <br>* [EMPLOYER-814](https://lwd.atlassian.net/browse/EMPLOYER-814): changed error message ([#2991](https://github.com/EOLWD/pfml/pull/2991))
- <br>* [EMPLOYER-801](https://lwd.atlassian.net/browse/EMPLOYER-801): Create Add Organization page (+ file restructuring) ([#3060](https://github.com/EOLWD/pfml/pull/3060))
- <br>* [EMPLOYER-768](https://lwd.atlassian.net/browse/EMPLOYER-768): Redirect from info request to verification flow ([#2983](https://github.com/EOLWD/pfml/pull/2983))
- <br>* [EMPLOYER-767](https://lwd.atlassian.net/browse/EMPLOYER-767): Prompt user to verify any unverified organizations ([#2994](https://github.com/EOLWD/pfml/pull/2994))
- <br>* [EMPLOYER-470](https://lwd.atlassian.net/browse/EMPLOYER-470): Request withholding data on verify business page via HOC ([#3002](https://github.com/EOLWD/pfml/pull/3002))
- <br>* [CP-789](https://lwd.atlassian.net/browse/CP-789): Remove next/router from useUsersLogic ([#2950](https://github.com/EOLWD/pfml/pull/2950))
- <br>* [CP-1805](https://lwd.atlassian.net/browse/CP-1805): Add method attribute to form elements ([#3087](https://github.com/EOLWD/pfml/pull/3087))
- <br>* [CP-1792](https://lwd.atlassian.net/browse/CP-1792): Deleted an extra period ([#3049](https://github.com/EOLWD/pfml/pull/3049))
- <br>* [CP-1791](https://lwd.atlassian.net/browse/CP-1791): - Track interactions with UI back button ([#3008](https://github.com/EOLWD/pfml/pull/3008))
- <br>* [CP-1778](https://lwd.atlassian.net/browse/CP-1778): point checklist back link to applications.index ([#3019](https://github.com/EOLWD/pfml/pull/3019))
- <br>* [CP-1778](https://lwd.atlassian.net/browse/CP-1778): Redirect logged in users who have claims to /applications ([#3014](https://github.com/EOLWD/pfml/pull/3014))
- <br>* [CP-1778](https://lwd.atlassian.net/browse/CP-1778): Fix Dashboard storybook and content casing ([#3065](https://github.com/EOLWD/pfml/pull/3065))
- <br>* [CP-1751](https://lwd.atlassian.net/browse/CP-1751): Update Next.js to 10.0.6 ([#2951](https://github.com/EOLWD/pfml/pull/2951))
- <br>* [CP-1749](https://lwd.atlassian.net/browse/CP-1749): Return empty string when date is blank ([#2997](https://github.com/EOLWD/pfml/pull/2997))
- <br>* [CP-1667](https://lwd.atlassian.net/browse/CP-1667): Refactor `onChange` called with a HTMLElement ([#2922](https://github.com/EOLWD/pfml/pull/2922))
- <br>* [CP-1666](https://lwd.atlassian.net/browse/CP-1666): Move tax liability content elsewhere and update the mass.gov URL ([#3015](https://github.com/EOLWD/pfml/pull/3015))
- <br>* [CP-1649](https://lwd.atlassian.net/browse/CP-1649): Display weekly time tables in 2-column design ([#2999](https://github.com/EOLWD/pfml/pull/2999))
- <br>* [CP-1532](https://lwd.atlassian.net/browse/CP-1532): Refactor FileCardsList error handling ([#2955](https://github.com/EOLWD/pfml/pull/2955))
- <br>* Set withholding amount as number; make next query param optional ([#3000](https://github.com/EOLWD/pfml/pull/3000))
- <br>* Fix training config ([#3073](https://github.com/EOLWD/pfml/pull/3073)) (#3074)
- <br>* Consolidate verification-related feature flags ([#2998](https://github.com/EOLWD/pfml/pull/2998))
- <br>* Change resource_arn and web_acl_id references ([#3035](https://github.com/EOLWD/pfml/pull/3035))
- <br>* CP: Update float handling and currency input ([#3006](https://github.com/EOLWD/pfml/pull/3006))
+
 </details>
                 
               
