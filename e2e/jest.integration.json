@@ -1,0 +1,6 @@
+{
+  "testMatch": [
+    "**/test/integration/*.[jt]s?(x)"
+  ],
+  "testEnvironment": "node"
+}

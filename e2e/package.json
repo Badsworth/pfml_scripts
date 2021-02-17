@@ -12,7 +12,8 @@
     "lint:ci": "npm run lint:js && npm run lint:ts",
     "lint:ts": "tsc --noEmit",
     "lint:js": "eslint src/ cypress/ test/",
-    "test": "jest",
+    "test:unit": "jest --config=jest.unit.json",
+    "test:integration": "jest --config=jest.integration.json",
     "cli": "ts-node src/cli.ts",
     "pilot3:gen": "ts-node src/cli.ts simulation generate -f ./src/simulation/scenarios/pilot3.ts -d ./data/pilot3",
     "pilot3:sim": "ts-node src/cli.ts simulation run -d ./data/pilot3",
@@ -90,11 +91,6 @@
   "cypress-cucumber-preprocessor": {
     "nonGlobalStepDefinitions": true,
     "commonPath": "cypress/tests/common"
-  },
-  "jest": {
-    "testMatch": [
-      "**/test/**/*.[jt]s?(x)"
-    ]
   },
   "element": {
     "testMatch": [

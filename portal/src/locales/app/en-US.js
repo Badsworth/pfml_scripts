@@ -1728,7 +1728,7 @@ const pages = {
     title: "Verify your paid leave contributions",
     withholdingAmountHint: "Include the full amount with dollars and cents.",
     withholdingAmountLabel: "Paid leave contributions for {{date}}",
-  }, 
+  },
   index: {
     claimantCardBody: "You can now apply for Paid Family and Medical Leave.",
     claimantCreateAccountButton: "Create an account",

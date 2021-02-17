@@ -139,6 +139,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
           throw new Error(err);
         });
     },
+
     waitForClaimDocuments: documentWaiter.waitForClaimDocuments.bind(
       documentWaiter
     ),
@@ -227,7 +228,9 @@ function generatePassword(): string {
 /**
  * Retrieves an existing employee from the employee file for the current environment.
  */
-async function getEmployee(employeeType: string): Promise<EmployeeRecord> {
+export async function getEmployee(
+  employeeType: string
+): Promise<EmployeeRecord> {
   const claims = await fs.promises
     .readFile(config("EMPLOYEES_FILE"), "utf-8")
     .then(JSON.parse);

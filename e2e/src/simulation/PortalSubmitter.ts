@@ -41,7 +41,6 @@ export default class PortalSubmitter {
 
   async getSession(credentials: Credentials): Promise<CognitoUserSession> {
     let session = this.sessions.get(credentials);
-
     if (!session || !session.isValid()) {
       session = await this.authenticator.authenticate(
         credentials.username,
@@ -110,6 +109,22 @@ export default class PortalSubmitter {
       first_name: first_name,
       last_name: last_name,
     };
+  }
+
+  async submitDocumentOnly(
+    credentials: Credentials,
+    applicationId: string,
+    fineosId: string,
+    documents: DocumentUploadRequest[]
+  ): Promise<void> {
+    const options = await this.getOptions(credentials);
+
+    return await this.uploadDocuments(
+      applicationId,
+      fineosId,
+      documents,
+      options
+    );
   }
 
   protected async submitEmployerResponse(
