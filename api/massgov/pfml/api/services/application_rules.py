@@ -29,7 +29,7 @@ MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
 MAX_DAYS_IN_LEAVE_PERIOD_RANGE = 364
 
 
-def get_application_issues(application: Application, headers: Headers) -> Optional[List[Issue]]:
+def get_application_issues(application: Application, headers: Headers) -> List[Issue]:
     """Takes in application and outputs any validation issues.
     These issues are either fields that are always required for an application or fields that are conditionally required based on previous input.
     """
@@ -38,10 +38,7 @@ def get_application_issues(application: Application, headers: Headers) -> Option
     issues += get_leave_periods_issues(application)
     issues += get_conditional_issues(application, headers)
 
-    if len(issues) == 0:
-        return None
-    else:
-        return issues
+    return issues
 
 
 def get_address_issues(application: Application, address_field_name: str) -> List[Issue]:
