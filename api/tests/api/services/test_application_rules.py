@@ -1654,6 +1654,21 @@ def test_employer_notification_date_not_required_when_self_employed(
     assert [] == issues
 
 
+def test_has_employer_benefits_true_no_benefit(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    application.has_employer_benefits = True
+
+    issues = get_conditional_issues(application, Headers())
+    assert [
+        Issue(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="when has_employer_benefits is true, employer_benefits cannot be empty",
+            field="employer_benefits",
+        )
+    ] == issues
+
+
 def test_employer_benefit_no_issues(test_db_session, initialize_factories_session):
     application = ApplicationFactory.create()
     benefits = [EmployerBenefitFactory.create(application_id=application.application_id)]
@@ -1918,6 +1933,21 @@ def test_other_leave_submitted_feature_flagged_rules(test_db_session, initialize
     )
 
 
+def test_has_other_incomes_true_no_income(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    application.has_other_incomes = True
+
+    issues = get_conditional_issues(application, Headers())
+    assert [
+        Issue(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="when has_other_incomes is true, other_incomes cannot be empty",
+            field="other_incomes",
+        )
+    ] == issues
+
+
 def test_other_income_no_issues(test_db_session, initialize_factories_session):
     application = ApplicationFactory.create()
     incomes = [OtherIncomeFactory.create(application_id=application.application_id,)]
@@ -2103,12 +2133,28 @@ def test_has_other_incomes_required(test_db_session, initialize_factories_sessio
         other_incomes_awaiting_approval=True, has_other_incomes=True
     )
     issues = get_conditional_issues(test_app, Headers())
-    assert [
+    assert (
         Issue(
             type=IssueType.conflicting,
             rule=IssueRule.disallow_has_other_incomes_when_awaiting_approval,
             message="has_other_incomes must be false if other_incomes_awaiting_approval is set",
             field="has_other_incomes",
+        )
+        in issues
+    )
+
+
+def test_has_previous_leaves_true_no_leave(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+    application.has_previous_leaves = True
+
+    issues = get_conditional_issues(application, Headers())
+    assert [
+        Issue(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="when has_previous_leaves is true, previous_leaves cannot be empty",
+            field="previous_leaves",
         )
     ] == issues
 

@@ -161,8 +161,18 @@ def check_date_range(
 def get_employer_benefits_issues(application: Application) -> List[Issue]:
     issues = []
 
-    for index, benefit in enumerate(application.employer_benefits, 0):
-        issues += get_employer_benefit_issues(benefit, index)
+    if application.has_employer_benefits and len(list(application.employer_benefits)) == 0:
+        issues.append(
+            Issue(
+                type=IssueType.required,
+                rule=IssueRule.conditional,
+                message="when has_employer_benefits is true, employer_benefits cannot be empty",
+                field="employer_benefits",
+            )
+        )
+    else:
+        for index, benefit in enumerate(application.employer_benefits, 0):
+            issues += get_employer_benefit_issues(benefit, index)
 
     return issues
 
@@ -195,8 +205,18 @@ def get_employer_benefit_issues(benefit: EmployerBenefit, index: int) -> List[Is
 def get_other_incomes_issues(application: Application) -> List[Issue]:
     issues = []
 
-    for index, income in enumerate(application.other_incomes, 0):
-        issues += get_other_income_issues(income, index)
+    if application.has_other_incomes and len(list(application.other_incomes)) == 0:
+        issues.append(
+            Issue(
+                type=IssueType.required,
+                rule=IssueRule.conditional,
+                message="when has_other_incomes is true, other_incomes cannot be empty",
+                field="other_incomes",
+            )
+        )
+    else:
+        for index, income in enumerate(application.other_incomes, 0):
+            issues += get_other_income_issues(income, index)
 
     return issues
 
@@ -229,8 +249,18 @@ def get_other_income_issues(income: OtherIncome, index: int) -> List[Issue]:
 def get_previous_leaves_issues(application: Application) -> List[Issue]:
     issues = []
 
-    for index, leave in enumerate(application.previous_leaves, 0):
-        issues += get_previous_leave_issues(leave, index)
+    if application.has_previous_leaves and len(list(application.previous_leaves)) == 0:
+        issues.append(
+            Issue(
+                type=IssueType.required,
+                rule=IssueRule.conditional,
+                message="when has_previous_leaves is true, previous_leaves cannot be empty",
+                field="previous_leaves",
+            )
+        )
+    else:
+        for index, leave in enumerate(application.previous_leaves, 0):
+            issues += get_previous_leave_issues(leave, index)
 
     return issues
 
@@ -384,14 +414,9 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
                 )
             )
 
-    if application.employer_benefits:
-        issues += get_employer_benefits_issues(application)
-
-    if application.other_incomes:
-        issues += get_other_incomes_issues(application)
-
-    if application.previous_leaves:
-        issues += get_previous_leaves_issues(application)
+    issues += get_employer_benefits_issues(application)
+    issues += get_other_incomes_issues(application)
+    issues += get_previous_leaves_issues(application)
 
     if require_other_leaves_fields:
         # TODO (CP-1674): Move these rules into the "always required" set once the
