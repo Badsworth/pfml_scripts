@@ -2,7 +2,8 @@ from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, Generator, List, Optional, Union
+from typing import Any, Dict, Generator, List, Optional, Union, cast
+from uuid import UUID
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -237,10 +238,14 @@ def get_latest_state_log_in_flow(
 
     _raise_exception_if_associated_model_has_no_id(associated_model)
 
-    associated_model_id = None
+    associated_model_id: Optional[UUID] = None
     if isinstance(associated_model, Employee):
         filter_params.append(LatestStateLog.employee_id == associated_model.employee_id)
-        associated_model_id = associated_model.employee_id
+        # TODO: API-1376 changed payment_id and reference_file_id types to PostgreSQLUUID. Changing
+        # employee_id to PostgreSQLUUID from UUID is a more involved change since so many places in
+        # the codebase use that value and we'll have a cascade of type annotation changes. Delaying
+        # that change until later in favor of getting the hotfix in API-1376 out the door.
+        associated_model_id = cast(UUID, associated_model.employee_id)
     elif isinstance(associated_model, Payment):
         filter_params.append(LatestStateLog.payment_id == associated_model.payment_id)
         associated_model_id = associated_model.payment_id
@@ -274,10 +279,14 @@ def get_latest_state_log_in_end_state(
 
     _raise_exception_if_associated_model_has_no_id(associated_model)
 
-    associated_model_id = None
+    associated_model_id: Optional[UUID] = None
     if isinstance(associated_model, Employee):
         filter_params.append(LatestStateLog.employee_id == associated_model.employee_id)
-        associated_model_id = associated_model.employee_id
+        # TODO: API-1376 changed payment_id and reference_file_id types to PostgreSQLUUID. Changing
+        # employee_id to PostgreSQLUUID from UUID is a more involved change since so many places in
+        # the codebase use that value and we'll have a cascade of type annotation changes. Delaying
+        # that change until later in favor of getting the hotfix in API-1376 out the door.
+        associated_model_id = cast(UUID, associated_model.employee_id)
     elif isinstance(associated_model, Payment):
         filter_params.append(LatestStateLog.payment_id == associated_model.payment_id)
         associated_model_id = associated_model.payment_id
