@@ -313,6 +313,7 @@ def write_row_to_output(
         c_value=index.c,
         i_value=index.i,
         case_status=requested_absence["ABSENCE_CASESTATUS"],
+        employer_id=requested_absence["EMPLOYER_CUSTOMERNO"],
     )
     output_csv.writerow(dataclasses.asdict(payment_row))
 

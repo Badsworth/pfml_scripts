@@ -38,6 +38,7 @@ class PaymentVoucherCSV:
     c_value: str
     i_value: str
     case_status: str
+    employer_id: str
 
 
 PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
@@ -69,6 +70,7 @@ PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
     c_value="C value",
     i_value="I value",
     case_status="Case Status",
+    employer_id="Employer ID",
 )
 
 

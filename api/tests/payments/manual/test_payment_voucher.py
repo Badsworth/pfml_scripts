@@ -296,6 +296,7 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
     assert len(output_csv.rows) == 1
     doc_id = output_csv.rows[0]["doc_id"]
     assert re.match("^INTFDFMLAAAA........$", doc_id)
+
     assert output_csv.rows[0] == {
         "absence_case_number": "NTN-308848-ABS-01",
         "activity_code": "7247",
@@ -325,6 +326,7 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "vendor_single_payment": "Yes",
         "zip": "02169",
         "case_status": "Approved",
+        "employer_id": "2626107",
     }
 
     assert len(writeback_csv.rows) == 1
@@ -428,6 +430,7 @@ def test_process_payment_record_multiple_details(test_db_session, initialize_fac
         "vendor_single_payment": "Yes",
         "zip": "02169",
         "case_status": "Approved",
+        "employer_id": "2626107",
     }
 
     assert len(writeback_csv.rows) == 1
