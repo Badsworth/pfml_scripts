@@ -495,6 +495,77 @@ export function confirmInfo(): void {
   cy.contains("Submit Part 1").click();
 }
 
+export function reportOtherLeave(
+  application: ApplicationRequestBody,
+  otherLeave: boolean
+): void {
+  clickChecklistButton("Report other leave, income, and benefits");
+  cy.contains("No").click();
+  cy.contains("button", "Save and continue").click();
+  cy.wait(200);
+
+  if (otherLeave) {
+    cy.contains("Yes").click();
+    cy.contains("button", "Save and continue").click();
+    cy.wait(200);
+    cy.contains("Workers Compensation").click();
+    if (
+      application.leave_details &&
+      application.leave_details.continuous_leave_periods
+    ) {
+      const leave = application.leave_details.continuous_leave_periods;
+      const startDate = leave?.[0]?.start_date;
+      const endDate = leave?.[0]?.end_date;
+      if (!startDate || !endDate) {
+        throw new Error("Unable to fill in empty dates.");
+      }
+
+      const [startYear, startMonth, startDay] = startDate.split("-");
+      const [endYear, endMonth, endDay] = endDate.split("-");
+      cy.contains(
+        "fieldset",
+        "When will you start receiving this income?"
+      ).within(() => {
+        cy.contains("Month").type(startMonth);
+        cy.contains("Day").type(startDay);
+        cy.contains("Year").type(startYear);
+      });
+      cy.contains(
+        "fieldset",
+        "When will you stop receiving this income?"
+      ).within(() => {
+        cy.contains("Month").type(endMonth);
+        cy.contains("Day").type(endDay);
+        cy.contains("Year").type(endYear);
+      });
+      cy.contains("button", "Save and continue").click();
+      cy.wait(200);
+      cy.contains("Yes").click();
+      cy.contains("button", "Save and continue").click();
+      cy.wait(400);
+      cy.contains("Yes").click();
+      cy.contains("An illness or injury").click();
+      cy.contains("fieldset", "When did your leave begin?").within(() => {
+        cy.contains("Month").type("1");
+        cy.contains("Day").type("1");
+        cy.contains("Year").type("2021");
+      });
+      cy.contains("fieldset", "When did your leave end?").within(() => {
+        cy.contains("Month").type("1");
+        cy.contains("Day").type("2");
+        cy.contains("Year").type("2021");
+      });
+      cy.contains("button", "Save and continue").click();
+    }
+  } else {
+    cy.contains("No").click();
+    cy.contains("button", "Save and continue").click();
+    cy.wait(400);
+    cy.contains("No").click();
+    cy.contains("button", "Save and continue").click();
+  }
+}
+
 // Payment Section Currently Removed
 // @Todo: Once this prop has been added back to ApplicationRequestBody
 
@@ -763,7 +834,10 @@ export function confirmEligibleParent(): void {
   cy.contains("button", "I understand and agree").click();
 }
 
-export function submitClaimPartOne(application: ApplicationRequestBody): void {
+export function submitClaimPartOne(
+  application: ApplicationRequestBody,
+  otherLeave = false
+): void {
   const reason = application.leave_details && application.leave_details.reason;
   const reasonQualifier =
     application.leave_details && application.leave_details.reason_qualifier;
@@ -791,12 +865,7 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
   answerReducedLeaveQuestion(application);
   answerIntermittentLeaveQuestion(application);
   onPage("checklist");
-  /*  Note:
-  Feature has been removed until soft launch (2nd Dec 2020)
-    clickChecklistButton("Report other leave, income, and benefits");
-    reportOtherBenefits();
-    onPage("checklist");
-  */
+  reportOtherLeave(application, otherLeave);
   clickChecklistButton("Review and confirm");
   if (reason === "Child Bonding") {
     confirmEligibleParent();

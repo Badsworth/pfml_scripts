@@ -690,6 +690,13 @@ export function uploadIDdoc(claimNumber: string): void {
   cy.wait(200);
 }
 
+export function findOtherLeaveEForm(claimNumber: string): void {
+  visitClaim(claimNumber);
+  onTab("Documents");
+  cy.contains("a", "Other Leaves");
+  cy.wait(200);
+}
+
 export function checkPaymentPreference(simClaim: SimulationClaim): void {
   const { claim, paymentPreference } = simClaim;
   searchClaimantSSN(claim.tax_identifier as string);
