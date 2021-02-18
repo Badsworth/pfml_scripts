@@ -78,6 +78,9 @@ def copy_claimant_list_to_moveit(db_session: db.Session) -> None:
             db_session=db_session,
         )
 
+    # Commit the StateLogs we created to the database.
+    db_session.commit()
+
 
 def get_approved_claims(db_session: db.Session) -> List[Claim]:
     return (

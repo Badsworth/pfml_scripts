@@ -495,6 +495,7 @@ def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
 def test_copy_to_sftp_and_archive_s3_files(
     initialize_factories_session,
     test_db_session,
+    test_db_other_session,
     mock_s3_bucket,
     mock_sftp_client,
     setup_mock_sftp_client,
@@ -553,8 +554,11 @@ def test_copy_to_sftp_and_archive_s3_files(
         assert ref_file
         assert filename in files_in_s3_archive_dir
         assert filename in files_in_moveit
+
+        # Use test_db_other_session so we query against the database instead of just the in-memory
+        # cache of test_db_session.
         assert (
-            test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
             .filter(StateLog.end_state_id == State.DUA_CLAIMANT_LIST_SUBMITTED.state_id)
             .filter(StateLog.reference_file_id == ref_file.reference_file_id)
             .scalar()
