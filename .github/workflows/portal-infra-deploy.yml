@@ -14,7 +14,7 @@ on:
       - infra/portal/**
 
 env:
-  terraformVersion: 0.12.24
+  terraformVersion: 0.13.6
   terraformBaseDir: ./infra/portal/environments/
   # Map branch name to environment name. This is used to set the portal_env variable below in combination with git refs.
   refs/heads/master: test

@@ -740,8 +740,8 @@ data "aws_iam_policy_document" "fineos_bucket_tool_task_policy_document" {
     ]
 
     resources = [
-      "${data.aws_s3_bucket.agency_transfer.arn}",
-      "${data.aws_s3_bucket.business_intelligence_tool.arn}"
+      data.aws_s3_bucket.agency_transfer.arn,
+      data.aws_s3_bucket.business_intelligence_tool.arn
     ]
 
     effect = "Allow"

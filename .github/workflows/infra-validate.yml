@@ -10,7 +10,7 @@ on:
 env:
   working-dir: ./infra
   tf-version-monitoring: 0.13.6
-  tf-version-default: 0.12.24
+  tf-version-default: 0.13.6
 
 jobs:
   tf-format:

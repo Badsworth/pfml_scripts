@@ -6,6 +6,9 @@ terraform {
   required_providers {
     archive = "~> 1.3"
     aws     = "~> 2.67"
+    newrelic = {
+      source = "newrelic/newrelic"
+    }
   }
 }
 

@@ -33,7 +33,7 @@ data "aws_iam_policy_document" "portal_web" {
     condition {
       test     = "StringEquals"
       variable = "aws:UserAgent"
-      values   = ["${random_password.s3_user_agent_password.result}"]
+      values   = [random_password.s3_user_agent_password.result]
     }
   }
 }

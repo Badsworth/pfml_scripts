@@ -15,7 +15,7 @@ provider "aws" {
 }
 
 terraform {
-  required_version = "0.12.24"
+  required_version = "0.13.6"
 
   backend "s3" {
     bucket         = "massgov-pfml-performance-env-mgmt"

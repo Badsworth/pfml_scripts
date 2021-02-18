@@ -9,7 +9,19 @@ data "aws_caller_identity" "current" {
 }
 
 terraform {
-  required_version = "0.12.24"
+  required_version = "0.13.6"
+
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+    newrelic = {
+      source = "newrelic/newrelic"
+    }
+    pagerduty = {
+      source = "pagerduty/pagerduty"
+    }
+  }
 }
 
 locals {

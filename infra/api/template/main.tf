@@ -1,10 +1,14 @@
 terraform {
-  required_version = "0.12.24"
+  required_version = "0.13.6"
 
   required_providers {
     aws      = "~> 3.13.0"
     random   = "~> 3.0.0"
     template = "~> 2.2.0"
+
+    newrelic = {
+      source = "newrelic/newrelic"
+    }
   }
 }
 

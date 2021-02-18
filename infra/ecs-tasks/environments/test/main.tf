@@ -3,7 +3,19 @@ provider "aws" {
 }
 
 terraform {
-  required_version = "0.12.24"
+  required_version = "0.13.6"
+
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+    newrelic = {
+      source = "newrelic/newrelic"
+    }
+    pagerduty = {
+      source = "pagerduty/pagerduty"
+    }
+  }
 
   backend "s3" {
     bucket         = "massgov-pfml-test-env-mgmt"
