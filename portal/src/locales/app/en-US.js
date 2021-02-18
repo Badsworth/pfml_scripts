@@ -1321,18 +1321,18 @@ const pages = {
     pregnancyOrRecentBirth_yes: "$t(shared.choiceYes)",
     previousLeaveEntryLabel: "$t(shared.previousLeaveEntryPrefix) {{count}}",
     previousLeaveFromCurrentEmployer_no:
-      "Did not take leave from this employer.",
-    previousLeaveFromCurrentEmployer_yes: "Took leave from this employer.",
+      "Did not take leave from this employer",
+    previousLeaveFromCurrentEmployer_yes: "Took leave from this employer",
     previousLeaveLabel: "Previous paid or unpaid leave?",
     previousLeaveReason_activeDutyFamily:
-      "Leave was for managing family affairs while a family member was on active duty in the armed forces.",
+      "Leave was for managing family affairs while a family member was on active duty in the armed forces",
     previousLeaveReason_bonding:
-      "Leave was for bonding with a child after birth or placement.",
-    previousLeaveReason_care: "Leave was for caring for a family member.",
-    previousLeaveReason_medical: "Leave was for an illness or injury.",
-    previousLeaveReason_pregnancy: "Leave was for a pregnancy.",
+      "Leave was for bonding with a child after birth or placement",
+    previousLeaveReason_care: "Leave was for caring for a family member",
+    previousLeaveReason_medical: "Leave was for an illness or injury",
+    previousLeaveReason_pregnancy: "Leave was for a pregnancy",
     previousLeaveReason_serviceMemberFamily:
-      "Leave was for caring for a family member who serves in the armed forces.",
+      "Leave was for caring for a family member who serves in the armed forces",
     reducedLeaveScheduleLabel: "Hours off per week",
     reducedLeaveScheduleWeeklyTotal: "$t(shared.displayTime)",
     reducedLeaveScheduleWeeklyTotal_noMinutes:

@@ -660,9 +660,9 @@ exports[`PreviousLeaveList renders review info for a previous leave entry 1`] = 
   label="Previous leave 1"
   level="4"
 >
-  Did not take leave from this employer.
+  Did not take leave from this employer
   <br />
-  Leave was for a pregnancy.
+  Leave was for a pregnancy
   <br />
   1/1/2021 – 2/1/2021
 </ReviewRow>
