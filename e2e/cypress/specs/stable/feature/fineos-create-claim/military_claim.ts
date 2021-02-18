@@ -66,7 +66,9 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
           },
           { timeout: 360000 }
         ).then(async (emails) => {
-          const emailContent = await email.getNotificationData(emails[0].html);
+          const emailContent = await email.getNotificationData(
+            emails[emails.length - 1].html
+          );
           expect(emailContent.name).to.equal(employeeFullName);
           expect(emailContent.applicationId).to.equal(
             submission.fineos_absence_id

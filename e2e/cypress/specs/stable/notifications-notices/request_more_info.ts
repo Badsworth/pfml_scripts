@@ -93,7 +93,7 @@ describe("Request for More Information (notificatins/notices)", () => {
             timestamp_from,
           }).then(async (emails) => {
             const emailContent = await email.getNotificationData(
-              emails[0].html
+              emails[emails.length - 1].html
             );
             expect(emails.length).to.be.greaterThan(0);
             expect(emailContent.applicationId).to.contain(caseNumber);

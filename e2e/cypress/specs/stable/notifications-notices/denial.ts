@@ -121,7 +121,9 @@ describe("Denial Notification and Notice", () => {
           },
           { timeout: 180000 }
         ).then(async (emails) => {
-          const emailContent = await email.getNotificationData(emails[0].html);
+          const emailContent = await email.getNotificationData(
+            emails[emails.length - 1].html
+          );
           if (typeof claim.date_of_birth !== "string") {
             throw new Error("DOB must be a string");
           }
@@ -163,7 +165,7 @@ describe("Denial Notification and Notice", () => {
           { timeout: 180000 }
         ).then(async (emails) => {
           const emailContent = await email.getNotificationData(
-            emails[0].html,
+            emails[emails.length - 1].html,
             "denial (employer)"
           );
           if (typeof claim.date_of_birth !== "string") {
@@ -175,7 +177,7 @@ describe("Denial Notification and Notice", () => {
           expect(emailContent.applicationId).to.equal(
             submission.fineos_absence_id
           );
-          expect(emails[0].html).to.include(
+          expect(emails[emails.length - 1].html).to.include(
             `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
           );
         });

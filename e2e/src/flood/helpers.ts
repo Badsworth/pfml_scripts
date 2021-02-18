@@ -190,7 +190,7 @@ export async function getMailVerifier(
       throw new Error(`No emails found for this user.`);
     }
 
-    return getCodeFromMessage(body.emails[0]);
+    return getCodeFromMessage(body.emails[body.emails.length - 1]);
   }
 
   function getCodeFromMessage(message: { html: string }): string {
