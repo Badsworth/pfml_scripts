@@ -4,6 +4,7 @@ import PropTypes from "prop-types";
 import { Spinner } from "../components/Spinner";
 import User from "../models/User";
 import assert from "assert";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../../src/routes";
 import { useTranslation } from "react-i18next";
 import withUser from "./withUser";
@@ -35,7 +36,11 @@ const withEmployerClaim = (Component) => {
     }, [claim]);
 
     useEffect(() => {
-      if (claim && user.hasUnverifiedEmployer) {
+      if (
+        isFeatureEnabled("employerShowVerifications") &&
+        claim &&
+        user.hasUnverifiedEmployer
+      ) {
         const employer = user.user_leave_administrators.find(
           (employer) =>
             !employer.verified && claim.employer_id === employer.employer_id
