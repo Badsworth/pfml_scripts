@@ -119,11 +119,21 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     },
 
     async submitClaimToAPI(
-      application: SimulationClaim & { credentials?: Credentials }
+      application: SimulationClaim & {
+        credentials?: Credentials;
+        employerCredentials?: Credentials;
+      }
     ): Promise<ApplicationResponse> {
       if (!application.claim) throw new Error("Application missing!");
       if (!application.documents.length) throw new Error("Documents missing!");
-      const { claim, documents, credentials, paymentPreference } = application;
+      const {
+        claim,
+        documents,
+        credentials,
+        paymentPreference,
+        employerResponse,
+        employerCredentials,
+      } = application;
       const newDocuments: DocumentUploadRequest[] = documents.map(
         makeDocUploadBody("/tmp", "Direct API Upload")
       );
@@ -132,7 +142,9 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
           credentials ?? defaultClaimantCredentials,
           claim,
           newDocuments,
-          paymentPreference
+          paymentPreference,
+          employerCredentials,
+          employerResponse
         )
         .catch((err) => {
           console.error("Failed to submit claim:", err.data);

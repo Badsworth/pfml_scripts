@@ -749,6 +749,19 @@ export function checkPaymentPreference(simClaim: SimulationClaim): void {
   cy.wait(2000);
 }
 
+export function getPaymentAmount(): Cypress.Chainable<string> {
+  cy.contains("Absence Paid Leave Case").click();
+  cy.wait("@ajaxRender");
+  onTab("Financials");
+  onTab("Recurring Payments");
+  onTab("Benefit Amount and Adjustments");
+  return cy
+    .get(
+      '#BenefitAmountOffsetsAndDeductionsListView td[id*="OffsetsAndDeductionsAmount0"]'
+    )
+    .invoke("text");
+}
+
 export function modifyDates(submission: Submission): void {
   visitClaim(submission.fineos_absence_id);
   cy.get('.date-wrapper span[id*="leaveStartDate"]')
