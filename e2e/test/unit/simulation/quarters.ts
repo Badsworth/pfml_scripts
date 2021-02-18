@@ -1,4 +1,6 @@
-import quarters, { parseISODateAsLocal } from "../../../src/simulation/quarters";
+import quarters, {
+  parseISODateAsLocal,
+} from "../../../src/simulation/quarters";
 import { describe, it, expect } from "@jest/globals";
 
 describe("Quarters", () => {

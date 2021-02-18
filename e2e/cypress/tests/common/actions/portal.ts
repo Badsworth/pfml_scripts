@@ -502,12 +502,12 @@ export function reportOtherLeave(
   clickChecklistButton("Report other leave, income, and benefits");
   cy.contains("No").click();
   cy.contains("button", "Save and continue").click();
-  cy.wait(200);
+  cy.wait(500);
 
   if (otherLeave) {
     cy.contains("Yes").click();
     cy.contains("button", "Save and continue").click();
-    cy.wait(200);
+    cy.wait(500);
     cy.contains("Workers Compensation").click();
     if (
       application.leave_details &&
@@ -539,10 +539,10 @@ export function reportOtherLeave(
         cy.contains("Year").type(endYear);
       });
       cy.contains("button", "Save and continue").click();
-      cy.wait(200);
+      cy.wait(500);
       cy.contains("Yes").click();
       cy.contains("button", "Save and continue").click();
-      cy.wait(400);
+      cy.wait(500);
       cy.contains("Yes").click();
       cy.contains("An illness or injury").click();
       cy.contains("fieldset", "When did your leave begin?").within(() => {

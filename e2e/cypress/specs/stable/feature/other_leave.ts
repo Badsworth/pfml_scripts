@@ -23,6 +23,7 @@ describe("Submit a bonding claim with other income and other leave - BHAP1", () 
         password: Cypress.env("E2E_PORTAL_PASSWORD"),
       };
       portal.login(credentials);
+      portal.goToDashboardFromApplicationsPage();
 
       // Continue Creating Claim
       portal.startClaim();
