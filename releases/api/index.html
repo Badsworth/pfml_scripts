@@ -639,38 +639,38 @@
 <tbody>
 <tr>
 <td>test</td>
-<td>415ecab8d956bfab263160d46d26e084a4a38dfc</td>
+<td>2febe0b91088afae38e5ce6c549e28107a986455</td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(test)">GitHub</a></td>
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.12.3">api/v1.12.3</a></td>
+<td>27fa67aecb6e2a0d91f76f002f2cf6a1306588be</td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(stage)">GitHub</a></td>
 </tr>
 <tr>
 <td>prod</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.12.3">api/v1.12.3</a></td>
+<td>ae0fdda4b58674a3f43be1b01746fa79434cde1e</td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(prod)">GitHub</a></td>
 </tr>
 <tr>
 <td>performance</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.12.3">api/v1.12.3</a></td>
+<td>2be7cb77618b128ac1a5268c137d2114197742e3</td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(performance)">GitHub</a></td>
 </tr>
 <tr>
 <td>training</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.12.3">api/v1.12.3</a></td>
+<td>7a59d3fd4c0d9f23ff6abb5f2eb9cbb35e64ad54</td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(training)">GitHub</a></td>
 </tr>
 <tr>
 <td>uat</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.12.2">api/v1.12.2</a></td>
+<td>8cb527e91ae9c9570d4c49a299e6af6fbc1d2ffd</td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(uat)">GitHub</a></td>
 </tr>
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (INFRA-51,CP-1780,CP-1776,API-1376,API-1375,EMPLOYER-690,EMPLOYER-734,API-1372,API-479,API-1370,INFRA-93,INFRA-246,CP-1778,INFRA-248,INFRA-239,INFRA-233,INFRA-216,EMPLOYER-885,API-1164,API-1279,CP-1778)">Jira List</a>):</p>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (API-1393,INFRA-51,CP-1780,CP-1776,API-1376,API-1375,EMPLOYER-690,EMPLOYER-734,API-1372,API-479,API-1370,INFRA-93,INFRA-246,CP-1778,INFRA-248,INFRA-239,INFRA-233,INFRA-216,EMPLOYER-885,API-1164,API-1279,CP-1778)">Jira List</a>):</p>
 <ul>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-93">INFRA-93</a>: Rethrow External client ReadTimeouts as 503 ServiceUnavailable (<a href="https://github.com/EOLWD/pfml/pull/2835">#2835</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-51">INFRA-51</a>: upgrade terraform to latest 0.13.x or 0.14.x (<a href="https://github.com/EOLWD/pfml/pull/2938">#2938</a>)</li>
@@ -687,6 +687,7 @@
 <li><a href="https://lwd.atlassian.net/browse/CP-1778">CP-1778</a>: Fix intermittent applications_get test failures (<a href="https://github.com/EOLWD/pfml/pull/3055">#3055</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/CP-1776">CP-1776</a>: Always return a List from get_application_issues (<a href="https://github.com/EOLWD/pfml/pull/3096">#3096</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-479">API-479</a>: Create list of claimants for DUA (<a href="https://github.com/EOLWD/pfml/pull/3026">#3026</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/API-1393">API-1393</a>: Save StateLogs to database after sending claimants to DUA (<a href="https://github.com/EOLWD/pfml/pull/3108">#3108</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-1376">API-1376</a>: Do not cast UUIDs to strings (<a href="https://github.com/EOLWD/pfml/pull/3064">#3064</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-1375">API-1375</a>: - Add employer ID to voucher CSV (<a href="https://github.com/EOLWD/pfml/pull/3089">#3089</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-1372">API-1372</a>: More surgical handling of <code>no_autoflush</code> in payments code (<a href="https://github.com/EOLWD/pfml/pull/3054">#3054</a>)</li>
@@ -716,6 +717,7 @@
  <br>* [CP-1778](https://lwd.atlassian.net/browse/CP-1778): Fix intermittent applications_get test failures ([#3055](https://github.com/EOLWD/pfml/pull/3055))
  <br>* [CP-1776](https://lwd.atlassian.net/browse/CP-1776): Always return a List from get_application_issues ([#3096](https://github.com/EOLWD/pfml/pull/3096))
  <br>* [API-479](https://lwd.atlassian.net/browse/API-479): Create list of claimants for DUA ([#3026](https://github.com/EOLWD/pfml/pull/3026))
+ <br>* [API-1393](https://lwd.atlassian.net/browse/API-1393): Save StateLogs to database after sending claimants to DUA ([#3108](https://github.com/EOLWD/pfml/pull/3108))
  <br>* [API-1376](https://lwd.atlassian.net/browse/API-1376): Do not cast UUIDs to strings ([#3064](https://github.com/EOLWD/pfml/pull/3064))
  <br>* [API-1375](https://lwd.atlassian.net/browse/API-1375): - Add employer ID to voucher CSV ([#3089](https://github.com/EOLWD/pfml/pull/3089))
  <br>* [API-1372](https://lwd.atlassian.net/browse/API-1372): More surgical handling of `no_autoflush` in payments code ([#3054](https://github.com/EOLWD/pfml/pull/3054))
