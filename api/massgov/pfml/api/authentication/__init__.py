@@ -8,6 +8,7 @@ import flask
 import jose
 import requests
 from jose import jwt
+from sentry_sdk import set_user
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from werkzeug.exceptions import Unauthorized
 
@@ -59,6 +60,8 @@ def decode_cognito_token(token):
             user = db_session.query(User).filter(User.active_directory_id == auth_id).one()
 
             flask.g.current_user = user
+
+            set_user({"id": user.user_id, "email": user.email_address})
 
             # Read attributes for logging, so that db calls are not made during logging.
             flask.g.current_user_user_id = str(user.user_id)
