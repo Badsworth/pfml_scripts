@@ -639,12 +639,12 @@
 <tbody>
 <tr>
 <td>test</td>
-<td>abcf60af3547aedd956205079c322babe6dae530</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.13.0-rc1">api/v1.13.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(test)">GitHub</a></td>
 </tr>
 <tr>
 <td>stage</td>
-<td>27fa67aecb6e2a0d91f76f002f2cf6a1306588be</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.13.0-rc1">api/v1.13.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -664,73 +664,16 @@
 </tr>
 <tr>
 <td>uat</td>
-<td>8cb527e91ae9c9570d4c49a299e6af6fbc1d2ffd</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.13.0-rc1">api/v1.13.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(uat)">GitHub</a></td>
 </tr>
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (API-1090,API-1393,INFRA-51,CP-1780,CP-1776,API-1376,API-1375,EMPLOYER-690,EMPLOYER-734,API-1372,API-479,API-1370,INFRA-93,INFRA-246,CP-1778,INFRA-248,INFRA-239,INFRA-233,INFRA-216,EMPLOYER-885,API-1164,API-1279,CP-1778)">Jira List</a>):</p>
-<ul>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-93">INFRA-93</a>: Rethrow External client ReadTimeouts as 503 ServiceUnavailable (<a href="https://github.com/EOLWD/pfml/pull/2835">#2835</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-51">INFRA-51</a>: upgrade terraform to latest 0.13.x or 0.14.x (<a href="https://github.com/EOLWD/pfml/pull/2938">#2938</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-248">INFRA-248</a>: Generate release page (<a href="https://github.com/EOLWD/pfml/pull/3042">#3042</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-246">INFRA-246</a>: Fix CVEs in container scan (<a href="https://github.com/EOLWD/pfml/pull/3051">#3051</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-239">INFRA-239</a>: Make automatic UAT deploys deploy the right thing (<a href="https://github.com/EOLWD/pfml/pull/3032">#3032</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-233">INFRA-233</a>: Remove parameters and variables from sentry event logs (<a href="https://github.com/EOLWD/pfml/pull/3003">#3003</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-216">INFRA-216</a>: send unexpected flask api errors to sentry (<a href="https://github.com/EOLWD/pfml/pull/2972">#2972</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-885">EMPLOYER-885</a>: Bug fix for missing employer-id on claim (<a href="https://github.com/EOLWD/pfml/pull/3043">#3043</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-734">EMPLOYER-734</a>: get_claims endpoint (<a href="https://github.com/EOLWD/pfml/pull/3020">#3020</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-690">EMPLOYER-690</a>: Trimmed white space from eForm values (<a href="https://github.com/EOLWD/pfml/pull/3068">#3068</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1780">CP-1780</a>: Throw warning when other leaves <code>has_**_**</code> is true, but no details (<a href="https://github.com/EOLWD/pfml/pull/3092">#3092</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1778">CP-1778</a>: Limit number of applications returned in /applications response (<a href="https://github.com/EOLWD/pfml/pull/3039">#3039</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1778">CP-1778</a>: Fix intermittent applications_get test failures (<a href="https://github.com/EOLWD/pfml/pull/3055">#3055</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1776">CP-1776</a>: Always return a List from get_application_issues (<a href="https://github.com/EOLWD/pfml/pull/3096">#3096</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-479">API-479</a>: Create list of claimants for DUA (<a href="https://github.com/EOLWD/pfml/pull/3026">#3026</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1393">API-1393</a>: Save StateLogs to database after sending claimants to DUA (<a href="https://github.com/EOLWD/pfml/pull/3108">#3108</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1376">API-1376</a>: Do not cast UUIDs to strings (<a href="https://github.com/EOLWD/pfml/pull/3064">#3064</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1375">API-1375</a>: - Add employer ID to voucher CSV (<a href="https://github.com/EOLWD/pfml/pull/3089">#3089</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1372">API-1372</a>: More surgical handling of <code>no_autoflush</code> in payments code (<a href="https://github.com/EOLWD/pfml/pull/3054">#3054</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1370">API-1370</a>: [HOTFIX] Skip updating state log for EFT flow (<a href="https://github.com/EOLWD/pfml/pull/3045">#3045</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1279">API-1279</a>: Additional logging to Payment CTR ECS task. (<a href="https://github.com/EOLWD/pfml/pull/3034">#3034</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1164">API-1164</a>: Pass in vendor code to data mart mock in payments e2e test (<a href="https://github.com/EOLWD/pfml/pull/3040">#3040</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1090">API-1090</a>: Fix date validation at the connexion layer (<a href="https://github.com/EOLWD/pfml/pull/2574">#2574</a>)</li>
-<li>Success log message for verifications endpoint (<a href="https://github.com/EOLWD/pfml/pull/3038">#3038</a>)</li>
-<li>Set enable_fortinet_managed_rules in prod to true (<a href="https://github.com/EOLWD/pfml/pull/3077">#3077</a>)</li>
-<li>INFRA: Remove tracing from Sentry (<a href="https://github.com/EOLWD/pfml/pull/3047">#3047</a>)</li>
-<li>Fix IAM role for FINEOS exports (<a href="https://github.com/EOLWD/pfml/pull/3053">#3053</a>)</li>
-<li>EMPLOYER 701: added exceptions (<a href="https://github.com/EOLWD/pfml/pull/2873">#2873</a>)</li>
-</ul>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in ()">Jira List</a>):</p>
 <details>
 <summary>Raw</summary>
- <br>* [INFRA-93](https://lwd.atlassian.net/browse/INFRA-93): Rethrow External client ReadTimeouts as 503 ServiceUnavailable ([#2835](https://github.com/EOLWD/pfml/pull/2835))
- <br>* [INFRA-51](https://lwd.atlassian.net/browse/INFRA-51): upgrade terraform to latest 0.13.x or 0.14.x ([#2938](https://github.com/EOLWD/pfml/pull/2938))
- <br>* [INFRA-248](https://lwd.atlassian.net/browse/INFRA-248): Generate release page ([#3042](https://github.com/EOLWD/pfml/pull/3042))
- <br>* [INFRA-246](https://lwd.atlassian.net/browse/INFRA-246): Fix CVEs in container scan ([#3051](https://github.com/EOLWD/pfml/pull/3051))
- <br>* [INFRA-239](https://lwd.atlassian.net/browse/INFRA-239): Make automatic UAT deploys deploy the right thing ([#3032](https://github.com/EOLWD/pfml/pull/3032))
- <br>* [INFRA-233](https://lwd.atlassian.net/browse/INFRA-233): Remove parameters and variables from sentry event logs ([#3003](https://github.com/EOLWD/pfml/pull/3003))
- <br>* [INFRA-216](https://lwd.atlassian.net/browse/INFRA-216): send unexpected flask api errors to sentry ([#2972](https://github.com/EOLWD/pfml/pull/2972))
- <br>* [EMPLOYER-885](https://lwd.atlassian.net/browse/EMPLOYER-885): Bug fix for missing employer-id on claim ([#3043](https://github.com/EOLWD/pfml/pull/3043))
- <br>* [EMPLOYER-734](https://lwd.atlassian.net/browse/EMPLOYER-734): get_claims endpoint ([#3020](https://github.com/EOLWD/pfml/pull/3020))
- <br>* [EMPLOYER-690](https://lwd.atlassian.net/browse/EMPLOYER-690): Trimmed white space from eForm values ([#3068](https://github.com/EOLWD/pfml/pull/3068))
- <br>* [CP-1780](https://lwd.atlassian.net/browse/CP-1780): Throw warning when other leaves `has_<br>*<br>*_<br>*<br>*` is true, but no details ([#3092](https://github.com/EOLWD/pfml/pull/3092))
- <br>* [CP-1778](https://lwd.atlassian.net/browse/CP-1778): Limit number of applications returned in /applications response ([#3039](https://github.com/EOLWD/pfml/pull/3039))
- <br>* [CP-1778](https://lwd.atlassian.net/browse/CP-1778): Fix intermittent applications_get test failures ([#3055](https://github.com/EOLWD/pfml/pull/3055))
- <br>* [CP-1776](https://lwd.atlassian.net/browse/CP-1776): Always return a List from get_application_issues ([#3096](https://github.com/EOLWD/pfml/pull/3096))
- <br>* [API-479](https://lwd.atlassian.net/browse/API-479): Create list of claimants for DUA ([#3026](https://github.com/EOLWD/pfml/pull/3026))
- <br>* [API-1393](https://lwd.atlassian.net/browse/API-1393): Save StateLogs to database after sending claimants to DUA ([#3108](https://github.com/EOLWD/pfml/pull/3108))
- <br>* [API-1376](https://lwd.atlassian.net/browse/API-1376): Do not cast UUIDs to strings ([#3064](https://github.com/EOLWD/pfml/pull/3064))
- <br>* [API-1375](https://lwd.atlassian.net/browse/API-1375): - Add employer ID to voucher CSV ([#3089](https://github.com/EOLWD/pfml/pull/3089))
- <br>* [API-1372](https://lwd.atlassian.net/browse/API-1372): More surgical handling of `no_autoflush` in payments code ([#3054](https://github.com/EOLWD/pfml/pull/3054))
- <br>* [API-1370](https://lwd.atlassian.net/browse/API-1370): [HOTFIX] Skip updating state log for EFT flow ([#3045](https://github.com/EOLWD/pfml/pull/3045))
- <br>* [API-1279](https://lwd.atlassian.net/browse/API-1279): Additional logging to Payment CTR ECS task. ([#3034](https://github.com/EOLWD/pfml/pull/3034))
- <br>* [API-1164](https://lwd.atlassian.net/browse/API-1164): Pass in vendor code to data mart mock in payments e2e test ([#3040](https://github.com/EOLWD/pfml/pull/3040))
- <br>* [API-1090](https://lwd.atlassian.net/browse/API-1090): Fix date validation at the connexion layer ([#2574](https://github.com/EOLWD/pfml/pull/2574))
- <br>* Success log message for verifications endpoint ([#3038](https://github.com/EOLWD/pfml/pull/3038))
- <br>* Set enable_fortinet_managed_rules in prod to true ([#3077](https://github.com/EOLWD/pfml/pull/3077))
- <br>* INFRA: Remove tracing from Sentry ([#3047](https://github.com/EOLWD/pfml/pull/3047))
- <br>* Fix IAM role for FINEOS exports ([#3053](https://github.com/EOLWD/pfml/pull/3053))
- <br>* EMPLOYER 701: added exceptions ([#2873](https://github.com/EOLWD/pfml/pull/2873))
+
 </details>
                 
               
