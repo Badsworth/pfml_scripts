@@ -205,7 +205,9 @@ resource "newrelic_nrql_alert_condition" "fineos_aggregated_5xx_rate" {
 
   nrql {
     query             = <<-NRQL
-      SELECT percentage(COUNT(*), WHERE http.statusCode >= 500) FROM Span
+      SELECT percentage(
+        COUNT(*), WHERE http.statusCode >= 500 OR error.class IS NOT NULL
+      ) FROM Span
       WHERE name LIKE 'External/%-api.masspfml.fineos.com/requests/'
       AND appName = 'PFML-API-${upper(var.environment_name)}'
     NRQL
@@ -240,7 +242,9 @@ resource "newrelic_nrql_alert_condition" "fineos_aggregated_4xx_rate" {
 
   nrql {
     query             = <<-NRQL
-      SELECT percentage(COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500) FROM Span
+      SELECT percentage(
+        COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500 OR error.class IS NOT NULL
+      ) FROM Span
       WHERE name LIKE 'External/%-api.masspfml.fineos.com/requests/'
       AND appName = 'PFML-API-${upper(var.environment_name)}'
     NRQL
@@ -279,7 +283,7 @@ resource "newrelic_nrql_alert_condition" "fineos_claim-submission_5xx_rate" {
   nrql {
     query = <<-NRQL
       SELECT percentage(
-        COUNT(*), WHERE http.statusCode >= 500
+        COUNT(*), WHERE http.statusCode >= 500 OR error.class IS NOT NULL
       ) FROM Span
       WHERE http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/ReadEmployer'
         OR http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/webservice'
@@ -326,7 +330,7 @@ resource "newrelic_nrql_alert_condition" "fineos_claim-submission_4xx_rate" {
   nrql {
     query = <<-NRQL
       SELECT percentage(
-        COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500
+        COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500 OR error.class IS NOT NULL
       ) FROM Span
       WHERE http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/ReadEmployer'
         OR http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/webservice'
@@ -373,7 +377,7 @@ resource "newrelic_nrql_alert_condition" "notifications_endpoint_error_rate" {
   nrql {
     query             = <<-NRQL
       SELECT percentage(
-        COUNT(*), WHERE response.statusCode >= 400
+        COUNT(*), WHERE response.statusCode >= 400 OR error.class IS NOT NULL
       ) FROM Span
       WHERE name LIKE 'POST paidleave-api-%.mass.gov:80/api/v1/notifications'
       AND appName = 'PFML-API-${upper(var.environment_name)}'
@@ -413,7 +417,9 @@ resource "newrelic_nrql_alert_condition" "servicenow_4xx_rate" {
 
   nrql {
     query             = <<-NRQL
-      SELECT percentage(COUNT(*), WHERE http.statusCode >= 400 and http.statusCode < 500) FROM Span
+      SELECT percentage(
+        COUNT(*), WHERE http.statusCode >= 400 AND http.statusCode < 500 OR error.class IS NOT NULL
+      ) FROM Span
       WHERE name LIKE 'External/savilinx.servicenowservices.com/requests/'
       AND appName = 'PFML-API-${upper(var.environment_name)}'
     NRQL
@@ -448,7 +454,9 @@ resource "newrelic_nrql_alert_condition" "servicenow_5xx_rate" {
 
   nrql {
     query             = <<-NRQL
-      SELECT percentage(COUNT(*), WHERE http.statusCode >= 500) FROM Span
+      SELECT percentage(
+        COUNT(*), WHERE http.statusCode >= 500 OR error.class IS NOT NULL
+      ) FROM Span
       WHERE name LIKE 'External/savilinx.servicenowservices.com/requests/'
       AND appName = 'PFML-API-${upper(var.environment_name)}'
     NRQL
@@ -539,11 +547,15 @@ resource "newrelic_nrql_alert_condition" "rmv_5xx_rate" {
   policy_id      = newrelic_alert_policy.api_alerts.id
   type           = "static"
   value_function = "single_value"
+  fill_option    = "last_value"
   enabled        = true
 
+  # the extra error.class filter is here to catch SSL or timeout errors that do not possess an HTTP status code
   nrql {
     query             = <<-NRQL
-      SELECT percentage(COUNT(*), WHERE http.statusCode >= 500) FROM Span
+      SELECT percentage(
+        COUNT(*), WHERE http.statusCode >= 500 OR error.class IS NOT NULL
+      ) FROM Span
       WHERE name LIKE 'External/atlas-%'
       AND appName = 'PFML-API-${upper(var.environment_name)}'
     NRQL
