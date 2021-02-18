@@ -628,6 +628,16 @@ data "aws_iam_policy_document" "payments_ctr_process_task_role_extras" {
 
     effect = "Allow"
   }
+
+  statement {
+    sid = "AllowSESSendEmail"
+    actions = [
+      "ses:SendEmail",
+      "ses:SendRawEmail"
+    ]
+    resources = ["*"]
+    effect    = "Allow"
+  }
 }
 
 resource "aws_iam_role" "payments_ctr_import_execution_role" {
