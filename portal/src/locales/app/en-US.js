@@ -57,6 +57,8 @@ const errors = {
     passwordErrors:
       "Your password does not meet the requirements. Please check the requirements and try again.",
     passwordRequired: "Enter your password",
+    passwordResetRequiredException:
+      'Your password must be reset before you can log in again. Click the "Forgot your password?" link below to reset your password.',
     userNotConfirmed:
       "Confirm your account by following the instructions in the verification email sent to your inbox.",
     userNotFound: "Incorrect email",

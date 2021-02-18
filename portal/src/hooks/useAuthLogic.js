@@ -666,6 +666,9 @@ function getLoginErrorInfo(error, t) {
     // This error triggers when username is empty
     // This code should be unreachable if validation works properly
     message = t("errors.auth.invalidParametersFallback");
+  } else if (error.code === "PasswordResetRequiredException") {
+    // This error triggers when an admin initiates a password reset
+    message = t("errors.auth.passwordResetRequiredException");
   } else {
     message = t("errors.network");
   }

@@ -535,6 +535,22 @@ describe("useAuthLogic", () => {
       expect(spy).toHaveBeenCalledWith("UNCONFIRMED_ACCOUNT");
       spy.mockRestore();
     });
+
+    it("sets app errors when Auth.signIn throws PasswordResetRequiredException", async () => {
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw { code: "PasswordResetRequiredException" };
+      });
+      await act(async () => {
+        await login(username, password);
+      });
+
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"Your password must be reset before you can log in again. Click the \\"Forgot your password?\\" link below to reset your password."`
+      );
+    });
   });
 
   describe("logout", () => {
