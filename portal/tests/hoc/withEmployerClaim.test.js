@@ -103,52 +103,101 @@ describe("withEmployerClaim", () => {
   });
 
   describe("when user has unverified employer", () => {
-    let claim;
+    describe('and "employerShowVerifications" feature flag is off', () => {
+      let claim;
 
-    beforeEach(() => {
-      claim = new MockEmployerClaimBuilder().completed().create();
-      appLogic.employers.claim = claim;
-      appLogic.portalFlow.pathWithParams = "test-route";
-    });
+      beforeEach(() => {
+        process.env.featureFlags = { employerShowVerifications: false };
 
-    it("redirects to Verify Contributions page if employer id matches", () => {
-      render(appLogic);
-
-      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        "/employers/organizations/verify-contributions",
-        {
-          employer_id: "dda903f-f093f-ff900",
-          next: "test-route",
-        }
-      );
-    });
-
-    it("does not redirect to Verify Contributions page if employer is verified", () => {
-      appLogic.users.user = userWithVerifiedEmployer;
-
-      render(appLogic);
-
-      expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-    });
-
-    it("does not redirect to Verify Business page if employer id does not match", () => {
-      const userWithUnverifiedDiffEmployer = new User({
-        user_id: "mock_user_id",
-        consented_to_data_sharing: true,
-        user_leave_administrators: [
-          new UserLeaveAdministrator({
-            employer_dba: "Test Company",
-            employer_fein: "1298391823",
-            employer_id: "different_id",
-            verified: false,
-          }),
-        ],
+        claim = new MockEmployerClaimBuilder().completed().create();
+        appLogic.employers.claim = claim;
+        appLogic.portalFlow.pathWithParams = "test-route";
       });
-      appLogic.users.user = userWithUnverifiedDiffEmployer;
 
-      render(appLogic);
+      it("does not redirect to the Verify Contributions page if employer id matches", () => {
+        render(appLogic);
+        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+      });
 
-      expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+      it("does not redirect to the Verify Contributions page if employer is verified", () => {
+        appLogic.users.user = userWithVerifiedEmployer;
+
+        render(appLogic);
+
+        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+      });
+
+      it("does not redirect to Verify Contributions page if employer id does not match", () => {
+        const userWithUnverifiedDiffEmployer = new User({
+          user_id: "mock_user_id",
+          consented_to_data_sharing: true,
+          user_leave_administrators: [
+            new UserLeaveAdministrator({
+              employer_dba: "Test Company",
+              employer_fein: "1298391823",
+              employer_id: "different_id",
+              verified: false,
+            }),
+          ],
+        });
+        appLogic.users.user = userWithUnverifiedDiffEmployer;
+
+        render(appLogic);
+
+        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('and "employerShowVerifications" feature flag is on', () => {
+      let claim;
+
+      beforeEach(() => {
+        process.env.featureFlags = { employerShowVerifications: true };
+
+        claim = new MockEmployerClaimBuilder().completed().create();
+        appLogic.employers.claim = claim;
+        appLogic.portalFlow.pathWithParams = "test-route";
+      });
+
+      it("redirects to Verify Contributions page if employer id matches", () => {
+        render(appLogic);
+
+        expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+          "/employers/organizations/verify-contributions",
+          {
+            employer_id: "dda903f-f093f-ff900",
+            next: "test-route",
+          }
+        );
+      });
+
+      it("does not redirect to Verify Contributions page if employer is verified", () => {
+        appLogic.users.user = userWithVerifiedEmployer;
+
+        render(appLogic);
+
+        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+      });
+
+      it("does not redirect to Verify Contributions page if employer id does not match", () => {
+        const userWithUnverifiedDiffEmployer = new User({
+          user_id: "mock_user_id",
+          consented_to_data_sharing: true,
+          user_leave_administrators: [
+            new UserLeaveAdministrator({
+              employer_dba: "Test Company",
+              employer_fein: "1298391823",
+              employer_id: "different_id",
+              verified: false,
+            }),
+          ],
+        });
+        appLogic.users.user = userWithUnverifiedDiffEmployer;
+
+        render(appLogic);
+
+        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+      });
     });
   });
 });
