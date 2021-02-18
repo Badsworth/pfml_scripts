@@ -2401,16 +2401,23 @@ def test_application_patch_date_of_birth_invalid(client, user, auth_token):
         response,
         400,
         errors=[
-            {"field": "date_of_birth", "message": "invalid date format", "type": "date",},
+            {
+                "field": "date_of_birth",
+                "message": "'1970-13-42' is not a 'maskable_date'",
+                "rule": "maskable_date",
+                "type": "format",
+            },
             {
                 "field": "leave_details.reduced_schedule_leave_periods.0.end_date",
-                "message": "invalid date format",
-                "type": "date",
+                "message": "'' is not a 'date'",
+                "rule": "date",
+                "type": "format",
             },
             {
                 "field": "leave_details.employer_notification_date",
-                "message": "invalid date format",
-                "type": "date",
+                "message": "'970-06-01' is not a 'date'",
+                "rule": "date",
+                "type": "format",
             },
         ],
     )

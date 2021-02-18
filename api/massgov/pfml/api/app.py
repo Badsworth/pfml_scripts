@@ -16,6 +16,7 @@ from flask import Flask, current_app, g
 import massgov.pfml.api.authorization.flask
 import massgov.pfml.api.authorization.rules
 import massgov.pfml.api.dashboards
+import massgov.pfml.api.validation.formats
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.access
 from massgov.pfml import db

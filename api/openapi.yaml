@@ -1530,7 +1530,7 @@ components:
               nullable: true
               example: "Doe"
             date_of_birth:
-              $ref: "#/components/schemas/Date"
+              $ref: "#/components/schemas/DateOrMaskedDate"
               nullable: true
             has_mailing_address:
               type: boolean
@@ -2146,10 +2146,10 @@ components:
           example: true
         child_birth_date:
           nullable: true
-          $ref: "#/components/schemas/Date"
+          $ref: "#/components/schemas/DateOrMaskedDate"
         child_placement_date:
           nullable: true
-          $ref: "#/components/schemas/Date"
+          $ref: "#/components/schemas/DateOrMaskedDate"
         has_future_child_date:
           type: boolean
           nullable: true
@@ -2705,6 +2705,12 @@ components:
     MaskedDate:
       type: string
       example: '****-01-01'
+      pattern: '\*\*\*\*-[0-9]{2}-[0-9]{2}'
+
+    DateOrMaskedDate:
+      type: string
+      example: '1970-01-01'
+      format: maskable_date
 
     DayOfWeek:
       type: string
