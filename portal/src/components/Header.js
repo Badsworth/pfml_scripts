@@ -35,16 +35,14 @@ const Header = (props) => {
         siteName={t("components.header.appTitle")}
       />
     ),
-    skipNav: (
-      <a href="#main" className="usa-skipnav">
-        {t("components.header.skipToContent")}
-      </a>
-    ),
     utilityNav: <AuthNav user={props.user} onLogout={props.onLogout} />,
   };
 
   return (
     <React.Fragment>
+      <a href="#main" className="usa-skipnav">
+        {t("components.header.skipToContent")}
+      </a>
       {isLoggedIn && <BetaBanner feedbackUrl={feedbackUrl} />}
       <HeaderSlim {...headerProps} />
     </React.Fragment>

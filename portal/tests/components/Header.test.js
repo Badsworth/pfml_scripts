@@ -8,7 +8,7 @@ describe("Header", () => {
     const wrapper = shallow(<Header onLogout={jest.fn()} />);
 
     expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find("HeaderSlim").prop("skipNav").props.href).toBe("#main");
+    expect(wrapper.find(".usa-skipnav").props().href).toBe("#main");
   });
 
   it("renders Header for logged in claimant", () => {
