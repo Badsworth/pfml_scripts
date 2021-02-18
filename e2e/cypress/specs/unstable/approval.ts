@@ -45,7 +45,7 @@ describe("Approval (notificatins/notices)", { retries: 0 }, () => {
               timestamp_fromER,
             }).then((emails) => {
               expect(emails.length).to.be.greaterThan(0);
-              expect(emails[0].html).to.contain(
+              expect(emails[emails.length - 1].html).to.contain(
                 `/employers/applications/new-application/?absence_id=${response.fineos_absence_id}`
               );
             });
