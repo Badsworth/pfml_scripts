@@ -16,6 +16,7 @@ locals {
   newrelic_log_ingestion_lambda = module.constants.newrelic_log_ingestion_arn
   fineos_data_extract_prefixes = [
     "VBI_CASE",
+    "VBI_DOCUMENT",
     "VBI_EPISODICABSENCEPERIOD",
     "VBI_REDUCEDSCHEDABSENCEPERIOD",
     "VBI_REQUESTEDABSENCE",
