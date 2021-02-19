@@ -2097,7 +2097,7 @@ const components = {
   },
   newsBanner: {
     body:
-      "In mid-March, we'll ask you to verify your paid leave contributions to secure your account. <learn-more-link>Learn what you need to do to prepare.</learn-more-link>",
+      "In the future, we'll ask you to verify your paid leave contributions to secure your account. <learn-more-link>Learn what you need to do to prepare.</learn-more-link>",
     header: "Account verification is coming soon",
   },
   signUp: {
