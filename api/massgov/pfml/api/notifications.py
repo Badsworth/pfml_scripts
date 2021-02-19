@@ -35,6 +35,7 @@ def notifications_post():
         now = datetime_util.utcnow()
         notification.created_at = now
         notification.updated_at = now
+        notification.fineos_absence_id = notification_request.absence_case_id
 
         notification.request_json = json.dumps(body)  # type: ignore
 

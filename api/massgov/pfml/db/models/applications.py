@@ -812,6 +812,7 @@ class Notification(Base):
     request_json = Column(JSON, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), nullable=False)
+    fineos_absence_id = Column(Text, index=True)
 
 
 class PhoneType(LookupTable):
