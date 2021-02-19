@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from massgov.pfml.db.models.employees import EmployerQuarterlyContribution, UserLeaveAdministrator
-from massgov.pfml.db.models.factories import EmployerFactory
+from massgov.pfml.db.models.factories import EmployerFactory, EmployerQuarterlyContributionFactory
 from massgov.pfml.util.strings import mask_fein
 
 
@@ -108,6 +108,54 @@ def test_employers_receive_404_for_no_contributions(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
+
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        f"/v1/employers/withholding/{employer.employer_id}",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+    assert response.status_code == 404
+
+
+def test_employers_receive_404_for_old_contributions(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    current_date = date.today()
+    two_years_ago = date(current_date.year - 2, current_date.month, current_date.day)
+    EmployerQuarterlyContributionFactory.create(
+        employer=employer, filing_period=two_years_ago, employer_total_pfml_contribution=100
+    )
+
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        f"/v1/employers/withholding/{employer.employer_id}",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+    assert response.status_code == 404
+
+
+def test_employers_receive_404_for_zero_amount_contributions(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    EmployerQuarterlyContributionFactory.create(
+        employer=employer, filing_period=date.today(), employer_total_pfml_contribution=0
+    )
 
     link = UserLeaveAdministrator(
         user_id=employer_user.user_id,

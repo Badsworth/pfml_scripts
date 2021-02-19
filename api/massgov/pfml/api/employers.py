@@ -1,3 +1,5 @@
+from datetime import date
+
 import connexion
 import flask
 from sqlalchemy import desc
@@ -21,15 +23,22 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 def employer_get_most_recent_withholding_dates(employer_id: str) -> flask.Response:
     with app.db_session() as db_session:
 
+        current_date = date.today()
+        last_years_date = date(current_date.year - 1, current_date.month, current_date.day)
+
         contribution = (
             db_session.query(EmployerQuarterlyContribution)
             .filter(EmployerQuarterlyContribution.employer_id == employer_id)
+            .filter(EmployerQuarterlyContribution.employer_total_pfml_contribution > 0)
+            .filter(
+                EmployerQuarterlyContribution.filing_period.between(last_years_date, current_date)
+            )
             .order_by(desc(EmployerQuarterlyContribution.filing_period))
             .first()
         )
 
         if contribution is None:
-            raise NotFound(description="No contributions found")
+            raise NotFound(description="No valid contributions found")
 
         response = {"filing_period": contribution.filing_period}
 
