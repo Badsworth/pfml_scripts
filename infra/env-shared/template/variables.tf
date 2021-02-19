@@ -41,3 +41,8 @@ variable "enforce_fortinet_managed_rules" {
   type        = bool
   default     = false
 }
+variable "runtime_py" {
+  description = "Pointer to the Python runtime used by the PFML API lambdas"
+  type        = string
+  default     = "python3.8"
+}

@@ -21,7 +21,7 @@ data "aws_iam_policy_document" "kinesis_aws_waf_policy" {
     ]
 
     resources = [
-      "${aws_s3_bucket.kinesis_dead_letter_drop.arn}",
+      aws_s3_bucket.kinesis_dead_letter_drop.arn,
       "${aws_s3_bucket.kinesis_dead_letter_drop.arn}/*"
     ]
   }
@@ -35,7 +35,7 @@ data "aws_iam_policy_document" "kinesis_aws_waf_policy" {
       "kms:GenerateDataKey"
     ]
 
-    resources = ["${aws_kms_key.kinesis_s3_key.arn}"]
+    resources = [aws_kms_key.kinesis_s3_key.arn]
 
     condition {
       test     = "StringEquals"
@@ -48,6 +48,14 @@ data "aws_iam_policy_document" "kinesis_aws_waf_policy" {
       variable = "kms:EncryptionContext:aws:s3:arn"
       values   = ["${aws_s3_bucket.kinesis_dead_letter_drop.arn}/*"]
     }
+  }
+  # Lambda Permissions
+  statement {
+    effect = "Allow"
+    actions = [
+      "lambda:InvokeFunction"
+    ]
+    resources = [aws_lambda_function.scrub_ip_addresses_lambda.arn]
   }
 }
 

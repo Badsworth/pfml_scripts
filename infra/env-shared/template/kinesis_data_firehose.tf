@@ -28,6 +28,16 @@ resource "aws_kinesis_firehose_delivery_stream" "aws_waf" {
     request_configuration {
       content_encoding = "GZIP"
     }
+    processing_configuration {
+      enabled = true
+      processors {
+        type = "Lambda"
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = aws_lambda_function.scrub_ip_addresses_lambda.arn
+        }
+      }
+    }
   }
 }
 
