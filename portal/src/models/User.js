@@ -20,10 +20,37 @@ class User extends BaseModel {
     );
   }
 
-  get hasUnverifiedEmployer() {
+  /**
+   * Determines whether an employer is verifiable (unverified and has verification data)
+   * @param {UserLeaveAdministrator} employer
+   * @returns {boolean}
+   */
+  isVerifiableEmployer(employer) {
+    return !employer.verified && employer.has_verification_data;
+  }
+
+  /**
+   * Determines whether user_leave_administrators has a verifiable employer
+   * @returns {boolean}
+   */
+  get hasVerifiableEmployer() {
     return this.user_leave_administrators.some(
-      (employer) => employer && employer.verified === false
+      (employer) => employer && this.isVerifiableEmployer(employer)
     );
+  }
+
+  /**
+   * Returns a verifiable employer by employer id
+   * @param {string} employerId
+   * @returns {UserLeaveAdministrator}
+   */
+  getVerifiableEmployerById(employerId) {
+    return this.user_leave_administrators.find((employer) => {
+      return (
+        employerId === employer.employer_id &&
+        this.isVerifiableEmployer(employer)
+      );
+    });
   }
 }
 
@@ -50,6 +77,7 @@ export class UserLeaveAdministrator extends BaseModel {
       employer_dba: null,
       employer_fein: null,
       employer_id: null,
+      has_verification_data: null,
       verified: null,
     };
   }

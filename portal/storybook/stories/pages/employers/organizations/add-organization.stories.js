@@ -11,6 +11,7 @@ export const Default = () => {
   const appLogic = {
     portalFlow: {
       appErrors: new AppErrorInfoCollection(),
+      goTo: () => {},
     },
   };
   return <AddOrganization appLogic={appLogic} />;

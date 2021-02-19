@@ -10,7 +10,7 @@ import withEmployerClaim from "../../src/hoc/withEmployerClaim";
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("withEmployerClaim", () => {
-  const userWithVerifiedEmployer = new User({
+  const verifiedUser = new User({
     user_id: "mock_user_id",
     consented_to_data_sharing: true,
     user_leave_administrators: [
@@ -18,6 +18,7 @@ describe("withEmployerClaim", () => {
         employer_dba: "Test Company",
         employer_fein: "1298391823",
         employer_id: "dda903f-f093f-ff900",
+        has_verification_data: true,
         verified: true,
       }),
     ],
@@ -40,7 +41,7 @@ describe("withEmployerClaim", () => {
   }
 
   it("shows spinner when claim is not loaded", () => {
-    appLogic.users.user = userWithVerifiedEmployer;
+    appLogic.users.user = verifiedUser;
 
     render(appLogic);
 
@@ -75,7 +76,7 @@ describe("withEmployerClaim", () => {
     });
 
     it("passes the 'user' prop from the withUser HOC", () => {
-      appLogic.users.user = userWithVerifiedEmployer;
+      appLogic.users.user = verifiedUser;
       render(appLogic);
 
       expect(wrapper.find("PageComponent").prop("user")).toEqual(
@@ -84,7 +85,7 @@ describe("withEmployerClaim", () => {
     });
 
     it("sets the 'claim' prop on the passed component", () => {
-      appLogic.users.user = userWithVerifiedEmployer;
+      appLogic.users.user = verifiedUser;
       render(appLogic);
 
       expect(wrapper.find("PageComponent").prop("claim")).toBeInstanceOf(
@@ -94,7 +95,7 @@ describe("withEmployerClaim", () => {
     });
 
     it("renders the wrapper component", () => {
-      appLogic.users.user = userWithVerifiedEmployer;
+      appLogic.users.user = verifiedUser;
       render(appLogic);
 
       expect(wrapper.find("PageComponent").exists()).toBe(true);
@@ -102,7 +103,7 @@ describe("withEmployerClaim", () => {
     });
   });
 
-  describe("when user has unverified employer", () => {
+  describe("when user has verifiable employer", () => {
     describe('and "employerShowVerifications" feature flag is off', () => {
       let claim;
 
@@ -119,8 +120,8 @@ describe("withEmployerClaim", () => {
         expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
       });
 
-      it("does not redirect to the Verify Contributions page if employer is verified", () => {
-        appLogic.users.user = userWithVerifiedEmployer;
+      it("does not redirect to Verify Contributions page if employer is verifiable", () => {
+        appLogic.users.user = verifiedUser;
 
         render(appLogic);
 
@@ -172,7 +173,7 @@ describe("withEmployerClaim", () => {
       });
 
       it("does not redirect to Verify Contributions page if employer is verified", () => {
-        appLogic.users.user = userWithVerifiedEmployer;
+        appLogic.users.user = verifiedUser;
 
         render(appLogic);
 
@@ -180,7 +181,7 @@ describe("withEmployerClaim", () => {
       });
 
       it("does not redirect to Verify Contributions page if employer id does not match", () => {
-        const userWithUnverifiedDiffEmployer = new User({
+        const unverifiedUserWithVerificationData = new User({
           user_id: "mock_user_id",
           consented_to_data_sharing: true,
           user_leave_administrators: [
@@ -188,11 +189,33 @@ describe("withEmployerClaim", () => {
               employer_dba: "Test Company",
               employer_fein: "1298391823",
               employer_id: "different_id",
+              has_verification_data: true,
               verified: false,
             }),
           ],
         });
-        appLogic.users.user = userWithUnverifiedDiffEmployer;
+        appLogic.users.user = unverifiedUserWithVerificationData;
+
+        render(appLogic);
+
+        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+      });
+
+      it("does not redirect to Verify Business page if employer does not have verification data", () => {
+        const unverifiedUserWithoutVerificationData = new User({
+          user_id: "mock_user_id",
+          consented_to_data_sharing: true,
+          user_leave_administrators: [
+            new UserLeaveAdministrator({
+              employer_dba: "Test Company",
+              employer_fein: "1298391823",
+              employer_id: "different_id",
+              has_verification_data: false,
+              verified: false,
+            }),
+          ],
+        });
+        appLogic.users.user = unverifiedUserWithoutVerificationData;
 
         render(appLogic);
 

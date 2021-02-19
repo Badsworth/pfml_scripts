@@ -32,6 +32,7 @@ exports[`Index renders the page 1`] = `
         employer_dba="Book Bindings 'R Us"
         employer_fein="1298391823"
         employer_id="dda903f-f093f-ff900"
+        has_verification_data={true}
         key="dda903f-f093f-ff900"
         verified={false}
       />
@@ -39,6 +40,7 @@ exports[`Index renders the page 1`] = `
         employer_dba="Knitting Castle"
         employer_fein="390293443"
         employer_id="dda930f-93jfk-iej08"
+        has_verification_data={true}
         key="dda930f-93jfk-iej08"
         verified={true}
       />

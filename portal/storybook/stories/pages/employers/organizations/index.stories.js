@@ -1,32 +1,32 @@
 import User, { UserLeaveAdministrator } from "src/models/User";
+import { Index } from "src/pages/employers/organizations";
 import React from "react";
-import { Success } from "src/pages/employers/organizations/success";
 
 export default {
-  title: `Pages/Employers/Organizations/Verification Success`,
-  component: Success,
+  title: `Pages/Employers/Organizations/Organizations`,
+  component: Index,
 };
 
 export const Default = () => {
-  const query = {
-    employer_id: "123",
-    next: "/",
-  };
-  const appLogic = {
-    portalFlow: {
-      goTo: () => {},
-    },
-  };
   const user_leave_administrators = [
     new UserLeaveAdministrator({
       employer_dba: "Some Company",
       employer_fein: "11-11111",
       employer_id: "123",
+      has_verification_data: true,
       verified: false,
     }),
   ];
   const user = new User({
     user_leave_administrators,
   });
-  return <Success appLogic={appLogic} query={query} user={user} />;
+  const appLogic = {
+    portalFlow: {
+      goTo: () => {},
+    },
+    users: {
+      user,
+    },
+  };
+  return <Index appLogic={appLogic} />;
 };

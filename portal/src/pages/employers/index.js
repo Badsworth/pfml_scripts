@@ -27,7 +27,7 @@ export const Index = (props) => {
     width: 30,
     fill: "currentColor",
   };
-  const hasUnverifiedEmployer = props.user.hasUnverifiedEmployer;
+  const hasVerifiableEmployer = props.user.hasVerifiableEmployer;
   const showNewsBanner = isFeatureEnabled("employerShowNewsBanner");
   const showVerifications = isFeatureEnabled("employerShowVerifications");
 
@@ -37,7 +37,7 @@ export const Index = (props) => {
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersDashboard.welcomeTitle")}</Title>
           {showNewsBanner && <NewsBanner />}
-          {showVerifications && hasUnverifiedEmployer && (
+          {showVerifications && hasVerifiableEmployer && (
             <Alert
               state="warning"
               heading={t("pages.employersDashboard.verificationTitle")}

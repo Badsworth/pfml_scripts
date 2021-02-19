@@ -39,12 +39,9 @@ const withEmployerClaim = (Component) => {
       if (
         isFeatureEnabled("employerShowVerifications") &&
         claim &&
-        user.hasUnverifiedEmployer
+        user.hasVerifiableEmployer
       ) {
-        const employer = user.user_leave_administrators.find(
-          (employer) =>
-            !employer.verified && claim.employer_id === employer.employer_id
-        );
+        const employer = user.getVerifiableEmployerById(claim.employer_id);
         if (employer && employer.employer_id) {
           appLogic.portalFlow.goTo(routes.employers.verifyContributions, {
             employer_id: employer.employer_id,

@@ -16,7 +16,7 @@ import withUser from "../../../hoc/withUser";
 export const Index = ({ appLogic }) => {
   const { t } = useTranslation();
   const {
-    hasUnverifiedEmployer,
+    hasVerifiableEmployer,
     user_leave_administrators,
   } = appLogic.users.user;
   const showVerifications = isFeatureEnabled("employerShowVerifications");
@@ -25,7 +25,7 @@ export const Index = ({ appLogic }) => {
     <React.Fragment>
       <BackButton />
       <Title>{t("pages.employersOrganizations.title")}</Title>
-      {showVerifications && hasUnverifiedEmployer && (
+      {showVerifications && hasVerifiableEmployer && (
         <Alert
           state="warning"
           heading={t("pages.employersDashboard.verificationTitle")}

@@ -6,7 +6,7 @@ export default {
   title: "Pages/Employers/Welcome",
   component: Index,
   argTypes: {
-    hasUnverifiedEmployer: {
+    hasVerifiableEmployer: {
       defaultValue: "Yes",
       control: {
         type: "radio",
@@ -16,14 +16,15 @@ export default {
   },
 };
 
-export const Default = ({ hasUnverifiedEmployer }) => {
+export const Default = ({ hasVerifiableEmployer }) => {
   const user = new User({
     user_leave_administrators: [
       {
         employer_dba: "Test Company",
         employer_fein: "",
         employer_id: 1,
-        verified: !(hasUnverifiedEmployer === "Yes"),
+        has_verification_data: true,
+        verified: !(hasVerifiableEmployer === "Yes"),
       },
     ],
   });

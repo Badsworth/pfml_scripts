@@ -2,6 +2,7 @@ import User, { UserLeaveAdministrator } from "src/models/User";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import React from "react";
 import VerifyContributions from "src/pages/employers/organizations/verify-contributions";
+import Withholding from "src/models/Withholding";
 
 export default {
   title: "Pages/Employers/Organizations/Verify Contributions",
@@ -42,5 +43,15 @@ export const Default = () => {
       user,
     },
   };
-  return <VerifyContributions appLogic={appLogic} query={query} user={user} />;
+  const withholding = new Withholding({
+    filing_period: "1-1-2021",
+  });
+  return (
+    <VerifyContributions
+      appLogic={appLogic}
+      query={query}
+      user={user}
+      withholding={withholding}
+    />
+  );
 };
