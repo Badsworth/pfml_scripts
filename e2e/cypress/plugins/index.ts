@@ -220,6 +220,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       E2E_PORTAL_USERNAME: config("PORTAL_USERNAME"),
       E2E_PORTAL_PASSWORD: config("PORTAL_PASSWORD"),
       E2E_EMPLOYER_PORTAL_PASSWORD: config("EMPLOYER_PORTAL_PASSWORD"),
+      E2E_ENVIRONMENT: config("ENVIRONMENT"),
     },
   };
 }

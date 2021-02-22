@@ -40,28 +40,22 @@ describe("Denial Notification and Notice", () => {
     });
   });
 
-  it(
-    "Claims for a financially ineligible claimant should be marked not met.",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      beforeFineos();
-      cy.visit("/");
-      cy.unstash<Submission>("submission").then((submission) => {
-        fineos.visitClaim(submission.fineos_absence_id);
-        fineos.assertClaimFinancialEligibility(false);
-      });
-    }
-  );
-
   it("Deny a claim", { baseUrl: getFineosBaseUrl() }, () => {
     beforeFineos();
     bailIfThisTestFails();
     cy.visit("/");
     cy.unstash<Submission>("submission").then((submission) => {
       fineos.visitClaim(submission.fineos_absence_id);
+      fineos.assertClaimFinancialEligibility(false);
     });
     fineos.denyClaim("Claimant wages failed 30x rule");
     cy.wait(200);
+    if (
+      Cypress.env("E2E_ENVIRONMENT") === "performance" ||
+      Cypress.env("E2E_ENVIRONMENT") === "test"
+    ) {
+      fineos.closeReleaseNoticeTask("Denial Notice");
+    }
   });
 
   // Check Legal Notice for both claimant/Leave-admin

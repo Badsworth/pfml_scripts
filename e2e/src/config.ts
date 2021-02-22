@@ -25,6 +25,7 @@ export interface E2EConfig {
   TESTMAIL_NAMESPACE: string;
   EMPLOYEES_FILE: string;
   EMPLOYERS_FILE: string;
+  ENVIRONMENT: string;
 }
 export interface LSTConfig {
   FLOOD_DATA_BASEURL: string;

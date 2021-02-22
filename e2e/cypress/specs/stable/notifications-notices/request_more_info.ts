@@ -43,6 +43,12 @@ describe("Request for More Information (notifications/notices)", () => {
       cy.get<string>("@fineos_absence_id").then((fineos_absence_id) => {
         fineos.visitClaim(fineos_absence_id);
         fineos.additionalEvidenceRequest(fineos_absence_id);
+        if (
+          Cypress.env("E2E_ENVIRONMENT") === "performance" ||
+          Cypress.env("E2E_ENVIRONMENT") === "test"
+        ) {
+          fineos.closeReleaseNoticeTask("Request for more Information");
+        }
       });
     }
   );

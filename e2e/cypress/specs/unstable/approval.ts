@@ -77,6 +77,12 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
       cy.unstash<Submission>("submission").then((submission) => {
         cy.visit("/");
         fineos.claimAdjudicationFlow(submission.fineos_absence_id, true);
+        if (
+          Cypress.env("E2E_ENVIRONMENT") === "performance" ||
+          Cypress.env("E2E_ENVIRONMENT") === "test"
+        ) {
+          fineos.closeReleaseNoticeTask("Approval Notice");
+        }
       });
     }
   );

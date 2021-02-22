@@ -785,6 +785,19 @@ export function modifyDates(submission: Submission): void {
   cy.wait(2000);
 }
 
+export function closeReleaseNoticeTask(docType: string): void {
+  onTab("Task");
+  cy.get(`.divListviewGrid .ListTable td[title='Release Notice']`)
+    .should("have.text", "Release Notice")
+    .click();
+  cy.wait("@ajaxRender");
+  cy.get('input[type="submit"][value="Close"]').click();
+  cy.wait("@ajaxRender");
+  cy.wait(200);
+  onTab("Documents");
+  cy.contains("a", docType);
+}
+
 export function confirmRMVStatus(RMVStatus: string): void {
   let statusText = "";
   switch (RMVStatus) {
