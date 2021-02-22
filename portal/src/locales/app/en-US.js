@@ -113,6 +113,8 @@ const errors = {
     employer_fein: {
       pattern:
         "Enter the Employer Identification Number in the correct format.",
+      require_contributing_employer:
+        "Enter a valid Employer Identification Number (EIN). Check that you entered your employers’ EIN correctly. You can find this number on all notices your employer sent about Paid Family and Medical Leave, or on your W‑2 or 1099‑MISC. If you continue to get this error, contact your employer and confirm that you have the correct EIN, and that they are contributing to Paid Family and Medical Leave.",
       required: "Enter your employer’s Employer Identification Number.",
     },
     employer_notified: {
