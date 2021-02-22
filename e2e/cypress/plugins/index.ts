@@ -192,8 +192,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     },
   });
 
-  // @see https://github.com/TheBrainFamily/cypress-cucumber-webpack-typescript-example
-  // @see https://github.com/cypress-io/cypress-webpack-preprocessor
   const options = {
     webpackOptions: require("../../webpack.config.ts"),
   };

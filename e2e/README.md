@@ -34,7 +34,7 @@ The test suite can run against your local portal enviornment.
 
 * Run `npm run cypress:open:local`
 * A window will pop open showing the various tests available for running.
-* Depending on what feature you're working on will determine the test of most interest. See Below ⬇️ 
+* Depending on what feature you're working on will determine the test of most interest. See Below ⬇️
 
 #### Information about Scenario Test:
 * [BHAP1](https://lwd.atlassian.net/browse/ETS-8) - continuous leave bonding claim
@@ -49,22 +49,9 @@ We have two different styles of Cypress tests:
 * End-to-End - Follows a single claim from initial creation on the Portal to Fineos and back. This type of test truly goes "end to end", but it is very fragile, due to the number of different systems it covers at once.
 * Feature Tests - Exercises a single feature of the application in the most minimal way possible.  These tests still span multiple applications, but will often start or end at the PFML API.  An example of a feature test is "Financial eligiblity should not be met if an employee has made less than $5000 in the past year." We prefer these tests when possible, as they are less brittle.
 
-All of our tests start with [Gherkin](https://cucumber.io/docs/gherkin/reference/) - a structured, human-readable specification language that defines and explains what is happening. Once the Gherkin has been defined, we create (or reuse) the implementation of each step using Typescript code.
-
 <details>
   <summary>Tips for writing effective tests</summary>
 
-* In Gherkin, focus on the business value you're demonstrating, rather than trying to give a click-by-click of what is happening. Think of this as explaining _what_ you're doing without necessarily needing to explain _how_ you're doing it.
-    _Example_:
-    ```gherkin
-    Scenario: As a CSR, I can satisfy evidence requirements for a Medical Claim
-      Given I am logged into Fineos as a Savilinx user
-      And I am viewing the previously submitted claim
-      When I start adjudication for the claim
-      When I mark "State Managed Paid Leave Confirmation" documentation as satisfactory
-      And I mark "Identification Proof" documentation as satisfactory
-      Then I should see that the claim's "Evidence" is "Satisfied"
-    ```
 * When implementing step definitions, you can use "helper" code in the form of custom Cypress commands, and our system of "actions". Using helpers for repetitive technical steps is good, since it allows us to reuse and improve the execution over time. But make sure your helpers are specifying technical steps rather than business or human process. Business process belongs in the step definition rather than tucked away in a helper.
   * Good helper examples
     * Selecting a particular fieldset based on legend label.

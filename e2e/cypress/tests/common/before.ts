@@ -1,5 +1,3 @@
-import { Before } from "cypress-cucumber-preprocessor/steps";
-
 export function beforePortal(): void {
   // Set the feature flag necessary to see the portal.
   cy.setCookie(
@@ -73,6 +71,3 @@ export function beforeFineos(): void {
   // Set up a route we can listen to wait on ajax rendering to complete.
   cy.intercept(/ajax\/pagerender\.jsp/).as("ajaxRender");
 }
-
-Before({ tags: "@portal" }, beforePortal);
-Before({ tags: "@fineos" }, beforeFineos);
