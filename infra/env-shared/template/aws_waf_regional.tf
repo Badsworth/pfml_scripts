@@ -99,6 +99,10 @@ resource "aws_wafregional_web_acl" "fortinet_managed_rules" {
     type = "ALLOW"
   }
 
+  logging_configuration {
+    log_destination = aws_kinesis_firehose_delivery_stream.aws_waf.arn
+  }
+
   rule {
     priority = 1
     rule_id  = local.regional_fortinet_rule_id
