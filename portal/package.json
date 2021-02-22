@@ -37,6 +37,8 @@
     "@fortawesome/react-fontawesome": "^0.1.14",
     "@massds/mayflower-assets": "^11.0.2",
     "@massds/mayflower-react": "^11.0.2",
+    "@sentry/integrations": "^6.1.0",
+    "@sentry/react": "^6.1.0",
     "assert": "^2.0.0",
     "classnames": "^2.2.6",
     "core-js": "^3.8.2",
