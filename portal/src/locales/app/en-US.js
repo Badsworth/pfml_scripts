@@ -427,6 +427,8 @@ const errors = {
         "You must choose at least one kind of leave (continuous, reduced schedule, or intermittent).",
       min_reduced_leave_minutes:
         "The total time entered for your hours off must be greater than 0.",
+      require_employee:
+        "We couldn’t find you in our system. Check that you entered your employers’ Employer Identification Number (EIN) correctly. If you continue to get this error, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
       require_employer_notified:
         "You must tell your employer that you’re taking leave before you can submit an application. If you’ve told your employer, update your application with the date that you notified them.",
     },

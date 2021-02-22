@@ -411,6 +411,10 @@ export default {
     },
     [routes.applications.employmentStatus]: {
       meta: {
+        applicableRules: [
+          // Show this error after we've gathered SSN and EIN
+          "require_employee",
+        ],
         step: ClaimSteps.employerInformation,
         fields: employmentStatusFields,
       },
