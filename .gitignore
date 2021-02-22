@@ -26,6 +26,7 @@ site/
 
 # Files generated with the "archive_file" Terraform resource
 infra/portal/template/.zip
+infra/env-shared/template/.zip
 
 # Generated code coverage reports
 portal/coverage/
