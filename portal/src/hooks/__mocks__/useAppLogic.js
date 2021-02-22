@@ -85,19 +85,29 @@ export default jest.fn(() => ({
       user_id: "mock_user_id",
       consented_to_data_sharing: true,
       user_leave_administrators: [
+        // not verified, but can be
         new UserLeaveAdministrator({
           employer_dba: "Book Bindings 'R Us",
-          employer_fein: "1298391823",
+          employer_fein: "**-***1823",
           employer_id: "dda903f-f093f-ff900",
           has_verification_data: true,
           verified: false,
         }),
+        // already verified
         new UserLeaveAdministrator({
           employer_dba: "Knitting Castle",
-          employer_fein: "390293443",
+          employer_fein: "**-***3443",
           employer_id: "dda930f-93jfk-iej08",
           has_verification_data: true,
           verified: true,
+        }),
+        // not verified and cannot be verified
+        new UserLeaveAdministrator({
+          employer_dba: "Tomato Touchdown",
+          employer_fein: "**-***7192",
+          employer_id: "io19fj9-00jjf-uiw3r",
+          has_verification_data: false,
+          verified: false,
         }),
       ],
     }),

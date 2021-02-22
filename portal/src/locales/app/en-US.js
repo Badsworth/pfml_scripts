@@ -1673,6 +1673,7 @@ const pages = {
       "You'll be able to add more organizations to your account in the near future.",
     organizationsTableHeader: "Organization",
     title: "Your organizations",
+    verificationBlocked: "Verification blocked",
     verificationRequired: "Verification required",
   },
   employersOrganizationsAddOrganization: {

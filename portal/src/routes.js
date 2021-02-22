@@ -62,6 +62,7 @@ const routes = {
   },
   employers: {
     addOrganization: "/employers/organizations/add-organization",
+    cannotVerify: "/employers/organizations/cannot-verify",
     confirmation: "/employers/applications/confirmation",
     createAccount: "/employers/create-account",
     dashboard: "/employers",

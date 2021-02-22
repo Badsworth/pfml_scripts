@@ -17,6 +17,8 @@ const Tag = ({ label, state }) => {
       "bg-success-lighter": state === "success",
       "text-base-darkest": state === "warning",
       "bg-warning-lighter": state === "warning",
+      "text-error": state === "error",
+      "bg-error-lighter": state === "error",
     }
   );
 
@@ -26,7 +28,7 @@ const Tag = ({ label, state }) => {
 Tag.propTypes = {
   label: PropTypes.string.isRequired,
   // TODO (EMPLOYER-421) consider other states.
-  state: PropTypes.oneOf(["success", "warning"]).isRequired,
+  state: PropTypes.oneOf(["success", "warning", "error"]).isRequired,
 };
 
 export default Tag;

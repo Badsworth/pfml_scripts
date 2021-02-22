@@ -40,8 +40,12 @@ describe("Index", () => {
     const rows = wrapper.find("LeaveAdministratorRow");
     const titles = rows.map((row) => row.dive().find("span").first().text());
     const eins = rows.map((row) => row.dive().find("td").text());
-    expect(titles).toEqual(["Book Bindings 'R Us", "Knitting Castle"]);
-    expect(eins).toEqual(["1298391823", "390293443"]);
+    expect(titles).toEqual([
+      "Book Bindings 'R Us",
+      "Knitting Castle",
+      "Tomato Touchdown",
+    ]);
+    expect(eins).toEqual(["**-***1823", "**-***3443", "**-***7192"]);
   });
 
   describe('when "employerShowVerifications" feature flag is enabled', () => {
@@ -60,12 +64,7 @@ describe("Index", () => {
           employer_dba: "Book Bindings 'R Us",
           employer_fein: "1298391823",
           employer_id: "dda903f-f093f-ff900",
-          verified: true,
-        }),
-        new UserLeaveAdministrator({
-          employer_dba: "Knitting Castle",
-          employer_fein: "390293443",
-          employer_id: "dda930f-93jfk-iej08",
+          has_verification_data: true,
           verified: true,
         }),
       ];
@@ -75,26 +74,57 @@ describe("Index", () => {
     });
 
     describe("for orgs that are not verified", () => {
-      let row;
-      beforeEach(() => {
-        renderPage();
-        row = wrapper.find("LeaveAdministratorRow").first().dive();
+      describe("and can be verified", () => {
+        const expectedUrl = routeWithParams("employers.verifyContributions", {
+          employer_id: "dda903f-f093f-ff900",
+          next: "/employers/organizations",
+        });
+        let row;
+
+        beforeEach(() => {
+          renderPage();
+          row = wrapper.find("LeaveAdministratorRow").first().dive();
+        });
+
+        it('shows the "Verification required" tag', () => {
+          const verificationTag = row.find("Tag");
+          expect(verificationTag.parent().is("a")).toBe(true);
+          expect(verificationTag.parent().prop("href")).toBe(expectedUrl);
+          expect(verificationTag.prop("label")).toBe("Verification required");
+          expect(verificationTag.prop("state")).toBe("warning");
+        });
+
+        it("links to the correct Verify Business page", () => {
+          const link = row.find("a").first();
+          expect(link.text()).toBe("Book Bindings 'R Us");
+          expect(link.prop("href")).toBe(expectedUrl);
+        });
       });
 
-      it('shows the "Verification required" tag', () => {
-        const verificationTag = row.find("Tag");
-        expect(verificationTag.prop("label")).toBe("Verification required");
-        expect(verificationTag.prop("state")).toBe("warning");
-      });
+      describe("and canNOT be verified", () => {
+        const expectedUrl = routeWithParams("employers.cannotVerify", {
+          employer_id: "io19fj9-00jjf-uiw3r",
+        });
+        let row;
 
-      it("links to the correct Verify Business page", () => {
-        const link = row.find("a");
-        expect(link.prop("href")).toBe(
-          routeWithParams("employers.verifyContributions", {
-            employer_id: "dda903f-f093f-ff900",
-            next: "/employers/organizations",
-          })
-        );
+        beforeEach(() => {
+          renderPage();
+          row = wrapper.find("LeaveAdministratorRow").at(2).dive();
+        });
+
+        it('shows the "Verification blocked" tag', () => {
+          const verificationTag = row.find("Tag");
+          expect(verificationTag.parent().is("a")).toBe(true);
+          expect(verificationTag.parent().prop("href")).toBe(expectedUrl);
+          expect(verificationTag.prop("label")).toBe("Verification blocked");
+          expect(verificationTag.prop("state")).toBe("error");
+        });
+
+        it("links to the Cannot Verify page", () => {
+          const link = row.find("a").first();
+          expect(link.text()).toBe("Tomato Touchdown");
+          expect(link.prop("href")).toBe(expectedUrl);
+        });
       });
     });
 
@@ -108,7 +138,7 @@ describe("Index", () => {
         expect(row.find("Tag").exists()).toBe(false);
       });
 
-      it("does not link to the Verify Contributions page", () => {
+      it("does not link anywhere", () => {
         expect(row.find("a").exists()).toBe(false);
       });
     });
@@ -121,21 +151,30 @@ describe("Index", () => {
     });
 
     describe("for all orgs", () => {
-      let notVerifiedRow, verifiedRow;
+      let verificationBlockedRow, verificationRequiredRow, verifiedRow;
       beforeEach(() => {
         renderPage();
-        notVerifiedRow = wrapper.find("LeaveAdministratorRow").first().dive();
+        verificationRequiredRow = wrapper
+          .find("LeaveAdministratorRow")
+          .first()
+          .dive();
         verifiedRow = wrapper.find("LeaveAdministratorRow").at(1).dive();
+        verificationBlockedRow = wrapper
+          .find("LeaveAdministratorRow")
+          .at(2)
+          .dive();
       });
 
       it('does not show the "Verification required" tag', () => {
-        expect(notVerifiedRow.find("Tag").exists()).toBe(false);
+        expect(verificationRequiredRow.find("Tag").exists()).toBe(false);
         expect(verifiedRow.find("Tag").exists()).toBe(false);
+        expect(verificationBlockedRow.find("Tag").exists()).toBe(false);
       });
 
       it("does not navigate anywhere on click", () => {
-        expect(notVerifiedRow.find("a").exists()).toBe(false);
+        expect(verificationRequiredRow.find("a").exists()).toBe(false);
         expect(verifiedRow.find("a").exists()).toBe(false);
+        expect(verificationBlockedRow.find("a").exists()).toBe(false);
       });
     });
   });

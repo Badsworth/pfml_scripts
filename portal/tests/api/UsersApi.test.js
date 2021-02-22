@@ -45,19 +45,17 @@ describe("users API", () => {
               ],
               user_leave_administrators: [
                 {
-                  employer: {
-                    employer_dba: "Book Bindings 'R Us",
-                    employer_fein: "1298391823",
-                    employer_id: "dda903f-f093f-ff900",
-                  },
+                  employer_dba: "Book Bindings 'R Us",
+                  employer_fein: "1298391823",
+                  employer_id: "dda903f-f093f-ff900",
+                  has_verification_data: true,
                   verified: false,
                 },
                 {
-                  employer: {
-                    employer_dba: "Knitting Castle",
-                    employer_fein: "390293443",
-                    employer_id: "dda930f-93jfk-iej08",
-                  },
+                  employer_dba: "Knitting Castle",
+                  employer_fein: "390293443",
+                  employer_id: "dda930f-93jfk-iej08",
+                  has_verification_data: true,
                   verified: true,
                 },
               ],
@@ -120,12 +118,14 @@ describe("users API", () => {
             employer_dba: "Book Bindings 'R Us",
             employer_fein: "1298391823",
             employer_id: "dda903f-f093f-ff900",
+            has_verification_data: true,
             verified: false,
           },
           {
             employer_dba: "Knitting Castle",
             employer_fein: "390293443",
             employer_id: "dda930f-93jfk-iej08",
+            has_verification_data: true,
             verified: true,
           },
         ]);
