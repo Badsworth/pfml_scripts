@@ -53,6 +53,9 @@ def get_approved_claims(db_session: db.Session) -> List[Claim]:
 def format_claims_for_dia_claimant_list(approved_claims: List[Claim]) -> List[Dict]:
     approved_claims_info = []
 
+    # DIA cannot accept CSVs that contain commas
+    value_errors = []
+
     for claim in approved_claims:
         employee = claim.employee
         if employee is not None:
@@ -70,7 +73,19 @@ def format_claims_for_dia_claimant_list(approved_claims: List[Claim]) -> List[Di
                 Constants.SSN_FIELD: employee.tax_identifier.tax_identifier.replace("-", ""),
             }
 
+            for key in _info:
+                value = _info[key]
+                if "," in value:
+                    value_errors.append(f"({claim.claim_id}, {key})")
+
             approved_claims_info.append(_info)
+
+    # API-1335: DIA cannot accept values that contain commas, and we don't expect to see values
+    # commas. If/when we encounter this situation, discuss a solution with DIA (Different file
+    # format? Update DIA process to accept commas? Exclude claims in code in the meantime?).
+    if len(value_errors) > 0:
+        errors = ", ".join(value_errors)
+        raise ValueError(f"Value for claims contains comma: {errors}")
 
     return approved_claims_info
 
@@ -79,6 +94,7 @@ def get_approved_claims_info_csv_path(approved_claims: List[Dict]) -> pathlib.Pa
     file_name = Constants.CLAIMAINT_LIST_FILENAME_PREFIX + get_now().strftime(
         Constants.CLAIMAINT_LIST_FILENAME_TIME_FORMAT
     )
+
     return create_csv_from_list(approved_claims, Constants.CLAIMAINT_LIST_FIELDS, file_name)
 
 

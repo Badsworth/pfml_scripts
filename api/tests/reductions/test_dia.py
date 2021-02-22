@@ -51,6 +51,35 @@ def set_up(test_db_session, initialize_factories_session):
     return approved_claims
 
 
+@pytest.fixture
+def set_up_invalid_data(test_db_session, initialize_factories_session):
+    start_date = date(2021, 1, 28)
+    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
+    employee_info = {
+        "date_of_birth": date(1979, 11, 12),
+        "first_name": "Jo,hn",
+        "last_name": "Doe",
+        "tax_identifier": tax_id,
+    }
+
+    employee1 = EmployeeFactory.create(**employee_info)
+    employee2 = EmployeeFactory.create(**employee_info)
+    ClaimFactory.create(
+        employee=employee1,
+        fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+        absence_period_start_date=start_date,
+    )
+    ClaimFactory.create(
+        employee=employee2,
+        fineos_absence_status_id=AbsenceStatus.DECLINED.absence_status_id,
+        absence_period_start_date=start_date,
+    )
+
+    approved_claims = get_approved_claims(test_db_session)
+
+    return approved_claims
+
+
 def test_get_approved_claims(set_up, test_db_session):
     approved_claims = set_up
     assert len(approved_claims) == 1
@@ -89,6 +118,14 @@ def test_get_approved_claims_info_csv_path(set_up):
     )
 
     assert file_path.name == file_name
+
+
+def test_get_approved_claims_info_csv_path_invalid_data(set_up_invalid_data):
+    approved_employees = set_up_invalid_data
+
+    with pytest.raises(ValueError):
+        approved_claims_dia_info = format_claims_for_dia_claimant_list(approved_employees)
+        get_approved_claims_info_csv_path(approved_claims_dia_info)
 
 
 def test_create_list_of_approved_claimants(monkeypatch, mock_s3_bucket, test_db_session, set_up):
