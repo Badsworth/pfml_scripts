@@ -1,5 +1,8 @@
 import { fineos, email } from "../../../../tests/common/actions";
-import { beforeFineos } from "../../../../tests/common/before";
+import {
+  bailIfThisTestFails,
+  beforeFineos,
+} from "../../../../tests/common/before";
 import { extractLeavePeriod } from "../../../../../src/utils";
 import { getFineosBaseUrl } from "../../../../config";
 import { Submission } from "../../../../../src/types";
@@ -10,6 +13,8 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
     { baseUrl: getFineosBaseUrl() },
     () => {
       beforeFineos();
+      bailIfThisTestFails();
+
       cy.task("generateClaim", {
         claimType: "BHAP1",
         employeeType: "financially eligible",

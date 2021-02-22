@@ -1,12 +1,16 @@
 import * as portal from "../../../tests/common/actions/portal";
 import { fineos } from "../../../tests/common/actions";
-import { beforeFineos } from "../../../tests/common/before";
+import {
+  bailIfThisTestFails,
+  beforeFineos,
+} from "../../../tests/common/before";
 import { beforePortal } from "../../../tests/common/before";
 import { getFineosBaseUrl } from "../../../config";
 
 describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
   it("As a claimant, I should be able to submit a claim (BHAP1) through the portal", () => {
     beforePortal();
+    bailIfThisTestFails();
 
     cy.task("generateClaim", {
       claimType: "BGBM1",
@@ -57,6 +61,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
     { baseUrl: getFineosBaseUrl() },
     () => {
       beforeFineos();
+      bailIfThisTestFails();
       cy.visit("/");
 
       cy.unstash<string>("claimNumber").then((claimNumber) => {

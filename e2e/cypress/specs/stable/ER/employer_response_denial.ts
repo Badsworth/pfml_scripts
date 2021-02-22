@@ -1,10 +1,16 @@
-import { beforePortal, beforeFineos } from "../../../tests/common/before";
+import {
+  beforePortal,
+  beforeFineos,
+  bailIfThisTestFails,
+} from "../../../tests/common/before";
 import { fineos, portal } from "../../../tests/common/actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 
 describe("Employer Responses", () => {
   it("As an employer, I should recieve an email asking for my response to a claim and also fill out the ER form", () => {
     beforePortal();
+    bailIfThisTestFails();
+
     cy.task("generateClaim", {
       claimType: "BHAP1",
       employeeType: "financially eligible",

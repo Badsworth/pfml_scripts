@@ -1,5 +1,9 @@
 import { fineos, portal, email } from "../../../tests/common/actions";
-import { beforeFineos, beforePortal } from "../../../tests/common/before";
+import {
+  bailIfThisTestFails,
+  beforeFineos,
+  beforePortal,
+} from "../../../tests/common/before";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { ApplicationResponse } from "../../../../src/api";
 import { Submission } from "../../../../src/types";
@@ -7,6 +11,8 @@ import { Submission } from "../../../../src/types";
 describe("Denial Notification and Notice", () => {
   it("Submit a financially ineligible claim to API", () => {
     beforePortal();
+    bailIfThisTestFails();
+
     cy.visit("/");
     cy.task("generateCredentials", false).then((credentials) => {
       cy.task("registerClaimant", credentials).then(() => {
@@ -49,6 +55,7 @@ describe("Denial Notification and Notice", () => {
 
   it("Deny a claim", { baseUrl: getFineosBaseUrl() }, () => {
     beforeFineos();
+    bailIfThisTestFails();
     cy.visit("/");
     cy.unstash<Submission>("submission").then((submission) => {
       fineos.visitClaim(submission.fineos_absence_id);

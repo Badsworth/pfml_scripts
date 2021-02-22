@@ -5,7 +5,7 @@ import { ApplicationResponse } from "../../../src/api";
 
 describe("Payment amounts", () => {
   it(
-    "Verify the payment amount for a continous bonding claim with a regular schedule",
+    "Verify the payment amount for a continuous bonding claim with a regular schedule",
     { baseUrl: getFineosBaseUrl() },
     () => {
       beforeFineos();

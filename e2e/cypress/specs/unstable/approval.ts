@@ -1,13 +1,15 @@
 import { fineos, portal, email } from "../../tests/common/actions";
-import { beforeFineos } from "../../tests/common/before";
+import { bailIfThisTestFails, beforeFineos } from "../../tests/common/before";
 import { beforePortal } from "../../tests/common/before";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
 import { ApplicationResponse } from "../../../src/api";
 import { Submission } from "../../../src/types";
 
-describe("Approval (notificatins/notices)", { retries: 0 }, () => {
+describe("Approval (notifications/notices)", { retries: 0 }, () => {
   it("Create a financially eligible claim in which an employer will respond", () => {
     beforePortal();
+    bailIfThisTestFails();
+
     cy.visit("/");
 
     // Generate Creds for Registration/Login - submit claim via API
@@ -70,6 +72,8 @@ describe("Approval (notificatins/notices)", { retries: 0 }, () => {
     { baseUrl: getFineosBaseUrl() },
     () => {
       beforeFineos();
+      bailIfThisTestFails();
+
       cy.unstash<Submission>("submission").then((submission) => {
         cy.visit("/");
         fineos.claimAdjudicationFlow(submission.fineos_absence_id, true);

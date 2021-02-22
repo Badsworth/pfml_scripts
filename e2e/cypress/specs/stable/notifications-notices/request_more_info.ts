@@ -1,14 +1,19 @@
 import { fineos, portal, email } from "../../../tests/common/actions";
-import { beforeFineos } from "../../../tests/common/before";
+import {
+  bailIfThisTestFails,
+  beforeFineos,
+} from "../../../tests/common/before";
 import { beforePortal } from "../../../tests/common/before";
 import { getFineosBaseUrl } from "../../../config";
 
-describe("Request for More Information (notificatins/notices)", () => {
+describe("Request for More Information (notifications/notices)", () => {
   it(
     "Create a financially eligible claim that is denied by an agent",
     { baseUrl: getFineosBaseUrl() },
     () => {
       beforeFineos();
+      bailIfThisTestFails();
+
       cy.visit("/");
 
       // Generate Creds for Registration/Login - submit claim via API

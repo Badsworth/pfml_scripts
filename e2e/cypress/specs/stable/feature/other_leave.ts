@@ -1,5 +1,8 @@
 import { fineos, portal } from "../../../tests/common/actions";
-import { beforeFineos } from "../../../tests/common/before";
+import {
+  bailIfThisTestFails,
+  beforeFineos,
+} from "../../../tests/common/before";
 import { beforePortal } from "../../../tests/common/before";
 import { getFineosBaseUrl } from "../../../config";
 import { Submission } from "../../../../src/types";
@@ -7,6 +10,8 @@ import { Submission } from "../../../../src/types";
 describe("Submit a bonding claim with other income and other leave - BHAP1", () => {
   it("As a claimant, I submit a BHAP1 claim with other leave and other income through the portal", () => {
     beforePortal();
+    bailIfThisTestFails();
+
     cy.task("generateClaim", {
       claimType: "BHAP1",
       employeeType: "financially eligible",
