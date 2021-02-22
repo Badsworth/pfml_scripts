@@ -24,6 +24,7 @@ from massgov.pfml.db.models.employees import (
     StateLog,
 )
 from massgov.pfml.db.models.factories import ClaimFactory, ReferenceFileFactory
+from massgov.pfml.payments.payments_util import get_now
 
 fake = faker.Faker()
 
@@ -425,7 +426,7 @@ def test_load_dua_payment_from_reference_file_success(
     assert file_util.list_files(pending_directory) == [filename]
     assert file_util.list_files(archive_directory) == []
 
-    dua.load_dua_payment_from_reference_file(ref_file, archive_directory, test_db_session)
+    dua._load_dua_payment_from_reference_file(ref_file, archive_directory, test_db_session)
 
     # Expect to have loaded some rows to the database.
     assert (
@@ -470,7 +471,7 @@ def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
     _create_dua_payment_list_reference_file("", dest_filepath)
 
     with pytest.raises(sqlalchemy.exc.IntegrityError):
-        dua.load_dua_payment_from_reference_file(ref_file, archive_directory, test_db_session)
+        dua._load_dua_payment_from_reference_file(ref_file, archive_directory, test_db_session)
 
     # Expect no rows in the database after because the reference_file.file_location conflict will
     # prevent the datbase from committing the changes.
@@ -580,7 +581,7 @@ def test_format_claims_for_dua_claimant_list_expected_structure_is_generated(
 ):
     approved_claims = [ClaimFactory.create() for _i in range(approved_claims_count)]
 
-    formatted_rows = dua.format_claims_for_dua_claimant_list(approved_claims)
+    formatted_rows = dua._format_claims_for_dua_claimant_list(approved_claims)
     expected_rows = [
         {
             dua.Constants.CASE_ID_FIELD: claim.fineos_absence_id,
@@ -608,7 +609,7 @@ def test_format_claims_for_dua_claimant_list_expected_structure_with_missing_emp
         for claim in approved_claims[1:]
     ]
 
-    formatted_rows = dua.format_claims_for_dua_claimant_list(approved_claims)
+    formatted_rows = dua._format_claims_for_dua_claimant_list(approved_claims)
 
     assert len(formatted_rows) == len(approved_claims) - 1
     assert formatted_rows == expected_rows
@@ -621,7 +622,7 @@ def test_format_claims_for_dua_claimant_list_null_absence_id(
         ClaimFactory.create(fineos_absence_id=None) for _i in range(random.randint(1, 5))
     ]
 
-    formatted_rows = dua.format_claims_for_dua_claimant_list(approved_claims)
+    formatted_rows = dua._format_claims_for_dua_claimant_list(approved_claims)
 
     assert len(formatted_rows) == len(approved_claims)
 
@@ -725,4 +726,148 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
                 claim.employee.tax_identifier.tax_identifier.replace("-", ""),
                 dua.Constants.TEMPORARY_BENEFIT_START_DATE,
             ]
+        )
+
+
+@pytest.mark.parametrize(
+    "other_ref_file_count, old_payment_list_ref_file_count, today_payment_list_ref_file_count, result",
+    (
+        # No ReferenceFiles in the database.
+        (0, 0, 0, False),
+        # Some ReferenceFiles in the database, but none with DUA_PAYMENT_LIST type.
+        (random.randint(1, 4), 0, 0, False),
+        # Some ReferenceFiles with DUA_PAYMENT_LIST type in the database but none created today.
+        (random.randint(1, 4), random.randint(3, 6), 0, False),
+        # Some ReferenceFiles with DUA_PAYMENT_LIST types created today.
+        (random.randint(1, 4), random.randint(3, 6), random.randint(1, 8), True),
+        # Most common scenario. Single ReferenceFile with DUA_PAYMENT_LIST type created today.
+        (random.randint(1, 4), random.randint(3, 6), 1, True),
+    ),
+)
+def test_payment_list_has_been_downloaded_today(
+    test_db_session,
+    initialize_factories_session,
+    other_ref_file_count,
+    old_payment_list_ref_file_count,
+    today_payment_list_ref_file_count,
+    result,
+):
+    for _i in range(other_ref_file_count):
+        ReferenceFileFactory.create()
+
+    for _i in range(old_payment_list_ref_file_count):
+        ref_file = ReferenceFileFactory.create(
+            reference_file_type_id=ReferenceFileType.DUA_PAYMENT_LIST.reference_file_type_id,
+        )
+        ref_file.created_at = get_now() - timedelta(days=random.randint(1, 365))
+
+    # Commit the created_at time changes to the database.
+    test_db_session.commit()
+
+    for _i in range(today_payment_list_ref_file_count):
+        ReferenceFileFactory.create(
+            reference_file_type_id=ReferenceFileType.DUA_PAYMENT_LIST.reference_file_type_id,
+        )
+
+    assert dua._payment_list_has_been_downloaded_today(test_db_session) == result
+
+
+@pytest.mark.parametrize(
+    "moveit_file_count",
+    (
+        # No files waiting for use in MoveIt.
+        (0),
+        # Single payment list waiting for us in MoveIt.
+        (1),
+        # We expect there to never be more than 1 file in MoveIt, but we should properly handle
+        # cases when there is more than 1 file.
+        (random.randint(2, 5)),
+    ),
+)
+def test_download_payment_list_if_none_today(
+    initialize_factories_session,
+    test_db_session,
+    test_db_other_session,
+    mock_s3_bucket,
+    mock_sftp_client,
+    setup_mock_sftp_client,
+    monkeypatch,
+    moveit_file_count,
+):
+    # Mock out S3 and MoveIt configs.
+    s3_bucket_uri = f"s3://{mock_s3_bucket}"
+    s3_dest_path = "reductions/dua/pending"
+    moveit_pickup_path = "/DFML/DUA/Outbound"
+    moveit_archive_path = "/DFML/DUA/Archive"
+
+    monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
+    monkeypatch.setenv("S3_DUA_PENDING_DIRECTORY_PATH", s3_dest_path)
+    monkeypatch.setenv("MOVEIT_DUA_OUTBOUND_PATH", moveit_pickup_path)
+    monkeypatch.setenv("MOVEIT_DUA_ARCHIVE_PATH", moveit_archive_path)
+
+    full_s3_dest_path = os.path.join(s3_bucket_uri, s3_dest_path)
+
+    moveit_filenames = []
+    for _i in range(moveit_file_count):
+        filename = _random_csv_filename()
+        filepath = os.path.join(moveit_pickup_path, filename)
+        mock_sftp_client._add_file(filepath, "")
+        moveit_filenames.append(filename)
+
+    # Confirm that the SFTP and S3 directories contain the expected number of files before testing.
+    assert len(mock_sftp_client.listdir(moveit_pickup_path)) == moveit_file_count
+    assert len(mock_sftp_client.listdir(moveit_archive_path)) == 0
+    assert len(file_util.list_files(full_s3_dest_path)) == 0
+
+    dua.download_payment_list_if_none_today(test_db_session)
+
+    # Expect to have moved all files from the source to the archive directory of MoveIt.
+    files_in_moveit_archive_dir = mock_sftp_client.listdir(moveit_archive_path)
+    assert len(files_in_moveit_archive_dir) == moveit_file_count
+    assert len(mock_sftp_client.listdir(moveit_pickup_path)) == 0
+
+    # Expect to have saved files to S3.
+    files_in_s3 = file_util.list_files(full_s3_dest_path)
+    assert len(files_in_s3) == moveit_file_count
+
+    assert (
+        test_db_other_session.query(sqlalchemy.func.count(ReferenceFile.reference_file_id))
+        .filter(
+            ReferenceFile.reference_file_type_id
+            == ReferenceFileType.DUA_PAYMENT_LIST.reference_file_type_id
+        )
+        .scalar()
+        == moveit_file_count
+    )
+
+    assert (
+        test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+        .filter(StateLog.end_state_id == State.DUA_PAYMENT_LIST_SAVED_TO_S3.state_id)
+        .scalar()
+        == moveit_file_count
+    )
+
+    # Validate details match our expectations.
+    for filename in moveit_filenames:
+        assert filename in files_in_moveit_archive_dir
+        assert filename in files_in_s3
+
+        file_loc = os.path.join(full_s3_dest_path, filename)
+
+        ref_file = (
+            test_db_session.query(ReferenceFile)
+            .filter(ReferenceFile.file_location == file_loc)
+            .one_or_none()
+        )
+        assert (
+            ref_file.reference_file_type_id
+            == ReferenceFileType.DUA_PAYMENT_LIST.reference_file_type_id
+        )
+
+        assert (
+            test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            .filter(StateLog.end_state_id == State.DUA_PAYMENT_LIST_SAVED_TO_S3.state_id)
+            .filter(StateLog.reference_file_id == ref_file.reference_file_id)
+            .scalar()
+            == 1
         )

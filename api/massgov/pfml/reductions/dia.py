@@ -112,7 +112,7 @@ def create_list_of_approved_claimants(db_session: db.Session) -> None:
 
     # Upload info to s3
     s3_dest = os.path.join(
-        config.s3_bucket, config.s3_dia_outbound_directory_path, claimant_info_path.name
+        config.s3_bucket_uri, config.s3_dia_outbound_directory_path, claimant_info_path.name
     )
     upload_to_s3(str(claimant_info_path), s3_dest)
 
