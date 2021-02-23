@@ -87,6 +87,57 @@ class ApplicationRequestBody(PydanticBaseModel):
             raise ValidationException(errors=error_list, message="Validation error", data={})
         return date_of_birth
 
+    @validator("work_pattern")
+    def work_pattern_must_have_seven_days(cls, work_pattern):  # noqa: B902
+        """Validates that work_pattern.work_pattern_days is properly formatted"""
+
+        if not work_pattern:
+            return work_pattern
+
+        error_list = []
+        api_work_pattern_days = work_pattern.work_pattern_days
+
+        if api_work_pattern_days is not None:
+            # when the user changes work_pattern_type, we pass an empty array, so no validation is required
+            if len(api_work_pattern_days) == 0:
+                return work_pattern
+
+            provided_week_days = {day.day_of_week.value for day in api_work_pattern_days}
+            week_days = {
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+            }
+            missing_days = week_days - provided_week_days
+
+            if len(missing_days) > 0:
+                error_list.append(
+                    ValidationErrorDetail(
+                        message=f"Provided work_pattern_days is missing {', '.join(sorted(missing_days))}.",
+                        type="invalid_days",
+                        rule="no_missing_days",
+                        field="work_pattern.work_pattern_days",
+                    )
+                )
+
+            if len(api_work_pattern_days) > 7:
+                error_list.append(
+                    ValidationErrorDetail(
+                        message=f"Provided work_pattern_days has {len(api_work_pattern_days)} days. There should be 7 days.",
+                        type="invalid_days",
+                        rule="seven_days_required",
+                        field="work_pattern.work_pattern_days",
+                    )
+                )
+
+        if error_list:
+            raise ValidationException(errors=error_list, message="Validation error", data={})
+        return work_pattern
+
 
 class DocumentRequestBody(PydanticBaseModel):
     document_type: DocumentType

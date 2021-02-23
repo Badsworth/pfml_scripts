@@ -6,7 +6,6 @@ import random
 import string
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from math import floor
 
 import factory  # this is from the factory_boy package
 import pytz
@@ -603,49 +602,41 @@ class WorkPatternFixedFactory(BaseFactory):
     work_pattern_id = Generators.UuidObj
 
     work_pattern_type_id = application_models.WorkPatternType.FIXED.work_pattern_type_id
-    work_week_starts_id = application_models.DayOfWeek.SUNDAY.day_of_week_id
     work_pattern_days = factory.LazyAttribute(
         lambda w: [
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.MONDAY.day_of_week_id,
-                week_number=1,
                 minutes=8 * 60 + 15,
             ),
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.TUESDAY.day_of_week_id,
-                week_number=1,
                 minutes=8 * 60 + 15,
             ),
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.WEDNESDAY.day_of_week_id,
-                week_number=1,
                 minutes=8 * 60 + 15,
             ),
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.THURSDAY.day_of_week_id,
-                week_number=1,
                 minutes=8 * 60 + 15,
             ),
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.FRIDAY.day_of_week_id,
-                week_number=1,
                 minutes=8 * 60 + 15,
             ),
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.SATURDAY.day_of_week_id,
-                week_number=1,
                 minutes=8 * 60 + 15,
             ),
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.SUNDAY.day_of_week_id,
-                week_number=1,
                 minutes=8 * 60 + 15,
             ),
         ]
@@ -658,14 +649,10 @@ class WorkPatternVariableFactory(WorkPatternFixedFactory):
 
 class WorkPatternRotatingFactory(WorkPatternFixedFactory):
     work_pattern_type_id = application_models.WorkPatternType.ROTATING.work_pattern_type_id
-    pattern_start_date = "2021-01-03"
     work_pattern_days = factory.LazyAttribute(
         lambda w: [
             application_models.WorkPatternDay(
-                work_pattern_id=w.work_pattern_id,
-                day_of_week_id=i % 7 + 1,
-                week_number=floor(i / 7) + 1,
-                minutes=8 * 60,
+                work_pattern_id=w.work_pattern_id, day_of_week_id=i % 7 + 1, minutes=8 * 60,
             )
             for i in range(28)
         ]

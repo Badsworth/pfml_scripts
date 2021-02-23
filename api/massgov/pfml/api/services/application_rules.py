@@ -956,7 +956,6 @@ def get_reduced_schedule_leave_minutes_issues(
 
             for field, work_pattern_minutes in zip(minute_fields, work_pattern_minutes_each_day):
                 leave_period_minutes: int = getattr(leave_period, field, None) or 0
-
                 if work_pattern_minutes is not None and leave_period_minutes > work_pattern_minutes:
                     issues.append(
                         Issue(

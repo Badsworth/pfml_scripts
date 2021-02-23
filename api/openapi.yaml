@@ -2352,7 +2352,7 @@ components:
           nullable: true
         work_pattern_days:
           type: array
-          maxItems: 28
+          maxItems: 7
           items:
             $ref: "#/components/schemas/WorkPatternDay"
           nullable: true

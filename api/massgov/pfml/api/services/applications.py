@@ -1,5 +1,5 @@
 from re import Pattern
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
 import phonenumbers
 from phonenumbers.phonenumberutil import region_code_for_number
@@ -601,8 +601,6 @@ def add_or_update_work_pattern(
     work_pattern = application.work_pattern or WorkPattern()
 
     if "work_pattern_days" in fieldset:
-        validate_work_pattern_days(api_work_pattern.work_pattern_days)
-
         if work_pattern.work_pattern_days:
             for work_pattern_day in work_pattern.work_pattern_days:
                 db_session.delete(work_pattern_day)
@@ -616,19 +614,11 @@ def add_or_update_work_pattern(
                 work_pattern_days.append(
                     WorkPatternDay(
                         day_of_week_id=DayOfWeek.get_id(api_work_pattern_day.day_of_week.value),
-                        week_number=api_work_pattern_day.week_number,
                         minutes=api_work_pattern_day.minutes,
                     )
                 )
 
             work_pattern.work_pattern_days = work_pattern_days
-    if "work_week_starts" in fieldset:
-        if api_work_pattern.work_week_starts:
-            work_pattern.work_week_starts_id = DayOfWeek.get_id(
-                api_work_pattern.work_week_starts.value
-            )
-        else:
-            work_pattern.work_week_starts_id = None
 
     if "work_pattern_type" in fieldset:
         if api_work_pattern.work_pattern_type:
@@ -637,16 +627,6 @@ def add_or_update_work_pattern(
             )
         else:
             work_pattern.work_pattern_type_id = None
-
-    if "pattern_start_date" in fieldset:
-        if api_work_pattern.pattern_start_date is not None:
-            pattern_start_week_day_id = api_work_pattern.pattern_start_date.isoweekday()
-            if pattern_start_week_day_id != work_pattern.work_week_starts_id:
-                raise BadRequest(
-                    "pattern_start_date must be on the same day of the week that the work week starts."
-                )
-
-        work_pattern.pattern_start_date = api_work_pattern.pattern_start_date
 
     db_session.add(work_pattern)
     application.work_pattern = work_pattern
@@ -934,50 +914,6 @@ def add_or_update_phone(
         application.phone.phone_number = internationalized_phone_number
 
     db_session.add(application.phone)
-
-
-def validate_work_pattern_days(
-    api_work_pattern_days: Optional[List[apps_common_io.WorkPatternDay]],
-) -> None:
-    """Validate work pattern. These errors should not be the result of bad user input"""
-    if api_work_pattern_days is None:
-        return None
-
-    weeks: Tuple[
-        List[apps_common_io.WorkPatternDay],
-        List[apps_common_io.WorkPatternDay],
-        List[apps_common_io.WorkPatternDay],
-        List[apps_common_io.WorkPatternDay],
-    ] = ([], [], [], [])
-    for day in api_work_pattern_days:
-        # week_number 1 - 4 is enforced through OpenAPI spec
-        weeks[day.week_number - 1].append(day)
-
-    for i, week in enumerate(weeks):
-        number_of_days = len(week)
-
-        if number_of_days == 0:
-            continue
-
-        provided_week_days = {day.day_of_week.value for day in week}
-        week_days = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
-        missing_days = week_days - provided_week_days
-        if len(missing_days) > 0:
-            raise BadRequest(
-                f"Week number {i+1} for provided work_pattern_days is missing {', '.join(sorted(missing_days))}."
-            )
-
-        if number_of_days != 7:
-            raise BadRequest(
-                f"Week number {i+1} for provided work_pattern_days has {number_of_days} days. There should be 7 days."
-            )
-
-        # Check if work pattern weeks aren't consecutive, as in request provides
-        # 7 days for week number 3 but 0 days for week number 2
-        if i > 0 and len(weeks[i - 1]) == 0:
-            raise BadRequest(
-                f"Week number {i} for provided work_pattern_days has 0 days, but you are attempting to add days for week number {i+1}. All provided weeks should be consecutive."
-            )
 
 
 def get_or_add_tax_identifier(

@@ -1265,7 +1265,7 @@ def test_reduced_leave_period_maximum_minutes(test_db_session, initialize_factor
                 # Use different minutes so the error messages are unique per day, helping
                 # us assert that the minutes were compared against each day, rather than
                 # the same day over and and over
-                WorkPatternDay(week_number=1, day_of_week_id=i + 1, minutes=i + 1)
+                WorkPatternDay(day_of_week_id=i + 1, minutes=i + 1)
                 for i in range(7)
             ]
         ),
@@ -1547,9 +1547,7 @@ def test_payment_method_required_for_payment_preference(
 def test_min_work_pattern_total_minutes_worked(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         work_pattern=WorkPatternFixedFactory(
-            work_pattern_days=[
-                WorkPatternDay(week_number=1, day_of_week_id=i + 1, minutes=0) for i in range(7)
-            ]
+            work_pattern_days=[WorkPatternDay(day_of_week_id=i + 1, minutes=0) for i in range(7)]
         )
     )
 
@@ -1569,7 +1567,7 @@ def test_required_work_pattern_minutes(test_db_session, initialize_factories_ses
         work_pattern=WorkPatternVariableFactory(
             work_pattern_days=[
                 # index 0 will have 60 minutes, so work_pattern should pass minimum total minutes for work pattern
-                WorkPatternDay(week_number=1, day_of_week_id=i + 1, minutes=60 if i == 0 else None)
+                WorkPatternDay(day_of_week_id=i + 1, minutes=60 if i == 0 else None)
                 for i in range(7)
             ]
         )
@@ -1596,7 +1594,7 @@ def test_max_work_pattern_minutes(test_db_session, initialize_factories_session)
         work_pattern=WorkPatternVariableFactory(
             work_pattern_days=[
                 # index 0 will be 24 hours and should be valid
-                WorkPatternDay(week_number=1, day_of_week_id=i + 1, minutes=24 * 60 + i)
+                WorkPatternDay(day_of_week_id=i + 1, minutes=24 * 60 + i)
                 for i in range(7)
             ]
         )

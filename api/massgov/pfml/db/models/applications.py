@@ -444,12 +444,9 @@ class WorkPattern(Base):
     __tablename__ = "work_pattern"
     work_pattern_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     work_pattern_type_id = Column(Integer, ForeignKey("lk_work_pattern_type.work_pattern_type_id"))
-    work_week_starts_id = Column(Integer, ForeignKey("lk_day_of_week.day_of_week_id"))
-    pattern_start_date = Column(Date)
 
     applications = relationship("Application", back_populates="work_pattern", uselist=True)
     work_pattern_type = relationship(LkWorkPatternType)
-    work_week_starts = relationship(LkDayOfWeek)
     work_pattern_days = relationship(
         "WorkPatternDay",
         back_populates="work_pattern",
@@ -464,8 +461,6 @@ class WorkPatternDay(Base):
         UUID(as_uuid=True), ForeignKey("work_pattern.work_pattern_id"), primary_key=True
     )
     day_of_week_id = Column(Integer, ForeignKey("lk_day_of_week.day_of_week_id"), primary_key=True)
-    week_number = Column(Integer, nullable=False, primary_key=True)
-    hours = Column(Integer)
     minutes = Column(Integer)
 
     work_pattern = relationship("WorkPattern", back_populates="work_pattern_days", uselist=False)

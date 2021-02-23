@@ -296,14 +296,11 @@ class MaskedPaymentPreference(BasePaymentPreference):
 
 class WorkPatternDay(PydanticBaseModel):
     day_of_week: DayOfWeek
-    week_number: int
     minutes: Optional[int]
 
 
 class WorkPattern(PydanticBaseModel):
     work_pattern_type: Optional[WorkPatternType]
-    work_week_starts: Optional[DayOfWeek]
-    pattern_start_date: Optional[date]
     work_pattern_days: Optional[List[WorkPatternDay]]
 
 

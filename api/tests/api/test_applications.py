@@ -28,6 +28,7 @@ from massgov.pfml.db.models.applications import (
     RelationshipToCaregiver,
     WorkPattern,
     WorkPatternDay,
+    WorkPatternType,
 )
 from massgov.pfml.db.models.employees import Address, GeoState, PaymentMethod, TaxIdentifier
 from massgov.pfml.db.models.factories import (
@@ -1359,16 +1360,14 @@ def test_application_patch_add_work_pattern(client, user, auth_token, test_db_se
         json={
             "work_pattern": {
                 "work_pattern_type": "Fixed",
-                "pattern_start_date": "2021-01-03",
-                "work_week_starts": "Sunday",
                 "work_pattern_days": [
-                    {"day_of_week": "Wednesday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Monday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Friday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Thursday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Saturday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Tuesday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Sunday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Wednesday", "minutes": 60 * 8},
+                    {"day_of_week": "Monday", "minutes": 60 * 8},
+                    {"day_of_week": "Friday", "minutes": 60 * 8},
+                    {"day_of_week": "Thursday", "minutes": 60 * 8},
+                    {"day_of_week": "Saturday", "minutes": 60 * 8},
+                    {"day_of_week": "Tuesday", "minutes": 60 * 8},
+                    {"day_of_week": "Sunday", "minutes": 60 * 8},
                 ],
             }
         },
@@ -1380,8 +1379,6 @@ def test_application_patch_add_work_pattern(client, user, auth_token, test_db_se
     work_pattern = response_body.get("work_pattern")
 
     assert work_pattern.get("work_pattern_type") == "Fixed"
-    assert work_pattern.get("pattern_start_date") == "2021-01-03"
-    assert work_pattern.get("work_week_starts") == "Sunday"
     assert len(work_pattern.get("work_pattern_days")) == 7
     work_pattern_days_of_week = [
         day.get("day_of_week") for day in work_pattern.get("work_pattern_days")
@@ -1401,8 +1398,8 @@ def test_application_patch_update_work_pattern(client, user, auth_token, test_db
     application = ApplicationFactory.create(user=user)
 
     new_work_pattern = WorkPattern(
-        pattern_start_date="2021-01-03",
-        work_pattern_days=[WorkPatternDay(day_of_week_id=i + 1, week_number=1) for i in range(7)],
+        work_pattern_days=[WorkPatternDay(day_of_week_id=i + 1) for i in range(7)],
+        work_pattern_type_id=WorkPatternType.get_id("Fixed"),
     )
     application.work_pattern = new_work_pattern
     test_db_session.add(application)
@@ -1414,15 +1411,14 @@ def test_application_patch_update_work_pattern(client, user, auth_token, test_db
         json={
             "work_pattern": {
                 "work_pattern_type": "Fixed",
-                "work_week_starts": "Sunday",
                 "work_pattern_days": [
-                    {"day_of_week": "Sunday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Monday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Tuesday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Wednesday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Thursday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Friday", "week_number": 1, "minutes": 60 * 8},
-                    {"day_of_week": "Saturday", "week_number": 1, "minutes": 60 * 8},
+                    {"day_of_week": "Sunday", "minutes": 60 * 8},
+                    {"day_of_week": "Monday", "minutes": 60 * 8},
+                    {"day_of_week": "Tuesday", "minutes": 60 * 8},
+                    {"day_of_week": "Wednesday", "minutes": 60 * 8},
+                    {"day_of_week": "Thursday", "minutes": 60 * 8},
+                    {"day_of_week": "Friday", "minutes": 60 * 8},
+                    {"day_of_week": "Saturday", "minutes": 60 * 8},
                 ],
             }
         },
@@ -1434,8 +1430,6 @@ def test_application_patch_update_work_pattern(client, user, auth_token, test_db
     work_pattern = response_body.get("work_pattern")
 
     assert work_pattern.get("work_pattern_type") == "Fixed"
-    assert work_pattern.get("pattern_start_date") == "2021-01-03"
-    assert work_pattern.get("work_week_starts") == "Sunday"
     assert len(work_pattern.get("work_pattern_days")) == 7
 
 
@@ -1443,10 +1437,8 @@ def test_application_patch_remove_work_pattern_days(client, user, auth_token, te
     application = ApplicationFactory.create(user=user)
 
     new_work_pattern = WorkPattern(
-        pattern_start_date="2021-01-03",
         work_pattern_type_id=1,
-        work_week_starts_id=7,
-        work_pattern_days=[WorkPatternDay(day_of_week_id=i + 1, week_number=1) for i in range(7)],
+        work_pattern_days=[WorkPatternDay(day_of_week_id=i + 1) for i in range(7)],
     )
     application.work_pattern = new_work_pattern
     test_db_session.add(application)
@@ -1455,13 +1447,7 @@ def test_application_patch_remove_work_pattern_days(client, user, auth_token, te
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={
-            "work_pattern": {
-                "work_pattern_type": "Variable",
-                "pattern_start_date": None,
-                "work_pattern_days": None,
-            }
-        },
+        json={"work_pattern": {"work_pattern_type": "Variable", "work_pattern_days": None,}},
     )
 
     assert response.status_code == 200
@@ -1470,8 +1456,6 @@ def test_application_patch_remove_work_pattern_days(client, user, auth_token, te
     work_pattern = response_body.get("work_pattern")
 
     assert work_pattern.get("work_pattern_type") == "Variable"
-    assert work_pattern.get("pattern_start_date") is None
-    assert work_pattern.get("work_week_starts") == "Sunday"
     assert len(work_pattern.get("work_pattern_days")) == 0
 
 
@@ -1480,52 +1464,20 @@ def test_application_patch_invalid_work_pattern(client, user, auth_token, test_d
 
     base_work_pattern = {
         "work_pattern_type": "Fixed",
-        "work_week_starts": "Sunday",
-        "pattern_start_date": "2021-01-03",
         "work_pattern_days": [
-            {"day_of_week": "Sunday", "week_number": 1, "minutes": 60 * 8},
-            {"day_of_week": "Monday", "week_number": 1, "minutes": 60 * 8},
-            {"day_of_week": "Tuesday", "week_number": 1, "minutes": 60 * 8},
-            {"day_of_week": "Wednesday", "week_number": 1, "minutes": 60 * 8},
-            {"day_of_week": "Thursday", "week_number": 1, "minutes": 60 * 8},
-            {"day_of_week": "Friday", "week_number": 1, "minutes": 60 * 8},
-            {"day_of_week": "Saturday", "week_number": 1, "minutes": 60 * 8},
+            {"day_of_week": "Sunday", "minutes": 60 * 8},
+            {"day_of_week": "Monday", "minutes": 60 * 8},
+            {"day_of_week": "Tuesday", "minutes": 60 * 8},
+            {"day_of_week": "Wednesday", "minutes": 60 * 8},
+            {"day_of_week": "Thursday", "minutes": 60 * 8},
+            {"day_of_week": "Friday", "minutes": 60 * 8},
+            {"day_of_week": "Saturday", "minutes": 60 * 8},
         ],
     }
 
-    work_pattern_with_invalid_start_date = copy.deepcopy(base_work_pattern)
-    work_pattern_with_invalid_start_date["pattern_start_date"] = "2021-01-04"
-
-    response = client.patch(
-        "/v1/applications/{}".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"work_pattern": work_pattern_with_invalid_start_date},
-    )
-
-    assert response.status_code == 400
-    assert (
-        response.get_json().get("detail")
-        == "pattern_start_date must be on the same day of the week that the work week starts."
-    )
-
-    work_pattern_with_invalid_week_number = copy.deepcopy(base_work_pattern)
-    work_pattern_with_invalid_week_number["work_pattern_days"][0]["week_number"] = 5
-
-    response = client.patch(
-        "/v1/applications/{}".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"work_pattern": work_pattern_with_invalid_week_number},
-    )
-    error = response.get_json().get("errors")[0]
-
-    assert response.status_code == 400
-    assert error.get("field") == "work_pattern.work_pattern_days.0.week_number"
-    assert error.get("message") == "5 is greater than the maximum of 4"
-    assert error.get("type") == "maximum"
-
     work_pattern_with_additional_days = copy.deepcopy(base_work_pattern)
     work_pattern_with_additional_days["work_pattern_days"].append(
-        {"day_of_week": "Sunday", "week_number": 1, "minutes": 60 * 8}
+        {"day_of_week": "Sunday", "minutes": 60 * 8}
     )
 
     response = client.patch(
@@ -1535,56 +1487,39 @@ def test_application_patch_invalid_work_pattern(client, user, auth_token, test_d
     )
 
     assert response.status_code == 400
-    assert (
-        response.get_json().get("detail")
-        == "Week number 1 for provided work_pattern_days has 8 days. There should be 7 days."
-    )
+    assert response.get_json().get("errors") == [
+        {
+            "field": "work_pattern.work_pattern_days",
+            "message": "[{'day_of_week': 'Sunday', 'minutes': 480}, {'day_of_week': 'Monday', 'minutes': 480}, {'day_of_week': 'Tuesday', 'minutes': 480}, {'day_of_week': 'Wednesday', 'minutes': 480}, {'day_of_week': 'Thursday', 'minutes': 480}, {'day_of_week': 'Friday', 'minutes': 480}, {'day_of_week': 'Saturday', 'minutes': 480}, {'day_of_week': 'Sunday', 'minutes': 480}] is too long",
+            "rule": 7,
+            "type": "maxItems",
+        }
+    ]
 
-    work_pattern_with_incomplete_week = copy.deepcopy(base_work_pattern)
-    work_pattern_with_incomplete_week["work_pattern_days"].extend(
-        [
-            {"day_of_week": "Sunday", "week_number": 2, "minutes": 60 * 8},
-            {"day_of_week": "Monday", "week_number": 2, "minutes": 60 * 8},
-            {"day_of_week": "Wednesday", "week_number": 2, "minutes": 60 * 8},
-        ]
-    )
-
-    response = client.patch(
-        "/v1/applications/{}".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"work_pattern": work_pattern_with_incomplete_week},
-    )
-
-    assert response.status_code == 400
-    assert (
-        response.get_json().get("detail")
-        == "Week number 2 for provided work_pattern_days is missing Friday, Saturday, Thursday, Tuesday."
-    )
-
-    work_pattern_with_non_consecutive_weeks = copy.deepcopy(base_work_pattern)
-    work_pattern_with_non_consecutive_weeks["work_pattern_days"].extend(
-        [
-            {"day_of_week": "Sunday", "week_number": 3, "minutes": 60 * 8},
-            {"day_of_week": "Monday", "week_number": 3, "minutes": 60 * 8},
-            {"day_of_week": "Tuesday", "week_number": 3, "minutes": 60 * 8},
-            {"day_of_week": "Wednesday", "week_number": 3, "minutes": 60 * 8},
-            {"day_of_week": "Thursday", "week_number": 3, "minutes": 60 * 8},
-            {"day_of_week": "Friday", "week_number": 3, "minutes": 60 * 8},
-            {"day_of_week": "Saturday", "week_number": 3, "minutes": 60 * 8},
-        ]
-    )
+    work_pattern_with_missing_days = {
+        "work_pattern_type": "Fixed",
+        "work_pattern_days": [
+            {"day_of_week": "Sunday", "minutes": 60 * 8},
+            {"day_of_week": "Monday", "minutes": 60 * 8},
+            {"day_of_week": "Wednesday", "minutes": 60 * 8},
+        ],
+    }
 
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"work_pattern": work_pattern_with_non_consecutive_weeks},
+        json={"work_pattern": work_pattern_with_missing_days},
     )
 
     assert response.status_code == 400
-    assert (
-        response.get_json().get("detail")
-        == "Week number 2 for provided work_pattern_days has 0 days, but you are attempting to add days for week number 3. All provided weeks should be consecutive."
-    )
+    assert response.get_json().get("errors") == [
+        {
+            "field": "work_pattern.work_pattern_days",
+            "message": "Provided work_pattern_days is missing Friday, Saturday, Thursday, Tuesday.",
+            "rule": "no_missing_days",
+            "type": "invalid_days",
+        }
+    ]
 
 
 def test_application_patch_has_employer_benefits(client, user, auth_token, test_db_session):
