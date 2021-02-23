@@ -2,7 +2,7 @@
 
 exports[`ApplicationCard renders Alert inside the component when there is an error loading documents 1`] = `
 Array [
-  "An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at ",
+  "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at ",
   <a
     href="tel:(833) 344‑7365"
     key="1"

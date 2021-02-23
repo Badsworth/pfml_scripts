@@ -572,7 +572,7 @@ const shared = {
   // TODO (CP-1335): Add i18next formatter for time
   displayTime_noMinutes: "{{hours}}h",
   documentsLoadError:
-    "An error was encountered while checking your application for documents. If this continues to happen, you may call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>",
+    "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>",
   documentsUploadError:
     "We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
   employerBenefitEntryPrefix: "Benefit",
@@ -726,7 +726,7 @@ const pages = {
     backToLoginLink: "$t(shared.backToLoginLink)",
     codeLabel: "$t(shared.verificationCodeLabel)",
     codeResent:
-      "We sent a new 6 digit verification code to your email address. Enter the new code to verify your email.",
+      "We sent a new 6-digit verification code to your email address. Enter the new code to verify your email.",
     codeResentHeading: "New verification code sent",
     confirmButton: "Submit",
     einLabel: "Employer ID number (EIN)",
@@ -735,7 +735,7 @@ const pages = {
     employerChoiceNo: "$t(shared.choiceNo)",
     employerChoiceYes: "$t(shared.choiceYes)",
     lead:
-      "We sent a 6 digit verification code to your email address. Enter the code to verify your email.",
+      "We sent a 6-digit verification code to your email address. Enter the code to verify your email.",
     lead_email:
       "We sent a 6 digit verification code to {{emailAddress}}. Enter the code to verify your email.",
     resendCodeLink: "Send a new code",
@@ -749,9 +749,9 @@ const pages = {
       "We may send notices to this address. If you choose to get your payments through paper checks, we will mail the checks to this address.",
     hasMailingAddressLabel: "Do you get your mail at this address?",
     hint:
-      "We will use this as your residential address for any previous claims you have submitted. If you are part of an Address Confidentiality Program, please provide your substitute address.",
+      "We will use this as your residential address for any previous applications you have submitted. If you are part of an Address Confidentiality Program, please provide your substitute address.",
     mailingAddressHint:
-      "We will use this as your mailing address for any previous claims you have submitted.",
+      "We will use this as your mailing address for any previous applications you have submitted.",
     mailingAddressLabel: "What is your mailing address?",
     sectionLabel: "What is your current residential address?",
     title: "$t(shared.claimsVerifyIdTitle)",
@@ -1123,7 +1123,7 @@ const pages = {
     routingNumberLabel: "Routing number",
     sectionLabel: "How do you want to get your weekly benefit?",
     sectionLabelHint:
-      "Your choice will be applied to any previous claims you have submitted.",
+      "Your choice will be applied to any previous applications you have submitted.",
     submitPart2Button: "Submit Part 2",
     title: "Payment method",
     whenWillIGetPaidDetails:
@@ -1749,9 +1749,9 @@ const pages = {
     ],
     continueButton: "Agree and continue",
     dataUsageBody_employer:
-      "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to a claim with health care providers and contracted private partners.",
+      "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to an application with health care providers and contracted private partners.",
     dataUsageBody_user:
-      "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to your claim with your employer, health care provider(s), and contracted private partners.",
+      "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to your application with your employer, health care provider(s), and contracted private partners.",
     dataUsageHeading: "How we use your data",
     fullUserAgreementBody:
       "To find out more about how the Commonwealth might use the information you share with the Department of Family and Medical Leave, please read the <informed-consent-link>DFML Informed Consent Agreement</informed-consent-link> and the <privacy-policy-link>Privacy Policy for Mass.gov</privacy-policy-link>.",

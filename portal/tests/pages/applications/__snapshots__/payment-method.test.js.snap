@@ -33,7 +33,7 @@ exports[`PaymentMethod renders the page 1`] = `
       hint={
         <React.Fragment>
           <p>
-            Your choice will be applied to any previous claims you have submitted.
+            Your choice will be applied to any previous applications you have submitted.
           </p>
           <Details
             label="When will I get paid?"
