@@ -180,7 +180,7 @@ test_payment_details_csv_row = {
     "CLAIMDETAILSINDEXID": "249",
     "DATEINTERFACE": "2021-01-16 23:59:59",
 }
-test_requested_absence_csv_row = {
+test_requested_absence_som_csv_row = {
     "NOTIFICATION_CASENUMBER": "NTN-308848",
     "ABSENCE_CASENUMBER": "NTN-308848-ABS-01",
     "ABSENCE_CASETYPENAME": "Absence Case",
@@ -231,6 +231,12 @@ test_requested_absence_csv_row = {
     "EPISODIC_DURATION_UNIT": "Please Select",
 }
 
+test_vbi_requested_absence_csv_row = {
+    "ABSENCE_CASENUMBER": "NTN-308848-ABS-01",
+    "LEAVEREQUEST_ID": "1234",
+    "LEAVEREQUEST_DECISION": "Pending",
+}
+
 
 class MockCSVWriter:
     def __init__(self):
@@ -254,6 +260,7 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "s3://bucket/test/2021-01-17-19-14-25-Employee_feed.csv",
         "s3://bucket/test/2021-01-17-19-14-25-LeavePlan_info.csv",
         "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE_SOM.csv",
+        "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE.csv",
         "s3://bucket/test/2021-01-17-19-14-25-vpeiclaimdetails.csv",
         "s3://bucket/test/2021-01-17-19-14-25-vpei.csv",
         "s3://bucket/test/2021-01-17-19-14-25-vpeipaymentdetails.csv",
@@ -269,7 +276,14 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
     requested_absence_extract = fineos_vendor_export.Extract(
         "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE_SOM.csv"
     )
-    requested_absence_extract.indexed_data["NTN-308848-ABS-01"] = test_requested_absence_csv_row
+    requested_absence_extract.indexed_data["NTN-308848-ABS-01"] = test_requested_absence_som_csv_row
+
+    # Build a custom voucher extract data for data from the VBI_REQUESTEDABSENCE.csv
+    # Not to be confused with the similarly named VBI_REQUESTEDABSENCE_SOM.csv
+    voucher_extract_data = payment_voucher.VoucherExtractData(input_files)
+    voucher_extract_data.vbi_requested_absence.indexed_data[
+        "NTN-308848-ABS-01"
+    ] = test_vbi_requested_absence_csv_row
 
     test_db_session.add(
         EmployeeFactory(
@@ -284,6 +298,7 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
     payment_voucher.process_payment_record(
         extract_data,
         requested_absence_extract,
+        voucher_extract_data,
         test_ci_index,
         test_pei_csv_row,
         output_csv,
@@ -326,6 +341,8 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "zip": "02169",
         "case_status": "Approved",
         "employer_id": "2626107",
+        "leave_request_id": "1234",
+        "leave_request_decision": "Pending",
     }
 
     assert len(writeback_csv.rows) == 1
@@ -345,6 +362,7 @@ def test_process_payment_record_multiple_details(test_db_session, initialize_fac
         "s3://bucket/test/2021-01-17-19-14-25-Employee_feed.csv",
         "s3://bucket/test/2021-01-17-19-14-25-LeavePlan_info.csv",
         "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE_SOM.csv",
+        "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE.csv",
         "s3://bucket/test/2021-01-17-19-14-25-vpeiclaimdetails.csv",
         "s3://bucket/test/2021-01-17-19-14-25-vpei.csv",
         "s3://bucket/test/2021-01-17-19-14-25-vpeipaymentdetails.csv",
@@ -372,7 +390,14 @@ def test_process_payment_record_multiple_details(test_db_session, initialize_fac
     requested_absence_extract = fineos_vendor_export.Extract(
         "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE_SOM.csv"
     )
-    requested_absence_extract.indexed_data["NTN-308848-ABS-01"] = test_requested_absence_csv_row
+    requested_absence_extract.indexed_data["NTN-308848-ABS-01"] = test_requested_absence_som_csv_row
+
+    # Build a custom voucher extract data for data from the VBI_REQUESTEDABSENCE.csv
+    # Not to be confused with the similarly named VBI_REQUESTEDABSENCE_SOM.csv
+    voucher_extract_data = payment_voucher.VoucherExtractData(input_files)
+    voucher_extract_data.vbi_requested_absence.indexed_data[
+        "NTN-308848-ABS-01"
+    ] = test_vbi_requested_absence_csv_row
 
     test_db_session.add(
         EmployeeFactory(
@@ -387,6 +412,7 @@ def test_process_payment_record_multiple_details(test_db_session, initialize_fac
     payment_voucher.process_payment_record(
         extract_data,
         requested_absence_extract,
+        voucher_extract_data,
         test_ci_index,
         test_pei_csv_row,
         output_csv,
@@ -429,6 +455,8 @@ def test_process_payment_record_multiple_details(test_db_session, initialize_fac
         "zip": "02169",
         "case_status": "Approved",
         "employer_id": "2626107",
+        "leave_request_id": "1234",
+        "leave_request_decision": "Pending",
     }
 
     assert len(writeback_csv.rows) == 1

@@ -40,6 +40,7 @@ from massgov.pfml.db.models.employees import (
     State,
 )
 from massgov.pfml.util.aws.ses import EmailRecipient, send_email
+from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.files import create_csv_from_list
 
 logger = logging.get_logger(__package__)
@@ -1057,3 +1058,24 @@ def get_reference_file(source_filepath: str, db_session: db.Session) -> Optional
             extra={"source_filepath": source_filepath},
         )
         raise
+
+
+def download_and_parse_csv(s3_path: str, download_directory: str) -> CSVSourceWrapper:
+    file_name = os.path.basename(s3_path)
+    download_location = os.path.join(download_directory, file_name)
+    logger.debug("Download file: %s, to: %s", s3_path, download_location)
+
+    try:
+        if s3_path.startswith("s3:/"):
+            file_util.download_from_s3(s3_path, download_location)
+        else:
+            file_util.copy_file(s3_path, download_location)
+    except Exception as e:
+        logger.exception(
+            "Error downloading file: %s",
+            s3_path,
+            extra={"src": s3_path, "destination": download_directory},
+        )
+        raise e
+
+    return CSVSourceWrapper(download_location)
