@@ -50,6 +50,7 @@ CMD_NAME=${CMD_NAME:-login-aws}
 #
 SCRIPT_PATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 LOGIN_AWS_SCRIPT_PATH=$SCRIPT_PATH/login-aws-template.sh
+CACERTS_PATH=$SCRIPT_PATH/cacerts_eotss.pem
 
 # 1. Go to the install location.
 pushd $INSTALL_LOCATION
@@ -62,24 +63,25 @@ fi
 
 pushd centrify-aws-cli-utilities/Python-AWS
 
-# 3. Download SSL certificates for the centrify endpoint and write it
-#    to a readable file. The filename is important and should match the
-#    centrify URL target (eotss.my.centrify.com). This allows us to
-#    securely make requests to Centrify.
-echo -n | \
-    openssl s_client -showcerts -connect eotss.my.centrify.com:443 | \
-    sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > cacerts_eotss.pem
+# 3. Copy SSL certificates for the Centrify endpoint.
+#    The filename is important and should match the centrify URL target
+#    (eotss.my.centrify.com). This allows us to securely make requests to Centrify.
+#
+#    Originally generated with the following commands (now broken):
+#
+#    openssl s_client -showcerts -connect eotss.my.centrify.com:443 | \
+#    sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > cacerts_eotss.pem
+#
+#    DIGICERT_GLOBAL_ROOT_SRC="https://dl.cacerts.digicert.com/DigiCertGlobalRootCA.crt.pem"
+#    curl $DIGICERT_GLOBAL_ROOT_SRC >> cacerts_eotss.pem
+#
+cp $CACERTS_PATH cacerts_eotss.pem
 
-# 4. Download and append the Digicert Global Root certifcate,
-#    which isn't included in the above.
-DIGICERT_GLOBAL_ROOT_SRC="https://dl.cacerts.digicert.com/DigiCertGlobalRootCA.crt.pem"
-curl $DIGICERT_GLOBAL_ROOT_SRC >> cacerts_eotss.pem
-
-# 5. Generate the login-aws script
+# 4. Generate the login-aws script
 cp $LOGIN_AWS_SCRIPT_PATH $CMD_NAME.sh
 chmod +x $CMD_NAME.sh
 
-# 6. Sym-link the script to a command that is runnable in any directory.
+# 5. Sym-link the script to a command that is runnable in any directory.
 ln -s $(pwd)/$CMD_NAME.sh $CMD_LOCATION/$CMD_NAME
 
 echo
