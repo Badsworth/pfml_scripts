@@ -124,6 +124,36 @@ locals {
       }
     },
 
+    "reductions-retrieve-payment-lists-from-agencies" = {
+      command             = ["reductions-retrieve-payment-lists-from-agencies"]
+      containers_template = "reductions_retrieve_payment_lists_from_agencies.json"
+      task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"
+      execution_role      = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-wrkflw-execution-role"
+      vars = {
+        eolwd_moveit_sftp_uri = var.eolwd_moveit_sftp_uri
+      }
+    },
+
+    "reductions-send-claimant-lists-to-agencies" = {
+      command             = ["reductions-send-claimant-lists-to-agencies"]
+      containers_template = "reductions_send_claimant_lists_to_agencies.json"
+      task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"
+      execution_role      = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-wrkflw-execution-role"
+      vars = {
+        eolwd_moveit_sftp_uri = var.eolwd_moveit_sftp_uri
+      }
+    },
+
+    "reductions-send-wage-replacement-payments-to-dfml" = {
+      command             = ["reductions-send-wage-replacement-payments-to-dfml"]
+      containers_template = "reductions_send_wage_replacement_payments_to_dfml.json"
+      task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"
+      execution_role      = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-wrkflw-execution-role"
+      vars = {
+        eolwd_moveit_sftp_uri = var.eolwd_moveit_sftp_uri
+      }
+    },
+
     "fineos-eligibility-feed-export" = {
       command             = ["fineos-eligibility-feed-export"]
       containers_template = "fineos_eligibility_feed_export_template.json"

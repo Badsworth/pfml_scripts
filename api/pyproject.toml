@@ -44,7 +44,6 @@ sqlalchemy = "^1.3.15"
 tenacity = "^6.2.0"
 xmlschema = "^1.2.2"
 zeep = "^3.4.0"
-strict-rfc3339 = "^0.7"
 
 [tool.poetry.dev-dependencies]
 bandit = "^1.6.2"
@@ -98,6 +97,9 @@ fineos-test-vendor-export-generate = "massgov.pfml.payments.mock.fineos_extract_
 fineos-daily-generate = "massgov.pfml.fineos.mock.generate:main"
 fineos-import-employee-updates = "massgov.pfml.fineos.import_fineos_updates:handler"
 fineos-bucket-tool = "massgov.pfml.fineos.tool.bucket:main"
+reductions-retrieve-payment-lists-from-agencies = "massgov.pfml.reductions.retrieve_payment_lists_from_agencies:main"
+reductions-send-claimant-lists-to-agencies = "massgov.pfml.reductions.send_claimant_lists_to_agencies:main"
+reductions-send-wage-replacement-payments-to-dfml = "massgov.pfml.send_wage_replacement_payments_to_dfml:main"
 transmogrify-state-logs = "massgov.pfml.util.tasks.transmogrify_states:transmogrify_states"
 
 [tool.black]

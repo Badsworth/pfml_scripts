@@ -712,6 +712,125 @@ data "aws_iam_policy_document" "payments_ctr_import_execution_role_extras" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for reductions-workflow
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "reductions_workflow_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "reductions_workflow_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow-extras"
+  role   = aws_iam_role.reductions_workflow_task_role.id
+  policy = data.aws_iam_policy_document.reductions_workflow_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "reductions_workflow_task_role_extras" {
+  statement {
+    sid = "AllowS3ReadOnBucket"
+    actions = [
+      "s3:Get*",
+      "s3:List*"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/reductions",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reductions/*",
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3WriteOnBucket"
+    actions = [
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/reductions",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reductions/*",
+    ]
+
+    effect = "Allow"
+  }
+}
+
+resource "aws_iam_role" "reductions_workflow_execution_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-reductions-wrkflw-execution-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "reductions_workflow_execution_role_extras" {
+  role       = aws_iam_role.reductions_workflow_execution_role.name
+  policy_arn = aws_iam_policy.reductions_workflow_execution_role_extras.arn
+}
+
+resource "aws_iam_policy" "reductions_workflow_execution_role_extras" {
+  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow-execution-policy"
+  description = "A clone of the standard execution role with extra SSM permissions for Reductions Workflow decryption keys."
+  policy      = data.aws_iam_policy_document.reductions_workflow_execution_role_extras.json
+}
+
+data "aws_iam_policy_document" "reductions_workflow_execution_role_extras" {
+  # Allow ECS to log to Cloudwatch.
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+
+    resources = [
+      "${aws_cloudwatch_log_group.ecs_tasks.arn}:*"
+    ]
+  }
+
+  # Allow ECS to authenticate with ECR and download images.
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+
+    # ECS Fargate doesn't like it when you restrict the access to a single
+    # repository. Instead, it needs access to all of them.
+    resources = [
+      "*"
+    ]
+  }
+
+  # Allow ECS to access secrets from parameter store.
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
+      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}/*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "ssm:GetParametersByPath",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}"
+    ]
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for S3 buckets for business intelligence (BI) data extracts
 # ----------------------------------------------------------------------------------------------------------------------
 
