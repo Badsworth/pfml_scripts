@@ -324,9 +324,8 @@ def write_writeback_row(index, writeback_csv):
         c_value=index.c,
         i_value=index.i,
         status="Active",
-        status_effective_date="",
-        status_reason="Manual payment voucher",
-        transaction_status="Preapproved for payment",
+        transaction_status="",
+        trans_status_date=datetime.datetime.now().strftime("%Y-%m-%d"),
         stock_no="",
     )
     writeback_csv.writerow(dataclasses.asdict(writeback_row))
@@ -357,7 +356,7 @@ def get_doc_id() -> str:
     identify manual payments.
     """
     return (
-        "INTFDFMLAAAA" + "".join(random.choices(string.ascii_letters + string.digits, k=8)).upper()
+        "GAXMDFMLAAAA" + "".join(random.choices(string.ascii_letters + string.digits, k=8)).upper()
     )
 
 

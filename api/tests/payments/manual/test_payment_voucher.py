@@ -295,8 +295,7 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
 
     assert len(output_csv.rows) == 1
     doc_id = output_csv.rows[0]["doc_id"]
-    assert re.match("^INTFDFMLAAAA........$", doc_id)
-
+    assert re.match("^GAXMDFMLAAAA........$", doc_id)
     assert output_csv.rows[0] == {
         "absence_case_number": "NTN-308848-ABS-01",
         "activity_code": "7247",
@@ -334,10 +333,9 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "c_value": "7326",
         "i_value": "249",
         "status": "Active",
-        "status_effective_date": "",
-        "status_reason": "Manual payment voucher",
         "stock_no": "",
-        "transaction_status": "Preapproved for payment",
+        "transaction_status": "",
+        "trans_status_date": "2021-01-15",
     }
 
 
@@ -400,7 +398,7 @@ def test_process_payment_record_multiple_details(test_db_session, initialize_fac
 
     assert len(output_csv.rows) == 1
     doc_id = output_csv.rows[0]["doc_id"]
-    assert re.match("^INTFDFMLAAAA........$", doc_id)
+    assert re.match("^GAXMDFMLAAAA........$", doc_id)
     assert output_csv.rows[0] == {
         "absence_case_number": "NTN-308848-ABS-01",
         "activity_code": "7247",
@@ -438,10 +436,9 @@ def test_process_payment_record_multiple_details(test_db_session, initialize_fac
         "c_value": "7326",
         "i_value": "249",
         "status": "Active",
-        "status_effective_date": "",
-        "status_reason": "Manual payment voucher",
         "stock_no": "",
-        "transaction_status": "Preapproved for payment",
+        "transaction_status": "",
+        "trans_status_date": "2021-01-15",
     }
 
 

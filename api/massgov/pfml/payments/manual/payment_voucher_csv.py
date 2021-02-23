@@ -81,9 +81,8 @@ class WritebackCSV:
     c_value: str
     i_value: str
     status: str
-    status_effective_date: str
-    status_reason: str
     transaction_status: str
+    trans_status_date: str
     stock_no: str
 
 
@@ -91,10 +90,9 @@ WRITEBACK_CSV_HEADERS = WritebackCSV(
     c_value="pei_C_Value",
     i_value="pei_I_Value",
     status="status",
-    status_effective_date="statusEffectiveDate",
-    status_reason="statusReason",
     transaction_status="transactionStatus",
-    stock_no="stockNo",
+    trans_status_date="transactionStatusDate",
+    stock_no="transactionNo",
 )
 
 
