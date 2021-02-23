@@ -726,6 +726,63 @@ def test_leave_period_end_date_before_start_date(test_db_session, initialize_fac
 
 
 @freeze_time("2021-01-01")
+def test_leave_period_disallow_12mo_leave_period_per_type(
+    test_db_session, initialize_factories_session
+):
+    continuous_leave_issues = get_continuous_leave_issues(
+        [
+            ContinuousLeavePeriodFactory.create(
+                start_date=date(2021, 2, 1), end_date=date(2022, 5, 1)
+            )
+        ]
+    )
+    intermittent_leave_issues = get_intermittent_leave_issues(
+        [
+            IntermittentLeavePeriodFactory.create(
+                start_date=date(2021, 2, 1),
+                end_date=date(2022, 5, 1),
+                duration=1,
+                duration_basis=DurationBasis.days.value,
+                frequency=1,
+                frequency_interval=1,
+                frequency_interval_basis=FrequencyIntervalBasis.months.value,
+            )
+        ]
+    )
+
+    reduced_schedule_leave_issues = get_reduced_schedule_leave_issues(
+        ApplicationFactory.create(
+            reduced_schedule_leave_periods=[
+                ReducedScheduleLeavePeriodFactory.create(
+                    start_date=date(2021, 2, 1), end_date=date(2022, 5, 1)
+                )
+            ]
+        )
+    )
+
+    assert [
+        Issue(
+            message="Leave cannot exceed 364 days",
+            rule=IssueRule.disallow_12mo_continuous_leave_period,
+        ),
+    ] == continuous_leave_issues
+
+    assert [
+        Issue(
+            message="Leave cannot exceed 364 days",
+            rule=IssueRule.disallow_12mo_intermittent_leave_period,
+        ),
+    ] == intermittent_leave_issues
+
+    assert [
+        Issue(
+            message="Leave cannot exceed 364 days",
+            rule=IssueRule.disallow_12mo_reduced_leave_period,
+        ),
+    ] == reduced_schedule_leave_issues
+
+
+@freeze_time("2021-01-01")
 def test_leave_period_disallow_12mo_leave_period(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(
         employment_status=EmploymentStatus.get_instance(

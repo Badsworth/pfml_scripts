@@ -44,6 +44,12 @@ class IssueRule(str, Enum):
     disallow_overlapping_leave_periods = "disallow_overlapping_leave_periods"
     # Range between earliest leave period start date and the latest leave period end date can’t be 12 months or longer
     disallow_12mo_leave_period = "disallow_12mo_leave_period"
+    # Range between continuous leave period start date and end date can’t be 12 months or longer
+    disallow_12mo_continuous_leave_period = "disallow_12mo_continuous_leave_period"
+    # Range between intermittent leave period start date and end date can’t be 12 months or longer
+    disallow_12mo_intermittent_leave_period = "disallow_12mo_intermittent_leave_period"
+    # Range between reduced leave period start date and end date can’t be 12 months or longer
+    disallow_12mo_reduced_leave_period = "disallow_12mo_reduced_leave_period"
     # If a claimant is awaiting approval for other incomes they can't also submit other incomes
     disallow_has_other_incomes_when_awaiting_approval = (
         "disallow_has_other_incomes_when_awaiting_approval"

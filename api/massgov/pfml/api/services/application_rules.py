@@ -710,6 +710,7 @@ def get_leave_period_ranges_issues(application: Application) -> List[Issue]:
 def get_leave_period_date_issues(
     leave_period: Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod],
     leave_period_path: str,
+    leave_period_type: str,
 ) -> List[Issue]:
     """Validate an individual leave period's start and end dates"""
     issues = []
@@ -734,6 +735,19 @@ def get_leave_period_date_issues(
             )
         )
 
+    # Prevent leave that exceed 12 months
+    if (
+        start_date is not None
+        and end_date is not None
+        and (end_date - start_date).days > MAX_DAYS_IN_LEAVE_PERIOD_RANGE
+    ):
+        issues.append(
+            Issue(
+                message=f"Leave cannot exceed {MAX_DAYS_IN_LEAVE_PERIOD_RANGE} days",
+                rule=getattr(IssueRule, f"disallow_12mo_{leave_period_type}_leave_period"),
+            )
+        )
+
     return issues
 
 
@@ -746,7 +760,7 @@ def get_continuous_leave_issues(leave_periods: Iterable[ContinuousLeavePeriod]) 
 
     for i, current_period in enumerate(leave_periods):
         leave_period_path = f"leave_details.continuous_leave_periods[{i}]"
-        issues += get_leave_period_date_issues(current_period, leave_period_path)
+        issues += get_leave_period_date_issues(current_period, leave_period_path, "continuous")
 
         for field in required_leave_period_fields:
             val = getattr(current_period, field, None)
@@ -777,7 +791,7 @@ def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePerio
 
     for i, current_period in enumerate(leave_periods):
         leave_period_path = f"leave_details.intermittent_leave_periods[{i}]"
-        issues += get_leave_period_date_issues(current_period, leave_period_path)
+        issues += get_leave_period_date_issues(current_period, leave_period_path, "intermittent")
 
         for field in required_leave_period_fields:
             val = getattr(current_period, field, None)
@@ -866,7 +880,7 @@ def get_reduced_schedule_leave_issues(application: Application) -> List[Issue]:
 
     for i, current_period in enumerate(leave_periods):
         leave_period_path = f"leave_details.reduced_schedule_leave_periods[{i}]"
-        issues += get_leave_period_date_issues(current_period, leave_period_path)
+        issues += get_leave_period_date_issues(current_period, leave_period_path, "reduced")
         issues += get_reduced_schedule_leave_minutes_issues(
             current_period, leave_period_path, application
         )
