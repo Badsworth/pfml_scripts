@@ -3,6 +3,7 @@
 #
 import connexion.apps.flask_app
 import pydantic
+import sentry_sdk
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem, ProblemException
 from flask.wrappers import Response
 from werkzeug.exceptions import (
@@ -16,6 +17,7 @@ from werkzeug.exceptions import (
 
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging as logging
+import massgov.pfml.util.sentry as sentry_util
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.api.validation.validators import (
     CustomParameterValidator,
@@ -23,22 +25,46 @@ from massgov.pfml.api.validation.validators import (
     CustomResponseValidator,
 )
 
+UNEXPECTED_ERROR_TYPES = {"enum", "type"}
 logger = logging.get_logger(__name__)
+
+
+def is_unexpected_validation_error(error: ValidationErrorDetail) -> bool:
+    return error.type in UNEXPECTED_ERROR_TYPES or error.type.startswith("type_error")
+
+
+def log_validation_error(
+    validation_exception: ValidationException, error: ValidationErrorDetail
+) -> None:
+    # Create a readable message for the individual error.
+    # Do not use the error's actual message since it may include PII.
+    message = "%s (field: %s, type: %s, rule: %s)" % (
+        validation_exception.message,
+        error.field,
+        error.type,
+        error.rule,
+    )
+
+    log_attributes = {
+        "error.class": "ValidationException",
+        "error.type": error.type,
+        "error.rule": error.rule,
+        "error.field": error.field,
+    }
+
+    if not is_unexpected_validation_error(error):
+        logger.info(message, extra=log_attributes)
+    else:
+        # Log explicit errors in the case of unexpected validation errors.
+        with sentry_sdk.push_scope() as scope:
+            scope.fingerprint = [error.type, error.rule, error.field]
+            sentry_util.log_and_capture_exception(message, extra=log_attributes)
 
 
 def validation_request_handler(validation_exception: ValidationException) -> Response:
     errors = []
     for error in validation_exception.errors:
-        logger.info(
-            validation_exception.message,
-            extra={
-                "error.class": "ValidationException",
-                "error.type": error.type,
-                "error.rule": error.rule,
-                "error.field": error.field,
-            },
-        )
-
+        log_validation_error(validation_exception, error)
         errors.append(response_util.validation_issue(error))
 
     return response_util.error_response(

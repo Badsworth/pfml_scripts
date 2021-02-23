@@ -1,9 +1,15 @@
+import logging  # noqa: B1
 import pathlib
 
 import connexion
 
 from massgov.pfml.api.util.response import success_response
-from massgov.pfml.api.validation import add_error_handlers_to_app, get_custom_validator_map
+from massgov.pfml.api.validation import (
+    add_error_handlers_to_app,
+    get_custom_validator_map,
+    log_validation_error,
+)
+from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 
 TEST_FOLDER = pathlib.Path(__file__).parent
 INVALID_USER = {"first_name": 123, "interests": ["sports", "activity", "sports"]}
@@ -125,3 +131,45 @@ def validate_invalid_response(response, url, message, field_prefix=""):
     assert interests_errors[0]["rule"] == 2
     assert interests_errors[1]["type"] == "uniqueItems"
     assert interests_errors[1]["rule"]
+
+
+def test_log_validation_error_unexpected_exception_handling(caplog):
+    caplog.set_level(logging.INFO)  # noqa: B1
+
+    unexpected_exception = ValidationErrorDetail(
+        rule="number", type="type", field="cents", message="something that might be PII",
+    )
+
+    expected_exception = ValidationErrorDetail(
+        rule="anything", type="format", field="anything", message="something that might be PII 2",
+    )
+
+    errors = [unexpected_exception, expected_exception, unexpected_exception, expected_exception]
+
+    exception = ValidationException(errors, "Request Validation Exception", {})
+
+    for error in exception.errors:
+        log_validation_error(exception, error)
+
+    assert [(r.funcName, r.levelname, r.message) for r in caplog.records] == [
+        (
+            "log_and_capture_exception",
+            "ERROR",
+            "Request Validation Exception (field: cents, type: type, rule: number)",
+        ),
+        (
+            "log_validation_error",
+            "INFO",
+            "Request Validation Exception (field: anything, type: format, rule: anything)",
+        ),
+        (
+            "log_and_capture_exception",
+            "ERROR",
+            "Request Validation Exception (field: cents, type: type, rule: number)",
+        ),
+        (
+            "log_validation_error",
+            "INFO",
+            "Request Validation Exception (field: anything, type: format, rule: anything)",
+        ),
+    ]

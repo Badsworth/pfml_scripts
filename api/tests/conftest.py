@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 import boto3
 import moto
 import pytest
+import sentry_sdk
 from jose import jwt
 
 import massgov.pfml.api.app
@@ -25,6 +26,13 @@ import massgov.pfml.util.logging
 from massgov.pfml.db.models.factories import UserFactory
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.api.tests.conftest")
+
+
+@pytest.fixture
+def disable_sentry(monkeypatch, autouse=True):
+    monkeypatch.setattr(sentry_sdk, "init", lambda: None)
+    monkeypatch.setattr(sentry_sdk, "capture_exception", lambda: None)
+    monkeypatch.setattr(sentry_sdk, "capture_message", lambda: None)
 
 
 @pytest.fixture
