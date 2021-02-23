@@ -14,6 +14,22 @@ class BasePortalError extends Error {
 }
 
 /**
+ * A Cognito authentication step failed.
+ */
+export class CognitoAuthError extends BasePortalError {
+  /**
+   * @param {{ code: string, name: string, message: string }} cognitoError - error returned by cognito API
+   * @param {{ type: string, field: string, message: string }} issue
+   */
+  constructor(cognitoError, issue = null, ...params) {
+    super(...params);
+    this.name = "CognitoAuthError";
+    this.cognitoError = cognitoError;
+    this.issue = issue;
+  }
+}
+
+/**
  * The authenticated user's session expired or couldn't be found.
  */
 export class AuthSessionMissingError extends BasePortalError {

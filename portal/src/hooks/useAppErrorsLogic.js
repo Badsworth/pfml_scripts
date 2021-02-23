@@ -1,6 +1,7 @@
 import {
   ApiRequestError,
   AuthSessionMissingError,
+  CognitoAuthError,
   DocumentsLoadError,
   DocumentsUploadError,
   ValidationError,
@@ -49,6 +50,8 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       error instanceof DocumentsUploadError
     ) {
       handleDocumentsError(error);
+    } else if (error instanceof CognitoAuthError) {
+      handleCognitoAuthError(error);
     } else {
       console.error(error);
       handleError(error);
@@ -73,12 +76,9 @@ const useAppErrorsLogic = ({ portalFlow }) => {
    * @param {string} issue.type
    * @param {string} i18nPrefix - prefix used in the i18n key
    * @returns {string | Trans} Internationalized error message or Trans component
-   * @example getMessageFromApiIssue(issue, "claims");
+   * @example getMessageFromIssue(issue, "claims");
    */
-  const getMessageFromApiIssue = (
-    { field, message, rule, type },
-    i18nPrefix
-  ) => {
+  const getMessageFromIssue = ({ field, message, rule, type }, i18nPrefix) => {
     let issueMessageKey;
 
     if (field) {
@@ -187,7 +187,7 @@ const useAppErrorsLogic = ({ portalFlow }) => {
     const appError = new AppErrorInfo({
       name: error.name,
       message: error.issue
-        ? getMessageFromApiIssue(error.issue, "documents")
+        ? getMessageFromIssue(error.issue, "documents")
         : t("errors.caughtError", { context: error.name }),
       meta: {
         application_id: error.application_id,
@@ -212,7 +212,7 @@ const useAppErrorsLogic = ({ portalFlow }) => {
     error.issues.forEach((issue) => {
       const appError = new AppErrorInfo({
         field: issue.field,
-        message: getMessageFromApiIssue(issue, error.i18nPrefix),
+        message: getMessageFromIssue(issue, error.i18nPrefix),
         name: error.name,
         rule: issue.rule,
         type: issue.type,
@@ -231,6 +231,27 @@ const useAppErrorsLogic = ({ portalFlow }) => {
         issueRule: rule,
         issueType: type,
       });
+    });
+  };
+
+  /**
+   * Add and track issues in a CognitoAuthError
+   * @param {CognitoAuthError} error
+   */
+  const handleCognitoAuthError = (error) => {
+    const appError = new AppErrorInfo({
+      name: error.name,
+      message: error.issue
+        ? getMessageFromIssue(error.issue, "auth")
+        : t("errors.network"),
+    });
+
+    addError(appError);
+
+    tracker.trackEvent("AuthError", {
+      errorCode: error.cognitoError.code,
+      errorMessage: error.cognitoError.message,
+      errorName: error.cognitoError.name,
     });
   };
 

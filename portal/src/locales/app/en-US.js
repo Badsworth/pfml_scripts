@@ -20,7 +20,7 @@ const chars = {
 
 const errors = {
   auth: {
-    attemptBlocked:
+    attemptBlocked_forgotPassword:
       "Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at $t(shared.contactCenterPhoneNumber).",
     attemptBlocked_login:
       "Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We’ve also sent you an email to confirm your identity.",
@@ -28,24 +28,24 @@ const errors = {
       "Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again.",
     attemptsLimitExceeded_login:
       "Your account is temporarily locked because of too many failed login attempts. Wait 15 minutes before trying again.",
-    codeDeliveryFailure:
-      "We encountered an error while sending the verification code. Try again.",
-    codeExpired:
-      "Sorry, your verification code has expired or has already been used.",
-    codeFormat:
-      "Enter the 6 digit code sent to your email and ensure it does not include any punctuation.",
-    codeMismatchException:
-      "Invalid verification code. Make sure the code matches the code emailed to you.",
-    codeRequired: "Enter the 6 digit code sent to your email",
-    emailRequired: "Enter your email address",
-    employerIdNumberRequired:
-      "Enter your 9-digit Employer Identification Number.",
+    code: {
+      deliveryFailure:
+        "We encountered an error while sending the verification code. Try again.",
+      expired:
+        "Sorry, your verification code has expired or has already been used.",
+      mismatchException:
+        "Invalid verification code. Make sure the code matches the code emailed to you.",
+      pattern:
+        "Enter the 6 digit code sent to your email and ensure it does not include any punctuation.",
+      required: "Enter the 6 digit code sent to your email",
+    },
+    ein: {
+      invalid: "Invalid employer ID number. Please try again.",
+      required: "Enter your 9-digit Employer Identification Number.",
+    },
     expiredVerificationCode:
       "Invalid verification code. Please request a new code.",
     incorrectEmailOrPassword: "Incorrect email or password",
-    insecurePassword:
-      "Choose a different password. Avoid commonly used passwords and avoid using the same password on multiple websites.",
-    invalidEmployerIdNumber: "Invalid employer ID number. Please try again.",
     invalidParametersFallback: "Enter all required information",
     invalidParametersIncludingMaybePassword:
       "Check the requirements and try again. Ensure all required information is entered and the password meets the requirements.",
@@ -54,15 +54,22 @@ const errors = {
       required:
         "Select Yes if you are you creating an employer account to manage leave for your company.",
     },
-    passwordErrors:
-      "Your password does not meet the requirements. Please check the requirements and try again.",
-    passwordRequired: "Enter your password",
-    passwordResetRequiredException:
-      'Your password must be reset before you can log in again. Click the "Forgot your password?" link below to reset your password.',
+    password: {
+      insecure:
+        "Choose a different password. Avoid commonly used passwords and avoid using the same password on multiple websites.",
+      invalid:
+        "Your password does not meet the requirements. Please check the requirements and try again.",
+      required: "Enter your password",
+      resetRequiredException:
+        'Your password must be reset before you can log in again. Click the "Forgot your password?" link below to reset your password.',
+    },
     userNotConfirmed:
       "Confirm your account by following the instructions in the verification email sent to your inbox.",
     userNotFound: "Incorrect email",
-    usernameExists: "An account with the given email already exists",
+    username: {
+      exists: "An account with the given email already exists",
+      required: "Enter your email address",
+    },
   },
   caughtError:
     "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber).",

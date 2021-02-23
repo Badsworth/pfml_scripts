@@ -435,7 +435,7 @@ describe("useAuthLogic", () => {
         `"This message wasn't expected by Portal code and is the error from Cognito."`
       );
       expect(tracker.trackEvent).toHaveBeenLastCalledWith(
-        "Unknown_NotAuthorizedException",
+        "AuthError",
         expect.objectContaining({ errorMessage: cognitoError.message })
       );
     });

@@ -1,12 +1,13 @@
-import AppErrorInfo from "../models/AppErrorInfo";
-import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
+import { CognitoAuthError, ValidationError } from "../errors";
 import { Auth } from "@aws-amplify/auth";
 import assert from "assert";
+import { compact } from "lodash";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";
 import tracker from "../services/tracker";
 import { useState } from "react";
-import { useTranslation } from "../locales/i18n";
+
+// TODO (CP-1771): This file makes reference to an Issue type that is not yet defined.
 
 /**
  * @param {object} params
@@ -15,8 +16,6 @@ import { useTranslation } from "../locales/i18n";
  * @returns {object}
  */
 const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
-  const { t } = useTranslation();
-
   // TODO (CP-872): Rather than setting default values for authLogic methods,
   // instead ensure they're always called with required string arguments
 
@@ -34,23 +33,6 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * @property {Function} setIsLoggedIn - Set whether the user is logged in or not after the logged in status has been checked
    */
   const [isLoggedIn, setIsLoggedIn] = useState(null);
-
-  /**
-   * Show client-side validation errors to the user and tracks them
-   * @param {AppErrorInfoCollection} appErrorInfoCollection
-   */
-  function handleValidationErrors(appErrorInfoCollection) {
-    appErrorsLogic.setAppErrors(appErrorInfoCollection);
-
-    appErrorInfoCollection.items.forEach((appErrorInfo) => {
-      // Track authentication errors as validation errors
-      tracker.trackEvent("ValidationError", {
-        // Do not log the error message, since it's not guaranteed that it won't include PII.
-        issueField: appErrorInfo.field,
-        issueType: appErrorInfo.type,
-      });
-    });
-  }
 
   /**
    * Initiate the Forgot Password flow, sending a verification code when user exists.
@@ -85,10 +67,12 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     appErrorsLogic.clearErrors();
     username = username.trim();
 
-    const validationErrors = validateUsername(username, t);
+    const validationIssues = combineValidationIssues(
+      validateUsername(username)
+    );
 
-    if (validationErrors) {
-      handleValidationErrors(validationErrors);
+    if (validationIssues) {
+      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return false;
     }
 
@@ -97,9 +81,8 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
       await Auth.forgotPassword(username);
       return true;
     } catch (error) {
-      trackAuthError(error);
-      const appErrors = getForgotPasswordErrorInfo(error, t);
-      appErrorsLogic.setAppErrors(appErrors);
+      const authError = getForgotPasswordError(error);
+      appErrorsLogic.catchError(authError);
       return false;
     }
   };
@@ -115,13 +98,13 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     appErrorsLogic.clearErrors();
     username = username.trim();
 
-    const validationErrors = combineErrorCollections([
-      validateUsername(username, t),
-      validatePassword(password, t),
-    ]);
+    const validationIssues = combineValidationIssues(
+      validateUsername(username),
+      validatePassword(password)
+    );
 
-    if (validationErrors) {
-      handleValidationErrors(validationErrors);
+    if (validationIssues) {
+      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return;
     }
 
@@ -137,14 +120,12 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
         portalFlow.goToPageFor("LOG_IN", {}, { "logged-in": true });
       }
     } catch (error) {
-      trackAuthError(error);
-
       if (error.code === "UserNotConfirmedException") {
         portalFlow.goToPageFor("UNCONFIRMED_ACCOUNT");
         return;
       }
-      const loginErrors = getLoginErrorInfo(error, t);
-      appErrorsLogic.setAppErrors(loginErrors);
+      const authError = getLoginError(error);
+      appErrorsLogic.catchError(authError);
     }
   };
 
@@ -210,9 +191,8 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
 
       portalFlow.goToPageFor("CREATE_ACCOUNT");
     } catch (error) {
-      trackAuthError(error);
-      const appErrors = getCreateAccountErrorInfo(error, t);
-      appErrorsLogic.setAppErrors(appErrors);
+      const authError = getCreateAccountError(error);
+      appErrorsLogic.catchError(authError);
     }
   };
 
@@ -226,13 +206,13 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     appErrorsLogic.clearErrors();
     username = username.trim();
 
-    const validationErrors = combineErrorCollections([
-      validateUsername(username, t),
-      validatePassword(password, t),
-    ]);
+    const validationIssues = combineValidationIssues(
+      validateUsername(username),
+      validatePassword(password)
+    );
 
-    if (validationErrors) {
-      handleValidationErrors(validationErrors);
+    if (validationIssues) {
+      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return;
     }
 
@@ -250,14 +230,14 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     appErrorsLogic.clearErrors();
     username = username.trim();
 
-    const validationErrors = combineErrorCollections([
-      validateUsername(username, t),
-      validatePassword(password, t),
-      validateEmployerIdNumber(ein, t),
-    ]);
+    const validationIssues = combineValidationIssues(
+      validateUsername(username),
+      validatePassword(password),
+      validateEin(ein)
+    );
 
-    if (validationErrors) {
-      handleValidationErrors(validationErrors);
+    if (validationIssues) {
+      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return;
     }
 
@@ -296,10 +276,12 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     appErrorsLogic.clearErrors();
     username = username.trim();
 
-    const validationErrors = validateUsername(username, t);
+    const validationIssues = combineValidationIssues(
+      validateUsername(username)
+    );
 
-    if (validationErrors) {
-      handleValidationErrors(validationErrors);
+    if (validationIssues) {
+      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return;
     }
 
@@ -309,12 +291,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
 
       // TODO (CP-600): Show success message
     } catch (error) {
-      trackAuthError(error);
-      const message = t("errors.network");
-      const appErrors = new AppErrorInfoCollection([
-        new AppErrorInfo({ message }),
-      ]);
-      appErrorsLogic.setAppErrors(appErrors);
+      appErrorsLogic.catchError(new CognitoAuthError(error));
     }
   };
 
@@ -331,14 +308,14 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     username = username.trim();
     code = code.trim();
 
-    const validationErrors = combineErrorCollections([
-      validateVerificationCode(code, t),
-      validateUsername(username, t),
-      validatePassword(password, t),
-    ]);
+    const validationIssues = combineValidationIssues(
+      validateCode(code),
+      validateUsername(username),
+      validatePassword(password)
+    );
 
-    if (validationErrors) {
-      handleValidationErrors(validationErrors);
+    if (validationIssues) {
+      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return;
     }
 
@@ -365,15 +342,15 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     code = code.trim();
     ein = ein.trim();
 
-    const validationErrors = combineErrorCollections([
-      validateVerificationCode(code, t),
-      validateUsername(username, t),
-      validatePassword(password, t),
-      validateEmployerIdNumber(ein, t),
-    ]);
+    const validationIssues = combineValidationIssues(
+      validateCode(code),
+      validateUsername(username),
+      validatePassword(password),
+      validateEin(ein)
+    );
 
-    if (validationErrors) {
-      handleValidationErrors(validationErrors);
+    if (validationIssues) {
+      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return;
     }
 
@@ -403,9 +380,8 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
 
       portalFlow.goToPageFor("SET_NEW_PASSWORD");
     } catch (error) {
-      trackAuthError(error);
-      const appErrors = getResetPasswordErrorInfo(error, t);
-      appErrorsLogic.setAppErrors(appErrors);
+      const authError = getResetPasswordError(error);
+      appErrorsLogic.catchError(authError);
     }
   };
 
@@ -434,7 +410,6 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
         }
       );
     } catch (error) {
-      trackAuthError(error);
       // If the error is the user trying to re-verified an already-verified account then we can redirect
       // them to the login page. This only occurs if the user's account is already verified and the
       // verification code they use is valid.
@@ -452,8 +427,8 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
         );
       }
 
-      const appErrors = getVerifyAccountErrorInfo(error, t);
-      appErrorsLogic.setAppErrors(appErrors);
+      const authError = getVerifyAccountError(error);
+      appErrorsLogic.catchError(authError);
     }
   };
 
@@ -470,13 +445,13 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     username = username.trim();
     code = code.trim();
 
-    const validationErrors = combineErrorCollections([
-      validateVerificationCode(code, t),
-      validateUsername(username, t),
-    ]);
+    const validationIssues = combineValidationIssues(
+      validateCode(code),
+      validateUsername(username)
+    );
 
-    if (validationErrors) {
-      handleValidationErrors(validationErrors);
+    if (validationIssues) {
+      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return;
     }
 
@@ -498,14 +473,14 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     code = code.trim();
     ein = ein.trim();
 
-    const validationErrors = combineErrorCollections([
-      validateVerificationCode(code, t),
-      validateUsername(username, t),
-      validateEmployerIdNumber(ein, t),
-    ]);
+    const validationIssues = combineValidationIssues(
+      validateCode(code),
+      validateUsername(username),
+      validateEin(ein)
+    );
 
-    if (validationErrors) {
-      handleValidationErrors(validationErrors);
+    if (validationIssues) {
+      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return;
     }
 
@@ -530,223 +505,196 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   };
 };
 
-/**
- * Combines all AppErrorInfoCollection items into a single AppErrorInfoCollection
- * @param {AppErrorInfoCollection[]} errorCollections - Array of optional AppErrorInfoCollection instances
- * @returns {AppErrorInfoCollection} - If at least one collection is present, an AppErrorInfoCollection is returned
- */
-function combineErrorCollections(errorCollections) {
-  // Remove undefined collections, which would occur if there were no errors
-  const collectionsWithItems = errorCollections.filter(
-    (errorCollection) => !!errorCollection
-  );
-
-  if (collectionsWithItems.length) {
-    return collectionsWithItems.reduce(
-      (combinedCollection, currentCollection) =>
-        new AppErrorInfoCollection(
-          combinedCollection.items.concat(currentCollection.items)
-        )
-    );
-  }
+function combineValidationIssues(...issues) {
+  const combinedIssues = compact(issues);
+  if (combinedIssues.length === 0) return;
+  return combinedIssues;
 }
 
-function validateVerificationCode(code, t) {
-  const validationErrors = [];
-
+function validateCode(code) {
   if (!code) {
-    validationErrors.push(
-      new AppErrorInfo({
-        field: "code",
-        type: "required",
-        message: t("errors.auth.codeRequired"),
-      })
-    );
+    return {
+      field: "code",
+      type: "required",
+    };
   } else if (!code.match(/^\d{6}$/)) {
-    validationErrors.push(
-      new AppErrorInfo({
-        field: "code",
-        type: "pattern", // matches same type as API regex pattern validations
-        message: t("errors.auth.codeFormat"),
-      })
-    );
-  }
-
-  if (!validationErrors.length) return;
-
-  return new AppErrorInfoCollection(validationErrors);
-}
-
-function validatePassword(password, t) {
-  if (!password) {
-    return new AppErrorInfoCollection([
-      new AppErrorInfo({
-        field: "password",
-        type: "required",
-        message: t("errors.auth.passwordRequired"),
-      }),
-    ]);
+    return {
+      field: "code",
+      type: "pattern", // matches same type as API regex pattern validations
+    };
   }
 }
 
-function validateUsername(username, t) {
+function validateUsername(username) {
   if (!username) {
-    return new AppErrorInfoCollection([
-      new AppErrorInfo({
-        field: "username",
-        type: "required",
-        message: t("errors.auth.emailRequired"),
-      }),
-    ]);
+    return {
+      field: "username",
+      type: "required",
+    };
   }
 }
 
-function validateEmployerIdNumber(employerIdNumber, t) {
-  if (!employerIdNumber) {
-    return new AppErrorInfoCollection([
-      new AppErrorInfo({
-        field: "ein",
-        type: "required",
-        message: t("errors.auth.employerIdNumberRequired"),
-      }),
-    ]);
+function validatePassword(password) {
+  if (!password) {
+    return {
+      field: "password",
+      type: "required",
+    };
+  }
+}
+
+function validateEin(ein) {
+  if (!ein) {
+    return {
+      field: "ein",
+      type: "required",
+    };
   }
 }
 
 /**
  * Converts an error thrown by the Amplify library's Auth.forgotPassword method into
- * AppErrorInfo objects to be rendered by the page.
+ * CognitoAuthError.
  * For a list of possible exceptions, see
  * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ForgotPassword.html#API_ForgotPassword_Errors
  * @param {{ code: string, message: string }} error Error object that was thrown by Amplify's Auth.signIn method
- * @param {Function} t Localization method
- * @returns {AppErrorInfoCollection}
+ * @returns {CognitoAuthError}
  */
-function getForgotPasswordErrorInfo(error, t) {
-  let message;
+function getForgotPasswordError(error) {
+  let issue;
+  const errorCodeToIssueMap = {
+    CodeDeliveryFailureException: { field: "code", type: "deliveryFailure" },
+    InvalidParameterException: { type: "invalidParametersFallback" },
+    UserNotFoundException: { type: "userNotFound" },
+    LimitExceededException: { type: "attemptsLimitExceeded_forgotPassword" },
+  };
 
   if (error.code === "NotAuthorizedException") {
-    message = getNotAuthorizedExceptionMessage(error, t, "forgotPassword");
-  } else if (error.code === "CodeDeliveryFailureException") {
-    message = t("errors.auth.codeDeliveryFailure");
-  } else if (error.code === "InvalidParameterException") {
-    message = t("errors.auth.invalidParametersFallback");
-  } else if (error.code === "UserNotFoundException") {
-    message = t("errors.auth.userNotFound");
-  } else if (error.code === "LimitExceededException") {
-    message = t("errors.auth.attemptsLimitExceeded", {
-      context: "forgotPassword",
-    });
-  } else {
-    message = t("errors.network");
+    issue = getNotAuthorizedExceptionIssue(error, "forgotPassword");
+  } else if (errorCodeToIssueMap[error.code]) {
+    issue = errorCodeToIssueMap[error.code];
   }
 
-  const validationErrors = [new AppErrorInfo({ message })];
-  return new AppErrorInfoCollection(validationErrors);
+  return new CognitoAuthError(error, issue);
 }
 
 /**
  * Converts an error thrown by the Amplify library's Auth.signIn method into
- * AppErrorInfo objects to be rendered by the page.
+ * CognitoAuthError objects.
  * For a list of possible exceptions, see
  * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html#API_InitiateAuth_Errors
  * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
- * @param {Function} t Localization method
- * @returns {AppErrorInfoCollection}
+ * @returns {CognitoAuthError}
  */
-function getLoginErrorInfo(error, t) {
-  let message;
+function getLoginError(error) {
+  let issue;
+  const invalidParameterIssue = { type: "invalidParametersFallback" };
+
   if (error.code === "NotAuthorizedException") {
-    message = getNotAuthorizedExceptionMessage(error, t, "login");
+    issue = getNotAuthorizedExceptionIssue(error, "login");
   } else if (error.code === "InvalidParameterException") {
-    // This error triggers when password is empty
-    // This code should be unreachable if validation works properly
-    message = t("errors.auth.invalidParametersFallback");
+    issue = invalidParameterIssue;
   } else if (error.name === "AuthError") {
     // This error triggers when username is empty
     // This code should be unreachable if validation works properly
-    message = t("errors.auth.invalidParametersFallback");
+    issue = invalidParameterIssue;
   } else if (error.code === "PasswordResetRequiredException") {
     // This error triggers when an admin initiates a password reset
-    message = t("errors.auth.passwordResetRequiredException");
-  } else {
-    message = t("errors.network");
+    issue = { field: "password", type: "resetRequiredException" };
   }
 
-  const appErrorInfo = new AppErrorInfo({ message });
-  return new AppErrorInfoCollection([appErrorInfo]);
+  return new CognitoAuthError(error, issue);
 }
 
 /**
  * Converts an error thrown by the Amplify library's Auth.signUp method into
- * AppErrorInfo objects to be rendered by the page.
+ * CognitoAuthError.
  * For a list of possible exceptions, see
  * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html#API_SignUp_Errors
  * @param {{ code: string, message: string }} error Error object that was thrown by Amplify's Auth.signUp method
- * @param {Function} t Localization method
- * @returns {AppErrorInfoCollection}
+ * @returns {CognitoAuthError}
  */
-function getCreateAccountErrorInfo(error, t) {
-  let message;
+function getCreateAccountError(error) {
+  let issue;
+  const errorCodeToIssueMap = {
+    UsernameExistsException: { field: "username", type: "exists" },
+    UnexpectedLambdaException: { field: "ein", type: "invalid" },
+    UserLambdaValidationException: {
+      field: "ein",
+      type: "invalid",
+    },
+  };
+
   if (
     error.code === "InvalidParameterException" ||
     error.code === "InvalidPasswordException"
   ) {
-    message = getInvalidPasswordExceptionMessage(error, t);
-  } else if (error.code === "UsernameExistsException") {
-    // TODO (CP-576): Obfuscate the fact that the user exists
-    message = t("errors.auth.usernameExists");
-  } else if (
-    error.code === "UnexpectedLambdaException" ||
-    error.code === "UserLambdaValidationException"
-  ) {
-    message = t("errors.auth.invalidEmployerIdNumber");
-  } else {
-    message = t("errors.network");
+    issue = getInvalidPasswordExceptionIssue(error);
+  } else if (errorCodeToIssueMap[error.code]) {
+    issue = errorCodeToIssueMap[error.code];
   }
 
-  return new AppErrorInfoCollection([new AppErrorInfo({ message })]);
+  return new CognitoAuthError(error, issue);
 }
 
 /**
  * Converts an error thrown by the Amplify library's Auth.forgotPasswordSubmit method into
- * AppErrorInfo objects to be rendered by the page.
+ * CognitoAuthError.
  * For a list of possible exceptions, see
  * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmForgotPassword.html
  * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
- * @param {Function} t Localization method
- * @returns {AppErrorInfoCollection}
+ * @returns {CognitoAuthError}
  */
-function getResetPasswordErrorInfo(error, t) {
-  let message;
-  if (error.code === "CodeMismatchException") {
-    message = t("errors.auth.codeMismatchException");
-  } else if (error.code === "ExpiredCodeException") {
-    message = t("errors.auth.codeExpired");
-  } else if (error.code === "InvalidParameterException") {
-    message = t("errors.auth.invalidParametersIncludingMaybePassword");
+function getResetPasswordError(error) {
+  let issue;
+  const errorCodeToIssueMap = {
+    CodeMismatchException: { field: "code", type: "mismatchException" },
+    ExpiredCodeException: { field: "code", type: "expired" },
+    InvalidParameterException: {
+      type: "invalidParametersIncludingMaybePassword",
+    },
+    UserNotConfirmedException: { type: "userNotConfirmed" },
+    UserNotFoundException: { type: "userNotFound" },
+  };
+
+  if (errorCodeToIssueMap[error.code]) {
+    issue = errorCodeToIssueMap[error.code];
   } else if (error.code === "InvalidPasswordException") {
-    message = getInvalidPasswordExceptionMessage(error, t);
-  } else if (error.code === "UserNotConfirmedException") {
-    message = t("errors.auth.userNotConfirmed");
-  } else if (error.code === "UserNotFoundException") {
-    message = t("errors.auth.userNotFound");
-  } else {
-    message = t("errors.network");
+    issue = getInvalidPasswordExceptionIssue(error);
   }
 
-  const appErrorInfo = new AppErrorInfo({ message });
-  return new AppErrorInfoCollection([appErrorInfo]);
+  return new CognitoAuthError(error, issue);
+}
+
+/**
+ * Converts an error thrown by the Amplify library's Auth.confirmSignUp method into
+ * CognitoAuthError.
+ * For a list of possible exceptions, see
+ * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmSignUp.html
+ * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
+ * @returns {CognitoAuthError}
+ */
+function getVerifyAccountError(error) {
+  let issue;
+  const errorCodeToIssueMap = {
+    CodeMismatchException: { field: "code", type: "mismatchException" },
+    ExpiredCodeException: { field: "code", type: "expired" },
+  };
+
+  if (errorCodeToIssueMap[error.code]) {
+    issue = errorCodeToIssueMap[error.code];
+  }
+
+  return new CognitoAuthError(error, issue);
 }
 
 /**
  * InvalidPasswordException may occur for a variety of reasons,
- * so our messaging needs to reflect this nuance.
+ * so our errors needs to reflect this nuance.
  * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
- * @param {Function} t Localization method
- * @returns {string}
+ * @returns {Issue}
  */
-function getInvalidPasswordExceptionMessage(error, t) {
+function getInvalidPasswordExceptionIssue(error) {
   // These are the specific Cognito errors that can occur:
   //
   // 1. When password is less than 6 characters long
@@ -776,21 +724,20 @@ function getInvalidPasswordExceptionMessage(error, t) {
   if (error.message.match(/password cannot be used for security reasons/)) {
     // For this case, a password may already conform to the password format
     // requirements, so showing the password format error would be confusing
-    return t("errors.auth.insecurePassword");
+    return { field: "password", type: "insecure" };
   }
 
-  return t("errors.auth.passwordErrors");
+  return { field: "password", type: "invalid" };
 }
 
 /**
  * NotAuthorizedException may occur for a variety of reasons,
- * so our messaging needs to reflect this nuance.
+ * so our errors needs to reflect this nuance.
  * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
- * @param {Function} t Localization method
  * @param {string} context - i18next context, representing the action that resulted in this exception (e.g login)
- * @returns {string}
+ * @returns {Issue}
  */
-function getNotAuthorizedExceptionMessage(error, t, context) {
+function getNotAuthorizedExceptionIssue(error, context) {
   // These are the specific Cognito errors that can occur:
   //
   // 1. When password or username is invalid (error is same for either scenario)
@@ -813,73 +760,16 @@ function getNotAuthorizedExceptionMessage(error, t, context) {
     error.message.match(/Request not allowed due to security reasons/) ||
     error.message.match(/Unable to login because of security reasons/)
   ) {
-    // The risk score of the request resulted in the attempt being Blocked
-    // by our Cognito Advanced Security settings
-    return t("errors.auth.attemptBlocked", { context });
+    return { type: `attemptBlocked_${context}` };
   }
   if (error.message.match(/Password attempts exceeded/)) {
-    return t("errors.auth.attemptsLimitExceeded", { context: "login" });
+    return { type: "attemptsLimitExceeded_login" };
   }
   if (error.message.match(/Incorrect username or password/)) {
-    return t("errors.auth.incorrectEmailOrPassword");
+    return { type: "incorrectEmailOrPassword" };
   }
 
-  // Fallback to the message in Cognito since it's unclear which of the
-  // above scenarios this error falls into, so it's impossible to know
-  // which custom error message is appropriate to show to the user
-  tracker.trackEvent("Unknown_NotAuthorizedException", {
-    errorCode: error.code,
-    errorMessage: error.message,
-    errorName: error.name,
-  });
-
-  return error.message;
-}
-
-/**
- * Converts an error thrown by the Amplify library's Auth.confirmSignUp method into
- * AppErrorInfo objects to be rendered by the page.
- * For a list of possible exceptions, see
- * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmSignUp.html
- * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
- * @param {Function} t Localization method
- * @returns {AppErrorInfoCollection}
- */
-function getVerifyAccountErrorInfo(error, t) {
-  let message;
-  if (error.code === "CodeMismatchException") {
-    // Cognito error message: "Invalid verification code provided, please try again."
-    message = t("errors.auth.codeMismatchException");
-  } else if (error.code === "ExpiredCodeException") {
-    // Cognito error message: "Invalid code provided, please request a code again."
-    message = t("errors.auth.codeExpired");
-  } else if (error.name === "AuthError") {
-    // This error triggers when username or code is empty
-    // Example message #1: Username cannot be empty
-    // Example message #2: Confirmation code cannot be empty
-    // This code should be unreachable if validation works properly
-    message = t("errors.network");
-  } else {
-    message = t("errors.network");
-  }
-
-  const appErrorInfo = new AppErrorInfo({ message });
-  return new AppErrorInfoCollection([appErrorInfo]);
-}
-
-/**
- * Send errors thrown while making an auth request, for debugging and monitoring.
- * @param {{code: string, message: string }} error
- */
-function trackAuthError(error) {
-  tracker.trackEvent("AuthError", {
-    errorCode: error.code,
-    // Cognito sometimes uses the same error code and name to represent
-    // multiple error reasons. The message is always unique, so this  will
-    // be helpful to include so we know more specifically what the error was:
-    errorMessage: error.message,
-    errorName: error.name,
-  });
+  return { message: error.message };
 }
 
 /**

@@ -2,7 +2,7 @@
  * @file Wrapper methods around our monitoring service. Methods in here should
  * handle a scenario where the monitoring service is blocked by things like an ad blocker.
  */
-import * as Sentry from '@sentry/react';
+import * as Sentry from "@sentry/react";
 import { Dedupe as DedupeIntegration } from "@sentry/integrations";
 
 /**
@@ -18,13 +18,12 @@ const moduleGlobal = {
  * Configure our monitoring services with environment-specific key/ids
  */
 function initialize() {
-
   if (process.env.buildEnv === "test") {
     Sentry.init({
       dsn: process.env.sentryDsn,
       integrations: [new DedupeIntegration()],
       environment: process.env.buildEnv,
-    }); 
+    });
   }
 
   // Don't break when rendered in a non-browser environment
