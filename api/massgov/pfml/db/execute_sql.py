@@ -52,7 +52,7 @@ def execute_sql():
                 execute_sql_statement(db_session, sql, args.limit)
 
     except sqlalchemy.exc.SQLAlchemyError as ex:
-        logger.error("error during execute: %s %s", ex.__class__, str(ex))
+        logger.exception("error during execute: %s %s", ex.__class__, str(ex))
 
     logger.info("done, %i statements executed", count)
 

@@ -222,7 +222,7 @@ def complete_intake(application: Application, db_session: massgov.pfml.db.Sessio
         fineos.complete_intake(fineos_user_id, str(application.fineos_notification_case_id))
 
     except massgov.pfml.fineos.FINEOSClientError:
-        logger.exception("FINEOS API error")
+        logger.error("FINEOS API error")
         issues.append(
             Issue(
                 IssueType.fineos_case_error,
@@ -601,7 +601,7 @@ def get_or_register_employee_fineos_user_id(
     fineos_user_id = register_employee(fineos, tax_identifier, employer_fein, db_session)
 
     if fineos_user_id is None:
-        logger.error("register_employee did not find a match")
+        logger.warning("register_employee did not find a match")
         raise ValueError("register_employee did not find a match")
 
     return fineos_user_id
@@ -645,13 +645,14 @@ def get_occupation(
             user_id, str(application.fineos_notification_case_id)
         )[0]
     except Exception as error:
-        logger.exception(
+        logger.warning(
             "get_occuption failure",
             extra={
                 "application.absence_case_id": application.fineos_absence_id,
                 "application.application_id": application.application_id,
                 "status": getattr(error, "response_status", None),
             },
+            exc_info=True,
         )
         raise error
 
@@ -709,9 +710,7 @@ def add_week_based_work_pattern(
     except Exception as error:
         extra = {} if log_attributes is None else log_attributes
         extra.update({"status": getattr(error, "response_status", None)})
-        logger.exception(
-            "add_week_based_work_pattern failure", extra=extra,
-        )
+        logger.warning("add_week_based_work_pattern failure", extra=extra, exc_info=True)
         raise error
 
 
@@ -729,9 +728,7 @@ def update_week_based_work_pattern(
     except Exception as error:
         extra = {} if log_attributes is None else log_attributes
         extra.update({"status": getattr(error, "response_status", None)})
-        logger.exception(
-            "update_week_based_work_pattern failure", extra=extra,
-        )
+        logger.warning("update_week_based_work_pattern failure", extra=extra, exc_info=True)
 
 
 def update_occupation_details(
@@ -940,7 +937,7 @@ def create_or_update_employer(
             read_employer_response = fineos.read_employer(employer.employer_fein)
             existing_fineos_record = read_employer_response.OCOrganisation[0]
         except FINEOSNotFound:
-            logger.exception(
+            logger.warning(
                 "Did not find employer in FINEOS as expected. Continuing with update as create.",
                 extra={
                     "internal_employer_id": employer.employer_id,

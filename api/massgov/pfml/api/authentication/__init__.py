@@ -71,10 +71,10 @@ def decode_cognito_token(token):
         logger.info("auth token decode succeeded", extra={"current_user.auth_id": auth_id})
         return decoded_token
     except jose.JOSEError as e:
-        logger.error("auth token decode failed: %s %s", type(e), str(e), extra={"error": e})
+        logger.exception("auth token decode failed: %s %s", type(e), str(e), extra={"error": e})
         raise Unauthorized
     except (NoResultFound, MultipleResultsFound) as e:
-        logger.error(
+        logger.exception(
             "user query failed: %s", type(e), extra={"current_user.auth_id": auth_id, "error": e,}
         )
         raise Unauthorized

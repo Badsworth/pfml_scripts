@@ -40,7 +40,7 @@ def create_fineos_user_helper(db_session: Session) -> None:
             logger.info("User created for app client %s", client_name)
 
         except MultipleResultsFound as e:
-            logger.error(
+            logger.exception(
                 "Multiple users with the same client_id exist for %s",
                 client_name,
                 extra={"error": e},

@@ -56,8 +56,8 @@ def notifications_post():
                 .one_or_none()
             )
 
-        except MultipleResultsFound as exc:
-            logger.error("Multiple employers found for specified FEIN", exc_info=exc)
+        except MultipleResultsFound:
+            logger.exception("Multiple employers found for specified FEIN")
 
             newrelic.agent.record_custom_event(
                 "FineosError",

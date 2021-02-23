@@ -118,7 +118,7 @@ def leave_admin_create(
         db_session.add(user_leave_admin)
         db_session.commit()
     except SQLAlchemyError as exc:
-        logger.error("Unable to create records for user", exc_info=exc)
+        logger.exception("Unable to create records for user")
         raise LeaveAdminCreationError("Unable to create records for user") from exc
 
     return user

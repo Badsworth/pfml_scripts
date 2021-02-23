@@ -66,7 +66,7 @@ def handle_rmv_check_request(
     except pydantic.ValidationError:
         rmv_check_record.api_error_code = RMVCheckApiErrorCode.FAILED_TO_BUILD_REQUEST
 
-        logger.info(
+        logger.exception(
             "Could not construct RMV API request object", extra=rmv_check_for_log(rmv_check_record),
         )
 
@@ -106,7 +106,7 @@ def handle_rmv_check_request(
     if isinstance(license_inquiry_response, RmvAcknowledgement):
         rmv_check_record.rmv_error_code = license_inquiry_response
 
-        logger.info(
+        logger.warning(
             "RMV Check finished without being able to retrieve record from RMV API",
             extra=rmv_check_for_log(rmv_check_record),
         )

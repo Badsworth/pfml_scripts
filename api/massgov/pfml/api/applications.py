@@ -270,7 +270,7 @@ def applications_submit(application_id):
         if not existing_application.fineos_absence_id:
             send_to_fineos_issues = send_to_fineos(existing_application, db_session, current_user)
             if len(send_to_fineos_issues) != 0:
-                logger.error(
+                logger.warning(
                     "applications_submit failure - failure sending application to claims processing system",
                     extra=log_attributes,
                 )
@@ -294,7 +294,7 @@ def applications_submit(application_id):
                 "applications_submit - application complete intake success", extra=log_attributes
             )
         else:
-            logger.error(
+            logger.warning(
                 "applications_submit failure - application complete intake failure",
                 extra=log_attributes,
             )
@@ -377,7 +377,7 @@ def validate_content_type(content_type):
     allowed_content_types = [item.value for item in AllowedContentTypes]
     if content_type not in allowed_content_types:
         message = "Incorrect file type: {}".format(content_type)
-        logger.error(message)
+        logger.warning(message)
         validation_error = ValidationErrorDetail(
             message=message, type="file_type", rule=allowed_content_types, field="file",
         )
@@ -395,7 +395,7 @@ def get_valid_content_type(file):
             message = "Detected content type and mime type do not match. Detected: {}, mimeType: {}".format(
                 content_type, file.mimetype
             )
-            logger.error(message)
+            logger.warning(message)
             validation_error = ValidationErrorDetail(
                 message=message,
                 type="file_type_mismatch",
@@ -414,7 +414,7 @@ def validate_file_name(file_name):
     """Validate the file name has an extension"""
     extension_index = file_name.rfind(".")
     if extension_index < 1:
-        logger.error("Missing extension on file name.")
+        logger.warning("Missing extension on file name.")
         message = "Missing extension on file name: {}".format(file_name)
         validation_error = ValidationErrorDetail(
             message=message,
@@ -490,9 +490,10 @@ def document_upload(application_id, body, file):
                 extra=log_attributes,
             )
         except ValueError as ve:
-            logger.error(
+            logger.warning(
                 "document_upload failure - failure uploading document to claims processing system",
                 extra=log_attributes,
+                exc_info=True,
             )
             return response_util.error_response(
                 status_code=BadRequest,
@@ -523,9 +524,10 @@ def document_upload(application_id, body, file):
                     "document_upload - evidence marked as received", extra=log_attributes,
                 )
         except ValueError as ve:
-            logger.error(
+            logger.warning(
                 "document_upload failure - failure marking evidence as received",
                 extra=log_attributes,
+                exc_info=True,
             )
 
             # Do not save the document in the database if we failed to mark the associated evidence as received in
@@ -730,9 +732,10 @@ def payment_preference_submit(application_id: str) -> Response:
                         status_code=201,
                     ).to_api_response()
                 except ValueError as ve:
-                    logger.error(
+                    logger.warning(
                         "payment_preference_submit failure - failure submitting payment preference to claims processing system",
                         extra=log_attributes,
+                        exc_info=True,
                     )
                     return response_util.error_response(
                         status_code=BadRequest,
@@ -743,7 +746,7 @@ def payment_preference_submit(application_id: str) -> Response:
                         ),
                     ).to_api_response()
             else:
-                logger.error(
+                logger.warning(
                     "payment_preference_submit failure - failure saving payment preference to database",
                     extra=log_attributes,
                 )

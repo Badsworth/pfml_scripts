@@ -114,7 +114,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
     # can now use `fineos_web_id` as if it was non-None
 
     if not awaiting_leave_info(fineos_web_id, fineos_absence_id):
-        logger.error("No outstanding information request for claim", extra=log_attributes)
+        logger.warning("No outstanding information request for claim", extra=log_attributes)
         return response_util.error_response(
             status_code=BadRequest,
             message="No outstanding information request for claim",
@@ -249,13 +249,13 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
         )
 
     if claim is None:
-        logger.error("Claim not in database.")
+        logger.warning("Claim not in database.")
         return response_util.error_response(
             status_code=BadRequest, message="Claim not in database.", errors=[], data={},
         ).to_api_response()
 
     if not user_has_access_to_claim(claim):
-        logger.error("User does not have access to claim.")
+        logger.warning("User does not have access to claim.")
         return response_util.error_response(
             status_code=Forbidden,
             message="User does not have access to claim.",
