@@ -1,0 +1,30 @@
+[
+  {
+    "accountKey": "05982902461",
+    "name": "Dynamic Productize Relationships Group",
+    "fein": "68-1637901",
+    "street": "308 Philip Plaza",
+    "city": "Greggview",
+    "state": "MA",
+    "zip": "63803-5031",
+    "dba": "",
+    "family_exemption": false,
+    "medical_exemption": false,
+    "updated_date": "2021-02-22T17:47:49.795Z",
+    "size": "small"
+  },
+  {
+    "accountKey": "86760684567",
+    "name": "Integrated Engineer E-Tailers Inc",
+    "fein": "39-8898158",
+    "street": "674 Cronin Harbor",
+    "city": "West Petra",
+    "state": "MA",
+    "zip": "92361-3230",
+    "dba": "",
+    "family_exemption": false,
+    "medical_exemption": false,
+    "updated_date": "2021-02-22T17:47:49.795Z",
+    "size": "medium"
+  }
+]
