@@ -12,6 +12,7 @@ from werkzeug.exceptions import (
     HTTPException,
     InternalServerError,
     NotFound,
+    ServiceUnavailable,
     Unauthorized,
 )
 
@@ -24,6 +25,7 @@ from massgov.pfml.api.validation.validators import (
     CustomRequestBodyValidator,
     CustomResponseValidator,
 )
+from massgov.pfml.fineos.exception import FINEOSFatalUnavailable
 
 UNEXPECTED_ERROR_TYPES = {"enum", "type"}
 logger = logging.get_logger(__name__)
@@ -111,11 +113,20 @@ def internal_server_error_handler(error: InternalServerError) -> Response:
     return http_exception_handler(error)
 
 
+def handle_fineos_unavailable_error(error: FINEOSFatalUnavailable) -> Response:
+    return response_util.error_response(
+        status_code=ServiceUnavailable,
+        message="The service is currently unavailable. Please try again later.",
+        errors=[response_util.custom_issue("fineos_client", "FINEOS is currently unavailable")],
+    ).to_api_response()
+
+
 def add_error_handlers_to_app(connexion_app):
     connexion_app.add_error_handler(ValidationException, validation_request_handler)
     connexion_app.add_error_handler(BadRequestProblem, connexion_400_handler)
     connexion_app.add_error_handler(ExtraParameterProblem, connexion_400_handler)
     connexion_app.add_error_handler(pydantic.ValidationError, handle_pydantic_validation_error)
+    connexion_app.add_error_handler(FINEOSFatalUnavailable, handle_fineos_unavailable_error)
 
     # These are all handled with the same generic exception handler to make them uniform in structure.
     connexion_app.add_error_handler(NotFound, http_exception_handler)

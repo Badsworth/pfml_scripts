@@ -72,7 +72,7 @@ def mock_bogus_fineos():
     def mock_create_or_update_leave_admin(
         leave_admin_create_or_update: fineos.models.CreateOrUpdateLeaveAdmin,
     ) -> None:
-        raise fineos.FINEOSClientError("OHNO")
+        raise fineos.FINEOSFatalResponseError(Exception("OHNO"))
 
     mock_fineos = fineos.create_client()
     mock_fineos.create_or_update_leave_admin = mock_create_or_update_leave_admin

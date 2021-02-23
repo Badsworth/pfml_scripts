@@ -615,7 +615,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
 
         if employer_create_or_update.employer_fein == "999999999":
-            raise exception.FINEOSClientError(
+            raise exception.FINEOSFatalResponseError(
                 Exception(
                     "Employer not created. Response Code: 422, "
                     "Party alias pfml_api_21ecb120-9a9a-4f8d-968d-e710b120e148 for alias "

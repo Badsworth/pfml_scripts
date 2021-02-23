@@ -11,7 +11,6 @@ import xml.etree.ElementTree
 import defusedxml
 import pytest
 import requests
-from werkzeug.wrappers import Response
 
 import massgov.pfml.fineos.fineos_client
 import massgov.pfml.fineos.models
@@ -457,7 +456,7 @@ def test_get_absence_period_decisions_with_error(caplog, httpserver, fineos_clie
         "/groupclientapi/groupClient/absences/absence-period-decisions?absenceId=NTN-251-ABS-01",
         method="GET",
         headers={"userid": "FINEOS_WEB_ID", "Content-Type": "application/json"},
-    ).respond_with_response(Response(FINEOSClientError))
+    ).respond_with_data('{"message": "Not found"', status=404, content_type="application/json")
 
     with pytest.raises(FINEOSClientError):
         fineos_client.get_absence_period_decisions("FINEOS_WEB_ID", "NTN-251-ABS-01")

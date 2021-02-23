@@ -158,8 +158,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 timeout=5,
             )
         except oauthlib.oauth2.OAuth2Error as ex:
-            logger.error("POST %s => %r", self.oauth2_url, ex)
-            raise exception.FINEOSClientError(cause=ex)
+            logger.exception("POST %s => %r", self.oauth2_url, ex)
+            raise exception.FINEOSFatalClientSideError(cause=ex)
 
         logger.info(
             "POST %s => type %s, expires %is (at %s)",
@@ -203,7 +203,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
                     method, url, timeout=(6.1, request_timeout), headers=headers, **args
                 )
         except (requests.exceptions.RequestException, requests.exceptions.Timeout) as ex:
-            logger.error("%s %s => %r", method, url, ex)
             # Make sure New Relic records errors from FINEOS, even if the API does not ultimately
             # return an error.
             # Specify fields based on API or FINEOS origin
@@ -223,17 +222,15 @@ class FINEOSClient(client.AbstractFINEOSClient):
                     else None,
                 },
             )
-            raise exception.FINEOSClientError(cause=ex)
+
+            if isinstance(ex, requests.exceptions.Timeout):
+                logger.warning("%s %s => %r", method, url, ex)
+                raise exception.FINEOSFatalUnavailable(cause=ex)
+            else:
+                logger.exception("%s %s => %r", method, url, ex)
+                raise exception.FINEOSFatalClientSideError(cause=ex)
 
         if response.status_code != requests.codes.ok:
-            logger.warning(
-                "%s %s => %s (%ims)",
-                method,
-                url,
-                response.status_code,
-                response.elapsed / MILLISECOND,
-                extra={"response.text": response.text},
-            )
             logger.debug(
                 "%s %s detail",
                 method,
@@ -259,7 +256,47 @@ class FINEOSClient(client.AbstractFINEOSClient):
                     else None,
                 },
             )
-            raise exception.FINEOSClientBadResponse(requests.codes.ok, response.status_code)
+
+            err: exception.FINEOSClientError
+
+            if response.status_code in (
+                requests.codes.SERVICE_UNAVAILABLE,
+                requests.codes.GATEWAY_TIMEOUT,
+                requests.codes.BAD_GATEWAY,
+            ):
+                # The service is unavailable for some reason. Log a warning and don't tell sentry -- there should be a
+                # percentage-based alarm for when there are too many of these.
+                #
+                # Ideally we would never get GATEWAY_TIMEOUT and would instead always keep our client-side timeout lower than the
+                # FINEOS 29s timeout; however, the program has requested that we keep them as high as possible. We should still
+                # manage them the same as a client-side timeout exception.
+                err = exception.FINEOSFatalUnavailable(response_status=response.status_code)
+                log_fn = logger.warning
+            elif response.status_code in (
+                requests.codes.UNPROCESSABLE_ENTITY,
+                requests.codes.NOT_FOUND,
+                requests.codes.FORBIDDEN,
+            ):
+                # Ideally we'd raise exceptions that distinguish between 403/404/422 but we'll leave that for another time.
+                err = exception.FINEOSClientBadResponse(requests.codes.ok, response.status_code)
+                log_fn = logger.warning
+            else:
+                # We should never see anything other than these. Log an error and notify Sentry if we do. These include issues
+                # like 400 BAD REQUEST (misformatted request), 500 INTERNAL SERVER ERROR, and 413 SIZE TOO LARGE.
+                err = exception.FINEOSFatalResponseError(requests.codes.ok, response.status_code)
+                log_fn = logger.error
+
+            log_fn(
+                "%s %s => %s (%ims)",
+                method,
+                url,
+                response.status_code,
+                response.elapsed / MILLISECOND,
+                extra={"response.text": response.text},
+                exc_info=err,
+            )
+
+            raise err
 
         logger.info(
             "%s %s => %s (%ims)", method, url, response.status_code, response.elapsed / MILLISECOND
@@ -993,7 +1030,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 {},
             )
             validation_msg_value = validation_msg.get("value")
-            raise exception.FINEOSClientError(
+            raise exception.FINEOSFatalResponseError(
                 Exception(
                     f"Employer not created. Response Code: {response_code_value}, {validation_msg_value}"
                 )
@@ -1135,7 +1172,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
 
         if fineos_customer_nbr == {}:
-            raise exception.FINEOSClientError(
+            raise exception.FINEOSFatalResponseError(
                 Exception(
                     f"Could not create service agreement for FINEOS employer id: {fineos_employer_id}"
                 )
