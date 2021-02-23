@@ -837,23 +837,19 @@ def fineos_document_response_to_document_response(
 def get_documents(
     application: Application, db_session: massgov.pfml.db.Session
 ) -> List[DocumentResponse]:
-    try:
-        fineos = massgov.pfml.fineos.create_client()
+    fineos = massgov.pfml.fineos.create_client()
 
-        fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
-        absence_id = get_fineos_absence_id_from_application(application)
+    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+    absence_id = get_fineos_absence_id_from_application(application)
 
-        fineos_documents = fineos.get_documents(fineos_user_id, absence_id)
-        document_responses = list(
-            map(
-                lambda fd: fineos_document_response_to_document_response(fd, application),
-                fineos_documents,
-            )
+    fineos_documents = fineos.get_documents(fineos_user_id, absence_id)
+    document_responses = list(
+        map(
+            lambda fd: fineos_document_response_to_document_response(fd, application),
+            fineos_documents,
         )
-        return document_responses
-    except massgov.pfml.fineos.FINEOSClientError:
-        logger.exception("FINEOS Client Exception")
-        raise ValueError("FINEOS Client Exception")
+    )
+    return document_responses
 
 
 def build_payment_preference(
@@ -911,17 +907,12 @@ def submit_payment_preference(
 def download_document(
     application: Application, fineos_document_id: str, db_session: massgov.pfml.db.Session
 ) -> massgov.pfml.fineos.models.customer_api.Base64EncodedFileData:
-    try:
-        fineos = massgov.pfml.fineos.create_client()
+    fineos = massgov.pfml.fineos.create_client()
 
-        fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
-        absence_id = get_fineos_absence_id_from_application(application)
+    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+    absence_id = get_fineos_absence_id_from_application(application)
 
-        return fineos.download_document(fineos_user_id, absence_id, fineos_document_id)
-
-    except massgov.pfml.fineos.FINEOSClientError:
-        logger.exception("FINEOS Client Exception")
-        raise ValueError("FINEOS Client Exception")
+    return fineos.download_document(fineos_user_id, absence_id, fineos_document_id)
 
 
 def create_or_update_employer(

@@ -121,38 +121,24 @@ def get_documents_as_leave_admin(fineos_user_id: str, absence_id: str) -> List[D
     """
     Given an absence ID, gets the documents associated with the claim
     """
-    try:
-        fineos = massgov.pfml.fineos.create_client()
-        fineos_documents = fineos.group_client_get_documents(fineos_user_id, absence_id)
-        # FINEOS response uses the "name" field for what we call "document_type"
-        downloadable_documents = filter(
-            lambda fd: fd.name.lower() in DOWNLOADABLE_DOC_TYPES, fineos_documents
-        )
-        document_responses = list(
-            map(
-                lambda fd: fineos_document_response_to_document_response(fd),
-                downloadable_documents,
-            )
-        )
-        return document_responses
-    except massgov.pfml.fineos.FINEOSClientError as error:
-        logger.exception("FINEOS Client Exception", extra={"error": error})
-        raise ValueError("FINEOS Client Exception")
+    fineos = massgov.pfml.fineos.create_client()
+    fineos_documents = fineos.group_client_get_documents(fineos_user_id, absence_id)
+    # FINEOS response uses the "name" field for what we call "document_type"
+    downloadable_documents = filter(
+        lambda fd: fd.name.lower() in DOWNLOADABLE_DOC_TYPES, fineos_documents
+    )
+    document_responses = list(
+        map(lambda fd: fineos_document_response_to_document_response(fd), downloadable_documents,)
+    )
+    return document_responses
 
 
 def download_document_as_leave_admin(
     fineos_user_id: str, absence_id: str, fineos_document_id: str
 ) -> massgov.pfml.fineos.models.group_client_api.Base64EncodedFileData:
-    try:
-        fineos = massgov.pfml.fineos.create_client()
+    fineos = massgov.pfml.fineos.create_client()
 
-        return fineos.download_document_as_leave_admin(
-            fineos_user_id, absence_id, fineos_document_id
-        )
-
-    except massgov.pfml.fineos.FINEOSClientError:
-        logger.exception("FINEOS Client Exception")
-        raise ValueError("FINEOS Client Exception")
+    return fineos.download_document_as_leave_admin(fineos_user_id, absence_id, fineos_document_id)
 
 
 def get_claim_as_leave_admin(
@@ -164,97 +150,86 @@ def get_claim_as_leave_admin(
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
     """
-    try:
-        if not fineos_client:
-            fineos_client = massgov.pfml.fineos.create_client()
-        absence_periods = fineos_client.get_absence_period_decisions(
-            fineos_user_id, absence_id
-        ).dict()
-        customer_id = absence_periods["decisions"][0]["employee"]["id"]
-        if (
-            "leavePlan" in absence_periods["decisions"][0]["period"]
-            and absence_periods["decisions"][0]["period"]["leavePlan"]
-        ):
-            status = absence_periods["decisions"][0]["period"]["leavePlan"]["adjudicationStatus"]
-        elif "leaveRequest" in absence_periods["decisions"][0]["period"]:
-            # Claims for ineligible Employers have no Leave Plan (and get rejected)
-            status = absence_periods["decisions"][0]["period"]["leaveRequest"]["decisionStatus"]
-        else:
-            status = "UNKNOWN"
-        customer_info = fineos_client.get_customer_info(fineos_user_id, customer_id).dict()
-        customer_occupations = fineos_client.get_customer_occupations(
-            fineos_user_id, customer_id
-        ).dict()
-        hours_worked_per_week = customer_occupations["elements"][0]["hrsWorkedPerWeek"]
-        eform_summaries = fineos_client.get_eform_summary(fineos_user_id, absence_id)
-        managed_reqs = fineos_client.get_managed_requirements(fineos_user_id, absence_id)
-        other_leaves: List[PreviousLeave] = []
-        other_incomes: List[EmployerBenefit] = []
-        is_reviewable = False
-        follow_up_date = None
+    if not fineos_client:
+        fineos_client = massgov.pfml.fineos.create_client()
 
-        for req in managed_reqs:
-            if req.type == LEAVE_ADMIN_INFO_REQUEST_TYPE:
-                follow_up_date = req.followUpDate
-                break
+    absence_periods = fineos_client.get_absence_period_decisions(fineos_user_id, absence_id).dict()
+    customer_id = absence_periods["decisions"][0]["employee"]["id"]
+    if (
+        "leavePlan" in absence_periods["decisions"][0]["period"]
+        and absence_periods["decisions"][0]["period"]["leavePlan"]
+    ):
+        status = absence_periods["decisions"][0]["period"]["leavePlan"]["adjudicationStatus"]
+    elif "leaveRequest" in absence_periods["decisions"][0]["period"]:
+        # Claims for ineligible Employers have no Leave Plan (and get rejected)
+        status = absence_periods["decisions"][0]["period"]["leaveRequest"]["decisionStatus"]
+    else:
+        status = "UNKNOWN"
+    customer_info = fineos_client.get_customer_info(fineos_user_id, customer_id).dict()
+    customer_occupations = fineos_client.get_customer_occupations(
+        fineos_user_id, customer_id
+    ).dict()
+    hours_worked_per_week = customer_occupations["elements"][0]["hrsWorkedPerWeek"]
+    eform_summaries = fineos_client.get_eform_summary(fineos_user_id, absence_id)
+    managed_reqs = fineos_client.get_managed_requirements(fineos_user_id, absence_id)
+    other_leaves: List[PreviousLeave] = []
+    other_incomes: List[EmployerBenefit] = []
+    is_reviewable = False
+    follow_up_date = None
 
-        for eform_summary_obj in eform_summaries:
-            eform_summary = eform_summary_obj.dict()
-            if eform_summary["eformType"] == "Other Income":
-                eform = fineos_client.get_eform(
-                    fineos_user_id, absence_id, eform_summary["eformId"]
-                )
-                other_incomes.extend(
-                    other_income
-                    for other_income in TransformOtherIncomeEform.from_fineos(eform)
-                    if other_income.program_type == "Employer"
-                )
-            elif eform_summary["eformType"] == "Other Leaves":
-                eform = fineos_client.get_eform(
-                    fineos_user_id, absence_id, eform_summary["eformId"]
-                )
-                other_leaves = other_leaves + TransformOtherLeaveEform.from_fineos(eform)
+    for req in managed_reqs:
+        if req.type == LEAVE_ADMIN_INFO_REQUEST_TYPE:
+            follow_up_date = req.followUpDate
+            break
 
-        if customer_info["address"] is not None:
-            claimant_address = Address(
-                line_1=customer_info["address"]["addressLine1"],
-                line_2=customer_info["address"]["addressLine2"],
-                city=customer_info["address"]["addressLine4"],
-                state=customer_info["address"]["addressLine6"],
-                zip=customer_info["address"]["postCode"],
+    for eform_summary_obj in eform_summaries:
+        eform_summary = eform_summary_obj.dict()
+        if eform_summary["eformType"] == "Other Income":
+            eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
+            other_incomes.extend(
+                other_income
+                for other_income in TransformOtherIncomeEform.from_fineos(eform)
+                if other_income.program_type == "Employer"
             )
-        else:
-            claimant_address = Address()
+        elif eform_summary["eformType"] == "Other Leaves":
+            eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
+            other_leaves = other_leaves + TransformOtherLeaveEform.from_fineos(eform)
 
-        if follow_up_date is not None:
-            is_reviewable = date.today() < follow_up_date
-
-        leave_details = get_leave_details(absence_periods)
-
-        return ClaimReviewResponse(
-            date_of_birth=customer_info["dateOfBirth"],
-            employer_benefits=other_incomes,
-            employer_fein=employer.employer_fein,
-            employer_dba=employer.employer_dba,
-            employer_id=employer.employer_id,
-            fineos_absence_id=absence_id,
-            first_name=customer_info["firstName"],
-            hours_worked_per_week=hours_worked_per_week,
-            last_name=customer_info["lastName"],
-            leave_details=leave_details,
-            middle_name=customer_info["secondName"],
-            previous_leaves=other_leaves,
-            residential_address=claimant_address,
-            tax_identifier=customer_info["idNumber"]
-            if customer_info["idNumber"] is not None
-            else "",
-            status=status,
-            follow_up_date=follow_up_date,
-            is_reviewable=is_reviewable,
+    if customer_info["address"] is not None:
+        claimant_address = Address(
+            line_1=customer_info["address"]["addressLine1"],
+            line_2=customer_info["address"]["addressLine2"],
+            city=customer_info["address"]["addressLine4"],
+            state=customer_info["address"]["addressLine6"],
+            zip=customer_info["address"]["postCode"],
         )
-    except massgov.pfml.fineos.FINEOSClientError as error:
-        logger.exception("FINEOS Client Exception", extra={"error": error})
-        raise ValueError("FINEOS Client Exception")
+    else:
+        claimant_address = Address()
+
+    if follow_up_date is not None:
+        is_reviewable = date.today() < follow_up_date
+
+    leave_details = get_leave_details(absence_periods)
+
+    return ClaimReviewResponse(
+        date_of_birth=customer_info["dateOfBirth"],
+        employer_benefits=other_incomes,
+        employer_fein=employer.employer_fein,
+        employer_dba=employer.employer_dba,
+        employer_id=employer.employer_id,
+        fineos_absence_id=absence_id,
+        first_name=customer_info["firstName"],
+        hours_worked_per_week=hours_worked_per_week,
+        last_name=customer_info["lastName"],
+        leave_details=leave_details,
+        middle_name=customer_info["secondName"],
+        previous_leaves=other_leaves,
+        residential_address=claimant_address,
+        tax_identifier=customer_info["idNumber"] if customer_info["idNumber"] is not None else "",
+        status=status,
+        follow_up_date=follow_up_date,
+        is_reviewable=is_reviewable,
+    )
 
 
 def register_leave_admin_with_fineos(
@@ -281,33 +256,6 @@ def register_leave_admin_with_fineos(
             )
             .one_or_none()
         )
-        if leave_admin_record and leave_admin_record.fineos_web_id is not None:
-            if not force_register:
-                logger.info(
-                    "User previously registered in FINEOS and force_register off",
-                    extra={"email": admin_email, "fineos_web_id": leave_admin_record.fineos_web_id},
-                )
-                return leave_admin_record
-
-        fineos = fineos_client if fineos_client else massgov.pfml.fineos.create_client()
-        fineos_web_id = f"pfml_leave_admin_{str(uuid.uuid4())}"
-        logger.info(
-            "Calling FINEOS to Create Leave Admin",
-            extra={"email": admin_email, "fineos_web_id": fineos_web_id},
-        )
-        leave_admin_create_payload = CreateOrUpdateLeaveAdmin(
-            fineos_web_id=fineos_web_id,
-            fineos_employer_id=str(employer.fineos_employer_id),
-            admin_full_name=admin_full_name,
-            admin_area_code=admin_area_code,
-            admin_phone_number=admin_phone_number,
-            admin_email=admin_email,
-        )
-        fineos.create_or_update_leave_admin(leave_admin_create_payload)
-
-    except massgov.pfml.fineos.FINEOSClientError as error:
-        logger.exception("FINEOS Client Exception", extra={"error": error})
-        raise ValueError("FINEOS Client Exception")
     except MultipleResultsFound as error:
         logger.exception(
             "Duplicate records found for UserLeaveAdministrator user_id %s",
@@ -315,23 +263,40 @@ def register_leave_admin_with_fineos(
             exc_info=error,
         )
         raise RegisterFINEOSDuplicateRecord("Duplicate User Leave Administrator records in db")
-    except Exception as db_error:
-        logger.exception("Error looking up leave admin from DB", extra={"error": db_error})
-        raise ValueError("Error looking up leave admin from DB")
 
-    try:
-        if leave_admin_record:
-            leave_admin_record.fineos_web_id = fineos_web_id
-        else:
-            leave_admin_record = UserLeaveAdministrator(
-                user=user, employer=employer, fineos_web_id=fineos_web_id
+    if leave_admin_record and leave_admin_record.fineos_web_id is not None:
+        if not force_register:
+            logger.info(
+                "User previously registered in FINEOS and force_register off",
+                extra={"email": admin_email, "fineos_web_id": leave_admin_record.fineos_web_id},
             )
-        db_session.add(leave_admin_record)
-        db_session.commit()
-        return leave_admin_record
-    except Exception as db_error:
-        logger.exception("Error adding leave admin to DB", extra={"error": db_error})
-        raise ValueError("Error adding leave admin to DB")
+            return leave_admin_record
+
+    fineos = fineos_client if fineos_client else massgov.pfml.fineos.create_client()
+    fineos_web_id = f"pfml_leave_admin_{str(uuid.uuid4())}"
+    logger.info(
+        "Calling FINEOS to Create Leave Admin",
+        extra={"email": admin_email, "fineos_web_id": fineos_web_id},
+    )
+    leave_admin_create_payload = CreateOrUpdateLeaveAdmin(
+        fineos_web_id=fineos_web_id,
+        fineos_employer_id=str(employer.fineos_employer_id),
+        admin_full_name=admin_full_name,
+        admin_area_code=admin_area_code,
+        admin_phone_number=admin_phone_number,
+        admin_email=admin_email,
+    )
+    fineos.create_or_update_leave_admin(leave_admin_create_payload)
+
+    if leave_admin_record:
+        leave_admin_record.fineos_web_id = fineos_web_id
+    else:
+        leave_admin_record = UserLeaveAdministrator(
+            user=user, employer=employer, fineos_web_id=fineos_web_id
+        )
+    db_session.add(leave_admin_record)
+    db_session.commit()
+    return leave_admin_record
 
 
 def create_eform(user_id: str, absence_id: str, eform: EFormBody) -> None:

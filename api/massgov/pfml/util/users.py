@@ -115,7 +115,7 @@ def create_or_update_user_record(
                 requested_employer.employer_id,
             )
             return False, "Duplicate user leave administrators found"
-        except ValueError as e:
+        except Exception as e:
             logger.warning("Received an error processing FINEOS registration ", exc_info=e)
             retry_count += 1
         else:
