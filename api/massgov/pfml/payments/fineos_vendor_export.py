@@ -31,7 +31,6 @@ from massgov.pfml.db.models.employees import (
     State,
     TaxIdentifier,
 )
-from massgov.pfml.util.csv import CSVSourceWrapper
 
 logger = logging.get_logger(__name__)
 
@@ -165,13 +164,11 @@ def download_and_index_data(extract_data: ExtractData, download_directory: str) 
         },
     )
 
-    downloaded_employee_feed_file = download_file(
-        extract_data.employee_feed.file_location, download_directory
-    )
-
     # Index employee file for easy search.
     employee_indexed_data: Dict[str, Dict[str, str]] = {}
-    employee_rows = CSVSourceWrapper(downloaded_employee_feed_file)
+    employee_rows = payments_util.download_and_parse_csv(
+        extract_data.employee_feed.file_location, download_directory
+    )
     for row in employee_rows:
         default_payment_flag = row.get("DEFPAYMENTPREF")
         if default_payment_flag is not None and default_payment_flag == "Y":
@@ -182,13 +179,11 @@ def download_and_index_data(extract_data: ExtractData, download_directory: str) 
 
     extract_data.employee_feed.indexed_data = employee_indexed_data
 
-    downloaded_leave_plan_info_file = download_file(
-        extract_data.leave_plan_info.file_location, download_directory
-    )
-
     # Index leave plan info for easy search.
     leave_plan_info_indexed_data: Dict[str, Dict[str, str]] = {}
-    leave_plan_info_rows = CSVSourceWrapper(downloaded_leave_plan_info_file)
+    leave_plan_info_rows = payments_util.download_and_parse_csv(
+        extract_data.leave_plan_info.file_location, download_directory
+    )
     for row in leave_plan_info_rows:
         leave_plan_info_indexed_data[str(row.get("ABSENCE_CASENUMBER"))] = row
         logger.debug(
@@ -198,12 +193,10 @@ def download_and_index_data(extract_data: ExtractData, download_directory: str) 
 
     extract_data.leave_plan_info.indexed_data = leave_plan_info_indexed_data
 
-    downloaded_requested_absence_file = download_file(
+    requested_absence_indexed_data: Dict[str, Dict[str, str]] = {}
+    requested_absence_rows = payments_util.download_and_parse_csv(
         extract_data.requested_absence_info.file_location, download_directory
     )
-
-    requested_absence_indexed_data: Dict[str, Dict[str, str]] = {}
-    requested_absence_rows = CSVSourceWrapper(downloaded_requested_absence_file)
     for row in requested_absence_rows:
         requested_absence_indexed_data[str(row.get("ABSENCE_CASENUMBER"))] = row
         logger.debug(

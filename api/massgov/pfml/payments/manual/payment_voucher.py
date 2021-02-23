@@ -12,7 +12,6 @@
 #
 
 import argparse
-import dataclasses
 import datetime
 import os.path
 import pathlib
@@ -20,12 +19,14 @@ import random
 import string
 import sys
 import tempfile
-from typing import Dict, Optional
+from dataclasses import asdict, dataclass, field
+from typing import Dict, List, Optional
 
 import smart_open
 from sqlalchemy.exc import SQLAlchemyError
 
 import massgov.pfml.db
+import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.batch.log
 import massgov.pfml.util.datetime
 import massgov.pfml.util.files
@@ -41,6 +42,24 @@ from massgov.pfml.payments.manual.payment_voucher_csv import (
 )
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.payments.manual.manual_payment")
+
+# File names
+VBI_REQUESTED_ASBSENCE = "VBI_REQUESTEDABSENCE.csv"
+
+
+@dataclass
+class Extract:
+    file_location: str
+    indexed_data: Dict[str, Dict[str, str]] = field(default_factory=dict)
+
+
+class VoucherExtractData:
+    vbi_requested_absence: Extract
+
+    def __init__(self, s3_locations: List[str]):
+        for s3_location in s3_locations:
+            if s3_location.endswith(VBI_REQUESTED_ASBSENCE):
+                self.vbi_requested_absence = Extract(s3_location)
 
 
 def main():
@@ -109,6 +128,12 @@ def process_extracts_to_payment_voucher(
     with tempfile.TemporaryDirectory() as vendor_temp_dir:
         fineos_vendor_export.download_and_index_data(vendor_extract_data, vendor_temp_dir)
 
+    # Read the VBI_REQUESTEDABSENCE.csv
+    # Not to be confused with the similarly named VBI_REQUESTEDABSENCE_SOM.csv
+    voucher_extract_data = VoucherExtractData(input_files)
+    with tempfile.TemporaryDirectory() as voucher_temp_dir:
+        download_and_index_voucher_data(voucher_extract_data, voucher_temp_dir)
+
     csv_path = os.path.join(
         output_path, datetime.datetime.now().strftime("%Y%m%d_%H%M%S_payment_voucher.csv")
     )
@@ -121,6 +146,7 @@ def process_extracts_to_payment_voucher(
         process_payment_records(
             extract_data,
             vendor_extract_data.requested_absence_info,
+            voucher_extract_data,
             output_file,
             writeback_file,
             payment_date,
@@ -143,6 +169,7 @@ def copy_input_files_to_output_path(input_path, output_path):
             "Employee_feed.csv",
             "LeavePlan_info.csv",
             "VBI_REQUESTEDABSENCE_SOM.csv",
+            VBI_REQUESTED_ASBSENCE,
             "vpei.csv",
             "vpeiclaimdetails.csv",
             "vpeipaymentdetails.csv",
@@ -162,6 +189,7 @@ def copy_input_files_to_output_path(input_path, output_path):
 def process_payment_records(
     extract_data,
     requested_absence_extract,
+    voucher_extract_data,
     output_file,
     writeback_file,
     payment_date,
@@ -185,6 +213,7 @@ def process_payment_records(
         process_payment_record(
             extract_data,
             requested_absence_extract,
+            voucher_extract_data,
             index,
             record,
             output_csv,
@@ -204,6 +233,7 @@ class PaymentRowError(Exception):
 def process_payment_record(
     extract_data,
     requested_absence_extract,
+    voucher_extract_data,
     index,
     record,
     output_csv,
@@ -220,6 +250,9 @@ def process_payment_record(
         extra.update(absence_case=payment_data.absence_case_number, i_value=index.i)
 
         requested_absence = requested_absence_extract.indexed_data[payment_data.absence_case_number]
+        vbi_requested_absence = voucher_extract_data.vbi_requested_absence.indexed_data[
+            payment_data.absence_case_number
+        ]
 
         if payment_data.validation_container.has_validation_issues():
             logger.warning(
@@ -231,7 +264,13 @@ def process_payment_record(
         mmars_vendor_code = get_mmars_vendor_code(payment_data.tin, db_session)
 
         write_row_to_output(
-            index, payment_data, requested_absence, mmars_vendor_code, payment_date, output_csv
+            index,
+            payment_data,
+            requested_absence,
+            vbi_requested_absence,
+            mmars_vendor_code,
+            payment_date,
+            output_csv,
         )
         write_writeback_row(index, writeback_csv)
 
@@ -272,7 +311,13 @@ def get_mmars_vendor_code(tax_identifier, db_session):
 
 
 def write_row_to_output(
-    index, payment_data, requested_absence, mmars_vendor_code, payment_date, output_csv
+    index,
+    payment_data,
+    requested_absence,
+    vbi_requested_absence,
+    mmars_vendor_code,
+    payment_date,
+    output_csv,
 ):
     """Write a single row to the output CSV."""
     payment_start_period = datetime.datetime.fromisoformat(payment_data.payment_start_period).date()
@@ -314,8 +359,30 @@ def write_row_to_output(
         i_value=index.i,
         case_status=requested_absence["ABSENCE_CASESTATUS"],
         employer_id=requested_absence["EMPLOYER_CUSTOMERNO"],
+        leave_request_id=vbi_requested_absence.get("LEAVEREQUEST_ID"),
+        leave_request_decision=vbi_requested_absence.get("LEAVEREQUEST_DECISION"),
     )
-    output_csv.writerow(dataclasses.asdict(payment_row))
+    output_csv.writerow(asdict(payment_row))
+
+
+def download_and_index_voucher_data(
+    extract_data: VoucherExtractData, download_directory: str
+) -> None:
+    vbi_requested_absence_rows = payments_util.download_and_parse_csv(
+        extract_data.vbi_requested_absence.file_location, download_directory
+    )
+
+    vbi_requested_absence_indexed_data: Dict[str, Dict[str, str]] = {}
+    for row in vbi_requested_absence_rows:
+        absence_case_number = str(row.get("ABSENCE_CASENUMBER"))
+        vbi_requested_absence_indexed_data[absence_case_number] = row
+        logger.debug(
+            "indexed vbi_REQUESTEDABSENCE file row with Absence case no: %s", absence_case_number
+        )
+
+    extract_data.vbi_requested_absence.indexed_data = vbi_requested_absence_indexed_data
+
+    return
 
 
 def write_writeback_row(index, writeback_csv):
@@ -328,7 +395,7 @@ def write_writeback_row(index, writeback_csv):
         trans_status_date=datetime.datetime.now().strftime("%Y-%m-%d"),
         stock_no="",
     )
-    writeback_csv.writerow(dataclasses.asdict(writeback_row))
+    writeback_csv.writerow(asdict(writeback_row))
 
 
 def get_leave_type(absence_info):
