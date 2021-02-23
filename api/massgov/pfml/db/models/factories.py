@@ -367,6 +367,7 @@ class ApplicationFactory(BaseFactory):
     submitted_time = None
     fineos_absence_id = None
     fineos_notification_case_id = None
+    hours_worked_per_week = None
 
     # Leave Periods
     has_continuous_leave_periods = False
@@ -377,8 +378,10 @@ class ApplicationFactory(BaseFactory):
     user = factory.SubFactory(UserFactory)
     user_id = factory.LazyAttribute(lambda a: a.user.user_id)
 
+    # EmployerFactory generates the FEIN, and we want to use the same FEIN
+    # so that EIN validations succeed
+    employer_fein = factory.SelfAttribute("employer.employer_fein")
     employer = factory.SubFactory(EmployerFactory)
-    hours_worked_per_week = None
     employer_id = factory.LazyAttribute(lambda a: a.employer.employer_id)
 
     tax_identifier = factory.SubFactory(TaxIdentifierFactory)
@@ -386,8 +389,6 @@ class ApplicationFactory(BaseFactory):
 
     employee = factory.SubFactory(EmployeeFactory)
     employee_id = factory.LazyAttribute(lambda a: a.employee.employee_id)
-
-    employer_fein = "22-7777777"
 
     phone = factory.SubFactory(PhoneFactory)
 

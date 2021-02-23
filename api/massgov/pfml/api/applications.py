@@ -24,6 +24,7 @@ from massgov.pfml.api.models.applications.requests import (
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
 from massgov.pfml.api.services.applications import get_document_by_id
+from massgov.pfml.api.services.ein_validators import get_contributing_employer_issue
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
     create_eform,
@@ -161,6 +162,10 @@ def applications_update(application_id):
         )
 
     issues = application_rules.get_application_issues(existing_application, flask.request.headers)
+    employer_issue = get_contributing_employer_issue(db_session, existing_application.employer_fein)
+
+    if employer_issue:
+        issues.append(employer_issue)
 
     # Set log attributes to the updated attributes rather than the previous attributes
     # Also, calling get_application_log_attributes too early causes the application not to update properly for some reason
@@ -209,6 +214,13 @@ def applications_submit(application_id):
         issues = application_rules.get_application_issues(
             existing_application, flask.request.headers
         )
+        employer_issue = get_contributing_employer_issue(
+            db_session, existing_application.employer_fein
+        )
+
+        if employer_issue:
+            issues.append(employer_issue)
+
         if issues:
             logger.info(
                 "applications_submit failure - application failed validation", extra=log_attributes

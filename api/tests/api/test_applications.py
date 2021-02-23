@@ -2583,6 +2583,31 @@ def test_application_patch_invalid_values(client, user, auth_token):
     )
 
 
+def test_application_patch_fein_not_found(client, user, auth_token):
+    # Assert that API returns a validation warning when the request
+    # includes an EIN that doesn't match an Employer record
+    application = ApplicationFactory.create(user=user)
+
+    update_request_body = {
+        "employer_fein": "99-9999999",
+    }
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=update_request_body,
+    )
+
+    response_body = response.get_json()
+    warnings = response_body.get("warnings")
+
+    assert {
+        "field": "employer_fein",
+        "message": "Confirm that you have the correct EIN, and that the Employer is contributing to Paid Family and Medical Leave.",
+        "type": "require_contributing_employer",
+    } in warnings
+
+
 def test_application_patch_keys_not_in_body_retain_existing_value(
     client, user, auth_token, test_db_session
 ):
@@ -2665,11 +2690,10 @@ def test_application_patch_failure_after_absence_case_creation(
     application.submitted_time = datetime_util.utcnow()
     test_db_session.commit()
 
-    update_request_body = sqlalchemy_object_as_dict(application)
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json=update_request_body,
+        json={},
     )
 
     tests.api.validate_error_response(
@@ -2693,8 +2717,6 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
     application.has_continuous_leave_periods = True
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    # Applications must have an FEIN for submit to succeed.
-    application.employer_fein = "770007777"
 
     assert not application.submitted_time
 
@@ -2729,8 +2751,6 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     application.has_continuous_leave_periods = True
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    # Applications must have an FEIN for submit to succeed.
-    application.employer_fein = "770007777"
 
     # Add fineos_absence_id so it behaves like it was submitted but failed to complete intake
     application.fineos_absence_id = "NTN-259-ABS-01"
@@ -2758,7 +2778,7 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     fineos_user_id = capture[2][1]
     # Capture contains a find_employer call and the complete_intake call
     assert capture == [
-        ("find_employer", None, {"employer_fein": "770007777"}),
+        ("find_employer", None, {"employer_fein": application.employer_fein}),
         (
             "register_api_user",
             None,
@@ -2766,7 +2786,7 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
                     customer_number=None,
-                    employer_id="7700077771000",
+                    employer_id=f"{application.employer_fein}1000",
                     date_of_birth=date(1753, 1, 1),
                     email=None,
                     first_name=None,
@@ -2849,10 +2869,8 @@ def test_application_post_submit_ssn_fraud_error(
     application.has_continuous_leave_periods = True
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    # Applications must have an FEIN for submit to succeed.
-    application.employer_fein = "770007777"
-    application.tax_identifier = tax_identifier
 
+    application.tax_identifier = tax_identifier
     test_db_session.commit()
 
     response = client.post(
@@ -2888,10 +2906,8 @@ def test_application_post_submit_ssn_second_app(
     application.has_continuous_leave_periods = True
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    # Applications must have an FEIN for submit to succeed.
-    application.employer_fein = "770007777"
-    application.tax_identifier = tax_identifier
 
+    application.tax_identifier = tax_identifier
     test_db_session.commit()
     response = client.post(
         "/v1/applications/{}/submit_application".format(application.application_id),
@@ -2904,50 +2920,24 @@ def test_application_post_submit_ssn_second_app(
     assert not response_body.get("warnings")
 
 
-def test_application_post_submit_app_fein_not_found(client, user, auth_token, test_db_session):
-    factory.random.reseed_random(2)
-
-    application = ApplicationFactory.create(user=user)
-    application.date_of_birth = "1953-01-05"
-    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
-    application.hours_worked_per_week = 70
-    application.residential_address = AddressFactory.create()
-    application.work_pattern = WorkPatternFixedFactory.create()
-    application.continuous_leave_periods = [
-        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
-    ]
-    application.has_continuous_leave_periods = True
-
-    assert not application.completed_time
-
-    # A FEIN of 999999999 is simulated as not found in MockFINEOSClient.
-    application.employer_fein = "999999999"
-    test_db_session.commit()
+def test_application_post_submit_app_fein_not_found(client, user, auth_token):
+    # Assert that API returns a validation error when the application
+    # includes an EIN that doesn't match an Employer record
+    application = ApplicationFactory.create(user=user, employer_fein="999999999")
 
     response = client.post(
         "/v1/applications/{}/submit_application".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
-    response_body = response.get_json()
-    fineos_issues = response_body.get("errors")
-    assert (
-        len(
-            list(
-                filter(lambda i: i["type"] == IssueType.fineos_case_creation_issues, fineos_issues)
-            )
-        )
-        > 0
-    )
 
-    assert (
-        response_body.get("message")
-        == f"Application {str(application.application_id)} could not be submitted"
-    )
-    assert not response_body.get("warnings")
-    # Simplified check to confirm Application was included in response:
-    assert response_body.get("data").get("application_id") == str(application.application_id)
-    assert not response_body.get("data").get("fineos_absence_id")
-    assert response_body.get("data").get("status") == ApplicationStatus.Started.value
+    response_body = response.get_json()
+    errors = response_body.get("errors")
+
+    assert {
+        "field": "employer_fein",
+        "message": "Confirm that you have the correct EIN, and that the Employer is contributing to Paid Family and Medical Leave.",
+        "type": "require_contributing_employer",
+    } in errors
 
 
 def test_application_post_submit_app_ssn_not_found(client, user, auth_token, test_db_session):
@@ -2999,7 +2989,6 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
     application = ApplicationFactory.create(user=user)
 
     application.hours_worked_per_week = 70
-    application.employer_fein = "770000001"
     application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
 
     application.first_name = "First"
@@ -3137,7 +3126,6 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     application.last_name = "Last"
     application.date_of_birth = date(1977, 7, 27)
     application.mass_id = "S12345678"
-    application.employer_fein = "770000001"
     application.hours_worked_per_week = 70
     application.employer_notified = True
     application.phone = Phone(phone_number="+12404879945", phone_type_id=1, fineos_phone_id=111)
@@ -3174,14 +3162,14 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     # This is generated randomly and changes each time.
     fineos_user_id = capture[2][1]
     assert capture == [
-        ("find_employer", None, {"employer_fein": "770000001"}),
+        ("find_employer", None, {"employer_fein": application.employer_fein}),
         (
             "register_api_user",
             None,
             {
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
-                    employer_id="7700000011000",
+                    employer_id=f"{application.employer_fein}1000",
                     date_of_birth=date(1753, 1, 1),
                     national_insurance_no="999004444",
                 )
@@ -3334,7 +3322,6 @@ def test_application_post_submit_to_fineos_intermittent_leave(
     application.middle_name = "Middle"
     application.last_name = "Last"
     application.date_of_birth = date(1977, 7, 27)
-    application.employer_fein = "770000001"
     application.hours_worked_per_week = 70
     application.employer_notified = True
     application.employer_notification_date = date(2021, 1, 7)
@@ -3399,7 +3386,6 @@ def test_application_post_submit_to_fineos_reduced_schedule_leave(
     application.middle_name = "Middle"
     application.last_name = "Last"
     application.date_of_birth = date(1977, 7, 27)
-    application.employer_fein = "770000001"
     application.hours_worked_per_week = 70
     application.employer_notified = True
     application.employer_notification_date = date(2021, 1, 7)
@@ -3850,7 +3836,6 @@ def test_application_post_complete_app(client, user, auth_token, test_db_session
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    application.employer_fein = "770000001"
     application.fineos_notification_case_id = "NTN-259"
     application.fineos_absence_id = application.fineos_notification_case_id + "-ABS-01"
     application.continuous_leave_periods = [
@@ -3880,7 +3865,6 @@ def test_application_complete_mark_document_received_fineos(
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    application.employer_fein = "770000001"
     application.fineos_notification_case_id = "NTN-259"
     application.fineos_absence_id = application.fineos_notification_case_id + "-ABS-01"
     application.continuous_leave_periods = [
