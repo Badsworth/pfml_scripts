@@ -47,7 +47,7 @@ exports[`UploadCertification after documents have been loaded when leave reason 
   documents={Array []}
   fileErrors={Array []}
   fileHeadingPrefix="File"
-  maximumFileSize={3500000}
+  maximumFileSize={4500000}
   onAddTempFiles={[Function]}
   onInvalidFilesError={[MockFunction]}
   onRemoveTempFile={[Function]}

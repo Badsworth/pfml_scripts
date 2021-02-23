@@ -6,7 +6,7 @@ exports[`FileUploadDetails renders the details with text 1`] = `
 >
   <div>
     <p>
-      Files should be 3.5 MB or smaller. If your file is larger than 3.5 MB, try resizing it or splitting it into separate files.
+      Files should be 4.5 MB or smaller. If your file is larger than 4.5 MB, try resizing it or splitting it into separate files.
     </p>
     <List
       key="0"

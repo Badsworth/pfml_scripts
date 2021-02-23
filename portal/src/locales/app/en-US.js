@@ -505,9 +505,9 @@ const errors = {
     },
   },
   invalidFile_size:
-    "We could not upload: {{disallowedFileNames}}. Files must be smaller than 3.5 MB.",
+    "We could not upload: {{disallowedFileNames}}. Files must be smaller than 4.5 MB.",
   invalidFile_sizeAndType:
-    "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 3.5 MB.",
+    "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 4.5 MB.",
   invalidFile_type:
     "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png).",
   network:
@@ -2044,7 +2044,7 @@ const components = {
   fileUploadDetails: {
     label: "Some tips for uploading documents and images",
     sizeNotice:
-      "Files should be 3.5 MB or smaller. If your file is larger than 3.5 MB, try resizing it or splitting it into separate files.",
+      "Files should be 4.5 MB or smaller. If your file is larger than 4.5 MB, try resizing it or splitting it into separate files.",
     tips: [
       {
         listHeading: "This website only accepts:",

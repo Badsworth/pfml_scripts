@@ -88,7 +88,7 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
       documents={Array []}
       fileErrors={Array []}
       fileHeadingPrefix="File"
-      maximumFileSize={3500000}
+      maximumFileSize={4500000}
       onAddTempFiles={[Function]}
       onInvalidFilesError={[MockFunction]}
       onRemoveTempFile={[Function]}
@@ -117,7 +117,7 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID r
   documents={Array []}
   fileErrors={Array []}
   fileHeadingPrefix="File"
-  maximumFileSize={3500000}
+  maximumFileSize={4500000}
   onAddTempFiles={[Function]}
   onInvalidFilesError={[MockFunction]}
   onRemoveTempFile={[Function]}
@@ -177,7 +177,7 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID r
       documents={Array []}
       fileErrors={Array []}
       fileHeadingPrefix="File"
-      maximumFileSize={3500000}
+      maximumFileSize={4500000}
       onAddTempFiles={[Function]}
       onInvalidFilesError={[MockFunction]}
       onRemoveTempFile={[Function]}
@@ -239,7 +239,7 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID w
       documents={Array []}
       fileErrors={Array []}
       fileHeadingPrefix="File"
-      maximumFileSize={3500000}
+      maximumFileSize={4500000}
       onAddTempFiles={[Function]}
       onInvalidFilesError={[MockFunction]}
       onRemoveTempFile={[Function]}

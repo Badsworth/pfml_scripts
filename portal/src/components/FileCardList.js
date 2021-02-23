@@ -14,7 +14,7 @@ import tracker from "../services/tracker";
 const defaultAllowedFileTypes = ["image/png", "image/jpeg", "application/pdf"];
 
 // Max file size in bytes
-const defaultMaximumFileSize = 3500000;
+const defaultMaximumFileSize = 4500000;
 
 // Exclusion reasons
 const disallowedReasons = {

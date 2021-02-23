@@ -350,7 +350,7 @@ describe("FileCardList", () => {
             type: "application/pdf",
           });
           Object.defineProperty(invalidFile.file, "size", {
-            get: () => 3500001,
+            get: () => 4500001,
           });
           testHook(() => {
             ({ collection: tempFiles, addItems: addFiles } = useCollectionState(
@@ -397,7 +397,7 @@ describe("FileCardList", () => {
           expect(error.issues).toMatchInlineSnapshot(`
             Array [
               Object {
-                "message": "We could not upload: invalid-file.pdf. Files must be smaller than 3.5 MB.",
+                "message": "We could not upload: invalid-file.pdf. Files must be smaller than 4.5 MB.",
               },
             ]
           `);
@@ -432,7 +432,7 @@ describe("FileCardList", () => {
             type: "application/exe",
           });
           Object.defineProperty(invalidFile.file, "size", {
-            get: () => 3500001,
+            get: () => 4500001,
           });
           testHook(() => {
             ({ collection: tempFiles, addItems: addFiles } = useCollectionState(
@@ -479,7 +479,7 @@ describe("FileCardList", () => {
           expect(error.issues).toMatchInlineSnapshot(`
             Array [
               Object {
-                "message": "We could not upload: invalid-file.exe. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 3.5 MB.",
+                "message": "We could not upload: invalid-file.exe. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 4.5 MB.",
               },
             ]
           `);
@@ -508,14 +508,14 @@ describe("FileCardList", () => {
           ];
 
           invalidSizeFiles.forEach((file) =>
-            Object.defineProperty(file, "size", { get: () => 3500001 })
+            Object.defineProperty(file, "size", { get: () => 4500001 })
           );
           const invalidSizeAndTypeFiles = [
             makeFile({ name: "sizeAndType1.exe", type: "application/exe" }),
             makeFile({ name: "sizeAndType2.gif", type: "application/gif" }),
           ];
           invalidSizeAndTypeFiles.forEach((file) =>
-            Object.defineProperty(file, "size", { get: () => 3500001 })
+            Object.defineProperty(file, "size", { get: () => 4500001 })
           );
 
           testHook(() => {
@@ -563,16 +563,16 @@ describe("FileCardList", () => {
                 "message": "We could not upload: type2.gif. Choose a PDF or an image file (.jpg, .jpeg, .png).",
               },
               Object {
-                "message": "We could not upload: size1.pdf. Files must be smaller than 3.5 MB.",
+                "message": "We could not upload: size1.pdf. Files must be smaller than 4.5 MB.",
               },
               Object {
-                "message": "We could not upload: size2.pdf. Files must be smaller than 3.5 MB.",
+                "message": "We could not upload: size2.pdf. Files must be smaller than 4.5 MB.",
               },
               Object {
-                "message": "We could not upload: sizeAndType1.exe. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 3.5 MB.",
+                "message": "We could not upload: sizeAndType1.exe. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 4.5 MB.",
               },
               Object {
-                "message": "We could not upload: sizeAndType2.gif. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 3.5 MB.",
+                "message": "We could not upload: sizeAndType2.gif. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 4.5 MB.",
               },
             ]
           `);
