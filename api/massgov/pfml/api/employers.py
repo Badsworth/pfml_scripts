@@ -9,6 +9,7 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import READ, requires
+from massgov.pfml.api.validation import PaymentRequired
 from massgov.pfml.db.models.employees import (
     Employer,
     EmployerQuarterlyContribution,
@@ -26,6 +27,13 @@ def employer_get_most_recent_withholding_dates(employer_id: str) -> flask.Respon
         current_date = date.today()
         last_years_date = date(current_date.year - 1, current_date.month, current_date.day)
 
+        employer = (
+            db_session.query(Employer).filter(Employer.employer_id == employer_id).one_or_none()
+        )
+
+        if employer is None:
+            raise NotFound(description="Employer not found")
+
         contribution = (
             db_session.query(EmployerQuarterlyContribution)
             .filter(EmployerQuarterlyContribution.employer_id == employer_id)
@@ -38,7 +46,7 @@ def employer_get_most_recent_withholding_dates(employer_id: str) -> flask.Respon
         )
 
         if contribution is None:
-            raise NotFound(description="No valid contributions found")
+            raise PaymentRequired(description="No valid contributions found")
 
         response = {"filing_period": contribution.filing_period}
 

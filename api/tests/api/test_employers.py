@@ -104,7 +104,7 @@ def test_employers_receive_200_and_most_recent_date_from_get_withholding_dates(
     assert response_data["filing_period"] == "2020-06-30"
 
 
-def test_employers_receive_404_for_no_contributions(
+def test_employers_receive_402_for_no_contributions(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
@@ -121,10 +121,10 @@ def test_employers_receive_404_for_no_contributions(
         f"/v1/employers/withholding/{employer.employer_id}",
         headers={"Authorization": f"Bearer {employer_auth_token}"},
     )
-    assert response.status_code == 404
+    assert response.status_code == 402
 
 
-def test_employers_receive_404_for_old_contributions(
+def test_employers_receive_402_for_old_contributions(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
@@ -146,10 +146,10 @@ def test_employers_receive_404_for_old_contributions(
         f"/v1/employers/withholding/{employer.employer_id}",
         headers={"Authorization": f"Bearer {employer_auth_token}"},
     )
-    assert response.status_code == 404
+    assert response.status_code == 402
 
 
-def test_employers_receive_404_for_zero_amount_contributions(
+def test_employers_receive_402_for_zero_amount_contributions(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
@@ -169,4 +169,4 @@ def test_employers_receive_404_for_zero_amount_contributions(
         f"/v1/employers/withholding/{employer.employer_id}",
         headers={"Authorization": f"Bearer {employer_auth_token}"},
     )
-    assert response.status_code == 404
+    assert response.status_code == 402
