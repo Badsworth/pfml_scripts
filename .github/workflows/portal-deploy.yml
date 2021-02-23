@@ -20,6 +20,12 @@ on:
         description: |
           --------------------------------------
           ⬇️ (For staging deploys only) Also deploy the above version to UAT?
+      extraPerformanceDeploy:
+        required: false
+        default: "true"
+        description: |
+          --------------------------------------
+          ⬇️ (Also for staging deploys only) Also deploy the above version to Performance?
 
   push:
     branches:
@@ -172,6 +178,30 @@ jobs:
                         -H "Authorization: Bearer $GITHUB_TOKEN" \
                         -H "Accept: application/vnd.github.v3+json" \
                         -d '{ "ref": "deploy/portal/uat", "inputs": { "version": "${{ env.UAT_DEPLOYMENT_VERSION }}" } }'
+          echo "Done."
+
+  extra-performance-deploy:
+    if: contains(github.ref, 'deploy/portal/performance') && github.event.inputs.extraPerformanceDeploy == 'true'
+    name: (Stage) Extra Performance deploy
+    needs: update-the-deploy-branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+      - name: Start a Performance deploy
+        env:
+          GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
+          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          PERFORMANCE_DEPLOYMENT_VERSION: ${{ github.event.inputs.version || 'master' }}
+          WORKFLOW_NAME: "portal-deploy.yml"
+        run: |
+          echo "*** A PORTAL staging deploy is now in progress. Enqueuing an extra deployment to Performance... ***"
+          curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
+                        -H "Authorization: Bearer $GITHUB_TOKEN" \
+                        -H "Accept: application/vnd.github.v3+json" \
+                        -d '{ "ref": "deploy/portal/performance", "inputs": { "version": "${{ env.PERFORMANCE_DEPLOYMENT_VERSION }}" } }'
           echo "Done."
 
   deploy:
