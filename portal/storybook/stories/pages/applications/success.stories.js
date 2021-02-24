@@ -29,6 +29,7 @@ const mockClaims = {
     .create(),
   "Family (Bonding Future Newborn)": new MockClaimBuilder()
     .continuous({ start_date: futureDate })
+    .hasFutureChild()
     .bondingBirthLeaveReason(futureDate)
     .absenceId()
     .create(),
@@ -39,6 +40,7 @@ const mockClaims = {
     .create(),
   "Family (Bonding Future Adoption)": new MockClaimBuilder()
     .continuous({ start_date: futureDate })
+    .hasFutureChild()
     .bondingAdoptionLeaveReason(futureDate)
     .absenceId()
     .create(),
