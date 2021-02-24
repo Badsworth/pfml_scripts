@@ -1483,7 +1483,7 @@ def parse_employer_file(employer_file_path, decrypter, report):
 
 
 def move_file_to_processed(file_path, s3_client):
-    """Move file from recieved to processed folder"""
+    """Move file from received to processed folder"""
     file_name = file_util.get_file_name(file_path)
     file_key = file_util.get_s3_file_key(file_path)
 
