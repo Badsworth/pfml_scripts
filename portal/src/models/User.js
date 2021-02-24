@@ -52,6 +52,40 @@ class User extends BaseModel {
       );
     });
   }
+
+  /**
+   * Determines whether an employer is NOT verifiable (unverified and lacks verification data)
+   * @param {UserLeaveAdministrator} employer
+   * @returns {boolean}
+   */
+  isUnverifiableEmployer(employer) {
+    return !employer.verified && !employer.has_verification_data;
+  }
+
+  /**
+   * Determines whether user_leave_administrators has an employer that cannot be verified
+   * due to a lack of verification data.
+   * @returns {boolean}
+   */
+  get hasUnverifiableEmployer() {
+    return this.user_leave_administrators.some((employer) =>
+      this.isUnverifiableEmployer(employer)
+    );
+  }
+
+  /**
+   * Returns an unverifiable employer by employer id
+   * @param {string} employerId
+   * @returns {UserLeaveAdministrator}
+   */
+  getUnverifiableEmployerById(employerId) {
+    return this.user_leave_administrators.find((employer) => {
+      return (
+        employerId === employer.employer_id &&
+        this.isUnverifiableEmployer(employer)
+      );
+    });
+  }
 }
 
 export class UserRole extends BaseModel {

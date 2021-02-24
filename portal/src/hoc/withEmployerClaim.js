@@ -36,20 +36,36 @@ const withEmployerClaim = (Component) => {
     }, [claim]);
 
     useEffect(() => {
-      if (
-        isFeatureEnabled("employerShowVerifications") &&
-        claim &&
-        user.hasVerifiableEmployer
-      ) {
-        const employer = user.getVerifiableEmployerById(claim.employer_id);
-        if (employer && employer.employer_id) {
-          appLogic.portalFlow.goTo(routes.employers.verifyContributions, {
-            employer_id: employer.employer_id,
-            next: appLogic.portalFlow.pathWithParams,
-          });
+      if (isFeatureEnabled("employerShowVerifications") && claim) {
+        if (user.getVerifiableEmployerById(claim.employer_id)) {
+          maybeRedirectToVerifyPage();
+        } else if (user.getUnverifiableEmployerById(claim.employer_id)) {
+          maybeRedirectToCannotVerifyPage();
         }
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [appLogic.portalFlow, claim, user]);
+
+    const maybeRedirectToVerifyPage = () => {
+      // the current employer can and should be verified; the page is blocked.
+      const employer = user.getVerifiableEmployerById(claim.employer_id);
+      if (employer.employer_id) {
+        appLogic.portalFlow.goTo(routes.employers.verifyContributions, {
+          employer_id: employer.employer_id,
+          next: appLogic.portalFlow.pathWithParams,
+        });
+      }
+    };
+
+    const maybeRedirectToCannotVerifyPage = () => {
+      // the current employer cannot be verified; the page is blocked.
+      const employer = user.getUnverifiableEmployerById(claim.employer_id);
+      if (employer.employer_id) {
+        appLogic.portalFlow.goTo(routes.employers.cannotVerify, {
+          employer_id: employer.employer_id,
+        });
+      }
+    };
 
     if (!claim) {
       return (

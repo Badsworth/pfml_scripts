@@ -264,6 +264,14 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
   /**
    * @returns {MockEmployerClaimBuilder}
    */
+  employer_id(employerId) {
+    set(this.claimAttrs, "employer_id", employerId);
+    return this;
+  }
+
+  /**
+   * @returns {MockEmployerClaimBuilder}
+   */
   reviewable(setting = true) {
     set(this.claimAttrs, "is_reviewable", !!setting);
     return this;
