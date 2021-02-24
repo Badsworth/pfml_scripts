@@ -25,14 +25,17 @@ export const VerifyContributions = (props) => {
     users: { user },
   } = appLogic;
   const { t } = useTranslation();
+  const employer = user.user_leave_administrators.find((employer) => {
+    return employer.employer_id === query.employer_id;
+  });
 
   if (!isFeatureEnabled("employerShowVerifications")) {
     appLogic.portalFlow.goTo(routes.employers.dashboard);
   }
 
-  const employer = user.user_leave_administrators.find((employer) => {
-    return employer.employer_id === query.employer_id;
-  });
+  if (employer.verified) {
+    appLogic.portalFlow.goTo(query.next || routes.employers.organizations);
+  }
 
   const { formState, updateFields } = useFormState({
     withholdingAmount: 0,

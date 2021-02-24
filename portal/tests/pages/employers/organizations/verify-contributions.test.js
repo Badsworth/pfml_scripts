@@ -15,11 +15,11 @@ describe("VerifyContributions", () => {
   };
   mockRouter.pathname = routes.employers.verifyContributions;
 
-  function render() {
+  function render(isVerified = false, customQuery) {
     return renderWithAppLogic(VerifyContributions, {
       diveLevels: 0,
       props: {
-        query,
+        query: customQuery || query,
         withholding: new Withholding({
           filing_period: "2011-11-20",
         }),
@@ -30,7 +30,7 @@ describe("VerifyContributions", () => {
             employer_dba: "Company Name",
             employer_fein: "11-111111",
             employer_id: "mock_employer_id",
-            verified: false,
+            verified: isVerified,
           }),
         ],
       },
@@ -90,6 +90,22 @@ describe("VerifyContributions", () => {
           withholding_quarter: "2011-11-20",
         },
         query.next
+      );
+    });
+
+    it("redirects to different page if employer is already verified", () => {
+      ({ wrapper, appLogic } = render(true));
+
+      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(query.next);
+    });
+
+    it("redirects to Organizations page if employer is already verified and next page is not provided", () => {
+      ({ wrapper, appLogic } = render(true, {
+        employer_id: "mock_employer_id",
+      }));
+
+      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+        routes.employers.organizations
       );
     });
   });
