@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`cannot verify renders the page 1`] = `
+<Fragment>
+  <BackButton />
+  <Title>
+    We are unable to verify this organization online at the moment
+  </Title>
+  <Lead>
+    <Trans
+      i18nKey="pages.employersCannotVerify.companyNameLabel"
+      tOptions={
+        Object {
+          "employerDba": "Company Name",
+        }
+      }
+    />
+    <br />
+    <Trans
+      i18nKey="pages.employersCannotVerify.employerIdNumberLabel"
+      tOptions={
+        Object {
+          "employerFein": "11-111111",
+        }
+      }
+    />
+  </Lead>
+</Fragment>
+`;

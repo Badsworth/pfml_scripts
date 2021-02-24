@@ -1577,6 +1577,12 @@ const pages = {
     title: "Finish setting up your account",
     usernameLabel: "$t(shared.usernameLabel)",
   },
+  employersCannotVerify: {
+    companyNameLabel: "<strong>Organization:</strong> {{employerDba}}",
+    employerIdNumberLabel:
+      "<strong>Employer ID number (EIN):</strong> {{employerFein}}",
+    title: "We are unable to verify this organization online at the moment",
+  },
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
     instructions:
