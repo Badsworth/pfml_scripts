@@ -61,20 +61,25 @@ export default class AuthenticationManager {
     password: string,
     fein: string
   ): Promise<void> {
+    const metadata = { ein: fein };
     const cognitoUser = await this.registerCognitoUser(
       username,
       password,
       [new CognitoUserAttribute({ Name: "email", Value: username })],
-      { fein }
+      metadata
     );
     // Wait for code.
-    await this.verifyCognitoAccount(cognitoUser, username);
+    await this.verifyCognitoAccount(cognitoUser, username, metadata);
     // Agree to terms and conditions.
     const session = await this.authenticate(username, password);
     await this.consentToDataSharing(session);
   }
 
-  async resetPassword(username: string, password: string): Promise<void> {
+  async resetPassword(
+    username: string,
+    password: string,
+    metadata?: ClientMetadata
+  ): Promise<void> {
     if (!this.verificationFetcher) {
       throw new Error("Unable to reset password without verification fetcher");
     }
@@ -91,10 +96,15 @@ export default class AuthenticationManager {
           const code = await verificationFetcher.getResetVerificationCodeForUser(
             username
           );
-          cognitoUser.confirmPassword(code, password, {
-            onSuccess: resolve,
-            onFailure: reject,
-          });
+          cognitoUser.confirmPassword(
+            code,
+            password,
+            {
+              onSuccess: resolve,
+              onFailure: reject,
+            },
+            metadata
+          );
         },
       });
     });
@@ -130,7 +140,8 @@ export default class AuthenticationManager {
 
   private async verifyCognitoAccount(
     cognitoUser: CognitoUser,
-    address: string
+    address: string,
+    metadata?: ClientMetadata
   ) {
     if (!this.verificationFetcher) {
       throw new Error(
@@ -141,13 +152,18 @@ export default class AuthenticationManager {
       address
     );
     return new Promise<void>((resolve, reject) => {
-      cognitoUser.confirmRegistration(code, true, function (err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve();
-      });
+      cognitoUser.confirmRegistration(
+        code,
+        true,
+        function (err) {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve();
+        },
+        metadata
+      );
     });
   }
 
