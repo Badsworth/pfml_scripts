@@ -159,10 +159,6 @@ def send_to_fineos(
         if phone_numbers is not None and len(phone_numbers) > 0:
             application.phone.fineos_phone_id = phone_numbers[0].id
 
-        db_session.add(application)
-        db_session.add(new_claim)
-        db_session.commit()
-
         if application.leave_reason_qualifier_id in [
             LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
             LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id,
@@ -176,6 +172,10 @@ def send_to_fineos(
         occupation = get_occupation(fineos, fineos_user_id, application)
         upsert_week_based_work_pattern(fineos, fineos_user_id, application, occupation.occupationId)
         update_occupation_details(fineos, application, occupation.occupationId)
+
+        db_session.add(application)
+        db_session.add(new_claim)
+        db_session.commit()
 
     except massgov.pfml.fineos.FINEOSClientError:
         logger.exception("FINEOS API error")
