@@ -21,6 +21,34 @@ describe("users API", () => {
   let usersApi;
   const accessTokenJwt =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
+  const getResponse = (roles) => {
+    const nestedRoles = [
+      { role: { role_description: "Employer", role_id: 1 } },
+      { role: { role_description: "User", role_id: 2 } },
+    ];
+    return {
+      data: {
+        email_address: "mock-user@example.com",
+        roles: roles || nestedRoles,
+        user_leave_administrators: [
+          {
+            employer_dba: "Book Bindings 'R Us",
+            employer_fein: "1298391823",
+            employer_id: "dda903f-f093f-ff900",
+            has_verification_data: true,
+            verified: false,
+          },
+          {
+            employer_dba: "Knitting Castle",
+            employer_fein: "390293443",
+            employer_id: "dda930f-93jfk-iej08",
+            has_verification_data: true,
+            verified: true,
+          },
+        ],
+      },
+    };
+  };
 
   beforeEach(() => {
     jest.resetAllMocks();
@@ -36,31 +64,7 @@ describe("users API", () => {
     describe("when the request succeeds", () => {
       beforeEach(() => {
         global.fetch = mockFetch({
-          response: {
-            data: {
-              email_address: "mock-user@example.com",
-              roles: [
-                { role: { role_description: "Employer", role_id: 1 } },
-                { role: { role_description: "User", role_id: 2 } },
-              ],
-              user_leave_administrators: [
-                {
-                  employer_dba: "Book Bindings 'R Us",
-                  employer_fein: "1298391823",
-                  employer_id: "dda903f-f093f-ff900",
-                  has_verification_data: true,
-                  verified: false,
-                },
-                {
-                  employer_dba: "Knitting Castle",
-                  employer_fein: "390293443",
-                  employer_id: "dda930f-93jfk-iej08",
-                  has_verification_data: true,
-                  verified: true,
-                },
-              ],
-            },
-          },
+          response: getResponse(),
           status: 200,
           ok: true,
         });
@@ -106,6 +110,31 @@ describe("users API", () => {
           {
             role_description: "User",
             role_id: 2,
+          },
+        ]);
+      });
+
+      it("returns flattened user roles as is", async () => {
+        const flattenedRoles = [
+          { role_description: "Employer", role_id: 1 },
+          { role_description: "Other User", role_id: 3 },
+        ];
+        global.fetch = mockFetch({
+          response: getResponse(flattenedRoles),
+          status: 200,
+          ok: true,
+        });
+
+        const response = await usersApi.getCurrentUser();
+
+        expect(response.user.roles).toEqual([
+          {
+            role_description: "Employer",
+            role_id: 1,
+          },
+          {
+            role_description: "Other User",
+            role_id: 3,
           },
         ]);
       });
