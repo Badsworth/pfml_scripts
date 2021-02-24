@@ -116,6 +116,13 @@ export const VerifyContributions = (props) => {
             "dor-phone-link": (
               <a href={`tel:${t("shared.departmentOfRevenuePhoneNumber")}`} />
             ),
+            "recent-filing-periods-link": (
+              <a
+                href={routes.external.massgov.preparingToVerifyEmployer}
+                target="_blank"
+                rel="noopener"
+              />
+            ),
             ol: <ol className="usa-list" />,
             li: <li />,
           }}

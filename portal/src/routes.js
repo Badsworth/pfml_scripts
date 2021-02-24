@@ -121,6 +121,8 @@ const routes = {
       multipleBirths: "https://www.mass.gov/pfml-multiple-births",
       paidLeave:
         "https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts",
+      preparingToVerifyEmployer:
+        "https://www.mass.gov/info-details/preparing-to-verify-your-employer-paid-family-and-medical-leave-account",
       privacyPolicy: "https://www.mass.gov/privacypolicy",
       reductionsEmployerBenefits:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-",

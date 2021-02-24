@@ -7,7 +7,7 @@ exports[`VerifyContributions when "employerShowVerifications" feature flag is en
   onSubmit={[Function]}
 >
   <Title>
-    Verify your paid leave contributions
+    Verify your paid leave contributions from MassTaxConnect
   </Title>
   <Lead>
     <Trans
@@ -60,6 +60,11 @@ exports[`VerifyContributions when "employerShowVerifications" feature flag is en
           "ol": <ol
             className="usa-list"
           />,
+          "recent-filing-periods-link": <a
+            href="https://www.mass.gov/info-details/preparing-to-verify-your-employer-paid-family-and-medical-leave-account"
+            rel="noopener"
+            target="_blank"
+          />,
         }
       }
       i18nKey="pages.employersOrganizationsVerifyContributions.detailsList"
@@ -72,7 +77,7 @@ exports[`VerifyContributions when "employerShowVerifications" feature flag is en
   </Details>
   <InputCurrency
     hint="Include the full amount with dollars and cents."
-    label="Paid leave contributions for 11/20/2011"
+    label="Paid leave contributions from 11/20/2011"
     mask="currency"
     name="withholdingAmount"
     onChange={[Function]}
@@ -165,15 +170,24 @@ Array [
       <strong
         key="strong-1"
       >
-        Recent Periods
+        Periods
       </strong>
-       tab, select the 
+       tab, select 
       <strong
         key="strong-3"
       >
         11/20/2011
       </strong>
-       period.
+      . If you don't have access to MassTaxConnect, we recommend asking your payroll department to copy the data from the 
+      <a
+        href="https://www.mass.gov/info-details/preparing-to-verify-your-employer-paid-family-and-medical-leave-account"
+        key="5"
+        rel="noopener"
+        target="_blank"
+      >
+        4 most recent filing periods
+      </a>
+      .
     </li>
     <li
       key="2"
@@ -182,7 +196,7 @@ Array [
       <strong
         key="strong-1"
       >
-        XXX
+        Tax
       </strong>
        amount from the 
       <strong
