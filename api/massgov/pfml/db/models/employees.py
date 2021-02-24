@@ -9,8 +9,10 @@
 # and seeding.
 #
 import uuid
+from datetime import date
 from typing import TYPE_CHECKING, List, Optional, cast
 
+from dateutil.relativedelta import relativedelta
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Index, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Query, dynamic_loader, relationship
@@ -266,6 +268,17 @@ class Employer(Base):
     employer_quarterly_contribution: "Query[EmployerQuarterlyContribution]" = dynamic_loader(
         "EmployerQuarterlyContribution", back_populates="employer"
     )
+
+    @typed_hybrid_property
+    def has_verification_data(self) -> bool:
+        current_date = date.today()
+        last_years_date = current_date - relativedelta(years=1)
+        return any(
+            quarter.employer_total_pfml_contribution > 0
+            and quarter.filing_period >= last_years_date
+            and quarter.filing_period < current_date
+            for quarter in self.employer_quarterly_contribution
+        )
 
 
 class EmployerQuarterlyContribution(Base):

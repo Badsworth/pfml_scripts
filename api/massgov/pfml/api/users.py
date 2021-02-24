@@ -80,6 +80,7 @@ class EmployerResponse(PydanticBaseModel):
     employer_dba: str
     employer_fein: str
     employer_id: UUID4
+    has_verification_data: bool
 
 
 class UserLeaveAdminResponse(PydanticBaseModel):
@@ -119,4 +120,5 @@ def normalize_user_leave_admin_response(
         "employer_fein": mask_fein(leave_admin_dict["employer"]["employer_fein"]),
         "employer_id": leave_admin_dict["employer"]["employer_id"],
         "verified": leave_admin_dict["verified"],
+        "has_verification_data": leave_admin_dict["employer"]["has_verification_data"],
     }

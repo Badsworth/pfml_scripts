@@ -1,10 +1,16 @@
 import uuid
+from datetime import date
 
 import pytest
+from dateutil.relativedelta import relativedelta
 
 import tests.api
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
-from massgov.pfml.db.models.factories import EmployerFactory, UserFactory
+from massgov.pfml.db.models.factories import (
+    EmployerFactory,
+    EmployerQuarterlyContributionFactory,
+    UserFactory,
+)
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -37,6 +43,7 @@ def test_users_get(client, employer_user, employer_auth_token, test_db_session):
             "employer_fein": f"**-***{employer.employer_fein[5:]}",
             "employer_id": str(employer.employer_id),
             "verified": False,
+            "has_verification_data": False,
         }
     ]
 
@@ -94,6 +101,7 @@ def test_users_get_current(client, employer_user, employer_auth_token, test_db_s
             "employer_fein": f"**-***{employer.employer_fein[5:]}",
             "employer_id": str(employer.employer_id),
             "verified": False,
+            "has_verification_data": False,
         }
     ]
 
@@ -185,3 +193,63 @@ def test_users_patch_fineos_forbidden(client, fineos_user, fineos_user_token):
         json=body,
     )
     tests.api.validate_error_response(response, 403)
+
+
+def test_has_verification_data_flag(client, employer_user, employer_auth_token, test_db_session):
+    employer = EmployerFactory.create()
+    # yesterday = datetime.today() - relativedelta(days=1)
+    yesterday = date.today() - relativedelta(days=1)
+    EmployerQuarterlyContributionFactory.create(employer=employer, filing_period=yesterday)
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/users/{}".format(employer_user.user_id),
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+    response_body = response.get_json()
+
+    assert response_body.get("data")["user_leave_administrators"] == [
+        {
+            "employer_dba": employer.employer_dba,
+            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_id": str(employer.employer_id),
+            "verified": False,
+            "has_verification_data": True,
+        }
+    ]
+
+
+def test_has_verification_data_flag_old_data(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    EmployerQuarterlyContributionFactory.create(employer=employer, filing_period="2019-02-18")
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/users/{}".format(employer_user.user_id),
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+    response_body = response.get_json()
+
+    assert response_body.get("data")["user_leave_administrators"] == [
+        {
+            "employer_dba": employer.employer_dba,
+            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_id": str(employer.employer_id),
+            "verified": False,
+            "has_verification_data": False,
+        }
+    ]
