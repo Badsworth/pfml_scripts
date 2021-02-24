@@ -729,6 +729,7 @@ def update_week_based_work_pattern(
         extra = {} if log_attributes is None else log_attributes
         extra.update({"status": getattr(error, "response_status", None)})
         logger.warning("update_week_based_work_pattern failure", extra=extra, exc_info=True)
+        raise error
 
 
 def update_occupation_details(
