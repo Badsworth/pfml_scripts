@@ -50,10 +50,7 @@ describe("Denial Notification and Notice", () => {
     });
     fineos.denyClaim("Claimant wages failed 30x rule");
     cy.wait(200);
-    if (
-      Cypress.env("E2E_ENVIRONMENT") === "performance" ||
-      Cypress.env("E2E_ENVIRONMENT") === "test"
-    ) {
+    if (Cypress.env("E2E_ENVIRONMENT") === "performance") {
       fineos.closeReleaseNoticeTask("Denial Notice");
     }
   });
