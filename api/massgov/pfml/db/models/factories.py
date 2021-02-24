@@ -383,11 +383,11 @@ class ApplicationFactory(BaseFactory):
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda a: a.employer.employer_id)
 
-    tax_identifier = factory.SubFactory(TaxIdentifierFactory)
-    tax_identifier_id = factory.LazyAttribute(lambda t: t.tax_identifier.tax_identifier_id)
-
     employee = factory.SubFactory(EmployeeFactory)
     employee_id = factory.LazyAttribute(lambda a: a.employee.employee_id)
+
+    tax_identifier = factory.SelfAttribute("employee.tax_identifier")
+    tax_identifier_id = factory.LazyAttribute(lambda t: t.tax_identifier.tax_identifier_id)
 
     phone = factory.SubFactory(PhoneFactory)
 

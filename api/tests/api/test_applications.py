@@ -41,7 +41,9 @@ from massgov.pfml.db.models.factories import (
     OtherIncomeFactory,
     PreviousLeaveFactory,
     ReducedScheduleLeavePeriodFactory,
+    TaxIdentifierFactory,
     UserFactory,
+    WagesAndContributionsFactory,
     WorkPatternFixedFactory,
 )
 
@@ -2643,6 +2645,10 @@ def test_application_patch_failure_after_absence_case_creation(
 def test_application_post_submit_app(client, user, auth_token, test_db_session):
     factory.random.reseed_random(1)
     application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
+
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
@@ -2677,6 +2683,10 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     # but it isn't currently in submitted status. This verifies that it only calls methods in complete_intake.
     factory.random.reseed_random(1)
     application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
+
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
@@ -2726,7 +2736,7 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
                     email=None,
                     first_name=None,
                     last_name=None,
-                    national_insurance_no="105410502",
+                    national_insurance_no=application.tax_identifier.tax_identifier,
                 )
             },
         ),
@@ -2786,15 +2796,16 @@ def test_application_post_submit_ssn_fraud_error(
 
     # consented_user will have a different IDs, create another app with it
     assert user.active_directory_id != consented_user.active_directory_id
-    tax_identifier = TaxIdentifier(tax_identifier="123456789")
-    other_app = ApplicationFactory.create(user=consented_user)
-    other_app.tax_identifier = tax_identifier
-
     assert user.active_directory_id != employer_user.active_directory_id
-    another_app = ApplicationFactory.create(user=employer_user)
-    another_app.tax_identifier = tax_identifier
 
     application = ApplicationFactory.create(user=user)
+    ApplicationFactory.create(user=employer_user, tax_identifier=application.tax_identifier)
+    ApplicationFactory.create(user=consented_user, tax_identifier=application.tax_identifier)
+
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
+
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
@@ -2805,7 +2816,6 @@ def test_application_post_submit_ssn_fraud_error(
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
 
-    application.tax_identifier = tax_identifier
     test_db_session.commit()
 
     response = client.post(
@@ -2827,11 +2837,12 @@ def test_application_post_submit_ssn_second_app(
     # This tests the case where an application is submitted, but another application
     # with the same SSN and same user exists.
     # This is in contrast to test_application_post_submit_ssn_fraud_error above
-    tax_identifier = TaxIdentifier(tax_identifier="123456789")
-    other_app = ApplicationFactory.create(user=user)
-    other_app.tax_identifier = tax_identifier
-
     application = ApplicationFactory.create(user=user)
+    ApplicationFactory.create(user=user, tax_identifier=application.tax_identifier)
+
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
@@ -2842,7 +2853,6 @@ def test_application_post_submit_ssn_second_app(
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
 
-    application.tax_identifier = tax_identifier
     test_db_session.commit()
     response = client.post(
         "/v1/applications/{}/submit_application".format(application.application_id),
@@ -2876,23 +2886,7 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token):
 
 
 def test_application_post_submit_app_ssn_not_found(client, user, auth_token, test_db_session):
-    factory.random.reseed_random(3)
-
-    application = ApplicationFactory.create(user=user)
-    application.date_of_birth = "2009-01-20"
-    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
-    application.hours_worked_per_week = 70
-    application.residential_address = AddressFactory.create()
-    application.work_pattern = WorkPatternFixedFactory.create()
-    application.continuous_leave_periods = [
-        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
-    ]
-    application.has_continuous_leave_periods = True
-
-    # A tax identifier of 999999999 is simulated as not found in MockFINEOSClient.
-    application.tax_identifier = TaxIdentifier(tax_identifier="999999999")
-
-    assert not application.completed_time
+    application = ApplicationFactory.create(user=user, tax_identifier=TaxIdentifierFactory.create())
 
     test_db_session.commit()
     response = client.post(
@@ -2900,19 +2894,11 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
         headers={"Authorization": f"Bearer {auth_token}"},
     )
     response_body = response.get_json()
-    assert (
-        response_body.get("message")
-        == f"Application {str(application.application_id)} could not be submitted"
-    )
-    fineos_issues = response_body.get("errors")
-    assert (
-        len(
-            list(
-                filter(lambda i: i["type"] == IssueType.fineos_case_creation_issues, fineos_issues)
-            )
-        )
-        > 0
-    )
+
+    assert {
+        "message": "Couldn't find Employee in our system. Confirm that you have the correct EIN.",
+        "type": "require_employee",
+    } in response_body.get("errors")
     assert not response_body.get("warnings")
     # Simplified check to confirm Application was included in response:
     assert response_body.get("data").get("application_id") == str(application.application_id)
@@ -2922,10 +2908,11 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
 
 def test_application_post_submit_existing_work_pattern(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
 
     application.hours_worked_per_week = 70
-    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
-
     application.first_name = "First"
     application.middle_name = "Middle"
     application.last_name = "Last"
@@ -2943,7 +2930,7 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
     # set fineos user id in DB to avoid autogenerated id
     fineos_user_id = "USER_WITH_EXISTING_WORK_PATTERN"
     fineos_web_id_ext = FINEOSWebIdExt()
-    fineos_web_id_ext.employee_tax_identifier = "999004444"
+    fineos_web_id_ext.employee_tax_identifier = application.tax_identifier.tax_identifier
     fineos_web_id_ext.employer_fein = application.employer_fein
     fineos_web_id_ext.fineos_web_id = fineos_user_id
     test_db_session.add(fineos_web_id_ext)
@@ -3054,8 +3041,9 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
 
 def test_application_post_submit_to_fineos(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-
-    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
     application.first_name = "First"
     application.middle_name = "Middle"
     application.last_name = "Last"
@@ -3106,7 +3094,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     user_id=fineos_user_id,
                     employer_id=f"{application.employer_fein}1000",
                     date_of_birth=date(1753, 1, 1),
-                    national_insurance_no="999004444",
+                    national_insurance_no=application.tax_identifier.tax_identifier,
                 )
             },
         ),
@@ -3119,7 +3107,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     lastName="Last",
                     secondName="Middle",
                     dateOfBirth=date(1977, 7, 27),
-                    idNumber="999004444",
+                    idNumber=application.tax_identifier.tax_identifier,
                     customerAddress=massgov.pfml.fineos.models.customer_api.CustomerAddress(
                         address=massgov.pfml.fineos.models.customer_api.Address(
                             addressLine1=application.residential_address.address_line_one,
@@ -3251,12 +3239,9 @@ def test_application_post_submit_to_fineos_intermittent_leave(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
-
-    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
-    application.first_name = "First"
-    application.middle_name = "Middle"
-    application.last_name = "Last"
-    application.date_of_birth = date(1977, 7, 27)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
     application.hours_worked_per_week = 70
     application.employer_notified = True
     application.employer_notification_date = date(2021, 1, 7)
@@ -3315,12 +3300,9 @@ def test_application_post_submit_to_fineos_reduced_schedule_leave(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
-
-    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
-    application.first_name = "First"
-    application.middle_name = "Middle"
-    application.last_name = "Last"
-    application.date_of_birth = date(1977, 7, 27)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
     application.hours_worked_per_week = 70
     application.employer_notified = True
     application.employer_notification_date = date(2021, 1, 7)
@@ -3389,6 +3371,9 @@ def test_application_post_submit_to_fineos_bonding_adoption(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -3439,6 +3424,9 @@ def test_application_post_submit_to_fineos_bonding_foster(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -3491,6 +3479,9 @@ def test_application_post_submit_to_fineos_bonding_newborn(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -3540,6 +3531,9 @@ def test_application_post_submit_to_fineos_bonding_newborn(
 
 def test_application_post_submit_to_fineos_medical(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -3594,6 +3588,9 @@ def test_application_post_submit_to_fineos_medical_pregnant(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -3639,6 +3636,9 @@ def test_application_post_submit_to_fineos_medical_pregnant(
 
 def test_application_post_submit_to_fineos_pregnant(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
     application.hours_worked_per_week = 70
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -3686,6 +3686,9 @@ def test_application_post_submit_app_failure_after_absence_case_creation(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
 
     # Fill in required fields so this is an valid application apart from the fact it's already been submitted.
     application.continuous_leave_periods = [
@@ -3716,6 +3719,9 @@ def test_application_post_submit_creates_previous_leaves_eform(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
     application.hours_worked_per_week = 40
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()
@@ -3743,6 +3749,9 @@ def test_application_post_submit_no_previous_leaves_does_not_create_eform(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
     application.hours_worked_per_week = 40
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.residential_address = AddressFactory.create()

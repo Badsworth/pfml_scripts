@@ -96,6 +96,8 @@ class IssueType(str, Enum):
     days_absent_per_intermittent_interval_maximum = "days_absent_per_intermittent_interval_maximum"
     # Employer record must exist in the API and FINEOS
     require_contributing_employer = "require_contributing_employer"
+    # Employee must have wages from the Employer
+    require_employee = "require_employee"
 
 
 @dataclass

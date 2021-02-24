@@ -17,6 +17,7 @@ This is the API for the Massachusetts Paid Family and Medical Leave program. See
     6. [Multi-head situations](#multi-head-situations)
 3. [Try it out](#try-it-out)
     1. [Getting local authentication credentials](#getting-local-authentication-credentials)
+    2. [Seed your database](#seed-your-database)
 4. [Tests](#tests)
     1. [During Development](#during-development)
 5. [Environment Configuration](#environment-configuration)
@@ -298,7 +299,7 @@ The spec is available at:
 - [http://localhost:1550/v1/openapi.json](http://localhost:1550/v1/openapi.json) (JSON) or
 - [http://localhost:1550/v1/openapi.yaml](http://localhost:1550/v1/openapi.yaml) (YAML)
 
-## Getting local authentication credentials
+### Getting local authentication credentials
 
 In order to make requests to the API, an authentication token must be included.
 Currently this is a JWT set in the `Authorization` HTTP header. A JWT signed by
@@ -351,6 +352,24 @@ For individual requests via `curl` or similar:
 ```sh
 curl -v --header "Authorization: Bearer <big jwt string above>" http://localhost:1550/v1/users/current
 ```
+
+### Seed your database
+
+Some interactions require valid data and associations to exist within the database, such as a valid `Employer` and `Employee`. The easiest way to seed your database is to run a mock DOR import:
+
+Generate a fake DOR file:
+
+```
+make dor-generate
+```
+
+Run the DOR import locally:
+
+```
+make dor-import
+```
+
+After the scripts above have ran, you can grab values from your database tables using a tool like [Postico](https://eggerapps.at/postico/).
 
 ## Tests
 
