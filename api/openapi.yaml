@@ -2,7 +2,7 @@ openapi: 3.0.2
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2020-11-23"
+  version: "2021-02-23"
 
 servers:
   - url: /v1
@@ -453,6 +453,12 @@ paths:
       summary: Update an Application
       description: >
         Supports partial update of an Application record.
+
+        Note that array property updates are not partial, after processing the
+        PATCH, the Application state will contain only the values of the array
+        in the request.
+
+        The behavior generally follows RFC 7396.
 
         It is expected clients will call this endpoint multiple times and with
         incomplete data as individual pieces of information is collected from
@@ -1600,11 +1606,13 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/EmployerBenefit"
+              maxItems: 4
             other_incomes:
               nullable: true
               type: array
               items:
                 $ref: "#/components/schemas/OtherIncome"
+              maxItems: 6
             phone:
               $ref: "#/components/schemas/Phone"
             has_previous_leaves:
@@ -1616,6 +1624,7 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/PreviousLeave"
+              maxItems: 6
         - type: object
           properties:
             employee_ssn:

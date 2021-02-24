@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Type, Union
 import phonenumbers
 from phonenumbers.phonenumberutil import region_code_for_number
 from sqlalchemy.orm.exc import NoResultFound
-from werkzeug.exceptions import BadRequest, Forbidden, NotFound
+from werkzeug.exceptions import BadRequest, Forbidden
 
 import massgov.pfml.api.models.applications.common as apps_common_io
 import massgov.pfml.api.models.claims.common as claims_common_io
@@ -327,15 +327,15 @@ def update_from_request(
             continue
 
         if key == "employer_benefits":
-            add_or_update_employer_benefits(db_session, body.employer_benefits, application)
+            set_employer_benefits(db_session, body.employer_benefits, application)
             continue
 
         if key == "other_incomes":
-            add_or_update_other_incomes(db_session, body.other_incomes, application)
+            set_other_incomes(db_session, body.other_incomes, application)
             continue
 
         if key == "previous_leaves":
-            add_or_update_previous_leaves(db_session, body.previous_leaves, application)
+            set_previous_leaves(db_session, body.previous_leaves, application)
             continue
 
         if key == "application_nickname":
@@ -641,29 +641,19 @@ def delete_application_other_benefits(
     db_session.refresh(application)
 
 
-def add_or_update_employer_benefits(
+def set_employer_benefits(
     db_session: db.Session,
     api_employer_benefits: Optional[List[apps_common_io.EmployerBenefit]],
     application: Application,
 ) -> None:
 
-    if not api_employer_benefits and application.employer_benefits:
+    if application.employer_benefits:
         delete_application_other_benefits(EmployerBenefit, application, db_session)
+
+    if not api_employer_benefits:
         return
 
-    assert api_employer_benefits is not None
-
-    # For any benefits in the request without an ID, create a new benefit
-    employer_benefits_to_create = filter(
-        lambda benefit: benefit.employer_benefit_id is None, api_employer_benefits
-    )
-    # For any benefits in the request with an ID, update an existing benefit
-    employer_benefits_to_update = filter(
-        lambda benefit: benefit.employer_benefit_id is not None, api_employer_benefits
-    )
-
-    for api_employer_benefit in employer_benefits_to_create:
-        # Create new benefit
+    for api_employer_benefit in api_employer_benefits:
         new_employer_benefit = EmployerBenefit(
             application_id=application.application_id,
             benefit_start_date=api_employer_benefit.benefit_start_date,
@@ -682,69 +672,20 @@ def add_or_update_employer_benefits(
 
         db_session.add(new_employer_benefit)
 
-    for api_employer_benefit in employer_benefits_to_update:
-        db_existing_employer_benefit = (
-            db_session.query(EmployerBenefit)
-            .filter(EmployerBenefit.employer_benefit_id == api_employer_benefit.employer_benefit_id)
-            .one_or_none()
-        )
 
-        if db_existing_employer_benefit is None:
-            raise NotFound(
-                f"EmployerBenefit with id {api_employer_benefit.employer_benefit_id} not found"
-            )
-
-        # Don't allow users to change benefit records for an application other than the one
-        # they're updating
-        if db_existing_employer_benefit.application_id != application.application_id:
-            # TODO: should we be throwing HTTP exceptions from services?
-            # should we provide a better, more detailed message?
-            raise Forbidden()
-
-        # Update each field
-        db_existing_employer_benefit.benefit_start_date = api_employer_benefit.benefit_start_date
-        db_existing_employer_benefit.benefit_end_date = api_employer_benefit.benefit_end_date
-        db_existing_employer_benefit.benefit_amount_dollars = (
-            api_employer_benefit.benefit_amount_dollars
-        )
-
-        if api_employer_benefit.benefit_type:
-            db_existing_employer_benefit.benefit_type_id = EmployerBenefitType.get_id(
-                api_employer_benefit.benefit_type.value
-            )
-        else:
-            db_existing_employer_benefit.benefit_type_id = None
-
-        if api_employer_benefit.benefit_amount_frequency:
-            db_existing_employer_benefit.benefit_amount_frequency_id = AmountFrequency.get_id(
-                api_employer_benefit.benefit_amount_frequency.value
-            )
-        else:
-            db_existing_employer_benefit.benefit_amount_frequency_id = None
-
-
-def add_or_update_other_incomes(
+def set_other_incomes(
     db_session: db.Session,
     api_other_incomes: Optional[List[apps_common_io.OtherIncome]],
     application: Application,
 ) -> None:
 
-    if not api_other_incomes and application.other_incomes:
+    if application.other_incomes:
         delete_application_other_benefits(OtherIncome, application, db_session)
+
+    if not api_other_incomes:
         return
 
-    assert api_other_incomes is not None
-    # For any incomes in the request without an ID, create a new income
-    other_incomes_to_create = list(
-        filter(lambda income: income.other_income_id is None, api_other_incomes)
-    )
-    # For any incomes in the request with an ID, update an existing income
-    other_incomes_to_update = list(
-        filter(lambda income: income.other_income_id is not None, api_other_incomes)
-    )
-
-    for api_other_income in other_incomes_to_create:
-        # Create new income
+    for api_other_income in api_other_incomes:
         new_other_income = OtherIncome(
             application_id=application.application_id,
             income_start_date=api_other_income.income_start_date,
@@ -763,65 +704,20 @@ def add_or_update_other_incomes(
 
         db_session.add(new_other_income)
 
-    for api_other_income in other_incomes_to_update:
-        db_existing_other_income = (
-            db_session.query(OtherIncome)
-            .filter(OtherIncome.other_income_id == api_other_income.other_income_id)
-            .one_or_none()
-        )
 
-        if db_existing_other_income is None:
-            raise NotFound(f"OtherIncome with id {api_other_income.other_income_id} not found")
-
-        # Don't allow users to change income records for an application other than the one
-        # they're updating
-        if db_existing_other_income.application_id != application.application_id:
-            # TODO: should we be throwing HTTP exceptions from services?
-            # should we provide a better, more detailed message?
-            raise Forbidden()
-
-        # Update each field
-        db_existing_other_income.income_start_date = api_other_income.income_start_date
-        db_existing_other_income.income_end_date = api_other_income.income_end_date
-        db_existing_other_income.income_amount_dollars = api_other_income.income_amount_dollars
-
-        if api_other_income.income_type:
-            db_existing_other_income.income_type_id = OtherIncomeType.get_id(
-                api_other_income.income_type.value
-            )
-        else:
-            db_existing_other_income.income_type_id = None
-
-        if api_other_income.income_amount_frequency:
-            db_existing_other_income.income_amount_frequency_id = AmountFrequency.get_id(
-                api_other_income.income_amount_frequency.value
-            )
-        else:
-            db_existing_other_income.income_amount_frequency_id = None
-
-
-def add_or_update_previous_leaves(
+def set_previous_leaves(
     db_session: db.Session,
     api_previous_leaves: Optional[List[claims_common_io.PreviousLeave]],
     application: Application,
 ) -> None:
 
-    if not api_previous_leaves and application.previous_leaves:
+    if application.previous_leaves:
         delete_application_other_benefits(PreviousLeave, application, db_session)
+
+    if not api_previous_leaves:
         return
 
-    assert api_previous_leaves is not None
-    previous_leaves_to_create = []
-    previous_leaves_to_update = []
-
     for api_previous_leave in api_previous_leaves:
-        if api_previous_leave.previous_leave_id:
-            previous_leaves_to_update.append(api_previous_leave)
-        else:
-            previous_leaves_to_create.append(api_previous_leave)
-
-    for api_previous_leave in previous_leaves_to_create:
-        # Create new previous_leave
         new_previous_leave = PreviousLeave(
             application_id=application.application_id,
             leave_start_date=api_previous_leave.leave_start_date,
@@ -834,37 +730,6 @@ def add_or_update_previous_leaves(
             )
 
         db_session.add(new_previous_leave)
-
-    for api_previous_leave in previous_leaves_to_update:
-        db_previous_leave = (
-            db_session.query(PreviousLeave)
-            .filter(PreviousLeave.previous_leave_id == api_previous_leave.previous_leave_id,)
-            .one_or_none()
-        )
-
-        if db_previous_leave is None:
-            raise NotFound(
-                f"PreviousLeave with id {api_previous_leave.previous_leave_id} not found"
-            )
-
-        # Don't allow users to change previous leave records for an application other than the one
-        # they're updating
-        if db_previous_leave.application_id != application.application_id:
-            # TODO: Using the same pattern as for other_income
-            # should we provide a better, more detailed message?
-            raise Forbidden()
-
-        # Update each field
-        db_previous_leave.leave_start_date = api_previous_leave.leave_start_date
-        db_previous_leave.leave_end_date = api_previous_leave.leave_end_date
-        db_previous_leave.is_for_current_employer = api_previous_leave.is_for_current_employer
-
-        if api_previous_leave.leave_reason:
-            db_previous_leave.leave_reason_id = PreviousLeaveQualifyingReason.get_id(
-                api_previous_leave.leave_reason.value
-            )
-        else:
-            db_previous_leave.leave_reason_id = None
 
 
 def remove_employer_benefit(db_session: db.Session, employer_benefit: EmployerBenefit) -> None:

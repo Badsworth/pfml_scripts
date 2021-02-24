@@ -206,6 +206,8 @@ class Phone(Base):
 
 
 class PreviousLeave(Base):
+    # Caution: records of this model get recreated frequently as part of the PATCH /applications/:id endpoint.
+    # Only the Application model should hold foreign keys to these records to avoid referenced objects being unexpectedly deleted.
     __tablename__ = "previous_leave"
     previous_leave_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     application_id = Column(
@@ -401,6 +403,8 @@ class ReducedScheduleLeavePeriod(Base):
 
 
 class EmployerBenefit(Base):
+    # Caution: records of this model get recreated frequently as part of the PATCH /applications/:id endpoint.
+    # Only the Application model should hold foreign keys to these records to avoid referenced objects being unexpectedly deleted.
     __tablename__ = "employer_benefit"
     employer_benefit_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     application_id = Column(
@@ -422,6 +426,8 @@ class EmployerBenefit(Base):
 
 
 class OtherIncome(Base):
+    # Caution: records of this model get recreated frequently as part of the PATCH /applications/:id endpoint.
+    # Only the Application model should hold foreign keys to these records to avoid referenced objects being unexpectedly deleted.
     __tablename__ = "other_income"
     other_income_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     application_id = Column(
