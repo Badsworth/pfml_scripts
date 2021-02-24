@@ -14,6 +14,7 @@ def main():
     with db.session_scope(db.init(), close=True) as db_session:
         # Expect retreive_dua_payments_list() to retrieve environment variables set via terraform.
 
+        dua.download_payment_list_if_none_today(db_session)
         dua.load_new_dua_payments(db_session)
 
         # TODO: Uncomment this once the work in API-475 is complete.

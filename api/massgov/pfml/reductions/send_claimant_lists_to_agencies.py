@@ -1,7 +1,8 @@
 import massgov.pfml.db as db
-import massgov.pfml.reductions.dia as dia
 import massgov.pfml.reductions.dua as dua
 import massgov.pfml.util.logging as logging
+
+# import massgov.pfml.reductions.dia as dia
 
 logger = logging.get_logger(__name__)
 
@@ -15,6 +16,6 @@ def main():
         dua.create_list_of_claimants(db_session)
         dua.copy_claimant_list_to_moveit(db_session)
 
-        # TODO: Uncomment this once the work in API-478 is complete.
-        dia.create_list_of_approved_claimants(db_session)
+        # TODO: Uncomment this once the work in API-478 is complete and DIA is ready to receive.
+        # dia.create_list_of_approved_claimants(db_session)
         # dia.send_dia_claimant_list(db_session)
