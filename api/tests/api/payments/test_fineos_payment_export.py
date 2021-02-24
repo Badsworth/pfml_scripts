@@ -37,6 +37,9 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.payments.config import get_s3_config
 from massgov.pfml.payments.payments_util import ValidationIssue, ValidationReason
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 EXPECTED_OUTCOME = {"message": "Success"}
 
 ### UTILITY METHODS

@@ -144,6 +144,7 @@ def test_gax_doc_id():
     assert len(doc_id) == 20
 
 
+@pytest.mark.integration
 def test_build_individual_gax_document(initialize_factories_session, test_db_session):
     xml_document = minidom.Document()
     document_root = xml_document.createElement("AMS_DOC_XML_IMPORT_FILE")
@@ -233,6 +234,7 @@ def test_build_individual_gax_document(initialize_factories_session, test_db_ses
     validate_elements(abs_doc_actg, expected_actg_subelements)
 
 
+@pytest.mark.integration
 @freeze_time("2021-01-01 12:00:00")
 def test_build_gax_files(
     initialize_factories_session, test_db_session, mock_s3_bucket, set_exporter_env_vars, mock_ses
@@ -336,6 +338,7 @@ def test_build_gax_files(
             assert abs_doc_actg.attrib == {"AMSDataObject": "Y"}
 
 
+@pytest.mark.integration
 @freeze_time("2021-01-01 12:00:00")
 def test_build_gax_files_previously_processed(
     initialize_factories_session, test_db_session, mock_s3_bucket, set_exporter_env_vars, mock_ses
@@ -372,6 +375,7 @@ def test_build_gax_files_previously_processed(
         assert "NewMmarsTransCount = 1;" in inf_file_contents
 
 
+@pytest.mark.integration
 def test_build_gax_files_no_eligible_payments(test_db_session, mock_s3_bucket):
     ctr_outbound_path = f"s3://{mock_s3_bucket}/path/to/dir"
     assert gax.build_gax_files(test_db_session, ctr_outbound_path) == (
@@ -380,6 +384,7 @@ def test_build_gax_files_no_eligible_payments(test_db_session, mock_s3_bucket):
     )
 
 
+@pytest.mark.integration
 def test_build_gax_files_skip_payment_record_errors(
     initialize_factories_session, test_db_session, mock_s3_bucket, set_exporter_env_vars, mock_ses
 ):
@@ -420,6 +425,7 @@ def test_build_gax_files_skip_payment_record_errors(
     assert ref_file.ctr_batch_identifier.inf_data.get("NewMmarsTransCount") == "1"
 
 
+@pytest.mark.integration
 def test_build_gax_files_raise_error_all_rows_error(
     initialize_factories_session, test_db_session, mock_s3_bucket
 ):

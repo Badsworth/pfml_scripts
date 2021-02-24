@@ -338,9 +338,13 @@ ifndef MIGRATE_MSG
 	$(error MIGRATE_MSG is undefined)
 endif
 
-test: ## Run tests, set $args to pass flags to `pytest`
-	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest $(args)
+define run_tests
+	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest $(1)
 	$(PY_RUN_CMD) coverage report
+endef
+
+test: ## Run tests, set $args to pass flags to `pytest`
+	$(call run_tests,$(args))
 
 test-changed: ## Run only tests that have changed
 	$(PY_RUN_CMD) python -m pytest --testmon
@@ -357,6 +361,12 @@ endif
 test-coverage-report: ## Open HTML test coverage report
 	$(PY_RUN_CMD) coverage html --directory .coverage_report
 	$(OPEN_CMD) .coverage_report/index.html
+
+test-integration: ## Run just integration tests, set $args to pass flags to `pytest`
+	$(call run_tests,-m integration $(args))
+
+test-unit: ## Run just unit tests, set $args to pass flags to `pytest`
+	$(call run_tests,-m 'not integration' $(args))
 
 define run_test_watch
 	$(PY_RUN_CMD) pytest-watch -- $(1)

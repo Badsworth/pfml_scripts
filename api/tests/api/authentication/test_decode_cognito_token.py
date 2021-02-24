@@ -8,24 +8,34 @@ from jose.exceptions import JWTError
 import massgov.pfml.api.authentication as authentication
 
 
-@pytest.fixture
-def auth_token_with_no_exp(auth_key, auth_claims):
+@pytest.fixture(scope="session")
+def auth_token_unit(auth_claims_unit, auth_key):
+    encoded = jwt.encode(auth_claims_unit, auth_key)
+    return encoded
+
+
+@pytest.fixture(scope="session")
+def auth_token_with_no_exp(auth_key, auth_claims_unit):
+    auth_claims = auth_claims_unit.copy()
     auth_claims.pop("exp")
 
     encoded = jwt.encode(auth_claims, auth_key)
     return encoded
 
 
-@pytest.fixture
-def auth_token_with_no_sub(auth_key, auth_claims):
+@pytest.fixture(scope="session")
+def auth_token_with_no_sub(auth_key, auth_claims_unit):
+    auth_claims = auth_claims_unit.copy()
     auth_claims.pop("sub")
 
     encoded = jwt.encode(auth_claims, auth_key)
     return encoded
 
 
-@pytest.fixture
-def auth_token_expired(auth_key, auth_claims):
+@pytest.fixture(scope="session")
+def auth_token_expired(auth_key, auth_claims_unit):
+    auth_claims = auth_claims_unit.copy()
+
     exp = datetime.now() - timedelta(days=1)
     auth_claims["exp"] = exp
 
@@ -33,29 +43,25 @@ def auth_token_expired(auth_key, auth_claims):
     return encoded
 
 
-@pytest.fixture
-def auth_token_invalid_user_id(auth_key, auth_claims):
+@pytest.fixture(scope="session")
+def auth_token_invalid_user_id(auth_key, auth_claims_unit):
+    auth_claims = auth_claims_unit.copy()
+
     auth_claims["sub"] = "foo"
     encoded = jwt.encode(auth_claims, auth_key)
     return encoded
 
 
-def test_decode_cognito_token_success(set_auth_public_keys, auth_claims, auth_token):
-    decoded = authentication._decode_cognito_token(auth_token)
+def test_decode_cognito_token_success(set_auth_public_keys, auth_claims_unit, auth_token_unit):
+    decoded = authentication._decode_cognito_token(auth_token_unit)
 
-    assert decoded == auth_claims
-
-
-def test_decode_oauth_token_success(set_auth_public_keys, oauth_claims, oauth_auth_token):
-    decoded = authentication._decode_cognito_token(oauth_auth_token)
-
-    assert decoded == oauth_claims
+    assert decoded == auth_claims_unit
 
 
-def test_decode_cognito_token_invalid_key(monkeypatch, auth_token):
+def test_decode_cognito_token_invalid_key(monkeypatch, auth_token_unit):
     monkeypatch.setattr(authentication, "public_keys", "nope")
     with pytest.raises(JWTError, match="Signature verification failed."):
-        authentication._decode_cognito_token(auth_token)
+        authentication._decode_cognito_token(auth_token_unit)
 
 
 def test_decode_cognito_token_no_exp(set_auth_public_keys, auth_token_with_no_exp):
@@ -73,6 +79,7 @@ def test_decode_cognito_token_expired(set_auth_public_keys, auth_token_expired):
         authentication._decode_cognito_token(auth_token_expired)
 
 
+@pytest.mark.integration
 def test_without_token(client, auth_token):
     response = client.get("/v1/status")
     response_body = response.get_json()
@@ -81,6 +88,7 @@ def test_without_token(client, auth_token):
     assert response_body["message"] == "Service healthy"
 
 
+@pytest.mark.integration
 def test_current_user_is_set_successfully(client, app, user, auth_token):
     with app.app.test_request_context("/v1/users/current"):
         response = client.get(
@@ -92,6 +100,7 @@ def test_current_user_is_set_successfully(client, app, user, auth_token):
         assert response.status_code == 200
 
 
+@pytest.mark.integration
 def test_claims_with_invalid_user_id(client, app, user, auth_token_invalid_user_id):
     with app.app.test_request_context("/v1/users/current"):
         response = client.get(

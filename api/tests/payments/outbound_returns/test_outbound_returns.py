@@ -15,6 +15,9 @@ from massgov.pfml.payments.outbound_returns import (
 from massgov.pfml.payments.payments_util import Constants
 from tests.api.payments.conftest import upload_file_to_s3
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 TEST_FILES_FOLDER = os.path.join(pathlib.Path(__file__).parent, "test_files", "outbound_returns")
 
 

@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timedelta
 
 import boto3
+import pytest
 from moto import mock_s3
 
 import massgov.pfml.formstack.importer.import_formstack as import_formstack
@@ -84,6 +85,7 @@ def test_write_to_s3(monkeypatch):
     assert file_body == fake_data_to_write
 
 
+@pytest.mark.integration
 def test_write_to_import_log(monkeypatch, test_db_session):
     import_start_time = datetime.now()
     query_start_time = datetime.now() - timedelta(hours=24)

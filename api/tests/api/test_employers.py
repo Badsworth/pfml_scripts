@@ -1,9 +1,14 @@
 from datetime import date, datetime
 from decimal import Decimal
 
+import pytest
+
 from massgov.pfml.db.models.employees import EmployerQuarterlyContribution, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory, EmployerQuarterlyContributionFactory
 from massgov.pfml.util.strings import mask_fein
+
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
 
 
 def test_employers_receive_201_from_add_fein(

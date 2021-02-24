@@ -3,6 +3,9 @@ import os
 
 import pytest
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def event_json():

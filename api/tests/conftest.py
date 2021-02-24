@@ -72,25 +72,22 @@ def set_auth_public_keys(monkeypatch, auth_key):
     monkeypatch.setattr(authentication, "public_keys", auth_key)
 
 
-@pytest.fixture
-def auth_claims(user):
+@pytest.fixture(scope="session")
+def auth_claims_unit():
     claims = {
-        "a": "b",
         "exp": datetime.now() + timedelta(days=1),
-        "sub": str(user.active_directory_id),
+        "sub": "foo",
     }
 
     return claims
 
 
 @pytest.fixture
-def oauth_claims(user):
-    claims = {
-        "exp": datetime.now() + timedelta(days=1),
-        "sub": str(user.active_directory_id),
-    }
+def auth_claims(auth_claims_unit, user):
+    auth_claims = auth_claims_unit.copy()
+    auth_claims["sub"] = str(user.active_directory_id)
 
-    return claims
+    return auth_claims
 
 
 @pytest.fixture
@@ -155,7 +152,7 @@ def fineos_user_claims(fineos_user):
     return claims
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def auth_key():
     hmac_key = {
         "kty": "oct",
@@ -183,12 +180,6 @@ def fineos_user_token(fineos_user_claims, auth_key):
 @pytest.fixture
 def auth_token(auth_claims, auth_key):
     encoded = jwt.encode(auth_claims, auth_key)
-    return encoded
-
-
-@pytest.fixture
-def oauth_auth_token(oauth_claims, auth_key):
-    encoded = jwt.encode(oauth_claims, auth_key)
     return encoded
 
 

@@ -17,6 +17,9 @@ from massgov.pfml.user_import.process_csv import (
     process_files,
 )
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 class MockCognito:
     def __init__(self):

@@ -8,6 +8,9 @@ from massgov.pfml.db.models.applications import Notification
 from massgov.pfml.db.models.employees import Claim
 from massgov.pfml.db.models.factories import EmployerFactory
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 leave_admin_body = {
     "absence_case_id": "NTN-111-ABS-01",
     "document_type": "Approval Notice",

@@ -25,6 +25,9 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import PaymentFactory
 from tests.helpers.state_log import AdditionalParams, setup_state_log
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 fake = faker.Faker()
 
 PENDING_WRITEBACK_EXTRACTION_DATE = date.today() - timedelta(days=fake.random_int())

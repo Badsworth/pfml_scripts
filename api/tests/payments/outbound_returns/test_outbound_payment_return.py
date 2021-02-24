@@ -20,6 +20,9 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.payments.payments_util import Constants, ValidationReason
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 file_with_no_errors = "mock_payment_return.dat"
 file_with_errors = "mock_payment_return_2.dat"
 

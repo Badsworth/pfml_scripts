@@ -3,6 +3,8 @@
 #
 from datetime import datetime
 
+import pytest
+
 from massgov.pfml.db.models.factories import (
     ApplicationFactory,
     EmployerBenefitFactory,
@@ -10,6 +12,9 @@ from massgov.pfml.db.models.factories import (
     PreviousLeaveFactory,
 )
 from massgov.pfml.util.logging.applications import get_application_log_attributes
+
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
 
 
 def test_get_application_log_attributes(user, test_db_session, initialize_factories_session):

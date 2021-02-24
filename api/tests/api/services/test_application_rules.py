@@ -41,6 +41,9 @@ from massgov.pfml.db.models.factories import (
     WorkPatternVariableFactory,
 )
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 def test_first_name_required(test_db_session, initialize_factories_session):
     test_app = ApplicationFactory.create(

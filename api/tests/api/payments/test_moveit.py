@@ -1,7 +1,12 @@
 import os
 
+import pytest
+
 import massgov.pfml.payments.moveit as moveit
 import massgov.pfml.payments.payments_util as payments_util
+
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
 
 
 def test_pickup_files_from_moveit_transforms_s3path_correctly(monkeypatch, test_db_session):

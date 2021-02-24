@@ -18,6 +18,9 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import EmployeeFactory, PaymentFactory, ReferenceFileFactory
 from tests.helpers.state_log import default_outcome, setup_state_log
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 ### Setup methods for various state log scenarios ###
 
 

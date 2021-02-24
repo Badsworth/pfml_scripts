@@ -20,6 +20,7 @@ This is the API for the Massachusetts Paid Family and Medical Leave program. See
     2. [Seed your database](#seed-your-database)
 4. [Tests](#tests)
     1. [During Development](#during-development)
+    2. [Integration test marker](#integration-test-marker)
 5. [Environment Configuration](#environment-configuration)
 6. [Monitoring and Alerting](#monitoring-and-alerting)
 7. [Releases](#releases)
@@ -441,6 +442,46 @@ make test-watch args=tests/api/test_users.py::test_users_get
 ```
 
 Arguments for `test-watch` are the same as args for `make test` as discussed in the section above.
+
+### Integration test marker
+
+An `integration` marker is configured in pytest for the project. Any test that
+requires a real database connection or any concrete "resource" outside of the
+code itself should be tagged with the `integration` marker. It indicates an
+"integration" test, as opposed to a "unit" test, in a somewhat loose sense.
+
+A few common situations are easy cases, if a test is covering API behavior via
+fixtures like `app` or `client` or testing state in the database with
+`test_db_session`, the test should be marked with `integration`.
+
+Accessing real files is a bit of a gray area. If testing code that needs
+file-like objects, should generally prefer using in-memory constructs like
+`StringIO` or `BytesIO` to avoid ever touching the filesystem. But currently if
+a test needs to load test fixture files or use `tmp_path` to work with a real
+file for some purpose, those do not need to be tagged `integration`.
+
+Decorate any individual test with `@pytest.mark.integration`.
+
+If all (or almost all) tests in a given test file are integration tests, they
+can be tagged all at once with a declaration like the following at the top of
+the file (after imports):
+
+```python
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+```
+
+If a test file has a large mix of integration and unit tests that don't make
+sense to separate, integration tests can be bundled into a test class which can
+then be tagged, for example:
+
+```python
+@pytest.mark.integration
+class TestIntegrations:
+```
+
+(but tagging each individual function with `@pytest.mark.integration` is also
+acceptable)
 
 ## Environment Configuration
 

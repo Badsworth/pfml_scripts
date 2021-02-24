@@ -4,6 +4,9 @@ import boto3
 import moto
 import pytest
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 @moto.mock_cognitoidp()
 def test_create_cognito_leave_admin_account(test_db_session):

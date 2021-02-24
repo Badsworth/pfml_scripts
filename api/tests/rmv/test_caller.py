@@ -1,9 +1,8 @@
 import os
 
 import boto3
-import botocore
+import moto
 import pytest
-from botocore.stub import Stubber
 from requests import Session
 from requests.exceptions import HTTPError
 from requests.models import Response
@@ -69,7 +68,7 @@ def test_zeep_caller_get_500(mock_wsdl_500, pkcs12_data):
         caller.get()
 
 
-def test_zeep_caller_rmv_config_from_env_and_secrets_manager(monkeypatch):
+def test_zeep_caller_rmv_config_from_env_and_secrets_manager(reset_aws_env_vars, monkeypatch):
     # Test that the RmvConfig logic runs properly and retrieves values
     # from the environment and secrets manager.
 
@@ -78,21 +77,17 @@ def test_zeep_caller_rmv_config_from_env_and_secrets_manager(monkeypatch):
     monkeypatch.setenv("RMV_CLIENT_BASE_URL", "https://fake-rmv-url.com")
     monkeypatch.setenv("RMV_CLIENT_CERTIFICATE_PASSWORD", "pw")
 
-    # patch a custom secretsmanager client into all boto3 sessions
-    client = botocore.session.get_session().create_client("secretsmanager", region_name="us-east-1")
-    monkeypatch.setattr(boto3, "client", lambda name: client)
+    # the call to get_secret_value in RmvConfig.from_env_and_secrets_manager
+    # needs this as the client does not specify a region and the
+    # `reset_aws_env_vars` fixture resets the default env var to 'testing'
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
 
-    with Stubber(client) as stubber:
-        # Add a response to the custom client
-        stubber.add_response(
-            "get_secret_value",
-            expected_params={"SecretId": "arn"},
-            service_response={"SecretBinary": str.encode("hello")},
-        )
+    with moto.mock_secretsmanager():
+        secrets_client = boto3.client("secretsmanager", region_name="us-east-1")
+        secrets_client.put_secret_value(SecretId="arn", SecretBinary=str.encode("hello"))
 
         # Generate the RMV Config and verify parsed attributes
         config = RmvConfig.from_env_and_secrets_manager()
         assert config.base_url == "https://fake-rmv-url.com"
         assert config.pkcs12_pw == "pw"
         assert config.pkcs12_data == str.encode("hello")
-        stubber.assert_no_pending_responses()

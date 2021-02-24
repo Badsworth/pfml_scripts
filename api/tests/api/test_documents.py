@@ -9,6 +9,9 @@ from massgov.pfml.db.models.applications import DocumentType
 from massgov.pfml.db.models.factories import ApplicationFactory
 from massgov.pfml.fineos import fineos_client, models
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 VALID_FORM_DATA = {
     "document_type": "Passport",
     "name": "passport.png",

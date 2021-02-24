@@ -1,3 +1,5 @@
+import pytest
+
 from massgov.pfml.db.models.employees import Claim, Employee, Employer, Payment
 from massgov.pfml.payments.mock.payments_test_scenario_generator import (
     ScenarioDataConfig,
@@ -7,6 +9,7 @@ from massgov.pfml.payments.mock.payments_test_scenario_generator import (
 )
 
 
+@pytest.mark.integration
 def test_generator(test_db_session, initialize_factories_session):
     # configure
     scenario_config = ScenarioDataConfig(

@@ -1,3 +1,4 @@
+import pytest
 from freezegun import freeze_time
 
 import massgov.pfml.fineos.mock_client
@@ -12,6 +13,9 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.fineos.models.group_client_api import EFormAttribute
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
+
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
 
 
 def test_non_employers_cannot_download_documents(client, auth_token):

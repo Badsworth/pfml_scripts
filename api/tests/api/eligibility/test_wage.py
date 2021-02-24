@@ -6,6 +6,8 @@ import datetime
 import decimal
 import uuid
 
+import pytest
+
 from massgov.pfml.api.eligibility import wage
 from massgov.pfml.db.models import factories
 from massgov.pfml.db.models.employees import WagesAndContributions
@@ -33,6 +35,7 @@ def add_wage_row(employer, employee, filing_period, qtr_wage):
     )
 
 
+@pytest.mark.integration
 def test_get_average_weekly_wage_one_row(test_db_session, initialize_factories_session):
     employer = factories.EmployerFactory(employer_id=EMPL1)
     employee = factories.EmployeeFactory()
@@ -47,6 +50,7 @@ def test_get_average_weekly_wage_one_row(test_db_session, initialize_factories_s
     assert aww == 1000
 
 
+@pytest.mark.integration
 def test_get_average_weekly_wage_multiple_rows(test_db_session, initialize_factories_session):
     employer1 = factories.EmployerFactory(employer_id=EMPL1)
     employer2 = factories.EmployerFactory(employer_id=EMPL2)
@@ -72,6 +76,7 @@ def test_get_average_weekly_wage_multiple_rows(test_db_session, initialize_facto
     assert aww == (13000 + 13520) / 26 + (7800 + 7540) / 26
 
 
+@pytest.mark.integration
 def test_query_employee_wages(test_db_session, initialize_factories_session):
     employer1 = factories.EmployerFactory(employer_id=EMPL1)
     employer2 = factories.EmployerFactory(employer_id=EMPL2)

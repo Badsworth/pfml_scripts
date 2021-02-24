@@ -13,6 +13,7 @@ import uuid
 from collections import Counter
 from typing import Dict, List
 
+import pytest
 from freezegun import freeze_time
 from smart_open import open as smart_open
 
@@ -62,6 +63,9 @@ from massgov.pfml.payments.process_ctr_payments import Configuration as CTRTaskC
 from massgov.pfml.payments.process_ctr_payments import _ctr_process as run_ctr_ecs_task
 from massgov.pfml.payments.process_payments import Configuration as FineosTaskConfiguration
 from massgov.pfml.payments.process_payments import _fineos_process as run_fineos_ecs_task
+
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
 
 # The number of times each scenario should be created
 # This should be left at 1 except when doing manual testing

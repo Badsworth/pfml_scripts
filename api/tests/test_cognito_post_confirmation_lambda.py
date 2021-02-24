@@ -8,6 +8,9 @@ import massgov.pfml.cognito_post_confirmation_lambda.lib as lib
 from massgov.pfml.api.services.administrator_fineos_actions import register_leave_admin_with_fineos
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def claimant_event_json():

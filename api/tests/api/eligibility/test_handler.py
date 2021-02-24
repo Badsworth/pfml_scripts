@@ -14,6 +14,9 @@ from massgov.pfml.db.models.factories import (
     WagesAndContributionsFactory,
 )
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 def test_endpoint_with_employee_wages_data(
     client, test_db_session, initialize_factories_session, fineos_user_token

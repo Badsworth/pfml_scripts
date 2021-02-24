@@ -37,6 +37,9 @@ from massgov.pfml.payments.config import get_s3_config
 from massgov.pfml.util import datetime
 from tests.api.payments.conftest import upload_file_to_s3
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def emp_updates_path(tmp_path, mock_fineos_s3_bucket):

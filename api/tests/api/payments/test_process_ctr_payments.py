@@ -1,12 +1,17 @@
 import logging  # noqa: B1
 import os
 
+import pytest
+
 import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.gax as gax
 import massgov.pfml.payments.moveit as moveit
 import massgov.pfml.payments.vcc as vcc
 import massgov.pfml.util.files as file_util
 from massgov.pfml.payments.process_ctr_payments import Configuration, _ctr_process
+
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
 
 # # == E2E Tests ==
 

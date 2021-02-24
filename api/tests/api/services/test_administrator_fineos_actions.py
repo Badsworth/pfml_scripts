@@ -251,6 +251,7 @@ def test_create_leave_admin_request_payload():
     assert payload.__contains__("<ns0:enabled>true</ns0:enabled>")
 
 
+@pytest.mark.integration
 def test_register_leave_admin_with_fineos(employer_user, test_db_session):
     employer = EmployerFactory.create()
     register_leave_admin_with_fineos(
@@ -274,6 +275,7 @@ def test_register_leave_admin_with_fineos(employer_user, test_db_session):
     assert created_leave_admin.employer_id == employer.employer_id
 
 
+@pytest.mark.integration
 def test_register_previously_registered_leave_admin_with_fineos(
     employer_user, test_db_session, caplog
 ):
@@ -347,6 +349,7 @@ def test_get_leave_details(period_decisions):
     assert leave_details.reduced_schedule_leave_periods[0].end_date == date(2021, 1, 29)
 
 
+@pytest.mark.integration
 def test_get_claim_plan(mock_fineos_period_decisions, initialize_factories_session):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
@@ -357,6 +360,7 @@ def test_get_claim_plan(mock_fineos_period_decisions, initialize_factories_sessi
     assert leave_details.status == "Undecided"
 
 
+@pytest.mark.integration
 def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan, initialize_factories_session):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"

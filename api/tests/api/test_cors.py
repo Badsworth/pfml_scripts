@@ -1,3 +1,9 @@
+import pytest
+
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
+
 def test_cors_success(app_cors):
     client = app_cors.app.test_client()
     body = {"email": "janedoe@example.com", "auth_id": "00000"}

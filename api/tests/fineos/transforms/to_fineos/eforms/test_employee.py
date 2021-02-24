@@ -7,6 +7,9 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
     TransformPreviousLeaves,
 )
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def previous_leave():

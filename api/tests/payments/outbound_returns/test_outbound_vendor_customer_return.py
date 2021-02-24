@@ -26,6 +26,9 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.payments.payments_util import Constants, ValidationContainer, ValidationReason
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 TEST_FOLDER = pathlib.Path(__file__).parent
 TEST_FILE_PATH = os.path.join(
     TEST_FOLDER,

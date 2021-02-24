@@ -14,6 +14,9 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import EmployeeFactory, EmployerFactory
 from massgov.pfml.util import datetime
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def emp_updates_path(tmp_path):

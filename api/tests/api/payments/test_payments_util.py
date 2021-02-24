@@ -38,6 +38,9 @@ from massgov.pfml.payments.payments_util import (
 )
 from tests.api.payments.conftest import upload_file_to_s3
 
+# most tests in here require real resources
+pytestmark = pytest.mark.integration
+
 fake = faker.Faker()
 
 TEST_FILENAME = "test.txt"

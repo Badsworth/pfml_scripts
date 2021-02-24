@@ -4,6 +4,9 @@ import massgov.pfml.payments.data_mart.client_test_scenarios as data_mart_test_s
 import massgov.pfml.payments.data_mart.core as data_mart_core
 from massgov.pfml.db.models.factories import CtrAddressPairFactory, EftFactory, EmployeeFactory
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def test_scenario_employees_and_map(initialize_factories_session):

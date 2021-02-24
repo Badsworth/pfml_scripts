@@ -26,6 +26,9 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import ClaimFactory, ReferenceFileFactory
 from massgov.pfml.payments.payments_util import get_now
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 fake = faker.Faker()
 
 

@@ -12,6 +12,9 @@ from massgov.pfml.payments.sftp_s3_transfer import (
     copy_to_sftp_and_archive_s3_files,
 )
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 def _setup_mock_sftp_files(sftp_client, folder, filenames):
     for filename in filenames:

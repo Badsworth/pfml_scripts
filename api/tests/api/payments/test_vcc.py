@@ -40,6 +40,9 @@ from massgov.pfml.db.models.factories import (
 )
 from tests.api.payments import validate_attributes, validate_elements
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 TEST_FOLDER = pathlib.Path(__file__).parent
 
 

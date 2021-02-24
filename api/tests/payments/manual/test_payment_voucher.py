@@ -8,11 +8,15 @@ import random
 import re
 
 import freezegun
+import pytest
 
 from massgov.pfml.db.models.employees import TaxIdentifier
 from massgov.pfml.db.models.factories import EmployeeFactory
 from massgov.pfml.payments import fineos_payment_export, fineos_vendor_export
 from massgov.pfml.payments.manual import payment_voucher
+
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
 
 test_ci_index = fineos_payment_export.CiIndex(c="7326", i="249")
 test_pei_csv_row = {

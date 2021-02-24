@@ -7,6 +7,9 @@ from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory, EmployerQuarterlyContributionFactory
 from massgov.pfml.db.models.verifications import Verification
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 verifications_body = {
     "employer_id": "6e441845-a933-4a0b-827b-ec5bf467429e",
     "withholding_amount": 10,

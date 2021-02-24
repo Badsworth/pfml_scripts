@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.mock.fineos_extract_generator as fineos_extract_generator
 import massgov.pfml.payments.payments_util as payments_util
@@ -11,6 +13,9 @@ from massgov.pfml.payments.mock.payments_test_scenario_generator import (
     ScenarioNameWithCount,
 )
 from massgov.pfml.payments.process_payments import Configuration, _fineos_process
+
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
 
 # == E2E Tests ==
 
@@ -58,7 +63,7 @@ def test_fineos_process(
     employers = test_db_session.query(Employer).all()
     payments = test_db_session.query(Payment).all()
 
-    # top level assersions
+    # top level assertions
     assert len(employees) == 12
     assert len(employers) == 12
     assert len(payments) == 5  # account for extra claim for scenario A

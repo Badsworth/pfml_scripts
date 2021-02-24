@@ -2,6 +2,8 @@ import os
 import tempfile
 from typing import List
 
+import pytest
+
 import massgov.pfml.payments.mock.fineos_extract_generator as fineos_extract_generator
 import massgov.pfml.util.files as file_util
 from massgov.pfml.payments.mock.fineos_extract_generator import (
@@ -17,6 +19,9 @@ from massgov.pfml.payments.mock.payments_test_scenario_generator import (
     ScenarioData,
     ScenarioDataConfig,
 )
+
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
 
 
 def test_generate_to_fs(test_db_session, mock_s3_bucket, initialize_factories_session):

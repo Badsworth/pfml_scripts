@@ -6,6 +6,9 @@ import pytest
 
 from massgov.pfml.rmv.caller import MockZeepCaller
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def rmv_full_mock(monkeypatch):

@@ -21,6 +21,9 @@ from massgov.pfml.reductions.dia import (
     get_approved_claims_info_csv_path,
 )
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def set_up(test_db_session, initialize_factories_session):

@@ -1,5 +1,6 @@
 import csv
 
+import pytest
 from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
@@ -9,6 +10,9 @@ import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import Flow, LkState, Payment, State, StateLog
 from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
 from tests.helpers.state_log import AdditionalParams, setup_state_log
+
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
 
 EXPECTED_DESCRIPTION = (
     "RecordName\nThis is a description of the problem\nMissingInDB:Field1\nMissingField:Field2"

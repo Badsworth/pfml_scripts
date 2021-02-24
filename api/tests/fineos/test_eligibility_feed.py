@@ -37,6 +37,10 @@ class SpecialTestException(Exception):
     pass
 
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
+
 @pytest.fixture
 def geo_state_lookup(test_db_session):
     GeoState.sync_to_database(test_db_session)
