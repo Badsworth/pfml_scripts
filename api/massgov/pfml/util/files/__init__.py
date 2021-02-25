@@ -354,6 +354,7 @@ def rename_file(source, destination):
         copy_file(source, destination)
         delete_file(source)
     else:
+        os.makedirs(os.path.dirname(destination), exist_ok=True)
         os.rename(source, destination)
 
 

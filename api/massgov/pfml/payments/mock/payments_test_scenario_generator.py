@@ -583,45 +583,42 @@ def generate_scenario_data_db(
 
 # Generate scenario data set in DB, return data set
 def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
-    try:
-        scenario_dataset: List[ScenarioData] = []
+    scenario_dataset: List[ScenarioData] = []
 
-        # generate scenario data
-        ssn = config.ssn_id_base + 1
-        fein = config.fein_id_base + 1
+    # generate scenario data
+    ssn = config.ssn_id_base + 1
+    fein = config.fein_id_base + 1
 
-        for scenario_and_count in config.scenario_config:
-            scenario_name = scenario_and_count.name
-            scenario_count = scenario_and_count.count
-            scenario_descriptor = SCENARIO_DESCRIPTORS[scenario_name]
+    for scenario_and_count in config.scenario_config:
+        scenario_name = scenario_and_count.name
+        scenario_count = scenario_and_count.count
+        scenario_descriptor = SCENARIO_DESCRIPTORS[scenario_name]
 
-            for i in range(scenario_count):  # noqa: B007
-                ssn_part_str = str(ssn)[2:]
-                fein_part_str = str(fein)[2:]
+        for i in range(scenario_count):  # noqa: B007
+            ssn_part_str = str(ssn)[2:]
+            fein_part_str = str(fein)[2:]
 
-                fineos_employer_id = fein_part_str.rjust(9, "3")
-                fineos_notification_id = f"NTN-{ssn_part_str}"
-                employee_customer_number = ssn_part_str.rjust(9, "5")
-                vendor_customer_code = ssn_part_str.rjust(9, "6")
+            fineos_employer_id = fein_part_str.rjust(9, "3")
+            fineos_notification_id = f"NTN-{ssn_part_str}"
+            employee_customer_number = ssn_part_str.rjust(9, "5")
+            vendor_customer_code = ssn_part_str.rjust(9, "6")
 
-                logger.info(
-                    f"scenario_name: {scenario_name}, vendor_customer_code: {vendor_customer_code}"
-                )
+            logger.info(
+                f"scenario_name: {scenario_name}, vendor_customer_code: {vendor_customer_code}"
+            )
 
-                scenario_data = generate_scenario_data_db(
-                    scenario_descriptor,
-                    ssn=str(ssn),
-                    fein=str(fein),
-                    fineos_employer_id=fineos_employer_id,
-                    fineos_notification_id=fineos_notification_id,
-                    vendor_customer_code=vendor_customer_code,
-                    employee_customer_number=employee_customer_number,
-                )
-                scenario_dataset.append(scenario_data)
+            scenario_data = generate_scenario_data_db(
+                scenario_descriptor,
+                ssn=str(ssn),
+                fein=str(fein),
+                fineos_employer_id=fineos_employer_id,
+                fineos_notification_id=fineos_notification_id,
+                vendor_customer_code=vendor_customer_code,
+                employee_customer_number=employee_customer_number,
+            )
+            scenario_dataset.append(scenario_data)
 
-                ssn += 1
-                fein += 1
+            ssn += 1
+            fein += 1
 
-        return scenario_dataset
-    except Exception as e:
-        raise e
+    return scenario_dataset
