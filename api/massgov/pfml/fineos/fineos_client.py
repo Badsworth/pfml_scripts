@@ -157,9 +157,12 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 client_secret=self.client_secret,
                 timeout=5,
             )
-        except oauthlib.oauth2.OAuth2Error as ex:
-            logger.exception("POST %s => %r", self.oauth2_url, ex)
-            raise exception.FINEOSFatalClientSideError(cause=ex)
+        except (
+            oauthlib.oauth2.OAuth2Error,
+            requests.exceptions.RequestException,
+            requests.exceptions.Timeout,
+        ) as ex:
+            self._handle_client_side_exception("POST", self.oauth2_url, ex)
 
         logger.info(
             "POST %s => type %s, expires %is (at %s)",
@@ -168,6 +171,36 @@ class FINEOSClient(client.AbstractFINEOSClient):
             token["expires_in"],
             datetime.datetime.utcfromtimestamp(token["expires_at"]),
         )
+
+    def _handle_client_side_exception(self, method: str, url: str, ex: Exception) -> None:
+        # Make sure New Relic records errors from FINEOS, even if the API does not ultimately
+        # return an error.
+        has_flask_context = flask.has_request_context()
+        newrelic.agent.record_custom_event(
+            "FineosError",
+            {
+                "fineos.error.class": type(ex).__name__,
+                "fineos.error.message": str(ex),
+                "fineos.request.method": method,
+                "fineos.request.uri": url,
+                "api.request.method": flask.request.method if has_flask_context else None,
+                "api.request.uri": flask.request.path if has_flask_context else None,
+                "api.request.headers.x-amzn-requestid": flask.request.headers.get(
+                    "x-amzn-requestid", None
+                )
+                if has_flask_context
+                else None,
+            },
+        )
+
+        if isinstance(ex, requests.exceptions.Timeout) or isinstance(
+            ex, oauthlib.oauth2.TemporarilyUnavailableError
+        ):
+            logger.warning("%s %s => %r", method, url, ex)
+            raise exception.FINEOSFatalUnavailable(cause=ex)
+        else:
+            logger.exception("%s %s => %r", method, url, ex)
+            raise exception.FINEOSFatalClientSideError(cause=ex)
 
     def _request(
         self, method: str, url: str, headers: Dict[str, str], **args: Any,
@@ -203,32 +236,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                     method, url, timeout=(6.1, request_timeout), headers=headers, **args
                 )
         except (requests.exceptions.RequestException, requests.exceptions.Timeout) as ex:
-            # Make sure New Relic records errors from FINEOS, even if the API does not ultimately
-            # return an error.
-            # Specify fields based on API or FINEOS origin
-            newrelic.agent.record_custom_event(
-                "FineosError",
-                {
-                    "fineos.error.class": type(ex).__name__,
-                    "fineos.error.message": str(ex),
-                    "fineos.request.method": method,
-                    "fineos.request.uri": url,
-                    "api.request.method": flask.request.method if has_flask_context else None,
-                    "api.request.uri": flask.request.path if has_flask_context else None,
-                    "api.request.headers.x-amzn-requestid": flask.request.headers.get(
-                        "x-amzn-requestid", None
-                    )
-                    if has_flask_context
-                    else None,
-                },
-            )
-
-            if isinstance(ex, requests.exceptions.Timeout):
-                logger.warning("%s %s => %r", method, url, ex)
-                raise exception.FINEOSFatalUnavailable(cause=ex)
-            else:
-                logger.exception("%s %s => %r", method, url, ex)
-                raise exception.FINEOSFatalClientSideError(cause=ex)
+            self._handle_client_side_exception(method, url, ex)
 
         if response.status_code != requests.codes.ok:
             logger.debug(
