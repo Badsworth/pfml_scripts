@@ -1,7 +1,7 @@
 from typing import Optional
 
 import massgov.pfml.db as db
-from massgov.pfml.api.util.response import Issue, IssueType
+from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
 from massgov.pfml.db.models.applications import Employee, Employer
 from massgov.pfml.db.models.employees import TaxIdentifier, WagesAndContributions
 
@@ -39,7 +39,7 @@ def get_contributing_employer_or_employee_issue(
             # to register the employee/employer combo in Fineos during claim creation
             # will therefore fail with a "not found" error.
             return Issue(
-                type=IssueType.require_employee,
+                rule=IssueRule.require_employee,
                 message="Couldn't find Employee in our system. Confirm that you have the correct EIN.",
             )
 

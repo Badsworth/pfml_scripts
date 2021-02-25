@@ -2840,7 +2840,7 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
 
     assert {
         "message": "Couldn't find Employee in our system. Confirm that you have the correct EIN.",
-        "type": "require_employee",
+        "rule": "require_employee",
     } in response_body.get("errors")
     assert not response_body.get("warnings")
     # Simplified check to confirm Application was included in response:

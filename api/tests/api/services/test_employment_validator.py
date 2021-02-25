@@ -3,7 +3,7 @@ import pytest
 from massgov.pfml.api.services.employment_validator import (
     get_contributing_employer_or_employee_issue,
 )
-from massgov.pfml.api.util.response import Issue, IssueType
+from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
 from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployerFactory,
@@ -75,7 +75,7 @@ def test_employee_is_required(test_db_session, initialize_factories_session):
     )
 
     assert issue == Issue(
-        type=IssueType.require_employee,
+        rule=IssueRule.require_employee,
         message="Couldn't find Employee in our system. Confirm that you have the correct EIN.",
     )
 
@@ -92,6 +92,6 @@ def test_employee_with_wages_from_employer_is_required(
     )
 
     assert issue == Issue(
-        type=IssueType.require_employee,
+        rule=IssueRule.require_employee,
         message="Couldn't find Employee in our system. Confirm that you have the correct EIN.",
     )
