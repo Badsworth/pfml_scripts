@@ -613,7 +613,7 @@ class User(Base):
         server_default=sqlnow(),
     )
 
-    roles = relationship("UserRole", back_populates="user", uselist=True)
+    roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
         "UserLeaveAdministrator", back_populates="user", uselist=True
     )

@@ -35,7 +35,7 @@ def test_users_get(client, employer_user, employer_auth_token, test_db_session):
     assert response.status_code == 200
     assert response_body.get("data")["user_id"] == str(employer_user.user_id)
     assert response_body.get("data")["roles"] == [
-        {"role": {"role_description": "Employer", "role_id": 3}}
+        {"role_description": "Employer", "role_id": 3},
     ]
     assert response_body.get("data")["user_leave_administrators"] == [
         {
@@ -93,7 +93,7 @@ def test_users_get_current(client, employer_user, employer_auth_token, test_db_s
     assert response.status_code == 200
     assert response_body.get("data")["user_id"] == str(employer_user.user_id)
     assert response_body.get("data")["roles"] == [
-        {"role": {"role_description": "Employer", "role_id": 3}}
+        {"role_description": "Employer", "role_id": 3},
     ]
     assert response_body.get("data")["user_leave_administrators"] == [
         {

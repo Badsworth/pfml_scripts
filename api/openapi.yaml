@@ -1254,7 +1254,7 @@ components:
         roles:
           type: array
           items:
-            $ref: "#/components/schemas/UserRoleResponse"
+            $ref: "#/components/schemas/RoleResponse"
         user_leave_administrators:
           type: array
           items:
@@ -1268,13 +1268,6 @@ components:
           type: integer
         role_description:
           type: string
-
-    UserRoleResponse:
-      type: object
-      additionalProperties: false
-      properties:
-        role:
-          $ref: "#/components/schemas/RoleResponse"
 
     UserLeaveAdminResponse:
       type: object

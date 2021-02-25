@@ -84,8 +84,7 @@ class UserFactory(BaseFactory):
         if extracted:
             for role in extracted:
                 lk_role = employee_models.Role.get_instance(db_session, template=role)
-                user_role = employee_models.UserRole(role=lk_role, user=self)
-                self.roles.append(user_role)
+                self.roles.append(lk_role)
                 get_db_session().commit()
 
 

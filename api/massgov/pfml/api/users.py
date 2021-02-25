@@ -88,10 +88,6 @@ class UserLeaveAdminResponse(PydanticBaseModel):
     verified: bool
 
 
-class UserRoleResponse(PydanticBaseModel):
-    role: RoleResponse
-
-
 class UserResponse(PydanticBaseModel):
     """Response object for a given User result """
 
@@ -99,7 +95,7 @@ class UserResponse(PydanticBaseModel):
     auth_id: str = Field(alias="active_directory_id")
     email_address: str
     consented_to_data_sharing: bool
-    roles: List[UserRoleResponse]
+    roles: List[RoleResponse]
     user_leave_administrators: List[UserLeaveAdminResponse]
 
 
