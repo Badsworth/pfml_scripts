@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
+import routes from "../../src/routes";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -26,19 +27,23 @@ const withWithholding = (Component) => {
     });
 
     useEffect(() => {
-      const loadWithholding = async () => {
-        const data = await appLogic.employers.loadWithholding(
-          employer.employer_id
-        );
-        setShouldLoadWithholding(false);
-        setWithholding(data);
-      };
+      if (employer.verified) {
+        appLogic.portalFlow.goTo(query.next || routes.employers.organizations);
+      } else {
+        const loadWithholding = async () => {
+          const data = await appLogic.employers.loadWithholding(
+            employer.employer_id
+          );
+          setShouldLoadWithholding(false);
+          setWithholding(data);
+        };
 
-      if (shouldLoadWithholding) {
-        loadWithholding();
+        if (shouldLoadWithholding) {
+          loadWithholding();
+        }
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [withholding]);
+    }, [withholding, employer]);
 
     return (
       <React.Fragment>
@@ -56,6 +61,9 @@ const withWithholding = (Component) => {
     appLogic: PropTypes.shape({
       employers: PropTypes.shape({
         loadWithholding: PropTypes.func.isRequired,
+      }).isRequired,
+      portalFlow: PropTypes.shape({
+        goTo: PropTypes.func.isRequired,
       }).isRequired,
       users: PropTypes.shape({
         user: PropTypes.instanceOf(User).isRequired,

@@ -33,10 +33,6 @@ export const VerifyContributions = (props) => {
     appLogic.portalFlow.goTo(routes.employers.dashboard);
   }
 
-  if (employer.verified) {
-    appLogic.portalFlow.goTo(query.next || routes.employers.organizations);
-  }
-
   const { formState, updateFields } = useFormState({
     withholdingAmount: 0,
   });
