@@ -1,7 +1,7 @@
 import User, { UserLeaveAdministrator } from "src/models/User";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import React from "react";
-import VerifyContributions from "src/pages/employers/organizations/verify-contributions";
+import { VerifyContributions } from "src/pages/employers/organizations/verify-contributions";
 import Withholding from "src/models/Withholding";
 
 export default {
@@ -12,14 +12,14 @@ export default {
 export const Default = () => {
   const query = {
     employer_id: "mock_employer_id",
-    next: "/employers/organizations",
   };
   const user = new User({
     user_leave_administrators: [
       new UserLeaveAdministrator({
         employer_dba: "Some Company",
         employer_fein: "11-11111",
-        employer_id: "123",
+        employer_id: "mock_employer_id",
+        has_verification_data: true,
         verified: false,
       }),
     ],
@@ -27,30 +27,24 @@ export const Default = () => {
   const appLogic = {
     appErrors: new AppErrorInfoCollection(),
     employers: {
+      loadClaim: () => {},
       submitWithholding: () => {},
     },
-    auth: {
-      isLoggedIn: true,
-      requireLogin: () => {},
-    },
     portalFlow: {
-      pathname: "/employers/organizations/verify-contributions",
+      goTo: () => {},
     },
     users: {
-      loadUser: () => {},
-      requireUserConsentToDataAgreement: () => {},
-      requireUserRole: () => {},
       user,
     },
+    setAppErrors: () => {},
   };
   const withholding = new Withholding({
-    filing_period: "1-1-2021",
+    filing_period: "02-2020",
   });
   return (
     <VerifyContributions
-      appLogic={appLogic}
       query={query}
-      user={user}
+      appLogic={appLogic}
       withholding={withholding}
     />
   );
