@@ -349,12 +349,6 @@ def update_from_request(
             lookup_model = db_lookups.by_value(db_session, value.get_lookup_model(), value)
 
             if lookup_model:
-                if key == "reason":
-                    key = "leave_reason"
-
-                if key == "reason_qualifier":
-                    key = "leave_reason_qualifier"
-
                 value = lookup_model
 
         setattr(application, key, value)
@@ -419,7 +413,8 @@ def update_leave_details(
                     key = "leave_reason_qualifier"
 
                 value = lookup_model
-
+        if key == "reason_qualifier" and not value:
+            key = "leave_reason_qualifier"
         setattr(application, key, value)
 
     return leave_schedules
