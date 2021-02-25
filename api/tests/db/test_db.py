@@ -111,6 +111,7 @@ def test_get_connection_parameters(reset_aws_env_vars, delete_db_env_vars, monke
         password=db_config.password,
         port=db_config.port,
         options=f"-c search_path={db_config.schema}",
+        connect_timeout=2,
     )
 
 

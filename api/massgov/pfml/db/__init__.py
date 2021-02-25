@@ -129,6 +129,7 @@ def get_connection_parameters(db_config: DbConfig) -> Dict[str, Any]:
         password=password,
         port=db_config.port,
         options=f"-c search_path={db_config.schema}",
+        connect_timeout=2,
         **connect_args,
     )
 
