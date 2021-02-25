@@ -29,15 +29,20 @@
       { "name": "DB_USERNAME", "value": "${db_username}" },
       { "name": "LOGGING_LEVEL", "value": "${logging_level}" },
 
-      { "name": "S3_DUA_OUTBOUND_DIRECTORY_PATH", "value": "reductions/dua/outbound" },
-      { "name": "S3_DUA_PENDING_DIRECTORY_PATH", "value": "reductions/dua/pending" },
-      { "name": "S3_DUA_ARCHIVE_DIRECTORY_PATH", "value": "reductions/dua/archive" },
+      { "name": "S3_BUCKET", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/" },
+      { "name": "S3_DIA_ARCHIVE_DIRECTORY_PATH", "value": "reductions/dia/archive" },
       { "name": "S3_DIA_OUTBOUND_DIRECTORY_PATH", "value": "reductions/dia/outbound" },
+      { "name": "S3_DUA_ARCHIVE_DIRECTORY_PATH", "value": "reductions/dua/archive" },
+      { "name": "S3_DUA_OUTBOUND_DIRECTORY_PATH", "value": "reductions/dua/outbound" },
 
-      { "name": "EOLWD_MOVEIT_SFTP_URI", "value": "${eolwd_moveit_sftp_uri}" }
+      { "name": "MOVEIT_SFTP_URI", "value": "${eolwd_moveit_sftp_uri}" },
+      { "name": "MOVEIT_DIA_INBOUND_PATH", "value": "/DFML/DIA/Inbound" },
+      { "name": "MOVEIT_DUA_INBOUND_PATH", "value": "/DFML/DUA/Inbound" }
     ],
     "secrets": [
-      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }
+      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
+      { "name": "MOVEIT_SSH_KEY", "valueFrom": "/service/${app_name}-comptroller/${environment_name}/eolwd-moveit-ssh-key" },
+      { "name": "MOVEIT_SSH_KEY_PASSWORD", "valueFrom": "/service/${app_name}-comptroller/${environment_name}/eolwd-moveit-ssh-key-password" }
     ]
   }
 ]

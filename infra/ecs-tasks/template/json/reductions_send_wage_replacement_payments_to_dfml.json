@@ -29,7 +29,10 @@
       { "name": "DB_USERNAME", "value": "${db_username}" },
       { "name": "LOGGING_LEVEL", "value": "${logging_level}" },
 
-      { "name": "EOLWD_MOVEIT_SFTP_URI", "value": "${eolwd_moveit_sftp_uri}" }
+      { "name": "S3_BUCKET", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/" },
+      { "name": "S3_DFML_ARCHIVE_DIRECTORY_PATH", "value": "reductions/dfml/archive" },
+      { "name": "S3_DFML_OUTBOUND_DIRECTORY_PATH", "value": "reductions/dfml/outbound" },
+      { "name": "S3_DFML_PENDING_DIRECTORY_PATH", "value": "reductions/dfml/pending" }
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }
