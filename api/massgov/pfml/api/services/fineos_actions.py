@@ -286,15 +286,11 @@ def mark_single_document_as_received(
     if document.fineos_id is None:
         raise ValueError("document.fineos_id is None")
 
-    try:
-        fineos = massgov.pfml.fineos.create_client()
-        fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
-        fineos.mark_document_as_received(
-            fineos_user_id, str(application.fineos_absence_id), str(document.fineos_id)
-        )
-    except Exception:
-        logger.exception("FINEOS API error")
-        raise ValueError("FINEOS API error")
+    fineos = massgov.pfml.fineos.create_client()
+    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+    fineos.mark_document_as_received(
+        fineos_user_id, str(application.fineos_absence_id), str(document.fineos_id)
+    )
 
 
 def build_customer_model(application, current_user):

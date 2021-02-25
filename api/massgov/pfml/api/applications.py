@@ -527,24 +527,22 @@ def document_upload(application_id, body, file):
                 logger.info(
                     "document_upload - evidence marked as received", extra=log_attributes,
                 )
-        except ValueError as ve:
+        except Exception:
             logger.warning(
                 "document_upload failure - failure marking evidence as received",
                 extra=log_attributes,
                 exc_info=True,
             )
 
-            # Do not save the document in the database if we failed to mark the associated evidence as received in
-            # FINEOS because we want the claimant to have the opportunity to try again. This behaviour will create
-            # mutliple documents in FINEOS but will also ensure that the evidence can eventually be marked as received.
-            db_session.rollback()
-
-            return response_util.error_response(
-                status_code=BadRequest,
-                message=str(ve),
-                errors=[response_util.custom_issue("fineos_client", str(ve))],
-                data=document_details.dict(),
-            ).to_api_response()
+            # We don't expect any errors here, raise an error if we get one.
+            # FINEOS Unavailability errors will bubble up and be returned as 503
+            # with a fineos_client issue type.
+            #
+            # Note that we expect the DB session to rollback here due to the raised exception,
+            # so the document is not saved and the claimant has the opportunity to try again.
+            # This behaviour will create multiple documents in FINEOS but will ensure that
+            # the evidence can eventually be marked as received without manual intervention.
+            raise
 
         db_session.commit()
 
