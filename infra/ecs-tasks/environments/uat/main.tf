@@ -38,6 +38,7 @@ module "tasks" {
   fineos_client_integration_services_api_url = "https://uat-api.masspfml.fineos.com/integration-services/"
   fineos_client_group_client_api_url         = "https://uat-api.masspfml.fineos.com/groupclientapi/"
   fineos_client_wscomposer_api_url           = "https://uat-api.masspfml.fineos.com/integration-services/wscomposer/"
+  fineos_client_wscomposer_user_id           = "OASIS"
   fineos_client_oauth2_url                   = "https://uat-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id             = "61on8s7n66i0gj913didkmn5q"
 
