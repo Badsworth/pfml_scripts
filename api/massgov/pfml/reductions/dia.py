@@ -13,7 +13,11 @@ from massgov.pfml.db.models.employees import (
     State,
 )
 from massgov.pfml.payments.payments_util import get_now
-from massgov.pfml.reductions.config import get_s3_config
+from massgov.pfml.payments.sftp_s3_transfer import (
+    SftpS3TransferConfig,
+    copy_to_sftp_and_archive_s3_files,
+)
+from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 from massgov.pfml.util.files import create_csv_from_list, upload_to_s3
 
 logger = logging.get_logger(__name__)
@@ -98,8 +102,35 @@ def get_approved_claims_info_csv_path(approved_claims: List[Dict]) -> pathlib.Pa
     return create_csv_from_list(approved_claims, Constants.CLAIMAINT_LIST_FIELDS, file_name)
 
 
+def upload_claimant_list_to_moveit(db_session: db.Session) -> None:
+    moveit_config = get_moveit_config()
+    s3_config = get_s3_config()
+
+    transfer_config = SftpS3TransferConfig(
+        s3_bucket_uri=s3_config.s3_bucket_uri,
+        source_dir=s3_config.s3_dia_outbound_directory_path,
+        archive_dir=s3_config.s3_dia_archive_directory_path,
+        dest_dir=moveit_config.moveit_dia_inbound_path,
+        sftp_uri=moveit_config.moveit_sftp_uri,
+        ssh_key_password=moveit_config.moveit_ssh_key_password,
+        ssh_key=moveit_config.moveit_ssh_key,
+    )
+
+    copied_reference_files = copy_to_sftp_and_archive_s3_files(transfer_config, db_session)
+    for ref_file in copied_reference_files:
+        state_log_util.create_finished_state_log(
+            associated_model=ref_file,
+            end_state=State.DIA_CLAIMANT_LIST_SUBMITTED,
+            outcome=state_log_util.build_outcome("Sent list of claimants to DIA via MoveIt"),
+            db_session=db_session,
+        )
+
+    # Commit the StateLogs we created to the database.
+    db_session.commit()
+
+
 def create_list_of_approved_claimants(db_session: db.Session) -> None:
-    config = get_s3_config()
+    s3_config = get_s3_config()
 
     # get approved claims
     approved_claims = get_approved_claims(db_session)
@@ -112,7 +143,7 @@ def create_list_of_approved_claimants(db_session: db.Session) -> None:
 
     # Upload info to s3
     s3_dest = os.path.join(
-        config.s3_bucket_uri, config.s3_dia_outbound_directory_path, claimant_info_path.name
+        s3_config.s3_bucket_uri, s3_config.s3_dia_outbound_directory_path, claimant_info_path.name
     )
     upload_to_s3(str(claimant_info_path), s3_dest)
 
@@ -122,6 +153,7 @@ def create_list_of_approved_claimants(db_session: db.Session) -> None:
         reference_file_type_id=ReferenceFileType.DIA_CLAIMANT_LIST.reference_file_type_id,
     )
     db_session.add(ref_file)
+
     # commit ref_file to db
     db_session.commit()
 

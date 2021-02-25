@@ -9,7 +9,8 @@ class ReductionsS3Config:
     s3_dua_outbound_directory_path: str  # Ex. reductions/dua/outbound
     s3_dua_pending_directory_path: str  # Ex. reductions/dua/pending
     s3_dua_archive_directory_path: str  # Ex. reductions/dua/archive
-    s3_dia_outbound_directory_path: str
+    s3_dia_archive_directory_path: str  # Ex. reductions/dua/archive
+    s3_dia_outbound_directory_path: str  # Ex. reductions/dua/outbound
 
 
 def get_s3_config() -> ReductionsS3Config:
@@ -18,6 +19,7 @@ def get_s3_config() -> ReductionsS3Config:
         s3_dua_outbound_directory_path=str(environ.get("S3_DUA_OUTBOUND_DIRECTORY_PATH")),
         s3_dua_pending_directory_path=str(environ.get("S3_DUA_PENDING_DIRECTORY_PATH")),
         s3_dua_archive_directory_path=str(environ.get("S3_DUA_ARCHIVE_DIRECTORY_PATH")),
+        s3_dia_archive_directory_path=str(environ.get("S3_DIA_ARCHIVE_DIRECTORY_PATH")),
         s3_dia_outbound_directory_path=str(environ.get("S3_DIA_OUTBOUND_DIRECTORY_PATH")),
     )
 
@@ -27,6 +29,7 @@ class ReductionsMoveItConfig:
     moveit_dua_inbound_path: str  # Ex: /DFML/DUA/Inbound
     moveit_dua_archive_path: str  # Ex: /DFML/DUA/Archive
     moveit_dua_outbound_path: str  # Ex: /DFML/DUA/Outbound
+    moveit_dia_inbound_path: str  # Ex: /DFML/DIA/Inbound
     # Ex: sftp://DFML@transfertest.eol.mass.gov
     moveit_sftp_uri: str
     # SSH Key and password stored in AWS Secrets Manager.
@@ -39,6 +42,7 @@ def get_moveit_config() -> ReductionsMoveItConfig:
         moveit_dua_inbound_path=str(environ.get("MOVEIT_DUA_INBOUND_PATH")),
         moveit_dua_archive_path=str(environ.get("MOVEIT_DUA_ARCHIVE_PATH")),
         moveit_dua_outbound_path=str(environ.get("MOVEIT_DUA_OUTBOUND_PATH")),
+        moveit_dia_inbound_path=str(environ.get("MOVEIT_DIA_INBOUND_PATH")),
         moveit_sftp_uri=str(environ.get("MOVEIT_SFTP_URI")),
         moveit_ssh_key=str(environ.get("MOVEIT_SSH_KEY")),
         moveit_ssh_key_password=str(environ.get("MOVEIT_SSH_KEY_PASSWORD")),
