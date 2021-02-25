@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, List, Optional, cast
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Index, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import Query, dynamic_loader, relationship
 from sqlalchemy.sql.expression import func
 from sqlalchemy.sql.functions import now as sqlnow
@@ -618,6 +619,22 @@ class User(Base):
         "UserLeaveAdministrator", back_populates="user", uselist=True
     )
     employers = relationship("Employer", secondary="link_user_leave_administrator", uselist=True)
+
+    @hybrid_method
+    def get_user_leave_admin_for_employer(
+        self, employer: Employer
+    ) -> Optional["UserLeaveAdministrator"]:
+        # Return the UserLeaveAdministrator record associated with the Employer
+        for user_leave_administrator in self.user_leave_administrators:
+            if user_leave_administrator.employer == employer:
+                return user_leave_administrator
+        return None
+
+    @hybrid_method
+    def verified_employer(self, employer: Employer) -> bool:
+        # Return the `verified` state of the Employer (from the UserLeaveAdministrator record)
+        user_leave_administrator = self.get_user_leave_admin_for_employer(employer=employer)
+        return user_leave_administrator.verified if user_leave_administrator else False
 
 
 class UserRole(Base):

@@ -225,7 +225,7 @@ class EmployeeReferenceFileFactory(BaseFactory):
 
 class VerificationTypeFactory(BaseFactory):
     class Meta:
-        model = verification_models.VerificationType
+        model = verification_models.LkVerificationType
 
     verification_type_id = factory.Sequence(lambda n: n)
     verification_type_description = factory.Faker("pystr")
@@ -235,11 +235,11 @@ class VerificationFactory(BaseFactory):
     class Meta:
         model = verification_models.Verification
 
-    verified_at = Generators.UtcNow
-    verification_code_id = Generators.UuidObj
+    created_at = Generators.UtcNow
+    updated_at = Generators.UtcNow
     verification_id = Generators.UuidObj
-    verification_type = factory.SubFactory(VerificationTypeFactory)
-    verification_type_id = factory.LazyAttribute(lambda a: a.verification_type.verification_type_id)
+    verification_type_id = None
+    verification_metadata = factory.Faker("json")
 
 
 class EmployerQuarterlyContributionFactory(BaseFactory):

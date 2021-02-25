@@ -46,19 +46,6 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
 
         if claim is not None:
             associated_employer_id = claim.employer_id
-        else:
-            # Backstopping the Claim lookup with an Application lookup for
-            # purposes of E2E testing.  This will no longer be needed when Claims
-            # is properly populated.
-            # Tech debt to be taken care of in EMPLOYER-626
-            application = (
-                db_session.query(Application)
-                .filter(Application.fineos_absence_id == fineos_absence_id)
-                .one_or_none()
-            )
-
-            if application is not None:
-                associated_employer_id = application.employer_id
 
         if associated_employer_id is None:
             raise Forbidden(description="Claim does not exist for given absence ID")
@@ -77,6 +64,10 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
 
         if user_leave_admin.fineos_web_id is None:
             raise Forbidden(description="User has no leave administrator FINEOS ID")
+
+        # TODO: Remove this after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
+        if app.get_config().enforce_verification and not user_leave_admin.verified:
+            raise Forbidden(description="User is not Verified")
 
         return user_leave_admin
 
@@ -152,7 +143,6 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     Calls out to the FINEOS Group Client API to retrieve claim data and returns it.
     The requesting user must be of the EMPLOYER role.
     """
-
     user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
 
     with app.db_session() as db_session:
@@ -173,7 +163,6 @@ def employer_get_claim_documents(fineos_absence_id: str) -> flask.Response:
     Calls out to the FINEOS Group Client API to get a list of documents attached to a specified claim.
     The requesting user must be of the EMPLOYER role.
     """
-
     user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
 
     documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore
@@ -189,7 +178,6 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
     Calls out to the FINEOS Group Client API to download a document for a specified claim.
     The requesting user must be of the EMPLOYER role.
     """
-
     user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
 
     documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore
@@ -224,6 +212,9 @@ def user_has_access_to_claim(claim: Claim) -> bool:
 
     if can(READ, "EMPLOYER_API") and claim.employer in current_user.employers:
         # User is leave admin for the employer associated with claim
+        # TODO: Remove this after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
+        if app.get_config().enforce_verification:
+            return current_user.verified_employer(claim.employer)
         return True
 
     with app.db_session() as db_session:
