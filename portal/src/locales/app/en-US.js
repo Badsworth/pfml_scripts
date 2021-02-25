@@ -121,7 +121,7 @@ const errors = {
       pattern:
         "Enter the Employer Identification Number in the correct format.",
       require_contributing_employer:
-        "Enter a valid Employer Identification Number (EIN). Check that you entered your employers’ EIN correctly. You can find this number on all notices your employer sent about Paid Family and Medical Leave, or on your W‑2 or 1099‑MISC. If you continue to get this error, contact your employer and confirm that you have the correct EIN, and that they are contributing to Paid Family and Medical Leave.",
+        "Enter a valid Employer Identification Number (EIN). Check that you entered your employer’s EIN correctly. You can find this number on all notices your employer sent about Paid Family and Medical Leave, or on your W‑2 or 1099‑MISC. If you continue to get this error, contact your employer and confirm that you have the correct EIN, and that they are contributing to Paid Family and Medical Leave.",
       required: "Enter your employer’s Employer Identification Number.",
     },
     employer_notified: {
@@ -435,7 +435,7 @@ const errors = {
       min_reduced_leave_minutes:
         "The total time entered for your hours off must be greater than 0.",
       require_employee:
-        "We couldn’t find you in our system. Check that you entered your employers’ Employer Identification Number (EIN) correctly. If you continue to get this error, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
+        "We couldn’t find you in our system. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
       require_employer_notified:
         "You must tell your employer that you’re taking leave before you can submit an application. If you’ve told your employer, update your application with the date that you notified them.",
     },
