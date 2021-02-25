@@ -9,8 +9,8 @@ class ReductionsS3Config:
     s3_dua_outbound_directory_path: str  # Ex. reductions/dua/outbound
     s3_dua_pending_directory_path: str  # Ex. reductions/dua/pending
     s3_dua_archive_directory_path: str  # Ex. reductions/dua/archive
-    s3_dia_archive_directory_path: str  # Ex. reductions/dua/archive
-    s3_dia_outbound_directory_path: str  # Ex. reductions/dua/outbound
+    s3_dia_archive_directory_path: str  # Ex. reductions/dia/archive
+    s3_dia_outbound_directory_path: str  # Ex. reductions/dia/outbound
 
 
 def get_s3_config() -> ReductionsS3Config:

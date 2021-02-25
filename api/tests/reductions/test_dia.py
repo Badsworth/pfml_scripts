@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 import boto3
 import faker
 import pytest
+import smart_open
 import sqlalchemy
 
 import massgov.pfml.util.csv as csv_util
@@ -24,13 +25,12 @@ from massgov.pfml.db.models.factories import (
     ReferenceFileFactory,
     TaxIdentifierFactory,
 )
-from massgov.pfml.payments.payments_util import get_now
 from massgov.pfml.reductions.dia import (
     Constants,
+    _format_claims_for_dia_claimant_list,
+    _get_approved_claims,
+    _write_approved_claims_to_tempfile,
     create_list_of_approved_claimants,
-    format_claims_for_dia_claimant_list,
-    get_approved_claims,
-    get_approved_claims_info_csv_path,
     upload_claimant_list_to_moveit,
 )
 
@@ -90,7 +90,7 @@ def set_up(test_db_session, initialize_factories_session):
         absence_period_start_date=start_date,
     )
 
-    approved_claims = get_approved_claims(test_db_session)
+    approved_claims = _get_approved_claims(test_db_session)
 
     return approved_claims
 
@@ -119,7 +119,7 @@ def set_up_invalid_data(test_db_session, initialize_factories_session):
         absence_period_start_date=start_date,
     )
 
-    approved_claims = get_approved_claims(test_db_session)
+    approved_claims = _get_approved_claims(test_db_session)
 
     return approved_claims
 
@@ -133,7 +133,7 @@ def test_format_claims_for_dia_claimant_list(set_up):
     approved_claims = set_up
     claim = approved_claims[0]
     employee = claim.employee
-    approved_claims_dia_info = format_claims_for_dia_claimant_list(approved_claims)
+    approved_claims_dia_info = _format_claims_for_dia_claimant_list(approved_claims)
 
     for approved_claim in approved_claims_dia_info:
         assert approved_claim[Constants.CASE_ID_FIELD] == claim.fineos_absence_id
@@ -151,25 +151,12 @@ def test_format_claims_for_dia_claimant_list(set_up):
         assert "-" not in approved_claim[Constants.SSN_FIELD]
 
 
-def test_get_approved_claims_info_csv_path(set_up):
-    approved_employees = set_up
-    approved_claims_dia_info = format_claims_for_dia_claimant_list(approved_employees)
-    file_path = get_approved_claims_info_csv_path(approved_claims_dia_info)
-    file_name = (
-        Constants.CLAIMAINT_LIST_FILENAME_PREFIX
-        + get_now().strftime(Constants.CLAIMAINT_LIST_FILENAME_TIME_FORMAT)
-        + ".csv"
-    )
-
-    assert file_path.name == file_name
-
-
-def test_get_approved_claims_info_csv_path_invalid_data(set_up_invalid_data):
+def test_write_approved_claims_to_tempfile_invalid_data(set_up_invalid_data):
     approved_employees = set_up_invalid_data
 
     with pytest.raises(ValueError):
-        approved_claims_dia_info = format_claims_for_dia_claimant_list(approved_employees)
-        get_approved_claims_info_csv_path(approved_claims_dia_info)
+        approved_claims_dia_info = _format_claims_for_dia_claimant_list(approved_employees)
+        _write_approved_claims_to_tempfile(approved_claims_dia_info)
 
 
 def _random_date_in_past_year() -> date:
@@ -282,27 +269,40 @@ def test_copy_to_sftp_and_archive_s3_files(
         )
 
 
-def test_create_list_of_approved_claimants(monkeypatch, mock_s3_bucket, test_db_session, set_up):
+def test_create_list_of_approved_claimants(
+    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session,
+):
     s3_bucket_uri = "s3://" + mock_s3_bucket
-    dest_dir = "pfml/inbox"
+    dest_dir = "reductions/dia/outbound"
     monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
     monkeypatch.setenv("S3_DIA_OUTBOUND_DIRECTORY_PATH", dest_dir)
 
-    approved_employees = set_up
-    approved_claims_dia_info = format_claims_for_dia_claimant_list(approved_employees)
-    file_path = get_approved_claims_info_csv_path(approved_claims_dia_info)
+    # Set up some small random number of claims.
+    claims = []
+    for _i in range(random.randint(3, 8)):
+        claim = ClaimFactory.create(
+            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id
+        )
+        claim.employee.date_of_birth = fake.date_between(start_date="-100y", end_date="-18y")
+        claims.append(claim)
 
     create_list_of_approved_claimants(test_db_session)
 
     # Expect that the file to appear in the mock_s3_bucket.
     s3 = boto3.client("s3")
 
+    # Confirm that the file is uploaded to S3 with the expected filename.
     object_list = s3.list_objects(Bucket=mock_s3_bucket, Prefix=dest_dir)["Contents"]
     assert object_list
-    if object_list:
-        assert len(object_list) == 1
-        dest_filepath = os.path.join(dest_dir, file_path.name)
-        assert object_list[0]["Key"] == dest_filepath
+    assert len(object_list) == 1
+    s3_filename = object_list[0]["Key"]
+    full_s3_filepath = os.path.join(s3_bucket_uri, s3_filename)
+    dest_filepath_and_prefix = os.path.join(dest_dir, Constants.CLAIMAINT_LIST_FILENAME_PREFIX)
+    assert s3_filename.startswith(dest_filepath_and_prefix)
+
+    # Confirm the file we uploaded to S3 contains a single row for each claim and no header row.
+    with smart_open.open(full_s3_filepath) as s3_file:
+        assert len(claims) == len(list(s3_file))
 
     ref_file = (
         test_db_session.query(ReferenceFile)
@@ -319,4 +319,4 @@ def test_create_list_of_approved_claimants(monkeypatch, mock_s3_bucket, test_db_
 
     assert len(ref_file) == 1
     assert len(state_log) == 1
-    assert ref_file[0].file_location == os.path.join(s3_bucket_uri, dest_dir, file_path.name)
+    assert ref_file[0].file_location == full_s3_filepath

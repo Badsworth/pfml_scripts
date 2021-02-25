@@ -1,5 +1,6 @@
+import csv
 import os
-import pathlib
+import tempfile
 from typing import Dict, List
 
 import massgov.pfml.api.util.state_log_util as state_log_util
@@ -18,7 +19,7 @@ from massgov.pfml.payments.sftp_s3_transfer import (
     copy_to_sftp_and_archive_s3_files,
 )
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
-from massgov.pfml.util.files import create_csv_from_list, upload_to_s3
+from massgov.pfml.util.files import upload_to_s3
 
 logger = logging.get_logger(__name__)
 
@@ -46,7 +47,7 @@ class Constants:
     ]
 
 
-def get_approved_claims(db_session: db.Session) -> List[Claim]:
+def _get_approved_claims(db_session: db.Session) -> List[Claim]:
     return (
         db_session.query(Claim)
         .filter_by(fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id)
@@ -54,7 +55,7 @@ def get_approved_claims(db_session: db.Session) -> List[Claim]:
     )
 
 
-def format_claims_for_dia_claimant_list(approved_claims: List[Claim]) -> List[Dict]:
+def _format_claims_for_dia_claimant_list(approved_claims: List[Claim]) -> List[Dict]:
     approved_claims_info = []
 
     # DIA cannot accept CSVs that contain commas
@@ -94,12 +95,15 @@ def format_claims_for_dia_claimant_list(approved_claims: List[Claim]) -> List[Di
     return approved_claims_info
 
 
-def get_approved_claims_info_csv_path(approved_claims: List[Dict]) -> pathlib.Path:
-    file_name = Constants.CLAIMAINT_LIST_FILENAME_PREFIX + get_now().strftime(
-        Constants.CLAIMAINT_LIST_FILENAME_TIME_FORMAT
-    )
+def _write_approved_claims_to_tempfile(approved_claims: List[Dict]) -> str:
+    # Not using file_util.create_csv_from_list() because DIA does not want a header row.
+    _handle, csv_filepath = tempfile.mkstemp()
+    with open(csv_filepath, mode="w") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=Constants.CLAIMAINT_LIST_FIELDS)
+        for data in approved_claims:
+            writer.writerow(data)
 
-    return create_csv_from_list(approved_claims, Constants.CLAIMAINT_LIST_FIELDS, file_name)
+    return csv_filepath
 
 
 def upload_claimant_list_to_moveit(db_session: db.Session) -> None:
@@ -133,19 +137,23 @@ def create_list_of_approved_claimants(db_session: db.Session) -> None:
     s3_config = get_s3_config()
 
     # get approved claims
-    approved_claims = get_approved_claims(db_session)
+    approved_claims = _get_approved_claims(db_session)
 
     # get dia info for approved claims
-    dia_claimant_info = format_claims_for_dia_claimant_list(approved_claims)
+    dia_claimant_info = _format_claims_for_dia_claimant_list(approved_claims)
 
-    # get csv claimant info path
-    claimant_info_path = get_approved_claims_info_csv_path(dia_claimant_info)
+    tempfile_path = _write_approved_claims_to_tempfile(dia_claimant_info)
 
     # Upload info to s3
-    s3_dest = os.path.join(
-        s3_config.s3_bucket_uri, s3_config.s3_dia_outbound_directory_path, claimant_info_path.name
+    file_name = (
+        Constants.CLAIMAINT_LIST_FILENAME_PREFIX
+        + get_now().strftime(Constants.CLAIMAINT_LIST_FILENAME_TIME_FORMAT)
+        + ".csv"
     )
-    upload_to_s3(str(claimant_info_path), s3_dest)
+    s3_dest = os.path.join(
+        s3_config.s3_bucket_uri, s3_config.s3_dia_outbound_directory_path, file_name
+    )
+    upload_to_s3(tempfile_path, s3_dest)
 
     # Update ReferenceFile and StateLog Tables
     ref_file = ReferenceFile(
