@@ -179,6 +179,18 @@ format-check: ## Check format of code
 	$(PY_RUN_CMD) isort --atomic --check-only
 	$(PY_RUN_CMD) black . --check
 
+# Allow command to be run with max={num}, where {num} is the number of recent commits to include.
+# e.g. max=0 is only 'dirty' file changes, max=1 includes changes from the latest commit.
+format-changed: max := 0
+format-changed: FILES := $(shell { \
+	git diff --name-only --relative HEAD~$(max); \
+	git diff --name-only --staged --relative HEAD~$(max); \
+	git ls-files --other --exclude-standard HEAD~$(max);} | \
+	grep \\.py | uniq)
+format-changed: ## Format changed files
+	$(PY_RUN_CMD) isort --atomic --apply $(FILES)
+	$(PY_RUN_CMD) black $(FILES)
+
 generate-verification-codes: ## Generate verification codes
 	$(PY_RUN_CMD) generate-verification-codes --input=$(input) --output=$(output)
 
@@ -205,8 +217,15 @@ else
 endif
 
 lint: ## Run linting
-lint: lint-spectral
+lint: lint-spectral lint-py
+
+lint-py: ## Run python linting
+lint-py: lint-flake lint-mypy
+
+lint-flake: ## Run flake8
 	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests bin
+
+lint-mypy: ## Run mypy
 	$(PY_RUN_CMD) mypy massgov bin
 
 lint-security: ## Run security linting
