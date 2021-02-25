@@ -31,6 +31,7 @@ import massgov.pfml.util.logging
 from sentry_sdk.integrations.logging import ignore_logger
 from massgov.pfml.util.sentry import sanitize_sentry_event
 from massgov.pfml.api.gunicorn_wrapper import GunicornAppWrapper
+from massgov.pfml.fineos.exception import FINEOSFatalUnavailable
 # fmt: on
 
 
@@ -52,9 +53,12 @@ def initialize_flask_sentry():
             integrations=[FlaskIntegration()],
             request_bodies="never",
             before_send=sanitize_sentry_event,
+            # Ignore temporary unavailability from FINEOS API.
+            # Outages should be captured through percentage-based New Relic alarms.
+            ignore_errors=[FINEOSFatalUnavailable],
             # Disable tracing since we rely on New Relic already.
             traces_sample_rate=0,
-            # By default the SDK will try to use the SENTRY_RELEASE environment variable, or infer a git commit SHA as release, however you may want to set something more human-readable.
+            # TODO (INFRA-222)
             # release="myapp@1.0.0",
             debug=False,
         )

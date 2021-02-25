@@ -259,10 +259,14 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
             err: exception.FINEOSClientError
 
-            if response.status_code in (
-                requests.codes.SERVICE_UNAVAILABLE,
-                requests.codes.GATEWAY_TIMEOUT,
-                requests.codes.BAD_GATEWAY,
+            if (
+                response.status_code
+                in (
+                    requests.codes.SERVICE_UNAVAILABLE,
+                    requests.codes.GATEWAY_TIMEOUT,
+                    requests.codes.BAD_GATEWAY,
+                )
+                or "ESOCKETTIMEDOUT" in response.text
             ):
                 # The service is unavailable for some reason. Log a warning and don't tell sentry -- there should be a
                 # percentage-based alarm for when there are too many of these.
@@ -283,7 +287,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             else:
                 # We should never see anything other than these. Log an error and notify Sentry if we do. These include issues
                 # like 400 BAD REQUEST (misformatted request), 500 INTERNAL SERVER ERROR, and 413 SIZE TOO LARGE.
-                err = exception.FINEOSFatalResponseError(requests.codes.ok, response.status_code)
+                err = exception.FINEOSFatalResponseError(response_status=response.status_code)
                 log_fn = logger.error
 
             log_fn(
