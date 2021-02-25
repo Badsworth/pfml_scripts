@@ -344,29 +344,25 @@ def applications_complete(application_id):
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             ).to_api_response()
 
-        if mark_documents_as_received(existing_application, db_session):
-            existing_application.completed_time = datetime_util.utcnow()
-            # Update log attributes now that completed_time is set
-            log_attributes = get_application_log_attributes(existing_application)
-            logger.info(
-                "applications_complete - application documents marked as received",
-                extra=log_attributes,
-            )
-        else:
-            logger.error(
+        try:
+            mark_documents_as_received(existing_application, db_session)
+        except Exception:
+            logger.warning(
                 "applications_complete failure - application documents failed to be marked as received",
                 extra=log_attributes,
+                exc_info=True,
             )
-            return response_util.error_response(
-                status_code=ServiceUnavailable,
-                message="Application {} could not be completed (failed to mark associated documents as received), try again later".format(
-                    existing_application.application_id
-                ),
-                errors=[],
-                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-            ).to_api_response()
+            raise
 
-        logger.info("applications_complete success", extra=log_attributes)
+        existing_application.completed_time = datetime_util.utcnow()
+        # Update log attributes now that completed_time is set
+        log_attributes = get_application_log_attributes(existing_application)
+
+    logger.info(
+        "applications_complete - application documents marked as received", extra=log_attributes,
+    )
+
+    logger.info("applications_complete success", extra=log_attributes)
 
     return response_util.success_response(
         message="Application {} completed without errors".format(

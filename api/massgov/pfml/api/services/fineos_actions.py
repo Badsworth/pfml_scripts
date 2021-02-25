@@ -241,37 +241,30 @@ DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE = (
 
 def mark_documents_as_received(
     application: Application, db_session: massgov.pfml.db.Session
-) -> bool:
+) -> None:
     """Mark documents attached to an application as received in FINEOS."""
 
     if application.fineos_absence_id is None:
         raise ValueError("application.fineos_absence_id is None")
 
-    try:
-        fineos = massgov.pfml.fineos.create_client()
-        fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+    fineos = massgov.pfml.fineos.create_client()
+    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
 
-        documents = (
-            db_session.query(Document)
-            .filter(Document.application_id == application.application_id)
-            .filter(Document.document_type_id.in_(DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE))
-        )
-        for document in documents:
-            if document.fineos_id is None:
-                logger.error(
-                    "Document does not have a fineos_id",
-                    extra={"document_id": document.document_id},
-                )
-                return False
-
-            fineos.mark_document_as_received(
-                fineos_user_id, str(application.fineos_absence_id), str(document.fineos_id)
+    documents = (
+        db_session.query(Document)
+        .filter(Document.application_id == application.application_id)
+        .filter(Document.document_type_id.in_(DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE))
+    )
+    for document in documents:
+        if document.fineos_id is None:
+            logger.warning(
+                "Document does not have a fineos_id", extra={"document_id": document.document_id},
             )
-    except massgov.pfml.fineos.FINEOSClientError:
-        logger.exception("FINEOS API error")
-        return False
+            raise ValueError("Document does not have a fineos_id")
 
-    return True
+        fineos.mark_document_as_received(
+            fineos_user_id, str(application.fineos_absence_id), str(document.fineos_id)
+        )
 
 
 def mark_single_document_as_received(
