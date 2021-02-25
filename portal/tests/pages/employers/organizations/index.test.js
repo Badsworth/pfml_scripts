@@ -48,6 +48,17 @@ describe("Index", () => {
     expect(eins).toEqual(["**-***1823", "**-***3443", "**-***7192"]);
   });
 
+  describe('when "employerShowAddOrganization" feature flag is enabled', () => {
+    beforeEach(() => {
+      process.env.featureFlags = { employerShowAddOrganization: true };
+    });
+
+    it("displays a button linked to Add Organization page", () => {
+      wrapper = shallow(<Index appLogic={appLogic} />).dive();
+      expect(wrapper.find("ButtonLink").exists()).toBe(true);
+    });
+  });
+
   describe('when "employerShowVerifications" feature flag is enabled', () => {
     beforeEach(() => {
       process.env.featureFlags = { employerShowVerifications: true };

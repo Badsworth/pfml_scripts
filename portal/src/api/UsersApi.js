@@ -1,6 +1,6 @@
 /* eslint-disable jsdoc/require-returns */
+import User, { UserLeaveAdministrator } from "../models/User";
 import BaseApi from "./BaseApi";
-import User from "../models/User";
 import routes from "../routes";
 
 /**
@@ -69,10 +69,10 @@ export default class UsersApi extends BaseApi {
   // [{ employer_dba, employer_fein, employer_id, verified }]]
   transformUserLeaveAdministrators = (userLeaveAdministrators = []) => {
     return userLeaveAdministrators.map(({ employer, ...rest }) => {
-      return {
+      return new UserLeaveAdministrator({
         ...employer,
         ...rest,
-      };
+      });
     });
   };
 }

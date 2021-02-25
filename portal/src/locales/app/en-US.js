@@ -1685,6 +1685,7 @@ const pages = {
     welcomeTitle: "Welcome",
   },
   employersOrganizations: {
+    addOrganizationButton: "Add organization",
     einTableHeader: "Employer ID number (EIN)",
     nearFutureAvailability:
       "You'll be able to add more organizations to your account in the near future.",

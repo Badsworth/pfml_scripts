@@ -1,5 +1,6 @@
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
+import ButtonLink from "../../../components/ButtonLink";
 import LeaveAdministratorRow from "../../../components/employers/LeaveAdministratorRow";
 import PropTypes from "prop-types";
 import React from "react";
@@ -8,6 +9,7 @@ import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import User from "../../../models/User";
 import { isFeatureEnabled } from "../../../services/featureFlags";
+import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
@@ -18,6 +20,7 @@ export const Index = ({ appLogic }) => {
     user_leave_administrators,
   } = appLogic.users.user;
   const showVerifications = isFeatureEnabled("employerShowVerifications");
+  const showAddOrganization = isFeatureEnabled("employerShowAddOrganization");
 
   return (
     <React.Fragment>
@@ -68,6 +71,11 @@ export const Index = ({ appLogic }) => {
           )}
         </tbody>
       </Table>
+      {showAddOrganization && (
+        <ButtonLink href={routes.employers.addOrganization}>
+          {t("pages.employersOrganizations.addOrganizationButton")}
+        </ButtonLink>
+      )}
     </React.Fragment>
   );
 };
