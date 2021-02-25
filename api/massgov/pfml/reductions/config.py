@@ -12,17 +12,19 @@ class ReductionsS3Config:
     s3_dua_archive_directory_path: str  # Ex. reductions/dua/archive
     s3_dia_archive_directory_path: str  # Ex. reductions/dia/archive
     s3_dia_outbound_directory_path: str  # Ex. reductions/dia/outbound
+    s3_dia_pending_directory_path: str  # Ex. reductions/dia/pending
 
 
 def get_s3_config() -> ReductionsS3Config:
     return ReductionsS3Config(
         s3_bucket_uri=str(environ.get("S3_BUCKET")),
         s3_dfml_outbound_directory_path=str(environ.get("S3_DFML_OUTBOUND_DIRECTORY_PATH")),
-        s3_dia_outbound_directory_path=str(environ.get("S3_DIA_OUTBOUND_DIRECTORY_PATH")),
         s3_dua_outbound_directory_path=str(environ.get("S3_DUA_OUTBOUND_DIRECTORY_PATH")),
         s3_dua_pending_directory_path=str(environ.get("S3_DUA_PENDING_DIRECTORY_PATH")),
         s3_dua_archive_directory_path=str(environ.get("S3_DUA_ARCHIVE_DIRECTORY_PATH")),
         s3_dia_archive_directory_path=str(environ.get("S3_DIA_ARCHIVE_DIRECTORY_PATH")),
+        s3_dia_outbound_directory_path=str(environ.get("S3_DIA_OUTBOUND_DIRECTORY_PATH")),
+        s3_dia_pending_directory_path=str(environ.get("S3_DIA_PENDING_DIRECTORY_PATH")),
     )
 
 
@@ -32,6 +34,8 @@ class ReductionsMoveItConfig:
     moveit_dua_archive_path: str  # Ex: /DFML/DUA/Archive
     moveit_dua_outbound_path: str  # Ex: /DFML/DUA/Outbound
     moveit_dia_inbound_path: str  # Ex: /DFML/DIA/Inbound
+    moveit_dia_outbound_path: str  # Ex: /DFML/DIA/Outbound
+    moveit_dia_archive_path: str  # Ex: /DFML/DIA/Archive
     # Ex: sftp://DFML@transfertest.eol.mass.gov
     moveit_sftp_uri: str
     # SSH Key and password stored in AWS Secrets Manager.
@@ -45,6 +49,8 @@ def get_moveit_config() -> ReductionsMoveItConfig:
         moveit_dua_archive_path=str(environ.get("MOVEIT_DUA_ARCHIVE_PATH")),
         moveit_dua_outbound_path=str(environ.get("MOVEIT_DUA_OUTBOUND_PATH")),
         moveit_dia_inbound_path=str(environ.get("MOVEIT_DIA_INBOUND_PATH")),
+        moveit_dia_archive_path=str(environ.get("MOVEIT_DIA_ARCHIVE_PATH")),
+        moveit_dia_outbound_path=str(environ.get("MOVEIT_DIA_OUTBOUND_PATH")),
         moveit_sftp_uri=str(environ.get("MOVEIT_SFTP_URI")),
         moveit_ssh_key=str(environ.get("MOVEIT_SSH_KEY")),
         moveit_ssh_key_password=str(environ.get("MOVEIT_SSH_KEY_PASSWORD")),

@@ -3,6 +3,8 @@ import os
 import tempfile
 from typing import Dict, List
 
+from sqlalchemy import func
+
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.util.logging as logging
@@ -16,6 +18,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.payments.payments_util import get_now
 from massgov.pfml.payments.sftp_s3_transfer import (
     SftpS3TransferConfig,
+    copy_from_sftp_to_s3_and_archive_files,
     copy_to_sftp_and_archive_s3_files,
 )
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
@@ -175,3 +178,61 @@ def create_list_of_approved_claimants(db_session: db.Session) -> None:
 
     # commit StateLog to db
     db_session.commit()
+
+
+def _payment_list_has_been_downloaded_today(db_session: db.Session) -> bool:
+    midnight_today = get_now().replace(hour=0, minute=0)
+    num_files = (
+        db_session.query(func.count(ReferenceFile.reference_file_id))
+        .filter(
+            ReferenceFile.created_at >= midnight_today,
+            ReferenceFile.reference_file_type_id
+            == ReferenceFileType.DUA_PAYMENT_LIST.reference_file_type_id,
+        )
+        .scalar()
+    )
+    return num_files > 0
+
+
+def download_payment_list_from_moveit(db_session: db.Session) -> None:
+    s3_config = get_s3_config()
+    moveit_config = get_moveit_config()
+
+    transfer_config = SftpS3TransferConfig(
+        s3_bucket_uri=s3_config.s3_bucket_uri,
+        source_dir=moveit_config.moveit_dia_outbound_path,
+        archive_dir=moveit_config.moveit_dia_archive_path,
+        dest_dir=s3_config.s3_dia_pending_directory_path,
+        sftp_uri=moveit_config.moveit_sftp_uri,
+        ssh_key_password=moveit_config.moveit_ssh_key_password,
+        ssh_key=moveit_config.moveit_ssh_key,
+    )
+
+    copied_reference_files = copy_from_sftp_to_s3_and_archive_files(transfer_config, db_session)
+    for ref_file in copied_reference_files:
+        ref_file.reference_file_type_id = ReferenceFileType.DIA_PAYMENT_LIST.reference_file_type_id
+        state_log_util.create_finished_state_log(
+            associated_model=ref_file,
+            end_state=State.DIA_PAYMENT_LIST_SAVED_TO_S3,
+            outcome=state_log_util.build_outcome("Saved DIA payment list to S3"),
+            db_session=db_session,
+        )
+
+    # Commit the ReferenceFile changes and StateLogs we created to the database.
+    db_session.commit()
+
+    if len(copied_reference_files) == 0:
+        logger.info("No new payment files were detected in the SFTP server.")
+    else:
+        logger.info(
+            "New payment files were detected in the SFTP server.",
+            extra={"reference_file_count": len(copied_reference_files)},
+        )
+
+
+# Meant to be called from ECS directly as a task.
+def download_payment_list_if_none_today(db_session: db.Session) -> None:
+    # Downloading payment lists from requires connecting to MoveIt. Wrap that call in this condition
+    # so we only incur the overhead of that connection if we haven't retrieved a payment list today.
+    if _payment_list_has_been_downloaded_today(db_session) is False:
+        download_payment_list_from_moveit(db_session)

@@ -31,6 +31,7 @@ from massgov.pfml.reductions.dia import (
     _get_approved_claims,
     _write_approved_claims_to_tempfile,
     create_list_of_approved_claimants,
+    download_payment_list_if_none_today,
     upload_claimant_list_to_moveit,
 )
 
@@ -320,3 +321,104 @@ def test_create_list_of_approved_claimants(
     assert len(ref_file) == 1
     assert len(state_log) == 1
     assert ref_file[0].file_location == full_s3_filepath
+
+
+@pytest.mark.parametrize(
+    "moveit_file_count",
+    (
+        # No files waiting for use in MoveIt.
+        (0),
+        # Single payment list waiting for us in MoveIt.
+        (1),
+        # We expect there to never be more than 1 file in MoveIt, but we should properly handle
+        # cases when there is more than 1 file.
+        (random.randint(2, 5)),
+    ),
+)
+def test_download_payment_list_if_none_today(
+    initialize_factories_session,
+    test_db_session,
+    test_db_other_session,
+    mock_s3_bucket,
+    mock_sftp_client,
+    setup_mock_sftp_client,
+    monkeypatch,
+    moveit_file_count,
+):
+    # Mock out S3 and MoveIt configs.
+    s3_bucket_uri = f"s3://{mock_s3_bucket}"
+    s3_dest_path = "reductions/dia/pending"
+    moveit_pickup_path = "/DFML/DIA/Outbound"
+    moveit_archive_path = "/DFML/DIA/Archive"
+
+    monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
+    monkeypatch.setenv("S3_DIA_PENDING_DIRECTORY_PATH", s3_dest_path)
+    monkeypatch.setenv("MOVEIT_DIA_OUTBOUND_PATH", moveit_pickup_path)
+    monkeypatch.setenv("MOVEIT_DIA_ARCHIVE_PATH", moveit_archive_path)
+
+    full_s3_dest_path = os.path.join(s3_bucket_uri, s3_dest_path)
+
+    moveit_filenames = []
+    for _i in range(moveit_file_count):
+        filename = _random_csv_filename()
+        filepath = os.path.join(moveit_pickup_path, filename)
+        mock_sftp_client._add_file(filepath, "")
+        moveit_filenames.append(filename)
+
+    # Confirm that the SFTP and S3 directories contain the expected number of files before testing.
+    assert len(mock_sftp_client.listdir(moveit_pickup_path)) == moveit_file_count
+    assert len(mock_sftp_client.listdir(moveit_archive_path)) == 0
+    assert len(file_util.list_files(full_s3_dest_path)) == 0
+
+    download_payment_list_if_none_today(test_db_session)
+
+    # Expect to have moved all files from the source to the archive directory of MoveIt.
+    files_in_moveit_archive_dir = mock_sftp_client.listdir(moveit_archive_path)
+    assert len(files_in_moveit_archive_dir) == moveit_file_count
+    assert len(mock_sftp_client.listdir(moveit_pickup_path)) == 0
+
+    # Expect to have saved files to S3.
+    files_in_s3 = file_util.list_files(full_s3_dest_path)
+    assert len(files_in_s3) == moveit_file_count
+
+    assert (
+        test_db_other_session.query(sqlalchemy.func.count(ReferenceFile.reference_file_id))
+        .filter(
+            ReferenceFile.reference_file_type_id
+            == ReferenceFileType.DIA_PAYMENT_LIST.reference_file_type_id
+        )
+        .scalar()
+        == moveit_file_count
+    )
+
+    assert (
+        test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+        .filter(StateLog.end_state_id == State.DIA_PAYMENT_LIST_SAVED_TO_S3.state_id)
+        .scalar()
+        == moveit_file_count
+    )
+
+    # Validate details match our expectations.
+    for filename in moveit_filenames:
+        assert filename in files_in_moveit_archive_dir
+        assert filename in files_in_s3
+
+        file_loc = os.path.join(full_s3_dest_path, filename)
+
+        ref_file = (
+            test_db_session.query(ReferenceFile)
+            .filter(ReferenceFile.file_location == file_loc)
+            .one_or_none()
+        )
+        assert (
+            ref_file.reference_file_type_id
+            == ReferenceFileType.DIA_PAYMENT_LIST.reference_file_type_id
+        )
+
+        assert (
+            test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            .filter(StateLog.end_state_id == State.DIA_PAYMENT_LIST_SAVED_TO_S3.state_id)
+            .filter(StateLog.reference_file_id == ref_file.reference_file_id)
+            .scalar()
+            == 1
+        )

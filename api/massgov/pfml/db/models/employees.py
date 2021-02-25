@@ -1474,6 +1474,14 @@ class State(LookupTable):
         47, "Submitted claimant list to DIA", Flow.DUA_CLAIMANT_LIST.flow_id
     )
 
+    # DIA payment list retrieval.
+    DIA_PAYMENT_LIST_SAVED_TO_S3 = LkState(
+        48, "DIA payment list saved to S3", Flow.DIA_PAYMENT_LIST.flow_id
+    )
+    DIA_PAYMENT_LIST_SAVED_TO_DB = LkState(
+        49, "New DIA payments stored in database", Flow.DIA_PAYMENT_LIST.flow_id
+    )
+
 
 class ReferenceFileType(LookupTable):
     model = LkReferenceFileType
