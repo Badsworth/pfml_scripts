@@ -10,6 +10,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm.session import Session
 
 import massgov.pfml.util.logging
+import massgov.pfml.util.logging.audit
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import Role, User, UserRole
 
