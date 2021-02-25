@@ -17,13 +17,18 @@ import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     DuaReductionPayment,
+    DuaReductionPaymentReferenceFile,
     LatestStateLog,
     ReferenceFile,
     ReferenceFileType,
     State,
     StateLog,
 )
-from massgov.pfml.db.models.factories import ClaimFactory, ReferenceFileFactory
+from massgov.pfml.db.models.factories import (
+    ClaimFactory,
+    DuaReductionPaymentFactory,
+    ReferenceFileFactory,
+)
 from massgov.pfml.payments.payments_util import get_now
 
 # every test in here requires real resources
@@ -31,11 +36,9 @@ pytestmark = pytest.mark.integration
 
 fake = faker.Faker()
 
-
 EXPECTED_DUA_PAYMENT_CSV_FILE_HEADERS = list(
     dua.Constants.DUA_PAYMENT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP.keys()
 )
-
 
 DUA_PAYMENT_LIST_ENCODERS: csv_util.Encoders = {
     date: lambda d: d.strftime("%Y%m%d"),
@@ -714,7 +717,7 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
     header_line = csv_file_lines.pop(0)
 
     # The CSV file should always have an header in it
-    assert header_line == ",".join(dua.Constants.CLAIMAINT_LIST_FIELDS)
+    assert header_line == ",".join(dua.Constants.CLAIMANT_LIST_FIELDS)
 
     # We've removed the header line so the line counts should match.
     assert len(csv_file_lines) == approved_claims_count
@@ -874,3 +877,106 @@ def test_download_payment_list_if_none_today(
             .scalar()
             == 1
         )
+
+
+def test_format_reduction_payments_for_report_with_no_new_payments():
+    no_reduction_payments = []
+    report = dua._format_reduction_payments_for_report(no_reduction_payments)
+
+    for info in report:
+        assert list(info.keys()) == dua.Constants.PAYMENT_LIST_FIELDS
+        for k, v in info.items():
+            assert k in dua.Constants.PAYMENT_LIST_FIELDS
+            assert v == "NO NEW PAYMENTS"
+
+
+def test_format_reduction_payments_for_report_with_payments(
+    initialize_factories_session, test_db_session
+):
+    dua_reduction_payment = DuaReductionPaymentFactory.create()
+
+    reduction_payments = dua._get_non_submitted_reduction_payments(test_db_session)
+    report = dua._format_reduction_payments_for_report(reduction_payments)
+
+    assert len(report) == 1
+
+    dollar_fields = [
+        dua.Constants.WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD,
+        dua.Constants.PAID_AM_OUTBOUND_DFML_REPORT_FIELD,
+    ]
+    date_fields = [
+        dua.Constants.WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD,
+        dua.Constants.RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD,
+        dua.Constants.BYB_DT_FIELD,
+        dua.Constants.BYE_DT_FIELD,
+        dua.Constants.DATE_PAYMENT_ADDED_TO_REPORT_FIELD,
+    ]
+
+    for info in report:
+        assert list(info.keys()) == dua.Constants.PAYMENT_LIST_FIELDS
+        for k, v in info.items():
+            _field = dua.Constants.DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP[k]
+            assert k in dua.Constants.PAYMENT_LIST_FIELDS
+
+            if k in dollar_fields:
+                assert v == dua._convert_cent_to_dollars(
+                    str(dua_reduction_payment.__dict__[_field])
+                )
+            elif k in date_fields:
+                assert v == dua_reduction_payment.__dict__[_field].strftime(
+                    dua.Constants.PAYMENT_REPORT_TIME_FORMAT
+                )
+            else:
+                assert v == dua_reduction_payment.__dict__[_field]
+
+
+def test_create_report_new_dua_payments_to_dfml(
+    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session
+):
+    s3_bucket_uri = "s3://" + mock_s3_bucket
+    dest_dir = "reductions/dfml/outbound"
+    monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
+    monkeypatch.setenv("S3_DFML_OUTBOUND_DIRECTORY_PATH", dest_dir)
+
+    reduction_payments = [
+        DuaReductionPaymentFactory.create() for _i in range(0, random.randint(2, 8))
+    ]
+    dua.create_report_new_dua_payments_to_dfml(test_db_session)
+
+    # Expect that the file to appear in the mock_s3_bucket.
+    s3 = boto3.client("s3")
+
+    object_list = s3.list_objects(Bucket=mock_s3_bucket, Prefix=dest_dir)["Contents"]
+    assert object_list
+    assert len(object_list) == 1
+    dest_filepath_prefix = os.path.join(dest_dir, dua.Constants.PAYMENT_LIST_FILENAME_PREFIX)
+    assert object_list[0]["Key"].startswith(dest_filepath_prefix)
+
+    ref_file = (
+        test_db_session.query(ReferenceFile)
+        .filter_by(
+            reference_file_type_id=ReferenceFileType.DUA_REDUCTION_REPORT_FOR_DFML.reference_file_type_id
+        )
+        .all()
+    )
+    state_log = (
+        test_db_session.query(StateLog)
+        .filter_by(end_state_id=State.DUA_REPORT_FOR_DFML_CREATED.state_id)
+        .all()
+    )
+
+    assert len(ref_file) == 1
+    assert len(state_log) == 1
+    assert ref_file[0].file_location == os.path.join(s3_bucket_uri, object_list[0]["Key"])
+
+    for payment in reduction_payments:
+        _ref_file = ref_file[0]
+        dua_reduction_ref_file = (
+            test_db_session.query(DuaReductionPaymentReferenceFile)
+            .filter_by(
+                dua_reduction_payment_id=payment.dua_reduction_payment_id,
+                reference_file_id=_ref_file.reference_file_id,
+            )
+            .one_or_none()
+        )
+        assert dua_reduction_ref_file is not None

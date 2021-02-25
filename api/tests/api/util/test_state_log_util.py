@@ -42,7 +42,7 @@ def single_ended_payment(test_db_session):
     )
 
 
-# 3 changing State Logs, ends with a DFML_REPORT_SUBMITTED
+# 3 changing State Logs, ends with a DUA_REPORT_FOR_DFML_SUBMITTED
 def simple_employee_with_end_state(test_db_session):
     return setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
@@ -69,12 +69,12 @@ def test_create_finished_state_log(initialize_factories_session, test_db_session
     employee = EmployeeFactory.create()
     employee_state_log = state_log_util.create_finished_state_log(
         associated_model=employee,
-        end_state=State.DFML_REPORT_SUBMITTED,
+        end_state=State.DUA_REPORT_FOR_DFML_SUBMITTED,
         outcome=default_outcome(),
         db_session=test_db_session,
     )
 
-    assert employee_state_log.end_state_id == State.DFML_REPORT_SUBMITTED.state_id
+    assert employee_state_log.end_state_id == State.DUA_REPORT_FOR_DFML_SUBMITTED.state_id
     assert employee_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
     assert employee_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
     assert employee_state_log.outcome == {"message": "success"}
@@ -87,12 +87,12 @@ def test_create_finished_state_log(initialize_factories_session, test_db_session
     payment = PaymentFactory.create()
     payment_state_log = state_log_util.create_finished_state_log(
         associated_model=payment,
-        end_state=State.DFML_REPORT_SUBMITTED,
+        end_state=State.DUA_REPORT_FOR_DFML_SUBMITTED,
         outcome=default_outcome(),
         db_session=test_db_session,
     )
 
-    assert payment_state_log.end_state_id == State.DFML_REPORT_SUBMITTED.state_id
+    assert payment_state_log.end_state_id == State.DUA_REPORT_FOR_DFML_SUBMITTED.state_id
     assert payment_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
     assert payment_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
     assert payment_state_log.outcome == {"message": "success"}
@@ -105,13 +105,13 @@ def test_create_finished_state_log(initialize_factories_session, test_db_session
     reference_file = ReferenceFileFactory.create()
     reference_file_state_log = state_log_util.create_finished_state_log(
         associated_model=reference_file,
-        end_state=State.DFML_REPORT_SUBMITTED,
+        end_state=State.DUA_REPORT_FOR_DFML_SUBMITTED,
         outcome=default_outcome(),
         db_session=test_db_session,
         start_time=datetime(2019, 1, 1),
     )
 
-    assert reference_file_state_log.end_state_id == State.DFML_REPORT_SUBMITTED.state_id
+    assert reference_file_state_log.end_state_id == State.DUA_REPORT_FOR_DFML_SUBMITTED.state_id
     assert reference_file_state_log.started_at.isoformat() == "2019-01-01T00:00:00"
     assert reference_file_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
     assert reference_file_state_log.outcome == {"message": "success"}

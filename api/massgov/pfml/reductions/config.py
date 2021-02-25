@@ -6,6 +6,7 @@ from os import environ
 class ReductionsS3Config:
     s3_bucket_uri: str  # Ex: s3://massgov-pfml-prod-agency-transfer/
     # S3 directory paths are relative to the root of the bucket but should not have leading slashes.
+    s3_dfml_outbound_directory_path: str  # Ex. reductions/dfml/outbound
     s3_dua_outbound_directory_path: str  # Ex. reductions/dua/outbound
     s3_dua_pending_directory_path: str  # Ex. reductions/dua/pending
     s3_dua_archive_directory_path: str  # Ex. reductions/dua/archive
@@ -16,11 +17,12 @@ class ReductionsS3Config:
 def get_s3_config() -> ReductionsS3Config:
     return ReductionsS3Config(
         s3_bucket_uri=str(environ.get("S3_BUCKET")),
+        s3_dfml_outbound_directory_path=str(environ.get("S3_DFML_OUTBOUND_DIRECTORY_PATH")),
+        s3_dia_outbound_directory_path=str(environ.get("S3_DIA_OUTBOUND_DIRECTORY_PATH")),
         s3_dua_outbound_directory_path=str(environ.get("S3_DUA_OUTBOUND_DIRECTORY_PATH")),
         s3_dua_pending_directory_path=str(environ.get("S3_DUA_PENDING_DIRECTORY_PATH")),
         s3_dua_archive_directory_path=str(environ.get("S3_DUA_ARCHIVE_DIRECTORY_PATH")),
         s3_dia_archive_directory_path=str(environ.get("S3_DIA_ARCHIVE_DIRECTORY_PATH")),
-        s3_dia_outbound_directory_path=str(environ.get("S3_DIA_OUTBOUND_DIRECTORY_PATH")),
     )
 
 

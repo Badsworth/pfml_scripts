@@ -2,6 +2,7 @@ import csv
 import io
 import os
 import pathlib
+from decimal import Decimal
 from typing import Any, Dict, List
 
 from sqlalchemy import func
@@ -14,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
     DuaReductionPayment,
+    DuaReductionPaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -25,37 +27,80 @@ from massgov.pfml.payments.sftp_s3_transfer import (
     copy_to_sftp_and_archive_s3_files,
 )
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
+from massgov.pfml.util.files import create_csv_from_list, upload_to_s3
 
 logger = logging.get_logger(__name__)
 
 
 class Constants:
-    DUA_PAYMENT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
-        "CASE_ID": "absence_case_id",
-        "EMPR_FEIN": "employer_fein",
-        "WARRANT_DT": "payment_date",
-        "RQST_WK_DT": "request_week_begin_date",
-        "WBA_ADDITIONS": "gross_payment_amount_cents",
-        "PAID_AM": "payment_amount_cents",
-        "FRAUD_IND": "fraud_indicator",
-        "BYB_DT": "benefit_year_begin_date",
-        "BYE_DT": "benefit_year_end_date",
-    }
+    TEMPORARY_BENEFIT_START_DATE = "20210101"
+
+    CLAIMANT_LIST_FILENAME_PREFIX = "DFML_CLAIMANTS_FOR_DUA_"
+    CLAIMANT_LIST_FILENAME_TIME_FORMAT = "%Y%m%d%H%M"
+    PAYMENT_LIST_FILENAME_PREFIX = "DUA_DFML_"
+    PAYMENT_LIST_FILENAME_TIME_FORMAT = "%Y%m%d%H%M"
+    PAYMENT_REPORT_TIME_FORMAT = "%m/%d/%Y"
 
     CASE_ID_FIELD = "CASE_ID"
+    EMPR_FEIN_FIELD = "EMPR_FEIN"
+    WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD = "PAYMENT_DATE"
+    RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD = "BENEFIT_WEEK_START_DATE"
+    WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD = "GROSS_PAYMENT_AMOUNT"
+    PAID_AM_OUTBOUND_DFML_REPORT_FIELD = "NET_PAYMENT_AMOUNT"
+    FRAUD_IND_FIELD = "FRAUD_IND"
+    BYB_DT_FIELD = "BYB_DT"
+    BYE_DT_FIELD = "BYE_DT"
+    DATE_PAYMENT_ADDED_TO_REPORT_FIELD = "DATE_PAYMENT_ADDED_TO_REPORT"
     BENEFIT_START_DATE_FIELD = "START_DATE"
     SSN_FIELD = "SSN"
+    WARRANT_DT_FIELD = "WARRANT_DT"
+    RQST_WK_DT_FIELD = "RQST_WK_DT"
+    WBA_ADDITIONS_FIELD = "WBA_ADDITIONS"
+    PAID_AM_FIELD = "PAID_AM"
 
-    CLAIMAINT_LIST_FIELDS = [
+    CLAIMANT_LIST_FIELDS = [
         CASE_ID_FIELD,
         SSN_FIELD,
         BENEFIT_START_DATE_FIELD,
     ]
 
-    TEMPORARY_BENEFIT_START_DATE = "20210101"
+    PAYMENT_LIST_FIELDS = [
+        CASE_ID_FIELD,
+        EMPR_FEIN_FIELD,
+        WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD,
+        RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD,
+        WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD,
+        PAID_AM_OUTBOUND_DFML_REPORT_FIELD,
+        FRAUD_IND_FIELD,
+        BYB_DT_FIELD,
+        BYE_DT_FIELD,
+        DATE_PAYMENT_ADDED_TO_REPORT_FIELD,
+    ]
 
-    CLAIMAINT_LIST_FILENAME_PREFIX = "DFML_CLAIMANTS_FOR_DUA_"
-    CLAIMAINT_LIST_FILENAME_TIME_FORMAT = "%Y%m%d%H%M"
+    DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
+        CASE_ID_FIELD: "absence_case_id",
+        EMPR_FEIN_FIELD: "employer_fein",
+        WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: "payment_date",
+        RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD: "request_week_begin_date",
+        WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD: "gross_payment_amount_cents",
+        PAID_AM_OUTBOUND_DFML_REPORT_FIELD: "payment_amount_cents",
+        FRAUD_IND_FIELD: "fraud_indicator",
+        BYB_DT_FIELD: "benefit_year_begin_date",
+        BYE_DT_FIELD: "benefit_year_end_date",
+        DATE_PAYMENT_ADDED_TO_REPORT_FIELD: "created_at",
+    }
+
+    DUA_PAYMENT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
+        CASE_ID_FIELD: "absence_case_id",
+        EMPR_FEIN_FIELD: "employer_fein",
+        WARRANT_DT_FIELD: "payment_date",
+        RQST_WK_DT_FIELD: "request_week_begin_date",
+        WBA_ADDITIONS_FIELD: "gross_payment_amount_cents",
+        PAID_AM_FIELD: "payment_amount_cents",
+        FRAUD_IND_FIELD: "fraud_indicator",
+        BYB_DT_FIELD: "benefit_year_begin_date",
+        BYE_DT_FIELD: "benefit_year_end_date",
+    }
 
 
 def copy_claimant_list_to_moveit(db_session: db.Session) -> None:
@@ -111,11 +156,11 @@ def _format_claims_for_dua_claimant_list(approved_claims: List[Claim]) -> List[D
 
 
 def _get_approved_claims_info_csv_path(approved_claims: List[Dict]) -> pathlib.Path:
-    file_name = Constants.CLAIMAINT_LIST_FILENAME_PREFIX + get_now().strftime(
-        Constants.CLAIMAINT_LIST_FILENAME_TIME_FORMAT
+    file_name = Constants.CLAIMANT_LIST_FILENAME_PREFIX + get_now().strftime(
+        Constants.CLAIMANT_LIST_FILENAME_TIME_FORMAT
     )
     return file_util.create_csv_from_list(
-        approved_claims, Constants.CLAIMAINT_LIST_FIELDS, file_name
+        approved_claims, Constants.CLAIMANT_LIST_FIELDS, file_name
     )
 
 
@@ -302,3 +347,112 @@ def download_payment_list_if_none_today(db_session: db.Session) -> None:
     # so we only incur the overhead of that connection if we haven't retrieved a payment list today.
     if _payment_list_has_been_downloaded_today(db_session) is False:
         download_payment_list_from_moveit(db_session)
+
+
+def _convert_cent_to_dollars(cent: str) -> Decimal:
+    if len(cent) < 2:
+        raise ValueError("Cent value should have two or more character")
+
+    dollar = cent[:-2] + "." + cent[-2:]
+    return Decimal(dollar)
+
+
+def _get_non_submitted_reduction_payments(db_session: db.Session) -> List[DuaReductionPayment]:
+    # TODO: currently we are grabbing all data, filtering strategy will be determined in the future
+    non_submitted_reduction_payments = db_session.query(DuaReductionPayment).all()
+
+    return non_submitted_reduction_payments
+
+
+def _format_reduction_payments_for_report(
+    reduction_payments: List[DuaReductionPayment],
+) -> List[Dict]:
+    if len(reduction_payments) == 0:
+        return [{field: "NO NEW PAYMENTS" for field in Constants.PAYMENT_LIST_FIELDS}]
+
+    payments = []
+    for payment in reduction_payments:
+        info = {
+            Constants.CASE_ID_FIELD: payment.absence_case_id,
+            Constants.EMPR_FEIN_FIELD: payment.employer_fein,
+            Constants.WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: payment.payment_date.strftime(
+                Constants.PAYMENT_REPORT_TIME_FORMAT
+            ),
+            Constants.RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD: payment.request_week_begin_date.strftime(
+                Constants.PAYMENT_REPORT_TIME_FORMAT
+            ),
+            Constants.WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD: _convert_cent_to_dollars(
+                str(payment.gross_payment_amount_cents)
+            ),
+            Constants.PAID_AM_OUTBOUND_DFML_REPORT_FIELD: _convert_cent_to_dollars(
+                str(payment.payment_amount_cents)
+            ),
+            Constants.FRAUD_IND_FIELD: payment.fraud_indicator,
+            Constants.BYB_DT_FIELD: payment.benefit_year_begin_date.strftime(
+                Constants.PAYMENT_REPORT_TIME_FORMAT
+            ),
+            Constants.BYE_DT_FIELD: payment.benefit_year_end_date.strftime(
+                Constants.PAYMENT_REPORT_TIME_FORMAT
+            ),
+            Constants.DATE_PAYMENT_ADDED_TO_REPORT_FIELD: payment.created_at.strftime(
+                Constants.PAYMENT_REPORT_TIME_FORMAT
+            ),
+        }
+        payments.append(info)
+    return payments
+
+
+def _get_new_dua_payments_to_dfml_report_csv_path(
+    reduction_payments_info: List[Dict],
+) -> pathlib.Path:
+    file_name = Constants.PAYMENT_LIST_FILENAME_PREFIX + get_now().strftime(
+        Constants.PAYMENT_LIST_FILENAME_TIME_FORMAT
+    )
+    return create_csv_from_list(reduction_payments_info, Constants.PAYMENT_LIST_FIELDS, file_name)
+
+
+def create_report_new_dua_payments_to_dfml(db_session: db.Session) -> None:
+    config = get_s3_config()
+
+    # get non-submitted payments
+    non_submitted_payments = _get_non_submitted_reduction_payments(db_session)
+
+    # get reduction payment report info
+    reduction_payment_report_info = _format_reduction_payments_for_report(non_submitted_payments)
+
+    # get csv path for reduction report
+    reduction_report_csv_path = _get_new_dua_payments_to_dfml_report_csv_path(
+        reduction_payment_report_info
+    )
+
+    # Upload info to s3
+    s3_dest = os.path.join(
+        config.s3_bucket_uri, config.s3_dfml_outbound_directory_path, reduction_report_csv_path.name
+    )
+    upload_to_s3(str(reduction_report_csv_path), s3_dest)
+
+    # Create ReferenceFile
+    ref_file = ReferenceFile(
+        file_location=s3_dest,
+        reference_file_type_id=ReferenceFileType.DUA_REDUCTION_REPORT_FOR_DFML.reference_file_type_id,
+    )
+    db_session.add(ref_file)
+    db_session.commit()
+
+    # Create objects that link DuaReductionPayments to the ReferenceFile.
+    for reduction_payment in non_submitted_payments:
+        link_obj = DuaReductionPaymentReferenceFile(
+            dua_reduction_payment=reduction_payment, reference_file=ref_file
+        )
+        db_session.add(link_obj)
+
+    # Update StateLog Tables
+    state_log_util.create_finished_state_log(
+        associated_model=ref_file,
+        end_state=State.DUA_REPORT_FOR_DFML_CREATED,
+        outcome=state_log_util.build_outcome("Created payments DFML report for DUA"),
+        db_session=db_session,
+    )
+
+    # commit StateLog to db
+    db_session.commit()

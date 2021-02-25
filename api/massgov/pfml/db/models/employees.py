@@ -846,6 +846,21 @@ class EmployeeReferenceFile(Base):
         return self
 
 
+class DuaReductionPaymentReferenceFile(Base):
+    __tablename__ = "link_dua_reduction_payment_reference_file"
+    dua_reduction_payment_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("dua_reduction_payment.dua_reduction_payment_id"),
+        primary_key=True,
+    )
+    reference_file_id = Column(
+        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), primary_key=True
+    )
+
+    dua_reduction_payment = relationship("DuaReductionPayment")
+    reference_file = relationship("ReferenceFile")
+
+
 class StateLog(Base):
     __tablename__ = "state_log"
     state_log_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -1362,11 +1377,11 @@ class State(LookupTable):
     )
     PAYMENTS_RETRIEVED = LkState(4, "Payments retrieved", Flow.UNUSED.flow_id)  # Not used
     PAYMENTS_STORED_IN_DB = LkState(5, "Payments stored in db", Flow.UNUSED.flow_id)  # Not used
-    DFML_REPORT_CREATED = LkState(
-        6, "Create DFML report", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
+    DUA_REPORT_FOR_DFML_CREATED = LkState(
+        6, "Create DUA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
     )
-    DFML_REPORT_SUBMITTED = LkState(
-        7, "Submit DFML report", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
+    DUA_REPORT_FOR_DFML_SUBMITTED = LkState(
+        7, "Submit DUA report for DFML", Flow.DFML_AGENCY_REDUCTION_REPORT.flow_id
     )
 
     # Payments State Machine LucidChart: https://app.lucidchart.com/lucidchart/invitations/accept/8ae0d129-b21e-4678-8f98-0b0feafb9ace
@@ -1472,11 +1487,16 @@ class ReferenceFileType(LookupTable):
     DIA_CLAIMANT_LIST = LkReferenceFileType(6, "DIA claimant list", 1)
     DUA_PAYMENT_LIST = LkReferenceFileType(7, "DUA payment list", 1)
     DIA_PAYMENT_LIST = LkReferenceFileType(8, "DIA payment list", 1)
-    DFML_AGENCY_REDUCTION_REPORT = LkReferenceFileType(9, "DFML agency reduction report", 1)
+    DUA_REDUCTION_REPORT_FOR_DFML = LkReferenceFileType(
+        9, "DUA payments for DFML reduction report", 1
+    )
     OUTBOUND_STATUS_RETURN = LkReferenceFileType(10, "Outbound Status Return", 1)
     OUTBOUND_VENDOR_CUSTOMER_RETURN = LkReferenceFileType(11, "Outbound Vendor Customer Return", 1)
     OUTBOUND_PAYMENT_RETURN = LkReferenceFileType(12, "Outbound Payment Return", 1)
     PEI_WRITEBACK = LkReferenceFileType(13, "PEI Writeback", 1)
+    DIA_REDUCTION_REPORT_FOR_DFML = LkReferenceFileType(
+        14, "DIA payments for DFML reduction report", 1
+    )
 
 
 class Title(LookupTable):
