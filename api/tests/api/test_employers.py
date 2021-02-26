@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -12,10 +12,15 @@ pytestmark = pytest.mark.integration
 
 
 def test_employers_receive_201_from_add_fein(
-    client, employer_user, employer_auth_token, test_db_session
+    monkeypatch, client, employer_user, employer_auth_token, test_db_session
 ):
+    monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
     current_employer = EmployerFactory.create()
     employer_to_add = EmployerFactory.create(employer_fein="999999999")
+    yesterday = datetime.now() - timedelta(days=1)
+    EmployerQuarterlyContributionFactory.create(
+        employer=employer_to_add, filing_period=yesterday.strftime("%Y-%m-%d")
+    )
 
     link = UserLeaveAdministrator(
         user_id=employer_user.user_id,
@@ -64,6 +69,82 @@ def test_employers_receive_400_from_bad_fein(
     )
 
     assert response.status_code == 400
+
+
+def test_employers_receive_201_if_no_withholding_data_but_no_enforcement(
+    monkeypatch, client, employer_user, employer_auth_token, test_db_session
+):
+    monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
+    EmployerFactory.create(employer_fein="999999999")
+
+    post_body = {"employer_fein": "999999999"}
+
+    response = client.post(
+        "/v1/employers/add",
+        json=post_body,
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 201
+
+
+def test_employers_receive_402_if_no_withholding_data(
+    monkeypatch, client, employer_user, employer_auth_token, test_db_session
+):
+    monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
+    EmployerFactory.create(employer_fein="999999999")
+
+    post_body = {"employer_fein": "999999999"}
+
+    response = client.post(
+        "/v1/employers/add",
+        json=post_body,
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 402
+
+
+def test_employers_receive_402_if_old_withholding_data(
+    monkeypatch, client, employer_user, employer_auth_token, test_db_session
+):
+    monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
+    employer_to_add = EmployerFactory.create(employer_fein="999999999")
+    yesterday = datetime.now() - timedelta(days=400)
+    EmployerQuarterlyContributionFactory.create(
+        employer=employer_to_add, filing_period=yesterday.strftime("%Y-%m-%d")
+    )
+
+    post_body = {"employer_fein": "999999999"}
+
+    response = client.post(
+        "/v1/employers/add",
+        json=post_body,
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 402
+
+
+def test_employers_receive_402_if_future_withholding_data(
+    monkeypatch, client, employer_user, employer_auth_token, test_db_session
+):
+    monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
+    employer_to_add = EmployerFactory.create(employer_fein="999999999")
+    yesterday = datetime.now() + timedelta(days=30)
+    EmployerQuarterlyContributionFactory.create(
+        employer=employer_to_add, filing_period=yesterday.strftime("%Y-%m-%d")
+    )
+
+    post_body = {"employer_fein": "999999999"}
+
+    response = client.post(
+        "/v1/employers/add",
+        json=post_body,
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 402
 
 
 def test_employers_receive_200_and_most_recent_date_from_get_withholding_dates(

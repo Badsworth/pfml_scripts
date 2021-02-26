@@ -72,6 +72,9 @@ def employer_add_fein() -> flask.Response:
         if employer is None:
             raise BadRequest(description="Invalid FEIN")
 
+        if employer.has_verification_data is False and app.get_config().enforce_verification:
+            raise PaymentRequired(description="Employer has no verification data")
+
         link = UserLeaveAdministrator(
             user_id=current_user.user_id, employer_id=employer.employer_id,
         )

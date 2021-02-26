@@ -220,6 +220,13 @@ paths:
                         $ref: "#/components/schemas/EmployerAddFeinResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "402":
+          description: No verification data for FEIN
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
         "503":
           description: Error while adding FEIN
           content:
@@ -1144,6 +1151,7 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+    
 
   schemas:
     SuccessfulResponse:
