@@ -21,6 +21,18 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 ##########################################
 
 
+def users_post():
+    """Create a new user account"""
+
+    # TODO (CP-1762): Create user in Cognito
+    # TODO (CP-1762): Create user in API DB
+
+    return response_util.success_response(
+        message="Successfully created user. User needs to verify email address next.",
+        status_code=201,
+    ).to_api_response()
+
+
 def users_get(user_id):
     with app.db_session() as db_session:
         u = get_or_404(db_session, User, user_id)

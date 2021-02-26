@@ -1,6 +1,8 @@
 import uuid
 from datetime import date
+from typing import Any, Dict
 
+import faker
 import pytest
 from dateutil.relativedelta import relativedelta
 
@@ -12,8 +14,76 @@ from massgov.pfml.db.models.factories import (
     UserFactory,
 )
 
+fake = faker.Faker()
+
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
+
+
+@pytest.fixture
+def valid_claimant_creation_request_body() -> Dict[str, Any]:
+    return {
+        "email_address": fake.email(),
+        "password": fake.password(length=12),
+        "role": {"role_description": "Claimant"},
+    }
+
+
+@pytest.fixture
+def valid_employer_creation_request_body(initialize_factories_session) -> Dict[str, Any]:
+    # EIN should match an EIN of an Employer in our database
+    employer = EmployerFactory.create()
+    ein = employer.employer_fein
+
+    return {
+        "email_address": fake.email(),
+        "password": fake.password(length=12),
+        "role": {"role_description": "Employer"},
+        "user_leave_administrator": {"employer_fein": "-".join([ein[:2], ein[2:9]]),},
+    }
+
+
+def test_users_post_claimant(client, valid_claimant_creation_request_body):
+    response = client.post("/v1/users", json=valid_claimant_creation_request_body,)
+
+    assert response.status_code == 201
+
+
+def test_users_post_employer(client, valid_employer_creation_request_body):
+    response = client.post("/v1/users", json=valid_employer_creation_request_body,)
+
+    assert response.status_code == 201
+
+
+def test_users_post_openapi_validation(client, valid_employer_creation_request_body):
+    # OpenAPI spec enforces format and enum validations for us
+    body = valid_employer_creation_request_body
+    body["email_address"] = "not-a-valid-email"
+    body["role"]["role_description"] = "Dog"
+    body["user_leave_administrator"]["employer_fein"] = "123123123"  # missing dash
+
+    response = client.post("/v1/users", json=body,)
+    errors = response.get_json().get("errors")
+
+    assert {
+        "field": "email_address",
+        "message": "'not-a-valid-email' is not a 'email'",
+        "rule": "email",
+        "type": "format",
+    } in errors
+    assert {
+        "field": "role.role_description",
+        "message": "'Dog' is not one of ['Claimant', 'Employer']",
+        "rule": ["Claimant", "Employer"],
+        "type": "enum",
+    } in errors
+    assert {
+        "field": "user_leave_administrator.employer_fein",
+        "message": "'123123123' does not match '^\\\\d{2}-\\\\d{7}$'",
+        "rule": "^\\d{2}-\\d{7}$",
+        "type": "pattern",
+    } in errors
+    assert response.status_code == 400
 
 
 def test_users_get(client, employer_user, employer_auth_token, test_db_session):

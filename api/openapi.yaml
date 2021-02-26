@@ -30,6 +30,29 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
 
+  /users:
+    post:
+      security:
+        - {} # no authentication option
+      tags:
+        - Users
+      summary: Create a User account
+      operationId: massgov.pfml.api.users.users_post
+      responses:
+        "201":
+          description: User account was created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreateRequest"
+  
   /users/{user_id}:
     get:
       tags:
@@ -1285,6 +1308,32 @@ components:
           example: "The Super Store"
         verified:
           type: boolean
+
+    UserCreateRequest:
+      type: object
+      properties:
+        email_address:
+          type: string
+          format: email
+          example: foo@example.com
+        password:
+          type: string
+          example: N~4Hq3>amXJ$
+        role:
+          type: object
+          properties:
+            role_description:
+              description: Type of user account to be created
+              type: string
+              enum:
+                - Claimant
+                - Employer
+              example: Employer
+        user_leave_administrator:
+          type: object
+          properties:
+            employer_fein:
+              $ref: "#/components/schemas/Fein"
 
     UserUpdateRequest:
       type: object
