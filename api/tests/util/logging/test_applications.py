@@ -7,9 +7,12 @@ import pytest
 
 from massgov.pfml.db.models.factories import (
     ApplicationFactory,
+    ContinuousLeavePeriodFactory,
     EmployerBenefitFactory,
+    IntermittentLeavePeriodFactory,
     OtherIncomeFactory,
     PreviousLeaveFactory,
+    ReducedScheduleLeavePeriodFactory,
 )
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 
@@ -74,3 +77,54 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "work_pattern.work_pattern_type": None,
     }
     assert log_attributes == expected_attributes
+
+
+def test_get_leave_period_log_attributes(user, test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create(
+        user=user,
+        updated_time=datetime.now(),
+        has_continuous_leave_periods=True,
+        has_intermittent_leave_periods=True,
+        has_reduced_schedule_leave_periods=True,
+    )
+    continuous_leave_1 = ContinuousLeavePeriodFactory.create(
+        application_id=application.application_id
+    )
+    continuous_leave_2 = ContinuousLeavePeriodFactory.create(
+        application_id=application.application_id
+    )
+    intermittent_leave_1 = IntermittentLeavePeriodFactory.create(
+        application_id=application.application_id
+    )
+    intermittent_leave_2 = IntermittentLeavePeriodFactory.create(
+        application_id=application.application_id
+    )
+    reduced_schedule_leave_1 = ReducedScheduleLeavePeriodFactory.create(
+        application_id=application.application_id
+    )
+    reduced_schedule_leave_2 = ReducedScheduleLeavePeriodFactory.create(
+        application_id=application.application_id
+    )
+
+    log_attributes = get_application_log_attributes(application)
+
+    expected_attributes = {
+        "application.continuous_leave[1].start_date": continuous_leave_1.start_date.isoformat(),
+        "application.continuous_leave[1].end_date": continuous_leave_1.end_date.isoformat(),
+        "application.continuous_leave[2].start_date": continuous_leave_2.start_date.isoformat(),
+        "application.continuous_leave[2].end_date": continuous_leave_2.end_date.isoformat(),
+        "application.intermittent_leave[1].start_date": intermittent_leave_1.start_date.isoformat(),
+        "application.intermittent_leave[1].end_date": intermittent_leave_1.end_date.isoformat(),
+        "application.intermittent_leave[2].start_date": intermittent_leave_2.start_date.isoformat(),
+        "application.intermittent_leave[2].end_date": intermittent_leave_2.end_date.isoformat(),
+        "application.reduced_schedule_leave[1].start_date": reduced_schedule_leave_1.start_date.isoformat(),
+        "application.reduced_schedule_leave[1].end_date": reduced_schedule_leave_1.end_date.isoformat(),
+        "application.reduced_schedule_leave[2].start_date": reduced_schedule_leave_2.start_date.isoformat(),
+        "application.reduced_schedule_leave[2].end_date": reduced_schedule_leave_2.end_date.isoformat(),
+    }
+
+    log_atribute_subset = {
+        key: value for key, value in log_attributes.items() if key in expected_attributes
+    }
+
+    assert log_atribute_subset == expected_attributes

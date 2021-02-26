@@ -1,16 +1,53 @@
 from collections import defaultdict
 from datetime import datetime
-from typing import DefaultDict, Dict, Iterable, Optional
+from typing import DefaultDict, Dict, Iterable, Optional, Union
 
 from massgov.pfml.db.models.applications import (
     Application,
+    ContinuousLeavePeriod,
     EmployerBenefit,
     EmployerBenefitType,
+    IntermittentLeavePeriod,
     OtherIncome,
     OtherIncomeType,
     PreviousLeave,
     PreviousLeaveQualifyingReason,
+    ReducedScheduleLeavePeriod,
 )
+
+
+def get_leave_dates(
+    leave_periods: Optional[
+        Iterable[Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]]
+    ],
+    leave_type: str,
+) -> Dict[str, str]:
+    leave_period_dates = {}
+    if leave_periods:
+        for i, leave_period in enumerate(leave_periods):
+            if leave_period.start_date:
+                leave_period_dates[
+                    f"application.{leave_type}[{i+1}].start_date"
+                ] = leave_period.start_date.isoformat()
+            if leave_period.end_date:
+                leave_period_dates[
+                    f"application.{leave_type}[{i+1}].end_date"
+                ] = leave_period.end_date.isoformat()
+
+    return leave_period_dates
+
+
+def get_leave_period_log_attributes(application: Application) -> Dict[str, str]:
+    result = {}
+    if application.has_continuous_leave_periods:
+        result.update(get_leave_dates(application.continuous_leave_periods, "continuous_leave"))
+    if application.has_reduced_schedule_leave_periods:
+        result.update(
+            get_leave_dates(application.reduced_schedule_leave_periods, "reduced_schedule_leave")
+        )
+    if application.has_intermittent_leave_periods:
+        result.update(get_leave_dates(application.intermittent_leave_periods, "intermittent_leave"))
+    return result
 
 
 def get_application_log_attributes(application: Application) -> Dict[str, Optional[str]]:
@@ -78,6 +115,9 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
         if application.work_pattern and application.work_pattern.work_pattern_type
         else None
     )
+
+    # add leave start_date and end_date for each type of leave period
+    result.update(get_leave_period_log_attributes(application))
 
     result.update(get_previous_leaves_log_attributes(application.previous_leaves))
     result.update(get_employer_benefits_log_attributes(application.employer_benefits))
