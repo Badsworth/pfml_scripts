@@ -110,23 +110,27 @@ describe("users API", () => {
         ]);
       });
 
-      it("returns transformed user leave administrators", async () => {
+      it("returns flattened user roles as is", async () => {
+        const flattenedRoles = [
+          { role_description: "Employer", role_id: 1 },
+          { role_description: "Other User", role_id: 3 },
+        ];
+        global.fetch = mockFetch({
+          response: getResponse(flattenedRoles),
+          status: 200,
+          ok: true,
+        });
+
         const response = await usersApi.getCurrentUser();
 
-        expect(response.user.user_leave_administrators).toEqual([
+        expect(response.user.roles).toEqual([
           {
-            employer_dba: "Book Bindings 'R Us",
-            employer_fein: "1298391823",
-            employer_id: "dda903f-f093f-ff900",
-            has_verification_data: true,
-            verified: false,
+            role_description: "Employer",
+            role_id: 1,
           },
           {
-            employer_dba: "Knitting Castle",
-            employer_fein: "390293443",
-            employer_id: "dda930f-93jfk-iej08",
-            has_verification_data: true,
-            verified: true,
+            role_description: "Other User",
+            role_id: 3,
           },
         ]);
       });
@@ -183,7 +187,7 @@ describe("users API", () => {
           "consented_to_data_sharing": true,
           "email_address": null,
           "roles": Array [
-            Object {
+            UserRole {
               "role_description": "Employer",
               "role_id": 1,
             },
