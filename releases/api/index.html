@@ -10,7 +10,7 @@
       
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.2">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.3">
     
     
       
@@ -639,7 +639,7 @@
 <tbody>
 <tr>
 <td>test</td>
-<td>e1cd9ae80cccec1d9d772885e46672da60df1943</td>
+<td>1532198987355ad4b93d75503f2e215d848e78ba</td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(test)">GitHub</a></td>
 </tr>
 <tr>
@@ -670,7 +670,7 @@
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (CP-1762,CP-1758,EMPLOYER-494,INFRA-288,INFRA-286,API-495,API-1451,API-472,EMPLOYER-536,INFRA-280,INFRA-280,API-1374,INFRA-278,API-1335,API-494,CP-1777,CP-1755,API-1362,EMPLOYER-904,CP-1708,INFRA-280,CP-1777,API-901,INFRA-278,EMPLOYER-903,API-901,API-1381)">Jira List</a>):</p>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (INFRA-214,CP-1762,CP-1758,EMPLOYER-494,INFRA-288,INFRA-286,API-495,API-1451,API-472,EMPLOYER-536,INFRA-280,INFRA-280,API-1374,INFRA-278,API-1335,API-494,CP-1777,CP-1755,API-1362,EMPLOYER-904,CP-1708,INFRA-280,CP-1777,API-901,INFRA-278,EMPLOYER-903,API-901,API-1381)">Jira List</a>):</p>
 <ul>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-288">INFRA-288</a>: Match libpq and sqlalchemy pool connection timeouts (<a href="https://github.com/EOLWD/pfml/pull/2694">#2694</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-286">INFRA-286</a>: Catch oauth2 unavailability issues (<a href="https://github.com/EOLWD/pfml/pull/3201">#3201</a>)</li>
@@ -678,6 +678,7 @@
 <li><a href="https://lwd.atlassian.net/browse/INFRA-280">INFRA-280</a>: (2/6): Raise 500 errors in mark_single_document_as_received (<a href="https://github.com/EOLWD/pfml/pull/3179">#3179</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-278">INFRA-278</a>: Handle SOCKETTIMEDOUT and ignore network issues in Sentry (<a href="https://github.com/EOLWD/pfml/pull/3177">#3177</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-278">INFRA-278</a>: Distinguish between fatal and non-fatal FINEOS errors (<a href="https://github.com/EOLWD/pfml/pull/3155">#3155</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/INFRA-214">INFRA-214</a>: delete eligibility feed lambda builds (<a href="https://github.com/EOLWD/pfml/pull/3169">#3169</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/EMPLOYER-904">EMPLOYER-904</a>: Add an "has_withholding_data" flag to Employer model (<a href="https://github.com/EOLWD/pfml/pull/3122">#3122</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/EMPLOYER-903">EMPLOYER-903</a>: Payment required error handling (<a href="https://github.com/EOLWD/pfml/pull/3147">#3147</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/EMPLOYER-536">EMPLOYER-536</a>: flatten user roles api representation (<a href="https://github.com/EOLWD/pfml/pull/3101">#3101</a>)</li>
@@ -713,6 +714,7 @@
  <br>* [INFRA-280](https://lwd.atlassian.net/browse/INFRA-280): (2/6): Raise 500 errors in mark_single_document_as_received ([#3179](https://github.com/EOLWD/pfml/pull/3179))
  <br>* [INFRA-278](https://lwd.atlassian.net/browse/INFRA-278): Handle SOCKETTIMEDOUT and ignore network issues in Sentry ([#3177](https://github.com/EOLWD/pfml/pull/3177))
  <br>* [INFRA-278](https://lwd.atlassian.net/browse/INFRA-278): Distinguish between fatal and non-fatal FINEOS errors ([#3155](https://github.com/EOLWD/pfml/pull/3155))
+ <br>* [INFRA-214](https://lwd.atlassian.net/browse/INFRA-214): delete eligibility feed lambda builds ([#3169](https://github.com/EOLWD/pfml/pull/3169))
  <br>* [EMPLOYER-904](https://lwd.atlassian.net/browse/EMPLOYER-904): Add an "has_withholding_data" flag to Employer model ([#3122](https://github.com/EOLWD/pfml/pull/3122))
  <br>* [EMPLOYER-903](https://lwd.atlassian.net/browse/EMPLOYER-903): Payment required error handling ([#3147](https://github.com/EOLWD/pfml/pull/3147))
  <br>* [EMPLOYER-536](https://lwd.atlassian.net/browse/EMPLOYER-536): flatten user roles api representation ([#3101](https://github.com/EOLWD/pfml/pull/3101))
@@ -806,10 +808,10 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../assets/javascripts/workers/search.f5903571.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../assets/javascripts/workers/search.fb4a9340.min.js", "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.3981fc68.min.js"></script>
+      <script src="../../assets/javascripts/bundle.ca5457b8.min.js"></script>
       
     
   </body>
