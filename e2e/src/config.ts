@@ -36,6 +36,8 @@ export interface LSTConfig {
   FINEOS_USERS: string;
   FINEOS_PASSWORD: string;
   EMPLOYER_PORTAL_USERNAME: string;
+  LST_EMPLOYEES_FILE: string;
+  LST_EMPLOYERS_FILE: string;
 }
 
 export type E2ELSTConfig = E2EConfig & LSTConfig;

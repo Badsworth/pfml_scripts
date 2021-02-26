@@ -103,7 +103,9 @@ export async function prepareBundle(
     await Util.runCommand(
       `npm run cli -- simulation generate -f ./src/simulation/scenarios/controlLST.ts -d ./src/flood/data/${bundleDir} -n "${numRecords}" -G "${escape(
         JSON.stringify(newDataConfig)
-      )}" -E ${config("EMPLOYERS_FILE")}`,
+      )}" -e ${config("LST_EMPLOYEES_FILE")} -E ${config(
+        "LST_EMPLOYERS_FILE"
+      )}`,
       true
     );
     // Log deployment details

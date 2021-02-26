@@ -37,19 +37,21 @@ const cmd: CommandModule<SystemWideArgs, ImportUserDataArgs> = {
   async handler(args) {
     args.logger.profile("splitUserData");
     const storage = new SimulationStorage(args.directory);
-    const cleanEmployeesTotal = args.split as number;
-    let totalCleanClaims = 0;
-    let totalNonCleanClaims = 0;
+    const toBeSliced = args.split as number;
+    let totalSliced = 0;
+    let totalRemaining = 0;
 
-    const cleanOutput = `${args.directory}/claimsCleanEmployees.json`;
-    const nonCleanOutput = `${args.directory}/claimsNonCleanEmployees.json`;
-    await fs.promises.unlink(cleanOutput);
-    await fs.promises.unlink(nonCleanOutput);
+    const claimsSlice = `${args.directory}/claims_${toBeSliced}.json`;
+    const claimsRemaining = `${args.directory}/claims_rest.json`;
+    if (fs.existsSync(claimsSlice) || fs.existsSync(claimsRemaining)) {
+      await fs.promises.unlink(claimsSlice);
+      await fs.promises.unlink(claimsRemaining);
+    }
 
-    const cleanEmployeesOutputStream = fs.createWriteStream(cleanOutput);
-    const nonCleanEmployeesOutputStream = fs.createWriteStream(nonCleanOutput);
+    const slicedOutput = fs.createWriteStream(claimsSlice);
+    const remainingOutput = fs.createWriteStream(claimsRemaining);
     // pipeline to output
-    nonCleanEmployeesOutputStream.write("[\n");
+    remainingOutput.write("[\n");
     await pipelineP(
       fs.createReadStream(storage.claimFile, { encoding: "utf8" }),
       JSONStream.parse("*"),
@@ -57,26 +59,26 @@ const cmd: CommandModule<SystemWideArgs, ImportUserDataArgs> = {
       new stream.Transform({
         objectMode: true,
         transform(chunk: SimulationClaim, encoding, next) {
-          if (totalCleanClaims < cleanEmployeesTotal) {
-            // write clean employee
+          if (totalSliced < toBeSliced) {
+            // write this employee to the new sliced file
             this.push(chunk);
-            totalCleanClaims++;
+            totalSliced++;
           } else {
-            // write NON clean employee
-            nonCleanEmployeesOutputStream.write(
-              (totalNonCleanClaims ? ",\n" : "") + JSON.stringify(chunk)
+            // write remaining employees to different file
+            remainingOutput.write(
+              (totalRemaining ? ",\n" : "") + JSON.stringify(chunk)
             );
-            totalNonCleanClaims++;
+            totalRemaining++;
           }
           next();
         },
       }),
       JSONStream.stringify(),
-      cleanEmployeesOutputStream
+      slicedOutput
     );
-    nonCleanEmployeesOutputStream.write("\n]");
-    args.logger.info(`Extracted ${cleanEmployeesTotal} clean employees.`);
-    args.logger.info(`${totalNonCleanClaims} claims remaining.`);
+    remainingOutput.write("\n]");
+    args.logger.info(`Extracted ${toBeSliced} clean employees.`);
+    args.logger.info(`${totalRemaining} claims remaining.`);
   },
 };
 
