@@ -57,7 +57,6 @@ module "api" {
   cognito_user_pool_keys_url                       = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_29j6fKBDT/.well-known/jwks.json"
   cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
   cognito_pre_signup_lambda_artifact_s3_key        = local.cognito_pre_signup_lambda_artifact_s3_key
-  fineos_eligibility_transfer_lambda_build_s3_key  = local.fineos_eligibility_transfer_lambda_build_s3_key
   rmv_client_base_url                              = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn                = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-uat/rmv_client_certificate-LWvMFe"
   rmv_check_behavior                               = "partially_mocked" # TODO?
@@ -72,7 +71,6 @@ module "api" {
   fineos_client_wscomposer_user_id                    = "OASIS"
   fineos_client_oauth2_url                            = "https://uat-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                      = "61on8s7n66i0gj913didkmn5q"
-  fineos_eligibility_feed_output_directory_path       = "s3://fin-sompre-data-import/UAT"
   fineos_import_employee_updates_input_directory_path = "s3://fin-sompre-data-export/UAT/dataexports"
   service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-uat.mass.gov"

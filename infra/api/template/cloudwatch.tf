@@ -111,23 +111,6 @@ resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_formstack_import" {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-resource "aws_cloudwatch_log_group" "lambda_eligibility_feed" {
-  name = "/aws/lambda/${aws_lambda_function.eligibility_feed.function_name}"
-
-  tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
-  })
-}
-
-resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_eligibility_feed" {
-  name            = "nr_lambda_eligibility_feed"
-  log_group_name  = aws_cloudwatch_log_group.lambda_eligibility_feed.name
-  filter_pattern  = ""
-  destination_arn = local.newrelic_log_ingestion_lambda
-}
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # RDS Cloudwatch logs subscription filter and lambda permission
 
 resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_permission_rds_logs" {

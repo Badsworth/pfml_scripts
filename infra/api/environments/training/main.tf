@@ -69,8 +69,6 @@ module "api" {
   fineos_client_wscomposer_api_url                    = "https://trn-api.masspfml.fineos.com/integration-services/wscomposer/"
   fineos_client_oauth2_url                            = "https://trn-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                      = "2jdpsthb76p5rfhfl9bdjem8gf"
-  fineos_eligibility_transfer_lambda_build_s3_key     = local.fineos_eligibility_transfer_lambda_build_s3_key
-  fineos_eligibility_feed_output_directory_path       = null // TODO if needed
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/TRN/dataexports"
   fineos_aws_iam_role_arn                             = null // TODO if needed
   fineos_aws_iam_role_external_id                     = null // TODO if needed

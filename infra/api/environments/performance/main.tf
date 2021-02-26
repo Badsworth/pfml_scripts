@@ -76,8 +76,6 @@ module "api" {
   fineos_client_wscomposer_api_url                    = "https://perf-api.masspfml.fineos.com/integration-services/wscomposer/"
   fineos_client_oauth2_url                            = "https://perf-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                      = "5u0hcdodd6vt5bfa6p2u6ij13d"
-  fineos_eligibility_transfer_lambda_build_s3_key     = local.fineos_eligibility_transfer_lambda_build_s3_key
-  fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/PERF"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/PERF/dataexports"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"

@@ -51,7 +51,6 @@ module "api" {
   cognito_user_pool_keys_url                       = ""
   cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
   cognito_pre_signup_lambda_artifact_s3_key        = local.cognito_pre_signup_lambda_artifact_s3_key
-  fineos_eligibility_transfer_lambda_build_s3_key  = local.fineos_eligibility_transfer_lambda_build_s3_key
   rmv_client_base_url                              = null
   rmv_client_certificate_binary_arn                = null
   rmv_check_behavior                               = "fully_mocked"

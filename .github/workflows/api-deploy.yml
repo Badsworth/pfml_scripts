@@ -257,7 +257,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component: ["formstack_import", "fineos/eligibility_export_feed", "cognito_pre_signup", "cognito_post_confirmation"]
+        component: ["formstack_import", "cognito_pre_signup", "cognito_post_confirmation"]
 
     env:
       infra-working-dir: ./api/lambdas
@@ -417,7 +417,6 @@ jobs:
       TF_VAR_formstack_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_VAR_cognito_pre_signup_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      TF_VAR_fineos_eligibility_transfer_lambda_build_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_CLI_ARGS: '-lock-timeout=120s'
 
     steps:

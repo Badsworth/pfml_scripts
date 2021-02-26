@@ -237,11 +237,6 @@ variable "fineos_client_oauth2_client_id" {
   default     = ""
 }
 
-variable "fineos_eligibility_transfer_lambda_build_s3_key" {
-  description = "The S3 object key of the FINEOS eligibility transfer lambda artifact"
-  type        = string
-}
-
 variable "fineos_eligibility_feed_output_directory_path" {
   description = "Location the Eligibility Feed Lambda should write output to"
   type        = string

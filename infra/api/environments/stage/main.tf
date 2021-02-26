@@ -81,8 +81,6 @@ module "api" {
   fineos_client_wscomposer_api_url                    = "https://idt-api.masspfml.fineos.com/integration-services/wscomposer/"
   fineos_client_oauth2_url                            = "https://idt-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                      = "1fa281uto9tjuqtm21jle7loam"
-  fineos_eligibility_transfer_lambda_build_s3_key     = local.fineos_eligibility_transfer_lambda_build_s3_key
-  fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/IDT"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/IDT/dataexports"
   service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-stage.mass.gov"
