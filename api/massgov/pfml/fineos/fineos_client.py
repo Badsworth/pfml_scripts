@@ -773,7 +773,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         data = {
             "fileName": file_name_root,
-            "fileExtension": file_extension,
+            "fileExtension": file_extension.lower(),
             "base64EncodedFileContents": encoded_file_contents,
             "fileSizeInBytes": file_size,
             "description": description,

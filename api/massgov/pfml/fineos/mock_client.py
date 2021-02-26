@@ -64,7 +64,7 @@ def mock_document(
         {
             "caseId": absence_id,
             "name": document_type,
-            "fileExtension": pathlib.Path(file_name).suffix,
+            "fileExtension": pathlib.Path(file_name).suffix.lower(),
             "originalFilename": file_name,
             "description": description,
         }
