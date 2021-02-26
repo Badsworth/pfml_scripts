@@ -1,7 +1,6 @@
 /* eslint-disable jsdoc/require-returns */
-import { compact, map } from "lodash";
+import User, { UserLeaveAdministrator, UserRole } from "../models/User";
 import BaseApi from "./BaseApi";
-import User from "../models/User";
 import routes from "../routes";
 
 /**
@@ -25,7 +24,7 @@ export default class UsersApi extends BaseApi {
   getCurrentUser = async () => {
     const { data } = await this.request("GET", "current", null);
     const roles = this.transformUserRoles(data.roles);
-    const user_leave_administrators = this.transformUserLeaveAdministrators(
+    const user_leave_administrators = this.createUserLeaveAdministrators(
       data.user_leave_administrators
     );
 
@@ -43,7 +42,7 @@ export default class UsersApi extends BaseApi {
   updateUser = async (user_id, patchData) => {
     const { data } = await this.request("PATCH", user_id, patchData);
     const roles = this.transformUserRoles(data.roles);
-    const user_leave_administrators = this.transformUserLeaveAdministrators(
+    const user_leave_administrators = this.createUserLeaveAdministrators(
       data.user_leave_administrators
     );
 
@@ -57,22 +56,19 @@ export default class UsersApi extends BaseApi {
     };
   };
 
-  // TODO (EMPLOYER-536): Remove helper method when API returns array of UserRole objects
-  // [{ role: { role_description, role_id }}] --> [{ role_description, role_id }]
-  transformUserRoles = (roles) => {
-    return compact(map(roles, "role"));
+  createUserLeaveAdministrators = (leaveAdmins) => {
+    return (leaveAdmins || []).map(
+      (leaveAdmin) => new UserLeaveAdministrator(leaveAdmin)
+    );
   };
 
-  // TODO (EMPLOYER-813): Remove helper method when API returns array of UserLeaveAdministrator objects
-  // [{ employer: { employer_dba, employer_fein, employer_id }, verified}]
-  // becomes
-  // [{ employer_dba, employer_fein, employer_id, verified }]]
-  transformUserLeaveAdministrators = (userLeaveAdministrators = []) => {
-    return userLeaveAdministrators.map(({ employer, ...rest }) => {
-      return {
-        ...employer,
-        ...rest,
-      };
+  // TODO (EMPLOYER-963): Remove helper method when API returns array of UserRole objects
+  // Accepts [{ role: { role_description, role_id }}] or [{ role_description, role_id }]
+  // Returns [{ role_description, role_id }]
+  transformUserRoles = (roles) => {
+    return roles.map((r) => {
+      const role = r.role || r;
+      return new UserRole(role);
     });
   };
 }
