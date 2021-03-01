@@ -86,8 +86,8 @@ services:
       # - PAYMENTS_GAX_BIEVNT_EMAIL=
       # - PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL=
       - DFML_PROJECT_MANAGER_EMAIL_ADDRESS=
-      - PFML_EMAIL_ADDRESS=noreplypfml@mass.gov
-      - BOUNCE_FORWARDING_EMAIL_ADDRESS=noreplypfml@mass.gov
+      - PFML_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov
+      - BOUNCE_FORWARDING_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov
       # Uncomment and set these in order to run the FINEOS and CTR ECS tasks locally with real S3
       # You'll also need to configure the mount for your ~/.aws/credentials in
       # docker-compose.override.yml in order for this to work.

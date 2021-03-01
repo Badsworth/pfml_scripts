@@ -166,9 +166,9 @@ class PaymentsEmailConfig:
 def get_email_config() -> PaymentsEmailConfig:
     payments_email_config = PaymentsEmailConfig(
         dfml_project_manager_email_address=os.getenv("DFML_PROJECT_MANAGER_EMAIL_ADDRESS", ""),
-        pfml_email_address=os.getenv("PFML_EMAIL_ADDRESS", "noreplypfml@mass.gov"),
+        pfml_email_address=os.getenv("PFML_EMAIL_ADDRESS", "PFML_DoNotReply@eol.mass.gov"),
         bounce_forwarding_email_address=os.getenv(
-            "BOUNCE_FORWARDING_EMAIL_ADDRESS", "noreplypfml@mass.gov"
+            "BOUNCE_FORWARDING_EMAIL_ADDRESS", "PFML_DoNotReply@eol.mass.gov"
         ),
         bounce_forwarding_email_address_arn=os.getenv("BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", ""),
         ctr_gax_bievnt_email_address=os.getenv("CTR_GAX_BIEVNT_EMAIL_ADDRESS", ""),
