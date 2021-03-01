@@ -50,7 +50,6 @@ resource "aws_lambda_function" "scrub_ip_addresses_lambda" {
       NEW_RELIC_TRUSTED_ACCOUNT_KEY         = "1606654"        # EOLWD parent account
       NEW_RELIC_LAMBDA_HANDLER              = "lambda.handler" # the actual lambda entrypoint
       NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
-      PORTAL_DOMAIN                         = module.constants.cert_domains[var.environment_name]
     }
   }
 
@@ -58,7 +57,7 @@ resource "aws_lambda_function" "scrub_ip_addresses_lambda" {
     environment = module.constants.environment_tags[var.environment_name]
   })
 }
-# Transforms the `scrub_ip_addresses` file in to something the lambda can use
+# Transforms the `scrub_ip_addresses.py` file in to something the lambda can use
 data "archive_file" "scrub_ip_addresses" {
   type        = "zip"
   output_path = "${path.module}/.zip/scrub-ip-addresses.zip"
