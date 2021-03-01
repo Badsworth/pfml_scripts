@@ -42,6 +42,7 @@ const useAppLogic = () => {
   const employers = useEmployersLogic({
     appErrorsLogic,
     portalFlow,
+    setUser: users.setUser,
   });
 
   const otherLeaves = useOtherLeavesLogic({ appErrorsLogic });

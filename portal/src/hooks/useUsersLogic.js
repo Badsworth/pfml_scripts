@@ -120,6 +120,7 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     loadUser,
     requireUserConsentToDataAgreement,
     requireUserRole,
+    setUser,
   };
 };
 

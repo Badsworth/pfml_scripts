@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import EmployersApi from "../api/EmployersApi";
 
-const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
+const useEmployersLogic = ({ appErrorsLogic, portalFlow, setUser }) => {
   const [claim, setClaim] = useState(null);
   const [documents, setDocuments] = useState(null);
   const employersApi = useMemo(() => new EmployersApi(), []);
@@ -97,6 +97,8 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow }) => {
     try {
       await employersApi.submitWithholding(data);
       const params = { employer_id: data.employer_id, next };
+      // this forces the user to be refetched.
+      setUser(undefined);
       portalFlow.goToNextPage({}, params);
     } catch (error) {
       appErrorsLogic.catchError(error);

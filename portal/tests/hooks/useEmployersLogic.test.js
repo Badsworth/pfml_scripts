@@ -22,13 +22,18 @@ jest.mock("../../src/services/tracker");
 describe("useEmployersLogic", () => {
   const absenceId = "mock-fineos-absence-id-1";
   const employerId = "mock-employer-id";
-  let appErrorsLogic, employersLogic, portalFlow;
+  let appErrorsLogic, employersLogic, portalFlow, setUser;
 
   function renderHook() {
+    setUser = jest.fn();
     testHook(() => {
       portalFlow = usePortalFlow();
       appErrorsLogic = useAppErrorsLogic({ portalFlow });
-      employersLogic = useEmployersLogic({ appErrorsLogic, portalFlow });
+      employersLogic = useEmployersLogic({
+        appErrorsLogic,
+        portalFlow,
+        setUser,
+      });
     });
   }
 
@@ -40,6 +45,7 @@ describe("useEmployersLogic", () => {
     appErrorsLogic = null;
     employersLogic = null;
     portalFlow = null;
+    setUser = null;
   });
 
   describe("loadClaim", () => {
@@ -301,6 +307,14 @@ describe("useEmployersLogic", () => {
       });
 
       expect(submitWithholdingMock).toHaveBeenCalledWith(postData);
+    });
+
+    it("clears the current user", async () => {
+      await act(async () => {
+        await employersLogic.submitWithholding(postData);
+      });
+
+      expect(setUser).toHaveBeenCalledWith(undefined);
     });
 
     describe("errors", () => {
