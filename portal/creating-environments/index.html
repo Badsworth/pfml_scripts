@@ -726,26 +726,26 @@
 <p>Before reading this, make sure you've already ran through the <a href="../../creating-environments/">steps to setup the infrastructure for a new environment</a>.</p>
 <h2 id="add-environment-variables">Add environment variables</h2>
 <ol>
-<li>Create a new config file for the environment in <a href="https://github.com/EOLWD/pfml/tree/master/portal/config"><code>portal/config</code></a>, copying the properties from another environment.</li>
+<li>Create a new config file for the environment in <a href="https://github.com/EOLWD/pfml/tree/main/portal/config"><code>portal/config</code></a>, copying the properties from another environment.</li>
 <li>Update the variables for the environment. Primarily, you'll want to update the environment name and the Cognito IDs, which should have been output after you ran <code>terraform apply</code>. Also look at <a href="../monitoring/">Monitoring</a> and <a href="../web-analytics/">Web Analytics</a> READMEs for configuring New Relic and Google Tag Manager.</li>
-<li>Add an entry for the new environment to <a href="https://github.com/EOLWD/pfml/tree/master/portal/config/index.js"><code>portal/config/index.js</code></a>, copying the properties from another environment.</li>
+<li>Add an entry for the new environment to <a href="https://github.com/EOLWD/pfml/tree/main/portal/config/index.js"><code>portal/config/index.js</code></a>, copying the properties from another environment.</li>
 <li>Make sure the associated API environment's origin URL is listed in the list of <code>allowed_origins</code> in <code>new-relic.js</code>.</li>
 </ol>
 <h2 id="add-a-build-script">Add a build script</h2>
 <p>Each environment should have its own build script in <code>portal/package.json</code> so that the site can be built using the correct environment variables. Refer to other build scripts, like <code>build:test</code> for an example.</p>
 <h2 id="update-github-actions">Update GitHub Actions</h2>
-<p>Each environment will have its own GitHub branch that will deploy when changes are pushed. Add your branch and environment configs to <a href="https://github.com/EOLWD/pfml/tree/master/.github/workflows/portal-deploy.yml"><code>portal-deploy.yml</code></a> <em>and</em> <a href="https://github.com/EOLWD/pfml/tree/master/.github/workflows/portal-infra-deploy.yml"><code>portal-infra-deploy.yml</code></a> by adding a branch to the workflow trigger:</p>
+<p>Each environment will have its own GitHub branch that will deploy when changes are pushed. Add your branch and environment configs to <a href="https://github.com/EOLWD/pfml/tree/main/.github/workflows/portal-deploy.yml"><code>portal-deploy.yml</code></a> <em>and</em> <a href="https://github.com/EOLWD/pfml/tree/main/.github/workflows/portal-infra-deploy.yml"><code>portal-infra-deploy.yml</code></a> by adding a branch to the workflow trigger:</p>
 <div class="highlight"><pre><span></span><code>on:
   push:
     branches:
-      - master
+      - main
       - deploy/&lt;&lt;environment_name&gt;&gt;
 </code></pre></div>
 <p>and environment variables:</p>
 <div class="highlight"><pre><span></span><code>env:
   # ...
   # map branch name to environment name
-  refs/heads/master: test
+  refs/heads/main: test
   refs/heads/deploy/&lt;&lt;environment_name&gt;&gt;: &lt;&lt;environment_name&gt;&gt;
 </code></pre></div>
 <p>Also update the <a href="../deployment/">deploy</a> doc with details about deploying to the new environment.</p>

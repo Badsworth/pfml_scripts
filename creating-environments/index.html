@@ -706,9 +706,9 @@
                 
                 
                 <h1 id="setting-up-a-new-environment">Setting up a new environment</h1>
-<p>The easiest way to set up resources in a new environment is using the templates in <a href="https://github.com/EOLWD/pfml/tree/master/bin/bootstrap-env">/bin/bootstrap-env/</a>.</p>
+<p>The easiest way to set up resources in a new environment is using the templates in <a href="https://github.com/EOLWD/pfml/tree/main/bin/bootstrap-env">/bin/bootstrap-env/</a>.</p>
 <ol>
-<li>The S3 bucket for holding tfstate files must be created first in <a href="https://github.com/EOLWD/pfml/tree/master/infra/pfml-aws/s3.tf">infra/pfml-aws/s3.tf</a></li>
+<li>The S3 bucket for holding tfstate files must be created first in <a href="https://github.com/EOLWD/pfml/tree/main/infra/pfml-aws/s3.tf">infra/pfml-aws/s3.tf</a></li>
 <li>Then, individual terraform components (<code>env-shared</code>, <code>api</code>, or <code>portal</code>) may be set up.</li>
 </ol>
 <div class="highlight"><pre><span></span><code>pfml$ bin/bootstrap-env/bootstrap-env.sh &lt;new-env&gt; &lt;component&gt;
@@ -748,8 +748,8 @@
 <p><strong>Api:</strong></p>
 <ul>
 <li>
-<p>When applying changes, provide an initial application version to deploy. Since this requires a version that is built and pushed to ECR, it's easiest to use the latest version on master.</p>
-<div class="highlight"><pre><span></span><code>$ git rev-parse master
+<p>When applying changes, provide an initial application version to deploy. Since this requires a version that is built and pushed to ECR, it's easiest to use the latest version on main.</p>
+<div class="highlight"><pre><span></span><code>$ git rev-parse main
 82043ae1e04621251fb9e7896176b38c884f027e
 
 $ terraform apply -var<span class="o">=</span><span class="s1">&#39;service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e&#39;</span>
@@ -770,7 +770,7 @@ $ terraform apply -var<span class="o">=</span><span class="s1">&#39;service_dock
 <p><a href="../portal/creating-environments/">Additional steps for new Portal environments</a></p>
 </li>
 <li>
-<p>Add the new environment to the <a href="https://github.com/EOLWD/pfml/tree/master/.github/workflows/infra-validate.yml">CI build matrix</a> so it can be validated when it's changed.</p>
+<p>Add the new environment to the <a href="https://github.com/EOLWD/pfml/tree/main/.github/workflows/infra-validate.yml">CI build matrix</a> so it can be validated when it's changed.</p>
 </li>
 </ol>
 <h2 id="setting-up-custom-domains">Setting up Custom Domains</h2>
@@ -800,9 +800,9 @@ $ terraform apply -var<span class="o">=</span><span class="s1">&#39;service_dock
 <p>Once EOTSS has approved the certificate, update the cert_domains map in the following files:</p>
 </li>
 <li>
-<p><a href="https://github.com/EOLWD/pfml/tree/master/infra/portal/template/acm.tf">infra/portal/template/acm.tf</a></p>
+<p><a href="https://github.com/EOLWD/pfml/tree/main/infra/portal/template/acm.tf">infra/portal/template/acm.tf</a></p>
 </li>
-<li><a href="https://github.com/EOLWD/pfml/tree/master/infra/env-shared/template/acm.tf">infra/env-shared/template/acm.tf</a></li>
+<li><a href="https://github.com/EOLWD/pfml/tree/main/infra/env-shared/template/acm.tf">infra/env-shared/template/acm.tf</a></li>
 </ol>
 <p>and flip enable_pretty_domains to <code>true</code> in infra/env-shared/environments/$ENV/main.tf.</p>
 <ol>
@@ -849,7 +849,7 @@ $ terraform apply -var<span class="o">=</span><span class="s1">&#39;service_dock
 <li>Log into the AWS Console and navigate to the Cognito User Pool for this environment.</li>
 <li>Click "Advanced Security" in the sidebar</li>
 <li><a href="https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-settings-advanced-security.html#cognito-user-pool-configure-advanced-security">Configure the adaptive authentication behavior</a>. In production and stage environments we block high-risk login attempts. This can also be configured for other environments if desired. High-risk login attempts aren't blocked in environments used for testing (test, perf, and training) so that automated test scripts don't get blocked.</li>
-<li>On the same page in AWS customize the email notification messages by copy-and-pasting the HTML email templates from <a href="https://github.com/EOLWD/pfml/tree/master/infra/portal/templates/emails/"><code>infra/portal/templates/emails</code></a>.</li>
+<li>On the same page in AWS customize the email notification messages by copy-and-pasting the HTML email templates from <a href="https://github.com/EOLWD/pfml/tree/main/infra/portal/templates/emails/"><code>infra/portal/templates/emails</code></a>.</li>
 </ol>
                 
               

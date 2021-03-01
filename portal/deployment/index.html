@@ -763,7 +763,7 @@
                 
                 <h1 id="deployment">Deployment</h1>
 <p>Deployments to all environments are managed through GitHub Actions.</p>
-<p>The <code>master</code> branch is automatically deployed to <code>test</code> as pull requests are merged into it.</p>
+<p>The <code>main</code> branch is automatically deployed to <code>test</code> as pull requests are merged into it.</p>
 <p>Unlike deployments to <code>test</code>, all deployments to <code>training, performance, stage</code> and <code>prod</code> are triggered manually.</p>
 <hr />
 <h2 id="triggering-a-deployment">Triggering a deployment</h2>
@@ -798,7 +798,7 @@ Today, these branches serve an archival role: they record what commit was deploy
 </thead>
 <tbody>
 <tr>
-<td>master</td>
+<td>main</td>
 <td>test</td>
 </tr>
 <tr>
@@ -832,11 +832,11 @@ Today, these branches serve an archival role: they record what commit was deploy
 <h2 id="storybook">Storybook</h2>
 <p>The <a href="http://massgov-pfml-test-storybook-builds.s3-website-us-east-1.amazonaws.com">Storybook site</a>,
 used for visualizing our components, is exported and deployed automatically when pull requests are merged
-into the <code>master</code> branch. Only one environment (<code>test</code>) exists for the Storybook site.</p>
+into the <code>main</code> branch. Only one environment (<code>test</code>) exists for the Storybook site.</p>
 <h2 id="playroom">Playroom</h2>
 <p>The <a href="http://massgov-pfml-test-playroom-builds.s3-website-us-east-1.amazonaws.com">Playroom site</a>,
 used for prototyping in the browser, is exported and deployed automatically when pull requests are merged
-into the <code>master</code> branch. Only one environment (<code>test</code>) exists for the Playroom site.</p>
+into the <code>main</code> branch. Only one environment (<code>test</code>) exists for the Playroom site.</p>
                 
               
               

@@ -860,7 +860,7 @@
 <p>Please see the <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/306577409/Delivery+Workflow">Delivery Workflow</a>
 Confluence page for guidance on how to pick up tickets, when to deploy, which environment to deploy to, etc.</p>
 <h2 id="local-development">Local Development</h2>
-<p>For practical instructions on getting set up locally, see the repo <a href="https://github.com/EOLWD/pfml/tree/master/README.md">README</a>.
+<p>For practical instructions on getting set up locally, see the repo <a href="https://github.com/EOLWD/pfml/tree/main/README.md">README</a>.
 Below are guidelines for working once you're ready.</p>
 <ul>
 <li>
@@ -883,13 +883,13 @@ See <em><a href="https://chris.beams.io/posts/git-commit/#seven-rules">Seven Rul
 <li>
 <p>To keep your branch updated with others' changes, you can:</p>
 </li>
-<li>Rebase your changes onto master with <code>git rebase master</code>, or</li>
+<li>Rebase your changes onto main with <code>git rebase main</code>, or</li>
 <li>
-<p>Merge master onto your own branch: <code>git merge master</code>.</p>
+<p>Merge main onto your own branch: <code>git merge main</code>.</p>
 </li>
 <li>
-<p>The favored pathway to keep your branch updated is to use <code>git merge master.</code>
-It's still possible to rebase and force-push your branch using <code>git rebase master</code>, but this pathway should be avoided
+<p>The favored pathway to keep your branch updated is to use <code>git merge main.</code>
+It's still possible to rebase and force-push your branch using <code>git rebase main</code>, but this pathway should be avoided
 if your branch is being worked on by more than one person at a time, due to the risk of causing unnecessary conflicts.</p>
 </li>
 </ul>
@@ -939,7 +939,7 @@ and trust that the recipient will address your comments before merging by replyi
 Use "request changes" sparingly, unless there's a blocking issue or major refactors that should be done.</p>
 <h3 id="auto-assignment">Auto assignment</h3>
 <p>Code review assignment can be setup to occur automatically when a Pull Request is created,
-through a combination of the <a href="https://github.com/EOLWD/pfml/tree/master/.github/CODEOWNERS"><code>CODEOWNERS</code> file</a>
+through a combination of the <a href="https://github.com/EOLWD/pfml/tree/main/.github/CODEOWNERS"><code>CODEOWNERS</code> file</a>
 and <a href="https://help.github.com/en/github/setting-up-and-managing-organizations-and-teams/organizing-members-into-teams">GitHub teams</a>.</p>
 <p>Teams exist for the API and Portal engineers:</p>
 <ul>
@@ -975,18 +975,18 @@ should be treated as a blocking issue and resolved before the PR is merged.</p>
 <h3 id="merges-the-api-database">Merges &amp; the API database</h3>
 <p>A particular source of danger when merging a PR is the risk that the merge will introduce conflicts
 to the PFML API's database schema. This scenario is not uncommon, especially for branches that
-introduce new database migrations and that have not yet been updated with the latest changes to master.
+introduce new database migrations and that have not yet been updated with the latest changes to main.
 The API's test suite cannot detect these conflicts, so they have historically been discovered
 only after PR merge, when deployment of the API begins to fail.</p>
 <p>To mitigate this risk, any engineer who introduces new database migrations to the API should pay special attention to the
 "Pre-Merge Conflict Check", an automated check that should appear on any pull request that makes changes to <code>api/massgov/pfml/db/migrations/versions</code>.
-This special 'pseudo-check' will diff your branch against master, and fail if it detects that your branch is missing any
-database migrations that are already present on master.</p>
-<p>To mitigate the risk that updates to master will, occasionally, introduce new database conflicts to unmerged branches,
-this pseudo-check will automatically re-run itself whenever a new database migration is pushed to master,
+This special 'pseudo-check' will diff your branch against main, and fail if it detects that your branch is missing any
+database migrations that are already present on main.</p>
+<p>To mitigate the risk that updates to main will, occasionally, introduce new database conflicts to unmerged branches,
+this pseudo-check will automatically re-run itself whenever a new database migration is pushed to main,
 and additionally whenever new commits are pushed to your PR's feature branch.</p>
 <p>For these reasons, please make sure you check the status of any database conflicts before merging an approved PR.
-To avoid these conflicts, any PR that alters the database <em>must</em> be updated with the latest changes to master before being merged.</p>
+To avoid these conflicts, any PR that alters the database <em>must</em> be updated with the latest changes to main before being merged.</p>
                 
               
               

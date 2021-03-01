@@ -770,29 +770,29 @@
 <p>...where <code>CP-123</code> is the Jira ticket number.</p>
 <p><strong>Why?</strong> We want to avoid losing track of work that we haven't completed, and unintentionally ship an application that doesn't work end-to-end. Making sure that we have tickets in our backlog is one major way we can avoid losing track of this work. In addition, having ticket references within TODO comments provides an engineer a way to learn additional context, and potentially learn that the work has already been completed, but the TODO got left behind in the code by accident.</p>
 <h2 id="creating-a-page">Creating a page</h2>
-<p>All files in the <a href="https://github.com/EOLWD/pfml/tree/master/portal/src/pages"><code>portal/src/pages</code></a> directory are automatically available as routes based on their name, e.g. <code>about.js</code> is routed to <code>/about</code>. Files named <code>index.js</code> are routed to the root of the directory. See more at the Next.js docs on <a href="https://nextjs.org/docs/routing/introduction">routing</a> and <a href="https://nextjs.org/docs/basic-features/pages">pages</a>.</p>
-<p>For Employer-specific pages, files will be nested in an <a href="https://github.com/EOLWD/pfml/tree/master/portal/src/pages/employers"><code>/employers</code></a> subdirectory.</p>
+<p>All files in the <a href="https://github.com/EOLWD/pfml/tree/main/portal/src/pages"><code>portal/src/pages</code></a> directory are automatically available as routes based on their name, e.g. <code>about.js</code> is routed to <code>/about</code>. Files named <code>index.js</code> are routed to the root of the directory. See more at the Next.js docs on <a href="https://nextjs.org/docs/routing/introduction">routing</a> and <a href="https://nextjs.org/docs/basic-features/pages">pages</a>.</p>
+<p>For Employer-specific pages, files will be nested in an <a href="https://github.com/EOLWD/pfml/tree/main/portal/src/pages/employers"><code>/employers</code></a> subdirectory.</p>
 <ol>
-<li>Each time you add a new page, add a new route to <a href="https://github.com/EOLWD/pfml/tree/master/portal/src/routes.js"><code>src/routes.js</code></a>.</li>
-<li>Add content strings for the page to <a href="https://github.com/EOLWD/pfml/tree/master/portal/src/locales/app/en-US.js"><code>src/locales/app/en-US.js</code></a>.</li>
-<li>Add a test file for the page (and for any new components) to <a href="https://github.com/EOLWD/pfml/tree/master/portal/tests/"><code>tests</code></a></li>
+<li>Each time you add a new page, add a new route to <a href="https://github.com/EOLWD/pfml/tree/main/portal/src/routes.js"><code>src/routes.js</code></a>.</li>
+<li>Add content strings for the page to <a href="https://github.com/EOLWD/pfml/tree/main/portal/src/locales/app/en-US.js"><code>src/locales/app/en-US.js</code></a>.</li>
+<li>Add a test file for the page (and for any new components) to <a href="https://github.com/EOLWD/pfml/tree/main/portal/tests/"><code>tests</code></a></li>
 </ol>
 <h3 id="question-pages">Question Pages</h3>
 <p>We use a <a href="https://statecharts.github.io/">state machine</a> to control routing between question pages in a flow. The library we use behind the scenes for this is <a href="https://xstate.js.org/docs/">XState</a>.</p>
 <ol>
-<li>Add a new state node for the route to <a href="https://github.com/EOLWD/pfml/tree/master/portal/src/flows/claimant.js"><code>src/flows/claimaint.js</code></a>, and add a <code>CONTINUE</code> transition. Read more on XState configs <a href="https://xstate.js.org/docs/guides/transitions.html#machine-transition-method">here</a>.</li>
+<li>Add a new state node for the route to <a href="https://github.com/EOLWD/pfml/tree/main/portal/src/flows/claimant.js"><code>src/flows/claimaint.js</code></a>, and add a <code>CONTINUE</code> transition. Read more on XState configs <a href="https://xstate.js.org/docs/guides/transitions.html#machine-transition-method">here</a>.</li>
 <li>Within a <code>meta</code> object on the state node, add a <code>step</code> and <code>fields</code> properties. The <code>fields</code> value should contain the field paths for every field that may be displayed on the question page. This is important because this array is what's used for determining what validation errors should display on the question page, and also is used for identifying when a step on the checklist is In Progress or Completed.</li>
 <li>If the page should display validation issues for specific rules, add an array of <code>applicableRules</code> to the state's <code>meta</code> object.</li>
 <li>If routing to or from the page is conditional, you'll need to define <code>guards</code> that determine the state. Read more on xstate guards <a href="https://xstate.js.org/docs/guides/guards.html#guards-condition-functions">here</a>.</li>
-<li>Add a test state for the new page to the <code>machineTests</code> object in <a href="https://github.com/EOLWD/pfml/tree/master/portal/tests/flows/claimant.test.js"><code>tests/flows/claimant.test.js</code></a></li>
+<li>Add a test state for the new page to the <code>machineTests</code> object in <a href="https://github.com/EOLWD/pfml/tree/main/portal/tests/flows/claimant.test.js"><code>tests/flows/claimant.test.js</code></a></li>
 <li>If routing is conditional, add items with appropriate data to the <code>testData</code> array.</li>
 </ol>
 <h3 id="auth-pages-routing">Auth Pages Routing</h3>
-<p>Similar to Question Pages, pages used in the Auth flow are also in the <a href="https://github.com/EOLWD/pfml/tree/master/portal/src/pages/"><code>/portal/src/pages</code></a> subdirectory, but routing is controlled using the state machine.</p>
+<p>Similar to Question Pages, pages used in the Auth flow are also in the <a href="https://github.com/EOLWD/pfml/tree/main/portal/src/pages/"><code>/portal/src/pages</code></a> subdirectory, but routing is controlled using the state machine.</p>
 <ol>
-<li>Add a new state for the route to <a href="https://github.com/EOLWD/pfml/tree/master/portal/src/flows/auth.js"><code>src/flows/auth.js</code></a>. Include a <code>CONTINUE</code> transition.</li>
+<li>Add a new state for the route to <a href="https://github.com/EOLWD/pfml/tree/main/portal/src/flows/auth.js"><code>src/flows/auth.js</code></a>. Include a <code>CONTINUE</code> transition.</li>
 <li>If routing to or from the page is conditional, you'll need to define <code>guard</code>s that determine the state. Read more on xstate guards <a href="https://xstate.js.org/docs/guides/guards.html#guards-condition-functions">here</a>.</li>
-<li>Add a test state for the new page to the <code>machineTests</code> object in <a href="https://github.com/EOLWD/pfml/tree/master/portal/tests/flows/auth.test.js"><code>tests/flows/auth.test.js</code></a></li>
+<li>Add a test state for the new page to the <code>machineTests</code> object in <a href="https://github.com/EOLWD/pfml/tree/main/portal/tests/flows/auth.test.js"><code>tests/flows/auth.test.js</code></a></li>
 <li>If routing is conditional, add items with appropriate data to the <code>testData</code> array.</li>
 </ol>
 <h2 id="nextconfigjs"><code>next.config.js</code></h2>
