@@ -2,7 +2,7 @@
 
 Deployments to all environments are managed through GitHub Actions.
 
-The `master` branch is automatically deployed to `test` as pull requests are merged into it.
+The `main` branch is automatically deployed to `test` as pull requests are merged into it.
 
 Unlike deployments to `test`, all deployments to `training, performance, stage` and `prod` are triggered manually.
 
@@ -25,7 +25,7 @@ Today, these branches serve an archival role: they record what commit was deploy
 
 | Name of deployment branch | Corresponding env |
 | ------------------------- | ----------------- |
-| master                    | test              |
+| main                      | test              |
 | deploy/api/stage          | stage             |
 | deploy/api/prod           | prod              |
 | deploy/api/performance    | performance       |

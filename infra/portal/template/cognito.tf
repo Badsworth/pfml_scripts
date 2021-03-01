@@ -19,8 +19,12 @@ resource "aws_cognito_user_pool" "claimants_pool" {
     # Use this SES email to send cognito emails. If we're not using SES for emails then use null
     source_arn            = var.ses_email_address == "" ? null : "arn:aws:ses:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:identity/${var.ses_email_address}"
     email_sending_account = var.ses_email_address == "" ? "COGNITO_DEFAULT" : "DEVELOPER"
-    # Customize the name that users see in the "From" section of their inbox, so that it's clearer who the email is from
-    from_email_address = var.ses_email_address == "" ? null : "\"Mass.gov\" <${var.ses_email_address}>"
+    # Customize the name that users see in the "From" section of their inbox, so that it's clearer who the email is from.
+    # This name also needs to be updated manually in the Cognito console for each environment's Advanced Security emails.
+    #
+    # Note that this name should _also_ match what is being sent by ServiceNow. If they ever change their sender name
+    # or we change ours, we need coordination to keep them in sync and provide a consistent user experience.
+    from_email_address = var.ses_email_address == "" ? null : "\"Department of Family and Medical Leave\" <${var.ses_email_address}>"
   }
 
   sms_authentication_message = "Your authentication code is {####}. "

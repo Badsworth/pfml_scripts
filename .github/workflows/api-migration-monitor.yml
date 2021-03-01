@@ -1,5 +1,5 @@
 name: API Migration Conflict Monitor
-# Listens for pushes to master with updated migration files, and re-triggers Alembic conflict checks for any PR that originally needed to run them
+# Listens for pushes to main with updated migration files, and re-triggers Alembic conflict checks for any PR that originally needed to run them
 # Potential future refinements:
 #   - Extract step scripts to .sh files or rewrite in JS
 #   - Pagination for response bodies > 100 entities
@@ -8,7 +8,7 @@ name: API Migration Conflict Monitor
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - api/massgov/pfml/db/migrations/versions/**
 
@@ -24,7 +24,7 @@ jobs:
     steps:
       - name: get all branches with open PRs
         run: |
-          PARAMS="state=open&base=master&sort=created&direction=desc&per_page=100"
+          PARAMS="state=open&base=main&sort=created&direction=desc&per_page=100"
           curl -Ls GET "${{ env.github_api }}/pulls?$PARAMS" \
           -H 'Authorization: Token ${{secrets.GITHUB_TOKEN}}' \
           -H 'Accept: application/vnd.github.v3+json' | \

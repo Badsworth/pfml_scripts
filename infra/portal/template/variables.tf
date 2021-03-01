@@ -35,7 +35,7 @@ variable "environment_name" {
 variable "ses_email_address" {
   description = "Email address used to send Cognito emails. Note that in order to use it at production scale or to send to out-of-domain email addresses we'll need to manually request that the SES email be removed from the SES sandbox"
   type        = string
-  default     = "noreplypfml@mass.gov"
+  default     = "PFML_DoNotReply@eol.mass.gov"
 }
 
 variable "enforce_cloudfront_rate_limit" {

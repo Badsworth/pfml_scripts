@@ -41,7 +41,7 @@ for COMPONENT in api portal; do
 
     released=$(make -s -C $COMPONENT whats-released-short |
                    sed -E "s/origin\/(deploy\/$COMPONENT\/)?//g" |
-                   sed -E 's/master/test/g' |
+                   sed -E 's/main/test/g' |
                    sed -E 's/(\*|:)/\|/g' |
                    sed -E "s/$VERSION_CAPTURE/$GITHUB_RELEASE_LINK_FORMAT/g" |
                    sed -E "s/$ENV_CAPTURE/$ENV_REPLACE$GITHUB_DEPLOYMENTS_FORMAT/g")

@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - main
 
 env:
   python-version: 3.8

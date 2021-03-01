@@ -8,10 +8,10 @@ on:
       version:
         required: false
         description: |
-          ⬆️️ Env to deploy to. For test deploys, select master or a feature branch.
+          ⬆️️ Env to deploy to. For test deploys, select main or a feature branch.
           For all other envs, use "deploy/portal/*".
           --------------------------------------
-          ⬇️ Tag or branch to be deployed. For deploys to test, leave blank to deploy master.
+          ⬇️ Tag or branch to be deployed. For deploys to test, leave blank to deploy main.
           For all other deploys, select an appropriate tag or feature branch.
         default: ''
       extraUatDeploy:
@@ -29,7 +29,7 @@ on:
 
   push:
     branches:
-      - master
+      - main
     paths:
       - "portal/**"
       - "!portal/__mocks__/**"
@@ -38,12 +38,16 @@ on:
       - "!portal/tests/**"
 
 env:
+  github_api: "https://api.github.com/repos/EOLWD/pfml"
+  workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  version_for_deploy: ${{ github.event.inputs.version || github.ref }}
+  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   nodeVersion: 12.x
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   terraformVersion: 0.13.6
   terraformBaseDir: ./infra/portal/environments/
   # Map branch name to environment name. This is used to set the portal_env variable below in combination with git refs.
-  refs/heads/master: test
+  refs/heads/main: test
   refs/heads/deploy/portal/stage: stage
   refs/heads/deploy/portal/prod: prod
   refs/heads/deploy/portal/performance: performance
@@ -120,25 +124,39 @@ jobs:
           git push -f origin HEAD
           echo "::set-output name=commit_hash::$commit_hash"
 
-
-  start-deployment-status:
-    name: Start deployment status
+  deploy-info:
+    name: Gather deploy info
     needs: update-the-deploy-branch
     runs-on: ubuntu-latest
     outputs:
-      deploy_id: ${{ steps.create-deployment.outputs.deployment_id }}
-
+      portal-env: ${{ steps.portal-env.outputs.portal-env }}
+      deployed-url: ${{ steps.deployed-url.outputs.deployed-url }}
     steps:
-      - name: Set portal-env Value
-        run: echo "portal-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
-
-      - name: Set deployed-url Value
+      - name: Set portal-env value
+        id: portal-env
         run: |
-          if [[ "${{ env.portal-env }}" == 'prod' ]]; then
-            echo "deployed-url=https://paidleave.mass.gov/" >> $GITHUB_ENV
+          echo "::set-output name=portal-env::${{ env[github.ref] || 'test' }}"
+
+      - name: Set deployed-url value
+        id: deployed-url
+        # steps cannot refer to an output from a previous step in the same job, so portal-env has to be calculated again
+        run: |
+          if [[ "${{ env[github.ref] || 'test' }}" == 'prod' ]]; then
+            echo "::set-output name=deployed-url::https://paidleave-api.mass.gov/api/docs/"
           else
-            echo "deployed-url=https://paidleave-${{ env.portal-env }}.mass.gov/" >> $GITHUB_ENV
+            echo "::set-output name=deployed-url::https://paidleave-api-${{ env[github.ref] || 'test' }}.mass.gov/api/docs/"
           fi
+
+  start-comms-github:
+    name: Start deploy comms (GitHub)
+    needs: [update-the-deploy-branch, deploy-info]
+    runs-on: ubuntu-latest
+    outputs:
+      deploy-id: ${{ steps.create-deployment.outputs.deployment_id }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - uses: chrnorm/deployment-action@releases/v1
         name: Create GitHub deployment
@@ -152,9 +170,71 @@ jobs:
           #       side-effects from happening off of the automated deployments.
           #
           token: "${{ github.token }}"
-          target_url: ${{ env.deployed-url }}
-          environment: "Portal (${{ env.portal-env }})"
+          target_url: ${{ needs.deploy-info.outputs.deployed-url }}
+          environment: "Portal (${{ needs.deploy-info.outputs.portal-env }})"
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
+  start-comms-slack:
+    name: Start deploy comms (Slack)
+    needs: [update-the-deploy-branch, deploy-info]
+    outputs:
+      subtitle: ${{ steps.choose_start_message.outputs.message }}
+    if: ${{ !contains(github.ref, 'main') }} # Mutes notifications for auto-deploys to test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set commit_details value
+        id: set-commit-details
+        run: |
+          echo "commit_details=$(git log --pretty=format:"<https://github.com/${{ github.repository }}/commit/${{needs.update-the-deploy-branch.outputs.commit_hash}}|%h %s>" -1 ${{needs.update-the-deploy-branch.outputs.commit_hash }})" >> $GITHUB_ENV
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Choose deployment start message
+        id: choose_start_message
+        env:
+          just_the_deploy: "<${{ env.workflow_self_link }}|build logs> | <https://github.com/EOLWD/pfml/commits/${{ env.version_for_deploy }}|commit history>"
+          with_release_notes: "<${{ env.workflow_self_link }}|build logs> | <https://github.com/EOLWD/pfml/releases/tag/${{ env.version_for_deploy }}|release notes>"
+        run: |
+          if [[ ${{ env.version_for_deploy }} == portal/* ]]; then
+            echo "::set-output name=message::${{ env.with_release_notes }}"
+          else
+            echo "::set-output name=message::${{ env.just_the_deploy }}"
+          fi
+
+      - name: Post to Slack
+        run: |
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "attachments": [{
+              "title": "Portal ${{ needs.deploy-info.outputs.portal-env }} deployment #${{ github.run_number }} was started\n${{ steps.choose_start_message.outputs.message }}",
+              "color": "warning",
+              "fields": [
+                { "title": "started by", "value": "`${{ github.actor }}`", "short": true },
+                { "title": "releasing", "value": "`${{ env.version_for_deploy }}`", "short": true },
+                { "title": "commit details", "value": "`${{ env.commit_details }}`" }
+              ]
+            }]
+          }' https://slack.com/api/chat.postMessage)
+
 
   extra-uat-deploy:
     if: contains(github.ref, 'deploy/portal/stage') && github.event.inputs.extraUatDeploy == 'true'
@@ -170,7 +250,7 @@ jobs:
         env:
           GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          UAT_DEPLOYMENT_VERSION: ${{ github.event.inputs.version || 'master' }}
+          UAT_DEPLOYMENT_VERSION: ${{ github.event.inputs.version || 'main' }}
           WORKFLOW_NAME: "portal-deploy.yml"
         run: |
           echo "*** A Portal staging deploy is now in progress. Enqueuing an extra deployment to UAT... ***"
@@ -181,7 +261,7 @@ jobs:
           echo "Done."
 
   extra-performance-deploy:
-    if: contains(github.ref, 'deploy/portal/performance') && github.event.inputs.extraPerformanceDeploy == 'true'
+    if: contains(github.ref, 'deploy/portal/stage') && github.event.inputs.extraPerformanceDeploy == 'true'
     name: (Stage) Extra Performance deploy
     needs: update-the-deploy-branch
     runs-on: ubuntu-latest
@@ -194,7 +274,7 @@ jobs:
         env:
           GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          PERFORMANCE_DEPLOYMENT_VERSION: ${{ github.event.inputs.version || 'master' }}
+          PERFORMANCE_DEPLOYMENT_VERSION: ${{ github.event.inputs.version || 'main' }}
           WORKFLOW_NAME: "portal-deploy.yml"
         run: |
           echo "*** A PORTAL staging deploy is now in progress. Enqueuing an extra deployment to Performance... ***"
@@ -207,17 +287,11 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: update-the-deploy-branch
+    needs: [update-the-deploy-branch, deploy-info]
     steps:
       - uses: actions/checkout@v2
         with:
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-
-      - name: Set portal_env Value
-        # see https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
-        # github.ref will give the branch or tag reference that triggered the workflow
-        # e.g refs/heads/master or refs/heads/deploy/portal/stage
-        run: echo "portal_env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -237,11 +311,11 @@ jobs:
         run: npm ci --prefix portal
 
       - name: Build
-        run: npm run build:${{ env.portal_env }} --prefix portal
+        run: npm run build:${{ needs.deploy-info.outputs.portal-env }} --prefix portal
 
       - name: Sync S3 Bucket
         env:
-          BUCKET_NAME: massgov-pfml-${{ env.portal_env }}-portal-site-builds
+          BUCKET_NAME: massgov-pfml-${{ needs.deploy-info.outputs.portal-env }}-portal-site-builds
           RELEASE_HASH: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
           NEXT_OUTPUT_DIR: ./portal/out
         run: |
@@ -251,7 +325,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [update-the-deploy-branch, deploy]
+    needs: [update-the-deploy-branch, deploy, deploy-info]
     env:
       TF_VAR_cloudfront_origin_path: /${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_CLI_ARGS: '-lock-timeout=120s'
@@ -260,12 +334,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-
-      - name: Set portal_env Value
-        # see https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
-        # github.ref will give the branch or tag reference that triggered the workflow
-        # e.g refs/heads/master or refs/heads/deploy/portal/stage
-        run: echo "portal_env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -284,22 +352,22 @@ jobs:
       - name: Terraform Init
         id: terraform_init
         run: terraform init
-        working-directory: ${{ env.terraformBaseDir }}${{ env.portal_env }}
+        working-directory: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.portal-env }}
 
       - name: Terraform Plan with new Cloudfront path
         id: terraform_plan
         run: terraform plan -out=plan.tfplan
-        working-directory: ${{ env.terraformBaseDir }}${{ env.portal_env }}
+        working-directory: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.portal-env }}
 
       - name: Terraform Apply from execution plan
         id: terraform_apply
         run: terraform apply plan.tfplan
-        working-directory: ${{ env.terraformBaseDir }}${{ env.portal_env }}
+        working-directory: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.portal-env }}
 
   invalidate-cloudfront:
     name: Invalidate Cloudfront Cache
     runs-on: ubuntu-latest
-    needs: [update-the-deploy-branch, deploy, release]
+    needs: [update-the-deploy-branch, deploy, release, deploy-info]
     env:
       TF_CLI_ARGS: '-lock-timeout=120s'
 
@@ -307,12 +375,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-
-      - name: Set portal_env Value
-        # see https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
-        # github.ref will give the branch or tag reference that triggered the workflow
-        # e.g refs/heads/master or refs/heads/deploy/portal/stage
-        run: echo "portal_env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -330,7 +392,7 @@ jobs:
           tf_actions_version: ${{ env.terraformVersion }}
           tf_actions_subcommand: init
           tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ env.portal_env }}
+          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.portal-env }}
 
       - name: Terraform Output
         id: terraform
@@ -338,7 +400,7 @@ jobs:
         with:
           tf_actions_version: ${{ env.terraformVersion }}
           tf_actions_subcommand: output
-          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ env.portal_env }}
+          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.portal-env }}
         env:
           TF_CLI_ARGS: ''
 
@@ -350,43 +412,48 @@ jobs:
           DISTRIBUTION_ID=$(echo $TF_OUTPUT | jq -r '.cloudfront_distribution_id.value')
           aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 
-  update-deployment-status:
-    name: Update deployment status
-    needs: [start-deployment-status, invalidate-cloudfront]
+  postdeploy-info:
+    name: Finalize deployment state
+    needs: [invalidate-cloudfront]
+    if: always()
     runs-on: ubuntu-latest
-    if: always() && needs.start-deployment-status.result == 'success'
-
+    outputs:
+      deploy-state: ${{ steps.deploy-state.outputs.deploy-state }}
     steps:
-      - name: Set deploy-state Value to true
-        run: |
-          if [[ $DEPLOY_RESULT == 'success' ]]
-          then
-            echo "deploy-state=success" >> $GITHUB_ENV
-          else
-            echo "deploy-state=failure" >> $GITHUB_ENV
-          fi
+      - name: Set deploy-state value
+        id: deploy-state
         env:
-          DEPLOY_RESULT: ${{ needs.invalidate-cloudfront.result }}
-
-      - name: Set portal-env Value
-        run: echo "portal-env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
-
-      - name: Set deployed-url Value
+          CLOUDFRONT_RESULT: ${{ needs.invalidate-cloudfront.result }}
+        # the below shellcode must account for both 'cancelled' state, when a running job is cancelled while running
+        # and 'skipped' state, when a job was skipped because a prior job was cancelled or did not need to be run
+        # for brevity both are reported as 'cancelled'; portal releases are not run conditionally
         run: |
-          if [[ "${{ env.portal-env }}" == 'prod' ]]; then
-            echo "deployed-url=https://paidleave.mass.gov/" >> $GITHUB_ENV
-          else
-            echo "deployed-url=https://paidleave-${{ env.portal-env }}.mass.gov/" >> $GITHUB_ENV
+          if [[ $CLOUDFRONT_RESULT == 'cancelled' ]] || [[ $CLOUDFRONT_RESULT == 'skipped' ]]; then
+            echo "::set-output name=deploy-state::inactive"
           fi
 
+          if [[ $CLOUDFRONT_RESULT == 'success' ]]; then
+            echo "::set-output name=deploy-state::success"
+          fi
+
+          if [[ $CLOUDFRONT_RESULT == 'failure' ]]; then
+            echo "::set-output name=deploy-state::failure"
+          fi
+
+  finish-comms-github:
+    name: Finish deploy comms (GitHub)
+    needs: [start-comms-github, deploy-info, postdeploy-info]
+    runs-on: ubuntu-latest
+    if: always() && needs.start-comms-github.result == 'success'
+    steps:
       - uses: chrnorm/deployment-status@releases/v1
         with:
           token: ${{ github.token }}
-          # This should match target_url in start-deployment-status.
+          # This should match target_url in start-comms-github.
           # see: https://github.com/chrnorm/deployment-status/issues/13#issuecomment-734731491
-          environment_url: ${{ env.deployed-url }}
-          state: ${{ env.deploy-state }}
-          deployment_id: ${{ needs.start-deployment-status.outputs.deploy_id }}
+          environment_url: ${{ needs.deploy-info.outputs.deployed-url }}
+          state: ${{ needs.postdeploy-info.outputs.deploy-state }}
+          deployment_id: ${{ needs.start-comms-github.outputs.deploy-id }}
 
       - name: Update release page
         uses: benc-uk/workflow-dispatch@v1
@@ -394,7 +461,65 @@ jobs:
         with:
           workflow: GH Pages deploy
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          ref: master
+          ref: main
+
+  finish-comms-slack:
+    name: Finish deploy comms (Slack)
+    needs: [start-comms-slack, deploy-info, postdeploy-info]
+    runs-on: ubuntu-latest
+    if: always() && needs.start-comms-slack.result == 'success' && !contains(github.ref, 'main') # Mutes notifications for auto-deploys to test
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Choose Slackbot message
+        id: choose_finish_message
+        env:
+          deployment_success: "Portal ${{ needs.deploy-info.outputs.portal-env }} deployment #${{ github.run_number }} succeeded"
+          deployment_failure: "Portal ${{ needs.deploy-info.outputs.portal-env }} deployment #${{ github.run_number }} failed"
+          deployment_cancelled: "Portal ${{ needs.deploy-info.outputs.portal-env }} deployment #${{ github.run_number }} was cancelled"
+        run: |
+          if [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'success' ]]; then
+            echo "::set-output name=message::${{ env.deployment_success }}"
+            echo "::set-output name=color::good"
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'inactive' ]]; then
+            echo "::set-output name=message::${{ env.deployment_cancelled }}"
+            echo "::set-output name=color::#35373b"
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'failure' ]]; then
+            echo "::set-output name=message::${{ env.deployment_failure }}"
+            echo "::set-output name=color::danger"
+          else
+            echo "::set-output name=message::${{ env.deployment_failure }}"
+            echo "::set-output name=color::#2767cf"
+          fi
+
+      - name: Post to Slack
+        run: |
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "attachments": [{
+              "title": "${{ steps.choose_finish_message.outputs.message }}\n${{ needs.start-comms-slack.outputs.subtitle }}",
+              "color": "${{ steps.choose_finish_message.outputs.color }}",
+              "fields": [
+                { "title": "started by", "value": "`${{ github.actor }}`", "short": true },
+                { "title": "released", "value": "`${{ env.version_for_deploy }}`", "short": true },
+              ]
+            }]
+          }' https://slack.com/api/chat.postMessage)
 
   end-to-end:
     name: End-to-End Test Deployment

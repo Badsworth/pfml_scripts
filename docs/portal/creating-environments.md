@@ -23,7 +23,7 @@ Each environment will have its own GitHub branch that will deploy when changes a
 on:
   push:
     branches:
-      - master
+      - main
       - deploy/<<environment_name>>
 ```
 
@@ -33,7 +33,7 @@ and environment variables:
 env:
   # ...
   # map branch name to environment name
-  refs/heads/master: test
+  refs/heads/main: test
   refs/heads/deploy/<<environment_name>>: <<environment_name>>
 ```
 

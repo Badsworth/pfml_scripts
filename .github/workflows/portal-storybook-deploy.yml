@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - main
     paths:
       - "portal/**"
       - "!portal/__mocks__/**"
@@ -17,10 +17,11 @@ on:
 env:
   nodeVersion: 12.x
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   terraformVersion: 0.13.6
   terraformBaseDir: ./infra/portal/environments/
   # Map branch name to environment name. This is used to set the portal_env variable below in combination with git refs.
-  refs/heads/master: test
+  refs/heads/main: test
 
 jobs:
   deploy:
@@ -32,7 +33,7 @@ jobs:
       - name: Set portal_env Value
         # see https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
         # github.ref will give the branch or tag reference that triggered the workflow
-        # e.g refs/heads/master or refs/heads/deploy/portal/stage
+        # e.g refs/heads/main or refs/heads/deploy/portal/stage
         run: echo "portal_env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
@@ -62,3 +63,36 @@ jobs:
         run: |
           aws s3 sync $OUTPUT_DIR s3://$BUCKET_NAME/ --exclude "*.html" --cache-control max-age=31536000,public &&
           aws s3 sync $OUTPUT_DIR s3://$BUCKET_NAME/ --exclude "*" --include "*.html" --cache-control s-maxage=86400,max-age=0,must-revalidate
+
+  slackbot-if-failed:
+    needs: deploy
+    if: failure()
+    name: Post to Slack if deploy failed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Post to Slack
+        run: |
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "attachments": [{
+              "text": "📚 Storybook deploy #${{ github.run_number }} failed.\n<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Please see build logs.>",
+              "color": "danger"
+            }]
+          }' https://slack.com/api/chat.postMessage)
