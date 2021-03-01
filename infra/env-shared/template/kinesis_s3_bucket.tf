@@ -1,10 +1,10 @@
-resource "aws_s3_bucket" "kinesis_dead_letter_drop" {
-  bucket = "massgov-pfml-${var.environment_name}-kinesis-dead-letter-drop"
+resource "aws_s3_bucket" "smx_kinesis_firewall_ingest" {
+  bucket = "massgov-pfml-${var.environment_name}-smx-kinesis-firewall-ingest"
 
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
     public      = "no"
-    Name        = "pfml-${var.environment_name}-kinesis-dead-letter-drop"
+    Name        = "pfml-${var.environment_name}-smx-kinesis-firewall-ingest"
   })
 
   server_side_encryption_configuration {
@@ -17,8 +17,8 @@ resource "aws_s3_bucket" "kinesis_dead_letter_drop" {
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "kinesis_dead_letter_drop" {
-  bucket = aws_s3_bucket.kinesis_dead_letter_drop.id
+resource "aws_s3_bucket_public_access_block" "smx_kinesis_firewall_ingest" {
+  bucket = aws_s3_bucket.smx_kinesis_firewall_ingest.id
 
   block_public_acls       = true
   block_public_policy     = true

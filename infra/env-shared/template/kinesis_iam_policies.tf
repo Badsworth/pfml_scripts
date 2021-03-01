@@ -6,7 +6,7 @@
 data "aws_iam_policy_document" "kinesis_aws_waf_policy" {
 
   depends_on = [
-    aws_s3_bucket.kinesis_dead_letter_drop
+    aws_s3_bucket.smx_kinesis_firewall_ingest
   ]
 
   # S3 permissions
@@ -21,8 +21,8 @@ data "aws_iam_policy_document" "kinesis_aws_waf_policy" {
     ]
 
     resources = [
-      aws_s3_bucket.kinesis_dead_letter_drop.arn,
-      "${aws_s3_bucket.kinesis_dead_letter_drop.arn}/*"
+      aws_s3_bucket.smx_kinesis_firewall_ingest.arn,
+      "${aws_s3_bucket.smx_kinesis_firewall_ingest.arn}/*"
     ]
   }
 
@@ -46,7 +46,7 @@ data "aws_iam_policy_document" "kinesis_aws_waf_policy" {
     condition {
       test     = "StringLike"
       variable = "kms:EncryptionContext:aws:s3:arn"
-      values   = ["${aws_s3_bucket.kinesis_dead_letter_drop.arn}/*"]
+      values   = ["${aws_s3_bucket.smx_kinesis_firewall_ingest.arn}/*"]
     }
   }
   # Lambda Permissions

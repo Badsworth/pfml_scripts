@@ -5,33 +5,19 @@ data "aws_ssm_parameter" "newrelic-insert-api-key" {
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "aws_waf" {
-  name        = "aws-waf-logs-${var.environment_name}-firewall-to-newrelic"
-  destination = "http_endpoint"
+  name        = "aws-waf-logs-${var.environment_name}-kinesis-to-s3"
+  destination = "extended_s3"
 
-  s3_configuration {
-    role_arn           = aws_iam_role.kinesis_aws_waf_role.arn
-    bucket_arn         = aws_s3_bucket.kinesis_dead_letter_drop.arn
-    buffer_size        = 5
-    buffer_interval    = 300
-    compression_format = "GZIP"
-  }
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.kinesis_aws_waf_role.arn
+    bucket_arn = aws_s3_bucket.smx_kinesis_firewall_ingest.arn
 
-  http_endpoint_configuration {
-    url                = "https://aws-api.newrelic.com/firehose/v1"
-    name               = "New Relic"
-    access_key         = data.aws_ssm_parameter.newrelic-insert-api-key.value
-    buffering_size     = 1
-    buffering_interval = 60
-    role_arn           = aws_iam_role.kinesis_aws_waf_role.arn
-    s3_backup_mode     = "FailedDataOnly"
-
-    request_configuration {
-      content_encoding = "GZIP"
-    }
     processing_configuration {
       enabled = true
+
       processors {
         type = "Lambda"
+
         parameters {
           parameter_name  = "LambdaArn"
           parameter_value = aws_lambda_function.scrub_ip_addresses_lambda.arn
