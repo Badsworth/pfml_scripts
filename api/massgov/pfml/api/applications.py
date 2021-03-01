@@ -709,36 +709,28 @@ def payment_preference_submit(application_id: str) -> Response:
             if existing_application.payment_preference:
                 try:
                     submit_payment_preference(existing_application, db_session)
-                    existing_application.has_submitted_payment_preference = True
-                    db_session.add(existing_application)
-                    db_session.commit()
-                    db_session.refresh(existing_application)
-
-                    logger.info("payment_preference_submit success", extra=log_attributes)
-
-                    return response_util.success_response(
-                        message="Payment Preference for application {} submitted without errors".format(
-                            existing_application.application_id
-                        ),
-                        data=ApplicationResponse.from_orm(existing_application).dict(
-                            exclude_none=True
-                        ),
-                        status_code=201,
-                    ).to_api_response()
-                except ValueError as ve:
+                except Exception:
                     logger.warning(
                         "payment_preference_submit failure - failure submitting payment preference to claims processing system",
                         extra=log_attributes,
                         exc_info=True,
                     )
-                    return response_util.error_response(
-                        status_code=BadRequest,
-                        message=str(ve),
-                        errors=[response_util.custom_issue("fineos_client", str(ve))],
-                        data=ApplicationResponse.from_orm(existing_application).dict(
-                            exclude_none=True
-                        ),
-                    ).to_api_response()
+                    raise
+
+                existing_application.has_submitted_payment_preference = True
+                db_session.add(existing_application)
+                db_session.commit()
+                db_session.refresh(existing_application)
+
+                logger.info("payment_preference_submit success", extra=log_attributes)
+
+                return response_util.success_response(
+                    message="Payment Preference for application {} submitted without errors".format(
+                        existing_application.application_id
+                    ),
+                    data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+                    status_code=201,
+                ).to_api_response()
             else:
                 logger.warning(
                     "payment_preference_submit failure - failure saving payment preference to database",

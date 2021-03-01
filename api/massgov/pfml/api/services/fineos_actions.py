@@ -880,20 +880,18 @@ def build_payment_preference(
 def submit_payment_preference(
     application: Application, db_session: massgov.pfml.db.Session
 ) -> massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse:
-    try:
-        fineos = massgov.pfml.fineos.create_client()
-        fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
-        if application.has_mailing_address and application.mailing_address:
-            fineos_payment_addr: Optional[
-                massgov.pfml.fineos.models.customer_api.CustomerAddress
-            ] = build_customer_address(application.mailing_address)
-        else:
-            fineos_payment_addr = None
-        fineos_payment_preference = build_payment_preference(application, fineos_payment_addr)
-        return fineos.add_payment_preference(fineos_user_id, fineos_payment_preference)
+    fineos = massgov.pfml.fineos.create_client()
+    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
 
-    except massgov.pfml.fineos.FINEOSClientError:
-        raise ValueError("FINEOS Client Exception")
+    if application.has_mailing_address and application.mailing_address:
+        fineos_payment_addr: Optional[
+            massgov.pfml.fineos.models.customer_api.CustomerAddress
+        ] = build_customer_address(application.mailing_address)
+    else:
+        fineos_payment_addr = None
+
+    fineos_payment_preference = build_payment_preference(application, fineos_payment_addr)
+    return fineos.add_payment_preference(fineos_user_id, fineos_payment_preference)
 
 
 def download_document(
