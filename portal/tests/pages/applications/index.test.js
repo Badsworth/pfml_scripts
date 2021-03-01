@@ -61,15 +61,10 @@ describe("Applications", () => {
       render();
     });
 
-    it("visually hides the page title", () => {
-      expect(wrapper.find("Title").prop("hidden")).toBe(true);
-    });
-
     it("renders a heading for the started applications", () => {
       expect(wrapper.find("Heading")).toMatchInlineSnapshot(`
         <Heading
           level="2"
-          size="1"
         >
           In-progress applications
         </Heading>
@@ -89,15 +84,10 @@ describe("Applications", () => {
       render();
     });
 
-    it("visually hides the page title", () => {
-      expect(wrapper.find("Title").prop("hidden")).toBe(true);
-    });
-
     it("renders a heading for the completed applications", () => {
       expect(wrapper.find("Heading")).toMatchInlineSnapshot(`
         <Heading
           level="2"
-          size="1"
         >
           Submitted applications
         </Heading>

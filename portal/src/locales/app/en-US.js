@@ -648,7 +648,7 @@ const pages = {
     inProgressHeading: "In-progress applications",
     noClaims: "You don’t have any applications yet.",
     submittedHeading: "Submitted applications",
-    title: "$t(shared.dashboardTitles.view)",
+    title: "Applications",
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:
       "Our Contact Center staff will review your documents for {{absence_id}}.",

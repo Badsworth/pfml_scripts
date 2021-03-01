@@ -37,7 +37,7 @@ export const Index = (props) => {
       )}
 
       <DashboardNavigation activeHref={appLogic.portalFlow.pathname} />
-      <Title hidden={hasClaims}>{t("pages.applications.title")}</Title>
+      <Title>{t("pages.applications.title")}</Title>
 
       {!hasClaims && <p>{t("pages.applications.noClaims")}</p>}
 
@@ -46,7 +46,7 @@ export const Index = (props) => {
           <div className="measure-6">
             <Lead>{t("pages.applications.claimsReflectPortal")}</Lead>
           </div>
-          <Heading level="2" size="1">
+          <Heading level="2">
             {t("pages.applications.inProgressHeading")}
           </Heading>
           {claims.inProgress.map((claim, index) => {
@@ -64,7 +64,7 @@ export const Index = (props) => {
 
       {hasCompletedClaims && (
         <React.Fragment>
-          <Heading level="2" size="1">
+          <Heading level="2">
             {t("pages.applications.submittedHeading")}
           </Heading>
           {claims.completed.map((claim, index) => {
