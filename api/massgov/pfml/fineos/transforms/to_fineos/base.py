@@ -1,94 +1,134 @@
-import abc
 from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
-
-from pydantic import BaseModel, Field
+from typing import Any, Dict, Iterable, List, Optional
 
 from massgov.pfml.fineos.models.group_client_api import EFormAttribute, ModelEnum
 
 
-# TODO use EForm from group_client_api model here
-class EFormBody(BaseModel):
-    eformType: str = Field(
-        None, description="Name of the EForm document type", min_length=0, max_length=200
-    )
-    eformId: Optional[int]
-    eformAttributes: List[EFormAttribute] = Field(None, description="An array of EForm attributes.")
+class EFormBody:
+    def __init__(self, eformType, eformAttributes):
+        self.eformType: str = eformType
+        self.eformAttributes: List[dict] = eformAttributes
 
 
-class AbstractTransform(abc.ABC, metaclass=abc.ABCMeta):
-    """ Base class that defines interface for transformations """
+class EFormAttributeBuilder:
+    """Base class for eForm attribute builders. Subclasses can define mappings for converting
+    arbitrary objects into EFormAttributes, including any logic required for generating suffixes
+    and adding static EFormAttribute values to every entry.
+    """
 
-    @classmethod
-    @abc.abstractmethod
-    def to_fineos(cls, api_model: BaseModel) -> Any:
-        """A method to transform a model into a FINEOS Model ."""
-        pass
-
-
-class TransformEformAttributes:
-
-    ATTRIBUTE_MAP: Dict[str, Dict[str, str]] = {}
+    ATTRIBUTE_MAP: Dict[str, Dict[str, Any]] = {}
     """ Example map:
     {
-        'pythonModelKey': {'name': 'EformAttribute.name', 'type': 'EformAttribute.type'}
+        'pythonModelKey': {'name': 'EFormAttribute.name', 'type': 'EFormAttribute.type'}
     }
     """
 
-    ADDITIONAL_OBJECT: EFormAttribute
+    # Static attribute value that should be added for all entries except the last. It won't be added
+    # for the final entry in an eform.
+    JOINING_ATTRIBUTE: Dict[str, Any] = {}
 
-    @classmethod
-    def to_attributes(cls, target: Any, suffix: Optional[str] = "") -> List[EFormAttribute]:
-        transformed = []
+    def __init__(self, target):
+        self.target = target
+
+    def get_suffix(self, definition: dict, count: int, suffix: str) -> str:
+        suffix_override = definition.get("suffixOverride")
+        return suffix_override(count) if suffix_override else suffix
+
+    def to_attribute(self, value: Any, definition: dict, count: int, suffix: str) -> EFormAttribute:
+        attribute_suffix = self.get_suffix(definition, count, suffix)
+        attribute_name = f"{definition['name']}{attribute_suffix}"
+        attribute_type = definition["type"]
+
+        if attribute_type == "enumValue":
+            # enumValue types need to be coerced into a ModelEnum instance
+            domain_name = definition["domainName"]
+            value = ModelEnum(domainName=domain_name, instanceValue=value)
+
+        attribute = EFormAttribute(name=attribute_name)
+        setattr(attribute, attribute_type, value)
+        return attribute
+
+    def to_attributes(self, count: int, suffix: str, is_last: bool) -> List[EFormAttribute]:
+        attributes = []
         """For examples of ATTRIBUTE_MAP check fineos/transforms/to_fineos/eforms/employer.py
         keys come from front end, values are what fineos expects
         """
-        for key in cls.ATTRIBUTE_MAP.keys():
-            attribute_name = f"{cls.ATTRIBUTE_MAP[key]['name']}{suffix}"
-            attribute_type = cls.ATTRIBUTE_MAP[key]["type"]
-            attribute = EFormAttribute(name=attribute_name)
-            attribute_value = getattr(target, key)
-            if attribute_type == "enumValue":
-                # enumValue types need to be coerced into a ModelEnum instance
-                domain_name = cls.ATTRIBUTE_MAP[key]["domainName"]
-                instance_value = attribute_value
-                attribute_value = ModelEnum(domainName=domain_name, instanceValue=instance_value)
-            elif isinstance(attribute_value, date):
-                attribute_value = attribute_value.strftime("%Y-%m-%d")
-            elif isinstance(attribute_value, Decimal):
-                """Decimals get turned into float because
-                fineos doesn't accept decimals
-                """
-                attribute_value = float(attribute_value)
-            setattr(attribute, attribute_type, attribute_value)
-            transformed.append(attribute)
+        for key, definition in self.ATTRIBUTE_MAP.items():
+            value = getattr(self.target, key)
+            attribute = self.to_attribute(value, definition, count, suffix)
+            attributes.append(attribute)
 
-        """Fineos will only display additional objects after we've selected
-        yes to an additional objects selection, ex: 'Will the employee receive any other wage replacement?'
-        if there's a suffix that means there's additional objects
-        this will ensure we've selected yes for the additional object
+        """For eForms with multiple entries FINEOS only displays multiple entries after answering
+        yes to a question about additional objects, ex: 'Will the employee receive any other wage replacement?'
+        Here we add any such attributes unless it's the last entry.
         """
-        if suffix:
-            attribute = cls.ADDITIONAL_OBJECT
-            attribute_name = f"{attribute.name}{suffix}"
-            attribute_value = attribute.enumValue
-            transformed.append(EFormAttribute(name=attribute_name, enumValue=attribute_value))
-        return transformed
+        if not is_last and len(self.JOINING_ATTRIBUTE.items()) > 0:
+            definition = self.JOINING_ATTRIBUTE
+            value = definition["instanceValue"]
+            attribute = self.to_attribute(value, definition, count, suffix)
+            attributes.append(attribute)
+
+        return attributes
+
+
+class EFormBuilder:
+    """Base class for eForm builder classes. Subclasses define logic for combining various pieces of data into
+    a EFormBody for sending to FINEOS.
+    """
 
     @classmethod
-    def list_to_attributes(
-        cls, targets: List[Any], always_add_suffix: Optional[bool] = False
+    def to_eform_attributes(
+        cls, targets: Iterable[EFormAttributeBuilder], always_add_suffix: Optional[bool] = False
     ) -> List[EFormAttribute]:
-        """Convert a list of objects to EFormAttributes
+        """Convert a list of EFormAttributeBuilders into EFormAttributes and apply suffixes to the names
+        as appropriate so they can be used to create an eform.
         always_add_suffix -- Optional boolean. If True then a suffix will always be added. If False a
         suffix will only be added for entries after targets[0]. Some eforms require an initial suffix and
         others require no initial suffix.
         """
-        transformed = []
+        attributes = []
+        targets = list(iter(targets))
+        last_index = len(targets) - 1
         for i, target in enumerate(targets):
             suffix = ""
             if i != 0 or always_add_suffix:
                 suffix = str(i + 1)
-            transformed.extend(cls.to_attributes(target=target, suffix=suffix))
-        return transformed
+            is_last = i == last_index
+            attributes.extend(target.to_attributes(i, suffix, is_last))
+        return attributes
+
+    @classmethod
+    def serialize_eform_attributes(cls, attributes: List[EFormAttribute]) -> List[Dict[str, Any]]:
+        """Convert EFormAttributes to a list of dictionaries which are ready to be serialized to JSON"""
+        serialized = []
+
+        for eformAttribute in attributes:
+            cleanedEformAttribute: Dict[str, Any] = {}
+            for key, value in dict(eformAttribute).items():
+                if value is not None and isinstance(value, ModelEnum):
+                    cleanedEformAttribute[key] = dict(value)
+                elif isinstance(value, date):
+                    # format dates for fineos
+                    cleanedEformAttribute[key] = value.isoformat()
+                elif isinstance(value, Decimal):
+                    """Decimals get turned into float because
+                    fineos doesn't accept decimals
+                    """
+                    cleanedEformAttribute[key] = float(value)
+                elif value is not None:
+                    cleanedEformAttribute[key] = value
+            if len(cleanedEformAttribute) > 1:
+                serialized.append(cleanedEformAttribute)
+
+        return serialized
+
+    @classmethod
+    def to_serialized_attributes(
+        cls, targets: Iterable[EFormAttributeBuilder], always_add_suffix: Optional[bool] = False
+    ) -> List[dict]:
+        """Convert a list of EFormAttributeBuilders into a dictionary of attributes ready to be serialized to a
+        JSON payload.
+        """
+        attributes = cls.to_eform_attributes(targets, always_add_suffix)
+        return cls.serialize_eform_attributes(attributes)

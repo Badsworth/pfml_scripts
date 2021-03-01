@@ -14,8 +14,6 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     VerificationFactory,
 )
-from massgov.pfml.fineos.models.group_client_api import EFormAttribute
-from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -821,57 +819,21 @@ class TestUpdateClaim:
 
         capture = massgov.pfml.fineos.mock_client.get_capture()
 
-        assert capture == [
-            ("get_outstanding_information", "fake-fineos-web-id", {"case_id": "NTN-100-ABS-01"}),
-            (
-                "create_eform",
-                "fake-fineos-web-id",
-                {
-                    "eform": EFormBody(
-                        eformType="Employer Response to Leave Request",
-                        eformId=None,
-                        eformAttributes=[
-                            EFormAttribute(
-                                name="Comment",
-                                booleanValue=None,
-                                dateValue=None,
-                                decimalValue=None,
-                                integerValue=None,
-                                stringValue="comment",
-                                enumValue=None,
-                            ),
-                            EFormAttribute(
-                                name="AverageWeeklyHoursWorked",
-                                booleanValue=None,
-                                dateValue=None,
-                                decimalValue=40,
-                                integerValue=None,
-                                stringValue=None,
-                                enumValue=None,
-                            ),
-                            EFormAttribute(
-                                name="EmployerDecision",
-                                booleanValue=None,
-                                dateValue=None,
-                                decimalValue=None,
-                                integerValue=None,
-                                stringValue="Approve",
-                                enumValue=None,
-                            ),
-                            EFormAttribute(
-                                name="Fraud1",
-                                booleanValue=None,
-                                dateValue=None,
-                                decimalValue=None,
-                                integerValue=None,
-                                stringValue="No",
-                                enumValue=None,
-                            ),
-                        ],
-                    ),
-                    "absence_id": "NTN-100-ABS-01",
-                },
-            ),
+        assert capture[0] == (
+            "get_outstanding_information",
+            "fake-fineos-web-id",
+            {"case_id": "NTN-100-ABS-01"},
+        )
+        assert capture[1][0] == "create_eform"
+        assert capture[1][1] == "fake-fineos-web-id"
+        assert capture[1][2]["absence_id"] == "NTN-100-ABS-01"
+        eform = capture[1][2]["eform"]
+        assert eform.eformType == "Employer Response to Leave Request"
+        assert eform.eformAttributes == [
+            {"name": "Comment", "stringValue": "comment"},
+            {"name": "AverageWeeklyHoursWorked", "decimalValue": 40.0},
+            {"name": "EmployerDecision", "stringValue": "Approve"},
+            {"name": "Fraud1", "stringValue": "No"},
         ]
 
     def test_error_received_when_no_outstanding_requirements_with_employer_update_claim_review(

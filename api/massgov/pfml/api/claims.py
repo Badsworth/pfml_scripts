@@ -24,7 +24,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministrator
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
-from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import TransformEmployerClaimReview
+from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EmployerClaimReviewEFormBuilder
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -125,7 +125,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
         complete_claim_review(fineos_web_id, fineos_absence_id)
         logger.info("Completed claim review", extra=log_attributes)
     else:
-        transformed_eform = TransformEmployerClaimReview.to_fineos(claim_request)
+        transformed_eform = EmployerClaimReviewEFormBuilder.build(claim_request)
         create_eform(fineos_web_id, fineos_absence_id, transformed_eform)
         logger.info("Created eform", extra=log_attributes)
 

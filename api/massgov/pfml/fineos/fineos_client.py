@@ -19,7 +19,6 @@ import requests
 import xmlschema
 
 import massgov.pfml.util.logging
-from massgov.pfml.fineos.models.group_client_api import ModelEnum
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
@@ -83,23 +82,6 @@ def fineos_document_empty_dates_to_none(response_json: dict) -> dict:
             response_json["receivedDate"] = None
 
     return response_json
-
-
-def serialize_eform_body(eform: EFormBody) -> List[dict]:
-    """Convert an EFormBody to a json-ready list"""
-    serialized = []
-
-    for eformAttribute in eform.eformAttributes:
-        cleanedEformAttribute = dict()
-        for key, value in dict(eformAttribute).items():
-            if value is not None and isinstance(value, ModelEnum):
-                cleanedEformAttribute[key] = dict(value)
-            elif value is not None:
-                cleanedEformAttribute[key] = value
-        if len(cleanedEformAttribute) > 1:
-            serialized.append(cleanedEformAttribute)
-
-    return serialized
 
 
 class FINEOSClient(client.AbstractFINEOSClient):
@@ -655,13 +637,12 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         encoded_eform_type = urllib.parse.quote(eform.eformType)
-        eform_json = serialize_eform_body(eform)
         try:
             self._group_client_api(
                 "POST",
                 f"groupClient/cases/{absence_id}/addEForm/{encoded_eform_type}",
                 user_id,
-                data=json.dumps(eform_json),
+                data=json.dumps(eform.eformAttributes),
             )
         except exception.FINEOSClientError as error:
             logger.error(
@@ -674,13 +655,12 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     def customer_create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         encoded_eform_type = urllib.parse.quote(eform.eformType)
-        eform_json = serialize_eform_body(eform)
 
         self._customer_api(
             "POST",
             f"customer/cases/{absence_id}/addEForm/{encoded_eform_type}",
             user_id,
-            data=json.dumps(eform_json),
+            data=json.dumps(eform.eformAttributes),
         )
 
     def get_case_occupations(

@@ -24,6 +24,7 @@ import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.applications.responses import DocumentResponse
+from massgov.pfml.api.models.common import PreviousLeave
 from massgov.pfml.api.util.response import Issue, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
@@ -37,7 +38,8 @@ from massgov.pfml.db.models.applications import (
 )
 from massgov.pfml.db.models.employees import Address, Claim, Country, Employer, PaymentMethod, User
 from massgov.pfml.fineos.exception import FINEOSNotFound
-from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EFormBody
+from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
+from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import PreviousLeavesEFormBuilder
 from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
 
 logger = logging.get_logger(__name__)
@@ -1003,3 +1005,15 @@ def create_eform(
     fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
     fineos_absence_id = get_fineos_absence_id_from_application(application)
     fineos.customer_create_eform(fineos_user_id, fineos_absence_id, eform)
+
+
+def create_other_leave_eform(application: Application, db_session: massgov.pfml.db.Session) -> None:
+    # Send previous leaves to fineos
+    if application.previous_leaves:
+        # Convert from DB models to API models because the API enum models are easier to serialize to strings
+        previous_leaves = map(
+            lambda leave: PreviousLeave.from_orm(leave), application.previous_leaves
+        )
+        eform = PreviousLeavesEFormBuilder.build(previous_leaves)
+        create_eform(application, db_session, eform)
+        logger.info("Created Other Leaves eform")

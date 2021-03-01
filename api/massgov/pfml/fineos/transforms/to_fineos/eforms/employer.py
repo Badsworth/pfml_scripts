@@ -1,13 +1,14 @@
 from itertools import chain
 
-from pydantic import BaseModel
-
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
-from massgov.pfml.fineos.models.group_client_api import EFormAttribute, ModelEnum
-from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody, TransformEformAttributes
+from massgov.pfml.fineos.transforms.to_fineos.base import (
+    EFormAttributeBuilder,
+    EFormBody,
+    EFormBuilder,
+)
 
 
-class TransformEmployerBenefit(TransformEformAttributes):
+class EmployerBenefitAttributeBuilder(EFormAttributeBuilder):
     ATTRIBUTE_MAP = {
         "benefit_amount_dollars": {"name": "Amount", "type": "decimalValue"},
         "benefit_amount_frequency": {"name": "Frequency", "type": "stringValue"},
@@ -16,26 +17,30 @@ class TransformEmployerBenefit(TransformEformAttributes):
         "benefit_type": {"name": "BenefitType", "type": "stringValue"},
     }
 
-    ADDITIONAL_OBJECT = EFormAttribute(
-        name="ReceiveWageReplacement",
-        enumValue=ModelEnum(domainName="PleaseSelectYesNoUnknown", instanceValue="Yes"),
-    )
+    JOINING_ATTRIBUTE = {
+        "name": "ReceiveWageReplacement",
+        "type": "enumValue",
+        "domainName": "PleaseSelectYesNoUnknown",
+        "instanceValue": "Yes",
+    }
 
 
-class TransformPreviousLeave(TransformEformAttributes):
+class PreviousLeaveAttributeBuilder(EFormAttributeBuilder):
     ATTRIBUTE_MAP = {
         "leave_start_date": {"name": "PastLeaveStartDate", "type": "dateValue"},
         "leave_end_date": {"name": "PastLeaveEndDate", "type": "dateValue"},
         "leave_reason": {"name": "QualifyingReason", "type": "stringValue"},
     }
 
-    ADDITIONAL_OBJECT = EFormAttribute(
-        name="Applies",
-        enumValue=ModelEnum(domainName="PleaseSelectYesNoUnknown", instanceValue="Yes"),
-    )
+    JOINING_ATTRIBUTE = {
+        "name": "Applies",
+        "type": "enumValue",
+        "domainName": "PleaseSelectYesNoUnknown",
+        "instanceValue": "Yes",
+    }
 
 
-class TransformOtherInfo(TransformEformAttributes):
+class OtherInfoAttributeBuilder(EFormAttributeBuilder):
     ATTRIBUTE_MAP = {
         "comment": {"name": "Comment", "type": "stringValue"},
         "hours_worked_per_week": {"name": "AverageWeeklyHoursWorked", "type": "decimalValue"},
@@ -44,15 +49,22 @@ class TransformOtherInfo(TransformEformAttributes):
     }
 
 
-class TransformEmployerClaimReview(BaseModel):
+class EmployerClaimReviewEFormBuilder(EFormBuilder):
     @classmethod
-    def to_fineos(cls, api_model: EmployerClaimReview) -> EFormBody:
+    def build(cls, review: EmployerClaimReview) -> EFormBody:
+        employer_benefits = map(
+            lambda benefit: EmployerBenefitAttributeBuilder(benefit), review.employer_benefits
+        )
+        previous_leaves = map(
+            lambda leave: PreviousLeaveAttributeBuilder(leave), review.previous_leaves
+        )
+        other_info = OtherInfoAttributeBuilder(review)
         attributes = list(
             chain(
-                TransformEmployerBenefit.list_to_attributes(api_model.employer_benefits),
-                TransformPreviousLeave.list_to_attributes(api_model.previous_leaves),
-                TransformOtherInfo.to_attributes(api_model),
+                cls.to_serialized_attributes(employer_benefits),
+                cls.to_serialized_attributes(previous_leaves),
+                cls.to_serialized_attributes([other_info]),
             )
         )
 
-        return EFormBody(eformType="Employer Response to Leave Request", eformAttributes=attributes)
+        return EFormBody("Employer Response to Leave Request", attributes)
