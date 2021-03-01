@@ -639,12 +639,12 @@
 <tbody>
 <tr>
 <td>test</td>
-<td>35182038de77ba263333fe2c315b070c3e06b1cf</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.14.0-rc2">api/v1.14.0-rc2</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(test)">GitHub</a></td>
 </tr>
 <tr>
 <td>stage</td>
-<td>1caf1fd256c0dfa11e7906de70e236733a00817d</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.14.0-rc2">api/v1.14.0-rc2</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -664,101 +664,16 @@
 </tr>
 <tr>
 <td>uat</td>
-<td>8fc74ede4eb824dc783c771e9b42718ec29086b6</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.14.0-rc2">api/v1.14.0-rc2</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(uat)">GitHub</a></td>
 </tr>
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (INFRA-281,INFRA-251,INFRA-280,INFRA-220,INFRA-160,CP-1560,INFRA-25,EMPLOYER-910,INFRA-214,CP-1762,CP-1758,EMPLOYER-494,INFRA-288,INFRA-286,API-495,API-1451,API-472,EMPLOYER-536,INFRA-280,INFRA-280,API-1374,INFRA-278,API-1335,API-494,CP-1777,CP-1755,API-1362,EMPLOYER-904,CP-1708,INFRA-280,CP-1777,API-901,INFRA-278,EMPLOYER-903,API-901,API-1381)">Jira List</a>):</p>
-<ul>
-<li>file extension to lower case (<a href="https://github.com/EOLWD/pfml/pull/3210">#3210</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-288">INFRA-288</a>: Match libpq and sqlalchemy pool connection timeouts (<a href="https://github.com/EOLWD/pfml/pull/2694">#2694</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-286">INFRA-286</a>: Catch oauth2 unavailability issues (<a href="https://github.com/EOLWD/pfml/pull/3201">#3201</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-281">INFRA-281</a>: Log WAF Data to S3 for Smartronix (<a href="https://github.com/EOLWD/pfml/pull/3212">#3212</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-280">INFRA-280</a>: (6/6): Raise exceptions from submit_payment_preference (<a href="https://github.com/EOLWD/pfml/pull/3183">#3183</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-280">INFRA-280</a>: (4/6): Raise errors from mark_documents_as_received (<a href="https://github.com/EOLWD/pfml/pull/3181">#3181</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-280">INFRA-280</a>: (2/6): Raise 500 errors in mark_single_document_as_received (<a href="https://github.com/EOLWD/pfml/pull/3179">#3179</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-278">INFRA-278</a>: Handle SOCKETTIMEDOUT and ignore network issues in Sentry (<a href="https://github.com/EOLWD/pfml/pull/3177">#3177</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-278">INFRA-278</a>: Distinguish between fatal and non-fatal FINEOS errors (<a href="https://github.com/EOLWD/pfml/pull/3155">#3155</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-25">INFRA-25</a>: Follow-up Patch Lambda Errors (<a href="https://github.com/EOLWD/pfml/pull/3213">#3213</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-251">INFRA-251</a>: update payments tasks to send emails from eol mass gov (<a href="https://github.com/EOLWD/pfml/pull/3209">#3209</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-220">INFRA-220</a>: Switch default branch from master to main (<a href="https://github.com/EOLWD/pfml/pull/3063">#3063</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-214">INFRA-214</a>: delete eligibility feed lambda builds (<a href="https://github.com/EOLWD/pfml/pull/3169">#3169</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-160">INFRA-160</a>: Automatic Slackbot deployment messages (<a href="https://github.com/EOLWD/pfml/pull/3133">#3133</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-910">EMPLOYER-910</a>: Prevent EINs from being added via /employers/add if they have no Verification data (<a href="https://github.com/EOLWD/pfml/pull/3134">#3134</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-904">EMPLOYER-904</a>: Add an "has_withholding_data" flag to Employer model (<a href="https://github.com/EOLWD/pfml/pull/3122">#3122</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-903">EMPLOYER-903</a>: Payment required error handling (<a href="https://github.com/EOLWD/pfml/pull/3147">#3147</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-536">EMPLOYER-536</a>: flatten user roles api representation (<a href="https://github.com/EOLWD/pfml/pull/3101">#3101</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-494">EMPLOYER-494</a>: Add Verification enforcement, add config flag to enable/disable enforcement (<a href="https://github.com/EOLWD/pfml/pull/3175">#3175</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1777">CP-1777</a>: Validate that an Employer and Employee association exists for an application (<a href="https://github.com/EOLWD/pfml/pull/3142">#3142</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1777">CP-1777</a>: Change require_employee to be an issue rule instead of issue type (<a href="https://github.com/EOLWD/pfml/pull/3187">#3187</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1762">CP-1762</a>: (Part 1/x): Add new API endpoint stub: POST /v1/users (<a href="https://github.com/EOLWD/pfml/pull/3203">#3203</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1758">CP-1758</a>: log leave period dates (<a href="https://github.com/EOLWD/pfml/pull/3139">#3139</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1755">CP-1755</a>: Set <code>leave_reason_qualifier</code> to none when update <code>leave_reason</code> to medical (<a href="https://github.com/EOLWD/pfml/pull/3163">#3163</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1708">CP-1708</a>: API rejects too many reduction entries (<a href="https://github.com/EOLWD/pfml/pull/2761">#2761</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1560">CP-1560</a>: - Refactor of to_fineos eform transforms (<a href="https://github.com/EOLWD/pfml/pull/3151">#3151</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-901">API-901</a>: DUA-only functions in ECS tasks (<a href="https://github.com/EOLWD/pfml/pull/3178">#3178</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-901">API-901</a>: Create ECS tasks for phases of reductions workflow (<a href="https://github.com/EOLWD/pfml/pull/2939">#2939</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-495">API-495</a>: retrieve daily dia payments list (<a href="https://github.com/EOLWD/pfml/pull/3206">#3206</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-494">API-494</a>: - Send list of claimants to DIA (<a href="https://github.com/EOLWD/pfml/pull/3150">#3150</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-472">API-472</a>: create report for new dua claimants (<a href="https://github.com/EOLWD/pfml/pull/3016">#3016</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1451">API-1451</a>: Update UAT WSComposer user to OASIS (<a href="https://github.com/EOLWD/pfml/pull/3205">#3205</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1381">API-1381</a>: Add LEAVEREQUEST_ID and LEAVEREQUEST_DECISION to payment voucher (<a href="https://github.com/EOLWD/pfml/pull/3093">#3093</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1374">API-1374</a>: Add environment variables for reductions ECS tasks (<a href="https://github.com/EOLWD/pfml/pull/3200">#3200</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1362">API-1362</a>: (1/?): Mark more integration tests (<a href="https://github.com/EOLWD/pfml/pull/3070">#3070</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1335">API-1335</a>: Remove header row from DIA claimant list (<a href="https://github.com/EOLWD/pfml/pull/3199">#3199</a>)</li>
-<li>PSD-85: Prevent partial application submissions to FINEOS (<a href="https://github.com/EOLWD/pfml/pull/3172">#3172</a>)</li>
-<li>INFRA: Fix import error in db-create-fineos-user (<a href="https://github.com/EOLWD/pfml/pull/3204">#3204</a>)</li>
-<li>Add lint-py and format-changed dev commands (<a href="https://github.com/EOLWD/pfml/pull/3202">#3202</a>)</li>
-<li>API: Re-add dependency on strict-rfc3339 (<a href="https://github.com/EOLWD/pfml/pull/3174">#3174</a>)</li>
-<li>API: Fix typo in docstring (<a href="https://github.com/EOLWD/pfml/pull/3170">#3170</a>)</li>
-<li>INFRA-280 (3/6): Re-raise exceptions from update_week_based_work_pattern (<a href="https://github.com/EOLWD/pfml/pull/3180">#3180</a>)</li>
-</ul>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in ()">Jira List</a>):</p>
 <details>
 <summary>Raw</summary>
- <br>* file extension to lower case ([#3210](https://github.com/EOLWD/pfml/pull/3210))
- <br>* [INFRA-288](https://lwd.atlassian.net/browse/INFRA-288): Match libpq and sqlalchemy pool connection timeouts ([#2694](https://github.com/EOLWD/pfml/pull/2694))
- <br>* [INFRA-286](https://lwd.atlassian.net/browse/INFRA-286): Catch oauth2 unavailability issues ([#3201](https://github.com/EOLWD/pfml/pull/3201))
- <br>* [INFRA-281](https://lwd.atlassian.net/browse/INFRA-281): Log WAF Data to S3 for Smartronix ([#3212](https://github.com/EOLWD/pfml/pull/3212))
- <br>* [INFRA-280](https://lwd.atlassian.net/browse/INFRA-280): (6/6): Raise exceptions from submit_payment_preference ([#3183](https://github.com/EOLWD/pfml/pull/3183))
- <br>* [INFRA-280](https://lwd.atlassian.net/browse/INFRA-280): (4/6): Raise errors from mark_documents_as_received ([#3181](https://github.com/EOLWD/pfml/pull/3181))
- <br>* [INFRA-280](https://lwd.atlassian.net/browse/INFRA-280): (2/6): Raise 500 errors in mark_single_document_as_received ([#3179](https://github.com/EOLWD/pfml/pull/3179))
- <br>* [INFRA-278](https://lwd.atlassian.net/browse/INFRA-278): Handle SOCKETTIMEDOUT and ignore network issues in Sentry ([#3177](https://github.com/EOLWD/pfml/pull/3177))
- <br>* [INFRA-278](https://lwd.atlassian.net/browse/INFRA-278): Distinguish between fatal and non-fatal FINEOS errors ([#3155](https://github.com/EOLWD/pfml/pull/3155))
- <br>* [INFRA-25](https://lwd.atlassian.net/browse/INFRA-25): Follow-up Patch Lambda Errors ([#3213](https://github.com/EOLWD/pfml/pull/3213))
- <br>* [INFRA-251](https://lwd.atlassian.net/browse/INFRA-251): update payments tasks to send emails from eol mass gov ([#3209](https://github.com/EOLWD/pfml/pull/3209))
- <br>* [INFRA-220](https://lwd.atlassian.net/browse/INFRA-220): Switch default branch from master to main ([#3063](https://github.com/EOLWD/pfml/pull/3063))
- <br>* [INFRA-214](https://lwd.atlassian.net/browse/INFRA-214): delete eligibility feed lambda builds ([#3169](https://github.com/EOLWD/pfml/pull/3169))
- <br>* [INFRA-160](https://lwd.atlassian.net/browse/INFRA-160): Automatic Slackbot deployment messages ([#3133](https://github.com/EOLWD/pfml/pull/3133))
- <br>* [EMPLOYER-910](https://lwd.atlassian.net/browse/EMPLOYER-910): Prevent EINs from being added via /employers/add if they have no Verification data ([#3134](https://github.com/EOLWD/pfml/pull/3134))
- <br>* [EMPLOYER-904](https://lwd.atlassian.net/browse/EMPLOYER-904): Add an "has_withholding_data" flag to Employer model ([#3122](https://github.com/EOLWD/pfml/pull/3122))
- <br>* [EMPLOYER-903](https://lwd.atlassian.net/browse/EMPLOYER-903): Payment required error handling ([#3147](https://github.com/EOLWD/pfml/pull/3147))
- <br>* [EMPLOYER-536](https://lwd.atlassian.net/browse/EMPLOYER-536): flatten user roles api representation ([#3101](https://github.com/EOLWD/pfml/pull/3101))
- <br>* [EMPLOYER-494](https://lwd.atlassian.net/browse/EMPLOYER-494): Add Verification enforcement, add config flag to enable/disable enforcement ([#3175](https://github.com/EOLWD/pfml/pull/3175))
- <br>* [CP-1777](https://lwd.atlassian.net/browse/CP-1777): Validate that an Employer and Employee association exists for an application ([#3142](https://github.com/EOLWD/pfml/pull/3142))
- <br>* [CP-1777](https://lwd.atlassian.net/browse/CP-1777): Change require_employee to be an issue rule instead of issue type ([#3187](https://github.com/EOLWD/pfml/pull/3187))
- <br>* [CP-1762](https://lwd.atlassian.net/browse/CP-1762): (Part 1/x): Add new API endpoint stub: POST /v1/users ([#3203](https://github.com/EOLWD/pfml/pull/3203))
- <br>* [CP-1758](https://lwd.atlassian.net/browse/CP-1758): log leave period dates ([#3139](https://github.com/EOLWD/pfml/pull/3139))
- <br>* [CP-1755](https://lwd.atlassian.net/browse/CP-1755): Set `leave_reason_qualifier` to none when update `leave_reason` to medical ([#3163](https://github.com/EOLWD/pfml/pull/3163))
- <br>* [CP-1708](https://lwd.atlassian.net/browse/CP-1708): API rejects too many reduction entries ([#2761](https://github.com/EOLWD/pfml/pull/2761))
- <br>* [CP-1560](https://lwd.atlassian.net/browse/CP-1560): - Refactor of to_fineos eform transforms ([#3151](https://github.com/EOLWD/pfml/pull/3151))
- <br>* [API-901](https://lwd.atlassian.net/browse/API-901): DUA-only functions in ECS tasks ([#3178](https://github.com/EOLWD/pfml/pull/3178))
- <br>* [API-901](https://lwd.atlassian.net/browse/API-901): Create ECS tasks for phases of reductions workflow ([#2939](https://github.com/EOLWD/pfml/pull/2939))
- <br>* [API-495](https://lwd.atlassian.net/browse/API-495): retrieve daily dia payments list ([#3206](https://github.com/EOLWD/pfml/pull/3206))
- <br>* [API-494](https://lwd.atlassian.net/browse/API-494): - Send list of claimants to DIA ([#3150](https://github.com/EOLWD/pfml/pull/3150))
- <br>* [API-472](https://lwd.atlassian.net/browse/API-472): create report for new dua claimants ([#3016](https://github.com/EOLWD/pfml/pull/3016))
- <br>* [API-1451](https://lwd.atlassian.net/browse/API-1451): Update UAT WSComposer user to OASIS ([#3205](https://github.com/EOLWD/pfml/pull/3205))
- <br>* [API-1381](https://lwd.atlassian.net/browse/API-1381): Add LEAVEREQUEST_ID and LEAVEREQUEST_DECISION to payment voucher ([#3093](https://github.com/EOLWD/pfml/pull/3093))
- <br>* [API-1374](https://lwd.atlassian.net/browse/API-1374): Add environment variables for reductions ECS tasks ([#3200](https://github.com/EOLWD/pfml/pull/3200))
- <br>* [API-1362](https://lwd.atlassian.net/browse/API-1362): (1/?): Mark more integration tests ([#3070](https://github.com/EOLWD/pfml/pull/3070))
- <br>* [API-1335](https://lwd.atlassian.net/browse/API-1335): Remove header row from DIA claimant list ([#3199](https://github.com/EOLWD/pfml/pull/3199))
- <br>* PSD-85: Prevent partial application submissions to FINEOS ([#3172](https://github.com/EOLWD/pfml/pull/3172))
- <br>* INFRA: Fix import error in db-create-fineos-user ([#3204](https://github.com/EOLWD/pfml/pull/3204))
- <br>* Add lint-py and format-changed dev commands ([#3202](https://github.com/EOLWD/pfml/pull/3202))
- <br>* API: Re-add dependency on strict-rfc3339 ([#3174](https://github.com/EOLWD/pfml/pull/3174))
- <br>* API: Fix typo in docstring ([#3170](https://github.com/EOLWD/pfml/pull/3170))
- <br>*  INFRA-280 (3/6): Re-raise exceptions from update_week_based_work_pattern ([#3180](https://github.com/EOLWD/pfml/pull/3180))
+
 </details>
                 
               
