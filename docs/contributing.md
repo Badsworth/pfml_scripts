@@ -24,11 +24,11 @@ Your local commit history will persist on the PR's page unless you force-push a 
 See _[Seven Rules](https://chris.beams.io/posts/git-commit/#seven-rules)_ for an external reference on commit message best practices.
 
 - To keep your branch updated with others' changes, you can:
-  - Rebase your changes onto master with `git rebase master`, or
-  - Merge master onto your own branch: `git merge master`.
+  - Rebase your changes onto main with `git rebase main`, or
+  - Merge main onto your own branch: `git merge main`.
   
-- The favored pathway to keep your branch updated is to use `git merge master.`
-It's still possible to rebase and force-push your branch using `git rebase master`, but this pathway should be avoided
+- The favored pathway to keep your branch updated is to use `git merge main.`
+It's still possible to rebase and force-push your branch using `git rebase main`, but this pathway should be avoided
 if your branch is being worked on by more than one person at a time, due to the risk of causing unnecessary conflicts.
 
 ## Code Reviews
@@ -131,18 +131,18 @@ should be treated as a blocking issue and resolved before the PR is merged.
 
 A particular source of danger when merging a PR is the risk that the merge will introduce conflicts
 to the PFML API's database schema. This scenario is not uncommon, especially for branches that
-introduce new database migrations and that have not yet been updated with the latest changes to master.
+introduce new database migrations and that have not yet been updated with the latest changes to main.
 The API's test suite cannot detect these conflicts, so they have historically been discovered
 only after PR merge, when deployment of the API begins to fail.
 
 To mitigate this risk, any engineer who introduces new database migrations to the API should pay special attention to the
 "Pre-Merge Conflict Check", an automated check that should appear on any pull request that makes changes to `api/massgov/pfml/db/migrations/versions`.
-This special 'pseudo-check' will diff your branch against master, and fail if it detects that your branch is missing any
-database migrations that are already present on master.
+This special 'pseudo-check' will diff your branch against main, and fail if it detects that your branch is missing any
+database migrations that are already present on main.
 
-To mitigate the risk that updates to master will, occasionally, introduce new database conflicts to unmerged branches,
-this pseudo-check will automatically re-run itself whenever a new database migration is pushed to master,
+To mitigate the risk that updates to main will, occasionally, introduce new database conflicts to unmerged branches,
+this pseudo-check will automatically re-run itself whenever a new database migration is pushed to main,
 and additionally whenever new commits are pushed to your PR's feature branch.
 
 For these reasons, please make sure you check the status of any database conflicts before merging an approved PR.
-To avoid these conflicts, any PR that alters the database _must_ be updated with the latest changes to master before being merged.
+To avoid these conflicts, any PR that alters the database _must_ be updated with the latest changes to main before being merged.

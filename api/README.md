@@ -191,7 +191,7 @@ will require a _rebuild_ of the API's Docker image. Do this with `make stop` fol
 
 If you're only changing application code, you won't need to rebuild anything,
 _unless_ you're changing code that runs before the `connexion_app.run` command in
-[__main__.py](https://github.com/EOLWD/pfml/blob/master/api/massgov/pfml/api/__main__.py#L57).
+[__main__.py](https://github.com/EOLWD/pfml/blob/main/api/massgov/pfml/api/__main__.py#L57).
 In this case only, you'll need to restart the Docker containers with `make stop` followed by `make start`.
 
 These scenarios are most relevant to developers who habitually work in `DOCKER_EXEC` mode,
@@ -264,7 +264,7 @@ make db-migrate-heads
 
 CI/CD runs migrations to reach the "head". When there are multiple, Alembic
 can't resolve which migrations need to be run. If you run into this error,
-you'll need to fix the migration branches/heads before merging to `master`.
+you'll need to fix the migration branches/heads before merging to `main`.
 
 If the migrations don't depend on each other, which is likely if they've
 branched, then you can just run:
@@ -525,7 +525,7 @@ have a Jira ticket associated.
 
 But this will provide a starting point. By default it will generate the list of
 commits that are different between what is deployed to stage (indicated by the
-`deploy/api/stage` branch) and what is on `master`. You can change the range of
+`deploy/api/stage` branch) and what is on `main`. You can change the range of
 commits it considers by passing in `refs`, for example only looking for changes
 between release candidates:
 
@@ -563,7 +563,7 @@ ticket number:
 
 ```sh
 ❯ make where-ticket ticket=API-1000
-## origin/master ##
+## origin/main ##
 e7fb31752 API-1000: Do not add "MA PFML - Limit" plan to FINEOS service agreements (#2272)
 
 ## origin/deploy/api/stage ##
@@ -585,9 +585,9 @@ So in this example, API-1000 has been deployed to every environment but `trainin
 
 ```sh
 ❯ make whats-released
-## origin/master ##
+## origin/main ##
  * Closest tag: api/v1.3.0-rc2-48-g4465cfb72
- * Latest commit: 4465cfb72 (origin/master, master) END-338: Convert employer response and remove notification checking (#2386)
+ * Latest commit: 4465cfb72 (origin/main, main) END-338: Convert employer response and remove notification checking (#2386)
 
 ## origin/deploy/api/stage ##
  * Closest tag: api/v1.3.0

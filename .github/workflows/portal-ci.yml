@@ -5,7 +5,7 @@ name: Portal CI
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - portal/**
   pull_request:

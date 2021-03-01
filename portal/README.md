@@ -130,7 +130,7 @@ have a Jira ticket associated.
 
 But this will provide a starting point. By default it will generate the list of
 commits that are different between what is deployed to stage (indicated by the
-`deploy/portal/stage` branch) and what is on `master`. You can change the range of
+`deploy/portal/stage` branch) and what is on `main`. You can change the range of
 commits it considers by passing in `refs`, for example only looking for changes
 between release candidates:
 
@@ -168,7 +168,7 @@ ticket number:
 
 ```sh
 ❯ make where-ticket ticket=CP-1709
-## origin/master ##
+## origin/main ##
 3894541e CP-1701: add tel link to Contact Center phone numbers (#2818)
 
 ## origin/deploy/portal/stage ##
@@ -192,9 +192,9 @@ So in this example, CP-1709 has been deployed to every environment but `training
 
 ```sh
 ❯ make whats-released
-## origin/master ##
+## origin/main ##
  * Closest tag: portal/v7.0-38-g6316145e
- * Latest commit: 6316145e (origin/master, origin/HEAD, master) Change resource_arn and web_acl_id references (#3035)
+ * Latest commit: 6316145e (origin/main, origin/HEAD, main) Change resource_arn and web_acl_id references (#3035)
 
 ## origin/deploy/portal/stage ##
  * Closest tag: portal/v7.0

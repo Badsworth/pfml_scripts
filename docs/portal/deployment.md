@@ -2,7 +2,7 @@
 
 Deployments to all environments are managed through GitHub Actions.
 
-The `master` branch is automatically deployed to `test` as pull requests are merged into it.
+The `main` branch is automatically deployed to `test` as pull requests are merged into it.
 
 Unlike deployments to `test`, all deployments to `training, performance, stage` and `prod` are triggered manually.
 
@@ -28,7 +28,7 @@ Today, these branches serve an archival role: they record what commit was deploy
 
 | Name of deployment branch    | Corresponding env |
 | ---------------------------- | ----------------- |
-| master                       | test              |
+| main                         | test              |
 | deploy/portal/stage          | stage             |
 | deploy/portal/prod           | prod              |
 | deploy/portal/performance    | performance       |
@@ -51,10 +51,10 @@ If you are testing a feature branch on the test environment, please go through t
 
 The [Storybook site](http://massgov-pfml-test-storybook-builds.s3-website-us-east-1.amazonaws.com),
 used for visualizing our components, is exported and deployed automatically when pull requests are merged
-into the `master` branch. Only one environment (`test`) exists for the Storybook site.
+into the `main` branch. Only one environment (`test`) exists for the Storybook site.
 
 ## Playroom
 
 The [Playroom site](http://massgov-pfml-test-playroom-builds.s3-website-us-east-1.amazonaws.com),
 used for prototyping in the browser, is exported and deployed automatically when pull requests are merged
-into the `master` branch. Only one environment (`test`) exists for the Playroom site.
+into the `main` branch. Only one environment (`test`) exists for the Playroom site.

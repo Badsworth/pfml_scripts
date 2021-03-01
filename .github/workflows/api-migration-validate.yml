@@ -8,7 +8,7 @@ on:
     inputs:
       baseref:
         required: true
-        description: 'The base ref to diff against, typically HEAD/master'
+        description: 'The base ref to diff against, typically HEAD/main'
       headref:
         required: true
         description: 'The head ref to diff against, typically HEAD of a feature branch'
@@ -87,7 +87,7 @@ jobs:
           --data "$check_data"
 
           if [[ $CHECK_STATUS = "failure" ]]; then
-            echo "The following migrations are missing, please update your branch with master:"
+            echo "The following migrations are missing, please update your branch with main:"
             cat migrations.log
             exit 1
           else

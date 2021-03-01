@@ -2,7 +2,7 @@
 # all links to code files are hardcoded with the repository URL.
 #
 # example:
-#   ../../api/README.md --> https://github.com/EOLWD/pfml/tree/master/api/README.md
+#   ../../api/README.md --> https://github.com/EOLWD/pfml/tree/main/api/README.md
 #
 import fileinput
 import glob
@@ -24,8 +24,8 @@ def replace_paths():
         with fileinput.FileInput(filepath, inplace=True) as f:
             for line in f:
                 print(line\
-                    .replace(f"]({prefix}", "](https://github.com/EOLWD/pfml/tree/master/")\
-                    .replace(f"](/", "](https://github.com/EOLWD/pfml/tree/master/"), end='')
+                    .replace(f"]({prefix}", "](https://github.com/EOLWD/pfml/tree/main/")\
+                    .replace(f"](/", "](https://github.com/EOLWD/pfml/tree/main/"), end='')
 
 
 replace_paths()

@@ -46,10 +46,10 @@ The easiest way to set up resources in a new environment is using the templates 
 
    **Api:**
 
-   - When applying changes, provide an initial application version to deploy. Since this requires a version that is built and pushed to ECR, it's easiest to use the latest version on master.
+   - When applying changes, provide an initial application version to deploy. Since this requires a version that is built and pushed to ECR, it's easiest to use the latest version on main.
 
      ```sh
-     $ git rev-parse master
+     $ git rev-parse main
      82043ae1e04621251fb9e7896176b38c884f027e
 
      $ terraform apply -var='service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e'

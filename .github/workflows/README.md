@@ -9,7 +9,7 @@ For more information on GitHub Actions, see [the docs](https://help.github.com/e
 
 ## Continuous Integration
 
-To preserve the health of the master branch, tests and other checks (linting, etc.) are triggered by `pull_request` events.
+To preserve the health of the main branch, tests and other checks (linting, etc.) are triggered by `pull_request` events.
 
 Workflows with the name patterns `<component>-ci.yml` or `<component>-validate.yml` fall into this category.
 

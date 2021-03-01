@@ -57,7 +57,7 @@ jobs:
       - name: "Check for changes"
         id: check-for-changes
         # Check whether the config has changed within the PR.
-        # This is done by comparing the PR's base branch (usually master) against the current PR commit.
+        # This is done by comparing the PR's base branch (usually main) against the current PR commit.
         run: |
           echo "::set-output name=has-changes::false"
 

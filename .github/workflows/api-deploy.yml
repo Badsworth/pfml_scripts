@@ -12,10 +12,10 @@ on:
       version:
         required: false
         description: |
-          ⬆️️ Env to deploy to. For test deploys, select master or a feature branch.
+          ⬆️️ Env to deploy to. For test deploys, select main or a feature branch.
           For all other envs, select "deploy/api/*".
           --------------------------------------
-          ⬇️ Tag or branch to be deployed. For deploys to test, leave blank to deploy master.
+          ⬇️ Tag or branch to be deployed. For deploys to test, leave blank to deploy main.
           For all other deploys, select an appropriate tag or feature branch.
         default: ''
       extraUatDeploy:
@@ -32,7 +32,7 @@ on:
           ⬇️ (Also for staging deploys only) Also deploy the above version to Performance?
   push:
     branches:
-      - master
+      - main
     paths:
       - api/**
       - infra/api/**
@@ -57,7 +57,7 @@ env:
   #
   # We could specify this directly in the bash script below, but this will be cleaner
   # to add and change items since bash doesn't have hashmaps/dicts.
-  refs/heads/master: test
+  refs/heads/main: test
   refs/heads/deploy/api/stage: stage
   refs/heads/deploy/api/prod: prod
   refs/heads/deploy/api/performance: performance
@@ -189,7 +189,7 @@ jobs:
     needs: [update-the-deploy-branch, deploy-info]
     outputs:
       subtitle: ${{ steps.choose_start_message.outputs.message }}
-    if: ${{ !contains(github.ref, 'master') }} # Mutes notifications for auto-deploys to test
+    if: ${{ !contains(github.ref, 'main') }} # Mutes notifications for auto-deploys to test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -259,7 +259,7 @@ jobs:
         env:
           GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          UAT_DEPLOYMENT_VERSION: ${{ github.event.inputs.version || 'master' }}
+          UAT_DEPLOYMENT_VERSION: ${{ github.event.inputs.version || 'main' }}
           WORKFLOW_NAME: "api-deploy.yml"
         run: |
           echo "*** An API staging deploy is now in progress. Enqueuing an extra deployment to UAT... ***"
@@ -283,7 +283,7 @@ jobs:
         env:
           GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          PERFORMANCE_DEPLOYMENT_VERSION: ${{ github.event.inputs.version || 'master' }}
+          PERFORMANCE_DEPLOYMENT_VERSION: ${{ github.event.inputs.version || 'main' }}
           WORKFLOW_NAME: "api-deploy.yml"
         run: |
           echo "*** An API staging deploy is now in progress. Enqueuing an extra deployment to Performance... ***"
@@ -711,13 +711,13 @@ jobs:
         with:
           workflow: GH Pages deploy
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          ref: master
+          ref: main
 
   finish-comms-slack:
     name: Finish deploy comms (Slack)
     needs: [start-comms-slack, deploy-info, postdeploy-info]
     runs-on: ubuntu-latest
-    if: always() && needs.start-comms-slack.result == 'success' && !contains(github.ref, 'master') # Mutes notifications for auto-deploys to test
+    if: always() && needs.start-comms-slack.result == 'success' && !contains(github.ref, 'main') # Mutes notifications for auto-deploys to test
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
