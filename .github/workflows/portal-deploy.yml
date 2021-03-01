@@ -261,7 +261,7 @@ jobs:
           echo "Done."
 
   extra-performance-deploy:
-    if: contains(github.ref, 'deploy/portal/performance') && github.event.inputs.extraPerformanceDeploy == 'true'
+    if: contains(github.ref, 'deploy/portal/stage') && github.event.inputs.extraPerformanceDeploy == 'true'
     name: (Stage) Extra Performance deploy
     needs: update-the-deploy-branch
     runs-on: ubuntu-latest
