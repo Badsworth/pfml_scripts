@@ -2159,8 +2159,7 @@ const components = {
     day_Tuesday: "$t(shared.day_Tuesday)",
     day_Wednesday: "$t(shared.day_Wednesday)",
     hoursHeader: "Hours",
-    time: "$t(shared.displayTime)",
-    time_noMinutes: "$t(shared.displayTime_noMinutes)",
+    time: "{{minutes, hoursMinutesDuration}}",
   },
   withClaims: {
     loadingLabel: "Loading claims",

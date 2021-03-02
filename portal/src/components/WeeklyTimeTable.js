@@ -1,7 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
 import Table from "./Table";
-import convertMinutesToHours from "../utils/convertMinutesToHours";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -28,11 +27,7 @@ export const WeeklyTimeTable = (props) => {
             </th>
             <td>
               {t("components.weeklyTimeTable.time", {
-                context:
-                  convertMinutesToHours(day.minutes).minutes === 0
-                    ? "noMinutes"
-                    : null,
-                ...convertMinutesToHours(day.minutes),
+                minutes: day.minutes,
               })}
             </td>
           </tr>

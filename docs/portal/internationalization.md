@@ -45,6 +45,30 @@ Our application takes advantage of some advanced patterns supported by the `i18n
 
   Note that we are using the [alternative usage of Trans introduced in v11.6.0](https://react.i18next.com/latest/trans-component#alternative-usage-v-11-6-0) where components are passed in as props rather than as children of `Trans`. This method allows the use of named tags in locale strings rather than needing to refer to child components by their index.
 
+- [Formatters](https://www.i18next.com/translation-function/formatting) are functions that define locale-specific formats for specially-formatted values such as currencies or time durations.
+
+  ```js
+  t("timeDuration", { minutes: 480 }); // -> "8h"
+  t("timeDuration", { minutes: 475 }); // -> "7h 55m"
+  ```
+
+  ```js
+  function formatValue(value, format, locale) {
+    if (format === "hoursMinutesDuration") {
+      // Could also internationalize by using the locale value
+      const { hours, minutes } = convertMinutesToHours(value);
+      if (minutes === 0) return `${hours}h`;
+      return `${hours}h ${minutes}m`;
+    }
+    return value;
+  ```
+
+  ```json
+  {
+    timeDuration: "{{minutes, hoursMinutesDuration}}",
+  }
+  ```
+
 ### Conventions
 
 Internationalization content can get messy and lead to hard-to-find bugs during translation. As such we strictly follow the below conventions to preserve readability, maintainability, and avoid errors.

@@ -2,18 +2,6 @@ import { initializeI18n } from "../../src/locales/i18n";
 import tracker from "../../src/services/tracker";
 
 describe("i18n", () => {
-  it("formats currency values", async () => {
-    const t = await initializeI18n("en-US", {
-      "en-US": {
-        translation: {
-          dollarAmount: "{{amount, currency}}",
-        },
-      },
-    });
-
-    expect(t("dollarAmount", { amount: 1000 })).toBe("$1,000.00");
-  });
-
   it("returns initial value when the format is unexpected", async () => {
     const t = await initializeI18n("en-US", {
       "en-US": {

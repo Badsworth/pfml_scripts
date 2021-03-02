@@ -3,30 +3,12 @@
  * @see docs/internationalization.md
  */
 import englishLocale from "./app/en-US";
+import formatValue from "./formatters";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 import tracker from "../services/tracker";
 
 const defaultLocale = "en-US";
-
-/**
- * Add additional formatting to a given translation string
- * @see https://www.i18next.com/translation-function/formatting
- * @param {string} value - the string to be formatted
- * @param {string} format - the type of formatting
- * @param {string} locale - language code
- * @returns {string} formatted value
- */
-function formatValue(value, format, locale) {
-  // formats number into currency (e.g. 1000 -> $1,000.00)
-  if (format === "currency") {
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
-  }
-  return value;
-}
 
 /**
  * Track when an i18n key is missing a value.
