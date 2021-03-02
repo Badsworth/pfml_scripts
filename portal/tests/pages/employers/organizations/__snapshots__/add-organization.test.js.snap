@@ -1,7 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`AddOrganization when "employerShowAddOrganization" is enabled renders the page 1`] = `
-<Fragment>
+<form
+  className="usa-form"
+  method="post"
+  onSubmit={[Function]}
+>
   <BackButton />
   <Title>
     Add an organization
@@ -11,14 +15,18 @@ exports[`AddOrganization when "employerShowAddOrganization" is enabled renders t
   </p>
   <InputText
     label="Employer ID number (EIN)"
+    mask="fein"
     name="ein"
+    onChange={[Function]}
     smallLabel={true}
+    value=""
   />
   <Button
     className="margin-top-4"
+    loading={false}
     type="submit"
   >
     Continue
   </Button>
-</Fragment>
+</form>
 `;

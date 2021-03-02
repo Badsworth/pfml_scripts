@@ -7,6 +7,25 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow, setUser }) => {
   const employersApi = useMemo(() => new EmployersApi(), []);
 
   /**
+   * Associate employer FEIN with logged in user
+   * @param {object} data - employer's FEIN
+   * @param {string} next - query param to navigate to next page
+   */
+  const addEmployer = async (data, next) => {
+    appErrorsLogic.clearErrors();
+
+    try {
+      const employer = await employersApi.addEmployer(data);
+      const params = { employer_id: employer.employer_id, next };
+      // Setting user to undefined to require fetching updated user_leave_administrators before navigating to Verify Contributions
+      setUser(undefined);
+      if (employer) portalFlow.goToNextPage({}, params);
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
+
+  /**
    * Retrieve claim from the API and set application errors if any
    * @param {string} absenceId - FINEOS absence id
    */
@@ -106,6 +125,7 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow, setUser }) => {
   };
 
   return {
+    addEmployer,
     claim,
     documents,
     downloadDocument,

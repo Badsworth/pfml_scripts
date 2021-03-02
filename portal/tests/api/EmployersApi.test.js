@@ -91,6 +91,11 @@ const mockWithholding = {
   withholding_amount: "123",
   withholding_quarter: "2020-10-10",
 };
+const mockUserLeaveAdmin = {
+  employer_id: "mock_employer_id",
+  employer_fein: "XX-XXX-6789",
+  employer_dba: "User Leave Admin 01",
+};
 
 describe("EmployersApi", () => {
   let employersApi;
@@ -102,6 +107,33 @@ describe("EmployersApi", () => {
       })
     );
     employersApi = new EmployersApi();
+  });
+
+  describe("addEmployer", () => {
+    describe("successful request", () => {
+      beforeEach(() => {
+        global.fetch = mockFetch({
+          response: {
+            data: mockUserLeaveAdmin,
+            status: 200,
+          },
+        });
+      });
+
+      it("sends POST request to /employers/add", async () => {
+        await employersApi.addEmployer({ ein: "123456789" });
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(fetch).toHaveBeenCalledWith(
+          `${process.env.apiUrl}/employers/add`,
+          expect.objectContaining({
+            body: JSON.stringify({ ein: "123456789" }),
+            headers,
+            method: "POST",
+          })
+        );
+      });
+    });
   });
 
   describe("getClaim", () => {

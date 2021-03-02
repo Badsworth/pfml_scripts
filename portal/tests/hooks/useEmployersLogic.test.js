@@ -1,4 +1,5 @@
 import {
+  addEmployerMock,
   downloadDocumentMock,
   getClaimMock,
   getDocumentsMock,
@@ -46,6 +47,60 @@ describe("useEmployersLogic", () => {
     employersLogic = null;
     portalFlow = null;
     setUser = null;
+  });
+
+  describe("addEmployer", () => {
+    const postData = {
+      ein: "123456789",
+    };
+
+    it("makes API call with POST data", async () => {
+      await act(async () => {
+        await employersLogic.addEmployer(postData);
+      });
+
+      expect(addEmployerMock).toHaveBeenCalledWith(postData);
+    });
+
+    it("clears the current user", async () => {
+      await act(async () => {
+        await employersLogic.addEmployer(postData);
+      });
+
+      expect(setUser).toHaveBeenCalledWith(undefined);
+    });
+
+    describe("errors", () => {
+      beforeEach(() => {
+        jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+      });
+
+      it("catches error", async () => {
+        addEmployerMock.mockImplementationOnce(() => {
+          throw new Error();
+        });
+
+        await act(async () => {
+          await employersLogic.addEmployer({ ein: "" });
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+      });
+
+      it("clears prior errors", async () => {
+        act(() => {
+          appErrorsLogic.setAppErrors(
+            new AppErrorInfoCollection([new AppErrorInfo()])
+          );
+        });
+
+        await act(async () => {
+          await employersLogic.addEmployer(postData);
+        });
+
+        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      });
+    });
   });
 
   describe("loadClaim", () => {

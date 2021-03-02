@@ -7,6 +7,7 @@ import BaseApi, {
 import Document from "../models/Document";
 import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
+import { UserLeaveAdministrator } from "../models/User";
 import Withholding from "../models/Withholding";
 import routes from "../routes";
 
@@ -28,6 +29,17 @@ export default class EmployersApi extends BaseApi {
   get i18nPrefix() {
     return "employers";
   }
+
+  /**
+   * Add an FEIN to the logged in Leave Administrator
+   *
+   * @param {object} postData - POST data (FEIN only)
+   * @returns {Promise}
+   */
+  addEmployer = async (postData) => {
+    const { data } = await this.request("POST", "add", postData);
+    return new UserLeaveAdministrator(data);
+  };
 
   /**
    * Retrieve a claim
@@ -118,9 +130,9 @@ export default class EmployersApi extends BaseApi {
    * Submit withholding amount for validation
    *
    * @param {object} postData - POST data (includes email, employer id, withholding amount & quarter)
-   * @returns {Promise}
+   * @returns {Promise<UserLeaveAdministrator>}
    */
   submitWithholding = async (postData) => {
-    await this.request("POST", `verifications`, postData);
+    await this.request("POST", "verifications", postData);
   };
 }

@@ -9,6 +9,11 @@ import routes from "../routes";
 
 export default {
   states: {
+    [routes.employers.addOrganization]: {
+      on: {
+        CONTINUE: routes.employers.verifyContributions,
+      },
+    },
     [routes.employers.confirmation]: {},
     [routes.employers.createAccount]: {
       on: {

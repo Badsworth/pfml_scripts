@@ -52,6 +52,7 @@ export default jest.fn(() => ({
     loadAll: jest.fn(),
   },
   employers: {
+    addEmployer: jest.fn(),
     downloadDocument: jest.fn(() => new Blob()),
     loadClaim: jest.fn(
       () => new EmployerClaim({ fineos_absence_id: "NTN-111-ABS-01" })

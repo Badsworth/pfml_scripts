@@ -1,9 +1,18 @@
 import Claim from "../../models/Claim";
 import DocumentCollection from "../../models/DocumentCollection";
+import { UserLeaveAdministrator } from "../../models/User";
 import Withholding from "../../models/Withholding";
 import { uniqueId } from "lodash";
 
 // Export mocked EmployersApi functions so we can spy on them
+
+export const addEmployerMock = jest.fn().mockResolvedValue(() => {
+  return {
+    data: new UserLeaveAdministrator({}),
+    status: 200,
+    success: true,
+  };
+});
 
 export const getClaimMock = jest.fn().mockResolvedValue((absenceId) => {
   return {
@@ -54,6 +63,7 @@ export const submitWithholdingMock = jest.fn().mockResolvedValue(() => {
 });
 
 const employersApi = jest.fn().mockImplementation(() => ({
+  addEmployer: addEmployerMock,
   getClaim: getClaimMock,
   getDocuments: getDocumentsMock,
   getWithholding: getWithholdingMock,
