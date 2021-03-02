@@ -6,12 +6,17 @@
 # https://www.python.org/dev/peps/pep-0578/
 #
 
+import logging  # noqa: B1
 import sys
 
 import massgov.pfml.util.collections.dict
 import massgov.pfml.util.logging
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+AUDIT = 32
+
+logging.addLevelName(AUDIT, "AUDIT")  # noqa: B1
 
 
 def init_security_logging():
@@ -54,7 +59,7 @@ def audit_log(message):
     """Log a message but only log recently repeated messages at intervals."""
     count = audit_message_count[message] = audit_message_count[message] + 1
     if count <= 10 or (count <= 100 and (count % 10) == 0) or (count % 100) == 0:
-        logger.info(message, extra={"count": count})  # noqa: B1
+        logger.log(AUDIT, message, extra={"count": count})  # noqa: B1
 
 
 audit_message_count = massgov.pfml.util.collections.dict.LeastRecentlyUsedDict()
