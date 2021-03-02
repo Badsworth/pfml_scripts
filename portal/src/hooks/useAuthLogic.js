@@ -1,7 +1,7 @@
 import { CognitoAuthError, ValidationError } from "../errors";
+import { compact, trim } from "lodash";
 import { Auth } from "@aws-amplify/auth";
 import assert from "assert";
-import { compact } from "lodash";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";
 import tracker from "../services/tracker";
@@ -65,7 +65,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    */
   const sendForgotPasswordConfirmation = async (username = "") => {
     appErrorsLogic.clearErrors();
-    username = username.trim();
+    username = trim(username);
 
     const validationIssues = combineValidationIssues(
       validateUsername(username)
@@ -96,7 +96,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    */
   const login = async (username = "", password, next = null) => {
     appErrorsLogic.clearErrors();
-    username = username.trim();
+    username = trim(username);
 
     const validationIssues = combineValidationIssues(
       validateUsername(username),
@@ -204,7 +204,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    */
   const createAccount = async (username = "", password) => {
     appErrorsLogic.clearErrors();
-    username = username.trim();
+    username = trim(username);
 
     const validationIssues = combineValidationIssues(
       validateUsername(username),
@@ -228,7 +228,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    */
   const createEmployerAccount = async (username = "", password, ein) => {
     appErrorsLogic.clearErrors();
-    username = username.trim();
+    username = trim(username);
 
     const validationIssues = combineValidationIssues(
       validateUsername(username),
@@ -274,7 +274,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
 
   const resendVerifyAccountCode = async (username = "") => {
     appErrorsLogic.clearErrors();
-    username = username.trim();
+    username = trim(username);
 
     const validationIssues = combineValidationIssues(
       validateUsername(username)
@@ -305,8 +305,8 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   const resetPassword = async (username = "", code = "", password = "") => {
     appErrorsLogic.clearErrors();
 
-    username = username.trim();
-    code = code.trim();
+    username = trim(username);
+    code = trim(code);
 
     const validationIssues = combineValidationIssues(
       validateCode(code),
@@ -338,9 +338,9 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   ) => {
     appErrorsLogic.clearErrors();
 
-    username = username.trim();
-    code = code.trim();
-    ein = ein.trim();
+    username = trim(username);
+    code = trim(code);
+    ein = trim(ein);
 
     const validationIssues = combineValidationIssues(
       validateCode(code),
@@ -442,8 +442,8 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   const verifyAccount = async (username = "", code = "") => {
     appErrorsLogic.clearErrors();
 
-    username = username.trim();
-    code = code.trim();
+    username = trim(username);
+    code = trim(code);
 
     const validationIssues = combineValidationIssues(
       validateCode(code),
@@ -469,9 +469,9 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   const verifyEmployerAccount = async (username = "", code = "", ein = "") => {
     appErrorsLogic.clearErrors();
 
-    username = username.trim();
-    code = code.trim();
-    ein = ein.trim();
+    username = trim(username);
+    code = trim(code);
+    ein = trim(ein);
 
     const validationIssues = combineValidationIssues(
       validateCode(code),
