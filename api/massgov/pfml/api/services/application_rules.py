@@ -1,6 +1,6 @@
 from datetime import date
 from itertools import chain, combinations
-from typing import Any, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 from dateutil.relativedelta import relativedelta
 from werkzeug.datastructures import Headers
@@ -64,7 +64,16 @@ def get_address_issues(application: Application, address_field_name: str) -> Lis
     return issues
 
 
-def check_required_fields(path: str, item: Any, required_fields: List[str],) -> List[Issue]:
+def handle_rename(renames: Union[Dict[str, str], None], field_name: str) -> str:
+    if renames:
+        return renames.get(field_name, field_name)
+
+    return field_name
+
+
+def check_required_fields(
+    path: str, item: Any, required_fields: List[str], renames: Optional[Dict[str, str]] = None
+) -> List[Issue]:
     """
     Check that a set of required fields are present on item. Returns an issue for each missing required field.
     """
@@ -73,7 +82,7 @@ def check_required_fields(path: str, item: Any, required_fields: List[str],) -> 
     for field in required_fields:
         val = getattr(item, field)
         if val is None:
-            field_name = f"{path}.{field}"
+            field_name = f"{path}.{handle_rename(renames, field)}"
             issues.append(
                 Issue(
                     type=IssueType.required, message=f"{field_name} is required", field=field_name,
@@ -83,7 +92,9 @@ def check_required_fields(path: str, item: Any, required_fields: List[str],) -> 
     return issues
 
 
-def check_codependent_fields(path: str, item: Any, field_a: str, field_b: str,) -> List[Issue]:
+def check_codependent_fields(
+    path: str, item: Any, field_a: str, field_b: str, renames: Optional[Dict[str, str]] = None
+) -> List[Issue]:
     """
     Checks that neither or both of the specified fields (field_a and _field_b) are set on item. If only one
     field is set then the returned issues will not be empty.
@@ -92,8 +103,8 @@ def check_codependent_fields(path: str, item: Any, field_a: str, field_b: str,) 
 
     val_a = getattr(item, field_a)
     val_b = getattr(item, field_b)
-    field_a_path = f"{path}.{field_a}"
-    field_b_path = f"{path}.{field_b}"
+    field_a_path = f"{path}.{handle_rename(renames, field_a)}"
+    field_b_path = f"{path}.{handle_rename(renames, field_b)}"
     if val_a and not val_b:
         issues.append(
             Issue(
@@ -184,11 +195,17 @@ def get_employer_benefit_issues(benefit: EmployerBenefit, index: int) -> List[Is
     required_fields = [
         "benefit_end_date",
         "benefit_start_date",
-        "benefit_type",
+        "benefit_type_id",
     ]
-    issues += check_required_fields(benefit_path, benefit, required_fields)
+    issues += check_required_fields(
+        benefit_path, benefit, required_fields, {"benefit_type_id": "benefit_type"}
+    )
     issues += check_codependent_fields(
-        benefit_path, benefit, "benefit_amount_dollars", "benefit_amount_frequency"
+        benefit_path,
+        benefit,
+        "benefit_amount_dollars",
+        "benefit_amount_frequency_id",
+        {"benefit_amount_frequency_id": "benefit_amount_frequency"},
     )
 
     start_date = benefit.benefit_start_date
@@ -228,11 +245,17 @@ def get_other_income_issues(income: OtherIncome, index: int) -> List[Issue]:
     required_fields = [
         "income_end_date",
         "income_start_date",
-        "income_type",
+        "income_type_id",
     ]
-    issues += check_required_fields(income_path, income, required_fields)
+    issues += check_required_fields(
+        income_path, income, required_fields, {"income_type_id": "income_type"}
+    )
     issues += check_codependent_fields(
-        income_path, income, "income_amount_dollars", "income_amount_frequency"
+        income_path,
+        income,
+        "income_amount_dollars",
+        "income_amount_frequency_id",
+        {"income_amount_frequency_id": "income_amount_frequency"},
     )
 
     start_date = income.income_start_date
@@ -273,9 +296,11 @@ def get_previous_leave_issues(leave: PreviousLeave, index: int) -> List[Issue]:
         "leave_start_date",
         "leave_end_date",
         "is_for_current_employer",
-        "leave_reason",
+        "leave_reason_id",
     ]
-    issues += check_required_fields(leave_path, leave, required_fields)
+    issues += check_required_fields(
+        leave_path, leave, required_fields, {"leave_reason_id": "leave_reason"}
+    )
 
     start_date = leave.leave_start_date
     start_date_path = f"{leave_path}.leave_start_date"
@@ -322,18 +347,13 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
             )
         )
 
-    if application.leave_reason and (
-        application.leave_reason.leave_reason_id
-        in [
-            LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
-            LeaveReason.PREGNANCY_MATERNITY.leave_reason_id,
-        ]
-    ):
+    if application.leave_reason_id in [
+        LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
+        LeaveReason.PREGNANCY_MATERNITY.leave_reason_id,
+    ]:
         issues += get_medical_leave_issues(application)
 
-    if application.leave_reason and (
-        application.leave_reason.leave_reason_id == LeaveReason.CHILD_BONDING.leave_reason_id
-    ):
+    if application.leave_reason_id == LeaveReason.CHILD_BONDING.leave_reason_id:
         issues += get_bonding_leave_issues(application)
 
     if application.employer_notified:
@@ -360,7 +380,7 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
         issues += get_work_pattern_issues(application)
 
     if (
-        application.employment_status
+        application.employment_status_id
         and not application.employer_fein
         and (
             application.employment_status_id
@@ -530,7 +550,7 @@ def get_payments_issues(application: Application) -> List[Issue]:
                     field="payment_preference.routing_number",
                 )
             )
-        if not application.payment_preference.bank_account_type:
+        if not application.payment_preference.bank_account_type_id:
             issues.append(
                 Issue(
                     type=IssueType.required,
@@ -563,7 +583,7 @@ def deepgetattr(obj, attr):
 ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
     "date_of_birth": "date_of_birth",
     "first_name": "first_name",
-    "employment_status": "employment_status",
+    "employment_status_id": "employment_status",
     "employer_notified": "leave_details.employer_notified",
     "has_continuous_leave_periods": "has_continuous_leave_periods",
     "has_intermittent_leave_periods": "has_intermittent_leave_periods",
@@ -572,12 +592,12 @@ ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
     "has_state_id": "has_state_id",
     "hours_worked_per_week": "hours_worked_per_week",
     "last_name": "last_name",
-    "leave_reason": "leave_details.reason",
+    "leave_reason_id": "leave_details.reason",
     "phone.phone_number": "phone.phone_number",  # TODO (CP-1467): phone_number here includes the int_code from the request, but int_code will eventually be removed
-    "phone.phone_type_instance": "phone.phone_type",
+    "phone.phone_type_id": "phone.phone_type",
     "residential_address": "residential_address",
     "tax_identifier": "tax_identifier",
-    "work_pattern.work_pattern_type": "work_pattern.work_pattern_type",
+    "work_pattern.work_pattern_type_id": "work_pattern.work_pattern_type",
 }
 
 

@@ -41,20 +41,15 @@ from massgov.pfml.db.models.factories import (
     WorkPatternVariableFactory,
 )
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
-
-def test_first_name_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_first_name_required():
+    test_app = ApplicationFactory.build(
         first_name=None,
         has_state_id=True,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         hours_worked_per_week=70,
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -62,16 +57,14 @@ def test_first_name_required(test_db_session, initialize_factories_session):
     ] == issues
 
 
-def test_last_name_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_last_name_required():
+    test_app = ApplicationFactory.build(
         last_name=None,
         has_state_id=True,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         hours_worked_per_week=70,
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -79,16 +72,14 @@ def test_last_name_required(test_db_session, initialize_factories_session):
     ] == issues
 
 
-def test_phone_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_phone_required():
+    test_app = ApplicationFactory.build(
         phone=None,
         has_state_id=True,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         hours_worked_per_week=70,
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
     )
 
     issues = get_always_required_issues(test_app)
@@ -106,16 +97,14 @@ def test_phone_required(test_db_session, initialize_factories_session):
     ] == issues
 
 
-def test_date_of_birth_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_date_of_birth_required():
+    test_app = ApplicationFactory.build(
         date_of_birth=None,
         has_state_id=True,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         hours_worked_per_week=70,
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -123,15 +112,13 @@ def test_date_of_birth_required(test_db_session, initialize_factories_session):
     ] == issues
 
 
-def test_has_state_id_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_has_state_id_required():
+    test_app = ApplicationFactory.build(
         has_state_id=None,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         hours_worked_per_week=70,
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -139,17 +126,15 @@ def test_has_state_id_required(test_db_session, initialize_factories_session):
     ] == issues
 
 
-def test_tax_identifier_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_tax_identifier_required():
+    test_app = ApplicationFactory.build(
         tax_identifier=None,
         tax_identifier_id=None,
         has_state_id=True,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         hours_worked_per_week=70,
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -157,16 +142,14 @@ def test_tax_identifier_required(test_db_session, initialize_factories_session):
     ] == issues
 
 
-def test_leave_reason_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        leave_reason=None,
+def test_leave_reason_required():
+    test_app = ApplicationFactory.build(
+        leave_reason_id=None,
         has_state_id=True,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         hours_worked_per_week=70,
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -178,13 +161,13 @@ def test_leave_reason_required(test_db_session, initialize_factories_session):
     ] == issues
 
 
-def test_employment_status_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_employment_status_required():
+    test_app = ApplicationFactory.build(
         employment_status=None,
         hours_worked_per_week=70,
         has_state_id=True,
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -196,16 +179,14 @@ def test_employment_status_required(test_db_session, initialize_factories_sessio
     ] == issues
 
 
-def test_employer_notified_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_employer_notified_required():
+    test_app = ApplicationFactory.build(
         employer_notified=None,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         hours_worked_per_week=70,
         has_state_id=True,
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -218,8 +199,8 @@ def test_employer_notified_required(test_db_session, initialize_factories_sessio
 
 
 @freeze_time("2021-01-01")
-def test_employer_notified_date_minimum(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_employer_notified_date_minimum():
+    test_app = ApplicationFactory.build(
         employer_notified=True, employer_notification_date=date(2018, 12, 31)
     )
     issues = get_conditional_issues(test_app, Headers())
@@ -234,14 +215,12 @@ def test_employer_notified_date_minimum(test_db_session, initialize_factories_se
     )
 
 
-def test_hours_worked_per_week_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+def test_hours_worked_per_week_required():
+    test_app = ApplicationFactory.build(
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         has_state_id=True,
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -253,15 +232,13 @@ def test_hours_worked_per_week_required(test_db_session, initialize_factories_se
     ] == issues
 
 
-def test_residential_address_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_residential_address_required():
+    test_app = ApplicationFactory.build(
         residential_address=None,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         hours_worked_per_week=70,
         has_state_id=True,
-        work_pattern=WorkPatternFixedFactory.create(),
+        work_pattern=WorkPatternFixedFactory.build(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -273,14 +250,12 @@ def test_residential_address_required(test_db_session, initialize_factories_sess
     ] == issues
 
 
-def test_residential_address_fields_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        residential_address=AddressFactory.create(
+def test_residential_address_fields_required():
+    test_app = ApplicationFactory.build(
+        residential_address=AddressFactory.build(
             address_line_one=None, city=None, geo_state_id=None, zip_code=None,
         ),
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         employer_notification_date=date(2021, 1, 3),
         employer_notified=True,
     )
@@ -311,14 +286,12 @@ def test_residential_address_fields_required(test_db_session, initialize_factori
     ] == issues
 
 
-def test_mailing_address_fields_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        mailing_address=AddressFactory.create(
+def test_mailing_address_fields_required():
+    test_app = ApplicationFactory.build(
+        mailing_address=AddressFactory.build(
             address_line_one=None, city=None, geo_state_id=None, zip_code=None,
         ),
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         employer_notification_date=date(2021, 1, 3),
         employer_notified=True,
     )
@@ -349,16 +322,14 @@ def test_mailing_address_fields_required(test_db_session, initialize_factories_s
     ] == issues
 
 
-def test_has_mailing_address_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_has_mailing_address_required():
+    test_app = ApplicationFactory.build(
         has_mailing_address=None,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         hours_worked_per_week=70,
         has_state_id=True,
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
     )
     issues = get_always_required_issues(test_app)
     assert [
@@ -370,13 +341,11 @@ def test_has_mailing_address_required(test_db_session, initialize_factories_sess
     ] == issues
 
 
-def test_work_pattern_type_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+def test_work_pattern_type_required():
+    test_app = ApplicationFactory.build(
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         hours_worked_per_week=70,
-        residential_address=AddressFactory.create(),
+        residential_address=AddressFactory.build(),
         work_pattern=None,
     )
     issues = get_always_required_issues(test_app)
@@ -389,14 +358,12 @@ def test_work_pattern_type_required(test_db_session, initialize_factories_sessio
     ] == issues
 
 
-def test_has_leave_periods_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+def test_has_leave_periods_required():
+    test_app = ApplicationFactory.build(
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         hours_worked_per_week=70,
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
         has_continuous_leave_periods=None,
         has_intermittent_leave_periods=None,
         has_reduced_schedule_leave_periods=None,
@@ -422,19 +389,17 @@ def test_has_leave_periods_required(test_db_session, initialize_factories_sessio
 
 
 @freeze_time("2021-01-01")
-def test_allow_hybrid_leave(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+def test_allow_hybrid_leave():
+    test_app = ApplicationFactory.build(
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
         has_continuous_leave_periods=True,
         has_intermittent_leave_periods=False,
         has_reduced_schedule_leave_periods=True,
-        continuous_leave_periods=[ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))],
+        continuous_leave_periods=[ContinuousLeavePeriodFactory.build(start_date=date(2021, 1, 1))],
         reduced_schedule_leave_periods=[
-            ReducedScheduleLeavePeriodFactory.create(start_date=date(2021, 2, 1))
+            ReducedScheduleLeavePeriodFactory.build(start_date=date(2021, 2, 1))
         ],
     )
 
@@ -444,23 +409,23 @@ def test_allow_hybrid_leave(test_db_session, initialize_factories_session):
 
 
 @freeze_time("2021-03-01")
-def test_disallow_overlapping_hybrid_leave_dates(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_disallow_overlapping_hybrid_leave_dates():
+    test_app = ApplicationFactory.build(
         continuous_leave_periods=[
-            ContinuousLeavePeriodFactory.create(
+            ContinuousLeavePeriodFactory.build(
                 start_date=date(2021, 3, 1), end_date=date(2021, 4, 1)
             )
         ],
         reduced_schedule_leave_periods=[
-            ReducedScheduleLeavePeriodFactory.create(
+            ReducedScheduleLeavePeriodFactory.build(
                 # Make sure empty dates don't crash things
                 start_date=None,
                 end_date=None,
             ),
-            ReducedScheduleLeavePeriodFactory.create(
+            ReducedScheduleLeavePeriodFactory.build(
                 start_date=date(2021, 3, 15), end_date=date(2021, 3, 20)
             ),
-            ReducedScheduleLeavePeriodFactory.create(
+            ReducedScheduleLeavePeriodFactory.build(
                 start_date=date(2021, 3, 21), end_date=date(2021, 4, 1)
             ),
         ],
@@ -486,21 +451,17 @@ def test_disallow_overlapping_hybrid_leave_dates(test_db_session, initialize_fac
     ] == list(disallow_overlapping_leave_period_issues)
 
 
-def test_disallow_hybrid_intermittent_continuous_leave(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+def test_disallow_hybrid_intermittent_continuous_leave():
+    test_app = ApplicationFactory.build(
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
         has_continuous_leave_periods=True,
         has_intermittent_leave_periods=True,
         has_reduced_schedule_leave_periods=False,
-        continuous_leave_periods=[ContinuousLeavePeriodFactory.create()],
+        continuous_leave_periods=[ContinuousLeavePeriodFactory.build()],
         intermittent_leave_periods=[
-            IntermittentLeavePeriodFactory.create(
+            IntermittentLeavePeriodFactory.build(
                 frequency_interval_basis=FrequencyIntervalBasis.months.value,
                 frequency=6,
                 duration_basis=DurationBasis.days.value,
@@ -521,19 +482,17 @@ def test_disallow_hybrid_intermittent_continuous_leave(
     )
 
 
-def test_disallow_hybrid_intermittent_reduced_leave(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+def test_disallow_hybrid_intermittent_reduced_leave():
+    test_app = ApplicationFactory.build(
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
         has_continuous_leave_periods=False,
         has_intermittent_leave_periods=True,
         has_reduced_schedule_leave_periods=True,
-        reduced_schedule_leave_periods=[ReducedScheduleLeavePeriodFactory.create()],
+        reduced_schedule_leave_periods=[ReducedScheduleLeavePeriodFactory.build()],
         intermittent_leave_periods=[
-            IntermittentLeavePeriodFactory.create(
+            IntermittentLeavePeriodFactory.build(
                 frequency_interval_basis=FrequencyIntervalBasis.months.value,
                 frequency=6,
                 duration_basis=DurationBasis.days.value,
@@ -554,16 +513,16 @@ def test_disallow_hybrid_intermittent_reduced_leave(test_db_session, initialize_
     )
 
 
-def test_disallow_2020_leave_period_start_dates(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_disallow_2020_leave_period_start_dates():
+    test_app = ApplicationFactory.build(
         continuous_leave_periods=[
-            ContinuousLeavePeriodFactory.create(start_date=date(2020, 12, 30))
+            ContinuousLeavePeriodFactory.build(start_date=date(2020, 12, 30))
         ],
         intermittent_leave_periods=[
-            IntermittentLeavePeriodFactory.create(start_date=date(2020, 12, 30))
+            IntermittentLeavePeriodFactory.build(start_date=date(2020, 12, 30))
         ],
         reduced_schedule_leave_periods=[
-            ReducedScheduleLeavePeriodFactory.create(start_date=date(2020, 12, 30))
+            ReducedScheduleLeavePeriodFactory.build(start_date=date(2020, 12, 30))
         ],
     )
 
@@ -597,17 +556,15 @@ def test_disallow_2020_leave_period_start_dates(test_db_session, initialize_fact
     )
 
 
-def test_disallow_submit_over_60_days_before_start_date(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
+def test_disallow_submit_over_60_days_before_start_date():
+    test_app = ApplicationFactory.build(
         continuous_leave_periods=[
-            ContinuousLeavePeriodFactory.create(
+            ContinuousLeavePeriodFactory.build(
                 start_date=date(2021, 5, 1), end_date=date(2021, 5, 8)
             )
         ],
         reduced_schedule_leave_periods=[
-            ReducedScheduleLeavePeriodFactory.create(
+            ReducedScheduleLeavePeriodFactory.build(
                 start_date=date(2021, 7, 17), end_date=date(2021, 7, 28)
             )
         ],
@@ -627,13 +584,11 @@ def test_disallow_submit_over_60_days_before_start_date(
         assert disallow_submission_issue not in issues
 
 
-def test_min_leave_periods(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
-        residential_address=AddressFactory.create(),
-        work_pattern=WorkPatternFixedFactory.create(),
+def test_min_leave_periods():
+    test_app = ApplicationFactory.build(
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
+        residential_address=AddressFactory.build(),
+        work_pattern=WorkPatternFixedFactory.build(),
         has_continuous_leave_periods=False,
         has_intermittent_leave_periods=False,
         has_reduced_schedule_leave_periods=False,
@@ -653,8 +608,8 @@ def test_min_leave_periods(test_db_session, initialize_factories_session):
     ] == issues
 
 
-def test_continuous_leave_period(test_db_session, initialize_factories_session):
-    test_leave_periods = [ContinuousLeavePeriodFactory.create(start_date=None, end_date=None)]
+def test_continuous_leave_period():
+    test_leave_periods = [ContinuousLeavePeriodFactory.build(start_date=None, end_date=None)]
     issues = get_continuous_leave_issues(test_leave_periods)
 
     assert [
@@ -671,17 +626,13 @@ def test_continuous_leave_period(test_db_session, initialize_factories_session):
     ] == issues
 
 
-def test_leave_period_end_date_before_start_date(test_db_session, initialize_factories_session):
+def test_leave_period_end_date_before_start_date():
     continuous_leave_issues = get_continuous_leave_issues(
-        [
-            ContinuousLeavePeriodFactory.create(
-                start_date=date(2021, 2, 1), end_date=date(2021, 1, 1)
-            )
-        ]
+        [ContinuousLeavePeriodFactory.build(start_date=date(2021, 2, 1), end_date=date(2021, 1, 1))]
     )
     intermittent_leave_issues = get_intermittent_leave_issues(
         [
-            IntermittentLeavePeriodFactory.create(
+            IntermittentLeavePeriodFactory.build(
                 start_date=date(2021, 2, 1),
                 end_date=date(2021, 1, 1),
                 duration=1,
@@ -694,9 +645,9 @@ def test_leave_period_end_date_before_start_date(test_db_session, initialize_fac
     )
 
     reduced_schedule_leave_issues = get_reduced_schedule_leave_issues(
-        ApplicationFactory.create(
+        ApplicationFactory.build(
             reduced_schedule_leave_periods=[
-                ReducedScheduleLeavePeriodFactory.create(
+                ReducedScheduleLeavePeriodFactory.build(
                     start_date=date(2021, 2, 1), end_date=date(2021, 1, 1)
                 )
             ]
@@ -729,19 +680,13 @@ def test_leave_period_end_date_before_start_date(test_db_session, initialize_fac
 
 
 @freeze_time("2021-01-01")
-def test_leave_period_disallow_12mo_leave_period_per_type(
-    test_db_session, initialize_factories_session
-):
+def test_leave_period_disallow_12mo_leave_period_per_type():
     continuous_leave_issues = get_continuous_leave_issues(
-        [
-            ContinuousLeavePeriodFactory.create(
-                start_date=date(2021, 2, 1), end_date=date(2022, 5, 1)
-            )
-        ]
+        [ContinuousLeavePeriodFactory.build(start_date=date(2021, 2, 1), end_date=date(2022, 5, 1))]
     )
     intermittent_leave_issues = get_intermittent_leave_issues(
         [
-            IntermittentLeavePeriodFactory.create(
+            IntermittentLeavePeriodFactory.build(
                 start_date=date(2021, 2, 1),
                 end_date=date(2022, 5, 1),
                 duration=1,
@@ -754,9 +699,9 @@ def test_leave_period_disallow_12mo_leave_period_per_type(
     )
 
     reduced_schedule_leave_issues = get_reduced_schedule_leave_issues(
-        ApplicationFactory.create(
+        ApplicationFactory.build(
             reduced_schedule_leave_periods=[
-                ReducedScheduleLeavePeriodFactory.create(
+                ReducedScheduleLeavePeriodFactory.build(
                     start_date=date(2021, 2, 1), end_date=date(2022, 5, 1)
                 )
             ]
@@ -786,23 +731,21 @@ def test_leave_period_disallow_12mo_leave_period_per_type(
 
 
 @freeze_time("2021-01-01")
-def test_leave_period_disallow_12mo_leave_period(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
-        work_pattern=WorkPatternFixedFactory.create(),
+def test_leave_period_disallow_12mo_leave_period():
+    test_app = ApplicationFactory.build(
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
+        work_pattern=WorkPatternFixedFactory.build(),
         has_continuous_leave_periods=True,
         has_intermittent_leave_periods=False,
         has_reduced_schedule_leave_periods=True,
         continuous_leave_periods=[
-            ContinuousLeavePeriodFactory.create(
+            ContinuousLeavePeriodFactory.build(
                 start_date=date(2021, 1, 1), end_date=date(2021, 6, 1)
             )
         ],
         reduced_schedule_leave_periods=[
             # End date is 1 year from the continuous leave period start date
-            ReducedScheduleLeavePeriodFactory.create(
+            ReducedScheduleLeavePeriodFactory.build(
                 start_date=date(2021, 6, 2), end_date=date(2022, 1, 1)
             )
         ],
@@ -815,12 +758,12 @@ def test_leave_period_disallow_12mo_leave_period(test_db_session, initialize_fac
     ] == issues
 
 
-def test_leave_period_allows_same_start_end_date(test_db_session, initialize_factories_session):
+def test_leave_period_allows_same_start_end_date():
     start_end_date = date(2021, 2, 2)
     issues = get_reduced_schedule_leave_issues(
-        ApplicationFactory.create(
+        ApplicationFactory.build(
             reduced_schedule_leave_periods=[
-                ReducedScheduleLeavePeriodFactory.create(
+                ReducedScheduleLeavePeriodFactory.build(
                     start_date=start_end_date, end_date=start_end_date
                 ),
             ]
@@ -830,9 +773,9 @@ def test_leave_period_allows_same_start_end_date(test_db_session, initialize_fac
     assert not issues
 
 
-def test_intermittent_leave_period(test_db_session, initialize_factories_session):
+def test_intermittent_leave_period():
     test_leave_periods = [
-        IntermittentLeavePeriodFactory.create(
+        IntermittentLeavePeriodFactory.build(
             start_date=None,
             end_date=None,
             duration=None,
@@ -1153,9 +1096,9 @@ def test_intermittent_absence_days_less_than_interval_length(test_leave_periods,
     assert issues == expected_issues
 
 
-def test_reduced_leave_period_required_fields(test_db_session, initialize_factories_session):
+def test_reduced_leave_period_required_fields():
     test_leave_periods = [
-        ReducedScheduleLeavePeriodFactory.create(
+        ReducedScheduleLeavePeriodFactory.build(
             start_date=None,
             end_date=None,
             sunday_off_minutes=None,
@@ -1167,7 +1110,7 @@ def test_reduced_leave_period_required_fields(test_db_session, initialize_factor
             saturday_off_minutes=None,
         )
     ]
-    test_app = ApplicationFactory.create(reduced_schedule_leave_periods=test_leave_periods)
+    test_app = ApplicationFactory.build(reduced_schedule_leave_periods=test_leave_periods)
 
     issues = get_reduced_schedule_leave_issues(test_app)
 
@@ -1191,14 +1134,12 @@ def test_reduced_leave_period_required_fields(test_db_session, initialize_factor
 
 
 @freeze_time("2021-01-01")
-def test_reduced_leave_period_required_minutes_fields(
-    test_db_session, initialize_factories_session
-):
+def test_reduced_leave_period_required_minutes_fields():
     # Minutes fields are reported as missing when at least one is not None or 0
     #
 
     test_leave_periods = [
-        ReducedScheduleLeavePeriodFactory.create(
+        ReducedScheduleLeavePeriodFactory.build(
             start_date=date(2021, 2, 1),
             end_date=date(2021, 2, 15),
             sunday_off_minutes=15,
@@ -1210,7 +1151,7 @@ def test_reduced_leave_period_required_minutes_fields(
             saturday_off_minutes=None,
         )
     ]
-    test_app = ApplicationFactory.create(reduced_schedule_leave_periods=test_leave_periods)
+    test_app = ApplicationFactory.build(reduced_schedule_leave_periods=test_leave_periods)
 
     issues = get_reduced_schedule_leave_issues(test_app)
 
@@ -1248,9 +1189,9 @@ def test_reduced_leave_period_required_minutes_fields(
     ] == issues
 
 
-def test_reduced_leave_period_maximum_minutes(test_db_session, initialize_factories_session):
+def test_reduced_leave_period_maximum_minutes():
     test_leave_periods = [
-        ReducedScheduleLeavePeriodFactory.create(
+        ReducedScheduleLeavePeriodFactory.build(
             sunday_off_minutes=8,
             monday_off_minutes=8,
             tuesday_off_minutes=8,
@@ -1261,9 +1202,9 @@ def test_reduced_leave_period_maximum_minutes(test_db_session, initialize_factor
         )
     ]
 
-    test_app = ApplicationFactory.create(
+    test_app = ApplicationFactory.build(
         reduced_schedule_leave_periods=test_leave_periods,
-        work_pattern=WorkPatternFixedFactory.create(
+        work_pattern=WorkPatternFixedFactory.build(
             work_pattern_days=[
                 # Use different minutes so the error messages are unique per day, helping
                 # us assert that the minutes were compared against each day, rather than
@@ -1315,11 +1256,9 @@ def test_reduced_leave_period_maximum_minutes(test_db_session, initialize_factor
     ] == issues
 
 
-def test_reduced_leave_period_maximum_minutes_empty_work_pattern_days(
-    test_db_session, initialize_factories_session
-):
+def test_reduced_leave_period_maximum_minutes_empty_work_pattern_days():
     test_leave_periods = [
-        ReducedScheduleLeavePeriodFactory.create(
+        ReducedScheduleLeavePeriodFactory.build(
             sunday_off_minutes=8,
             monday_off_minutes=8,
             tuesday_off_minutes=8,
@@ -1330,9 +1269,9 @@ def test_reduced_leave_period_maximum_minutes_empty_work_pattern_days(
         )
     ]
 
-    test_app = ApplicationFactory.create(
+    test_app = ApplicationFactory.build(
         reduced_schedule_leave_periods=test_leave_periods,
-        work_pattern=WorkPatternFixedFactory.create(work_pattern_days=[]),
+        work_pattern=WorkPatternFixedFactory.build(work_pattern_days=[]),
     )
 
     issues = get_reduced_schedule_leave_issues(test_app)
@@ -1340,9 +1279,9 @@ def test_reduced_leave_period_maximum_minutes_empty_work_pattern_days(
     assert [] == issues
 
 
-def test_reduced_leave_period_minimum_total_minutes(test_db_session, initialize_factories_session):
+def test_reduced_leave_period_minimum_total_minutes():
     test_leave_periods = [
-        ReducedScheduleLeavePeriodFactory.create(
+        ReducedScheduleLeavePeriodFactory.build(
             sunday_off_minutes=0,
             monday_off_minutes=0,
             tuesday_off_minutes=0,
@@ -1352,7 +1291,7 @@ def test_reduced_leave_period_minimum_total_minutes(test_db_session, initialize_
             saturday_off_minutes=0,
         )
     ]
-    test_app = ApplicationFactory.create(reduced_schedule_leave_periods=test_leave_periods)
+    test_app = ApplicationFactory.build(reduced_schedule_leave_periods=test_leave_periods)
 
     issues = get_reduced_schedule_leave_issues(test_app)
 
@@ -1365,8 +1304,8 @@ def test_reduced_leave_period_minimum_total_minutes(test_db_session, initialize_
     ] == issues
 
 
-def test_mass_id_required_if_has_mass_id(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(has_state_id=True, mass_id=None)
+def test_mass_id_required_if_has_mass_id():
+    test_app = ApplicationFactory.build(has_state_id=True, mass_id=None)
     issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
@@ -1378,8 +1317,8 @@ def test_mass_id_required_if_has_mass_id(test_db_session, initialize_factories_s
     ] == issues
 
 
-def test_mailing_addr_required_if_has_mailing_addr(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(has_mailing_address=True, mailing_address=None)
+def test_mailing_addr_required_if_has_mailing_addr():
+    test_app = ApplicationFactory.build(has_mailing_address=True, mailing_address=None)
     issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
@@ -1391,11 +1330,12 @@ def test_mailing_addr_required_if_has_mailing_addr(test_db_session, initialize_f
     ] == issues
 
 
-def test_pregnant_required_medical_leave(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_pregnant_required_medical_leave():
+    test_app = ApplicationFactory.build(
         leave_reason_id=LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
         pregnant_or_recent_birth=None,
     )
+    assert test_app.pregnant_or_recent_birth is None
     issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
@@ -1407,8 +1347,8 @@ def test_pregnant_required_medical_leave(test_db_session, initialize_factories_s
     ] == issues
 
 
-def test_reason_qualifers_required_for_bonding(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_reason_qualifers_required_for_bonding():
+    test_app = ApplicationFactory.build(
         leave_reason_id=LeaveReason.CHILD_BONDING.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
     )
@@ -1423,10 +1363,8 @@ def test_reason_qualifers_required_for_bonding(test_db_session, initialize_facto
     ] == issues
 
 
-def test_child_birth_date_required_for_newborn_bonding(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
+def test_child_birth_date_required_for_newborn_bonding():
+    test_app = ApplicationFactory.build(
         leave_reason_id=LeaveReason.CHILD_BONDING.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
         child_birth_date=None,
@@ -1442,10 +1380,8 @@ def test_child_birth_date_required_for_newborn_bonding(
     ] == issues
 
 
-def test_child_placement_date_required_for_adoption_bonding(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
+def test_child_placement_date_required_for_adoption_bonding():
+    test_app = ApplicationFactory.build(
         leave_reason_id=LeaveReason.CHILD_BONDING.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id,
         child_placement_date=None,
@@ -1461,10 +1397,8 @@ def test_child_placement_date_required_for_adoption_bonding(
     ] == issues
 
 
-def test_child_placement_date_required_for_fostercare_bonding(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
+def test_child_placement_date_required_for_fostercare_bonding():
+    test_app = ApplicationFactory.build(
         leave_reason_id=LeaveReason.CHILD_BONDING.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id,
         child_placement_date=None,
@@ -1480,9 +1414,9 @@ def test_child_placement_date_required_for_fostercare_bonding(
     ] == issues
 
 
-def test_account_number_required_for_ACH(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        payment_preference=PaymentPreferenceFactory.create(
+def test_account_number_required_for_ACH():
+    test_app = ApplicationFactory.build(
+        payment_preference=PaymentPreferenceFactory.build(
             payment_method_id=PaymentMethod.ACH.payment_method_id, account_number=None
         )
     )
@@ -1497,9 +1431,9 @@ def test_account_number_required_for_ACH(test_db_session, initialize_factories_s
     ] == issues
 
 
-def test_routing_number_required_for_ACH(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        payment_preference=PaymentPreferenceFactory.create(
+def test_routing_number_required_for_ACH():
+    test_app = ApplicationFactory.build(
+        payment_preference=PaymentPreferenceFactory.build(
             payment_method_id=PaymentMethod.ACH.payment_method_id, routing_number=None
         )
     )
@@ -1514,9 +1448,9 @@ def test_routing_number_required_for_ACH(test_db_session, initialize_factories_s
     ] == issues
 
 
-def test_bank_account_type_required_for_ACH(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        payment_preference=PaymentPreferenceFactory.create(
+def test_bank_account_type_required_for_ACH():
+    test_app = ApplicationFactory.build(
+        payment_preference=PaymentPreferenceFactory.build(
             payment_method_id=PaymentMethod.ACH.payment_method_id, bank_account_type_id=None
         )
     )
@@ -1531,11 +1465,9 @@ def test_bank_account_type_required_for_ACH(test_db_session, initialize_factorie
     ] == issues
 
 
-def test_payment_method_required_for_payment_preference(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
-        payment_preference=PaymentPreferenceFactory.create(payment_method_id=None)
+def test_payment_method_required_for_payment_preference():
+    test_app = ApplicationFactory.build(
+        payment_preference=PaymentPreferenceFactory.build(payment_method_id=None)
     )
     issues = get_payments_issues(test_app)
     assert [
@@ -1547,9 +1479,9 @@ def test_payment_method_required_for_payment_preference(
     ] == issues
 
 
-def test_min_work_pattern_total_minutes_worked(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        work_pattern=WorkPatternFixedFactory(
+def test_min_work_pattern_total_minutes_worked():
+    test_app = ApplicationFactory.build(
+        work_pattern=WorkPatternFixedFactory.build(
             work_pattern_days=[WorkPatternDay(day_of_week_id=i + 1, minutes=0) for i in range(7)]
         )
     )
@@ -1565,9 +1497,9 @@ def test_min_work_pattern_total_minutes_worked(test_db_session, initialize_facto
     ] == issues
 
 
-def test_required_work_pattern_minutes(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        work_pattern=WorkPatternVariableFactory(
+def test_required_work_pattern_minutes():
+    test_app = ApplicationFactory.build(
+        work_pattern=WorkPatternVariableFactory.build(
             work_pattern_days=[
                 # index 0 will have 60 minutes, so work_pattern should pass minimum total minutes for work pattern
                 WorkPatternDay(day_of_week_id=i + 1, minutes=60 if i == 0 else None)
@@ -1592,9 +1524,9 @@ def test_required_work_pattern_minutes(test_db_session, initialize_factories_ses
     assert expected_issues == issues
 
 
-def test_max_work_pattern_minutes(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
-        work_pattern=WorkPatternVariableFactory(
+def test_max_work_pattern_minutes():
+    test_app = ApplicationFactory.build(
+        work_pattern=WorkPatternVariableFactory.build(
             work_pattern_days=[
                 # index 0 will be 24 hours and should be valid
                 WorkPatternDay(day_of_week_id=i + 1, minutes=24 * 60 + i)
@@ -1619,14 +1551,10 @@ def test_max_work_pattern_minutes(test_db_session, initialize_factories_session)
     assert expected_issues == issues
 
 
-def test_employer_fein_required_for_employed_claimants(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
+def test_employer_fein_required_for_employed_claimants():
+    test_app = ApplicationFactory.build(
         employer_fein=None,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         employer_notification_date=date(2021, 1, 3),
         employer_notified=True,
     )
@@ -1641,21 +1569,17 @@ def test_employer_fein_required_for_employed_claimants(
     ] == issues
 
 
-def test_employer_fein_not_required_for_self_employed_claimants(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
+def test_employer_fein_not_required_for_self_employed_claimants():
+    test_app = ApplicationFactory.build(
         employer_fein=None,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.SELF_EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.SELF_EMPLOYED.employment_status_id,
     )
     issues = get_conditional_issues(test_app, Headers())
     assert not issues
 
 
-def test_employer_notification_date_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(employer_notified=True, employer_notification_date=None)
+def test_employer_notification_date_required():
+    test_app = ApplicationFactory.build(employer_notified=True, employer_notification_date=None)
     issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
@@ -1667,14 +1591,10 @@ def test_employer_notification_date_required(test_db_session, initialize_factori
     ] == issues
 
 
-def test_employer_notification_date_required_when_employed(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
+def test_employer_notification_date_required_when_employed():
+    test_app = ApplicationFactory.build(
         employer_notified=False,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
     )
     issues = get_conditional_issues(test_app, Headers())
     assert [
@@ -1686,34 +1606,26 @@ def test_employer_notification_date_required_when_employed(
     ] == issues
 
 
-def test_employer_notification_date_not_required_when_unemployed(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
+def test_employer_notification_date_not_required_when_unemployed():
+    test_app = ApplicationFactory.build(
         employer_notified=False,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.UNEMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.UNEMPLOYED.employment_status_id,
     )
     issues = get_conditional_issues(test_app, Headers())
     assert [] == issues
 
 
-def test_employer_notification_date_not_required_when_self_employed(
-    test_db_session, initialize_factories_session
-):
-    test_app = ApplicationFactory.create(
+def test_employer_notification_date_not_required_when_self_employed():
+    test_app = ApplicationFactory.build(
         employer_notified=False,
-        employment_status=EmploymentStatus.get_instance(
-            test_db_session, template=EmploymentStatus.SELF_EMPLOYED
-        ),
+        employment_status_id=EmploymentStatus.SELF_EMPLOYED.employment_status_id,
     )
     issues = get_conditional_issues(test_app, Headers())
     assert [] == issues
 
 
-def test_has_employer_benefits_true_no_benefit(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
+def test_has_employer_benefits_true_no_benefit():
+    application = ApplicationFactory.build()
     application.has_employer_benefits = True
 
     issues = get_conditional_issues(application, Headers())
@@ -1727,36 +1639,32 @@ def test_has_employer_benefits_true_no_benefit(test_db_session, initialize_facto
     ] == issues
 
 
-def test_employer_benefit_no_issues(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
-    benefits = [EmployerBenefitFactory.create(application_id=application.application_id)]
+def test_employer_benefit_no_issues():
+    application = ApplicationFactory.build()
+    benefits = [EmployerBenefitFactory.build(application_id=application.application_id)]
     application.employer_benefits = benefits
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [] == issues
 
 
-def test_employer_benefit_amount_fields_are_optional(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
+def test_employer_benefit_amount_fields_are_optional():
+    application = ApplicationFactory.build()
     benefits = [
-        EmployerBenefitFactory.create(
+        EmployerBenefitFactory.build(
             application_id=application.application_id,
             benefit_amount_dollars=None,
-            benefit_amount_frequency=None,
+            benefit_amount_frequency_id=None,
         )
     ]
     application.employer_benefits = benefits
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [] == issues
 
 
-def test_employer_benefit_missing_fields(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(employer_benefits=[EmployerBenefit()])
+def test_employer_benefit_missing_fields():
+    test_app = ApplicationFactory.build(employer_benefits=[EmployerBenefit()])
     issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
@@ -1777,16 +1685,14 @@ def test_employer_benefit_missing_fields(test_db_session, initialize_factories_s
     ] == issues
 
 
-def test_employer_benefit_amount_dollars_required(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
+def test_employer_benefit_amount_dollars_required():
+    application = ApplicationFactory.build()
     benefits = [
-        EmployerBenefitFactory.create(
+        EmployerBenefitFactory.build(
             application_id=application.application_id, benefit_amount_dollars=None,
         )
     ]
     application.employer_benefits = benefits
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -1799,16 +1705,14 @@ def test_employer_benefit_amount_dollars_required(test_db_session, initialize_fa
     ] == issues
 
 
-def test_employer_benefit_amount_frequency_required(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
+def test_employer_benefit_amount_frequency_required():
+    application = ApplicationFactory.build()
     benefits = [
-        EmployerBenefitFactory.create(
-            application_id=application.application_id, benefit_amount_frequency=None,
+        EmployerBenefitFactory.build(
+            application_id=application.application_id, benefit_amount_frequency_id=None,
         )
     ]
     application.employer_benefits = benefits
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -1821,18 +1725,14 @@ def test_employer_benefit_amount_frequency_required(test_db_session, initialize_
     ] == issues
 
 
-def test_employer_benefit_start_date_must_be_after_2020(
-    test_db_session, initialize_factories_session
-):
-    application = ApplicationFactory.create()
+def test_employer_benefit_start_date_must_be_after_2020():
+    application = ApplicationFactory.build()
     benefits = [
-        EmployerBenefitFactory.create(
+        EmployerBenefitFactory.build(
             application_id=application.application_id, benefit_start_date=date(2020, 12, 31),
         )
     ]
     application.employer_benefits = benefits
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -1844,18 +1744,14 @@ def test_employer_benefit_start_date_must_be_after_2020(
     ] == issues
 
 
-def test_employer_benefit_end_date_must_be_after_2020(
-    test_db_session, initialize_factories_session
-):
-    application = ApplicationFactory.create()
+def test_employer_benefit_end_date_must_be_after_2020():
+    application = ApplicationFactory.build()
     benefits = [
-        EmployerBenefitFactory.create(
+        EmployerBenefitFactory.build(
             application_id=application.application_id, benefit_end_date=date(2020, 12, 31),
         )
     ]
     application.employer_benefits = benefits
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -1867,20 +1763,16 @@ def test_employer_benefit_end_date_must_be_after_2020(
     ] == issues
 
 
-def test_employer_benefit_end_date_must_be_after_start_date(
-    test_db_session, initialize_factories_session
-):
-    application = ApplicationFactory.create()
+def test_employer_benefit_end_date_must_be_after_start_date():
+    application = ApplicationFactory.build()
     benefits = [
-        EmployerBenefitFactory.create(
+        EmployerBenefitFactory.build(
             application_id=application.application_id,
             benefit_start_date=date(2021, 1, 2),
             benefit_end_date=date(2021, 1, 1),
         )
     ]
     application.employer_benefits = benefits
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -1892,10 +1784,10 @@ def test_employer_benefit_end_date_must_be_after_start_date(
     ] == issues
 
 
-def test_other_leave_feature_flagged_rules(test_db_session, initialize_factories_session):
+def test_other_leave_feature_flagged_rules():
     # Assert that API returns specific validation warnings when the
     # X-FF-Require-Other-Leaves header is present
-    application = ApplicationFactory.create()
+    application = ApplicationFactory.build()
     headers = Headers()
 
     # Rules aren't enforced when a feature flag header isn't included
@@ -1956,10 +1848,10 @@ def test_other_leave_feature_flagged_rules(test_db_session, initialize_factories
     )
 
 
-def test_other_leave_submitted_feature_flagged_rules(test_db_session, initialize_factories_session):
+def test_other_leave_submitted_feature_flagged_rules():
     # Assert that API does not return specific validation warnings when the
     # X-FF-Require-Other-Leaves header is present and the claim is already submitted
-    application = ApplicationFactory.create(submitted_time=datetime.now())
+    application = ApplicationFactory.build(submitted_time=datetime.now())
     headers = Headers()
     headers.add("X-FF-Require-Other-Leaves", "value_does_not_matter")
 
@@ -1991,8 +1883,8 @@ def test_other_leave_submitted_feature_flagged_rules(test_db_session, initialize
     )
 
 
-def test_has_other_incomes_true_no_income(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
+def test_has_other_incomes_true_no_income():
+    application = ApplicationFactory.build()
     application.has_other_incomes = True
 
     issues = get_conditional_issues(application, Headers())
@@ -2006,36 +1898,32 @@ def test_has_other_incomes_true_no_income(test_db_session, initialize_factories_
     ] == issues
 
 
-def test_other_income_no_issues(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
-    incomes = [OtherIncomeFactory.create(application_id=application.application_id,)]
+def test_other_income_no_issues():
+    application = ApplicationFactory.build()
+    incomes = [OtherIncomeFactory.build(application_id=application.application_id,)]
     application.other_incomes = incomes
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [] == issues
 
 
-def test_other_income_amount_fields_are_optional(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
+def test_other_income_amount_fields_are_optional():
+    application = ApplicationFactory.build()
     incomes = [
-        OtherIncomeFactory.create(
+        OtherIncomeFactory.build(
             application_id=application.application_id,
             income_amount_dollars=None,
-            income_amount_frequency=None,
+            income_amount_frequency_id=None,
         )
     ]
     application.other_incomes = incomes
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [] == issues
 
 
-def test_other_income_missing_fields(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(other_incomes=[OtherIncome()])
+def test_other_income_missing_fields():
+    test_app = ApplicationFactory.build(other_incomes=[OtherIncome()])
     issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
@@ -2056,16 +1944,14 @@ def test_other_income_missing_fields(test_db_session, initialize_factories_sessi
     ] == issues
 
 
-def test_other_income_amount_dollars_required(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
+def test_other_income_amount_dollars_required():
+    application = ApplicationFactory.build()
     incomes = [
-        OtherIncomeFactory.create(
+        OtherIncomeFactory.build(
             application_id=application.application_id, income_amount_dollars=None,
         )
     ]
     application.other_incomes = incomes
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -2078,16 +1964,14 @@ def test_other_income_amount_dollars_required(test_db_session, initialize_factor
     ] == issues
 
 
-def test_other_income_amount_frequency_required(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
+def test_other_income_amount_frequency_required():
+    application = ApplicationFactory.build()
     incomes = [
-        OtherIncomeFactory.create(
-            application_id=application.application_id, income_amount_frequency=None,
+        OtherIncomeFactory.build(
+            application_id=application.application_id, income_amount_frequency_id=None,
         )
     ]
     application.other_incomes = incomes
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -2100,16 +1984,14 @@ def test_other_income_amount_frequency_required(test_db_session, initialize_fact
     ] == issues
 
 
-def test_other_income_start_date_must_be_after_2020(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
+def test_other_income_start_date_must_be_after_2020():
+    application = ApplicationFactory.build()
     incomes = [
-        OtherIncomeFactory.create(
+        OtherIncomeFactory.build(
             application_id=application.application_id, income_start_date=date(2020, 12, 31),
         )
     ]
     application.other_incomes = incomes
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -2121,16 +2003,14 @@ def test_other_income_start_date_must_be_after_2020(test_db_session, initialize_
     ] == issues
 
 
-def test_other_income_end_date_must_be_after_2020(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
+def test_other_income_end_date_must_be_after_2020():
+    application = ApplicationFactory.build()
     incomes = [
-        OtherIncomeFactory.create(
+        OtherIncomeFactory.build(
             application_id=application.application_id, income_end_date=date(2020, 12, 31),
         )
     ]
     application.other_incomes = incomes
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -2142,20 +2022,16 @@ def test_other_income_end_date_must_be_after_2020(test_db_session, initialize_fa
     ] == issues
 
 
-def test_other_income_end_date_must_be_after_start_date(
-    test_db_session, initialize_factories_session
-):
-    application = ApplicationFactory.create()
+def test_other_income_end_date_must_be_after_start_date():
+    application = ApplicationFactory.build()
     incomes = [
-        OtherIncomeFactory.create(
+        OtherIncomeFactory.build(
             application_id=application.application_id,
             income_start_date=date(2021, 1, 2),
             income_end_date=date(2021, 1, 1),
         )
     ]
     application.other_incomes = incomes
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -2167,14 +2043,14 @@ def test_other_income_end_date_must_be_after_start_date(
     ] == issues
 
 
-def test_has_other_incomes_required(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(
+def test_has_other_incomes_required():
+    test_app = ApplicationFactory.build(
         other_incomes_awaiting_approval=True, has_other_incomes=False
     )
     issues = get_conditional_issues(test_app, Headers())
     assert [] == issues
 
-    test_app = ApplicationFactory.create(
+    test_app = ApplicationFactory.build(
         other_incomes_awaiting_approval=True, has_other_incomes=None
     )
     issues = get_conditional_issues(test_app, Headers())
@@ -2187,7 +2063,7 @@ def test_has_other_incomes_required(test_db_session, initialize_factories_sessio
         )
     ] == issues
 
-    test_app = ApplicationFactory.create(
+    test_app = ApplicationFactory.build(
         other_incomes_awaiting_approval=True, has_other_incomes=True
     )
     issues = get_conditional_issues(test_app, Headers())
@@ -2202,8 +2078,8 @@ def test_has_other_incomes_required(test_db_session, initialize_factories_sessio
     )
 
 
-def test_has_previous_leaves_true_no_leave(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
+def test_has_previous_leaves_true_no_leave():
+    application = ApplicationFactory.build()
     application.has_previous_leaves = True
 
     issues = get_conditional_issues(application, Headers())
@@ -2217,19 +2093,17 @@ def test_has_previous_leaves_true_no_leave(test_db_session, initialize_factories
     ] == issues
 
 
-def test_previous_leave_no_issues(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
-    leaves = [PreviousLeaveFactory.create(application_id=application.application_id,)]
+def test_previous_leave_no_issues():
+    application = ApplicationFactory.build()
+    leaves = [PreviousLeaveFactory.build(application_id=application.application_id,)]
     application.previous_leaves = leaves
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [] == issues
 
 
-def test_previous_leave_missing_fields(test_db_session, initialize_factories_session):
-    test_app = ApplicationFactory.create(previous_leaves=[PreviousLeave()])
+def test_previous_leave_missing_fields():
+    test_app = ApplicationFactory.build(previous_leaves=[PreviousLeave()])
     issues = get_conditional_issues(test_app, Headers())
     assert [
         Issue(
@@ -2255,18 +2129,14 @@ def test_previous_leave_missing_fields(test_db_session, initialize_factories_ses
     ] == issues
 
 
-def test_previous_leave_start_date_must_be_after_2020(
-    test_db_session, initialize_factories_session
-):
-    application = ApplicationFactory.create()
+def test_previous_leave_start_date_must_be_after_2020():
+    application = ApplicationFactory.build()
     leaves = [
-        PreviousLeaveFactory.create(
+        PreviousLeaveFactory.build(
             application_id=application.application_id, leave_start_date=date(2020, 12, 31),
         )
     ]
     application.previous_leaves = leaves
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -2278,16 +2148,14 @@ def test_previous_leave_start_date_must_be_after_2020(
     ] == issues
 
 
-def test_previous_leave_end_date_must_be_after_2020(test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create()
+def test_previous_leave_end_date_must_be_after_2020():
+    application = ApplicationFactory.build()
     leaves = [
-        PreviousLeaveFactory.create(
+        PreviousLeaveFactory.build(
             application_id=application.application_id, leave_end_date=date(2020, 12, 31),
         )
     ]
     application.previous_leaves = leaves
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [
@@ -2299,20 +2167,16 @@ def test_previous_leave_end_date_must_be_after_2020(test_db_session, initialize_
     ] == issues
 
 
-def test_previous_leave_end_date_must_be_after_start_date(
-    test_db_session, initialize_factories_session
-):
-    application = ApplicationFactory.create()
+def test_previous_leave_end_date_must_be_after_start_date():
+    application = ApplicationFactory.build()
     leaves = [
-        PreviousLeaveFactory.create(
+        PreviousLeaveFactory.build(
             application_id=application.application_id,
             leave_start_date=date(2021, 1, 2),
             leave_end_date=date(2021, 1, 1),
         )
     ]
     application.previous_leaves = leaves
-    test_db_session.add(application)
-    test_db_session.commit()
 
     issues = get_conditional_issues(application, Headers())
     assert [
