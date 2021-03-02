@@ -2,8 +2,10 @@
 # This should be used for seeding tables in development and testing.
 #
 
+import os
 import random
 import string
+import unittest.mock
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
@@ -22,6 +24,25 @@ db_session = None
 
 def get_db_session():
     global db_session
+
+    if os.getenv("DB_FACTORIES_DISABLE_DB_ACCESS", "0") == "1":
+        alert_db_session = unittest.mock.MagicMock()
+        alert_db_session.add.side_effect = Exception(
+            """DB_FACTORIES_DISABLE_DB_ACCESS is set, refusing database action.
+
+            If your tests don't need to cover database behavior, consider
+            calling the `build()` method instead of `create()` on the factory to
+            not persist the generated model.
+
+            If running tests that actually need data in the DB, pull in the
+            `initialize_factories_session` fixture.
+
+            If running factories outside of the tests and you see this, unset
+            the DB_FACTORIES_DISABLE_DB_ACCESS env var.
+            """
+        )
+
+        return alert_db_session
 
     if db_session is None:
         db_session = db.init()

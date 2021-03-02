@@ -28,11 +28,22 @@ from massgov.pfml.db.models.factories import UserFactory
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.api.tests.conftest")
 
 
-@pytest.fixture
-def disable_sentry(monkeypatch, autouse=True):
+@pytest.fixture(autouse=True)
+def disable_sentry(monkeypatch):
     monkeypatch.setattr(sentry_sdk, "init", lambda: None)
     monkeypatch.setattr(sentry_sdk, "capture_exception", lambda: None)
     monkeypatch.setattr(sentry_sdk, "capture_message", lambda: None)
+
+
+@pytest.fixture(autouse=True, scope="session")
+def set_no_db_factories_alert():
+    """By default, ensure factories do not attempt to access the database.
+
+    The tests that need generated models to actually hit the database can pull
+    in the `initialize_factories_session` fixture to their test case to enable
+    factory writes to the database.
+    """
+    os.environ["DB_FACTORIES_DISABLE_DB_ACCESS"] = "1"
 
 
 @pytest.fixture
@@ -344,7 +355,9 @@ def test_db(test_db_schema):
 
 
 @pytest.fixture
-def initialize_factories_session(test_db_session):
+def initialize_factories_session(monkeypatch, test_db_session):
+    monkeypatch.delenv("DB_FACTORIES_DISABLE_DB_ACCESS")
+
     import massgov.pfml.db.models.factories as factories
 
     factories.db_session = test_db_session
@@ -389,6 +402,11 @@ def test_db_other_session(test_db):
 
     db_session.close()
     db_session.remove()
+
+
+@pytest.fixture
+def mock_db_session(mocker):
+    return mocker.patch("sqlalchemy.orm.Session", autospec=True)
 
 
 @pytest.fixture

@@ -4,11 +4,6 @@ import massgov.pfml.payments.data_mart as data_mart
 import massgov.pfml.payments.data_mart_states_processing as data_mart_states_processing
 
 
-@pytest.fixture
-def mock_db_session(mocker):
-    return mocker.patch("sqlalchemy.orm.Session", autospec=True)
-
-
 def test_process_all_states_data_mart_client_fail_just_returns(mocker, mock_db_session):
     mocker.patch.object(data_mart.RealClient, "__init__", side_effect=Exception)
 
