@@ -940,6 +940,25 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>Note that we are using the <a href="https://react.i18next.com/latest/trans-component#alternative-usage-v-11-6-0">alternative usage of Trans introduced in v11.6.0</a> where components are passed in as props rather than as children of <code>Trans</code>. This method allows the use of named tags in locale strings rather than needing to refer to child components by their index.</p>
+<ul>
+<li><a href="https://www.i18next.com/translation-function/formatting">Formatters</a> are functions that define locale-specific formats for specially-formatted values such as currencies or time durations.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="nx">t</span><span class="p">(</span><span class="s2">&quot;timeDuration&quot;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">minutes</span><span class="o">:</span> <span class="mf">480</span> <span class="p">});</span> <span class="c1">// -&gt; &quot;8h&quot;</span>
+<span class="nx">t</span><span class="p">(</span><span class="s2">&quot;timeDuration&quot;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">minutes</span><span class="o">:</span> <span class="mf">475</span> <span class="p">});</span> <span class="c1">// -&gt; &quot;7h 55m&quot;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span> <span class="nx">formatValue</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">format</span><span class="p">,</span> <span class="nx">locale</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">format</span> <span class="o">===</span> <span class="s2">&quot;hoursMinutesDuration&quot;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Could also internationalize by using the locale value</span>
+    <span class="kd">const</span> <span class="p">{</span> <span class="nx">hours</span><span class="p">,</span> <span class="nx">minutes</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">convertMinutesToHours</span><span class="p">(</span><span class="nx">value</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">minutes</span> <span class="o">===</span> <span class="mf">0</span><span class="p">)</span> <span class="k">return</span> <span class="sb">`</span><span class="si">${</span><span class="nx">hours</span><span class="si">}</span><span class="sb">h`</span><span class="p">;</span>
+    <span class="k">return</span> <span class="sb">`</span><span class="si">${</span><span class="nx">hours</span><span class="si">}</span><span class="sb">h </span><span class="si">${</span><span class="nx">minutes</span><span class="si">}</span><span class="sb">m`</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nx">value</span><span class="p">;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+  <span class="kc">t</span><span class="err">imeDura</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="p">:</span> <span class="s2">&quot;{{minutes, hoursMinutesDuration}}&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
 <h3 id="conventions">Conventions</h3>
 <p>Internationalization content can get messy and lead to hard-to-find bugs during translation. As such we strictly follow the below conventions to preserve readability, maintainability, and avoid errors.</p>
 <h4 id="organization">Organization</h4>
