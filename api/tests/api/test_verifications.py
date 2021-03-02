@@ -1,4 +1,5 @@
 import logging  # noqa: B1
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -112,7 +113,14 @@ def test_verification_successful_for_valid_data(
         employer_id=employer_quarterly_contribution.employer_id,
         fineos_web_id="fake-fineos-web-id",
     )
+
+    # Must be at least 1 day ago for employer.has_verification_data to be True
+    employer_quarterly_contribution.filing_period = (datetime.now() - timedelta(1)).strftime(
+        "%Y-%m-%d"
+    )
+
     test_db_session.add(link)
+    test_db_session.add(employer_quarterly_contribution)
     test_db_session.commit()
 
     verifications_body["employer_id"] = employer_quarterly_contribution.employer_id
@@ -127,7 +135,6 @@ def test_verification_successful_for_valid_data(
         json=verifications_body,
     )
 
-    assert response.status_code == 201
     verification = test_db_session.query(Verification).first()
     user_leave_administrator = (
         test_db_session.query(UserLeaveAdministrator)
@@ -139,3 +146,21 @@ def test_verification_successful_for_valid_data(
     assert user_leave_administrator.employer_id == employer_quarterly_contribution.employer_id
     assert user_leave_administrator.verification_id == verification.verification_id
     assert "Successfully verified user." in caplog.text
+
+    assert response.status_code == 201
+    response_body = response.get_json()
+    assert response_body.get("data")["user_id"] == str(employer_user.user_id)
+    assert response_body.get("data")["roles"] == [
+        {"role_description": "Employer", "role_id": 3},
+    ]
+
+    employer = employer_quarterly_contribution.employer
+    assert response_body.get("data")["user_leave_administrators"] == [
+        {
+            "employer_dba": employer.employer_dba,
+            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_id": str(employer.employer_id),
+            "verified": True,
+            "has_verification_data": True,
+        }
+    ]

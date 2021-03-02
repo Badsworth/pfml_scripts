@@ -987,14 +987,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessfulResponse"
-                example:
-                  meta:
-                    method: "POST"
-                    resource: "/verifications"
-                  status_code: 201
-                  message: "success"
+                $ref: "#/components/schemas/UserResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
       requestBody:

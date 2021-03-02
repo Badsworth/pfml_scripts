@@ -7,6 +7,7 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.verifications.requests import VerificationRequest
+from massgov.pfml.api.users import user_response
 from massgov.pfml.db.models.employees import (
     EmployerQuarterlyContribution,
     User,
@@ -104,5 +105,5 @@ def verifications():
     logger.info("Successfully verified user.", extra=verification_request.dict())
 
     return response_util.success_response(
-        message="Successfully verified user.", status_code=201, data={}
+        message="Successfully verified user.", status_code=201, data=user_response(current_user),
     ).to_api_response()
