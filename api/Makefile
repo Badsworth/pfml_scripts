@@ -194,6 +194,9 @@ format-changed: ## Format changed files
 generate-verification-codes: ## Generate verification codes
 	$(PY_RUN_CMD) generate-verification-codes --input=$(input) --output=$(output)
 
+generate-wagesandcontributions: ## Generate fake WagesAndContributions data
+	$(PY_RUN_CMD) generate-wagesandcontributions --employer_fein=$(employer_fein) --employee_ssn=$(employee_ssn)
+
 init: ## Initialize project to run locally
 init: build deps jwks.json init-db
 
