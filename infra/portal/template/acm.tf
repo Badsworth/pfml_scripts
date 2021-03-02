@@ -1,7 +1,7 @@
 locals {
   domains = {
-    "${var.environment_name}" = "paidleave-${var.environment_name}.mass.gov"
-    "prod"                    = "paidleave.mass.gov"
+    (var.environment_name) = "paidleave-${var.environment_name}.mass.gov"
+    "prod"                 = "paidleave.mass.gov"
   }
   cert_domain = module.constants.cert_domains[var.environment_name]
   domain      = lookup(local.domains, var.environment_name)

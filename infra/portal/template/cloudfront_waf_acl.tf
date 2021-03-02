@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------#
 
 locals {
-  kinesis_data_firehose_arn = "arn:aws:firehose:us-east-1:498823821309:deliverystream/aws-waf-logs-${var.environment_name}-firewall-to-newrelic"
+  kinesis_data_firehose_arn = "arn:aws:firehose:us-east-1:498823821309:deliverystream/aws-waf-logs-${var.environment_name}-kinesis-to-s3"
 }
 
 resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
