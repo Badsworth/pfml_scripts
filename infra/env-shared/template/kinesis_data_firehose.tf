@@ -9,21 +9,9 @@ resource "aws_kinesis_firehose_delivery_stream" "aws_waf" {
   destination = "extended_s3"
 
   extended_s3_configuration {
-    role_arn   = aws_iam_role.kinesis_aws_waf_role.arn
-    bucket_arn = aws_s3_bucket.smx_kinesis_firewall_ingest.arn
-
-    processing_configuration {
-      enabled = true
-
-      processors {
-        type = "Lambda"
-
-        parameters {
-          parameter_name  = "LambdaArn"
-          parameter_value = aws_lambda_function.scrub_ip_addresses_lambda.arn
-        }
-      }
-    }
+    role_arn           = aws_iam_role.kinesis_aws_waf_role.arn
+    bucket_arn         = aws_s3_bucket.smx_kinesis_firewall_ingest.arn
+    compression_format = "Snappy" # Chosen for speed over efficiency
   }
 }
 
