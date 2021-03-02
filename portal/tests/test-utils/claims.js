@@ -216,6 +216,12 @@ export class BaseMockClaimBuilder {
             }),
           ]
     );
+
+    if (this instanceof MockClaimBuilder) {
+      // only the MockClaimBuilder has this attr, MockEmployerClaimBuilder does not
+      set(this.claimAttrs, "has_employer_benefits", true);
+    }
+
     return this;
   }
 }
