@@ -34,6 +34,7 @@
       { "name": "DB_NAME", "value": "${db_name}" },
       { "name": "DB_USERNAME", "value": "${db_username}" },
       { "name": "CORS_ORIGINS", "value": "${cors_origins}" },
+      { "name": "COGNITO_USER_POOL_CLIENT_ID", "value": "${cognito_user_pool_client_id}"},
       { "name": "COGNITO_USER_POOL_KEYS_URL", "value": "${cognito_user_pool_keys_url}"},
       { "name": "LOGGING_LEVEL", "value": "${logging_level}" },
       { "name": "RMV_CLIENT_BASE_URL", "value": "${rmv_client_base_url}" },

@@ -137,6 +137,10 @@ variable "cognito_user_pool_arn" {
   default     = null
 }
 
+variable "cognito_user_pool_client_id" {
+  type = string
+}
+
 variable "cognito_post_confirmation_lambda_artifact_s3_key" {
   description = "The S3 object key of the Cognito Post Confirmation hook Lambda artifact"
   type        = string
