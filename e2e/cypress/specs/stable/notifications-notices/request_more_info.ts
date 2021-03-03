@@ -43,8 +43,21 @@ describe("Request for More Information (notifications/notices)", () => {
       cy.get<string>("@fineos_absence_id").then((fineos_absence_id) => {
         fineos.visitClaim(fineos_absence_id);
         fineos.additionalEvidenceRequest(fineos_absence_id);
-        if (Cypress.env("E2E_ENVIRONMENT") === "performance") {
-          fineos.closeReleaseNoticeTask("Request for more Information");
+        switch (Cypress.env("E2E_ENVIRONMENT")) {
+          case "performance":
+          case "training":
+          case "uat":
+            fineos.closeReleaseNoticeTask("Request for more Information");
+            break;
+
+          case "test":
+          case "stage":
+            // @Todo: Write function to trigger Notice Generation
+            // in test/stage environments
+            break;
+
+          default:
+            throw new Error("Env Not Recognized - Try Again!");
         }
       });
     }

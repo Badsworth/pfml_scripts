@@ -50,8 +50,21 @@ describe("Denial Notification and Notice", () => {
     });
     fineos.denyClaim("Claimant wages failed 30x rule");
     cy.wait(200);
-    if (Cypress.env("E2E_ENVIRONMENT") === "performance") {
-      fineos.closeReleaseNoticeTask("Denial Notice");
+    switch (Cypress.env("E2E_ENVIRONMENT")) {
+      case "performance":
+      case "training":
+      case "uat":
+        fineos.closeReleaseNoticeTask("Denial Notice");
+        break;
+
+      case "test":
+      case "stage":
+        // @Todo: Write function to trigger Notice Generation
+        // in test/stage environments
+        break;
+
+      default:
+        throw new Error("Env Not Recognized - Try Again!");
     }
   });
 

@@ -77,8 +77,21 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
       cy.unstash<Submission>("submission").then((submission) => {
         cy.visit("/");
         fineos.claimAdjudicationFlow(submission.fineos_absence_id, true);
-        if (Cypress.env("E2E_ENVIRONMENT") === "performance") {
-          fineos.closeReleaseNoticeTask("Approval Notice");
+        switch (Cypress.env("E2E_ENVIRONMENT")) {
+          case "performance":
+          case "training":
+          case "uat":
+            fineos.closeReleaseNoticeTask("Approval Notice");
+            break;
+
+          case "test":
+          case "stage":
+            // @Todo: Write function to trigger Notice Generation
+            // in test/stage environments
+            break;
+
+          default:
+            throw new Error("Env Not Recognized - Try Again!");
         }
       });
     }
