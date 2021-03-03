@@ -292,6 +292,7 @@ def copy_file(source, destination):
             os.remove(tempfile_path)
 
     else:
+        os.makedirs(os.path.dirname(destination), exist_ok=True)
         shutil.copy2(source, destination)
 
 

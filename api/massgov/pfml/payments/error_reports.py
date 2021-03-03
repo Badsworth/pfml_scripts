@@ -1,7 +1,5 @@
-import csv
 import os
 import pathlib
-import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union, cast
@@ -23,6 +21,13 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
+from massgov.pfml.payments.reporting.abstract_reporting import Report
+from massgov.pfml.payments.reporting.error_reporting import (
+    ErrorRecord,
+    initialize_ctr_payments_error_report_group,
+    initialize_error_report,
+    initialize_fineos_payments_error_report_group,
+)
 from massgov.pfml.util.aws.ses import EmailRecipient, send_email
 
 logger = logging.get_logger(__name__)
@@ -38,53 +43,13 @@ logger = logging.get_logger(__name__)
 # See the following docs for details:
 # - https://lwd.atlassian.net/wiki/spaces/API/pages/1020067908/Payments+Reports+Errors
 # - https://lwd.atlassian.net/wiki/spaces/API/pages/970326505/Payments+State+Machines
+#
+# See also massgov.pfml.payments.reporting.error_reporting which contains
+# many of the data class style objects used for reporting
 ####
 
-# The column headers in the CSV
-DESCRIPTION_COLUMN = "Description of Issue"
-FINEOS_CUSTOMER_NUM_COLUMN = "FINEOS Customer Number"
-FINEOS_ABSENCE_ID_COLUMN = "FINEOS Absence Case ID"
-MMARS_VENDOR_CUST_NUM_COLUMN = "MMARS Vendor Customer Number"
-MMARS_DOCUMENT_ID_COLUMN = "MMARS Document ID"
-PAYMENT_DATE_COLUMN = "Payment Date"
-
-CSV_HEADER: List[str] = [
-    DESCRIPTION_COLUMN,
-    FINEOS_CUSTOMER_NUM_COLUMN,
-    FINEOS_ABSENCE_ID_COLUMN,
-    MMARS_VENDOR_CUST_NUM_COLUMN,
-    MMARS_DOCUMENT_ID_COLUMN,
-    PAYMENT_DATE_COLUMN,
-]
-
-FINEOS_PAYMENTS_EMAIL_SUBJECT = "DFML CPS Reports for {0}"
-FINEOS_PAYMENTS_EMAIL_BODY = "This is the daily error report for {0}. Attached are errors resulting from the {1}. Note that the error report might be an empty file. If this happens it means there are no outstanding errors in that category for the day."
-CTR_PAYMENTS_EMAIL_SUBJECT = "DFML CTR Reports for {0}"
-CTR_PAYMENTS_EMAIL_BODY = "This is the daily error report for {0}. Attached are errors resulting from the {1}. Note that the error report might be an empty file. If this happens it means there are no outstanding errors in that category for the day."
 
 GENERIC_OUTCOME_MSG = "No details provided for cause of issue"
-
-
-@dataclass
-class ErrorReport:
-    description: str
-    fineos_customer_number: Optional[str] = None
-    fineos_absence_id: Optional[str] = None
-    ctr_vendor_customer_code: Optional[str] = None
-    mmars_document_id: Optional[str] = None
-    payment_date: Optional[str] = None
-
-    def get_dict(self) -> Dict[str, Optional[str]]:
-        # The CSVWriter expects the dictionary of values
-        # to have keys that match the headers, so map them here
-        return {
-            DESCRIPTION_COLUMN: self.description,
-            FINEOS_CUSTOMER_NUM_COLUMN: self.fineos_customer_number,
-            FINEOS_ABSENCE_ID_COLUMN: self.fineos_absence_id,
-            MMARS_VENDOR_CUST_NUM_COLUMN: self.ctr_vendor_customer_code,
-            MMARS_DOCUMENT_ID_COLUMN: self.mmars_document_id,
-            PAYMENT_DATE_COLUMN: self.payment_date,
-        }
 
 
 @dataclass
@@ -109,16 +74,8 @@ class FileInfo:
 
 @dataclass
 class ErrorLogs:
-    errors: List[ErrorReport]
+    errors: List[ErrorRecord]
     state_logs: List[StateLog]
-
-
-def _build_file_path(working_directory: pathlib.Path, file_name: str) -> pathlib.Path:
-    # eg. "my_file" -> my_file-2020-01-01.csv
-    return (
-        working_directory
-        / f"{payments_util.get_now().strftime('%Y-%m-%d-%H-%M-%S')}-{file_name}.csv"
-    )
 
 
 def _parse_outcome(state_log: StateLog) -> Outcome:
@@ -157,19 +114,6 @@ def _parse_outcome(state_log: StateLog) -> Outcome:
             description_values.insert(0, key)
 
     return Outcome(key, "\n".join(description_values))
-
-
-def _create_file(errors: List[ErrorReport], outfile: pathlib.Path) -> pathlib.Path:
-    # Note, from the docs:
-    # "the value None is written as the empty string" - which is fine for us
-    # https://docs.python.org/3/library/csv.html#csv.DictWriter
-    with open(outfile, "w", newline="") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=CSV_HEADER, quoting=csv.QUOTE_ALL)
-        writer.writeheader()
-        for error in errors:
-            writer.writerow(error.get_dict())
-
-    return outfile
 
 
 def _get_employee_claim_payment_from_state_log(
@@ -259,7 +203,7 @@ def _build_error_report(
     mmars_doc_id: Optional[str],
     add_vendor_customer_code: bool,
     db_session: db.Session,
-) -> Optional[ErrorReport]:
+) -> Optional[ErrorRecord]:
     # If associated_class is PAYMENT, all of these should be set
     #    unless the payment errored before we were able to create the
     #    payment in fineos_payment_export. In that case, we will have no
@@ -293,7 +237,7 @@ def _build_error_report(
         if add_vendor_customer_code:
             ctr_vendor_customer_code = db_models.employee.ctr_vendor_customer_code
 
-    return ErrorReport(
+    return ErrorRecord(
         description=description,
         fineos_customer_number=fineos_customer_number,
         fineos_absence_id=fineos_absence_id,
@@ -364,14 +308,14 @@ def _build_state_log(
 
 
 def _make_simple_report(
-    outfile: pathlib.Path,
+    report_name: str,
     current_state: LkState,
     next_state: LkState,
     associated_class: state_log_util.AssociatedClass,
     add_vendor_customer_code: bool,
     add_mmars_doc_id: bool,
     db_session: db.Session,
-) -> pathlib.Path:
+) -> Report:
     state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=associated_class, end_state=current_state, db_session=db_session
     )
@@ -382,7 +326,7 @@ def _make_simple_report(
         len(state_logs),
     )
 
-    errors: List[ErrorReport] = []
+    errors: List[ErrorRecord] = []
 
     for state_log in state_logs:
         outcome = _parse_outcome(state_log)
@@ -424,9 +368,10 @@ def _make_simple_report(
             next_state=next_state,
             db_session=db_session,
         )
+    report = initialize_error_report(report_name)
+    report.add_records(errors)
 
-    _create_file(errors, outfile)
-    return outfile
+    return report
 
 
 def _get_time_based_errors(
@@ -436,7 +381,7 @@ def _get_time_based_errors(
     days_stuck: int,
     now: datetime,
     db_session: db.Session,
-) -> List[ErrorReport]:
+) -> List[ErrorRecord]:
     state_logs = state_log_util.get_state_logs_stuck_in_state(
         associated_class=associated_class,
         end_state=current_state,
@@ -453,7 +398,7 @@ def _get_time_based_errors(
         len(state_logs),
     )
 
-    errors: List[ErrorReport] = []
+    errors: List[ErrorRecord] = []
 
     for state_log in state_logs:
         description = f"Process has been stuck for {days_stuck} days in [{current_state.state_description}] without a resolution."
@@ -516,11 +461,14 @@ def _send_errors_email(subject: str, body: str, error_files: List[pathlib.Path])
         )
 
 
-def _send_fineos_payments_errors(working_directory: pathlib.Path, db_session: db.Session) -> None:
+def _send_fineos_payments_errors(db_session: db.Session) -> None:
+    # Create the report group which will contain the reports
+    report_group = initialize_fineos_payments_error_report_group()
+
     ### Simple Reports
     # ADD_TO_PAYMENT_EXPORT_ERROR_REPORT -> PAYMENT_EXPORT_ERROR_REPORT_SENT
     cps_payment_export_report = _make_simple_report(
-        outfile=_build_file_path(working_directory, "CPS-payment-export-error-report"),
+        report_name="CPS-payment-export-error-report",
         current_state=State.ADD_TO_PAYMENT_EXPORT_ERROR_REPORT,
         next_state=State.PAYMENT_EXPORT_ERROR_REPORT_SENT,
         associated_class=state_log_util.AssociatedClass.PAYMENT,
@@ -528,10 +476,11 @@ def _send_fineos_payments_errors(working_directory: pathlib.Path, db_session: db
         add_mmars_doc_id=False,
         db_session=db_session,
     )
+    report_group.add_report(cps_payment_export_report)
 
     # ADD_TO_VENDOR_EXPORT_ERROR_REPORT -> VENDOR_EXPORT_ERROR_REPORT_SENT
     cps_vendor_export_report = _make_simple_report(
-        outfile=_build_file_path(working_directory, "CPS-vendor-export-error-report"),
+        report_name="CPS-vendor-export-error-report",
         current_state=State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT,
         next_state=State.VENDOR_EXPORT_ERROR_REPORT_SENT,
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
@@ -539,24 +488,18 @@ def _send_fineos_payments_errors(working_directory: pathlib.Path, db_session: db
         add_mmars_doc_id=False,
         db_session=db_session,
     )
+    report_group.add_report(cps_vendor_export_report)
     ### No time based reports exist for this task
 
-    today = payments_util.get_now()
-
-    files = [cps_payment_export_report, cps_vendor_export_report]
-    _send_errors_email(
-        subject=FINEOS_PAYMENTS_EMAIL_SUBJECT.format(today.strftime("%m/%d/%Y")),
-        body=FINEOS_PAYMENTS_EMAIL_BODY.format(today.strftime("%m/%d/%Y"), "FINEOS processing"),
-        error_files=files,
-    )
+    # Finally create the reports and send them
+    report_group.create_and_send_reports()
 
 
 def send_fineos_error_reports(db_session: db.Session) -> None:
     logger.info("Creating FINEOS payment reports")
 
     try:
-        working_directory = pathlib.Path(tempfile.mkdtemp())
-        _send_fineos_payments_errors(working_directory, db_session)
+        _send_fineos_payments_errors(db_session)
 
         # Finally if the email was sent successfully, we commit the state log
         # entries to the DB. The objects are already in a finished state
@@ -568,13 +511,15 @@ def send_fineos_error_reports(db_session: db.Session) -> None:
         db_session.rollback()
 
 
-def _send_ctr_payments_errors(working_directory: pathlib.Path, db_session: db.Session) -> None:
+def _send_ctr_payments_errors(db_session: db.Session) -> None:
     now = datetime_util.utcnow()  # This has the same TZ as the StateLogs
+
+    report_group = initialize_ctr_payments_error_report_group()
 
     ### Simple Reports
     # ADD_TO_GAX_ERROR_REPORT -> GAX_ERROR_REPORT_SENT
     gax_error_report = _make_simple_report(
-        outfile=_build_file_path(working_directory, "GAX-error-report"),
+        report_name="GAX-error-report",
         current_state=State.ADD_TO_GAX_ERROR_REPORT,
         next_state=State.GAX_ERROR_REPORT_SENT,
         associated_class=state_log_util.AssociatedClass.PAYMENT,
@@ -582,9 +527,10 @@ def _send_ctr_payments_errors(working_directory: pathlib.Path, db_session: db.Se
         add_mmars_doc_id=True,
         db_session=db_session,
     )
+    report_group.add_report(gax_error_report)
     # ADD_TO_VCC_ERROR_REPORT -> VCC_ERROR_REPORT_SENT
     vcc_error_report = _make_simple_report(
-        outfile=_build_file_path(working_directory, "VCC-error-report"),
+        report_name="VCC-error-report",
         current_state=State.ADD_TO_VCC_ERROR_REPORT,
         next_state=State.VCC_ERROR_REPORT_SENT,
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
@@ -592,9 +538,10 @@ def _send_ctr_payments_errors(working_directory: pathlib.Path, db_session: db.Se
         add_mmars_doc_id=True,
         db_session=db_session,
     )
+    report_group.add_report(vcc_error_report)
     # ADD_TO_VCM_REPORT -> VCM_REPORT_SENT
     vcm_report = _make_simple_report(
-        outfile=_build_file_path(working_directory, "VCM-report"),
+        report_name="VCM-report",
         current_state=State.ADD_TO_VCM_REPORT,
         next_state=State.VCM_REPORT_SENT,
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
@@ -602,9 +549,10 @@ def _send_ctr_payments_errors(working_directory: pathlib.Path, db_session: db.Se
         add_mmars_doc_id=False,
         db_session=db_session,
     )
+    report_group.add_report(vcm_report)
     # ADD_TO_EFT_ERROR_REPORT -> EFT_ERROR_REPORT_SENT
     eft_error_report = _make_simple_report(
-        outfile=_build_file_path(working_directory, "EFT-error-report"),
+        report_name="EFT-error-report",
         current_state=State.ADD_TO_EFT_ERROR_REPORT,
         next_state=State.EFT_ERROR_REPORT_SENT,
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
@@ -612,6 +560,7 @@ def _send_ctr_payments_errors(working_directory: pathlib.Path, db_session: db.Se
         add_mmars_doc_id=False,
         db_session=db_session,
     )
+    report_group.add_report(eft_error_report)
 
     ### Time Based Reports
     ## Payment Audit Error Report - Contains 3 separate queries worth of data
@@ -643,15 +592,15 @@ def _send_ctr_payments_errors(working_directory: pathlib.Path, db_session: db.Se
         db_session=db_session,
     )
 
-    # Build the CSV from all three sets of payment errors
+    # Build the report from all three sets of payment errors
     payment_audit_errors = (
         gax_error_report_stuck_errors
         + gax_sent_stuck_errors
         + confirm_vend_status_in_mmars_stuck_errors
     )
-    payment_audit_error_report = _create_file(
-        payment_audit_errors, _build_file_path(working_directory, "payment-audit-error-report"),
-    )
+    payment_audit_error_report = initialize_error_report("payment-audit-error-report")
+    payment_audit_error_report.add_records(payment_audit_errors)
+    report_group.add_report(payment_audit_error_report)
 
     ## Vendor Audit Error Report - Contains 3 separate queries worth of data
     # VCM_REPORT_SENT >> 15 days >> VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED
@@ -682,13 +631,13 @@ def _send_ctr_payments_errors(working_directory: pathlib.Path, db_session: db.Se
         db_session=db_session,
     )
 
-    # Build the CSV from all three sets of vendor errors
+    # Build the report from all three sets of vendor errors
     vendor_audit_errors = (
         vcm_sent_stuck_errors + vcc_sent_stuck_errors + vcc_error_report_stuck_errors
     )
-    vendor_audit_error_report = _create_file(
-        vendor_audit_errors, _build_file_path(working_directory, "vendor-audit-error-report"),
-    )
+    vendor_audit_error_report = initialize_error_report("vendor-audit-error-report")
+    vendor_audit_error_report.add_records(vendor_audit_errors)
+    report_group.add_report(vendor_audit_error_report)
 
     # EFT audit error report - Contains just one queries worth of data
     # EFT_PENDING >> 15 days >> EFT_ALLOWABLE_TIME_IN_STATE_EXCEEDED
@@ -700,36 +649,20 @@ def _send_ctr_payments_errors(working_directory: pathlib.Path, db_session: db.Se
         now=now,
         db_session=db_session,
     )
-    # Build the CSV for EFT errors
-    eft_audit_error_report = _create_file(
-        eft_stuck_errors, _build_file_path(working_directory, "EFT-audit-error-report"),
-    )
+    # Build the report for EFT errors
+    eft_audit_error_report = initialize_error_report("EFT-audit-error-report")
+    eft_audit_error_report.add_records(eft_stuck_errors)
+    report_group.add_report(eft_audit_error_report)
 
-    files = [
-        gax_error_report,
-        vcc_error_report,
-        vcm_report,
-        eft_error_report,
-        payment_audit_error_report,
-        vendor_audit_error_report,
-        eft_audit_error_report,
-    ]
-
-    today = payments_util.get_now()
-
-    _send_errors_email(
-        subject=CTR_PAYMENTS_EMAIL_SUBJECT.format(today.strftime("%m/%d/%Y")),
-        body=CTR_PAYMENTS_EMAIL_BODY.format(today.strftime("%m/%d/%Y"), "CTR processing"),
-        error_files=files,
-    )
+    # Finally create the reports and send them
+    report_group.create_and_send_reports()
 
 
 def send_ctr_error_reports(db_session: db.Session) -> None:
     logger.info("Creating CTR payment error reports")
 
     try:
-        working_directory = pathlib.Path(tempfile.mkdtemp())
-        _send_ctr_payments_errors(working_directory, db_session)
+        _send_ctr_payments_errors(db_session)
 
         # Finally if the email was sent successfully, we commit the state log
         # entries to the DB. The objects are already in a finished state

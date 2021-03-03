@@ -1,11 +1,15 @@
 import csv
+import os
 
 import pytest
 from freezegun import freeze_time
+from smart_open import open as smart_open
 
 import massgov.pfml.api.util.state_log_util as state_log_util
+import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.error_reports as error_reports
 import massgov.pfml.payments.payments_util as payments_util
+import massgov.pfml.payments.reporting.error_reporting as error_reporting
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import Flow, LkState, Payment, State, StateLog
 from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
@@ -51,29 +55,44 @@ def setup_state_log_in_end_state(associated_class, end_state, test_db_session, a
     return state_log_results
 
 
-def parse_csv(path):
-    with open(path) as csv_file:
+def parse_csv(s3_prefix, file_name):
+    path = os.path.join(s3_prefix, file_name)
+    with smart_open(path) as csv_file:
         reader = csv.DictReader(csv_file, delimiter=",")
         records = [record for record in reader]
         # These records tend to come in the same order we created them, but add a sort
         # command to make certain they're sorted by the customer number (which should always be present)
-        sorted(records, key=lambda record: record[error_reports.FINEOS_CUSTOMER_NUM_COLUMN])
+        sorted(records, key=lambda record: record[error_reporting.FINEOS_CUSTOMER_NUM_COLUMN])
         return records
 
 
 def validate_fineos_files(date_str, file_names):
-    assert file_names[0] == f"{date_str}-CPS-payment-export-error-report.csv"
-    assert file_names[1] == f"{date_str}-CPS-vendor-export-error-report.csv"
+    # All files are in a subdirectory and will look like
+    # 2020-01-01/2020-01-01-07-00-00-filename.csv
+
+    # Date str comes in with a full timestamp, but the folder is just
+    # the date, so pull the date out of that.
+    date = date_str[:10]
+
+    assert file_names[0] == f"{date}/{date_str}-CPS-payment-export-error-report.csv"
+    assert file_names[1] == f"{date}/{date_str}-CPS-vendor-export-error-report.csv"
 
 
 def validate_ctr_files(date_str, file_names):
-    assert file_names[0] == f"{date_str}-EFT-audit-error-report.csv"
-    assert file_names[1] == f"{date_str}-EFT-error-report.csv"
-    assert file_names[2] == f"{date_str}-GAX-error-report.csv"
-    assert file_names[3] == f"{date_str}-VCC-error-report.csv"
-    assert file_names[4] == f"{date_str}-VCM-report.csv"
-    assert file_names[5] == f"{date_str}-payment-audit-error-report.csv"
-    assert file_names[6] == f"{date_str}-vendor-audit-error-report.csv"
+    # All files are in a subdirectory and will look like
+    # 2020-01-01/2020-01-01-07-00-00-filename.csv
+
+    # Date str comes in with a full timestamp, but the folder is just
+    # the date, so pull the date out of that.
+    date = date_str[:10]
+
+    assert file_names[0] == f"{date}/{date_str}-EFT-audit-error-report.csv"
+    assert file_names[1] == f"{date}/{date_str}-EFT-error-report.csv"
+    assert file_names[2] == f"{date}/{date_str}-GAX-error-report.csv"
+    assert file_names[3] == f"{date}/{date_str}-VCC-error-report.csv"
+    assert file_names[4] == f"{date}/{date_str}-VCM-report.csv"
+    assert file_names[5] == f"{date}/{date_str}-payment-audit-error-report.csv"
+    assert file_names[6] == f"{date}/{date_str}-vendor-audit-error-report.csv"
 
 
 def add_mmars_payments_for_claim(claim, test_db_session):
@@ -239,23 +258,24 @@ def test_get_employee_claim_payment_from_state_log_multiple_mmars_claims(
 
 @freeze_time("2020-01-01 12:00:00")
 def test_send_fineos_payments_errors_empty_db(
-    test_db_session, initialize_factories_session, tmp_path, mock_ses, set_exporter_env_vars
+    test_db_session, initialize_factories_session, mock_ses, set_exporter_env_vars
 ):
+    s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
     # If there is nothing in a bad state, this should just create
     # a bunch of CSVs with just a header
-    error_reports._send_fineos_payments_errors(tmp_path, test_db_session)
+    error_reports._send_fineos_payments_errors(test_db_session)
 
-    file_names = file_util.list_files(str(tmp_path))
+    file_names = file_util.list_files(s3_prefix, recursive=True)
     assert len(file_names) == 2  # 2 total reports
     file_names.sort()
     validate_fineos_files("2020-01-01-07-00-00", file_names)
 
     for file_name in file_names:
-        with open(tmp_path / file_name) as csv_file:
+        with smart_open(os.path.join(s3_prefix, file_name)) as csv_file:
             reader = csv.reader(csv_file, delimiter=",")
             lines = [row for row in reader]
             assert len(lines) == 1
-            assert lines[0] == error_reports.CSV_HEADER
+            assert lines[0] == error_reporting.CSV_HEADER
 
     # As a sanity check, even afterwards, no state logs should
     # be updated/exist
@@ -266,23 +286,24 @@ def test_send_fineos_payments_errors_empty_db(
 
 @freeze_time("2020-01-01 12:00:00")
 def test_send_ctr_payments_errors_empty_db(
-    test_db_session, initialize_factories_session, tmp_path, mock_ses, set_exporter_env_vars
+    test_db_session, initialize_factories_session, mock_ses, set_exporter_env_vars
 ):
+    s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
     # If there is nothing in a bad state, this should just create
     # a bunch of CSVs with just a header
-    error_reports._send_ctr_payments_errors(tmp_path, test_db_session)
+    error_reports._send_ctr_payments_errors(test_db_session)
 
-    file_names = file_util.list_files(str(tmp_path))
+    file_names = file_util.list_files(s3_prefix, recursive=True)
     assert len(file_names) == 7  # 7 total reports
     file_names.sort()
     validate_ctr_files("2020-01-01-07-00-00", file_names)
 
     for file_name in file_names:
-        with open(tmp_path / file_name) as csv_file:
+        with smart_open(os.path.join(s3_prefix, file_name)) as csv_file:
             reader = csv.reader(csv_file, delimiter=",")
             lines = [row for row in reader]
             assert len(lines) == 1
-            assert lines[0] == error_reports.CSV_HEADER
+            assert lines[0] == error_reporting.CSV_HEADER
 
     # As a sanity check, even afterwards, no state logs should
     # be updated/exist
@@ -293,8 +314,9 @@ def test_send_ctr_payments_errors_empty_db(
 
 @freeze_time("2020-01-01 12:00:00")
 def test_send_fineos_payments_errors(
-    test_db_session, initialize_factories_session, tmp_path, mock_ses, set_exporter_env_vars
+    test_db_session, initialize_factories_session, mock_ses, set_exporter_env_vars
 ):
+    s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
     # Setup for cps_payment_export_report
     setup_state_log_in_end_state(
         state_log_util.AssociatedClass.PAYMENT,
@@ -329,40 +351,40 @@ def test_send_fineos_payments_errors(
     )
     test_db_session.commit()
 
-    error_reports._send_fineos_payments_errors(tmp_path, test_db_session)
+    error_reports._send_fineos_payments_errors(test_db_session)
 
-    file_names = file_util.list_files(str(tmp_path))
+    file_names = file_util.list_files(s3_prefix, recursive=True)
     assert len(file_names) == 2  # 2 total reports
     file_names.sort()
     validate_fineos_files("2020-01-01-07-00-00", file_names)
 
-    cps_payment_records = parse_csv(tmp_path / file_names[0])
+    cps_payment_records = parse_csv(s3_prefix, file_names[0])
     assert len(cps_payment_records) == 1
     assert cps_payment_records[0] == {
-        error_reports.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000000",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "NTN-00-ABS-00",
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",
-        error_reports.PAYMENT_DATE_COLUMN: "01/07/2020",
+        error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000000",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-00-ABS-00",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
-    cps_vendor_records = parse_csv(tmp_path / file_names[1])
+    cps_vendor_records = parse_csv(s3_prefix, file_names[1])
     assert len(cps_vendor_records) == 2
     assert cps_vendor_records[0] == {
-        error_reports.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000001",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",
-        error_reports.PAYMENT_DATE_COLUMN: "",
+        error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000001",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",
+        error_reporting.PAYMENT_DATE_COLUMN: "",
     }
     assert cps_vendor_records[1] == {
-        error_reports.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000002",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "NTN-02-ABS-02",
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",
-        error_reports.PAYMENT_DATE_COLUMN: "01/07/2020",
+        error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000002",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-02-ABS-02",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
 
     # Show that we can do a rollback
@@ -382,8 +404,9 @@ def test_send_fineos_payments_errors(
 
 @freeze_time("2020-01-01 12:00:00")
 def test_send_ctr_payments_errors_simple_reports(
-    test_db_session, initialize_factories_session, tmp_path, mock_ses, set_exporter_env_vars
+    test_db_session, initialize_factories_session, mock_ses, set_exporter_env_vars
 ):
+    s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
     # In the interest of keeping this single test at only 200 lines,
     # the time-based reports are in the next test (test_send_ctr_payments_errors_time_based_reports)
 
@@ -476,79 +499,79 @@ def test_send_ctr_payments_errors_simple_reports(
     test_db_session.commit()
 
     # Finally call the method after all that setup
-    error_reports._send_ctr_payments_errors(tmp_path, test_db_session)
+    error_reports._send_ctr_payments_errors(test_db_session)
 
-    file_names = file_util.list_files(str(tmp_path))
+    file_names = file_util.list_files(s3_prefix, recursive=True)
     assert len(file_names) == 7  # 7 total reports
     file_names.sort()
     validate_ctr_files("2020-01-01-07-00-00", file_names)
 
-    eft_records = parse_csv(tmp_path / file_names[1])
+    eft_records = parse_csv(s3_prefix, file_names[1])
     assert len(eft_records) == 2
     assert eft_records[0] == {
-        error_reports.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000005",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-05",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Explicitly not set
-        error_reports.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000005",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-05",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Explicitly not set
+        error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
     }
     assert eft_records[1] == {
-        error_reports.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000006",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "NTN-06-ABS-06",
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-06",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Explicitly not set
-        error_reports.PAYMENT_DATE_COLUMN: "01/07/2020",
+        error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000006",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-06-ABS-06",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-06",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Explicitly not set
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
 
-    gax_records = parse_csv(tmp_path / file_names[2])
+    gax_records = parse_csv(s3_prefix, file_names[2])
     assert len(gax_records) == 1
     assert gax_records[0] == {
-        error_reports.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000000",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "NTN-00-ABS-00",
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-00",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "RecordName",
-        error_reports.PAYMENT_DATE_COLUMN: "01/07/2020",
+        error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000000",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-00-ABS-00",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-00",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "RecordName",
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
 
-    vcc_records = parse_csv(tmp_path / file_names[3])
+    vcc_records = parse_csv(s3_prefix, file_names[3])
     assert len(vcc_records) == 2
     assert vcc_records[0] == {
-        error_reports.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000001",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-01",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "RecordName",
-        error_reports.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000001",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-01",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "RecordName",
+        error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
     }
     assert vcc_records[1] == {
-        error_reports.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000002",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "NTN-02-ABS-02",
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-02",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "RecordName",
-        error_reports.PAYMENT_DATE_COLUMN: "01/07/2020",
+        error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000002",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-02-ABS-02",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-02",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "RecordName",
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
 
-    vcm_records = parse_csv(tmp_path / file_names[4])
+    vcm_records = parse_csv(s3_prefix, file_names[4])
     assert len(vcm_records) == 2
     assert vcm_records[0] == {
-        error_reports.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000003",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-03",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Explicitly not set
-        error_reports.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000003",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-03",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Explicitly not set
+        error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
     }
     assert vcm_records[1] == {
-        error_reports.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000004",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "NTN-04-ABS-04",
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-04",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Explicitly not set
-        error_reports.PAYMENT_DATE_COLUMN: "01/07/2020",
+        error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000004",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-04-ABS-04",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-04",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Explicitly not set
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
 
     # Show that we can do a rollback
@@ -568,7 +591,7 @@ def test_send_ctr_payments_errors_simple_reports(
 
 @freeze_time("2020-01-01 12:00:00")
 def test_send_ctr_payments_errors_eft_pending(
-    test_db_session, initialize_factories_session, tmp_path, mock_ses, set_exporter_env_vars
+    test_db_session, initialize_factories_session, mock_ses, set_exporter_env_vars
 ):
     # Setup for VCM Report
     setup_state_log_in_end_state(
@@ -600,7 +623,7 @@ def test_send_ctr_payments_errors_eft_pending(
     test_db_session.commit()
 
     # Finally call the method after all that setup
-    error_reports._send_ctr_payments_errors(tmp_path, test_db_session)
+    error_reports._send_ctr_payments_errors(test_db_session)
 
     # Confirm state logs for VENDOR_EFT flow
     state_logs = (
@@ -616,8 +639,9 @@ def test_send_ctr_payments_errors_eft_pending(
 
 @freeze_time("2020-04-01 12:00:00")
 def test_send_ctr_payments_errors_time_based_reports(
-    test_db_session, initialize_factories_session, tmp_path, mock_ses, set_exporter_env_vars
+    test_db_session, initialize_factories_session, mock_ses, set_exporter_env_vars
 ):
+    s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
     # Note, for the sake of this test, all state logs are too old/stuck
     # The utilities used in this test create the records on 2020-01-01, so we've set "now" to 2020-04-01
 
@@ -759,108 +783,108 @@ def test_send_ctr_payments_errors_time_based_reports(
     test_db_session.commit()
 
     # Finally call the method after all that setup
-    error_reports._send_ctr_payments_errors(tmp_path, test_db_session)
+    error_reports._send_ctr_payments_errors(test_db_session)
 
-    file_names = file_util.list_files(str(tmp_path))
+    file_names = file_util.list_files(s3_prefix, recursive=True)
     assert len(file_names) == 7  # 7 total reports
     file_names.sort()
     validate_ctr_files("2020-04-01-08-00-00", file_names)
 
-    eft_audit_records = parse_csv(tmp_path / file_names[0])
+    eft_audit_records = parse_csv(s3_prefix, file_names[0])
     assert len(eft_audit_records) == 2
     assert eft_audit_records[0] == {
-        error_reports.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [EFT pending] without a resolution.",
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000009",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-09",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reports.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [EFT pending] without a resolution.",
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000009",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-09",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+        error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
     }
     assert eft_audit_records[1] == {
-        error_reports.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [EFT pending] without a resolution.",
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000010",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "NTN-10-ABS-10",
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-10",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reports.PAYMENT_DATE_COLUMN: "01/07/2020",
+        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [EFT pending] without a resolution.",
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000010",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-10-ABS-10",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-10",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
 
-    payment_audit_records = parse_csv(tmp_path / file_names[5])
+    payment_audit_records = parse_csv(s3_prefix, file_names[5])
     assert len(payment_audit_records) == 3
     assert payment_audit_records[0] == {
-        error_reports.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [GAX error report sent] without a resolution.",
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000000",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "NTN-00-ABS-00",
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-00",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reports.PAYMENT_DATE_COLUMN: "01/07/2020",
+        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [GAX error report sent] without a resolution.",
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000000",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-00-ABS-00",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-00",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
     assert payment_audit_records[1] == {
-        error_reports.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [GAX sent] without a resolution.",
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000001",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "NTN-01-ABS-01",
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-01",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reports.PAYMENT_DATE_COLUMN: "01/07/2020",
+        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [GAX sent] without a resolution.",
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000001",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-01-ABS-01",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-01",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
     assert payment_audit_records[2] == {
-        error_reports.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [Confirm vendor status in MMARS] without a resolution.",
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000002",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "NTN-02-ABS-02",
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-02",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reports.PAYMENT_DATE_COLUMN: "01/07/2020",
+        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [Confirm vendor status in MMARS] without a resolution.",
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000002",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-02-ABS-02",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-02",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
 
-    vendor_audit_records = parse_csv(tmp_path / file_names[6])
+    vendor_audit_records = parse_csv(s3_prefix, file_names[6])
     assert len(vendor_audit_records) == 6
     assert vendor_audit_records[0] == {
-        error_reports.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [VCM report sent] without a resolution.",
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000003",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-03",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reports.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [VCM report sent] without a resolution.",
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000003",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-03",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+        error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
     }
     assert vendor_audit_records[1] == {
-        error_reports.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [VCM report sent] without a resolution.",
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000004",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "NTN-04-ABS-04",
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-04",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reports.PAYMENT_DATE_COLUMN: "01/07/2020",
+        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [VCM report sent] without a resolution.",
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000004",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-04-ABS-04",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-04",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
     assert vendor_audit_records[2] == {
-        error_reports.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC sent] without a resolution.",
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000005",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-05",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reports.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC sent] without a resolution.",
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000005",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-05",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+        error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
     }
     assert vendor_audit_records[3] == {
-        error_reports.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC sent] without a resolution.",
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000006",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "NTN-06-ABS-06",
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-06",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reports.PAYMENT_DATE_COLUMN: "01/07/2020",
+        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC sent] without a resolution.",
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000006",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-06-ABS-06",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-06",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
     assert vendor_audit_records[4] == {
-        error_reports.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC error report sent] without a resolution.",
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000007",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-07",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reports.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC error report sent] without a resolution.",
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000007",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-07",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+        error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
     }
     assert vendor_audit_records[5] == {
-        error_reports.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC error report sent] without a resolution.",
-        error_reports.FINEOS_CUSTOMER_NUM_COLUMN: "000000008",
-        error_reports.FINEOS_ABSENCE_ID_COLUMN: "NTN-08-ABS-08",
-        error_reports.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-08",
-        error_reports.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reports.PAYMENT_DATE_COLUMN: "01/07/2020",
+        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC error report sent] without a resolution.",
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000008",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-08-ABS-08",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-08",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
 
     # Show that we can do a rollback
