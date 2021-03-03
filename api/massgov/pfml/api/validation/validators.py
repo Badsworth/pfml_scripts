@@ -64,12 +64,16 @@ def validate_schema_util(validator_decorator, data, error_message):
             flask.request.warning_list = warning_list
 
             if len(error_list) > 0:
-                invalid_data_payload = data.get("data", data)
+                invalid_data_payload = data
+                if isinstance(data, dict) and "data" in data:
+                    invalid_data_payload = data["data"]
                 raise ValidationException(
                     errors=error_list, message=error_message, data=invalid_data_payload
                 )
         else:
-            invalid_data_payload = data.get("data", data)
+            invalid_data_payload = data
+            if isinstance(data, dict) and "data" in data:
+                invalid_data_payload = data["data"]
             raise ValidationException(
                 errors=error_list, message=error_message, data=invalid_data_payload
             )
