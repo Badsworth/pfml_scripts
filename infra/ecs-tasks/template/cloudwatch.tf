@@ -179,7 +179,7 @@ module "fineos_error_extract_scheduler" {
           "--recursive", 
           "--copy_dir", "${var.fineos_error_export_path}", 
           "--to_dir", "s3://${data.aws_s3_bucket.agency_transfer.bucket}/cps-errors/received/", 
-          "--file_prefixes", "${join(",", local.fineos_error_extract_prefixes)}"
+          "--file_prefixes", "all"
         ]
       }
     ]

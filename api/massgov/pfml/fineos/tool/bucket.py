@@ -36,9 +36,11 @@ def main():
     parser.add_argument("--delsize", type=int, help="Size of object to delete")
     parser.add_argument("--copy_dir", type=str, help="Copy multiple objs")
     parser.add_argument("--to_dir", type=str, help="New dest for copied objs")
-    parser.add_argument("--file_prefixes", type=str, help="List of file prefixes")
+    parser.add_argument(
+        "--file_prefixes", type=str, help="List of file prefixes. Default: copy all files"
+    )
     parser.add_argument("--recursive", dest="recursive", action="store_true")
-    parser.set_defaults(recursive=False)
+    parser.set_defaults(recursive=False, file_prefixes="all")
 
     args = parser.parse_args()
 
@@ -92,6 +94,11 @@ def bucket_tool(args, s3, s3_fineos, boto3, fineos_boto_session):
         bucket_delete(args.delete, args.delsize, s3_fineos if is_fineos_bucket(args.delete) else s3)
 
     elif args.copy_dir and args.to_dir:
+        if args.file_prefixes == "all":
+            list_files = args.file_prefixes
+        else:
+            list_files = args.file_prefixes.split(",")
+
         copy_dir(
             args.copy_dir,
             args.to_dir,
@@ -99,7 +106,7 @@ def bucket_tool(args, s3, s3_fineos, boto3, fineos_boto_session):
             s3_fineos if is_fineos_bucket(args.to_dir) else s3,
             fineos_boto_session if is_fineos_bucket(args.copy_dir) else boto3,
             fineos_boto_session if is_fineos_bucket(args.to_dir) else boto3,
-            args.file_prefixes.split(","),
+            list_files,
             args.recursive,
         )
 
@@ -164,6 +171,9 @@ def bucket_delete(delete, delsize, s3):
 
 
 def file_name_contains_prefix(file_prefixes, file_name):
+    if file_prefixes == "all":
+        return True
+
     for prefix in file_prefixes:
         if prefix in file_name:
             return True
