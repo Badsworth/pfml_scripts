@@ -489,6 +489,8 @@ const errors = {
       maximum: "Average weekly hours must be 168 or fewer.",
       minimum: "Enter the average weekly hours.",
     },
+    incorrect_withholding_amount:
+      "The amount does not match our records. Please try again.",
     outstanding_information_request_required:
       "This application has already been reviewed.",
     previous_leaves: {
