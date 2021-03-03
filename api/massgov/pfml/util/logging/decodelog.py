@@ -12,7 +12,7 @@
 import datetime
 import json
 import sys
-from typing import Mapping
+from typing import Mapping, Optional
 
 RED = "\033[31m"
 GREEN = "\033[32m"
@@ -20,14 +20,18 @@ BLUE = "\033[34m"
 RESET = "\033[0m"
 NO_COLOUR = ""
 
+output_dates = None
+
 
 def main() -> None:
     """Main entry point when used as a script."""
     for line in sys.stdin:
-        print(process_line(line))
+        processed = process_line(line)
+        if processed is not None:
+            print(processed)
 
 
-def process_line(line: str) -> str:
+def process_line(line: str) -> Optional[str]:
     """Process a line of the log and return the reformatted line."""
     line = line.rstrip()
     if line and line[0] == "{":
@@ -40,9 +44,12 @@ def process_line(line: str) -> str:
     return line
 
 
-def decode_json_line(line: str) -> str:
+def decode_json_line(line: str) -> Optional[str]:
     """Decode a JSON log line and return the reformatted line."""
-    data = json.loads(line)
+    try:
+        data = json.loads(line)
+    except json.decoder.JSONDecodeError:
+        return line
 
     name = data.pop("name", "-")
     level = data.pop("levelname", "-")
@@ -52,6 +59,14 @@ def decode_json_line(line: str) -> str:
     data.pop("thread", 0)
     data.pop("threadName", "-")
     data.pop("process", 0)
+    data.pop("entity.type", "-")
+    data.pop("entity.name", "-")
+    data.pop("entity.guid", "-")
+    data.pop("span.id", "-")
+    data.pop("trace.id", "-")
+
+    if level == "AUDIT":
+        return None
 
     return "%s  %s%-36s%s %-28s %s%-8s %-80s %s%s%s" % (
         format_datetime(created),
@@ -81,7 +96,14 @@ def colour_for_level(level: str) -> str:
 
 
 def format_datetime(created: datetime.datetime) -> str:
-    return created.time().isoformat(timespec="milliseconds")
+    global output_dates
+    if output_dates is None:
+        # Check first line - if over 10h ago, output dates as well as time.
+        output_dates = 36000 < (datetime.datetime.now() - created).total_seconds()
+    if output_dates:
+        return created.isoformat(timespec="milliseconds")
+    else:
+        return created.time().isoformat(timespec="milliseconds")
 
 
 def format_extra(data: Mapping[str, str]) -> str:
