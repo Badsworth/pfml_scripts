@@ -534,7 +534,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             "::error file=api/%s,line=%s::%s %s\n"
             % (
                 report.location[0],
-                report.longrepr.reprcrash.lineno,
+                report.location[1],
                 report.location[2],
                 report.longrepr.reprcrash.message,
             )
