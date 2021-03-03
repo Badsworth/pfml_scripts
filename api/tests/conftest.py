@@ -364,6 +364,13 @@ def initialize_factories_session(monkeypatch, test_db_session):
 
 
 @pytest.fixture
+def initialize_factories_session_via_migrations(test_db_session_via_migrations):
+    import massgov.pfml.db.models.factories as factories
+
+    factories.db_session = test_db_session_via_migrations
+
+
+@pytest.fixture
 def test_db_via_migrations(test_db_schema):
     """
     Creates a test schema, runs migrations through Alembic. Schema is dropped
@@ -373,7 +380,7 @@ def test_db_via_migrations(test_db_schema):
     from alembic import command
 
     alembic_cfg = Config(
-        os.path.join(os.path.dirname(__file__), "../../massgov/pfml/db/alembic.ini")
+        os.path.join(os.path.dirname(__file__), "../massgov/pfml/db/migrations/alembic.ini")
     )
     command.upgrade(alembic_cfg, "head")
 
@@ -397,6 +404,18 @@ def test_db_other_session(test_db):
     import massgov.pfml.db as db
 
     db_session = db.init(sync_lookups=True)
+
+    yield db_session
+
+    db_session.close()
+    db_session.remove()
+
+
+@pytest.fixture
+def test_db_session_via_migrations(test_db_via_migrations):
+    import massgov.pfml.db as db
+
+    db_session = db.init()
 
     yield db_session
 

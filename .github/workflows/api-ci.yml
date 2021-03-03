@@ -57,7 +57,7 @@ jobs:
         run: make build
 
       - name: test for multi-headed migration situation
-        run: make test args="-k test_only_single_head_revision_in_migrations"
+        run: make test args="tests/db/test_migrations.py::test_only_single_head_revision_in_migrations"
 
       - name: start db
         run: make start-db

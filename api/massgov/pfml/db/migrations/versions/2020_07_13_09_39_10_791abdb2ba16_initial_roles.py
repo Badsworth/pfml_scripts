@@ -5,6 +5,8 @@ Revises: 020d8108295a
 Create Date: 2020-07-13 09:39:10.386003
 
 """
+import os
+
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -14,14 +16,25 @@ branch_labels = None
 depends_on = None
 
 admin_username = "pfml"
-app_schema = "public"
+app_schema = os.getenv("DB_SCHEMA", "public")
 app_role = "app"
 
 
 def upgrade():
     op.execute("REVOKE ALL ON SCHEMA public FROM PUBLIC")
 
-    op.execute(f"CREATE ROLE {app_role}")
+    op.execute(
+        f"""
+    DO $$
+    BEGIN
+        CREATE ROLE {app_role};
+        EXCEPTION WHEN DUPLICATE_OBJECT THEN
+        RAISE NOTICE 'not creating role {app_role} -- it already exists';
+    END
+    $$;
+    """
+    )
+
     # allow admin user to act in the new role
     op.execute(f"GRANT app TO {admin_username} WITH ADMIN OPTION")
 

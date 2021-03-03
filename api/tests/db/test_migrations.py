@@ -30,3 +30,13 @@ def test_only_single_head_revision_in_migrations():
         raise AssertionError(
             "See 'Multi-head situations' section of README.md. TL;DR: run `make db-migrate-merge-heads`"
         )
+
+
+@pytest.mark.integration
+def test_running_migrations_fixture(logging_fix, test_db_via_migrations):
+    pass
+
+
+@pytest.mark.integration
+def test_running_migrations_session_fixture(logging_fix, test_db_session_via_migrations):
+    pass
