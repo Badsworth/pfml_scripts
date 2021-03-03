@@ -242,7 +242,7 @@ class PaymentData:
         # These are only required if payment_method is for EFT
         eft_required = self.raw_payment_method == PaymentMethod.ACH.payment_method_description
         self.routing_nbr = payments_util.validate_csv_input(
-            "PAYEEBANKCODE",
+            "PAYEEBANKSORT",
             pei_record,
             self.validation_container,
             eft_required,

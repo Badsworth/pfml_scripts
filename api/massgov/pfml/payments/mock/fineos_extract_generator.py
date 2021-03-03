@@ -80,7 +80,7 @@ PEI_FIELD_NAMES = [
     "PAYMENTMETHOD",
     "PAYMENTDATE",
     "AMOUNT_MONAMT",
-    "PAYEEBANKCODE",
+    "PAYEEBANKSORT",
     "PAYEEACCOUNTN",
     "PAYEEACCOUNTT",
 ]
@@ -236,9 +236,9 @@ def _generate_fineos_payment_rows_for_scenario(
         #     vpei_row["AMOUNT_MONAMT"] = ""
 
         if is_eft:
-            vpei_row["PAYEEBANKCODE"] = employee.eft.routing_nbr
+            vpei_row["PAYEEBANKSORT"] = employee.eft.routing_nbr
             if scenario_descriptor.routing_number_ten_digits_update:
-                vpei_row["PAYEEBANKCODE"] = employee.eft.routing_nbr.rjust(
+                vpei_row["PAYEEBANKSORT"] = employee.eft.routing_nbr.rjust(
                     10, "8"
                 )  # routing number is originally 9 digits
 

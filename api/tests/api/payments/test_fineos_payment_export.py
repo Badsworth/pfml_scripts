@@ -772,7 +772,7 @@ def test_validation_missing_fields(set_exporter_env_vars):
     )  # No longer missing now
     expected_missing_values.update(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEBANKCODE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEBANKSORT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTN"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT"),
         ]
@@ -792,7 +792,7 @@ def test_validation_param_length(set_exporter_env_vars):
     ci_index = exporter.CiIndex("1", "1")
     extract_data = exporter.ExtractData(exporter.expected_file_names, "2020-01-01-11-30-00")
     # First let's check if a field is too short
-    extract_data.pei.indexed_data = {ci_index: {"PAYEEBANKCODE": "123", "PAYMENTPOSTCO": "123"}}
+    extract_data.pei.indexed_data = {ci_index: {"PAYEEBANKSORT": "123", "PAYMENTPOSTCO": "123"}}
     extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
     extract_data.claim_details.indexed_data = {ci_index: {"isdata": "1"}}
 
@@ -802,14 +802,14 @@ def test_validation_param_length(set_exporter_env_vars):
 
     assert set(
         [
-            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYEEBANKCODE"),
+            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYEEBANKSORT"),
             ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYMENTPOSTCO"),
         ]
     ).issubset(set(payment_data.validation_container.validation_issues))
 
     # Now let's check if a field is too long
     extract_data.pei.indexed_data[ci_index]["PAYMENTPOSTCO"] = "012345-67890"
-    extract_data.pei.indexed_data[ci_index]["PAYEEBANKCODE"] = "012345678910"
+    extract_data.pei.indexed_data[ci_index]["PAYEEBANKSORT"] = "012345678910"
     extract_data.pei.indexed_data[ci_index]["PAYEEACCOUNTN"] = "0" * 50
 
     payment_data = exporter.PaymentData(
@@ -819,7 +819,7 @@ def test_validation_param_length(set_exporter_env_vars):
     assert set(
         [
             ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYEEACCOUNTN"),
-            ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYEEBANKCODE"),
+            ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYEEBANKSORT"),
             ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYMENTPOSTCO"),
         ]
     ).issubset(set(payment_data.validation_container.validation_issues))
