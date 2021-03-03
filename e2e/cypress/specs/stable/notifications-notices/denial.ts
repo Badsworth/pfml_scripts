@@ -66,7 +66,7 @@ describe("Denial Notification and Notice", () => {
           "waitForClaimDocuments",
           {
             credentials: credentials,
-            applicationId: submission.application_id,
+            application_id: submission.application_id,
             document_type: "Denial Notice",
           },
           { timeout: 300000 }

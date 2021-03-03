@@ -97,7 +97,7 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
           "waitForClaimDocuments",
           {
             credentials: credentials,
-            applicationId: submission.application_id,
+            application_id: submission.application_id,
             document_type: "Approval Notice",
           },
           { timeout: 300000 }

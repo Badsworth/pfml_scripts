@@ -62,7 +62,7 @@ describe("Request for More Information (notifications/notices)", () => {
           "waitForClaimDocuments",
           {
             credentials: credentials,
-            applicationId: applicationId,
+            application_id: applicationId,
             document_type: "Request for more Information",
           },
           { timeout: 300000 }
