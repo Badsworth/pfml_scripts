@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 
-"""isort:skip_file"""
-# fmt: off
-
 #
 # A prototype API server.
 #
@@ -10,30 +7,32 @@
 # if that module is executed, e.g., `python -m my.module`.
 #
 # https://docs.python.org/3/library/__main__.html
-import os
 
 # Import and initialize the NewRelic Python agent.
-# This must be done as early as possible, even before other imports, and even if it makes style enforcement unhappy.
+#
+# This must be done as early as possible, even before other imports, and even if it makes style
+# enforcement unhappy.
 # https://docs.newrelic.com/docs/agents/python-agent/python-agent-api/initialize
-import newrelic.agent
+import os  # isort:skip
+import newrelic.agent  # isort:skip
+
 newrelic.agent.initialize(
     config_file=os.path.join(os.path.dirname(__file__), "../../..", "newrelic.ini"),
-    environment=os.environ.get("ENVIRONMENT", "local")
+    environment=os.environ.get("ENVIRONMENT", "local"),
 )
 
-from sentry_sdk.integrations.flask import FlaskIntegration
 import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.logging import ignore_logger
+
+import massgov.pfml.api.api
 import massgov.pfml.api.app as app
 import massgov.pfml.api.authentication as authentication
-import massgov.pfml.util.logging.audit as audit_logging
 import massgov.pfml.util.logging
-
-from sentry_sdk.integrations.logging import ignore_logger
-from massgov.pfml.util.sentry import sanitize_sentry_event
+import massgov.pfml.util.logging.audit as audit_logging
 from massgov.pfml.api.gunicorn_wrapper import GunicornAppWrapper
 from massgov.pfml.fineos.exception import FINEOSFatalUnavailable
-# fmt: on
-
+from massgov.pfml.util.sentry import sanitize_sentry_event
 
 logger = massgov.pfml.util.logging.get_logger(__package__)
 
