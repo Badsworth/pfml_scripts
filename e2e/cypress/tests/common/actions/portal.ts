@@ -682,7 +682,7 @@ export function confirmSubmit(): void {
 }
 
 export function goToDashboardFromApplicationsPage(): void {
-  cy.contains("Get ready to apply", {
+  cy.contains("Start a new application", {
     timeout: 15000, // Dashboard can take awhile to load due to the number of claims the E2E user has
   }).click();
 }

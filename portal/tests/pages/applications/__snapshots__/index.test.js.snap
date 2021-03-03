@@ -2,14 +2,35 @@
 
 exports[`Applications when no claims exist renders the empty page state 1`] = `
 <Fragment>
-  <DashboardNavigation
-    activeHref="/applications"
-  />
-  <Title>
-    Applications
-  </Title>
-  <p>
-    You don’t have any applications yet.
-  </p>
+  <div
+    className="grid-row grid-gap-6"
+  >
+    <div
+      className="desktop:grid-col"
+    >
+      <Title>
+        Applications
+      </Title>
+      <p>
+        You don’t have any applications yet.
+      </p>
+    </div>
+    <div
+      className="desktop:grid-col-auto"
+    >
+      <Heading
+        className="usa-sr-only"
+        level="2"
+      >
+        Create a new application
+      </Heading>
+      <ButtonLink
+        href="/dashboard"
+        variation="outline"
+      >
+        Start a new application
+      </ButtonLink>
+    </div>
+  </div>
 </Fragment>
 `;

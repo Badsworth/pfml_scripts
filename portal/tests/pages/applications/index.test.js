@@ -62,7 +62,7 @@ describe("Applications", () => {
     });
 
     it("renders a heading for the started applications", () => {
-      expect(wrapper.find("Heading")).toMatchInlineSnapshot(`
+      expect(wrapper.find("Heading").first()).toMatchInlineSnapshot(`
         <Heading
           level="2"
         >
@@ -85,7 +85,7 @@ describe("Applications", () => {
     });
 
     it("renders a heading for the completed applications", () => {
-      expect(wrapper.find("Heading")).toMatchInlineSnapshot(`
+      expect(wrapper.find("Heading").first()).toMatchInlineSnapshot(`
         <Heading
           level="2"
         >

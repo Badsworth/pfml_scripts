@@ -1,12 +1,13 @@
 import Alert from "../../components/Alert";
 import ApplicationCard from "../../components/ApplicationCard";
+import ButtonLink from "../../components/ButtonLink";
 import ClaimCollection from "../../models/ClaimCollection";
-import DashboardNavigation from "../../components/DashboardNavigation";
 import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
+import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
 
@@ -36,49 +37,61 @@ export const Index = (props) => {
         </Alert>
       )}
 
-      <DashboardNavigation activeHref={appLogic.portalFlow.pathname} />
-      <Title>{t("pages.applications.title")}</Title>
+      <div className="grid-row grid-gap-6">
+        <div className="desktop:grid-col">
+          <Title>{t("pages.applications.title")}</Title>
 
-      {!hasClaims && <p>{t("pages.applications.noClaims")}</p>}
+          {!hasClaims && <p>{t("pages.applications.noClaims")}</p>}
 
-      {hasInProgressClaims && (
-        <React.Fragment>
-          <div className="measure-6">
-            <Lead>{t("pages.applications.claimsReflectPortal")}</Lead>
-          </div>
-          <Heading level="2">
-            {t("pages.applications.inProgressHeading")}
+          {hasInProgressClaims && (
+            <React.Fragment>
+              <div className="measure-6">
+                <Lead>{t("pages.applications.claimsReflectPortal")}</Lead>
+              </div>
+              <Heading level="2">
+                {t("pages.applications.inProgressHeading")}
+              </Heading>
+              {claims.inProgress.map((claim, index) => {
+                return (
+                  <ApplicationCard
+                    appLogic={appLogic}
+                    key={claim.application_id}
+                    claim={claim}
+                    number={index + 1}
+                  />
+                );
+              })}
+            </React.Fragment>
+          )}
+
+          {hasCompletedClaims && (
+            <React.Fragment>
+              <Heading level="2">
+                {t("pages.applications.submittedHeading")}
+              </Heading>
+              {claims.completed.map((claim, index) => {
+                return (
+                  <ApplicationCard
+                    appLogic={appLogic}
+                    key={claim.application_id}
+                    claim={claim}
+                    number={claims.inProgress.length + index + 1}
+                  />
+                );
+              })}
+            </React.Fragment>
+          )}
+        </div>
+        <div className="desktop:grid-col-auto">
+          <Heading level="2" className="usa-sr-only">
+            {t("pages.applications.createApplicationHeading")}
           </Heading>
-          {claims.inProgress.map((claim, index) => {
-            return (
-              <ApplicationCard
-                appLogic={appLogic}
-                key={claim.application_id}
-                claim={claim}
-                number={index + 1}
-              />
-            );
-          })}
-        </React.Fragment>
-      )}
 
-      {hasCompletedClaims && (
-        <React.Fragment>
-          <Heading level="2">
-            {t("pages.applications.submittedHeading")}
-          </Heading>
-          {claims.completed.map((claim, index) => {
-            return (
-              <ApplicationCard
-                appLogic={appLogic}
-                key={claim.application_id}
-                claim={claim}
-                number={claims.inProgress.length + index + 1}
-              />
-            );
-          })}
-        </React.Fragment>
-      )}
+          <ButtonLink href={routes.applications.dashboard} variation="outline">
+            {t("pages.applications.dashboardLink")}
+          </ButtonLink>
+        </div>
+      </div>
     </React.Fragment>
   );
 };

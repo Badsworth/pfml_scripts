@@ -556,10 +556,6 @@ const shared = {
     "PO Box 838$t(chars.nbsp)Lawrence, MA$t(chars.nbsp)01842",
   contactCenterFaxNumber: "(617)$t(chars.nbsp)855$t(chars.nbhyphen)6180",
   contactCenterPhoneNumber: "(833)$t(chars.nbsp)344$t(chars.nbhyphen)7365",
-  dashboardTitles: {
-    view: "View your applications",
-    create: "Get ready to apply",
-  },
   day_Friday: "Friday",
   day_Monday: "Monday",
   day_Saturday: "Saturday",
@@ -647,6 +643,8 @@ const pages = {
   applications: {
     claimsReflectPortal:
       "Your applications only reflect what you entered using this website. Any changes you made through the Contact Center will not be shown here.",
+    createApplicationHeading: "Create a new application",
+    dashboardLink: "Start a new application",
     inProgressHeading: "In-progress applications",
     noClaims: "You don’t have any applications yet.",
     submittedHeading: "Submitted applications",
@@ -1528,6 +1526,7 @@ const pages = {
     alertPhone:
       "<p>Apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> if <strong>any</strong> of the following are true:</p><ul><li>You are self-employed or unemployed and you are applying for paid leave</li><li>You need paid family leave to care for a family member who serves in the armed forces</li><li>You need paid family leave to manage family affairs when a family member is on active duty in the armed forces</li></ul>",
     alertPhoneHeading: "Apply by phone",
+    applicationsLink: "View all applications",
     createClaimButton: "Create an application",
     stepOne:
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
@@ -1538,7 +1537,7 @@ const pages = {
     stepTwo:
       "<p>For medical leave your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
     stepTwoHeading: "2. Get documentation that supports your leave request",
-    title: "$t(shared.dashboardTitles.create)",
+    title: "Get ready to apply",
   },
   employersAuthCreateAccount: {
     alertHeading:
@@ -1851,10 +1850,6 @@ const components = {
     title: "Verify your email address",
     verifyHint:
       "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
-  },
-  dashboardNavigation: {
-    applicationsLink: "$t(shared.dashboardTitles.view)",
-    createApplicationLink: "$t(shared.dashboardTitles.create)",
   },
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",

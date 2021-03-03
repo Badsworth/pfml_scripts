@@ -7,9 +7,9 @@ import {
 import Alert from "../components/Alert";
 import ButtonLink from "../components/ButtonLink";
 import ClaimCollection from "../models/ClaimCollection";
-import DashboardNavigation from "../components/DashboardNavigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Heading from "../components/Heading";
+import Link from "next/link";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
@@ -22,8 +22,10 @@ import withClaims from "../hoc/withClaims";
  * "Dashboard" - Where a Claimant is redirected to after successfully authenticating.
  */
 export const Dashboard = (props) => {
-  const { appLogic } = props;
+  const { appLogic, claims } = props;
   const { t } = useTranslation();
+
+  const hasClaims = !claims.isEmpty;
 
   // We only want to redirect users who have claims when they
   // first login, but don't want to prevent them from navigating
@@ -47,7 +49,13 @@ export const Dashboard = (props) => {
 
   return (
     <React.Fragment>
-      <DashboardNavigation activeHref={appLogic.portalFlow.pathname} />
+      {hasClaims && (
+        <Link href={routes.applications.index}>
+          <a className="display-inline-block margin-bottom-5">
+            {t("pages.dashboard.applicationsLink")}
+          </a>
+        </Link>
+      )}
 
       <Title>{t("pages.dashboard.title")}</Title>
 

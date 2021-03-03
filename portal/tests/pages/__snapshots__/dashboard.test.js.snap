@@ -2,9 +2,6 @@
 
 exports[`Dashboard renders dashboard content 1`] = `
 <Fragment>
-  <DashboardNavigation
-    activeHref="/dashboard"
-  />
   <Title>
     Get ready to apply
   </Title>
