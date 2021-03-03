@@ -45,6 +45,8 @@ const cmd: CommandModule<SystemWideArgs, RegisterLeaveAdminArgs> = {
         fein
       );
       args.logger.info(`Leave Admin Registered for ${fein}: ${creds.username}`);
+      await authenticator.verifyLeaveAdmin(creds.username, creds.password);
+      args.logger.info(`Leave Admin verified for ${fein}: ${creds.username}`);
     } catch (e) {
       if (e.code === "UsernameExistsException") {
         const answers = await prompt<{ recreate: boolean }>({
@@ -58,6 +60,10 @@ const cmd: CommandModule<SystemWideArgs, RegisterLeaveAdminArgs> = {
             ein: fein,
           });
           args.logger.info(`Password reset for ${fein}: ${creds.username}`);
+          await authenticator.verifyLeaveAdmin(creds.username, creds.password);
+          args.logger.info(
+            `Leave Admin verified for ${fein}: ${creds.username}`
+          );
         }
       } else {
         throw e;

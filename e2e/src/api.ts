@@ -43,7 +43,7 @@ export const _ = {
     encodeReserved: [encodeURI, encodeURIComponent],
     allowReserved: [encodeURI, encodeURI],
     /** Deeply remove all properties with undefined values. */
-    stripUndefined<T>(obj?: T): T | undefined {
+    stripUndefined<T extends Record<string, U | undefined>, U>(obj?: T): Record<string, U> | undefined {
         return obj && JSON.parse(JSON.stringify(obj));
     },
     isEmpty(v: unknown): boolean {
@@ -145,7 +145,6 @@ export const http = {
         const href = _.joinUrl(baseUrl, url);
         const res = await (customFetch || fetch)(href, {
             ...init,
-            // @ts-ignore
             headers: _.stripUndefined({ ...defaults.headers, ...headers }),
         });
         let text: string | undefined;
@@ -252,8 +251,8 @@ export interface Meta {
     };
 }
 export interface Issue {
-    "type": string;
-    message: string;
+    "type"?: string;
+    message?: string;
     rule?: string | number | number | boolean | any | object;
     field?: string;
 }
@@ -272,11 +271,34 @@ export interface ErrorResponse {
     warnings?: Issue[];
     errors: Issue[];
 }
+export type Fein = string;
+export interface UserCreateRequest {
+    email_address?: string;
+    password?: string;
+    role?: {
+        role_description?: "Claimant" | "Employer";
+    };
+    user_leave_administrator?: {
+        employer_fein?: Fein;
+    };
+}
+export interface RoleResponse {
+    role_id?: number;
+    role_description?: string;
+}
+export interface UserLeaveAdminResponse {
+    employer_id?: string;
+    employer_fein?: string;
+    employer_dba?: string;
+    verified?: boolean;
+}
 export interface UserResponse {
     user_id?: string;
     auth_id?: string;
     email_address?: string;
     consented_to_data_sharing?: boolean;
+    roles?: RoleResponse[];
+    user_leave_administrators?: UserLeaveAdminResponse[];
 }
 export interface UserUpdateRequest {
     consented_to_data_sharing: boolean;
@@ -313,17 +335,39 @@ export interface EmployeeSearchRequest {
 export interface POSTEmployeesSearchResponse extends SuccessfulResponse {
     data?: EmployeeResponse;
 }
-export interface EmployerResponse {
-    employer_id: string;
-    employer_fein: string;
-    employer_dba: string;
+export interface EmployerAddFeinRequestBody {
+    employer_fein?: string;
 }
-export interface GETEmployersByEmployerIdResponse extends SuccessfulResponse {
-    data?: EmployerResponse;
+export interface EmployerAddFeinResponse {
+    employer_id?: string;
+    employer_fein?: string;
+    employer_dba?: string;
+}
+export interface POSTEmployersAddResponse extends SuccessfulResponse {
+    data?: EmployerAddFeinResponse;
+}
+export interface POSTEmployersAddResponse402 extends ErrorResponse {
+}
+export interface POSTEmployersAddResponse503 extends ErrorResponse {
+}
+export interface WithholdingResponse {
+    filing_period?: any;
+}
+export interface GETEmployersWithholdingByEmployerIdResponse extends SuccessfulResponse {
+    data?: WithholdingResponse;
+}
+export interface ClaimResponse {
+    fineos_absence_id?: any;
+    fineos_notification_id?: any;
+    absence_period_start_date?: any;
+    absence_period_end_date?: any;
+}
+export interface GETClaimsByFineosAbsenceIdResponse extends SuccessfulResponse {
+    data?: ClaimResponse;
 }
 export interface ClaimDocumentResponse {
     created_at: any;
-    document_type: "Passport" | "Driver's License Mass" | "Driver's License Other State" | "Identification Proof" | "State managed Paid Leave Confirmation" | "Approval Notice" | "Request for More information" | "Denial Notice";
+    document_type: "State managed Paid Leave Confirmation" | "Approval Notice" | "Request for More information" | "Denial Notice" | "Employer Response Additional Documentation";
     content_type: string;
     fineos_document_id: string;
     name: string;
@@ -332,16 +376,16 @@ export interface ClaimDocumentResponse {
 export interface GETEmployersClaimsByFineosAbsenceIdDocumentsResponse extends SuccessfulResponse {
     data?: ClaimDocumentResponse;
 }
+export type MaskedDate = string;
 export type Date = string;
 export interface EmployerBenefit {
     employer_benefit_id?: string | null;
-    benefit_start_date?: Date;
-    benefit_end_date?: Date;
+    benefit_start_date?: Date | null;
+    benefit_end_date?: Date | null;
     benefit_amount_dollars?: number | null;
     benefit_amount_frequency?: ("Per Day" | "Per Week" | "Per Month" | "In Total") | null;
     benefit_type?: ("Accrued paid leave" | "Short-term disability insurance" | "Permanent disability insurance" | "Family or medical leave insurance" | "Unknown") | null;
 }
-export type Fein = string;
 export interface EmployerContinuousLeavePeriods {
     start_date?: Date;
     end_date?: Date;
@@ -366,9 +410,11 @@ export interface EmployerLeaveDetails {
     reduced_schedule_leave_periods?: EmployerReducedScheduleLeavePeriods;
 }
 export interface PreviousLeave {
-    leave_end_date?: Date;
-    leave_start_date?: Date;
-    leave_type?: "Pregnancy/Maternity" | "Serious Health Condition" | "Care of Family Member" | "Child Bonding" | "Military Caregiver" | "Military Exigency Family";
+    previous_leave_id?: string | null;
+    is_for_current_employer?: boolean | null;
+    leave_end_date?: Date | null;
+    leave_start_date?: Date | null;
+    leave_reason?: ("Pregnancy / Maternity" | "Serious health condition" | "Care for a family member" | "Child bonding" | "Military caregiver" | "Military exigency family" | "Unknown") | null;
 }
 export interface Address {
     city?: string | null;
@@ -377,19 +423,24 @@ export interface Address {
     state?: string | null;
     zip?: string | null;
 }
-export type SsnItin = string;
+export type MaskedSsnItin = string;
 export interface ClaimReviewResponse {
-    date_of_birth?: Date;
+    date_of_birth?: MaskedDate;
     employer_benefits?: EmployerBenefit[];
+    employer_dba?: string;
+    employer_id?: string;
     employer_fein?: Fein;
     fineos_absence_id?: string;
     first_name?: string;
+    hours_worked_per_week?: string;
+    is_reviewable?: boolean;
     last_name?: string;
     leave_details?: EmployerLeaveDetails;
+    status?: string;
     middle_name?: string;
     previous_leaves?: PreviousLeave[];
     residential_address?: Address;
-    tax_identifier?: SsnItin;
+    tax_identifier?: MaskedSsnItin;
     follow_up_date?: Date;
 }
 export interface GETEmployersClaimsByFineosAbsenceIdReviewResponse extends SuccessfulResponse {
@@ -398,7 +449,8 @@ export interface GETEmployersClaimsByFineosAbsenceIdReviewResponse extends Succe
 export interface EmployerClaimRequestBody {
     employer_benefits: EmployerBenefit[];
     previous_leaves: PreviousLeave[];
-    hours_worked_per_week: number;
+    has_amendments?: boolean;
+    hours_worked_per_week: number | null;
     employer_decision?: "Approve" | "Deny" | "Requires More Information";
     fraud?: "Yes" | "No";
     comment?: string;
@@ -409,7 +461,6 @@ export interface UpdateClaimReviewResponse {
 export interface PATCHEmployersClaimsByFineosAbsenceIdReviewResponse extends SuccessfulResponse {
     data?: UpdateClaimReviewResponse;
 }
-export type MaskedSsnItin = string;
 export interface ReducedScheduleLeavePeriods {
     leave_period_id?: string | null;
     start_date?: Date | null;
@@ -445,6 +496,7 @@ export interface IntermittentLeavePeriods {
     duration?: number | null;
     duration_basis?: ("Minutes" | "Hours" | "Days") | null;
 }
+export type DateOrMaskedDate = string;
 export interface ApplicationLeaveDetails {
     reason?: ("Pregnancy/Maternity" | "Child Bonding" | "Serious Health Condition - Employee") | null;
     reason_qualifier?: ("Newborn" | "Adoption" | "Foster Care") | null;
@@ -454,8 +506,8 @@ export interface ApplicationLeaveDetails {
     relationship_to_caregiver?: ("Parent" | "Child" | "Grandparent" | "Grandchild" | "Other Family Member" | "Service Member" | "Inlaw" | "Sibling" | "Other" | "Employee") | null;
     relationship_qualifier?: ("Adoptive" | "Biological" | "Foster" | "Custodial Parent" | "Legal Guardian" | "Step Parent") | null;
     pregnant_or_recent_birth?: boolean | null;
-    child_birth_date?: Date | null;
-    child_placement_date?: Date | null;
+    child_birth_date?: DateOrMaskedDate | null;
+    child_placement_date?: DateOrMaskedDate | null;
     has_future_child_date?: boolean | null;
     employer_notified?: boolean | null;
     employer_notification_date?: Date | null;
@@ -482,8 +534,8 @@ export interface WorkPattern {
 }
 export interface OtherIncome {
     other_income_id?: string | null;
-    income_start_date?: Date;
-    income_end_date?: Date;
+    income_start_date?: Date | null;
+    income_end_date?: Date | null;
     income_amount_dollars?: number | null;
     income_amount_frequency?: ("Per Day" | "Per Week" | "Per Month" | "In Total") | null;
     income_type?: ("Workers Compensation" | "Unemployment Insurance" | "SSDI" | "Disability benefits under Gov't retirement plan" | "Jones Act benefits" | "Railroad Retirement benefits" | "Earnings from another employment/self-employment") | null;
@@ -503,7 +555,7 @@ export interface ApplicationResponse {
     first_name?: string | null;
     middle_name?: string | null;
     last_name?: string | null;
-    date_of_birth?: Date | null;
+    date_of_birth?: MaskedDate | null;
     has_continuous_leave_periods?: boolean | null;
     has_employer_benefits?: boolean | null;
     has_intermittent_leave_periods?: boolean | null;
@@ -527,6 +579,8 @@ export interface ApplicationResponse {
     updated_time?: string;
     status?: "Started" | "Submitted" | "Completed";
     phone?: MaskedPhone;
+    has_previous_leaves?: boolean | null;
+    previous_leaves?: PreviousLeave[];
 }
 export interface POSTApplicationsResponse extends SuccessfulResponse {
     data?: ApplicationResponse;
@@ -535,11 +589,12 @@ export type ApplicationSearchResults = ApplicationResponse[];
 export interface GETApplicationsResponse extends SuccessfulResponse {
     data?: ApplicationSearchResults;
 }
+export type SsnItin = string;
 export type MassId = string;
 export interface Phone {
-    int_code?: string;
-    phone_number?: string;
-    phone_type?: "Cell" | "Fax" | "Phone";
+    int_code?: string | null;
+    phone_number?: string | null;
+    phone_type?: ("Cell" | "Fax" | "Phone") | null;
 }
 export interface ApplicationRequestBody {
     application_nickname?: string | null;
@@ -550,7 +605,7 @@ export interface ApplicationRequestBody {
     first_name?: string | null;
     middle_name?: string | null;
     last_name?: string | null;
-    date_of_birth?: Date | null;
+    date_of_birth?: DateOrMaskedDate | null;
     has_mailing_address?: boolean | null;
     mailing_address?: Address | null;
     residential_address?: Address | null;
@@ -566,9 +621,11 @@ export interface ApplicationRequestBody {
     occupation?: ("Sales Clerk" | "Administrative" | "Engineer" | "Health Care") | null;
     leave_details?: ApplicationLeaveDetails;
     work_pattern?: WorkPattern | null;
-    employer_benefits?: EmployerBenefit[];
-    other_incomes?: OtherIncome[];
+    employer_benefits?: EmployerBenefit[] | null;
+    other_incomes?: OtherIncome[] | null;
     phone?: Phone;
+    has_previous_leaves?: boolean | null;
+    previous_leaves?: PreviousLeave[] | null;
 }
 export interface PATCHApplicationsByApplicationIdResponse extends SuccessfulResponse {
     data?: ApplicationResponse;
@@ -667,8 +724,8 @@ export interface NotificationClaimant {
 }
 export interface NotificationRequest {
     absence_case_id: string;
-    fein?: string;
-    organization_name?: string;
+    fein: string;
+    organization_name: string;
     document_type?: string;
     trigger: string;
     source: "Self-Service" | "Call Center";
@@ -677,6 +734,11 @@ export interface NotificationRequest {
     claimant_info: NotificationClaimant;
 }
 export interface POSTNotificationsResponse extends SuccessfulResponse {
+}
+export interface VerificationRequest {
+    employer_id: string;
+    withholding_amount: number;
+    withholding_quarter: string;
 }
 /**
  * Get the API status
@@ -687,22 +749,32 @@ export async function getStatus(options?: RequestOptions): Promise<ApiResponse<S
     });
 }
 /**
+ * Create a User account
+ */
+export async function postUsers(userCreateRequest: UserCreateRequest, options?: RequestOptions): Promise<ApiResponse<UserResponse>> {
+    return await http.fetchJson("/users", http.json({
+        ...options,
+        method: "POST",
+        body: userCreateRequest
+    }));
+}
+/**
  * Retrieve a User account
  */
-export async function getUsersByUserId({ userId }: {
-    userId: string;
+export async function getUsersByUser_id({ user_id }: {
+    user_id: string;
 }, options?: RequestOptions): Promise<ApiResponse<UserResponse>> {
-    return await http.fetchJson(`/users/${userId}`, {
+    return await http.fetchJson(`/users/${user_id}`, {
         ...options
     });
 }
 /**
  * Update a User account
  */
-export async function patchUsersByUserId({ userId }: {
-    userId: string;
+export async function patchUsersByUser_id({ user_id }: {
+    user_id: string;
 }, userUpdateRequest: UserUpdateRequest, options?: RequestOptions): Promise<ApiResponse<UserResponse>> {
-    return await http.fetchJson(`/users/${userId}`, http.json({
+    return await http.fetchJson(`/users/${user_id}`, http.json({
         ...options,
         method: "PATCH",
         body: userUpdateRequest
@@ -720,20 +792,20 @@ export async function getUsersCurrent(options?: RequestOptions): Promise<ApiResp
 /**
  * Retrieve an Employee record
  */
-export async function getEmployeesByEmployeeId({ employeeId }: {
-    employeeId: string;
+export async function getEmployeesByEmployee_id({ employee_id }: {
+    employee_id: string;
 }, options?: RequestOptions): Promise<ApiResponse<GETEmployeesByEmployeeIdResponse>> {
-    return await http.fetchJson(`/employees/${employeeId}`, {
+    return await http.fetchJson(`/employees/${employee_id}`, {
         ...options
     });
 }
 /**
  * Update an Employee record, for mutable properties
  */
-export async function patchEmployeesByEmployeeId({ employeeId }: {
-    employeeId: string;
+export async function patchEmployeesByEmployee_id({ employee_id }: {
+    employee_id: string;
 }, employeeUpdateRequest: EmployeeUpdateRequest, options?: RequestOptions): Promise<ApiResponse<PATCHEmployeesByEmployeeIdResponse>> {
-    return await http.fetchJson(`/employees/${employeeId}`, http.json({
+    return await http.fetchJson(`/employees/${employee_id}`, http.json({
         ...options,
         method: "PATCH",
         body: employeeUpdateRequest
@@ -750,53 +822,73 @@ export async function postEmployeesSearch(employeeSearchRequest: EmployeeSearchR
     }));
 }
 /**
- * Retrieve an Employer record
+ * Add an FEIN to the logged in Leave Administrator
  */
-export async function getEmployersByEmployerId({ employerId }: {
-    employerId: string;
-}, options?: RequestOptions): Promise<ApiResponse<GETEmployersByEmployerIdResponse>> {
-    return await http.fetchJson(`/employers/${employerId}`, {
+export async function postEmployersAdd(employerAddFeinRequestBody: EmployerAddFeinRequestBody, options?: RequestOptions): Promise<ApiResponse<POSTEmployersAddResponse>> {
+    return await http.fetchJson("/employers/add", http.json({
+        ...options,
+        method: "POST",
+        body: employerAddFeinRequestBody
+    }));
+}
+/**
+ * Retrieves the last withholding date for the FEIN specified
+ */
+export async function getEmployersWithholdingByEmployer_id({ employer_id }: {
+    employer_id: string;
+}, options?: RequestOptions): Promise<ApiResponse<GETEmployersWithholdingByEmployerIdResponse>> {
+    return await http.fetchJson(`/employers/withholding/${employer_id}`, {
+        ...options
+    });
+}
+/**
+ * Retrieve a claim for a specified absence ID
+ */
+export async function getClaimsByFineos_absence_id({ fineos_absence_id }: {
+    fineos_absence_id: string;
+}, options?: RequestOptions): Promise<ApiResponse<GETClaimsByFineosAbsenceIdResponse>> {
+    return await http.fetchJson(`/claims/${fineos_absence_id}`, {
         ...options
     });
 }
 /**
  * Retrieve a FINEOS documents for a specified absence ID and document ID
  */
-export async function getEmployersClaimsByFineosAbsenceIdDocumentsAndFineosDocumentId({ fineosAbsenceId, fineosDocumentId }: {
-    fineosAbsenceId: string;
-    fineosDocumentId: string;
-}, options?: RequestOptions): Promise<ApiResponse<string | undefined>> {
-    return await http.fetch(`/employers/claims/${fineosAbsenceId}/documents/${fineosDocumentId}`, {
+export async function getEmployersClaimsByFineos_absence_idDocumentsAndFineos_document_id({ fineos_absence_id, fineos_document_id }: {
+    fineos_absence_id: string;
+    fineos_document_id: string;
+}, options?: RequestOptions): Promise<ApiResponse<string|undefined>> {
+    return await http.fetch(`/employers/claims/${fineos_absence_id}/documents/${fineos_document_id}`, {
         ...options
     });
 }
 /**
  * Retrieve a list of FINEOS documents for a specified absence ID
  */
-export async function getEmployersClaimsByFineosAbsenceIdDocuments({ fineosAbsenceId }: {
-    fineosAbsenceId: string;
+export async function getEmployersClaimsByFineos_absence_idDocuments({ fineos_absence_id }: {
+    fineos_absence_id: string;
 }, options?: RequestOptions): Promise<ApiResponse<GETEmployersClaimsByFineosAbsenceIdDocumentsResponse>> {
-    return await http.fetchJson(`/employers/claims/${fineosAbsenceId}/documents`, {
+    return await http.fetchJson(`/employers/claims/${fineos_absence_id}/documents`, {
         ...options
     });
 }
 /**
  * Retrieve FINEOS claim review data for a specified absence ID
  */
-export async function getEmployersClaimsByFineosAbsenceIdReview({ fineosAbsenceId }: {
-    fineosAbsenceId: string;
+export async function getEmployersClaimsByFineos_absence_idReview({ fineos_absence_id }: {
+    fineos_absence_id: string;
 }, options?: RequestOptions): Promise<ApiResponse<GETEmployersClaimsByFineosAbsenceIdReviewResponse>> {
-    return await http.fetchJson(`/employers/claims/${fineosAbsenceId}/review`, {
+    return await http.fetchJson(`/employers/claims/${fineos_absence_id}/review`, {
         ...options
     });
 }
 /**
  * Save review claim from leave admin
  */
-export async function patchEmployersClaimsByFineosAbsenceIdReview({ fineosAbsenceId }: {
-    fineosAbsenceId: string;
+export async function patchEmployersClaimsByFineos_absence_idReview({ fineos_absence_id }: {
+    fineos_absence_id: string;
 }, employerClaimRequestBody: EmployerClaimRequestBody, options?: RequestOptions): Promise<ApiResponse<PATCHEmployersClaimsByFineosAbsenceIdReviewResponse>> {
-    return await http.fetchJson(`/employers/claims/${fineosAbsenceId}/review`, http.json({
+    return await http.fetchJson(`/employers/claims/${fineos_absence_id}/review`, http.json({
         ...options,
         method: "PATCH",
         body: employerClaimRequestBody
@@ -822,77 +914,97 @@ export async function getApplications(options?: RequestOptions): Promise<ApiResp
 /**
  * Retrieve an Application identified by the application id
  */
-export async function getApplicationsByApplicationId({ applicationId }: {
-    applicationId: string;
+export async function getApplicationsByApplication_id({ application_id, xFfRequireOtherLeaves }: {
+    application_id: string;
+    xFfRequireOtherLeaves?: string;
 }, options?: RequestOptions): Promise<ApiResponse<ApplicationResponse>> {
-    return await http.fetchJson(`/applications/${applicationId}`, {
-        ...options
+    return await http.fetchJson(`/applications/${application_id}`, {
+        ...options,
+        headers: {
+            ...options?.headers,
+            "X-FF-Require-Other-Leaves": xFfRequireOtherLeaves
+        }
     });
 }
 /**
  * Update an Application
  */
-export async function patchApplicationsByApplicationId({ applicationId }: {
-    applicationId: string;
+export async function patchApplicationsByApplication_id({ application_id, xFfRequireOtherLeaves }: {
+    application_id: string;
+    xFfRequireOtherLeaves?: string;
 }, applicationRequestBody: ApplicationRequestBody, options?: RequestOptions): Promise<ApiResponse<PATCHApplicationsByApplicationIdResponse>> {
-    return await http.fetchJson(`/applications/${applicationId}`, http.json({
+    return await http.fetchJson(`/applications/${application_id}`, http.json({
         ...options,
         method: "PATCH",
-        body: applicationRequestBody
+        body: applicationRequestBody,
+        headers: {
+            ...options?.headers,
+            "X-FF-Require-Other-Leaves": xFfRequireOtherLeaves
+        }
     }));
 }
 /**
  * Submit the first part of the application to the Claims Processing System.
  *
  */
-export async function postApplicationsByApplicationIdSubmitApplication({ applicationId }: {
-    applicationId: string;
+export async function postApplicationsByApplication_idSubmit_application({ application_id, xFfRequireOtherLeaves }: {
+    application_id: string;
+    xFfRequireOtherLeaves?: string;
 }, options?: RequestOptions): Promise<ApiResponse<POSTApplicationsByApplicationIdSubmitApplicationResponse>> {
-    return await http.fetchJson(`/applications/${applicationId}/submit_application`, {
+    return await http.fetchJson(`/applications/${application_id}/submit_application`, {
         ...options,
-        method: "POST"
+        method: "POST",
+        headers: {
+            ...options?.headers,
+            "X-FF-Require-Other-Leaves": xFfRequireOtherLeaves
+        }
     });
 }
 /**
  * Complete intake of an application in the Claims Processing System.
  *
  */
-export async function postApplicationsByApplicationIdCompleteApplication({ applicationId }: {
-    applicationId: string;
+export async function postApplicationsByApplication_idComplete_application({ application_id, xFfRequireOtherLeaves }: {
+    application_id: string;
+    xFfRequireOtherLeaves?: string;
 }, options?: RequestOptions): Promise<ApiResponse<POSTApplicationsByApplicationIdCompleteApplicationResponse>> {
-    return await http.fetchJson(`/applications/${applicationId}/complete_application`, {
+    return await http.fetchJson(`/applications/${application_id}/complete_application`, {
         ...options,
-        method: "POST"
+        method: "POST",
+        headers: {
+            ...options?.headers,
+            "X-FF-Require-Other-Leaves": xFfRequireOtherLeaves
+        }
     });
 }
 /**
  * Download an application (case) document by id.
  */
-export async function getApplicationsByApplicationIdDocumentsAndDocumentId({ applicationId, documentId }: {
-    applicationId: string;
-    documentId: string;
-}, options?: RequestOptions): Promise<ApiResponse<string | undefined>> {
-    return await http.fetch(`/applications/${applicationId}/documents/${documentId}`, {
+export async function getApplicationsByApplication_idDocumentsAndDocument_id({ application_id, document_id }: {
+    application_id: string;
+    document_id: string;
+}, options?: RequestOptions): Promise<ApiResponse<string|undefined>> {
+    return await http.fetch(`/applications/${application_id}/documents/${document_id}`, {
         ...options
     });
 }
 /**
  * Get list of documents for a case
  */
-export async function getApplicationsByApplicationIdDocuments({ applicationId }: {
-    applicationId: string;
+export async function getApplicationsByApplication_idDocuments({ application_id }: {
+    application_id: string;
 }, options?: RequestOptions): Promise<ApiResponse<GETApplicationsByApplicationIdDocumentsResponse>> {
-    return await http.fetchJson(`/applications/${applicationId}/documents`, {
+    return await http.fetchJson(`/applications/${application_id}/documents`, {
         ...options
     });
 }
 /**
  * Upload Document
  */
-export async function postApplicationsByApplicationIdDocuments({ applicationId }: {
-    applicationId: string;
+export async function postApplicationsByApplication_idDocuments({ application_id }: {
+    application_id: string;
 }, documentUploadRequest: DocumentUploadRequest, options?: RequestOptions): Promise<ApiResponse<POSTApplicationsByApplicationIdDocumentsResponse>> {
-    return await http.fetchJson(`/applications/${applicationId}/documents`, http.multipart({
+    return await http.fetchJson(`/applications/${application_id}/documents`, http.multipart({
         ...options,
         method: "POST",
         body: documentUploadRequest
@@ -901,14 +1013,50 @@ export async function postApplicationsByApplicationIdDocuments({ applicationId }
 /**
  * Submit Payment Preference
  */
-export async function postApplicationsByApplicationIdSubmitPaymentPreference({ applicationId }: {
-    applicationId: string;
+export async function postApplicationsByApplication_idSubmit_payment_preference({ application_id }: {
+    application_id: string;
 }, paymentPreferenceRequestBody: PaymentPreferenceRequestBody, options?: RequestOptions): Promise<ApiResponse<POSTApplicationsByApplicationIdSubmitPaymentPreferenceResponse>> {
-    return await http.fetchJson(`/applications/${applicationId}/submit_payment_preference`, http.json({
+    return await http.fetchJson(`/applications/${application_id}/submit_payment_preference`, http.json({
         ...options,
         method: "POST",
         body: paymentPreferenceRequestBody
     }));
+}
+/**
+ * Remove an existing EmployerBenefit record from an application.
+ */
+export async function deleteApplicationsByApplication_idEmployer_benefitsAndEmployer_benefit_id({ application_id, employer_benefit_id }: {
+    application_id: string;
+    employer_benefit_id: string;
+}, options?: RequestOptions): Promise<ApiResponse<ApplicationResponse>> {
+    return await http.fetchJson(`/applications/${application_id}/employer_benefits/${employer_benefit_id}`, {
+        ...options,
+        method: "DELETE"
+    });
+}
+/**
+ * Remove an existing OtherIncome record from an application.
+ */
+export async function deleteApplicationsByApplication_idOther_incomesAndOther_income_id({ application_id, other_income_id }: {
+    application_id: string;
+    other_income_id: string;
+}, options?: RequestOptions): Promise<ApiResponse<ApplicationResponse>> {
+    return await http.fetchJson(`/applications/${application_id}/other_incomes/${other_income_id}`, {
+        ...options,
+        method: "DELETE"
+    });
+}
+/**
+ * Remove an existing PreviousLeave record from an application.
+ */
+export async function deleteApplicationsByApplication_idPrevious_leavesAndPrevious_leave_id({ application_id, previous_leave_id }: {
+    application_id: string;
+    previous_leave_id: string;
+}, options?: RequestOptions): Promise<ApiResponse<ApplicationResponse>> {
+    return await http.fetchJson(`/applications/${application_id}/previous_leaves/${previous_leave_id}`, {
+        ...options,
+        method: "DELETE"
+    });
 }
 /**
  * Retrieve financial eligibility by SSN/ITIN, FEIN, leave start date, application submitted date and employment status.
@@ -939,5 +1087,16 @@ export async function postNotifications(notificationRequest: NotificationRequest
         ...options,
         method: "POST",
         body: notificationRequest
+    }));
+}
+/**
+ * Check to see if user should be verified and create verification record
+ *
+ */
+export async function postEmployersVerifications(verificationRequest: VerificationRequest, options?: RequestOptions): Promise<ApiResponse<UserResponse>> {
+    return await http.fetchJson("/employers/verifications", http.json({
+        ...options,
+        method: "POST",
+        body: verificationRequest
     }));
 }

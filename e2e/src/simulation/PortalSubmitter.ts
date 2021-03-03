@@ -5,18 +5,18 @@ import type { CognitoUserSession } from "amazon-cognito-identity-js";
 // Generated API Client courtesy of @spec2ts/openapi-client.
 import {
   postApplications,
-  patchApplicationsByApplicationId,
-  postApplicationsByApplicationIdSubmitApplication,
+  patchApplicationsByApplication_id,
+  postApplicationsByApplication_idSubmit_application,
   ApplicationRequestBody,
   RequestOptions,
-  postApplicationsByApplicationIdDocuments,
+  postApplicationsByApplication_idDocuments,
   DocumentUploadRequest,
-  postApplicationsByApplicationIdCompleteApplication,
+  postApplicationsByApplication_idComplete_application,
   ApplicationResponse,
-  postApplicationsByApplicationIdSubmitPaymentPreference,
+  postApplicationsByApplication_idSubmit_payment_preference,
   PaymentPreferenceRequestBody,
-  patchEmployersClaimsByFineosAbsenceIdReview,
-  getEmployersClaimsByFineosAbsenceIdReview,
+  patchEmployersClaimsByFineos_absence_idReview,
+  getEmployersClaimsByFineos_absence_idReview,
 } from "../api";
 import pRetry from "p-retry";
 import AuthenticationManager from "./AuthenticationManager";
@@ -113,14 +113,14 @@ export default class PortalSubmitter {
 
   async submitDocumentOnly(
     credentials: Credentials,
-    applicationId: string,
+    application_id: string,
     fineosId: string,
     documents: DocumentUploadRequest[]
   ): Promise<void> {
     const options = await this.getOptions(credentials);
 
     return await this.uploadDocuments(
-      applicationId,
+      application_id,
       fineosId,
       documents,
       options
@@ -129,7 +129,7 @@ export default class PortalSubmitter {
 
   protected async submitEmployerResponse(
     employerCredentials: Credentials,
-    fineosAbsenceId: string,
+    fineos_absence_id: string,
     response: SimulatedEmployerResponse
   ): Promise<void> {
     const options = await this.getOptions(employerCredentials);
@@ -140,8 +140,8 @@ export default class PortalSubmitter {
     const review = await pRetry(
       async () => {
         try {
-          return await getEmployersClaimsByFineosAbsenceIdReview(
-            { fineosAbsenceId },
+          return await getEmployersClaimsByFineos_absence_idReview(
+            { fineos_absence_id },
             options
           );
         } catch (e) {
@@ -150,7 +150,7 @@ export default class PortalSubmitter {
             e.data.message === "Claim does not exist for given absence ID"
           ) {
             throw new Error(
-              `Unable to find claim as leave admin for ${fineosAbsenceId}.`
+              `Unable to find claim as leave admin for ${fineos_absence_id}.`
             );
           }
           // Otherwise, abort immediately - there's some other problem.
@@ -165,8 +165,8 @@ export default class PortalSubmitter {
         "Cannot submit employer response due to missing data on the employer review."
       );
     }
-    await patchEmployersClaimsByFineosAbsenceIdReview(
-      { fineosAbsenceId },
+    await patchEmployersClaimsByFineos_absence_idReview(
+      { fineos_absence_id },
       {
         employer_benefits: data.employer_benefits,
         previous_leaves: data.previous_leaves,
@@ -177,14 +177,14 @@ export default class PortalSubmitter {
   }
 
   protected async uploadDocuments(
-    applicationId: string,
+    application_id: string,
     fineosId: string,
     documents: DocumentUploadRequest[],
     options?: RequestOptions
   ): Promise<void> {
     const promises = documents.map(async (document) => {
-      return postApplicationsByApplicationIdDocuments(
-        { applicationId },
+      return postApplicationsByApplication_idDocuments(
+        { application_id },
         document,
         options
       );
@@ -201,23 +201,23 @@ export default class PortalSubmitter {
   }
 
   private async updateApplication(
-    applicationId: string,
+    application_id: string,
     application: ApplicationRequestBody,
     options: RequestOptions
   ) {
-    return patchApplicationsByApplicationId(
-      { applicationId },
+    return patchApplicationsByApplication_id(
+      { application_id },
       application,
       options
     );
   }
 
   private async submitApplication(
-    applicationId: string,
+    application_id: string,
     options?: RequestOptions
   ) {
-    const response = await postApplicationsByApplicationIdSubmitApplication(
-      { applicationId },
+    const response = await postApplicationsByApplication_idSubmit_application(
+      { application_id },
       options
     );
     if (response.data.data && "fineos_absence_id" in response.data.data) {
@@ -231,12 +231,12 @@ export default class PortalSubmitter {
   }
 
   private async completeApplication(
-    applicationId: string,
+    application_id: string,
     options?: RequestOptions
   ) {
     try {
-      return await postApplicationsByApplicationIdCompleteApplication(
-        { applicationId },
+      return await postApplicationsByApplication_idComplete_application(
+        { application_id },
         options
       );
     } catch (e) {
@@ -255,12 +255,12 @@ export default class PortalSubmitter {
   }
 
   private async uploadPaymentPreference(
-    applicationId: string,
+    application_id: string,
     paymentPreference: PaymentPreferenceRequestBody,
     options?: RequestOptions
   ) {
-    return postApplicationsByApplicationIdSubmitPaymentPreference(
-      { applicationId },
+    return postApplicationsByApplication_idSubmit_payment_preference(
+      { application_id },
       paymentPreference,
       options
     );

@@ -1,10 +1,10 @@
-import { getApplicationsByApplicationIdDocuments } from "../../src/api";
+import { getApplicationsByApplication_idDocuments } from "../../src/api";
 import AuthenticationManager from "../../src/simulation/AuthenticationManager";
 import pRetry from "p-retry";
 
 type WaitForDocumentOpts = {
   credentials: Credentials;
-  applicationId: string;
+  application_id: string;
   document_type: string;
 };
 
@@ -16,7 +16,7 @@ export default class DocumentWaiter {
 
   async waitForClaimDocuments({
     credentials,
-    applicationId,
+    application_id,
     document_type,
   }: WaitForDocumentOpts): Promise<boolean> {
     const session = await this.authenticator.authenticate(
@@ -33,8 +33,8 @@ export default class DocumentWaiter {
     // Retry the document request indefinitely (Cypress task will time out to stop).
     return pRetry(
       async () => {
-        const documents = await getApplicationsByApplicationIdDocuments(
-          { applicationId },
+        const documents = await getApplicationsByApplication_idDocuments(
+          { application_id },
           opts
         );
         const discoveredTypes = (documents.data.data ?? []).map(

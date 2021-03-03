@@ -7,7 +7,13 @@ import {
   CognitoUserSession,
 } from "amazon-cognito-identity-js";
 import TestMailVerificationFetcher from "../../cypress/plugins/TestMailVerificationFetcher";
-import { getUsersCurrent, patchUsersByUserId } from "../api";
+import {
+  ApiResponse,
+  getUsersCurrent,
+  patchUsersByUser_id,
+  postEmployersVerifications,
+  UserResponse,
+} from "../api";
 
 export default class AuthenticationManager {
   pool: CognitoUserPool;
@@ -167,6 +173,43 @@ export default class AuthenticationManager {
     });
   }
 
+  async verifyLeaveAdmin(
+    username: string,
+    password: string
+  ): Promise<ApiResponse<UserResponse>> {
+    const session = await this.authenticate(username, password);
+    if (!this.apiBaseUrl) {
+      throw new Error(
+        "No api base URL was given. Unable to consent to data sharing."
+      );
+    }
+    const apiOptions = {
+      baseUrl: this.apiBaseUrl,
+      headers: {
+        Authorization: `Bearer ${session.getAccessToken().getJwtToken()}`,
+        "User-Agent": "PFML Business Simulation Bot",
+      },
+    };
+    const user = ((await getUsersCurrent(apiOptions)) as unknown) as {
+      data: { data: UserResponse };
+    };
+    if (!user.data.data.user_leave_administrators) {
+      throw new Error("No leave administrators found");
+    }
+    const employer_id = user.data.data.user_leave_administrators[0].employer_id;
+    if (!employer_id) {
+      throw new Error("No employer ID found");
+    }
+    return await postEmployersVerifications(
+      {
+        employer_id: employer_id,
+        withholding_amount: 60000,
+        withholding_quarter: "2020-12-31",
+      },
+      apiOptions
+    );
+  }
+
   private async consentToDataSharing(session: CognitoUserSession) {
     if (!this.apiBaseUrl) {
       throw new Error(
@@ -188,9 +231,9 @@ export default class AuthenticationManager {
     }
 
     // Approve data sharing for this user.
-    await patchUsersByUserId(
+    await patchUsersByUser_id(
       {
-        userId: user.data.data.user_id,
+        user_id: user.data.data.user_id,
       },
       {
         consented_to_data_sharing: true,
