@@ -52,7 +52,7 @@ export function beforeFineos(): void {
   cy.on("uncaught:exception", (e) => {
     if (
       e.message.match(
-        /#.(CaseOwnershipSummaryPanelElement|CaseParticipantsSummaryPanelElement)/
+      /(#.(CaseOwnershipSummaryPanelElement|CaseParticipantsSummaryPanelElement)|panelsdrilldown)/
       )
     ) {
       return false;
