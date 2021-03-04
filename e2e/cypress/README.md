@@ -3,6 +3,20 @@ Cypress Test Suite
 
 This README contains in-depth documentation on our Cypress test suite.
 
+Guidelines
+----------
+
+* E2E tests are expensive to run (slow), and fragile.  Any tests we add must meet the following criteria:
+  * It tests integrated (not component level) functionality. Component functionality should be tested by the component's own test suite.
+  * It covers new functionality that is not tested elsewhere (avoid hitting the same path many times).
+  * The functionality it covers is critical for the operation of the business.
+* It's OK to check multiple things in a single test. It's often better to add a new assertion to a test that is already exercising the flow you need than to write a whole new test for it. As a concrete example, we check both the employer response submission and the employer response notification e-mail in the same test, because separating these two things would require us to go back through the claim sumission and employer response process multiple times.
+* We often share state between `it()` statements in a test.  This is discouraged by Cypress, but necessary here.  Because claim submission and adjudication flows are so slow, we often chain them before several `it()` blocks, and reuse the claim for multiple assertions. We share the submitted claim state using `cy.stash()`, a custom system built for retaining state between steps. When writing tests that cross multiple domains, test state (aliased data) is lost. `cy.stash()` works by writing our state data to the filesystem. `cy.stash()` should only be used at the top level of a test (never in helpers/action code).  Here are the common things we might stash:
+  * Full Claims (under `claim`), which give us access to stuff like employer_fein, first_name, last_name, etc.
+  * API Claim Submission Response (under `submission`), which gives us access to stuff like fineos_absence_id and application_id.
+  * Credentials, (under `credentials`) wherever we need to create new ones in one block, then reuse them in another.
+* Avoid `cy.wait()` with explicit wait times at all costs. Explicit wait times are extremely fragile and prevent our tests from getting faster as the system gets faster (ie: if claim submission or e-mail happens to speed up). This is a whole topic in itself, so we'll just refer to [Cypress' documentation](https://docs.cypress.io/guides/core-concepts/retry-ability.html) here.  There are a few cases where `cy.wait()` is necessary in our test suite, and they're mostly to resolve issues with Fineos DOM instability (and constrained to wait times of under 1 second).
+
 Retries and dependent tests
 ----------------------------
 
