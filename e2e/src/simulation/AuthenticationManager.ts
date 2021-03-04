@@ -14,6 +14,8 @@ import {
   postEmployersVerifications,
   UserResponse,
 } from "../api";
+import fetch from "node-fetch";
+import { OAuthCreds } from "types";
 
 export default class AuthenticationManager {
   pool: CognitoUserPool;
@@ -208,6 +210,26 @@ export default class AuthenticationManager {
       },
       apiOptions
     );
+  }
+
+  async getOauth2Token(apiCreds: OAuthCreds, url: string): Promise<string> {
+    const encodedCreds = Buffer.from(
+      `${apiCreds.clientID}:${apiCreds.secretID}`
+    ).toString("base64");
+    const opts = {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${encodedCreds}`,
+        "User-Agent": "PFML Integration Testing",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: "grant_type=client_credentials",
+    };
+
+    return fetch(url, opts)
+      .then((res) => res.json())
+      .then((json) => json.access_token)
+      .catch((err) => console.log(err));
   }
 
   private async consentToDataSharing(session: CognitoUserSession) {
