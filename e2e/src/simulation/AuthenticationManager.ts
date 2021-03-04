@@ -212,7 +212,7 @@ export default class AuthenticationManager {
     );
   }
 
-  async getOauth2Token(apiCreds: OAuthCreds, url: string): Promise<string> {
+  async getAPIBearerToken(apiCreds: OAuthCreds): Promise<string> {
     const encodedCreds = Buffer.from(
       `${apiCreds.clientID}:${apiCreds.secretID}`
     ).toString("base64");
@@ -226,10 +226,14 @@ export default class AuthenticationManager {
       body: "grant_type=client_credentials",
     };
 
-    return fetch(url, opts)
-      .then((res) => res.json())
-      .then((json) => json.access_token)
-      .catch((err) => console.log(err));
+    const res = await fetch(`${this.apiBaseUrl}/oauth2/token`, opts);
+    const { access_token } = await res.json();
+    if (!access_token) {
+      throw new Error(
+        `Unable to get an access token. Response was: ${JSON.stringify(res)}`
+      );
+    }
+    return access_token;
   }
 
   private async consentToDataSharing(session: CognitoUserSession) {

@@ -6,8 +6,6 @@ import { getEmployee } from "../../cypress/plugins";
 import AuthenticationManager from "../../src/simulation/AuthenticationManager";
 import { CognitoUserPool } from "amazon-cognito-identity-js";
 import config from "../../src/config";
-import TestMailVerificationFetcher from "../../cypress/plugins/TestMailVerificationFetcher";
-import { OAuthCreds } from "../../src/types";
 import { EligibilityRequest } from "api";
 import { postFinancialEligibility } from "../../src/api";
 import { formatISO } from "date-fns";
@@ -16,39 +14,26 @@ const scenarioFunctions: Record<string, SimulationGenerator> = {
   ...integrationScenarios,
 };
 
-let userPool: CognitoUserPool;
-let verificationFetcher: TestMailVerificationFetcher;
-let authenticator: AuthenticationManager;
-let apiCreds: OAuthCreds;
 let token: string;
 
 describe("FE test", () => {
   beforeAll(async () => {
-    userPool = new CognitoUserPool({
+    const userPool = new CognitoUserPool({
       ClientId: config("COGNITO_CLIENTID"),
       UserPoolId: config("COGNITO_POOL"),
     });
 
-    verificationFetcher = new TestMailVerificationFetcher(
-      config("TESTMAIL_APIKEY"),
-      config("TESTMAIL_NAMESPACE")
-    );
-
-    authenticator = new AuthenticationManager(
+    const authenticator = new AuthenticationManager(
       userPool,
-      config("API_BASEURL"),
-      verificationFetcher
+      config("API_BASEURL")
     );
 
-    apiCreds = {
+    const apiCreds = {
       clientID: config("API_FINEOS_CLIENT_ID"),
       secretID: config("API_FINEOS_CLIENT_SECRET"),
     };
 
-    token = await authenticator.getOauth2Token(
-      apiCreds,
-      `${config("API_BASEURL")}/oauth2/token`
-    );
+    token = await authenticator.getAPIBearerToken(apiCreds);
   });
 
   test("Claimaint should be Financially Eligible", async () => {
