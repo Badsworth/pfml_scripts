@@ -37,16 +37,17 @@ describe("Index", () => {
       });
     });
 
-    it("redirects to dashboard", async () => {
+    it("redirects to applications", async () => {
       const { appLogic, wrapper } = renderWithAppLogic(Index, {
         diveLevels: 0,
         render: "mount",
       });
+
       await act(async () => {
         await wrapper.update();
       });
 
-      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith("/dashboard");
+      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith("/applications");
     });
   });
 
@@ -55,7 +56,7 @@ describe("Index", () => {
       Auth.currentUserInfo.mockResolvedValue();
     });
 
-    it("does not redirect to dashboard", async () => {
+    it("does not redirect to applications", async () => {
       const { appLogic, wrapper } = renderWithAppLogic(Index, {
         diveLevels: 0,
         render: "mount",

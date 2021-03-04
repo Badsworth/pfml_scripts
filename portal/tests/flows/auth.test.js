@@ -10,12 +10,12 @@ const createAccountStates = [
   routes.auth.createAccount,
   routes.auth.verifyAccount,
   routes.auth.login,
-  routes.applications.dashboard,
+  routes.applications.index,
 ];
 
 const forgotPasswordStates = [
   routes.auth.forgotPassword,
-  routes.applications.dashboard,
+  routes.applications.index,
   routes.auth.login,
   routes.auth.verifyAccount,
   routes.auth.resetPassword,

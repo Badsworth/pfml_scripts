@@ -18,6 +18,11 @@ export const Index = (props) => {
   const { appLogic, claims, query } = props;
   const { t } = useTranslation();
 
+  // Redirect users who do not have claims
+  if (props.claims.isEmpty) {
+    appLogic.portalFlow.goTo(routes.applications.dashboard);
+  }
+
   const hasClaims = claims.items.length > 0;
   const hasInProgressClaims = hasClaims && claims.inProgress.length > 0;
   const hasCompletedClaims = hasClaims && claims.completed.length > 0;
@@ -97,7 +102,12 @@ export const Index = (props) => {
 };
 
 Index.propTypes = {
-  appLogic: PropTypes.object.isRequired,
+  appLogic: PropTypes.shape({
+    portalFlow: PropTypes.shape({
+      goTo: PropTypes.func.isRequired,
+      pathname: PropTypes.string.isRequired,
+    }).isRequired,
+  }).isRequired,
   claims: PropTypes.instanceOf(ClaimCollection).isRequired,
   query: PropTypes.shape({
     uploadedAbsenceId: PropTypes.string,

@@ -22,7 +22,7 @@ export default {
     },
     [routes.auth.login]: {
       on: {
-        LOG_IN: routes.applications.dashboard,
+        LOG_IN: routes.applications.index,
         UNCONFIRMED_ACCOUNT: routes.auth.verifyAccount,
       },
     },

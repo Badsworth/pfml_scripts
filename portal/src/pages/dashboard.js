@@ -18,21 +18,11 @@ import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 import withClaims from "../hoc/withClaims";
 
-/**
- * "Dashboard" - Where a Claimant is redirected to after successfully authenticating.
- */
 export const Dashboard = (props) => {
   const { appLogic, claims } = props;
   const { t } = useTranslation();
 
   const hasClaims = !claims.isEmpty;
-
-  // We only want to redirect users who have claims when they
-  // first login, but don't want to prevent them from navigating
-  // to this page entirely
-  if (props.query["logged-in"] && !props.claims.isEmpty) {
-    appLogic.portalFlow.goToPageFor("SHOW_APPLICATIONS");
-  }
 
   const alertIconProps = {
     className: "margin-right-1 text-secondary text-middle",
@@ -50,7 +40,7 @@ export const Dashboard = (props) => {
   return (
     <React.Fragment>
       {hasClaims && (
-        <Link href={routes.applications.index}>
+        <Link href={appLogic.portalFlow.getNextPageRoute("SHOW_APPLICATIONS")}>
           <a className="display-inline-block margin-bottom-5">
             {t("pages.dashboard.applicationsLink")}
           </a>
@@ -155,14 +145,10 @@ Dashboard.propTypes = {
   appLogic: PropTypes.shape({
     portalFlow: PropTypes.shape({
       getNextPageRoute: PropTypes.func.isRequired,
-      goToPageFor: PropTypes.func.isRequired,
       pathname: PropTypes.string.isRequired,
     }),
   }).isRequired,
   claims: PropTypes.instanceOf(ClaimCollection).isRequired,
-  query: PropTypes.shape({
-    "logged-in": PropTypes.string,
-  }).isRequired,
 };
 
 export default withClaims(Dashboard);

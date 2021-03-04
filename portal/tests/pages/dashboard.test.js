@@ -17,12 +17,11 @@ function render(customProps = {}, options = { claims: [] }) {
     appLogic.claims.hasLoadedAll = true;
   });
 
-  const goToPageForSpy = jest.spyOn(appLogic.portalFlow, "goToPageFor");
   const { wrapper } = renderWithAppLogic(Dashboard, {
     props: { appLogic, ...customProps },
   });
 
-  return { appLogic, goToPageForSpy, wrapper };
+  return { appLogic, wrapper };
 }
 
 describe("Dashboard", () => {
@@ -30,31 +29,32 @@ describe("Dashboard", () => {
     const { wrapper } = render();
 
     expect(wrapper).toMatchSnapshot();
+
     wrapper.find("Trans").forEach((trans) => {
       expect(trans.dive()).toMatchSnapshot();
     });
   });
 
-  it("redirects to Dashboard when user has applications and just logged in", () => {
-    const claims = [new MockClaimBuilder().create()];
+  it("doesn't show link to applications when claims do not exist", () => {
+    const { wrapper } = render();
 
-    const { goToPageForSpy } = render(
-      {
-        query: {
-          "logged-in": "true",
-        },
-      },
-      { claims }
-    );
-
-    expect(goToPageForSpy).toHaveBeenCalledWith("SHOW_APPLICATIONS");
+    expect(wrapper.find("Link").exists()).toBe(false);
   });
 
-  it("does not redirect to Dashboard when user has applications but logged-in query isn't set", () => {
+  it("shows link to applications when claims exist", () => {
     const claims = [new MockClaimBuilder().create()];
+    const { wrapper } = render({}, { claims });
 
-    const { goToPageForSpy } = render({}, { claims });
-
-    expect(goToPageForSpy).not.toHaveBeenCalled();
+    expect(wrapper.find("Link")).toMatchInlineSnapshot(`
+      <Link
+        href="/applications"
+      >
+        <a
+          className="display-inline-block margin-bottom-5"
+        >
+          View all applications
+        </a>
+      </Link>
+    `);
   });
 });

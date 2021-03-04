@@ -117,7 +117,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
       if (next) {
         portalFlow.goTo(next);
       } else {
-        portalFlow.goToPageFor("LOG_IN", {}, { "logged-in": true });
+        portalFlow.goToPageFor("LOG_IN");
       }
     } catch (error) {
       if (error.code === "UserNotConfirmedException") {

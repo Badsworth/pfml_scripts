@@ -23,7 +23,7 @@ export const Index = (props) => {
     // eslint-disable-next-line promise/catch-or-return
     Auth.currentUserInfo().then((userInfo) => {
       if (userInfo) {
-        return appLogic.portalFlow.goTo(routes.applications.dashboard);
+        return appLogic.portalFlow.goTo(routes.applications.index);
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

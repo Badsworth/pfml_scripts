@@ -39,13 +39,12 @@ describe("Applications", () => {
   });
 
   describe("when no claims exist", () => {
-    beforeEach(() => {
+    it("redirects to dashboard", () => {
       appLogic.claims.claims = new ClaimCollection([]);
+      const goToSpy = jest.spyOn(appLogic.portalFlow, "goTo");
       render();
-    });
 
-    it("renders the empty page state", () => {
-      expect(wrapper).toMatchSnapshot();
+      expect(goToSpy).toHaveBeenCalledWith("/dashboard");
     });
   });
 
