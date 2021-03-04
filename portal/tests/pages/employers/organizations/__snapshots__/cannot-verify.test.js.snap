@@ -25,5 +25,8 @@ exports[`cannot verify renders the page 1`] = `
       }
     />
   </Lead>
+  <p>
+    Your account can’t be verified yet, because your organization has not made any paid leave contributions. After you pay quarterly taxes, you can verify your account and review applications.
+  </p>
 </Fragment>
 `;

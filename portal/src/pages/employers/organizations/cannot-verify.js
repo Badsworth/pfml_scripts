@@ -33,6 +33,7 @@ export const CannotVerify = (props) => {
           tOptions={{ employerFein }}
         />
       </Lead>
+      <p>{t("pages.employersCannotVerify.body")}</p>
     </React.Fragment>
   );
 };

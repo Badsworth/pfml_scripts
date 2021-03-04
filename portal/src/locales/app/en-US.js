@@ -1579,6 +1579,8 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   employersCannotVerify: {
+    body:
+      "Your account can’t be verified yet, because your organization has not made any paid leave contributions. After you pay quarterly taxes, you can verify your account and review applications.",
     companyNameLabel: "<strong>Organization:</strong> {{employerDba}}",
     employerIdNumberLabel:
       "<strong>Employer ID number (EIN):</strong> {{employerFein}}",
