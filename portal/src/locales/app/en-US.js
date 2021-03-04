@@ -482,6 +482,10 @@ const errors = {
         format: "Start date must include a valid month, day, and year.",
       },
     },
+    employer_fein: {
+      duplicate:
+        "The employer ID you entered is already associated with your account.",
+    },
     hours_worked_per_week: {
       // TODO (EMPLOYER-723) remove this
       invalid_hours_worked_per_week:
@@ -489,8 +493,6 @@ const errors = {
       maximum: "Average weekly hours must be 168 or fewer.",
       minimum: "Enter the average weekly hours.",
     },
-    incorrect_withholding_amount:
-      "The amount does not match our records. Please try again.",
     outstanding_information_request_required:
       "This application has already been reviewed.",
     previous_leaves: {
@@ -504,6 +506,9 @@ const errors = {
         minimum:
           "Last day of leave must be on or after the first day of leave.",
       },
+    },
+    withholding_amount: {
+      incorrect: "The amount does not match our records. Please try again.",
     },
   },
   invalidFile_size:
