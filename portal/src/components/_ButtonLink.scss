@@ -1,22 +1,4 @@
-@use "~@massds/mayflower-assets/scss/00-base/_color-tokens.scss" as *;
-
 .usa-button.disabled {
   // see https://github.com/uswds/uswds/blob/44a9e68cf397fc1a8c9f46361dfe2c470a5c7309/src/stylesheets/elements/_buttons.scss#L50
   @include button-disabled;
-}
-
-.usa-button--outline.usa-button--inverse.usa-button--unstyled {
-  // If a .usa-button has these 3 classes, its :visible state is not accessible
-  // on a dark background. https://github.com/uswds/uswds/pull/3846
-  &:visited {
-    color: $c-gray-light;
-  }
-
-  &:hover {
-    color: $c-gray-lightest;
-  }
-
-  &:active {
-    color: "white";
-  }
 }
