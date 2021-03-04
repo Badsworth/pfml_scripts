@@ -1380,6 +1380,13 @@ class Flow(LookupTable):
     UNUSED = LkFlow(9, "Unused flow")
     PEI_WRITEBACK_FILES = LkFlow(10, "PEI Writeback files")
 
+    # ==============================
+    # Delegated Payments Flows
+    # ==============================
+    DELEGATED_CLAIMANT = LkFlow(20, "Claimant")
+    DELEGATED_PAYMENT = LkFlow(21, "Payment")
+    DELEGATED_EFT = LkFlow(22, "EFT")
+
 
 class State(LookupTable):
     model = LkState
@@ -1498,6 +1505,132 @@ class State(LookupTable):
     DIA_PAYMENT_LIST_SAVED_TO_DB = LkState(
         49, "New DIA payments stored in database", Flow.DIA_PAYMENT_LIST.flow_id
     )
+
+    # ==============================
+    # Delegated Payments States
+    # https://lucid.app/lucidchart/edf54a33-1a3f-432d-82b7-157cf02667a4/edit?useCachedRole=false&shared=true&page=NnnYFBRiym9J#
+    # ==============================
+
+    # == Claimant States
+
+    DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS = LkState(
+        100, "Claimant extracted from FINEOS", Flow.DELEGATED_CLAIMANT.flow_id
+    )
+    DELEGATED_CLAIMANT_ADD_TO_CLAIMANT_EXTRACT_ERROR_REPORT = LkState(
+        101, "Add to Claimant Extract Error Report", Flow.DELEGATED_CLAIMANT.flow_id
+    )
+    DELEGATED_CLAIMANT_EXTRACT_ERROR_REPORT_SENT = LkState(
+        102, "Claimant Extract Error Report sent", Flow.DELEGATED_CLAIMANT.flow_id
+    )
+
+    # == EFT States
+
+    DELEGATED_EFT_SEND_PRENOTE = LkState(110, "Send EFT Prenote", Flow.DELEGATED_EFT.flow_id)
+    DELEGATED_EFT_PRENOTE_SENT = LkState(111, "EFT Prenote Sent", Flow.DELEGATED_EFT.flow_id)
+    DELEGATED_EFT_ALLOWABLE_TIME_IN_PRENOTE_STATE_EXCEEDED = LkState(
+        112, "EFT alllowable time in Prenote state exceeded", Flow.DELEGATED_EFT.flow_id
+    )
+    DELEGATED_EFT_ELIGIBLE = LkState(113, "EFT eligible", Flow.DELEGATED_EFT.flow_id)
+    DELEGATED_EFT_ADD_TO_ERROR_REPORT = LkState(
+        114, "Add to EFT Error Report", Flow.DELEGATED_EFT.flow_id
+    )
+    DELEGATED_EFT_ERROR_REPORT_SENT = LkState(
+        115, "EFT Error Report sent", Flow.DELEGATED_EFT.flow_id
+    )
+
+    # == Payment States
+
+    # FINEOS Extract stage
+    DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT = LkState(
+        120, "Add to Payment Error Report", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_ERROR_REPORT_SENT = LkState(
+        121, "Payment Error Report sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT = LkState(
+        122,
+        "Waiting for Payment Audit Report response - $0 payment",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+    DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
+        123, "Add $0 payment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_ZERO_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+        124, "$0 payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT = LkState(
+        125,
+        "Waiting for Payment Audit Report response - overpayment",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+    DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK = LkState(
+        126, "Add overpayment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+        127, "Overpayment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING = LkState(
+        128, "Staged for Payment Audit Report sampling", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_ADD_TO_PAYMENT_AUDIT_REPORT = LkState(
+        129, "Add to Payment Audit Report", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT = LkState(
+        130, "Payment Audit Report sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED = LkState(
+        131,
+        "Waiting for Payment Audit Report response - not sampled",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
+    # Payment Rejects processing stage
+    DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT = LkState(
+        132, "Add to Payment Reject Report", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT = LkState(
+        133, "Payment Reject Report sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
+        134, "Add accepted payment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+        135, "Accepted payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_CHECK = LkState(
+        136, "Add to PUB Transaction - Check", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT = LkState(
+        137, "PUB Transaction sent - Check", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT = LkState(
+        138, "Add to PUB Transaction - EFT", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT = LkState(
+        139, "PUB Transaction sent - EFT", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    # PUB Status Return stage
+    DELEGATED_PAYMENT_ADD_TO_PUB_ERROR_REPORT = LkState(
+        140, "Add to PUB Error Report", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_PUB_ERROR_REPORT_SENT = LkState(
+        141, "PUB Error Report sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DELEGATED_PAYMENT_ADD_TO_PUB_PAYMENT_FINEOS_WRITEBACK = LkState(
+        142, "Add to PUB payment FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_PUB_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+        143, "PUB payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_COMPLETE = LkState(144, "Payment complete", Flow.DELEGATED_PAYMENT.flow_id)
 
 
 class ReferenceFileType(LookupTable):
