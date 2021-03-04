@@ -11,6 +11,10 @@ def snake_to_camel(string: str) -> str:
     return "".join(word.capitalize() for word in string.split("_"))
 
 
+def capitalize(string: str) -> str:
+    return string.capitalize()
+
+
 def join_with_coordinating_conjunction(
     terms: List[str], separator: str = ",", conjunction: str = "and"
 ) -> str:
