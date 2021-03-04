@@ -66,6 +66,7 @@ exports[`RepeatableFieldset renders a RepeatableFieldsetCard for each entry 1`] 
   </RepeatableFieldsetCard>
   <Button
     disabled={false}
+    name="add-entry-button"
     onClick={[MockFunction]}
     variation="outline"
   >

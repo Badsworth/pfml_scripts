@@ -60,6 +60,7 @@ const RepeatableFieldset = (props) => {
         </RepeatableFieldsetCard>
       ))}
       <Button
+        name="add-entry-button"
         onClick={props.onAddClick}
         variation="outline"
         disabled={limitReached}

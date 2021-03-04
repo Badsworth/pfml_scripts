@@ -159,3 +159,44 @@ exports[`EmployerBenefitDetails when the user's claim has employer benefits rend
   />
 </QuestionPage>
 `;
+
+exports[`EmployerBenefitDetails when the user's claim has no employer benefits renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Other leave, income, and benefits"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.
+  </Heading>
+  <LeaveDatesAlert
+    endDate="2021-06-01"
+    headingLevel="3"
+    startDate="2021-01-01"
+  />
+  <RepeatableFieldset
+    addButtonLabel="Add another benefit"
+    entries={
+      Array [
+        EmployerBenefit {
+          "benefit_amount_dollars": null,
+          "benefit_amount_frequency": null,
+          "benefit_end_date": null,
+          "benefit_start_date": null,
+          "benefit_type": null,
+          "employer_benefit_id": null,
+        },
+      ]
+    }
+    headingPrefix="Benefit"
+    limit={4}
+    limitMessage="You can only add up to 4 benefits"
+    onAddClick={[Function]}
+    onRemoveClick={[Function]}
+    removeButtonLabel="Remove benefit"
+    render={[Function]}
+  />
+</QuestionPage>
+`;

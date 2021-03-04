@@ -30,6 +30,7 @@ const RepeatableFieldsetCard = (props) => {
         {props.showRemoveButton && (
           <div className="border-top border-base-lighter padding-top-2 margin-top-2">
             <Button
+              name="remove-entry-button"
               className="text-error hover:text-error-dark active:text-error-darker"
               onClick={handleRemoveClick}
               variation="unstyled"

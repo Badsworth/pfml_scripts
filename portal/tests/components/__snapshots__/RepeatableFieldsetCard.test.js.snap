@@ -23,6 +23,7 @@ exports[`RepeatableFieldsetCard renders with the given content 1`] = `
 exports[`RepeatableFieldsetCard when showRemoveButton is true shows the remove button 1`] = `
 <Button
   className="text-error hover:text-error-dark active:text-error-darker"
+  name="remove-entry-button"
   onClick={[Function]}
   variation="unstyled"
 >
