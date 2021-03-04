@@ -4,6 +4,7 @@ import {
   CognitoAuthError,
   DocumentsLoadError,
   DocumentsUploadError,
+  LeaveAdminForbiddenError,
   ValidationError,
 } from "../errors";
 import AppErrorInfo from "../models/AppErrorInfo";
@@ -52,6 +53,8 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       handleDocumentsError(error);
     } else if (error instanceof CognitoAuthError) {
       handleCognitoAuthError(error);
+    } else if (error instanceof LeaveAdminForbiddenError) {
+      handleLeaveAdminForbiddenError(error);
     } else {
       console.error(error);
       handleError(error);
@@ -253,6 +256,25 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       errorMessage: error.cognitoError.message,
       errorName: error.cognitoError.name,
     });
+  };
+
+  /**
+   * Redirect to either the Verify Contributions or Cannot Verify page
+   * based on if the UserLeaveAdministrator is verifiable.
+   * @param {LeaveAdminForbiddenError} error
+   */
+  const handleLeaveAdminForbiddenError = (error) => {
+    tracker.trackEvent("LeaveAdminForbiddenError", {
+      errorMessage: error.message,
+      errorName: error.name,
+      employerId: error.employer_id,
+      hasVerificationData: error.has_verification_data,
+    });
+
+    const route = error.has_verification_data
+      ? routes.employers.verifyContributions
+      : routes.employers.cannotVerify;
+    portalFlow.goTo(route, { employer_id: error.employer_id });
   };
 
   return {

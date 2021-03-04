@@ -3,6 +3,7 @@ import {
   DocumentsLoadError,
   DocumentsUploadError,
   ForbiddenError,
+  LeaveAdminForbiddenError,
   NetworkError,
   ValidationError,
 } from "../../src/errors";
@@ -364,6 +365,91 @@ describe("useAppErrorsLogic", () => {
         expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
           issueField: "first_name",
           issueType: "required",
+        });
+      });
+    });
+
+    describe("when LeaveAdminForbiddenError is thrown", () => {
+      let goToSpy;
+      beforeEach(() => {
+        goToSpy = jest.spyOn(portalFlow, "goTo");
+      });
+
+      describe("when has_verification_data is true", () => {
+        beforeEach(() => {
+          act(() => {
+            appErrorsLogic.catchError(
+              new LeaveAdminForbiddenError(
+                "some-employer-id",
+                true,
+                "User is not Verified"
+              )
+            );
+          });
+        });
+
+        it("tracks the event", () => {
+          expect(tracker.trackEvent).toHaveBeenCalledWith(
+            "LeaveAdminForbiddenError",
+            {
+              errorMessage: "User is not Verified",
+              errorName: "LeaveAdminForbiddenError",
+              employerId: "some-employer-id",
+              hasVerificationData: true,
+            }
+          );
+        });
+
+        it("redirects to verify contributions page", () => {
+          expect(
+            goToSpy
+          ).toHaveBeenCalledWith(
+            "/employers/organizations/verify-contributions",
+            { employer_id: "some-employer-id" }
+          );
+        });
+
+        it("does not add the error to appErrors collection", () => {
+          expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        });
+      });
+
+      describe("when has_verification_data is false", () => {
+        beforeEach(() => {
+          act(() => {
+            appErrorsLogic.catchError(
+              new LeaveAdminForbiddenError(
+                "some-employer-id",
+                false,
+                "User is not Verified"
+              )
+            );
+          });
+        });
+
+        it("tracks the event", () => {
+          expect(tracker.trackEvent).toHaveBeenCalledWith(
+            "LeaveAdminForbiddenError",
+            {
+              errorMessage: "User is not Verified",
+              errorName: "LeaveAdminForbiddenError",
+              employerId: "some-employer-id",
+              hasVerificationData: false,
+            }
+          );
+        });
+
+        it("redirects to cannot verify page", () => {
+          expect(goToSpy).toHaveBeenCalledWith(
+            "/employers/organizations/cannot-verify",
+            {
+              employer_id: "some-employer-id",
+            }
+          );
+        });
+
+        it("does not add the error to appErrors collection", () => {
+          expect(appErrorsLogic.appErrors.items).toHaveLength(0);
         });
       });
     });

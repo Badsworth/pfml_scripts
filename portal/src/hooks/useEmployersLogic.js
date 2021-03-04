@@ -1,5 +1,7 @@
+import { get, isNil } from "lodash";
 import { useMemo, useState } from "react";
 import EmployersApi from "../api/EmployersApi";
+import { LeaveAdminForbiddenError } from "../errors";
 
 const useEmployersLogic = ({ appErrorsLogic, portalFlow, setUser }) => {
   const [claim, setClaim] = useState(null);
@@ -38,7 +40,20 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow, setUser }) => {
 
       setClaim(claim);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      const employer_id = get(error, "data.employer_id");
+      const has_verification_data = get(error, "data.has_verification_data");
+
+      if (!isNil(employer_id) && !isNil(has_verification_data)) {
+        appErrorsLogic.catchError(
+          new LeaveAdminForbiddenError(
+            employer_id,
+            has_verification_data,
+            error.message
+          )
+        );
+      } else {
+        appErrorsLogic.catchError(error);
+      }
     }
   };
 

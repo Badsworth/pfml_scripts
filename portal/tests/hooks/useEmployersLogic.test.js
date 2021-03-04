@@ -1,3 +1,4 @@
+import { BadRequestError, LeaveAdminForbiddenError } from "../../src/errors";
 import {
   addEmployerMock,
   downloadDocumentMock,
@@ -9,7 +10,6 @@ import {
 } from "../../src/api/EmployersApi";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import { BadRequestError } from "../../src/errors";
 import { act } from "react-dom/test-utils";
 import { testHook } from "../test-utils";
 import { uniqueId } from "lodash";
@@ -121,7 +121,7 @@ describe("useEmployersLogic", () => {
         jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
       });
 
-      it("catches error", async () => {
+      it("catches generic errors", async () => {
         getClaimMock.mockImplementationOnce(() => {
           throw new Error();
         });
@@ -131,6 +131,35 @@ describe("useEmployersLogic", () => {
         });
 
         expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+      });
+
+      it("catches instances of LeaveAdminForbiddenError", async () => {
+        const catchErrorSpy = jest.spyOn(appErrorsLogic, "catchError");
+        getClaimMock.mockImplementationOnce(() => {
+          // eslint-disable-next-line no-throw-literal
+          throw {
+            data: {
+              employer_id: "some-employer-id",
+              has_verification_data: "true",
+            },
+            errors: [],
+            message: "User is not Verified",
+            status_code: 403,
+          };
+        });
+
+        await act(async () => {
+          await employersLogic.loadClaim(absenceId);
+        });
+
+        const expectedError = new LeaveAdminForbiddenError(
+          "some-employer-id",
+          true,
+          "User is not Verified"
+        );
+        // first call, first argument
+        expect(catchErrorSpy.mock.calls[0][0]).toEqual(expectedError);
+        expect(appErrorsLogic.appErrors.items.length).toBe(0);
       });
     });
 
