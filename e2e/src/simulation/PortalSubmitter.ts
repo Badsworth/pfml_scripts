@@ -79,12 +79,7 @@ export default class PortalSubmitter {
       options
     );
     const { fineos_absence_id, first_name, last_name } = submitResponseData;
-    await this.uploadDocuments(
-      application_id,
-      fineos_absence_id,
-      documents,
-      options
-    );
+    await this.uploadDocuments(application_id, documents, options);
     await this.uploadPaymentPreference(
       application_id,
       paymentPreference,
@@ -109,22 +104,6 @@ export default class PortalSubmitter {
       first_name: first_name,
       last_name: last_name,
     };
-  }
-
-  async submitDocumentOnly(
-    credentials: Credentials,
-    application_id: string,
-    fineosId: string,
-    documents: DocumentUploadRequest[]
-  ): Promise<void> {
-    const options = await this.getOptions(credentials);
-
-    return await this.uploadDocuments(
-      application_id,
-      fineosId,
-      documents,
-      options
-    );
   }
 
   protected async submitEmployerResponse(
@@ -178,7 +157,6 @@ export default class PortalSubmitter {
 
   protected async uploadDocuments(
     application_id: string,
-    fineosId: string,
     documents: DocumentUploadRequest[],
     options?: RequestOptions
   ): Promise<void> {
