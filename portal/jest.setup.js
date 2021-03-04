@@ -27,7 +27,7 @@ process.env.session = { secondsOfInactivityUntilLogout: 10 };
 /**
  * Mock DOM APIs
  */
-global.fetch = jest.fn();
+// global.fetch = jest.fn();
 global.scrollTo = jest.fn();
 
 // URL.createObjectURL() hasn't been implemented in the jest DOM yet but will be

@@ -1,0 +1,85 @@
+{
+  "consumer": {
+    "name": "Claimant Portal"
+  },
+  "provider": {
+    "name": "PFML API"
+  },
+  "interactions": [
+    {
+      "description": "a request to get claims",
+      "providerState": "user is not logged in",
+      "request": {
+        "method": "GET",
+        "path": "/applications"
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+        },
+        "body": {
+        }
+      }
+    },
+    {
+      "description": "a request to get claims",
+      "providerState": "user is logged in",
+      "request": {
+        "method": "GET",
+        "path": "/applications",
+        "headers": {
+          "Authorization": "Bearer 2020-02-10T11:34:18.045Z"
+        },
+        "matchingRules": {
+          "$.headers.Authorization": {
+            "match": "type"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+        },
+        "body": {
+          "data": [
+            {
+              "application_id": "2a340cf8-6d2a-4f82-a075-73588d003f8f"
+            }
+          ]
+        },
+        "matchingRules": {
+          "$.body.data[0].application_id": {
+            "match": "type"
+          }
+        }
+      }
+    },
+    {
+      "description": "a request to create a claim",
+      "request": {
+        "method": "POST",
+        "path": "/applications"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+        },
+        "body": {
+          "data": {
+            "application_id": "2a340cf8-6d2a-4f82-a075-73588d003f8f"
+          }
+        },
+        "matchingRules": {
+          "$.body.data.application_id": {
+            "match": "type"
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "2.0.0"
+    }
+  }
+}
