@@ -41,15 +41,33 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
             }
 
             // As an employer, I should receive a notification about my response being required
-            cy.task<Email[]>("getEmails", {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: `Action required: Respond to ${claim.claim.first_name} ${claim.claim.last_name}'s paid leave application`,
-              timestamp_fromER,
-            }).then((emails) => {
+            cy.task<Email[]>(
+              "getEmails",
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: `Action required: Respond to ${claim.claim.first_name} ${claim.claim.last_name}'s paid leave application`,
+                timestamp_from: timestamp_fromER,
+              },
+              { timeout: 360000 }
+            ).then((emails) => {
               expect(emails.length).to.be.greaterThan(0);
               expect(emails[0].html).to.contain(
                 `/employers/applications/new-application/?absence_id=${response.fineos_absence_id}`
               );
+            });
+
+            cy.task<Email[]>(
+              "getEmails",
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject:
+                  "Thank you for successfully submitting your Paid Family and Medical Leave Application",
+                timestamp_from: timestamp_fromER,
+              },
+              { timeout: 360000 }
+            ).then((emails) => {
+              expect(emails.length).to.be.greaterThan(0);
+              expect(emails[0].html).to.contain(response.fineos_absence_id);
             });
 
             // Access and fill out ER form
