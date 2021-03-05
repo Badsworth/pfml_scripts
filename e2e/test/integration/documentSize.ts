@@ -7,7 +7,6 @@ import PortalSubmitter from "../../src/simulation/PortalSubmitter";
 import AuthenticationManager from "../../src/simulation/AuthenticationManager";
 import { CognitoUserPool } from "amazon-cognito-identity-js";
 import config from "../../src/config";
-import { Credentials } from "../../src/types";
 import {
   DocumentUploadRequest,
   postApplicationsByApplication_idDocuments,
@@ -19,9 +18,9 @@ const scenarioFunctions: Record<string, SimulationGenerator> = {
   ...integrationScenarios,
 };
 
-let defaultClaimantCredentials: Credentials;
 let submitter: PortalSubmitter;
 let pmflApiOptions: RequestOptions;
+let application_id: string;
 
 describe("API Documents Test of various file sizes", () => {
   beforeAll(async () => {
@@ -35,7 +34,7 @@ describe("API Documents Test of various file sizes", () => {
       config("API_BASEURL")
     );
 
-    defaultClaimantCredentials = {
+    const defaultClaimantCredentials = {
       username: config("PORTAL_USERNAME"),
       password: config("PORTAL_PASSWORD"),
     };
@@ -54,9 +53,7 @@ describe("API Documents Test of various file sizes", () => {
     };
 
     submitter = new PortalSubmitter(authenticator, config("API_BASEURL"));
-  });
 
-  test("Should recieve an error when submitting a document of size 20MB", async () => {
     const employee = await getEmployee("financially eligible");
 
     const opts = {
@@ -68,18 +65,10 @@ describe("API Documents Test of various file sizes", () => {
 
     const claim = await scenarioFunctions["DHAP1"](opts);
 
-    // Submit Claim w/o Document
-    const appRes = await submitter
-      .submit(
-        defaultClaimantCredentials,
-        claim.claim,
-        [],
-        claim.paymentPreference
-      )
-      .catch((err) => {
-        throw new Error(err);
-      });
+    application_id = await submitter.submitPartOne(defaultClaimantCredentials, claim.claim)
+  }, 60000);
 
+  test("Should recieve an error when submitting a document of size 20MB", async () => {
     const document: DocumentUploadRequest = {
       document_type: "State managed Paid Leave Confirmation",
       description: "Large PDF Upload 30MB",
@@ -89,7 +78,7 @@ describe("API Documents Test of various file sizes", () => {
 
     // Add large document to claim
     const docRes = await postApplicationsByApplication_idDocuments(
-      { application_id: appRes.application_id as string },
+      { application_id: application_id },
       document,
       pmflApiOptions
     ).catch((err) => {
@@ -101,29 +90,6 @@ describe("API Documents Test of various file sizes", () => {
   }, 60000);
 
   test("Should submit Document less than 5MB successfully", async () => {
-    const employee = await getEmployee("financially eligible");
-
-    const opts = {
-      documentDirectory: "/tmp",
-      employeeFactory: () => employee,
-      employerFactory: () => ({ fein: employee.employer_fein } as Employer),
-      shortClaim: true,
-    };
-
-    const claim = await scenarioFunctions["DHAP1"](opts);
-
-    // Submit Claim w/o Document
-    const appRes = await submitter
-      .submit(
-        defaultClaimantCredentials,
-        claim.claim,
-        [],
-        claim.paymentPreference
-      )
-      .catch((err) => {
-        throw new Error(err);
-      });
-
     const document: DocumentUploadRequest = {
       document_type: "State managed Paid Leave Confirmation",
       description: "Small PDF - Less than 1MB",
@@ -133,7 +99,7 @@ describe("API Documents Test of various file sizes", () => {
 
     // Add small document to claim
     const docRes = await postApplicationsByApplication_idDocuments(
-      { application_id: appRes.application_id as string },
+      { application_id: application_id },
       document,
       pmflApiOptions
     );

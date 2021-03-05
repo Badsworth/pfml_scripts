@@ -106,6 +106,21 @@ export default class PortalSubmitter {
     };
   }
 
+  async submitPartOne(
+    credentials: Credentials,
+    application: ApplicationRequestBody,
+  ): Promise<string> {
+    const options = await this.getOptions(credentials);
+    const application_id = await this.createApplication(options);
+    await this.updateApplication(application_id, application, options);
+    await this.submitApplication(
+      application_id,
+      options
+    );
+
+    return application_id
+  }
+
   protected async submitEmployerResponse(
     employerCredentials: Credentials,
     fineos_absence_id: string,
