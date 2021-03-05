@@ -2168,6 +2168,9 @@ const components = {
   withClaims: {
     loadingLabel: "Loading claims",
   },
+  withEmployerClaim: {
+    loadingLabel: "Loading claim",
+  },
   withUser: {
     loadingLabel: "Loading account",
   },
