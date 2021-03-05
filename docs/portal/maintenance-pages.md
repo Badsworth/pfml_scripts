@@ -29,6 +29,13 @@ Use `*` to match any string:
 ]
 ```
 
+## Enable scheduled maintenance page
+If the maintenance page is being added because of scheduled down time, add the user friendly day and time that the maintenance pages will be removed to the configs.
+
+```json
+"maintenanceRemovalDayAndTime": "Sunday, January 1st, at 6 p.m. EST"
+```
+
 ## Testing
 
 If you are testing the configuration locally, just note that you need to restart the local development server in order for new environment variables to kick in.

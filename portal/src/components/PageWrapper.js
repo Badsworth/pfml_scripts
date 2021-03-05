@@ -20,7 +20,12 @@ const MaintenanceTakeover = dynamic(() => import("./MaintenanceTakeover"));
  * with this component as its parent.
  */
 const PageWrapper = (props) => {
-  const { appLogic, isLoading, maintenancePageRoutes } = props;
+  const {
+    appLogic,
+    isLoading,
+    maintenancePageRoutes,
+    maintenanceRemovalDayAndTime,
+  } = props;
   const { t } = useTranslation();
 
   /**
@@ -63,7 +68,9 @@ const PageWrapper = (props) => {
   } else if (showMaintenancePageBody && !isFeatureEnabled("noMaintenance")) {
     pageBody = (
       <section id="page" data-test="maintenance page">
-        <MaintenanceTakeover />
+        <MaintenanceTakeover
+          scheduledRemovalDayAndTimeText={maintenanceRemovalDayAndTime}
+        />
       </section>
     );
   } else {
@@ -109,6 +116,8 @@ PageWrapper.propTypes = {
   isLoading: PropTypes.bool,
   /** Page routes that should render a maintenance page */
   maintenancePageRoutes: PropTypes.arrayOf(PropTypes.string),
+  /** User friendly date and time when the maintenance page will be removed */
+  maintenanceRemovalDayAndTime: PropTypes.string,
 };
 
 export default PageWrapper;
