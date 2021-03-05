@@ -367,6 +367,38 @@ def test_rename_file_s3(mock_s3_bucket):
         file_util.read_file_lines(source_path)
 
 
+def test_rename_file_fs(test_fs_path, tmp_path):
+    file_name = "test.txt"
+    full_path = "{}/{}".format(str(test_fs_path), file_name)
+
+    # Test renaming from one filename to another
+    destination = os.path.join(tmp_path, "new_filename.txt")
+
+    file_util.rename_file(full_path, destination)
+
+    # because function returns a map object instead of a list, must cast to list
+    lines = list(file_util.read_file_lines(destination))
+    assert lines[0] == "line 1 text"
+    assert lines[1] == "line 2 text"
+    assert lines[2] == "line 3 text"
+
+
+def test_rename_file_fs_mkdirs(test_fs_path, tmp_path):
+    file_name = "test.txt"
+    full_path = "{}/{}".format(str(test_fs_path), file_name)
+
+    # Test renaming including creating new directories that did not previous exist
+    destination = os.path.join(tmp_path, "new_dir", "new_filename.txt")
+
+    file_util.rename_file(full_path, destination)
+
+    # because function returns a map object instead of a list, must cast to list
+    lines = list(file_util.read_file_lines(destination))
+    assert lines[0] == "line 1 text"
+    assert lines[1] == "line 2 text"
+    assert lines[2] == "line 3 text"
+
+
 def test_ebcdic_encoding(test_fs_path):
     # This test is here as an example for future usage of ebcdic encoding
     # + verification that this works with our existing file utilities.

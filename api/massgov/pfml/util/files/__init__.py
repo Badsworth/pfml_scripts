@@ -355,7 +355,8 @@ def rename_file(source, destination):
         copy_file(source, destination)
         delete_file(source)
     else:
-        os.rename(source, destination)
+        # This will create any missing intermediary directories
+        os.renames(source, destination)
 
 
 def download_from_s3(source, destination):
