@@ -42,11 +42,10 @@ class BaseCollection {
   /**
    * Return a single item from the id of the item or
    * undefined if the item is not in the collection
-   * TODO (CP-887): Rename to getItem to be consistent with other methods
    * @param {string} itemId - item id
    * @returns {BaseModel|undefined} item - instance of item
    */
-  get(itemId) {
+  getItem(itemId) {
     return this.itemsById[itemId];
   }
 
@@ -61,7 +60,7 @@ class BaseCollection {
     if (!itemId) {
       throw new Error(`Item ${this.idProperty} is null or undefined`);
     }
-    if (this.get(itemId)) {
+    if (this.getItem(itemId)) {
       throw new Error(
         `Item with ${this.idProperty} ${itemId} already exists in collection`
       );

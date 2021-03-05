@@ -37,12 +37,12 @@ describe("BaseCollection", () => {
     });
 
     it("gets an item by item id", () => {
-      expect(collection.get(item1.testId)).toEqual(item1);
-      expect(collection.get(item2.testId)).toEqual(item2);
+      expect(collection.getItem(item1.testId)).toEqual(item1);
+      expect(collection.getItem(item2.testId)).toEqual(item2);
     });
 
     it("returns undefined if item is not in collection", () => {
-      expect(collection.get("111")).toBe(undefined);
+      expect(collection.getItem("111")).toBe(undefined);
     });
   });
 

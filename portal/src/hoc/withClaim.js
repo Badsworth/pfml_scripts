@@ -24,7 +24,7 @@ const withClaim = (Component) => {
 
     const application_id = query.claim_id;
     const claims = appLogic.claims.claims;
-    const claim = claims.get(application_id);
+    const claim = claims.getItem(application_id);
     const shouldLoad = !appLogic.claims.hasLoadedClaimAndWarnings(
       application_id
     );

@@ -54,7 +54,8 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   const hasLoadedClaimAndWarnings = (application_id) => {
     // !! so we always return a Boolean
     return !!(
-      warningsLists.hasOwnProperty(application_id) && claims.get(application_id)
+      warningsLists.hasOwnProperty(application_id) &&
+      claims.getItem(application_id)
     );
   };
 
@@ -76,7 +77,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     try {
       const { claim, warnings } = await claimsApi.getClaim(application_id);
 
-      if (claims.get(application_id)) {
+      if (claims.getItem(application_id)) {
         setClaim(claim);
       } else {
         addClaim(claim);

@@ -378,7 +378,7 @@ describe("useClaimsLogic", () => {
           await claimsLogic.complete(applicationId);
         });
 
-        const claim = claimsLogic.claims.get(applicationId);
+        const claim = claimsLogic.claims.getItem(applicationId);
 
         expect(completeClaimMock).toHaveBeenCalledWith(applicationId);
         expect(claim.status).toBe(ClaimStatus.completed);
@@ -455,7 +455,7 @@ describe("useClaimsLogic", () => {
           await claimsLogic.update(applicationId, patchData);
         });
 
-        const claim = claimsLogic.claims.get(applicationId);
+        const claim = claimsLogic.claims.getItem(applicationId);
 
         expect(claim).toBeInstanceOf(Claim);
         expect(claim).toEqual(expect.objectContaining(patchData));
@@ -517,7 +517,7 @@ describe("useClaimsLogic", () => {
             await claimsLogic.update(applicationId, patchData);
           });
 
-          const claim = claimsLogic.claims.get(applicationId);
+          const claim = claimsLogic.claims.getItem(applicationId);
 
           expect(claim.last_name).toBe(last_name);
           expect(claimsLogic.warningsLists[applicationId]).toEqual([
@@ -550,7 +550,7 @@ describe("useClaimsLogic", () => {
             await claimsLogic.update(applicationId, patchData);
           });
 
-          const claim = claimsLogic.claims.get(applicationId);
+          const claim = claimsLogic.claims.getItem(applicationId);
 
           expect(claim.last_name).toBeNull();
         });
@@ -665,7 +665,7 @@ describe("useClaimsLogic", () => {
           await claimsLogic.submit(applicationId);
         });
 
-        const claim = claimsLogic.claims.get(applicationId);
+        const claim = claimsLogic.claims.getItem(applicationId);
 
         expect(submitClaimMock).toHaveBeenCalledWith(applicationId);
         expect(claim.status).toBe(ClaimStatus.submitted);
@@ -752,7 +752,7 @@ describe("useClaimsLogic", () => {
           await claimsLogic.submitPaymentPreference(applicationId, paymentData);
         });
 
-        const claim = claimsLogic.claims.get(applicationId);
+        const claim = claimsLogic.claims.getItem(applicationId);
 
         expect(submitPaymentPreferenceMock).toHaveBeenCalledWith(
           applicationId,

@@ -119,7 +119,7 @@ describe("useCollectionState", () => {
     describe("updateItem", () => {
       it("updates an item properties", () => {
         act(() => updateItem({ testId: "123", testProp: "testValue" }));
-        expect(collection.get("123")).toEqual({
+        expect(collection.getItem("123")).toEqual({
           testId: "123",
           testProp: "testValue",
         });
