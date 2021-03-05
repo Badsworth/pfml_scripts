@@ -266,7 +266,7 @@ export default {
     },
     [routes.applications.leavePeriodContinuous]: {
       meta: {
-        applicableRules: ["disallow_12mo_leave_period"],
+        applicableRules: ["disallow_12mo_continuous_leave_period"],
         step: ClaimSteps.leaveDetails,
         fields: leavePeriodContinuousFields,
       },
@@ -277,7 +277,7 @@ export default {
     [routes.applications.leavePeriodReducedSchedule]: {
       meta: {
         applicableRules: [
-          "disallow_12mo_leave_period",
+          "disallow_12mo_reduced_leave_period",
           // This page is after the Continuous page, so on this page is
           // where we can surface validation issues related to the following rules:
           "disallow_overlapping_leave_periods",
@@ -302,7 +302,7 @@ export default {
         step: ClaimSteps.leaveDetails,
         fields: leavePeriodIntermittentFields,
         applicableRules: [
-          "disallow_12mo_leave_period",
+          "disallow_12mo_intermittent_leave_period",
           // This page is after the Continuous and Reduced Schedule pages,
           // so on this page is where we can surface validation issues
           // related to the following rules:

@@ -421,7 +421,12 @@ const errors = {
       },
     },
     rules: {
-      disallow_12mo_leave_period: "Your leave cannot be longer than 12 months.",
+      disallow_12mo_continuous_leave_period:
+        "$t(shared.disallow12moLeavePeriod)",
+      disallow_12mo_intermittent_leave_period:
+        "$t(shared.disallow12moLeavePeriod)",
+      disallow_12mo_leave_period: "$t(shared.disallow12moLeavePeriod)",
+      disallow_12mo_reduced_leave_period: "$t(shared.disallow12moLeavePeriod)",
       disallow_attempts:
         "We already have an account set up for you. Please sign in with that account. If that doesn’t sound familiar to you, call the Contact Center at $t(shared.contactCenterPhoneNumber).",
       disallow_hybrid_intermittent_leave:
@@ -570,6 +575,7 @@ const shared = {
   day_Wednesday: "Wednesday",
   departmentOfRevenuePhoneNumber:
     "(617)$t(chars.nbsp)466$t(chars.nbhyphen)3950",
+  disallow12moLeavePeriod: "Your leave cannot be longer than 12 months.",
   // TODO (CP-1335): Add i18next formatter for time
   displayTime: "{{hours}}h {{minutes}}m",
   // TODO (CP-1335): Add i18next formatter for time
