@@ -10,3 +10,30 @@
 /docs/portal/ @EOLWD/pfml-portal
 /infra/portal/ @EOLWD/pfml-portal
 /e2e/ @EOLWD/pfml-e2e
+
+# These patterns include ** to match both api/massgov/pfml/DIR and api/tests/DIR
+/api/                                                  @jamesbursa @oscarAtNava
+/api/**/util/                                          @chouinar @jamesbursa
+/api/**/api/                                           @jamesbursa @shebryant
+/api/**/api/*.py                                       @jkpace @shebryant
+/api/**/api/auth*/                                     @doshitan @shebryant
+/api/**/api/claims*                                    @jkpace @sharonwarner
+/api/**/api/services/*applications.py                  @doshitan @jnfang
+/api/**/api/services/*fineos_actions.py                @jnfang @oscarAtNava
+/api/**/api/services/*administrator_fineos_actions.py  @jkpace @sharonwarner
+/api/**/api/eligibility/                               @EyuelAbebe @jamesbursa
+/api/**/api/validation/                                @antxaddis @kyeah
+/api/**/cognito*/                                      @microwavenby @sharonwarner
+/api/**/db/                                            @doshitan @jamesbursa
+/api/**/dor/                                           @antxaddis @mhuneke
+/api/**/fineos/                                        @doshitan @oscarAtNava
+/api/**/formstack/                                     @microwavenby @sharonwarner
+/api/**/payments/                                      @chouinar @rocketnova
+/api/**/reductions/                                    @EyuelAbebe @lowellrex
+/api/**/rmv/                                           @doshitan @kyeah
+/api/**/servicenow/                                    @microwavenby @sharonwarner
+/api/**/user_import/                                   @microwavenby @sharonwarner
+/api/lambdas/                                          @paz-focus @sharonwarner
+/api/?ocker*                                           @jamesbursa @kyeah
+/api/Makefile                                          @doshitan @kyeah
+/api/openapi.yaml                                      @oscarAtNava @shebryant

@@ -31,6 +31,17 @@ See _[Seven Rules](https://chris.beams.io/posts/git-commit/#seven-rules)_ for an
 It's still possible to rebase and force-push your branch using `git rebase main`, but this pathway should be avoided
 if your branch is being worked on by more than one person at a time, due to the risk of causing unnecessary conflicts.
 
+## Code Owners
+
+Many parts of the code have owners, defined in the [`CODEOWNERS` file](../.github/CODEOWNERS).
+
+Code owners help to improve the quality of the code by:
+- Reviewing changes (see below)
+- Encouraging consistency and maintainability
+- Refactoring the code as it grows
+
+Normally each module or file has two or more owners that share these tasks.
+
 ## Code Reviews
 
 Code reviews are intended to help all of us grow as engineers and improve the quality of what we ship.
