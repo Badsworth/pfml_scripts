@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 from botocore.exceptions import ClientError
 
-import massgov.pfml.cognito_post_confirmation_lambda.lib as lib
 from massgov.pfml import fineos
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
 from massgov.pfml.user_import.process_csv import (
@@ -274,56 +273,3 @@ class TestProcessByEmail:
             in finished_file.getMessage()
         )
         assert "done processing files" in complete_log.getMessage()
-
-    def test_duplicate_ula(
-        self, test_file_location, test_db_session, create_employers, mock_bogus_fineos, caplog
-    ):
-        cognito_client = MockCognito()
-        email = "test_user@gmail.com"
-        fein = "111111111"
-        employer = (
-            test_db_session.query(Employer).filter(Employer.employer_fein == fein).one_or_none()
-        )
-        resp = cognito_client.admin_create_user(Username=email)
-        mock_active_directory_id = resp["User"]["Attributes"][0]["Value"]
-        user = lib.leave_admin_create(
-            test_db_session,
-            mock_active_directory_id,
-            email,
-            fein,
-            {"auth_id": mock_active_directory_id},
-        )
-        duplicate_ula = UserLeaveAdministrator(user=user, employer=employer)
-        test_db_session.add(duplicate_ula)
-        test_db_session.commit()
-
-        pivoted = pivot_csv_file(test_file_location)
-        processed = 0
-        for email, employers in pivoted.items():
-            processed += process_by_email(
-                email=email,
-                input_data=employers,
-                db_session=test_db_session,
-                cognito_pool_id="fake_pool",
-                filename=test_file_location,
-                cognito_client=cognito_client,
-            )
-        #  We won't process the combination of `test_user@gmail.com` and `111111111`
-        #  (as we intentionally created dupe ULAs)
-        assert processed == 4
-        count_error_db_lookup = 0
-        count_error_calling_fineos = 0
-        count_error_for_bad_email = 0
-        for record in caplog.records:
-            if "Duplicate records found for UserLeaveAdministrator" in record.getMessage():
-                count_error_db_lookup += 1
-            elif "Received an error processing FINEOS registration" in record.getMessage():
-                count_error_calling_fineos += 1
-            elif (
-                f"Unable to complete registration for {email} for employer " in record.getMessage()
-            ):
-                count_error_for_bad_email += 1
-
-        assert count_error_db_lookup == 1
-        assert count_error_calling_fineos == 0
-        assert count_error_for_bad_email == 0

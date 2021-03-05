@@ -13,7 +13,18 @@ from datetime import date
 from typing import TYPE_CHECKING, List, Optional, cast
 
 from dateutil.relativedelta import relativedelta
-from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Index, Integer, Numeric, Text
+from sqlalchemy import (
+    TIMESTAMP,
+    Boolean,
+    Column,
+    Date,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import Query, dynamic_loader, relationship
@@ -663,6 +674,7 @@ class UserRole(Base):
 
 class UserLeaveAdministrator(Base):
     __tablename__ = "link_user_leave_administrator"
+    __table_args__ = (UniqueConstraint("user_id", "employer_id"),)
     user_leave_administrator_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False)
     employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), nullable=False)

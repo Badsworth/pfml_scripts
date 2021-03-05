@@ -227,6 +227,13 @@ paths:
               schema:
                 allOf:
                   - $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Duplicate employer for user
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
         "503":
           description: Error while adding FEIN
           content:

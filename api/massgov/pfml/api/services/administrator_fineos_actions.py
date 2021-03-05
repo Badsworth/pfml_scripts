@@ -3,8 +3,6 @@ import uuid
 from datetime import date, datetime
 from typing import Dict, List, Optional
 
-from sqlalchemy.orm.exc import MultipleResultsFound
-
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
@@ -261,22 +259,14 @@ def register_leave_admin_with_fineos(
     Given information about a Leave administrator, create a FINEOS user for that leave admin
     and associate that user to the leave admin within the PFML DB
     """
-    try:
-        leave_admin_record = (
-            db_session.query(UserLeaveAdministrator)
-            .filter(
-                UserLeaveAdministrator.user_id == user.user_id,
-                UserLeaveAdministrator.employer_id == employer.employer_id,
-            )
-            .one_or_none()
+    leave_admin_record = (
+        db_session.query(UserLeaveAdministrator)
+        .filter(
+            UserLeaveAdministrator.user_id == user.user_id,
+            UserLeaveAdministrator.employer_id == employer.employer_id,
         )
-    except MultipleResultsFound as error:
-        logger.exception(
-            "Duplicate records found for UserLeaveAdministrator user_id %s",
-            user.user_id,
-            exc_info=error,
-        )
-        raise RegisterFINEOSDuplicateRecord("Duplicate User Leave Administrator records in db")
+        .one_or_none()
+    )
 
     if leave_admin_record and leave_admin_record.fineos_web_id is not None:
         if not force_register:

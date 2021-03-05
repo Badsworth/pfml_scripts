@@ -3,7 +3,8 @@ from datetime import date
 import connexion
 import flask
 from sqlalchemy import desc
-from werkzeug.exceptions import BadRequest, NotFound, Unauthorized
+from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import BadRequest, Conflict, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
@@ -79,7 +80,25 @@ def employer_add_fein() -> flask.Response:
             user_id=current_user.user_id, employer_id=employer.employer_id,
         )
         db_session.add(link)
-        db_session.commit()
+
+        try:
+            db_session.commit()
+        except IntegrityError:
+            logger.error("Duplicate employer for user")
+            db_session.rollback()
+
+            return response_util.error_response(
+                data={},
+                status_code=Conflict,
+                message="Duplicate employer for user",
+                errors=[
+                    response_util.custom_issue(
+                        field="employer_fein",
+                        type="duplicate",
+                        message="Duplicate employer for user",
+                    )
+                ],
+            ).to_api_response()
 
         response_data = {
             "employer_dba": employer.employer_dba,

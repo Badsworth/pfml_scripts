@@ -131,9 +131,9 @@ def test_employers_receive_402_if_future_withholding_data(
 ):
     monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
     employer_to_add = EmployerFactory.create(employer_fein="999999999")
-    yesterday = datetime.now() + timedelta(days=30)
+    thirty_days_in_the_future = datetime.now() + timedelta(days=30)
     EmployerQuarterlyContributionFactory.create(
-        employer=employer_to_add, filing_period=yesterday.strftime("%Y-%m-%d")
+        employer=employer_to_add, filing_period=thirty_days_in_the_future.strftime("%Y-%m-%d")
     )
 
     post_body = {"employer_fein": "999999999"}
@@ -145,6 +145,30 @@ def test_employers_receive_402_if_future_withholding_data(
     )
 
     assert response.status_code == 402
+
+
+def test_employers_receive_409_if_duplicate_fein(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer_to_add = EmployerFactory.create(employer_fein="999999999")
+    yesterday = datetime.now() - timedelta(days=1)
+    EmployerQuarterlyContributionFactory.create(
+        employer=employer_to_add, filing_period=yesterday.strftime("%Y-%m-%d")
+    )
+
+    link = UserLeaveAdministrator(user=employer_user, employer=employer_to_add)
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    post_body = {"employer_fein": "999999999"}
+
+    response = client.post(
+        "/v1/employers/add",
+        json=post_body,
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 409
 
 
 def test_employers_receive_200_and_most_recent_date_from_get_withholding_dates(

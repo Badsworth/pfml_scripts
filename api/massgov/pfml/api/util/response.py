@@ -3,7 +3,14 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union
 
 import flask
-from werkzeug.exceptions import BadRequest, Forbidden, HTTPException, NotFound, ServiceUnavailable
+from werkzeug.exceptions import (
+    BadRequest,
+    Conflict,
+    Forbidden,
+    HTTPException,
+    NotFound,
+    ServiceUnavailable,
+)
 
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
 
@@ -185,7 +192,12 @@ def success_response(
 
 def error_response(
     status_code: Union[
-        HTTPException, Type[BadRequest], Type[ServiceUnavailable], Type[NotFound], Type[Forbidden]
+        HTTPException,
+        Type[BadRequest],
+        Type[Conflict],
+        Type[ServiceUnavailable],
+        Type[NotFound],
+        Type[Forbidden],
     ],
     message: str,
     errors: List[Issue],
