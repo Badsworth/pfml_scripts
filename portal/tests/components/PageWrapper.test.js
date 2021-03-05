@@ -123,6 +123,24 @@ describe("PageWrapper", () => {
     );
   });
 
+  it("renders MaintenanceTakeover with scheduledRemovalDayAndTimeText when maintenanceRemovalDayAndTime and maintenancePageRoutes are set", () => {
+    const maintenancePageRoutes = ["/*"];
+    const maintenanceRemovalDayAndTime = "Sunday, January 1st, at 5 p.m. EST";
+
+    mockRouter.pathname = "/";
+    const wrapper = render({
+      maintenancePageRoutes,
+      maintenanceRemovalDayAndTime,
+    });
+
+    expect(
+      wrapper
+        .find({ "data-test": "maintenance page" })
+        .childAt(0)
+        .prop("scheduledRemovalDayAndTimeText")
+    ).toEqual(maintenanceRemovalDayAndTime);
+  });
+
   it("bypasses MaintenanceTakeover when noMaintenance feature flag is present", () => {
     process.env.featureFlags = {
       noMaintenance: true,
