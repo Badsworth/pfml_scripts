@@ -30,6 +30,25 @@ from massgov.pfml.util.sqlalchemy import get_or_404
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
+class VerificationRequired(Forbidden):
+    user_leave_admin: UserLeaveAdministrator
+    description = "User is not Verified"
+    status_code = Forbidden
+
+    def __init__(self, user_leave_admin):
+        self.user_leave_admin = user_leave_admin
+
+    def to_api_response(self):
+        employer_id = self.user_leave_admin.employer_id
+        has_verification_data = self.user_leave_admin.employer.has_verification_data
+        return response_util.error_response(
+            status_code=self.status_code,
+            message=self.description,
+            errors=[],
+            data={"employer_id": employer_id, "has_verification_data": has_verification_data},
+        ).to_api_response()
+
+
 def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdministrator:
     with app.db_session() as db_session:
         associated_employer_id: Optional[str] = None
@@ -67,7 +86,7 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
 
         # TODO: Remove this after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
         if app.get_config().enforce_verification and not user_leave_admin.verified:
-            raise Forbidden(description="User is not Verified")
+            raise VerificationRequired(user_leave_admin)
 
         return user_leave_admin
 
@@ -86,7 +105,10 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
             data={},
         ).to_api_response()
 
-    user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
+    try:
+        user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
+    except VerificationRequired as error:
+        return error.to_api_response()
 
     log_attributes = {
         "absence_case_id": fineos_absence_id,
@@ -143,7 +165,10 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     Calls out to the FINEOS Group Client API to retrieve claim data and returns it.
     The requesting user must be of the EMPLOYER role.
     """
-    user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
+    try:
+        user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
+    except VerificationRequired as error:
+        return error.to_api_response()
 
     with app.db_session() as db_session:
 
@@ -163,7 +188,10 @@ def employer_get_claim_documents(fineos_absence_id: str) -> flask.Response:
     Calls out to the FINEOS Group Client API to get a list of documents attached to a specified claim.
     The requesting user must be of the EMPLOYER role.
     """
-    user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
+    try:
+        user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
+    except VerificationRequired as error:
+        return error.to_api_response()
 
     documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore
     documents_list = [doc.dict() for doc in documents]
@@ -178,7 +206,10 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
     Calls out to the FINEOS Group Client API to download a document for a specified claim.
     The requesting user must be of the EMPLOYER role.
     """
-    user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
+    try:
+        user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
+    except VerificationRequired as error:
+        return error.to_api_response()
 
     documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore
     document = next(

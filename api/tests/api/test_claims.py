@@ -65,13 +65,17 @@ class TestVerificationEnforcement:
     # This class groups the tests that ensure that existing users with UserLeaveAdministrator records
     # get 403s when attempting to access claim data without a Verification
 
+    @pytest.fixture()
+    def employer(self):
+        employer = EmployerFactory.create()
+        return employer
+
     @pytest.fixture(autouse=True)
     def _enforce_verifications(self, monkeypatch):
         monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
 
     @pytest.fixture(autouse=True)
-    def _setup_claim_employer(self, test_db_session, employer_user):
-        employer = EmployerFactory.create()
+    def _setup_claim_employer(self, test_db_session, employer_user, employer):
         ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01")
         link = UserLeaveAdministrator(
             user_id=employer_user.user_id,
@@ -82,7 +86,7 @@ class TestVerificationEnforcement:
         test_db_session.commit()
 
     def test_employers_cannot_access_claims_endpoint_without_verification(
-        self, client, auth_token, employer_auth_token
+        self, client, auth_token, employer_auth_token, employer
     ):
         response = client.get(
             "/v1/employers/claims/NTN-100-ABS-01/review",
@@ -91,9 +95,13 @@ class TestVerificationEnforcement:
 
         assert response.status_code == 403
         assert response.get_json()["message"] == "User is not Verified"
+        assert response.get_json()["data"] == {
+            "employer_id": str(employer.employer_id),
+            "has_verification_data": employer.has_verification_data,
+        }
 
     def test_employers_cannot_download_documents_without_verification(
-        self, client, auth_token, employer_auth_token
+        self, client, auth_token, employer_auth_token, employer
     ):
         response = client.get(
             "/v1/employers/claims/NTN-100-ABS-01/documents/1111",
@@ -102,9 +110,13 @@ class TestVerificationEnforcement:
 
         assert response.status_code == 403
         assert response.get_json()["message"] == "User is not Verified"
+        assert response.get_json()["data"] == {
+            "employer_id": str(employer.employer_id),
+            "has_verification_data": employer.has_verification_data,
+        }
 
     def test_employers_cannot_update_claim_without_verification(
-        self, client, employer_auth_token, update_claim_body
+        self, client, employer_auth_token, update_claim_body, employer
     ):
         response = client.patch(
             "/v1/employers/claims/NTN-100-ABS-01/review",
@@ -113,6 +125,10 @@ class TestVerificationEnforcement:
         )
         assert response.status_code == 403
         assert response.get_json()["message"] == "User is not Verified"
+        assert response.get_json()["data"] == {
+            "employer_id": str(employer.employer_id),
+            "has_verification_data": employer.has_verification_data,
+        }
 
     def test_get_claim_user_cannot_access_without_verification(self, client, employer_auth_token):
         response = client.get(
