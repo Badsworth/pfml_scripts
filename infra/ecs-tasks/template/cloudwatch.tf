@@ -28,7 +28,12 @@ locals {
     "VBI_ABSENCEAPPEALCASES",
     "VBI_ABSENCECASEByOrg",
     "VBI_ABSENCECASEByStage",
-    "VBI_ABSENCECASE"
+    "VBI_ABSENCECASE",
+    "VBI_NEW_REQUESTEDABSENCE_SOM",
+    "VBI_TASKREPORT_SOM",
+    "VBI_PERSON_SOM",
+    "VBI_ORGANISATION",
+    "Exception_Report_Variance"
   ]
   fineos_error_extract_prefixes = [
     "EmployeeFileError"

@@ -175,7 +175,7 @@ def file_name_contains_prefix(file_prefixes, file_name):
         return True
 
     for prefix in file_prefixes:
-        if prefix in file_name:
+        if prefix.lower() in file_name.lower():
             return True
     return False
 
