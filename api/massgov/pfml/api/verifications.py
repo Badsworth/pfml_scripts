@@ -85,7 +85,13 @@ def verifications():
             return response_util.error_response(
                 status_code=BadRequest,
                 message="Withholding amount is incorrect.",
-                errors=[],
+                errors=[
+                    response_util.custom_issue(
+                        message="Withholding amount is incorrect",
+                        type="incorrect",
+                        field="withholding_amount",
+                    )
+                ],
                 data=verification_request.dict(exclude_none=True),
             ).to_api_response()
 
