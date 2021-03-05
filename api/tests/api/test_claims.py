@@ -402,6 +402,45 @@ class TestGetClaimReview:
         assert fineos_web_id == "employer2-fineos-web-id"
         assert params == {"absence_id": "NTN-100-ABS-02"}
 
+    @freeze_time("2020-12-07")
+    def test_employers_receive_404_from_get_claim_review_with_nil_decision_dates(
+        self,
+        monkeypatch,
+        client,
+        employer_user,
+        employer_auth_token,
+        test_db_session,
+        test_verification,
+        caplog,
+    ):
+        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        ClaimFactory.create(
+            employer_id=employer.employer_id, fineos_absence_id="NTN-100-ABS-01",
+        )
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        with monkeypatch.context() as m:
+            # simulate case where FINEOS API returns nil start and end date values
+            m.setattr(
+                massgov.pfml.fineos.mock_client,
+                "mock_absence_periods",
+                lambda absence_id: {"startDate": "", "endDate": "", "decisions": []},
+            )
+            response = client.get(
+                "/v1/employers/claims/NTN-100-ABS-01/review",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+        assert "Did not receive leave period decisions for absence periods" in caplog.text
+        assert response.status_code == 404
+
 
 @pytest.mark.integration
 class TestUpdateClaim:

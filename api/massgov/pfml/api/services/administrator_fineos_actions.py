@@ -24,6 +24,7 @@ from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformOtherLeaveEform,
 )
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EFormBody
+from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 LEAVE_ADMIN_INFO_REQUEST_TYPE = "Employer Confirmation of Leave Data"
 
@@ -146,7 +147,7 @@ def get_claim_as_leave_admin(
     absence_id: str,
     employer: Employer,
     fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None,
-) -> ClaimReviewResponse:
+) -> Optional[ClaimReviewResponse]:
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
     """
@@ -154,6 +155,19 @@ def get_claim_as_leave_admin(
         fineos_client = massgov.pfml.fineos.create_client()
 
     absence_periods = fineos_client.get_absence_period_decisions(fineos_user_id, absence_id).dict()
+    set_empty_dates_to_none(absence_periods, ["startDate", "endDate"])
+
+    if not absence_periods.get("decisions", []):
+        logger.error(
+            "Did not receive leave period decisions for absence periods",
+            extra={
+                "fineos_user_id": fineos_user_id,
+                "absence_id": absence_id,
+                "employer_id": employer.employer_id,
+            },
+        )
+        return None
+
     customer_id = absence_periods["decisions"][0]["employee"]["id"]
     if (
         "leavePlan" in absence_periods["decisions"][0]["period"]

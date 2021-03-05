@@ -18,6 +18,7 @@ import requests
 
 import massgov.pfml.util.logging
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
+from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 from . import client, exception, fineos_client, models
 
@@ -321,7 +322,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         self, user_id: str, absence_id: str
     ) -> models.group_client_api.PeriodDecisions:
         _capture_call("get_absence_period_decisions", user_id, absence_id=absence_id)
-        return models.group_client_api.PeriodDecisions.parse_obj(mock_absence_periods(absence_id))
+        absence_periods = mock_absence_periods(absence_id)
+        set_empty_dates_to_none(absence_periods, ["startDate", "endDate"])
+        return models.group_client_api.PeriodDecisions.parse_obj(absence_periods)
 
     def get_customer_info(
         self, user_id: str, customer_id: str

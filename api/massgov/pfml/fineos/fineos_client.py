@@ -509,7 +509,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
             )
             error.method_name = "get_absence_period_decisions"
             raise error
-        return models.group_client_api.PeriodDecisions.parse_obj(response.json())
+        absence_periods = response.json()
+        set_empty_dates_to_none(absence_periods, ["startDate", "endDate"])
+        return models.group_client_api.PeriodDecisions.parse_obj(absence_periods)
 
     def get_customer_info(
         self, user_id: str, customer_id: str

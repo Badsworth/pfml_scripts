@@ -3,7 +3,7 @@ from typing import Optional
 
 import connexion
 import flask
-from werkzeug.exceptions import BadRequest, Forbidden, Unauthorized
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.services.claim_rules as claim_rules
@@ -171,12 +171,18 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         return error.to_api_response()
 
     with app.db_session() as db_session:
-
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
 
         claim = get_claim_as_leave_admin(
             user_leave_admin.fineos_web_id, fineos_absence_id, employer  # type: ignore
         )
+        if claim is None:
+            raise NotFound(
+                description="Could not fetch Claim from FINEOS with given absence ID {}".format(
+                    fineos_absence_id
+                )
+            )
+
         return response_util.success_response(
             message="Successfully retrieved claim", data=claim.dict(), status_code=200
         ).to_api_response()
