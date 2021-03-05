@@ -23,7 +23,7 @@ export default class UsersApi extends BaseApi {
    */
   getCurrentUser = async () => {
     const { data } = await this.request("GET", "current", null);
-    const roles = this.transformUserRoles(data.roles);
+    const roles = this.createUserRoles(data.roles);
     const user_leave_administrators = this.createUserLeaveAdministrators(
       data.user_leave_administrators
     );
@@ -41,7 +41,7 @@ export default class UsersApi extends BaseApi {
    */
   updateUser = async (user_id, patchData) => {
     const { data } = await this.request("PATCH", user_id, patchData);
-    const roles = this.transformUserRoles(data.roles);
+    const roles = this.createUserRoles(data.roles);
     const user_leave_administrators = this.createUserLeaveAdministrators(
       data.user_leave_administrators
     );
@@ -62,13 +62,7 @@ export default class UsersApi extends BaseApi {
     );
   };
 
-  // TODO (EMPLOYER-963): Remove helper method when API returns array of UserRole objects
-  // Accepts [{ role: { role_description, role_id }}] or [{ role_description, role_id }]
-  // Returns [{ role_description, role_id }]
-  transformUserRoles = (roles) => {
-    return roles.map((r) => {
-      const role = r.role || r;
-      return new UserRole(role);
-    });
+  createUserRoles = (roles) => {
+    return (roles || []).map((role) => new UserRole(role));
   };
 }

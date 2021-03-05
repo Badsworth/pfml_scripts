@@ -21,15 +21,14 @@ describe("users API", () => {
   let usersApi;
   const accessTokenJwt =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
-  const getResponse = (roles) => {
-    const nestedRoles = [
-      { role: { role_description: "Employer", role_id: 1 } },
-      { role: { role_description: "User", role_id: 2 } },
-    ];
+  const getResponse = () => {
     return {
       data: {
         email_address: "mock-user@example.com",
-        roles: roles || nestedRoles,
+        roles: [
+          { role_description: "Employer", role_id: 1 },
+          { role_description: "Other User", role_id: 3 },
+        ],
         user_leave_administrators: [
           {
             employer_dba: "Book Bindings 'R Us",
@@ -99,28 +98,9 @@ describe("users API", () => {
         expect(response.user).toBeInstanceOf(User);
       });
 
-      it("returns transformed user roles", async () => {
-        const response = await usersApi.getCurrentUser();
-
-        expect(response.user.roles).toEqual([
-          {
-            role_description: "Employer",
-            role_id: 1,
-          },
-          {
-            role_description: "User",
-            role_id: 2,
-          },
-        ]);
-      });
-
       it("returns flattened user roles as is", async () => {
-        const flattenedRoles = [
-          { role_description: "Employer", role_id: 1 },
-          { role_description: "Other User", role_id: 3 },
-        ];
         global.fetch = mockFetch({
-          response: getResponse(flattenedRoles),
+          response: getResponse(),
           status: 200,
           ok: true,
         });
@@ -192,8 +172,8 @@ describe("users API", () => {
           "email_address": null,
           "roles": Array [
             UserRole {
-              "role_description": "Employer",
-              "role_id": 1,
+              "role_description": null,
+              "role_id": null,
             },
           ],
           "status": null,
