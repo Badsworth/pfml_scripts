@@ -18,7 +18,6 @@ const scenarioFunctions: Record<string, SimulationGenerator> = {
   ...integrationScenarios,
 };
 
-let submitter: PortalSubmitter;
 let pmflApiOptions: RequestOptions;
 let application_id: string;
 
@@ -52,7 +51,7 @@ describe("API Documents Test of various file sizes", () => {
       },
     };
 
-    submitter = new PortalSubmitter(authenticator, config("API_BASEURL"));
+    const submitter = new PortalSubmitter(authenticator, config("API_BASEURL"));
 
     const employee = await getEmployee("financially eligible");
 
@@ -65,13 +64,16 @@ describe("API Documents Test of various file sizes", () => {
 
     const claim = await scenarioFunctions["DHAP1"](opts);
 
-    application_id = await submitter.submitPartOne(defaultClaimantCredentials, claim.claim)
+    application_id = await submitter.submitPartOne(
+      defaultClaimantCredentials,
+      claim.claim
+    );
   }, 60000);
 
-  test("Should recieve an error when submitting a document of size 20MB", async () => {
+  test("Should recieve an error when submitting a document of size 26MB", async () => {
     const document: DocumentUploadRequest = {
       document_type: "State managed Paid Leave Confirmation",
-      description: "Large PDF Upload 30MB",
+      description: "Large PDF Upload 26MB",
       file: fs.createReadStream("./cypress/fixtures/large.pdf"),
       name: `large.pdf`,
     };
