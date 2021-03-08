@@ -39,12 +39,12 @@ describe("Applications", () => {
   });
 
   describe("when no claims exist", () => {
-    it("redirects to dashboard", () => {
+    it("redirects to getReady", () => {
       appLogic.claims.claims = new ClaimCollection([]);
       const goToSpy = jest.spyOn(appLogic.portalFlow, "goTo");
       render();
 
-      expect(goToSpy).toHaveBeenCalledWith("/dashboard");
+      expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready");
     });
   });
 

@@ -23,7 +23,7 @@ describe("routes", () => {
   describe("isApplicationsRoute", () => {
     it("returns true if route is in Claimant Portal", () => {
       expect(isApplicationsRoute(claimsRoute)).toEqual(true);
-      expect(isApplicationsRoute("/dashboard")).toEqual(true);
+      expect(isApplicationsRoute("/applications/get-ready")).toEqual(true);
     });
 
     it("returns false if route is not in Claimant Portal", () => {

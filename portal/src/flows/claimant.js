@@ -80,7 +80,7 @@ const checklistEvents = {
 
 export default {
   states: {
-    [routes.applications.dashboard]: {
+    [routes.applications.getReady]: {
       meta: {},
       on: {
         CONSENT_TO_DATA_SHARING: routes.user.consentToDataSharing,
@@ -97,7 +97,7 @@ export default {
     [routes.user.consentToDataSharing]: {
       meta: {},
       on: {
-        CONTINUE: routes.applications.dashboard,
+        CONTINUE: routes.applications.getReady,
       },
     },
     [routes.applications.index]: {
@@ -122,7 +122,7 @@ export default {
     [routes.applications.success]: {
       meta: {},
       on: {
-        CONTINUE: routes.applications.dashboard,
+        CONTINUE: routes.applications.getReady,
       },
     },
     [routes.applications.name]: {

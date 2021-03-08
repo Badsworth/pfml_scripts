@@ -264,7 +264,7 @@ describe("useUsersLogic", () => {
 
     describe("when user has roles", () => {
       it("redirects to Employers dashboard if user has Employer role", async () => {
-        mockRouter.pathname = routes.applications.dashboard;
+        mockRouter.pathname = routes.applications.index;
 
         renderHook();
         await preloadUser(
@@ -290,7 +290,7 @@ describe("useUsersLogic", () => {
       });
 
       it("redirects to Employers dashboard if user has multiple roles, including Employer", async () => {
-        mockRouter.pathname = routes.applications.dashboard;
+        mockRouter.pathname = routes.applications.index;
 
         const userRole = [
           new UserRole({
@@ -310,8 +310,9 @@ describe("useUsersLogic", () => {
         expect(goToSpy).toHaveBeenCalledWith("/employers");
       });
 
-      it("redirects to Claims dashboard if user does not have a role", async () => {
+      it("redirects to Claims index if user does not have a role", async () => {
         mockRouter.pathname = routes.employers.dashboard;
+
         renderHook();
         await preloadUser(
           new User({ roles: [], consented_to_data_sharing: true })
@@ -319,7 +320,7 @@ describe("useUsersLogic", () => {
 
         usersLogic.requireUserRole();
 
-        expect(goToSpy).toHaveBeenCalledWith("/dashboard");
+        expect(goToSpy).toHaveBeenCalledWith("/applications");
       });
     });
   });

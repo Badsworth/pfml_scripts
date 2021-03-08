@@ -20,7 +20,8 @@ export const Index = (props) => {
 
   // Redirect users who do not have claims
   if (props.claims.isEmpty) {
-    appLogic.portalFlow.goTo(routes.applications.dashboard);
+    appLogic.portalFlow.goTo(routes.applications.getReady);
+    return null;
   }
 
   const hasClaims = claims.items.length > 0;
@@ -92,8 +93,8 @@ export const Index = (props) => {
             {t("pages.applications.createApplicationHeading")}
           </Heading>
 
-          <ButtonLink href={routes.applications.dashboard} variation="outline">
-            {t("pages.applications.dashboardLink")}
+          <ButtonLink href={routes.applications.getReady} variation="outline">
+            {t("pages.applications.getReadyLink")}
           </ButtonLink>
         </div>
       </div>

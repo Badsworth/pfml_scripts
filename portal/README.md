@@ -237,7 +237,7 @@ Below is an abbreviated representation of our directory structure, pointing out 
 │   ├── pages
 │   │   ├── _app.js         ⭐️ Entry point, setting up the entire application
 │   │   ├── applications    Pages for authenticated claimants
-│   │   ├── dashboard.js    Dashboard for authenticated claimants
+│   │   │   └── index.js    List of applications for claimants
 │   │   ├── employers       Pages for authenticated employers
 │   │   │   └── index.js    Dashboard for authenticated employers
 │   │   └── index.js        Landing page for unauthenticated users

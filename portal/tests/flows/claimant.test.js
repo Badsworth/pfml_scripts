@@ -15,11 +15,11 @@ import routes from "../../src/routes";
 // In order to determine level of test coverage, each route
 // needs a test function defined for meta
 const machineTests = {
-  [routes.applications.dashboard]: {
+  [routes.applications.getReady]: {
     meta: {
       test: () => {},
     },
-    // When exiting dashboard state,
+    // When exiting getReady state,
     // add test data to the machine's context
     exit: "assignTestDataToMachineContext",
   },
@@ -291,7 +291,7 @@ describe("claimFlowConfigs", () => {
     { claimData: variableWorkPattern, userData: {} },
   ];
 
-  // Action that's fired when exiting dashboard state and creating a claim and
+  // Action that's fired when exiting getReady state and creating a claim and
   // adds test data to the current machine context
   const assignTestDataToMachineContext = assign({
     claim: (ctx, event) => new Claim({ ...ctx.claim, ...event.claimData }),
@@ -302,7 +302,7 @@ describe("claimFlowConfigs", () => {
     {
       ...machineConfigsWithTests,
       context,
-      initial: routes.applications.dashboard,
+      initial: routes.applications.getReady,
     },
     {
       guards: {

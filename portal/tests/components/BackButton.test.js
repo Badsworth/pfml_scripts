@@ -35,7 +35,7 @@ describe("<BackButton>", () => {
 
   describe("when label prop is defined", () => {
     it("sets back button label", () => {
-      const label = "Back to Dashboard";
+      const label = "Back to checklist";
       const wrapper = shallow(<BackButton label={label} />);
 
       expect(wrapper.dive().text()).toEqual(label);

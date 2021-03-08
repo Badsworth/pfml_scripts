@@ -1,21 +1,21 @@
 import ClaimCollection from "src/models/ClaimCollection";
-import { Dashboard } from "src/pages/dashboard";
+import { GetReady } from "src/pages/applications/get-ready";
 import React from "react";
 import routes from "src/routes";
 
 export default {
-  title: "Pages/Claimant dashboard",
-  component: Dashboard,
+  title: `Pages/Applications/Get Ready`,
+  component: GetReady,
 };
 
 export const Page = () => (
-  <Dashboard
+  <GetReady
     claims={new ClaimCollection()}
     appLogic={{
       portalFlow: {
         getNextPageRoute: () => "#storybook-example",
         goToPageFor: () => {},
-        pathname: routes.applications.dashboard,
+        pathname: routes.applications.getReady,
       },
     }}
     query={{}}

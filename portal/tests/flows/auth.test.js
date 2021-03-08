@@ -5,7 +5,6 @@ import machineConfigs from "../../src/flows";
 import { merge } from "lodash";
 import routes from "../../src/routes";
 
-// routes.applications.dashboard is not a path in flow-confings/auth.js, but it's used in the CONTINUE for routes.auth.login, so it needs to be included in the list
 const createAccountStates = [
   routes.auth.createAccount,
   routes.auth.verifyAccount,

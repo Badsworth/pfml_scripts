@@ -19,6 +19,7 @@ const routes = {
     employerBenefits: "/applications/employer-benefits",
     employerBenefitsDetails: "/applications/employer-benefits-details",
     employmentStatus: "/applications/employment-status",
+    getReady: "/applications/get-ready",
     index: "/applications",
     intermittentFrequency: "/applications/intermittent-frequency",
     leavePeriodContinuous: "/applications/leave-period-continuous",

@@ -38,7 +38,7 @@ describe("useClaimsLogic", () => {
 
   beforeEach(() => {
     applicationId = "mock-application-id";
-    mockRouter.pathname = routes.dashboard;
+    mockRouter.pathname = routes.getReady;
     user = new User({ user_id: "mock-user-id" });
   });
 
