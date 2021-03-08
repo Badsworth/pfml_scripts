@@ -15,11 +15,7 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
       beforeFineos();
       bailIfThisTestFails();
 
-      cy.task("generateClaim", {
-        claimType: "BHAP1",
-        employeeType: "financially eligible",
-      }).then((claim: SimulationClaim) => {
-        cy.log("generated claim", claim.claim);
+      cy.task("generateClaim", "BHAP1").then((claim) => {
         cy.stash("claim", claim.claim);
         if (
           !claim.claim.first_name ||

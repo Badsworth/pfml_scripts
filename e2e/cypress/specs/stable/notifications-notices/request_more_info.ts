@@ -17,19 +17,16 @@ describe("Request for More Information (notifications/notices)", () => {
       cy.visit("/");
 
       // Generate Creds for Registration/Login - submit claim via API
-      cy.task("generateCredentials", false).then((credentials) => {
+      cy.task("generateCredentials").then((credentials) => {
         cy.stash("credentials", credentials);
         cy.task("registerClaimant", credentials).then(() => {
-          cy.task("generateClaim", {
-            claimType: "BHAP1",
-            employeeType: "financially eligible",
-          }).then((claim: SimulationClaim) => {
+          cy.task("generateClaim", "BHAP1").then((claim) => {
             cy.stash("claim", claim.claim);
             cy.stash("timestamp_from", Date.now());
             cy.task("submitClaimToAPI", {
               ...claim,
               credentials,
-            } as SimulationClaim).then((response) => {
+            }).then((response) => {
               console.log(response);
               cy.wrap(response.fineos_absence_id).as("fineos_absence_id");
               cy.stashLog("fineos_absence_id", response.fineos_absence_id);

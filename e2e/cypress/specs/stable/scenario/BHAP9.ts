@@ -5,10 +5,7 @@ describe("Submit a REDUCED LEAVE bonding claim and adjucation approval - BHAP8",
   it("As a claimant, I should be able to submit a Reduced Leave claim (BHAP8) through the portal", () => {
     beforePortal();
 
-    cy.task("generateClaim", {
-      claimType: "BHAP9",
-      employeeType: "financially eligible",
-    }).then((claim: SimulationClaim) => {
+    cy.task("generateClaim", "BHAP9").then((claim) => {
       if (!claim) {
         throw new Error("Claim Was Not Generated");
       }

@@ -11,12 +11,9 @@ describe("Payment amounts", () => {
       beforeFineos();
       cy.visit("/");
       // Generate Creds for Registration/Login - submit claim via API
-      cy.task("generateCredentials", false).then((credentials) => {
+      cy.task("generateCredentials").then((credentials) => {
         cy.task("registerClaimant", credentials).then(() => {
-          cy.task("generateClaim", {
-            claimType: "Jill",
-            employeeType: "financially eligible",
-          }).then((claim: SimulationClaim) => {
+          cy.task("generateClaim", "Jill").then((claim) => {
             if (!claim.claim.employer_fein) {
               throw new Error("Claim has no Employer FEIN");
             }
@@ -27,7 +24,7 @@ describe("Payment amounts", () => {
               ...claim,
               credentials,
               employerCredentials,
-            } as SimulationClaim).then((response: ApplicationResponse) => {
+            }).then((response: ApplicationResponse) => {
               if (typeof response.fineos_absence_id !== "string") {
                 throw new Error("Response must include FINEOS absence ID");
               }

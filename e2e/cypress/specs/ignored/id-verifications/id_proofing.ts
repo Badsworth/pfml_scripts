@@ -11,10 +11,7 @@ describe("Submit a <Scenario> claim directly to API and check for RMV Identifica
       beforeFineos();
       cy.visit("/");
 
-      cy.task("generateClaim", {
-        claimType: "BHAP11ID",
-        employeeType: "financially eligible",
-      }).then((claim: SimulationClaim) => {
+      cy.task("generateClaim", "BHAP11ID").then((claim) => {
         cy.task("submitClaimToAPI", claim).as("submission");
       });
 
@@ -32,10 +29,7 @@ describe("Submit a <Scenario> claim directly to API and check for RMV Identifica
       beforeFineos();
       cy.visit("/");
 
-      cy.task("generateClaim", {
-        claimType: "BHAP12ID",
-        employeeType: "financially eligible",
-      }).then((claim: SimulationClaim) => {
+      cy.task("generateClaim", "BHAP12ID").then((claim) => {
         cy.task("submitClaimToAPI", claim).as("submission");
       });
 
@@ -54,10 +48,7 @@ describe("Submit a <Scenario> claim directly to API and check for RMV Identifica
       beforeFineos();
       cy.visit("/");
 
-      cy.task("generateClaim", {
-        claimType: "BHAP10ID",
-        employeeType: "financially eligible",
-      }).then((claim: SimulationClaim) => {
+      cy.task("generateClaim", "BHAP10ID").then((claim) => {
         cy.task("submitClaimToAPI", claim).as("submission");
       });
 
@@ -76,10 +67,7 @@ describe("Submit a <Scenario> claim directly to API and check for RMV Identifica
       beforeFineos();
       cy.visit("/");
 
-      cy.task("generateClaim", {
-        claimType: "BHAP13ID",
-        employeeType: "financially eligible",
-      }).then((claim: SimulationClaim) => {
+      cy.task("generateClaim", "BHAP13ID").then((claim) => {
         cy.task("submitClaimToAPI", claim).as("submission");
       });
 

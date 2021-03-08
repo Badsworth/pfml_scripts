@@ -11,10 +11,7 @@ describe("Employer Responses", () => {
     beforePortal();
     bailIfThisTestFails();
 
-    cy.task("generateClaim", {
-      claimType: "BHAP1",
-      employeeType: "financially eligible",
-    }).then((claim) => {
+    cy.task("generateClaim", "BHAP1").then((claim) => {
       const { employer_fein } = claim.claim;
       if (!(typeof employer_fein === "string")) {
         throw new Error("No employer_fein property was added to this claim.");
@@ -23,6 +20,9 @@ describe("Employer Responses", () => {
       cy.stash("timestamp_from", Date.now());
       const timestamp_from = Date.now();
       cy.task("submitClaimToAPI", claim).then((response) => {
+        if (!response.fineos_absence_id) {
+          throw new Error("Response does not have a fineos_absence_id");
+        }
         // As an employer, I should receive a notification about my response being required
         cy.task("getEmails", {
           address: "gqzap.notifications@inbox.testmail.app",

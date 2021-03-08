@@ -1,5 +1,5 @@
 import { getApplicationsByApplication_idDocuments } from "../../src/api";
-import AuthenticationManager from "../../src/simulation/AuthenticationManager";
+import AuthenticationManager from "../../src/submission/AuthenticationManager";
 import pRetry from "p-retry";
 
 type WaitForDocumentOpts = {

@@ -13,18 +13,15 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
     cy.visit("/");
 
     // Generate Creds for Registration/Login - submit claim via API
-    cy.task("generateCredentials", false).then((credentials) => {
+    cy.task("generateCredentials").then((credentials) => {
       cy.stash("credentials", credentials);
       cy.task("registerClaimant", credentials).then(() => {
-        cy.task("generateClaim", {
-          claimType: "BHAP1",
-          employeeType: "financially eligible",
-        }).then((claim: SimulationClaim) => {
+        cy.task("generateClaim", "BHAP1").then((claim) => {
           cy.stash("claim", claim.claim);
           cy.task("submitClaimToAPI", {
             ...claim,
             credentials,
-          } as SimulationClaim).then((response: ApplicationResponse) => {
+          }).then((response: ApplicationResponse) => {
             console.log(response);
             const timestamp_fromER = Date.now();
             cy.stash("submission", {

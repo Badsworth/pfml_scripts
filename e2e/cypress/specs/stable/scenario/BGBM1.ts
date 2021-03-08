@@ -12,10 +12,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
     beforePortal();
     bailIfThisTestFails();
 
-    cy.task("generateClaim", {
-      claimType: "BGBM1",
-      employeeType: "financially eligible",
-    }).then((claim: SimulationClaim) => {
+    cy.task("generateClaim", "BGBM1").then((claim) => {
       if (!claim) {
         throw new Error("Claim Was Not Generated");
       }

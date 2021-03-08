@@ -14,16 +14,13 @@ describe("Denial Notification and Notice", () => {
     bailIfThisTestFails();
 
     cy.visit("/");
-    cy.task("generateCredentials", false).then((credentials) => {
+    cy.task("generateCredentials").then((credentials) => {
       cy.task("registerClaimant", credentials).then(() => {
-        cy.task("generateClaim", {
-          claimType: "BHAP1",
-          employeeType: "financially ineligible",
-        }).then((claim: SimulationClaim) => {
+        cy.task("generateClaim", "BHAP1INEL").then((claim) => {
           cy.task("submitClaimToAPI", {
             ...claim,
             credentials,
-          } as SimulationClaim).then((responseData: ApplicationResponse) => {
+          }).then((responseData: ApplicationResponse) => {
             if (!responseData.fineos_absence_id) {
               throw new Error("FINEOS ID must be specified");
             }

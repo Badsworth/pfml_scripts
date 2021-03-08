@@ -1,4 +1,3 @@
-import { SimulationClaim } from "../../../../src/simulation/types";
 import { Credentials } from "../../../../src/types";
 import {
   ApplicationResponse,
@@ -15,34 +14,8 @@ export function onPage(page: string): void {
   cy.url().should("include", `/applications/${page}`);
 }
 
-export function submittingClaimType(
-  claimType: string,
-  employeeType: string
-): void {
-  cy.task("generateClaim", {
-    claimType: claimType,
-    employeeType: employeeType,
-  }).then((claim?: SimulationClaim) => {
-    if (!claim) {
-      throw new Error("Claim Was Not Generated");
-    }
-    cy.log("generated claim", claim.claim);
-    cy.wrap(claim.claim).as("application");
-    cy.wrap(claim.paymentPreference).as("paymentPreference");
-  });
-}
-
-export function submitClaimDirectlyToAPI(
-  scenario: string,
-  employeeType: string
-): void {
-  cy.task("generateClaim", {
-    claimType: scenario,
-    employeeType: employeeType,
-  }).then({ timeout: 40000 }, (claim?: SimulationClaim) => {
-    if (!claim) {
-      throw new Error("Claim Was Not Generated");
-    }
+export function submitClaimDirectlyToAPI(scenario: string): void {
+  cy.task("generateClaim", scenario).then({ timeout: 40000 }, (claim) => {
     cy.log("submitting", claim);
     cy.task("submitClaimToAPI", claim)
       .then((responseData: unknown) => responseData as ApplicationResponse)

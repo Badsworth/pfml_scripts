@@ -13,36 +13,25 @@ import config from "../../src/config";
 import faker from "faker";
 import path from "path";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
-import { CypressStepThis } from "../../src/types";
-import TestMailVerificationFetcher from "./TestMailVerificationFetcher";
-import PortalSubmitter from "../../src/simulation/PortalSubmitter";
+// @todo: Move these utilities into src/.
 import {
-  SimulationClaim,
-  Employer,
-  EmployeeRecord,
-} from "../../src/simulation/types";
+  getAuthManager,
+  getClaimantCredentials,
+  getEmployeePool,
+  getPortalSubmitter,
+  getVerificationFetcher,
+} from "../../src/scripts/util";
 import { Credentials } from "../../src/types";
-import { SimulationGenerator } from "../../src/simulation/simulate";
-import { ApplicationResponse, DocumentUploadRequest } from "../../src/api";
-import { makeDocUploadBody } from "../../src/simulation/SimulationRunner";
-import { fromClaimData } from "../../src/simulation/EmployeeFactory";
-import * as pilot3 from "../../src/simulation/scenarios/pilot3";
-import * as pilot4 from "../../src/simulation/scenarios/pilot4";
-import * as integrationScenarios from "../../src/simulation/scenarios/integrationScenarios";
+import { ApplicationResponse } from "../../src/api";
 
 import fs from "fs";
 import pdf from "pdf-parse";
 import { Result } from "pdf-parse";
 import TestMailClient, { Email, GetEmailsOpts } from "./TestMailClient";
-import AuthenticationManager from "../../src/simulation/AuthenticationManager";
-import { CognitoUserPool } from "amazon-cognito-identity-js";
 import DocumentWaiter from "./DocumentWaiter";
-
-const scenarioFunctions: Record<string, SimulationGenerator> = {
-  ...pilot3,
-  ...pilot4,
-  ...integrationScenarios,
-};
+import { ClaimGenerator, DehydratedClaim } from "../../src/generation/Claim";
+import * as scenarios from "../../src/scenarios";
+import EmployerPool from "../../src/generation/Employer";
 
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
@@ -50,24 +39,9 @@ const scenarioFunctions: Record<string, SimulationGenerator> = {
  * @type {Cypress.PluginConfig}
  */
 export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
-  const userPool = new CognitoUserPool({
-    ClientId: config("COGNITO_CLIENTID"),
-    UserPoolId: config("COGNITO_POOL"),
-  });
-  const verificationFetcher = new TestMailVerificationFetcher(
-    config("TESTMAIL_APIKEY"),
-    config("TESTMAIL_NAMESPACE")
-  );
-  const authenticator = new AuthenticationManager(
-    userPool,
-    config("API_BASEURL"),
-    verificationFetcher
-  );
-  const submitter = new PortalSubmitter(authenticator, config("API_BASEURL"));
-  const defaultClaimantCredentials = {
-    username: config("PORTAL_USERNAME"),
-    password: config("PORTAL_PASSWORD"),
-  };
+  const verificationFetcher = getVerificationFetcher();
+  const authenticator = getAuthManager();
+  const submitter = getPortalSubmitter();
   const documentWaiter = new DocumentWaiter(
     config("API_BASEURL"),
     authenticator
@@ -85,23 +59,13 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       );
       return client.getEmails(opts);
     },
-    async generateCredentials(
-      isEmployer: boolean
-    ): Promise<CypressStepThis["credentials"]> {
-      const namespace = config("TESTMAIL_NAMESPACE");
-      const tag = faker.random.alphaNumeric(8);
-      const credentials: Credentials = {
-        username: `${namespace}.${tag}@inbox.testmail.app`,
-        password: generatePassword(),
-      };
-      if (isEmployer) {
-        await getEmployee("financially eligible").then((employee) => {
-          credentials.fein = employee.employer_fein;
-        });
-      }
-      return credentials;
+    generateCredentials,
+    async generateLeaveAdminCredentials(): Promise<Credentials> {
+      const credentials = generateCredentials();
+      const employerPool = await EmployerPool.load(config("EMPLOYERS_FILE"));
+      const employer = employerPool.pick();
+      return { ...credentials, fein: employer.fein };
     },
-
     async registerClaimant(options: Credentials): Promise<true> {
       await authenticator.registerClaimant(options.username, options.password);
       return true;
@@ -119,32 +83,18 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     },
 
     async submitClaimToAPI(
-      application: SimulationClaim & {
+      application: DehydratedClaim & {
         credentials?: Credentials;
         employerCredentials?: Credentials;
       }
     ): Promise<ApplicationResponse> {
       if (!application.claim) throw new Error("Application missing!");
-      if (!application.documents.length) throw new Error("Documents missing!");
-      const {
-        claim,
-        documents,
-        credentials,
-        paymentPreference,
-        employerResponse,
-        employerCredentials,
-      } = application;
-      const newDocuments: DocumentUploadRequest[] = documents.map(
-        makeDocUploadBody("/tmp", "Direct API Upload")
-      );
+      const { credentials, employerCredentials, ...claim } = application;
       return submitter
         .submit(
-          credentials ?? defaultClaimantCredentials,
-          claim,
-          newDocuments,
-          paymentPreference,
-          employerCredentials,
-          employerResponse
+          await ClaimGenerator.hydrate(claim, "/tmp"),
+          credentials ?? getClaimantCredentials(),
+          employerCredentials
         )
         .catch((err) => {
           console.error("Failed to submit claim:", err.data);
@@ -156,24 +106,20 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       documentWaiter
     ),
 
-    async generateClaim({ claimType, employeeType }): Promise<SimulationClaim> {
-      if (!(claimType in scenarioFunctions)) {
-        throw new Error(`Invalid claim type: ${claimType}`);
+    async generateClaim(scenarioID: string): Promise<DehydratedClaim> {
+      if (!(scenarioID in scenarios)) {
+        throw new Error(`Invalid scenario: ${scenarioID}`);
       }
-
-      // Get the employee record here (read JSON, map to identifier).
-      const employee = await getEmployee(employeeType);
-
-      const opts = {
-        documentDirectory: "/tmp",
-        employeeFactory: () => employee,
-        // Dummy employer factory. Doesn't return full employer objects, just
-        // the FEIN. In this case, we know we don't need other employer props.
-        employerFactory: () => ({ fein: employee.employer_fein } as Employer),
-        shortClaim: true,
-      };
-
-      return scenarioFunctions[claimType](opts);
+      const scenario = scenarios[scenarioID as keyof typeof scenarios];
+      const claim = ClaimGenerator.generate(
+        await getEmployeePool(),
+        scenario.employee,
+        scenario.claim
+      );
+      // Dehydrate (save) documents to the temp directory, where they can be picked up later on.
+      // The file for a document is normally a callback function, which cannot be serialized and
+      // sent to the browser using Cypress.
+      return ClaimGenerator.dehydrate(claim, "/tmp");
     },
     async noticeReader(noticeType: string): Promise<Result> {
       const PDFdataBuffer = fs.readFileSync(
@@ -225,6 +171,18 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
   };
 }
 
+/**
+ * Generates a random set of credentials.
+ */
+function generateCredentials(): Credentials {
+  const namespace = config("TESTMAIL_NAMESPACE");
+  const tag = faker.random.alphaNumeric(8);
+  return {
+    username: `${namespace}.${tag}@inbox.testmail.app`,
+    password: generatePassword(),
+  };
+}
+
 function generatePassword(): string {
   // Password = {uppercase}{lowercase}{random*10){number}{symbol}
   return (
@@ -234,26 +192,4 @@ function generatePassword(): string {
     faker.random.number(999) +
     faker.random.arrayElement(["@#$%^&*"])
   );
-}
-
-/**
- * Retrieves an existing employee from the employee file for the current environment.
- */
-export async function getEmployee(
-  employeeType: string
-): Promise<EmployeeRecord> {
-  const claims = await fs.promises
-    .readFile(config("EMPLOYEES_FILE"), "utf-8")
-    .then(JSON.parse);
-  const factory = fromClaimData(claims);
-  // @todo: We should probably just update this to match the employee factory wage spec
-  // - it's just out of scope for what I'm doing right now.
-  switch (employeeType) {
-    case "financially eligible":
-      return factory("eligible");
-    case "financially ineligible":
-      return factory("ineligible");
-    default:
-      throw new Error(`Unknown employee type: ${employeeType}`);
-  }
 }

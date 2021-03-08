@@ -8,10 +8,7 @@ describe("Submit Part One of a claim, without documents, and then find in FINEOS
   it("As a claimant, I submit a claim through the portal (part one only)", () => {
     beforePortal();
 
-    cy.task("generateClaim", {
-      claimType: "MHAP1",
-      employeeType: "financially eligible",
-    }).then((claim: SimulationClaim) => {
+    cy.task("generateClaim", "MHAP1").then((claim) => {
       if (!claim) {
         throw new Error("Claim Was Not Generated");
       }

@@ -3,33 +3,20 @@ import { fineos } from "../../tests/common/actions";
 import { beforeFineos } from "../../tests/common/before";
 import { beforePortal } from "../../tests/common/before";
 import { getLeaveAdminCredentials, getFineosBaseUrl } from "../../config";
-import { ApplicationResponse } from "../../../src/api";
 import { Submission } from "../../../src/types";
+import { DehydratedClaim } from "../../../src/generation/Claim";
 
 describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineos", () => {
   it("Create a financially eligible claim (MHAP4) in which an employer will respond", () => {
     beforePortal();
 
-    cy.task("generateClaim", {
-      claimType: "MHAP4",
-      employeeType: "financially eligible",
-    }).then((claim: SimulationClaim) => {
-      if (!claim) {
-        throw new Error("Claim Was Not Generated");
-      }
-      cy.log("generated claim", claim.claim);
+    const x = {} as DehydratedClaim;
+    cy.task("submitClaimToAPI", x).then((response) => {
+      console.log(response.application_id);
+    });
 
-      const credentials: Credentials = {
-        username: Cypress.env("E2E_PORTAL_USERNAME"),
-        password: Cypress.env("E2E_PORTAL_PASSWORD"),
-      };
-
-      cy.stash("claim", claim.claim);
-      cy.task("submitClaimToAPI", {
-        ...claim,
-        credentials,
-      } as SimulationClaim).then((response: ApplicationResponse) => {
-        console.log(response);
+    cy.task("generateClaim", "MHAP4").then((claim) => {
+      cy.task("submitClaimToAPI", claim).then((response) => {
         cy.stash("submission", {
           application_id: response.application_id,
           fineos_absence_id: response.fineos_absence_id,

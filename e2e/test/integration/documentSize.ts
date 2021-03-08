@@ -1,100 +1,126 @@
 import { describe, beforeAll, test, expect } from "@jest/globals";
-import { SimulationGenerator } from "../../src/simulation/simulate";
-import type { Employer } from "../../src/simulation/types";
-import * as integrationScenarios from "../../src/simulation/scenarios/integrationScenarios";
-import { getEmployee } from "../../cypress/plugins";
-import PortalSubmitter from "../../src/simulation/PortalSubmitter";
-import AuthenticationManager from "../../src/simulation/AuthenticationManager";
-import { CognitoUserPool } from "amazon-cognito-identity-js";
-import config from "../../src/config";
-import TestMailVerificationFetcher from "../../cypress/plugins/TestMailVerificationFetcher";
-import { Credentials } from "../../src/types";
-import { DocumentUploadRequest } from "api";
+import {
+  DocumentUploadRequest,
+  RequestOptions,
+  postApplicationsByApplication_idDocuments,
+} from "../../src/api";
 import fs from "fs";
+import {
+  getClaimantCredentials,
+  getEmployeePool,
+  getPortalSubmitter,
+  getAuthManager,
+} from "../../src/scripts/util";
+import { ClaimGenerator } from "../../src/generation/Claim";
+import * as scenarios from "../../src/scenarios";
+import config from "../../src/config";
 
-const scenarioFunctions: Record<string, SimulationGenerator> = {
-  ...integrationScenarios,
-};
-
-let userPool: CognitoUserPool;
-let verificationFetcher: TestMailVerificationFetcher;
-let authenticator: AuthenticationManager;
-let defaultClaimantCredentials: Credentials;
-let submitter: PortalSubmitter;
+const defaultClaimantCredentials = getClaimantCredentials();
+let application_id: string;
+let pmflApiOptions: RequestOptions;
 
 describe("API Documents Test of various file sizes", () => {
-  beforeAll(() => {
-    userPool = new CognitoUserPool({
-      ClientId: config("COGNITO_CLIENTID"),
-      UserPoolId: config("COGNITO_POOL"),
-    });
-
-    verificationFetcher = new TestMailVerificationFetcher(
-      config("TESTMAIL_APIKEY"),
-      config("TESTMAIL_NAMESPACE")
+  beforeAll(async () => {
+    const authenticator = getAuthManager();
+    const submitter = getPortalSubmitter();
+    const employeePool = await getEmployeePool();
+    const session = await authenticator.authenticate(
+      defaultClaimantCredentials.username,
+      defaultClaimantCredentials.password
     );
 
-    authenticator = new AuthenticationManager(
-      userPool,
-      config("API_BASEURL"),
-      verificationFetcher
-    );
-
-    defaultClaimantCredentials = {
-      username: config("PORTAL_USERNAME"),
-      password: config("PORTAL_PASSWORD"),
-    };
-
-    submitter = new PortalSubmitter(authenticator, config("API_BASEURL"));
-  });
-
-  test("Should recieve an error when submitting a document of size 20MB", async () => {
-    const employee = await getEmployee("financially eligible");
-
-    const opts = {
-      documentDirectory: "/tmp",
-      employeeFactory: () => employee,
-      employerFactory: () => ({ fein: employee.employer_fein } as Employer),
-      shortClaim: true,
-    };
-
-    const claim = await scenarioFunctions["DHAP1"](opts);
-
-    // Submit Claim w/o Document
-    const appRes = await submitter
-      .submit(
-        defaultClaimantCredentials,
-        claim.claim,
-        [],
-        claim.paymentPreference
-      )
-      .catch((err) => {
-        console.error("Failed to submit claim:", err);
-        throw new Error(err);
-      });
-
-    // Add large document to claim
-    const document: DocumentUploadRequest[] = [
-      {
-        document_type: "State managed Paid Leave Confirmation",
-        description: "Large PDF Upload 30MB",
-        file: fs.createReadStream("./cypress/fixtures/large.pdf"),
-        name: `large.pdf`,
+    pmflApiOptions = {
+      baseUrl: config("API_BASEURL"),
+      headers: {
+        Authorization: `Bearer ${session.getAccessToken().getJwtToken()}`,
+        "User-Agent": "PFML Cypress Testing",
       },
-    ];
+    };
 
-    const docRes = await submitter
-      .submitDocumentOnly(
-        defaultClaimantCredentials,
-        appRes.application_id as string,
-        appRes.fineos_absence_id as string,
-        document
-      )
-      .catch((err) => {
+    const claim = ClaimGenerator.generate(
+      employeePool,
+      scenarios.BHAP1.employee,
+      scenarios.BHAP1.claim
+    );
+
+    const res = await submitter.submitPartOne(
+      defaultClaimantCredentials,
+      claim.claim
+    );
+
+    if (!res.application_id || !res.fineos_absence_id) {
+      throw new Error(
+        `Unable to determine application ID or absence ID from response ${JSON.stringify(
+          res
+        )}`
+      );
+    }
+
+    application_id = res.application_id;
+  }, 60000);
+
+  /**
+   *  Idea here is to test the file size limit (4.5MB) w/each accepted
+   *  filetype: PDF/JPG/PNG in three different ways.
+   *    - smaller than limit
+   *    - right at limit ex. 4.4MB
+   *    - larger than limit
+   *
+   *  @Todo
+   *  - Add more test for other file types and sizes
+   *  - Add test for file type not accepted (Ex: .csv, .psd)
+   */
+
+  const tests = [
+    [
+      "less than 4.5MB successfully",
+      "./cypress/fixtures/docTesting/small-150KB.pdf",
+      "Successfully uploaded document",
+      200,
+    ],
+    [
+      "right at 4.5MB successfully",
+      "./cypress/fixtures/docTesting/limit-4.5MB.pdf",
+      "Successfully uploaded document",
+      200,
+    ],
+    [
+      "larger than 4.5MB (10MB) unsuccessfully and return API error",
+      "./cypress/fixtures/docTesting/large-10MB.pdf",
+      "Request Entity Too Large",
+      413,
+    ],
+  ];
+
+  test.each(tests)(
+    "Should submit a PDF document with file size %s",
+    async (
+      description: string,
+      filepath: string,
+      message: string,
+      statusCode: number
+    ) => {
+      const document: DocumentUploadRequest = {
+        document_type: "State managed Paid Leave Confirmation",
+        description: description,
+        file: fs.createReadStream(filepath),
+        name: `large.pdf`,
+      };
+      const docRes = await postApplicationsByApplication_idDocuments(
+        { application_id: application_id },
+        document,
+        pmflApiOptions
+      ).catch((err) => {
         return err;
       });
 
-    expect(docRes.status).toBe(413);
-    expect(docRes.statusText).toBe("Request Entity Too Large");
-  }, 60000);
+      expect(docRes.status).toBe(statusCode);
+      if (statusCode === 413) {
+        expect(docRes.statusText).toBe("Request Entity Too Large");
+      } else {
+        expect(docRes.data.message).toBe(message);
+      }
+    },
+    60000
+  );
 });

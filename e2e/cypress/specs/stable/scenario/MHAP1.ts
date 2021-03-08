@@ -13,10 +13,7 @@ describe("Submit a medical claim and adjucation approval - MHAP1", () => {
     beforePortal();
     bailIfThisTestFails();
 
-    cy.task("generateClaim", {
-      claimType: "MHAP1",
-      employeeType: "financially eligible",
-    }).then((claim: SimulationClaim) => {
+    cy.task("generateClaim", "MHAP1").then((claim) => {
       if (!claim) {
         throw new Error("Claim Was Not Generated");
       }

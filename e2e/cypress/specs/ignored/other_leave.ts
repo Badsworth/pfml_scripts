@@ -9,15 +9,12 @@ describe("Submit a bonding claim with other income and other leave - BHAP1", () 
     beforePortal();
     bailIfThisTestFails();
 
-    cy.task("generateClaim", {
-      claimType: "BHAP1",
-      employeeType: "financially eligible",
-    }).then((claim: SimulationClaim) => {
+    cy.task("generateClaim", "BHAP1").then((claim) => {
       if (!claim) {
         throw new Error("Claim Was Not Generated");
       }
       cy.stash("claim", claim);
-      const application: ApplicationRequestBody = claim.claim;
+      const application = claim.claim;
       const paymentPreference = claim.paymentPreference;
 
       const credentials: Credentials = {

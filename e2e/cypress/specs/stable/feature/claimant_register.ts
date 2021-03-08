@@ -4,7 +4,7 @@ import { beforePortal } from "../../../tests/common/before";
 describe("Claimant Registration", () => {
   it("Should allow a new claimant to register", () => {
     beforePortal();
-    cy.task("generateCredentials", false).then((credentials) => {
+    cy.task("generateCredentials").then((credentials) => {
       portal.registerAsClaimant(credentials);
       portal.login(credentials);
       portal.assertLoggedIn();

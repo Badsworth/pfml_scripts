@@ -8,7 +8,7 @@
     "FINEOS_BASEURL": "https://dt2-claims-webapp.masspfml.fineos.com",
     "FINEOS_USERNAME": "CONTENT",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/e2e-2021-02-22.json",
+    "EMPLOYEES_FILE": "./employees/e2e-2021-02-22.employees.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-02-22.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
@@ -21,7 +21,7 @@
     "FINEOS_BASEURL": "https://idt-claims-webapp.masspfml.fineos.com",
     "FINEOS_USERNAME": "CONTENT",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/e2e-2021-02-22.json",
+    "EMPLOYEES_FILE": "./employees/e2e-2021-02-22.employees.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-02-22.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
@@ -34,7 +34,7 @@
     "COGNITO_POOL": "us-east-1_gHLjkp4A8",
     "COGNITO_CLIENTID": "2hr6bckdopamvq92jahr542p5p",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/test-stage-2020-11-30.json",
+    "EMPLOYEES_FILE": "./employees/test-stage-2020-11-30.employees.json",
     "EMPLOYERS_FILE": "./employers/e2e.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
@@ -47,7 +47,7 @@
     "COGNITO_POOL": "us-east-1_0jv6SlemT",
     "COGNITO_CLIENTID": "1ps8bs9s5ns4f6qamj6qn6qd3",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/e2e-2021-02-22.json",
+    "EMPLOYEES_FILE": "./employees/e2e-2021-02-22.employees.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-02-22.json",
     "LST_EMPLOYEES_FILE": "./employees/lst-2021-02-24.json",
     "LST_EMPLOYERS_FILE": "./employers/lst-2021-02-24.json",
@@ -62,7 +62,7 @@
     "COGNITO_POOL": "us-east-1_29j6fKBDT",
     "COGNITO_CLIENTID": "1ajh0c38bs21k60bjtttegspvp",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/e2e-2021-02-22.json",
+    "EMPLOYEES_FILE": "./employees/e2e-2021-02-22.employees.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-02-22.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
@@ -74,7 +74,7 @@
     "API_BASEURL": "https://paidleave-api-stage.mass.gov/api/v1",
     "FINEOS_BASEURL": "https://idt-claims-webapp.masspfml.fineos.com",
     "FINEOS_USERNAME": "CONTENT",
-    "EMPLOYEES_FILE": "./employees/test-stage-2020-11-30.json",
+    "EMPLOYEES_FILE": "./employees/e2e-2021-02-22.employees.json",
     "EMPLOYERS_FILE": "./employers/e2e.json",
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"

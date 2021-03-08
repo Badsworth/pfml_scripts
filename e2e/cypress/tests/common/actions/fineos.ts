@@ -697,7 +697,7 @@ export function findOtherLeaveEForm(claimNumber: string): void {
   cy.wait(200);
 }
 
-export function checkPaymentPreference(simClaim: SimulationClaim): void {
+export function checkPaymentPreference(simClaim: DehydratedClaim): void {
   const { claim, paymentPreference } = simClaim;
   searchClaimantSSN(claim.tax_identifier as string);
   clickBottomWidgetButton("OK");
