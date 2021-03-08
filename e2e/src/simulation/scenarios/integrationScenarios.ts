@@ -1,5 +1,4 @@
 import { scenario } from "../simulate";
-import { addDays, subDays } from "date-fns";
 
 // Additional scenarios for integration testing that should not be included in LST or BizSim
 export const BHAP8 = scenario("BHAP8", {
@@ -100,27 +99,4 @@ export const DHAP1 = scenario("DHAP1", {
   reason_qualifier: "Foster Care",
   residence: "MA-proofed",
   docs: {},
-});
-
-/**
- * END-628: Create a handful of tests to cover multiple varying scenarios.
- *
- * "Jill" has a continuous bonding claim with a regular 40 hour scheudle. Other
- * scenarios will cover other variations of types, periods, salaries, and
- * schedules.
- */
-export const Jill = scenario("Jill", {
-  reason: "Child Bonding",
-  reason_qualifier: "Foster Care",
-  residence: "MA-proofed",
-  docs: {
-    MASSID: {},
-    FOSTERPLACEMENT: {},
-  },
-  employerResponse: {
-    hours_worked_per_week: 40,
-    employer_decision: "Approve",
-    fraud: "No",
-  },
-  leave_dates: [subDays(new Date(), 1), addDays(new Date(), 6)],
 });

@@ -102,7 +102,10 @@ export const MHAP4: ScenarioSpecification = {
 };
 
 export const Jill: ScenarioSpecification = {
-  employee: { mass_id: true },
+  employee: {
+    wages: 30000,
+    mass_id: true,
+  },
   claim: {
     label: "Jill",
     reason: "Child Bonding",

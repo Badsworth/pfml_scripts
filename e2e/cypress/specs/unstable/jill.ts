@@ -31,7 +31,7 @@ describe("Payment amounts", () => {
               fineos.checkPaymentPreference(claim);
               fineos.claimAdjudicationFlow(response.fineos_absence_id, true);
               fineos.getPaymentAmount().then((amount) => {
-                expect(amount).to.eq("92.30");
+                expect(amount).to.eq("461.54");
               });
             });
           });
