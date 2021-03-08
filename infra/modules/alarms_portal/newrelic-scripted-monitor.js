@@ -37,5 +37,5 @@ $browser
       .click();
   })
   .then(() => {
-    return $browser.findElement($driver.By.linkText("Get ready to apply"));
+    return $browser.findElement($driver.By.linkText("Create an application"));
   });
