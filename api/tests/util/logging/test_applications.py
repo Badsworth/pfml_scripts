@@ -68,6 +68,7 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "application.num_previous_leave_reasons.Military exigency family": "0",
         "application.num_previous_leave_reasons.Pregnancy / Maternity": "1",
         "application.num_previous_leave_reasons.Serious health condition": "0",
+        "application.pregnant_or_recent_birth": "False",
         "application.start_time": str(application.start_time),
         "application.start_time.timestamp": str(application.start_time.timestamp()),
         "application.submitted_time": None,

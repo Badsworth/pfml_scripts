@@ -65,6 +65,7 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
         "has_previous_leaves",
         "has_reduced_schedule_leave_periods",
         "has_submitted_payment_preference",
+        "pregnant_or_recent_birth",
         "start_time",
         "updated_time",
         "completed_time",
