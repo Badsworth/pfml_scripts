@@ -11,7 +11,7 @@ from smart_open import open as smart_open
 import massgov.pfml.util.logging
 from massgov.pfml import db, fineos
 from massgov.pfml.util.strings import mask_fein
-from massgov.pfml.util.users import create_or_update_user_record
+from massgov.pfml.util.users import register_or_update_leave_admin
 
 #
 # Import CSV file of Leave Admins into Cognito, Paid Leave DB, FINEOS
@@ -76,7 +76,7 @@ def process_by_email(
     for employer_to_register in input_data:
         if employer_to_register.get("fein"):
             fein = clean_fein(employer_to_register["fein"])
-            registered, reg_msg = create_or_update_user_record(
+            registered, reg_msg = register_or_update_leave_admin(
                 db_session=db_session,
                 fein=fein,
                 email=email,

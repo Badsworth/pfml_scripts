@@ -4,6 +4,7 @@ import boto3
 import botocore
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import MultipleResultsFound
+from werkzeug.exceptions import BadRequest
 
 import massgov.pfml.cognito_post_confirmation_lambda.lib as lib
 import massgov.pfml.util.logging
@@ -17,7 +18,8 @@ from massgov.pfml.util.aws.cognito import (
     CognitoAccountCreationFailure,
     CognitoLookupFailure,
     CognitoPasswordSetFailure,
-    create_cognito_leave_admin_account,
+    create_cognito_account,
+    create_verified_cognito_leave_admin_account,
     lookup_cognito_account_id,
 )
 from massgov.pfml.util.employers import lookup_employer
@@ -25,15 +27,59 @@ from massgov.pfml.util.employers import lookup_employer
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def create_or_update_user_record(
+def create_user(db_session: db.Session, email_address: str, auth_id: str,) -> User:
+    """Create API records for a new user (claimant or leave admin)"""
+
+    # TODO (CP-1762): Support employer account creation by validating EIN and creating role records
+    user = User(active_directory_id=auth_id, email_address=email_address,)
+
+    db_session.add(user)
+    db_session.commit()
+
+    return user
+
+
+def register_user(
+    db_session: db.Session,
+    email_address: str,
+    password: str,
+    cognito_user_pool_client_id: str,
+    cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
+) -> User:
+    """Create a new Cognito and API user for authenticating and performing authenticated API requests"""
+
+    try:
+        auth_id = create_cognito_account(
+            email_address, password, cognito_user_pool_client_id, cognito_client=cognito_client
+        )
+        logger.info(
+            "register_user - successfully created Cognito user",
+            extra={"current_user.auth_id": auth_id},
+        )
+    except botocore.exceptions.ClientError as e:
+        # TODO (CP-1764): Handle custom Cognito error exceptions raised from cognito.py
+        logger.info(
+            "register_user - failed to create Cognito user", extra={"error": e.response["Error"]},
+        )
+        raise BadRequest(description=e.response["Error"]["Message"])
+
+    user = create_user(db_session, email_address, auth_id)
+
+    return user
+
+
+def register_or_update_leave_admin(
     db_session: db.Session,
     fein: str,
     email: str,
     cognito_pool_id: str,
-    consume_use: Optional[bool] = False,
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
     fineos_client: Optional[fineos.AbstractFINEOSClient] = None,
 ) -> Tuple[bool, str]:
+    """Create or update Cognito and API records for a Leave Admin.
+    Creates a Cognito user with a verified email and generated password, if a user doesn't already exist
+    """
+
     if not cognito_client:
         cognito_client = boto3.client("cognito-idp", region_name="us-east-1")
 
@@ -81,7 +127,7 @@ def create_or_update_user_record(
     else:
         logger.debug("Creating new Cognito user", extra={"email": email})
         try:
-            user = create_cognito_leave_admin_account(
+            user = create_verified_cognito_leave_admin_account(
                 db_session=db_session,
                 email=email,
                 fein=fein,

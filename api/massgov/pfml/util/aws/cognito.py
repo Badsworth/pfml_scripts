@@ -33,6 +33,10 @@ class CognitoPasswordSetFailure(Exception):
     pass
 
 
+def create_cognito_client():
+    return boto3.client("cognito-idp", region_name="us-east-1")
+
+
 def generate_temp_password() -> str:
     alphabet = string.ascii_letters + string.digits + string.punctuation
     while True:
@@ -60,7 +64,7 @@ def lookup_cognito_account_id(
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
 ) -> Union[str, None]:
     if not cognito_client:
-        cognito_client = boto3.client("cognito-idp", region_name="us-east-1")
+        cognito_client = create_cognito_client()
     retries = 0
     response = None
     while retries < 3:
@@ -93,16 +97,18 @@ def lookup_cognito_account_id(
     return None
 
 
-def create_cognito_leave_admin_account(
+def create_verified_cognito_leave_admin_account(
     db_session: db.Session,
     email: str,
     fein: str,
     cognito_user_pool_id: str,
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
 ) -> User:
+    """Create Cognito and API records for a leave admin with a verified email and temporary password"""
+
     active_directory_id: Optional[str] = None
     if cognito_client is None:
-        cognito_client = boto3.client("cognito-idp", region_name="us-east-1")
+        cognito_client = create_cognito_client()
     temp_password = generate_temp_password()
 
     try:
@@ -140,3 +146,25 @@ def create_cognito_leave_admin_account(
         "auth_id": active_directory_id,
     }
     return leave_admin_create(db_session, active_directory_id, email, fein, log_attributes)
+
+
+def create_cognito_account(
+    email_address: str,
+    password: str,
+    cognito_user_pool_client_id: str,
+    cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
+) -> str:
+    """Sign up a new user in the Cognito user pool. Returns Cognito user sub."""
+    if cognito_client is None:
+        cognito_client = create_cognito_client()
+
+    try:
+        response = cognito_client.sign_up(
+            ClientId=cognito_user_pool_client_id, Username=email_address, Password=password
+        )
+    except botocore.exceptions.ClientError as exc:
+        # TODO (CP-1764): Handle the full range of Cognito exceptions:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cognito-idp.html#CognitoIdentityProvider.Client.sign_up
+        raise exc
+
+    return response["UserSub"]

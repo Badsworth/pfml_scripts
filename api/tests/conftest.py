@@ -213,6 +213,36 @@ def test_fs_path(tmp_path):
 
 
 @pytest.fixture
+def mock_cognito(monkeypatch, reset_aws_env_vars):
+    import boto3
+
+    with moto.mock_cognitoidp():
+        cognito = boto3.client("cognito-idp", "us-east-1")
+
+        def mock_create_cognito_client():
+            return cognito
+
+        monkeypatch.setattr(
+            massgov.pfml.util.aws.cognito, "create_cognito_client", mock_create_cognito_client
+        )
+
+        yield cognito
+
+
+@pytest.fixture
+def mock_cognito_user_pool(monkeypatch, mock_cognito):
+    with moto.mock_cognitoidp():
+        user_pool_id = mock_cognito.create_user_pool(PoolName=str(uuid.uuid4()))["UserPool"]["Id"]
+        user_pool_client_id = mock_cognito.create_user_pool_client(
+            UserPoolId=user_pool_id, ClientName="test"
+        )["UserPoolClient"]["ClientId"]
+
+        monkeypatch.setenv("COGNITO_USER_POOL_CLIENT_ID", user_pool_client_id)
+
+        yield {"id": user_pool_id, "client_id": user_pool_client_id}
+
+
+@pytest.fixture
 def mock_ses(monkeypatch, reset_aws_env_vars):
     import boto3
 
@@ -226,7 +256,6 @@ def mock_ses(monkeypatch, reset_aws_env_vars):
     monkeypatch.setenv("CTR_GAX_BIEVNT_EMAIL_ADDRESS", "test1@example.com")
     monkeypatch.setenv("CTR_VCC_BIEVNT_EMAIL_ADDRESS", "test2@example.com")
     monkeypatch.setenv("DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", "test3@example.com")
-    monkeypatch.setenv("AWS_DEFAULT_REGION", "test")
 
     with moto.mock_ses():
         ses = boto3.client("ses")
@@ -442,7 +471,7 @@ def reset_aws_env_vars(monkeypatch):
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
     monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
     monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
-    monkeypatch.setenv("AWS_DEFAULT_REGION", "testing")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
 
 
 # This fixture was necessary at the time of this PR as

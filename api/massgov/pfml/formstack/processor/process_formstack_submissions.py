@@ -5,7 +5,7 @@ import smart_open
 
 from massgov.pfml import db
 from massgov.pfml.formstack.formstack_client import FormstackClient
-from massgov.pfml.util.users import create_or_update_user_record
+from massgov.pfml.util.users import register_or_update_leave_admin
 
 
 def get_form_id_from_filename(source_filename: str) -> str:
@@ -42,7 +42,7 @@ def process_formstack_submissions_file(
         else:
             cleaned_fein = None
 
-        create_or_update_user_record(
+        register_or_update_leave_admin(
             db_session=db_session,
             fein=cleaned_fein,
             email=data["your_email_address"],

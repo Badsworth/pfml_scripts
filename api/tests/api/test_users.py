@@ -7,7 +7,7 @@ import pytest
 from dateutil.relativedelta import relativedelta
 
 import tests.api
-from massgov.pfml.db.models.employees import UserLeaveAdministrator
+from massgov.pfml.db.models.employees import User, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import (
     EmployerFactory,
     EmployerQuarterlyContributionFactory,
@@ -23,7 +23,7 @@ pytestmark = pytest.mark.integration
 @pytest.fixture
 def valid_claimant_creation_request_body() -> Dict[str, Any]:
     return {
-        "email_address": fake.email(),
+        "email_address": fake.email(domain="example.com"),
         "password": fake.password(length=12),
         "role": {"role_description": "Claimant"},
     }
@@ -36,26 +36,64 @@ def valid_employer_creation_request_body(initialize_factories_session) -> Dict[s
     ein = employer.employer_fein
 
     return {
-        "email_address": fake.email(),
+        "email_address": fake.email(domain="example.com"),
         "password": fake.password(length=12),
         "role": {"role_description": "Employer"},
         "user_leave_administrator": {"employer_fein": "-".join([ein[:2], ein[2:9]]),},
     }
 
 
-def test_users_post_claimant(client, valid_claimant_creation_request_body):
+def test_users_post_claimant(
+    client,
+    mock_cognito,
+    mock_cognito_user_pool,
+    test_db_session,
+    valid_claimant_creation_request_body,
+):
+    email_address = valid_claimant_creation_request_body.get("email_address")
     response = client.post("/v1/users", json=valid_claimant_creation_request_body,)
+    response_body = response.get_json()
 
+    # Response includes the user data
     assert response.status_code == 201
+    assert response_body.get("data").get("email_address") == email_address
+
+    # User added to DB
+    user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
+    assert user.active_directory_id is not None
+
+    # User added to user pool
+    cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
+    assert cognito_users["Users"][0]["Username"] == email_address
 
 
-def test_users_post_employer(client, valid_employer_creation_request_body):
+def test_users_post_employer(
+    client,
+    mock_cognito,
+    mock_cognito_user_pool,
+    test_db_session,
+    valid_employer_creation_request_body,
+):
+    email_address = valid_employer_creation_request_body.get("email_address")
     response = client.post("/v1/users", json=valid_employer_creation_request_body,)
+    response_body = response.get_json()
 
+    # Response includes the user data
     assert response.status_code == 201
+    assert response_body.get("data").get("email_address") == email_address
+
+    # User added to DB
+    user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
+    assert user.active_directory_id is not None
+
+    # User added to user pool
+    cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
+    assert cognito_users["Users"][0]["Username"] == email_address
 
 
-def test_users_post_openapi_validation(client, valid_employer_creation_request_body):
+def test_users_post_openapi_validation(
+    client, mock_cognito_user_pool, valid_employer_creation_request_body
+):
     # OpenAPI spec enforces format and enum validations for us
     body = valid_employer_creation_request_body
     body["email_address"] = "not-a-valid-email"

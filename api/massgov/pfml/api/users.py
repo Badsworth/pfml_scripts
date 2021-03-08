@@ -12,6 +12,7 @@ from massgov.pfml.db.models.employees import User
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein
+from massgov.pfml.util.users import register_user
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -23,11 +24,19 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 def users_post():
     """Create a new user account"""
+    body = UserCreateRequest.parse_obj(connexion.request.json)
 
-    # TODO (CP-1762): Create user in Cognito
-    # TODO (CP-1762): Create user in API DB
+    # TODO (CP-1763): Enforce required fields are present
+    with app.db_session() as db_session:
+        user = register_user(
+            db_session,
+            body.email_address,
+            body.password,
+            app.get_config().cognito_user_pool_client_id,
+        )
 
     return response_util.success_response(
+        data=user_response(user),
         message="Successfully created user. User needs to verify email address next.",
         status_code=201,
     ).to_api_response()
@@ -77,6 +86,11 @@ def users_patch(user_id):
 ##########################################
 # Data types and helpers
 ##########################################
+
+
+class UserCreateRequest(PydanticBaseModel):
+    email_address: str
+    password: str
 
 
 class UserUpdateRequest(PydanticBaseModel):
