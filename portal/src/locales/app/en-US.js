@@ -1841,7 +1841,7 @@ const components = {
     reductionsInstruction_2: "Income from any other sources during your leave",
     reductionsInstructionsIntro:
       "If you’ll receive <reductions-overview-link>other benefits or income</reductions-overview-link>, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>. This includes:",
-    resumeClaimButton: "Complete your application",
+    resumeClaimButton: "Continue application",
     uploadDocsButton: "Upload additional documents",
   },
   authNav: {

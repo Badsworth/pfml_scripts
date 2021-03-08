@@ -139,7 +139,7 @@ exports[`ApplicationCard when the claim status is Submitted includes a link to c
   data-test="resume-button"
   href="/applications/checklist?claim_id=mock_application_id"
 >
-  Complete your application
+  Continue application
 </ButtonLink>
 `;
 
