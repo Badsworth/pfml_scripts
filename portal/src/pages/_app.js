@@ -121,6 +121,9 @@ export const App = ({ Component, pageProps }) => {
       appLogic={appLogic}
       isLoading={ui.isLoading}
       maintenancePageRoutes={process.env.maintenancePageRoutes || []}
+      maintenanceRemovalDayAndTime={
+        process.env.maintenanceRemovalDayAndTime || null
+      }
     >
       <Component appLogic={appLogic} query={router.query} {...pageProps} />
     </PageWrapper>

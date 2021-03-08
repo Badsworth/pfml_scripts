@@ -6,4 +6,4 @@ export default {
   component: MaintenanceTakeover,
 };
 
-export const Default = () => <MaintenanceTakeover />;
+export const Default = (args) => <MaintenanceTakeover {...args} />;

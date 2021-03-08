@@ -2122,6 +2122,8 @@ const components = {
   maintenanceTakeover: {
     lead:
       "This page is currently unavailable while the site is undergoing maintenance. Please check back$t(chars.nbsp)shortly.",
+    scheduled:
+      "We are performing scheduled maintenance to improve functionality and our overall service. Paid leave applications will be back online on <strong>{{scheduledRemovalDayAndTime}}</strong>.<br/><br/>When we are back, you will be able to access your existing applications or create a new one. Employers will be able to respond to information requests. We appreciate your understanding and patience. To get ready, review <what-to-expect-link>what to expect when you apply for paid family and medical leave benefits</what-to-expect-link>.",
     title: "We’re undergoing maintenance",
   },
   newsBanner: {

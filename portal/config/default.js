@@ -20,6 +20,7 @@ module.exports = {
   // Enable the maintenance page on these routes:
   // See docs/portal/maintenance-pages.md for details.
   maintenancePageRoutes: [],
+  maintenanceRemovalDayAndTime: null,
   newRelicAppId: null,
   sentryDsn:
     "https://3c7da99697784a3dab944dec622d1b50@o514801.ingest.sentry.io/5620266",
