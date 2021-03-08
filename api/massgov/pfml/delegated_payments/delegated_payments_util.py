@@ -72,6 +72,7 @@ class Constants:
     # - an employee submits multiple different types of claims
 
     # These states are restartable.
+    # TODO - delete this when updating PEI writeback
     RESTARTABLE_VENDOR_CHECK_STATES = [
         State.VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT.state_id,
         State.VENDOR_EXPORT_ERROR_REPORT_SENT.state_id,
@@ -83,18 +84,37 @@ class Constants:
         State.VCC_ERROR_REPORT_SENT.state_id,
     ]
 
-    # At the end of a full ECS task run, no employees should be in these
-    # states. If they are, something went wrong during the ECS task
-    MID_TASK_VENDOR_CHECK_STATES = [
-        State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT.state_id,
-        State.ADD_TO_VCM_REPORT.state_id,
-        State.ADD_TO_VCC.state_id,
-        State.ADD_TO_VCC_ERROR_REPORT.state_id,
-    ]
-
-    # These states are not restartable.
-    NOT_RESTARTABLE_VENDOR_CHECK_STATES = [
-        State.VCC_SENT.state_id,
+    # When processing payments, certain states
+    # indicate that a payment is actively being processed
+    # and should not be restarted. If we receive a payment
+    # record from FINEOS while that payment already is in
+    # one of these states, the new payment record should
+    # immediately go into the payment error report
+    NON_RESTARTABLE_PAYMENT_STATES = [
+        # These states are a part of the normal payment extract flow
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_AUDIT_REPORT.state_id,
+        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id,
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED.state_id,
+        # These states are a part of the add to pub task
+        State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK.state_id,
+        State.DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT.state_id,
+        State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_CHECK.state_id,
+        State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_id,
+        State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT.state_id,
+        State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id,
+        # These states are a part of the pub response task
+        State.DELEGATED_PAYMENT_ADD_TO_PUB_PAYMENT_FINEOS_WRITEBACK.state_id,
+        State.DELEGATED_PAYMENT_PUB_PAYMENT_FINEOS_WRITEBACK_SENT.state_id,
+        State.DELEGATED_PAYMENT_COMPLETE.state_id,
+        # These states are a part of the $0 payment flow
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT.state_id,
+        State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK.state_id,
+        State.DELEGATED_PAYMENT_ZERO_PAYMENT_FINEOS_WRITEBACK_SENT.state_id,
+        # These states are a part of the overpayment flow
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT.state_id,
+        State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK.state_id,
+        State.DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT.state_id,
     ]
 
     # States that we wait in while waiting for the reject file
@@ -123,6 +143,7 @@ class ValidationReason(str, Enum):
     OUTBOUND_STATUS_ERROR = "OutboundStatusError"
     MISMATCHED_DATA = "MismatchedData"
     UNUSABLE_STATE = "UnusableState"
+    RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED = "ReceivedPaymentCurrentlyBeingProcessed"
 
 
 @dataclass(frozen=True, eq=True)

@@ -45,6 +45,172 @@ pytestmark = pytest.mark.integration
 
 EXPECTED_OUTCOME = {"message": "Success"}
 
+VPEI_HEADERS = [
+    "C",
+    "I",
+    "LASTUPDATEDATE",
+    "C_OSUSER_UPDATEDBY",
+    "I_OSUSER_UPDATEDBY",
+    "ADDRESSLINE1",
+    "ADDRESSLINE2",
+    "ADDRESSLINE3",
+    "ADDRESSLINE4",
+    "ADDRESSLINE5",
+    "ADDRESSLINE6",
+    "ADDRESSLINE7",
+    "ADVICETOPAY",
+    "ADVICETOPAYOV",
+    "AMALGAMATIONC",
+    "AMOUNT_MONAMT",
+    "AMOUNT_MONCUR",
+    "CHECKCUTTING",
+    "CONFIRMEDBYUS",
+    "CONFIRMEDUID",
+    "CONTRACTREF",
+    "CORRESPCOUNTR",
+    "CURRENCY",
+    "DATEINTERFACE",
+    "DESCRIPTION",
+    "EMPLOYEECONTR",
+    "EVENTEFFECTIV",
+    "EVENTREASON",
+    "EVENTTYPE",
+    "EXTRACTIONDAT",
+    "GROSSPAYMENTA_MONAMT",
+    "GROSSPAYMENTA_MONCUR",
+    "INSUREDRESIDE",
+    "NAMETOPRINTON",
+    "NOMINATEDPAYE",
+    "NOMPAYEECUSTO",
+    "NOMPAYEEDOB",
+    "NOMPAYEEFULLN",
+    "NOMPAYEESOCNU",
+    "NOTES",
+    "PAYEEACCOUNTN",
+    "PAYEEACCOUNTT",
+    "PAYEEADDRESS",
+    "PAYEEBANKBRAN",
+    "PAYEEBANKCODE",
+    "PAYEEBANKINST",
+    "PAYEEBANKSORT",
+    "PAYEECORRESPO",
+    "PAYEECUSTOMER",
+    "PAYEEDOB",
+    "PAYEEFULLNAME",
+    "PAYEEIDENTIFI",
+    "PAYEESOCNUMBE",
+    "PAYMENTADD",
+    "PAYMENTADD1",
+    "PAYMENTADD2",
+    "PAYMENTADD3",
+    "PAYMENTADD4",
+    "PAYMENTADD5",
+    "PAYMENTADD6",
+    "PAYMENTADD7",
+    "PAYMENTADDCOU",
+    "PAYMENTCORRST",
+    "PAYMENTDATE",
+    "PAYMENTFREQUE",
+    "PAYMENTMETHOD",
+    "PAYMENTPOSTCO",
+    "PAYMENTPREMIS",
+    "PAYMENTTRIGGE",
+    "PAYMENTTYPE",
+    "PAYMETHCURREN",
+    "POSTCODE",
+    "PREMISESNO",
+    "SETUPBYUSERID",
+    "SETUPBYUSERNA",
+    "STATUS",
+    "STATUSEFFECTI",
+    "STATUSREASON",
+    "STOCKNO",
+    "SUMMARYEFFECT",
+    "SUMMARYSTATUS",
+    "TRANSSTATUSDA",
+]
+CLAIM_DETAIL_HEADERS = [
+    "C",
+    "I",
+    "LASTUPDATEDATE",
+    "C_OSUSER_UPDATEDBY",
+    "I_OSUSER_UPDATEDBY",
+    "ABSENCECASENU",
+    "BENEFITRIGHTT",
+    "CLAIMANTAGE",
+    "CLAIMANTCUSTO",
+    "CLAIMANTDOB",
+    "CLAIMANTGENDE",
+    "CLAIMANTNAME",
+    "CLAIMANTRELTO",
+    "CLAIMNUMBER",
+    "DIAGCODE2",
+    "DIAGCODE3",
+    "DIAGCODE4",
+    "DIAGCODE5",
+    "EMPLOYEEID",
+    "EVENTCAUSE",
+    "INCURREDDATE",
+    "INSUREDADDRES",
+    "INSUREDADDRL1",
+    "INSUREDADDRL2",
+    "INSUREDADDRL3",
+    "INSUREDADDRL4",
+    "INSUREDADDRL5",
+    "INSUREDADDRL6",
+    "INSUREDADDRL7",
+    "INSUREDAGE",
+    "INSUREDCORCOU",
+    "INSUREDCORRES",
+    "INSUREDCUSTOM",
+    "INSUREDDOB",
+    "INSUREDEMPLOY",
+    "INSUREDFULLNA",
+    "INSUREDGENDER",
+    "INSUREDPOSTCO",
+    "INSUREDPREMIS",
+    "INSUREDRETIRE",
+    "INSUREDSOCNUM",
+    "LEAVEPLANID",
+    "LEAVEREQUESTI",
+    "NOTIFIEDDATE",
+    "PAYEEAGEATINC",
+    "PAYEECASEROLE",
+    "PAYEERELTOINS",
+    "PRIMARYDIAGNO",
+    "PRIMARYMEDICA",
+    "DIAG2MEDICALC",
+    "DIAG3MEDICALC",
+    "DIAG4MEDICALC",
+    "DIAG5MEDICALC",
+    "PECLASSID",
+    "PEINDEXID",
+    "DATEINTERFACE",
+]
+PAYMENT_DETAIL_HEADERS = [
+    "C",
+    "I",
+    "LASTUPDATEDATE",
+    "C_OSUSER_UPDATEDBY",
+    "I_OSUSER_UPDATEDBY",
+    "BENEFITEFFECT",
+    "BENEFITFINALP",
+    "DESCRIPTION_PAYMENTDTLS",
+    "PAYMENTENDPER",
+    "PAYMENTSTARTP",
+    "BALANCINGAMOU_MONAMT",
+    "BALANCINGAMOU_MONCUR",
+    "BUSINESSNETBE_MONAMT",
+    "BUSINESSNETBE_MONCUR",
+    "DUETYPE",
+    "GROUPID",
+    "PECLASSID",
+    "PEINDEXID",
+    "CLAIMDETAILSCLASSID",
+    "CLAIMDETAILSINDEXID",
+    "DATEINTERFACE",
+]
+
 ### UTILITY METHODS
 
 
@@ -55,6 +221,36 @@ def make_s3_file(s3_bucket, key, test_file_name):
 
     s3 = boto3.client("s3")
     s3.upload_file(test_file_path, s3_bucket, key)
+
+
+def make_vpei_line(c_value, i_value):
+    records = []
+    for _ in VPEI_HEADERS:
+        records.append('""')  # Empty quotes
+
+    records[0] = f'"{c_value}"'
+    records[1] = f'"{i_value}"'
+    return ",".join(records)
+
+
+def make_claim_details_line(pe_class_id, pe_index_id, absence_case_number):
+    records = []
+    for _ in CLAIM_DETAIL_HEADERS:
+        records.append('""')  # Empty quotes
+
+    records[5] = f'"{absence_case_number}"'
+    records[53] = f'"{pe_class_id}"'
+    records[54] = f'"{pe_index_id}"'
+
+    return ",".join(records)
+
+
+def make_payment_details_line():
+    records = []
+    for _ in PAYMENT_DETAIL_HEADERS:
+        records.append('""')  # Empty quotes
+
+    return ",".join(records)
 
 
 def add_db_records(
@@ -68,6 +264,7 @@ def add_db_records(
     add_employee=True,
     c_value=None,
     i_value=None,
+    additional_payment_state=None,
 ):
     eft = None
     if add_eft:
@@ -101,8 +298,11 @@ def add_db_records(
 
         # Payment needs to be attached to a claim
         if add_payment:
-            PaymentFactory.create(
+            payment = PaymentFactory.create(
                 claim=claim, fineos_pei_c_value=c_value, fineos_pei_i_value=i_value
+            )
+            state_log_util.create_finished_state_log(
+                payment, additional_payment_state, EXPECTED_OUTCOME, db_session
             )
 
 
@@ -114,6 +314,7 @@ def setup_process_tests(
     add_eft=True,
     add_payment=False,
     add_second_employee=True,  # False = this'll cause the second record to fail
+    additional_payment_state=None,
 ):
     """ This is a utility method for setting up a lot of boiler plate in the
         process_extract_data tests
@@ -136,6 +337,7 @@ def setup_process_tests(
         add_payment=add_payment,
         c_value="7326",
         i_value="301",
+        additional_payment_state=additional_payment_state,
     )
     add_db_records(
         test_db_session,
@@ -148,6 +350,7 @@ def setup_process_tests(
         add_employee=add_second_employee,
         c_value="7326",
         i_value="302",
+        additional_payment_state=additional_payment_state,
     )
     add_db_records(
         test_db_session,
@@ -159,6 +362,7 @@ def setup_process_tests(
         add_payment=add_payment,
         c_value="7326",
         i_value="303",
+        additional_payment_state=additional_payment_state,
     )
 
 
@@ -305,7 +509,10 @@ def test_process_extract_data(
         assert len(state_logs) == 1
         state_log = state_logs[0]
         assert state_log.outcome == EXPECTED_OUTCOME
-        assert state_log.end_state_id == State.MARK_AS_EXTRACTED_IN_FINEOS.state_id
+        assert (
+            state_log.end_state_id
+            == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+        )
 
         eft = employee.eft
 
@@ -330,6 +537,68 @@ def test_process_extract_data(
             state_log = state_logs[0]
             assert "Initiated VENDOR_EFT flow for Employee" in state_log.outcome["message"]
             assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
+
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_data_prior_payment_exists_is_being_processed(
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    test_db_session,
+    tmp_path,
+    initialize_factories_session,
+    monkeypatch,
+    create_triggers,
+    caplog,
+):
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    setup_process_tests(
+        mock_s3_bucket,
+        test_db_session,
+        add_payment=True,
+        additional_payment_state=State.DELEGATED_PAYMENT_COMPLETE,
+    )
+
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 9
+
+    extractor.process_extract_data(tmp_path, test_db_session)
+
+    for index in ["1", "2", "3"]:
+        payments = (
+            test_db_session.query(Payment)
+            .filter(
+                Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == f"30{index}"
+            )
+            .all()
+        )
+        # There will be both a prior payment and a new payment
+        assert len(payments) == 2
+
+        new_payment = [
+            payment
+            for payment in payments
+            if payment.state_logs[0].end_state_id
+            == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+        ][0]
+        assert new_payment
+        assert len(new_payment.state_logs) == 1
+        state_log = new_payment.state_logs[0]
+
+        assert state_log.outcome == {
+            "message": "Error processing payment record",
+            "validation_container": {
+                "record_key": f"CiIndex(c='7326', i='30{index}')",
+                "validation_issues": [
+                    {
+                        "reason": "ReceivedPaymentCurrentlyBeingProcessed",
+                        "details": "We received a payment that is already being processed. It is currently in state Payment complete.",
+                    }
+                ],
+            },
+        }
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -370,85 +639,32 @@ def test_process_extract_data_one_bad_record(
             )
             .one_or_none()
         )
+        # Payment+claim is created even when employee cannot be found
+        assert payment
+        assert payment.claim
+        assert len(payment.state_logs) == 1
+        state_log = payment.state_logs[0]
         if index == "2":
-            assert payment is None
+            assert (
+                state_log.end_state_id
+                == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+            )
+            assert state_log.outcome == {
+                "message": "Error processing payment record",
+                "validation_container": {
+                    "record_key": "CiIndex(c='7326', i='302')",
+                    "validation_issues": [{"reason": "MissingInDB", "details": "tax_identifier"}],
+                },
+            }
         else:
-            assert payment
-
-    # Get all the state logs from the DB that have a payment attached
-    successful_state_logs = (
-        test_db_session.query(StateLog).filter(StateLog.payment_id != None).all()  # noqa
-    )
-    assert len(successful_state_logs) == 2
-    for state_log in successful_state_logs:
-        assert state_log.outcome == EXPECTED_OUTCOME
-
-    # Get the errored state log by querying for all state logs without a payment set
-    # as it will have failed before getting to the payment logic
-    unsuccessful_state_logs = (
-        test_db_session.query(StateLog)
-        .filter(StateLog.payment_id == None, StateLog.employee_id == None)  # noqa
-        .all()
-    )
-    assert len(unsuccessful_state_logs) == 1
-    assert unsuccessful_state_logs[0].outcome == {
-        "message": "Error processing payment record",
-        "validation_container": {
-            "record_key": "CiIndex(c='7326', i='302')",
-            "validation_issues": [{"reason": "MissingInDB", "details": "tax_identifier"}],
-        },
-    }
+            assert (
+                state_log.end_state_id
+                == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+            )
+            assert state_log.outcome == EXPECTED_OUTCOME
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
-
-
-def test_process_extract_data_one_previously_in_gax(
-    mock_s3_bucket,
-    set_exporter_env_vars,
-    test_db_session,
-    tmp_path,
-    initialize_factories_session,
-    monkeypatch,
-    create_triggers,
-):
-    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
-    setup_process_tests(mock_s3_bucket, test_db_session, add_payment=True)
-
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 9
-
-    # Grab the a payment and give it a previous state log entry
-    # that indicates it has been in a GAX before
-    payment = (
-        test_db_session.query(Payment)
-        .filter(Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == "301")
-        .one_or_none()
-    )
-
-    state_log_util.create_finished_state_log(
-        end_state=State.GAX_SENT,
-        outcome=state_log_util.build_outcome("GAX sent"),
-        associated_model=payment,
-        db_session=test_db_session,
-    )
-
-    extractor.process_extract_data(tmp_path, test_db_session)
-
-    # It should have two state logs, the one we added
-    # and one in ADD_TO_PAYMENT_EXPORT_ERROR_REPORT
-    test_db_session.refresh(payment)
-    assert len(payment.state_logs) == 2
-    states = [state_log.end_state.state_id for state_log in payment.state_logs]
-    assert set([State.GAX_SENT.state_id, State.ADD_TO_PAYMENT_EXPORT_ERROR_REPORT.state_id]) == set(
-        states
-    )
-
-    # The other two payments should only have a single happy state
-    payments = test_db_session.query(Payment).filter(Payment.payment_id != payment.payment_id).all()
-    for payment in payments:
-        assert len(payment.state_logs) == 1
-        assert payment.state_logs[0].end_state_id == State.MARK_AS_EXTRACTED_IN_FINEOS.state_id
 
 
 def test_process_extract_data_rollback(
@@ -621,7 +837,10 @@ def test_process_extract_data_no_existing_claim_address_eft(
         assert len(state_logs) == 1
         state_log = state_logs[0]
         assert state_log.outcome == EXPECTED_OUTCOME
-        assert state_log.end_state_id == State.MARK_AS_EXTRACTED_IN_FINEOS.state_id
+        assert (
+            state_log.end_state_id
+            == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+        )
 
         eft = employee.eft
 
@@ -656,7 +875,12 @@ def test_process_extract_data_existing_payment(
     create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
-    setup_process_tests(mock_s3_bucket, test_db_session, add_payment=True)
+    setup_process_tests(
+        mock_s3_bucket,
+        test_db_session,
+        add_payment=True,
+        additional_payment_state=State.DELEGATED_PAYMENT_ERROR_REPORT_SENT,
+    )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 9
@@ -664,59 +888,105 @@ def test_process_extract_data_existing_payment(
     extractor.process_extract_data(tmp_path, test_db_session)
 
     for index in ["1", "2", "3"]:
-        payment = (
+        payments = (
             test_db_session.query(Payment)
             .filter(
                 Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == f"30{index}"
             )
-            .first()
+            .all()
         )
 
-        # Validate all of the payment fields that were updated
-        # None of these are defaulted to similar values by our factory logic
-        assert payment.period_start_date.strftime("%Y-%m-%d") == f"2021-01-0{index}"
-        assert payment.period_end_date.strftime("%Y-%m-%d") == f"2021-01-1{index}"
-        assert payment.payment_date.strftime("%Y-%m-%d") == f"2021-01-0{index}"
-        assert payment.fineos_extraction_date == date(2021, 1, 13)
-        assert str(payment.amount) == f"{index * 3}.99"  # eg. 111.99
+        # There will be both a prior payment and a new payment
+        assert len(payments) == 2
 
-        # Verify that there is exactly one successful state log per payment
-        state_logs = payment.state_logs
-        assert len(state_logs) == 1
-        state_log = state_logs[0]
-        assert state_log.outcome == EXPECTED_OUTCOME
-        assert state_log.end_state_id == State.MARK_AS_EXTRACTED_IN_FINEOS.state_id
+        for payment in payments:
+            # Verify that there is exactly one successful state log per payment
+            state_logs = payment.state_logs
+            assert len(state_logs) == 1
+            state_log = state_logs[0]
+            assert state_log.outcome == EXPECTED_OUTCOME
+            # The state ID will be either the prior state ID or the new successful one
+            assert state_log.end_state_id in [
+                State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id,
+                State.DELEGATED_PAYMENT_ERROR_REPORT_SENT.state_id,
+            ]
 
     payment_count_after = test_db_session.query(Payment).count()
-    assert payment_count_after == 3
+    assert payment_count_after == 6  # 3 payments each with an old record and a new one
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
 
 
-def test_validation_of_joining_datasets(set_exporter_env_vars):
-    # This test is targeted specifically at verifying the join logic of PaymentData
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_data_minimal_viable_payment(
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    test_db_session,
+    tmp_path,
+    initialize_factories_session,
+    monkeypatch,
+    create_triggers,
+):
+    # This test creates a file with absolutely no data besides the bare
+    # minimum to be viable to create a payment, this is done in order
+    # to test that all of our validations work, and all of the missing data
+    # edge cases are accounted for and handled appropriately. This shouldn't
+    # ever be a real scenario, but might encompass small pieces of something real
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 0
 
-    # Extract data expects S3 paths that it uses to later download files and parse them
-    # We don't want to deal with files in this test, so we'll make the indexed values ourselves
-    extract_data = extractor.ExtractData(extractor.expected_file_names, "2020-01-01")
-    extract_data.pei.indexed_data = {}
-    extract_data.payment_details.indexed_data = {}
-    extract_data.claim_details.indexed_data = {}
-
-    ci_index = extractor.CiIndex("1", "1")
-    payment_data = extractor.PaymentData(extract_data, ci_index, {})
-
-    # Make sure the validation container has the expected index
-    # and all of the non-PEI datasets
-    validation_container = payment_data.validation_container
-    assert validation_container.record_key == str(ci_index)
-    assert set(validation_container.validation_issues) == set(
-        [
-            ValidationIssue(ValidationReason.MISSING_DATASET, "payment_details"),
-            ValidationIssue(ValidationReason.MISSING_DATASET, "claim_details"),
-        ]
+    s3 = boto3.client("s3")
+    vpei_text = "\n".join([",".join(VPEI_HEADERS), make_vpei_line("1000", "1")])
+    vpei_file = tmp_path / "vpei.csv"
+    vpei_file.write_text(vpei_text)
+    s3.upload_file(
+        str(vpei_file), mock_s3_bucket, "cps/inbound/received/2020-01-01-11-30-00-vpei.csv"
     )
+
+    claim_details_text = "\n".join(
+        [",".join(CLAIM_DETAIL_HEADERS), make_claim_details_line("1000", "1", "NTN-01-ABS-01")]
+    )
+    claim_details_file = tmp_path / "claim_details.csv"
+    claim_details_file.write_text(claim_details_text)
+    s3.upload_file(
+        str(claim_details_file),
+        mock_s3_bucket,
+        "cps/inbound/received/2020-01-01-11-30-00-vpeiclaimdetails.csv",
+    )
+
+    payment_details_text = "\n".join(
+        [",".join(PAYMENT_DETAIL_HEADERS), make_payment_details_line()]
+    )
+    payment_details_file = tmp_path / "payment_details.csv"
+    payment_details_file.write_text(payment_details_text)
+    s3.upload_file(
+        str(payment_details_file),
+        mock_s3_bucket,
+        "cps/inbound/received/2020-01-01-11-30-00-vpeipaymentdetails.csv",
+    )
+
+    # We deliberately do no DB setup, there will not be any prior employee
+    extractor.process_extract_data(tmp_path, test_db_session)
+
+    payment = test_db_session.query(Payment).one_or_none()
+    assert payment
+    assert payment.claim
+    assert payment.claim.fineos_absence_id == "NTN-01-ABS-01"
+
+    assert len(payment.state_logs) == 1
+    state_log = payment.state_logs[0]
+    state_log.end_state_id = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+
+    assert state_log.outcome["message"] == "Error processing payment record"
+    assert state_log.outcome["validation_container"]["record_key"] == "CiIndex(c='1000', i='1')"
+    # Not going to exactly match the errors here as there are many
+    # and they may adjust in the future
+    assert len(state_log.outcome["validation_container"]["validation_issues"]) >= 10
+
+    employee_log_count_after = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_after == employee_log_count_before
 
 
 def test_validation_missing_fields(set_exporter_env_vars):
@@ -730,7 +1000,7 @@ def test_validation_missing_fields(set_exporter_env_vars):
     extract_data = extractor.ExtractData(extractor.expected_file_names, "2020-01-01-11-30-00")
     extract_data.pei.indexed_data = {ci_index: {"PAYEECUSTOMER": "1234"}}
     extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
-    extract_data.claim_details.indexed_data = {ci_index: {"isdata": "1"}}
+    extract_data.claim_details.indexed_data = {ci_index: {"ABSENCECASENU": "NTN-01-ABS-01"}}
 
     payment_data = extractor.PaymentData(
         extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
@@ -740,7 +1010,6 @@ def test_validation_missing_fields(set_exporter_env_vars):
     expected_missing_values = set(
         [
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD1"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD4"),
@@ -797,7 +1066,7 @@ def test_validation_param_length(set_exporter_env_vars):
     # First let's check if a field is too short
     extract_data.pei.indexed_data = {ci_index: {"PAYEEBANKCODE": "123", "PAYMENTPOSTCO": "123"}}
     extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
-    extract_data.claim_details.indexed_data = {ci_index: {"isdata": "1"}}
+    extract_data.claim_details.indexed_data = {ci_index: {"ABSENCECASENU": "NTN-01-ABS-01"}}
 
     payment_data = extractor.PaymentData(
         extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
@@ -842,7 +1111,7 @@ def test_validation_lookup_validators(set_exporter_env_vars):
         }
     }
     extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
-    extract_data.claim_details.indexed_data = {ci_index: {"isdata": "1"}}
+    extract_data.claim_details.indexed_data = {ci_index: {"ABSENCECASENU": "NTN-01-ABS-01"}}
 
     payment_data = extractor.PaymentData(
         extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
@@ -858,28 +1127,19 @@ def test_validation_lookup_validators(set_exporter_env_vars):
 
 
 def test_validation_payment_amount(set_exporter_env_vars):
-    # When doing validation, we verify that payment amounts
-    # are greater than 0
+    # When doing validation, we verify that payment amount
+    # must be a numeric value
 
     ci_index = extractor.CiIndex("1", "1")
     extract_data = extractor.ExtractData(extractor.expected_file_names, "2020-01-01-11-30-00")
-    extract_data.pei.indexed_data = {ci_index: {"AMOUNT_MONAMT": "0.00"}}
+    extract_data.pei.indexed_data = {ci_index: {"AMOUNT_MONAMT": "MONEY"}}
     extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
-    extract_data.claim_details.indexed_data = {ci_index: {"isdata": "1"}}
+    extract_data.claim_details.indexed_data = {ci_index: {"ABSENCECASENU": "NTN-01-ABS-01"}}
 
     payment_data = extractor.PaymentData(
         extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
     )
 
-    assert set([ValidationIssue(ValidationReason.INVALID_VALUE, "AMOUNT_MONAMT")]).issubset(
-        set(payment_data.validation_container.validation_issues)
-    )
-
-    # Verify negatives are caught as well
-    extract_data.pei.indexed_data[ci_index]["AMOUNT_MONAMT"] = "-0.01"
-    payment_data = extractor.PaymentData(
-        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
-    )
     assert set([ValidationIssue(ValidationReason.INVALID_VALUE, "AMOUNT_MONAMT")]).issubset(
         set(payment_data.validation_container.validation_issues)
     )

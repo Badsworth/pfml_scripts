@@ -6,6 +6,7 @@ import uuid
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from typing import Dict, List, Optional, Tuple, cast
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -27,12 +28,15 @@ from massgov.pfml.db.models.employees import (
     Employee,
     EmployeeAddress,
     GeoState,
+    LatestStateLog,
+    LkState,
     Payment,
     PaymentMethod,
     PaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,
     State,
+    StateLog,
     TaxIdentifier,
 )
 
@@ -104,7 +108,7 @@ class ExtractData:
             reference_file_type_id=ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id,
             reference_file_id=uuid.uuid4(),
         )
-        logger.debug("Intialized extract data: %s", self.reference_file.file_location)
+        logger.debug("Initialized extract data: %s", self.reference_file.file_location)
 
 
 class PaymentData:
@@ -119,28 +123,27 @@ class PaymentData:
 
     c_value: str
     i_value: str
-    customer_no: str
 
-    tin: Optional[str]
-    absence_case_number: Optional[str]
+    tin: Optional[str] = None
+    absence_case_number: Optional[str] = None
 
-    full_name: Optional[str]
+    full_name: Optional[str] = None
 
-    address_line_one: Optional[str]
-    address_line_two: Optional[str]
-    city: Optional[str]
-    state: Optional[str]
-    zip_code: Optional[str]
+    address_line_one: Optional[str] = None
+    address_line_two: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zip_code: Optional[str] = None
 
-    raw_payment_method: Optional[str]
-    payment_start_period: Optional[str]
-    payment_end_period: Optional[str]
-    payment_date: Optional[str]
-    payment_amount: Optional[str]
+    raw_payment_method: Optional[str] = None
+    payment_start_period: Optional[str] = None
+    payment_end_period: Optional[str] = None
+    payment_date: Optional[str] = None
+    payment_amount: Optional[str] = None
 
-    routing_nbr: Optional[str]
-    account_nbr: Optional[str]
-    raw_account_type: Optional[str]
+    routing_nbr: Optional[str] = None
+    account_nbr: Optional[str] = None
+    raw_account_type: Optional[str] = None
 
     def __init__(self, extract_data: ExtractData, index: CiIndex, pei_record: Dict[str, str]):
         self.validation_container = payments_util.ValidationContainer(str(index))
@@ -159,19 +162,22 @@ class PaymentData:
                 payments_util.ValidationReason.MISSING_DATASET, "claim_details"
             )
 
-        if self.validation_container.has_validation_issues():
-            return
-        # Cast these to non-optional values as we've validated them above (for linting)
-        payment_details = cast(List[Dict[str, str]], payment_details)
-        claim_details = cast(Dict[str, str], claim_details)
-
         # Grab every value we might need out of the datasets
         self.tin = payments_util.validate_csv_input(
             "PAYEESOCNUMBE", pei_record, self.validation_container, True
         )
-        self.absence_case_number = payments_util.validate_csv_input(
-            "ABSENCECASENU", claim_details, self.validation_container, True
-        )
+        if claim_details:
+            self.absence_case_number = payments_util.validate_csv_input(
+                "ABSENCECASENU", claim_details, self.validation_container, True
+            )
+        # Absence case number is very required to proceed, without it we can't
+        # make a claim whatsoever. This should be impossible and would indicate
+        # a significant issue with the data being received from FINEOS. Halt processing
+        # entirely and alert FINEOS that their extracts are broken.
+        if not self.absence_case_number:
+            raise Exception(
+                "Could not find an absence case number for C=%s I=%s", self.c_value, self.i_value
+            )
 
         self.full_name = payments_util.validate_csv_input(
             "PAYEEFULLNAME", pei_record, self.validation_container, False
@@ -223,11 +229,13 @@ class PaymentData:
             custom_validator_func=payment_period_date_validator,
         )
 
-        self.aggregate_payment_details(payment_details)
+        if payment_details:
+            self.aggregate_payment_details(payment_details)
 
         def amount_validator(amount_str: str) -> Optional[payments_util.ValidationReason]:
-            amount = float(amount_str)
-            if amount <= 0:
+            try:
+                Decimal(amount_str)
+            except (InvalidOperation, TypeError):  # Amount is not numeric
                 return payments_util.ValidationReason.INVALID_VALUE
             return None
 
@@ -304,6 +312,48 @@ class PaymentData:
         }
 
 
+def get_active_payment_state(payment: Payment, db_session: db.Session) -> Optional[LkState]:
+    """ For the given payment, determine if the payment is being processed or complete
+        and if so, return the active state.
+        Returns:
+          - If being processed, the state the active payment is in, else None
+    """
+    # Get all payments associated with C/I value
+    payment_ids = (
+        db_session.query(Payment.payment_id)
+        .filter(
+            Payment.fineos_pei_c_value == payment.fineos_pei_c_value,
+            Payment.fineos_pei_i_value == payment.fineos_pei_i_value,
+        )
+        .all()
+    )
+
+    # For each payment, check whether it's in a specific set of states
+    # We query for the state specifically as the payment comes attached
+    active_state = (
+        db_session.query(StateLog)
+        .join(LatestStateLog)
+        .join(Payment)
+        .filter(
+            Payment.payment_id.in_(payment_ids),
+            StateLog.end_state_id.in_(payments_util.Constants.NON_RESTARTABLE_PAYMENT_STATES),
+        )
+        .first()
+    )
+
+    if active_state:
+        logger.warning(
+            "Payment with C=%s I=%s received from FINEOS that is already in active state: [%s] - active payment ID: %s",
+            payment.fineos_pei_c_value,
+            payment.fineos_pei_i_value,
+            active_state.end_state.state_description,
+            active_state.payment.payment_id,
+        )
+        return active_state.end_state
+
+    return None
+
+
 def payment_period_date_validator(
     payment_period_date_str: str,
 ) -> Optional[payments_util.ValidationReason]:
@@ -314,7 +364,6 @@ def payment_period_date_validator(
     return None
 
 
-# TODO move to payments_util
 def download_and_process_data(extract_data: ExtractData, download_directory: pathlib.Path) -> None:
     logger.info(
         "Downloading and indexing payment extract data files.",
@@ -417,6 +466,7 @@ def get_employee_and_claim(
     payment_data: PaymentData, db_session: db.Session
 ) -> Tuple[Optional[Employee], Optional[Claim]]:
     # Get the TIN, employee and claim associated with the payment to be made
+    employee, claim = None, None
     try:
         tax_identifier = (
             db_session.query(TaxIdentifier).filter_by(tax_identifier=payment_data.tin).one_or_none()
@@ -425,20 +475,19 @@ def get_employee_and_claim(
             payment_data.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_IN_DB, "tax_identifier"
             )
-            return None, None
-
-        employee = db_session.query(Employee).filter_by(tax_identifier=tax_identifier).one_or_none()
-        if not employee:
-            payment_data.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_IN_DB, "employee"
+        else:
+            employee = (
+                db_session.query(Employee).filter_by(tax_identifier=tax_identifier).one_or_none()
             )
-            return None, None
+
+            if not employee:
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISSING_IN_DB, "employee"
+                )
 
         claim = (
             db_session.query(Claim)
-            .filter_by(
-                fineos_absence_id=payment_data.absence_case_number, employee_id=employee.employee_id
-            )
+            .filter_by(fineos_absence_id=payment_data.absence_case_number)
             .one_or_none()
         )
     except SQLAlchemyError as e:
@@ -449,7 +498,8 @@ def get_employee_and_claim(
         )
         raise
 
-    # claim might not exist because the employee used the call center, if so, create the claim now
+    # claim might not exist because the employee used the call center, or the employee
+    # errored. Claim should always be created, even without an employee.
     if not claim:
         claim = Claim(
             claim_id=uuid.uuid4(),
@@ -457,6 +507,36 @@ def get_employee_and_claim(
             fineos_absence_id=payment_data.absence_case_number,
         )
         db_session.add(claim)
+
+    if not employee and claim.employee:
+        # Somehow we have ended up in a state where we could not find an employee
+        # but did find a claim with some other employee ID. This shouldn't happen
+        # but if it does we need to halt to investigate.
+        logger.error(
+            "Could not find employee for payment, but found claim %s with an attached employee %s",
+            claim.claim_id,
+            claim.employee.employee_id,
+            extra=payment_data.get_traceable_details(),
+        )
+        raise Exception(
+            "Could not find employee for payment, but found a claim",
+            extra=payment_data.get_traceable_details(),
+        )
+
+    if employee and employee.employee_id != claim.employee.employee_id:
+        # We've found a claim with a different employee ID, this shouldn't happen
+        # This might mean that the FINEOS absence_case_number isn't necessarily unique.
+        logger.error(
+            "Found claim %s, but its employee ID %s does not match the one we found from the TIN %s ",
+            claim.claim_id,
+            claim.employee.employee_id,
+            employee.employee_id,
+            extra=payment_data.get_traceable_details(),
+        )
+        raise Exception(
+            "The claims employee does not match the employee associated with the TIN",
+            extra=payment_data.get_traceable_details(),
+        )
 
     return employee, claim
 
@@ -500,46 +580,62 @@ def update_ctr_address_pair_fineos_address(
     return True
 
 
-def create_or_update_payment(
-    payment_data: PaymentData, claim: Claim, db_session: db.Session
+def create_payment(
+    payment_data: PaymentData,
+    claim: Claim,
+    validation_container: payments_util.ValidationContainer,
+    db_session: db.Session,
 ) -> Payment:
-    # First check if a payment already exists
-    try:
-        payment = (
-            db_session.query(Payment)
-            .filter(
-                Payment.fineos_pei_c_value == payment_data.c_value,
-                Payment.fineos_pei_i_value == payment_data.i_value,
-            )
-            .one_or_none()
-        )
-    except SQLAlchemyError as e:
-        logger.exception(
-            "Unexpected error %s with one_or_none when querying for payment",
-            type(e),
-            extra=payment_data.get_traceable_details(),
-        )
-        raise
+    # We always create a new payment record. This may be completely new
+    # or a payment might have been created before. We'll check that later.
 
-    if not payment:
-        logger.info(
-            "Creating new payment for CI: %s, %s",
-            payment_data.c_value,
-            payment_data.i_value,
-            extra=payment_data.get_traceable_details(),
-        )
-        payment = Payment(payment_id=uuid.uuid4())
+    logger.info(
+        "Creating new payment for CI: %s, %s",
+        payment_data.c_value,
+        payment_data.i_value,
+        extra=payment_data.get_traceable_details(),
+    )
+    payment = Payment(payment_id=uuid.uuid4())
 
+    # Note that these values may have validation issues
+    # that is fine as it will get moved to an error state
     payment.claim = claim
     payment.period_start_date = payments_util.datetime_str_to_date(
         payment_data.payment_start_period
     )
     payment.period_end_date = payments_util.datetime_str_to_date(payment_data.payment_end_period)
     payment.payment_date = payments_util.datetime_str_to_date(payment_data.payment_date)
-    payment.amount = decimal.Decimal(cast(str, payment_data.payment_amount))
+    try:
+        payment.amount = decimal.Decimal(cast(str, payment_data.payment_amount))
+    except (InvalidOperation, TypeError):
+        # In the unlikely scenario where payment amount isn't set
+        # we need to set something as the DB requires this to be set
+        payment.amount = Decimal(0)
+
+        # As a sanity check, make certain that missing amount was caught
+        # by the earlier validation logic, this if statement shouldn't
+        # ever happen. This exists to show we're not ever accidentally
+        # setting a payment that is going further in processing.
+        if not validation_container.has_validation_issues():
+            raise Exception(
+                "A payment without an amount was found and not caught by validation.",
+                extra=payment_data.get_traceable_details(),
+            )
+
     payment.fineos_pei_c_value = payment_data.c_value
     payment.fineos_pei_i_value = payment_data.i_value
     payment.fineos_extraction_date = payments_util.get_now().date()
+
+    # If the payment is already being processed,
+    # then FINEOS sent us a payment they should not have
+    # whether that's a FINEOS issue or writeback issue, we
+    # need to error the payment.
+    active_state = get_active_payment_state(payment, db_session)
+    if active_state:
+        validation_container.add_validation_issue(
+            payments_util.ValidationReason.RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED,
+            f"We received a payment that is already being processed. It is currently in state {active_state.state_description}.",
+        )
 
     db_session.add(payment)
     return payment
@@ -596,21 +692,19 @@ def update_eft(payment_data: PaymentData, employee: Employee, db_session: db.Ses
         return True
 
 
-def process_payment_data_record(
-    payment_data: PaymentData, reference_file: ReferenceFile, db_session: db.Session
-) -> Optional[Payment]:
-    employee, claim = get_employee_and_claim(payment_data, db_session)
-
-    # We weren't able to find the employee and claim, can't properly associate it
-    if payment_data.validation_container.has_validation_issues():
-        return None
-    # cast the types here so the linter doesn't think these are potentially None below
-    employee = cast(Employee, employee)
-    claim = cast(Claim, claim)
-
-    with fineos_log_tables_util.update_entity_and_remove_log_entry(
-        db_session, employee, commit=False
-    ):
+def add_records_to_db(
+    payment_data: PaymentData,
+    employee: Optional[Employee],
+    claim: Optional[Claim],
+    reference_file: ReferenceFile,
+    db_session: db.Session,
+) -> Payment:
+    # Only update the employee if it exists and there
+    # are no validation issues. Employees are used in
+    # many contexts, so we want to be careful about modifying
+    # them with problematic data.
+    has_address_update, has_eft_update = False, False
+    if employee and not payment_data.validation_container.has_validation_issues():
         # Update the payment method ID of the employee
         employee.payment_method_id = PaymentMethod.get_id(payment_data.raw_payment_method)
 
@@ -622,94 +716,78 @@ def process_payment_data_record(
         # Update the EFT info with values from FINEOS
         has_eft_update = update_eft(payment_data, employee, db_session)
 
-        # Create the payment record
-        payment = create_or_update_payment(payment_data, claim, db_session)
+    # Create the payment record
+    payment = create_payment(payment_data, claim, payment_data.validation_container, db_session)
 
-        # Specify whether the Payment has an EFT update
-        # This gets used later in the pipeline (such as during the PEI Writeback
-        # step)
-        payment.has_address_update = has_address_update
+    # Specify whether the Payment has an address update
+    # This gets used later in the pipeline (such as during the PEI Writeback
+    # step)
+    payment.has_address_update = has_address_update
 
-        # Specify whether the Payment has an EFT update
-        # This gets used later in the pipeline (such as during the PEI Writeback
-        # step)
-        payment.has_eft_update = has_eft_update
+    # Specify whether the Payment has an EFT update
+    # This gets used later in the pipeline (such as during the PEI Writeback
+    # step)
+    payment.has_eft_update = has_eft_update
 
-        # Link the payment object to the payment_reference_file
-        payment_reference_file = PaymentReferenceFile(
-            payment=payment, reference_file=reference_file,
-        )
-        db_session.add(payment_reference_file)
+    # Link the payment object to the payment_reference_file
+    payment_reference_file = PaymentReferenceFile(payment=payment, reference_file=reference_file,)
+    db_session.add(payment_reference_file)
+
+    return payment
+
+
+def process_payment_data_record(
+    payment_data: PaymentData, reference_file: ReferenceFile, db_session: db.Session
+) -> Payment:
+    employee, claim = get_employee_and_claim(payment_data, db_session)
+
+    # If the employee is set, we need to wrap the DB queries
+    # to avoid adding additional employee log entries
+    if employee:
+        with fineos_log_tables_util.update_entity_and_remove_log_entry(
+            db_session, employee, commit=False
+        ):
+            payment = add_records_to_db(payment_data, employee, claim, reference_file, db_session)
+    else:
+        payment = add_records_to_db(payment_data, None, claim, reference_file, db_session)
 
     return payment
 
 
 def _setup_state_log(
-    payment: Optional[Payment],
-    was_successful: bool,
+    payment: Payment,
     validation_container: payments_util.ValidationContainer,
     db_session: db.Session,
 ) -> None:
 
-    if payment:
-        # If a payment has already been in a GAX, we do not want to
-        # send it again (ideally we should never receive duplicate payments, but it is possible)
-        # We do not want to consider these successful regardless of the
-        # validation and want to send them in the error report to alert
-        # someone that duplicate payments are coming through.
-        was_previously_in_gax = state_log_util.has_been_in_end_state(
-            payment, db_session, State.GAX_SENT
-        )
-
-        # All error scenarios end up in ADD_TO_PAYMENT_EXPORT_ERROR_REPORT
-        if was_successful and not was_previously_in_gax:
-            end_state = State.MARK_AS_EXTRACTED_IN_FINEOS
-        else:
-            end_state = State.ADD_TO_PAYMENT_EXPORT_ERROR_REPORT
-
-        if was_previously_in_gax:
-            # Useful IDs will be added during the error report generation.
-            message = "Received a duplicate payment record from FINEOS"
-            # Unset the validation container issues to keep
-            # the error message simple in the report
-            # Don't set the whole container to None as we want
-            # the CI Value key added still.
-            validation_container.validation_issues = []
-        elif not was_successful:
-            message = "Error processing payment record"
-        else:
-            message = "Success"
-
-        state_log_util.create_finished_state_log(
-            end_state=end_state,
-            outcome=state_log_util.build_outcome(message, validation_container),
-            associated_model=payment,
-            db_session=db_session,
-        )
-
-        if was_successful and payment.has_eft_update and payment.claim and payment.claim.employee:
-            employee = payment.claim.employee
-            state_log_util.create_finished_state_log(
-                end_state=State.EFT_REQUEST_RECEIVED,
-                associated_model=employee,
-                outcome=state_log_util.build_outcome(
-                    f"Initiated VENDOR_EFT flow for Employee {employee.employee_id} from FINEOS payment export"
-                ),
-                db_session=db_session,
-            )
+    # https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
+    # Does the payment have validation issues
+    # If so, add to that error state
+    if validation_container.has_validation_issues():
+        end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+        message = "Error processing payment record"
 
     else:
-        # In the most problematic cases, the state log
-        # needs to be created before we've got a payment
-        # object to associate it with. Associate the type with payment
-        # but no actual payment.
-        # TODO save with employee id and claim for traceability
-        state_log_util.create_state_log_without_associated_model(
-            end_state=State.ADD_TO_PAYMENT_EXPORT_ERROR_REPORT,
+        end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+        message = "Success"
+
+    state_log_util.create_finished_state_log(
+        end_state=end_state,
+        outcome=state_log_util.build_outcome(message, validation_container),
+        associated_model=payment,
+        db_session=db_session,
+    )
+
+    # TODO - redo the EFT triggering logic
+    # This should be the right behavior, but the states need to be updated
+    if payment.has_eft_update and payment.claim and payment.claim.employee:
+        employee = payment.claim.employee
+        state_log_util.create_finished_state_log(
+            end_state=State.EFT_REQUEST_RECEIVED,
+            associated_model=employee,
             outcome=state_log_util.build_outcome(
-                "Error processing payment record", validation_container
+                f"Initiated VENDOR_EFT flow for Employee {employee.employee_id} from FINEOS payment export"
             ),
-            associated_class=state_log_util.AssociatedClass.PAYMENT,
             db_session=db_session,
         )
 
@@ -727,11 +805,6 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             payment_data = PaymentData(extract_data, index, record)
             logger.debug("Constructed payment data for extract with CI: %s, %s", index.c, index.i)
 
-            # Some required parameter is missing, can't continue processing the record
-            if payment_data.validation_container.has_validation_issues():
-                _setup_state_log(None, False, payment_data.validation_container, db_session)
-                continue
-
             logger.info(
                 f"Processing payment record - absence case number: {payment_data.absence_case_number}",
                 extra=payment_data.get_traceable_details(),
@@ -745,32 +818,21 @@ def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> 
             # record to an error state which'll send out a report to address it, otherwise
             # it will move onto the next step in processing
             _setup_state_log(
-                payment,
-                not payment_data.validation_container.has_validation_issues(),
-                payment_data.validation_container,
-                db_session,
+                payment, payment_data.validation_container, db_session,
             )
 
             logger.info(
                 f"Done processing payment record - absence case number: {payment_data.absence_case_number}",
                 extra=payment_data.get_traceable_details(),
             )
-        except Exception as e:
-            logger.exception("Validation error while processing payments %s", e)
-
-            # In the case of any error, add the error message to the validation
-            # container, or create one and add it.
-            if payment_data:
-                validation_container = payment_data.validation_container
-            else:
-                validation_container = payments_util.ValidationContainer(str(index))
-
-            validation_container.add_validation_issue(
-                payments_util.ValidationReason.EXCEPTION_OCCURRED, str(e)
+        except Exception:
+            # An exception during processing would indicate
+            # either a bug or a scenario that we believe invalidates
+            # an entire file and warrants investigating
+            logger.exception(
+                "An error occurred while processing payment for CI: %s, %s", index.c, index.i,
             )
-
-            # Note if this errors, the whole process fails, if adding a DB record fails, that's probably desirable
-            _setup_state_log(payment, False, validation_container, db_session)
+            raise
 
     logger.info("Successfully processed payment extract into db: %s", extract_data.date_str)
     return None
