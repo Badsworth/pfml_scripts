@@ -97,6 +97,16 @@ class Constants:
         State.VCC_SENT.state_id,
     ]
 
+    # States that we wait in while waiting for the reject file
+    # If any payments are still in this state when the extract
+    # task runs, we'll move them to an error state.
+    REJECT_FILE_PENDING_STATES = [
+        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED,
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT,
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT,
+    ]
+
 
 class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"

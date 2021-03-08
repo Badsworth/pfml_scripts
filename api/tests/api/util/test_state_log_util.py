@@ -60,6 +60,25 @@ def employee_stuck_state_log(test_db_session):
     )
 
 
+# Utility method
+def build_state_log(associated_class, end_state, test_db_session):
+    if associated_class == state_log_util.AssociatedClass.PAYMENT:
+        associated_model = PaymentFactory.create()
+    elif associated_class == state_log_util.AssociatedClass.EMPLOYEE:
+        associated_model = EmployeeFactory.create()
+    else:
+        associated_model = ReferenceFileFactory.create()
+
+    state_log_util.create_finished_state_log(
+        end_state=end_state,
+        outcome=state_log_util.build_outcome("Success"),
+        associated_model=associated_model,
+        db_session=test_db_session,
+    )
+
+    return associated_model
+
+
 ### /end Setup methods for various state log scenarios ###
 
 
@@ -479,6 +498,96 @@ def test_get_state_logs_stuck_in_state(initialize_factories_session, test_db_ses
     stuck_state_log_ids = [state_log.state_log_id for state_log in stuck_state_logs]
     assert test_setup1.state_logs[-1].state_log_id in stuck_state_log_ids
     assert test_setup2.state_logs[-1].state_log_id in stuck_state_log_ids
+
+
+def test_get_state_counts(initialize_factories_session, test_db_session):
+    misc_states = [
+        State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK,
+        State.DELEGATED_PAYMENT_ERROR_REPORT_SENT,
+        State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+    ]
+    payments = []
+
+    # Start by adding 5 of every state
+    for _ in range(5):
+        for state in misc_states:
+            payment = build_state_log(
+                state_log_util.AssociatedClass.PAYMENT, state, test_db_session
+            )
+            payments.append(payment)
+
+    state_log_counts = state_log_util.get_state_counts(test_db_session)
+    for state in misc_states:
+        assert state_log_counts[state.state_description] == 5
+
+    # Add 7 of another state
+    for _ in range(7):
+        payment = build_state_log(
+            state_log_util.AssociatedClass.PAYMENT,
+            State.DELEGATED_PAYMENT_ADD_TO_PUB_ERROR_REPORT,
+            test_db_session,
+        )
+        payments.append(payment)
+
+    state_log_counts = state_log_util.get_state_counts(test_db_session)
+    # Prior counts unaffected
+    for state in misc_states:
+        assert state_log_counts[state.state_description] == 5
+
+    assert state_log_counts[State.DELEGATED_PAYMENT_ADD_TO_PUB_ERROR_REPORT.state_description] == 7
+
+    # Now move every payment to a new state
+    for payment in payments:
+        state_log_util.create_finished_state_log(
+            payment,
+            State.DELEGATED_PAYMENT_COMPLETE,
+            state_log_util.build_outcome("Success"),
+            test_db_session,
+        )
+
+    # Now everything should be in just a single state
+    state_log_counts = state_log_util.get_state_counts(test_db_session)
+
+    assert len(state_log_counts) == 1
+    assert state_log_counts[State.DELEGATED_PAYMENT_COMPLETE.state_description] == len(payments)
+
+
+def test_get_state_counts_different_flows(initialize_factories_session, test_db_session):
+    # Each of these states is in a different flow
+    misc_states = [State.PEI_WRITEBACK_SENT, State.VERIFY_VENDOR_STATUS, State.ADD_TO_VCM_REPORT]
+    payments = []
+
+    # Start by adding 5 of every state
+    for _ in range(5):
+        for state in misc_states:
+            payment = build_state_log(
+                state_log_util.AssociatedClass.PAYMENT, state, test_db_session
+            )
+            payments.append(payment)
+
+    state_log_counts = state_log_util.get_state_counts(test_db_session)
+    for state in misc_states:
+        assert state_log_counts[state.state_description] == 5
+
+    # Now add all of these payments to a state in a different flow
+    # The existing counts should stay as each payment is now associated
+    # with two different state log flows
+    for payment in payments:
+        state_log_util.create_finished_state_log(
+            payment,
+            State.DELEGATED_PAYMENT_COMPLETE,
+            state_log_util.build_outcome("Success"),
+            test_db_session,
+        )
+
+    state_log_counts = state_log_util.get_state_counts(test_db_session)
+
+    # These are all still here
+    for state in misc_states:
+        assert state_log_counts[state.state_description] == 5
+
+    # All of the new states are also present
+    assert state_log_counts[State.DELEGATED_PAYMENT_COMPLETE.state_description] == len(payments)
 
 
 def test_build_outcome():

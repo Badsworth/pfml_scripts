@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Any, Dict, Generator, List, Optional, Union, cast
 from uuid import UUID
 
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
 import massgov.pfml.db as db
@@ -446,6 +447,48 @@ def _get_time_since_ended(
 
     elapsed_time = current_time - state_log.ended_at
     return elapsed_time
+
+
+def get_state_counts(db_session: db.Session) -> Dict[str, int]:
+    """
+    Get a dictionary of state_description -> count for all latest state logs
+    Note that this method logs the counts it finds whenever it's called.
+    """
+    # Query looks like:
+    #
+    # SELECT lk_state.state_description, lk_state.state_id, COUNT(latest_state_log.latest_state_log_id)
+    # FROM latest_state_log
+    # JOIN state_log ON latest_state_log.state_log_id = state_log.state_log_id
+    # JOIN lk_state ON state_log.end_state_id = lk_state.state_id
+    # GROUP BY lk_state.state_id, lk_state.flow_id
+    latest_state_log_counts = (
+        db_session.query(
+            LkState.state_description,
+            LkState.state_id,
+            func.count(LatestStateLog.latest_state_log_id),
+        )
+        .join(StateLog, LatestStateLog.state_log_id == StateLog.state_log_id)
+        .join(LkState)
+        .group_by(LkState.state_id, LkState.flow_id)
+        .all()
+    )
+
+    logger.info("Fetched state log counts")
+    state_counts = {}
+    for record in latest_state_log_counts:
+        description = record[0]
+        state_id = record[1]
+        count = record[2]
+        logger.info(
+            "[%s][%i]: %i",
+            description,
+            state_id,
+            count,
+            extra={"state_description": description, "state_id": state_id, "count": count},
+        )
+        state_counts[description] = count
+
+    return state_counts
 
 
 def build_outcome(
