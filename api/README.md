@@ -8,23 +8,31 @@ This is the API for the Massachusetts Paid Family and Medical Leave program. See
         1. [(Preferred) Docker + GNU Make](#preferred-docker--gnu-make)
         2. [Native Developer Setup](#native-developer-setup)
     3. [Development Workflow](#development-workflow)
-2. [Running the Application (Docker)](#running-the-application-docker)
+2. [How it works](#how-it-works)
+    1. [Key Technologies](#key-technologies)
+    2. [Request operations](#request-operations)
+    3. [Authentication](#authentication)
+    4. [Authorization](#authorization)
+3. [Running the Application (Docker)](#running-the-application-docker)
     1. [Initializing dependencies](#initializing-dependencies)
     2. [Common commands](#common-commands)
     3. [Managing the container environment](#managing-the-container-environment)
     4. [Running migrations](#running-migrations)
     5. [Creating new migrations](#creating-new-migrations)
     6. [Multi-head situations](#multi-head-situations)
-3. [Try it out](#try-it-out)
+4. [Try it out](#try-it-out)
     1. [Getting local authentication credentials](#getting-local-authentication-credentials)
     2. [Seed your database](#seed-your-database)
-4. [Tests](#tests)
+5. [Tests](#tests)
     1. [During Development](#during-development)
     2. [Integration test marker](#integration-test-marker)
-5. [Environment Configuration](#environment-configuration)
-6. [Monitoring and Alerting](#monitoring-and-alerting)
-7. [Releases](#releases)
-8. [Directory Structure](#directory-structure)
+6. [Managing dependencies](#managing-dependencies)
+    1. [poetry.lock conflicts](#poetry.lock-conflicts)
+7. [Environment Configuration](#environment-configuration)
+8. [How deploys work](#how-deploys-work)
+9. [Monitoring and Alerting](#monitoring-and-alerting)
+10. [Releases](#releases)
+11. [Directory Structure](#directory-structure)
 
 **You may also be interested in:**
 
@@ -135,27 +143,113 @@ To setup a development environment outside of Docker, you'll need to install a
 few things.
 
 1. Install at least Python 3.8.
-  [pyenv](https://github.com/pyenv/pyenv#installation) is one popular option for
-  installing Python, or [asdf](https://asdf-vm.com/).
+   [pyenv](https://github.com/pyenv/pyenv#installation) is one popular option
+   for installing Python, or [asdf](https://asdf-vm.com/).
 2. After installing and activating the right version of Python, install
-  [poetry](https://python-poetry.org/docs/#installation).
-3. Then set `RUN_CMD_OPT` to `NATIVE` in your development environment.
-4. Then run `make deps` to install Python dependencies and development tooling.
+   [poetry](https://python-poetry.org/docs/#installation).
+3. Install [Node.js](https://nodejs.org/en/) (v10 or greater).
+   [nvm](https://github.com/nvm-sh/nvm) is one popular option. Similar to
+   Python, [asdf](https://asdf-vm.com/) is another option.
+4. Set `RUN_CMD_OPT` to `NATIVE` in your development environment.
+5. Run `make deps` to install Python dependencies and development tooling.
 
-You should now be set up to run developer tooling natively, like linting. To run
-the application, set up a PostgreSQL database and see `docker-compose.yml` for
-environment variables needed.
+You should now be able to run developer tooling natively, like linting.
+
+To run the application you'll need some environment variables set. You can
+largely copy-paste the env vars in `docker-compose.yml` to your native
+environment. `DB_HOST` should be changed to `localhost`. You can then start up
+just the PostgreSQL database via Docker with `make start-db` and then the API
+server with `make run-native`.
 
 ### Development Workflow
 
-All mandatory checks are run as part of the Github CI pull request process. See
-the `api-*.yml` files in pfml/.github/workflows to see what gets run.
+All mandatory checks run as part of the Github CI pull request process. See the
+`api-*.yml` files in [/.github/workflows](/.github/workflows) to see what
+gets run.
 
 You can run these checks on your local machine before the PR stage (such as
-befor each commit or before pushing to Github):
+before each commit or before pushing to Github):
 
-- `make check` to run checks (e.g. linting, testing)
 - `make format` to fix any formatting issues
+- `make check` to run checks (e.g. linting, testing)
+  - See the other `check-static` and `lint-*` make targets, as well as the Tests
+    section below to run more targeted versions of these checks
+
+## How it works
+
+### Key Technologies
+
+The API is written in Python, utilizing Connexion as the web application
+framework (with Flask serving as the backend for Connexion). The API is
+described in the OpenAPI Specification format in the file
+[openapi.yaml](/api/openapi.yaml).
+
+SQLAlchemy is the ORM, with migrations driven by Alembic. pydantic is used in
+many spots for parsing data (and often serializing it to json or plain
+dictionaries). Where pydantic is not used, plain Python dataclasses are
+generally preferred.
+
+- [OpenAPI Specification][oas-docs]
+- [Connexion][connexion-home] ([source code][connexion-src])
+- [SQLAlchemy][sqlalchemy-home] ([source code][sqlalchemy-src])
+- [Alembic][alembic-home] ([source code](alembic-src))
+- [pydantic][pydantic-home] ([source code][pydantic-src])
+
+[oas-docs]: http://spec.openapis.org/oas/v3.0.3
+[oas-swagger-docs]: https://swagger.io/docs/specification/about/
+
+[connexion-home]: https://connexion.readthedocs.io/en/latest/
+[connexion-src]: https://github.com/zalando/connexion
+
+[pydantic-home]:https://pydantic-docs.helpmanual.io/
+[pydantic-src]: https://github.com/samuelcolvin/pydantic/
+
+[sqlalchemy-home]: https://www.sqlalchemy.org/
+[sqlalchemy-src]: https://github.com/sqlalchemy/sqlalchemy
+
+[alembic-home]: https://alembic.sqlalchemy.org/en/latest/
+[alembic-src]: https://github.com/sqlalchemy/alembic
+
+### Request operations
+
+- OpenAPI spec (`openapi.yaml`) defines API interface: routes, requests, responses, etc.
+- Connexion connects routes to handlers via `operationId` property on a route
+  - Connexion will run OAS validations before reaching handler
+  - Connexion will run authentication code and set user in the request context
+  - The handlers generally live in the top level files at
+    [massgov/pfml/api](/api/massgov/pfml/api/), with the `operationId` pointing
+    to the specific module and function
+- Handlers check if user in request context is authorized to perform the action
+  the request represents
+- Handlers use pydantic models to parse request bodies and construct response data
+- Connexion will run OAS validations on response format from handler
+
+### Authentication
+
+Authentication methods are defined in the `securitySchemes` block in
+`openapi.yaml`. A particular security scheme is enabled for a route via a
+`security` block on that route. Note the `jwt` scheme is enabled by default for
+every route via the global `security` block at the top of `openapi.yaml`.
+
+Connexion runs the authentication before passing the request to the route
+handler. In the `jwt` security scheme, the `x-bearerInfoFunc` points to the
+function that is run to do the authentication.
+
+### Authorization
+
+Authorization is handled via the
+[bouncer](https://github.com/bouncer-app/bouncer) and
+[flask-bouncer](https://github.com/bouncer-app/flask-bouncer) libraries.
+
+The rules are defined in
+[massgov/pfml/api/authorization/rules.py](/api/massgov/pfml/api/authorization/rules.py),
+and request handlers use the `ensure` and `can` functions provided by
+flask-bouncer (re-exported in
+[massgov/pfml/api/authorization/flask.py](/api/massgov/pfml/api/authorization/flask.py)
+for use in the application, as we may eventually want to provide slightly
+modified versions of the functions provided by flask-bouncer directly) to check
+if the user in the current request context is authorized to perform the given
+action on the given subject.
 
 ## Running the Application (Docker)
 
@@ -199,12 +293,14 @@ with long-lived application and DB containers.
 
 #### Running migrations
 
-When you're first setting up your environment, ensure that migrations are run against your db so it has all the required tables.
+When you're first setting up your environment, ensure that migrations are run
+against your db so it has all the required tables. `make init` does this, but if
+needing to work with the migrations directly, some common commands:
 
 ```sh
-$ make db-upgrade       # Apply pending migrations to db
-$ make db-downgrade     # Rollback last migration to db
-$ make db-downgrade-all # Rollback all migrations
+make db-upgrade       # Apply pending migrations to db
+make db-downgrade     # Rollback last migration to db
+make db-downgrade-all # Rollback all migrations
 ```
 
 #### Creating new migrations
@@ -483,6 +579,38 @@ class TestIntegrations:
 (but tagging each individual function with `@pytest.mark.integration` is also
 acceptable)
 
+## Managing dependencies
+
+Python dependencies are managed through poetry. See [its
+docs](https://python-poetry.org/docs/) for adding/removing/running Python things
+(or see `poetry --help`).
+
+Cheatsheet:
+
+| Action                              | Command                                    |
+| ----------------------------------- | ------------------------------------------ |
+| Add a dependency                    | `poetry add <package name> [--dev]`        |
+| Update a dependency                 | `poetry update <package name>`             |
+| Remove a dependency                 | `poetry remove <package name>`             |
+| See installed package info          | `poetry show [package name]`               |
+| Run a command in Python environment | `poetry run <cmd>`                         |
+| See all package info                | `poetry show [--outdated] [--latest]`      |
+| Upgrade package to latest version   | `poetry add <package name>@latest [--dev]` |
+
+### poetry.lock conflicts
+
+Poetry maintains a `metadata.content-hash` value in its lock file
+(`poetry.lock`) which is the hash of the sorted contents of the `pyproject.toml`
+(helps keep track of if the lock file is out of date with declared dependencies
+and such).
+
+This can be a cause of merge conflicts.
+
+To resolve:
+
+- Pick either side of the conflict (i.e., edit the `content-hash` line to either hash)
+- Then run `make update-poetry-lock-hash` to update the hash to the correct value
+
 ## Environment Configuration
 
 Environment variables for the local app are in the `docker-compose.yml` file.
@@ -499,6 +627,54 @@ services:
 ```
 
 Changes here will be picked up next time `make start` is run.
+
+## How deploys work
+
+There are two ways code gets run in hosted environments, as ECS tasks and as
+Lambdas.
+
+For actually performing deploys, see
+[/docs/api/deployment.md](/docs/api/deployment.md).
+
+### ECS
+
+ECS tasks all share the same container as built by the `app` stage of the
+`Dockerfile`. This stage builds the project Python package (basically zip up
+[massgov/](/api/massgov)) and installs it into the container environment.
+
+This also has the effect of making the package entrypoints as listed in the
+`[tool.poetry.scripts]` section of [pyproject.toml](/api/pyproject.toml)
+available on `PATH`, so ECS tasks besides the Paid Leave API server tend to set
+one of these as their Docker command.
+
+The Paid Leave API server ECS task is declared in
+[/infra/api/template/service.tf](/infra/api/template/service.tf) as well as its
+ECS service, which is a wrapper for ECS tasks to ensure a specified number of
+the tasks are running, provides mechanisms for autoscaling, and various other
+"service" features.
+
+Other ECS tasks are in
+[/infra/ecs-tasks/template/tasks.tf](/infra/ecs-tasks/template/tasks.tf). These
+are not a part of an ECS service, the tasks are launched/started on demand
+(either by an automated process like a scheduled AWS EventBridge event, Step
+Function, or manually through the [/bin/run-ecs-task](/bin/run-ecs-task/) tool).
+
+### Lambda
+
+Lambdas are a little different. Their main source code lives somewhere in
+[massgov/](/api/massgov), with their build infrastructure in
+[lambdas/](/api/lambdas) which is mostly boilerplate to import the correct
+module from [massgov/](/api/massgov) and build it as appropriate for the Lambda
+runtime.
+
+The Lambda building happens via the AWS Serverless Application Model (SAM) CLI
+tool, which takes the project Python package and builds its dependencies inside
+a Docker container matching the Lambda runtime environment (for cases where a
+dependency needs a compiled component). This generates a ZIP of the Lambda,
+which can then be uploaded to S3.
+
+The Lambda configuration and deploys are done in Terraform, at
+[/infra/api/template/lambda.tf](/infra/api/template/lambda.tf).
 
 ## Monitoring and Alerting
 
@@ -562,7 +738,7 @@ the most up-to-date info.
 ticket number:
 
 ```sh
-❯ make where-ticket ticket=API-1000
+$ make where-ticket ticket=API-1000
 ## origin/main ##
 e7fb31752 API-1000: Do not add "MA PFML - Limit" plan to FINEOS service agreements (#2272)
 
@@ -581,10 +757,10 @@ e7fb31752 API-1000: Do not add "MA PFML - Limit" plan to FINEOS service agreemen
 
 So in this example, API-1000 has been deployed to every environment but `training`.
 
-`whats-released` lists some info about the lastest commits on the release branches:
+`whats-released` lists some info about the latest commits on the release branches:
 
 ```sh
-❯ make whats-released
+$ make whats-released
 ## origin/main ##
  * Closest tag: api/v1.3.0-rc2-48-g4465cfb72
  * Latest commit: 4465cfb72 (origin/main, main) END-338: Convert employer response and remove notification checking (#2386)
@@ -614,6 +790,7 @@ So here can see `api/v1.3.0` is on both `stage` and `prod`, `performance` is on
 
 ```
 .
+├── lambdas                     Build/packaging configurations for AWS Lambdas
 ├── massgov                     Python package directory
 │   └── pfml
 │       └── api                 Application code

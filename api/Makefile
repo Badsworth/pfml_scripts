@@ -314,6 +314,10 @@ run-test: # The second parameter is the number of retries (each followed by
 run: ## Run docker-compose
 run: start logs
 
+run-native: ## Start API server directly
+run-native: jwks.json
+	poetry run python -m massgov.pfml.api $(DECODE_LOG)
+
 db-create-users: ## Create database users
 	$(PY_RUN_CMD) db-admin-create-db-users $(DECODE_LOG)
 
@@ -435,6 +439,9 @@ whats-released-short: ## List latest version tag on release branches
 	@for branch in $(API_RELEASE_BRANCHES); do \
 		echo " * $$branch: $$(git describe --tags --match api/v* $$branch)"; \
 	done
+
+update-poetry-lock-hash: ## Update metadata.content-hash in poetry.lock
+	$(POETRY_CMD) lock --no-update
 
 help: ## Displays this help screen
 	@grep -Eh '^[[:print:]]+:.*?##' $(MAKEFILE_LIST) | \
