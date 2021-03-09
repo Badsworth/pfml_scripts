@@ -7,8 +7,8 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 @dataclass
-class PaymentsS3Config:
-    """Config for Payments S3 Buckets
+class DelegatedPaymentsS3Config:
+    """Config for Delegated Payments S3 Buckets
 
     This config is a wrapper around S3 paths (eg. s3://bucket/path/to/folder/).
 
@@ -52,27 +52,26 @@ class PaymentsS3Config:
     # Ex: s3://massgov-pfml-prod-agency-transfer/cps/outbound/
     pfml_fineos_outbound_path: str
 
-    ## ---- CTR-related S3 bucket envs
-    # PFML API stores a copy of all files that CTR/MMARS generates for us
-    # This is where we store that copy
-    # Ex: s3://massgov-pfml-prod-agency-transfer/ctr/inbound/
-    pfml_ctr_inbound_path: str
-    # PFML API stores a copy of all files that we generate for CTR/MMARS
-    # This is where we store that copy
-    # Ex: s3://massgov-pfml-prod-agency-transfer/ctr/outbound/
-    pfml_ctr_outbound_path: str
+    ## ---- PUB-related S3 bucket envs
+    # All files we receive from PUB will be saved up in this directory.
+    # Ex: s3://massgov-pfml-prod-agency-transfer/pub/inbound/
+    pfml_pub_inbound_path: str
+    # All files we send to PUB will be saved in this directory
+    # Ex: s3://massgov-pfml-prod-agency-transfer/pub/outbound/
+    pfml_pub_outbound_path: str
+
     # PFML API stores a copy of all files that we generate for error reporting
     # This is where the store that copy
     # Ex: s3://massgov-pfml-prod-agency-transfer/error-reports/outbound/
     pfml_error_reports_path: str
 
 
-def get_s3_config() -> PaymentsS3Config:
-    return PaymentsS3Config(
+def get_s3_config() -> DelegatedPaymentsS3Config:
+    return DelegatedPaymentsS3Config(
         fineos_data_export_path=str(os.environ.get("FINEOS_DATA_EXPORT_PATH")),
         fineos_data_import_path=str(os.environ.get("FINEOS_DATA_IMPORT_PATH")),
-        pfml_ctr_inbound_path=str(os.environ.get("PFML_CTR_INBOUND_PATH")),
-        pfml_ctr_outbound_path=str(os.environ.get("PFML_CTR_OUTBOUND_PATH")),
+        pfml_pub_inbound_path=str(os.environ.get("PFML_PUB_INBOUND_PATH")),
+        pfml_pub_outbound_path=str(os.environ.get("PFML_PUB_OUTBOUND_PATH")),
         pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
         pfml_fineos_outbound_path=str(os.environ.get("PFML_FINEOS_OUTBOUND_PATH")),
         pfml_error_reports_path=str(os.environ.get("PFML_ERROR_REPORTS_PATH")),
