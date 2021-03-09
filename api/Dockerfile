@@ -53,6 +53,8 @@ COPY . ./
 
 ENV PATH="/opt/mssql-tools/bin:$PATH"
 
+COPY ./pacts ./
+
 # run the server
 CMD ["poetry", "run", "python", "-m", "massgov.pfml.api"]
 

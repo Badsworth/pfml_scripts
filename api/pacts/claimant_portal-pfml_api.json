@@ -28,7 +28,7 @@
         "method": "GET",
         "path": "/applications",
         "headers": {
-          "Authorization": "Bearer 2020-02-10T11:34:18.045Z"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhIjoiYiIsImV4cCI6MTYxNTM0MTc3OSwic3ViIjoiNmY2NzZhYWMtN2U4YS00YzYwLTk4ODQtYWE0YjUzZmQwMTE2In0.vwVQ1X9Osmb1N4IEcn1W5ohoZoxA7ES0Q69lQlFiANI"
         },
         "matchingRules": {
           "$.headers.Authorization": {
@@ -58,7 +58,10 @@
       "description": "a request to create a claim",
       "request": {
         "method": "POST",
-        "path": "/applications"
+        "path": "/applications",
+        "headers": {
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhIjoiYiIsImV4cCI6MTYxNTM0MTc3OSwic3ViIjoiNmY2NzZhYWMtN2U4YS00YzYwLTk4ODQtYWE0YjUzZmQwMTE2In0.vwVQ1X9Osmb1N4IEcn1W5ohoZoxA7ES0Q69lQlFiANI"
+        }
       },
       "response": {
         "status": 200,
