@@ -3693,10 +3693,74 @@ def test_application_post_submit_creates_previous_leaves_eform(
     captures = massgov.pfml.fineos.mock_client.get_capture()
 
     assert response.status_code == 201
-    assert "customer_create_eform" in map(lambda capture: capture[0], captures)
+    filtered = list(filter(lambda cap: cap[0] == "customer_create_eform", captures))
+    assert len(filtered) == 1
+    create_eform_capture = filtered[0]
+    assert create_eform_capture[2]["eform"].eformType == "Other Leaves"
 
 
-def test_application_post_submit_no_previous_leaves_does_not_create_eform(
+def test_application_post_submit_no_previous_leaves_does_not_create_other_leaves_eform(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
+    application.hours_worked_per_week = 40
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    test_db_session.commit()
+
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    captures = massgov.pfml.fineos.mock_client.get_capture()
+
+    assert response.status_code == 201
+    assert "customer_create_eform" not in map(lambda capture: capture[0], captures)
+
+
+def test_application_post_submit_creates_other_incomes_eform(
+    client, user, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
+    application.hours_worked_per_week = 40
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    application.employer_benefits = [
+        EmployerBenefitFactory.create(application_id=application.application_id)
+    ]
+
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    captures = massgov.pfml.fineos.mock_client.get_capture()
+
+    assert response.status_code == 201
+    filtered = list(filter(lambda cap: cap[0] == "customer_create_eform", captures))
+    assert len(filtered) == 1
+    create_eform_capture = filtered[0]
+    assert create_eform_capture[2]["eform"].eformType == "Other Income"
+
+
+def test_application_post_submit_no_benefits_or_incomes_does_not_create_other_incomes_eform(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)

@@ -29,7 +29,7 @@ from massgov.pfml.api.services.employment_validator import (
 )
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
-    create_other_leave_eform,
+    create_other_leaves_and_other_incomes_eforms,
     download_document,
     get_documents,
     mark_documents_as_received,
@@ -303,8 +303,8 @@ def applications_submit(application_id):
             )
             return get_fineos_submit_issues_response(complete_intake_issues, existing_application)
 
-        # Send previous leave eform to FINEOS
-        create_other_leave_eform(existing_application, db_session)
+        # Send previous leaves, employer benefits, and other incomes as eforms to FINEOS
+        create_other_leaves_and_other_incomes_eforms(existing_application, db_session)
 
         logger.info("applications_submit success", extra=log_attributes)
 

@@ -23,6 +23,7 @@ import phonenumbers
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
+from massgov.pfml.api.models.applications.common import EmployerBenefit, OtherIncome
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import PreviousLeave
 from massgov.pfml.api.util.response import Issue, IssueType
@@ -39,8 +40,12 @@ from massgov.pfml.db.models.applications import (
 from massgov.pfml.db.models.employees import Address, Claim, Country, Employer, PaymentMethod, User
 from massgov.pfml.fineos.exception import FINEOSNotFound
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
-from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import PreviousLeavesEFormBuilder
+from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
+    OtherIncomesEFormBuilder,
+    PreviousLeavesEFormBuilder,
+)
 from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
+from massgov.pfml.util.logging.applications import get_application_log_attributes
 
 logger = logging.get_logger(__name__)
 
@@ -1005,7 +1010,11 @@ def create_eform(
     fineos.customer_create_eform(fineos_user_id, fineos_absence_id, eform)
 
 
-def create_other_leave_eform(application: Application, db_session: massgov.pfml.db.Session) -> None:
+def create_other_leaves_and_other_incomes_eforms(
+    application: Application, db_session: massgov.pfml.db.Session
+) -> None:
+    log_attributes = get_application_log_attributes(application)
+
     # Send previous leaves to fineos
     if application.previous_leaves:
         # Convert from DB models to API models because the API enum models are easier to serialize to strings
@@ -1014,4 +1023,20 @@ def create_other_leave_eform(application: Application, db_session: massgov.pfml.
         )
         eform = PreviousLeavesEFormBuilder.build(previous_leaves)
         create_eform(application, db_session, eform)
-        logger.info("Created Other Leaves eform")
+        logger.info("Created Other Leaves eform", extra=log_attributes)
+    # Send employer benefits and other incomes to fineos
+    if (
+        application.employer_benefits
+        or application.other_incomes
+        or application.other_incomes_awaiting_approval
+    ):
+        # Convert from DB models to API models because the API enum models are easier to serialize to strings
+        other_incomes = map(lambda income: OtherIncome.from_orm(income), application.other_incomes)
+        employer_benefits = map(
+            lambda benefit: EmployerBenefit.from_orm(benefit), application.employer_benefits,
+        )
+        eform = OtherIncomesEFormBuilder.build(
+            employer_benefits, other_incomes, application.other_incomes_awaiting_approval,
+        )
+        create_eform(application, db_session, eform)
+        logger.info("Created Other Incomes eform", extra=log_attributes)

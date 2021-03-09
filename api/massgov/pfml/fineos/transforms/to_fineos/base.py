@@ -24,6 +24,9 @@ class EFormAttributeBuilder:
     }
     """
 
+    # Static attribute values that should be added to each eform entry
+    STATIC_ATTRIBUTES: List[Dict[str, Any]] = []
+
     # Static attribute value that should be added for all entries except the last. It won't be added
     # for the final entry in an eform.
     JOINING_ATTRIBUTE: Dict[str, Any] = {}
@@ -56,6 +59,11 @@ class EFormAttributeBuilder:
         """
         for key, definition in self.ATTRIBUTE_MAP.items():
             value = getattr(self.target, key)
+            attribute = self.to_attribute(value, definition, count, suffix)
+            attributes.append(attribute)
+
+        for definition in self.STATIC_ATTRIBUTES:
+            value = definition["instanceValue"]
             attribute = self.to_attribute(value, definition, count, suffix)
             attributes.append(attribute)
 

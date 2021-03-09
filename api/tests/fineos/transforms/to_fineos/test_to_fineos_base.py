@@ -5,7 +5,6 @@ from typing import Iterable, Optional
 
 import pytest
 
-from massgov.pfml.fineos.models.group_client_api import EFormAttribute
 from massgov.pfml.fineos.transforms.to_fineos.base import (
     EFormAttributeBuilder,
     EFormBody,
@@ -27,6 +26,16 @@ class PurchaseDataAttributeBuilder(EFormAttributeBuilder):
         "domainName": "PleaseSelectYesNoUnknown",
         "instanceValue": "Yes",
     }
+
+    STATIC_ATTRIBUTES = [
+        {
+            "name": "PurchaseType",
+            "type": "enumValue",
+            "domainName": "PleaseSelectCreditChequeCash",
+            "instanceValue": "Credit",
+        },
+        {"name": "ApiVersion", "type": "decimalValue", "instanceValue": 1.0,},
+    ]
 
 
 class PurchaseData(PydanticBaseModel):
@@ -51,34 +60,24 @@ def purchase_data():
     )
 
 
-class TestEFormAttributeBuilder:
-    def test_transform_purchase_data(self, purchase_data):
-        attribute_builder = PurchaseDataAttributeBuilder(purchase_data)
-        attributes = attribute_builder.to_attributes(0, "", True)
-        assert len(attributes) == 3
-        for r in attributes:
-            assert type(r) is EFormAttribute
-        (
-            purchase_amount_eform_attribute,
-            item_description_eform_attribute,
-            purchase_date_eform_attribute,
-        ) = attributes
-        assert purchase_amount_eform_attribute.decimalValue == purchase_data.purchase_amount
-        assert purchase_amount_eform_attribute.name == "purchaseAmount"
-        assert item_description_eform_attribute.stringValue == purchase_data.item_description
-        assert item_description_eform_attribute.name == "itemDescription"
-        assert purchase_date_eform_attribute.dateValue == purchase_data.purchase_date
-        assert purchase_date_eform_attribute.name == "purchaseDate"
-
-    def test_transform_purchase_data_list(self, purchase_data):
+class TestEFormBuilder:
+    def test_purchase_data_eform_builder(self, purchase_data):
         eform = PurchaseDataEFormBuilder.build([purchase_data, purchase_data])
         attributes = eform.eformAttributes
-        assert len(attributes) == 7
+        assert len(attributes) == 11
 
         expected_attributes = [
             {"decimalValue": purchase_data.purchase_amount, "name": "purchaseAmount"},
             {"name": "itemDescription", "stringValue": purchase_data.item_description},
             {"dateValue": purchase_data.purchase_date.isoformat(), "name": "purchaseDate"},
+            {
+                "enumValue": {
+                    "domainName": "PleaseSelectCreditChequeCash",
+                    "instanceValue": "Credit",
+                },
+                "name": "PurchaseType",
+            },
+            {"decimalValue": 1.0, "name": "ApiVersion"},
             {
                 "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
                 "name": "PurchaseAdditionalItem",
@@ -86,5 +85,13 @@ class TestEFormAttributeBuilder:
             {"decimalValue": purchase_data.purchase_amount, "name": "purchaseAmount2"},
             {"name": "itemDescription2", "stringValue": purchase_data.item_description},
             {"dateValue": purchase_data.purchase_date.isoformat(), "name": "purchaseDate2"},
+            {
+                "enumValue": {
+                    "domainName": "PleaseSelectCreditChequeCash",
+                    "instanceValue": "Credit",
+                },
+                "name": "PurchaseType2",
+            },
+            {"decimalValue": 1.0, "name": "ApiVersion2"},
         ]
         assert attributes == expected_attributes
