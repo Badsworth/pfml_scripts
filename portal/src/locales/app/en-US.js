@@ -575,7 +575,7 @@ const shared = {
   day_Wednesday: "Wednesday",
   departmentOfRevenuePhoneNumber:
     "(617)$t(chars.nbsp)466$t(chars.nbhyphen)3950",
-  disallow12moLeavePeriod: "Your leave cannot be longer than 12 months.",
+  disallow12moLeavePeriod: "Your leave cannot be 12 months or more.",
   // TODO (CP-1335): Add i18next formatter for time
   displayTime: "{{hours}}h {{minutes}}m",
   // TODO (CP-1335): Add i18next formatter for time
