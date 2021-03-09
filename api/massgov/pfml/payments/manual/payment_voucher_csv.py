@@ -41,6 +41,7 @@ class PaymentVoucherCSV:
     employer_id: str
     leave_request_id: str
     leave_request_decision: str
+    vcm_flag: str
 
 
 PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
@@ -75,6 +76,7 @@ PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
     employer_id="Employer ID",
     leave_request_id="Leave request ID",
     leave_request_decision="Leave request decision",
+    vcm_flag="Has Pending VCM",
 )
 
 

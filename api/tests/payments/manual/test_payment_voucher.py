@@ -10,10 +10,12 @@ import re
 import freezegun
 import pytest
 
-from massgov.pfml.db.models.employees import TaxIdentifier
+import massgov.pfml.api.util.state_log_util as state_log_util
+from massgov.pfml.db.models.employees import State, TaxIdentifier
 from massgov.pfml.db.models.factories import EmployeeFactory
 from massgov.pfml.payments import fineos_payment_export, fineos_vendor_export
 from massgov.pfml.payments.manual import payment_voucher
+from tests.helpers.state_log import AdditionalParams, setup_state_log
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -289,11 +291,14 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "NTN-308848-ABS-01"
     ] = test_vbi_requested_absence_csv_row
 
-    test_db_session.add(
-        EmployeeFactory(
+    setup_state_log(
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        end_states=[State.VCM_REPORT_SENT],
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(
             tax_identifier=TaxIdentifier(tax_identifier="999004400"),
             ctr_vendor_customer_code="VC0001230001",
-        )
+        ),
     )
 
     output_csv = MockCSVWriter()
@@ -347,6 +352,7 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "employer_id": "2626107",
         "leave_request_id": "1234",
         "leave_request_decision": "Pending",
+        "vcm_flag": "Yes",
     }
 
     assert len(writeback_csv.rows) == 1
@@ -461,6 +467,7 @@ def test_process_payment_record_multiple_details(test_db_session, initialize_fac
         "employer_id": "2626107",
         "leave_request_id": "1234",
         "leave_request_decision": "Pending",
+        "vcm_flag": "Missing State",
     }
 
     assert len(writeback_csv.rows) == 1
@@ -489,12 +496,16 @@ def test_process_extracts_to_payment_voucher(
         "003061455",
         "066360920",
     ):
-        test_db_session.add(
-            EmployeeFactory(
+        setup_state_log(
+            associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+            end_states=[State.IDENTIFY_MMARS_STATUS],
+            test_db_session=test_db_session,
+            additional_params=AdditionalParams(
                 tax_identifier=TaxIdentifier(tax_identifier=ssn),
                 ctr_vendor_customer_code="VC00012300" + ssn[-2:],
-            )
+            ),
         )
+
     test_db_session.add(
         EmployeeFactory(
             tax_identifier=TaxIdentifier(tax_identifier="375563922"), ctr_vendor_customer_code=None,

@@ -32,7 +32,8 @@ import massgov.pfml.util.datetime
 import massgov.pfml.util.files
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.audit
-from massgov.pfml.db.models.employees import Employee, TaxIdentifier
+from massgov.pfml.api.util import state_log_util
+from massgov.pfml.db.models.employees import Employee, Flow, State, TaxIdentifier
 from massgov.pfml.payments import fineos_payment_export, fineos_vendor_export, gax
 from massgov.pfml.payments.manual.payment_voucher_csv import (
     PaymentVoucherCSV,
@@ -261,7 +262,11 @@ def process_payment_record(
                 extra=extra,
             )
 
-        mmars_vendor_code = get_mmars_vendor_code(payment_data.tin, db_session)
+        employee = get_employee(payment_data.tin, db_session)
+
+        mmars_vendor_code = get_mmars_vendor_code(employee)
+
+        vcm_flag = get_vcm_flag(employee, db_session)
 
         write_row_to_output(
             index,
@@ -269,6 +274,7 @@ def process_payment_record(
             requested_absence,
             vbi_requested_absence,
             mmars_vendor_code,
+            vcm_flag,
             payment_date,
             output_csv,
         )
@@ -286,8 +292,8 @@ def process_payment_record(
         log_entry.increment("exception")
 
 
-def get_mmars_vendor_code(tax_identifier, db_session):
-    """Get Comptroller vendor code for the given SSN from the database."""
+def get_employee(tax_identifier: Optional[str], db_session: massgov.pfml.db.Session) -> Employee:
+    """Return employee by tax identifier"""
     try:
         employee = (
             db_session.query(Employee)
@@ -302,12 +308,37 @@ def get_mmars_vendor_code(tax_identifier, db_session):
         )
         raise
     if employee:
-        if employee.ctr_vendor_customer_code:
-            return employee.ctr_vendor_customer_code
-        else:
-            raise PaymentRowError("ctr_vendor_customer_code is NULL")
+        return employee
     else:
         raise PaymentRowError("not found in employee table")
+
+
+def get_mmars_vendor_code(employee: Employee) -> str:
+    """Get Comptroller vendor code for the given SSN from the database."""
+    if employee.ctr_vendor_customer_code:
+        return employee.ctr_vendor_customer_code
+    else:
+        raise PaymentRowError("ctr_vendor_customer_code is NULL")
+
+
+def get_vcm_flag(employee: Employee, db_session: massgov.pfml.db.Session) -> str:
+    """Returns indicator for whether an employee has an outstanding VCM
+
+        Returns:
+            - 'Yes' if the employee has an outstanding VCM
+            - 'Missing State' if employee has no current state (aka has not gone through the VCC/VCM process yet)
+            - 'No' otherwise
+    """
+    current_state_log = state_log_util.get_latest_state_log_in_flow(
+        employee, Flow.VENDOR_CHECK, db_session
+    )
+
+    if current_state_log is None:
+        return "Missing State"
+    elif current_state_log.end_state_id == State.VCM_REPORT_SENT.state_id:
+        return "Yes"
+    else:
+        return "No"
 
 
 def write_row_to_output(
@@ -316,6 +347,7 @@ def write_row_to_output(
     requested_absence,
     vbi_requested_absence,
     mmars_vendor_code,
+    vcm_flag,
     payment_date,
     output_csv,
 ):
@@ -361,6 +393,7 @@ def write_row_to_output(
         employer_id=requested_absence["EMPLOYER_CUSTOMERNO"],
         leave_request_id=vbi_requested_absence.get("LEAVEREQUEST_ID"),
         leave_request_decision=vbi_requested_absence.get("LEAVEREQUEST_DECISION"),
+        vcm_flag=vcm_flag,
     )
     output_csv.writerow(asdict(payment_row))
 

@@ -2,10 +2,17 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
+import factory  # this is from the factory_boy package
 from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-from massgov.pfml.db.models.employees import Employee, Payment, PaymentMethod, StateLog
+from massgov.pfml.db.models.employees import (
+    Employee,
+    Payment,
+    PaymentMethod,
+    StateLog,
+    TaxIdentifier,
+)
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
     EftFactory,
@@ -13,6 +20,7 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     PaymentFactory,
     ReferenceFileFactory,
+    TaxIdentifierFactory,
 )
 
 
@@ -34,6 +42,7 @@ class AdditionalParams:
     fineos_customer_num: Optional[str] = None
     fineos_absence_id: Optional[str] = None
     ctr_vendor_customer_code: Optional[str] = None
+    tax_identifier: Optional[TaxIdentifier] = factory.SubFactory(TaxIdentifierFactory)
     add_claim_payment_for_employee: bool = False
     payment: Optional[Payment] = None
     add_eft: bool = False
@@ -44,6 +53,7 @@ def setup_db_for_state_log(associated_class, additional_params=None):
         additional_params = AdditionalParams()
     if associated_class == state_log_util.AssociatedClass.EMPLOYEE:
         associated_model = EmployeeFactory.create(
+            tax_identifier=additional_params.tax_identifier,
             fineos_customer_number=additional_params.fineos_customer_num,
             ctr_vendor_customer_code=additional_params.ctr_vendor_customer_code,
         )
@@ -62,6 +72,7 @@ def setup_db_for_state_log(associated_class, additional_params=None):
 
     if associated_class == state_log_util.AssociatedClass.PAYMENT:
         employee = EmployeeFactory.create(
+            tax_identifier=additional_params.tax_identifier,
             fineos_customer_number=additional_params.fineos_customer_num,
             ctr_vendor_customer_code=additional_params.ctr_vendor_customer_code,
         )
