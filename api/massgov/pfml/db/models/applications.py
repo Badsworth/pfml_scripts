@@ -16,7 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import backref, relationship
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
@@ -292,7 +292,7 @@ class Application(Base):
     has_previous_leaves = Column(Boolean)
 
     user = relationship(User)
-    claim = relationship(Claim)
+    claim = relationship(Claim, backref=backref("application", uselist=False))
     employer = relationship(Employer)
     employee = relationship(Employee)
     occupation = relationship(LkOccupation)

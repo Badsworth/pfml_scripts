@@ -268,9 +268,9 @@ def applications_submit(application_id):
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             ).to_api_response()
 
-        # Only send to fineos if fineos_absence_id isn't set. If it is set,
+        # Only send to fineos if fineos_absence_id isn't set on the claim. If it is set,
         # assume that just complete_intake needs to be reattempted.
-        if not existing_application.fineos_absence_id:
+        if not existing_application.claim:
             send_to_fineos_issues = send_to_fineos(existing_application, db_session, current_user)
             if len(send_to_fineos_issues) != 0:
                 logger.warning(
@@ -559,7 +559,7 @@ def documents_get(application_id):
         ensure(READ, existing_application)
 
         # Check if application has been submitted to fineos
-        if existing_application.fineos_absence_id is None:
+        if not existing_application.claim:
             return response_util.success_response(
                 message="Successfully retrieved documents", data=[], status_code=200,
             ).to_api_response()

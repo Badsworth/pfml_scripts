@@ -145,9 +145,6 @@ def send_to_fineos(
         fineos.update_customer_details(fineos_user_id, customer)
         new_case = fineos.start_absence(fineos_user_id, absence_case)
 
-        application.fineos_absence_id = new_case.absenceId
-        application.fineos_notification_case_id = new_case.notificationCaseId
-
         new_claim = Claim(
             fineos_absence_id=new_case.absenceId, fineos_notification_id=new_case.notificationCaseId
         )
@@ -168,7 +165,7 @@ def send_to_fineos(
         ]:
             reflexive_question = build_bonding_date_reflexive_question(application)
             fineos.update_reflexive_questions(
-                fineos_user_id, application.fineos_absence_id, reflexive_question
+                fineos_user_id, application.claim.fineos_absence_id, reflexive_question
             )
 
         occupation = get_occupation(fineos, fineos_user_id, application)
@@ -199,8 +196,8 @@ def complete_intake(application: Application, db_session: massgov.pfml.db.Sessio
     if application.employer_fein is None:
         raise ValueError("application.employer_fein is None")
 
-    if application.fineos_notification_case_id is None:
-        raise ValueError("application.fineos_notification_case_id is None")
+    if application.claim.fineos_notification_id is None:
+        raise ValueError("application.claim.fineos_notification_id is None")
 
     fineos = massgov.pfml.fineos.create_client()
 
@@ -221,7 +218,7 @@ def complete_intake(application: Application, db_session: massgov.pfml.db.Sessio
 
         fineos_user_id = str(fineos_user_id)
         db_session.commit()
-        fineos.complete_intake(fineos_user_id, str(application.fineos_notification_case_id))
+        fineos.complete_intake(fineos_user_id, str(application.claim.fineos_notification_id))
 
     except massgov.pfml.fineos.FINEOSClientError:
         logger.error("FINEOS API error")
@@ -246,8 +243,8 @@ def mark_documents_as_received(
 ) -> None:
     """Mark documents attached to an application as received in FINEOS."""
 
-    if application.fineos_absence_id is None:
-        raise ValueError("application.fineos_absence_id is None")
+    if application.claim.fineos_absence_id is None:
+        raise ValueError("application.claim.fineos_absence_id is None")
 
     fineos = massgov.pfml.fineos.create_client()
     fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
@@ -265,7 +262,7 @@ def mark_documents_as_received(
             raise ValueError("Document does not have a fineos_id")
 
         fineos.mark_document_as_received(
-            fineos_user_id, str(application.fineos_absence_id), str(document.fineos_id)
+            fineos_user_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
         )
 
 
@@ -275,8 +272,8 @@ def mark_single_document_as_received(
     if document.document_type_id not in DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE:
         return None
 
-    if application.fineos_absence_id is None:
-        raise ValueError("application.fineos_absence_id is None")
+    if application.claim.fineos_absence_id is None:
+        raise ValueError("application.claim.fineos_absence_id is None")
 
     if document.fineos_id is None:
         raise ValueError("document.fineos_id is None")
@@ -284,7 +281,7 @@ def mark_single_document_as_received(
     fineos = massgov.pfml.fineos.create_client()
     fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
     fineos.mark_document_as_received(
-        fineos_user_id, str(application.fineos_absence_id), str(document.fineos_id)
+        fineos_user_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
     )
 
 
@@ -599,10 +596,13 @@ def get_or_register_employee_fineos_user_id(
 
 
 def get_fineos_absence_id_from_application(application: Application) -> str:
-    if application.fineos_absence_id is None:
+    if application.claim is None:
+        raise ValueError("Missing claim")
+
+    if application.claim.fineos_absence_id is None:
         raise ValueError("Missing absence id")
 
-    return application.fineos_absence_id
+    return application.claim.fineos_absence_id
 
 
 def build_bonding_date_reflexive_question(
@@ -630,16 +630,16 @@ def build_bonding_date_reflexive_question(
 def get_occupation(
     fineos_client: massgov.pfml.fineos.AbstractFINEOSClient, user_id: str, application: Application
 ) -> massgov.pfml.fineos.models.customer_api.ReadCustomerOccupation:
-    logger.info("getting occupation for absence_case %s", application.fineos_absence_id)
+    logger.info("getting occupation for absence_case %s", application.claim.fineos_absence_id)
     try:
         return fineos_client.get_case_occupations(
-            user_id, str(application.fineos_notification_case_id)
+            user_id, str(application.claim.fineos_notification_id)
         )[0]
     except Exception as error:
         logger.warning(
             "get_occuption failure",
             extra={
-                "application.absence_case_id": application.fineos_absence_id,
+                "application.absence_case_id": application.claim.fineos_absence_id,
                 "application.application_id": application.application_id,
                 "status": getattr(error, "response_status", None),
             },
@@ -655,13 +655,13 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application, occupati
 
     week_based_work_pattern = build_week_based_work_pattern(application)
     log_attributes = {
-        "application.absence_case_id": application.fineos_absence_id,
+        "application.absence_case_id": application.claim.fineos_absence_id,
         "application.application_id": application.application_id,
         "occupation_id": occupation_id,
     }
     logger.info(
         "upserting work_pattern for absence case %s",
-        application.fineos_absence_id,
+        application.claim.fineos_absence_id,
         extra=log_attributes,
     )
 
@@ -671,7 +671,7 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application, occupati
         )
         logger.info(
             "added work_pattern successfully for absence case %s",
-            application.fineos_absence_id,
+            application.claim.fineos_absence_id,
             extra=log_attributes,
         )
     except massgov.pfml.fineos.exception.FINEOSClientBadResponse as error:
@@ -682,7 +682,7 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application, occupati
             )
             logger.info(
                 "updated work_pattern successfully for absence case %s",
-                application.fineos_absence_id,
+                application.claim.fineos_absence_id,
                 extra=log_attributes,
             )
         else:

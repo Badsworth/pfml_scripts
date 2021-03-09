@@ -99,7 +99,9 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
     )
 
     # Use a different attribute name for fineos_absence_id to avoid using vendor specific names
-    result["application.absence_case_id"] = application.fineos_absence_id
+    result["application.absence_case_id"] = (
+        application.claim.fineos_absence_id if application.claim else None
+    )
 
     # leave_reason and leave_reason_qualifier are objects, so get the underlying string description
     result["application.leave_reason"] = (

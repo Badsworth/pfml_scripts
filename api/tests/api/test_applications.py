@@ -34,6 +34,7 @@ from massgov.pfml.db.models.employees import Address, GeoState, PaymentMethod, T
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
+    ClaimFactory,
     ContinuousLeavePeriodFactory,
     DocumentFactory,
     EmployerBenefitFactory,
@@ -2563,10 +2564,12 @@ def test_application_patch_failure_after_absence_case_creation(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-1989", fineos_absence_id="NTN-1989-ABS-01"
+    )
 
     # Attach absence case information application so it appears as if this application has already been submitted.
-    application.fineos_notification_case_id = "NTN-1989"
-    application.fineos_absence_id = application.fineos_notification_case_id + "-ABS-01"
+    application.claim = claim
     application.submitted_time = datetime_util.utcnow()
     test_db_session.commit()
 
@@ -2633,6 +2636,10 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-1989", fineos_absence_id="NTN-1989-ABS-01"
+    )
+
     application.date_of_birth = "1997-06-06"
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.hours_worked_per_week = 70
@@ -2641,8 +2648,7 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     application.work_pattern = WorkPatternFixedFactory.create()
 
     # Add fineos_absence_id so it behaves like it was submitted but failed to complete intake
-    application.fineos_absence_id = "NTN-259-ABS-01"
-    application.fineos_notification_case_id = "NTN-259"
+    application.claim = claim
 
     assert not application.submitted_time
 
@@ -2683,7 +2689,7 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
                 )
             },
         ),
-        ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-259"},),
+        ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-1989"},),
     ]
 
 
@@ -3629,6 +3635,9 @@ def test_application_post_submit_app_failure_after_absence_case_creation(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-1989", fineos_absence_id="NTN-1989-ABS-01"
+    )
     WagesAndContributionsFactory.create(
         employer=application.employer, employee=application.employee
     )
@@ -3645,8 +3654,7 @@ def test_application_post_submit_app_failure_after_absence_case_creation(
     application.work_pattern = WorkPatternFixedFactory.create()
 
     # Attach absence case information application so it appears as if this application has already been submitted.
-    application.fineos_notification_case_id = "NTN-1989"
-    application.fineos_absence_id = application.fineos_notification_case_id + "-ABS-01"
+    application.claim = claim
     application.submitted_time = datetime_util.utcnow()
     test_db_session.commit()
 
@@ -3718,13 +3726,15 @@ def test_application_post_submit_no_previous_leaves_does_not_create_eform(
 
 def test_application_post_complete_app(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-1989", fineos_absence_id="NTN-1989-ABS-01"
+    )
     application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    application.fineos_notification_case_id = "NTN-259"
-    application.fineos_absence_id = application.fineos_notification_case_id + "-ABS-01"
+    application.claim = claim
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
@@ -3747,13 +3757,15 @@ def test_application_complete_mark_document_received_fineos(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-1989", fineos_absence_id="NTN-1989-ABS-01"
+    )
     application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()
     application.work_pattern = WorkPatternFixedFactory.create()
-    application.fineos_notification_case_id = "NTN-259"
-    application.fineos_absence_id = application.fineos_notification_case_id + "-ABS-01"
+    application.claim = claim
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(
             # Dates that pass validation criteria. 55 and 75 are not meaningful values outside
@@ -3818,7 +3830,7 @@ def test_application_complete_mark_document_received_fineos(
 
     # Arguments we pass to the function
     assert capture[2][2] == {
-        "absence_id": application.fineos_absence_id,
+        "absence_id": application.claim.fineos_absence_id,
         "fineos_document_id": id_proof.fineos_id,
     }
 

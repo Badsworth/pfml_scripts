@@ -24,6 +24,6 @@ describe("i18n formatters", () => {
 
     expect(t("hoursMinutesDuration", { minutes: 475 })).toBe("7h 55m");
     expect(t("hoursMinutesDuration", { minutes: 45 })).toBe("0h 45m");
-    expect(t("hoursMinutesDuration", { minutes: 0})).toBe("0h");
+    expect(t("hoursMinutesDuration", { minutes: 0 })).toBe("0h");
   });
 });

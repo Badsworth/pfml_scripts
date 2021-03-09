@@ -6,7 +6,7 @@ import pytest
 import massgov.pfml.fineos.mock_client
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.db.models.applications import DocumentType
-from massgov.pfml.db.models.factories import ApplicationFactory
+from massgov.pfml.db.models.factories import ApplicationFactory, ClaimFactory
 from massgov.pfml.fineos import fineos_client, models
 
 # every test in here requires real resources
@@ -39,8 +39,10 @@ def invalid_file():
 
 
 def document_upload_helper(client, user, auth_token, form_data):
-    absence_case_id = "NTN-111-ABS-01"
-    application = ApplicationFactory.create(user=user, fineos_absence_id=absence_case_id)
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
+    )
+    application = ApplicationFactory.create(user=user, claim=claim)
 
     response = client.post(
         "/v1/applications/{}/documents".format(application.application_id),
@@ -228,8 +230,10 @@ def test_document_upload_and_mark_evidence_received(
 
 
 def test_documents_get(client, consented_user, consented_user_token, test_db_session):
-    absence_case_id = "NTN-111-ABS-01"
-    application = ApplicationFactory.create(user=consented_user, fineos_absence_id=absence_case_id)
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
+    )
+    application = ApplicationFactory.create(user=consented_user, claim=claim)
 
     response = client.get(
         "/v1/applications/{}/documents".format(application.application_id),
@@ -252,8 +256,6 @@ def test_documents_get(client, consented_user, consented_user_token, test_db_ses
 def test_documents_get_date_created(
     client, consented_user, consented_user_token, test_db_session, monkeypatch
 ):
-    absence_case_id = "NTN-111-ABS-01"
-
     def mocked_mock_document(absence_id):
 
         # mock the response object using "dateCreated"
@@ -271,7 +273,10 @@ def test_documents_get_date_created(
 
     monkeypatch.setattr(massgov.pfml.fineos.mock_client, "mock_document", mocked_mock_document)
 
-    application = ApplicationFactory.create(user=consented_user, fineos_absence_id=absence_case_id)
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
+    )
+    application = ApplicationFactory.create(user=consented_user, claim=claim)
 
     response = client.get(
         "/v1/applications/{}/documents".format(application.application_id),
@@ -285,10 +290,12 @@ def test_documents_get_date_created(
 
 
 def test_documents_download(client, consented_user, consented_user_token, test_db_session):
-    absence_case_id = "NTN-111-ABS-01"
     document_id = "3011"
 
-    application = ApplicationFactory.create(user=consented_user, fineos_absence_id=absence_case_id)
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
+    )
+    application = ApplicationFactory.create(user=consented_user, claim=claim)
 
     response = client.get(
         "/v1/applications/{}/documents/{}".format(application.application_id, document_id),
@@ -305,7 +312,6 @@ def test_documents_download_matches_document_id(
     client, consented_user, consented_user_token, test_db_session, monkeypatch
 ):
     # Regression test to ensure that get_document_by_id searches through all documents from FINEOS
-    absence_case_id = "NTN-111-ABS-01"
     document_id = "3012"
 
     def mock_get_documents(self, user_id, absence_id):
@@ -348,7 +354,10 @@ def test_documents_download_matches_document_id(
         massgov.pfml.fineos.mock_client.MockFINEOSClient, "get_documents", mock_get_documents
     )
 
-    application = ApplicationFactory.create(user=consented_user, fineos_absence_id=absence_case_id)
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
+    )
+    application = ApplicationFactory.create(user=consented_user, claim=claim)
 
     response = client.get(
         "/v1/applications/{}/documents/{}".format(application.application_id, document_id),
@@ -365,7 +374,6 @@ def test_documents_download_mismatch_case(
     client, consented_user, consented_user_token, test_db_session, monkeypatch
 ):
     # Regression test to ensure that get_document_by_id searches through all documents from FINEOS
-    absence_case_id = "NTN-111-ABS-01"
     document_id = "3012"
 
     def mock_get_documents(self, user_id, absence_id):
@@ -384,7 +392,10 @@ def test_documents_download_mismatch_case(
         massgov.pfml.fineos.mock_client.MockFINEOSClient, "get_documents", mock_get_documents
     )
 
-    application = ApplicationFactory.create(user=consented_user, fineos_absence_id=absence_case_id)
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
+    )
+    application = ApplicationFactory.create(user=consented_user, claim=claim)
 
     response = client.get(
         "/v1/applications/{}/documents/{}".format(application.application_id, document_id),
@@ -398,10 +409,12 @@ def test_documents_download_mismatch_case(
 
 
 def test_documents_download_forbidden(client, fineos_user, fineos_user_token, test_db_session):
-    absence_case_id = "NTN-111-ABS-01"
     document_id = "3011"
 
-    application = ApplicationFactory.create(user=fineos_user, fineos_absence_id=absence_case_id)
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
+    )
+    application = ApplicationFactory.create(user=fineos_user, claim=claim)
 
     response = client.get(
         "/v1/applications/{}/documents/{}".format(application.application_id, document_id),

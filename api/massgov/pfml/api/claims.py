@@ -21,7 +21,6 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
 )
-from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministrator
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EmployerClaimReviewEFormBuilder
@@ -254,12 +253,7 @@ def user_has_access_to_claim(claim: Claim) -> bool:
             return current_user.verified_employer(claim.employer)
         return True
 
-    with app.db_session() as db_session:
-        application = (
-            db_session.query(Application)
-            .filter(Application.fineos_absence_id == claim.fineos_absence_id)
-            .one_or_none()
-        )
+    application = claim.application  # type: ignore
 
     if application and application.user == current_user:
         # User is claimant and this is their claim

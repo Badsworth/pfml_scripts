@@ -320,6 +320,7 @@ class ClaimFactory(BaseFactory):
     benefit_amount = 100
     benefit_days = 60
     fineos_absence_id = Generators.FineosAbsenceId
+    fineos_notification_id = None
     employee = factory.SubFactory(EmployeeFactory)
     employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
 
@@ -384,8 +385,6 @@ class ApplicationFactory(BaseFactory):
     employer_notification_date = None
     completed_time = None
     submitted_time = None
-    fineos_absence_id = None
-    fineos_notification_case_id = None
     hours_worked_per_week = None
 
     # Leave Periods

@@ -99,6 +99,9 @@ class ApplicationResponse(PydanticBaseModel):
         else:
             application_response.status = ApplicationStatus.Started
 
+        if application.claim is not None:
+            application_response.fineos_absence_id = application.claim.fineos_absence_id
+
         return application_response
 
 
