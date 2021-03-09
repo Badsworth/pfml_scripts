@@ -7,7 +7,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 @dataclass
-class DelegatedPaymentsS3Config:
+class PaymentsS3Config:
     """Config for Delegated Payments S3 Buckets
 
     This config is a wrapper around S3 paths (eg. s3://bucket/path/to/folder/).
@@ -66,8 +66,8 @@ class DelegatedPaymentsS3Config:
     pfml_error_reports_path: str
 
 
-def get_s3_config() -> DelegatedPaymentsS3Config:
-    return DelegatedPaymentsS3Config(
+def get_s3_config() -> PaymentsS3Config:
+    return PaymentsS3Config(
         fineos_data_export_path=str(os.environ.get("FINEOS_DATA_EXPORT_PATH")),
         fineos_data_import_path=str(os.environ.get("FINEOS_DATA_IMPORT_PATH")),
         pfml_pub_inbound_path=str(os.environ.get("PFML_PUB_INBOUND_PATH")),
