@@ -102,6 +102,7 @@ export class UserRole extends BaseModel {
  * @enum {string}
  */
 export const RoleDescription = {
+  claimant: "Claimant",
   employer: "Employer",
 };
 

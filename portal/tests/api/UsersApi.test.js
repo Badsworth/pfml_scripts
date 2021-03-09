@@ -59,6 +59,34 @@ describe("users API", () => {
     usersApi = new UsersApi();
   });
 
+  describe("createUser", () => {
+    describe("when the request succeeds", () => {
+      beforeEach(() => {
+        global.fetch = mockFetch({
+          response: getResponse(),
+          status: 201,
+          ok: true,
+        });
+      });
+
+      it("resolves with the user in the response", async () => {
+        expect.assertions();
+
+        const response = await usersApi.createUser({
+          email_address: "mock-user@example.com",
+          password: "password123!",
+        });
+
+        expect(response.user).toBeInstanceOf(User);
+        expect(response).toEqual({
+          user: expect.objectContaining({
+            email_address: "mock-user@example.com",
+          }),
+        });
+      });
+    });
+  });
+
   describe("getCurrentUser", () => {
     describe("when the request succeeds", () => {
       beforeEach(() => {
@@ -69,33 +97,17 @@ describe("users API", () => {
         });
       });
 
-      it("resolves with the response", async () => {
-        expect.assertions();
-
-        const response = await usersApi.getCurrentUser();
-
-        expect(response).toMatchInlineSnapshot(
-          {
-            user: expect.objectContaining({
-              email_address: "mock-user@example.com",
-            }),
-          },
-          `
-          Object {
-            "user": ObjectContaining {
-              "email_address": "mock-user@example.com",
-            },
-          }
-        `
-        );
-      });
-
-      it("includes instance of User in the response", async () => {
+      it("resolves with the user in the response", async () => {
         expect.assertions();
 
         const response = await usersApi.getCurrentUser();
 
         expect(response.user).toBeInstanceOf(User);
+        expect(response).toEqual({
+          user: expect.objectContaining({
+            email_address: "mock-user@example.com",
+          }),
+        });
       });
 
       it("returns flattened user roles as is", async () => {

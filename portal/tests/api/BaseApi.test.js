@@ -64,6 +64,20 @@ describe("BaseApi", () => {
     );
   });
 
+  it("excludes Authorization header when excludeAuthHeader option is true", async () => {
+    expect.assertions();
+    await testsApi.request("GET", "users", {}, {}, { excludeAuthHeader: true });
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.not.objectContaining({
+          Authorization: `Bearer ${accessTokenJwt}`,
+        }),
+      })
+    );
+  });
+
   it("sends a GET request to the API", async () => {
     expect.assertions();
     const method = "GET";

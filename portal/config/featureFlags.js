@@ -7,6 +7,10 @@ const flagsConfig = {
   // Define a default or all feature flags here.
   // Environments will fallback to these default values.
   defaults: {
+    // When this flag is enabled, Create Account requests will be
+    // sent through the API, rather than directly to Cognito
+    authThroughApi: false,
+
     // When this flag is enabled, the user can see the "Employment status"
     // question in the claimant flow (CP-1204)
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses

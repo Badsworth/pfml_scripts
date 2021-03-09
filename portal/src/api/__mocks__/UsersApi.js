@@ -14,6 +14,13 @@ const createMockUser = () =>
     user_id: "api-123",
   });
 
+export const mockCreateUser = jest.fn(() =>
+  Promise.resolve({
+    success: true,
+    user: createMockUser(),
+  })
+);
+
 export const mockGetCurrentUser = jest.fn(() =>
   Promise.resolve({
     success: true,
@@ -29,6 +36,7 @@ export const mockUpdateUser = jest.fn(() =>
 );
 
 export default jest.fn().mockImplementation(() => ({
+  createUser: mockCreateUser,
   getCurrentUser: mockGetCurrentUser,
   updateUser: mockUpdateUser,
 }));

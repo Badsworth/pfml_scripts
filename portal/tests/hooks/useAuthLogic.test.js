@@ -1,4 +1,5 @@
 import { Auth } from "@aws-amplify/auth";
+import UsersApi from "../../src/api/UsersApi";
 import { act } from "react-dom/test-utils";
 import routes from "../../src/routes";
 import { testHook } from "../test-utils";
@@ -8,6 +9,7 @@ import useAuthLogic from "../../src/hooks/useAuthLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("@aws-amplify/auth");
+jest.mock("../../src/api/UsersApi");
 jest.mock("../../src/services/tracker");
 
 describe("useAuthLogic", () => {
@@ -34,7 +36,6 @@ describe("useAuthLogic", () => {
     verifyEmployerAccount;
 
   beforeEach(() => {
-    jest.resetAllMocks();
     username = "test@email.com";
     password = "TestP@ssw0rd!";
     ein = "12-3456789";
@@ -86,7 +87,7 @@ describe("useAuthLogic", () => {
     it("does not change page when Cognito request fails", async () => {
       const spy = jest.spyOn(portalFlow, "goToPageFor");
 
-      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -147,7 +148,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when an account isn't found", () => {
-      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -166,7 +167,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when Auth.forgotPassword throws InvalidParameterException", () => {
-      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -186,7 +187,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when Auth.forgotPassword throws NotAuthorizedException due to security reasons", () => {
-      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -205,7 +206,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when Auth.forgotPassword throws LimitExceededException due to too many forget password requests", () => {
-      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -224,7 +225,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets system error message when Auth.forgotPassword throws unanticipated error", () => {
-      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementationOnce(() => {
         throw new Error("Some unknown error");
       });
       act(() => {
@@ -238,7 +239,7 @@ describe("useAuthLogic", () => {
 
     it("tracks Cognito request errors", async () => {
       const error = new Error("Some unknown error");
-      jest.spyOn(Auth, "forgotPassword").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPassword").mockImplementationOnce(() => {
         throw error;
       });
 
@@ -318,7 +319,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when username and password are incorrect", async () => {
-      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+      jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -337,7 +338,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when Auth.signIn throws InvalidParameterException", async () => {
-      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+      jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -357,7 +358,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when Auth.signIn throws NotAuthorizedException due to security reasons", async () => {
-      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+      jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -376,7 +377,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when Auth.signIn throws NotAuthorizedException due to incorrect username or password", async () => {
-      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+      jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -395,7 +396,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when Auth.signIn throws NotAuthorizedException due to too many failed login attempts", () => {
-      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+      jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -421,7 +422,7 @@ describe("useAuthLogic", () => {
         name: "NotAuthorizedException",
       };
 
-      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+      jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw cognitoError;
@@ -441,7 +442,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when Auth.signIn throws AuthError", async () => {
-      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+      jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
         // AWS Auth uses an AuthError class that is private, so we
         // are faking our own version of it for testing purposes
         class AuthError extends Error {
@@ -462,7 +463,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets system error message when Auth.signIn throws unanticipated error", async () => {
-      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+      jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
         throw new Error("Some unknown error");
       });
       await act(async () => {
@@ -476,7 +477,7 @@ describe("useAuthLogic", () => {
 
     it("tracks Cognito request errors", async () => {
       const error = new Error("Some unknown error");
-      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+      jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
         throw error;
       });
 
@@ -519,7 +520,7 @@ describe("useAuthLogic", () => {
     });
 
     it("redirects to verify account page while receiving UserNotConfirmedException error", () => {
-      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+      jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -537,7 +538,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when Auth.signIn throws PasswordResetRequiredException", async () => {
-      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+      jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw { code: "PasswordResetRequiredException" };
@@ -613,7 +614,58 @@ describe("useAuthLogic", () => {
     });
   });
 
-  describe("createAccount", () => {
+  describe("createAccount, with authThroughApi feature flag", () => {
+    beforeEach(() => {
+      process.env.featureFlags = { authThroughApi: true };
+    });
+
+    it("sends request through API module", async () => {
+      const usersApi = new UsersApi();
+
+      await act(async () => {
+        // Add whitespace to username to also cover trimming
+        await createAccount(username + " ", password);
+      });
+
+      expect(usersApi.createUser).toHaveBeenCalledWith({
+        email_address: username,
+        password,
+        role: {
+          role_description: "Claimant",
+        },
+        user_leave_administrator: {
+          employer_fein: undefined,
+        },
+      });
+    });
+
+    it("sets authData for reference on Verify Account page", async () => {
+      await act(async () => {
+        await createAccount(username, password);
+      });
+
+      expect(authData).toEqual({
+        createAccountUsername: username,
+        createAccountFlow: "claimant",
+      });
+    });
+
+    it("routes to Verify Account page when request succeeds", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      await act(async () => {
+        await createAccount(username, password);
+      });
+
+      expect(spy).toHaveBeenCalledWith("CREATE_ACCOUNT");
+    });
+  });
+
+  // TODO (CP-1768): Remove code below once requests are always sent through API
+  describe("createAccount, without authThroughApi feature flag", () => {
+    beforeEach(() => {
+      process.env.featureFlags = { authThroughApi: false };
+    });
+
     it("calls Auth.signUp", async () => {
       await act(async () => {
         await createAccount(username, password);
@@ -693,7 +745,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when an account with the username already exists", () => {
-      jest.spyOn(Auth, "signUp").mockImplementation(() => {
+      jest.spyOn(Auth, "signUp").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -712,7 +764,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when Auth.signUp throws InvalidParameterException", () => {
-      jest.spyOn(Auth, "signUp").mockImplementation(() => {
+      jest.spyOn(Auth, "signUp").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -750,8 +802,7 @@ describe("useAuthLogic", () => {
       expect.assertions(cognitoErrors.length * 2);
 
       for (const cognitoError of cognitoErrors) {
-        jest.resetAllMocks();
-        jest.spyOn(Auth, "signUp").mockImplementation(() => {
+        jest.spyOn(Auth, "signUp").mockImplementationOnce(() => {
           // Ignore lint rule since AWS Auth class actually throws an object literal
           // eslint-disable-next-line no-throw-literal
           throw cognitoError;
@@ -782,8 +833,7 @@ describe("useAuthLogic", () => {
       expect.assertions(cognitoErrors.length * 2);
 
       for (const cognitoError of cognitoErrors) {
-        jest.resetAllMocks();
-        jest.spyOn(Auth, "signUp").mockImplementation(() => {
+        jest.spyOn(Auth, "signUp").mockImplementationOnce(() => {
           // Ignore lint rule since AWS Auth class actually throws an object literal
           // eslint-disable-next-line no-throw-literal
           throw cognitoError;
@@ -799,7 +849,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets system error message when Auth.signUp throws unanticipated error", () => {
-      jest.spyOn(Auth, "signUp").mockImplementation(() => {
+      jest.spyOn(Auth, "signUp").mockImplementationOnce(() => {
         throw new Error("Some unknown error");
       });
       act(() => {
@@ -813,7 +863,7 @@ describe("useAuthLogic", () => {
 
     it("tracks Cognito request errors", async () => {
       const error = new Error("Some unknown error");
-      jest.spyOn(Auth, "signUp").mockImplementation(() => {
+      jest.spyOn(Auth, "signUp").mockImplementationOnce(() => {
         throw error;
       });
 
@@ -837,7 +887,57 @@ describe("useAuthLogic", () => {
     });
   });
 
-  describe("createEmployerAccount", () => {
+  describe("createEmployerAccount, with authThroughApi feature flag", () => {
+    beforeEach(() => {
+      process.env.featureFlags = { authThroughApi: true };
+    });
+
+    it("sends request through API module", async () => {
+      const usersApi = new UsersApi();
+
+      await act(async () => {
+        // Add whitespace to username to also cover trimming
+        await createEmployerAccount(username + " ", password, ein);
+      });
+
+      expect(usersApi.createUser).toHaveBeenCalledWith({
+        email_address: username,
+        password,
+        role: {
+          role_description: "Employer",
+        },
+        user_leave_administrator: {
+          employer_fein: ein,
+        },
+      });
+    });
+
+    it("sets authData for reference on Verify Account page", async () => {
+      await act(async () => {
+        await createEmployerAccount(username, password, ein);
+      });
+
+      expect(authData).toEqual({
+        createAccountUsername: username,
+        createAccountFlow: "employer",
+      });
+    });
+
+    it("routes to Verify Account page when request succeeds", async () => {
+      const spy = jest.spyOn(portalFlow, "goToPageFor");
+      await act(async () => {
+        await createEmployerAccount(username, password, ein);
+      });
+
+      expect(spy).toHaveBeenCalledWith("CREATE_ACCOUNT");
+    });
+  });
+
+  describe("createEmployerAccount, without authThroughApi feature flag", () => {
+    beforeEach(() => {
+      process.env.featureFlags = { authThroughApi: false };
+    });
+
     it("calls Auth.signUp with username, password, and ein as a custom attribute", async () => {
       await act(async () => {
         await createEmployerAccount(username, password, ein);
@@ -917,7 +1017,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when an employer ID number is invalid", () => {
-      jest.spyOn(Auth, "signUp").mockImplementation(() => {
+      jest.spyOn(Auth, "signUp").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -1067,7 +1167,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets system error message when Auth.resendSignUp throws unanticipated error", () => {
-      jest.spyOn(Auth, "resendSignUp").mockImplementation(() => {
+      jest.spyOn(Auth, "resendSignUp").mockImplementationOnce(() => {
         throw new Error("Some unknown error");
       });
       act(() => {
@@ -1081,7 +1181,7 @@ describe("useAuthLogic", () => {
 
     it("tracks Cognito request errors", async () => {
       const error = new Error("Some unknown error");
-      jest.spyOn(Auth, "resendSignUp").mockImplementation(() => {
+      jest.spyOn(Auth, "resendSignUp").mockImplementationOnce(() => {
         throw error;
       });
 
@@ -1167,7 +1267,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when CodeMismatchException is thrown", () => {
-      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -1188,7 +1288,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when ExpiredCodeException is thrown", () => {
-      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -1209,7 +1309,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when InvalidParameterException is thrown", () => {
-      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -1231,7 +1331,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when InvalidPasswordException is thrown due to non-conforming password", () => {
-      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -1252,7 +1352,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when InvalidPasswordException is thrown due to insecure password", () => {
-      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -1273,7 +1373,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when UserNotConfirmedException is thrown", () => {
-      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -1294,7 +1394,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when UserNotFoundException is thrown", () => {
-      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -1316,7 +1416,7 @@ describe("useAuthLogic", () => {
 
     it("tracks Cognito request errors", async () => {
       const error = new Error("Some unknown error");
-      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementation(() => {
+      jest.spyOn(Auth, "forgotPasswordSubmit").mockImplementationOnce(() => {
         throw error;
       });
 
@@ -1492,7 +1592,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when verification code is incorrect", () => {
-      jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+      jest.spyOn(Auth, "confirmSignUp").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -1511,7 +1611,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets app errors when verification code has expired", () => {
-      jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+      jest.spyOn(Auth, "confirmSignUp").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -1531,7 +1631,7 @@ describe("useAuthLogic", () => {
 
     it("redirects to the login page when account is already verified", () => {
       const spy = jest.spyOn(portalFlow, "goToPageFor");
-      jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+      jest.spyOn(Auth, "confirmSignUp").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
         // eslint-disable-next-line no-throw-literal
         throw {
@@ -1575,8 +1675,7 @@ describe("useAuthLogic", () => {
       expect.assertions(cognitoErrors.length * 2);
 
       for (const cognitoError of cognitoErrors) {
-        jest.resetAllMocks();
-        jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+        jest.spyOn(Auth, "confirmSignUp").mockImplementationOnce(() => {
           // Ignore lint rule since AWS Auth class actually throws an object literal
           // eslint-disable-next-line no-throw-literal
           throw cognitoError;
@@ -1592,7 +1691,7 @@ describe("useAuthLogic", () => {
     });
 
     it("sets system error message when Auth.confirmSignUp throws unanticipated error", () => {
-      jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+      jest.spyOn(Auth, "confirmSignUp").mockImplementationOnce(() => {
         throw new Error("Some unknown error");
       });
       act(() => {
@@ -1606,7 +1705,7 @@ describe("useAuthLogic", () => {
 
     it("tracks Cognito request errors", async () => {
       const error = new Error("Some unknown error");
-      jest.spyOn(Auth, "confirmSignUp").mockImplementation(() => {
+      jest.spyOn(Auth, "confirmSignUp").mockImplementationOnce(() => {
         throw error;
       });
 

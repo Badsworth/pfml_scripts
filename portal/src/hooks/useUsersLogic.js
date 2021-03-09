@@ -65,6 +65,7 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
       setUser(user);
     } catch (error) {
       if (error instanceof UnauthorizedError) {
+        // TODO (CP-1768): Remove this block once sign up requests are always sent through API.
         // API returns a 401 (UnauthorizedError) if they don't find a matching
         // user in the database. This could mean our post-confirmation hook
         // timed out or failed. We redirect the user to the password reset

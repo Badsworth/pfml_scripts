@@ -1,11 +1,14 @@
 import { CognitoAuthError, ValidationError } from "../errors";
 import { compact, trim } from "lodash";
+import { useMemo, useState } from "react";
 import { Auth } from "@aws-amplify/auth";
+import { RoleDescription } from "../models/User";
+import UsersApi from "../api/UsersApi";
 import assert from "assert";
 import { createRouteWithQuery } from "../utils/routeWithParams";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import tracker from "../services/tracker";
-import { useState } from "react";
 
 // TODO (CP-1771): This file makes reference to an Issue type that is not yet defined.
 
@@ -16,6 +19,8 @@ import { useState } from "react";
  * @returns {object}
  */
 const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
+  const usersApi = useMemo(() => new UsersApi(), []);
+
   // TODO (CP-872): Rather than setting default values for authLogic methods,
   // instead ensure they're always called with required string arguments
 
@@ -164,6 +169,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} username Email address that is used as the username
    * @param {string} password Password
    * @param {string} [ein] Employer id number (if signing up through Employer Portal)
+   * TODO (CP-1768): Remove this method once account creation requests are sent through API
    * @private
    */
   const createAccountInCognito = async (username, password, ein) => {
@@ -197,12 +203,57 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   };
 
   /**
+   * Shared logic to create an account through the API
+   * @param {string} email_address
+   * @param {string} password Password
+   * @param {RoleDescription} role_description
+   * @param {string} [employer_fein]
+   * @private
+   */
+  const _createAccountInApi = async (
+    email_address,
+    password,
+    role_description,
+    employer_fein
+  ) => {
+    appErrorsLogic.clearErrors();
+    email_address = trim(email_address);
+
+    try {
+      await usersApi.createUser({
+        email_address,
+        password,
+        role: { role_description },
+        user_leave_administrator: { employer_fein },
+      });
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+      return;
+    }
+
+    // Store the username so the user doesn't need to reenter it on the Verify page
+    setAuthData({
+      createAccountUsername: email_address,
+      createAccountFlow:
+        role_description === RoleDescription.employer ? "employer" : "claimant",
+    });
+
+    portalFlow.goToPageFor("CREATE_ACCOUNT");
+  };
+
+  /**
    * Create Portal account with the given username (email) and password.
    * If there are any errors, set app errors on the page.
    * @param {string} username Email address that is used as the username
    * @param {string} password Password
    */
   const createAccount = async (username = "", password) => {
+    if (isFeatureEnabled("authThroughApi")) {
+      await _createAccountInApi(username, password, RoleDescription.claimant);
+      return;
+    }
+
+    // TODO (CP-1768): Remove code below once requests are always sent through API
     appErrorsLogic.clearErrors();
     username = trim(username);
 
@@ -227,6 +278,17 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} ein Employer id number (known as EIN or FEIN)
    */
   const createEmployerAccount = async (username = "", password, ein) => {
+    if (isFeatureEnabled("authThroughApi")) {
+      await _createAccountInApi(
+        username,
+        password,
+        RoleDescription.employer,
+        ein
+      );
+      return;
+    }
+
+    // TODO (CP-1768): Remove code below once requests are always sent through API
     appErrorsLogic.clearErrors();
     username = trim(username);
 

@@ -18,6 +18,25 @@ export default class UsersApi extends BaseApi {
   }
 
   /**
+   * Register a new user
+   * @param {object} requestData - Registration fields
+   * @returns {Promise<UsersApiResult>}
+   */
+  createUser = async (requestData) => {
+    const { data } = await this.request(
+      "POST",
+      "",
+      requestData,
+      {},
+      { excludeAuthHeader: true }
+    );
+
+    return Promise.resolve({
+      user: new User(data),
+    });
+  };
+
+  /**
    * Get the currently authenticated user
    * @returns {Promise<UsersApiResult>}
    */

@@ -23,6 +23,7 @@ export const VerifyAccount = (props) => {
   const { appErrors, auth } = appLogic;
   const { t } = useTranslation();
 
+  // TODO (CP-1768): Remove code related to showing EIN field once sign up requests are always sent through API
   const createAccountUsername = get(auth, "authData.createAccountUsername", "");
   const createAccountFlow = get(auth, "authData.createAccountFlow");
   const employerIdNumber = get(auth, "authData.employerIdNumber", "");

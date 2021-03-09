@@ -57,7 +57,7 @@ export default class BaseApi {
    * @param {string} subPath - relative path without a leading forward slash
    * @param {object|FormData} [body] - request body
    * @param {object} [additionalHeaders] - request headers
-   * @param {{ multipartForm: boolean}}  options
+   * @param {{ excludeAuthHeader: boolean, multipartForm: boolean}}  options
    * @returns {Response} response - rejects on non-2xx status codes
    */
   async request(
@@ -65,19 +65,19 @@ export default class BaseApi {
     subPath = "",
     body = null,
     additionalHeaders = {},
-    options = { multipartForm: false }
+    { excludeAuthHeader = false, multipartForm = false } = {}
   ) {
     method = method.toUpperCase();
     validateRequestMethod(method);
 
     const url = createRequestUrl(this.basePath, subPath);
-    const authHeader = await getAuthorizationHeader();
+    const authHeader = excludeAuthHeader ? {} : await getAuthorizationHeader();
     const headers = {
       ...authHeader,
       ...additionalHeaders,
     };
 
-    if (!options.multipartForm) {
+    if (!multipartForm) {
       // Normally we want "application/json", but when we upload files,
       // we want the browser to automatically set the "Content-Type" to
       // "multipart/form-data" (specifically, we want the browser to set

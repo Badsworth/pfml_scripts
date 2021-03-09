@@ -25,6 +25,7 @@ export const ResetPassword = (props) => {
   const { t } = useTranslation();
 
   const cachedEmail = get(auth, "authData.resetPasswordUsername", "");
+  // TODO (CP-1768): Remove code related to showing EIN field once sign up requests are always sent through API
   const userNotFound = query["user-not-found"] === "true";
   const [codeResent, setCodeResent] = useState(false);
 
