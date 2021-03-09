@@ -11,6 +11,7 @@ from massgov.pfml.db.models.employees import Country, EmployerQuarterlyContribut
 from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployerFactory,
+    TaxIdentifierFactory,
     WagesAndContributionsFactory,
 )
 
@@ -202,3 +203,18 @@ def test_check_and_update_employer_quarlerly_contribution(
 
     assert updated
     assert len(test_db_session.dirty) == 1
+
+
+def test_dict_to_employee_removes_underscores_in_names(
+    test_db_session, initialize_factories_session
+):
+    underscored_employee_info = {
+        "employee_first_name": "Jane_Foo",
+        "employee_last_name": "Bar_Smith_",
+    }
+    underscored_employee = util.dict_to_employee(
+        underscored_employee_info, 1, uuid.uuid4(), TaxIdentifierFactory.tax_identifier_id
+    )
+
+    assert underscored_employee.first_name == "Jane Foo"
+    assert underscored_employee.last_name == "Bar Smith"

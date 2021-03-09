@@ -27,8 +27,8 @@ def employer_id_address_id_to_model(employer_id, address_id):
 def dict_to_employee(employee_info, import_log_entry_id, uuid=uuid.uuid4, tax_identifier_id=None):
     employee = Employee(
         employee_id=uuid,
-        first_name=employee_info["employee_first_name"],
-        last_name=employee_info["employee_last_name"],
+        first_name=employee_info["employee_first_name"].replace("_", " ").strip(),
+        last_name=employee_info["employee_last_name"].replace("_", " ").strip(),
         latest_import_log_id=import_log_entry_id,
         tax_identifier_id=tax_identifier_id,
     )
