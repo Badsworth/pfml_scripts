@@ -124,7 +124,7 @@ locals {
       }
     },
 
-    "reductions-retrieve-payment-lists-from-agencies" = {
+    "reductions-retrieve-payment-lists" = {
       command             = ["reductions-retrieve-payment-lists-from-agencies"]
       containers_template = "reductions_retrieve_payment_lists_from_agencies.json"
       task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"
@@ -134,7 +134,7 @@ locals {
       }
     },
 
-    "reductions-send-claimant-lists-to-agencies" = {
+    "reductions-send-claimant-lists" = {
       command             = ["reductions-send-claimant-lists-to-agencies"]
       containers_template = "reductions_send_claimant_lists_to_agencies.json"
       task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"
@@ -144,7 +144,7 @@ locals {
       }
     },
 
-    "reductions-send-wage-replacement-payments-to-dfml" = {
+    "reductions-send-wage-replacement" = {
       command             = ["reductions-send-wage-replacement-payments-to-dfml"]
       containers_template = "reductions_send_wage_replacement_payments_to_dfml.json"
       task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"

@@ -228,3 +228,58 @@ module "export_leave_admins_created_scheduler" {
   }
   DOC
 }
+
+
+module "reductions_send_claimant_lists_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_reductions_send_claimant_lists_to_agencies_schedule
+
+  task_name           = "reductions-send-claimant-lists"
+  schedule_expression = "cron(0 9 * * ? *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-send-claimant-lists"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-send-claimant-lists"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
+}
+
+module "reductions_retrieve_payment_listsscheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_reductions_retrieve_payment_lists_from_agencies_schedule
+
+  task_name           = "reductions-retrieve-payment-lists"
+  schedule_expression = "cron(0/15 9-15 * * ? *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-retrieve-payment-lists"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-retrieve-payment-lists"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
+}
+
+module "reductions-send-wage-replacement-payments-to-dfml" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_reductions_send_wage_replacement_payments_to_dfml_schedule
+
+  task_name           = "reductions-send-wage-replacement"
+  schedule_expression = "cron(0 15 * * ? *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-send-wage-replacement"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-send-wage-replacement"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
+}
