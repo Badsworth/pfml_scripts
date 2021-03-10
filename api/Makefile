@@ -166,6 +166,10 @@ fineos-test-vendor-export-generate-more:
 	mkdir -p mock_fineos_test_vendor_export_more
 	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export_more --fein 104000000 --ssn 254000000 --cvalue 5200 --employeecustomernumber 300 --absencecaseid 300 $(DECODE_LOG)
 
+delegated-payment-audit-rejects-generate:
+	mkdir -p mock_payment_rejects_files
+	$(PY_RUN_CMD) delegated-payment-audit-rejects-generate --folder mock_payment_rejects_files $(DECODE_LOG)
+
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	aws ecr get-login-password --region 'us-east-1' | \

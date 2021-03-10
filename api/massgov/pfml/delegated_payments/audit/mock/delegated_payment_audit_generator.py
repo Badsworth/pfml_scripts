@@ -1,3 +1,4 @@
+import argparse
 import decimal
 import random
 import uuid
@@ -7,6 +8,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, List, Tuple
 
+import massgov.pfml.db as db
+import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     ClaimType,
@@ -22,7 +25,21 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     PaymentFactory,
 )
-from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import PaymentAuditData
+from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import (
+    PaymentAuditData,
+    write_audit_report,
+)
+
+logger = logging.get_logger(__name__)
+
+
+# Setup command line generator args
+
+parser = argparse.ArgumentParser(description="Generate fake payments files and data")
+parser.add_argument(
+    "--folder", type=str, default="payments_files", help="Output folder for generated files"
+)
+
 
 ##############################
 ## Scenario Data Structures ##
@@ -187,7 +204,7 @@ def generate_scenario_data(scenario_descriptor: AuditScenarioDescriptor) -> Audi
     period_start_date = payment_date - timedelta(days=7)
     period_end_date = payment_date - timedelta(days=1)
 
-    payment_amount = decimal.Decimal(random.uniform(1, 1000))
+    payment_amount = round(decimal.Decimal(random.uniform(1, 1000)), 2)
 
     payment = PaymentFactory.create(
         fineos_pei_c_value=c_value,
@@ -221,12 +238,13 @@ def generate_scenario_data(scenario_descriptor: AuditScenarioDescriptor) -> Audi
 def generate_audit_report_dataset(
     data_set_config: List[AuditScenarioNameWithCount],
 ) -> List[AuditScenarioData]:
+    scenario_data_set: List[Tuple[PaymentAuditData, AuditScenarioName]] = []
+
     for scenario_with_count in data_set_config:
         scenario_name = scenario_with_count.name
         scenario_count = scenario_with_count.count
         scenario_descriptor = AUDIT_SCENARIO_DESCRIPTORS[scenario_name]
 
-        scenario_data_set: List[Tuple[PaymentAuditData, AuditScenarioName]] = []
         for i in range(scenario_count):  # noqa: B007
             scenario_data = generate_scenario_data(scenario_descriptor)
             scenario_data_set.append(scenario_data)
@@ -234,5 +252,40 @@ def generate_audit_report_dataset(
     return scenario_data_set
 
 
-def generate_audit_rejects():
-    pass
+# TODO pass in batch id and separate data set generation piece (after PUB-76)
+def generate_payment_audit_data_set_and_rejects_file(
+    folder_path: str, db_session: db.Session
+) -> List[AuditScenarioData]:
+    test_scenarios_with_count: List[AuditScenarioNameWithCount] = [
+        AuditScenarioNameWithCount(scenario_name, 10)
+        for scenario_name in AUDIT_SCENARIO_DESCRIPTORS.keys()
+    ]
+
+    payment_audit_scenario_data_set: List[AuditScenarioData] = generate_audit_report_dataset(
+        test_scenarios_with_count
+    )
+
+    payment_audit_data_set: List[PaymentAuditData] = []
+    for payment_audit_scenario_data in payment_audit_scenario_data_set:
+        payment_audit_data: PaymentAuditData = payment_audit_scenario_data.payment_audit_data
+        payment_audit_data.rejected_by_program_integrity = True if random.random() < 0.3 else False
+        payment_audit_data_set.append(payment_audit_data)
+
+    write_audit_report(payment_audit_data_set, folder_path, db_session)
+    return payment_audit_scenario_data_set
+
+
+def generate_payment_rejects_file():
+    logging.init(__name__)
+
+    logger.info("Genrating payment rejects file.")
+
+    db_session = db.init(sync_lookups=True)
+    db.models.factories.db_session = db_session
+
+    args = parser.parse_args()
+    folder_path = args.folder
+
+    generate_payment_audit_data_set_and_rejects_file(folder_path, db_session)
+
+    logger.info("Done genrating payment rejects file.")
