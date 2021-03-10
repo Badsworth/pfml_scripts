@@ -9,9 +9,12 @@ export default {
 
 export const Default = () => {
   const appLogic = {
+    appErrors: new AppErrorInfoCollection(),
     portalFlow: {
-      appErrors: new AppErrorInfoCollection(),
       goTo: () => {},
+    },
+    employers: {
+      addEmployer: () => {},
     },
   };
   return <AddOrganization appLogic={appLogic} />;
