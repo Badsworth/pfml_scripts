@@ -8,7 +8,7 @@ on:
       - portal/**
 
 env:
-  nodeVersion: 12.x
+  nodeVersion: 15.x
 
 jobs:
   build_test:

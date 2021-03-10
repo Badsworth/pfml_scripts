@@ -52,9 +52,3 @@ If you are testing a feature branch on the test environment, please go through t
 The [Storybook site](http://massgov-pfml-test-storybook-builds.s3-website-us-east-1.amazonaws.com),
 used for visualizing our components, is exported and deployed automatically when pull requests are merged
 into the `main` branch. Only one environment (`test`) exists for the Storybook site.
-
-## Playroom
-
-The [Playroom site](http://massgov-pfml-test-playroom-builds.s3-website-us-east-1.amazonaws.com),
-used for prototyping in the browser, is exported and deployed automatically when pull requests are merged
-into the `main` branch. Only one environment (`test`) exists for the Playroom site.

@@ -11,11 +11,10 @@ on:
     paths:
       - "portal/**"
       - "!portal/__mocks__/**"
-      - "!portal/playroom/**"
       - "!portal/tests/**"
 
 env:
-  nodeVersion: 12.x
+  nodeVersion: 15.x
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   terraformVersion: 0.13.6

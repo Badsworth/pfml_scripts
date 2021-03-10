@@ -83,14 +83,6 @@ Run the UI component explorer sandbox, [Storybook](https://storybook.js.org/). A
 
 Exports the Storybook site as a static HTML site.
 
-### `npm run playroom`
-
-Run [Playroom](https://github.com/seek-oss/playroom), a code-oriented design environment that allows you to quickly prototype interfaces using our production component library, in the browser.
-
-### `npm run playroom:build`
-
-Exports the Playroom site as a static HTML site for publishing online.
-
 ## Additional commands
 
 ### `npm run analyze-bundle`
@@ -225,7 +217,6 @@ Below is an abbreviated representation of our directory structure, pointing out 
 ├── __mocks__               Dependency mocks used by test suites
 ├── tests                   Test suites
 ├── config                  Env. variables & feature flags
-├── playroom                Playroom layout & components export
 ├── public                  Static assets
 ├── src                     Source code
 │   ├── api                 API request modules
@@ -246,6 +237,5 @@ Below is an abbreviated representation of our directory structure, pointing out 
 ├── storybook               Storybook site config and stories
 ├── styles
 │   └── app.scss            Main stylesheet
-├── next.config.js          Build process config for Portal
-└── playroom.config.js      Build process config for Playroom
+└── next.config.js          Build process config for Portal
 ```

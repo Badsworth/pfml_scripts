@@ -33,7 +33,6 @@ on:
     paths:
       - "portal/**"
       - "!portal/__mocks__/**"
-      - "!portal/playroom/**"
       - "!portal/storybook/**"
       - "!portal/tests/**"
 
