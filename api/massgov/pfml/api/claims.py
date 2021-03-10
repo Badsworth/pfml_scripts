@@ -31,11 +31,11 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 class VerificationRequired(Forbidden):
     user_leave_admin: UserLeaveAdministrator
-    description = "User is not Verified"
     status_code = Forbidden
 
-    def __init__(self, user_leave_admin):
+    def __init__(self, user_leave_admin, description):
         self.user_leave_admin = user_leave_admin
+        self.description = description
 
     def to_api_response(self):
         employer_id = self.user_leave_admin.employer_id
@@ -81,11 +81,13 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
             raise Forbidden(description="User is not a leave administrator")
 
         if user_leave_admin.fineos_web_id is None:
-            raise Forbidden(description="User has no leave administrator FINEOS ID")
+            raise VerificationRequired(
+                user_leave_admin, "User has no leave administrator FINEOS ID"
+            )
 
         # TODO: Remove this after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
         if app.get_config().enforce_verification and not user_leave_admin.verified:
-            raise VerificationRequired(user_leave_admin)
+            raise VerificationRequired(user_leave_admin, "User is not Verified")
 
         return user_leave_admin
 
