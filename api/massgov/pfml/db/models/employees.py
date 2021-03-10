@@ -1391,6 +1391,8 @@ class Flow(LookupTable):
     VENDOR_EFT = LkFlow(8, "Vendor EFT")
     UNUSED = LkFlow(9, "Unused flow")
     PEI_WRITEBACK_FILES = LkFlow(10, "PEI Writeback files")
+    DFML_DUA_REDUCTION_REPORT = LkFlow(11, "DUA agency reduction report")
+    DFML_DIA_REDUCTION_REPORT = LkFlow(12, "DIA agency reduction report")
 
     # ==============================
     # Delegated Payments Flows
@@ -1516,6 +1518,18 @@ class State(LookupTable):
     )
     DIA_PAYMENT_LIST_SAVED_TO_DB = LkState(
         49, "New DIA payments stored in database", Flow.DIA_PAYMENT_LIST.flow_id
+    )
+
+    # State for sending new reductions payments to DFML
+    DIA_REDUCTIONS_REPORT_SENT = LkState(
+        50,
+        "New DIA reductions payments report sent to DFML",
+        Flow.DFML_DIA_REDUCTION_REPORT.flow_id,
+    )
+    DUA_REDUCTIONS_REPORT_SENT = LkState(
+        51,
+        "New DUA reductions payments report sent to DFML",
+        Flow.DFML_DUA_REDUCTION_REPORT.flow_id,
     )
 
     # ==============================
