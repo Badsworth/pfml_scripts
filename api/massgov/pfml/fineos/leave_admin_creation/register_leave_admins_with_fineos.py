@@ -6,6 +6,7 @@ import massgov.pfml.util.logging
 from massgov.pfml import db, fineos
 from massgov.pfml.api.services.administrator_fineos_actions import register_leave_admin_with_fineos
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
+from massgov.pfml.util.sentry import initialize_sentry
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -103,6 +104,7 @@ def find_admins_without_registration(db_session: db.Session):
 
 
 def main():
+    initialize_sentry()
     massgov.pfml.util.logging.init("register_leave_admins_with_fineos")
     logger.info("Beginning FINEOS Leave Admin Creation Script")
     db_session_raw = db.init()

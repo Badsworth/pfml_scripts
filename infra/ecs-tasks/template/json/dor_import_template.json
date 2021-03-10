@@ -28,7 +28,8 @@
       { "name": "DB_NAME", "value": "${db_name}" },
       { "name": "DB_USERNAME", "value": "${db_username}" },
       { "name": "DECRYPT", "value": "true" },
-      { "name": "FOLDER_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/dor/received" }
+      { "name": "FOLDER_PATH", "value": "s3://massgov-pfml-${environment_name}-agency-transfer/dor/received" },
+      { "name": "ENABLE_SENTRY", "value": "${enable_sentry}"}
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },

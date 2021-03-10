@@ -1,6 +1,10 @@
+import os
 import sys
 from types import TracebackType
 from typing import Dict, Optional, Tuple, Union
+
+import sentry_sdk
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 import massgov.pfml.util.logging as logging
 
@@ -21,6 +25,23 @@ def sanitize_sentry_event(event, hint):
             frame.pop("vars", None)
 
     return event
+
+
+# This is a util for initializing Sentry before all ECS tasks
+def initialize_sentry():
+    if os.environ.get("ENABLE_SENTRY", "0") == "1":
+        sentry_logging = LoggingIntegration(
+            # Send logs to Sentry as breadcrumbs, but don't capture them as error events.
+            level=logger.info(),
+            event_level=None,
+        )
+
+        sentry_sdk.init(
+            "https://624337ca44e9405f8884c4a3f5acc0c0@o514801.ingest.sentry.io/5628495",
+            traces_sample_rate=1.0,
+            before_send=sanitize_sentry_event,
+            integrations=[sentry_logging],
+        )
 
 
 def log_and_capture_exception(msg: str, extra: Optional[Dict] = None) -> None:

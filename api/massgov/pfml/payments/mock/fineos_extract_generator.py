@@ -26,6 +26,7 @@ from massgov.pfml.payments.mock.payments_test_scenario_generator import (
     ScenarioDataConfig,
     ScenarioNameWithCount,
 )
+from massgov.pfml.util.sentry import initialize_sentry
 
 logger = logging.get_logger(__name__)
 
@@ -442,6 +443,7 @@ DEFAULT_SCENARIOS_CONFIG: List[ScenarioNameWithCount] = [
 
 def main():
     # generate sample
+    initialize_sentry()
     logging.init(__name__)
 
     db_session = db.init(sync_lookups=True)

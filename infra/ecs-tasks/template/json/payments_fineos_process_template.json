@@ -47,7 +47,8 @@
       { "name": "CTR_VCC_BIEVNT_EMAIL_ADDRESS", "value": "${ctr_vcc_bievnt_email_address}" },
       { "name": "DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", "value": "${dfml_business_operations_email_address}" },
       { "name": "DFML_PROJECT_MANAGER_EMAIL_ADDRESS", "value": "${dfml_project_manager_email_address}" },
-      { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", "value": "${bounce_forwarding_email_address_arn}" }
+      { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", "value": "${bounce_forwarding_email_address_arn}" },
+      { "name": "ENABLE_SENTRY", "value": "${enable_sentry}"}
 
     ],
     "secrets": [

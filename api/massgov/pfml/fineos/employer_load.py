@@ -9,6 +9,7 @@ import massgov.pfml.util.batch.log
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db, fineos
 from massgov.pfml.util.logging import audit
+from massgov.pfml.util.sentry import initialize_sentry
 
 logger = logging.get_logger(__name__)
 
@@ -35,6 +36,7 @@ def parse_args():
 
 def handler():
     """ECS handler function."""
+    initialize_sentry()
     audit.init_security_logging()
     logging.init(__name__)
 

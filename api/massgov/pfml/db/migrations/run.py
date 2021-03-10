@@ -6,6 +6,10 @@ import os
 from alembic import command
 from alembic.config import Config
 
+from massgov.pfml.util.sentry import initialize_sentry
+
+# import sentry.py and make sure flag is OFF
+initialize_sentry()
 alembic_cfg = Config(os.path.join(os.path.dirname(__file__), "./alembic.ini"))
 
 # Override the script_location to be absolute based on this file's directory.
