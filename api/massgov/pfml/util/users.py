@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import MultipleResultsFound
 from werkzeug.exceptions import BadRequest
 
+import massgov.pfml.api.app as app
 import massgov.pfml.cognito_post_confirmation_lambda.lib as lib
 import massgov.pfml.util.logging
 from massgov.pfml import db, fineos
@@ -72,6 +73,7 @@ def register_or_update_leave_admin(
     db_session: db.Session,
     fein: str,
     email: str,
+    force_registration: bool,
     cognito_pool_id: str,
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
     fineos_client: Optional[fineos.AbstractFINEOSClient] = None,
@@ -140,6 +142,11 @@ def register_or_update_leave_admin(
             return False, "Unable to create Cognito account for user"
         except CognitoPasswordSetFailure:
             return False, "Unable to set Cognito password for user"
+
+    # TODO: Remove this check - https://lwd.atlassian.net/browse/EMPLOYER-962
+    if app.get_config().enforce_verification and not force_registration:
+        return True, "Successfully added user to Cognito and API DB"
+
     retry_count = 0
     while retry_count < 3:
         try:

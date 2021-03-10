@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from botocore.exceptions import ClientError
 
+import massgov.pfml.fineos.mock_client
 from massgov.pfml import fineos
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
 from massgov.pfml.user_import.process_csv import (
@@ -151,6 +152,7 @@ class TestProcessByEmail:
                 email=email,
                 input_data=employers,
                 db_session=test_db_session,
+                force_registration=True,
                 cognito_pool_id="fake_pool",
                 cognito_client=cognito_client,
                 fineos_client=fineos_client,
@@ -187,6 +189,7 @@ class TestProcessByEmail:
                 email=email,
                 input_data=employers,
                 db_session=test_db_session,
+                force_registration=True,
                 cognito_pool_id="fake_pool",
                 filename=test_file_location,
                 cognito_client=cognito_client,
@@ -215,6 +218,7 @@ class TestProcessByEmail:
                 email=email,
                 input_data=employers,
                 db_session=test_db_session,
+                force_registration=True,
                 cognito_pool_id="fake_pool",
                 filename=test_file_location,
                 cognito_client=cognito_client,
@@ -242,6 +246,7 @@ class TestProcessByEmail:
                 email=email,
                 input_data=employers,
                 db_session=test_db_session,
+                force_registration=True,
                 cognito_pool_id="fake_pool",
                 filename=test_file_location,
                 cognito_client=cognito_client,
@@ -262,6 +267,7 @@ class TestProcessByEmail:
         process_files(
             files=[test_file_location],
             db_session=test_db_session,
+            force_registration=True,
             cognito_client=cognito_client,
             cognito_pool_id="fake_pool",
         )
@@ -273,3 +279,45 @@ class TestProcessByEmail:
             in finished_file.getMessage()
         )
         assert "done processing files" in complete_log.getMessage()
+
+    def test_no_fineos_web_ids_created_when_not_forcing_registration(
+        self, test_file_location, test_db_session, create_employers
+    ):
+        massgov.pfml.fineos.mock_client.start_capture()
+        fineos_client = fineos.create_client()
+        cognito_client = MockCognito()
+        pivoted = pivot_csv_file(test_file_location)
+        processed = 0
+        for email, employers in pivoted.items():
+            processed += process_by_email(
+                email=email,
+                input_data=employers,
+                db_session=test_db_session,
+                force_registration=False,
+                cognito_pool_id="fake_pool",
+                cognito_client=cognito_client,
+                fineos_client=fineos_client,
+            )
+        # 5 records in this file
+        assert processed == 5
+        # Should have created 3 cognito users
+        assert len(cognito_client._memo) == 3
+        # Ensure all emails in pivoted file were created in cognito
+        assert set(cognito_client._memo.keys()) == set(pivoted.keys())
+
+        # Ensure ALL changes are committed by the process_by_email flow with intentional rollback
+        test_db_session.rollback()
+        users_created = test_db_session.query(User).all()
+        assert len(users_created) == 3
+        user_roles_created = test_db_session.query(UserRole).all()
+        assert len(user_roles_created) == 3
+        for user_role in user_roles_created:
+            assert user_role.role_id == Role.EMPLOYER.role_id
+
+        # We shouldn't have any fineos_web_ids in the ULA table because none of these users have verified.
+        user_leave_admins = test_db_session.query(UserLeaveAdministrator).all()
+        assert len(user_leave_admins) == 3
+        for ula in user_leave_admins:
+            assert ula.fineos_web_id is None
+        capture = massgov.pfml.fineos.mock_client.get_capture()
+        assert len(capture) == 0

@@ -31,6 +31,11 @@ def parse_args():
         description="Import CSV file(s) containing emails+fein as leave admins",
     )
     parser.add_argument("files", nargs="+", help="Files to import")
+    parser.add_argument(
+        "--force_registration",
+        help="To register users in Fineos without verification",
+        action="store_true",
+    )
     args = parser.parse_args()
     if not args.files:
         parser.print_help()
@@ -67,6 +72,7 @@ def process_by_email(
     email: str,
     input_data: List[dict],
     db_session: db.Session,
+    force_registration: bool,
     cognito_pool_id: str,
     filename: Optional[str] = "",
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
@@ -80,6 +86,7 @@ def process_by_email(
                 db_session=db_session,
                 fein=fein,
                 email=email,
+                force_registration=force_registration,
                 cognito_pool_id=cognito_pool_id,
                 cognito_client=cognito_client,
                 fineos_client=fineos_client,
@@ -99,6 +106,7 @@ def process_by_email(
 
 def process_files(
     files: List[str],
+    force_registration: bool,
     cognito_pool_id: str,
     db_session: Optional[db.Session] = None,
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
@@ -122,6 +130,7 @@ def process_files(
                     email=email,
                     input_data=employers,
                     db_session=db_session,
+                    force_registration=force_registration,
                     cognito_pool_id=cognito_pool_id,
                     filename=input_file,
                     cognito_client=cognito_client,
@@ -151,4 +160,8 @@ def process():
         exit(1)
 
     args = parse_args()
-    process_files(files=args.files, cognito_pool_id=cognito_pool_id)
+    process_files(
+        files=args.files,
+        force_registration=args.force_registration,
+        cognito_pool_id=cognito_pool_id,
+    )

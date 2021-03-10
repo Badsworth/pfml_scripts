@@ -46,5 +46,6 @@ def process_formstack_submissions_file(
             db_session=db_session,
             fein=cleaned_fein,
             email=data["your_email_address"],
+            force_registration=True,
             cognito_pool_id=cognito_pool_id,
         )

@@ -1,5 +1,6 @@
 import boto3
 
+import massgov.pfml.api.app as app
 import massgov.pfml.util.config as config
 import massgov.pfml.util.logging
 from massgov.pfml import db, fineos
@@ -49,14 +50,26 @@ def find_user_and_register(
 
 
 def find_admins_without_registration(db_session: db.Session):
-    # Get records with no fineos_web_id
+    # Get verified records with no fineos_web_id
     # For each record, lookup the user and employer
     # Register with fineos
-    leave_admins_without_fineos = (
-        db_session.query(UserLeaveAdministrator)
-        .filter(UserLeaveAdministrator.fineos_web_id == None)  # noqa: E711
-        .all()
-    )
+
+    # TODO: Remove this check - https://lwd.atlassian.net/browse/EMPLOYER-962
+    if app.get_config().enforce_verification:
+        leave_admins_without_fineos = (
+            db_session.query(UserLeaveAdministrator)
+            .filter(
+                UserLeaveAdministrator.fineos_web_id.is_(None),
+                UserLeaveAdministrator.verified == True,  # noqa: E712
+            )
+            .all()
+        )
+    else:
+        leave_admins_without_fineos = (
+            db_session.query(UserLeaveAdministrator)
+            .filter(UserLeaveAdministrator.fineos_web_id.is_(None))
+            .all()
+        )
 
     if len(leave_admins_without_fineos) > 0:
         fineos_client_config = fineos.factory.FINEOSClientConfig.from_env()
@@ -77,7 +90,7 @@ def find_admins_without_registration(db_session: db.Session):
 
     leave_admins_without_fineos_count = (
         db_session.query(UserLeaveAdministrator)
-        .filter(UserLeaveAdministrator.fineos_web_id == None)  # noqa: E711
+        .filter(UserLeaveAdministrator.fineos_web_id.is_(None))
         .count()
     )
 
