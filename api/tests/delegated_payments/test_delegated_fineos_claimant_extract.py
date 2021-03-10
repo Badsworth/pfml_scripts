@@ -1,4 +1,5 @@
 import os
+import tempfile
 from typing import Dict, List, Optional, Tuple
 
 import boto3
@@ -33,6 +34,7 @@ from massgov.pfml.db.models.factories import (
     ReferenceFileFactory,
     TaxIdentifierFactory,
 )
+from massgov.pfml.db.models.payments import EmployeeFeed, VbiRequestedAbsenceSom
 from massgov.pfml.delegated_payments.delegated_config import get_s3_config
 from massgov.pfml.util import datetime
 from tests.delegated_payments.conftest import upload_file_to_s3
@@ -937,3 +939,37 @@ def test_process_records_to_db_no_claimant_updates_has_prior_eft_state(
             State.VCC_ERROR_REPORT_SENT.state_id,
             State.EFT_PENDING.state_id,
         ]
+
+
+def test_extract_to_staging_tables(emp_updates_path, test_db_session):
+    tempdir = tempfile.mkdtemp()
+    date = "2020-12-21-19-20-42"
+    test_file_name1 = "Employee_feed.csv"
+    test_file_name2 = "VBI_REQUESTEDABSENCE_SOM.csv"
+    test_file_name3 = "LeavePlan_info.csv"
+
+    test_file_path1 = os.path.join(os.path.dirname(__file__), f"test_files/{test_file_name1}")
+    test_file_path2 = os.path.join(os.path.dirname(__file__), f"test_files/{test_file_name2}")
+    test_file_path3 = os.path.join(os.path.dirname(__file__), f"test_files/{test_file_name3}")
+
+    test_file_names = [test_file_path1, test_file_path2, test_file_path3]
+
+    extract_data = claimant_export.ExtractData(test_file_names, date)
+    claimant_export.download_and_index_data(extract_data, tempdir)
+    claimant_export.extract_to_staging_tables(extract_data, test_db_session)
+
+    test_db_session.commit()
+
+    requested_absence_info_data = test_db_session.query(VbiRequestedAbsenceSom).all()
+    employee_feed_data = test_db_session.query(EmployeeFeed).all()
+
+    ref_file = extract_data.reference_file
+
+    assert len(requested_absence_info_data) == 4
+    assert len(employee_feed_data) == 2
+
+    for data in requested_absence_info_data:
+        assert data.reference_file_id == ref_file.reference_file_id
+
+    for data in employee_feed_data:
+        assert data.reference_file_id == ref_file.reference_file_id

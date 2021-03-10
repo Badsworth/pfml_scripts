@@ -28,6 +28,7 @@ from massgov.pfml.db.models.factories import (
     EmployeeReferenceFileFactory,
     ReferenceFileFactory,
 )
+from massgov.pfml.db.models.payments import Vpei
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     get_fineos_vendor_customer_numbers_from_reference_file,
     get_inf_data_as_plain_text,
@@ -966,3 +967,19 @@ def test_get_fineos_max_history_date_bad_string(monkeypatch):
 
     with pytest.raises(ValueError):
         payments_util.get_fineos_max_history_date(ReferenceFileType.PAYMENT_EXTRACT)
+
+
+def test_create_staging_table_instance(test_db_session, initialize_factories_session):
+    """ We test if an extra column is provided to given staging data model, an instance of data
+    model is created, excluding the extra column. The extra column is logged as warning.
+    """
+
+    ref_file = ReferenceFileFactory.create()
+    vpei_data = {"addressline6": "test", "addressline7": "test", "addressline8": "test"}
+    vpei_instance = payments_util.create_staging_table_instance(vpei_data, Vpei, ref_file)
+    test_db_session.add(vpei_instance)
+    test_db_session.commit()
+
+    employee = test_db_session.query(Vpei).filter_by(addressline6="test", addressline7="test").all()
+
+    assert len(employee) == 1

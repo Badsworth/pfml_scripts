@@ -16,6 +16,8 @@ import pytz
 import smart_open
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.declarative.api import DeclarativeMeta
+from sqlalchemy.orm import ColumnProperty, class_mapper
 from sqlalchemy.orm.exc import MultipleResultsFound
 
 import massgov.pfml.delegated_payments.delegated_config as payments_config
@@ -38,6 +40,13 @@ from massgov.pfml.db.models.employees import (
     ReferenceFile,
     ReferenceFileType,
     State,
+)
+from massgov.pfml.db.models.payments import (
+    EmployeeFeed,
+    VbiRequestedAbsenceSom,
+    Vpei,
+    VpeiClaimDetails,
+    VpeiPaymentDetails,
 )
 from massgov.pfml.util.aws.ses import EmailRecipient, send_email
 from massgov.pfml.util.csv import CSVSourceWrapper
@@ -1110,3 +1119,49 @@ def download_and_parse_csv(s3_path: str, download_directory: str) -> CSVSourceWr
         raise e
 
     return CSVSourceWrapper(download_location)
+
+
+def make_keys_lowercase(data: Dict[str, Any]) -> Dict[str, Any]:
+    return {k.lower(): v for k, v in data.items()}
+
+
+def get_attribute_names(cls):
+    return [
+        prop.key
+        for prop in class_mapper(cls).iterate_properties
+        if isinstance(prop, ColumnProperty)
+    ]
+
+
+def create_staging_table_instance(
+    data: Dict,
+    db_cls: Union[Vpei, VpeiClaimDetails, VpeiPaymentDetails, VbiRequestedAbsenceSom, EmployeeFeed],
+    ref_file: ReferenceFile,
+) -> DeclarativeMeta:
+    """ We check if keys from data have a matching class property in staging model db_cls, if data contains
+    properties not yet included in cls, we log a warning. We return an instance of cls, with matching properties
+    from data and cls.
+    Eg:
+        class VbiRequestedAbsenceSom(Base):
+            __tablename__ = "a"
+            absence_casenumber = Column(Text)
+            absence_casestatus = Column(Text)
+            new_column = Column(Text)
+
+        data = {'absence_casenumber': '123', 'absence_casestatus': 'active','new_column': 'testtest'}
+
+        We will return an instance of class VbiRequestedAbsenceSom, with properties absence_casenumber and
+        absence_casestatus. We will log a warning stating property new_column is not included in model
+        class VbiRequestedAbsenceSom.
+    """
+
+    # check if extracted data types match our db model properties
+    known_properties = set(get_attribute_names(db_cls))
+    extracted_properties = set(data.keys())
+    difference = [prop for prop in extracted_properties if prop not in known_properties]
+
+    if len(difference) > 0:
+        logger.warning(f"{db_cls.__name__} does not include properties: {','.join(difference)}")
+        [data.pop(diff) for diff in difference]
+
+    return db_cls(**data, reference_file_id=ref_file.reference_file_id)

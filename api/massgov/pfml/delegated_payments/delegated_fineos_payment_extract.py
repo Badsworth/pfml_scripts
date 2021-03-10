@@ -39,6 +39,7 @@ from massgov.pfml.db.models.employees import (
     StateLog,
     TaxIdentifier,
 )
+from massgov.pfml.db.models.payments import Vpei, VpeiClaimDetails, VpeiPaymentDetails
 
 logger = logging.get_logger(__name__)
 
@@ -440,7 +441,7 @@ def determine_field_names(download_location: pathlib.Path) -> List[str]:
 
 def download_and_parse_data(s3_path: str, download_directory: pathlib.Path) -> List[Dict[str, str]]:
     file_name = s3_path.split("/")[-1]
-    download_location = download_directory / file_name
+    download_location = os.path.join(download_directory, file_name)
     logger.info("download %s to %s", s3_path, download_location)
     if s3_path.startswith("s3:/"):
         file_util.download_from_s3(s3_path, str(download_location))
@@ -993,6 +994,8 @@ def process_extract_data(download_directory: pathlib.Path, db_session: db.Sessio
             extract_data = ExtractData(s3_file_locations, date_str)
             download_and_process_data(extract_data, download_directory)
 
+            extract_to_staging_tables(extract_data, db_session)
+
             process_records_to_db(extract_data, db_session)
             move_files_from_received_to_processed(extract_data, db_session)
             logger.info(
@@ -1012,3 +1015,35 @@ def process_extract_data(download_directory: pathlib.Path, db_session: db.Sessio
             raise
 
     logger.info("Successfully processed payment extract files")
+
+
+def extract_to_staging_tables(extract_data: ExtractData, db_session: db.Session):
+    ref_file = extract_data.reference_file
+    db_session.add(ref_file)
+    pei_data = [
+        payments_util.make_keys_lowercase(v) for v in extract_data.pei.indexed_data.values()
+    ]
+    claim_details_data = [
+        payments_util.make_keys_lowercase(v)
+        for v in extract_data.claim_details.indexed_data.values()
+    ]
+    payment_details_data = []
+    for _, v in extract_data.payment_details.indexed_data.items():
+        for data in v:
+            payment_details_data.append(payments_util.make_keys_lowercase(data))
+
+    for data in pei_data:
+        vpei = payments_util.create_staging_table_instance(data, Vpei, ref_file)
+        db_session.add(vpei)
+
+    for data in claim_details_data:
+        claim_details = payments_util.create_staging_table_instance(
+            data, VpeiClaimDetails, ref_file
+        )
+        db_session.add(claim_details)
+
+    for data in payment_details_data:
+        payment_details = payments_util.create_staging_table_instance(
+            data, VpeiPaymentDetails, ref_file
+        )
+        db_session.add(payment_details)

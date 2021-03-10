@@ -31,6 +31,7 @@ from massgov.pfml.db.models.employees import (
     State,
     TaxIdentifier,
 )
+from massgov.pfml.db.models.payments import EmployeeFeed, VbiRequestedAbsenceSom
 
 logger = logging.get_logger(__name__)
 
@@ -129,6 +130,9 @@ def process_claimant_extract_data(db_session: db.Session) -> None:
 
             extract_data = ExtractData(s3_file_locations, date_str)
             download_and_index_data(extract_data, download_directory)
+
+            extract_to_staging_tables(extract_data, db_session)
+
             process_records_to_db(extract_data, db_session)
             move_files_from_received_to_processed(extract_data, db_session)
             logger.info(
@@ -169,6 +173,7 @@ def download_and_index_data(extract_data: ExtractData, download_directory: str) 
     employee_rows = payments_util.download_and_parse_csv(
         extract_data.employee_feed.file_location, download_directory
     )
+
     for row in employee_rows:
         default_payment_flag = row.get("DEFPAYMENTPREF")
         if default_payment_flag is not None and default_payment_flag == "Y":
@@ -969,3 +974,26 @@ def move_files_from_received_to_error(extract_data: ExtractData, db_session: db.
     )
 
     logger.info("Successfully moved claimant files to error folder.")
+
+
+def extract_to_staging_tables(extract_data: ExtractData, db_session: db.Session):
+    ref_file = extract_data.reference_file
+    db_session.add(ref_file)
+    requested_absence_info_data = [
+        payments_util.make_keys_lowercase(v)
+        for v in extract_data.requested_absence_info.indexed_data.values()
+    ]
+    employee_feed_data = [
+        payments_util.make_keys_lowercase(v)
+        for v in extract_data.employee_feed.indexed_data.values()
+    ]
+
+    for data in requested_absence_info_data:
+        vbi_requested_absence_som = payments_util.create_staging_table_instance(
+            data, VbiRequestedAbsenceSom, ref_file
+        )
+        db_session.add(vbi_requested_absence_som)
+
+    for data in employee_feed_data:
+        employee_feed = payments_util.create_staging_table_instance(data, EmployeeFeed, ref_file)
+        db_session.add(employee_feed)

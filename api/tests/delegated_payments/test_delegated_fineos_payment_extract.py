@@ -1,4 +1,5 @@
 import os
+import tempfile
 from datetime import date
 
 import boto3
@@ -34,6 +35,7 @@ from massgov.pfml.db.models.factories import (
     PaymentFactory,
     ReferenceFileFactory,
 )
+from massgov.pfml.db.models.payments import Vpei, VpeiClaimDetails, VpeiPaymentDetails
 from massgov.pfml.delegated_payments.delegated_config import get_s3_config
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     ValidationIssue,
@@ -41,6 +43,7 @@ from massgov.pfml.delegated_payments.delegated_payments_util import (
 )
 
 # every test in here requires real resources
+
 pytestmark = pytest.mark.integration
 
 EXPECTED_OUTCOME = {"message": "Success"}
@@ -1249,3 +1252,42 @@ def test_update_ctr_address_pair_fineos_address_no_update(
     )
     assert len(employee_state_logs_after) == 1
     assert employee_state_logs_after[0].end_state_id == State.EFT_REQUEST_RECEIVED.state_id
+
+
+def test_extract_to_staging_tables(test_db_session):
+    tempdir = tempfile.mkdtemp()
+    date_str = "2020-12-21-19-20-42"
+    test_file_name1 = "vpei.csv"
+    test_file_name2 = "vpeiclaimdetails.csv"
+    test_file_name3 = "vpeipaymentdetails.csv"
+
+    test_file_path1 = os.path.join(os.path.dirname(__file__), f"test_files/{test_file_name1}")
+    test_file_path2 = os.path.join(os.path.dirname(__file__), f"test_files/{test_file_name2}")
+    test_file_path3 = os.path.join(os.path.dirname(__file__), f"test_files/{test_file_name3}")
+
+    test_file_names = [test_file_path1, test_file_path2, test_file_path3]
+
+    extract_data = extractor.ExtractData(test_file_names, date_str)
+    extractor.download_and_process_data(extract_data, tempdir)
+    extractor.extract_to_staging_tables(extract_data, test_db_session)
+
+    test_db_session.commit()
+
+    pei_data = test_db_session.query(Vpei).all()
+    claim_details_data = test_db_session.query(VpeiClaimDetails).all()
+    payment_details_data = test_db_session.query(VpeiPaymentDetails).all()
+
+    assert len(pei_data) == 3
+    assert len(claim_details_data) == 3
+    assert len(payment_details_data) == 3
+
+    ref_file = extract_data.reference_file
+
+    for data in pei_data:
+        assert data.reference_file_id == ref_file.reference_file_id
+
+    for data in claim_details_data:
+        assert data.reference_file_id == ref_file.reference_file_id
+
+    for data in payment_details_data:
+        assert data.reference_file_id == ref_file.reference_file_id
