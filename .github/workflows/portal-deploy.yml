@@ -287,6 +287,8 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     needs: [update-the-deploy-branch, deploy-info]
+    env: 
+      releaseVersion: ${{ github.event.inputs.version }}
     steps:
       - uses: actions/checkout@v2
         with:

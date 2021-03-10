@@ -1,5 +1,6 @@
 const mayflowerAssets = require("@massds/mayflower-assets");
 const buildEnv = process.env.BUILD_ENV || "development";
+const releaseVersion = process.env.releaseVersion ? `massgov-pfml-portal@${process.env.releaseVersion.replace("portal/", "")}` : null
 const envVariables = require("./config")[buildEnv];
 const featureFlags = require("./config/featureFlags")(buildEnv);
 const withImages = require("next-images");
@@ -18,6 +19,7 @@ const config = {
     ...envVariables,
     featureFlags,
     buildEnv,
+    releaseVersion,
   },
   // Output source maps for production builds so they can aid in debugging production issues
   productionBrowserSourceMaps: true,

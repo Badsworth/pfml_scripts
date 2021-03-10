@@ -23,6 +23,7 @@ function initialize() {
       dsn: process.env.sentryDsn,
       integrations: [new DedupeIntegration()],
       environment: process.env.buildEnv,
+      release: process.env.releaseVersion,
     });
   }
 
