@@ -18,7 +18,7 @@ describe("Employer Generation", () => {
       city: expect.any(String),
       state: "MA",
       zip: expect.stringMatching(/\d{5}\-\d{4}/),
-      dba: "",
+      dba: expect.any(String),
       family_exemption: false,
       medical_exemption: false,
       updated_date: expect.any(String),
@@ -87,5 +87,49 @@ describe("Employer Generation", () => {
     );
     expect(counts.small).toBeLessThan(counts.medium);
     expect(counts.medium).toBeLessThan(counts.large);
+  });
+
+  it("generate() should return an employer with quarterly withholding amounts that reflect the employers FEIN", () => {
+    const [fresh] = EmployerPool.generate(1);
+    for (const withholding of fresh.withholdings) {
+      expect(parseInt(fresh.fein.replace("-", "").slice(0, 6)) / 100).toEqual(
+        withholding
+      );
+    }
+  });
+
+  it("generate() should return an employer with 4 quarterly withholding amounts of 0 when specified", () => {
+    const [fresh] = EmployerPool.generate(1, {
+      withholdings: [0, 0, 0, 0],
+    });
+    for (const withholding of fresh.withholdings) {
+      expect(0).toEqual(withholding);
+    }
+  });
+
+  it("generate() should return an employer with occuring quarterly withholding amounts of 0 at the rate specified", () => {
+    const zeroAmount = 1;
+    const [fresh] = EmployerPool.generate(1, {
+      withholdings: [null, null, null, 0],
+    });
+
+    let zeroReceived = 0;
+    for (const withholding of fresh.withholdings) {
+      if (withholding === 0) zeroReceived += 1;
+    }
+
+    expect(zeroAmount).toEqual(zeroReceived);
+  });
+
+  it("generate() will set employers quartlery amount to FEIN when withholdings is explicitly undefined", () => {
+    const [fresh] = EmployerPool.generate(1, {
+      withholdings: undefined,
+    });
+
+    for (const withholding of Object.values(fresh.withholdings)) {
+      expect(parseInt(fresh.fein.replace("-", "").slice(0, 6)) / 100).toEqual(
+        withholding
+      );
+    }
   });
 });

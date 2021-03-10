@@ -5,6 +5,7 @@ import unique from "../simulation/unique";
 import { pipeline, Readable } from "stream";
 import JSONStream from "JSONStream";
 import { promisify } from "util";
+
 const pipelineP = promisify(pipeline);
 
 export type Employer = {
@@ -22,6 +23,7 @@ export type Employer = {
   exemption_cease_date?: Date | string;
   updated_date?: Date | string;
   size?: "small" | "medium" | "large";
+  withholdings: number[];
 };
 
 // Roulette wheel algorithm.
@@ -34,7 +36,9 @@ const employerSizeWheel = [
 
 type EmployerGenerationSpec = {
   size?: Employer["size"];
+  withholdings?: (number | null)[]; // quarters with 0 or null withholding amounts
 };
+
 export class EmployerGenerator {
   private generateAccountKey = unique(() =>
     faker.helpers.replaceSymbolWithNumber("###########")
@@ -55,20 +59,37 @@ export class EmployerGenerator {
       Math.floor(Math.random() * employerSizeWheel.length)
     ];
   }
+
+  private generateWithholding(
+    fein: string,
+    spec: (number | null)[] = [null, null, null, null]
+  ): Employer["withholdings"] {
+    const formattedFein = fein.replace(/-/, "");
+    const defaultWithholding = parseInt(formattedFein.slice(0, 6)) / 100;
+    return spec.map((value) => value ?? defaultWithholding);
+  }
+
   generate(spec: EmployerGenerationSpec = {}): Employer {
+    // dba and name should be the same
+
+    const name = this.generateCompanyName();
+    const fein = this.generateFEIN();
+    const withholdings = this.generateWithholding(fein, spec.withholdings);
+
     return {
       accountKey: this.generateAccountKey(),
-      name: this.generateCompanyName(),
-      fein: this.generateFEIN(),
+      name,
+      fein,
       street: faker.address.streetAddress(),
       city: faker.address.city(),
       state: "MA",
       zip: faker.address.zipCode("#####-####"),
-      dba: "",
+      dba: name,
       family_exemption: false,
       medical_exemption: false,
       updated_date: formatISO(new Date()),
       size: spec.size ?? this.generateSize(),
+      withholdings,
     };
   }
 }
@@ -112,6 +133,15 @@ export default class EmployerPool implements Iterable<Employer> {
       JSONStream.stringify(),
       fs.createWriteStream(filename)
     );
+  }
+
+  /**
+   * Merge one or more pools together into a megapool.
+   *
+   * @param pools
+   */
+  static merge(...pools: EmployerPool[]): EmployerPool {
+    return new this(pools.map((p) => p.employers).flat(1));
   }
 
   /**

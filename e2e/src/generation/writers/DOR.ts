@@ -117,7 +117,7 @@ export default class DOR {
     employer: Employer,
     periods: Date[]
   ) {
-    return periods.map((period) => {
+    return periods.map((period, i) => {
       return (
         [
           "A",
@@ -127,7 +127,7 @@ export default class DOR {
           employer.fein.replace(/-/g, "").padEnd(14),
           "F",
           employer.fein.replace(/-/g, "").padEnd(14),
-          amt(60000),
+          amt(employer.withholdings[i] ?? 0),
           formatDate(period, "yyyyMMdd"),
           formatDate(period, "yyyyMMddHHmmss"),
         ].join("") + "\n"
