@@ -22,8 +22,6 @@
 // spacing styles we rely on are overridden
 @import "~uswds/dist/scss/uswds";
 
-@import "~@fortawesome/fontawesome-svg-core/styles";
-
 // Include default USWDS h1-h6 style (size, weight, spacing) rulesets
 @include usa-headings-styles;
 

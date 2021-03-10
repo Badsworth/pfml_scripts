@@ -1,14 +1,9 @@
 import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
-import {
-  faComments,
-  faEdit,
-  faFile,
-} from "@fortawesome/free-regular-svg-icons";
 import Alert from "../../components/Alert";
 import ButtonLink from "../../components/ButtonLink";
 import ClaimCollection from "../../models/ClaimCollection";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Heading from "../../components/Heading";
+import Icon from "../../components/Icon";
 import Link from "next/link";
 import PropTypes from "prop-types";
 import React from "react";
@@ -24,17 +19,14 @@ export const GetReady = (props) => {
 
   const hasClaims = !claims.isEmpty;
 
+  const iconClassName =
+    "margin-right-1 text-secondary text-middle margin-top-neg-05";
+
   const alertIconProps = {
-    className: "margin-right-1 text-secondary text-middle",
+    className: iconClassName,
     height: 20,
     width: 20,
     fill: "currentColor",
-  };
-
-  const iconProps = {
-    className: "margin-right-1 text-secondary",
-    size: "lg",
-    fixedWidth: true,
   };
 
   return (
@@ -92,13 +84,13 @@ export const GetReady = (props) => {
 
       <div className="measure-6">
         <Heading level="2">
-          <FontAwesomeIcon icon={faComments} {...iconProps} />
+          <Icon className={iconClassName} name="comment" />
           {t("pages.getReady.stepOneHeading")}
         </Heading>
         <Trans i18nKey="pages.getReady.stepOne" />
 
         <Heading level="2">
-          <FontAwesomeIcon icon={faFile} {...iconProps} />
+          <Icon className={iconClassName} name="upload_file" />
           {t("pages.getReady.stepTwoHeading")}
         </Heading>
         <Trans
@@ -111,7 +103,7 @@ export const GetReady = (props) => {
         />
 
         <Heading level="2">
-          <FontAwesomeIcon icon={faEdit} {...iconProps} />
+          <Icon className={iconClassName} name="edit" />
           {t("pages.getReady.stepThreeHeading")}
         </Heading>
         <Trans

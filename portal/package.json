@@ -31,9 +31,6 @@
   },
   "dependencies": {
     "@aws-amplify/auth": "^3.4.16",
-    "@fortawesome/fontawesome-svg-core": "^1.2.32",
-    "@fortawesome/free-regular-svg-icons": "^5.15.1",
-    "@fortawesome/react-fontawesome": "^0.1.14",
     "@massds/mayflower-assets": "^11.0.2",
     "@massds/mayflower-react": "^11.0.2",
     "@sentry/integrations": "^6.1.0",

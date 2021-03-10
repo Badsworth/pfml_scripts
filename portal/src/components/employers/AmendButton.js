@@ -1,8 +1,7 @@
 import Button from "../Button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Icon from "../Icon";
 import PropTypes from "prop-types";
 import React from "react";
-import { faEdit } from "@fortawesome/free-regular-svg-icons";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -16,7 +15,10 @@ const AmendButton = ({ onClick }) => {
   return (
     <span className="c-amend-button">
       <Button variation="unstyled" onClick={onClick}>
-        <FontAwesomeIcon icon={faEdit} className="edit-icon margin-right-1" />
+        <Icon
+          name="edit"
+          className="text-middle margin-right-05 margin-top-neg-05"
+        />
         <span className="amend-text">{t("components.amendButton.amend")}</span>
       </Button>
     </span>
