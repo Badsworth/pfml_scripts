@@ -57,8 +57,6 @@ describe("ScheduleFixed", () => {
       diveLevels: 0,
     }));
 
-    wrapper.update();
-
     const values = wrapper.find("InputHours").map((el) => el.props().value);
     expect(sum(values)).toEqual(0);
   });

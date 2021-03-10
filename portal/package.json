@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Mass PFML Portal",
   "main": "index.js",
+  "engines": {
+    "node": ">=15",
+    "npm": ">=7"
+  },
   "scripts": {
     "analyze-bundle": "ANALYZE_BUNDLE=true next build",
     "dev": "next",

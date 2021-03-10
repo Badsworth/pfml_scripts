@@ -13,7 +13,6 @@ describe("withWithholding", () => {
   const employer_id = "mock-employer-id";
 
   const PageComponent = () => <div />;
-  const WrappedComponent = withWithholding(PageComponent);
 
   const getUser = (isVerified = false) => {
     return new User({
@@ -30,10 +29,13 @@ describe("withWithholding", () => {
     });
   };
 
-  function render({ appLogic, customQuery }) {
+  async function render({ appLogic, customQuery }) {
     const query = customQuery || { employer_id };
-    act(() => {
-      wrapper = mount(<WrappedComponent appLogic={appLogic} query={query} />);
+    await act(async () => {
+      const WrappedComponent = withWithholding(PageComponent);
+      wrapper = await mount(
+        <WrappedComponent appLogic={appLogic} query={query} />
+      );
     });
   }
 
@@ -44,31 +46,31 @@ describe("withWithholding", () => {
     appLogic.users.user = getUser();
   });
 
-  it("renders a spinner when withholding is loading", () => {
-    render({ appLogic });
+  it("renders a spinner when withholding is loading", async () => {
+    await render({ appLogic });
 
     expect(wrapper.find("Spinner").exists()).toBe(true);
   });
 
-  it("fetches withholding data", () => {
-    render({ appLogic });
+  it("fetches withholding data", async () => {
+    await render({ appLogic });
 
     expect(appLogic.employers.loadWithholding).toHaveBeenCalledWith(
       "mock-employer-id"
     );
   });
 
-  it("redirects to different page if employer is already verified", () => {
+  it("redirects to different page if employer is already verified", async () => {
     appLogic.users.user = getUser(true);
 
-    render({ appLogic });
+    await render({ appLogic });
 
     expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
       "/employers/organizations"
     );
   });
 
-  it("redirects to Organizations page if employer is already verified and next page is not provided", () => {
+  it("redirects to Organizations page if employer is already verified and next page is not provided", async () => {
     const customQuery = {
       employer_id: "mock-employer-id",
       next:
@@ -76,7 +78,7 @@ describe("withWithholding", () => {
     };
     appLogic.users.user = getUser(true);
 
-    render({ appLogic, customQuery });
+    await render({ appLogic, customQuery });
 
     expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(customQuery.next);
   });
