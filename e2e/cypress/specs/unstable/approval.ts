@@ -64,7 +64,22 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
               { timeout: 360000 }
             ).then((emails) => {
               expect(emails.length).to.be.greaterThan(0);
-              expect(emails[0].html).to.contain(response.fineos_absence_id);
+              for (const emailSingle of emails) {
+                if (
+                  response.fineos_absence_id &&
+                  emailSingle.html.includes(response.fineos_absence_id)
+                ) {
+                  expect(emailSingle.html).to.contain(
+                    response.fineos_absence_id
+                  );
+                  return;
+                } else {
+                  cy.log("f");
+                }
+              }
+              throw new Error(
+                "Successful Submission emails did not include correct Fineos Absence ID"
+              );
             });
 
             // Access and fill out ER form
