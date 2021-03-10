@@ -42,7 +42,9 @@ class PaymentAuditData:
     rejected_notes: str = ""
 
 
-def write_audit_report(payments: Iterable[Payment], output_path: str, db_session: db.Session):
+def write_audit_report(
+    payment_audit_data_set: Iterable[PaymentAuditData], output_path: str, db_session: db.Session
+):
     # Setup the output file
     file_config = FileConfig(file_prefix=output_path)
     report_group = ReportGroup(file_config=file_config)
@@ -50,30 +52,11 @@ def write_audit_report(payments: Iterable[Payment], output_path: str, db_session
     report = Report(report_name="Payment-Audit-Report", header_record=PAYMENT_AUDIT_CSV_HEADERS)
     report_group.add_report(report)
 
-    write_audit_report_rows(report, payments)
-
-    report_group.create_and_send_reports()
-
-
-def write_audit_report_rows(report: Report, payments: Iterable[Payment]):
-    for payment in payments:
-
-        # TODO query payments and state logs to populate the following (after PUB-69 is complete)
-        is_first_time_payment = False
-        is_updated_payment = False
-        is_rejected_or_error = False
-        days_in_rejected_state = 0
-
-        payment_audit_data = PaymentAuditData(
-            payment=payment,
-            is_first_time_payment=is_first_time_payment,
-            is_updated_payment=is_updated_payment,
-            is_rejected_or_error=is_rejected_or_error,
-            days_in_rejected_state=days_in_rejected_state,
-        )
-
+    for payment_audit_data in payment_audit_data_set:
         payment_audit_report_row = build_audit_report_row(payment_audit_data)
         report.add_record(payment_audit_report_row)
+
+    report_group.create_and_send_reports()
 
 
 def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAuditCSV:
