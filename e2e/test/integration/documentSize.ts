@@ -14,6 +14,8 @@ import {
 import { ClaimGenerator } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import config from "../../src/config";
+import * as data from "../util";
+import path from "path";
 
 const defaultClaimantCredentials = getClaimantCredentials();
 let application_id: string;
@@ -65,35 +67,12 @@ describe("API Documents Test of various file sizes", () => {
    *    - smaller than limit
    *    - right at limit ex. 4.4MB
    *    - larger than limit
-   *
-   *  @Todo
-   *  - Add more test for other file types and sizes
-   *  - Add test for file type not accepted (Ex: .csv, .psd)
    */
 
-  const tests = [
-    [
-      "less than 4.5MB successfully",
-      "./cypress/fixtures/docTesting/small-150KB.pdf",
-      "Successfully uploaded document",
-      200,
-    ],
-    [
-      "right at 4.5MB successfully",
-      "./cypress/fixtures/docTesting/limit-4.5MB.pdf",
-      "Successfully uploaded document",
-      200,
-    ],
-    [
-      "larger than 4.5MB (10MB) unsuccessfully and return API error",
-      "./cypress/fixtures/docTesting/large-10MB.pdf",
-      "Request Entity Too Large",
-      413,
-    ],
-  ];
+  const tests = [...data.pdf, ...data.jpg, ...data.png, ...data.badFileTypes];
 
   test.each(tests)(
-    "Should submit a PDF document with file size %s",
+    "%s",
     async (
       description: string,
       filepath: string,
@@ -104,7 +83,7 @@ describe("API Documents Test of various file sizes", () => {
         document_type: "State managed Paid Leave Confirmation",
         description: description,
         file: fs.createReadStream(filepath),
-        name: `large.pdf`,
+        name: path.basename(filepath),
       };
       const docRes = await postApplicationsByApplication_idDocuments(
         { application_id: application_id },
