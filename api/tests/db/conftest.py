@@ -22,7 +22,7 @@ def verbose_test_db_session(monkeypatch, test_db):
     # set hide sql parameter to true
     db_config: DbConfig = get_config()
     db_config.hide_sql_parameter_logs = False
-    db_session = db.init(db_config, sync_lookups=True)
+    db_session = db.init(db_config, sync_lookups=True, check_migrations_current=False)
 
     yield db_session
 

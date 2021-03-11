@@ -17,11 +17,16 @@ import massgov.pfml.db.handle_error
 import massgov.pfml.db.models
 import massgov.pfml.util.logging
 from massgov.pfml.db.config import DbConfig, get_config
+from massgov.pfml.db.migrations.run import have_all_migrations_run
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def init(config: Optional[DbConfig] = None, sync_lookups: bool = False) -> scoped_session:
+def init(
+    config: Optional[DbConfig] = None,
+    sync_lookups: bool = False,
+    check_migrations_current: bool = False,
+) -> scoped_session:
     logger.info("connecting to postgres db")
 
     engine = create_engine(config)
@@ -54,6 +59,9 @@ def init(config: Optional[DbConfig] = None, sync_lookups: bool = False) -> scope
     if sync_lookups:
         massgov.pfml.db.models.init_lookup_tables(session_factory)
         massgov.pfml.db.models.applications.sync_state_metrics(session_factory)
+
+    if check_migrations_current:
+        have_all_migrations_run(engine)
 
     engine.dispose()
 

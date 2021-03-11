@@ -49,12 +49,12 @@ def set_no_db_factories_alert():
 @pytest.fixture
 def app_cors(monkeypatch, test_db):
     monkeypatch.setenv("CORS_ORIGINS", "http://example.com")
-    return massgov.pfml.api.app.create_app()
+    return massgov.pfml.api.app.create_app(check_migrations_current=False)
 
 
 @pytest.fixture
 def app(test_db, initialize_factories_session, set_auth_public_keys):
-    return massgov.pfml.api.app.create_app()
+    return massgov.pfml.api.app.create_app(check_migrations_current=False)
 
 
 @pytest.fixture
@@ -420,7 +420,7 @@ def test_db_via_migrations(test_db_schema):
 def test_db_session(test_db):
     import massgov.pfml.db as db
 
-    db_session = db.init(sync_lookups=True)
+    db_session = db.init(sync_lookups=True, check_migrations_current=False)
 
     yield db_session
 
@@ -432,7 +432,7 @@ def test_db_session(test_db):
 def test_db_other_session(test_db):
     import massgov.pfml.db as db
 
-    db_session = db.init(sync_lookups=True)
+    db_session = db.init(sync_lookups=True, check_migrations_current=False)
 
     yield db_session
 

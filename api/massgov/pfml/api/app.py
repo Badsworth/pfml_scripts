@@ -29,14 +29,18 @@ from .reverse_proxy import ReverseProxied
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def create_app(config: Optional[AppConfig] = None) -> connexion.FlaskApp:
+def create_app(
+    config: Optional[AppConfig] = None, check_migrations_current: bool = True
+) -> connexion.FlaskApp:
     logger.info("Creating API Application...")
 
     if config is None:
         config = get_config()
 
     # Initialize the db
-    db_session_factory = db.init(config.db, sync_lookups=True)
+    db_session_factory = db.init(
+        config.db, sync_lookups=True, check_migrations_current=check_migrations_current
+    )
 
     # Enable mock responses for unimplemented paths.
     resolver = connexion.mock.MockResolver(mock_all=False)
