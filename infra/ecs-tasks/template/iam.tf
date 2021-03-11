@@ -803,6 +803,160 @@ data "aws_iam_policy_document" "pub_payments_process_fineos_task_role_extras" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for pub-payments-create-pub-files
+# (Use default task_executor execution role)
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "pub_payments_create_pub_files_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-pub-payments-create-pub-files"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "pub_payments_create_pub_files_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-pub-payments-create-pub-files-extras"
+  role   = aws_iam_role.pub_payments_create_pub_files_task_role.id
+  policy = data.aws_iam_policy_document.pub_payments_create_pub_files_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "pub_payments_create_pub_files_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3ReadOnBucket"
+    actions = [
+      "s3:Get*",
+      "s3:List*"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub",
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3WriteOnBucket"
+    actions = [
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub",
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowSESSendEmail"
+    actions = [
+      "ses:SendEmail",
+      "ses:SendRawEmail"
+    ]
+    resources = ["*"]
+    effect    = "Allow"
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for pub-payments-process-pub-returns
+# (Use default task_executor execution role)
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "pub_payments_process_pub_returns_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-pub-payments-process-pub-returns"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "pub_payments_process_pub_returns_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-pub-payments-process-pub-returns-extras"
+  role   = aws_iam_role.pub_payments_process_pub_returns_task_role.id
+  policy = data.aws_iam_policy_document.pub_payments_process_pub_returns_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3ReadOnBucket"
+    actions = [
+      "s3:Get*",
+      "s3:List*"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub",
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3WriteOnBucket"
+    actions = [
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub",
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowSESSendEmail"
+    actions = [
+      "ses:SendEmail",
+      "ses:SendRawEmail"
+    ]
+    resources = ["*"]
+    effect    = "Allow"
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for reductions-workflow
 # ----------------------------------------------------------------------------------------------------------------------
 

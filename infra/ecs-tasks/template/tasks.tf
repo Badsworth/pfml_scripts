@@ -158,6 +158,18 @@ locals {
       }
     },
 
+    "pub-payments-create-pub-files" = {
+      command             = ["pub-payments-create-pub-files"]
+      containers_template = "pub_payments_create_pub_files_template.json"
+      task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-pub-payments-create-pub-files"
+    },
+
+    "pub-payments-process-pub-returns" = {
+      command             = ["pub-payments-process-pub-returns"]
+      containers_template = "pub_payments_process_pub_returns_template.json"
+      task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-pub-payments-process-pub-returns"
+    },
+
     "fineos-eligibility-feed-export" = {
       command             = ["fineos-eligibility-feed-export"]
       containers_template = "fineos_eligibility_feed_export_template.json"
@@ -233,7 +245,7 @@ locals {
 
     "pub-payments-process-fineos" = {
       command   = ["pub-payments-process-fineos"]
-      task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
+      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-fineos"
     },
 
     "fineos-test-vendor-export-generate" = {
