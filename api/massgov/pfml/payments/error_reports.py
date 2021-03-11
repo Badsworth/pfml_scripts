@@ -250,7 +250,6 @@ def _build_error_report(
 def _build_state_log(
     current_state_log: StateLog,
     associated_class: state_log_util.AssociatedClass,
-    current_state: LkState,
     next_state: LkState,
     db_session: db.Session,
 ) -> None:
@@ -309,23 +308,32 @@ def _build_state_log(
 
 def _make_simple_report(
     report_name: str,
-    current_state: LkState,
+    current_states: List[LkState],
     next_state: LkState,
     associated_class: state_log_util.AssociatedClass,
     add_vendor_customer_code: bool,
     add_mmars_doc_id: bool,
     db_session: db.Session,
 ) -> Report:
-    state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        associated_class=associated_class, end_state=current_state, db_session=db_session
-    )
-    logger.info(
-        "Building error reports for %s with end state: %s - found %s",
-        associated_class.value,
-        current_state.state_description,
-        len(state_logs),
-    )
+    """Create a simple report from StateLog outcomes"""
 
+    # Create a combined list of all state logs whose latest state is in the
+    # `current_states` list.
+    state_logs: List[StateLog] = []
+    for current_state in current_states:
+        results = state_log_util.get_all_latest_state_logs_in_end_state(
+            associated_class=associated_class, end_state=current_state, db_session=db_session
+        )
+        state_logs.extend(results)
+
+        logger.info(
+            "Building error reports for %s with end state: %s - found %s",
+            associated_class.value,
+            current_state.state_description,
+            len(state_logs),
+        )
+
+    # Build the error reports.
     errors: List[ErrorRecord] = []
 
     for state_log in state_logs:
@@ -364,7 +372,6 @@ def _make_simple_report(
         _build_state_log(
             current_state_log=state_log,
             associated_class=associated_class,
-            current_state=current_state,
             next_state=next_state,
             db_session=db_session,
         )
@@ -422,7 +429,6 @@ def _get_time_based_errors(
         _build_state_log(
             current_state_log=state_log,
             associated_class=associated_class,
-            current_state=current_state,
             next_state=next_state,
             db_session=db_session,
         )
@@ -469,7 +475,7 @@ def _send_fineos_payments_errors(db_session: db.Session) -> None:
     # ADD_TO_PAYMENT_EXPORT_ERROR_REPORT -> PAYMENT_EXPORT_ERROR_REPORT_SENT
     cps_payment_export_report = _make_simple_report(
         report_name="CPS-payment-export-error-report",
-        current_state=State.ADD_TO_PAYMENT_EXPORT_ERROR_REPORT,
+        current_states=[State.ADD_TO_PAYMENT_EXPORT_ERROR_REPORT],
         next_state=State.PAYMENT_EXPORT_ERROR_REPORT_SENT,
         associated_class=state_log_util.AssociatedClass.PAYMENT,
         add_vendor_customer_code=False,
@@ -481,7 +487,7 @@ def _send_fineos_payments_errors(db_session: db.Session) -> None:
     # ADD_TO_VENDOR_EXPORT_ERROR_REPORT -> VENDOR_EXPORT_ERROR_REPORT_SENT
     cps_vendor_export_report = _make_simple_report(
         report_name="CPS-vendor-export-error-report",
-        current_state=State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT,
+        current_states=[State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT],
         next_state=State.VENDOR_EXPORT_ERROR_REPORT_SENT,
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
         add_vendor_customer_code=False,
@@ -520,7 +526,7 @@ def _send_ctr_payments_errors(db_session: db.Session) -> None:
     # ADD_TO_GAX_ERROR_REPORT -> GAX_ERROR_REPORT_SENT
     gax_error_report = _make_simple_report(
         report_name="GAX-error-report",
-        current_state=State.ADD_TO_GAX_ERROR_REPORT,
+        current_states=[State.ADD_TO_GAX_ERROR_REPORT],
         next_state=State.GAX_ERROR_REPORT_SENT,
         associated_class=state_log_util.AssociatedClass.PAYMENT,
         add_vendor_customer_code=True,
@@ -531,7 +537,7 @@ def _send_ctr_payments_errors(db_session: db.Session) -> None:
     # ADD_TO_VCC_ERROR_REPORT -> VCC_ERROR_REPORT_SENT
     vcc_error_report = _make_simple_report(
         report_name="VCC-error-report",
-        current_state=State.ADD_TO_VCC_ERROR_REPORT,
+        current_states=[State.ADD_TO_VCC_ERROR_REPORT],
         next_state=State.VCC_ERROR_REPORT_SENT,
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
         add_vendor_customer_code=True,
@@ -540,9 +546,15 @@ def _send_ctr_payments_errors(db_session: db.Session) -> None:
     )
     report_group.add_report(vcc_error_report)
     # ADD_TO_VCM_REPORT -> VCM_REPORT_SENT
+    # VCM_REPORT_SENT -> VCM_REPORT_SENT
+    #
+    # The VCM report was originally a delta of just the current run's entries that
+    # needed to be added to the VCM report. API-1386 changed it to no longer be
+    # a delta, so this report actually combines records that are in
+    # ADD_TO_VCM_REPORT plus VCM_REPORT_SENT together.
     vcm_report = _make_simple_report(
         report_name="VCM-report",
-        current_state=State.ADD_TO_VCM_REPORT,
+        current_states=[State.ADD_TO_VCM_REPORT, State.VCM_REPORT_SENT],
         next_state=State.VCM_REPORT_SENT,
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
         add_vendor_customer_code=True,
@@ -553,7 +565,7 @@ def _send_ctr_payments_errors(db_session: db.Session) -> None:
     # ADD_TO_EFT_ERROR_REPORT -> EFT_ERROR_REPORT_SENT
     eft_error_report = _make_simple_report(
         report_name="EFT-error-report",
-        current_state=State.ADD_TO_EFT_ERROR_REPORT,
+        current_states=[State.ADD_TO_EFT_ERROR_REPORT],
         next_state=State.EFT_ERROR_REPORT_SENT,
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
         add_vendor_customer_code=True,

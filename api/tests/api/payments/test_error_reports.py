@@ -472,6 +472,18 @@ def test_send_ctr_payments_errors_simple_reports(
         ),
     )
 
+    setup_state_log_in_end_state(
+        state_log_util.AssociatedClass.EMPLOYEE,
+        end_state=State.VCM_REPORT_SENT,
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(
+            fineos_customer_num="000000007",
+            fineos_absence_id="NTN-07-ABS-07",
+            ctr_vendor_customer_code="VEND-07",
+            add_claim_payment_for_employee=True,  # It will find payment/claim data
+        ),
+    )
+
     # Setup for EFT Error report
     setup_state_log_in_end_state(
         state_log_util.AssociatedClass.EMPLOYEE,
@@ -556,7 +568,7 @@ def test_send_ctr_payments_errors_simple_reports(
     }
 
     vcm_records = parse_csv(s3_prefix, file_names[4])
-    assert len(vcm_records) == 2
+    assert len(vcm_records) == 3
     assert vcm_records[0] == {
         error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
         error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000003",
@@ -574,19 +586,28 @@ def test_send_ctr_payments_errors_simple_reports(
         error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
 
+    assert vcm_records[2] == {
+        error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
+        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000007",
+        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-07-ABS-07",
+        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-07",
+        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Explicitly not set
+        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
+    }
+
     # Show that we can do a rollback
 
-    # 24 total state logs
-    # 7 calls to setup_state_log_in_end_state (created employee or payment state logs)
-    # 7 prior states created in setup_state_log_in_end_state
-    #   3 additional created when we add_claim_payment_for_employee=True and created an additional payment state log
-    # the 7 records created to move the payment/employee state logs to the next state.
+    # 28 total state logs
+    # 8 calls to setup_state_log_in_end_state (created employee or payment state logs)
+    # 8 prior states created in setup_state_log_in_end_state
+    #   4 additional created when we add_claim_payment_for_employee=True and created an additional payment state log
+    # the 8 records created to move the payment/employee state logs to the next state.
     state_logs = test_db_session.query(StateLog).all()
-    assert len(state_logs) == 24
+    assert len(state_logs) == 28
     test_db_session.rollback()
-    # the 7 created as part of processing no longer exist
+    # the 8 created as part of processing no longer exist
     rolled_back_state_logs = test_db_session.query(StateLog).all()
-    assert len(rolled_back_state_logs) == 17
+    assert len(rolled_back_state_logs) == 20
 
 
 @freeze_time("2020-01-01 12:00:00")
@@ -889,13 +910,14 @@ def test_send_ctr_payments_errors_time_based_reports(
 
     # Show that we can do a rollback
 
-    # 37 total state logs
+    # 39 total state logs
     # 11 calls to setup_state_log_in_end_state (created employee or payment state logs)
     # 11 prior states created in setup_state_log_in_end_state
     #   4 additional created when we add_claim_payment_for_employee=True and created an additional payment state log
     # the 11 records created to move the payment/employee state logs to the next state.
+    #   2 additional records for the VCM_REPORT_SENT records that were moved to the next state as part of the simple reports
     state_logs = test_db_session.query(StateLog).all()
-    assert len(state_logs) == 37
+    assert len(state_logs) == 39
     test_db_session.rollback()
     # the 11 created as part of processing no longer exist
     rolled_back_state_logs = test_db_session.query(StateLog).all()
