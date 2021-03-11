@@ -169,6 +169,11 @@ AUDIT_SCENARIO_DESCRIPTORS[
     is_multiple_days_in_rejected_state=True,
 )
 
+DEFAULT_AUDIT_SCENARIO_DATA_SET = [
+    AuditScenarioNameWithCount(scenario_name, 1)
+    for scenario_name in AUDIT_SCENARIO_DESCRIPTORS.keys()
+]
+
 #######################
 ## Utility functions ##
 #######################
@@ -254,24 +259,24 @@ def generate_audit_report_dataset(
 
 # TODO pass in batch id and separate data set generation piece (after PUB-76)
 def generate_payment_audit_data_set_and_rejects_file(
-    folder_path: str, db_session: db.Session
+    config: List[AuditScenarioNameWithCount],
+    folder_path: str,
+    db_session: db.Session,
+    reject_rate: decimal.Decimal = 0.5,
 ) -> List[AuditScenarioData]:
-    test_scenarios_with_count: List[AuditScenarioNameWithCount] = [
-        AuditScenarioNameWithCount(scenario_name, 10)
-        for scenario_name in AUDIT_SCENARIO_DESCRIPTORS.keys()
-    ]
-
-    payment_audit_scenario_data_set: List[AuditScenarioData] = generate_audit_report_dataset(
-        test_scenarios_with_count
-    )
+    payment_audit_scenario_data_set: List[AuditScenarioData] = generate_audit_report_dataset(config)
 
     payment_audit_data_set: List[PaymentAuditData] = []
     for payment_audit_scenario_data in payment_audit_scenario_data_set:
         payment_audit_data: PaymentAuditData = payment_audit_scenario_data.payment_audit_data
-        payment_audit_data.rejected_by_program_integrity = True if random.random() < 0.3 else False
+        payment_audit_data.rejected_by_program_integrity = (
+            True if random.random() <= reject_rate else False
+        )
         payment_audit_data_set.append(payment_audit_data)
 
-    write_audit_report(payment_audit_data_set, folder_path, db_session)
+    write_audit_report(
+        payment_audit_data_set, folder_path, db_session, report_name="Payment-Rejects"
+    )
     return payment_audit_scenario_data_set
 
 
@@ -286,6 +291,11 @@ def generate_payment_rejects_file():
     args = parser.parse_args()
     folder_path = args.folder
 
-    generate_payment_audit_data_set_and_rejects_file(folder_path, db_session)
+    config: List[AuditScenarioNameWithCount] = [
+        AuditScenarioNameWithCount(scenario_name, 10)
+        for scenario_name in AUDIT_SCENARIO_DESCRIPTORS.keys()
+    ]
+
+    generate_payment_audit_data_set_and_rejects_file(config, folder_path, db_session)
 
     logger.info("Done genrating payment rejects file.")

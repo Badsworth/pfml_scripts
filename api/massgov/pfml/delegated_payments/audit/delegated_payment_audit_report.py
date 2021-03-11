@@ -1,5 +1,6 @@
+import pathlib
 from dataclasses import dataclass
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
@@ -43,20 +44,35 @@ class PaymentAuditData:
 
 
 def write_audit_report(
-    payment_audit_data_set: Iterable[PaymentAuditData], output_path: str, db_session: db.Session
+    payment_audit_data_set: Iterable[PaymentAuditData],
+    output_path: str,
+    db_session: db.Session,
+    report_name: str = "Payment-Audit-Report",
 ):
+    payment_audit_report_rows: List[PaymentAuditCSV] = []
+    for payment_audit_data in payment_audit_data_set:
+        payment_audit_report_rows.append(build_audit_report_row(payment_audit_data))
+
+    write_audit_report_rows(payment_audit_report_rows, output_path, db_session, report_name)
+
+
+def write_audit_report_rows(
+    payment_audit_report_rows: Iterable[PaymentAuditCSV],
+    output_path: str,
+    db_session: db.Session,
+    report_name: str,
+) -> Optional[pathlib.Path]:
     # Setup the output file
     file_config = FileConfig(file_prefix=output_path)
     report_group = ReportGroup(file_config=file_config)
 
-    report = Report(report_name="Payment-Audit-Report", header_record=PAYMENT_AUDIT_CSV_HEADERS)
+    report = Report(report_name=report_name, header_record=PAYMENT_AUDIT_CSV_HEADERS)
     report_group.add_report(report)
 
-    for payment_audit_data in payment_audit_data_set:
-        payment_audit_report_row = build_audit_report_row(payment_audit_data)
+    for payment_audit_report_row in payment_audit_report_rows:
         report.add_record(payment_audit_report_row)
 
-    report_group.create_and_send_reports()
+    return report_group.create_and_send_reports()
 
 
 def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAuditCSV:

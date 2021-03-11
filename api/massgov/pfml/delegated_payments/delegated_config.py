@@ -65,6 +65,12 @@ class PaymentsS3Config:
     # Ex: s3://massgov-pfml-prod-agency-transfer/error-reports/outbound/
     pfml_error_reports_path: str
 
+    # Delegated configs start here
+    payment_rejects_received_folder_path: str
+    payment_rejects_processed_folder_path: str
+    payment_rejects_report_outbound_folder: str
+    payment_rejects_report_sent_folder_path: str
+
 
 def get_s3_config() -> PaymentsS3Config:
     return PaymentsS3Config(
@@ -75,6 +81,18 @@ def get_s3_config() -> PaymentsS3Config:
         pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
         pfml_fineos_outbound_path=str(os.environ.get("PFML_FINEOS_OUTBOUND_PATH")),
         pfml_error_reports_path=str(os.environ.get("PFML_ERROR_REPORTS_PATH")),
+        payment_rejects_received_folder_path=str(
+            os.environ.get("PAYMENT_REJECTS_RECEIVED_FOLDER_PATH")
+        ),
+        payment_rejects_processed_folder_path=str(
+            os.environ.get("PAYMENT_REJECTS_PROCESSED_FOLDER_PATH")
+        ),
+        payment_rejects_report_outbound_folder=str(
+            os.environ.get("PAYMENT_REJECTS_REPORT_OUTBOUND_FOLDER")
+        ),
+        payment_rejects_report_sent_folder_path=str(
+            os.environ.get("PAYMENT_REJECTS_REPORT_SENT_FOLDER_PATH")
+        ),
     )
 
 

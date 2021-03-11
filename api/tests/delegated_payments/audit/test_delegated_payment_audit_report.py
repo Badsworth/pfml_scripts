@@ -6,9 +6,10 @@ import pytest
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import Address, EmployeeAddress
+from massgov.pfml.db.models.employees import Address, EmployeeAddress, Payment
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
+    PaymentAuditCSV,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import (
     PaymentAuditData,
@@ -66,61 +67,71 @@ def test_write_audit_report(tmp_path, test_db_session, initialize_factories_sess
     index = 0
     for row in parsed_csv:
         payment_audit_data = payment_audit_data_set[index]
-        payment = payment_audit_data.payment
-
-        employee_address: EmployeeAddress = payment.claim.employee.addresses.first()  # TODO adjust after address validation work to get the most recent valid address
-        address: Address = employee_address.address
-
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id] == str(payment.payment_id)
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment.claim)
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.claim.employee.first_name
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.last_name] == payment.claim.employee.last_name
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.address_line_1] == address.address_line_one
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.address_line_2] == ""
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.city] == address.city
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.state] == address.geo_state.geo_state_description
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.zip] == address.zip_code
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_preference] == get_payment_preference(
-            payment.claim.employee
-        )
-        assert (
-            row[PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date]
-            == payment.payment_date.isoformat()
-        )
-        assert (
-            row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_start_date]
-            == payment.period_start_date.isoformat()
-        )
-        assert (
-            row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_end_date]
-            == payment.period_end_date.isoformat()
-        )
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_amount] == str(payment.amount)
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_number] == payment.claim.fineos_absence_id
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.c_value] == payment.fineos_pei_c_value
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.i_value] == payment.fineos_pei_i_value
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.employer_id] == str(
-            payment.claim.employer.fineos_employer_id
-        )
-        assert (
-            row[PAYMENT_AUDIT_CSV_HEADERS.case_status]
-            == payment.claim.fineos_absence_status.absence_status_description
-        )
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_id] == ""
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision] == ""
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment] == bool_to_str(
-            payment_audit_data.is_first_time_payment
-        )
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.is_updated_payment] == bool_to_str(
-            payment_audit_data.is_updated_payment
-        )
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.is_rejected_or_error] == bool_to_str(
-            payment_audit_data.is_rejected_or_error
-        )
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.days_in_rejected_state] == str(
-            payment_audit_data.days_in_rejected_state
-        )
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity] == ""
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes] == ""
+        validate_payment_audit_csv_row_by_payment_audit_data(row, payment_audit_data)
 
         index += 1
+
+
+def validate_payment_audit_csv_row_by_payment_audit_data(
+    row: PaymentAuditCSV, payment_audit_data: PaymentAuditData
+):
+    validate_payment_audit_csv_row_by_payment(row, payment_audit_data.payment)
+
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment] == bool_to_str(
+        payment_audit_data.is_first_time_payment
+    )
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.is_updated_payment] == bool_to_str(
+        payment_audit_data.is_updated_payment
+    )
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.is_rejected_or_error] == bool_to_str(
+        payment_audit_data.is_rejected_or_error
+    )
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.days_in_rejected_state] == str(
+        payment_audit_data.days_in_rejected_state
+    )
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity] == ""
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes] == ""
+
+
+def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Payment):
+    employee_address: EmployeeAddress = payment.claim.employee.addresses.first()  # TODO adjust after address validation work to get the most recent valid address
+    address: Address = employee_address.address
+
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id] == str(payment.payment_id)
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment.claim)
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.claim.employee.first_name
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.last_name] == payment.claim.employee.last_name
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.address_line_1] == address.address_line_one
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.address_line_2] == ""
+        if address.address_line_two is None
+        else address.address_line_two
+    )
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.city] == address.city
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.state] == address.geo_state.geo_state_description
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.zip] == address.zip_code
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_preference] == get_payment_preference(
+        payment.claim.employee
+    )
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date] == payment.payment_date.isoformat()
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_start_date]
+        == payment.period_start_date.isoformat()
+    )
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_end_date]
+        == payment.period_end_date.isoformat()
+    )
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_amount] == str(payment.amount)
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_number] == payment.claim.fineos_absence_id
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.c_value] == payment.fineos_pei_c_value
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.i_value] == payment.fineos_pei_i_value
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.employer_id] == str(
+        payment.claim.employer.fineos_employer_id
+    )
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.case_status]
+        == payment.claim.fineos_absence_status.absence_status_description
+    )
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_id] == ""
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision] == ""
