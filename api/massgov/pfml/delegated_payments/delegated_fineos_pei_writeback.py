@@ -13,7 +13,6 @@ import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
-    Flow,
     LkState,
     Payment,
     PaymentReferenceFile,
@@ -52,11 +51,11 @@ class PeiWritebackItem:
     prior_state: LkState
     end_state: LkState
     encoded_row: Dict[str, str]
-    post_writeback_hook: Optional[Callable] = None
 
 
 ACTIVE_WRITEBACK_RECORD_STATUS = "Active"
 PENDING_WRITEBACK_RECORD_TRANSACTION_STATUS = "Pending"
+WRITEBACK_FILE_SUFFIX = "-pei_writeback.csv"
 
 PEI_WRITEBACK_CSV_ENCODERS: csv_util.Encoders = {
     date: lambda d: d.strftime("%m/%d/%Y"),
@@ -96,38 +95,63 @@ def process_payments_for_writeback(db_session: db.Session) -> None:
 
 
 def get_records_to_writeback(db_session: db.Session) -> List[PeiWritebackItem]:
-    """
-    Queries DB for payments whose state is "Mark As Extracted in FINEOS" or "Send Payment Details to FINEOS"
-    @return List[PeiWritebackItem]
-    """
-
-    extracted_writeback_items = _get_writeback_items_for_state(
+    zero_dollar_payment_writeback_items = _get_writeback_items_for_state(
         db_session=db_session,
-        prior_state=State.MARK_AS_EXTRACTED_IN_FINEOS,
-        end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+        prior_state=State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK,
+        end_state=State.DELEGATED_PAYMENT_ZERO_PAYMENT_FINEOS_WRITEBACK_SENT,
         writeback_record_converter=_extracted_payment_to_pei_writeback_record,
-        post_writeback_hook=_after_vendor_check_initiated,
     )
     logger.info(
         "Found %i extracted writeback items in state: %s",
-        len(extracted_writeback_items),
-        State.MARK_AS_EXTRACTED_IN_FINEOS.state_description,
+        len(zero_dollar_payment_writeback_items),
+        State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
     )
 
-    disbursed_writeback_items = _get_writeback_items_for_state(
+    overpayment_writeback_items = _get_writeback_items_for_state(
         db_session=db_session,
-        prior_state=State.SEND_PAYMENT_DETAILS_TO_FINEOS,
-        end_state=State.PAYMENT_COMPLETE,
-        writeback_record_converter=_disbursed_payment_to_pei_writeback_record,
-        post_writeback_hook=None,
+        prior_state=State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK,
+        end_state=State.DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT,
+        writeback_record_converter=_extracted_payment_to_pei_writeback_record,
     )
     logger.info(
-        "Found %i disbursed writeback items in state: %s",
-        len(disbursed_writeback_items),
-        State.PAYMENT_COMPLETE.state_description,
+        "Found %i extracted writeback items in state: %s",
+        len(overpayment_writeback_items),
+        State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK.state_description,
     )
 
-    return extracted_writeback_items + disbursed_writeback_items
+    accepted_payment_writeback_items = _get_writeback_items_for_state(
+        db_session=db_session,
+        prior_state=State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK,
+        end_state=State.DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT,
+        writeback_record_converter=_extracted_payment_to_pei_writeback_record,
+    )
+    logger.info(
+        "Found %i extracted writeback items in state: %s",
+        len(accepted_payment_writeback_items),
+        State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
+    )
+
+    cancelled_payment_writeback_items = _get_writeback_items_for_state(
+        db_session=db_session,
+        prior_state=State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK,
+        end_state=State.DELEGATED_PAYMENT_CANCELLATION_PAYMENT_FINEOS_WRITEBACK_SENT,
+        writeback_record_converter=_extracted_payment_to_pei_writeback_record,
+    )
+    logger.info(
+        "Found %i extracted writeback items in state: %s",
+        len(cancelled_payment_writeback_items),
+        State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
+    )
+
+    # TODO: Add disbursed payments to this writeback using the same pattern as above but with a
+    # writeback_record_converter of _disbursed_payment_to_pei_writeback_record.
+
+    return (
+        zero_dollar_payment_writeback_items
+        + overpayment_writeback_items
+        + accepted_payment_writeback_items
+        + cancelled_payment_writeback_items
+    )
 
 
 def _get_writeback_items_for_state(
@@ -135,7 +159,6 @@ def _get_writeback_items_for_state(
     prior_state: LkState,
     end_state: LkState,
     writeback_record_converter: Callable,
-    post_writeback_hook: Optional[Callable] = None,
 ) -> List[PeiWritebackItem]:
     pei_writeback_items = []
 
@@ -157,7 +180,6 @@ def _get_writeback_items_for_state(
                     prior_state=prior_state,
                     end_state=end_state,
                     encoded_row=csv_util.encode_row(writeback_record, PEI_WRITEBACK_CSV_ENCODERS),
-                    post_writeback_hook=post_writeback_hook,
                 )
             )
         except Exception:
@@ -180,7 +202,7 @@ def upload_writeback_csv_and_save_reference_files(
     logger.info("Uploading writeback files to FINEOS S3")
 
     current_datetime = get_now()
-    filename_to_upload = f"{current_datetime.strftime('%Y-%m-%d-%H-%M-%S')}-pei_writeback.csv"
+    filename_to_upload = current_datetime.strftime("%Y-%m-%d-%H-%M-%S") + WRITEBACK_FILE_SUFFIX
 
     s3_config = payments_config.get_s3_config()
 
@@ -273,12 +295,9 @@ def upload_writeback_csv_and_save_reference_files(
 
         reference_file.file_location = pfml_pei_writeback_sent_filepath
         db_session.add(reference_file)
-
-        _run_post_writeback_hooks(pei_writeback_items, db_session)
-
         db_session.commit()
 
-        logger.info("Successfully ran post writeback state transitions.")
+        logger.info("Successfully updated reference file location and created state log.")
     except Exception as e:
         db_session.rollback()
         logger.exception(
@@ -374,6 +393,7 @@ def _extracted_payment_to_pei_writeback_record(payment: Payment) -> PeiWriteback
         status=ACTIVE_WRITEBACK_RECORD_STATUS,
         extractionDate=payment.fineos_extraction_date,
         transactionStatus=PENDING_WRITEBACK_RECORD_TRANSACTION_STATUS,
+        transStatusDate=get_now(),
     )
 
 
@@ -399,70 +419,3 @@ def _disbursed_payment_to_pei_writeback_record(payment: Payment) -> PeiWriteback
         transStatusDate=payment.disb_check_eft_issue_date,
         transactionStatus=f"Distributed {payment.disb_method.payment_method_description}",
     )
-
-
-def _run_post_writeback_hooks(
-    pei_writeback_items: List[PeiWritebackItem], db_session: db.Session
-) -> None:
-    for item in pei_writeback_items:
-        if item.post_writeback_hook:
-            try:
-                item.post_writeback_hook(payment=item.payment, db_session=db_session)
-            except Exception:
-                logger.exception(
-                    "Error executing post_writeback_hook",
-                    extra={"payment_id": item.payment.payment_id},
-                )
-                continue
-
-
-def _after_vendor_check_initiated(payment: Payment, db_session: db.Session) -> None:
-    employee = payment.claim.employee
-
-    # Skip if there are no address or EFT updates
-    if not payment.has_address_update and not payment.has_eft_update:
-        logger.info(
-            "Payment (C: %s, I: %s) has no address or EFT updates. Not initiating VENDOR_CHECK flow.",
-            payment.fineos_pei_c_value,
-            payment.fineos_pei_i_value,
-            extra={
-                "fineos_pei_c_value": payment.fineos_pei_c_value,
-                "fineos_pei_i_value": payment.fineos_pei_i_value,
-            },
-        )
-        return
-
-    # Get the latest state log for the employee
-    latest_state_log = state_log_util.get_latest_state_log_in_flow(
-        employee, Flow.VENDOR_CHECK, db_session
-    )
-
-    # An employee can only be restarted in the VENDOR_CHECK flow if:
-    # 1. The employee has never been through the VENDOR_CHECK flow (unlikely)
-    # 2. The employee is in a restartable state in the VENDOR_CHECK flow
-    # 3. The employee is not in a restartable state BUT this payment includes
-    #    either an address or payment update
-    if (
-        latest_state_log is None
-        or (
-            latest_state_log.end_state
-            and latest_state_log.end_state.state_id in Constants.RESTARTABLE_VENDOR_CHECK_STATES
-        )
-        or payment.has_address_update
-        or payment.has_eft_update
-    ):
-        state_log_util.create_finished_state_log(
-            associated_model=employee,
-            end_state=State.IDENTIFY_MMARS_STATUS,
-            outcome=state_log_util.build_outcome(
-                "Start Vendor Check flow after receiving payment in payment extract"
-            ),
-            db_session=db_session,
-        )
-    else:
-        # This should never happen. If it does, it means that something went
-        # wrong.
-        logger.error(
-            "Vendor files are already in flight to CTR. This case should not have happened.",
-            extra={"employee_id": employee.employee_id},
-        )
