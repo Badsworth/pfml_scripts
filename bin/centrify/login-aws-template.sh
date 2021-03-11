@@ -36,7 +36,7 @@ create_credentials_file () {
 region = us-east-1
 INNER
 
-  echo default    
+  echo default
 }
 
 profile=$(get_last_aws_profile || create_credentials_file)
@@ -60,8 +60,8 @@ python3 -c "
 import os
 import sys
 os.chdir(\"$SCRIPT_PATH\")
-sys.argv.append('-tenant')
-sys.argv.append('eotss.my.centrify.com')
+sys.argv.append('--tenant')
+sys.argv.append('eotss.my.idaptive.app')
 sys.argv.append('-r')
 sys.argv.append('us-east-1')
 import CentrifyAWSCLI

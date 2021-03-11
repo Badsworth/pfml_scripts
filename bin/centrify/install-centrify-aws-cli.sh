@@ -58,7 +58,7 @@ pushd $INSTALL_LOCATION
 # 2. Download centrify-aws-cli-utilities.
 if ! [ -d "centrify-aws-cli-utilities" ]; then
     # Try with SSH first, then user/password over HTTPS.
-    git clone git@github.com:centrify/centrify-aws-cli-utilities.git || git clone https://github.com/centrify/centrify-aws-cli-utilities.git
+    git clone git@github.com:navapbc/centrify-aws-cli-utilities.git || git clone https://github.com/navapbc/centrify-aws-cli-utilities.git
 fi
 
 pushd centrify-aws-cli-utilities/Python-AWS
