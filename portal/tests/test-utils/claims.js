@@ -686,37 +686,30 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
         work_pattern_days: [
           new WorkPatternDay({
             day_of_week: "Sunday",
-            week_number: 1,
             minutes: 0,
           }),
           new WorkPatternDay({
             day_of_week: "Monday",
-            week_number: 1,
             minutes: 8 * 60,
           }),
           new WorkPatternDay({
             day_of_week: "Tuesday",
-            week_number: 1,
             minutes: 8 * 60,
           }),
           new WorkPatternDay({
             day_of_week: "Wednesday",
-            week_number: 1,
             minutes: 8 * 60,
           }),
           new WorkPatternDay({
             day_of_week: "Thursday",
-            week_number: 1,
             minutes: 8 * 60,
           }),
           new WorkPatternDay({
             day_of_week: "Friday",
-            week_number: 1,
             minutes: 8 * 60,
           }),
           new WorkPatternDay({
             day_of_week: "Saturday",
-            week_number: 1,
             minutes: 0,
           }),
         ],

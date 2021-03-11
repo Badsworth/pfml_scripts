@@ -181,13 +181,10 @@ export class WorkPattern extends BaseModel {
 
   get defaults() {
     return {
-      pattern_start_date: null,
       work_pattern_days: OrderedDaysOfWeek.map(
-        (day_of_week) =>
-          new WorkPatternDay({ day_of_week, minutes: null, week_number: 1 })
+        (day_of_week) => new WorkPatternDay({ day_of_week, minutes: null })
       ),
       work_pattern_type: null,
-      work_week_starts: "Sunday",
     };
   }
 
@@ -221,7 +218,6 @@ export class WorkPattern extends BaseModel {
         new WorkPatternDay({
           day_of_week,
           minutes,
-          week_number: 1,
         })
     );
 
@@ -238,8 +234,6 @@ export class WorkPatternDay extends BaseModel {
       day_of_week: null,
       // API represents hours in minutes
       minutes: null,
-      // an integer between 1 and 4
-      week_number: null,
     };
   }
 }
@@ -374,7 +368,7 @@ export const OrderedDaysOfWeek = [
 ];
 
 /**
- * Enums for the Application's `work_pattern.work_week_starts` and `work_pattern.work_pattern_days[].day_of_week` fields
+ * Enums for the Application's `work_pattern.work_pattern_days[].day_of_week` fields
  * Produces object: { sunday: "Sunday", monday: "Monday", ... }
  * @example DayOfWeek.sunday
  * @enum {string}

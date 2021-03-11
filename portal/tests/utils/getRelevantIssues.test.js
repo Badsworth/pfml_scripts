@@ -207,10 +207,6 @@ describe("getRelevantIssues", () => {
           field: "work_pattern.work_pattern_days[12].minutes",
           type: "required",
         },
-        {
-          field: "work_pattern.work_pattern_days[5].week_number",
-          type: "required",
-        },
         { rule: "disallow_foo" },
       ];
       const pages = [
@@ -250,10 +246,6 @@ describe("getRelevantIssues", () => {
           field: "work_pattern.work_pattern_days.12.minutes",
           type: "required",
         },
-        {
-          field: "work_pattern.work_pattern_days.5.week_number",
-          type: "required",
-        },
         { rule: "disallow_foo" },
       ];
       const pages = [
@@ -287,10 +279,6 @@ describe("getRelevantIssues", () => {
         { field: "first_name", type: "required" },
         {
           field: "work_pattern.work_pattern_days[0].minutes",
-          type: "required",
-        },
-        {
-          field: "work_pattern.work_pattern_days[5].week_number",
           type: "required",
         },
         { field: "work_pattern.work_pattern_days[2]", type: "required" },

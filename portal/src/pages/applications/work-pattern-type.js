@@ -24,7 +24,7 @@ export const WorkPatternType = (props) => {
     const patchData = { ...formState };
 
     // if a user navigates back to this page after filling hours for
-    // a work pattern type, we need to reset work_patterns_days to empty array
+    // a work pattern type, we need to reset work_patterns_days
     // and hours_worked_per_week to null if the work_pattern_type changes
     if (work_pattern_type !== get(claim, "work_pattern.work_pattern_type")) {
       set(patchData, "hours_worked_per_week", null);

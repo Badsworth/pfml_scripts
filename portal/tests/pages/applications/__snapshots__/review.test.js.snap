@@ -526,37 +526,30 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
           WorkPatternDay {
             "day_of_week": "Sunday",
             "minutes": 0,
-            "week_number": 1,
           },
           WorkPatternDay {
             "day_of_week": "Monday",
             "minutes": 480,
-            "week_number": 1,
           },
           WorkPatternDay {
             "day_of_week": "Tuesday",
             "minutes": 480,
-            "week_number": 1,
           },
           WorkPatternDay {
             "day_of_week": "Wednesday",
             "minutes": 480,
-            "week_number": 1,
           },
           WorkPatternDay {
             "day_of_week": "Thursday",
             "minutes": 480,
-            "week_number": 1,
           },
           WorkPatternDay {
             "day_of_week": "Friday",
             "minutes": 480,
-            "week_number": 1,
           },
           WorkPatternDay {
             "day_of_week": "Saturday",
             "minutes": 0,
-            "week_number": 1,
           },
         ]
       }
@@ -735,37 +728,30 @@ exports[`Work patterns shows work pattern days if work pattern type is fixed 1`]
       WorkPatternDay {
         "day_of_week": "Sunday",
         "minutes": 0,
-        "week_number": 1,
       },
       WorkPatternDay {
         "day_of_week": "Monday",
         "minutes": 480,
-        "week_number": 1,
       },
       WorkPatternDay {
         "day_of_week": "Tuesday",
         "minutes": 480,
-        "week_number": 1,
       },
       WorkPatternDay {
         "day_of_week": "Wednesday",
         "minutes": 480,
-        "week_number": 1,
       },
       WorkPatternDay {
         "day_of_week": "Thursday",
         "minutes": 480,
-        "week_number": 1,
       },
       WorkPatternDay {
         "day_of_week": "Friday",
         "minutes": 480,
-        "week_number": 1,
       },
       WorkPatternDay {
         "day_of_week": "Saturday",
         "minutes": 0,
-        "week_number": 1,
       },
     ]
   }
