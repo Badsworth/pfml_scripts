@@ -1,3 +1,4 @@
+import logging as python_logging  # noqa: B1
 import os
 import sys
 from types import TracebackType
@@ -32,7 +33,7 @@ def initialize_sentry():
     if os.environ.get("ENABLE_SENTRY", "0") == "1":
         sentry_logging = LoggingIntegration(
             # Send logs to Sentry as breadcrumbs, but don't capture them as error events.
-            level=logger.info(),
+            level=python_logging.INFO,  # noqa: B1
             event_level=None,
         )
 
