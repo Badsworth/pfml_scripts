@@ -630,8 +630,13 @@ Changes here will be picked up next time `make start` is run.
 
 ## How deploys work
 
-There are two ways code gets run in hosted environments, as ECS tasks and as
-Lambdas.
+There are two ways code gets run in hosted environments, as tasks on [AWS
+Elastic Container Service (ECS) clusters][ecs-docs] (backed by [AWS
+Fargate][fargate-docs]) and as [AWS Lambdas][lambda-docs].
+
+[ecs-docs]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
+[fargate-docs]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html
+[lambda-docs]: https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
 
 For actually performing deploys, see
 [/docs/api/deployment.md](/docs/api/deployment.md).
