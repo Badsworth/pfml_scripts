@@ -8,8 +8,8 @@ from massgov.pfml.db.models.employees import ReferenceFile
 from .base import Base, utc_timestamp_gen, uuid_gen
 
 
-class Vpei(Base):
-    __tablename__ = "vpei"
+class FineosExtractVpei(Base):
+    __tablename__ = "fineos_extract_vpei"
 
     vpei_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
@@ -114,8 +114,8 @@ class Vpei(Base):
     reference_file = relationship(ReferenceFile)
 
 
-class VpeiPaymentDetails(Base):
-    __tablename__ = "vpei_payment_details"
+class FineosExtractVpeiPaymentDetails(Base):
+    __tablename__ = "fineos_extract_vpei_payment_details"
 
     vpei_payment_details_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
@@ -159,8 +159,8 @@ class VpeiPaymentDetails(Base):
     reference_file = relationship(ReferenceFile)
 
 
-class VpeiClaimDetails(Base):
-    __tablename__ = "vpei_claim_details"
+class FineosExtractVpeiClaimDetails(Base):
+    __tablename__ = "fineos_extract_vpei_claim_details"
 
     vpei_claim_details_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
@@ -239,8 +239,8 @@ class VpeiClaimDetails(Base):
     reference_file = relationship(ReferenceFile)
 
 
-class VbiRequestedAbsenceSom(Base):
-    __tablename__ = "vbi_requested_absence_som"
+class FineosExtractVbiRequestedAbsenceSom(Base):
+    __tablename__ = "fineos_extract_vbi_requested_absence_som"
 
     vbi_requested_absence_som_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
@@ -310,8 +310,8 @@ class VbiRequestedAbsenceSom(Base):
     reference_file = relationship(ReferenceFile)
 
 
-class EmployeeFeed(Base):
-    __tablename__ = "employee_feed"
+class FineosExtractEmployeeFeed(Base):
+    __tablename__ = "fineos_extract_employee_feed"
 
     employee_feed_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 

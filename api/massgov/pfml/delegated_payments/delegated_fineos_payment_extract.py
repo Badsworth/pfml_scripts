@@ -39,7 +39,11 @@ from massgov.pfml.db.models.employees import (
     StateLog,
     TaxIdentifier,
 )
-from massgov.pfml.db.models.payments import Vpei, VpeiClaimDetails, VpeiPaymentDetails
+from massgov.pfml.db.models.payments import (
+    FineosExtractVpei,
+    FineosExtractVpeiClaimDetails,
+    FineosExtractVpeiPaymentDetails,
+)
 
 logger = logging.get_logger(__name__)
 
@@ -1033,17 +1037,17 @@ def extract_to_staging_tables(extract_data: ExtractData, db_session: db.Session)
             payment_details_data.append(payments_util.make_keys_lowercase(data))
 
     for data in pei_data:
-        vpei = payments_util.create_staging_table_instance(data, Vpei, ref_file)
+        vpei = payments_util.create_staging_table_instance(data, FineosExtractVpei, ref_file)
         db_session.add(vpei)
 
     for data in claim_details_data:
         claim_details = payments_util.create_staging_table_instance(
-            data, VpeiClaimDetails, ref_file
+            data, FineosExtractVpeiClaimDetails, ref_file
         )
         db_session.add(claim_details)
 
     for data in payment_details_data:
         payment_details = payments_util.create_staging_table_instance(
-            data, VpeiPaymentDetails, ref_file
+            data, FineosExtractVpeiPaymentDetails, ref_file
         )
         db_session.add(payment_details)

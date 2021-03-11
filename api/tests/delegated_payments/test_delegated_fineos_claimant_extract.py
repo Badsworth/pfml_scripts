@@ -34,7 +34,10 @@ from massgov.pfml.db.models.factories import (
     ReferenceFileFactory,
     TaxIdentifierFactory,
 )
-from massgov.pfml.db.models.payments import EmployeeFeed, VbiRequestedAbsenceSom
+from massgov.pfml.db.models.payments import (
+    FineosExtractEmployeeFeed,
+    FineosExtractVbiRequestedAbsenceSom,
+)
 from massgov.pfml.delegated_payments.delegated_config import get_s3_config
 from massgov.pfml.util import datetime
 from tests.delegated_payments.conftest import upload_file_to_s3
@@ -960,8 +963,8 @@ def test_extract_to_staging_tables(emp_updates_path, test_db_session):
 
     test_db_session.commit()
 
-    requested_absence_info_data = test_db_session.query(VbiRequestedAbsenceSom).all()
-    employee_feed_data = test_db_session.query(EmployeeFeed).all()
+    requested_absence_info_data = test_db_session.query(FineosExtractVbiRequestedAbsenceSom).all()
+    employee_feed_data = test_db_session.query(FineosExtractEmployeeFeed).all()
 
     ref_file = extract_data.reference_file
 

@@ -42,11 +42,11 @@ from massgov.pfml.db.models.employees import (
     State,
 )
 from massgov.pfml.db.models.payments import (
-    EmployeeFeed,
-    VbiRequestedAbsenceSom,
-    Vpei,
-    VpeiClaimDetails,
-    VpeiPaymentDetails,
+    FineosExtractEmployeeFeed,
+    FineosExtractVbiRequestedAbsenceSom,
+    FineosExtractVpei,
+    FineosExtractVpeiClaimDetails,
+    FineosExtractVpeiPaymentDetails,
 )
 from massgov.pfml.util.aws.ses import EmailRecipient, send_email
 from massgov.pfml.util.csv import CSVSourceWrapper
@@ -1135,7 +1135,13 @@ def get_attribute_names(cls):
 
 def create_staging_table_instance(
     data: Dict,
-    db_cls: Union[Vpei, VpeiClaimDetails, VpeiPaymentDetails, VbiRequestedAbsenceSom, EmployeeFeed],
+    db_cls: Union[
+        FineosExtractVpei,
+        FineosExtractVpeiClaimDetails,
+        FineosExtractVpeiPaymentDetails,
+        FineosExtractVbiRequestedAbsenceSom,
+        FineosExtractEmployeeFeed,
+    ],
     ref_file: ReferenceFile,
 ) -> DeclarativeMeta:
     """ We check if keys from data have a matching class property in staging model db_cls, if data contains

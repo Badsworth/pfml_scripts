@@ -28,7 +28,7 @@ from massgov.pfml.db.models.factories import (
     EmployeeReferenceFileFactory,
     ReferenceFileFactory,
 )
-from massgov.pfml.db.models.payments import Vpei
+from massgov.pfml.db.models.payments import FineosExtractVpei
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     get_fineos_vendor_customer_numbers_from_reference_file,
     get_inf_data_as_plain_text,
@@ -976,10 +976,16 @@ def test_create_staging_table_instance(test_db_session, initialize_factories_ses
 
     ref_file = ReferenceFileFactory.create()
     vpei_data = {"addressline6": "test", "addressline7": "test", "addressline8": "test"}
-    vpei_instance = payments_util.create_staging_table_instance(vpei_data, Vpei, ref_file)
+    vpei_instance = payments_util.create_staging_table_instance(
+        vpei_data, FineosExtractVpei, ref_file
+    )
     test_db_session.add(vpei_instance)
     test_db_session.commit()
 
-    employee = test_db_session.query(Vpei).filter_by(addressline6="test", addressline7="test").all()
+    employee = (
+        test_db_session.query(FineosExtractVpei)
+        .filter_by(addressline6="test", addressline7="test")
+        .all()
+    )
 
     assert len(employee) == 1

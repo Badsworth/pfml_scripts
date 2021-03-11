@@ -35,7 +35,11 @@ from massgov.pfml.db.models.factories import (
     PaymentFactory,
     ReferenceFileFactory,
 )
-from massgov.pfml.db.models.payments import Vpei, VpeiClaimDetails, VpeiPaymentDetails
+from massgov.pfml.db.models.payments import (
+    FineosExtractVpei,
+    FineosExtractVpeiClaimDetails,
+    FineosExtractVpeiPaymentDetails,
+)
 from massgov.pfml.delegated_payments.delegated_config import get_s3_config
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     ValidationIssue,
@@ -1273,9 +1277,9 @@ def test_extract_to_staging_tables(test_db_session):
 
     test_db_session.commit()
 
-    pei_data = test_db_session.query(Vpei).all()
-    claim_details_data = test_db_session.query(VpeiClaimDetails).all()
-    payment_details_data = test_db_session.query(VpeiPaymentDetails).all()
+    pei_data = test_db_session.query(FineosExtractVpei).all()
+    claim_details_data = test_db_session.query(FineosExtractVpeiClaimDetails).all()
+    payment_details_data = test_db_session.query(FineosExtractVpeiPaymentDetails).all()
 
     assert len(pei_data) == 3
     assert len(claim_details_data) == 3

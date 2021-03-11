@@ -31,7 +31,10 @@ from massgov.pfml.db.models.employees import (
     State,
     TaxIdentifier,
 )
-from massgov.pfml.db.models.payments import EmployeeFeed, VbiRequestedAbsenceSom
+from massgov.pfml.db.models.payments import (
+    FineosExtractEmployeeFeed,
+    FineosExtractVbiRequestedAbsenceSom,
+)
 
 logger = logging.get_logger(__name__)
 
@@ -990,10 +993,12 @@ def extract_to_staging_tables(extract_data: ExtractData, db_session: db.Session)
 
     for data in requested_absence_info_data:
         vbi_requested_absence_som = payments_util.create_staging_table_instance(
-            data, VbiRequestedAbsenceSom, ref_file
+            data, FineosExtractVbiRequestedAbsenceSom, ref_file
         )
         db_session.add(vbi_requested_absence_som)
 
     for data in employee_feed_data:
-        employee_feed = payments_util.create_staging_table_instance(data, EmployeeFeed, ref_file)
+        employee_feed = payments_util.create_staging_table_instance(
+            data, FineosExtractEmployeeFeed, ref_file
+        )
         db_session.add(employee_feed)
