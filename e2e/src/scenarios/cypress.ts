@@ -8,7 +8,7 @@ import { addDays, subDays } from "date-fns";
  * short claim, or you explain why it is not.
  */
 export const BHAP1: ScenarioSpecification = {
-  employee: { mass_id: true },
+  employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "BHAP1",
     shortClaim: true,
@@ -34,7 +34,7 @@ export const BHAP1INEL: ScenarioSpecification = {
   },
 };
 export const BHAP8: ScenarioSpecification = {
-  employee: { mass_id: true },
+  employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "BHAP8",
     shortClaim: true,
@@ -49,7 +49,7 @@ export const BHAP8: ScenarioSpecification = {
   },
 };
 export const BHAP9: ScenarioSpecification = {
-  employee: { mass_id: true },
+  employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "BHAP9",
     shortClaim: true,
@@ -63,7 +63,7 @@ export const BHAP9: ScenarioSpecification = {
   },
 };
 export const BGBM1: ScenarioSpecification = {
-  employee: { mass_id: true },
+  employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "BGBM1",
     shortClaim: true,
@@ -77,7 +77,7 @@ export const BGBM1: ScenarioSpecification = {
 };
 
 export const MHAP1: ScenarioSpecification = {
-  employee: { mass_id: true },
+  employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "MHAP1",
     shortClaim: true,
@@ -89,7 +89,7 @@ export const MHAP1: ScenarioSpecification = {
   },
 };
 export const MHAP4: ScenarioSpecification = {
-  employee: { mass_id: true },
+  employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "MHAP4",
     shortClaim: true,
