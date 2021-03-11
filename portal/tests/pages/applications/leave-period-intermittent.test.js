@@ -70,15 +70,13 @@ describe("LeavePeriodIntermittent", () => {
         render: "mount", // support useEffect
       }
     );
-    const { changeRadioGroup } = simulateEvents(wrapper);
+    const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
 
     // Trigger the effect
     changeRadioGroup("has_intermittent_leave_periods", "true");
 
     // Submit the form and assert against what's submitted
-    await act(async () => {
-      await wrapper.find("form").simulate("submit");
-    });
+    await submitForm();
 
     expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
       has_intermittent_leave_periods: true,
@@ -147,7 +145,7 @@ describe("LeavePeriodIntermittent", () => {
     ).toBe(true);
   });
 
-  it("sends intermittent leave dates and ID to the api", () => {
+  it("sends intermittent leave dates and ID to the api when the claim already has data", async () => {
     const claim = new MockClaimBuilder().intermittent().create();
     const {
       end_date,
@@ -159,12 +157,49 @@ describe("LeavePeriodIntermittent", () => {
       claimAttrs: claim,
     });
 
-    wrapper.find("QuestionPage").simulate("save");
+    const { submitForm } = simulateEvents(wrapper);
+
+    await submitForm();
 
     expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
       has_intermittent_leave_periods: true,
       leave_details: {
         intermittent_leave_periods: [{ end_date, start_date, leave_period_id }],
+      },
+    });
+  });
+
+  it("sends intermittent leave dates and ID to the api when the user enters new data", async () => {
+    const claim = new MockClaimBuilder().create();
+    const startDate = "2021-01-01";
+    const endDate = "2021-03-01";
+
+    const { appLogic, wrapper } = renderWithAppLogic(LeavePeriodIntermittent, {
+      claimAttrs: claim,
+    });
+
+    const { changeField, changeRadioGroup, submitForm } = simulateEvents(
+      wrapper
+    );
+
+    changeRadioGroup("has_intermittent_leave_periods", true);
+    changeField(
+      "leave_details.intermittent_leave_periods[0].start_date",
+      startDate
+    );
+    changeField(
+      "leave_details.intermittent_leave_periods[0].end_date",
+      endDate
+    );
+
+    await submitForm();
+
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      has_intermittent_leave_periods: true,
+      leave_details: {
+        intermittent_leave_periods: [
+          { end_date: endDate, start_date: startDate },
+        ],
       },
     });
   });
