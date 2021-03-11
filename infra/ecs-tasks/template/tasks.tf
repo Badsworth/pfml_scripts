@@ -231,6 +231,11 @@ locals {
       }
     },
 
+    "pub-payments-process-fineos" = {
+      command   = ["pub-payments-process-fineos"]
+      task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
+    },
+
     "fineos-test-vendor-export-generate" = {
       command             = ["fineos-test-vendor-export-generate"]
       task_role           = aws_iam_role.payments_fineos_process_task_role.arn

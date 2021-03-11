@@ -712,6 +712,97 @@ data "aws_iam_policy_document" "payments_ctr_import_execution_role_extras" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for pub-payments-process-fineos
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "pub_payments_process_fineos_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-fineos"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "pub_payments_process_fineos_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-fineos-fineos-assume-policy"
+  role   = aws_iam_role.pub_payments_process_fineos_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
+}
+
+resource "aws_iam_role_policy" "pub_payments_process_fineos_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-fineos-extras"
+  role   = aws_iam_role.pub_payments_process_fineos_task_role.id
+  policy = data.aws_iam_policy_document.pub_payments_process_fineos_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "pub_payments_process_fineos_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3ReadOnBucket"
+    actions = [
+      "s3:Get*",
+      "s3:List*"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/payments",
+      "${data.aws_s3_bucket.agency_transfer.arn}/payments/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3WriteOnBucket"
+    actions = [
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/payments",
+      "${data.aws_s3_bucket.agency_transfer.arn}/payments/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowSESSendEmail"
+    actions = [
+      "ses:SendEmail",
+      "ses:SendRawEmail"
+    ]
+    resources = ["*"]
+
+    effect = "Allow"
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for reductions-workflow
 # ----------------------------------------------------------------------------------------------------------------------
 
