@@ -8,7 +8,7 @@ import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { ApplicationResponse } from "../../../../src/api";
 import { Submission } from "../../../../src/types";
 
-describe("Denial Notification and Notice", () => {
+describe("Denial Notification and Notice", { retries: 0 }, () => {
   it("Submit a financially ineligible claim to API", () => {
     beforePortal();
     bailIfThisTestFails();
@@ -56,8 +56,7 @@ describe("Denial Notification and Notice", () => {
 
       case "test":
       case "stage":
-        // @Todo: Write function to trigger Notice Generation
-        // in test/stage environments
+        fineos.triggerNoticeRelease("Denial Notice");
         break;
 
       default:

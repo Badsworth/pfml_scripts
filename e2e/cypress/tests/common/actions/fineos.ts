@@ -98,6 +98,7 @@ export function assertClaimApprovable(): void {
     "have.text",
     "Satisfied"
   );
+
   cy.get(
     "[id*='leavePlanAdjudicationListviewWidgetAvailabilityStatus']"
   ).should("have.text", "Time Available");
@@ -794,6 +795,23 @@ export function closeReleaseNoticeTask(docType: string): void {
   cy.get('input[type="submit"][value="Close"]').click();
   cy.wait("@ajaxRender");
   cy.wait(200);
+  onTab("Documents");
+  cy.contains("a", docType);
+}
+
+export function triggerNoticeRelease(docType: string): void {
+  onTab("Task");
+  cy.get("td").contains("Processes").click({ force: true });
+
+  cy.get("span").contains("SOM Generate Legal Notice").click();
+
+  cy.get('input[type="submit"][value="Properties"]').click({ force: true });
+
+  cy.get('input[type="submit"][value="Continue"]').click({ force: true });
+
+  cy.wait("@ajaxRender");
+  cy.wait(2000);
+
   onTab("Documents");
   cy.contains("a", docType);
 }

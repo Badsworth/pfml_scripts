@@ -116,8 +116,7 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
 
           case "test":
           case "stage":
-            // @Todo: Write function to trigger Notice Generation
-            // in test/stage environments
+            fineos.triggerNoticeRelease("Approval Notice");
             break;
 
           default:
