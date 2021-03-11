@@ -28,7 +28,7 @@
         "method": "GET",
         "path": "/applications",
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhIjoiYiIsImV4cCI6MTYxNTM0MTc3OSwic3ViIjoiNmY2NzZhYWMtN2U4YS00YzYwLTk4ODQtYWE0YjUzZmQwMTE2In0.vwVQ1X9Osmb1N4IEcn1W5ohoZoxA7ES0Q69lQlFiANI"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTU0MjIzNzEsInN1YiI6ImQ2NjRiM2E4LTkyYjMtNDE3My04NWFiLTIxOWJlMzk2OGUwYSJ9.-8uHNYRGnoADrKOCpB2qFdOEUY2j69Tcz4boEybTsbM"
         },
         "matchingRules": {
           "$.headers.Authorization": {
@@ -60,11 +60,11 @@
         "method": "POST",
         "path": "/applications",
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhIjoiYiIsImV4cCI6MTYxNTM0MTc3OSwic3ViIjoiNmY2NzZhYWMtN2U4YS00YzYwLTk4ODQtYWE0YjUzZmQwMTE2In0.vwVQ1X9Osmb1N4IEcn1W5ohoZoxA7ES0Q69lQlFiANI"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTU0MjIzNzEsInN1YiI6ImQ2NjRiM2E4LTkyYjMtNDE3My04NWFiLTIxOWJlMzk2OGUwYSJ9.-8uHNYRGnoADrKOCpB2qFdOEUY2j69Tcz4boEybTsbM"
         }
       },
       "response": {
-        "status": 200,
+        "status": 201,
         "headers": {
         },
         "body": {

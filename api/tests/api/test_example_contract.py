@@ -28,14 +28,11 @@ PACT_MOCK_PORT = 1550
 PACT_URL = "http://{}:{}/v1".format(PACT_MOCK_HOST, PACT_MOCK_PORT)
 PACT_DIR = os.path.dirname(os.path.realpath(__file__))
 
-@freeze_time("2020-01-01")
-def test_example(user):
-    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
-
-    auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhIjoiYiIsImV4cCI6MTYxNTM0MTc3OSwic3ViIjoiNmY2NzZhYWMtN2U4YS00YzYwLTk4ODQtYWE0YjUzZmQwMTE2In0.vwVQ1X9Osmb1N4IEcn1W5ohoZoxA7ES0Q69lQlFiANI"
+def test_example():
+    auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTU0MjIzNzEsInN1YiI6ImQ2NjRiM2E4LTkyYjMtNDE3My04NWFiLTIxOWJlMzk2OGUwYSJ9.-8uHNYRGnoADrKOCpB2qFdOEUY2j69Tcz4boEybTsbM"
     verifier = Verifier(provider='API service', provider_base_url=PACT_URL, custom_provider_header=f"Authorization: Bearer {auth_token}")
 
-    print(auth_token)
     output, logs = verifier.verify_pacts(PACT_FILE, verbose=False) #  provider_states_setup_url="{}/_pact/provider_states".format(PACT_URL))
+    print(logs)
 
     assert (output == 0)
