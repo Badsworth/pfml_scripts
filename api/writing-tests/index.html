@@ -14,7 +14,7 @@
     
     
       
-        <title>Maintenance pages - PFML</title>
+        <title>Writing Tests - PFML</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#maintenance-pages" class="md-skip">
+        <a href="#writing-tests" class="md-skip">
           Skip to content
         </a>
       
@@ -90,7 +90,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Maintenance pages
+              Writing Tests
             
           </span>
         </div>
@@ -257,12 +257,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" checked>
       
       <label class="md-nav__link" for="__nav_5">
         Api
@@ -280,124 +282,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/db-roles-and-users/" class="md-nav__link">
+      <a href="../db-roles-and-users/" class="md-nav__link">
         Database Users
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/deployment/" class="md-nav__link">
-        Deployment
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/environment-variables/" class="md-nav__link">
-        Environment Variables
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/fields-and-validations/" class="md-nav__link">
-        Fields and validations
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/monitoring/" class="md-nav__link">
-        API Monitoring
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/writing-tests/" class="md-nav__link">
-        Writing Tests
-      </a>
-    </li>
-  
-
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-    
-  
-  
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
-      
-      <label class="md-nav__link" for="__nav_6">
-        Portal
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-      <nav class="md-nav" aria-label="Portal" data-md-level="1">
-        <label class="md-nav__title" for="__nav_6">
-          <span class="md-nav__icon md-icon"></span>
-          Portal
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../browser-support/" class="md-nav__link">
-        Browser support
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../creating-environments/" class="md-nav__link">
-        Setting up a new environment
       </a>
     </li>
   
@@ -420,20 +306,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../development/" class="md-nav__link">
-        Portal Development
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../environment-variables/" class="md-nav__link">
-        Environment variables
+        Environment Variables
       </a>
     </li>
   
@@ -444,8 +318,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../error-handling/" class="md-nav__link">
-        Error handling
+      <a href="../fields-and-validations/" class="md-nav__link">
+        Fields and validations
       </a>
     </li>
   
@@ -456,20 +330,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../feature-flags/" class="md-nav__link">
-        Feature flags
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../internationalization/" class="md-nav__link">
-        Internationalization
+      <a href="../monitoring/" class="md-nav__link">
+        API Monitoring
       </a>
     </li>
   
@@ -489,12 +351,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Maintenance pages
+          Writing Tests
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Maintenance pages
+        Writing Tests
       </a>
       
         
@@ -511,43 +373,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#enable-site-wide" class="md-nav__link">
-    Enable site wide
+  <a href="#naming" class="md-nav__link">
+    Naming
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-on-a-group-of-pages" class="md-nav__link">
-    Enable on a group of pages
+  <a href="#conftest-files" class="md-nav__link">
+    conftest files
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-on-specific-pages" class="md-nav__link">
-    Enable on specific pages
+  <a href="#helpers" class="md-nav__link">
+    Helpers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-scheduled-maintenance-page" class="md-nav__link">
-    Enable scheduled maintenance page
+  <a href="#using-factories" class="md-nav__link">
+    Using Factories
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#testing" class="md-nav__link">
-    Testing
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#bypassing-maintenance-pages" class="md-nav__link">
-    Bypassing maintenance pages
+  <a href="#integration-test-marker" class="md-nav__link">
+    Integration test marker
   </a>
   
 </li>
@@ -560,12 +415,150 @@
   
 
           
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      <label class="md-nav__link" for="__nav_6">
+        Portal
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Portal" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Portal
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
             
   
   
   
     <li class="md-nav__item">
-      <a href="../monitoring/" class="md-nav__link">
+      <a href="../../portal/browser-support/" class="md-nav__link">
+        Browser support
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/creating-environments/" class="md-nav__link">
+        Setting up a new environment
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/deployment/" class="md-nav__link">
+        Deployment
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/development/" class="md-nav__link">
+        Portal Development
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/environment-variables/" class="md-nav__link">
+        Environment variables
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/error-handling/" class="md-nav__link">
+        Error handling
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/feature-flags/" class="md-nav__link">
+        Feature flags
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/internationalization/" class="md-nav__link">
+        Internationalization
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/maintenance-pages/" class="md-nav__link">
+        Maintenance pages
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/monitoring/" class="md-nav__link">
         Monitoring
       </a>
     </li>
@@ -577,7 +570,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../naming-conventions/" class="md-nav__link">
+      <a href="../../portal/naming-conventions/" class="md-nav__link">
         Naming conventions
       </a>
     </li>
@@ -589,7 +582,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../software-architecture/" class="md-nav__link">
+      <a href="../../portal/software-architecture/" class="md-nav__link">
         Software Architecture
       </a>
     </li>
@@ -601,7 +594,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../storybook/" class="md-nav__link">
+      <a href="../../portal/storybook/" class="md-nav__link">
         Storybook
       </a>
     </li>
@@ -613,7 +606,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tests/" class="md-nav__link">
+      <a href="../../portal/tests/" class="md-nav__link">
         Tests
       </a>
     </li>
@@ -625,7 +618,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../web-analytics/" class="md-nav__link">
+      <a href="../../portal/web-analytics/" class="md-nav__link">
         Web Analytics
       </a>
     </li>
@@ -717,43 +710,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#enable-site-wide" class="md-nav__link">
-    Enable site wide
+  <a href="#naming" class="md-nav__link">
+    Naming
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-on-a-group-of-pages" class="md-nav__link">
-    Enable on a group of pages
+  <a href="#conftest-files" class="md-nav__link">
+    conftest files
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-on-specific-pages" class="md-nav__link">
-    Enable on specific pages
+  <a href="#helpers" class="md-nav__link">
+    Helpers
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#enable-scheduled-maintenance-page" class="md-nav__link">
-    Enable scheduled maintenance page
+  <a href="#using-factories" class="md-nav__link">
+    Using Factories
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#testing" class="md-nav__link">
-    Testing
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#bypassing-maintenance-pages" class="md-nav__link">
-    Bypassing maintenance pages
+  <a href="#integration-test-marker" class="md-nav__link">
+    Integration test marker
   </a>
   
 </li>
@@ -770,37 +756,127 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/EOLWD/PFML/edit/master/docs/portal/maintenance-pages.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/EOLWD/PFML/edit/master/docs/api/writing-tests.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="maintenance-pages">Maintenance pages</h1>
-<p>The Portal includes the ability to have maintenance pages that we can turn on in case we need to shut down all or part of the website.</p>
-<p>Maintenance pages are controlled through the <code>maintenancePageRoutes</code> <a href="../environment-variables/">environment variable</a>.</p>
-<p>Add the <code>maintenancePageRoutes</code> variable to the environment you want to target. It accepts an array of routes (without trailing slashes) that should render a maintenance page.</p>
-<h2 id="enable-site-wide">Enable site wide</h2>
-<p>Use <code>*</code> to match any string:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;maintenancePageRoutes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;/*&quot;</span><span class="p">]</span>
+                <h1 id="writing-tests">Writing Tests</h1>
+<p><a href="https://docs.pytest.org">pytest</a> is our test runner, which is simple but
+powerful. If you are new to pytest, reading up on how <a href="https://docs.pytest.org/en/latest/fixture.html">fixtures
+work</a> in particular might be
+helpful as it's one area that is a bit different than is common with other
+runners (and languages).</p>
+<h2 id="naming">Naming</h2>
+<p>pytest automatically discovers tests by <a href="https://docs.pytest.org/en/stable/goodpractices.html#conventions-for-python-test-discovery">following a number of
+conventions</a>
+(what it calls "collection").</p>
+<p>For this project specifically:</p>
+<ul>
+<li>All tests live under <code>tests/</code></li>
+<li>Under <code>tests/</code>, the organization mirrors the source code structure, but
+  without the <code>massgov/pfml/</code> part, so for example:</li>
+<li>The tests for <code>massgov/pfml/api/</code> live under <code>tests/api/</code></li>
+<li><code>massgov/pfml/util/aws/</code> under <code>test/util/aws/</code>.</li>
+<li>Create <code>__init__.py</code> files for each directory. This helps <a href="https://docs.pytest.org/en/latest/goodpractices.html#tests-outside-application-code">avoid name
+  conflicts when pytest is resolving
+  tests</a>.</li>
+<li>Test files should begin with the <code>test_</code> prefix, followed by the module the
+  tests cover, for example, a file <code>foo.py</code> will have tests in a file
+  <code>test_foo.py</code>.</li>
+<li>Tests for <code>massgov/pfml/api/applications.py</code> live at <code>tests/api/test_applications.py</code></li>
+<li>Test cases should begin with the <code>test_</code> prefix, followed by the function it's
+  testing and some description of what about the function it is testing.</li>
+<li>In <code>tests/api/test_users.py</code>, the <code>test_users_patch_404</code> function is a test
+    (because it begins with <code>test_</code>), that covers the <code>users_patch</code> function's
+    behavior around 404 responses.</li>
+<li>Tests can be grouped in classes starting with <code>Test</code>, methods that start
+    with <code>test_</code> will be picked up as tests, for example
+    <code>TestFeature::test_scenario</code>.</li>
+</ul>
+<p>There are occasions where tests may not line up exactly with a single source
+file, function, or otherwise may need to deviate from this exact structure, but
+this is the setup in general.</p>
+<h2 id="conftest-files">conftest files</h2>
+<p><code>conftest.py</code> files are automatically loaded by pytest, making their contents
+available to tests without needing to be imported. They are an easy place to put
+shared test fixtures as well as define other pytest configuration (define hooks,
+load plugins, define new/override assert behavior, etc.).</p>
+<p>They should never be imported directly.</p>
+<p>The main <code>tests/conftest.py</code> holds widely useful fixtures included for all
+tests. Scoped <code>conftest.py</code> files can be created that apply only to the tests
+below them in the directory hierarchy, for example, the <code>tests/db/conftest.py</code>
+file is only loaded for tests under <code>tests/db/</code>.</p>
+<p>More info:
+https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-functions</p>
+<h2 id="helpers">Helpers</h2>
+<p>If there is useful functionality that needs to be shared between tests, but is
+only applicable to testing and is not a fixture, create modules under
+<code>tests/helpers/</code>.</p>
+<p>They can be imported into tests from the path <code>tests.helpers</code>, for example,
+<code>from tests.helpers.foo import helper_func</code>.</p>
+<h2 id="using-factories">Using Factories</h2>
+<p>To facilitate easier setup of test data, most database models have factories via
+<a href="https://factoryboy.readthedocs.io/">factory_boy</a> in
+<code>massgov/pfml/db/models/factories.py</code>.</p>
+<p>There are a few different ways of <a href="https://factoryboy.readthedocs.io/en/stable/#using-factories">using the
+factories</a>, termed
+"strategies": build, create, and stub. Most notably for this project:</p>
+<ul>
+<li>The build strategy via <code>FooFactory.build()</code> populates a model class with the
+  generated data, but does not attempt to write it to the database</li>
+<li>The create strategy via <code>FooFactory.create()</code> writes a generated model to the
+  database (can think of it like <code>FooFactory.build()</code> then <code>db_session.add()</code>
+  and <code>db_session.commit()</code>)</li>
+</ul>
+<p>The build strategy is useful if the code under test just needs the data on the
+model and doesn't actually perform any database interactions.</p>
+<p>In order to use the create strategy, pull in the <code>initialize_factories_session</code>
+fixture.</p>
+<p>Regardless of the strategy, can override the values for attributes on the
+generated models by passing them into the factory call, for example:</p>
+<div class="highlight"><pre><span></span><code><span class="n">FooFactory</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">foo_id</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Bar&quot;</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="enable-on-a-group-of-pages">Enable on a group of pages</h2>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;maintenancePageRoutes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;/applications/*&quot;</span><span class="p">]</span>
+<p>would set <code>foo_id=5</code> and <code>name="Bar"</code> on the generated model, while all other
+attributes would use what's configured on the factory class.</p>
+<p>For creating a collection of generated models, there are batch methods,
+<code>build_batch()</code> and <code>create_batch()</code>, which will create multiple instances. For
+example:</p>
+<div class="highlight"><pre><span></span><code><span class="n">FooFactory</span><span class="o">.</span><span class="n">build_batch</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="enable-on-specific-pages">Enable on specific pages</h2>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;maintenancePageRoutes&quot;</span><span class="p">:</span> <span class="p">[</span>
-  <span class="s2">&quot;/create-account&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;/employers/create-account&quot;</span>
-<span class="p">]</span>
+<p>will return 5 <code>Foo</code> instances with different data. Attributes set in the batch
+call will be shared among all the instances, so:</p>
+<div class="highlight"><pre><span></span><code><span class="n">FooFactory</span><span class="o">.</span><span class="n">build_batch</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">parent_widget</span><span class="o">=</span><span class="n">widget</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="enable-scheduled-maintenance-page">Enable scheduled maintenance page</h2>
-<p>If the maintenance page is being added because of scheduled down time, add the user friendly day and time that the maintenance pages will be removed to the configs.</p>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;maintenanceRemovalDayAndTime&quot;</span><span class="p">:</span> <span class="s2">&quot;Sunday, January 1st, at 6 p.m. EST&quot;</span>
+<p>would create 2 <code>Foo</code> instances with <code>widget</code> set as their <code>parent_widget</code>.</p>
+<h2 id="integration-test-marker">Integration test marker</h2>
+<p>An <code>integration</code> marker is configured in pytest for the project. Any test that
+requires a real database connection or any concrete "resource" outside of the
+code itself should be tagged with the <code>integration</code> marker. It indicates an
+"integration" test, as opposed to a "unit" test, in a somewhat loose sense.</p>
+<p>A few common situations are easy cases, if a test is covering API behavior via
+fixtures like <code>app</code> or <code>client</code> or testing state in the database with
+<code>test_db_session</code>, the test should be marked with <code>integration</code>.</p>
+<p>Accessing real files is a bit of a gray area. If testing code that needs
+file-like objects, should generally prefer using in-memory constructs like
+<code>StringIO</code> or <code>BytesIO</code> to avoid ever touching the filesystem. But currently if
+a test needs to load test fixture files or use <code>tmp_path</code> to work with a real
+file for some purpose, those do not need to be tagged <code>integration</code>.</p>
+<p>Decorate any individual test with <code>@pytest.mark.integration</code>.</p>
+<p>If all (or almost all) tests in a given test file are integration tests, they
+can be tagged all at once with a declaration like the following at the top of
+the file (after imports):</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># every test in here requires real resources</span>
+<span class="n">pytestmark</span> <span class="o">=</span> <span class="n">pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
 </code></pre></div>
-<h2 id="testing">Testing</h2>
-<p>If you are testing the configuration locally, just note that you need to restart the local development server in order for new environment variables to kick in.</p>
-<h2 id="bypassing-maintenance-pages">Bypassing maintenance pages</h2>
-<p>It can be helpful to bypass a maintenance page to test the page itself. To do so, you can enable the <code>noMaintenance</code> <a href="../feature-flags/">feature flag</a> in the browser.</p>
-<p>For example, to bypass the maintenance pages in the Test environment: <code>https://paidleave-test.mass.gov?_ff=noMaintenance:true</code></p>
+<p>If a test file has a large mix of integration and unit tests that don't make
+sense to separate, integration tests can be bundled into a test class which can
+then be tagged, for example:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
+<span class="k">class</span> <span class="nc">TestIntegrations</span><span class="p">:</span>
+</code></pre></div>
+<p>(but tagging each individual function with <code>@pytest.mark.integration</code> is also
+acceptable)</p>
                 
               
               
@@ -818,7 +894,7 @@
   
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
-        <a href="../internationalization/" class="md-footer__link md-footer__link--prev" rel="prev">
+        <a href="../monitoring/" class="md-footer__link md-footer__link--prev" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -827,19 +903,19 @@
               <span class="md-footer__direction">
                 Previous
               </span>
-              Internationalization
+              API Monitoring
             </div>
           </div>
         </a>
       
       
-        <a href="../monitoring/" class="md-footer__link md-footer__link--next" rel="next">
+        <a href="../../portal/browser-support/" class="md-footer__link md-footer__link--next" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Monitoring
+              Browser support
             </div>
           </div>
           <div class="md-footer__button md-icon">
