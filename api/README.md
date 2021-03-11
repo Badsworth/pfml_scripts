@@ -25,7 +25,6 @@ This is the API for the Massachusetts Paid Family and Medical Leave program. See
     2. [Seed your database](#seed-your-database)
 5. [Tests](#tests)
     1. [During Development](#during-development)
-    2. [Integration test marker](#integration-test-marker)
 6. [Managing dependencies](#managing-dependencies)
     1. [poetry.lock conflicts](#poetry.lock-conflicts)
 7. [Environment Configuration](#environment-configuration)
@@ -470,18 +469,20 @@ After the scripts above have ran, you can grab values from your database tables 
 
 ## Tests
 
+For writing tests see [/docs/api/writing-tests.md](/docs/api/writing-tests.md).
+
+There are various `test*` make targets set up for convenience.
+
+To run the entire test suite:
+
 ```sh
 make test
 ```
 
-[pytest](https://docs.pytest.org) is our test runner, which is simple but
-powerful. If you are new to pytest, reading up on how [fixtures
-work](https://docs.pytest.org/en/latest/fixture.html) in particular might be
-helpful as it's one area that is a bit different than is common with other
-runners (and languages).
-
-To pass arguments to `pytest` through `make test` you can set the `args`
-variable. For example, to run only the tests in `test_user.py`:
+Ultimately the targets just wrap the test runner
+[pytest](https://docs.pytest.org) with minor tweaks and wrapping it in helper
+tools. To pass arguments to `pytest` through `make test` you can set the `args`
+variable.  For example, to run only the tests in `test_user.py`:
 
 ```sh
 make test args=tests/api/test_users.py
@@ -499,9 +500,9 @@ To pass multiple arguments:
 make test args="-x tests/api/test_users.py"
 ```
 
-For a more complete description of the various ways you can select which test
-cases to run or various behaviors that can be turned on, [refer to the pytest
-docs](https://docs.pytest.org/en/latest/usage.html).
+For a more complete description of the many ways you can select tests to run and
+different flags, [refer to the pytest
+docs](https://docs.pytest.org/en/latest/usage.html) (and/or `pytest --help`).
 
 ### During Development
 
@@ -539,45 +540,11 @@ make test-watch args=tests/api/test_users.py::test_users_get
 
 Arguments for `test-watch` are the same as args for `make test` as discussed in the section above.
 
-### Integration test marker
+To run only unit tests:
 
-An `integration` marker is configured in pytest for the project. Any test that
-requires a real database connection or any concrete "resource" outside of the
-code itself should be tagged with the `integration` marker. It indicates an
-"integration" test, as opposed to a "unit" test, in a somewhat loose sense.
-
-A few common situations are easy cases, if a test is covering API behavior via
-fixtures like `app` or `client` or testing state in the database with
-`test_db_session`, the test should be marked with `integration`.
-
-Accessing real files is a bit of a gray area. If testing code that needs
-file-like objects, should generally prefer using in-memory constructs like
-`StringIO` or `BytesIO` to avoid ever touching the filesystem. But currently if
-a test needs to load test fixture files or use `tmp_path` to work with a real
-file for some purpose, those do not need to be tagged `integration`.
-
-Decorate any individual test with `@pytest.mark.integration`.
-
-If all (or almost all) tests in a given test file are integration tests, they
-can be tagged all at once with a declaration like the following at the top of
-the file (after imports):
-
-```python
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
+``` sh
+make test-unit
 ```
-
-If a test file has a large mix of integration and unit tests that don't make
-sense to separate, integration tests can be bundled into a test class which can
-then be tagged, for example:
-
-```python
-@pytest.mark.integration
-class TestIntegrations:
-```
-
-(but tagging each individual function with `@pytest.mark.integration` is also
-acceptable)
 
 ## Managing dependencies
 
