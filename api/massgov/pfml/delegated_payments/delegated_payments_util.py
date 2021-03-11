@@ -153,6 +153,7 @@ class ValidationReason(str, Enum):
     MISMATCHED_DATA = "MismatchedData"
     UNUSABLE_STATE = "UnusableState"
     RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED = "ReceivedPaymentCurrentlyBeingProcessed"
+    UNEXPECTED_PAYMENT_TRANSACTION_TYPE = "UnexpectedPaymentTransactionType"
 
 
 @dataclass(frozen=True, eq=True)

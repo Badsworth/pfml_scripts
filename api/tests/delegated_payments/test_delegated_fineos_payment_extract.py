@@ -1,8 +1,11 @@
+import csv
 import os
 import tempfile
+from collections import OrderedDict
 from datetime import date
 
 import boto3
+import faker
 import pytest
 from freezegun import freeze_time
 
@@ -31,7 +34,6 @@ from massgov.pfml.db.models.factories import (
     CtrAddressPairFactory,
     EftFactory,
     EmployeeFactory,
-    EmployerFactory,
     PaymentFactory,
     ReferenceFileFactory,
 )
@@ -52,171 +54,28 @@ pytestmark = pytest.mark.integration
 
 EXPECTED_OUTCOME = {"message": "Success"}
 
-VPEI_HEADERS = [
+PEI_FIELD_NAMES = [
     "C",
     "I",
-    "LASTUPDATEDATE",
-    "C_OSUSER_UPDATEDBY",
-    "I_OSUSER_UPDATEDBY",
-    "ADDRESSLINE1",
-    "ADDRESSLINE2",
-    "ADDRESSLINE3",
-    "ADDRESSLINE4",
-    "ADDRESSLINE5",
-    "ADDRESSLINE6",
-    "ADDRESSLINE7",
-    "ADVICETOPAY",
-    "ADVICETOPAYOV",
-    "AMALGAMATIONC",
-    "AMOUNT_MONAMT",
-    "AMOUNT_MONCUR",
-    "CHECKCUTTING",
-    "CONFIRMEDBYUS",
-    "CONFIRMEDUID",
-    "CONTRACTREF",
-    "CORRESPCOUNTR",
-    "CURRENCY",
-    "DATEINTERFACE",
-    "DESCRIPTION",
-    "EMPLOYEECONTR",
-    "EVENTEFFECTIV",
-    "EVENTREASON",
-    "EVENTTYPE",
-    "EXTRACTIONDAT",
-    "GROSSPAYMENTA_MONAMT",
-    "GROSSPAYMENTA_MONCUR",
-    "INSUREDRESIDE",
-    "NAMETOPRINTON",
-    "NOMINATEDPAYE",
-    "NOMPAYEECUSTO",
-    "NOMPAYEEDOB",
-    "NOMPAYEEFULLN",
-    "NOMPAYEESOCNU",
-    "NOTES",
-    "PAYEEACCOUNTN",
-    "PAYEEACCOUNTT",
-    "PAYEEADDRESS",
-    "PAYEEBANKBRAN",
-    "PAYEEBANKCODE",
-    "PAYEEBANKINST",
-    "PAYEEBANKSORT",
-    "PAYEECORRESPO",
-    "PAYEECUSTOMER",
-    "PAYEEDOB",
-    "PAYEEFULLNAME",
-    "PAYEEIDENTIFI",
     "PAYEESOCNUMBE",
-    "PAYMENTADD",
     "PAYMENTADD1",
     "PAYMENTADD2",
-    "PAYMENTADD3",
     "PAYMENTADD4",
-    "PAYMENTADD5",
     "PAYMENTADD6",
-    "PAYMENTADD7",
-    "PAYMENTADDCOU",
-    "PAYMENTCORRST",
-    "PAYMENTDATE",
-    "PAYMENTFREQUE",
-    "PAYMENTMETHOD",
     "PAYMENTPOSTCO",
-    "PAYMENTPREMIS",
-    "PAYMENTTRIGGE",
-    "PAYMENTTYPE",
-    "PAYMETHCURREN",
-    "POSTCODE",
-    "PREMISESNO",
-    "SETUPBYUSERID",
-    "SETUPBYUSERNA",
-    "STATUS",
-    "STATUSEFFECTI",
-    "STATUSREASON",
-    "STOCKNO",
-    "SUMMARYEFFECT",
-    "SUMMARYSTATUS",
-    "TRANSSTATUSDA",
+    "PAYMENTMETHOD",
+    "PAYMENTDATE",
+    "AMOUNT_MONAMT",
+    "PAYEEBANKSORT",
+    "PAYEEACCOUNTN",
+    "PAYEEACCOUNTT",
+    "EVENTTYPE",
 ]
-CLAIM_DETAIL_HEADERS = [
-    "C",
-    "I",
-    "LASTUPDATEDATE",
-    "C_OSUSER_UPDATEDBY",
-    "I_OSUSER_UPDATEDBY",
-    "ABSENCECASENU",
-    "BENEFITRIGHTT",
-    "CLAIMANTAGE",
-    "CLAIMANTCUSTO",
-    "CLAIMANTDOB",
-    "CLAIMANTGENDE",
-    "CLAIMANTNAME",
-    "CLAIMANTRELTO",
-    "CLAIMNUMBER",
-    "DIAGCODE2",
-    "DIAGCODE3",
-    "DIAGCODE4",
-    "DIAGCODE5",
-    "EMPLOYEEID",
-    "EVENTCAUSE",
-    "INCURREDDATE",
-    "INSUREDADDRES",
-    "INSUREDADDRL1",
-    "INSUREDADDRL2",
-    "INSUREDADDRL3",
-    "INSUREDADDRL4",
-    "INSUREDADDRL5",
-    "INSUREDADDRL6",
-    "INSUREDADDRL7",
-    "INSUREDAGE",
-    "INSUREDCORCOU",
-    "INSUREDCORRES",
-    "INSUREDCUSTOM",
-    "INSUREDDOB",
-    "INSUREDEMPLOY",
-    "INSUREDFULLNA",
-    "INSUREDGENDER",
-    "INSUREDPOSTCO",
-    "INSUREDPREMIS",
-    "INSUREDRETIRE",
-    "INSUREDSOCNUM",
-    "LEAVEPLANID",
-    "LEAVEREQUESTI",
-    "NOTIFIEDDATE",
-    "PAYEEAGEATINC",
-    "PAYEECASEROLE",
-    "PAYEERELTOINS",
-    "PRIMARYDIAGNO",
-    "PRIMARYMEDICA",
-    "DIAG2MEDICALC",
-    "DIAG3MEDICALC",
-    "DIAG4MEDICALC",
-    "DIAG5MEDICALC",
-    "PECLASSID",
-    "PEINDEXID",
-    "DATEINTERFACE",
-]
-PAYMENT_DETAIL_HEADERS = [
-    "C",
-    "I",
-    "LASTUPDATEDATE",
-    "C_OSUSER_UPDATEDBY",
-    "I_OSUSER_UPDATEDBY",
-    "BENEFITEFFECT",
-    "BENEFITFINALP",
-    "DESCRIPTION_PAYMENTDTLS",
-    "PAYMENTENDPER",
-    "PAYMENTSTARTP",
-    "BALANCINGAMOU_MONAMT",
-    "BALANCINGAMOU_MONCUR",
-    "BUSINESSNETBE_MONAMT",
-    "BUSINESSNETBE_MONCUR",
-    "DUETYPE",
-    "GROUPID",
-    "PECLASSID",
-    "PEINDEXID",
-    "CLAIMDETAILSCLASSID",
-    "CLAIMDETAILSINDEXID",
-    "DATEINTERFACE",
-]
+PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "PAYMENTENDPER"]
+PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU"]
+
+fake = faker.Faker()
+fake.seed_instance(1212)
 
 ### UTILITY METHODS
 
@@ -230,34 +89,101 @@ def make_s3_file(s3_bucket, key, test_file_name):
     s3.upload_file(test_file_path, s3_bucket, key)
 
 
-def make_vpei_line(c_value, i_value):
-    records = []
-    for _ in VPEI_HEADERS:
-        records.append('""')  # Empty quotes
+def make_and_upload_extract_file(tmp_path, mock_s3_bucket, file_name, fieldnames, records):
+    csv_file_path = tmp_path / file_name
+    csv_file = file_util.write_file(csv_file_path)
+    csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+    csv_writer.writeheader()
 
-    records[0] = f'"{c_value}"'
-    records[1] = f'"{i_value}"'
-    return ",".join(records)
+    for record in records:
+        csv_writer.writerow(record)
 
+    csv_file.close()
 
-def make_claim_details_line(pe_class_id, pe_index_id, absence_case_number):
-    records = []
-    for _ in CLAIM_DETAIL_HEADERS:
-        records.append('""')  # Empty quotes
-
-    records[5] = f'"{absence_case_number}"'
-    records[53] = f'"{pe_class_id}"'
-    records[54] = f'"{pe_index_id}"'
-
-    return ",".join(records)
+    s3 = boto3.client("s3")
+    s3.upload_file(
+        str(csv_file_path), mock_s3_bucket, f"cps/inbound/received/2020-01-01-11-30-00-{file_name}"
+    )
 
 
-def make_payment_details_line():
-    records = []
-    for _ in PAYMENT_DETAIL_HEADERS:
-        records.append('""')  # Empty quotes
+def get_value(value, default, generate_defaults):
+    if not value:
+        if generate_defaults:
+            return default
+        return ""
 
-    return ",".join(records)
+    return value
+
+
+def make_vpei_record(
+    c_value,
+    i_value,
+    generate_defaults=True,
+    tin=None,
+    address1=None,
+    address2=None,
+    city=None,
+    state=None,
+    zip_code=None,
+    payment_method=None,
+    payment_date=None,
+    payment_amount=None,
+    routing_nbr=None,
+    account_nbr=None,
+    account_type=None,
+    payment_type=None,
+):
+    vpei_record = OrderedDict()
+    vpei_record["C"] = c_value
+    vpei_record["I"] = i_value
+
+    vpei_record["PAYEESOCNUMBE"] = get_value(tin, fake.ssn().replace("-", ""), generate_defaults)
+    vpei_record["PAYMENTADD1"] = get_value(
+        address1,
+        f"{fake.building_number()} {fake.street_name()} {fake.street_suffix()}",
+        generate_defaults,
+    )
+    vpei_record["PAYMENTADD2"] = get_value(address2, "", generate_defaults)
+    vpei_record["PAYMENTADD4"] = get_value(city, fake.city(), generate_defaults)
+    vpei_record["PAYMENTADD6"] = get_value(state, fake.state_abbr().upper(), generate_defaults)
+    vpei_record["PAYMENTPOSTCO"] = get_value(
+        zip_code, fake.zipcode_plus4().replace("-", ""), generate_defaults
+    )
+    vpei_record["PAYMENTMETHOD"] = get_value(
+        payment_method, "Elec Funds Transfer", generate_defaults
+    )
+    vpei_record["PAYMENTDATE"] = get_value(payment_date, "2021-01-01 12:00:00", generate_defaults)
+    vpei_record["AMOUNT_MONAMT"] = get_value(payment_amount, "100.00", generate_defaults)
+    vpei_record["PAYEEBANKSORT"] = get_value(routing_nbr, "051000101", generate_defaults)
+    vpei_record["PAYEEACCOUNTN"] = get_value(account_nbr, "12345678910", generate_defaults)
+    vpei_record["PAYEEACCOUNTT"] = get_value(account_type, "Checking", generate_defaults)
+    vpei_record["EVENTTYPE"] = get_value(payment_type, "PaymentOut", generate_defaults)
+
+    return vpei_record
+
+
+def make_claim_detail_record(pe_class_id, pe_index_id, absence_case_number):
+    claim_detail_record = OrderedDict()
+    claim_detail_record["PECLASSID"] = pe_class_id
+    claim_detail_record["PEINDEXID"] = pe_index_id
+    claim_detail_record["ABSENCECASENU"] = absence_case_number
+    return claim_detail_record
+
+
+def make_payment_details_record(
+    pe_class_id, pe_index_id, generate_defaults=True, payment_start=None, payment_end=None
+):
+    payment_detail_record = OrderedDict()
+    payment_detail_record["PECLASSID"] = pe_class_id
+    payment_detail_record["PEINDEXID"] = pe_index_id
+
+    payment_detail_record["PAYMENTSTARTP"] = get_value(
+        payment_start, "2021-01-01 12:00:00", generate_defaults
+    )
+    payment_detail_record["PAYMENTENDPER"] = get_value(
+        payment_end, "2021-01-08 12:00:00", generate_defaults
+    )
+    return payment_detail_record
 
 
 def add_db_records(
@@ -296,12 +222,7 @@ def add_db_records(
         employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
 
     if add_claim:
-        employer = EmployerFactory.create()
-        claim = ClaimFactory.create(
-            employer_id=employer.employer_id,
-            fineos_absence_id=absence_case_id,
-            employee_id=employee.employee_id,
-        )
+        claim = ClaimFactory.create(fineos_absence_id=absence_case_id, employee=employee)
 
         # Payment needs to be attached to a claim
         if add_payment:
@@ -311,6 +232,32 @@ def add_db_records(
             state_log_util.create_finished_state_log(
                 payment, additional_payment_state, EXPECTED_OUTCOME, db_session
             )
+
+
+def add_db_records_from_row(
+    db_session,
+    vpei_record,
+    claimant_record,
+    add_claim=True,
+    add_address=True,
+    add_eft=True,
+    add_payment=False,
+    add_employee=True,
+    additional_payment_state=None,
+):
+    add_db_records(
+        db_session,
+        tin=vpei_record["PAYEESOCNUMBE"],
+        absence_case_id=claimant_record["ABSENCECASENU"],
+        c_value=vpei_record["C"],
+        i_value=vpei_record["I"],
+        add_claim=add_claim,
+        add_address=add_address,
+        add_eft=add_eft,
+        add_payment=add_payment,
+        add_employee=add_employee,
+        additional_payment_state=additional_payment_state,
+    )
 
 
 def setup_process_tests(
@@ -438,7 +385,7 @@ def test_process_extract_data(
     setup_process_tests(mock_s3_bucket, test_db_session)
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 9
+    assert employee_log_count_before == 6
 
     extractor.process_extract_data(tmp_path, test_db_session)
 
@@ -569,7 +516,7 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
     )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 9
+    assert employee_log_count_before == 6
 
     extractor.process_extract_data(tmp_path, test_db_session)
 
@@ -686,7 +633,7 @@ def test_process_extract_data_rollback(
     setup_process_tests(mock_s3_bucket, test_db_session)
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 9
+    assert employee_log_count_before == 6
 
     # Override the method that moves files at the end to throw
     # an error so that everything will rollback
@@ -890,7 +837,7 @@ def test_process_extract_data_existing_payment(
     )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 9
+    assert employee_log_count_before == 6
 
     extractor.process_extract_data(tmp_path, test_db_session)
 
@@ -944,34 +891,27 @@ def test_process_extract_data_minimal_viable_payment(
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 0
 
-    s3 = boto3.client("s3")
-    vpei_text = "\n".join([",".join(VPEI_HEADERS), make_vpei_line("1000", "1")])
-    vpei_file = tmp_path / "vpei.csv"
-    vpei_file.write_text(vpei_text)
-    s3.upload_file(
-        str(vpei_file), mock_s3_bucket, "cps/inbound/received/2020-01-01-11-30-00-vpei.csv"
+    vpei_record = make_vpei_record("1000", "1", generate_defaults=False)
+    make_and_upload_extract_file(
+        tmp_path, mock_s3_bucket, "vpei.csv", PEI_FIELD_NAMES, [vpei_record]
     )
 
-    claim_details_text = "\n".join(
-        [",".join(CLAIM_DETAIL_HEADERS), make_claim_details_line("1000", "1", "NTN-01-ABS-01")]
-    )
-    claim_details_file = tmp_path / "claim_details.csv"
-    claim_details_file.write_text(claim_details_text)
-    s3.upload_file(
-        str(claim_details_file),
+    claim_record = make_claim_detail_record("1000", "1", "NTN-01-ABS-01")
+    make_and_upload_extract_file(
+        tmp_path,
         mock_s3_bucket,
-        "cps/inbound/received/2020-01-01-11-30-00-vpeiclaimdetails.csv",
+        "vpeiclaimdetails.csv",
+        PEI_CLAIM_DETAILS_FIELD_NAMES,
+        [claim_record],
     )
 
-    payment_details_text = "\n".join(
-        [",".join(PAYMENT_DETAIL_HEADERS), make_payment_details_line()]
-    )
-    payment_details_file = tmp_path / "payment_details.csv"
-    payment_details_file.write_text(payment_details_text)
-    s3.upload_file(
-        str(payment_details_file),
+    payment_details_record = make_payment_details_record("1000", "1", generate_defaults=False)
+    make_and_upload_extract_file(
+        tmp_path,
         mock_s3_bucket,
-        "cps/inbound/received/2020-01-01-11-30-00-vpeipaymentdetails.csv",
+        "vpeipaymentdetails.csv",
+        PEI_PAYMENT_DETAILS_FIELD_NAMES,
+        [payment_details_record],
     )
 
     # We deliberately do no DB setup, there will not be any prior employee
@@ -996,7 +936,162 @@ def test_process_extract_data_minimal_viable_payment(
     assert employee_log_count_after == employee_log_count_before
 
 
-def test_validation_missing_fields(set_exporter_env_vars):
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_additional_payment_types(
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    test_db_session,
+    tmp_path,
+    initialize_factories_session,
+    monkeypatch,
+    create_triggers,
+):
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    # Create a zero dollar payment
+    vpei_record_zero_dollar = make_vpei_record("1000", "1", payment_amount="0.00")
+    claim_record_zero_dollar = make_claim_detail_record("1000", "1", "NTN-01-ABS-01")
+    payment_details_record_zero_dollar = make_payment_details_record("1000", "1")
+    add_db_records_from_row(test_db_session, vpei_record_zero_dollar, claim_record_zero_dollar)
+
+    # Create an overpayment
+    vpei_record_overpayment = make_vpei_record("2000", "2", payment_type="Overpayment")
+    claim_record_overpayment = make_claim_detail_record("2000", "2", "NTN-02-ABS-02")
+    payment_details_record_overpayment = make_payment_details_record("2000", "2")
+    add_db_records_from_row(test_db_session, vpei_record_overpayment, claim_record_overpayment)
+
+    # Create an ACH cancellation
+    vpei_record_ach_cancellation = make_vpei_record(
+        "3000", "3", payment_method="Elec Funds Transfer", payment_type="PaymentOut Cancellation"
+    )
+    claim_record_ach_cancellation = make_claim_detail_record("3000", "3", "NTN-03-ABS-03")
+    payment_details_record_ach_cancellation = make_payment_details_record("3000", "3")
+    add_db_records_from_row(
+        test_db_session, vpei_record_ach_cancellation, claim_record_ach_cancellation
+    )
+
+    # Create a check cancellation
+    vpei_record_check_cancellation = make_vpei_record(
+        "4000", "4", payment_method="Check", payment_type="PaymentOut Cancellation"
+    )
+    claim_record_check_cancellation = make_claim_detail_record("4000", "4", "NTN-04-ABS-04")
+    payment_details_record_check_cancellation = make_payment_details_record("4000", "4")
+    add_db_records_from_row(
+        test_db_session, vpei_record_check_cancellation, claim_record_check_cancellation
+    )
+
+    # Unknown - negative payment but not a cancellation/overpayment
+    vpei_record_unknown = make_vpei_record(
+        "5000", "5", payment_type="Mystery", payment_amount="-50.00"
+    )
+    claim_record_unknown = make_claim_detail_record("5000", "5", "NTN-05-ABS-05")
+    payment_details_record_unknown = make_payment_details_record("5000", "5")
+    add_db_records_from_row(test_db_session, vpei_record_unknown, claim_record_unknown)
+
+    make_and_upload_extract_file(
+        tmp_path,
+        mock_s3_bucket,
+        "vpei.csv",
+        PEI_FIELD_NAMES,
+        [
+            vpei_record_zero_dollar,
+            vpei_record_overpayment,
+            vpei_record_ach_cancellation,
+            vpei_record_check_cancellation,
+            vpei_record_unknown,
+        ],
+    )
+    make_and_upload_extract_file(
+        tmp_path,
+        mock_s3_bucket,
+        "vpeiclaimdetails.csv",
+        PEI_CLAIM_DETAILS_FIELD_NAMES,
+        [
+            claim_record_zero_dollar,
+            claim_record_overpayment,
+            claim_record_ach_cancellation,
+            claim_record_check_cancellation,
+            claim_record_unknown,
+        ],
+    )
+    make_and_upload_extract_file(
+        tmp_path,
+        mock_s3_bucket,
+        "vpeipaymentdetails.csv",
+        PEI_PAYMENT_DETAILS_FIELD_NAMES,
+        [
+            payment_details_record_zero_dollar,
+            payment_details_record_overpayment,
+            payment_details_record_ach_cancellation,
+            payment_details_record_check_cancellation,
+            payment_details_record_unknown,
+        ],
+    )
+
+    # Run the extract process
+    extractor.process_extract_data(tmp_path, test_db_session)
+
+    # Zero dollar payment should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
+    zero_dollar_payment = (
+        test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_c_value == "1000", Payment.fineos_pei_i_value == "1")
+        .one_or_none()
+    )
+    assert len(zero_dollar_payment.state_logs) == 1
+    assert (
+        zero_dollar_payment.state_logs[0].end_state_id
+        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT.state_id
+    )
+
+    # Overpayment should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT
+    overpayment_payment = (
+        test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_c_value == "2000", Payment.fineos_pei_i_value == "2")
+        .one_or_none()
+    )
+    assert len(overpayment_payment.state_logs) == 1
+    assert (
+        overpayment_payment.state_logs[0].end_state_id
+        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT.state_id
+    )
+
+    # ACH Cancellation should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
+    ach_cancellation_payment = (
+        test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_c_value == "3000", Payment.fineos_pei_i_value == "3")
+        .one_or_none()
+    )
+    assert len(ach_cancellation_payment.state_logs) == 1
+    assert (
+        ach_cancellation_payment.state_logs[0].end_state_id
+        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION.state_id
+    )
+
+    # Check Cancellation should be in the normal path end state of DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+    check_cancellation_payment = (
+        test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_c_value == "4000", Payment.fineos_pei_i_value == "4")
+        .one_or_none()
+    )
+    assert len(check_cancellation_payment.state_logs) == 1
+    assert (
+        check_cancellation_payment.state_logs[0].end_state_id
+        == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+    )
+
+    # Unknown should be in the error report state DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+    unknown_payment = (
+        test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_c_value == "5000", Payment.fineos_pei_i_value == "5")
+        .one_or_none()
+    )
+    assert len(unknown_payment.state_logs) == 1
+    assert (
+        unknown_payment.state_logs[0].end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+    )
+
+
+def test_validation_missing_fields(initialize_factories_session, set_exporter_env_vars):
     # This test is specifically aimed at verifying we check for required parameters
 
     # We set it up so the datasets can be joined on ci_index, but don't set any
@@ -1026,6 +1121,7 @@ def test_validation_missing_fields(set_exporter_env_vars):
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "AMOUNT_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "EVENTTYPE"),
         ]
     )
     assert set(validation_container.validation_issues) == expected_missing_values
@@ -1051,7 +1147,7 @@ def test_validation_missing_fields(set_exporter_env_vars):
     )  # No longer missing now
     expected_missing_values.update(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEBANKCODE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEBANKSORT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTN"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT"),
         ]
@@ -1071,7 +1167,7 @@ def test_validation_param_length(set_exporter_env_vars):
     ci_index = extractor.CiIndex("1", "1")
     extract_data = extractor.ExtractData(extractor.expected_file_names, "2020-01-01-11-30-00")
     # First let's check if a field is too short
-    extract_data.pei.indexed_data = {ci_index: {"PAYEEBANKCODE": "123", "PAYMENTPOSTCO": "123"}}
+    extract_data.pei.indexed_data = {ci_index: {"PAYEEBANKSORT": "123", "PAYMENTPOSTCO": "123"}}
     extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
     extract_data.claim_details.indexed_data = {ci_index: {"ABSENCECASENU": "NTN-01-ABS-01"}}
 
@@ -1081,14 +1177,14 @@ def test_validation_param_length(set_exporter_env_vars):
 
     assert set(
         [
-            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYEEBANKCODE"),
+            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYEEBANKSORT"),
             ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYMENTPOSTCO"),
         ]
     ).issubset(set(payment_data.validation_container.validation_issues))
 
     # Now let's check if a field is too long
     extract_data.pei.indexed_data[ci_index]["PAYMENTPOSTCO"] = "012345-67890"
-    extract_data.pei.indexed_data[ci_index]["PAYEEBANKCODE"] = "012345678910"
+    extract_data.pei.indexed_data[ci_index]["PAYEEBANKSORT"] = "012345678910"
     extract_data.pei.indexed_data[ci_index]["PAYEEACCOUNTN"] = "0" * 50
 
     payment_data = extractor.PaymentData(
@@ -1098,7 +1194,7 @@ def test_validation_param_length(set_exporter_env_vars):
     assert set(
         [
             ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYEEACCOUNTN"),
-            ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYEEBANKCODE"),
+            ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYEEBANKSORT"),
             ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYMENTPOSTCO"),
         ]
     ).issubset(set(payment_data.validation_container.validation_issues))

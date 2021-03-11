@@ -203,6 +203,16 @@ class LkState(Base):
         self.flow_id = flow_id
 
 
+class LkPaymentTransactionType(Base):
+    __tablename__ = "lk_payment_transaction_type"
+    payment_transaction_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    payment_transaction_type_description = Column(Text)
+
+    def __init__(self, payment_transaction_type_id, payment_transaction_type_description):
+        self.payment_transaction_type_id = payment_transaction_type_id
+        self.payment_transaction_type_description = payment_transaction_type_description
+
+
 class LkReferenceFileType(Base):
     __tablename__ = "lk_reference_file_type"
     reference_file_type_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -480,6 +490,9 @@ class Payment(Base):
     __tablename__ = "payment"
     payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
+    payment_transaction_type_id = Column(
+        Integer, ForeignKey("lk_payment_transaction_type.payment_transaction_type_id")
+    )
     period_start_date = Column(Date)
     period_end_date = Column(Date)
     payment_date = Column(Date)
@@ -495,7 +508,9 @@ class Payment(Base):
     has_eft_update = Column(Boolean, default=False, server_default="FALSE", nullable=False)
 
     claim = relationship(Claim)
+    payment_transaction_type = relationship(LkPaymentTransactionType)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
+
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")
 
@@ -1658,6 +1673,30 @@ class State(LookupTable):
     )
     DELEGATED_PAYMENT_COMPLETE = LkState(144, "Payment complete", Flow.DELEGATED_PAYMENT.flow_id)
 
+    # Delegated payment states for ACH cancellation (similar to 122-127)
+    DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION = LkState(
+        145,
+        "Waiting for Payment Audit Report response - cancellation payment",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+    DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
+        146, "Add cancellation payment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_CANCELLATION_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+        147, "cancellation payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+
+class PaymentTransactionType(LookupTable):
+    model = LkPaymentTransactionType
+    column_names = ("payment_transaction_type_id", "payment_transaction_type_description")
+
+    STANDARD = LkPaymentTransactionType(1, "Standard")
+    ZERO_DOLLAR = LkPaymentTransactionType(2, "Zero Dollar")
+    OVERPAYMENT = LkPaymentTransactionType(3, "Overpayment")
+    CANCELLATION = LkPaymentTransactionType(4, "Cancellation")
+    UNKNOWN = LkPaymentTransactionType(5, "Unknown")
+
 
 class ReferenceFileType(LookupTable):
     model = LkReferenceFileType
@@ -1722,9 +1761,9 @@ def sync_lookup_tables(db_session):
     ReferenceFileType.sync_to_database(db_session)
     Title.sync_to_database(db_session)
     ReferenceFileType.sync_to_database(db_session)
-
     # Order of operations matters here:
     # Flow must be synced before State.
     Flow.sync_to_database(db_session)
     State.sync_to_database(db_session)
+    PaymentTransactionType.sync_to_database(db_session)
     db_session.commit()

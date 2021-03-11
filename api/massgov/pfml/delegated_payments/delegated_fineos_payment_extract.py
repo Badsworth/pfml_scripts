@@ -29,10 +29,12 @@ from massgov.pfml.db.models.employees import (
     EmployeeAddress,
     GeoState,
     LatestStateLog,
+    LkPaymentTransactionType,
     LkState,
     Payment,
     PaymentMethod,
     PaymentReferenceFile,
+    PaymentTransactionType,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -61,6 +63,11 @@ expected_file_names = [
     PAYMENT_DETAILS_EXPECTED_FILE_NAME,
     CLAIM_DETAILS_EXPECTED_FILE_NAME,
 ]
+
+CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
+OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = set(
+    ["Overpayment"]
+)  # There may be multiple types needed here, need to test further to know
 
 
 @dataclass(frozen=True, eq=True)
@@ -141,6 +148,7 @@ class PaymentData:
     zip_code: Optional[str] = None
 
     raw_payment_method: Optional[str] = None
+    raw_payment_transaction_type: Optional[str] = None
     payment_start_period: Optional[str] = None
     payment_end_period: Optional[str] = None
     payment_date: Optional[str] = None
@@ -226,6 +234,10 @@ class PaymentData:
             ),
         )
 
+        self.raw_payment_transaction_type = payments_util.validate_csv_input(
+            "EVENTTYPE", pei_record, self.validation_container, True
+        )
+
         self.payment_date = payments_util.validate_csv_input(
             "PAYMENTDATE",
             pei_record,
@@ -255,7 +267,7 @@ class PaymentData:
         # These are only required if payment_method is for EFT
         eft_required = self.raw_payment_method == PaymentMethod.ACH.payment_method_description
         self.routing_nbr = payments_util.validate_csv_input(
-            "PAYEEBANKCODE",
+            "PAYEEBANKSORT",
             pei_record,
             self.validation_container,
             eft_required,
@@ -532,16 +544,13 @@ def get_employee_and_claim(
         # We've found a claim with a different employee ID, this shouldn't happen
         # This might mean that the FINEOS absence_case_number isn't necessarily unique.
         logger.error(
-            "Found claim %s, but its employee ID %s does not match the one we found from the TIN %s ",
+            "Found claim %s, but its employee ID %s does not match the one we found from the TIN %s",
             claim.claim_id,
             claim.employee.employee_id,
             employee.employee_id,
             extra=payment_data.get_traceable_details(),
         )
-        raise Exception(
-            "The claims employee does not match the employee associated with the TIN",
-            extra=payment_data.get_traceable_details(),
-        )
+        raise Exception("The claims employee does not match the employee associated with the TIN")
 
     return employee, claim
 
@@ -585,6 +594,29 @@ def update_ctr_address_pair_fineos_address(
     return True
 
 
+def get_payment_transaction_type_id(
+    payment_data: PaymentData, amount: Decimal
+) -> LkPaymentTransactionType:
+    if payment_data.raw_payment_transaction_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
+        return PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+    elif payment_data.raw_payment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
+        return PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id
+    elif amount == Decimal("0"):
+        return PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
+    elif amount > Decimal("0"):
+        return PaymentTransactionType.STANDARD.payment_transaction_type_id
+
+    # We should always have been able to figure out the payment type
+    # from the above checks, this shouldn't happen and should go
+    # to the error report as it's not clear what we should do with it
+    # It might be a negative payment with a field set incorrectly in FINEOS
+    payment_data.validation_container.add_validation_issue(
+        payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
+        f"Payment type [{payment_data.raw_payment_transaction_type}] had a negative payment amount",
+    )
+    return PaymentTransactionType.UNKNOWN.payment_transaction_type_id
+
+
 def create_payment(
     payment_data: PaymentData,
     claim: Claim,
@@ -612,10 +644,23 @@ def create_payment(
     payment.payment_date = payments_util.datetime_str_to_date(payment_data.payment_date)
     try:
         payment.amount = decimal.Decimal(cast(str, payment_data.payment_amount))
+        payment.payment_transaction_type_id = get_payment_transaction_type_id(
+            payment_data, payment.amount
+        )
     except (InvalidOperation, TypeError):
+        logger.exception(
+            "Unable to convert payment amount %s to a decimal",
+            payment_data.payment_amount,
+            extra=payment_data.get_traceable_details(),
+        )
         # In the unlikely scenario where payment amount isn't set
         # we need to set something as the DB requires this to be set
         payment.amount = Decimal(0)
+        # Can't determine the payment type without an amount, and this
+        # is an error scenario anyways.
+        payment.payment_transaction_type_id = (
+            PaymentTransactionType.UNKNOWN.payment_transaction_type_id
+        )
 
         # As a sanity check, make certain that missing amount was caught
         # by the earlier validation logic, this if statement shouldn't
@@ -764,13 +809,42 @@ def _setup_state_log(
     validation_container: payments_util.ValidationContainer,
     db_session: db.Session,
 ) -> None:
-
     # https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
     # Does the payment have validation issues
     # If so, add to that error state
     if validation_container.has_validation_issues():
         end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
         message = "Error processing payment record"
+
+    # Zero dollar payments are added to the FINEOS writeback + a report
+    elif (
+        payment.payment_transaction_type_id
+        == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
+    ):
+        end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
+        message = "Zero dollar payment added to pending state for FINEOS writeback"
+
+    # Overpayments are added to to the FINEOS writeback + a report
+    elif (
+        payment.payment_transaction_type_id
+        == PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id
+    ):
+        end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT
+        message = "Overpayment payment added to pending state for FINEOS writeback"
+
+    # Cancellations depend on the type of payment
+    elif (
+        payment.payment_transaction_type_id
+        == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+    ):
+        # ACH cancellations are added to the FINEOS writeback + a report
+        if payment.claim.employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
+            end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
+            message = "Cancellation payment added to pending state for FINEOS writeback"
+        # Check cancellations are processed by us and sent to PUB
+        else:
+            end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+            message = "Check cancellation payment added"
 
     else:
         end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
