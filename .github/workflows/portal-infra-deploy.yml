@@ -49,23 +49,25 @@ jobs:
           role-duration-seconds: 3600
           role-to-assume: ci-run-deploys
 
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: ${{ env.terraformVersion }}
+          terraform_wrapper: false
+
       - name: Terraform Init
         id: terraform_init
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraformVersion }}
-          tf_actions_subcommand: init
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ env.portal_env }}
+        run: terraform init
+        working-directory: ${{ env.terraformBaseDir }}${{ env.portal_env }}
 
-      - name: Terraform Apply
+      - name: Terraform Plan with new Cloudfront path
+        id: terraform_plan
+        run: terraform plan -out=plan.tfplan
+        working-directory: ${{ env.terraformBaseDir }}${{ env.portal_env }}
+
+      - name: Terraform Apply from execution plan
         id: terraform_apply
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraformVersion }}
-          tf_actions_subcommand: apply
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ env.portal_env }}
+        run: terraform apply plan.tfplan
+        working-directory: ${{ env.terraformBaseDir }}${{ env.portal_env }}
 
   end-to-end:
     name: End-to-End Test Deployment
