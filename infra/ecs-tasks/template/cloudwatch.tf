@@ -235,7 +235,7 @@ module "reductions_send_claimant_lists_scheduler" {
   is_enabled = var.enable_reductions_send_claimant_lists_to_agencies_schedule
 
   task_name           = "reductions-send-claimant-lists"
-  schedule_expression = "cron(0 9 * * ? *)"
+  schedule_expression = "cron(0 8 * * ? *)"
   environment_name    = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
@@ -253,7 +253,7 @@ module "reductions_retrieve_payment_listsscheduler" {
   is_enabled = var.enable_reductions_retrieve_payment_lists_from_agencies_schedule
 
   task_name           = "reductions-retrieve-payment-lists"
-  schedule_expression = "cron(0/15 9-15 * * ? *)"
+  schedule_expression = "cron(0/15 8-23,0 * * ? *)"
   environment_name    = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
