@@ -98,7 +98,7 @@ def make_s3_file(s3_bucket, key, test_file_name):
 
 def make_and_upload_extract_file(tmp_path, mock_s3_bucket, file_name, fieldnames, records):
     csv_file_path = tmp_path / file_name
-    csv_file = file_util.write_file(csv_file_path)
+    csv_file = file_util.write_file(str(csv_file_path))
     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     csv_writer.writeheader()
 

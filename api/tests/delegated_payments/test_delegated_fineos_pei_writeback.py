@@ -26,6 +26,13 @@ pytestmark = pytest.mark.integration
 fake = faker.Faker()
 
 
+@pytest.fixture
+def fineos_pei_writeback_step(initialize_factories_session, test_db_session, test_db_other_session):
+    return writeback.FineosPeiWritebackStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+
 def _generate_payment(test_db_session: db.Session) -> Payment:
     return PaymentFactory.create(
         fineos_pei_c_value=str(fake.random_int(min=1000, max=9999)),
@@ -82,7 +89,7 @@ def _generate_cancelled_payment(test_db_session: db.Session) -> Payment:
     ),
 )
 def test_process_payments_for_writeback(
-    initialize_factories_session,
+    fineos_pei_writeback_step,
     test_db_session,
     test_db_other_session,
     mock_s3_bucket,
@@ -125,7 +132,7 @@ def test_process_payments_for_writeback(
 
     all_payments = zero_dollar_payments + overpayments + accepted_payments + cancelled_payments
 
-    writeback.process_payments_for_writeback(test_db_session)
+    fineos_pei_writeback_step.process_payments_for_writeback()
 
     reference_files = (
         test_db_other_session.query(ReferenceFile)
@@ -217,7 +224,7 @@ def test_process_payments_for_writeback(
 
 
 def test_process_payments_for_writeback_no_payments_ready_for_writeback(
-    initialize_factories_session, test_db_session,
+    fineos_pei_writeback_step, test_db_session,
 ):
     # Create some small amount of Payments that are in a state other than the one we pick up
     # for the writeback.
@@ -226,7 +233,7 @@ def test_process_payments_for_writeback_no_payments_ready_for_writeback(
             test_db_session, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
         )
 
-    writeback.process_payments_for_writeback(test_db_session)
+    fineos_pei_writeback_step.process_payments_for_writeback()
 
     # Did not create any ReferenceFile objects since we did not create any writeback files.
     reference_files = (
@@ -256,7 +263,7 @@ def test_process_payments_for_writeback_no_payments_ready_for_writeback(
     ),
 )
 def test_get_writeback_items_for_state(
-    initialize_factories_session,
+    fineos_pei_writeback_step,
     test_db_session,
     zero_dollar_payment_count,
     overpayment_count,
@@ -288,14 +295,14 @@ def test_get_writeback_items_for_state(
         + accepted_payment_count
         + cancelled_payment_count
     )
-    writeback_records = writeback.get_records_to_writeback(test_db_session)
+    writeback_records = fineos_pei_writeback_step.get_records_to_writeback()
     assert len(writeback_records) == payments_ready_for_writeback_count
 
 
-def test_extracted_payment_to_pei_writeback_record(initialize_factories_session, test_db_session):
+def test_extracted_payment_to_pei_writeback_record(fineos_pei_writeback_step, test_db_session):
     payment = _generate_payment(test_db_session)
 
-    writeback_record = writeback._extracted_payment_to_pei_writeback_record(payment)
+    writeback_record = fineos_pei_writeback_step._extracted_payment_to_pei_writeback_record(payment)
 
     assert writeback_record.status == writeback.ACTIVE_WRITEBACK_RECORD_STATUS
     assert (

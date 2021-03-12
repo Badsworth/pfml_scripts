@@ -519,6 +519,7 @@ def test_process_extract_unprocessed_folder_files(
 
     # confirm all unprocessed files were downloaded
     claimant_extract_step.run()
+
     destination_folder = os.path.join(
         get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
     )

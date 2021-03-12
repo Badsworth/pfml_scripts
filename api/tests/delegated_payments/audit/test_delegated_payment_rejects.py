@@ -27,10 +27,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import (
     REJECTED_OUTCOME,
     REJECTED_STATE,
     PaymentRejectsException,
-    parse_payment_rejects_file,
-    process_rejects,
-    transition_audit_pending_payment_state,
-    transition_not_sampled_payment_audit_pending_states,
+    PaymentRejectsStep,
 )
 from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generator import (
     DEFAULT_AUDIT_SCENARIO_DATA_SET,
@@ -38,8 +35,15 @@ from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generato
 )
 
 
+@pytest.fixture
+def payment_rejects_step(initialize_factories_session, test_db_session, test_db_other_session):
+    return PaymentRejectsStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
-def test_parse_payment_rejects_file(tmp_path, test_db_session, initialize_factories_session):
+def test_parse_payment_rejects_file(tmp_path, test_db_session, payment_rejects_step):
     generate_payment_audit_data_set_and_rejects_file(
         DEFAULT_AUDIT_SCENARIO_DATA_SET, tmp_path, test_db_session, 1
     )
@@ -49,7 +53,9 @@ def test_parse_payment_rejects_file(tmp_path, test_db_session, initialize_factor
     )
 
     file_path = os.path.join(expected_rejects_folder, "2021-01-15-12-00-00-Payment-Rejects.csv")
-    payment_rejects_rows: List[PaymentAuditCSV] = parse_payment_rejects_file(file_path)
+    payment_rejects_rows: List[PaymentAuditCSV] = payment_rejects_step.parse_payment_rejects_file(
+        file_path
+    )
 
     assert len(payment_rejects_rows) == len(DEFAULT_AUDIT_SCENARIO_DATA_SET)
 
@@ -69,7 +75,7 @@ def test_parse_payment_rejects_file(tmp_path, test_db_session, initialize_factor
     assert rejects_count > 0
 
 
-def test_transition_audit_pending_payment_state(test_db_session, initialize_factories_session):
+def test_transition_audit_pending_payment_state(test_db_session, payment_rejects_step):
     # test rejection
     payment_1 = PaymentFactory.create()
     state_log_util.create_finished_state_log(
@@ -79,7 +85,7 @@ def test_transition_audit_pending_payment_state(test_db_session, initialize_fact
         test_db_session,
     )
 
-    transition_audit_pending_payment_state(payment_1, True, test_db_session)
+    payment_rejects_step.transition_audit_pending_payment_state(payment_1, True)
 
     payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
         payment_1, Flow.DELEGATED_PAYMENT, test_db_session
@@ -98,7 +104,7 @@ def test_transition_audit_pending_payment_state(test_db_session, initialize_fact
         test_db_session,
     )
 
-    transition_audit_pending_payment_state(payment_2, False, test_db_session)
+    payment_rejects_step.transition_audit_pending_payment_state(payment_2, False)
 
     payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
         payment_2, Flow.DELEGATED_PAYMENT, test_db_session
@@ -115,7 +121,7 @@ def test_transition_audit_pending_payment_state(test_db_session, initialize_fact
         PaymentRejectsException,
         match=f"No state log found for payment found in audit reject file: {payment_3.payment_id}",
     ):
-        transition_audit_pending_payment_state(payment_3, True, test_db_session)
+        payment_rejects_step.transition_audit_pending_payment_state(payment_3, True)
 
     # test not a payment pending state exception
     payment_4 = PaymentFactory.create()
@@ -130,12 +136,10 @@ def test_transition_audit_pending_payment_state(test_db_session, initialize_fact
         PaymentRejectsException,
         match=f"Found payment state log not in audit response pending state: {State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED.state_description}, payment_id: {payment_4.payment_id}",
     ):
-        transition_audit_pending_payment_state(payment_4, True, test_db_session)
+        payment_rejects_step.transition_audit_pending_payment_state(payment_4, True)
 
 
-def test_transition_not_sampled_payment_audit_pending_states(
-    test_db_session, initialize_factories_session
-):
+def test_transition_not_sampled_payment_audit_pending_states(test_db_session, payment_rejects_step):
     # create payments with pending states
     payment_to_pending_state = {}
     for state_transition in NOT_SAMPLED_STATE_TRANSITIONS:
@@ -150,7 +154,7 @@ def test_transition_not_sampled_payment_audit_pending_states(
         payment_to_pending_state[payment.payment_id] = state_transition.from_state
 
     # transition the states
-    transition_not_sampled_payment_audit_pending_states(test_db_session)
+    payment_rejects_step.transition_not_sampled_payment_audit_pending_states()
 
     # confirm states was transitioned correctly
     payments = test_db_session.query(Payment).all()
@@ -172,7 +176,7 @@ def test_transition_not_sampled_payment_audit_pending_states(
 
 
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
-def test_process_rejects(test_db_session, initialize_factories_session, monkeypatch):
+def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     # setup folder path configs
     payment_rejects_received_folder_path = str(tempfile.mkdtemp())
     payment_rejects_processed_folder_path = str(tempfile.mkdtemp())
@@ -242,7 +246,7 @@ def test_process_rejects(test_db_session, initialize_factories_session, monkeypa
     )
 
     # process rejects
-    process_rejects(test_db_session)
+    payment_rejects_step.process_rejects()
 
     # check some are rejected
     # TODO adjust scenario config to specify desired rejection state instead of random sampling

@@ -161,6 +161,12 @@ payments-ctr-process: # Run the Payments Comptroller processes (Just the VCC par
 pub-payments-process-fineos:
 	$(PY_RUN_CMD) pub-payments-process-fineos --steps ALL $(DECODE_LOG)
 
+pub-payments-create-pub-files:
+	$(PY_RUN_CMD) pub-payments-create-pub-files --steps ALL $(DECODE_LOG)
+
+pub-payments-process-pub-returns:
+	$(PY_RUN_CMD) pub-payments-process-pub-returns --steps ALL $(DECODE_LOG)
+
 fineos-test-vendor-export-generate:
 	mkdir -p mock_fineos_test_vendor_export
 	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export --fein 103000000 --ssn 253000000 --cvalue 5100 --employeecustomernumber 200 --absencecaseid 200 $(DECODE_LOG)

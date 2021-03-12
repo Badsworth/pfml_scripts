@@ -25,8 +25,8 @@ class PaymentAuditCSV(AbstractRecord):
     absence_case_number: str
     c_value: str
     i_value: str
-    employer_id: str
-    case_status: str
+    employer_id: Optional[str]
+    case_status: Optional[str]
     leave_request_id: Optional[str]
     leave_request_decision: Optional[str]
     is_first_time_payment: str

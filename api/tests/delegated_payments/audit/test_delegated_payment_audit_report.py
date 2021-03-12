@@ -23,8 +23,8 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import (
     PaymentAuditData,
+    PaymentAuditReportStep,
     bool_to_str,
-    generate_audit_report,
     get_leave_type,
     get_payment_preference,
     write_audit_report,
@@ -36,6 +36,13 @@ from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generato
 )
 
 pytestmark = pytest.mark.integration
+
+
+@pytest.fixture
+def payment_audit_report_step(initialize_factories_session, test_db_session, test_db_other_session):
+    return PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
 
 
 def test_write_audit_report(tmp_path, test_db_session, initialize_factories_session):
@@ -144,7 +151,7 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
 
 
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
-def test_generate_audit_report(test_db_session, initialize_factories_session, monkeypatch):
+def test_generate_audit_report(test_db_session, payment_audit_report_step, monkeypatch):
     # setup folder path configs
     payment_audit_report_outbound_folder_path = str(tempfile.mkdtemp())
     payment_audit_report_sent_folder_path = str(tempfile.mkdtemp())
@@ -173,7 +180,7 @@ def test_generate_audit_report(test_db_session, initialize_factories_session, mo
         )
 
     # generate audit report
-    generate_audit_report(test_db_session)
+    payment_audit_report_step.run()
 
     # check that sampled states have transitioned
     sampled_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(

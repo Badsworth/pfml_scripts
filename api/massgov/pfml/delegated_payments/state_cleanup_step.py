@@ -78,6 +78,5 @@ class StateCleanupStep(Step):
         except Exception:
             self.db_session.rollback()
             logger.exception("Error cleaning up audit report pending states")
-
             # We do not want to run any subsequent steps if this fails
             raise

@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
@@ -26,6 +25,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import (
     write_audit_report_rows,
 )
+from massgov.pfml.delegated_payments.step import Step
 
 logger = logging.get_logger(__name__)
 
@@ -98,300 +98,298 @@ class PaymentRejectsException(Exception):
     """An error during Payment Rejects file processing."""
 
 
-def parse_payment_rejects_file(file_path: str) -> List[PaymentAuditCSV]:
-    parsed_csv = csv.DictReader(open(file_path))
+class PaymentRejectsStep(Step):
+    def run_step(self) -> None:
+        self.process_rejects()
 
-    payment_rejects_rows: List[PaymentAuditCSV] = []
+    def parse_payment_rejects_file(self, file_path: str) -> List[PaymentAuditCSV]:
+        parsed_csv = csv.DictReader(open(file_path))
 
-    for row in parsed_csv:
-        payment_reject_row = PaymentAuditCSV(
-            pfml_payment_id=row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id],
-            leave_type=row[PAYMENT_AUDIT_CSV_HEADERS.leave_type],
-            first_name=row[PAYMENT_AUDIT_CSV_HEADERS.first_name],
-            last_name=row[PAYMENT_AUDIT_CSV_HEADERS.last_name],
-            address_line_1=row[PAYMENT_AUDIT_CSV_HEADERS.address_line_1],
-            address_line_2=row[PAYMENT_AUDIT_CSV_HEADERS.address_line_2],
-            city=row[PAYMENT_AUDIT_CSV_HEADERS.city],
-            state=row[PAYMENT_AUDIT_CSV_HEADERS.state],
-            zip=row[PAYMENT_AUDIT_CSV_HEADERS.zip],
-            payment_preference=row[PAYMENT_AUDIT_CSV_HEADERS.payment_preference],
-            scheduled_payment_date=row[PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date],
-            payment_period_start_date=row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_start_date],
-            payment_period_end_date=row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_end_date],
-            payment_amount=row[PAYMENT_AUDIT_CSV_HEADERS.payment_amount],
-            absence_case_number=row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_number],
-            c_value=row[PAYMENT_AUDIT_CSV_HEADERS.c_value],
-            i_value=row[PAYMENT_AUDIT_CSV_HEADERS.i_value],
-            employer_id=row[PAYMENT_AUDIT_CSV_HEADERS.employer_id],
-            case_status=row[PAYMENT_AUDIT_CSV_HEADERS.case_status],
-            leave_request_id=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_id],
-            leave_request_decision=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision],
-            is_first_time_payment=row[PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment],
-            is_updated_payment=row[PAYMENT_AUDIT_CSV_HEADERS.is_updated_payment],
-            is_rejected_or_error=row[PAYMENT_AUDIT_CSV_HEADERS.is_rejected_or_error],
-            days_in_rejected_state=row[PAYMENT_AUDIT_CSV_HEADERS.days_in_rejected_state],
-            rejected_by_program_integrity=row[
-                PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity
-            ],
-            rejected_notes=row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes],
-        )
-        payment_rejects_rows.append(payment_reject_row)
+        payment_rejects_rows: List[PaymentAuditCSV] = []
 
-    return payment_rejects_rows
+        for row in parsed_csv:
+            payment_reject_row = PaymentAuditCSV(
+                pfml_payment_id=row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id],
+                leave_type=row[PAYMENT_AUDIT_CSV_HEADERS.leave_type],
+                first_name=row[PAYMENT_AUDIT_CSV_HEADERS.first_name],
+                last_name=row[PAYMENT_AUDIT_CSV_HEADERS.last_name],
+                address_line_1=row[PAYMENT_AUDIT_CSV_HEADERS.address_line_1],
+                address_line_2=row[PAYMENT_AUDIT_CSV_HEADERS.address_line_2],
+                city=row[PAYMENT_AUDIT_CSV_HEADERS.city],
+                state=row[PAYMENT_AUDIT_CSV_HEADERS.state],
+                zip=row[PAYMENT_AUDIT_CSV_HEADERS.zip],
+                payment_preference=row[PAYMENT_AUDIT_CSV_HEADERS.payment_preference],
+                scheduled_payment_date=row[PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date],
+                payment_period_start_date=row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_start_date],
+                payment_period_end_date=row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_end_date],
+                payment_amount=row[PAYMENT_AUDIT_CSV_HEADERS.payment_amount],
+                absence_case_number=row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_number],
+                c_value=row[PAYMENT_AUDIT_CSV_HEADERS.c_value],
+                i_value=row[PAYMENT_AUDIT_CSV_HEADERS.i_value],
+                employer_id=row[PAYMENT_AUDIT_CSV_HEADERS.employer_id],
+                case_status=row[PAYMENT_AUDIT_CSV_HEADERS.case_status],
+                leave_request_id=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_id],
+                leave_request_decision=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision],
+                is_first_time_payment=row[PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment],
+                is_updated_payment=row[PAYMENT_AUDIT_CSV_HEADERS.is_updated_payment],
+                is_rejected_or_error=row[PAYMENT_AUDIT_CSV_HEADERS.is_rejected_or_error],
+                days_in_rejected_state=row[PAYMENT_AUDIT_CSV_HEADERS.days_in_rejected_state],
+                rejected_by_program_integrity=row[
+                    PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity
+                ],
+                rejected_notes=row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes],
+            )
+            payment_rejects_rows.append(payment_reject_row)
 
+        return payment_rejects_rows
 
-def transition_audit_pending_payment_state(
-    payment: Payment, is_rejected_payment: bool, db_session: db.Session
-):
-    payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
-        payment, Flow.DELEGATED_PAYMENT, db_session
-    )
-
-    if payment_state_log is None:
-        raise PaymentRejectsException(
-            f"No state log found for payment found in audit reject file: {payment.payment_id}"
+    def transition_audit_pending_payment_state(self, payment: Payment, is_rejected_payment: bool):
+        payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+            payment, Flow.DELEGATED_PAYMENT, self.db_session
         )
 
-    if (
-        payment_state_log.end_state.state_id
-        != State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id
-    ):
-        raise PaymentRejectsException(
-            f"Found payment state log not in audit response pending state: {payment_state_log.end_state.state_description}, payment_id: {payment.payment_id}"
-        )
-
-    if is_rejected_payment:
-        state_log_util.create_finished_state_log(
-            payment, REJECTED_STATE, REJECTED_OUTCOME, db_session
-        )
-    else:
-        state_log_util.create_finished_state_log(
-            payment, ACCEPTED_STATE, ACCEPTED_OUTCOME, db_session
-        )
-
-
-def transition_audit_pending_payment_states(
-    payment_rejects_rows: List[PaymentAuditCSV], db_session: db.Session
-):
-    for payment_rejects_row in payment_rejects_rows:
-        payment = (
-            db_session.query(Payment)
-            .filter(Payment.payment_id == payment_rejects_row.pfml_payment_id)
-            .one_or_none()
-        )
-
-        if payment is None:
+        if payment_state_log is None:
             raise PaymentRejectsException(
-                f"Could not find payment from rejects file in DB: {payment_rejects_row.pfml_payment_id}"
+                f"No state log found for payment found in audit reject file: {payment.payment_id}"
             )
 
-        is_rejected_payment = payment_rejects_row.rejected_by_program_integrity == "Y"
+        if (
+            payment_state_log.end_state.state_id
+            != State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id
+        ):
+            raise PaymentRejectsException(
+                f"Found payment state log not in audit response pending state: {payment_state_log.end_state.state_description}, payment_id: {payment.payment_id}"
+            )
 
-        transition_audit_pending_payment_state(payment, is_rejected_payment, db_session)
+        if is_rejected_payment:
+            state_log_util.create_finished_state_log(
+                payment, REJECTED_STATE, REJECTED_OUTCOME, self.db_session
+            )
+        else:
+            state_log_util.create_finished_state_log(
+                payment, ACCEPTED_STATE, ACCEPTED_OUTCOME, self.db_session
+            )
 
+    def transition_audit_pending_payment_states(self, payment_rejects_rows: List[PaymentAuditCSV]):
+        for payment_rejects_row in payment_rejects_rows:
+            payment = (
+                self.db_session.query(Payment)
+                .filter(Payment.payment_id == payment_rejects_row.pfml_payment_id)
+                .one_or_none()
+            )
 
-def _transition_not_sampled_payment_audit_pending_state(
-    pending_state: LkState, db_session: db.Session
-):
-    state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        state_log_util.AssociatedClass.PAYMENT, pending_state, db_session
-    )
-    state_log_count = len(state_logs)
-    if state_log_count == 0:
+            if payment is None:
+                raise PaymentRejectsException(
+                    f"Could not find payment from rejects file in DB: {payment_rejects_row.pfml_payment_id}"
+                )
+
+            is_rejected_payment = payment_rejects_row.rejected_by_program_integrity == "Y"
+
+            self.transition_audit_pending_payment_state(payment, is_rejected_payment)
+
+    def _transition_not_sampled_payment_audit_pending_state(self, pending_state: LkState):
+        state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            state_log_util.AssociatedClass.PAYMENT, pending_state, self.db_session
+        )
+        state_log_count = len(state_logs)
+        if state_log_count == 0:
+            logger.info(
+                "No payments found in state %s, nothing to transition",
+                pending_state.state_description,
+            )
+            return
+
+        next_state = NOT_SAMPLED_PAYMENT_NEXT_STATE_BY_CURRENT_STATE[pending_state.state_id]
+        outcome = NOT_SAMPLED_PAYMENT_OUTCOME_BY_CURRENT_STATE[pending_state.state_id]
+
         logger.info(
-            "No payments found in state %s, nothing to transition", pending_state.state_description
+            "%i payments found for state %s, moving them to %s",
+            state_log_count,
+            pending_state.state_description,
+            next_state.state_description,
         )
-        return
 
-    next_state = NOT_SAMPLED_PAYMENT_NEXT_STATE_BY_CURRENT_STATE[pending_state.state_id]
-    outcome = NOT_SAMPLED_PAYMENT_OUTCOME_BY_CURRENT_STATE[pending_state.state_id]
+        for state_log in state_logs:
+            payment = state_log.payment
 
-    logger.info(
-        "%i payments found for state %s, moving them to %s",
-        state_log_count,
-        pending_state.state_description,
-        next_state.state_description,
-    )
+            # Shouldn't happen as they should always have a payment attached
+            # but due to our unassociated state log logic, it technically can happen
+            # elsewhere in the code and we want to be certain it isn't happening here
+            if not payment:
+                raise PaymentRejectsException(
+                    f"A state log was found without a payment while processing rejects: {state_log.state_log_id}"
+                )
 
-    for state_log in state_logs:
-        payment = state_log.payment
+            state_log_util.create_finished_state_log(payment, next_state, outcome, self.db_session)
 
-        # Shouldn't happen as they should always have a payment attached
-        # but due to our unassociated state log logic, it technically can happen
-        # elsewhere in the code and we want to be certain it isn't happening here
-        if not payment:
+        logger.info(
+            "Successfully moved %i state logs from %s to %s",
+            state_log_count,
+            pending_state.state_description,
+            next_state.state_description,
+        )
+
+    def transition_not_sampled_payment_audit_pending_states(self):
+        logger.info("Start transition of not sampled payment audit pending states")
+
+        for pending_state in NOT_SAMPLED_PENDING_STATES:
+            self._transition_not_sampled_payment_audit_pending_state(pending_state)
+
+        logger.info("Completed transition of not sampled payment audit pending states")
+
+    def process_rejects_and_send_report(
+        self,
+        payment_rejects_received_folder_path: str,
+        payment_rejects_processed_folder_path: str,
+        payment_rejects_report_outbound_folder: str,
+        payment_rejects_report_sent_folder_path: str,
+    ):
+        # TODO Confirm we should look in a dated folder? if so today or yesterday's date?
+        payment_rejects_received_folder_dated_path = os.path.join(
+            payment_rejects_received_folder_path, payments_util.get_now().strftime("%Y-%m-%d")
+        )
+        rejects_files = file_util.list_files(payment_rejects_received_folder_dated_path)
+
+        if len(rejects_files) == 0:
+            raise PaymentRejectsException("No Payment Rejects file found.")
+
+        if len(rejects_files) > 1:
+            rejects_file_names = ", ".join(rejects_files)
             raise PaymentRejectsException(
-                f"A state log was found without a payment while processing rejects: {state_log.state_log_id}"
+                f"Too many Payment Rejects files found: {rejects_file_names}"
             )
 
-        state_log_util.create_finished_state_log(payment, next_state, outcome, db_session)
-
-    logger.info(
-        "Successfully moved %i state logs from %s to %s",
-        state_log_count,
-        pending_state.state_description,
-        next_state.state_description,
-    )
-
-
-def transition_not_sampled_payment_audit_pending_states(db_session: db.Session):
-    logger.info("Start transition of not sampled payment audit pending states")
-
-    for pending_state in NOT_SAMPLED_PENDING_STATES:
-        _transition_not_sampled_payment_audit_pending_state(pending_state, db_session)
-
-    logger.info("Completed transition of not sampled payment audit pending states")
-
-
-def process_rejects_and_send_report(
-    payment_rejects_received_folder_path: str,
-    payment_rejects_processed_folder_path: str,
-    payment_rejects_report_outbound_folder: str,
-    payment_rejects_report_sent_folder_path: str,
-    db_session: db.Session,
-):
-    # TODO Confirm we should look in a dated folder? if so today or yesterday's date?
-    payment_rejects_received_folder_dated_path = os.path.join(
-        payment_rejects_received_folder_path, payments_util.get_now().strftime("%Y-%m-%d")
-    )
-    rejects_files = file_util.list_files(payment_rejects_received_folder_dated_path)
-
-    if len(rejects_files) == 0:
-        raise PaymentRejectsException("No Payment Rejects file found.")
-
-    if len(rejects_files) > 1:
-        rejects_file_names = rejects_files.join(", ")
-        raise PaymentRejectsException(f"Too many Payment Rejects files found: {rejects_file_names}")
-
-    # process the file
-    rejects_file_name = rejects_files[0]
-    payment_rejects_file_path = os.path.join(
-        payment_rejects_received_folder_dated_path, rejects_file_name
-    )
-
-    logger.info("Start processing Payment Rejects file: %s", payment_rejects_file_path)
-
-    # parse the rejects file
-    payment_rejects_rows: List[PaymentAuditCSV] = parse_payment_rejects_file(
-        payment_rejects_file_path,
-    )
-    parsed_rows_count = len(payment_rejects_rows)
-
-    logger.info("Parsed %i payment rejects rows", parsed_rows_count)
-
-    # check if returned rows match expected number if our state log
-    state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        state_log_util.AssociatedClass.PAYMENT,
-        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-        db_session,
-    )
-    state_log_count = len(state_logs)
-    if state_log_count != parsed_rows_count:
-        raise PaymentRejectsException(
-            f"Unexpected number of parsed Payment Rejects file rows - found: {parsed_rows_count}, expected: {state_log_count}"
+        # process the file
+        rejects_file_name = rejects_files[0]
+        payment_rejects_file_path = os.path.join(
+            payment_rejects_received_folder_dated_path, rejects_file_name
         )
 
-    # transition audit pending sampled states
-    transition_audit_pending_payment_states(payment_rejects_rows, db_session)
+        logger.info("Start processing Payment Rejects file: %s", payment_rejects_file_path)
 
-    # transition non sampled states
-    transition_not_sampled_payment_audit_pending_states(db_session)
-
-    # put file in processed folder
-    processed_file_path = os.path.join(
-        payment_rejects_processed_folder_path,
-        payments_util.get_now().strftime("%Y-%m-%d"),
-        rejects_file_name,
-    )
-    file_util.rename_file(payment_rejects_file_path, processed_file_path)
-    logger.info("Payment Rejects file in processed folder: %s", processed_file_path)
-
-    # create reference file
-    reference_file = ReferenceFile(
-        file_location=processed_file_path,
-        reference_file_type_id=ReferenceFileType.DELEGATED_PAYMENT_REJECTS.reference_file_type_id,
-    )
-    db_session.add(reference_file)
-
-    logger.info("Created reference file for Payment Rejects file: %s", reference_file.file_location)
-
-    # create and send Payment Rejects Report file
-    # TODO split this out, we need to figure out how to get derived data to mirror PaymentAuditData
-
-    logger.info("Creating Payment Rejects Report file")
-
-    rejected_payment_rows: List[PaymentAuditCSV] = list(
-        filter(
-            lambda payment_rejects_row: payment_rejects_row.rejected_by_program_integrity == "Y",
-            payment_rejects_rows,
+        # parse the rejects file
+        payment_rejects_rows: List[PaymentAuditCSV] = self.parse_payment_rejects_file(
+            payment_rejects_file_path,
         )
-    )
+        parsed_rows_count = len(payment_rejects_rows)
 
-    # write to outbound folder
-    outbound_file_path = write_audit_report_rows(
-        rejected_payment_rows,
-        payment_rejects_report_outbound_folder,
-        db_session,
-        report_name="Payment-Rejects-Report",
-    )
+        logger.info("Parsed %i payment rejects rows", parsed_rows_count)
 
-    if outbound_file_path is None:
-        raise Exception("Payment rejects file not written to outbound folder")
+        # check if returned rows match expected number if our state log
+        state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            state_log_util.AssociatedClass.PAYMENT,
+            State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+            self.db_session,
+        )
+        state_log_count = len(state_logs)
+        if state_log_count != parsed_rows_count:
+            raise PaymentRejectsException(
+                f"Unexpected number of parsed Payment Rejects file rows - found: {parsed_rows_count}, expected: {state_log_count}"
+            )
 
-    logger.info(
-        "Done writing Payment Rejects Report file to outbound folder: %s", outbound_file_path
-    )
+        # transition audit pending sampled states
+        self.transition_audit_pending_payment_states(payment_rejects_rows)
 
-    # also write it to the outbund folder
-    send_file_path: Optional[pathlib.Path] = write_audit_report_rows(
-        rejected_payment_rows,
-        payment_rejects_report_sent_folder_path,
-        db_session,
-        report_name="Payment-Rejects-Report",
-    )
+        # transition non sampled states
+        self.transition_not_sampled_payment_audit_pending_states()
 
-    if send_file_path is None:
-        raise Exception("Payment rejects file not written to sent folder")
+        # put file in processed folder
+        processed_file_path = os.path.join(
+            payment_rejects_processed_folder_path,
+            payments_util.get_now().strftime("%Y-%m-%d"),
+            rejects_file_name,
+        )
+        file_util.rename_file(payment_rejects_file_path, processed_file_path)
+        logger.info("Payment Rejects file in processed folder: %s", processed_file_path)
 
-    logger.info("Done writing Payment Rejects Report file to sent folder: %s", send_file_path)
+        # create reference file
+        reference_file = ReferenceFile(
+            file_location=processed_file_path,
+            reference_file_type_id=ReferenceFileType.DELEGATED_PAYMENT_REJECTS.reference_file_type_id,
+        )
+        self.db_session.add(reference_file)
 
-    # create a reference file
-    reference_file = ReferenceFile(
-        file_location=str(send_file_path),
-        reference_file_type_id=ReferenceFileType.DELEGATED_PAYMENT_REJECTS_REPORT.reference_file_type_id,
-    )
-    db_session.add(reference_file)
-
-    logger.info(
-        "Created reference file for Payment Rejects Report file: %s", reference_file.file_location
-    )
-
-    logger.info("Done processing Payment Rejects file: %s", payment_rejects_file_path)
-
-
-def process_rejects(db_session):
-    """Top level function to process payments rejects"""
-
-    try:
-        logger.info("Start processing payment rejects")
-
-        s3_config = payments_config.get_s3_config()
-
-        process_rejects_and_send_report(
-            s3_config.payment_rejects_received_folder_path,
-            s3_config.payment_rejects_processed_folder_path,
-            s3_config.payment_rejects_report_outbound_folder,
-            s3_config.payment_rejects_report_sent_folder_path,
-            db_session,
+        logger.info(
+            "Created reference file for Payment Rejects file: %s", reference_file.file_location
         )
 
-        db_session.commit()
+        # create and send Payment Rejects Report file
+        # TODO split this out, we need to figure out how to get derived data to mirror PaymentAuditData
 
-        logger.info("Done processing payment rejects")
+        logger.info("Creating Payment Rejects Report file")
 
-    except Exception:
-        db_session.rollback()
-        logger.exception("Error processing Payment Rejects file")
+        rejected_payment_rows: List[PaymentAuditCSV] = list(
+            filter(
+                lambda payment_rejects_row: payment_rejects_row.rejected_by_program_integrity
+                == "Y",
+                payment_rejects_rows,
+            )
+        )
 
-        # We do not want to run any subsequent steps if this fails
-        raise
+        # write to outbound folder
+        outbound_file_path = write_audit_report_rows(
+            rejected_payment_rows,
+            payment_rejects_report_outbound_folder,
+            self.db_session,
+            report_name="Payment-Rejects-Report",
+        )
+
+        if outbound_file_path is None:
+            raise Exception("Payment rejects file not written to outbound folder")
+
+        logger.info(
+            "Done writing Payment Rejects Report file to outbound folder: %s", outbound_file_path
+        )
+
+        # also write it to the outbund folder
+        send_file_path: Optional[pathlib.Path] = write_audit_report_rows(
+            rejected_payment_rows,
+            payment_rejects_report_sent_folder_path,
+            self.db_session,
+            report_name="Payment-Rejects-Report",
+        )
+
+        if send_file_path is None:
+            raise Exception("Payment rejects file not written to sent folder")
+
+        logger.info("Done writing Payment Rejects Report file to sent folder: %s", send_file_path)
+
+        # create a reference file
+        reference_file = ReferenceFile(
+            file_location=str(send_file_path),
+            reference_file_type_id=ReferenceFileType.DELEGATED_PAYMENT_REJECTS_REPORT.reference_file_type_id,
+        )
+        self.db_session.add(reference_file)
+
+        logger.info(
+            "Created reference file for Payment Rejects Report file: %s",
+            reference_file.file_location,
+        )
+
+        logger.info("Done processing Payment Rejects file: %s", payment_rejects_file_path)
+
+    def process_rejects(self):
+        """Top level function to process payments rejects"""
+
+        try:
+            logger.info("Start processing payment rejects")
+
+            s3_config = payments_config.get_s3_config()
+
+            self.process_rejects_and_send_report(
+                s3_config.payment_rejects_received_folder_path,
+                s3_config.payment_rejects_processed_folder_path,
+                s3_config.payment_rejects_report_outbound_folder,
+                s3_config.payment_rejects_report_sent_folder_path,
+            )
+
+            self.db_session.commit()
+
+            logger.info("Done processing payment rejects")
+
+        except Exception:
+            self.db_session.rollback()
+            logger.exception("Error processing Payment Rejects file")
+
+            # We do not want to run any subsequent steps if this fails
+            raise

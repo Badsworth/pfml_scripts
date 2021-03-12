@@ -405,6 +405,8 @@ def read_file(path, mode="r", encoding=None):
 
 
 def write_file(path, mode="w", encoding=None):
+    if not is_s3_path(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
     config = botocore.client.Config(retries={"max_attempts": 10, "mode": "standard"})
     params = {"resource_kwargs": {"config": config}}
     return smart_open.open(path, mode, encoding=encoding, transport_params=params)

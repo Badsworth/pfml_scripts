@@ -1,6 +1,7 @@
 import abc
 from typing import Optional
 
+import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.util.batch.log import LogEntry
@@ -26,7 +27,12 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
                 self.__class__.__name__,
                 self.get_import_log_id(),
             )
+            state_log_counts_before = state_log_util.get_state_counts(self.db_session)
+            self.log_entry.set_metrics(state_log_counts_before=state_log_counts_before)
             self.run_step()
+
+            state_log_counts_after = state_log_util.get_state_counts(self.db_session)
+            self.log_entry.set_metrics(state_log_counts_after=state_log_counts_after)
 
     @abc.abstractmethod
     def run_step(self) -> None:

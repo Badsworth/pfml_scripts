@@ -486,6 +486,7 @@ class ClaimantExtractStep(Step):
                         .filter(Employee.tax_identifier_id == tax_identifier_id)
                         .one_or_none()
                     )
+
             except SQLAlchemyError as e:
                 logger.exception(
                     "Unexpected error %s with one_or_none when querying for tin/employee",

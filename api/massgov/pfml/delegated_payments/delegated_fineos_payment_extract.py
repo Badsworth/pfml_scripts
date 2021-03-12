@@ -563,36 +563,6 @@ class PaymentExtractStep(Step):
                 "The claims employee does not match the employee associated with the TIN"
             )
 
-        if not employee and claim.employee:
-            # Somehow we have ended up in a state where we could not find an employee
-            # but did find a claim with some other employee ID. This shouldn't happen
-            # but if it does we need to halt to investigate.
-            logger.error(
-                "Could not find employee for payment, but found claim %s with an attached employee %s",
-                claim.claim_id,
-                claim.employee.employee_id,
-                extra=payment_data.get_traceable_details(),
-            )
-            raise Exception(
-                "Could not find employee for payment, but found a claim",
-                extra=payment_data.get_traceable_details(),
-            )
-
-        if employee and employee.employee_id != claim.employee.employee_id:
-            # We've found a claim with a different employee ID, this shouldn't happen
-            # This might mean that the FINEOS absence_case_number isn't necessarily unique.
-            logger.error(
-                "Found claim %s, but its employee ID %s does not match the one we found from the TIN %s ",
-                claim.claim_id,
-                claim.employee.employee_id,
-                employee.employee_id,
-                extra=payment_data.get_traceable_details(),
-            )
-            raise Exception(
-                "The claims employee does not match the employee associated with the TIN",
-                extra=payment_data.get_traceable_details(),
-            )
-
         return employee, claim
 
     def update_ctr_address_pair_fineos_address(

@@ -4,18 +4,25 @@ from typing import List
 
 import massgov.pfml.db as db
 import massgov.pfml.util.logging as logging
+from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import PaymentRejectsStep
+from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
 from massgov.pfml.delegated_payments.pub.transaction_file_creator import TransactionFileCreator
+from massgov.pfml.util.logging import audit
 
 logger = logging.get_logger(__name__)
 
 
 ALL = "ALL"
+PROCESS_AUDIT_REJECT = "audit-reject"
+CREATE_PEI_WRITEBACK = "initial-writeback"
 PROCESS_CHECKS = "checks"
 PROCESS_PRENOTES = "prenotes"
 PROCESS_ACH = "ach"
 SEND_FILES = "send"
 ALLOWED_VALUES = [
     ALL,
+    PROCESS_AUDIT_REJECT,
+    CREATE_PEI_WRITEBACK,
     PROCESS_CHECKS,
     PROCESS_PRENOTES,
     PROCESS_ACH,
@@ -24,6 +31,8 @@ ALLOWED_VALUES = [
 
 
 class Configuration:
+    process_audit_reject: bool
+    create_pei_writeback: bool
     process_checks: bool
     process_prenotes: bool
     process_ach: bool
@@ -45,11 +54,15 @@ class Configuration:
         steps = set(args.steps)
 
         if ALL in steps:
+            self.process_audit_reject = True
+            self.create_pei_writeback = True
             self.process_checks = True
             self.process_prenotes = True
             self.process_ach = True
             self.send_files = True
         else:
+            self.process_audit_reject = PROCESS_AUDIT_REJECT in steps
+            self.create_pei_writeback = CREATE_PEI_WRITEBACK in steps
             self.process_checks = PROCESS_CHECKS in steps
             self.process_prenotes = PROCESS_PRENOTES in steps
             self.process_ach = PROCESS_ACH in steps
@@ -62,7 +75,7 @@ def make_db_session() -> db.Session:
 
 def main():
     """Entry point for PUB Payment Processing"""
-    logging.audit.init_security_logging()
+    audit.init_security_logging()
     logging.init(__name__)
 
     config = Configuration(sys.argv[1:])
@@ -71,22 +84,32 @@ def main():
         _process_pub_payments(db_session, config)
 
 
-def _process_pub_payments(db_session: db.Session, config: Configuration) -> None:
+def _process_pub_payments(db_session_raw: db.Session, config: Configuration) -> None:
     """Process PUB Payments"""
     logger.info("Start - PUB Payments ECS Task")
 
-    transaction_file_creator = TransactionFileCreator(db_session)
+    # db_session_raw is used for the log entries and
+    # this db_session is used by each of the steps directly.
+    with db.session_scope(db_session_raw) as db_session:
+        if config.process_audit_reject:
+            PaymentRejectsStep(db_session=db_session, log_entry_db_session=db_session_raw).run()
 
-    if config.process_checks:
-        transaction_file_creator.create_check_file()
+        if config.create_pei_writeback:
+            FineosPeiWritebackStep(db_session=db_session, log_entry_db_session=db_session_raw).run()
+            pass
 
-    if config.process_prenotes:
-        transaction_file_creator.add_prenotes()
+        transaction_file_creator = TransactionFileCreator(db_session)
 
-    if config.process_ach:
-        transaction_file_creator.add_ach_payments()
+        if config.process_checks:
+            transaction_file_creator.create_check_file()
 
-    if config.send_files:
-        transaction_file_creator.send_payment_files()
+        if config.process_prenotes:
+            transaction_file_creator.add_prenotes()
+
+        if config.process_ach:
+            transaction_file_creator.add_ach_payments()
+
+        if config.send_files:
+            transaction_file_creator.send_payment_files()
 
     logger.info("Done - PUB Payments ECS Task")
