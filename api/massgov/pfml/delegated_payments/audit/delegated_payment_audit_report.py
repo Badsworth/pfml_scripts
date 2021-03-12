@@ -2,6 +2,9 @@ import pathlib
 from dataclasses import dataclass
 from typing import Iterable, List, Optional
 
+import massgov.pfml.api.util.state_log_util as state_log_util
+import massgov.pfml.delegated_payments.delegated_config as payments_config
+import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     Address,
@@ -14,6 +17,9 @@ from massgov.pfml.db.models.employees import (
     LkPaymentMethod,
     Payment,
     PaymentMethod,
+    ReferenceFile,
+    ReferenceFileType,
+    State,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
@@ -24,6 +30,13 @@ from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting impo
     Report,
     ReportGroup,
 )
+
+logger = logging.get_logger(__name__)
+
+#################################
+## Common Audit File Utilities ##
+## TODO move to util file      ##
+#################################
 
 
 class PaymentAuditRowError(Exception):
@@ -48,12 +61,12 @@ def write_audit_report(
     output_path: str,
     db_session: db.Session,
     report_name: str = "Payment-Audit-Report",
-):
+) -> Optional[pathlib.Path]:
     payment_audit_report_rows: List[PaymentAuditCSV] = []
     for payment_audit_data in payment_audit_data_set:
         payment_audit_report_rows.append(build_audit_report_row(payment_audit_data))
 
-    write_audit_report_rows(payment_audit_report_rows, output_path, db_session, report_name)
+    return write_audit_report_rows(payment_audit_report_rows, output_path, db_session, report_name)
 
 
 def write_audit_report_rows(
@@ -148,3 +161,174 @@ def get_payment_preference(employee: Employee) -> str:
     raise PaymentAuditRowError(
         "Unexpected payment preference %s" % payment_preference.payment_method_description
     )
+
+
+##########################################
+## Payment Audit Report file processing ##
+##########################################
+
+
+class PaymentAuditError(Exception):
+    """An error in a row that prevents processing of the payment."""
+
+
+def sample_payments_for_audit_report(db_session: db.Session) -> Iterable[Payment]:
+    logger.info("Start sampling payments for audit report")
+
+    state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+        state_log_util.AssociatedClass.PAYMENT,
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+        db_session,
+    )
+
+    payments: List[Payment] = []
+    for state_log in state_logs:
+        payment = state_log.payment
+
+        # Shouldn't happen as they should always have a payment attached
+        # but due to our unassociated state log logic, it technically can happen
+        # elsewhere in the code and we want to be certain it isn't happening here
+        if not payment:
+            raise PaymentAuditError(
+                f"A state log was found without a payment in while trying to sample payments for audit report: {state_log.state_log_id}"
+            )
+
+        # transition the state sampling state
+        # NOTE: we currently sample 100% of all available payments for audit.
+        # In the future this will be based on a number of criteria
+        # https://lwd.atlassian.net/wiki/spaces/API/pages/1309737679/Payment+Audit+and+Rejection#Sampling-Rules
+        state_log_util.create_finished_state_log(
+            payment,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_AUDIT_REPORT,
+            state_log_util.build_outcome("Add to Payment Audit Report"),
+            db_session,
+        )
+
+        payments.append(payment)
+
+    logger.info("Done sampling payments for audit report: %i", len(payments))
+
+    return payments
+
+
+def set_sampled_payments_to_sent_state(db_session: db.Session):
+    logger.info("Start setting sampled payments to sent state")
+
+    state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+        state_log_util.AssociatedClass.PAYMENT,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_AUDIT_REPORT,
+        db_session,
+    )
+
+    for state_log in state_logs:
+        payment = state_log.payment
+
+        # Shouldn't happen as they should always have a payment attached
+        # but due to our unassociated state log logic, it technically can happen
+        # elsewhere in the code and we want to be certain it isn't happening here
+        if not payment:
+            raise PaymentAuditError(
+                f"A state log was found without a payment while processing audit report: {state_log.state_log_id}"
+            )
+
+        state_log_util.create_finished_state_log(
+            payment,
+            State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+            state_log_util.build_outcome("Payment Audit Report sent"),
+            db_session,
+        )
+
+    logger.info("Done setting sampled payments to sent state: %i", len(state_logs))
+
+
+def build_payment_audit_data_set(payments: Iterable[Payment]) -> Iterable[PaymentAuditData]:
+    logger.info("Start building payment audit data for sampled payments")
+
+    payment_audit_data_set: List[Payment] = []
+
+    for payment in payments:
+        # TODO query state logs to populate the following
+        is_first_time_payment = True
+        is_updated_payment = False
+        is_rejected_or_error = False
+        days_in_rejected_state = 0
+
+        payment_audit_data = PaymentAuditData(
+            payment=payment,
+            is_first_time_payment=is_first_time_payment,
+            is_updated_payment=is_updated_payment,
+            is_rejected_or_error=is_rejected_or_error,
+            days_in_rejected_state=days_in_rejected_state,
+        )
+        payment_audit_data_set.append(payment_audit_data)
+
+    logger.info(
+        "Start building payment audit data for sampled payments: %i", len(payment_audit_data_set)
+    )
+
+    return payment_audit_data_set
+
+
+def generate_audit_report(db_session: db.Session):
+    """Top level function to generate and send payment audit report"""
+
+    try:
+        logger.info("Start generating payment audit report")
+
+        s3_config = payments_config.get_s3_config()
+
+        # sample files
+        payments: Iterable[Payment] = sample_payments_for_audit_report(db_session)
+
+        # generate payment audit data
+        payment_audit_data_set: Iterable[PaymentAuditData] = build_payment_audit_data_set(payments)
+
+        # write the report
+        outbound_file_path = write_audit_report(
+            payment_audit_data_set,
+            s3_config.payment_audit_report_outbound_folder_path,
+            db_session,
+            report_name="Payment-Audit-Report",
+        )
+
+        if outbound_file_path is None:
+            raise Exception("Payment Audit Report file not written to outbound folder")
+
+        logger.info(
+            "Done writing Payment Audit Report file to outbound folder: %s", outbound_file_path
+        )
+
+        # also write the report to the sent folder
+        send_file_path = write_audit_report(
+            payment_audit_data_set,
+            s3_config.payment_audit_report_sent_folder_path,
+            db_session,
+            report_name="Payment-Audit-Report",
+        )
+
+        if send_file_path is None:
+            raise Exception("Payment Audit Report file not written to send folder")
+
+        logger.info("Done writing Payment Audit Report file to outbound folder: %s", send_file_path)
+
+        # create a reference file
+        reference_file = ReferenceFile(
+            file_location=str(send_file_path),
+            reference_file_type_id=ReferenceFileType.DELEGATED_PAYMENT_AUDIT_REPORT.reference_file_type_id,
+        )
+        db_session.add(reference_file)
+
+        # set sampled payments as sent
+        set_sampled_payments_to_sent_state(db_session)
+
+        # persist changes
+        db_session.commit()
+
+        logger.info("Done generating payment audit report")
+
+    except Exception:
+        db_session.rollback()
+        logger.exception("Error processing Payment Rejects file")
+
+        # We do not want to run any subsequent steps if this fails
+        raise

@@ -221,7 +221,7 @@ def _transition_not_sampled_payment_audit_pending_state(
         # elsewhere in the code and we want to be certain it isn't happening here
         if not payment:
             raise PaymentRejectsException(
-                f"A state log was found without a payment in the cleanup job: {state_log.state_log_id}"
+                f"A state log was found without a payment while processing rejects: {state_log.state_log_id}"
             )
 
         state_log_util.create_finished_state_log(payment, next_state, outcome, db_session)
