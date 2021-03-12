@@ -391,8 +391,13 @@ export function assertClaimHasLeaveAdminResponse(approval: boolean): void {
   }
 }
 
-// @todo: This seems like it's doing a lot - is this really the whole claim workflow?
-// If so, we might want to name it submitClaim() to align with portal/API.
+/*
+ * This work-flow is submitting a full bonding/military claim
+ * directly into Fineos.
+ *
+ * Note: named createNotification based on the name of the button
+ * in Fineos that starts this workflow
+ */
 export function createNotification(
   startDate: Date,
   endDate: Date,
@@ -426,8 +431,7 @@ export function createNotification(
   cy.get("span[id='nextContainer']")
     .first()
     .find("input")
-    .click()
-    .wait("@ajaxRender");
+    .click({ timeout: 20000 });
   cy.contains("div", "One or more fixed time off periods")
     .prev()
     .find("input[type='checkbox'][id*='continuousTimeToggle_CHECKBOX']")
@@ -442,23 +446,26 @@ export function createNotification(
   cy.labelled("Absence end date").type(`${formatDateString(endDate)}{enter}`, {
     force: true,
   });
-  cy.wait(1000);
-  cy.get(
-    "input[type='button'][id*='AddTimeOffAbsencePeriod'][value='Add']"
-  ).click();
   cy.wait("@ajaxRender");
   cy.wait(200);
+  cy.get(
+    "input[type='button'][id*='AddTimeOffAbsencePeriod'][value='Add']"
+  ).click({ force: true });
   cy.wait("@ajaxRender");
+  cy.wait(500);
+  cy.wait("@ajaxRender");
+  cy.wait(500);
   cy.get("span[id='nextContainer']")
     .first()
     .find("input")
-    .click()
-    .wait("@ajaxRender");
-  cy.get("span[id='nextContainer']")
-    .first()
-    .find("input")
-    .click()
-    .wait("@ajaxRender");
+    .click({ timeout: 20000 });
+  cy.labelled("Work Pattern Type").select("Fixed");
+  cy.wait("@ajaxRender");
+  cy.wait(1000);
+  cy.get("input[type=checkbox][id*=standardWorkWeek_CHECKBOX]").click();
+  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.wait("@ajaxRender");
+  cy.wait(200);
   if (claimType === "military care leave") {
     cy.labelled("Military Caregiver Description").type(
       "I am a parent military caregiver."
@@ -467,10 +474,12 @@ export function createNotification(
   cy.get("span[id='nextContainer']")
     .first()
     .find("input")
-    .click()
-    .wait("@ajaxRender");
+    .click({ timeout: 20000 });
   cy.contains("div", "Thank you. Your notification has been submitted.");
-  cy.get("span[id='nextContainer']").first().find("input").click();
+  cy.get("span[id='nextContainer']")
+    .first()
+    .find("input")
+    .click({ timeout: 20000 });
 }
 
 export function additionalEvidenceRequest(claimNumber: string): void {
@@ -802,16 +811,11 @@ export function closeReleaseNoticeTask(docType: string): void {
 export function triggerNoticeRelease(docType: string): void {
   onTab("Task");
   cy.get("td").contains("Processes").click({ force: true });
-
   cy.get("span").contains("SOM Generate Legal Notice").click();
-
   cy.get('input[type="submit"][value="Properties"]').click({ force: true });
-
   cy.get('input[type="submit"][value="Continue"]').click({ force: true });
-
   cy.wait("@ajaxRender");
   cy.wait(2000);
-
   onTab("Documents");
   cy.contains("a", docType);
 }

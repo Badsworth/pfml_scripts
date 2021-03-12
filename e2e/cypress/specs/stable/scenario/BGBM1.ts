@@ -78,7 +78,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
           "form",
           "Upload your Massachusetts driver’s license or ID card"
         )
-          .find("h3")
+          .find("h3", { timeout: 60000 })
           .should("have.length", 1);
       });
     });
