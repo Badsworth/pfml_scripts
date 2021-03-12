@@ -6,7 +6,7 @@ import boto3
 import pytest
 from sqlalchemy import func
 
-import massgov.pfml.delegated_payments.delegated_fineos_claimant_extract as claimant_export
+import massgov.pfml.delegated_payments.delegated_fineos_claimant_extract as claimant_extract
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.api.util import state_log_util
@@ -44,6 +44,13 @@ from tests.delegated_payments.conftest import upload_file_to_s3
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
+
+
+@pytest.fixture
+def claimant_extract_step(initialize_factories_session, test_db_session, test_db_other_session):
+    return claimant_extract.ClaimantExtractStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
 
 
 @pytest.fixture
@@ -99,9 +106,9 @@ def emp_updates_path(tmp_path, mock_fineos_s3_bucket):
     )
 
 
-def test_process_claimant_extract_data_happy_path(
+def test_run_step_happy_path(
+    claimant_extract_step,
     test_db_session,
-    initialize_factories_session,
     emp_updates_path,
     set_exporter_env_vars,
     monkeypatch,
@@ -116,7 +123,7 @@ def test_process_claimant_extract_data_happy_path(
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 1
 
-    claimant_export.process_claimant_extract_data(test_db_session)
+    claimant_extract_step.run()
 
     # Requested absences file artifact above has three records but only one with the
     # LEAVEREQUEST_EVIDENCERESULTTYPE != Satisfied
@@ -202,9 +209,9 @@ def test_process_claimant_extract_data_happy_path(
     assert employee_log_count_after == employee_log_count_before
 
 
-def test_process_claimant_extract_data_no_employee(
+def test_run_step_no_employee(
+    claimant_extract_step,
     test_db_session,
-    initialize_factories_session,
     emp_updates_path,
     set_exporter_env_vars,
     monkeypatch,
@@ -215,7 +222,7 @@ def test_process_claimant_extract_data_no_employee(
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 0
 
-    claimant_export.process_claimant_extract_data(test_db_session)
+    claimant_extract_step.run()
 
     claim: Optional[Claim] = (
         test_db_session.query(Claim)
@@ -232,15 +239,15 @@ def test_process_claimant_extract_data_no_employee(
     assert employee_log_count_after == employee_log_count_before
 
 
-def format_absence_data() -> Tuple[claimant_export.ExtractData, Dict[str, str]]:
-    leave_plan_extract = claimant_export.Extract("test/location/leave_plan")
+def format_absence_data() -> Tuple[claimant_extract.ExtractData, Dict[str, str]]:
+    leave_plan_extract = claimant_extract.Extract("test/location/leave_plan")
     leave_plan_extract.indexed_data = {
         "NTN-001-ABS-01": {
             "ABSENCE_CASENUMBER": "NTN-001-ABS-01",
             "LEAVETYPE": "Family Medical Leave",
         }
     }
-    extract_data = claimant_export.ExtractData([], "2021-02-21")
+    extract_data = claimant_extract.ExtractData([], "2021-02-21")
     extract_data.leave_plan_info = leave_plan_extract
 
     requested_absence = {
@@ -273,12 +280,12 @@ def formatted_claim(initialize_factories_session) -> Claim:
     return claim
 
 
-def test_create_or_update_claim_happy_path_new_claim(test_db_session, initialize_factories_session):
+def test_create_or_update_claim_happy_path_new_claim(claimant_extract_step, test_db_session):
 
     extract_data, requested_absence = format_absence_data()
 
-    validation_container, claim = claimant_export.create_or_update_claim(
-        test_db_session, extract_data, requested_absence
+    validation_container, claim = claimant_extract_step.create_or_update_claim(
+        extract_data, requested_absence
     )
 
     assert len(validation_container.validation_issues) == 0
@@ -295,13 +302,13 @@ def test_create_or_update_claim_happy_path_new_claim(test_db_session, initialize
 
 
 def test_create_or_update_claim_happy_path_update_claim(
-    test_db_session, initialize_factories_session, formatted_claim
+    claimant_extract_step, test_db_session, formatted_claim
 ):
 
     extract_data, requested_absence = format_absence_data()
 
-    validation_container, claim = claimant_export.create_or_update_claim(
-        test_db_session, extract_data, requested_absence
+    validation_container, claim = claimant_extract_step.create_or_update_claim(
+        extract_data, requested_absence
     )
 
     assert len(validation_container.validation_issues) == 0
@@ -317,14 +324,14 @@ def test_create_or_update_claim_happy_path_update_claim(
     assert claim.is_id_proofed is True
 
 
-def test_create_or_update_claim_no_leave_plan_match(test_db_session, initialize_factories_session):
+def test_create_or_update_claim_no_leave_plan_match(claimant_extract_step, test_db_session):
 
     extract_data, requested_absence = format_absence_data()
     # Change key to force unmatch.
     requested_absence["ABSENCE_CASENUMBER"] = "NTN-002-ABS-01"
 
-    validation_container, claim = claimant_export.create_or_update_claim(
-        test_db_session, extract_data, requested_absence
+    validation_container, claim = claimant_extract_step.create_or_update_claim(
+        extract_data, requested_absence
     )
 
     # Leave plan match logic commented out by other PR so commenting validation assertion
@@ -333,14 +340,14 @@ def test_create_or_update_claim_no_leave_plan_match(test_db_session, initialize_
     assert claim is not None
 
 
-def test_create_or_update_claim_invalid_values(test_db_session, initialize_factories_session):
+def test_create_or_update_claim_invalid_values(claimant_extract_step, test_db_session):
 
     extract_data, requested_absence = format_absence_data()
     # Set absences status to invalid value
     requested_absence["ABSENCE_CASESTATUS"] = "Invalid Value"
 
-    validation_container, claim = claimant_export.create_or_update_claim(
-        test_db_session, extract_data, requested_absence
+    validation_container, claim = claimant_extract_step.create_or_update_claim(
+        extract_data, requested_absence
     )
 
     assert len(validation_container.validation_issues) == 1
@@ -350,8 +357,8 @@ def test_create_or_update_claim_invalid_values(test_db_session, initialize_facto
     # Set start date to empty string
     requested_absence["ABSENCEPERIOD_START"] = ""
 
-    validation_container, claim = claimant_export.create_or_update_claim(
-        test_db_session, extract_data, requested_absence
+    validation_container, claim = claimant_extract_step.create_or_update_claim(
+        extract_data, requested_absence
     )
 
     assert len(validation_container.validation_issues) == 1
@@ -361,16 +368,16 @@ def test_create_or_update_claim_invalid_values(test_db_session, initialize_facto
     # Set end date to empty string
     requested_absence["ABSENCEPERIOD_END"] = ""
 
-    validation_container, claim = claimant_export.create_or_update_claim(
-        test_db_session, extract_data, requested_absence
+    validation_container, claim = claimant_extract_step.create_or_update_claim(
+        extract_data, requested_absence
     )
 
     assert len(validation_container.validation_issues) == 1
     assert claim.absence_period_end_date is None
 
 
-def add_employee_feed(extract_data: claimant_export.ExtractData):
-    employee_feed_extract = claimant_export.Extract("test/location/employee_info")
+def add_employee_feed(extract_data: claimant_extract.ExtractData):
+    employee_feed_extract = claimant_extract.Extract("test/location/employee_info")
     employee_feed_extract.indexed_data = {
         "12345": {
             "NATINSNO": "123456789",
@@ -390,9 +397,7 @@ def add_employee_feed(extract_data: claimant_export.ExtractData):
     extract_data.employee_feed = employee_feed_extract
 
 
-def test_update_employee_info_happy_path(
-    test_db_session, initialize_factories_session, formatted_claim
-):
+def test_update_employee_info_happy_path(claimant_extract_step, test_db_session, formatted_claim):
     extract_data, requested_absence = format_absence_data()
     add_employee_feed(extract_data)
 
@@ -402,8 +407,8 @@ def test_update_employee_info_happy_path(
     absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
     validation_container = payments_util.ValidationContainer(record_key=absence_case_id)
 
-    employee, has_claimant_update = claimant_export.update_employee_info(
-        test_db_session, extract_data, requested_absence, formatted_claim, validation_container
+    employee, has_claimant_update = claimant_extract_step.update_employee_info(
+        extract_data, requested_absence, formatted_claim, validation_container
     )
 
     assert len(validation_container.validation_issues) == 0
@@ -413,9 +418,7 @@ def test_update_employee_info_happy_path(
     assert has_claimant_update is True
 
 
-def test_update_employee_info_not_in_db(
-    test_db_session, initialize_factories_session, formatted_claim
-):
+def test_update_employee_info_not_in_db(claimant_extract_step, test_db_session, formatted_claim):
     extract_data, requested_absence = format_absence_data()
     add_employee_feed(extract_data)
 
@@ -425,15 +428,15 @@ def test_update_employee_info_not_in_db(
     absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
     validation_container = payments_util.ValidationContainer(record_key=absence_case_id)
 
-    employee, has_claimant_update = claimant_export.update_employee_info(
-        test_db_session, extract_data, requested_absence, formatted_claim, validation_container
+    employee, has_claimant_update = claimant_extract_step.update_employee_info(
+        extract_data, requested_absence, formatted_claim, validation_container
     )
 
     assert employee is None
     assert has_claimant_update is False
 
 
-def test_update_mailing_address_happy_path(test_db_session, initialize_factories_session):
+def test_update_mailing_address_happy_path(claimant_extract_step, test_db_session):
     employee = EmployeeFactory()
     feed_entry = {
         "ADDRESS1": "456 Park Avenue",
@@ -444,8 +447,8 @@ def test_update_mailing_address_happy_path(test_db_session, initialize_factories
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_address_update = claimant_export.update_mailing_address(
-        test_db_session, feed_entry, employee, validation_container
+    has_address_update = claimant_extract_step.update_mailing_address(
+        feed_entry, employee, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -463,9 +466,9 @@ def test_update_mailing_address_happy_path(test_db_session, initialize_factories
 def test_process_extract_unprocessed_folder_files(
     mock_fineos_s3_bucket,
     set_exporter_env_vars,
+    claimant_extract_step,
     test_db_session,
     tmp_path,
-    initialize_factories_session,
     monkeypatch,
     create_triggers,
 ):
@@ -474,7 +477,7 @@ def test_process_extract_unprocessed_folder_files(
     s3 = boto3.client("s3")
 
     def add_s3_files(prefix):
-        for expected_file_name in claimant_export.expected_file_names:
+        for expected_file_name in claimant_extract.expected_file_names:
             key = f"{prefix}{expected_file_name}"
             s3.put_object(Bucket=mock_fineos_s3_bucket, Key=key, Body="a,b,c")
 
@@ -515,7 +518,7 @@ def test_process_extract_unprocessed_folder_files(
     assert employee_log_count_before == 0
 
     # confirm all unprocessed files were downloaded
-    claimant_export.process_claimant_extract_data(test_db_session)
+    claimant_extract_step.run()
     destination_folder = os.path.join(
         get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
     )
@@ -523,7 +526,7 @@ def test_process_extract_unprocessed_folder_files(
     assert len(processed_files) == 6
 
     expected_file_names = []
-    for date_file in claimant_export.expected_file_names:
+    for date_file in claimant_extract.expected_file_names:
         for unprocessed_date in ["2020-01-02-11-30-00", "2020-01-04-11-30-00"]:
             expected_file_names.append(
                 f"{payments_util.get_date_group_folder_name(unprocessed_date, ReferenceFileType.VENDOR_CLAIM_EXTRACT)}/{unprocessed_date}-{date_file}"
@@ -534,7 +537,9 @@ def test_process_extract_unprocessed_folder_files(
 
     # confirm no files will be copied in a subsequent copy
     copied_files = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, claimant_export.expected_file_names, ReferenceFileType.VENDOR_CLAIM_EXTRACT
+        test_db_session,
+        claimant_extract.expected_file_names,
+        ReferenceFileType.VENDOR_CLAIM_EXTRACT,
     )
     assert not copied_files
 
@@ -542,7 +547,7 @@ def test_process_extract_unprocessed_folder_files(
     assert employee_log_count_after == employee_log_count_before
 
 
-def test_update_mailing_address_validation_issues(test_db_session, initialize_factories_session):
+def test_update_mailing_address_validation_issues(claimant_extract_step, test_db_session):
     employee = EmployeeFactory()
 
     # Invalid zip code
@@ -555,8 +560,8 @@ def test_update_mailing_address_validation_issues(test_db_session, initialize_fa
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_address_update = claimant_export.update_mailing_address(
-        test_db_session, feed_entry, employee, validation_container
+    has_address_update = claimant_extract_step.update_mailing_address(
+        feed_entry, employee, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -577,8 +582,8 @@ def test_update_mailing_address_validation_issues(test_db_session, initialize_fa
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_address_update = claimant_export.update_mailing_address(
-        test_db_session, feed_entry, employee, validation_container
+    has_address_update = claimant_extract_step.update_mailing_address(
+        feed_entry, employee, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -599,8 +604,8 @@ def test_update_mailing_address_validation_issues(test_db_session, initialize_fa
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_address_update = claimant_export.update_mailing_address(
-        test_db_session, feed_entry, employee, validation_container
+    has_address_update = claimant_extract_step.update_mailing_address(
+        feed_entry, employee, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -612,7 +617,7 @@ def test_update_mailing_address_validation_issues(test_db_session, initialize_fa
     assert has_address_update is False
 
 
-def test_update_eft_info_happy_path(test_db_session, initialize_factories_session):
+def test_update_eft_info_happy_path(claimant_extract_step, test_db_session):
     employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
 
     assert employee.eft is None
@@ -620,8 +625,8 @@ def test_update_eft_info_happy_path(test_db_session, initialize_factories_sessio
     eft_entry = {"SORTCODE": "123456789", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_eft_update = claimant_export.update_eft_info(
-        test_db_session, eft_entry, employee, validation_container
+    has_eft_update = claimant_extract_step.update_eft_info(
+        eft_entry, employee, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -644,7 +649,7 @@ def test_update_eft_info_happy_path(test_db_session, initialize_factories_sessio
     # assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
 
 
-def test_update_eft_info_update_existing(test_db_session, initialize_factories_session):
+def test_update_eft_info_update_existing(claimant_extract_step, test_db_session):
     employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
     eft = EftFactory.create()
     employee.eft = eft
@@ -657,8 +662,8 @@ def test_update_eft_info_update_existing(test_db_session, initialize_factories_s
     eft_entry = {"SORTCODE": "123456789", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_eft_update = claimant_export.update_eft_info(
-        test_db_session, eft_entry, employee, validation_container
+    has_eft_update = claimant_extract_step.update_eft_info(
+        eft_entry, employee, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -682,7 +687,7 @@ def test_update_eft_info_update_existing(test_db_session, initialize_factories_s
     # assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
 
 
-def test_update_eft_info_is_same_eft_no_prior_state(test_db_session, initialize_factories_session):
+def test_update_eft_info_is_same_eft_no_prior_state(claimant_extract_step, test_db_session):
     employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
     eft = EftFactory.create()
     employee.eft = eft
@@ -699,8 +704,8 @@ def test_update_eft_info_is_same_eft_no_prior_state(test_db_session, initialize_
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_eft_update = claimant_export.update_eft_info(
-        test_db_session, eft_entry, employee, validation_container
+    has_eft_update = claimant_extract_step.update_eft_info(
+        eft_entry, employee, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -723,9 +728,7 @@ def test_update_eft_info_is_same_eft_no_prior_state(test_db_session, initialize_
     # assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
 
 
-def test_update_eft_info_is_same_eft_has_prior_eft_state(
-    test_db_session, initialize_factories_session
-):
+def test_update_eft_info_is_same_eft_has_prior_eft_state(claimant_extract_step, test_db_session):
     employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
     eft = EftFactory.create()
     employee.eft = eft
@@ -749,8 +752,8 @@ def test_update_eft_info_is_same_eft_has_prior_eft_state(
         db_session=test_db_session,
     )
 
-    has_eft_update = claimant_export.update_eft_info(
-        test_db_session, eft_entry, employee, validation_container
+    has_eft_update = claimant_extract_step.update_eft_info(
+        eft_entry, employee, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -771,15 +774,15 @@ def test_update_eft_info_is_same_eft_has_prior_eft_state(
     assert state_log.end_state_id == State.EFT_PENDING.state_id
 
 
-def test_update_eft_info_validation_issues(test_db_session, initialize_factories_session):
+def test_update_eft_info_validation_issues(claimant_extract_step, test_db_session):
     employee = EmployeeFactory()
 
     # Routing number incorrect length.
     eft_entry = {"SORTCODE": "12345678", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_eft_update = claimant_export.update_eft_info(
-        test_db_session, eft_entry, employee, validation_container
+    has_eft_update = claimant_extract_step.update_eft_info(
+        eft_entry, employee, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -798,8 +801,8 @@ def test_update_eft_info_validation_issues(test_db_session, initialize_factories
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_eft_update = claimant_export.update_eft_info(
-        test_db_session, eft_entry, employee, validation_container
+    has_eft_update = claimant_extract_step.update_eft_info(
+        eft_entry, employee, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -818,8 +821,8 @@ def test_update_eft_info_validation_issues(test_db_session, initialize_factories
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_eft_update = claimant_export.update_eft_info(
-        test_db_session, eft_entry, employee, validation_container
+    has_eft_update = claimant_extract_step.update_eft_info(
+        eft_entry, employee, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -838,8 +841,8 @@ def test_update_eft_info_validation_issues(test_db_session, initialize_factories
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_eft_update = claimant_export.update_eft_info(
-        test_db_session, eft_entry, employee, validation_container
+    has_eft_update = claimant_extract_step.update_eft_info(
+        eft_entry, employee, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -853,7 +856,7 @@ def test_update_eft_info_validation_issues(test_db_session, initialize_factories
 
 # TODO: Add test if there are no validation issues with EFT
 def test_process_records_to_db_validation_issues(
-    test_db_session, initialize_factories_session, formatted_claim
+    claimant_extract_step, test_db_session, formatted_claim
 ):
     # Setup
     extract_data, requested_absence = format_absence_data()
@@ -861,14 +864,16 @@ def test_process_records_to_db_validation_issues(
     # Create some validation issues
     extract_data.employee_feed.indexed_data["12345"]["SORTCODE"] = ""
     requested_absence["ABSENCEPERIOD_END"] = ""
-    extract_data.requested_absence_info = claimant_export.Extract("test/location/requested_absence")
+    extract_data.requested_absence_info = claimant_extract.Extract(
+        "test/location/requested_absence"
+    )
     extract_data.requested_absence_info.indexed_data["NTN-001-ABS-01"] = requested_absence
 
     tax_identifier = TaxIdentifierFactory(tax_identifier="123456789")
     EmployeeFactory(tax_identifier=tax_identifier)
 
     # Run the process
-    claimant_export.process_records_to_db(extract_data, test_db_session)
+    claimant_extract_step.process_records_to_db(extract_data)
 
     # Verify the state logs
     state_logs = test_db_session.query(StateLog).all()
@@ -879,12 +884,14 @@ def test_process_records_to_db_validation_issues(
 
 
 def test_process_records_to_db_no_claimant_updates_has_prior_eft_state(
-    test_db_session, initialize_factories_session, formatted_claim
+    claimant_extract_step, test_db_session, formatted_claim
 ):
     # Setup
     extract_data, requested_absence = format_absence_data()
     add_employee_feed(extract_data)
-    extract_data.requested_absence_info = claimant_export.Extract("test/location/requested_absence")
+    extract_data.requested_absence_info = claimant_extract.Extract(
+        "test/location/requested_absence"
+    )
     extract_data.requested_absence_info.indexed_data["NTN-001-ABS-01"] = requested_absence
 
     # Create an employee with address and EFT that exactly matches the input
@@ -931,7 +938,7 @@ def test_process_records_to_db_no_claimant_updates_has_prior_eft_state(
     assert len(state_logs) == 2
 
     # Run the process
-    claimant_export.process_records_to_db(extract_data, test_db_session)
+    claimant_extract_step.process_records_to_db(extract_data)
 
     # Verify both state logs are in the same state
     state_logs = test_db_session.query(StateLog).all()
@@ -944,7 +951,7 @@ def test_process_records_to_db_no_claimant_updates_has_prior_eft_state(
         ]
 
 
-def test_extract_to_staging_tables(emp_updates_path, test_db_session):
+def test_extract_to_staging_tables(emp_updates_path, claimant_extract_step, test_db_session):
     tempdir = tempfile.mkdtemp()
     date = "2020-12-21-19-20-42"
     test_file_name1 = "Employee_feed.csv"
@@ -957,9 +964,9 @@ def test_extract_to_staging_tables(emp_updates_path, test_db_session):
 
     test_file_names = [test_file_path1, test_file_path2, test_file_path3]
 
-    extract_data = claimant_export.ExtractData(test_file_names, date)
-    claimant_export.download_and_index_data(extract_data, tempdir)
-    claimant_export.extract_to_staging_tables(extract_data, test_db_session)
+    extract_data = claimant_extract.ExtractData(test_file_names, date)
+    claimant_extract_step.download_and_index_data(extract_data, tempdir)
+    claimant_extract_step.extract_to_staging_tables(extract_data)
 
     test_db_session.commit()
 

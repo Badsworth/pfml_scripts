@@ -506,6 +506,9 @@ class Payment(Base):
     disb_amount = Column(Numeric(asdecimal=True))
     has_address_update = Column(Boolean, default=False, server_default="FALSE", nullable=False)
     has_eft_update = Column(Boolean, default=False, server_default="FALSE", nullable=False)
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
 
     claim = relationship(Claim)
     payment_transaction_type = relationship(LkPaymentTransactionType)

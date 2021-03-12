@@ -1144,6 +1144,7 @@ def create_staging_table_instance(
         FineosExtractEmployeeFeed,
     ],
     ref_file: ReferenceFile,
+    fineos_extract_import_log_id: Optional[int],
 ) -> DeclarativeMeta:
     """ We check if keys from data have a matching class property in staging model db_cls, if data contains
     properties not yet included in cls, we log a warning. We return an instance of cls, with matching properties
@@ -1171,4 +1172,8 @@ def create_staging_table_instance(
         logger.warning(f"{db_cls.__name__} does not include properties: {','.join(difference)}")
         [data.pop(diff) for diff in difference]
 
-    return db_cls(**data, reference_file_id=ref_file.reference_file_id)
+    return db_cls(
+        **data,
+        reference_file_id=ref_file.reference_file_id,
+        fineos_extract_import_log_id=fineos_extract_import_log_id,
+    )

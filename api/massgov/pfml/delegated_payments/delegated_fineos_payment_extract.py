@@ -2,6 +2,7 @@ import csv
 import decimal
 import os
 import pathlib
+import tempfile
 import uuid
 from collections import OrderedDict
 from dataclasses import dataclass, field
@@ -12,7 +13,6 @@ from typing import Dict, List, Optional, Tuple, cast
 from sqlalchemy.exc import SQLAlchemyError
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.fineos.util.log_tables as fineos_log_tables_util
@@ -46,6 +46,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
 )
+from massgov.pfml.delegated_payments.step import Step
 
 logger = logging.get_logger(__name__)
 
@@ -243,7 +244,7 @@ class PaymentData:
             pei_record,
             self.validation_container,
             True,
-            custom_validator_func=payment_period_date_validator,
+            custom_validator_func=self.payment_period_date_validator,
         )
 
         if payment_details:
@@ -300,14 +301,14 @@ class PaymentData:
                 payment_detail_row,
                 self.validation_container,
                 True,
-                custom_validator_func=payment_period_date_validator,
+                custom_validator_func=self.payment_period_date_validator,
             )
             row_end_period = payments_util.validate_csv_input(
                 "PAYMENTENDPER",
                 payment_detail_row,
                 self.validation_container,
                 True,
-                custom_validator_func=payment_period_date_validator,
+                custom_validator_func=self.payment_period_date_validator,
             )
             if row_start_period is not None:
                 start_periods.append(row_start_period)
@@ -317,6 +318,15 @@ class PaymentData:
             self.payment_start_period = min(start_periods)
         if end_periods:
             self.payment_end_period = max(end_periods)
+
+    def payment_period_date_validator(
+        self, payment_period_date_str: str
+    ) -> Optional[payments_util.ValidationReason]:
+        now = payments_util.get_now()
+        payment_period_date = datetime.strptime(payment_period_date_str, "%Y-%m-%d %H:%M:%S")
+        if payment_period_date.date() > now.date():
+            return payments_util.ValidationReason.INVALID_VALUE
+        return None
 
     def get_traceable_details(self) -> Dict[str, Optional[str]]:
         # For logging purposes, this returns useful, traceable details
@@ -329,799 +339,825 @@ class PaymentData:
         }
 
 
-def get_active_payment_state(payment: Payment, db_session: db.Session) -> Optional[LkState]:
-    """ For the given payment, determine if the payment is being processed or complete
-        and if so, return the active state.
-        Returns:
-          - If being processed, the state the active payment is in, else None
-    """
-    # Get all payments associated with C/I value
-    payment_ids = (
-        db_session.query(Payment.payment_id)
-        .filter(
-            Payment.fineos_pei_c_value == payment.fineos_pei_c_value,
-            Payment.fineos_pei_i_value == payment.fineos_pei_i_value,
-        )
-        .all()
-    )
+class PaymentExtractStep(Step):
+    def run_step(self):
+        with tempfile.TemporaryDirectory() as download_directory:
+            self.process_extract_data(download_directory)
 
-    # For each payment, check whether it's in a specific set of states
-    # We query for the state specifically as the payment comes attached
-    active_state = (
-        db_session.query(StateLog)
-        .join(LatestStateLog)
-        .join(Payment)
-        .filter(
-            Payment.payment_id.in_(payment_ids),
-            StateLog.end_state_id.in_(payments_util.Constants.NON_RESTARTABLE_PAYMENT_STATES),
-        )
-        .first()
-    )
-
-    if active_state:
-        logger.warning(
-            "Payment with C=%s I=%s received from FINEOS that is already in active state: [%s] - active payment ID: %s",
-            payment.fineos_pei_c_value,
-            payment.fineos_pei_i_value,
-            active_state.end_state.state_description,
-            active_state.payment.payment_id,
-        )
-        return active_state.end_state
-
-    return None
-
-
-def payment_period_date_validator(
-    payment_period_date_str: str,
-) -> Optional[payments_util.ValidationReason]:
-    now = payments_util.get_now()
-    payment_period_date = datetime.strptime(payment_period_date_str, "%Y-%m-%d %H:%M:%S")
-    if payment_period_date.date() > now.date():
-        return payments_util.ValidationReason.INVALID_VALUE
-    return None
-
-
-def download_and_process_data(extract_data: ExtractData, download_directory: pathlib.Path) -> None:
-    logger.info(
-        "Downloading and indexing payment extract data files.",
-        extra={
-            "pei_file": extract_data.pei.file_location,
-            "payment_details_file": extract_data.payment_details.file_location,
-            "claim_details_file": extract_data.claim_details.file_location,
-        },
-    )
-    # To make processing simpler elsewhere, we index each extract file object on a key
-    # that will let us join it with the PEI file later.
-
-    # VPEI file
-    pei_data = download_and_parse_data(extract_data.pei.file_location, download_directory)
-    # This doesn't specifically need to be indexed, but it lets us be consistent
-    for record in pei_data:
-        extract_data.pei.indexed_data[CiIndex(record["C"], record["I"])] = record
-        logger.debug("indexed pei file row with CI: %s, %s", record["C"], record["I"])
-
-    # Payment details file
-    payment_details = download_and_parse_data(
-        extract_data.payment_details.file_location, download_directory
-    )
-    # claim details needs to be indexed on PECLASSID and PEINDEXID
-    # which point to the vpei.C and vpei.I columns
-    for record in payment_details:
-        index = CiIndex(record["PECLASSID"], record["PEINDEXID"])
-        if index not in extract_data.payment_details.indexed_data:
-            extract_data.payment_details.indexed_data[index] = []
-        extract_data.payment_details.indexed_data[index].append(record)
-        logger.debug(
-            "indexed payment details file row with CI: %s, %s",
-            record["PECLASSID"],
-            record["PEINDEXID"],
-        )
-
-    # Claim details file
-    claim_details = download_and_parse_data(
-        extract_data.claim_details.file_location, download_directory
-    )
-    # claim details needs to be indexed on PECLASSID and PEINDEXID
-    # which point to the vpei.C and vpei.I columns
-    for record in claim_details:
-        extract_data.claim_details.indexed_data[
-            CiIndex(record["PECLASSID"], record["PEINDEXID"])
-        ] = record
-        logger.debug(
-            "indexed claim details file row with CI: %s, %s",
-            record["PECLASSID"],
-            record["PEINDEXID"],
-        )
-
-    logger.info("Successfully downloaded and indexed payment extract data files.")
-
-
-def determine_field_names(download_location: pathlib.Path) -> List[str]:
-    field_names: Dict[str, int] = OrderedDict()
-    # Read the first line of the file and handle duplicate field names.
-    with open(download_location) as extract_file:
-        reader = csv.reader(extract_file, delimiter=",")
-
-        # If duplicates are found, they'll be named
-        # field_name_1, field_name_2,..
-        for field_name in next(reader):
-            if field_name in field_names:
-                new_field_name = f"{field_name}_{field_names[field_name]}"
-                field_names[field_name] += 1
-                field_names[new_field_name] = 1
-            else:
-                field_names[field_name] = 1
-
-    return list(field_names.keys())
-
-
-def download_and_parse_data(s3_path: str, download_directory: pathlib.Path) -> List[Dict[str, str]]:
-    file_name = s3_path.split("/")[-1]
-    download_location = os.path.join(download_directory, file_name)
-    logger.info("download %s to %s", s3_path, download_location)
-    if s3_path.startswith("s3:/"):
-        file_util.download_from_s3(s3_path, str(download_location))
-    else:
-        file_util.copy_file(s3_path, str(download_location))
-
-    raw_extract_data = []
-
-    field_names = determine_field_names(download_location)
-    with open(download_location) as extract_file:
-        dict_reader = csv.DictReader(extract_file, delimiter=",", fieldnames=field_names)
-        # Each data object represents a row from the CSV as a dictionary
-        # The keys are column headers
-        # The rows are the corresponding value in the row
-        next(dict_reader)  # Because we specify the fieldnames, skip the header row
-        raw_extract_data = list(dict_reader)
-
-    logger.info("read %s: %i records", download_location, len(raw_extract_data))
-    return raw_extract_data
-
-
-def get_employee_and_claim(
-    payment_data: PaymentData, db_session: db.Session
-) -> Tuple[Optional[Employee], Optional[Claim]]:
-    # Get the TIN, employee and claim associated with the payment to be made
-    employee, claim = None, None
-    try:
-        tax_identifier = (
-            db_session.query(TaxIdentifier).filter_by(tax_identifier=payment_data.tin).one_or_none()
-        )
-        if not tax_identifier:
-            payment_data.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_IN_DB, "tax_identifier"
+    def get_active_payment_state(self, payment: Payment) -> Optional[LkState]:
+        """ For the given payment, determine if the payment is being processed or complete
+            and if so, return the active state.
+            Returns:
+              - If being processed, the state the active payment is in, else None
+        """
+        # Get all payments associated with C/I value
+        payment_ids = (
+            self.db_session.query(Payment.payment_id)
+            .filter(
+                Payment.fineos_pei_c_value == payment.fineos_pei_c_value,
+                Payment.fineos_pei_i_value == payment.fineos_pei_i_value,
             )
+            .all()
+        )
+
+        # For each payment, check whether it's in a specific set of states
+        # We query for the state specifically as the payment comes attached
+        active_state = (
+            self.db_session.query(StateLog)
+            .join(LatestStateLog)
+            .join(Payment)
+            .filter(
+                Payment.payment_id.in_(payment_ids),
+                StateLog.end_state_id.in_(payments_util.Constants.NON_RESTARTABLE_PAYMENT_STATES),
+            )
+            .first()
+        )
+
+        if active_state:
+            logger.warning(
+                "Payment with C=%s I=%s received from FINEOS that is already in active state: [%s] - active payment ID: %s",
+                payment.fineos_pei_c_value,
+                payment.fineos_pei_i_value,
+                active_state.end_state.state_description,
+                active_state.payment.payment_id,
+            )
+            return active_state.end_state
+
+        return None
+
+    def download_and_process_data(
+        self, extract_data: ExtractData, download_directory: pathlib.Path
+    ) -> None:
+        logger.info(
+            "Downloading and indexing payment extract data files.",
+            extra={
+                "pei_file": extract_data.pei.file_location,
+                "payment_details_file": extract_data.payment_details.file_location,
+                "claim_details_file": extract_data.claim_details.file_location,
+            },
+        )
+        # To make processing simpler elsewhere, we index each extract file object on a key
+        # that will let us join it with the PEI file later.
+
+        # VPEI file
+        pei_data = self.download_and_parse_data(extract_data.pei.file_location, download_directory)
+        # This doesn't specifically need to be indexed, but it lets us be consistent
+        for record in pei_data:
+            extract_data.pei.indexed_data[CiIndex(record["C"], record["I"])] = record
+            logger.debug("indexed pei file row with CI: %s, %s", record["C"], record["I"])
+
+        # Payment details file
+        payment_details = self.download_and_parse_data(
+            extract_data.payment_details.file_location, download_directory
+        )
+        # claim details needs to be indexed on PECLASSID and PEINDEXID
+        # which point to the vpei.C and vpei.I columns
+        for record in payment_details:
+            index = CiIndex(record["PECLASSID"], record["PEINDEXID"])
+            if index not in extract_data.payment_details.indexed_data:
+                extract_data.payment_details.indexed_data[index] = []
+            extract_data.payment_details.indexed_data[index].append(record)
+            logger.debug(
+                "indexed payment details file row with CI: %s, %s",
+                record["PECLASSID"],
+                record["PEINDEXID"],
+            )
+
+        # Claim details file
+        claim_details = self.download_and_parse_data(
+            extract_data.claim_details.file_location, download_directory
+        )
+        # claim details needs to be indexed on PECLASSID and PEINDEXID
+        # which point to the vpei.C and vpei.I columns
+        for record in claim_details:
+            extract_data.claim_details.indexed_data[
+                CiIndex(record["PECLASSID"], record["PEINDEXID"])
+            ] = record
+            logger.debug(
+                "indexed claim details file row with CI: %s, %s",
+                record["PECLASSID"],
+                record["PEINDEXID"],
+            )
+
+        logger.info("Successfully downloaded and indexed payment extract data files.")
+
+    def determine_field_names(self, download_location: pathlib.Path) -> List[str]:
+        field_names: Dict[str, int] = OrderedDict()
+        # Read the first line of the file and handle duplicate field names.
+        with open(download_location) as extract_file:
+            reader = csv.reader(extract_file, delimiter=",")
+
+            # If duplicates are found, they'll be named
+            # field_name_1, field_name_2,..
+            for field_name in next(reader):
+                if field_name in field_names:
+                    new_field_name = f"{field_name}_{field_names[field_name]}"
+                    field_names[field_name] += 1
+                    field_names[new_field_name] = 1
+                else:
+                    field_names[field_name] = 1
+
+        return list(field_names.keys())
+
+    def download_and_parse_data(
+        self, s3_path: str, download_directory: pathlib.Path
+    ) -> List[Dict[str, str]]:
+        file_name = s3_path.split("/")[-1]
+        download_location = os.path.join(download_directory, file_name)
+        logger.info("download %s to %s", s3_path, download_location)
+        if s3_path.startswith("s3:/"):
+            file_util.download_from_s3(s3_path, str(download_location))
         else:
-            employee = (
-                db_session.query(Employee).filter_by(tax_identifier=tax_identifier).one_or_none()
-            )
+            file_util.copy_file(s3_path, str(download_location))
 
-            if not employee:
+        raw_extract_data = []
+
+        field_names = self.determine_field_names(download_location)
+        with open(download_location) as extract_file:
+            dict_reader = csv.DictReader(extract_file, delimiter=",", fieldnames=field_names)
+            # Each data object represents a row from the CSV as a dictionary
+            # The keys are column headers
+            # The rows are the corresponding value in the row
+            next(dict_reader)  # Because we specify the fieldnames, skip the header row
+            raw_extract_data = list(dict_reader)
+
+        logger.info("read %s: %i records", download_location, len(raw_extract_data))
+        return raw_extract_data
+
+    def get_employee_and_claim(
+        self, payment_data: PaymentData
+    ) -> Tuple[Optional[Employee], Optional[Claim]]:
+        # Get the TIN, employee and claim associated with the payment to be made
+        employee, claim = None, None
+        try:
+            tax_identifier = (
+                self.db_session.query(TaxIdentifier)
+                .filter_by(tax_identifier=payment_data.tin)
+                .one_or_none()
+            )
+            if not tax_identifier:
                 payment_data.validation_container.add_validation_issue(
-                    payments_util.ValidationReason.MISSING_IN_DB, "employee"
+                    payments_util.ValidationReason.MISSING_IN_DB, "tax_identifier"
+                )
+            else:
+                employee = (
+                    self.db_session.query(Employee)
+                    .filter_by(tax_identifier=tax_identifier)
+                    .one_or_none()
                 )
 
-        claim = (
-            db_session.query(Claim)
-            .filter_by(fineos_absence_id=payment_data.absence_case_number)
-            .one_or_none()
-        )
-    except SQLAlchemyError as e:
-        logger.exception(
-            "Unexpected error %s with one_or_none when querying for tin/employee/claim",
-            type(e),
-            extra=payment_data.get_traceable_details(),
-        )
-        raise
+                if not employee:
+                    payment_data.validation_container.add_validation_issue(
+                        payments_util.ValidationReason.MISSING_IN_DB, "employee"
+                    )
 
-    # claim might not exist because the employee used the call center, or the employee
-    # errored. Claim should always be created, even without an employee.
-    if not claim:
-        claim = Claim(
-            claim_id=uuid.uuid4(),
-            employee=employee,
-            fineos_absence_id=payment_data.absence_case_number,
-        )
-        db_session.add(claim)
-
-    if not employee and claim.employee:
-        # Somehow we have ended up in a state where we could not find an employee
-        # but did find a claim with some other employee ID. This shouldn't happen
-        # but if it does we need to halt to investigate.
-        logger.error(
-            "Could not find employee for payment, but found claim %s with an attached employee %s",
-            claim.claim_id,
-            claim.employee.employee_id,
-            extra=payment_data.get_traceable_details(),
-        )
-        raise Exception(
-            "Could not find employee for payment, but found a claim",
-            extra=payment_data.get_traceable_details(),
-        )
-
-    if employee and employee.employee_id != claim.employee.employee_id:
-        # We've found a claim with a different employee ID, this shouldn't happen
-        # This might mean that the FINEOS absence_case_number isn't necessarily unique.
-        logger.error(
-            "Found claim %s, but its employee ID %s does not match the one we found from the TIN %s",
-            claim.claim_id,
-            claim.employee.employee_id,
-            employee.employee_id,
-            extra=payment_data.get_traceable_details(),
-        )
-        raise Exception("The claims employee does not match the employee associated with the TIN")
-
-    return employee, claim
-
-
-def update_ctr_address_pair_fineos_address(
-    payment_data: PaymentData, employee: Employee, db_session: db.Session
-) -> bool:
-    """Create or update the employee's EFT record
-
-    Returns:
-        bool: True if payment_data has address updates; False otherwise
-    """
-    # Construct an Address from the payment_data
-    payment_data_address = Address(
-        address_id=uuid.uuid4(),
-        address_line_one=payment_data.address_line_one,
-        address_line_two=payment_data.address_line_two if payment_data.address_line_two else None,
-        city=payment_data.city,
-        geo_state_id=GeoState.get_id(payment_data.state),
-        zip_code=payment_data.zip_code,
-        address_type_id=AddressType.MAILING.address_type_id,
-    )
-
-    # If ctr_address_pair exists, compare the existing fineos_address with the payment_data address
-    #   If they're the same, nothing needs to be done, so we can return
-    #   If they're different or if no ctr_address_pair exists, create a new CtrAddressPair
-    ctr_address_pair = employee.ctr_address_pair
-    if ctr_address_pair:
-        if payments_util.is_same_address(ctr_address_pair.fineos_address, payment_data_address):
-            return False
-
-    new_ctr_address_pair = CtrAddressPair(fineos_address=payment_data_address)
-    employee.ctr_address_pair = new_ctr_address_pair
-    db_session.add(payment_data_address)
-    db_session.add(new_ctr_address_pair)
-    db_session.add(employee)
-
-    # We also want to make sure the address is linked in the EmployeeAddress table
-    employee_address = EmployeeAddress(employee=employee, address=payment_data_address)
-    db_session.add(employee_address)
-    return True
-
-
-def get_payment_transaction_type_id(
-    payment_data: PaymentData, amount: Decimal
-) -> LkPaymentTransactionType:
-    if payment_data.raw_payment_transaction_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
-        return PaymentTransactionType.CANCELLATION.payment_transaction_type_id
-    elif payment_data.raw_payment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
-        return PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id
-    elif amount == Decimal("0"):
-        return PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
-    elif amount > Decimal("0"):
-        return PaymentTransactionType.STANDARD.payment_transaction_type_id
-
-    # We should always have been able to figure out the payment type
-    # from the above checks, this shouldn't happen and should go
-    # to the error report as it's not clear what we should do with it
-    # It might be a negative payment with a field set incorrectly in FINEOS
-    payment_data.validation_container.add_validation_issue(
-        payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
-        f"Payment type [{payment_data.raw_payment_transaction_type}] had a negative payment amount",
-    )
-    return PaymentTransactionType.UNKNOWN.payment_transaction_type_id
-
-
-def create_payment(
-    payment_data: PaymentData,
-    claim: Claim,
-    validation_container: payments_util.ValidationContainer,
-    db_session: db.Session,
-) -> Payment:
-    # We always create a new payment record. This may be completely new
-    # or a payment might have been created before. We'll check that later.
-
-    logger.info(
-        "Creating new payment for CI: %s, %s",
-        payment_data.c_value,
-        payment_data.i_value,
-        extra=payment_data.get_traceable_details(),
-    )
-    payment = Payment(payment_id=uuid.uuid4())
-
-    # Note that these values may have validation issues
-    # that is fine as it will get moved to an error state
-    payment.claim = claim
-    payment.period_start_date = payments_util.datetime_str_to_date(
-        payment_data.payment_start_period
-    )
-    payment.period_end_date = payments_util.datetime_str_to_date(payment_data.payment_end_period)
-    payment.payment_date = payments_util.datetime_str_to_date(payment_data.payment_date)
-    try:
-        payment.amount = decimal.Decimal(cast(str, payment_data.payment_amount))
-        payment.payment_transaction_type_id = get_payment_transaction_type_id(
-            payment_data, payment.amount
-        )
-    except (InvalidOperation, TypeError):
-        logger.exception(
-            "Unable to convert payment amount %s to a decimal",
-            payment_data.payment_amount,
-            extra=payment_data.get_traceable_details(),
-        )
-        # In the unlikely scenario where payment amount isn't set
-        # we need to set something as the DB requires this to be set
-        payment.amount = Decimal(0)
-        # Can't determine the payment type without an amount, and this
-        # is an error scenario anyways.
-        payment.payment_transaction_type_id = (
-            PaymentTransactionType.UNKNOWN.payment_transaction_type_id
-        )
-
-        # As a sanity check, make certain that missing amount was caught
-        # by the earlier validation logic, this if statement shouldn't
-        # ever happen. This exists to show we're not ever accidentally
-        # setting a payment that is going further in processing.
-        if not validation_container.has_validation_issues():
-            raise Exception(
-                "A payment without an amount was found and not caught by validation.",
-                extra=payment_data.get_traceable_details(),
+            claim = (
+                self.db_session.query(Claim)
+                .filter_by(fineos_absence_id=payment_data.absence_case_number)
+                .one_or_none()
             )
-
-    payment.fineos_pei_c_value = payment_data.c_value
-    payment.fineos_pei_i_value = payment_data.i_value
-    payment.fineos_extraction_date = payments_util.get_now().date()
-
-    # If the payment is already being processed,
-    # then FINEOS sent us a payment they should not have
-    # whether that's a FINEOS issue or writeback issue, we
-    # need to error the payment.
-    active_state = get_active_payment_state(payment, db_session)
-    if active_state:
-        validation_container.add_validation_issue(
-            payments_util.ValidationReason.RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED,
-            f"We received a payment that is already being processed. It is currently in state {active_state.state_description}.",
-        )
-
-    db_session.add(payment)
-    return payment
-
-
-def update_eft(payment_data: PaymentData, employee: Employee, db_session: db.Session) -> bool:
-    """Create or update the employee's EFT record
-
-    Returns:
-        bool: True if the payment_data includes EFT updates; False otherwise
-    """
-
-    # Only update if the employee is using ACH for payments
-    if payment_data.raw_payment_method != PaymentMethod.ACH.payment_method_description:
-        # We deliberately do not delete an EFT record in the case they switched from
-        # EFT to Check for payment method. In the event they switch back, we'll update accordingly later.
-        return False
-
-    # Need to cast these values as str rather than Optional[str] as we've
-    # already validated they're not None for linting
-    routing_nbr = cast(str, payment_data.routing_nbr)
-    account_nbr = cast(str, payment_data.account_nbr)
-    bank_account_type_id = BankAccountType.get_id(payment_data.raw_account_type)
-
-    # Construct an EFT object.
-    new_eft = EFT(
-        eft_id=uuid.uuid4(),
-        routing_nbr=routing_nbr,
-        account_nbr=account_nbr,
-        bank_account_type_id=bank_account_type_id,
-    )
-
-    # Retrieve the employee's existing EFT data, if any
-    existing_eft = employee.eft
-
-    # If the employee has no existing EFT data, set it to the new data
-    if not existing_eft:
-        employee.eft = new_eft
-        db_session.add(new_eft)
-        return True
-
-    # If the employee's existing EFT data is the same as the new data, then
-    # do nothing
-    elif payments_util.is_same_eft(existing_eft, new_eft):
-        return False
-
-    # If the employee's existing EFT data is NOT the same as the new data,
-    # then overwrite the old data
-    else:
-        existing_eft.routing_nbr = routing_nbr
-        existing_eft.account_nbr = account_nbr
-        existing_eft.bank_account_type_id = bank_account_type_id
-        db_session.add(existing_eft)
-        return True
-
-
-def add_records_to_db(
-    payment_data: PaymentData,
-    employee: Optional[Employee],
-    claim: Optional[Claim],
-    reference_file: ReferenceFile,
-    db_session: db.Session,
-) -> Payment:
-    # Only update the employee if it exists and there
-    # are no validation issues. Employees are used in
-    # many contexts, so we want to be careful about modifying
-    # them with problematic data.
-    has_address_update, has_eft_update = False, False
-    if employee and not payment_data.validation_container.has_validation_issues():
-        # Update the payment method ID of the employee
-        employee.payment_method_id = PaymentMethod.get_id(payment_data.raw_payment_method)
-
-        # Update the mailing address with values from FINEOS
-        has_address_update = update_ctr_address_pair_fineos_address(
-            payment_data, employee, db_session
-        )
-
-        # Update the EFT info with values from FINEOS
-        has_eft_update = update_eft(payment_data, employee, db_session)
-
-    # Create the payment record
-    payment = create_payment(payment_data, claim, payment_data.validation_container, db_session)
-
-    # Specify whether the Payment has an address update
-    # This gets used later in the pipeline (such as during the PEI Writeback
-    # step)
-    payment.has_address_update = has_address_update
-
-    # Specify whether the Payment has an EFT update
-    # This gets used later in the pipeline (such as during the PEI Writeback
-    # step)
-    payment.has_eft_update = has_eft_update
-
-    # Link the payment object to the payment_reference_file
-    payment_reference_file = PaymentReferenceFile(payment=payment, reference_file=reference_file,)
-    db_session.add(payment_reference_file)
-
-    return payment
-
-
-def process_payment_data_record(
-    payment_data: PaymentData, reference_file: ReferenceFile, db_session: db.Session
-) -> Payment:
-    employee, claim = get_employee_and_claim(payment_data, db_session)
-
-    # If the employee is set, we need to wrap the DB queries
-    # to avoid adding additional employee log entries
-    if employee:
-        with fineos_log_tables_util.update_entity_and_remove_log_entry(
-            db_session, employee, commit=False
-        ):
-            payment = add_records_to_db(payment_data, employee, claim, reference_file, db_session)
-    else:
-        payment = add_records_to_db(payment_data, None, claim, reference_file, db_session)
-
-    return payment
-
-
-def _setup_state_log(
-    payment: Payment,
-    validation_container: payments_util.ValidationContainer,
-    db_session: db.Session,
-) -> None:
-    # https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
-    # Does the payment have validation issues
-    # If so, add to that error state
-    if validation_container.has_validation_issues():
-        end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
-        message = "Error processing payment record"
-
-    # Zero dollar payments are added to the FINEOS writeback + a report
-    elif (
-        payment.payment_transaction_type_id
-        == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
-    ):
-        end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
-        message = "Zero dollar payment added to pending state for FINEOS writeback"
-
-    # Overpayments are added to to the FINEOS writeback + a report
-    elif (
-        payment.payment_transaction_type_id
-        == PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id
-    ):
-        end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT
-        message = "Overpayment payment added to pending state for FINEOS writeback"
-
-    # Cancellations depend on the type of payment
-    elif (
-        payment.payment_transaction_type_id
-        == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
-    ):
-        # ACH cancellations are added to the FINEOS writeback + a report
-        if payment.claim.employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
-            end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
-            message = "Cancellation payment added to pending state for FINEOS writeback"
-        # Check cancellations are processed by us and sent to PUB
-        else:
-            end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
-            message = "Check cancellation payment added"
-
-    else:
-        end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
-        message = "Success"
-
-    state_log_util.create_finished_state_log(
-        end_state=end_state,
-        outcome=state_log_util.build_outcome(message, validation_container),
-        associated_model=payment,
-        db_session=db_session,
-    )
-
-    # TODO - redo the EFT triggering logic
-    # This should be the right behavior, but the states need to be updated
-    if payment.has_eft_update and payment.claim and payment.claim.employee:
-        employee = payment.claim.employee
-        state_log_util.create_finished_state_log(
-            end_state=State.EFT_REQUEST_RECEIVED,
-            associated_model=employee,
-            outcome=state_log_util.build_outcome(
-                f"Initiated VENDOR_EFT flow for Employee {employee.employee_id} from FINEOS payment export"
-            ),
-            db_session=db_session,
-        )
-
-
-def process_records_to_db(extract_data: ExtractData, db_session: db.Session) -> None:
-    logger.info("Processing payment extract data into db: %s", extract_data.date_str)
-
-    # Add the files to the DB
-    # Note a single payment reference file is used for all files collectively
-    db_session.add(extract_data.reference_file)
-
-    for index, record in extract_data.pei.indexed_data.items():
-        try:
-            # Construct a payment data object for easier organization of the many params
-            payment_data = PaymentData(extract_data, index, record)
-            logger.debug("Constructed payment data for extract with CI: %s, %s", index.c, index.i)
-
-            logger.info(
-                f"Processing payment record - absence case number: {payment_data.absence_case_number}",
-                extra=payment_data.get_traceable_details(),
-            )
-
-            payment = process_payment_data_record(
-                payment_data, extract_data.reference_file, db_session
-            )
-
-            # Create and finish the state log. If there were any issues, this'll set the
-            # record to an error state which'll send out a report to address it, otherwise
-            # it will move onto the next step in processing
-            _setup_state_log(
-                payment, payment_data.validation_container, db_session,
-            )
-
-            logger.info(
-                f"Done processing payment record - absence case number: {payment_data.absence_case_number}",
-                extra=payment_data.get_traceable_details(),
-            )
-        except Exception:
-            # An exception during processing would indicate
-            # either a bug or a scenario that we believe invalidates
-            # an entire file and warrants investigating
+        except SQLAlchemyError as e:
             logger.exception(
-                "An error occurred while processing payment for CI: %s, %s", index.c, index.i,
+                "Unexpected error %s with one_or_none when querying for tin/employee/claim",
+                type(e),
+                extra=payment_data.get_traceable_details(),
             )
             raise
 
-    logger.info("Successfully processed payment extract into db: %s", extract_data.date_str)
-    return None
+        # claim might not exist because the employee used the call center, or the employee
+        # errored. Claim should always be created, even without an employee.
+        if not claim:
+            claim = Claim(
+                claim_id=uuid.uuid4(),
+                employee=employee,
+                fineos_absence_id=payment_data.absence_case_number,
+            )
+            self.db_session.add(claim)
 
+        if not employee and claim.employee:
+            # Somehow we have ended up in a state where we could not find an employee
+            # but did find a claim with some other employee ID. This shouldn't happen
+            # but if it does we need to halt to investigate.
+            logger.error(
+                "Could not find employee for payment, but found claim %s with an attached employee %s",
+                claim.claim_id,
+                claim.employee.employee_id,
+                extra=payment_data.get_traceable_details(),
+            )
+            raise Exception(
+                "Could not find employee for payment, but found a claim",
+                extra=payment_data.get_traceable_details(),
+            )
 
-# TODO move to payments_util
-def move_files_from_received_to_processed(
-    extract_data: ExtractData, db_session: db.Session
-) -> None:
-    # Effectively, this method will move a file of path:
-    # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
-    # to
-    # s3://bucket/path/to/processed/2020-01-01-11-30-00-payment-export/2020-01-01-11-30-00-file.csv
-    date_group_folder = payments_util.get_date_group_folder_name(
-        extract_data.date_str, ReferenceFileType.PAYMENT_EXTRACT
-    )
-    new_pei_s3_path = extract_data.pei.file_location.replace(
-        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
-    )
-    file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
-    logger.debug(
-        "Moved PEI file to processed folder.",
-        extra={"source": extract_data.pei.file_location, "destination": new_pei_s3_path},
-    )
+        if employee and employee.employee_id != claim.employee.employee_id:
+            # We've found a claim with a different employee ID, this shouldn't happen
+            # This might mean that the FINEOS absence_case_number isn't necessarily unique.
+            logger.error(
+                "Found claim %s, but its employee ID %s does not match the one we found from the TIN %s",
+                claim.claim_id,
+                claim.employee.employee_id,
+                employee.employee_id,
+                extra=payment_data.get_traceable_details(),
+            )
+            raise Exception(
+                "The claims employee does not match the employee associated with the TIN"
+            )
 
-    new_payment_s3_path = extract_data.payment_details.file_location.replace(
-        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
-    )
-    file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
-    logger.debug(
-        "Moved payments details file to processed folder.",
-        extra={
-            "source": extract_data.payment_details.file_location,
-            "destination": new_payment_s3_path,
-        },
-    )
+        if not employee and claim.employee:
+            # Somehow we have ended up in a state where we could not find an employee
+            # but did find a claim with some other employee ID. This shouldn't happen
+            # but if it does we need to halt to investigate.
+            logger.error(
+                "Could not find employee for payment, but found claim %s with an attached employee %s",
+                claim.claim_id,
+                claim.employee.employee_id,
+                extra=payment_data.get_traceable_details(),
+            )
+            raise Exception(
+                "Could not find employee for payment, but found a claim",
+                extra=payment_data.get_traceable_details(),
+            )
 
-    new_claim_s3_path = extract_data.claim_details.file_location.replace(
-        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
-    )
-    file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
-    logger.debug(
-        "Moved claim details file to processed folder.",
-        extra={
-            "source": extract_data.claim_details.file_location,
-            "destination": new_claim_s3_path,
-        },
-    )
+        if employee and employee.employee_id != claim.employee.employee_id:
+            # We've found a claim with a different employee ID, this shouldn't happen
+            # This might mean that the FINEOS absence_case_number isn't necessarily unique.
+            logger.error(
+                "Found claim %s, but its employee ID %s does not match the one we found from the TIN %s ",
+                claim.claim_id,
+                claim.employee.employee_id,
+                employee.employee_id,
+                extra=payment_data.get_traceable_details(),
+            )
+            raise Exception(
+                "The claims employee does not match the employee associated with the TIN",
+                extra=payment_data.get_traceable_details(),
+            )
 
-    # Update the reference file DB record to point to the new folder for these files
-    extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
-        RECEIVED_FOLDER, f"{PROCESSED_FOLDER}"
-    )
-    extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
-        extract_data.date_str, date_group_folder
-    )
-    db_session.add(extract_data.reference_file)
-    logger.debug(
-        "Updated reference file location for payment extract data.",
-        extra={"reference_file_location": extract_data.reference_file.file_location},
-    )
+        return employee, claim
 
-    logger.info("Successfully moved payments files to processed folder.")
+    def update_ctr_address_pair_fineos_address(
+        self, payment_data: PaymentData, employee: Employee
+    ) -> bool:
+        """Create or update the employee's EFT record
 
+        Returns:
+            bool: True if payment_data has address updates; False otherwise
+        """
+        # Construct an Address from the payment_data
+        payment_data_address = Address(
+            address_id=uuid.uuid4(),
+            address_line_one=payment_data.address_line_one,
+            address_line_two=payment_data.address_line_two
+            if payment_data.address_line_two
+            else None,
+            city=payment_data.city,
+            geo_state_id=GeoState.get_id(payment_data.state),
+            zip_code=payment_data.zip_code,
+            address_type_id=AddressType.MAILING.address_type_id,
+        )
 
-# TODO move to payments_util
-def move_files_from_received_to_error(
-    extract_data: Optional[ExtractData], db_session: db.Session
-) -> None:
-    if not extract_data:
-        logger.error("Cannot move files to error directory, as path is not known")
-        return
-    # Effectively, this method will move a file of path:
-    # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
-    # to
-    # s3://bucket/path/to/error/2020-01-01-11-30-00-payment-export/2020-01-01-file.csv
-    date_group_folder = payments_util.get_date_group_folder_name(
-        extract_data.date_str, ReferenceFileType.PAYMENT_EXTRACT
-    )
-    new_pei_s3_path = extract_data.pei.file_location.replace(
-        "received", f"error/{date_group_folder}"
-    )
-    file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
-    logger.debug(
-        "Moved PEI file to error folder.",
-        extra={"source": extract_data.pei.file_location, "destination": new_pei_s3_path},
-    )
+        # If ctr_address_pair exists, compare the existing fineos_address with the payment_data address
+        #   If they're the same, nothing needs to be done, so we can return
+        #   If they're different or if no ctr_address_pair exists, create a new CtrAddressPair
+        ctr_address_pair = employee.ctr_address_pair
+        if ctr_address_pair:
+            if payments_util.is_same_address(ctr_address_pair.fineos_address, payment_data_address):
+                return False
 
-    new_payment_s3_path = extract_data.payment_details.file_location.replace(
-        "received", f"error/{date_group_folder}"
-    )
-    file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
-    logger.debug(
-        "Moved payments details file to error folder.",
-        extra={
-            "source": extract_data.payment_details.file_location,
-            "destination": new_payment_s3_path,
-        },
-    )
+        new_ctr_address_pair = CtrAddressPair(fineos_address=payment_data_address)
+        employee.ctr_address_pair = new_ctr_address_pair
+        self.db_session.add(payment_data_address)
+        self.db_session.add(new_ctr_address_pair)
+        self.db_session.add(employee)
 
-    new_claim_s3_path = extract_data.claim_details.file_location.replace(
-        "received", f"error/{date_group_folder}"
-    )
-    file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
-    logger.debug(
-        "Moved claim details file to error folder.",
-        extra={
-            "source": extract_data.claim_details.file_location,
-            "destination": new_claim_s3_path,
-        },
-    )
+        # We also want to make sure the address is linked in the EmployeeAddress table
+        employee_address = EmployeeAddress(employee=employee, address=payment_data_address)
+        self.db_session.add(employee_address)
+        return True
 
-    # We still want to create the reference file, just use the one that is
-    # created in the __init__ of the extract data object and set the path.
-    # Note that this will not be attached to a payment
-    extract_data.reference_file.file_location = file_util.get_directory(new_pei_s3_path)
-    db_session.add(extract_data.reference_file)
-    logger.debug(
-        "Updated reference file location for payment extract data.",
-        extra={"reference_file_location": extract_data.reference_file.file_location},
-    )
+    def get_payment_transaction_type_id(
+        self, payment_data: PaymentData, amount: Decimal
+    ) -> LkPaymentTransactionType:
+        if payment_data.raw_payment_transaction_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
+            return PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+        elif payment_data.raw_payment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
+            return PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id
+        elif amount == Decimal("0"):
+            return PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
+        elif amount > Decimal("0"):
+            return PaymentTransactionType.STANDARD.payment_transaction_type_id
 
-    logger.info("Successfully moved payments files to error folder.")
+        # We should always have been able to figure out the payment type
+        # from the above checks, this shouldn't happen and should go
+        # to the error report as it's not clear what we should do with it
+        # It might be a negative payment with a field set incorrectly in FINEOS
+        payment_data.validation_container.add_validation_issue(
+            payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
+            f"Payment type [{payment_data.raw_payment_transaction_type}] had a negative payment amount",
+        )
+        return PaymentTransactionType.UNKNOWN.payment_transaction_type_id
 
+    def create_payment(
+        self,
+        payment_data: PaymentData,
+        claim: Claim,
+        validation_container: payments_util.ValidationContainer,
+    ) -> Payment:
+        # We always create a new payment record. This may be completely new
+        # or a payment might have been created before. We'll check that later.
 
-def process_extract_data(download_directory: pathlib.Path, db_session: db.Session) -> None:
+        logger.info(
+            "Creating new payment for CI: %s, %s",
+            payment_data.c_value,
+            payment_data.i_value,
+            extra=payment_data.get_traceable_details(),
+        )
+        payment = Payment(payment_id=uuid.uuid4())
 
-    logger.info("Processing payment extract files")
-
-    payments_util.copy_fineos_data_to_archival_bucket(
-        db_session, expected_file_names, ReferenceFileType.PAYMENT_EXTRACT
-    )
-    data_by_date = payments_util.group_s3_files_by_date(expected_file_names)
-
-    previously_processed_date = set()
-
-    logger.info("Dates in /received folder: %s", ", ".join(data_by_date.keys()))
-
-    for date_str, s3_file_locations in data_by_date.items():
-
-        logger.debug("Processing files in date group: %s", date_str, extra={"date_group": date_str})
-
+        # Note that these values may have validation issues
+        # that is fine as it will get moved to an error state
+        payment.claim = claim
+        payment.period_start_date = payments_util.datetime_str_to_date(
+            payment_data.payment_start_period
+        )
+        payment.period_end_date = payments_util.datetime_str_to_date(
+            payment_data.payment_end_period
+        )
+        payment.payment_date = payments_util.datetime_str_to_date(payment_data.payment_date)
         try:
-            if (
-                date_str in previously_processed_date
-                or payments_util.payment_extract_reference_file_exists_by_date_group(
-                    db_session, date_str, ReferenceFileType.PAYMENT_EXTRACT
+            payment.amount = decimal.Decimal(cast(str, payment_data.payment_amount))
+            payment.payment_transaction_type_id = self.get_payment_transaction_type_id(
+                payment_data, payment.amount
+            )
+        except (InvalidOperation, TypeError):
+            logger.exception(
+                "Unable to convert payment amount %s to a decimal",
+                payment_data.payment_amount,
+                extra=payment_data.get_traceable_details(),
+            )
+            # In the unlikely scenario where payment amount isn't set
+            # we need to set something as the DB requires this to be set
+            payment.amount = Decimal(0)
+            # Can't determine the payment type without an amount, and this
+            # is an error scenario anyways.
+            payment.payment_transaction_type_id = (
+                PaymentTransactionType.UNKNOWN.payment_transaction_type_id
+            )
+
+            # As a sanity check, make certain that missing amount was caught
+            # by the earlier validation logic, this if statement shouldn't
+            # ever happen. This exists to show we're not ever accidentally
+            # setting a payment that is going further in processing.
+            if not validation_container.has_validation_issues():
+                raise Exception(
+                    "A payment without an amount was found and not caught by validation.",
+                    extra=payment_data.get_traceable_details(),
                 )
+
+        payment.fineos_pei_c_value = payment_data.c_value
+        payment.fineos_pei_i_value = payment_data.i_value
+        payment.fineos_extraction_date = payments_util.get_now().date()
+        payment.fineos_extract_import_log_id = self.get_import_log_id()
+
+        # If the payment is already being processed,
+        # then FINEOS sent us a payment they should not have
+        # whether that's a FINEOS issue or writeback issue, we
+        # need to error the payment.
+        active_state = self.get_active_payment_state(payment)
+        if active_state:
+            validation_container.add_validation_issue(
+                payments_util.ValidationReason.RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED,
+                f"We received a payment that is already being processed. It is currently in state {active_state.state_description}.",
+            )
+
+        self.db_session.add(payment)
+
+        return payment
+
+    def update_eft(self, payment_data: PaymentData, employee: Employee) -> bool:
+        """Create or update the employee's EFT record
+
+        Returns:
+            bool: True if the payment_data includes EFT updates; False otherwise
+        """
+
+        # Only update if the employee is using ACH for payments
+        if payment_data.raw_payment_method != PaymentMethod.ACH.payment_method_description:
+            # We deliberately do not delete an EFT record in the case they switched from
+            # EFT to Check for payment method. In the event they switch back, we'll update accordingly later.
+            return False
+
+        # Need to cast these values as str rather than Optional[str] as we've
+        # already validated they're not None for linting
+        routing_nbr = cast(str, payment_data.routing_nbr)
+        account_nbr = cast(str, payment_data.account_nbr)
+        bank_account_type_id = BankAccountType.get_id(payment_data.raw_account_type)
+
+        # Construct an EFT object.
+        new_eft = EFT(
+            eft_id=uuid.uuid4(),
+            routing_nbr=routing_nbr,
+            account_nbr=account_nbr,
+            bank_account_type_id=bank_account_type_id,
+        )
+
+        # Retrieve the employee's existing EFT data, if any
+        existing_eft = employee.eft
+
+        # If the employee has no existing EFT data, set it to the new data
+        if not existing_eft:
+            employee.eft = new_eft
+            self.db_session.add(new_eft)
+            return True
+
+        # If the employee's existing EFT data is the same as the new data, then
+        # do nothing
+        elif payments_util.is_same_eft(existing_eft, new_eft):
+            return False
+
+        # If the employee's existing EFT data is NOT the same as the new data,
+        # then overwrite the old data
+        else:
+            existing_eft.routing_nbr = routing_nbr
+            existing_eft.account_nbr = account_nbr
+            existing_eft.bank_account_type_id = bank_account_type_id
+            self.db_session.add(existing_eft)
+            return True
+
+    def add_records_to_db(
+        self,
+        payment_data: PaymentData,
+        employee: Optional[Employee],
+        claim: Optional[Claim],
+        reference_file: ReferenceFile,
+    ) -> Payment:
+        # Only update the employee if it exists and there
+        # are no validation issues. Employees are used in
+        # many contexts, so we want to be careful about modifying
+        # them with problematic data.
+        has_address_update, has_eft_update = False, False
+        if employee and not payment_data.validation_container.has_validation_issues():
+            # Update the payment method ID of the employee
+            employee.payment_method_id = PaymentMethod.get_id(payment_data.raw_payment_method)
+
+            # Update the mailing address with values from FINEOS
+            has_address_update = self.update_ctr_address_pair_fineos_address(payment_data, employee)
+
+            # Update the EFT info with values from FINEOS
+            has_eft_update = self.update_eft(payment_data, employee)
+
+        # Create the payment record
+        payment = self.create_payment(payment_data, claim, payment_data.validation_container)
+
+        # Specify whether the Payment has an address update
+        # This gets used later in the pipeline (such as during the PEI Writeback
+        # step)
+        payment.has_address_update = has_address_update
+
+        # Specify whether the Payment has an EFT update
+        # This gets used later in the pipeline (such as during the PEI Writeback
+        # step)
+        payment.has_eft_update = has_eft_update
+
+        # Link the payment object to the payment_reference_file
+        payment_reference_file = PaymentReferenceFile(
+            payment=payment, reference_file=reference_file,
+        )
+        self.db_session.add(payment_reference_file)
+
+        return payment
+
+    def process_payment_data_record(
+        self, payment_data: PaymentData, reference_file: ReferenceFile
+    ) -> Payment:
+        employee, claim = self.get_employee_and_claim(payment_data)
+
+        # If the employee is set, we need to wrap the DB queries
+        # to avoid adding additional employee log entries
+        if employee:
+            with fineos_log_tables_util.update_entity_and_remove_log_entry(
+                self.db_session, employee, commit=False
             ):
-                logger.warning(
-                    "Found existing ReferenceFile record for date group in /processed folder: %s",
+                payment = self.add_records_to_db(payment_data, employee, claim, reference_file)
+        else:
+            payment = self.add_records_to_db(payment_data, None, claim, reference_file)
+
+        return payment
+
+    def _setup_state_log(
+        self, payment: Payment, validation_container: payments_util.ValidationContainer
+    ) -> None:
+
+        # https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
+        # Does the payment have validation issues
+        # If so, add to that error state
+        if validation_container.has_validation_issues():
+            end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+            message = "Error processing payment record"
+
+        # Zero dollar payments are added to the FINEOS writeback + a report
+        elif (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
+        ):
+            end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
+            message = "Zero dollar payment added to pending state for FINEOS writeback"
+
+        # Overpayments are added to to the FINEOS writeback + a report
+        elif (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id
+        ):
+            end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT
+            message = "Overpayment payment added to pending state for FINEOS writeback"
+
+        # Cancellations depend on the type of payment
+        elif (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+        ):
+            # ACH cancellations are added to the FINEOS writeback + a report
+            if payment.claim.employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
+                end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
+                message = "Cancellation payment added to pending state for FINEOS writeback"
+            # Check cancellations are processed by us and sent to PUB
+            else:
+                end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+                message = "Check cancellation payment added"
+
+        else:
+            end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+            message = "Success"
+
+        state_log_util.create_finished_state_log(
+            end_state=end_state,
+            outcome=state_log_util.build_outcome(message, validation_container),
+            associated_model=payment,
+            db_session=self.db_session,
+        )
+
+        # TODO - redo the EFT triggering logic
+        # This should be the right behavior, but the states need to be updated
+        if payment.has_eft_update and payment.claim and payment.claim.employee:
+            employee = payment.claim.employee
+            state_log_util.create_finished_state_log(
+                end_state=State.EFT_REQUEST_RECEIVED,
+                associated_model=employee,
+                outcome=state_log_util.build_outcome(
+                    f"Initiated VENDOR_EFT flow for Employee {employee.employee_id} from FINEOS payment export"
+                ),
+                db_session=self.db_session,
+            )
+
+    def process_records_to_db(self, extract_data: ExtractData) -> None:
+        logger.info("Processing payment extract data into db: %s", extract_data.date_str)
+
+        # Add the files to the DB
+        # Note a single payment reference file is used for all files collectively
+        self.db_session.add(extract_data.reference_file)
+
+        for index, record in extract_data.pei.indexed_data.items():
+            try:
+                # Construct a payment data object for easier organization of the many params
+                payment_data = PaymentData(extract_data, index, record)
+                logger.debug(
+                    "Constructed payment data for extract with CI: %s, %s", index.c, index.i
+                )
+
+                logger.info(
+                    f"Processing payment record - absence case number: {payment_data.absence_case_number}",
+                    extra=payment_data.get_traceable_details(),
+                )
+
+                payment = self.process_payment_data_record(
+                    payment_data, extract_data.reference_file
+                )
+
+                # Create and finish the state log. If there were any issues, this'll set the
+                # record to an error state which'll send out a report to address it, otherwise
+                # it will move onto the next step in processing
+                self._setup_state_log(
+                    payment, payment_data.validation_container,
+                )
+
+                logger.info(
+                    f"Done processing payment record - absence case number: {payment_data.absence_case_number}",
+                    extra=payment_data.get_traceable_details(),
+                )
+            except Exception:
+                # An exception during processing would indicate
+                # either a bug or a scenario that we believe invalidates
+                # an entire file and warrants investigating
+                logger.exception(
+                    "An error occurred while processing payment for CI: %s, %s", index.c, index.i,
+                )
+                raise
+
+        logger.info("Successfully processed payment extract into db: %s", extract_data.date_str)
+        return None
+
+    # TODO move to payments_util
+    def move_files_from_received_to_processed(self, extract_data: ExtractData) -> None:
+        # Effectively, this method will move a file of path:
+        # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
+        # to
+        # s3://bucket/path/to/processed/2020-01-01-11-30-00-payment-export/2020-01-01-11-30-00-file.csv
+        date_group_folder = payments_util.get_date_group_folder_name(
+            extract_data.date_str, ReferenceFileType.PAYMENT_EXTRACT
+        )
+        new_pei_s3_path = extract_data.pei.file_location.replace(
+            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
+        )
+        file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
+        logger.debug(
+            "Moved PEI file to processed folder.",
+            extra={"source": extract_data.pei.file_location, "destination": new_pei_s3_path},
+        )
+
+        new_payment_s3_path = extract_data.payment_details.file_location.replace(
+            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
+        )
+        file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
+        logger.debug(
+            "Moved payments details file to processed folder.",
+            extra={
+                "source": extract_data.payment_details.file_location,
+                "destination": new_payment_s3_path,
+            },
+        )
+
+        new_claim_s3_path = extract_data.claim_details.file_location.replace(
+            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
+        )
+        file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
+        logger.debug(
+            "Moved claim details file to processed folder.",
+            extra={
+                "source": extract_data.claim_details.file_location,
+                "destination": new_claim_s3_path,
+            },
+        )
+
+        # Update the reference file DB record to point to the new folder for these files
+        extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
+            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}"
+        )
+        extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
+            extract_data.date_str, date_group_folder
+        )
+        self.db_session.add(extract_data.reference_file)
+        logger.debug(
+            "Updated reference file location for payment extract data.",
+            extra={"reference_file_location": extract_data.reference_file.file_location},
+        )
+
+        logger.info("Successfully moved payments files to processed folder.")
+
+    # TODO move to payments_util
+    def move_files_from_received_to_error(self, extract_data: Optional[ExtractData]) -> None:
+        if not extract_data:
+            logger.error("Cannot move files to error directory, as path is not known")
+            return
+        # Effectively, this method will move a file of path:
+        # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
+        # to
+        # s3://bucket/path/to/error/2020-01-01-11-30-00-payment-export/2020-01-01-file.csv
+        date_group_folder = payments_util.get_date_group_folder_name(
+            extract_data.date_str, ReferenceFileType.PAYMENT_EXTRACT
+        )
+        new_pei_s3_path = extract_data.pei.file_location.replace(
+            "received", f"error/{date_group_folder}"
+        )
+        file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
+        logger.debug(
+            "Moved PEI file to error folder.",
+            extra={"source": extract_data.pei.file_location, "destination": new_pei_s3_path},
+        )
+
+        new_payment_s3_path = extract_data.payment_details.file_location.replace(
+            "received", f"error/{date_group_folder}"
+        )
+        file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
+        logger.debug(
+            "Moved payments details file to error folder.",
+            extra={
+                "source": extract_data.payment_details.file_location,
+                "destination": new_payment_s3_path,
+            },
+        )
+
+        new_claim_s3_path = extract_data.claim_details.file_location.replace(
+            "received", f"error/{date_group_folder}"
+        )
+        file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
+        logger.debug(
+            "Moved claim details file to error folder.",
+            extra={
+                "source": extract_data.claim_details.file_location,
+                "destination": new_claim_s3_path,
+            },
+        )
+
+        # We still want to create the reference file, just use the one that is
+        # created in the __init__ of the extract data object and set the path.
+        # Note that this will not be attached to a payment
+        extract_data.reference_file.file_location = file_util.get_directory(new_pei_s3_path)
+        self.db_session.add(extract_data.reference_file)
+        logger.debug(
+            "Updated reference file location for payment extract data.",
+            extra={"reference_file_location": extract_data.reference_file.file_location},
+        )
+
+        logger.info("Successfully moved payments files to error folder.")
+
+    def process_extract_data(self, download_directory: pathlib.Path) -> None:
+
+        logger.info("Processing payment extract files")
+
+        payments_util.copy_fineos_data_to_archival_bucket(
+            self.db_session, expected_file_names, ReferenceFileType.PAYMENT_EXTRACT
+        )
+        data_by_date = payments_util.group_s3_files_by_date(expected_file_names)
+
+        previously_processed_date = set()
+
+        logger.info("Dates in /received folder: %s", ", ".join(data_by_date.keys()))
+
+        for date_str, s3_file_locations in data_by_date.items():
+
+            logger.debug(
+                "Processing files in date group: %s", date_str, extra={"date_group": date_str}
+            )
+
+            try:
+                if (
+                    date_str in previously_processed_date
+                    or payments_util.payment_extract_reference_file_exists_by_date_group(
+                        self.db_session, date_str, ReferenceFileType.PAYMENT_EXTRACT
+                    )
+                ):
+                    logger.warning(
+                        "Found existing ReferenceFile record for date group in /processed folder: %s",
+                        date_str,
+                        extra={"date_group": date_str},
+                    )
+                    previously_processed_date.add(date_str)
+                    continue
+
+                extract_data = ExtractData(s3_file_locations, date_str)
+                self.download_and_process_data(extract_data, download_directory)
+                self.extract_to_staging_tables(extract_data)
+
+                self.process_records_to_db(extract_data)
+                self.move_files_from_received_to_processed(extract_data)
+
+                logger.info(
+                    "Successfully processed payment extract files in date group: %s",
                     date_str,
                     extra={"date_group": date_str},
                 )
-                previously_processed_date.add(date_str)
-                continue
+                self.db_session.commit()
+            except Exception:
+                self.db_session.rollback()
+                logger.exception(
+                    "Error processing payment extract files in date_group: %s",
+                    date_str,
+                    extra={"date_group": date_str},
+                )
+                self.move_files_from_received_to_error(extract_data)
+                raise
 
-            extract_data = ExtractData(s3_file_locations, date_str)
-            download_and_process_data(extract_data, download_directory)
+        logger.info("Successfully processed payment extract files")
 
-            extract_to_staging_tables(extract_data, db_session)
+    def extract_to_staging_tables(self, extract_data: ExtractData):
+        ref_file = extract_data.reference_file
+        self.db_session.add(ref_file)
+        pei_data = [
+            payments_util.make_keys_lowercase(v) for v in extract_data.pei.indexed_data.values()
+        ]
+        claim_details_data = [
+            payments_util.make_keys_lowercase(v)
+            for v in extract_data.claim_details.indexed_data.values()
+        ]
+        payment_details_data = []
+        for _, v in extract_data.payment_details.indexed_data.items():
+            for data in v:
+                payment_details_data.append(payments_util.make_keys_lowercase(data))
 
-            process_records_to_db(extract_data, db_session)
-            move_files_from_received_to_processed(extract_data, db_session)
-            logger.info(
-                "Successfully processed payment extract files in date group: %s",
-                date_str,
-                extra={"date_group": date_str},
+        for data in pei_data:
+            vpei = payments_util.create_staging_table_instance(
+                data, FineosExtractVpei, ref_file, self.get_import_log_id()
             )
-            db_session.commit()
-        except Exception:
-            db_session.rollback()
-            logger.exception(
-                "Error processing payment extract files in date_group: %s",
-                date_str,
-                extra={"date_group": date_str},
+            self.db_session.add(vpei)
+
+        for data in claim_details_data:
+            claim_details = payments_util.create_staging_table_instance(
+                data, FineosExtractVpeiClaimDetails, ref_file, self.get_import_log_id()
             )
-            move_files_from_received_to_error(extract_data, db_session)
-            raise
+            self.db_session.add(claim_details)
 
-    logger.info("Successfully processed payment extract files")
-
-
-def extract_to_staging_tables(extract_data: ExtractData, db_session: db.Session):
-    ref_file = extract_data.reference_file
-    db_session.add(ref_file)
-    pei_data = [
-        payments_util.make_keys_lowercase(v) for v in extract_data.pei.indexed_data.values()
-    ]
-    claim_details_data = [
-        payments_util.make_keys_lowercase(v)
-        for v in extract_data.claim_details.indexed_data.values()
-    ]
-    payment_details_data = []
-    for _, v in extract_data.payment_details.indexed_data.items():
-        for data in v:
-            payment_details_data.append(payments_util.make_keys_lowercase(data))
-
-    for data in pei_data:
-        vpei = payments_util.create_staging_table_instance(data, FineosExtractVpei, ref_file)
-        db_session.add(vpei)
-
-    for data in claim_details_data:
-        claim_details = payments_util.create_staging_table_instance(
-            data, FineosExtractVpeiClaimDetails, ref_file
-        )
-        db_session.add(claim_details)
-
-    for data in payment_details_data:
-        payment_details = payments_util.create_staging_table_instance(
-            data, FineosExtractVpeiPaymentDetails, ref_file
-        )
-        db_session.add(payment_details)
+        for data in payment_details_data:
+            payment_details = payments_util.create_staging_table_instance(
+                data, FineosExtractVpeiPaymentDetails, ref_file, self.get_import_log_id()
+            )
+            self.db_session.add(payment_details)

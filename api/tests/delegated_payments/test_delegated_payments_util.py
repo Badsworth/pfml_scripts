@@ -977,7 +977,7 @@ def test_create_staging_table_instance(test_db_session, initialize_factories_ses
     ref_file = ReferenceFileFactory.create()
     vpei_data = {"addressline6": "test", "addressline7": "test", "addressline8": "test"}
     vpei_instance = payments_util.create_staging_table_instance(
-        vpei_data, FineosExtractVpei, ref_file
+        vpei_data, FineosExtractVpei, ref_file, None
     )
     test_db_session.add(vpei_instance)
     test_db_session.commit()

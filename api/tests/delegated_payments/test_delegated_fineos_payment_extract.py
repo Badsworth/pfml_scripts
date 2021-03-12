@@ -80,6 +80,13 @@ fake.seed_instance(1212)
 ### UTILITY METHODS
 
 
+@pytest.fixture
+def payment_extract_step(initialize_factories_session, test_db_session, test_db_other_session):
+    return extractor.PaymentExtractStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+
 def make_s3_file(s3_bucket, key, test_file_name):
     # Utility method to upload a test file to the mocked S3.
     # test_file_name corresponds to the name of the file in the test_files directory
@@ -262,7 +269,7 @@ def add_db_records_from_row(
 
 def setup_process_tests(
     mock_s3_bucket,
-    test_db_session,
+    db_session,
     add_claim=True,
     add_address=True,
     add_eft=True,
@@ -282,7 +289,7 @@ def setup_process_tests(
     make_s3_file(mock_s3_bucket, f"{s3_prefix}vpeiclaimdetails.csv", "vpeiclaimdetails.csv")
 
     add_db_records(
-        test_db_session,
+        db_session,
         "111111111",
         "NTN-01-ABS-02",
         add_claim=add_claim,
@@ -294,7 +301,7 @@ def setup_process_tests(
         additional_payment_state=additional_payment_state,
     )
     add_db_records(
-        test_db_session,
+        db_session,
         "222222222",
         "NTN-02-ABS-03",
         add_claim=add_claim,
@@ -307,7 +314,7 @@ def setup_process_tests(
         additional_payment_state=additional_payment_state,
     )
     add_db_records(
-        test_db_session,
+        db_session,
         "333333333",
         "NTN-03-ABS-04",
         add_claim=add_claim,
@@ -318,12 +325,6 @@ def setup_process_tests(
         i_value="303",
         additional_payment_state=additional_payment_state,
     )
-
-
-def get_download_directory(tmp_path, directory_name):
-    directory = tmp_path / directory_name
-    directory.mkdir()
-    return directory
 
 
 def add_s3_files(mock_fineos_s3_bucket, s3_prefix):
@@ -337,10 +338,10 @@ def add_s3_files(mock_fineos_s3_bucket, s3_prefix):
 ### TESTS BEGIN
 
 
-def test_download_and_parse_data(mock_s3_bucket, tmp_path):
+def test_download_and_parse_data(mock_s3_bucket, tmp_path, payment_extract_step):
     make_s3_file(mock_s3_bucket, "path/to/file/test.csv", "small.csv")
 
-    raw_data = extractor.download_and_parse_data(
+    raw_data = payment_extract_step.download_and_parse_data(
         f"s3://{mock_s3_bucket}/path/to/file/test.csv", tmp_path
     )
 
@@ -375,9 +376,8 @@ def test_download_and_parse_data(mock_s3_bucket, tmp_path):
 def test_process_extract_data(
     mock_s3_bucket,
     set_exporter_env_vars,
+    payment_extract_step,
     test_db_session,
-    tmp_path,
-    initialize_factories_session,
     monkeypatch,
     create_triggers,
 ):
@@ -387,14 +387,7 @@ def test_process_extract_data(
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 6
 
-    extractor.process_extract_data(tmp_path, test_db_session)
-
-    # First verify the files were downloaded
-    downloaded_files = file_util.list_files(str(tmp_path))
-    assert len(downloaded_files) == 3
-    assert set(downloaded_files) == set(
-        ["2020-01-01-11-30-00-" + file_name for file_name in extractor.expected_file_names]
-    )
+    payment_extract_step.run()
 
     # Make sure files were copied to the processed directory
     moved_files = file_util.list_files(
@@ -425,6 +418,7 @@ def test_process_extract_data(
         assert payment.fineos_extraction_date == date(2021, 1, 13)
         assert str(payment.amount) == f"{index * 3}.99"  # eg. 111.99
         assert payment.has_address_update is True
+        assert payment.fineos_extract_import_log_id == payment_extract_step.get_import_log_id()
 
         claim = payment.claim
         assert claim
@@ -500,9 +494,8 @@ def test_process_extract_data(
 def test_process_extract_data_prior_payment_exists_is_being_processed(
     mock_s3_bucket,
     set_exporter_env_vars,
+    payment_extract_step,
     test_db_session,
-    tmp_path,
-    initialize_factories_session,
     monkeypatch,
     create_triggers,
     caplog,
@@ -518,7 +511,7 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 6
 
-    extractor.process_extract_data(tmp_path, test_db_session)
+    payment_extract_step.run()
 
     for index in ["1", "2", "3"]:
         payments = (
@@ -561,9 +554,8 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
 def test_process_extract_data_one_bad_record(
     mock_s3_bucket,
     set_exporter_env_vars,
+    payment_extract_step,
     test_db_session,
-    tmp_path,
-    initialize_factories_session,
     monkeypatch,
     create_triggers,
 ):
@@ -582,7 +574,7 @@ def test_process_extract_data_one_bad_record(
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 2
 
-    extractor.process_extract_data(tmp_path, test_db_session)
+    payment_extract_step.run()
 
     # The second record will have failed and so no payment would have been created
     for index in ["1", "2", "3"]:
@@ -624,9 +616,8 @@ def test_process_extract_data_one_bad_record(
 def test_process_extract_data_rollback(
     mock_s3_bucket,
     set_exporter_env_vars,
+    payment_extract_step,
     test_db_session,
-    tmp_path,
-    initialize_factories_session,
     monkeypatch,
     create_triggers,
 ):
@@ -641,10 +632,10 @@ def test_process_extract_data_rollback(
         raise Exception("Fake Error")
 
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
-    monkeypatch.setattr(extractor, "move_files_from_received_to_processed", err_method)
+    monkeypatch.setattr(payment_extract_step, "move_files_from_received_to_processed", err_method)
 
     with pytest.raises(Exception, match="Fake Error"):
-        extractor.process_extract_data(tmp_path, test_db_session)
+        payment_extract_step.run()
         # Make certain that there are no payments or state logs in the DB
         payments = test_db_session.query(Payment).all()
         assert len(payments) == 0
@@ -671,9 +662,8 @@ def test_process_extract_data_rollback(
 def test_process_extract_unprocessed_folder_files(
     mock_fineos_s3_bucket,
     set_exporter_env_vars,
+    payment_extract_step,
     test_db_session,
-    tmp_path,
-    initialize_factories_session,
     monkeypatch,
     create_triggers,
 ):
@@ -707,9 +697,7 @@ def test_process_extract_unprocessed_folder_files(
         reference_file_type_id=ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id,
     )
 
-    # confirm all unprocessed files were downloaded
-    download_directory_1 = get_download_directory(tmp_path, "directory_1")
-    extractor.process_extract_data(download_directory_1, test_db_session)
+    payment_extract_step.run()
     destination_folder = os.path.join(
         get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
     )
@@ -739,21 +727,20 @@ def test_process_extract_unprocessed_folder_files(
 def test_process_extract_data_no_existing_claim_address_eft(
     mock_s3_bucket,
     set_exporter_env_vars,
+    payment_extract_step,
     test_db_session,
-    tmp_path,
-    initialize_factories_session,
     monkeypatch,
     create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(
-        mock_s3_bucket, test_db_session, add_claim=False, add_address=False, add_eft=False
+        mock_s3_bucket, test_db_session, add_claim=False, add_address=False, add_eft=False,
     )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 3
 
-    extractor.process_extract_data(tmp_path, test_db_session)
+    payment_extract_step.run()
 
     for index in ["1", "2", "3"]:
         payment = (
@@ -822,9 +809,8 @@ def test_process_extract_data_no_existing_claim_address_eft(
 def test_process_extract_data_existing_payment(
     mock_s3_bucket,
     set_exporter_env_vars,
+    payment_extract_step,
     test_db_session,
-    tmp_path,
-    initialize_factories_session,
     monkeypatch,
     create_triggers,
 ):
@@ -839,7 +825,7 @@ def test_process_extract_data_existing_payment(
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 6
 
-    extractor.process_extract_data(tmp_path, test_db_session)
+    payment_extract_step.run()
 
     for index in ["1", "2", "3"]:
         payments = (
@@ -876,9 +862,9 @@ def test_process_extract_data_existing_payment(
 def test_process_extract_data_minimal_viable_payment(
     mock_s3_bucket,
     set_exporter_env_vars,
+    payment_extract_step,
     test_db_session,
     tmp_path,
-    initialize_factories_session,
     monkeypatch,
     create_triggers,
 ):
@@ -915,7 +901,7 @@ def test_process_extract_data_minimal_viable_payment(
     )
 
     # We deliberately do no DB setup, there will not be any prior employee
-    extractor.process_extract_data(tmp_path, test_db_session)
+    payment_extract_step.run()
 
     payment = test_db_session.query(Payment).one_or_none()
     assert payment
@@ -941,6 +927,7 @@ def test_process_extract_additional_payment_types(
     mock_s3_bucket,
     set_exporter_env_vars,
     test_db_session,
+    payment_extract_step,
     tmp_path,
     initialize_factories_session,
     monkeypatch,
@@ -1028,7 +1015,7 @@ def test_process_extract_additional_payment_types(
     )
 
     # Run the extract process
-    extractor.process_extract_data(tmp_path, test_db_session)
+    payment_extract_step.run()
 
     # Zero dollar payment should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
     zero_dollar_payment = (
@@ -1250,12 +1237,7 @@ def test_validation_payment_amount(set_exporter_env_vars):
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_update_eft_no_update(
-    test_db_session,
-    mock_s3_bucket,
-    set_exporter_env_vars,
-    monkeypatch,
-    initialize_factories_session,
-    tmp_path,
+    payment_extract_step, test_db_session, mock_s3_bucket, set_exporter_env_vars, monkeypatch,
 ):
     # update_eft() has 3 possible outcomes:
     #   1. There is no change to EFT
@@ -1281,7 +1263,7 @@ def test_update_eft_no_update(
     test_db_session.commit()
 
     # Run the process
-    extractor.process_extract_data(tmp_path, test_db_session)
+    payment_extract_step.run()
     test_db_session.expire_all()
 
     # Verify the payment isn't marked as having an EFT update
@@ -1302,12 +1284,7 @@ def test_update_eft_no_update(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_update_ctr_address_pair_fineos_address_no_update(
-    test_db_session,
-    mock_s3_bucket,
-    set_exporter_env_vars,
-    monkeypatch,
-    initialize_factories_session,
-    tmp_path,
+    payment_extract_step, test_db_session, mock_s3_bucket, set_exporter_env_vars, monkeypatch,
 ):
     # update_ctr_address_pair_fineos_address() has 2 possible outcomes:
     #   1. There is no change to address
@@ -1334,7 +1311,7 @@ def test_update_ctr_address_pair_fineos_address_no_update(
     test_db_session.commit()
 
     # Run the process
-    extractor.process_extract_data(tmp_path, test_db_session)
+    payment_extract_step.run()
     test_db_session.expire_all()
 
     # Verify the payment isn't marked as having an address update
@@ -1354,7 +1331,7 @@ def test_update_ctr_address_pair_fineos_address_no_update(
     assert employee_state_logs_after[0].end_state_id == State.EFT_REQUEST_RECEIVED.state_id
 
 
-def test_extract_to_staging_tables(test_db_session):
+def test_extract_to_staging_tables(payment_extract_step, test_db_session):
     tempdir = tempfile.mkdtemp()
     date_str = "2020-12-21-19-20-42"
     test_file_name1 = "vpei.csv"
@@ -1368,8 +1345,8 @@ def test_extract_to_staging_tables(test_db_session):
     test_file_names = [test_file_path1, test_file_path2, test_file_path3]
 
     extract_data = extractor.ExtractData(test_file_names, date_str)
-    extractor.download_and_process_data(extract_data, tempdir)
-    extractor.extract_to_staging_tables(extract_data, test_db_session)
+    payment_extract_step.download_and_process_data(extract_data, tempdir)
+    payment_extract_step.extract_to_staging_tables(extract_data)
 
     test_db_session.commit()
 
@@ -1385,9 +1362,12 @@ def test_extract_to_staging_tables(test_db_session):
 
     for data in pei_data:
         assert data.reference_file_id == ref_file.reference_file_id
+        assert data.fineos_extract_import_log_id == payment_extract_step.get_import_log_id()
 
     for data in claim_details_data:
         assert data.reference_file_id == ref_file.reference_file_id
+        assert data.fineos_extract_import_log_id == payment_extract_step.get_import_log_id()
 
     for data in payment_details_data:
         assert data.reference_file_id == ref_file.reference_file_id
+        assert data.fineos_extract_import_log_id == payment_extract_step.get_import_log_id()

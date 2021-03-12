@@ -1,4 +1,4 @@
-from sqlalchemy import TIMESTAMP, Column, ForeignKey, Text
+from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.functions import now as sqlnow
@@ -110,6 +110,9 @@ class FineosExtractVpei(Base):
         default=utc_timestamp_gen,
         server_default=sqlnow(),
     )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
 
     reference_file = relationship(ReferenceFile)
 
@@ -154,6 +157,9 @@ class FineosExtractVpeiPaymentDetails(Base):
         nullable=False,
         default=utc_timestamp_gen,
         server_default=sqlnow(),
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
     )
 
     reference_file = relationship(ReferenceFile)
@@ -235,6 +241,9 @@ class FineosExtractVpeiClaimDetails(Base):
         default=utc_timestamp_gen,
         server_default=sqlnow(),
     )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
 
     reference_file = relationship(ReferenceFile)
 
@@ -306,6 +315,9 @@ class FineosExtractVbiRequestedAbsenceSom(Base):
         nullable=False,
         default=utc_timestamp_gen,
         server_default=sqlnow(),
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
     )
     reference_file = relationship(ReferenceFile)
 
@@ -388,6 +400,9 @@ class FineosExtractEmployeeFeed(Base):
         nullable=False,
         default=utc_timestamp_gen,
         server_default=sqlnow(),
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
     )
 
     reference_file = relationship(ReferenceFile)

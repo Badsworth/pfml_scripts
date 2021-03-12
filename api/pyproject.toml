@@ -96,6 +96,7 @@ payments-fineos-process = "massgov.pfml.payments.process_payments:fineos_process
 payments-mock-generate = "massgov.pfml.payments.mock.generate:main"
 payments-rotate-data-mart-password = "massgov.pfml.payments.rotate_data_mart_password:main"
 payments-manual-payment-voucher = "massgov.pfml.payments.manual.payment_voucher:main"
+pub-payments-process-fineos = "massgov.pfml.delegated_payments.task.process_fineos_extracts:main"
 fineos-payments-mock-generate = "massgov.pfml.payments.mock.fineos_extract_generator:main"
 fineos-test-vendor-export-generate = "massgov.pfml.payments.mock.fineos_extract_generator:create_test_vendor_export"
 fineos-daily-generate = "massgov.pfml.fineos.mock.generate:main"
