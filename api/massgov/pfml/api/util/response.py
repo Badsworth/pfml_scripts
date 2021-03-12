@@ -12,7 +12,7 @@ from werkzeug.exceptions import (
     ServiceUnavailable,
 )
 
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
+from massgov.pfml.api.validation.exceptions import PaymentRequired, ValidationErrorDetail
 
 
 # == response data structures ==
@@ -194,6 +194,7 @@ def error_response(
     status_code: Union[
         HTTPException,
         Type[BadRequest],
+        Type[PaymentRequired],
         Type[Conflict],
         Type[ServiceUnavailable],
         Type[NotFound],

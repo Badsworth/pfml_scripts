@@ -10,7 +10,7 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import READ, requires
-from massgov.pfml.api.validation import PaymentRequired
+from massgov.pfml.api.validation.exceptions import PaymentRequired
 from massgov.pfml.db.models.employees import (
     Employer,
     EmployerQuarterlyContribution,
@@ -74,7 +74,19 @@ def employer_add_fein() -> flask.Response:
             raise BadRequest(description="Invalid FEIN")
 
         if employer.has_verification_data is False and app.get_config().enforce_verification:
-            raise PaymentRequired(description="Employer has no verification data")
+            return response_util.error_response(
+                status_code=PaymentRequired,
+                message="Employer has no verification data",
+                errors=[
+                    response_util.custom_issue(
+                        type="employer_verification_data_required",
+                        message="Employer has no verification data",
+                        rule="employer_requires_verification_data",
+                        field="ein",
+                    )
+                ],
+                data={},
+            ).to_api_response()
 
         link = UserLeaveAdministrator(
             user_id=current_user.user_id, employer_id=employer.employer_id,

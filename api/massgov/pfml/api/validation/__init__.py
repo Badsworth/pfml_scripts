@@ -31,11 +31,6 @@ UNEXPECTED_ERROR_TYPES = {"enum", "type"}
 logger = logging.get_logger(__name__)
 
 
-class PaymentRequired(HTTPException):
-    code = 402
-    description = "Payment required"
-
-
 def is_unexpected_validation_error(error: ValidationErrorDetail) -> bool:
     return error.type in UNEXPECTED_ERROR_TYPES or error.type.startswith("type_error")
 

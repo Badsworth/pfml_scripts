@@ -5,6 +5,13 @@
 from dataclasses import dataclass
 from typing import Any, List, Optional, Union
 
+from werkzeug.exceptions import HTTPException
+
+
+class PaymentRequired(HTTPException):
+    code = 402
+    description = "Payment required"
+
 
 @dataclass
 class ValidationErrorDetail:
