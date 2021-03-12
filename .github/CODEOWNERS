@@ -25,6 +25,7 @@
 /api/**/api/validation/                                @antxaddis @kyeah
 /api/**/cognito*/                                      @microwavenby @sharonwarner
 /api/**/db/                                            @doshitan @jamesbursa
+/api/**/delegated_payments/                            @chouinar @lowellrex
 /api/**/dor/                                           @antxaddis @mhuneke
 /api/**/fineos/                                        @doshitan @oscarAtNava
 /api/**/formstack/                                     @microwavenby @sharonwarner
