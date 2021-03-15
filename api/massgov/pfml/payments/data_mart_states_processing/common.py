@@ -343,11 +343,13 @@ def process_employees_in_state(
 
             if employee:
                 extra["employee_id"] = employee.employee_id
+                extra["fineos_customer_number"] = employee.fineos_customer_number
 
             logger.exception(
-                "Hit error processing record in state: %s, employee: %s",
+                "Hit error processing record in state: %s, employee: %s, %s",
                 prior_state.state_description,
                 employee.employee_id,
+                employee.fineos_customer_number,
                 extra=extra,
             )
         finally:
