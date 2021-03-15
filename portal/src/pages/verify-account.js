@@ -11,6 +11,7 @@ import Lead from "../components/Lead";
 import PropTypes from "prop-types";
 import Title from "../components/Title";
 import { get } from "lodash";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import tracker from "../services/tracker";
 import useFormState from "../hooks/useFormState";
@@ -23,7 +24,6 @@ export const VerifyAccount = (props) => {
   const { appErrors, auth } = appLogic;
   const { t } = useTranslation();
 
-  // TODO (CP-1768): Remove code related to showing EIN field once sign up requests are always sent through API
   const createAccountUsername = get(auth, "authData.createAccountUsername", "");
   const createAccountFlow = get(auth, "authData.createAccountFlow");
   const employerIdNumber = get(auth, "authData.employerIdNumber", "");
@@ -31,7 +31,11 @@ export const VerifyAccount = (props) => {
   // If a user reloads the page, we'd lose the email and FEIN stored in authData,
   // which we need for verifying their account
   const showEmailField = !createAccountUsername;
-  const showEinFields = !employerIdNumber && createAccountFlow !== "claimant";
+  // TODO (CP-1768): Remove code related to showing EIN field once sign up requests are always sent through API
+  const showEinFields =
+    !isFeatureEnabled("authThroughApi") &&
+    !employerIdNumber &&
+    createAccountFlow !== "claimant";
 
   /**
    * Get the initial value for the "Are you creating an employer account?" option
@@ -73,7 +77,7 @@ export const VerifyAccount = (props) => {
       return;
     }
 
-    if (formState.isEmployer) {
+    if (!isFeatureEnabled("authThroughApi") && formState.isEmployer) {
       await auth.verifyEmployerAccount(
         formState.username,
         formState.code,
