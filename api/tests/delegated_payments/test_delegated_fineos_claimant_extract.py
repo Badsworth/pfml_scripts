@@ -523,8 +523,16 @@ def test_process_extract_unprocessed_folder_files(
     destination_folder = os.path.join(
         get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
     )
+    skipped_folder = os.path.join(
+        get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_SKIPPED_DIR,
+    )
     processed_files = file_util.list_files(destination_folder, recursive=True)
-    assert len(processed_files) == 6
+    skipped_files = file_util.list_files(skipped_folder, recursive=True)
+    assert len(processed_files) == 3
+    assert len(skipped_files) == 3
+
+    for file in skipped_files:
+        assert file.startswith("2020-01-02-11-30-00")
 
     expected_file_names = []
     for date_file in claimant_extract.expected_file_names:
@@ -536,13 +544,12 @@ def test_process_extract_unprocessed_folder_files(
     for processed_file in processed_files:
         assert processed_file in expected_file_names
 
-    # confirm no files will be copied in a subsequent copy
     copied_files = payments_util.copy_fineos_data_to_archival_bucket(
         test_db_session,
         claimant_extract.expected_file_names,
         ReferenceFileType.VENDOR_CLAIM_EXTRACT,
     )
-    assert not copied_files
+    assert len(copied_files) == 1
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before

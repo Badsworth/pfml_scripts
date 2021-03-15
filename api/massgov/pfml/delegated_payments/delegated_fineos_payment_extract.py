@@ -53,6 +53,7 @@ logger = logging.get_logger(__name__)
 # folder constants
 RECEIVED_FOLDER = "received"
 PROCESSED_FOLDER = "processed"
+SKIPPED_FOLDER = "skipped"
 
 # Expected file names
 PEI_EXPECTED_FILE_NAME = "vpei.csv"
@@ -984,6 +985,63 @@ class PaymentExtractStep(Step):
         logger.info("Successfully moved payments files to processed folder.")
 
     # TODO move to payments_util
+    def move_files_from_received_to_skipped(self, extract_data: ExtractData) -> None:
+        # Effectively, this method will move a file of path:
+        # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
+        # to
+        # s3://bucket/path/to/processed/2020-01-01-11-30-00-payment-export/2020-01-01-11-30-00-file.csv
+        date_group_folder = payments_util.get_date_group_folder_name(
+            extract_data.date_str, ReferenceFileType.PAYMENT_EXTRACT
+        )
+        new_pei_s3_path = extract_data.pei.file_location.replace(
+            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
+        )
+        file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
+        logger.debug(
+            "Moved PEI file to skipped folder.",
+            extra={"source": extract_data.pei.file_location, "destination": new_pei_s3_path},
+        )
+
+        new_payment_s3_path = extract_data.payment_details.file_location.replace(
+            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
+        )
+        file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
+        logger.debug(
+            "Moved payments details file to skipped folder.",
+            extra={
+                "source": extract_data.payment_details.file_location,
+                "destination": new_payment_s3_path,
+            },
+        )
+
+        new_claim_s3_path = extract_data.claim_details.file_location.replace(
+            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
+        )
+        file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
+        logger.debug(
+            "Moved claim details file to skipped folder.",
+            extra={
+                "source": extract_data.claim_details.file_location,
+                "destination": new_claim_s3_path,
+            },
+        )
+
+        # Update the reference file DB record to point to the new folder for these files
+        extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
+            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}"
+        )
+        extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
+            extract_data.date_str, date_group_folder
+        )
+        self.db_session.add(extract_data.reference_file)
+        logger.debug(
+            "Updated reference file location for payment extract data.",
+            extra={"reference_file_location": extract_data.reference_file.file_location},
+        )
+
+        logger.info("Successfully moved payments files to skipped folder.")
+
+    # TODO move to payments_util
     def move_files_from_received_to_error(self, extract_data: Optional[ExtractData]) -> None:
         if not extract_data:
             logger.error("Cannot move files to error directory, as path is not known")
@@ -1053,6 +1111,9 @@ class PaymentExtractStep(Step):
 
         logger.info("Dates in /received folder: %s", ", ".join(data_by_date.keys()))
 
+        if bool(data_by_date):
+            latest_date_str = sorted(data_by_date.keys())[-1]
+
         for date_str, s3_file_locations in data_by_date.items():
 
             logger.debug(
@@ -1060,6 +1121,17 @@ class PaymentExtractStep(Step):
             )
 
             try:
+                extract_data = ExtractData(s3_file_locations, date_str)
+
+                if date_str != latest_date_str:
+                    self.move_files_from_received_to_skipped(extract_data)
+                    logger.info(
+                        "Successfully skipped claimant extract files in date group: %s",
+                        date_str,
+                        extra={"date_group": date_str},
+                    )
+                    continue
+
                 if (
                     date_str in previously_processed_date
                     or payments_util.payment_extract_reference_file_exists_by_date_group(
@@ -1074,7 +1146,6 @@ class PaymentExtractStep(Step):
                     previously_processed_date.add(date_str)
                     continue
 
-                extract_data = ExtractData(s3_file_locations, date_str)
                 self.download_and_process_data(extract_data, download_directory)
                 self.extract_to_staging_tables(extract_data)
 

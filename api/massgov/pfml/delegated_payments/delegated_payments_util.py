@@ -70,6 +70,7 @@ class Constants:
     S3_OUTBOUND_ERROR_DIR = "error"
     S3_INBOUND_RECEIVED_DIR = "received"
     S3_INBOUND_PROCESSED_DIR = "processed"
+    S3_INBOUND_SKIPPED_DIR = "skipped"
     S3_INBOUND_ERROR_DIR = "error"
 
     # === Metadata for states in the VENDOR_CHECK flow ===
