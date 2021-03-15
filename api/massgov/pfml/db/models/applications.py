@@ -283,8 +283,6 @@ class Application(Base):
     updated_time = Column(TIMESTAMP(timezone=True))
     completed_time = Column(TIMESTAMP(timezone=True))
     submitted_time = Column(TIMESTAMP(timezone=True))
-    fineos_absence_id = Column(Text, index=True)
-    fineos_notification_case_id = Column(Text, index=True)
     has_employer_benefits = Column(Boolean)
     has_other_incomes = Column(Boolean)
     other_incomes_awaiting_approval = Column(Boolean)
