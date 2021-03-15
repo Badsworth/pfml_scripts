@@ -103,6 +103,8 @@ class IssueType(str, Enum):
     # e.g. You can not request 5 days off 2 times in a week as that would
     # exceed the 7 days in a week
     days_absent_per_intermittent_interval_maximum = "days_absent_per_intermittent_interval_maximum"
+    # Employer record must exist in the API
+    require_employer = "require_employer"
     # Employer record must exist in the API and FINEOS
     require_contributing_employer = "require_contributing_employer"
 

@@ -13,9 +13,9 @@ def test_register_user_success(test_db_session, mock_cognito, mock_cognito_user_
 
     user = register_user(
         test_db_session,
+        mock_cognito_user_pool["client_id"],
         email_address,
         fake.password(length=12),
-        mock_cognito_user_pool["client_id"],
         cognito_client=mock_cognito,
     )
 

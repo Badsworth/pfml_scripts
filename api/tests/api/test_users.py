@@ -7,7 +7,7 @@ import pytest
 from dateutil.relativedelta import relativedelta
 
 import tests.api
-from massgov.pfml.db.models.employees import User, UserLeaveAdministrator
+from massgov.pfml.db.models.employees import Role, User, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import (
     EmployerFactory,
     EmployerQuarterlyContributionFactory,
@@ -30,10 +30,13 @@ def valid_claimant_creation_request_body() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def valid_employer_creation_request_body(initialize_factories_session) -> Dict[str, Any]:
-    # EIN should match an EIN of an Employer in our database
-    employer = EmployerFactory.create()
-    ein = employer.employer_fein
+def employer_for_new_user(initialize_factories_session) -> EmployerFactory:
+    return EmployerFactory.create()
+
+
+@pytest.fixture
+def valid_employer_creation_request_body(employer_for_new_user) -> Dict[str, Any]:
+    ein = employer_for_new_user.employer_fein
 
     return {
         "email_address": fake.email(domain="example.com"),
@@ -69,22 +72,39 @@ def test_users_post_claimant(
 
 def test_users_post_employer(
     client,
+    employer_for_new_user,
     mock_cognito,
     mock_cognito_user_pool,
     test_db_session,
     valid_employer_creation_request_body,
 ):
     email_address = valid_employer_creation_request_body.get("email_address")
+    employer_fein = valid_employer_creation_request_body.get("user_leave_administrator").get(
+        "employer_fein"
+    )
     response = client.post("/v1/users", json=valid_employer_creation_request_body,)
     response_body = response.get_json()
+    response_user = response_body.get("data")
 
     # Response includes the user data
     assert response.status_code == 201
-    assert response_body.get("data").get("email_address") == email_address
+    assert response_user.get("email_address") == email_address
+    assert len(response_user.get("user_leave_administrators")) == 1
+    # EIN is masked in response
+    assert (
+        response_user.get("user_leave_administrators")[0].get("employer_fein")
+        == f"**-***{employer_fein[6:]}"
+    )
 
     # User added to DB
     user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
     assert user.active_directory_id is not None
+
+    # Employer records added to DB
+    assert len(user.roles) == 1
+    assert user.roles[0].role_id == Role.EMPLOYER.role_id
+    assert len(user.user_leave_administrators) == 1
+    assert user.user_leave_administrators[0].employer_id == employer_for_new_user.employer_id
 
     # User added to user pool
     cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
@@ -120,6 +140,29 @@ def test_users_post_openapi_validation(
         "message": "'123123123' does not match '^\\\\d{2}-\\\\d{7}$'",
         "rule": "^\\d{2}-\\d{7}$",
         "type": "pattern",
+    } in errors
+    assert response.status_code == 400
+
+
+def test_users_post_employer_required(
+    client, mock_cognito, test_db_session,
+):
+    # EIN with no Employer record in the DB
+    ein = "12-3456789"
+    body = {
+        "email_address": fake.email(domain="example.com"),
+        "password": fake.password(length=12),
+        "role": {"role_description": "Employer"},
+        "user_leave_administrator": {"employer_fein": ein,},
+    }
+
+    response = client.post("/v1/users", json=body,)
+    errors = response.get_json().get("errors")
+
+    assert {
+        "field": "user_leave_administrator.employer_fein",
+        "message": "Invalid EIN",
+        "type": "require_employer",
     } in errors
     assert response.status_code == 400
 

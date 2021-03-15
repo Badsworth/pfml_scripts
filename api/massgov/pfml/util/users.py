@@ -14,7 +14,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     RegisterFINEOSDuplicateRecord,
     register_leave_admin_with_fineos,
 )
-from massgov.pfml.db.models.employees import Role, User, UserRole
+from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
 from massgov.pfml.util.aws.cognito import (
     CognitoAccountCreationFailure,
     CognitoLookupFailure,
@@ -28,23 +28,43 @@ from massgov.pfml.util.employers import lookup_employer
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def create_user(db_session: db.Session, email_address: str, auth_id: str,) -> User:
+def create_user(
+    db_session: db.Session,
+    email_address: str,
+    auth_id: str,
+    employer_for_leave_admin: Optional[Employer],
+) -> User:
     """Create API records for a new user (claimant or leave admin)"""
-
-    # TODO (CP-1762): Support employer account creation by validating EIN and creating role records
     user = User(active_directory_id=auth_id, email_address=email_address,)
-
     db_session.add(user)
+
+    if employer_for_leave_admin:
+        user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
+        user_leave_admin = UserLeaveAdministrator(
+            user=user, employer=employer_for_leave_admin, fineos_web_id=None,
+        )
+        db_session.add(user_role)
+        db_session.add(user_leave_admin)
+
     db_session.commit()
+
+    logger.info(
+        "create_user - successfully created User",
+        extra={
+            "current_user.auth_id": auth_id,
+            "isEmployer": str(employer_for_leave_admin is not None),
+        },
+    )
 
     return user
 
 
 def register_user(
     db_session: db.Session,
+    cognito_user_pool_client_id: str,
     email_address: str,
     password: str,
-    cognito_user_pool_client_id: str,
+    employer_for_leave_admin: Optional[Employer] = None,
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
 ) -> User:
     """Create a new Cognito and API user for authenticating and performing authenticated API requests"""
@@ -64,7 +84,7 @@ def register_user(
         )
         raise BadRequest(description=e.response["Error"]["Message"])
 
-    user = create_user(db_session, email_address, auth_id)
+    user = create_user(db_session, email_address, auth_id, employer_for_leave_admin)
 
     return user
 

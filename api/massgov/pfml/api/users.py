@@ -1,15 +1,16 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import connexion
 from pydantic import UUID4, Field
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import BadRequest, NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
-from massgov.pfml.db.models.employees import User
+from massgov.pfml.db.models.employees import Employer, Role, User
 from massgov.pfml.util.pydantic import PydanticBaseModel
+from massgov.pfml.util.pydantic.types import FEINUnformattedStr
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein
 from massgov.pfml.util.users import register_user
@@ -25,14 +26,42 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 def users_post():
     """Create a new user account"""
     body = UserCreateRequest.parse_obj(connexion.request.json)
-
     # TODO (CP-1763): Enforce required fields are present
+    employer = None
+    role_description = body.role.role_description
+
     with app.db_session() as db_session:
+        if (
+            role_description == Role.EMPLOYER.role_description
+            and body.user_leave_administrator is not None
+        ):
+            employer_fein = body.user_leave_administrator.employer_fein
+            employer = (
+                db_session.query(Employer)
+                .filter(Employer.employer_fein == employer_fein)
+                .one_or_none()
+            )
+
+            if employer is None:
+                return response_util.error_response(
+                    status_code=BadRequest,
+                    data={},
+                    message="Invalid employer details",
+                    errors=[
+                        response_util.Issue(
+                            field="user_leave_administrator.employer_fein",
+                            message="Invalid EIN",
+                            type=response_util.IssueType.require_employer,
+                        )
+                    ],
+                ).to_api_response()
+
         user = register_user(
             db_session,
+            app.get_config().cognito_user_pool_client_id,
             body.email_address,
             body.password,
-            app.get_config().cognito_user_pool_client_id,
+            employer,
         )
 
     return response_util.success_response(
@@ -88,9 +117,19 @@ def users_patch(user_id):
 ##########################################
 
 
+class RoleRequest(PydanticBaseModel):
+    role_description: str
+
+
+class UserLeaveAdminRequest(PydanticBaseModel):
+    employer_fein: FEINUnformattedStr
+
+
 class UserCreateRequest(PydanticBaseModel):
     email_address: str
     password: str
+    role: RoleRequest
+    user_leave_administrator: Optional[UserLeaveAdminRequest]
 
 
 class UserUpdateRequest(PydanticBaseModel):
