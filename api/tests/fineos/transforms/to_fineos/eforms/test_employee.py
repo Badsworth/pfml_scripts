@@ -373,6 +373,10 @@ def test_transform_previous_leaves():
             "enumValue": {"domainName": "YesNoUnknown", "instanceValue": "No"},
             "name": "LeaveFromEmployer2",
         },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
+            "name": "Applies2",
+        },
     ]
 
     assert eform_body.eformAttributes == expected_attributes

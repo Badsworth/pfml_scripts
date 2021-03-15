@@ -156,12 +156,14 @@ class PreviousLeaveAttributeBuilder(EFormAttributeBuilder):
         },
     }
 
-    JOINING_ATTRIBUTE = {
-        "name": "Applies",
-        "type": "enumValue",
-        "domainName": "PleaseSelectYesNoUnknown",
-        "instanceValue": "Yes",
-    }
+    STATIC_ATTRIBUTES = [
+        {
+            "name": "Applies",
+            "type": "enumValue",
+            "domainName": "PleaseSelectYesNoUnknown",
+            "instanceValue": "Yes",
+        }
+    ]
 
     def __init__(self, target):
         intermediary_target = IntermediaryPreviousLeave(target)
