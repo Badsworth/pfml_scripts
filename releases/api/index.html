@@ -652,7 +652,7 @@
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/commits/415d2166e">415d2166e</a> (<a href="https://github.com/EOLWD/pfml/compare/api/v1.14.0...415d2166e">1 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.14.0">api/v1.14.0</a>)</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.15.1">api/v1.15.1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -678,183 +678,71 @@
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (API-1499,INFRA-262,PUB-95,PUB-85,INFRA-310,EMPLOYER-1012,CP-1560,CP-1764,API-1324,PUB-57,INFRA-245,API-980,CP-1762,EMPLOYER-1010,PUB-89,API-1324,PUB-76,PUB-56,PUB-57,PUB-33,PUB-71,EMPLOYER-1020,API-1362,PUB-38,API-184,PUB-74,PUB-84,API-1386,INFRA-218,PUB-53,PUB-52,INFRA-305,PUB-35,API-474,EMPLOYER-805,EMPLOYER-1009,PUB-38,API-1462,CP-1560,EMPLOYER-726,API-1256,API-1324,PUB-74,PUB-69,PUB-83,CP-1762,CP-1811,INFRA-284,EMPLOYER-966,API-1341,EMPLOYER-983,EMPLOYER-799,EMPLOYER-984,API-1415,PUB-44,PUB-74,INFRA-302,INFRA-295,API-1362,API-1308,API-1392,INFRA-211,CP-1762,PUB-66,API-1408,API-1362,CP-1881,EMPLOYER-969,INFRA-292,API-1362)">Jira List</a>):</p>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (API-1499,INFRA-262,PUB-95,PUB-85,INFRA-310,EMPLOYER-1012,CP-1560,CP-1764,API-1324,PUB-57,INFRA-245,API-980,CP-1762,EMPLOYER-1010,PUB-89,API-1324,PUB-76,PUB-56,PUB-57,PUB-33,PUB-71,EMPLOYER-1020,API-1362,PUB-38,API-184)">Jira List</a>):</p>
 <ul>
 <li>remove compression from KDF (<a href="https://github.com/EOLWD/pfml/pull/3394">#3394</a>)</li>
-<li>fix infinite loop (<a href="https://github.com/EOLWD/pfml/pull/3230">#3230</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-95">PUB-95</a>: Cleanup claimant extract logic for PUB work (<a href="https://github.com/EOLWD/pfml/pull/3384">#3384</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-89">PUB-89</a>: Connecting all of the steps for PUB payments up to writeback #1 (<a href="https://github.com/EOLWD/pfml/pull/3366">#3366</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-85">PUB-85</a>: only process latest payments (<a href="https://github.com/EOLWD/pfml/pull/3380">#3380</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-84">PUB-84</a>: add terraform for payments-process-fineos-extracts ECS task (<a href="https://github.com/EOLWD/pfml/pull/3324">#3324</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-83">PUB-83</a>: Add a step that will cleanup payment audit steps (<a href="https://github.com/EOLWD/pfml/pull/3294">#3294</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-76">PUB-76</a>: Create FINEOS extract ECS task + add batch ID support (<a href="https://github.com/EOLWD/pfml/pull/3313">#3313</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-74">PUB-74</a>: Add process_pub_responses.py script (<a href="https://github.com/EOLWD/pfml/pull/3315">#3315</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-74">PUB-74</a>: Add process_pub_payments script (<a href="https://github.com/EOLWD/pfml/pull/3275">#3275</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-74">PUB-74</a>: Add infrastructure configs to allow PUB scripts to be called as ECS tasks (<a href="https://github.com/EOLWD/pfml/pull/3318">#3318</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-71">PUB-71</a>: Modify the payment extract logic to handle additional payment types (<a href="https://github.com/EOLWD/pfml/pull/3327">#3327</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-69">PUB-69</a>: Modify payment extract logic to create new payments regardless of validation/existing payments (<a href="https://github.com/EOLWD/pfml/pull/3273">#3273</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-66">PUB-66</a>: Copy existing payments code to delegated payments section (<a href="https://github.com/EOLWD/pfml/pull/3240">#3240</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-57">PUB-57</a>: Process payment rejects file. (<a href="https://github.com/EOLWD/pfml/pull/3351">#3351</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-57">PUB-57</a>: Adjust payment reject end state. (<a href="https://github.com/EOLWD/pfml/pull/3383">#3383</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-56">PUB-56</a>: Create Payment Audit Report top level function (<a href="https://github.com/EOLWD/pfml/pull/3354">#3354</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-53">PUB-53</a>: Generate Payment Rejects Mock File (<a href="https://github.com/EOLWD/pfml/pull/3321">#3321</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-52">PUB-52</a>: Payment Audit Test Scenarios (<a href="https://github.com/EOLWD/pfml/pull/3305">#3305</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-44">PUB-44</a>: New states for Delegated Payments (<a href="https://github.com/EOLWD/pfml/pull/3250">#3250</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-38">PUB-38</a>: fixed migration file for staging tables. (<a href="https://github.com/EOLWD/pfml/pull/3343">#3343</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-38">PUB-38</a>: created class models to store payment and claimants extract files (<a href="https://github.com/EOLWD/pfml/pull/3261">#3261</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-35">PUB-35</a>: Build Audit Report (<a href="https://github.com/EOLWD/pfml/pull/3286">#3286</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PUB-33">PUB-33</a>: Adapt first FINEOS writeback for PUB delegated payments (<a href="https://github.com/EOLWD/pfml/pull/3355">#3355</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-310">INFRA-310</a>: Generate terraform lock files (<a href="https://github.com/EOLWD/pfml/pull/3387">#3387</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-305">INFRA-305</a>: Add a distinct ECS task for db-migrate-down (<a href="https://github.com/EOLWD/pfml/pull/3316">#3316</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-302">INFRA-302</a>: Log warning for missing employee/employer in eligibility check (<a href="https://github.com/EOLWD/pfml/pull/3235">#3235</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-295">INFRA-295</a>: provide better release info for untagged heads (<a href="https://github.com/EOLWD/pfml/pull/3251">#3251</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-292">INFRA-292</a>: Remove IP Redacting Lambda from KDF (<a href="https://github.com/EOLWD/pfml/pull/3227">#3227</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-284">INFRA-284</a>: added new job configs (<a href="https://github.com/EOLWD/pfml/pull/3258">#3258</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-262">INFRA-262</a>: resolve immer vulnerability cve-2020-28477 (<a href="https://github.com/EOLWD/pfml/pull/3279">#3279</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-245">INFRA-245</a>: update terraform to v0.14.x (<a href="https://github.com/EOLWD/pfml/pull/3157">#3157</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-218">INFRA-218</a>: Send Uncaught ECS Task Errors to Sentry (<a href="https://github.com/EOLWD/pfml/pull/3079">#3079</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-211">INFRA-211</a>: Copy all Files from FINEOS ErrorExports to S3 (<a href="https://github.com/EOLWD/pfml/pull/3246">#3246</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-984">EMPLOYER-984</a>: Add data to endpoint errors related to unverified users (<a href="https://github.com/EOLWD/pfml/pull/3272">#3272</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-983">EMPLOYER-983</a>: Return custom error for incorrect withholding amount (<a href="https://github.com/EOLWD/pfml/pull/3262">#3262</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-969">EMPLOYER-969</a>: Verification endpoint returns serialized User object (<a href="https://github.com/EOLWD/pfml/pull/3216">#3216</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-966">EMPLOYER-966</a>: Duplicate FEIN error handling (<a href="https://github.com/EOLWD/pfml/pull/3274">#3274</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-805">EMPLOYER-805</a>: Pulling verified users for Fineos POC account creation (<a href="https://github.com/EOLWD/pfml/pull/3159">#3159</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-799">EMPLOYER-799</a>: leave period date values are optional (<a href="https://github.com/EOLWD/pfml/pull/3191">#3191</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-726">EMPLOYER-726</a>: removed references to application.absence_id and application.notification_id (<a href="https://github.com/EOLWD/pfml/pull/3028">#3028</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1020">EMPLOYER-1020</a>: Addressed log-level issue. Concerned that there are no tests of sentry initialization directly (<a href="https://github.com/EOLWD/pfml/pull/3342">#3342</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1012">EMPLOYER-1012</a>: removed absence_id and notification_id from applications table (<a href="https://github.com/EOLWD/pfml/pull/3304">#3304</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1010">EMPLOYER-1010</a>: Return a custom issue when an employer does not have verification data (<a href="https://github.com/EOLWD/pfml/pull/3311">#3311</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1009">EMPLOYER-1009</a>: Raise VerificationRequired error if leave admin does not exist in FINEOS (<a href="https://github.com/EOLWD/pfml/pull/3312">#3312</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1881">CP-1881</a>: wages and contributions command (<a href="https://github.com/EOLWD/pfml/pull/3224">#3224</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1811">CP-1811</a>: Begin logging pregnant or recent birth (<a href="https://github.com/EOLWD/pfml/pull/3293">#3293</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/CP-1764">CP-1764</a>: Catch Cognito sign up exceptions (<a href="https://github.com/EOLWD/pfml/pull/3353">#3353</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/CP-1762">CP-1762</a>: Add leave admin registration support (<a href="https://github.com/EOLWD/pfml/pull/3220">#3220</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1762">CP-1762</a>: Add basic Cognito account creation integration to Users endpoint (<a href="https://github.com/EOLWD/pfml/pull/3217">#3217</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1762">CP-1762</a>: Add Cognito user pool client ID env var to API (<a href="https://github.com/EOLWD/pfml/pull/3214">#3214</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1560">CP-1560</a>: Begin sending other income eform to FINEOS (<a href="https://github.com/EOLWD/pfml/pull/3167">#3167</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/CP-1560">CP-1560</a>: - Always add a 'Applies' attribute for previous leaves (<a href="https://github.com/EOLWD/pfml/pull/3364">#3364</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-980">API-980</a>: Add DIA-specific payment table v.2 (<a href="https://github.com/EOLWD/pfml/pull/3367">#3367</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-474">API-474</a>: Email Reports of New Payments to DFML (<a href="https://github.com/EOLWD/pfml/pull/3081">#3081</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-184">API-184</a>: Add Hard Check for Database Schema (<a href="https://github.com/EOLWD/pfml/pull/3184">#3184</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-1499">API-1499</a>: Output FINEOS customer number as part of Data Mart errors (<a href="https://github.com/EOLWD/pfml/pull/3373">#3373</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1462">API-1462</a>: Add whether claimant has an outstanding VCM to Payment Voucher (<a href="https://github.com/EOLWD/pfml/pull/3287">#3287</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1415">API-1415</a>: Basic client for using the Experian Address Validation API(s) (<a href="https://github.com/EOLWD/pfml/pull/3252">#3252</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1408">API-1408</a>: Interface to make reports of any format (<a href="https://github.com/EOLWD/pfml/pull/3173">#3173</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1392">API-1392</a>: Fix test_db_via_migrations fixture and test it (<a href="https://github.com/EOLWD/pfml/pull/1395">#1395</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1386">API-1386</a>: VCM report now includes all outstanding VCMs, not just deltas (<a href="https://github.com/EOLWD/pfml/pull/3283">#3283</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-1362">API-1362</a>: (5/5): Basic docs for writing tests and using the factories (<a href="https://github.com/EOLWD/pfml/pull/3328">#3328</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1362">API-1362</a>: (4/?): Make some data_mart/common tests into unit tests (<a href="https://github.com/EOLWD/pfml/pull/3243">#3243</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1362">API-1362</a>: (3/?): Update application_rules.py tests to not use DB (<a href="https://github.com/EOLWD/pfml/pull/3239">#3239</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1362">API-1362</a>: (2/?): Disable factory DB access by default for tests (<a href="https://github.com/EOLWD/pfml/pull/3071">#3071</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1341">API-1341</a>: Allow file renames to create intermediary directories on fs (<a href="https://github.com/EOLWD/pfml/pull/2986">#2986</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-1324">API-1324</a>: - enabling reductions tasks (<a href="https://github.com/EOLWD/pfml/pull/3335">#3335</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-1324">API-1324</a>: - adjusting reductions tasks DST (<a href="https://github.com/EOLWD/pfml/pull/3336">#3336</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1324">API-1324</a>: - added schedules for reductions ecs tasks (<a href="https://github.com/EOLWD/pfml/pull/3288">#3288</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1308">API-1308</a>: Fix Payment Voucher routing number errors (<a href="https://github.com/EOLWD/pfml/pull/3253">#3253</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1256">API-1256</a>: - underscore removal on import (<a href="https://github.com/EOLWD/pfml/pull/3222">#3222</a>)</li>
 <li>Setting default values for cognito variables (<a href="https://github.com/EOLWD/pfml/pull/3357">#3357</a>)</li>
-<li>PUB: Revert delegated payments config name (<a href="https://github.com/EOLWD/pfml/pull/3319">#3319</a>)</li>
 <li>Fix import issue with logging.audit in reductions scripts (<a href="https://github.com/EOLWD/pfml/pull/3379">#3379</a>)</li>
-<li>Change compression format for KDF (<a href="https://github.com/EOLWD/pfml/pull/3245">#3245</a>)</li>
-<li>API: import all API modules directly at start to expose import errors (<a href="https://github.com/EOLWD/pfml/pull/3256">#3256</a>)</li>
-<li>API: fix response validation exception when response is a string (<a href="https://github.com/EOLWD/pfml/pull/3255">#3255</a>)</li>
-<li>API: fix line number of failed tests in GitHub actions (<a href="https://github.com/EOLWD/pfml/pull/3229">#3229</a>)</li>
-<li>API: filter out AUDIT lines in decodelog.py tool (<a href="https://github.com/EOLWD/pfml/pull/3241">#3241</a>)</li>
-<li>API: add AUDIT log level for easier filtering (<a href="https://github.com/EOLWD/pfml/pull/3226">#3226</a>)</li>
 <li>API: Minor tweaks to a few tests (<a href="https://github.com/EOLWD/pfml/pull/3331">#3331</a>)</li>
-<li>API: Link to main docs for ECS and Lambda in README (<a href="https://github.com/EOLWD/pfml/pull/3334">#3334</a>)</li>
-<li>API: Fix indentation in test/api/test_claims.py (<a href="https://github.com/EOLWD/pfml/pull/3329">#3329</a>)</li>
 <li>API: Fix import issue with logging.audit in PUB script (<a href="https://github.com/EOLWD/pfml/pull/3381">#3381</a>)</li>
-<li>API: Add basic description of how the API works to docs (<a href="https://github.com/EOLWD/pfml/pull/1096">#1096</a>)</li>
 </ul>
 <details>
 <summary>Raw</summary>
  <br>* remove compression from KDF ([#3394](https://github.com/EOLWD/pfml/pull/3394))
- <br>* fix infinite loop ([#3230](https://github.com/EOLWD/pfml/pull/3230))
  <br>* [PUB-95](https://lwd.atlassian.net/browse/PUB-95): Cleanup claimant extract logic for PUB work ([#3384](https://github.com/EOLWD/pfml/pull/3384))
  <br>* [PUB-89](https://lwd.atlassian.net/browse/PUB-89): Connecting all of the steps for PUB payments up to writeback #1 ([#3366](https://github.com/EOLWD/pfml/pull/3366))
  <br>* [PUB-85](https://lwd.atlassian.net/browse/PUB-85): only process latest payments ([#3380](https://github.com/EOLWD/pfml/pull/3380))
- <br>* [PUB-84](https://lwd.atlassian.net/browse/PUB-84): add terraform for payments-process-fineos-extracts ECS task ([#3324](https://github.com/EOLWD/pfml/pull/3324))
- <br>* [PUB-83](https://lwd.atlassian.net/browse/PUB-83): Add a step that will cleanup payment audit steps ([#3294](https://github.com/EOLWD/pfml/pull/3294))
  <br>* [PUB-76](https://lwd.atlassian.net/browse/PUB-76): Create FINEOS extract ECS task + add batch ID support ([#3313](https://github.com/EOLWD/pfml/pull/3313))
- <br>* [PUB-74](https://lwd.atlassian.net/browse/PUB-74): Add process_pub_responses.py script ([#3315](https://github.com/EOLWD/pfml/pull/3315))
- <br>* [PUB-74](https://lwd.atlassian.net/browse/PUB-74): Add process_pub_payments script ([#3275](https://github.com/EOLWD/pfml/pull/3275))
- <br>* [PUB-74](https://lwd.atlassian.net/browse/PUB-74): Add infrastructure configs to allow PUB scripts to be called as ECS tasks ([#3318](https://github.com/EOLWD/pfml/pull/3318))
  <br>* [PUB-71](https://lwd.atlassian.net/browse/PUB-71): Modify the payment extract logic to handle additional payment types ([#3327](https://github.com/EOLWD/pfml/pull/3327))
- <br>* [PUB-69](https://lwd.atlassian.net/browse/PUB-69): Modify payment extract logic to create new payments regardless of validation/existing payments ([#3273](https://github.com/EOLWD/pfml/pull/3273))
- <br>* [PUB-66](https://lwd.atlassian.net/browse/PUB-66): Copy existing payments code to delegated payments section ([#3240](https://github.com/EOLWD/pfml/pull/3240))
  <br>* [PUB-57](https://lwd.atlassian.net/browse/PUB-57): Process payment rejects file. ([#3351](https://github.com/EOLWD/pfml/pull/3351))
  <br>* [PUB-57](https://lwd.atlassian.net/browse/PUB-57): Adjust payment reject end state. ([#3383](https://github.com/EOLWD/pfml/pull/3383))
  <br>* [PUB-56](https://lwd.atlassian.net/browse/PUB-56): Create Payment Audit Report top level function ([#3354](https://github.com/EOLWD/pfml/pull/3354))
- <br>* [PUB-53](https://lwd.atlassian.net/browse/PUB-53): Generate Payment Rejects Mock File ([#3321](https://github.com/EOLWD/pfml/pull/3321))
- <br>* [PUB-52](https://lwd.atlassian.net/browse/PUB-52): Payment Audit Test Scenarios ([#3305](https://github.com/EOLWD/pfml/pull/3305))
- <br>* [PUB-44](https://lwd.atlassian.net/browse/PUB-44): New states for Delegated Payments ([#3250](https://github.com/EOLWD/pfml/pull/3250))
  <br>* [PUB-38](https://lwd.atlassian.net/browse/PUB-38): fixed migration file for staging tables. ([#3343](https://github.com/EOLWD/pfml/pull/3343))
- <br>* [PUB-38](https://lwd.atlassian.net/browse/PUB-38): created class models to store payment and claimants extract files ([#3261](https://github.com/EOLWD/pfml/pull/3261))
- <br>* [PUB-35](https://lwd.atlassian.net/browse/PUB-35): Build Audit Report ([#3286](https://github.com/EOLWD/pfml/pull/3286))
  <br>* [PUB-33](https://lwd.atlassian.net/browse/PUB-33): Adapt first FINEOS writeback for PUB delegated payments ([#3355](https://github.com/EOLWD/pfml/pull/3355))
  <br>* [INFRA-310](https://lwd.atlassian.net/browse/INFRA-310): Generate terraform lock files ([#3387](https://github.com/EOLWD/pfml/pull/3387))
- <br>* [INFRA-305](https://lwd.atlassian.net/browse/INFRA-305): Add a distinct ECS task for db-migrate-down ([#3316](https://github.com/EOLWD/pfml/pull/3316))
- <br>* [INFRA-302](https://lwd.atlassian.net/browse/INFRA-302): Log warning for missing employee/employer in eligibility check ([#3235](https://github.com/EOLWD/pfml/pull/3235))
- <br>* [INFRA-295](https://lwd.atlassian.net/browse/INFRA-295): provide better release info for untagged heads ([#3251](https://github.com/EOLWD/pfml/pull/3251))
- <br>* [INFRA-292](https://lwd.atlassian.net/browse/INFRA-292): Remove IP Redacting Lambda from KDF ([#3227](https://github.com/EOLWD/pfml/pull/3227))
- <br>* [INFRA-284](https://lwd.atlassian.net/browse/INFRA-284): added new job configs ([#3258](https://github.com/EOLWD/pfml/pull/3258))
  <br>* [INFRA-262](https://lwd.atlassian.net/browse/INFRA-262): resolve immer vulnerability cve-2020-28477 ([#3279](https://github.com/EOLWD/pfml/pull/3279))
  <br>* [INFRA-245](https://lwd.atlassian.net/browse/INFRA-245): update terraform to v0.14.x ([#3157](https://github.com/EOLWD/pfml/pull/3157))
- <br>* [INFRA-218](https://lwd.atlassian.net/browse/INFRA-218): Send Uncaught ECS Task Errors to Sentry ([#3079](https://github.com/EOLWD/pfml/pull/3079))
- <br>* [INFRA-211](https://lwd.atlassian.net/browse/INFRA-211): Copy all Files from FINEOS ErrorExports to S3 ([#3246](https://github.com/EOLWD/pfml/pull/3246))
- <br>* [EMPLOYER-984](https://lwd.atlassian.net/browse/EMPLOYER-984): Add data to endpoint errors related to unverified users ([#3272](https://github.com/EOLWD/pfml/pull/3272))
- <br>* [EMPLOYER-983](https://lwd.atlassian.net/browse/EMPLOYER-983): Return custom error for incorrect withholding amount ([#3262](https://github.com/EOLWD/pfml/pull/3262))
- <br>* [EMPLOYER-969](https://lwd.atlassian.net/browse/EMPLOYER-969): Verification endpoint returns serialized User object ([#3216](https://github.com/EOLWD/pfml/pull/3216))
- <br>* [EMPLOYER-966](https://lwd.atlassian.net/browse/EMPLOYER-966): Duplicate FEIN error handling ([#3274](https://github.com/EOLWD/pfml/pull/3274))
- <br>* [EMPLOYER-805](https://lwd.atlassian.net/browse/EMPLOYER-805): Pulling verified users for Fineos POC account creation ([#3159](https://github.com/EOLWD/pfml/pull/3159))
- <br>* [EMPLOYER-799](https://lwd.atlassian.net/browse/EMPLOYER-799): leave period date values are optional ([#3191](https://github.com/EOLWD/pfml/pull/3191))
- <br>* [EMPLOYER-726](https://lwd.atlassian.net/browse/EMPLOYER-726): removed references to application.absence_id and application.notification_id ([#3028](https://github.com/EOLWD/pfml/pull/3028))
  <br>* [EMPLOYER-1020](https://lwd.atlassian.net/browse/EMPLOYER-1020): Addressed log-level issue. Concerned that there are no tests of sentry initialization directly ([#3342](https://github.com/EOLWD/pfml/pull/3342))
  <br>* [EMPLOYER-1012](https://lwd.atlassian.net/browse/EMPLOYER-1012): removed absence_id and notification_id from applications table ([#3304](https://github.com/EOLWD/pfml/pull/3304))
  <br>* [EMPLOYER-1010](https://lwd.atlassian.net/browse/EMPLOYER-1010): Return a custom issue when an employer does not have verification data ([#3311](https://github.com/EOLWD/pfml/pull/3311))
- <br>* [EMPLOYER-1009](https://lwd.atlassian.net/browse/EMPLOYER-1009): Raise VerificationRequired error if leave admin does not exist in FINEOS ([#3312](https://github.com/EOLWD/pfml/pull/3312))
- <br>* [CP-1881](https://lwd.atlassian.net/browse/CP-1881): wages and contributions command ([#3224](https://github.com/EOLWD/pfml/pull/3224))
- <br>* [CP-1811](https://lwd.atlassian.net/browse/CP-1811): Begin logging pregnant or recent birth ([#3293](https://github.com/EOLWD/pfml/pull/3293))
  <br>* [CP-1764](https://lwd.atlassian.net/browse/CP-1764): Catch Cognito sign up exceptions ([#3353](https://github.com/EOLWD/pfml/pull/3353))
  <br>* [CP-1762](https://lwd.atlassian.net/browse/CP-1762): Add leave admin registration support ([#3220](https://github.com/EOLWD/pfml/pull/3220))
- <br>* [CP-1762](https://lwd.atlassian.net/browse/CP-1762): Add basic Cognito account creation integration to Users endpoint ([#3217](https://github.com/EOLWD/pfml/pull/3217))
- <br>* [CP-1762](https://lwd.atlassian.net/browse/CP-1762): Add Cognito user pool client ID env var to API ([#3214](https://github.com/EOLWD/pfml/pull/3214))
- <br>* [CP-1560](https://lwd.atlassian.net/browse/CP-1560): Begin sending other income eform to FINEOS ([#3167](https://github.com/EOLWD/pfml/pull/3167))
  <br>* [CP-1560](https://lwd.atlassian.net/browse/CP-1560): - Always add a 'Applies' attribute for previous leaves ([#3364](https://github.com/EOLWD/pfml/pull/3364))
  <br>* [API-980](https://lwd.atlassian.net/browse/API-980): Add DIA-specific payment table v.2 ([#3367](https://github.com/EOLWD/pfml/pull/3367))
- <br>* [API-474](https://lwd.atlassian.net/browse/API-474): Email Reports of New Payments to DFML ([#3081](https://github.com/EOLWD/pfml/pull/3081))
  <br>* [API-184](https://lwd.atlassian.net/browse/API-184): Add Hard Check for Database Schema ([#3184](https://github.com/EOLWD/pfml/pull/3184))
  <br>* [API-1499](https://lwd.atlassian.net/browse/API-1499): Output FINEOS customer number as part of Data Mart errors ([#3373](https://github.com/EOLWD/pfml/pull/3373))
- <br>* [API-1462](https://lwd.atlassian.net/browse/API-1462): Add whether claimant has an outstanding VCM to Payment Voucher ([#3287](https://github.com/EOLWD/pfml/pull/3287))
- <br>* [API-1415](https://lwd.atlassian.net/browse/API-1415): Basic client for using the Experian Address Validation API(s) ([#3252](https://github.com/EOLWD/pfml/pull/3252))
- <br>* [API-1408](https://lwd.atlassian.net/browse/API-1408): Interface to make reports of any format ([#3173](https://github.com/EOLWD/pfml/pull/3173))
- <br>* [API-1392](https://lwd.atlassian.net/browse/API-1392): Fix test_db_via_migrations fixture and test it ([#1395](https://github.com/EOLWD/pfml/pull/1395))
- <br>* [API-1386](https://lwd.atlassian.net/browse/API-1386): VCM report now includes all outstanding VCMs, not just deltas ([#3283](https://github.com/EOLWD/pfml/pull/3283))
  <br>* [API-1362](https://lwd.atlassian.net/browse/API-1362): (5/5): Basic docs for writing tests and using the factories ([#3328](https://github.com/EOLWD/pfml/pull/3328))
- <br>* [API-1362](https://lwd.atlassian.net/browse/API-1362): (4/?): Make some data_mart/common tests into unit tests ([#3243](https://github.com/EOLWD/pfml/pull/3243))
- <br>* [API-1362](https://lwd.atlassian.net/browse/API-1362): (3/?): Update application_rules.py tests to not use DB ([#3239](https://github.com/EOLWD/pfml/pull/3239))
- <br>* [API-1362](https://lwd.atlassian.net/browse/API-1362): (2/?): Disable factory DB access by default for tests ([#3071](https://github.com/EOLWD/pfml/pull/3071))
- <br>* [API-1341](https://lwd.atlassian.net/browse/API-1341): Allow file renames to create intermediary directories on fs ([#2986](https://github.com/EOLWD/pfml/pull/2986))
  <br>* [API-1324](https://lwd.atlassian.net/browse/API-1324): - enabling reductions tasks ([#3335](https://github.com/EOLWD/pfml/pull/3335))
  <br>* [API-1324](https://lwd.atlassian.net/browse/API-1324): - adjusting reductions tasks DST ([#3336](https://github.com/EOLWD/pfml/pull/3336))
- <br>* [API-1324](https://lwd.atlassian.net/browse/API-1324): - added schedules for reductions ecs tasks ([#3288](https://github.com/EOLWD/pfml/pull/3288))
- <br>* [API-1308](https://lwd.atlassian.net/browse/API-1308): Fix Payment Voucher routing number errors ([#3253](https://github.com/EOLWD/pfml/pull/3253))
- <br>* [API-1256](https://lwd.atlassian.net/browse/API-1256): - underscore removal on import ([#3222](https://github.com/EOLWD/pfml/pull/3222))
  <br>* Setting default values for cognito variables ([#3357](https://github.com/EOLWD/pfml/pull/3357))
- <br>* PUB: Revert delegated payments config name ([#3319](https://github.com/EOLWD/pfml/pull/3319))
  <br>* Fix import issue with logging.audit in reductions scripts ([#3379](https://github.com/EOLWD/pfml/pull/3379))
- <br>* Change compression format for KDF ([#3245](https://github.com/EOLWD/pfml/pull/3245))
- <br>* API: import all API modules directly at start to expose import errors ([#3256](https://github.com/EOLWD/pfml/pull/3256))
- <br>* API: fix response validation exception when response is a string ([#3255](https://github.com/EOLWD/pfml/pull/3255))
- <br>* API: fix line number of failed tests in GitHub actions ([#3229](https://github.com/EOLWD/pfml/pull/3229))
- <br>* API: filter out AUDIT lines in decodelog.py tool ([#3241](https://github.com/EOLWD/pfml/pull/3241))
- <br>* API: add AUDIT log level for easier filtering ([#3226](https://github.com/EOLWD/pfml/pull/3226))
  <br>* API: Minor tweaks to a few tests ([#3331](https://github.com/EOLWD/pfml/pull/3331))
- <br>* API: Link to main docs for ECS and Lambda in README ([#3334](https://github.com/EOLWD/pfml/pull/3334))
- <br>* API: Fix indentation in test/api/test_claims.py ([#3329](https://github.com/EOLWD/pfml/pull/3329))
  <br>* API: Fix import issue with logging.audit in PUB script ([#3381](https://github.com/EOLWD/pfml/pull/3381))
- <br>* API: Add basic description of how the API works to docs ([#1096](https://github.com/EOLWD/pfml/pull/1096))
 </details>
                 
               
