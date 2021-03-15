@@ -51,8 +51,7 @@ TEST_DEST_DIR = "error"
 # TODO: These should really be in payments_util or payments_config
 PAYMENT_EXTRACT_FILENAMES = ["vpei.csv", "vpeiclaimdetails.csv", "vpeipaymentdetails.csv"]
 
-VENDOR_EXTRACT_FILENAMES = [
-    "LeavePlan_info.csv",
+CLAIMANT_EXTRACT_FILENAMES = [
     "Employee_feed.csv",
     "VBI_REQUESTEDABSENCE_SOM.csv",
 ]
@@ -156,15 +155,15 @@ def test_get_date_group_str_from_path(path, date_group):
 def test_get_date_group_folder_name():
     assert (
         payments_util.get_date_group_folder_name(
-            "2020-12-01-11-30-00", ReferenceFileType.PAYMENT_EXTRACT
+            "2020-12-01-11-30-00", ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         )
-        == "2020-12-01-11-30-00-payment-export"
+        == "2020-12-01-11-30-00-payment-extract"
     )
     assert (
         payments_util.get_date_group_folder_name(
-            "2020-12-01-11-30-00", ReferenceFileType.VENDOR_CLAIM_EXTRACT
+            "2020-12-01-11-30-00", ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         )
-        == "2020-12-01-11-30-00-vendor-export"
+        == "2020-12-01-11-30-00-claimant-extract"
     )
 
 
@@ -174,21 +173,23 @@ def test_payment_extract_reference_file_exists_by_date_group(
     date_group = "2020-12-01-11-30-00"
 
     assert not payments_util.payment_extract_reference_file_exists_by_date_group(
-        test_db_session, date_group, ReferenceFileType.PAYMENT_EXTRACT
+        test_db_session, date_group, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
     )
 
     file_location = os.path.join(
         payments_config.get_s3_config().pfml_fineos_inbound_path,
         payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
-        payments_util.get_date_group_folder_name(date_group, ReferenceFileType.PAYMENT_EXTRACT),
+        payments_util.get_date_group_folder_name(
+            date_group, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
+        ),
     )
     ReferenceFileFactory.create(
         file_location=file_location,
-        reference_file_type_id=ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id,
+        reference_file_type_id=ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id,
     )
 
     assert payments_util.payment_extract_reference_file_exists_by_date_group(
-        test_db_session, date_group, ReferenceFileType.PAYMENT_EXTRACT
+        test_db_session, date_group, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
     )
 
 
@@ -233,7 +234,7 @@ def test_copy_fineos_data_to_archival_bucket(
     make_s3_file(mock_fineos_s3_bucket, "DT2/vpeiclaimdetails.csv", "vpeiclaimdetails.csv")
     make_s3_file(mock_fineos_s3_bucket, "IDT/dataexports/vpeiclaimdetails.csv", "small.csv")
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.PAYMENT_EXTRACT,
+        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
     )
 
     received_s3_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/"
@@ -290,7 +291,7 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_payment(
 
     # Actually run the command
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.PAYMENT_EXTRACT,
+        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
     )
 
     received_s3_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/"
@@ -329,26 +330,26 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_vendor(
     expected_timestamp_1 = "2020-01-03-11-30-00"
     s3_prefix = "DT2/dataexports/"
     upload_timestamped_s3_files(
-        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_1, VENDOR_EXTRACT_FILENAMES
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_1, CLAIMANT_EXTRACT_FILENAMES
     )
 
     # Add 3 files in a date folder: should be processed
     expected_timestamp_2 = "2020-01-02-11-30-00"
     s3_prefix = f"DT2/dataexports/{expected_timestamp_2}/"
     upload_timestamped_s3_files(
-        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_2, VENDOR_EXTRACT_FILENAMES
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_2, CLAIMANT_EXTRACT_FILENAMES
     )
 
     # Add 3 files in a date folder: should NOT be processed
     not_expected_timestamp_1 = "2020-01-01-11-30-00"
     s3_prefix = f"DT2/dataexports/{not_expected_timestamp_1}/"
     upload_timestamped_s3_files(
-        mock_fineos_s3_bucket, s3_prefix, not_expected_timestamp_1, VENDOR_EXTRACT_FILENAMES
+        mock_fineos_s3_bucket, s3_prefix, not_expected_timestamp_1, CLAIMANT_EXTRACT_FILENAMES
     )
 
     # Actually run the command
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, VENDOR_EXTRACT_FILENAMES, ReferenceFileType.VENDOR_CLAIM_EXTRACT,
+        test_db_session, CLAIMANT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT,
     )
 
     received_s3_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/"
@@ -358,7 +359,7 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_vendor(
         copied_file_mapping_by_date,
         expected_timestamp_1,
         received_s3_prefix,
-        VENDOR_EXTRACT_FILENAMES,
+        CLAIMANT_EXTRACT_FILENAMES,
     )
 
     # 2020-01-02 files should be there
@@ -366,7 +367,7 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_vendor(
         copied_file_mapping_by_date,
         expected_timestamp_2,
         received_s3_prefix,
-        VENDOR_EXTRACT_FILENAMES,
+        CLAIMANT_EXTRACT_FILENAMES,
     )
 
     # 2020-01-01 files should NOT be there
@@ -383,12 +384,12 @@ def test_copy_fineos_data_to_archival_bucket_skip_top_level(
     expected_timestamp_1 = "2020-01-03-11-30-00"
     s3_prefix = "DT2/dataexports/"
     upload_timestamped_s3_files(
-        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_1, VENDOR_EXTRACT_FILENAMES
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_1, CLAIMANT_EXTRACT_FILENAMES
     )
 
     # Actually run the command
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, VENDOR_EXTRACT_FILENAMES, ReferenceFileType.VENDOR_CLAIM_EXTRACT,
+        test_db_session, CLAIMANT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT,
     )
 
     # Files should be empty
@@ -415,7 +416,7 @@ def test_copy_fineos_data_to_archival_bucket_duplicate_suffix_error(
         match=f"Error while copying fineos extracts - duplicate files found for vpei.csv: s3://test_bucket/cps/inbound/received/{date_prefix}-ANOTHER-vpei.csv and s3://fineos_bucket/DT2/dataexports/{date_prefix}-vpei.csv",
     ):
         payments_util.copy_fineos_data_to_archival_bucket(
-            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.PAYMENT_EXTRACT,
+            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
         )
 
 
@@ -435,7 +436,7 @@ def test_copy_fineos_data_to_archival_bucket_missing_file_error(
         match=f"Error while copying fineos extracts - The following expected files were not found {date_prefix}-vpeiclaimdetails.csv,{date_prefix}-vpeipaymentdetails.csv",
     ):
         payments_util.copy_fineos_data_to_archival_bucket(
-            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.PAYMENT_EXTRACT,
+            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
         )
 
 
@@ -943,11 +944,13 @@ def test_get_fineos_max_history_date(monkeypatch):
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2021-01-15")
 
     vendor_datetime = payments_util.get_fineos_max_history_date(
-        ReferenceFileType.VENDOR_CLAIM_EXTRACT
+        ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
     )
     assert vendor_datetime == datetime(2021, 1, 1, 0, 0)
 
-    payment_datetime = payments_util.get_fineos_max_history_date(ReferenceFileType.PAYMENT_EXTRACT)
+    payment_datetime = payments_util.get_fineos_max_history_date(
+        ReferenceFileType.FINEOS_PAYMENT_EXTRACT
+    )
     assert payment_datetime == datetime(2021, 1, 15, 0, 0)
 
 
@@ -963,10 +966,10 @@ def test_get_fineos_max_history_date_bad_string(monkeypatch):
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "bar")
 
     with pytest.raises(ValueError):
-        payments_util.get_fineos_max_history_date(ReferenceFileType.VENDOR_CLAIM_EXTRACT)
+        payments_util.get_fineos_max_history_date(ReferenceFileType.FINEOS_CLAIMANT_EXTRACT)
 
     with pytest.raises(ValueError):
-        payments_util.get_fineos_max_history_date(ReferenceFileType.PAYMENT_EXTRACT)
+        payments_util.get_fineos_max_history_date(ReferenceFileType.FINEOS_PAYMENT_EXTRACT)
 
 
 def test_create_staging_table_instance(test_db_session, initialize_factories_session):

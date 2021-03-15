@@ -46,21 +46,11 @@ ERRORED_FOLDER = "errored"
 
 REQUESTED_ABSENCES_FILE_NAME = "VBI_REQUESTEDABSENCE_SOM.csv"
 EMPLOYEE_FEED_FILE_NAME = "Employee_feed.csv"
-LEAVE_PLAN_INFO_FILE_NAME = "LeavePlan_info.csv"
 
 expected_file_names = [
     REQUESTED_ABSENCES_FILE_NAME,
     EMPLOYEE_FEED_FILE_NAME,
-    LEAVE_PLAN_INFO_FILE_NAME,
 ]
-
-ELECTRONIC_FUNDS_TRANSFER = 1
-
-CLAIM_TYPE_TRANSLATION = {
-    "Family Medical Leave": "Family Leave",
-    "EE Medical Leave": "Medical Leave",
-    "Military Related Leave": "Military Leave",
-}
 
 
 @dataclass
@@ -72,7 +62,6 @@ class Extract:
 class ExtractData:
     requested_absence_info: Extract
     employee_feed: Extract
-    leave_plan_info: Extract
 
     date_str: str
 
@@ -84,8 +73,6 @@ class ExtractData:
                 self.requested_absence_info = Extract(s3_location)
             elif s3_location.endswith(EMPLOYEE_FEED_FILE_NAME):
                 self.employee_feed = Extract(s3_location)
-            elif s3_location.endswith(LEAVE_PLAN_INFO_FILE_NAME):
-                self.leave_plan_info = Extract(s3_location)
 
         self.date_str = date_str
 
@@ -93,7 +80,7 @@ class ExtractData:
             file_location=os.path.join(
                 payments_config.get_s3_config().pfml_fineos_inbound_path, "received", self.date_str
             ),
-            reference_file_type_id=ReferenceFileType.VENDOR_CLAIM_EXTRACT.reference_file_type_id,
+            reference_file_type_id=ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id,
             reference_file_id=uuid.uuid4(),
         )
         logger.debug("Intialized extract data: %s", self.reference_file.file_location)
@@ -108,7 +95,7 @@ class ClaimantExtractStep(Step):
         logger.info("Processing claimant extract files")
 
         payments_util.copy_fineos_data_to_archival_bucket(
-            self.db_session, expected_file_names, ReferenceFileType.VENDOR_CLAIM_EXTRACT
+            self.db_session, expected_file_names, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         )
         data_by_date = payments_util.group_s3_files_by_date(expected_file_names)
         download_directory = tempfile.mkdtemp().__str__()
@@ -141,7 +128,7 @@ class ClaimantExtractStep(Step):
                 if (
                     date_str in previously_processed_date
                     or payments_util.payment_extract_reference_file_exists_by_date_group(
-                        self.db_session, date_str, ReferenceFileType.VENDOR_CLAIM_EXTRACT
+                        self.db_session, date_str, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
                     )
                 ):
                     logger.warning(
@@ -186,7 +173,6 @@ class ClaimantExtractStep(Step):
             "Downloading and indexing claimant extract data files.",
             extra={
                 "employee_feed_file": extract_data.employee_feed.file_location,
-                "leave_plan_file": extract_data.leave_plan_info.file_location,
                 "requested_absence_file": extract_data.requested_absence_info.file_location,
             },
         )
@@ -205,22 +191,7 @@ class ClaimantExtractStep(Step):
                     "indexed employee feed file row with Customer NO: %s",
                     str(row.get("CUSTOMERNO")),
                 )
-
         extract_data.employee_feed.indexed_data = employee_indexed_data
-
-        # Index leave plan info for easy search.
-        leave_plan_info_indexed_data: Dict[str, Dict[str, str]] = {}
-        leave_plan_info_rows = payments_util.download_and_parse_csv(
-            extract_data.leave_plan_info.file_location, download_directory
-        )
-        for row in leave_plan_info_rows:
-            leave_plan_info_indexed_data[str(row.get("ABSENCE_CASENUMBER"))] = row
-            logger.debug(
-                "indexed leave plan file row with Absence case no: %s",
-                str(row.get("ABSENCE_CASENUMBER")),
-            )
-
-        extract_data.leave_plan_info.indexed_data = leave_plan_info_indexed_data
 
         requested_absence_indexed_data: Dict[str, Dict[str, str]] = {}
         requested_absence_rows = payments_util.download_and_parse_csv(
@@ -360,46 +331,6 @@ class ClaimantExtractStep(Step):
             validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_FIELD, claim_type_header
             )
-
-        """
-        leave_plan = extract_data.leave_plan_info.indexed_data.get(absence_case_id)
-
-        if leave_plan is None:
-            error_msg = f"Leave Plan Info not found for Requested Absence {absence_case_id}"
-            validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_DATASET, error_msg,
-            )
-            return validation_container, None
-        else:
-            # Translating FINEOS known values to PFML values.
-            # If no transaltion value found leave value as is and
-            # validate_csv_input will add an issue in the validation
-            # container.
-            raw_leave_type = leave_plan.get("LEAVETYPE")
-            if raw_leave_type is not None:
-                try:
-                    translated_leave_type = CLAIM_TYPE_TRANSLATION.get(raw_leave_type)
-                    # Used str() to fix lint error.
-                    leave_plan["LEAVETYPE"] = str(translated_leave_type)
-                except KeyError:
-                    pass
-
-            leave_type = payments_util.validate_csv_input(
-                "LEAVETYPE",
-                leave_plan,
-                validation_container,
-                True,
-                custom_validator_func=payments_util.lookup_validator(ClaimType),
-            )
-
-            if leave_type is not None:
-                try:
-                    claim_pfml.claim_type_id = ClaimType.get_id(leave_type)
-                except KeyError:
-                    # validate_csv_input already recorded the key does not exist
-                    # but doesn't signal back.
-                    pass
-        """
 
         case_status = payments_util.validate_csv_input(
             "ABSENCE_CASESTATUS",
@@ -673,7 +604,7 @@ class ClaimantExtractStep(Step):
     ) -> bool:
         """Returns True if there have been EFT updates; False otherwise"""
         nbr_of_validation_errors = len(validation_container.validation_issues)
-        eft_required = employee_pfml_entry.payment_method_id == ELECTRONIC_FUNDS_TRANSFER
+        eft_required = employee_pfml_entry.payment_method_id == PaymentMethod.ACH.payment_method_id
 
         routing_nbr = payments_util.validate_csv_input(
             "SORTCODE",
@@ -706,7 +637,7 @@ class ClaimantExtractStep(Step):
             new_eft.bank_account_type_id = BankAccountType.get_id(account_type)
 
             current_claimant_eft_state = state_log_util.get_latest_state_log_in_flow(
-                employee_pfml_entry, Flow.VENDOR_EFT, self.db_session
+                employee_pfml_entry, Flow.DELEGATED_EFT, self.db_session
             )
 
             # If the employee has no existing EFT, then we set it to the new one.
@@ -727,22 +658,22 @@ class ClaimantExtractStep(Step):
                 employee_pfml_entry.eft.account_nbr = new_eft.account_nbr
                 employee_pfml_entry.eft.bank_account_type_id = new_eft.bank_account_type_id
 
-            # Only initiate the VENDOR_EFT flow if there have been changes OR
-            # If this employee has never been in the VENDOR_EFT flow before.
+            # Only initiate the DELEGATED_EFT_SEND_PRENOTE flow if there have been changes OR
+            # If this employee has never been in the DELEGATED_EFT_SEND_PRENOTE flow before.
             # The early return if is_same_eft() is True will prevent reaching
             # this statement.
             logger.info(
-                "Initiated VENDOR_EFT flow for Employee",
+                "Initiated DELEGATED_EFT_SEND_PRENOTE flow for Employee",
                 extra={
-                    "end_state_id": State.EFT_REQUEST_RECEIVED.state_id,
+                    "end_state_id": State.DELEGATED_EFT_SEND_PRENOTE.state_id,
                     "employee_id": employee_pfml_entry.employee_id,
                 },
             )
             # state_log_util.create_finished_state_log(
-            #     end_state=State.EFT_REQUEST_RECEIVED,
+            #     end_state=State.DELEGATED_EFT_SEND_PRENOTE,
             #     associated_model=employee_pfml_entry,
             #     outcome=state_log_util.build_outcome(
-            #         f"Initiated VENDOR_EFT flow for Employee {employee_pfml_entry.employee_id}"
+            #         f"Initiated DELEGATED_EFT_SEND_PRENOTE flow for Employee {employee_pfml_entry.employee_id}"
             #     ),
             #     db_session=db_session,
             # )
@@ -810,16 +741,13 @@ class ClaimantExtractStep(Step):
         validation_container: payments_util.ValidationContainer,
         has_claimant_update: bool,
     ) -> None:
-        """Manages the VENDOR_CHECK states"""
+        """Manages the DELEGATED_CLAIMANT states"""
         validation_container.record_key = employee_pfml_entry.employee_id
-        current_state = state_log_util.get_latest_state_log_in_flow(
-            employee_pfml_entry, Flow.VENDOR_CHECK, self.db_session
-        )
 
         # If there are validation issues, add to claimant extract error report.
         if validation_container.has_validation_issues():
             state_log_util.create_finished_state_log(
-                end_state=State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT,
+                end_state=State.DELEGATED_CLAIMANT_ADD_TO_CLAIMANT_EXTRACT_ERROR_REPORT,
                 associated_model=employee_pfml_entry,
                 outcome=state_log_util.build_outcome(
                     f"Employee {employee_pfml_entry.employee_id} had validation issues in FINEOS claimant extract {extract_data.date_str}",
@@ -828,36 +756,15 @@ class ClaimantExtractStep(Step):
                 db_session=self.db_session,
             )
 
-        # If there are MMARS-relevant claimant updates OR the employee has not been
-        # through in the VENDOR_CHECK flow before, restart VENDOR_CHECK flow.
-        elif has_claimant_update or current_state is None:
+        else:
             state_log_util.create_finished_state_log(
-                end_state=State.IDENTIFY_MMARS_STATUS,
+                end_state=State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS,
                 associated_model=employee_pfml_entry,
                 outcome=state_log_util.build_outcome(
                     f"Employee {employee_pfml_entry.employee_id} successfully extracted from FINEOS claimant extract {extract_data.date_str}"
                 ),
                 db_session=self.db_session,
             )
-
-        # It's most likely unsafe to move to a new state, because it could be
-        # in-progress. Safer to move to the same state and add a note.
-        else:
-            # Adding check for typing. This should never happen in practice.
-            if current_state.end_state is None:
-                logger.error(
-                    "An unexpected error occurred where the latest state_log has no end_state: %s",
-                    current_state.state_log_id,
-                )
-            else:
-                state_log_util.create_finished_state_log(
-                    end_state=current_state.end_state,
-                    associated_model=employee_pfml_entry,
-                    outcome=state_log_util.build_outcome(
-                        f"No changes to employee {employee_pfml_entry.employee_id} successfully extracted from FINEOS claimant extract {extract_data.date_str}"
-                    ),
-                    db_session=self.db_session,
-                )
 
     # TODO move to payments_util
     def move_files_from_received_to_processed(self, extract_data: ExtractData) -> None:
@@ -866,7 +773,7 @@ class ClaimantExtractStep(Step):
         # to
         # s3://bucket/path/to/processed/2020-01-01-11-30-00-payment-extract/2020-01-01-11-30-00-file.csv
         date_group_folder = payments_util.get_date_group_folder_name(
-            extract_data.date_str, ReferenceFileType.VENDOR_CLAIM_EXTRACT
+            extract_data.date_str, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         )
         new_requested_absence_info_s3_path = extract_data.requested_absence_info.file_location.replace(
             RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
@@ -894,20 +801,6 @@ class ClaimantExtractStep(Step):
             },
         )
 
-        new_leave_plan_info_s3_path = extract_data.leave_plan_info.file_location.replace(
-            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(
-            extract_data.leave_plan_info.file_location, new_leave_plan_info_s3_path
-        )
-        logger.debug(
-            "Moved leave plan file to processed folder.",
-            extra={
-                "source": extract_data.leave_plan_info.file_location,
-                "destination": new_leave_plan_info_s3_path,
-            },
-        )
-
         # Update the reference file DB record to point to the new folder for these files
         extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
             RECEIVED_FOLDER, PROCESSED_FOLDER
@@ -930,7 +823,7 @@ class ClaimantExtractStep(Step):
         # to
         # s3://bucket/path/to/skipped/2020-01-01-11-30-00-payment-extract/2020-01-01-11-30-00-file.csv
         date_group_folder = payments_util.get_date_group_folder_name(
-            extract_data.date_str, ReferenceFileType.VENDOR_CLAIM_EXTRACT
+            extract_data.date_str, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         )
         new_requested_absence_info_s3_path = extract_data.requested_absence_info.file_location.replace(
             RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
@@ -958,20 +851,6 @@ class ClaimantExtractStep(Step):
             },
         )
 
-        new_leave_plan_info_s3_path = extract_data.leave_plan_info.file_location.replace(
-            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(
-            extract_data.leave_plan_info.file_location, new_leave_plan_info_s3_path
-        )
-        logger.debug(
-            "Moved leave plan file to skipped folder.",
-            extra={
-                "source": extract_data.leave_plan_info.file_location,
-                "destination": new_leave_plan_info_s3_path,
-            },
-        )
-
         # Update the reference file DB record to point to the new folder for these files
         extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
             RECEIVED_FOLDER, SKIPPED_FOLDER
@@ -994,7 +873,7 @@ class ClaimantExtractStep(Step):
         # to
         # s3://bucket/path/to/errored/2020-01-01/2020-01-01-file.csv
         date_group_folder = payments_util.get_date_group_folder_name(
-            extract_data.date_str, ReferenceFileType.VENDOR_CLAIM_EXTRACT
+            extract_data.date_str, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         )
         new_requested_absence_info_s3_path = extract_data.requested_absence_info.file_location.replace(
             RECEIVED_FOLDER, f"{date_group_folder}"
@@ -1019,20 +898,6 @@ class ClaimantExtractStep(Step):
             extra={
                 "source": extract_data.employee_feed.file_location,
                 "destination": new_employee_feed_s3_path,
-            },
-        )
-
-        new_leave_plan_info_s3_path = extract_data.leave_plan_info.file_location.replace(
-            RECEIVED_FOLDER, f"{ERRORED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(
-            extract_data.leave_plan_info.file_location, new_leave_plan_info_s3_path
-        )
-        logger.debug(
-            "Moved leave plan file to error folder.",
-            extra={
-                "source": extract_data.leave_plan_info.file_location,
-                "destination": new_leave_plan_info_s3_path,
             },
         )
 

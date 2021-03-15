@@ -119,7 +119,7 @@ class ExtractData:
         )
         self.reference_file = ReferenceFile(
             file_location=file_location,
-            reference_file_type_id=ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id,
+            reference_file_type_id=ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id,
             reference_file_id=uuid.uuid4(),
         )
         logger.debug("Initialized extract data: %s", self.reference_file.file_location)
@@ -934,7 +934,7 @@ class PaymentExtractStep(Step):
         # to
         # s3://bucket/path/to/processed/2020-01-01-11-30-00-payment-export/2020-01-01-11-30-00-file.csv
         date_group_folder = payments_util.get_date_group_folder_name(
-            extract_data.date_str, ReferenceFileType.PAYMENT_EXTRACT
+            extract_data.date_str, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         )
         new_pei_s3_path = extract_data.pei.file_location.replace(
             RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
@@ -991,7 +991,7 @@ class PaymentExtractStep(Step):
         # to
         # s3://bucket/path/to/processed/2020-01-01-11-30-00-payment-export/2020-01-01-11-30-00-file.csv
         date_group_folder = payments_util.get_date_group_folder_name(
-            extract_data.date_str, ReferenceFileType.PAYMENT_EXTRACT
+            extract_data.date_str, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         )
         new_pei_s3_path = extract_data.pei.file_location.replace(
             RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
@@ -1051,7 +1051,7 @@ class PaymentExtractStep(Step):
         # to
         # s3://bucket/path/to/error/2020-01-01-11-30-00-payment-export/2020-01-01-file.csv
         date_group_folder = payments_util.get_date_group_folder_name(
-            extract_data.date_str, ReferenceFileType.PAYMENT_EXTRACT
+            extract_data.date_str, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         )
         new_pei_s3_path = extract_data.pei.file_location.replace(
             "received", f"error/{date_group_folder}"
@@ -1103,7 +1103,7 @@ class PaymentExtractStep(Step):
         logger.info("Processing payment extract files")
 
         payments_util.copy_fineos_data_to_archival_bucket(
-            self.db_session, expected_file_names, ReferenceFileType.PAYMENT_EXTRACT
+            self.db_session, expected_file_names, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         )
         data_by_date = payments_util.group_s3_files_by_date(expected_file_names)
 
@@ -1135,7 +1135,7 @@ class PaymentExtractStep(Step):
                 if (
                     date_str in previously_processed_date
                     or payments_util.payment_extract_reference_file_exists_by_date_group(
-                        self.db_session, date_str, ReferenceFileType.PAYMENT_EXTRACT
+                        self.db_session, date_str, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
                     )
                 ):
                     logger.warning(

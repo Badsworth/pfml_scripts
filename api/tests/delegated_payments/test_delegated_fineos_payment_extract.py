@@ -391,7 +391,7 @@ def test_process_extract_data(
 
     # Make sure files were copied to the processed directory
     moved_files = file_util.list_files(
-        f"s3://{mock_s3_bucket}/cps/inbound/processed/{payments_util.get_date_group_folder_name('2020-01-01-11-30-00', ReferenceFileType.PAYMENT_EXTRACT)}/"
+        f"s3://{mock_s3_bucket}/cps/inbound/processed/{payments_util.get_date_group_folder_name('2020-01-01-11-30-00', ReferenceFileType.FINEOS_PAYMENT_EXTRACT)}/"
     )
     assert len(moved_files) == 3
 
@@ -446,11 +446,11 @@ def test_process_extract_data(
         reference_file = reference_files[0].reference_file
         assert (
             reference_file.file_location
-            == "s3://test_bucket/cps/inbound/processed/2020-01-01-11-30-00-payment-export"
+            == "s3://test_bucket/cps/inbound/processed/2020-01-01-11-30-00-payment-extract"
         )
         assert (
             reference_file.reference_file_type_id
-            == ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id
+            == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
         )
         # Verify that there is exactly one successful state log per payment
         state_logs = payment.state_logs
@@ -652,7 +652,7 @@ def test_process_extract_data_rollback(
         assert reference_files[0].file_location == f"s3://{mock_s3_bucket}/cps/inbound/error/"
         assert (
             reference_files[0].reference_file_type_id
-            == ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id
+            == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
         )
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
@@ -681,20 +681,20 @@ def test_process_extract_unprocessed_folder_files(
             get_s3_config().pfml_fineos_inbound_path,
             "processed",
             payments_util.get_date_group_folder_name(
-                "2020-01-01-11-30-00", ReferenceFileType.PAYMENT_EXTRACT
+                "2020-01-01-11-30-00", ReferenceFileType.FINEOS_PAYMENT_EXTRACT
             ),
         ),
-        reference_file_type_id=ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id,
+        reference_file_type_id=ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id,
     )
     ReferenceFileFactory.create(
         file_location=os.path.join(
             get_s3_config().pfml_fineos_inbound_path,
             "processed",
             payments_util.get_date_group_folder_name(
-                "2020-01-03-11-30-00", ReferenceFileType.PAYMENT_EXTRACT
+                "2020-01-03-11-30-00", ReferenceFileType.FINEOS_PAYMENT_EXTRACT
             ),
         ),
-        reference_file_type_id=ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id,
+        reference_file_type_id=ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id,
     )
 
     payment_extract_step.run()
@@ -713,7 +713,7 @@ def test_process_extract_unprocessed_folder_files(
     for date_file in ["vpei.csv", "vpeipaymentdetails.csv", "vpeiclaimdetails.csv"]:
         for unprocessed_date in ["2020-01-02-11-30-00", "2020-01-04-11-30-00"]:
             expected_file_names.append(
-                f"{payments_util.get_date_group_folder_name(unprocessed_date, ReferenceFileType.PAYMENT_EXTRACT)}/{unprocessed_date}-{date_file}"
+                f"{payments_util.get_date_group_folder_name(unprocessed_date, ReferenceFileType.FINEOS_PAYMENT_EXTRACT)}/{unprocessed_date}-{date_file}"
             )
 
     for processed_file in processed_files:
@@ -724,7 +724,7 @@ def test_process_extract_unprocessed_folder_files(
 
     # confirm no files will be copied in a subsequent copy
     copied_files = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, extractor.expected_file_names, ReferenceFileType.PAYMENT_EXTRACT
+        test_db_session, extractor.expected_file_names, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
     )
     assert len(copied_files) == 1
 

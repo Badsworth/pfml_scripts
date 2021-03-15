@@ -9,7 +9,6 @@ from sqlalchemy import func
 import massgov.pfml.delegated_payments.delegated_fineos_claimant_extract as claimant_extract
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     BankAccountType,
@@ -17,7 +16,6 @@ from massgov.pfml.db.models.employees import (
     ClaimType,
     Employee,
     EmployeeLog,
-    Flow,
     GeoState,
     PaymentMethod,
     ReferenceFileType,
@@ -25,9 +23,7 @@ from massgov.pfml.db.models.employees import (
     StateLog,
 )
 from massgov.pfml.db.models.factories import (
-    AddressFactory,
     ClaimFactory,
-    CtrAddressPairFactory,
     EftFactory,
     EmployeeFactory,
     EmployerFactory,
@@ -84,26 +80,12 @@ def emp_updates_path(tmp_path, mock_fineos_s3_bucket):
         employee_feed_file, mock_fineos_s3_bucket, f"DT2/dataexports/{employee_feed_file_name}"
     )
 
-    leave_plan_info_file_name = "2020-12-21-19-20-42-LeavePlan_info.csv"
-    content_line_one = '"ABSENCE_CASENUMBER","PAIDLEAVE_CASENUMBER","PAIDLEAVEBENEFIT_CASENUMBER","PEI_I","PEI_C","LP_C","LP_I","ALIAS","SHORTNAME","LEAVETYPE","BENEFITRIGHTYPE"'
-    content_line_two = '"NTN-1307-ABS-01","PL ABS-1307","PL ABS-1307-PL ABS-01","","","14400","313","MA PFML - Employee","MA PFML - Employee","EE Medical Leave","Absence Benefit"'
-    content_line_three = '"NTN-1308-ABS-01","PL ABS-1308","PL ABS-1308-PL ABS-01","","","14400","315","MA PFML - Family","MA PFML - Family","Family Medical Leave","Absence Benefit"'
-    content = f"{content_line_one}\n{content_line_two}\n{content_line_three}"
-
-    leave_plan_info_file = tmp_path / leave_plan_info_file_name
-    leave_plan_info_file.write_text(content)
-    upload_file_to_s3(
-        leave_plan_info_file, mock_fineos_s3_bucket, f"DT2/dataexports/{leave_plan_info_file_name}"
-    )
-
     # Add another file to test that our file processing ignores non-dated files
     other_file_name = "config.csv"
     content_line_one = "Text"
     other_file = tmp_path / other_file_name
     other_file.write_text(content_line_one)
-    upload_file_to_s3(
-        leave_plan_info_file, mock_fineos_s3_bucket, f"DT2/dataexports/{other_file_name}"
-    )
+    upload_file_to_s3(other_file, mock_fineos_s3_bucket, f"DT2/dataexports/{other_file_name}")
 
 
 def test_run_step_happy_path(
@@ -136,7 +118,6 @@ def test_run_step_happy_path(
 
     assert claim is not None
     assert claim.employee_id == employee.employee_id
-    # assert claim.employer_id == employer.employer_id  # TODO - See comment in update_employee_info
 
     assert claim.fineos_notification_id == "NTN-1308"
     assert claim.claim_type.claim_type_id == ClaimType.MEDICAL_LEAVE.claim_type_id
@@ -179,28 +160,15 @@ def test_run_step_happy_path(
     # Confirm StateLogs
     state_logs = test_db_session.query(StateLog).all()
 
-    # TODO: Restore this test after we have a long-term solution for the hotfix in API-1370.
-    #
-    # updated_employee_state_log_count = 2
     updated_employee_state_log_count = 1
 
     assert len(state_logs) == updated_employee_state_log_count
     assert len(updated_employee.state_logs) == updated_employee_state_log_count
 
-    # TODO: Restore this test after we have a long-term solution for the hotfix in API-1370.
-    #
-    # Confirm 1 state log for VENDOR_EFT flow
-    # assert (
-    #     test_db_session.query(func.count(StateLog.state_log_id))
-    #     .filter(StateLog.end_state_id == State.EFT_REQUEST_RECEIVED.state_id)
-    #     .scalar()
-    #     == 1
-    # )
-
-    # Confirm 1 state log for VENDOR_CHECK flow
+    # Confirm 1 state log for DELEGATED_EFT flow
     assert (
         test_db_session.query(func.count(StateLog.state_log_id))
-        .filter(StateLog.end_state_id == State.IDENTIFY_MMARS_STATUS.state_id)
+        .filter(StateLog.end_state_id == State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS.state_id)
         .scalar()
         == 1
     )
@@ -240,15 +208,7 @@ def test_run_step_no_employee(
 
 
 def format_absence_data() -> Tuple[claimant_extract.ExtractData, Dict[str, str]]:
-    leave_plan_extract = claimant_extract.Extract("test/location/leave_plan")
-    leave_plan_extract.indexed_data = {
-        "NTN-001-ABS-01": {
-            "ABSENCE_CASENUMBER": "NTN-001-ABS-01",
-            "LEAVETYPE": "Family Medical Leave",
-        }
-    }
     extract_data = claimant_extract.ExtractData([], "2021-02-21")
-    extract_data.leave_plan_info = leave_plan_extract
 
     requested_absence = {
         "ABSENCE_CASENUMBER": "NTN-001-ABS-01",
@@ -293,8 +253,6 @@ def test_create_or_update_claim_happy_path_new_claim(claimant_extract_step, test
     # New claim not yet persisted to DB
     assert claim.fineos_notification_id == "NTN-001"
     assert claim.fineos_absence_id == "NTN-001-ABS-01"
-    # ClaimType logic commented out by other PR so commenting this assertion.
-    # assert claim.claim_type_id == ClaimType.FAMILY_LEAVE.claim_type_id
     assert claim.fineos_absence_status_id == AbsenceStatus.ADJUDICATION.absence_status_id
     assert claim.absence_period_start_date == datetime.date(2021, 2, 14)
     assert claim.absence_period_end_date == datetime.date(2021, 2, 28)
@@ -322,22 +280,6 @@ def test_create_or_update_claim_happy_path_update_claim(
     assert claim.absence_period_start_date == datetime.date(2021, 2, 14)
     assert claim.absence_period_end_date == datetime.date(2021, 2, 28)
     assert claim.is_id_proofed is True
-
-
-def test_create_or_update_claim_no_leave_plan_match(claimant_extract_step, test_db_session):
-
-    extract_data, requested_absence = format_absence_data()
-    # Change key to force unmatch.
-    requested_absence["ABSENCE_CASENUMBER"] = "NTN-002-ABS-01"
-
-    validation_container, claim = claimant_extract_step.create_or_update_claim(
-        extract_data, requested_absence
-    )
-
-    # Leave plan match logic commented out by other PR so commenting validation assertion
-    # and checking claim is not none. Why was leave plan match commented out?
-    # assert len(validation_container.validation_issues) == 1
-    assert claim is not None
 
 
 def test_create_or_update_claim_invalid_values(claimant_extract_step, test_db_session):
@@ -498,20 +440,20 @@ def test_process_extract_unprocessed_folder_files(
             get_s3_config().pfml_fineos_inbound_path,
             payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
             payments_util.get_date_group_folder_name(
-                "2020-01-01-11-30-00", ReferenceFileType.VENDOR_CLAIM_EXTRACT
+                "2020-01-01-11-30-00", ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
             ),
         ),
-        reference_file_type_id=ReferenceFileType.VENDOR_CLAIM_EXTRACT.reference_file_type_id,
+        reference_file_type_id=ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id,
     )
     ReferenceFileFactory.create(
         file_location=os.path.join(
             get_s3_config().pfml_fineos_inbound_path,
             payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
             payments_util.get_date_group_folder_name(
-                "2020-01-03-11-30-00", ReferenceFileType.VENDOR_CLAIM_EXTRACT
+                "2020-01-03-11-30-00", ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
             ),
         ),
-        reference_file_type_id=ReferenceFileType.VENDOR_CLAIM_EXTRACT.reference_file_type_id,
+        reference_file_type_id=ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id,
     )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
@@ -527,9 +469,10 @@ def test_process_extract_unprocessed_folder_files(
         get_s3_config().pfml_fineos_inbound_path, payments_util.Constants.S3_INBOUND_SKIPPED_DIR,
     )
     processed_files = file_util.list_files(destination_folder, recursive=True)
+
     skipped_files = file_util.list_files(skipped_folder, recursive=True)
-    assert len(processed_files) == 3
-    assert len(skipped_files) == 3
+    assert len(processed_files) == 2
+    assert len(skipped_files) == 2
 
     for file in skipped_files:
         assert file.startswith("2020-01-02-11-30-00")
@@ -538,7 +481,7 @@ def test_process_extract_unprocessed_folder_files(
     for date_file in claimant_extract.expected_file_names:
         for unprocessed_date in ["2020-01-02-11-30-00", "2020-01-04-11-30-00"]:
             expected_file_names.append(
-                f"{payments_util.get_date_group_folder_name(unprocessed_date, ReferenceFileType.VENDOR_CLAIM_EXTRACT)}/{unprocessed_date}-{date_file}"
+                f"{payments_util.get_date_group_folder_name(unprocessed_date, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT)}/{unprocessed_date}-{date_file}"
             )
 
     for processed_file in processed_files:
@@ -547,7 +490,7 @@ def test_process_extract_unprocessed_folder_files(
     copied_files = payments_util.copy_fineos_data_to_archival_bucket(
         test_db_session,
         claimant_extract.expected_file_names,
-        ReferenceFileType.VENDOR_CLAIM_EXTRACT,
+        ReferenceFileType.FINEOS_CLAIMANT_EXTRACT,
     )
     assert len(copied_files) == 1
 
@@ -648,14 +591,6 @@ def test_update_eft_info_happy_path(claimant_extract_step, test_db_session):
     )
     assert has_eft_update is True
 
-    # TODO: Restore this test after we have a long-term solution for the hotfix in API-1370.
-    #
-    # state_log = state_log_util.get_latest_state_log_in_flow(
-    #     employee, Flow.VENDOR_EFT, test_db_session
-    # )
-    # assert state_log
-    # assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
-
 
 def test_update_eft_info_update_existing(claimant_extract_step, test_db_session):
     employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
@@ -685,14 +620,6 @@ def test_update_eft_info_update_existing(claimant_extract_step, test_db_session)
         updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
     )
     assert has_eft_update is True
-
-    # TODO: Restore this test after we have a long-term solution for the hotfix in API-1370.
-    #
-    # state_log = state_log_util.get_latest_state_log_in_flow(
-    #     employee, Flow.VENDOR_EFT, test_db_session
-    # )
-    # assert state_log
-    # assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
 
 
 def test_update_eft_info_is_same_eft_no_prior_state(claimant_extract_step, test_db_session):
@@ -727,59 +654,6 @@ def test_update_eft_info_is_same_eft_no_prior_state(claimant_extract_step, test_
         updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
     )
     assert has_eft_update is True
-
-    # TODO: Restore this test after we have a long-term solution for the hotfix in API-1370.
-    #
-    # state_log = state_log_util.get_latest_state_log_in_flow(
-    #     employee, Flow.VENDOR_EFT, test_db_session
-    # )
-    # assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
-
-
-def test_update_eft_info_is_same_eft_has_prior_eft_state(claimant_extract_step, test_db_session):
-    employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
-    eft = EftFactory.create()
-    employee.eft = eft
-    test_db_session.add(employee)
-    test_db_session.add(eft)
-    test_db_session.commit()
-
-    assert employee.eft is not None
-
-    eft_entry = {
-        "SORTCODE": eft.routing_nbr,
-        "ACCOUNTNO": eft.account_nbr,
-        "ACCOUNTTYPE": eft.bank_account_type.bank_account_type_description,
-    }
-    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
-
-    state_log_util.create_finished_state_log(
-        associated_model=employee,
-        end_state=State.EFT_PENDING,
-        outcome=state_log_util.build_outcome("Foo"),
-        db_session=test_db_session,
-    )
-
-    has_eft_update = claimant_extract_step.update_eft_info(
-        eft_entry, employee, validation_container
-    )
-
-    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
-        Employee.employee_id == employee.employee_id
-    ).one_or_none()
-
-    assert updated_employee.eft.eft_id == eft.eft_id
-    assert updated_employee.eft.routing_nbr == eft.routing_nbr
-    assert updated_employee.eft.account_nbr == eft.account_nbr
-    assert (
-        updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
-    )
-    assert has_eft_update is False
-
-    state_log = state_log_util.get_latest_state_log_in_flow(
-        employee, Flow.VENDOR_EFT, test_db_session
-    )
-    assert state_log.end_state_id == State.EFT_PENDING.state_id
 
 
 def test_update_eft_info_validation_issues(claimant_extract_step, test_db_session):
@@ -888,75 +762,10 @@ def test_process_records_to_db_validation_issues(
     assert len(state_logs) == 1
 
     state_log = state_logs[0]
-    assert state_log.end_state_id == State.ADD_TO_VENDOR_EXPORT_ERROR_REPORT.state_id
-
-
-def test_process_records_to_db_no_claimant_updates_has_prior_eft_state(
-    claimant_extract_step, test_db_session, formatted_claim
-):
-    # Setup
-    extract_data, requested_absence = format_absence_data()
-    add_employee_feed(extract_data)
-    extract_data.requested_absence_info = claimant_extract.Extract(
-        "test/location/requested_absence"
+    assert (
+        state_log.end_state_id
+        == State.DELEGATED_CLAIMANT_ADD_TO_CLAIMANT_EXTRACT_ERROR_REPORT.state_id
     )
-    extract_data.requested_absence_info.indexed_data["NTN-001-ABS-01"] = requested_absence
-
-    # Create an employee with address and EFT that exactly matches the input
-    # Make the DOB different. That should not trigger the VENDOR_CHECK state change
-    tax_identifier = TaxIdentifierFactory.create(tax_identifier="123456789")
-    eft = EftFactory.create(
-        routing_nbr=extract_data.employee_feed.indexed_data["12345"]["SORTCODE"],
-        account_nbr=extract_data.employee_feed.indexed_data["12345"]["ACCOUNTNO"],
-        bank_account_type_id=2,
-    )
-    address = AddressFactory.create(
-        address_line_one=extract_data.employee_feed.indexed_data["12345"]["ADDRESS1"],
-        address_line_two=extract_data.employee_feed.indexed_data["12345"]["ADDRESS2"],
-        city=extract_data.employee_feed.indexed_data["12345"]["ADDRESS4"],
-        geo_state_id=GeoState.NY.geo_state_id,
-        zip_code=extract_data.employee_feed.indexed_data["12345"]["POSTCODE"],
-    )
-    ctr_address_pair = CtrAddressPairFactory.create(fineos_address=address,)
-    employee = EmployeeFactory.create(
-        tax_identifier=tax_identifier,
-        date_of_birth="1967-04-27",
-        eft=eft,
-        ctr_address_pair=ctr_address_pair,
-    )
-
-    # Create a statelog for this employee to verify the state doesn't change
-    state_log_util.create_finished_state_log(
-        associated_model=employee,
-        end_state=State.VCC_ERROR_REPORT_SENT,
-        outcome=state_log_util.build_outcome("Foo"),
-        db_session=test_db_session,
-    )
-
-    # Create a state log for the VENDOR_EFT flow
-    state_log_util.create_finished_state_log(
-        associated_model=employee,
-        end_state=State.EFT_PENDING,
-        outcome=state_log_util.build_outcome("Foo"),
-        db_session=test_db_session,
-    )
-
-    # Verify the state log
-    state_logs = test_db_session.query(StateLog).all()
-    assert len(state_logs) == 2
-
-    # Run the process
-    claimant_extract_step.process_records_to_db(extract_data)
-
-    # Verify both state logs are in the same state
-    state_logs = test_db_session.query(StateLog).all()
-    assert len(state_logs) == 3
-
-    for state_log in state_logs:
-        assert state_log.end_state_id in [
-            State.VCC_ERROR_REPORT_SENT.state_id,
-            State.EFT_PENDING.state_id,
-        ]
 
 
 def test_extract_to_staging_tables(emp_updates_path, claimant_extract_step, test_db_session):
@@ -964,13 +773,11 @@ def test_extract_to_staging_tables(emp_updates_path, claimant_extract_step, test
     date = "2020-12-21-19-20-42"
     test_file_name1 = "Employee_feed.csv"
     test_file_name2 = "VBI_REQUESTEDABSENCE_SOM.csv"
-    test_file_name3 = "LeavePlan_info.csv"
 
     test_file_path1 = os.path.join(os.path.dirname(__file__), f"test_files/{test_file_name1}")
     test_file_path2 = os.path.join(os.path.dirname(__file__), f"test_files/{test_file_name2}")
-    test_file_path3 = os.path.join(os.path.dirname(__file__), f"test_files/{test_file_name3}")
 
-    test_file_names = [test_file_path1, test_file_path2, test_file_path3]
+    test_file_names = [test_file_path1, test_file_path2]
 
     extract_data = claimant_extract.ExtractData(test_file_names, date)
     claimant_extract_step.download_and_index_data(extract_data, tempdir)

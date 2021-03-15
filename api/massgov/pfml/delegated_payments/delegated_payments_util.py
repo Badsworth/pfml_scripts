@@ -500,8 +500,8 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
     """Returns a max history datetime for a given ReferenceFileType
 
     Only accepts:
-        - ReferenceFileType.VENDOR_CLAIM_EXTRACT
-        - ReferenceFileType.PAYMENT_EXTRACT
+        - ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
+        - ReferenceFileType.FINEOS_PAYMENT_EXTRACT
 
     Raises:
         ValueError: An unacceptable ReferenceFileType or a bad datestring was
@@ -511,13 +511,13 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
 
     if (
         export_type.reference_file_type_id
-        == ReferenceFileType.VENDOR_CLAIM_EXTRACT.reference_file_type_id
+        == ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id
     ):
         datestring = date_config.fineos_vendor_max_history_date
 
     elif (
         export_type.reference_file_type_id
-        == ReferenceFileType.PAYMENT_EXTRACT.reference_file_type_id
+        == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
     ):
         datestring = date_config.fineos_payment_max_history_date
 
