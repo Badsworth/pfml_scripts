@@ -5,6 +5,7 @@ from typing import List
 import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.pub.response_file_handler as response_file_handler
 import massgov.pfml.util.logging as logging
+import massgov.pfml.util.logging.audit as audit
 
 logger = logging.get_logger(__name__)
 
@@ -52,7 +53,7 @@ def make_db_session() -> db.Session:
 
 def main():
     """Entry point for PUB Response Processing"""
-    logging.audit.init_security_logging()
+    audit.init_security_logging()
     logging.init(__name__)
 
     config = Configuration(sys.argv[1:])
