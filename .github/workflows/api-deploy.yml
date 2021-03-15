@@ -48,7 +48,7 @@ env:
   terraform-api-dir: ./infra/api/environments
   terraform-env-shared-dir: ./infra/env-shared/environments
   terraform-ecs-tasks-dir: ./infra/ecs-tasks/environments
-  terraform-version: 0.13.6
+  terraform-version: 0.14.7
   python-version: 3.8
   # Create a mapping of branches to environment names.
   #
@@ -423,7 +423,7 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v1.2.1
         with:
-          terraform_version: 0.13.6
+          terraform_version: 0.14.7
           terraform_wrapper: false
 
       - name: Terraform Init
@@ -469,7 +469,7 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v1.2.1
         with:
-          terraform_version: 0.13.6
+          terraform_version: 0.14.7
           terraform_wrapper: false
 
       - name: Terraform Init

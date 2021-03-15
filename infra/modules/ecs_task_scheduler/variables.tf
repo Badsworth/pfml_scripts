@@ -26,12 +26,12 @@ variable "input" {
 
 variable "app_subnet_ids" {
   description = "Subnets to run the task in"
-  type        = list
+  type        = list(any)
 }
 
 variable "security_group_ids" {
   description = "Security groups for the task to attach"
-  type        = list
+  type        = list(any)
 }
 
 variable "schedule_expression" {
