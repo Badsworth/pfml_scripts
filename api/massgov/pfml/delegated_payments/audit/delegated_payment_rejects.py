@@ -85,9 +85,6 @@ NOT_SAMPLED_PENDING_STATES: List[LkState] = [st.from_state for st in NOT_SAMPLED
 NOT_SAMPLED_PENDING_STATE_IDS: List[int] = [st.state_id for st in NOT_SAMPLED_PENDING_STATES]
 
 # Sampled payment next states
-REJECTED_STATE = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
-REJECTED_OUTCOME = state_log_util.build_outcome("Payment rejected")
-
 ACCEPTED_STATE = State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK
 ACCEPTED_OUTCOME = state_log_util.build_outcome(
     "Accepted payment to be added to FINEOS Writeback - sampled"
@@ -163,7 +160,10 @@ class PaymentRejectsStep(Step):
 
         if is_rejected_payment:
             state_log_util.create_finished_state_log(
-                payment, REJECTED_STATE, REJECTED_OUTCOME, self.db_session
+                payment,
+                State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+                state_log_util.build_outcome("Payment rejected"),
+                self.db_session,
             )
         else:
             state_log_util.create_finished_state_log(
@@ -236,6 +236,40 @@ class PaymentRejectsStep(Step):
             self._transition_not_sampled_payment_audit_pending_state(pending_state)
 
         logger.info("Completed transition of not sampled payment audit pending states")
+
+    def transition_rejected_payments_to_sent_state(self):
+        logger.info("Start transition of rejected payments to sent state")
+
+        state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            state_log_util.AssociatedClass.PAYMENT,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+            self.db_session,
+        )
+        state_log_count = len(state_logs)
+
+        logger.info(
+            "%i payments found for state %s, moving them to %s",
+            state_log_count,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_description,
+            State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT.state_description,
+        )
+
+        for state_log in state_logs:
+            payment = state_log.payment
+
+            state_log_util.create_finished_state_log(
+                payment,
+                State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT,
+                state_log_util.build_outcome("Payment Reject Report sent"),
+                self.db_session,
+            )
+
+        logger.info(
+            "Successfully moved %i state logs from %s to %s",
+            state_log_count,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_description,
+            State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT.state_description,
+        )
 
     def process_rejects_and_send_report(
         self,
@@ -314,7 +348,7 @@ class PaymentRejectsStep(Step):
         )
 
         # create and send Payment Rejects Report file
-        # TODO split this out, we need to figure out how to get derived data to mirror PaymentAuditData
+        # TODO split this out and use state? we'll need to figure out how to get derived data to mirror PaymentAuditData
 
         logger.info("Creating Payment Rejects Report file")
 
@@ -353,6 +387,9 @@ class PaymentRejectsStep(Step):
             raise Exception("Payment rejects file not written to sent folder")
 
         logger.info("Done writing Payment Rejects Report file to sent folder: %s", send_file_path)
+
+        # transition state for rejected files
+        self.transition_rejected_payments_to_sent_state()
 
         # create a reference file
         reference_file = ReferenceFile(

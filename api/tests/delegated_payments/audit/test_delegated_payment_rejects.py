@@ -24,8 +24,6 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import (
     NOT_SAMPLED_PAYMENT_NEXT_STATE_BY_CURRENT_STATE,
     NOT_SAMPLED_PAYMENT_OUTCOME_BY_CURRENT_STATE,
     NOT_SAMPLED_STATE_TRANSITIONS,
-    REJECTED_OUTCOME,
-    REJECTED_STATE,
     PaymentRejectsException,
     PaymentRejectsStep,
 )
@@ -92,8 +90,11 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
     )
 
     assert payment_state_log is not None
-    assert payment_state_log.end_state_id == REJECTED_STATE.state_id
-    assert payment_state_log.outcome["message"] == REJECTED_OUTCOME["message"]
+    assert (
+        payment_state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id
+    )
+    assert payment_state_log.outcome["message"] == "Payment rejected"
 
     # test acceptance
     payment_2 = PaymentFactory.create()
@@ -251,7 +252,9 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     # check some are rejected
     # TODO adjust scenario config to specify desired rejection state instead of random sampling
     rejected_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        state_log_util.AssociatedClass.PAYMENT, REJECTED_STATE, test_db_session
+        state_log_util.AssociatedClass.PAYMENT,
+        State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT,
+        test_db_session,
     )
     assert len(rejected_state_logs) == len(DEFAULT_AUDIT_SCENARIO_DATA_SET)
 
