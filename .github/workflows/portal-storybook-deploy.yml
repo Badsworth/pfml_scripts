@@ -16,12 +16,8 @@ on:
 env:
   nodeVersion: 15.x
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-<<<<<<< HEAD
   terraformVersion: 0.14.7
-=======
   deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
-  terraformVersion: 0.13.6
->>>>>>> d00a5a02a5336161f0080f2d884a879f7ffd928f
   terraformBaseDir: ./infra/portal/environments/
   # Map branch name to environment name. This is used to set the portal_env variable below in combination with git refs.
   refs/heads/main: test
