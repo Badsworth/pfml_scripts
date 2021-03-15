@@ -830,6 +830,12 @@ class ReferenceFile(Base):
     agency_reduction_payment = relationship(
         "AgencyReductionPaymentReferenceFile", back_populates="reference_file"
     )
+    dia_reduction_payment = relationship(
+        "DiaReductionPaymentReferenceFile", back_populates="reference_file"
+    )
+    dua_reduction_payment = relationship(
+        "DuaReductionPaymentReferenceFile", back_populates="reference_file"
+    )
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=True, default=utc_timestamp_gen, server_default=sqlnow(),
     )
@@ -908,6 +914,21 @@ class DuaReductionPaymentReferenceFile(Base):
     reference_file = relationship("ReferenceFile")
 
 
+class DiaReductionPaymentReferenceFile(Base):
+    __tablename__ = "link_dia_reduction_payment_reference_file"
+    dia_reduction_payment_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("dia_reduction_payment.dia_reduction_payment_id"),
+        primary_key=True,
+    )
+    reference_file_id = Column(
+        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), primary_key=True
+    )
+
+    dia_reduction_payment = relationship("DiaReductionPayment")
+    reference_file = relationship("ReferenceFile")
+
+
 class StateLog(Base):
     __tablename__ = "state_log"
     state_log_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -975,6 +996,35 @@ class DuaReductionPayment(Base):
     # have to coalesce those null values to empty strings. We've manually adjusted the migration
     # that adds this unique constraint to coalesce those nullable fields.
     # See: 2021_01_29_15_51_16_14155f78d8e6_create_dua_reduction_payment_table.py
+
+
+class DiaReductionPayment(Base):
+    __tablename__ = "dia_reduction_payment"
+    dia_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+
+    absence_case_id = Column(Text, nullable=False)
+    board_no = Column(Text)
+    event_id = Column(Text)
+    event_description = Column(Text)
+    eve_created_date = Column(Date)
+    event_occurrence_date = Column(Date)
+    award_id = Column(Text)
+    award_code = Column(Text)
+    award_amount = Column(Numeric(asdecimal=True))
+    award_date = Column(Date)
+    start_date = Column(Date)
+    end_date = Column(Date)
+    weekly_amount = Column(Numeric(asdecimal=True))
+    award_created_date = Column(Date)
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    # Each row should be unique.
 
 
 class AbsenceStatus(LookupTable):

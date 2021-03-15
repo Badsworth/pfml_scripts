@@ -691,3 +691,23 @@ class DuaReductionPaymentFactory(BaseFactory):
     fraud_indicator = None
     benefit_year_begin_date = factory.Faker("date_object")
     benefit_year_end_date = factory.Faker("date_object")
+
+
+class DiaReductionPaymentFactory(BaseFactory):
+    class Meta:
+        model = employee_models.DiaReductionPayment
+
+    absence_case_id = Generators.FineosAbsenceId
+    board_no = factory.Faker("uuid4")
+    event_id = factory.Faker("uuid4")
+    event_description = "PC"
+    eve_created_date = factory.Faker("date_object")
+    event_occurrence_date = factory.Faker("date_object")
+    award_id = factory.Faker("uuid4")
+    award_code = "34"
+    award_amount = 1600.00
+    award_date = factory.Faker("date_object")
+    start_date = factory.Faker("date_object")
+    end_date = factory.Faker("date_object")
+    weekly_amount = 400.00
+    award_created_date = factory.Faker("date_object")
