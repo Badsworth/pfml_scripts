@@ -6,6 +6,9 @@ import massgov.pfml.delegated_payments.state_cleanup_step as state_cleanup
 from massgov.pfml.db.models.employees import State, StateLog
 from massgov.pfml.db.models.factories import PaymentFactory
 
+# every test in here requires real resources
+pytestmark = pytest.mark.integration
+
 # A few miscellaneous states that won't be cleaned up
 misc_states = [
     State.DELEGATED_PAYMENT_COMPLETE,

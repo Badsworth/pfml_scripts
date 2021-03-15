@@ -1,7 +1,7 @@
 import faker
 import pytest
 
-from massgov.pfml.util.aws.cognito import create_cognito_account
+import massgov.pfml.util.aws.cognito as cognito_util
 
 fake = faker.Faker()
 
@@ -9,7 +9,7 @@ fake = faker.Faker()
 def test_create_cognito_account(mock_cognito, mock_cognito_user_pool):
     email_address = fake.email(domain="example.com")
 
-    sub = create_cognito_account(
+    sub = cognito_util.create_cognito_account(
         email_address,
         fake.password(length=12),
         mock_cognito_user_pool["client_id"],
@@ -26,13 +26,11 @@ def test_create_cognito_account(mock_cognito, mock_cognito_user_pool):
 def test_create_verified_cognito_leave_admin_account(
     test_db_session, mock_cognito, mock_cognito_user_pool
 ):
-    import massgov.pfml.util.aws.cognito as main
-
-    main.db_session_raw = test_db_session
-
     # Moto will not return a 'sub' attribute so we expect this error
-    with pytest.raises(main.CognitoSubNotFound, match="Cognito did not return an ID for the user!"):
-        main.create_verified_cognito_leave_admin_account(
+    with pytest.raises(
+        cognito_util.CognitoSubNotFound, match="Cognito did not return an ID for the user!"
+    ):
+        cognito_util.create_verified_cognito_leave_admin_account(
             test_db_session,
             "test@test.com",
             "1234567",
@@ -45,13 +43,11 @@ def test_create_verified_cognito_leave_admin_account(
 
 @pytest.mark.integration
 def test_lookup_cognito_account_id(test_db_session, mock_cognito_user_pool):
-    import massgov.pfml.util.aws.cognito as main
-
-    main.db_session_raw = test_db_session
-
     # Moto will not return a 'sub' attribute so we expect this error
-    with pytest.raises(main.CognitoSubNotFound, match="Cognito did not return an ID for the user!"):
-        main.create_verified_cognito_leave_admin_account(
+    with pytest.raises(
+        cognito_util.CognitoSubNotFound, match="Cognito did not return an ID for the user!"
+    ):
+        cognito_util.create_verified_cognito_leave_admin_account(
             test_db_session,
             "test@test.com",
             "1234567",
@@ -59,7 +55,9 @@ def test_lookup_cognito_account_id(test_db_session, mock_cognito_user_pool):
         )
 
     # ... the user has to be found for lookup_cognito_account_id to throw this error; a weird intersection to be sure
-    with pytest.raises(main.CognitoSubNotFound, match="Cognito did not return an ID for the user!"):
-        main.lookup_cognito_account_id(
+    with pytest.raises(
+        cognito_util.CognitoSubNotFound, match="Cognito did not return an ID for the user!"
+    ):
+        cognito_util.lookup_cognito_account_id(
             email="test@test.com", cognito_user_pool_id=mock_cognito_user_pool["id"]
         )

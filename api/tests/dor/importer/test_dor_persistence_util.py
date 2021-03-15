@@ -205,9 +205,7 @@ def test_check_and_update_employer_quarlerly_contribution(
     assert len(test_db_session.dirty) == 1
 
 
-def test_dict_to_employee_removes_underscores_in_names(
-    test_db_session, initialize_factories_session
-):
+def test_dict_to_employee_removes_underscores_in_names():
     underscored_employee_info = {
         "employee_first_name": "Jane_Foo",
         "employee_last_name": "Bar_Smith_",
