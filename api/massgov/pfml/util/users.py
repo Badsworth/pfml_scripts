@@ -4,7 +4,6 @@ import boto3
 import botocore
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import MultipleResultsFound
-from werkzeug.exceptions import BadRequest
 
 import massgov.pfml.api.app as app
 import massgov.pfml.cognito_post_confirmation_lambda.lib as lib
@@ -67,22 +66,21 @@ def register_user(
     employer_for_leave_admin: Optional[Employer] = None,
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
 ) -> User:
-    """Create a new Cognito and API user for authenticating and performing authenticated API requests"""
+    """Create a new Cognito and API user for authenticating and performing authenticated API requests
 
-    try:
-        auth_id = create_cognito_account(
-            email_address, password, cognito_user_pool_client_id, cognito_client=cognito_client
-        )
-        logger.info(
-            "register_user - successfully created Cognito user",
-            extra={"current_user.auth_id": auth_id},
-        )
-    except botocore.exceptions.ClientError as e:
-        # TODO (CP-1764): Handle custom Cognito error exceptions raised from cognito.py
-        logger.info(
-            "register_user - failed to create Cognito user", extra={"error": e.response["Error"]},
-        )
-        raise BadRequest(description=e.response["Error"]["Message"])
+    Raises
+    ------
+    - CognitoAccountCreationUserError
+    - CognitoAccountCreationFailure
+    """
+
+    auth_id = create_cognito_account(
+        email_address, password, cognito_user_pool_client_id, cognito_client=cognito_client
+    )
+    logger.info(
+        "register_user - successfully created Cognito user",
+        extra={"current_user.auth_id": auth_id},
+    )
 
     user = create_user(db_session, email_address, auth_id, employer_for_leave_admin)
 

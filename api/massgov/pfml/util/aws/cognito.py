@@ -8,6 +8,7 @@ import botocore
 
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
+from massgov.pfml.api.util.response import Issue, IssueType
 from massgov.pfml.cognito_post_confirmation_lambda.lib import leave_admin_create
 from massgov.pfml.db.models.employees import User
 
@@ -26,7 +27,24 @@ class CognitoLookupFailure(Exception):
 
 
 class CognitoAccountCreationFailure(Exception):
+    """Error response returned from the AWS Cognito service. This does not include network-related errors."""
+
     pass
+
+
+class CognitoAccountCreationUserError(Exception):
+    """Error raised due to a user-recoverable Cognito issue
+
+    Attributes:
+        message -- Cognito's explanation of the error
+        issue -- used for communicating the error to the user
+    """
+
+    __slots__ = ["message", "issue"]
+
+    def __init__(self, message: str, issue: Issue):
+        self.message = message
+        self.issue = issue
 
 
 class CognitoPasswordSetFailure(Exception):
@@ -154,7 +172,19 @@ def create_cognito_account(
     cognito_user_pool_client_id: str,
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
 ) -> str:
-    """Sign up a new user in the Cognito user pool. Returns Cognito user sub."""
+    """Sign up a new user in the Cognito user pool.
+
+    Returns
+    -------
+    active_directory_id
+        Cognito user sub (id)
+
+    Raises
+    ------
+    - CognitoAccountCreationUserError
+    - CognitoAccountCreationFailure
+    """
+
     if cognito_client is None:
         cognito_client = create_cognito_client()
 
@@ -162,9 +192,45 @@ def create_cognito_account(
         response = cognito_client.sign_up(
             ClientId=cognito_user_pool_client_id, Username=email_address, Password=password
         )
-    except botocore.exceptions.ClientError as exc:
-        # TODO (CP-1764): Handle the full range of Cognito exceptions:
-        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cognito-idp.html#CognitoIdentityProvider.Client.sign_up
-        raise exc
+    except cognito_client.exceptions.InvalidPasswordException as error:
+        # Thrown for various reasons:
+        # 1. When password doesn't conform to our password requirements (length, casing, characters)
+        # 2. When password is a commonly used or compromised credential
+        # Password requirements are defined on the Cognito user pool in our Terraform script
+        message = error.response["Error"]["Message"]
+        issue_type = (
+            IssueType.insecure
+            if "password cannot be used for security reasons" in message
+            else IssueType.invalid
+        )
+
+        issue = Issue(field="password", type=issue_type, message=message)
+
+        raise CognitoAccountCreationUserError(issue.message, issue) from error
+    except botocore.exceptions.ParamValidationError as error:
+        # Thrown for various reasons:
+        # 1. When password is less than 6 characters
+        # 2. When username isn't an email
+        # Number 2 above will be caught by our OpenAPI validations, which check that email_address
+        # is an email, so we interpret this error to indicate something is wrong with the password
+        issue = Issue(field="password", type=IssueType.invalid, message="{}".format(error))
+
+        raise CognitoAccountCreationUserError(issue.message, issue) from error
+    except cognito_client.exceptions.UsernameExistsException as error:
+        message = error.response["Error"]["Message"]
+        issue = Issue(field="email_address", type=IssueType.exists, message=message)
+
+        raise CognitoAccountCreationUserError(issue.message, issue) from error
+    except botocore.exceptions.ClientError as error:
+        logger.warning(
+            "create_cognito_account - failed to sign up with unexpected ClientError",
+            extra={"error": error.response["Error"]},
+        )
+
+        raise CognitoAccountCreationFailure(
+            "create_cognito_account error: {}: {}".format(
+                error.response["Error"]["Code"], error.response["Error"]["Message"]
+            )
+        ) from error
 
     return response["UserSub"]

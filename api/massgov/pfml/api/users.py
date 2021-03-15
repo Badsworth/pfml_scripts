@@ -9,6 +9,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.db.models.employees import Employer, Role, User
+from massgov.pfml.util.aws.cognito import CognitoAccountCreationUserError
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import FEINUnformattedStr
 from massgov.pfml.util.sqlalchemy import get_or_404
@@ -56,13 +57,26 @@ def users_post():
                     ],
                 ).to_api_response()
 
-        user = register_user(
-            db_session,
-            app.get_config().cognito_user_pool_client_id,
-            body.email_address,
-            body.password,
-            employer,
-        )
+        try:
+            user = register_user(
+                db_session,
+                app.get_config().cognito_user_pool_client_id,
+                body.email_address,
+                body.password,
+                employer,
+            )
+        except CognitoAccountCreationUserError as e:
+            logger.info(
+                "users_post failure - Cognito account creation failed with user error",
+                extra={"issueField": e.issue.field, "issueType": e.issue.type},
+            )
+
+            return response_util.error_response(
+                status_code=BadRequest,
+                message="Cognito account creation failed.",
+                errors=[e.issue],
+                data={},
+            ).to_api_response()
 
     return response_util.success_response(
         data=user_response(user),

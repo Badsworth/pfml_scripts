@@ -144,6 +144,48 @@ def test_users_post_openapi_validation(
     assert response.status_code == 400
 
 
+def test_users_post_cognito_user_error(
+    client,
+    mock_cognito,
+    mock_cognito_user_pool,
+    monkeypatch,
+    test_db_session,
+    valid_claimant_creation_request_body,
+):
+    # User-recoverable Cognito errors result in 400 error response
+    body = valid_claimant_creation_request_body
+    body["password"] = "test"
+
+    def sign_up(ClientId, Username, Password):
+        raise mock_cognito.exceptions.InvalidPasswordException(
+            error_response={
+                "Error": {
+                    "Code": "InvalidPasswordException",
+                    "Message": "Password did not conform with policy: Password not long enough",
+                }
+            },
+            operation_name="SignUp",
+        )
+
+    monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
+
+    response = client.post("/v1/users", json=body,)
+    errors = response.get_json().get("errors")
+    user = (
+        test_db_session.query(User)
+        .filter(User.email_address == body.get("email_address"))
+        .one_or_none()
+    )
+
+    assert user is None
+    assert {
+        "field": "password",
+        "type": "invalid",
+        "message": "Password did not conform with policy: Password not long enough",
+    } in errors
+    assert response.status_code == 400
+
+
 def test_users_post_employer_required(
     client, mock_cognito, test_db_session,
 ):

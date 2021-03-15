@@ -79,10 +79,18 @@ class IssueRule(str, Enum):
 class IssueType(str, Enum):
     # Data is present but shouldn't be
     conflicting = "conflicting"
+    # A record already exists, preventing this data from being used again
+    exists = "exists"
     # Number or Date is greater than expected range
     maximum = "maximum"
     # Number or Date is less than the expected range
     minimum = "minimum"
+    # Data is insecure or compromised and cannot be used
+    insecure = "insecure"
+    # Generic issue indicating something about the data is invalid. This should
+    # only be used when we're unable to provide anything more specific about the issue,
+    # for instance when the issue could be a range of things that we're unable to specify.
+    invalid = "invalid"
     # Date range is invalid, eg a start date occurs after an end date
     invalid_date_range = "invalid_date_range"
     # Data is missing
