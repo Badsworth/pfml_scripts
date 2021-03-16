@@ -377,7 +377,7 @@ def test_e2e_process(
         assert_expected_files_ends_in_list(files_in_moveit_after_day_1, vcc_filenames)
 
         # Confirm all error reports found in S3 (2 from fineos task, 7 from ctr task)
-        assert len(file_util.list_files(s3_config.pfml_error_reports_path, recursive=True)) == 9
+        assert len(file_util.list_files(s3_config.pfml_error_reports_path, recursive=True)) == 6
         assert_error_reports(
             {
                 "EFT-audit-error-report.csv": [],

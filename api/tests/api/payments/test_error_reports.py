@@ -86,13 +86,19 @@ def validate_ctr_files(date_str, file_names):
     # the date, so pull the date out of that.
     date = date_str[:10]
 
-    assert file_names[0] == f"{date}/{date_str}-EFT-audit-error-report.csv"
-    assert file_names[1] == f"{date}/{date_str}-EFT-error-report.csv"
-    assert file_names[2] == f"{date}/{date_str}-GAX-error-report.csv"
-    assert file_names[3] == f"{date}/{date_str}-VCC-error-report.csv"
-    assert file_names[4] == f"{date}/{date_str}-VCM-report.csv"
-    assert file_names[5] == f"{date}/{date_str}-payment-audit-error-report.csv"
-    assert file_names[6] == f"{date}/{date_str}-vendor-audit-error-report.csv"
+    # API-1489 disabled time-based error reports, so commenting them out for now
+    # assert file_names[0] == f"{date}/{date_str}-EFT-audit-error-report.csv"
+    # assert file_names[1] == f"{date}/{date_str}-EFT-error-report.csv"
+    # assert file_names[2] == f"{date}/{date_str}-GAX-error-report.csv"
+    # assert file_names[3] == f"{date}/{date_str}-VCC-error-report.csv"
+    # assert file_names[4] == f"{date}/{date_str}-VCM-report.csv"
+    # assert file_names[5] == f"{date}/{date_str}-payment-audit-error-report.csv"
+    # assert file_names[6] == f"{date}/{date_str}-vendor-audit-error-report.csv"
+
+    assert file_names[0] == f"{date}/{date_str}-EFT-error-report.csv"
+    assert file_names[1] == f"{date}/{date_str}-GAX-error-report.csv"
+    assert file_names[2] == f"{date}/{date_str}-VCC-error-report.csv"
+    assert file_names[3] == f"{date}/{date_str}-VCM-report.csv"
 
 
 def add_mmars_payments_for_claim(claim, test_db_session):
@@ -294,7 +300,8 @@ def test_send_ctr_payments_errors_empty_db(
     error_reports._send_ctr_payments_errors(test_db_session)
 
     file_names = file_util.list_files(s3_prefix, recursive=True)
-    assert len(file_names) == 7  # 7 total reports
+    assert len(file_names) == 4
+    # API-1489 disabled time-based reports, so this is now 4 instead of 7 total reports
     file_names.sort()
     validate_ctr_files("2020-01-01-07-00-00", file_names)
 
@@ -514,11 +521,12 @@ def test_send_ctr_payments_errors_simple_reports(
     error_reports._send_ctr_payments_errors(test_db_session)
 
     file_names = file_util.list_files(s3_prefix, recursive=True)
-    assert len(file_names) == 7  # 7 total reports
+    assert len(file_names) == 4
+    # API-1489 disabled time-based reports, so this is now 4 instead of 7 total reports
     file_names.sort()
     validate_ctr_files("2020-01-01-07-00-00", file_names)
 
-    eft_records = parse_csv(s3_prefix, file_names[1])
+    eft_records = parse_csv(s3_prefix, file_names[0])
     assert len(eft_records) == 2
     assert eft_records[0] == {
         error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
@@ -537,7 +545,7 @@ def test_send_ctr_payments_errors_simple_reports(
         error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
 
-    gax_records = parse_csv(s3_prefix, file_names[2])
+    gax_records = parse_csv(s3_prefix, file_names[1])
     assert len(gax_records) == 1
     assert gax_records[0] == {
         error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
@@ -548,7 +556,7 @@ def test_send_ctr_payments_errors_simple_reports(
         error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
 
-    vcc_records = parse_csv(s3_prefix, file_names[3])
+    vcc_records = parse_csv(s3_prefix, file_names[2])
     assert len(vcc_records) == 2
     assert vcc_records[0] == {
         error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
@@ -567,7 +575,7 @@ def test_send_ctr_payments_errors_simple_reports(
         error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
     }
 
-    vcm_records = parse_csv(s3_prefix, file_names[4])
+    vcm_records = parse_csv(s3_prefix, file_names[3])
     assert len(vcm_records) == 3
     assert vcm_records[0] == {
         error_reporting.DESCRIPTION_COLUMN: EXPECTED_DESCRIPTION,
@@ -658,267 +666,268 @@ def test_send_ctr_payments_errors_eft_pending(
         assert state_log.end_state_id == State.EFT_PENDING.state_id
 
 
-@freeze_time("2020-04-01 12:00:00")
-def test_send_ctr_payments_errors_time_based_reports(
-    test_db_session, initialize_factories_session, mock_ses, set_exporter_env_vars
-):
-    s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
-    # Note, for the sake of this test, all state logs are too old/stuck
-    # The utilities used in this test create the records on 2020-01-01, so we've set "now" to 2020-04-01
+# API-1489 disabled time-based reports, so commenting this out for now
+# @freeze_time("2020-04-01 12:00:00")
+# def test_send_ctr_payments_errors_time_based_reports(
+#     test_db_session, initialize_factories_session, mock_ses, set_exporter_env_vars
+# ):
+#     s3_prefix = payments_config.get_s3_config().pfml_error_reports_path
+#     # Note, for the sake of this test, all state logs are too old/stuck
+#     # The utilities used in this test create the records on 2020-01-01, so we've set "now" to 2020-04-01
 
-    # Gax error report stuck setup
-    setup_state_log_in_end_state(
-        state_log_util.AssociatedClass.PAYMENT,
-        end_state=State.GAX_ERROR_REPORT_SENT,
-        test_db_session=test_db_session,
-        additional_params=AdditionalParams(
-            fineos_customer_num="000000000",
-            fineos_absence_id="NTN-00-ABS-00",
-            ctr_vendor_customer_code="VEND-00",
-        ),
-    )
+#     # Gax error report stuck setup
+#     setup_state_log_in_end_state(
+#         state_log_util.AssociatedClass.PAYMENT,
+#         end_state=State.GAX_ERROR_REPORT_SENT,
+#         test_db_session=test_db_session,
+#         additional_params=AdditionalParams(
+#             fineos_customer_num="000000000",
+#             fineos_absence_id="NTN-00-ABS-00",
+#             ctr_vendor_customer_code="VEND-00",
+#         ),
+#     )
 
-    # Gax stuck setup
-    setup_state_log_in_end_state(
-        state_log_util.AssociatedClass.PAYMENT,
-        end_state=State.GAX_SENT,
-        test_db_session=test_db_session,
-        additional_params=AdditionalParams(
-            fineos_customer_num="000000001",
-            fineos_absence_id="NTN-01-ABS-01",
-            ctr_vendor_customer_code="VEND-01",
-        ),
-    )
+#     # Gax stuck setup
+#     setup_state_log_in_end_state(
+#         state_log_util.AssociatedClass.PAYMENT,
+#         end_state=State.GAX_SENT,
+#         test_db_session=test_db_session,
+#         additional_params=AdditionalParams(
+#             fineos_customer_num="000000001",
+#             fineos_absence_id="NTN-01-ABS-01",
+#             ctr_vendor_customer_code="VEND-01",
+#         ),
+#     )
 
-    # CONFIRM_VENDOR_STATUS_IN_MMARS stuck setup
-    setup_state_log_in_end_state(
-        state_log_util.AssociatedClass.PAYMENT,
-        end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
-        test_db_session=test_db_session,
-        additional_params=AdditionalParams(
-            fineos_customer_num="000000002",
-            fineos_absence_id="NTN-02-ABS-02",
-            ctr_vendor_customer_code="VEND-02",
-        ),
-    )
+#     # CONFIRM_VENDOR_STATUS_IN_MMARS stuck setup
+#     setup_state_log_in_end_state(
+#         state_log_util.AssociatedClass.PAYMENT,
+#         end_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+#         test_db_session=test_db_session,
+#         additional_params=AdditionalParams(
+#             fineos_customer_num="000000002",
+#             fineos_absence_id="NTN-02-ABS-02",
+#             ctr_vendor_customer_code="VEND-02",
+#         ),
+#     )
 
-    # VCM report sent setup
-    setup_state_log_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.VCM_REPORT_SENT,
-        test_db_session=test_db_session,
-        additional_params=AdditionalParams(
-            fineos_customer_num="000000003",
-            fineos_absence_id="NTN-03-ABS-03",
-            ctr_vendor_customer_code="VEND-03",
-            add_claim_payment_for_employee=False,  # No payment or claim data will be found
-        ),
-    )
+#     # VCM report sent setup
+#     setup_state_log_in_end_state(
+#         state_log_util.AssociatedClass.EMPLOYEE,
+#         end_state=State.VCM_REPORT_SENT,
+#         test_db_session=test_db_session,
+#         additional_params=AdditionalParams(
+#             fineos_customer_num="000000003",
+#             fineos_absence_id="NTN-03-ABS-03",
+#             ctr_vendor_customer_code="VEND-03",
+#             add_claim_payment_for_employee=False,  # No payment or claim data will be found
+#         ),
+#     )
 
-    setup_state_log_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.VCM_REPORT_SENT,
-        test_db_session=test_db_session,
-        additional_params=AdditionalParams(
-            fineos_customer_num="000000004",
-            fineos_absence_id="NTN-04-ABS-04",
-            ctr_vendor_customer_code="VEND-04",
-            add_claim_payment_for_employee=True,  # It will find payment/claim data
-        ),
-    )
+#     setup_state_log_in_end_state(
+#         state_log_util.AssociatedClass.EMPLOYEE,
+#         end_state=State.VCM_REPORT_SENT,
+#         test_db_session=test_db_session,
+#         additional_params=AdditionalParams(
+#             fineos_customer_num="000000004",
+#             fineos_absence_id="NTN-04-ABS-04",
+#             ctr_vendor_customer_code="VEND-04",
+#             add_claim_payment_for_employee=True,  # It will find payment/claim data
+#         ),
+#     )
 
-    # VCC sent setup
-    setup_state_log_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.VCC_SENT,
-        test_db_session=test_db_session,
-        additional_params=AdditionalParams(
-            fineos_customer_num="000000005",
-            fineos_absence_id="NTN-05-ABS-05",
-            ctr_vendor_customer_code="VEND-05",
-            add_claim_payment_for_employee=False,  # No payment or claim data will be found
-        ),
-    )
+#     # VCC sent setup
+#     setup_state_log_in_end_state(
+#         state_log_util.AssociatedClass.EMPLOYEE,
+#         end_state=State.VCC_SENT,
+#         test_db_session=test_db_session,
+#         additional_params=AdditionalParams(
+#             fineos_customer_num="000000005",
+#             fineos_absence_id="NTN-05-ABS-05",
+#             ctr_vendor_customer_code="VEND-05",
+#             add_claim_payment_for_employee=False,  # No payment or claim data will be found
+#         ),
+#     )
 
-    setup_state_log_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.VCC_SENT,
-        test_db_session=test_db_session,
-        additional_params=AdditionalParams(
-            fineos_customer_num="000000006",
-            fineos_absence_id="NTN-06-ABS-06",
-            ctr_vendor_customer_code="VEND-06",
-            add_claim_payment_for_employee=True,  # It will find payment/claim data
-        ),
-    )
+#     setup_state_log_in_end_state(
+#         state_log_util.AssociatedClass.EMPLOYEE,
+#         end_state=State.VCC_SENT,
+#         test_db_session=test_db_session,
+#         additional_params=AdditionalParams(
+#             fineos_customer_num="000000006",
+#             fineos_absence_id="NTN-06-ABS-06",
+#             ctr_vendor_customer_code="VEND-06",
+#             add_claim_payment_for_employee=True,  # It will find payment/claim data
+#         ),
+#     )
 
-    # VCC error report sent setup
-    setup_state_log_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.VCC_ERROR_REPORT_SENT,
-        test_db_session=test_db_session,
-        additional_params=AdditionalParams(
-            fineos_customer_num="000000007",
-            fineos_absence_id="NTN-07-ABS-07",
-            ctr_vendor_customer_code="VEND-07",
-            add_claim_payment_for_employee=False,  # No payment or claim data will be found
-        ),
-    )
+#     # VCC error report sent setup
+#     setup_state_log_in_end_state(
+#         state_log_util.AssociatedClass.EMPLOYEE,
+#         end_state=State.VCC_ERROR_REPORT_SENT,
+#         test_db_session=test_db_session,
+#         additional_params=AdditionalParams(
+#             fineos_customer_num="000000007",
+#             fineos_absence_id="NTN-07-ABS-07",
+#             ctr_vendor_customer_code="VEND-07",
+#             add_claim_payment_for_employee=False,  # No payment or claim data will be found
+#         ),
+#     )
 
-    setup_state_log_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.VCC_ERROR_REPORT_SENT,
-        test_db_session=test_db_session,
-        additional_params=AdditionalParams(
-            fineos_customer_num="000000008",
-            fineos_absence_id="NTN-08-ABS-08",
-            ctr_vendor_customer_code="VEND-08",
-            add_claim_payment_for_employee=True,  # It will find payment/claim data
-        ),
-    )
+#     setup_state_log_in_end_state(
+#         state_log_util.AssociatedClass.EMPLOYEE,
+#         end_state=State.VCC_ERROR_REPORT_SENT,
+#         test_db_session=test_db_session,
+#         additional_params=AdditionalParams(
+#             fineos_customer_num="000000008",
+#             fineos_absence_id="NTN-08-ABS-08",
+#             ctr_vendor_customer_code="VEND-08",
+#             add_claim_payment_for_employee=True,  # It will find payment/claim data
+#         ),
+#     )
 
-    # EFT pending report sent
-    setup_state_log_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.EFT_PENDING,
-        test_db_session=test_db_session,
-        additional_params=AdditionalParams(
-            fineos_customer_num="000000009",
-            fineos_absence_id="NTN-09-ABS-09",
-            ctr_vendor_customer_code="VEND-09",
-            add_claim_payment_for_employee=False,  # No payment or claim data will be found
-        ),
-    )
+#     # EFT pending report sent
+#     setup_state_log_in_end_state(
+#         state_log_util.AssociatedClass.EMPLOYEE,
+#         end_state=State.EFT_PENDING,
+#         test_db_session=test_db_session,
+#         additional_params=AdditionalParams(
+#             fineos_customer_num="000000009",
+#             fineos_absence_id="NTN-09-ABS-09",
+#             ctr_vendor_customer_code="VEND-09",
+#             add_claim_payment_for_employee=False,  # No payment or claim data will be found
+#         ),
+#     )
 
-    setup_state_log_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.EFT_PENDING,
-        test_db_session=test_db_session,
-        additional_params=AdditionalParams(
-            fineos_customer_num="000000010",
-            fineos_absence_id="NTN-10-ABS-10",
-            ctr_vendor_customer_code="VEND-10",
-            add_claim_payment_for_employee=True,  # It will find payment/claim data
-        ),
-    )
-    test_db_session.commit()
+#     setup_state_log_in_end_state(
+#         state_log_util.AssociatedClass.EMPLOYEE,
+#         end_state=State.EFT_PENDING,
+#         test_db_session=test_db_session,
+#         additional_params=AdditionalParams(
+#             fineos_customer_num="000000010",
+#             fineos_absence_id="NTN-10-ABS-10",
+#             ctr_vendor_customer_code="VEND-10",
+#             add_claim_payment_for_employee=True,  # It will find payment/claim data
+#         ),
+#     )
+#     test_db_session.commit()
 
-    # Finally call the method after all that setup
-    error_reports._send_ctr_payments_errors(test_db_session)
+#     # Finally call the method after all that setup
+#     error_reports._send_ctr_payments_errors(test_db_session)
 
-    file_names = file_util.list_files(s3_prefix, recursive=True)
-    assert len(file_names) == 7  # 7 total reports
-    file_names.sort()
-    validate_ctr_files("2020-04-01-08-00-00", file_names)
+#     file_names = file_util.list_files(s3_prefix, recursive=True)
+#     assert len(file_names) == 7  # 7 total reports
+#     file_names.sort()
+#     validate_ctr_files("2020-04-01-08-00-00", file_names)
 
-    eft_audit_records = parse_csv(s3_prefix, file_names[0])
-    assert len(eft_audit_records) == 2
-    assert eft_audit_records[0] == {
-        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [EFT pending] without a resolution.",
-        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000009",
-        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
-        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-09",
-        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
-    }
-    assert eft_audit_records[1] == {
-        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [EFT pending] without a resolution.",
-        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000010",
-        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-10-ABS-10",
-        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-10",
-        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
-    }
+#     eft_audit_records = parse_csv(s3_prefix, file_names[0])
+#     assert len(eft_audit_records) == 2
+#     assert eft_audit_records[0] == {
+#         error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [EFT pending] without a resolution.",
+#         error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000009",
+#         error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
+#         error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-09",
+#         error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+#         error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
+#     }
+#     assert eft_audit_records[1] == {
+#         error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [EFT pending] without a resolution.",
+#         error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000010",
+#         error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-10-ABS-10",
+#         error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-10",
+#         error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+#         error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
+#     }
 
-    payment_audit_records = parse_csv(s3_prefix, file_names[5])
-    assert len(payment_audit_records) == 3
-    assert payment_audit_records[0] == {
-        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [GAX error report sent] without a resolution.",
-        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000000",
-        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-00-ABS-00",
-        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-00",
-        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
-    }
-    assert payment_audit_records[1] == {
-        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [GAX sent] without a resolution.",
-        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000001",
-        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-01-ABS-01",
-        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-01",
-        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
-    }
-    assert payment_audit_records[2] == {
-        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [Confirm vendor status in MMARS] without a resolution.",
-        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000002",
-        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-02-ABS-02",
-        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-02",
-        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
-    }
+#     payment_audit_records = parse_csv(s3_prefix, file_names[5])
+#     assert len(payment_audit_records) == 3
+#     assert payment_audit_records[0] == {
+#         error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [GAX error report sent] without a resolution.",
+#         error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000000",
+#         error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-00-ABS-00",
+#         error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-00",
+#         error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+#         error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
+#     }
+#     assert payment_audit_records[1] == {
+#         error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [GAX sent] without a resolution.",
+#         error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000001",
+#         error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-01-ABS-01",
+#         error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-01",
+#         error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+#         error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
+#     }
+#     assert payment_audit_records[2] == {
+#         error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [Confirm vendor status in MMARS] without a resolution.",
+#         error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000002",
+#         error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-02-ABS-02",
+#         error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-02",
+#         error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+#         error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
+#     }
 
-    vendor_audit_records = parse_csv(s3_prefix, file_names[6])
-    assert len(vendor_audit_records) == 6
-    assert vendor_audit_records[0] == {
-        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [VCM report sent] without a resolution.",
-        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000003",
-        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
-        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-03",
-        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
-    }
-    assert vendor_audit_records[1] == {
-        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [VCM report sent] without a resolution.",
-        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000004",
-        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-04-ABS-04",
-        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-04",
-        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
-    }
-    assert vendor_audit_records[2] == {
-        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC sent] without a resolution.",
-        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000005",
-        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
-        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-05",
-        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
-    }
-    assert vendor_audit_records[3] == {
-        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC sent] without a resolution.",
-        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000006",
-        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-06-ABS-06",
-        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-06",
-        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
-    }
-    assert vendor_audit_records[4] == {
-        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC error report sent] without a resolution.",
-        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000007",
-        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
-        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-07",
-        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
-    }
-    assert vendor_audit_records[5] == {
-        error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC error report sent] without a resolution.",
-        error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000008",
-        error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-08-ABS-08",
-        error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-08",
-        error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
-        error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
-    }
+#     vendor_audit_records = parse_csv(s3_prefix, file_names[6])
+#     assert len(vendor_audit_records) == 6
+#     assert vendor_audit_records[0] == {
+#         error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [VCM report sent] without a resolution.",
+#         error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000003",
+#         error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
+#         error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-03",
+#         error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+#         error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
+#     }
+#     assert vendor_audit_records[1] == {
+#         error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 15 days in [VCM report sent] without a resolution.",
+#         error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000004",
+#         error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-04-ABS-04",
+#         error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-04",
+#         error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+#         error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
+#     }
+#     assert vendor_audit_records[2] == {
+#         error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC sent] without a resolution.",
+#         error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000005",
+#         error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
+#         error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-05",
+#         error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+#         error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
+#     }
+#     assert vendor_audit_records[3] == {
+#         error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC sent] without a resolution.",
+#         error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000006",
+#         error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-06-ABS-06",
+#         error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-06",
+#         error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+#         error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
+#     }
+#     assert vendor_audit_records[4] == {
+#         error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC error report sent] without a resolution.",
+#         error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000007",
+#         error_reporting.FINEOS_ABSENCE_ID_COLUMN: "",  # Not found because no payment/claims attached
+#         error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-07",
+#         error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+#         error_reporting.PAYMENT_DATE_COLUMN: "",  # Not found because no payment/claims attached
+#     }
+#     assert vendor_audit_records[5] == {
+#         error_reporting.DESCRIPTION_COLUMN: "Process has been stuck for 5 days in [VCC error report sent] without a resolution.",
+#         error_reporting.FINEOS_CUSTOMER_NUM_COLUMN: "000000008",
+#         error_reporting.FINEOS_ABSENCE_ID_COLUMN: "NTN-08-ABS-08",
+#         error_reporting.MMARS_VENDOR_CUST_NUM_COLUMN: "VEND-08",
+#         error_reporting.MMARS_DOCUMENT_ID_COLUMN: "",  # Never set for time based reports
+#         error_reporting.PAYMENT_DATE_COLUMN: "01/07/2020",
+#     }
 
-    # Show that we can do a rollback
+#     # Show that we can do a rollback
 
-    # 39 total state logs
-    # 11 calls to setup_state_log_in_end_state (created employee or payment state logs)
-    # 11 prior states created in setup_state_log_in_end_state
-    #   4 additional created when we add_claim_payment_for_employee=True and created an additional payment state log
-    # the 11 records created to move the payment/employee state logs to the next state.
-    #   2 additional records for the VCM_REPORT_SENT records that were moved to the next state as part of the simple reports
-    state_logs = test_db_session.query(StateLog).all()
-    assert len(state_logs) == 39
-    test_db_session.rollback()
-    # the 11 created as part of processing no longer exist
-    rolled_back_state_logs = test_db_session.query(StateLog).all()
-    assert len(rolled_back_state_logs) == 26
+#     # 39 total state logs
+#     # 11 calls to setup_state_log_in_end_state (created employee or payment state logs)
+#     # 11 prior states created in setup_state_log_in_end_state
+#     #   4 additional created when we add_claim_payment_for_employee=True and created an additional payment state log
+#     # the 11 records created to move the payment/employee state logs to the next state.
+#     #   2 additional records for the VCM_REPORT_SENT records that were moved to the next state as part of the simple reports
+#     state_logs = test_db_session.query(StateLog).all()
+#     assert len(state_logs) == 39
+#     test_db_session.rollback()
+#     # the 11 created as part of processing no longer exist
+#     rolled_back_state_logs = test_db_session.query(StateLog).all()
+#     assert len(rolled_back_state_logs) == 26

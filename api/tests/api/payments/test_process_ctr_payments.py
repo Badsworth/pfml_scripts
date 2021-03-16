@@ -76,7 +76,7 @@ def test_ctr_process_errors(
     error_reports = file_util.list_files(
         payments_config.get_s3_config().pfml_error_reports_path, recursive=True
     )
-    assert len(error_reports) == 7
+    assert len(error_reports) == 4
     # Going to very quickly check that they're all empty except for a header
     for error_report in error_reports:
         lines = file_util.read_file_lines(

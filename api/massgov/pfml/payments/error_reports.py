@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional, Union, cast
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.config as payments_config
 import massgov.pfml.payments.payments_util as payments_util
-import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
@@ -29,6 +28,8 @@ from massgov.pfml.payments.reporting.error_reporting import (
     initialize_fineos_payments_error_report_group,
 )
 from massgov.pfml.util.aws.ses import EmailRecipient, send_email
+
+# import massgov.pfml.util.datetime as datetime_util
 
 logger = logging.get_logger(__name__)
 
@@ -518,7 +519,7 @@ def send_fineos_error_reports(db_session: db.Session) -> None:
 
 
 def _send_ctr_payments_errors(db_session: db.Session) -> None:
-    now = datetime_util.utcnow()  # This has the same TZ as the StateLogs
+    # now = datetime_util.utcnow()  # This has the same TZ as the StateLogs
 
     report_group = initialize_ctr_payments_error_report_group()
 
@@ -575,96 +576,99 @@ def _send_ctr_payments_errors(db_session: db.Session) -> None:
     report_group.add_report(eft_error_report)
 
     ### Time Based Reports
-    ## Payment Audit Error Report - Contains 3 separate queries worth of data
-    # GAX_ERROR_REPORT_SENT >> 5 days >> PAYMENT_ALLOWABLE_TIME_IN_STATE_EXCEEDED
-    gax_error_report_stuck_errors = _get_time_based_errors(
-        current_state=State.GAX_ERROR_REPORT_SENT,
-        next_state=State.PAYMENT_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
-        associated_class=state_log_util.AssociatedClass.PAYMENT,
-        days_stuck=5,
-        now=now,
-        db_session=db_session,
-    )
-    # GAX_SENT >> 5 days >> PAYMENT_ALLOWABLE_TIME_IN_STATE_EXCEEDED
-    gax_sent_stuck_errors = _get_time_based_errors(
-        current_state=State.GAX_SENT,
-        next_state=State.PAYMENT_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
-        associated_class=state_log_util.AssociatedClass.PAYMENT,
-        days_stuck=5,
-        now=now,
-        db_session=db_session,
-    )
-    # CONFIRM_VENDOR_STATUS_IN_MMARS >> 15 days >> PAYMENT_ALLOWABLE_TIME_IN_STATE_EXCEEDED
-    confirm_vend_status_in_mmars_stuck_errors = _get_time_based_errors(
-        current_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
-        next_state=State.PAYMENT_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
-        associated_class=state_log_util.AssociatedClass.PAYMENT,
-        days_stuck=15,
-        now=now,
-        db_session=db_session,
-    )
 
-    # Build the report from all three sets of payment errors
-    payment_audit_errors = (
-        gax_error_report_stuck_errors
-        + gax_sent_stuck_errors
-        + confirm_vend_status_in_mmars_stuck_errors
-    )
-    payment_audit_error_report = initialize_error_report("payment-audit-error-report")
-    payment_audit_error_report.add_records(payment_audit_errors)
-    report_group.add_report(payment_audit_error_report)
+    ## API-1489: Time-based reports are temporarily disabled
 
-    ## Vendor Audit Error Report - Contains 3 separate queries worth of data
-    # VCM_REPORT_SENT >> 15 days >> VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED
-    vcm_sent_stuck_errors = _get_time_based_errors(
-        current_state=State.VCM_REPORT_SENT,
-        next_state=State.VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        days_stuck=15,
-        now=now,
-        db_session=db_session,
-    )
-    # VCC_SENT >> 5 days >> VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED
-    vcc_sent_stuck_errors = _get_time_based_errors(
-        current_state=State.VCC_SENT,
-        next_state=State.VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        days_stuck=5,
-        now=now,
-        db_session=db_session,
-    )
-    # VCC_ERROR_REPORT_SENT >> 5 days >> VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED
-    vcc_error_report_stuck_errors = _get_time_based_errors(
-        current_state=State.VCC_ERROR_REPORT_SENT,
-        next_state=State.VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        days_stuck=5,
-        now=now,
-        db_session=db_session,
-    )
+    # ## Payment Audit Error Report - Contains 3 separate queries worth of data
+    # # GAX_ERROR_REPORT_SENT >> 5 days >> PAYMENT_ALLOWABLE_TIME_IN_STATE_EXCEEDED
+    # gax_error_report_stuck_errors = _get_time_based_errors(
+    #     current_state=State.GAX_ERROR_REPORT_SENT,
+    #     next_state=State.PAYMENT_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
+    #     associated_class=state_log_util.AssociatedClass.PAYMENT,
+    #     days_stuck=5,
+    #     now=now,
+    #     db_session=db_session,
+    # )
+    # # GAX_SENT >> 5 days >> PAYMENT_ALLOWABLE_TIME_IN_STATE_EXCEEDED
+    # gax_sent_stuck_errors = _get_time_based_errors(
+    #     current_state=State.GAX_SENT,
+    #     next_state=State.PAYMENT_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
+    #     associated_class=state_log_util.AssociatedClass.PAYMENT,
+    #     days_stuck=5,
+    #     now=now,
+    #     db_session=db_session,
+    # )
+    # # CONFIRM_VENDOR_STATUS_IN_MMARS >> 15 days >> PAYMENT_ALLOWABLE_TIME_IN_STATE_EXCEEDED
+    # confirm_vend_status_in_mmars_stuck_errors = _get_time_based_errors(
+    #     current_state=State.CONFIRM_VENDOR_STATUS_IN_MMARS,
+    #     next_state=State.PAYMENT_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
+    #     associated_class=state_log_util.AssociatedClass.PAYMENT,
+    #     days_stuck=15,
+    #     now=now,
+    #     db_session=db_session,
+    # )
 
-    # Build the report from all three sets of vendor errors
-    vendor_audit_errors = (
-        vcm_sent_stuck_errors + vcc_sent_stuck_errors + vcc_error_report_stuck_errors
-    )
-    vendor_audit_error_report = initialize_error_report("vendor-audit-error-report")
-    vendor_audit_error_report.add_records(vendor_audit_errors)
-    report_group.add_report(vendor_audit_error_report)
+    # # Build the report from all three sets of payment errors
+    # payment_audit_errors = (
+    #     gax_error_report_stuck_errors
+    #     + gax_sent_stuck_errors
+    #     + confirm_vend_status_in_mmars_stuck_errors
+    # )
+    # payment_audit_error_report = initialize_error_report("payment-audit-error-report")
+    # payment_audit_error_report.add_records(payment_audit_errors)
+    # report_group.add_report(payment_audit_error_report)
 
-    # EFT audit error report - Contains just one queries worth of data
-    # EFT_PENDING >> 15 days >> EFT_ALLOWABLE_TIME_IN_STATE_EXCEEDED
-    eft_stuck_errors = _get_time_based_errors(
-        current_state=State.EFT_PENDING,
-        next_state=State.EFT_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        days_stuck=15,
-        now=now,
-        db_session=db_session,
-    )
-    # Build the report for EFT errors
-    eft_audit_error_report = initialize_error_report("EFT-audit-error-report")
-    eft_audit_error_report.add_records(eft_stuck_errors)
-    report_group.add_report(eft_audit_error_report)
+    # ## Vendor Audit Error Report - Contains 3 separate queries worth of data
+    # # VCM_REPORT_SENT >> 15 days >> VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED
+    # vcm_sent_stuck_errors = _get_time_based_errors(
+    #     current_state=State.VCM_REPORT_SENT,
+    #     next_state=State.VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
+    #     associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+    #     days_stuck=15,
+    #     now=now,
+    #     db_session=db_session,
+    # )
+    # # VCC_SENT >> 5 days >> VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED
+    # vcc_sent_stuck_errors = _get_time_based_errors(
+    #     current_state=State.VCC_SENT,
+    #     next_state=State.VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
+    #     associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+    #     days_stuck=5,
+    #     now=now,
+    #     db_session=db_session,
+    # )
+    # # VCC_ERROR_REPORT_SENT >> 5 days >> VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED
+    # vcc_error_report_stuck_errors = _get_time_based_errors(
+    #     current_state=State.VCC_ERROR_REPORT_SENT,
+    #     next_state=State.VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
+    #     associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+    #     days_stuck=5,
+    #     now=now,
+    #     db_session=db_session,
+    # )
+
+    # # Build the report from all three sets of vendor errors
+    # vendor_audit_errors = (
+    #     vcm_sent_stuck_errors + vcc_sent_stuck_errors + vcc_error_report_stuck_errors
+    # )
+    # vendor_audit_error_report = initialize_error_report("vendor-audit-error-report")
+    # vendor_audit_error_report.add_records(vendor_audit_errors)
+    # report_group.add_report(vendor_audit_error_report)
+
+    # # EFT audit error report - Contains just one queries worth of data
+    # # EFT_PENDING >> 15 days >> EFT_ALLOWABLE_TIME_IN_STATE_EXCEEDED
+    # eft_stuck_errors = _get_time_based_errors(
+    #     current_state=State.EFT_PENDING,
+    #     next_state=State.EFT_ALLOWABLE_TIME_IN_STATE_EXCEEDED,
+    #     associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+    #     days_stuck=15,
+    #     now=now,
+    #     db_session=db_session,
+    # )
+    # # Build the report for EFT errors
+    # eft_audit_error_report = initialize_error_report("EFT-audit-error-report")
+    # eft_audit_error_report.add_records(eft_stuck_errors)
+    # report_group.add_report(eft_audit_error_report)
 
     # Finally create the reports and send them
     report_group.create_and_send_reports()
