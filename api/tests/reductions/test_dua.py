@@ -879,6 +879,19 @@ def test_download_payment_list_if_none_today(
         )
 
 
+def test_format_reduction_payments_for_report_optional_fields_empty(
+    initialize_factories_session, test_db_session
+):
+    # Set one of the optional fields to None.
+    dua_reduction_payment = DuaReductionPaymentFactory.create()
+    dua_reduction_payment.request_week_begin_date = None
+
+    # Expect that this will not raise an error.
+    formatted_rows = dua._format_reduction_payments_for_report([dua_reduction_payment])
+
+    assert formatted_rows[0][dua.Constants.RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD] == ""
+
+
 def test_format_reduction_payments_for_report_with_no_new_payments():
     no_reduction_payments = []
     report = dua._format_reduction_payments_for_report(no_reduction_payments)

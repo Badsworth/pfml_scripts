@@ -2,8 +2,9 @@ import csv
 import io
 import os
 import pathlib
+from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import func
 
@@ -364,6 +365,13 @@ def _get_non_submitted_reduction_payments(db_session: db.Session) -> List[DuaRed
     return non_submitted_reduction_payments
 
 
+def _format_date_for_report(raw_date: Optional[date]) -> str:
+    if raw_date is None:
+        return ""
+
+    return raw_date.strftime(Constants.PAYMENT_REPORT_TIME_FORMAT)
+
+
 def _format_reduction_payments_for_report(
     reduction_payments: List[DuaReductionPayment],
 ) -> List[Dict]:
@@ -375,11 +383,11 @@ def _format_reduction_payments_for_report(
         info = {
             Constants.CASE_ID_FIELD: payment.absence_case_id,
             Constants.EMPR_FEIN_FIELD: payment.employer_fein,
-            Constants.WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: payment.payment_date.strftime(
-                Constants.PAYMENT_REPORT_TIME_FORMAT
+            Constants.WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: _format_date_for_report(
+                payment.payment_date
             ),
-            Constants.RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD: payment.request_week_begin_date.strftime(
-                Constants.PAYMENT_REPORT_TIME_FORMAT
+            Constants.RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD: _format_date_for_report(
+                payment.request_week_begin_date
             ),
             Constants.WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD: _convert_cent_to_dollars(
                 str(payment.gross_payment_amount_cents)
@@ -388,14 +396,10 @@ def _format_reduction_payments_for_report(
                 str(payment.payment_amount_cents)
             ),
             Constants.FRAUD_IND_FIELD: payment.fraud_indicator,
-            Constants.BYB_DT_FIELD: payment.benefit_year_begin_date.strftime(
-                Constants.PAYMENT_REPORT_TIME_FORMAT
-            ),
-            Constants.BYE_DT_FIELD: payment.benefit_year_end_date.strftime(
-                Constants.PAYMENT_REPORT_TIME_FORMAT
-            ),
-            Constants.DATE_PAYMENT_ADDED_TO_REPORT_FIELD: payment.created_at.strftime(
-                Constants.PAYMENT_REPORT_TIME_FORMAT
+            Constants.BYB_DT_FIELD: _format_date_for_report(payment.benefit_year_begin_date),
+            Constants.BYE_DT_FIELD: _format_date_for_report(payment.benefit_year_end_date),
+            Constants.DATE_PAYMENT_ADDED_TO_REPORT_FIELD: _format_date_for_report(
+                payment.created_at
             ),
         }
         payments.append(info)
