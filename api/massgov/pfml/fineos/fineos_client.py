@@ -220,6 +220,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
         except (requests.exceptions.RequestException, requests.exceptions.Timeout) as ex:
             self._handle_client_side_exception(method, url, ex)
 
+        try:
+            response_payload_json = response.json()
+        except ValueError:
+            response_payload_json = {}
+
         if response.status_code != requests.codes.ok:
             logger.debug(
                 "%s %s detail",
@@ -232,6 +237,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 "FineosError",
                 {
                     "fineos.error.class": "FINEOSClientBadResponse",
+                    "fineos.error.correlation_id": response_payload_json.get("correlationId", ""),
                     "fineos.error.message": response.text,
                     "fineos.response.status": response.status_code,
                     "fineos.request.method": method,
@@ -286,7 +292,12 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 url,
                 response.status_code,
                 response.elapsed / MILLISECOND,
-                extra={"response.text": response.text},
+                extra={
+                    "response.text": response.text,
+                    "response.fineos_correlation_id": response_payload_json.get(
+                        "correlationId", ""
+                    ),
+                },
                 exc_info=err,
             )
 
