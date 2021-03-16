@@ -2,7 +2,14 @@
  * This file contains iterable helpers for claim submission.
  */
 import { SubmissionResult } from "./ClaimStateTracker";
-import { AnyIterable, tap } from "streaming-iterables";
+import { AnyIterable, tap, transform } from "streaming-iterables";
+import { GeneratedClaim } from "../generation/Claim";
+import {
+  getClaimantCredentials,
+  getLeaveAdminCredentials,
+} from "../scripts/util";
+import { ApplicationResponse } from "../api";
+import PortalSubmitter from "./PortalSubmitter";
 
 /**
  * Iterator callback to log progress as submission happens.
@@ -29,6 +36,53 @@ export function logSubmissions(
       );
     }
   }, results);
+}
+
+/**
+ * Triggers submission of all claims in an iterable.
+ */
+export function submitAll(
+  submitter: PortalSubmitter,
+  concurrency = 1
+): (iterable: AnyIterable<GeneratedClaim>) => AsyncIterable<SubmissionResult> {
+  return transform(concurrency, async (claim: GeneratedClaim) => {
+    if (!claim.claim.employer_fein) {
+      throw new Error("Claim does not have employer_fein property");
+    }
+    try {
+      const result = await submitter.submit(
+        claim,
+        getClaimantCredentials(),
+        getLeaveAdminCredentials(claim.claim.employer_fein)
+      );
+      return { claim, result };
+    } catch (e) {
+      return { claim, error: e };
+    }
+  });
+}
+
+/**
+ * Execute a postProcess callback following submission.
+ */
+export function postProcess(
+  fn: (claim: GeneratedClaim, result: ApplicationResponse) => Promise<void>,
+  concurrency = 1
+): (
+  iterable: AnyIterable<SubmissionResult>
+) => AsyncIterable<SubmissionResult> {
+  return transform(concurrency, async (result: SubmissionResult) => {
+    // Skip post-process if there was already an error.
+    if (result.error || !result.result) {
+      return result;
+    }
+    try {
+      await fn(result.claim, result.result);
+      return result;
+    } catch (e) {
+      return { ...result, error: e };
+    }
+  });
 }
 
 /**

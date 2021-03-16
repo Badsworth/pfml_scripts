@@ -2,19 +2,22 @@ import path from "path";
 import fs from "fs";
 import { format as formatDate } from "date-fns";
 import PortalSubmitter from "../submission/PortalSubmitter";
-import { consume, map, pipeline } from "streaming-iterables";
+import { consume, pipeline } from "streaming-iterables";
 import { GeneratedClaim } from "../generation/Claim";
 import AuthenticationManager from "../submission/AuthenticationManager";
 import { CognitoUserPool } from "amazon-cognito-identity-js";
 import config from "../config";
 import { Credentials } from "../types";
 import TestMailVerificationFetcher from "../../cypress/plugins/TestMailVerificationFetcher";
-import ClaimStateTracker, {
-  SubmissionResult,
-} from "../submission/ClaimStateTracker";
+import ClaimStateTracker from "../submission/ClaimStateTracker";
 import EmployeePool from "../generation/Employee";
 import { ApplicationResponse } from "../api";
-import { logSubmissions, watchFailures } from "../submission/iterable";
+import {
+  logSubmissions,
+  postProcess,
+  submitAll,
+  watchFailures,
+} from "../submission/iterable";
 
 interface DataDirectory {
   dir: string;
@@ -107,41 +110,19 @@ export type PostSubmitCallback = (
 export async function submit(
   claims: AsyncIterable<GeneratedClaim>,
   tracker: ClaimStateTracker,
-  postSubmit?: PostSubmitCallback
+  postSubmit?: PostSubmitCallback,
+  concurrency = 1
 ): Promise<void> {
-  const submitter = getPortalSubmitter();
-  const submitAll = map(
-    async (claim: GeneratedClaim): Promise<SubmissionResult> => {
-      if (!claim.claim.employer_fein) {
-        throw new Error("No FEIN was found on this claim");
-      }
-      try {
-        const result = await submitter.submit(
-          claim,
-          getClaimantCredentials(),
-          getLeaveAdminCredentials(claim.claim.employer_fein)
-        );
-        if (postSubmit) {
-          await postSubmit(claim, result);
-        }
-        return { claim, result };
-      } catch (e) {
-        return { claim, error: e };
-      }
-    }
-  );
-
   // Use async iterables to consume all of the claims. Order of the processing steps in this pipeline matters!
   // Filtering must happen before submit, and tracking should happen before the failure watcher.
   await pipeline(
-    async function* () {
-      yield* claims;
-    },
-    tracker.filter,
-    submitAll,
-    tracker.track,
-    logSubmissions,
-    watchFailures,
+    () => claims,
+    tracker.filter, // Filter out claims that have already been submitted.
+    submitAll(getPortalSubmitter(), concurrency), // Execute submission.
+    postProcess(postSubmit ?? (() => Promise.resolve()), concurrency), // Run post-processing steps (this is optional).
+    tracker.track, // Track claims that have been submitted.
+    logSubmissions, // Log submission results to console.
+    watchFailures, // Exit after 3 failures.
     consume
   );
 }
