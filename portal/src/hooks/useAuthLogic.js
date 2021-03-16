@@ -219,13 +219,18 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     appErrorsLogic.clearErrors();
     email_address = trim(email_address);
 
+    const requestData = {
+      email_address,
+      password,
+      role: { role_description },
+    };
+
+    if (role_description === RoleDescription.employer) {
+      requestData.user_leave_administrator = { employer_fein };
+    }
+
     try {
-      await usersApi.createUser({
-        email_address,
-        password,
-        role: { role_description },
-        user_leave_administrator: { employer_fein },
-      });
+      await usersApi.createUser(requestData);
     } catch (error) {
       appErrorsLogic.catchError(error);
       return;

@@ -633,9 +633,6 @@ describe("useAuthLogic", () => {
         role: {
           role_description: "Claimant",
         },
-        user_leave_administrator: {
-          employer_fein: undefined,
-        },
       });
     });
 
