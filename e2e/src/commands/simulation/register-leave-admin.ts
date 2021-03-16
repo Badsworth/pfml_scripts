@@ -1,10 +1,9 @@
 import { CommandModule } from "yargs";
 import { SystemWideArgs } from "../../cli";
 import config from "../../config";
-import AuthenticationManager from "../../simulation/AuthenticationManager";
-import { CognitoUserPool } from "amazon-cognito-identity-js";
-import TestMailVerificationFetcher from "../../../cypress/plugins/TestMailVerificationFetcher";
 import { prompt } from "enquirer";
+import { endOfQuarter, formatISO, subQuarters } from "date-fns";
+import { getAuthManager } from "../../scripts/util";
 
 type RegisterLeaveAdminArgs = {
   fein: string;
@@ -21,22 +20,19 @@ const cmd: CommandModule<SystemWideArgs, RegisterLeaveAdminArgs> = {
   },
   async handler(args) {
     const { fein } = args;
-    const authenticator = new AuthenticationManager(
-      new CognitoUserPool({
-        UserPoolId: config("COGNITO_POOL"),
-        ClientId: config("COGNITO_CLIENTID"),
-      }),
-      config("API_BASEURL"),
-      new TestMailVerificationFetcher(
-        config("TESTMAIL_APIKEY"),
-        config("TESTMAIL_NAMESPACE")
-      )
-    );
+    const authenticator = getAuthManager();
 
     const creds = {
       username: `gqzap.employer.${fein.replace("-", "")}@inbox.testmail.app`,
       password: config("EMPLOYER_PORTAL_PASSWORD"),
     };
+    const withholding_amount =
+      parseInt(fein.replace("-", "").slice(0, 6)) / 100;
+    const withholding_quarter = formatISO(
+      endOfQuarter(subQuarters(new Date(), 1)),
+      { representation: "date" }
+    );
+
     try {
       args.logger.debug(`Creating Leave Admin account for ${fein}`);
       await authenticator.registerLeaveAdmin(
@@ -45,7 +41,12 @@ const cmd: CommandModule<SystemWideArgs, RegisterLeaveAdminArgs> = {
         fein
       );
       args.logger.info(`Leave Admin Registered for ${fein}: ${creds.username}`);
-      await authenticator.verifyLeaveAdmin(creds.username, creds.password);
+      await authenticator.verifyLeaveAdmin(
+        creds.username,
+        creds.password,
+        withholding_amount,
+        withholding_quarter
+      );
       args.logger.info(`Leave Admin verified for ${fein}: ${creds.username}`);
     } catch (e) {
       if (e.code === "UsernameExistsException") {
@@ -60,7 +61,12 @@ const cmd: CommandModule<SystemWideArgs, RegisterLeaveAdminArgs> = {
             ein: fein,
           });
           args.logger.info(`Password reset for ${fein}: ${creds.username}`);
-          await authenticator.verifyLeaveAdmin(creds.username, creds.password);
+          await authenticator.verifyLeaveAdmin(
+            creds.username,
+            creds.password,
+            withholding_amount,
+            withholding_quarter
+          );
           args.logger.info(
             `Leave Admin verified for ${fein}: ${creds.username}`
           );

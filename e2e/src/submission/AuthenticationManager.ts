@@ -7,7 +7,13 @@ import {
   CognitoUserSession,
 } from "amazon-cognito-identity-js";
 import TestMailVerificationFetcher from "../../cypress/plugins/TestMailVerificationFetcher";
-import { getUsersCurrent, patchUsersByUser_id } from "../api";
+import {
+  ApiResponse,
+  getUsersCurrent,
+  patchUsersByUser_id,
+  postEmployersVerifications,
+  UserResponse,
+} from "../api";
 
 export default class AuthenticationManager {
   pool: CognitoUserPool;
@@ -165,6 +171,45 @@ export default class AuthenticationManager {
         metadata
       );
     });
+  }
+
+  async verifyLeaveAdmin(
+    username: string,
+    password: string,
+    withholding_amount: number,
+    withholding_quarter: string
+  ): Promise<ApiResponse<UserResponse>> {
+    const session = await this.authenticate(username, password);
+    if (!this.apiBaseUrl) {
+      throw new Error(
+        "No api base URL was given. Unable to consent to data sharing."
+      );
+    }
+    const apiOptions = {
+      baseUrl: this.apiBaseUrl,
+      headers: {
+        Authorization: `Bearer ${session.getAccessToken().getJwtToken()}`,
+        "User-Agent": "PFML Business Simulation Bot",
+      },
+    };
+    const user = ((await getUsersCurrent(apiOptions)) as unknown) as {
+      data: { data: UserResponse };
+    };
+    if (!user.data.data.user_leave_administrators) {
+      throw new Error("No leave administrators found");
+    }
+    const employer_id = user.data.data.user_leave_administrators[0].employer_id;
+    if (!employer_id) {
+      throw new Error("No employer ID found");
+    }
+    return await postEmployersVerifications(
+      {
+        employer_id: employer_id,
+        withholding_amount,
+        withholding_quarter,
+      },
+      apiOptions
+    );
   }
 
   private async consentToDataSharing(session: CognitoUserSession) {
