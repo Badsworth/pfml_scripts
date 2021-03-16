@@ -136,23 +136,15 @@ export const scenarioChoices: Choice[] = [
   { name: "DFMLOpsAgent", message: "DFMLOps Agent" },
 ];
 
-export const envChoices: Choice[] = [
-  { name: "test", message: "Test" },
-  { name: "stage", message: "Stage" },
-  { name: "performance", message: "Performance" },
-  { name: "training", message: "Training" },
-];
-
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const bundlerPrompts = (args: BundleLST) => ({
   env: {
-    type: "select",
+    type: "input",
     name: "env",
     message: "Target environment?",
-    choices: envChoices,
-    initial: getChoiceIndexByName(envChoices, args.env || "performance"),
+    initial: args.env || "performance",
     required: true,
-    skip: !!args.env,
+    skip: "env" in args,
   },
   speed: {
     type: "numeral",

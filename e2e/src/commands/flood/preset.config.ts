@@ -1,10 +1,7 @@
 import * as Util from "./common";
 import { factory as EnvFactory } from "../../config";
 
-export default async (
-  preset: Util.PresetName,
-  env: Util.EnvironmentName
-): Promise<void> => {
+export default function (env: Util.EnvironmentName): Util.Presets {
   const config = EnvFactory(env);
   const floodDefaults: Util.DeployLST = {
     env,
@@ -100,18 +97,5 @@ export default async (
       },
     ],
   };
-
-  for (const flood of floodPresets[preset]) {
-    const floodArgs: string = Object.entries(flood).reduce(
-      (allArgs, [k, v]) => `${allArgs} --${k} "${v}"`,
-      ""
-    );
-    // @todo: concerned that github actions will close the script's execution
-    // and that some timeouts will not execute.
-    setTimeout(
-      () =>
-        Util.runCommand(`npm run cli -- flood deployLST ${floodArgs}`, true),
-      (flood.startAfter || 0) * 60 * 1000
-    );
-  }
-};
+  return floodPresets;
+}
