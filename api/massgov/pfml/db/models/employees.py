@@ -181,6 +181,16 @@ class LkBankAccountType(Base):
         self.bank_account_type_description = bank_account_type_description
 
 
+class LkPrenoteState(Base):
+    __tablename__ = "lk_prenote_state"
+    prenote_state_id = Column(Integer, primary_key=True, autoincrement=True)
+    prenote_state_description = Column(Text)
+
+    def __init__(self, prenote_state_id, prenote_state_description):
+        self.prenote_state_id = prenote_state_id
+        self.prenote_state_description = prenote_state_description
+
+
 class LkFlow(Base):
     __tablename__ = "lk_flow"
     flow_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -341,6 +351,29 @@ class EFT(Base):
     employee = relationship("Employee", back_populates="eft")
 
 
+class PubEft(Base):
+    __tablename__ = "pub_eft"
+    pub_eft_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    routing_nbr = Column(Text, nullable=False)
+    account_nbr = Column(Text, nullable=False)
+    bank_account_type_id = Column(
+        Integer, ForeignKey("lk_bank_account_type.bank_account_type_id"), nullable=False
+    )
+    prenote_state_id = Column(
+        Integer, ForeignKey("lk_prenote_state.prenote_state_id"), nullable=False
+    )
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+    prenote_response_at = Column(TIMESTAMP(timezone=True))
+
+    bank_account_type = relationship(LkBankAccountType)
+    employees = relationship("EmployeePubEftPair", back_populates="pub_eft")
+
+
 class TaxIdentifier(Base):
     __tablename__ = "tax_identifier"
     tax_identifier_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -416,6 +449,7 @@ class Employee(Base):
     claims = cast(Optional[List["Claim"]], relationship("Claim", back_populates="employee"))
     state_logs = relationship("StateLog", back_populates="employee")
     eft = relationship("EFT", back_populates="employee", uselist=False)
+    pub_efts = relationship("EmployeePubEftPair", back_populates="employee")
     reference_files = relationship("EmployeeReferenceFile", back_populates="employee")
     payment_method = relationship(LkPaymentMethod, foreign_keys=payment_method_id)
     tax_identifier = cast(
@@ -445,6 +479,15 @@ class EmployeeLog(Base):
     modified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
     process_id = Column(Integer, index=True)
     employer_id = Column(UUID(as_uuid=True), index=True)
+
+
+class EmployeePubEftPair(Base):
+    __tablename__ = "link_employee_pub_eft_pair"
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), primary_key=True)
+    pub_eft_id = Column(PostgreSQLUUID, ForeignKey("pub_eft.pub_eft_id"), primary_key=True)
+
+    employee = relationship("Employee", back_populates="pub_efts")
+    pub_eft = relationship("PubEft", back_populates="employees")
 
 
 class Claim(Base):
@@ -509,10 +552,12 @@ class Payment(Base):
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
+    pub_eft_id = Column(UUID(as_uuid=True), ForeignKey("pub_eft.pub_eft_id"))
 
     claim = relationship(Claim)
     payment_transaction_type = relationship(LkPaymentTransactionType)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
+    pub_eft = relationship(PubEft)
 
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")
@@ -1445,6 +1490,16 @@ class BankAccountType(LookupTable):
     CHECKING = LkBankAccountType(2, "Checking")
 
 
+class PrenoteState(LookupTable):
+    model = LkPrenoteState
+    column_names = ("prenote_state_id", "prenote_state_description")
+
+    PENDING_PRE_PUB = LkPrenoteState(1, "Pending - Needs to be sent to PUB")
+    PENDING_WITH_PUB = LkPrenoteState(2, "Pending - Was sent to PUB")
+    APPROVED = LkPrenoteState(3, "Approved")
+    REJECTED = LkPrenoteState(4, "Rejected")
+
+
 class Flow(LookupTable):
     model = LkFlow
     column_names = ("flow_id", "flow_description")
@@ -1825,4 +1880,5 @@ def sync_lookup_tables(db_session):
     Flow.sync_to_database(db_session)
     State.sync_to_database(db_session)
     PaymentTransactionType.sync_to_database(db_session)
+    PrenoteState.sync_to_database(db_session)
     db_session.commit()
