@@ -20,6 +20,15 @@ mass-pfml-api:
 When updating these variables, you'll need to run `make build` 
 in order to rebuild your container and pick up the new values.
 
+### Overriding AWS credentials
+
+To use your AWS credentials locally:
+
+1. Run the `login-aws` script
+1. Override the container's AWS credentials path in `docker-compose.override.yml` (there's a commented line showing an example)
+1. Set the `AWS_PROFILE` in `docker-compose.yml` to the AWS profile you want to use
+1. Rerun `make build`
+
 ## Deployed Environments
 
 In deployed environments, variables are pulled in through AWS Elastic Container Service (ECS) 
