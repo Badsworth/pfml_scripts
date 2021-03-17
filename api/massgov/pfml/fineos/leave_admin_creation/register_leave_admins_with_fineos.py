@@ -89,11 +89,21 @@ def find_admins_without_registration(db_session: db.Session):
     for leave_admin in leave_admins_without_fineos:
         find_user_and_register(db_session, leave_admin, fineos_client)
 
-    leave_admins_without_fineos_count = (
-        db_session.query(UserLeaveAdministrator)
-        .filter(UserLeaveAdministrator.fineos_web_id.is_(None))
-        .count()
-    )
+    if app.get_config().enforce_verification:
+        leave_admins_without_fineos_count = (
+            db_session.query(UserLeaveAdministrator)
+            .filter(
+                UserLeaveAdministrator.fineos_web_id.is_(None),
+                UserLeaveAdministrator.verified == True,  # noqa: E712
+            )
+            .count()
+        )
+    else:
+        leave_admins_without_fineos_count = (
+            db_session.query(UserLeaveAdministrator)
+            .filter(UserLeaveAdministrator.fineos_web_id.is_(None))
+            .count()
+        )
 
     logger.info(
         "Leave admin records left unprocessed",
