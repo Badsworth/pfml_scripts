@@ -573,6 +573,77 @@ export function fillAbsencePeriod(claimNumber: string): void {
   });
 }
 
+export function intermittentClaimAdjudicationFlow(
+  claimNumber: string,
+  ERresponse = false
+): void {
+  visitClaim(claimNumber);
+  if (ERresponse) {
+    assertClaimHasLeaveAdminResponse(true);
+    clickBottomWidgetButton("Close");
+  }
+  assertOnClaimPage(claimNumber);
+  checkTask();
+  cy.get("input[type='submit'][value='Adjudicate']").click();
+  checkStatus(claimNumber, "Eligibility", "Met");
+  markEvidence(claimNumber, "MHAP1", "State managed Paid Leave Confirmation");
+  markEvidence(claimNumber, "MHAP1", "Identification Proof");
+  checkStatus(claimNumber, "Evidence", "Satisfied");
+  fillAbsencePeriod(claimNumber);
+  onTab("Manage Request");
+  cy.get('input[title="Accept Leave Plan"]').click();
+  cy.wait(1000);
+  checkStatus(claimNumber, "Availability", "As Certified");
+  // Complete Adjudication
+  assertAdjudicatingClaim(claimNumber);
+  clickBottomWidgetButton("OK");
+  // Approve Claim
+  if (ERresponse) {
+    approveClaim();
+  }
+  cy.wait(2000);
+}
+
+export function submitActualHours(claimNumber: string): void {
+  cy.get('a[aria-label="Cases"]').click();
+  cy.get('td[keytipnumber="4"]').contains("Case").click();
+  cy.labelled("Case Number").type(claimNumber);
+  cy.labelled("Case Type").select("Absence Case");
+  cy.get('input[type="submit"][value="Search"]').click();
+  cy.contains("span[class='LinkText']", "Record Actual").click({ force: true });
+  cy.wait(1000);
+  cy.contains("tbody", "Episodic").click();
+  cy.contains("input", "Record Actual").click();
+  cy.get('input[name*="startDateAllDay_CHECKBOX"]').click();
+  cy.get('input[name*="endDateAllDay_CHECKBOX"]').click({ force: true });
+  cy.get("input[type='submit'][value='OK']").click();
+  cy.get("#nextPreviousButtons").within(() => {
+    cy.get(`input[value*="Next "]`).click({ force: true });
+  });
+  cy.contains("td", "Time off period").click({ force: true });
+  cy.wait(5000);
+  cy.get('select[name*="reportedBy"]').select("Employee");
+  cy.wait(5000);
+  cy.get('select[name*="receivedVia"]').select("Phone");
+  cy.wait(5000);
+  cy.get("input[name*='applyActualTime']").click();
+  cy.contains("td", "Time off period").click({ force: true });
+  cy.get("#nextPreviousButtons").within(() => {
+    cy.get(`input[value*="Next "]`).click({ force: true });
+  });
+  cy.contains("td", "Time off period").click();
+  cy.contains("input", "Request Recertification").click({ force: true });
+  cy.get("#nextPreviousButtons").within(() => {
+    cy.get(`input[value*="Close"]`).click({ force: true });
+  });
+  cy.get('a[aria-label="Cases"]').click();
+  cy.get('td[keytipnumber="4"]').contains("Case").click();
+  cy.labelled("Case Number").type(claimNumber);
+  cy.labelled("Case Type").select("Absence Case");
+  cy.get('input[type="submit"][value="Search"]').click();
+  cy.contains("Review and Make Decision on Actual Time Submitted");
+}
+
 export function claimAdjudicationFlow(
   claimNumber: string,
   ERresponse = false
