@@ -337,6 +337,19 @@
     Local Development
   </a>
   
+    <nav class="md-nav" aria-label="Local Development">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#overriding-aws-credentials" class="md-nav__link">
+    Overriding AWS credentials
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -689,6 +702,19 @@
     Local Development
   </a>
   
+    <nav class="md-nav" aria-label="Local Development">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#overriding-aws-credentials" class="md-nav__link">
+    Overriding AWS credentials
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -730,6 +756,14 @@
 </code></pre></div>
 <p>When updating these variables, you'll need to run <code>make build</code> 
 in order to rebuild your container and pick up the new values.</p>
+<h3 id="overriding-aws-credentials">Overriding AWS credentials</h3>
+<p>To use your AWS credentials locally:</p>
+<ol>
+<li>Run the <code>login-aws</code> script</li>
+<li>Override the container's AWS credentials path in <code>docker-compose.override.yml</code> (there's a commented line showing an example)</li>
+<li>Set the <code>AWS_PROFILE</code> in <code>docker-compose.yml</code> to the AWS profile you want to use</li>
+<li>Rerun <code>make build</code></li>
+</ol>
 <h2 id="deployed-environments">Deployed Environments</h2>
 <p>In deployed environments, variables are pulled in through AWS Elastic Container Service (ECS) 
 as listed in the <a href="https://github.com/EOLWD/pfml/tree/main/infra/api/template/container_definitions.json">container definition</a>. 
