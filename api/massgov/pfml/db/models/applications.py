@@ -747,6 +747,10 @@ class RMVCheck(Base):
         Boolean, nullable=False, default=False, server_default="FALSE"
     )
 
+    has_passed_required_checks = Column(
+        Boolean, nullable=False, default=False, server_default="FALSE"
+    )
+
     rmv_error_code = Column(StrEnum(RmvAcknowledgement), nullable=True)
     api_error_code = Column(StrEnum(RMVCheckApiErrorCode), nullable=True)
 

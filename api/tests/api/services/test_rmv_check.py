@@ -4,6 +4,7 @@ from datetime import date, timedelta
 import pytest
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 
+import massgov.pfml.rmv.errors as rmv_errors
 from massgov.pfml.api.services.rmv_check import (
     RMVCheckApiErrorCode,
     RMVCheckRequest,
@@ -75,6 +76,7 @@ def test_do_checks_pass(matching_check_data):
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is True
 
 
 def test_do_checks_fail_expiration_license1(matching_check_data):
@@ -93,6 +95,7 @@ def test_do_checks_fail_expiration_license1(matching_check_data):
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is False
 
 
 def test_do_checks_fail_expiration_if_license2_with_no_license1(matching_check_data):
@@ -112,6 +115,7 @@ def test_do_checks_fail_expiration_if_license2_with_no_license1(matching_check_d
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is False
 
 
 def test_do_checks_pass_expiration_if_only_license2_expired(matching_check_data):
@@ -131,6 +135,7 @@ def test_do_checks_pass_expiration_if_only_license2_expired(matching_check_data)
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is True
 
 
 def test_do_checks_fail_customer_inactive(matching_check_data):
@@ -149,6 +154,7 @@ def test_do_checks_fail_customer_inactive(matching_check_data):
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is False
 
 
 def test_do_checks_fail_fraudulent_activity(matching_check_data):
@@ -168,6 +174,7 @@ def test_do_checks_fail_fraudulent_activity(matching_check_data):
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is False
 
     # ensure it has to be marked as active
     license_inquiry_response.cfl_sanctions = True
@@ -203,9 +210,10 @@ def test_do_checks_fail_mass_id_number(matching_check_data):
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is False
 
 
-def test_do_checks_fail_residential_address_line_1(matching_check_data):
+def test_do_checks_pass_residential_address_line_1_mismatch(matching_check_data):
     (rmv_check_request, license_inquiry_response) = matching_check_data
     rmv_check_record = RMVCheck()
 
@@ -222,6 +230,7 @@ def test_do_checks_fail_residential_address_line_1(matching_check_data):
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is True
 
     # even if conceptually the same
     rmv_check_request.residential_address_line_1 = "123 Main St"
@@ -230,6 +239,7 @@ def test_do_checks_fail_residential_address_line_1(matching_check_data):
     result = do_checks(rmv_check_request, license_inquiry_response, rmv_check_record)
 
     assert result.check_residential_address_line_1 is False
+    assert result.has_passed_required_checks is True
 
     # even minor differences
     rmv_check_request.residential_address_line_1 = "123 Main St"
@@ -238,6 +248,7 @@ def test_do_checks_fail_residential_address_line_1(matching_check_data):
     result = do_checks(rmv_check_request, license_inquiry_response, rmv_check_record)
 
     assert result.check_residential_address_line_1 is False
+    assert result.has_passed_required_checks is True
 
 
 def test_do_checks_pass_residential_address_line_1_case_insensitive(matching_check_data):
@@ -257,9 +268,10 @@ def test_do_checks_pass_residential_address_line_1_case_insensitive(matching_che
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is True
 
 
-def test_do_checks_fail_residential_address_line_2(matching_check_data):
+def test_do_checks_pass_residential_address_line_2_mismatch(matching_check_data):
     (rmv_check_request, license_inquiry_response) = matching_check_data
     rmv_check_record = RMVCheck()
 
@@ -276,6 +288,7 @@ def test_do_checks_fail_residential_address_line_2(matching_check_data):
     assert result.check_residential_address_line_2 is False
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is True
 
     # if RMV has a line 2 on record, but not provided by user
     rmv_check_request.residential_address_line_2 = None
@@ -284,6 +297,7 @@ def test_do_checks_fail_residential_address_line_2(matching_check_data):
     result = do_checks(rmv_check_request, license_inquiry_response, rmv_check_record)
 
     assert result.check_residential_address_line_2 is False
+    assert result.has_passed_required_checks is True
 
     # even if conceptually the same
     rmv_check_request.residential_address_line_2 = "Apt 123"
@@ -292,6 +306,7 @@ def test_do_checks_fail_residential_address_line_2(matching_check_data):
     result = do_checks(rmv_check_request, license_inquiry_response, rmv_check_record)
 
     assert result.check_residential_address_line_2 is False
+    assert result.has_passed_required_checks is True
 
     # even on minor differences
     rmv_check_request.residential_address_line_2 = "Apt. 123"
@@ -300,6 +315,7 @@ def test_do_checks_fail_residential_address_line_2(matching_check_data):
     result = do_checks(rmv_check_request, license_inquiry_response, rmv_check_record)
 
     assert result.check_residential_address_line_2 is False
+    assert result.has_passed_required_checks is True
 
 
 def test_do_checks_pass_residential_address_line_2_case_insensitive(matching_check_data):
@@ -319,6 +335,7 @@ def test_do_checks_pass_residential_address_line_2_case_insensitive(matching_che
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is True
 
 
 def test_do_checks_pass_residential_address_line_2_when_not_needed(matching_check_data):
@@ -338,6 +355,7 @@ def test_do_checks_pass_residential_address_line_2_when_not_needed(matching_chec
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is True
 
     # if user provides a line two, but RMV doesn't have it on record, that's okay
     rmv_check_request.residential_address_line_2 = "Apt 123"
@@ -346,6 +364,7 @@ def test_do_checks_pass_residential_address_line_2_when_not_needed(matching_chec
     result = do_checks(rmv_check_request, license_inquiry_response, rmv_check_record)
 
     assert result.check_residential_address_line_2 is True
+    assert result.has_passed_required_checks is True
 
 
 def test_do_checks_fail_residential_city(matching_check_data):
@@ -365,6 +384,7 @@ def test_do_checks_fail_residential_city(matching_check_data):
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is False
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is False
 
     # even with minor differences
     rmv_check_request.residential_address_city = "Boston "
@@ -373,6 +393,7 @@ def test_do_checks_fail_residential_city(matching_check_data):
     result = do_checks(rmv_check_request, license_inquiry_response, rmv_check_record)
 
     assert result.check_residential_city is False
+    assert result.has_passed_required_checks is False
 
 
 def test_do_checks_pass_residential_address_city_case_insensitive(matching_check_data):
@@ -392,6 +413,7 @@ def test_do_checks_pass_residential_address_city_case_insensitive(matching_check
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is True
 
 
 def test_do_checks_fail_residential_zip_code(matching_check_data):
@@ -411,6 +433,7 @@ def test_do_checks_fail_residential_zip_code(matching_check_data):
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is False
+    assert result.has_passed_required_checks is False
 
     # even with minor differences
     rmv_check_request.residential_address_zip_code = "12345-6789"
@@ -419,6 +442,7 @@ def test_do_checks_fail_residential_zip_code(matching_check_data):
     result = do_checks(rmv_check_request, license_inquiry_response, rmv_check_record)
 
     assert result.check_residential_city is False
+    assert result.has_passed_required_checks is False
 
 
 def test_do_checks_pass_residential_zip_code_first_five(matching_check_data):
@@ -438,6 +462,7 @@ def test_do_checks_pass_residential_zip_code_first_five(matching_check_data):
     assert result.check_residential_address_line_2 is True
     assert result.check_residential_city is True
     assert result.check_residential_zip_code is True
+    assert result.has_passed_required_checks is True
 
 
 def test_make_response_from_rmv_check_pass():
@@ -451,7 +476,8 @@ def test_make_response_from_rmv_check_pass():
             check_residential_address_line_2=True,
             check_residential_city=True,
             check_residential_zip_code=True,
-        )
+            has_passed_required_checks=True,
+        ),
     )
 
     assert response.verified is True
@@ -460,7 +486,9 @@ def test_make_response_from_rmv_check_pass():
 
 def test_make_response_from_rmv_check_fail_due_to_rmv_not_found():
     response = make_response_from_rmv_check(
-        RMVCheck(rmv_error_code=RmvAcknowledgement.CUSTOMER_NOT_FOUND)
+        RMVCheck(
+            rmv_error_code=RmvAcknowledgement.CUSTOMER_NOT_FOUND, has_passed_required_checks=False,
+        ),
     )
 
     assert response.verified is False
@@ -470,7 +498,10 @@ def test_make_response_from_rmv_check_fail_due_to_rmv_not_found():
     )
 
     response = make_response_from_rmv_check(
-        RMVCheck(rmv_error_code=RmvAcknowledgement.CREDENTIAL_NOT_FOUND)
+        RMVCheck(
+            rmv_error_code=RmvAcknowledgement.CREDENTIAL_NOT_FOUND,
+            has_passed_required_checks=False,
+        )
     )
 
     assert response.verified is False
@@ -483,21 +514,30 @@ def test_make_response_from_rmv_check_fail_due_to_rmv_not_found():
 def test_make_response_from_rmv_check_500_due_to_rmv_required_fields_missing():
     with pytest.raises(InternalServerError):
         make_response_from_rmv_check(
-            RMVCheck(rmv_error_code=RmvAcknowledgement.REQUIRED_FIELDS_MISSING)
+            RMVCheck(
+                rmv_error_code=RmvAcknowledgement.REQUIRED_FIELDS_MISSING,
+                has_passed_required_checks=False,
+            )
         )
 
 
 def test_make_response_from_rmv_check_503_due_to_networking_issues():
     with pytest.raises(ServiceUnavailable):
         make_response_from_rmv_check(
-            RMVCheck(api_error_code=RMVCheckApiErrorCode.NETWORKING_ISSUES)
+            RMVCheck(
+                api_error_code=RMVCheckApiErrorCode.NETWORKING_ISSUES,
+                has_passed_required_checks=False,
+            )
         )
 
 
 def test_make_response_from_rmv_check_500_due_to_failing_to_parse_rmv_response():
     with pytest.raises(InternalServerError):
         make_response_from_rmv_check(
-            RMVCheck(api_error_code=RMVCheckApiErrorCode.FAILED_TO_PARSE_RESPONSE)
+            RMVCheck(
+                api_error_code=RMVCheckApiErrorCode.FAILED_TO_PARSE_RESPONSE,
+                has_passed_required_checks=False,
+            )
         )
 
 
@@ -512,7 +552,8 @@ def test_make_response_from_rmv_check_fail_due_to_one_thing():
             check_residential_address_line_2=True,
             check_residential_city=True,
             check_residential_zip_code=True,
-        )
+            has_passed_required_checks=False,
+        ),
     )
 
     assert response.verified is False
@@ -530,13 +571,14 @@ def test_make_response_from_rmv_check_fail_due_to_multiple_thing():
             check_residential_address_line_2=True,
             check_residential_city=True,
             check_residential_zip_code=False,
-        )
+            has_passed_required_checks=False,
+        ),
     )
 
     assert response.verified is False
     assert (
         response.description
-        == "Verification failed because ID holder is deceased, residential address line 1 mismatch, and residential zip code mismatch."
+        == "Verification failed because ID holder is deceased and residential zip code mismatch."
     )
 
 
@@ -575,6 +617,8 @@ def test_handle_rmv_check_request_pass(test_db_session, matching_check_data):
     assert rmv_check_record.check_residential_address_line_2 is True
     assert rmv_check_record.check_residential_city is True
     assert rmv_check_record.check_residential_zip_code is True
+
+    assert rmv_check_record.has_passed_required_checks is True
 
 
 @pytest.mark.integration
@@ -615,6 +659,8 @@ def test_handle_rmv_check_request_fail(test_db_session, matching_check_data):
     assert rmv_check_record.check_residential_city is True
     assert rmv_check_record.check_residential_zip_code is True
 
+    assert rmv_check_record.has_passed_required_checks is False
+
 
 @pytest.mark.integration
 def test_handle_rmv_check_request_fail_rmv_request(test_db_session, matching_check_data):
@@ -651,3 +697,46 @@ def test_handle_rmv_check_request_fail_rmv_request(test_db_session, matching_che
     assert rmv_check_record.check_residential_address_line_2 is False
     assert rmv_check_record.check_residential_city is False
     assert rmv_check_record.check_residential_zip_code is False
+
+    assert rmv_check_record.has_passed_required_checks is False
+
+
+@pytest.mark.integration
+def test_handle_rmv_check_request_fail_rmv_server_error(
+    test_db_session, matching_check_data, mocker
+):
+    (rmv_check_request, _) = matching_check_data
+
+    rmv_client = mocker.patch("massgov.pfml.rmv.client.RmvClient", autospec=True)
+    rmv_client.vendor_license_inquiry.side_effect = rmv_errors.RmvError
+
+    rmv_check_record = handle_rmv_check_request(test_db_session, rmv_client, rmv_check_request)
+
+    assert rmv_check_record
+
+    assert rmv_check_record.rmv_check_id
+
+    assert rmv_check_record.absence_case_id == rmv_check_record.absence_case_id
+
+    assert rmv_check_record.created_at
+    assert rmv_check_record.request_to_rmv_started_at
+    assert rmv_check_record.request_to_rmv_completed_at
+    assert (
+        rmv_check_record.request_to_rmv_started_at != rmv_check_record.request_to_rmv_completed_at
+    )
+
+    assert rmv_check_record.rmv_error_code is None
+    assert rmv_check_record.api_error_code is RMVCheckApiErrorCode.UNKNOWN_RMV_ISSUE
+
+    assert rmv_check_record.rmv_customer_key is None
+
+    assert rmv_check_record.check_expiration is False
+    assert rmv_check_record.check_customer_inactive is False
+    assert rmv_check_record.check_active_fraudulent_activity is False
+    assert rmv_check_record.check_mass_id_number is False
+    assert rmv_check_record.check_residential_address_line_1 is False
+    assert rmv_check_record.check_residential_address_line_2 is False
+    assert rmv_check_record.check_residential_city is False
+    assert rmv_check_record.check_residential_zip_code is False
+
+    assert rmv_check_record.has_passed_required_checks is False

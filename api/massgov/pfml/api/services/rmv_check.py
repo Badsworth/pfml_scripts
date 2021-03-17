@@ -1,6 +1,6 @@
 import json
 from datetime import date
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pydantic
 import requests
@@ -47,15 +47,63 @@ class RMVCheckResponse(PydanticBaseModel):
     description: str
 
 
+REQUIRED_CHECKS_AND_THEIR_FAILURE_DESCRIPTIONS = {
+    "check_expiration": "ID is expired",
+    "check_customer_inactive": "ID holder is deceased",
+    "check_active_fraudulent_activity": "ID is marked for active fraudulent activity",
+    "check_mass_id_number": "ID number mismatch",
+    "check_residential_city": "residential city mismatch",
+    "check_residential_zip_code": "residential zip code mismatch",
+}
+
+# currently unused, but here if needed for messaging purposes in the future
+OPTIONAL_CHECKS_AND_THEIR_WARNING_DESCRIPTIONS = {
+    "check_residential_address_line_1": "residential address line 1 mismatch",
+    "check_residential_address_line_2": "residential address line 2 mismatch",
+}
+
+
 def handle_rmv_check_request(
     db_session: db.Session, rmv_client: RmvClient, request_body: RMVCheckRequest
 ) -> RMVCheck:
+    """Process request into a RMVCheck database record"""
+
     rmv_check_record = RMVCheck(absence_case_id=request_body.absence_case_id)
     db_session.add(rmv_check_record)
     db_session.commit()
 
     logger.info("RMV Check started", extra=rmv_check_for_log(rmv_check_record))
 
+    result, license_inquiry_response = _do_rmv_license_inquiry_request(
+        rmv_client, request_body, rmv_check_record
+    )
+
+    if license_inquiry_response is not None:
+        result = _handle_rmv_license_inquiry_response(
+            request_body, license_inquiry_response, rmv_check_record
+        )
+
+    db_session.commit()
+
+    # some reporting in New Relic (notably the ID proofing dashboard) depends on
+    # this log message string and data, don't change it without checking things
+    logger.info("RMV Check completed", extra=rmv_check_for_log(result))
+
+    return result
+
+
+def _do_rmv_license_inquiry_request(
+    rmv_client: RmvClient, request_body: RMVCheckRequest, rmv_check_record: RMVCheck
+) -> Tuple[RMVCheck, Optional[Union[VendorLicenseInquiryResponse, RmvAcknowledgement]]]:
+    """Make VendorLicenseInquiry request with RMV based on request input.
+
+    Some expected types of failures are handled by setting the appropriate error
+    property on the RMVCheck record.
+
+    Returns:
+        The second element in the tuple is the RMV response, if there were
+        expected types of failures with the request to the RMV, it will be None.
+    """
     try:
         vendor_license_inquiry_request = VendorLicenseInquiryRequest(
             first_name=request_body.first_name,
@@ -70,7 +118,9 @@ def handle_rmv_check_request(
             "Could not construct RMV API request object", extra=rmv_check_for_log(rmv_check_record),
         )
 
-        return rmv_check_record
+        return rmv_check_record, None
+
+    license_inquiry_response = None
 
     try:
         rmv_check_record.request_to_rmv_started_at = utcnow()
@@ -81,16 +131,12 @@ def handle_rmv_check_request(
         logger.exception(
             "RMV Check failed due to unknown error", extra=rmv_check_for_log(rmv_check_record),
         )
-
-        return rmv_check_record
     except pydantic.ValidationError:
         rmv_check_record.api_error_code = RMVCheckApiErrorCode.FAILED_TO_PARSE_RESPONSE
 
         logger.exception(
             "Could not parse response from the RMV API", extra=rmv_check_for_log(rmv_check_record),
         )
-
-        return rmv_check_record
     except (requests.ConnectionError, requests.Timeout):
         rmv_check_record.api_error_code = RMVCheckApiErrorCode.NETWORKING_ISSUES
 
@@ -98,11 +144,17 @@ def handle_rmv_check_request(
             "RMV Check had networking issues connecting to RMV API",
             extra=rmv_check_for_log(rmv_check_record),
         )
-
-        return rmv_check_record
     finally:
         rmv_check_record.request_to_rmv_completed_at = utcnow()
 
+    return rmv_check_record, license_inquiry_response
+
+
+def _handle_rmv_license_inquiry_response(
+    request_body: RMVCheckRequest,
+    license_inquiry_response: Union[VendorLicenseInquiryResponse, RmvAcknowledgement],
+    rmv_check_record: RMVCheck,
+) -> RMVCheck:
     if isinstance(license_inquiry_response, RmvAcknowledgement):
         rmv_check_record.rmv_error_code = license_inquiry_response
 
@@ -115,11 +167,7 @@ def handle_rmv_check_request(
 
     rmv_check_record.rmv_customer_key = license_inquiry_response.customer_key
 
-    result = do_checks(request_body, license_inquiry_response, rmv_check_record)
-
-    logger.info("RMV Check finished", extra=rmv_check_for_log(result))
-
-    return result
+    return do_checks(request_body, license_inquiry_response, rmv_check_record)
 
 
 def do_checks(
@@ -179,22 +227,58 @@ def do_checks(
         request_body.residential_address_zip_code[:5] == license_inquiry_response.zip[:5]
     )
 
+    rmv_check_record.has_passed_required_checks = _has_passed_required_checks(rmv_check_record)
+
     return rmv_check_record
 
 
-CHECKS_AND_THEIR_FAILURE_DESCRIPTIONS = {
-    "check_expiration": "ID is expired",
-    "check_customer_inactive": "ID holder is deceased",
-    "check_active_fraudulent_activity": "ID is marked for active fraudulent activity",
-    "check_mass_id_number": "ID number mismatch",
-    "check_residential_address_line_1": "residential address line 1 mismatch",
-    "check_residential_address_line_2": "residential address line 2 mismatch",
-    "check_residential_city": "residential city mismatch",
-    "check_residential_zip_code": "residential zip code mismatch",
-}
+def _has_passed_required_checks(rmv_check_record: RMVCheck) -> bool:
+    if (
+        rmv_check_record.rmv_error_code
+        or rmv_check_record.api_error_code
+        or _get_failed_required_checks(rmv_check_record)
+    ):
+        return False
+
+    return True
+
+
+def _get_failed_required_checks(rmv_check_record: RMVCheck) -> List[str]:
+    failed_checks = []
+
+    for check in REQUIRED_CHECKS_AND_THEIR_FAILURE_DESCRIPTIONS.keys():
+        try:
+            check_result = getattr(rmv_check_record, check)
+        except AttributeError:
+            logger.exception(
+                f"Could not find attribute '{check}' on an RMVCheck instance, check for typos in the keys of REQUIRED_CHECKS_AND_THEIR_FAILURE_DESCRIPTIONS"
+            )
+
+            raise InternalServerError
+
+        if not check_result:
+            failed_checks.append(check)
+
+    return failed_checks
 
 
 def make_response_from_rmv_check(rmv_check_record: RMVCheck) -> RMVCheckResponse:
+    """Generate API response or raise appropriate HTTP Exception based on RMV check data"""
+
+    if rmv_check_record.has_passed_required_checks:
+        return RMVCheckResponse(verified=True, description="Verification check passed.")
+
+    server_error_response = _handle_server_errors(rmv_check_record)
+
+    if server_error_response:
+        return server_error_response
+
+    return _handle_data_match_errors(rmv_check_record)
+
+
+def _handle_server_errors(rmv_check_record: RMVCheck) -> Optional[RMVCheckResponse]:
+    """For issues outside of the data matching, generate failure response or raise correct HTTP exception"""
+
     # first determine if we had issues even getting record from the RMV
     if rmv_check_record.rmv_error_code:
         if rmv_check_record.rmv_error_code is RmvAcknowledgement.CUSTOMER_NOT_FOUND:
@@ -227,32 +311,24 @@ def make_response_from_rmv_check(rmv_check_record: RMVCheck) -> RMVCheckResponse
 
         raise InternalServerError
 
-    # then figure out if all checks passed
-    failed_checks = []
+    return None
 
-    for check in CHECKS_AND_THEIR_FAILURE_DESCRIPTIONS.keys():
-        try:
-            check_result = getattr(rmv_check_record, check)
-        except AttributeError:
-            logger.exception(
-                f"Could not find attribute '{check}' on an RMVCheck instance, check for typos in the keys of CHECKS_AND_THEIR_FAILURE_DESCRIPTIONS"
-            )
 
-            raise InternalServerError
+def _handle_data_match_errors(rmv_check_record: RMVCheck) -> RMVCheckResponse:
+    """Generate failure response for RMVCheck record with data match issues."""
 
-        if not check_result:
-            failed_checks.append(check)
+    failed_checks = _get_failed_required_checks(rmv_check_record)
 
-    if len(failed_checks) != 0:
-        failed_check_descriptions = list(
-            map(lambda k: CHECKS_AND_THEIR_FAILURE_DESCRIPTIONS[k], failed_checks)
-        )
+    if not failed_checks:
+        raise ValueError("RMV Check record has no failing checks.")
 
-        description = f"Verification failed because {join_with_coordinating_conjunction(failed_check_descriptions)}."
+    failed_check_descriptions = list(
+        map(lambda k: REQUIRED_CHECKS_AND_THEIR_FAILURE_DESCRIPTIONS[k], failed_checks)
+    )
 
-        return RMVCheckResponse(verified=False, description=description)
+    description = f"Verification failed because {join_with_coordinating_conjunction(failed_check_descriptions)}."
 
-    return RMVCheckResponse(verified=True, description="Verification check passed.")
+    return RMVCheckResponse(verified=False, description=description)
 
 
 def rmv_check_for_log(rmv_check_record: RMVCheck) -> Dict[str, Any]:
@@ -281,6 +357,7 @@ def rmv_check_for_log(rmv_check_record: RMVCheck) -> Dict[str, Any]:
         "api_error_code",
         "absence_case_id",
         "rmv_customer_key",
+        "has_passed_required_checks",
     }
 
     # silly dance to serialize record into dictionary with basic types using
