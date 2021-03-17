@@ -8,59 +8,61 @@ import { shallow } from "enzyme";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-describe("PreviousLeaves", () => {
-  let appLogic, claim, wrapper;
-
-  beforeEach(() => {
+const setup = (claim) => {
+  if (!claim) {
     claim = new MockClaimBuilder().continuous().create();
-    ({ appLogic, wrapper } = renderWithAppLogic(PreviousLeaves, {
-      claimAttrs: claim,
-    }));
+  }
+
+  const { appLogic, wrapper } = renderWithAppLogic(PreviousLeaves, {
+    claimAttrs: claim,
   });
 
+  const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
+
+  return {
+    appLogic,
+    claim,
+    changeRadioGroup,
+    submitForm,
+    wrapper,
+  };
+};
+
+describe("PreviousLeaves", () => {
   it("renders the page", () => {
+    const { wrapper } = setup();
+
     const hintWrapper = shallow(wrapper.find("InputChoiceGroup").prop("hint"));
 
     expect(wrapper).toMatchSnapshot();
     expect(hintWrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
-  describe("when user clicks continue", () => {
-    it("calls claims.update", async () => {
-      const { submitForm } = simulateEvents(wrapper);
+  it("calls claims.update when user clicks continue", async () => {
+    const { appLogic, claim, wrapper } = setup();
+    const { submitForm } = simulateEvents(wrapper);
 
-      await submitForm();
+    await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
-        claim.application_id,
-        {
-          has_previous_leaves: claim.has_previous_leaves,
-        }
-      );
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      has_previous_leaves: claim.has_previous_leaves,
     });
+  });
 
-    it("sends previous_leaves as null to the API if has_previous_leaves changes to no", async () => {
-      claim = new MockClaimBuilder()
-        .previousLeavePregnancyFromOtherEmployer()
-        .create();
+  it("sends previous_leaves as null to the API if has_previous_leaves changes to no", async () => {
+    const claim = new MockClaimBuilder()
+      .previousLeavePregnancyFromOtherEmployer()
+      .create();
 
-      ({ appLogic, wrapper } = renderWithAppLogic(PreviousLeaves, {
-        claimAttrs: claim,
-      }));
+    const { appLogic, changeRadioGroup, submitForm } = setup(claim);
 
-      const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
+    changeRadioGroup("has_previous_leaves", "false");
 
-      changeRadioGroup("has_previous_leaves", "false");
+    await submitForm();
 
-      await submitForm();
-
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
-        claim.application_id,
-        {
-          has_previous_leaves: false,
-          previous_leaves: null,
-        }
-      );
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      has_previous_leaves: false,
+      previous_leaves: null,
     });
   });
 });
