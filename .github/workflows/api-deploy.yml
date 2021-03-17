@@ -88,13 +88,11 @@ jobs:
                 }
               }
             }
-
       - name: fail if not a member
         if: contains(github.ref, 'deploy/api/prod') && contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
         run: |
           echo "Not part of pfml-devops, cancelling workflow"
           exit 1
-
   update-the-deploy-branch:
     name: Update archival branch
     needs: prod-check
@@ -115,19 +113,16 @@ jobs:
           git config user.name "PFMLDevOps"
           git config user.email "68565627+PFMLDevOps@users.noreply.github.com"
           branch_or_tag=$(echo ${{github.ref}} | sed -E 's/^refs\/(heads|tags)\///')
-
           if commit_hash=$(git rev-parse origin/${{github.event.inputs.version}} 2>/dev/null); then
             echo "Received branch"
           else
             commit_hash=$(git rev-parse ${{github.event.inputs.version}})
             echo "Received tag"
           fi
-
           if [[ -z $commit_hash ]]; then
             echo "💣 No valid commit hash could be found in Git for the provided branch or tag '${{github.event.inputs.version}}'. This deploy can't proceed."
             exit 1
           fi
-
           echo "about to commit $commit_hash to $branch_or_tag..."
           git pull origin $branch_or_tag --ff-only
           git reset --hard $commit_hash
@@ -146,7 +141,6 @@ jobs:
         id: api-env
         run: |
           echo "::set-output name=api-env::${{ env[github.ref] || 'test' }}"
-
       - name: Set deployed-url value
         id: deployed-url
         # steps cannot refer to an output from a previous step in the same job, so api-env has to be calculated again
@@ -200,7 +194,6 @@ jobs:
         id: set-commit-details
         run: |
           echo "commit_details=$(git log --pretty=format:"<https://github.com/${{ github.repository }}/commit/${{needs.update-the-deploy-branch.outputs.commit_hash}}|%h %s>" -1 ${{needs.update-the-deploy-branch.outputs.commit_hash }})" >> $GITHUB_ENV
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -664,32 +657,13 @@ jobs:
     outputs:
       deploy-state: ${{ steps.deploy-state.outputs.deploy-state }}
     steps:
+        # https://github.com/technote-space/workflow-conclusion-action
+        # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
+      - uses: technote-space/workflow-conclusion-action@v2
       - name: Set deploy-state value
         id: deploy-state
-        env:
-          API_RESULT: ${{ needs.api-release.result }}
-          GATEWAY_RESULT: ${{ needs.api-gateway-release.result }}
-        # the below shellcode must account for both 'cancelled' state, when a running job is cancelled while running
-        # and 'skipped' state, when a job was skipped because a prior job was cancelled or did not need to be run
-        # for brevity both are reported as 'cancelled'; api-release and gateway-release are never run conditionally
-        run: |
-          if [[ $API_RESULT == 'cancelled' ]] || [[ $GATEWAY_RESULT == 'cancelled' ]]; then
-            echo "::set-output name=deploy-state::inactive"
-          fi
-
-          if [[ $API_RESULT == 'skipped' ]] || [[ $GATEWAY_RESULT == 'skipped' ]]; then
-            echo "::set-output name=deploy-state::inactive"
-          fi
-
-          if [[ $API_RESULT == 'success' ]] && [[ $GATEWAY_RESULT == 'success' ]]; then
-            echo "::set-output name=deploy-state::success"
-          fi
-
-          if [[ $API_RESULT == 'failure' ]] || [[ $GATEWAY_RESULT == 'failure' ]]; then
-            echo "::set-output name=deploy-state::failure"
-          fi
-
-
+        run: echo "::set-output name=deploy-state::${{ env.WORKFLOW_CONCLUSION }}"
+  
   finish-comms-github:
     name: Finish deploy comms (GitHub)
     needs: [start-comms-github, deploy-info, postdeploy-info]
@@ -744,9 +718,18 @@ jobs:
           if [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'success' ]]; then
             echo "::set-output name=message::${{ env.deployment_success }}"
             echo "::set-output name=color::good"
-          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'inactive' ]]; then
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'cancelled' ]]; then
             echo "::set-output name=message::${{ env.deployment_cancelled }}"
             echo "::set-output name=color::#35373b"
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'skipped' ]]; then
+            echo "::set-output name=message::${{ env.deployment_cancelled }}"
+            echo "::set-output name=color::#35373b"
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'neutral' ]]; then
+            echo "::set-output name=message::${{ env.deployment_cancelled }}"
+            echo "::set-output name=color::#35373b"
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'timed_out' ]]; then
+            echo "::set-output name=message::${{ env.deployment_failure }}"
+            echo "::set-output name=color::danger"
           elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'failure' ]]; then
             echo "::set-output name=message::${{ env.deployment_failure }}"
             echo "::set-output name=color::danger"
@@ -754,7 +737,6 @@ jobs:
             echo "::set-output name=message::${{ env.deployment_failure }}"
             echo "::set-output name=color::#2767cf"
           fi
-
       - name: Post to Slack
         run: |
           SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
