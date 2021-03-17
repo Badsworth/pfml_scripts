@@ -326,12 +326,18 @@ export function findDocument(documentType: string): void {
   switch (documentType) {
     case "MA ID":
       documentCategory = "Identification_Proof";
-      cy.get(`a[name*=${documentCategory}]`);
+      cy.get(`a[name*=${documentCategory}]`).should(
+        "contain.text",
+        "Identification Proof"
+      );
       break;
     case "HCP":
     case "FOSTER":
       documentCategory = "State_managed_Paid_Leave_Confirmation";
-      cy.get(`a[name*=${documentCategory}]`);
+      cy.get(`a[name*=${documentCategory}]`).should(
+        "contain.text",
+        "State managed Paid Leave Confirmation"
+      );
       break;
     case "Employer Confirmation":
       documentCategory = "Employer Confirmation of Leave Data";
@@ -606,7 +612,11 @@ export function claimAdjudicationMailedDoc(claimNumber: string): void {
   visitClaim(claimNumber);
   assertOnClaimPage(claimNumber);
   onTab("Documents");
+  // Assert ID Doc is present
+  findDocument("MA ID");
   uploadDocument("HCP", "State Managed");
+  onTab("Documents");
+  findDocument("HCP");
   onTab("Absence Hub");
   cy.get('input[type="submit"][value="Adjudicate"]').click();
   markEvidence(claimNumber, "BGBM1", "State managed Paid Leave Confirmation");

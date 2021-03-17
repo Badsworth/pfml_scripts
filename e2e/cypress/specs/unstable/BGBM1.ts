@@ -1,11 +1,8 @@
-import * as portal from "../../../tests/common/actions/portal";
-import { fineos } from "../../../tests/common/actions";
-import {
-  bailIfThisTestFails,
-  beforeFineos,
-} from "../../../tests/common/before";
-import { beforePortal } from "../../../tests/common/before";
-import { getFineosBaseUrl } from "../../../config";
+import * as portal from "../../tests/common/actions/portal";
+import { fineos } from "../../tests/common/actions";
+import { bailIfThisTestFails, beforeFineos } from "../../tests/common/before";
+import { beforePortal } from "../../tests/common/before";
+import { getFineosBaseUrl } from "../../config";
 
 describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
   it("As a claimant, I should be able to submit a claim (BHAP1) through the portal", () => {
@@ -48,7 +45,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
         cy.stashLog("claimNumber", body.data.fineos_absence_id);
         cy.stashLog("applicationId", body.data.application_id);
       });
-      portal.submitPartThreeNoLeaveCert(application, paymentPreference);
+      portal.submitPartsTwoThreeNoLeaveCert(paymentPreference);
     });
   });
 
@@ -73,12 +70,10 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
     cy.unstash<Credentials>("credentials").then((credentials) => {
       portal.login(credentials);
       cy.unstash<string>("applicationId").then((application_id) => {
-        portal.goToIdUploadPage(application_id);
-        cy.contains(
-          "form",
-          "Upload your Massachusetts driver’s license or ID card"
-        )
-          .find("h3", { timeout: 60000 })
+        portal.goToUploadCertificationPage(application_id);
+        cy.contains("form", "Upload your documentation")
+          .find("h3", { timeout: 30000 })
+          .should("contain.text", "File 1")
           .should("have.length", 1);
       });
     });

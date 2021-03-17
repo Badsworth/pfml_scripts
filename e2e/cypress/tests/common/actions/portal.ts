@@ -676,8 +676,8 @@ export function viewClaim(applicationId: string): void {
   );
 }
 
-export function goToIdUploadPage(applicationId: string): void {
-  cy.visit(`/applications/upload-id/?claim_id=${applicationId}`);
+export function goToUploadCertificationPage(applicationId: string): void {
+  cy.visit(`/applications/upload-certification/?claim_id=${applicationId}`);
 }
 
 export function completeDateForm(
@@ -847,8 +847,7 @@ export function submitClaimPartOne(
   confirmInfo();
 }
 
-export function submitPartThreeNoLeaveCert(
-  application: ApplicationRequestBody,
+export function submitPartsTwoThreeNoLeaveCert(
   paymentPreference: PaymentPreferenceRequestBody
 ): void {
   clickChecklistButton("Add payment information");
@@ -856,6 +855,7 @@ export function submitPartThreeNoLeaveCert(
   onPage("checklist");
   clickChecklistButton("Upload identity document");
   addId("MA ID");
+  cy.wait(1000);
 }
 
 export function submitClaimPartsTwoThree(
