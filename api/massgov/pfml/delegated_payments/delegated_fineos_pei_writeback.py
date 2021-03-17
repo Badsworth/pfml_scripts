@@ -54,7 +54,8 @@ class PeiWritebackItem:
 
 
 ACTIVE_WRITEBACK_RECORD_STATUS = "Active"
-PENDING_WRITEBACK_RECORD_TRANSACTION_STATUS = "Pending"
+PAID_WRITEBACK_RECORD_TRANSACTION_STATUS = "Paid"
+PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS = "Processed"
 WRITEBACK_FILE_SUFFIX = "-pei_writeback.csv"
 
 PEI_WRITEBACK_CSV_ENCODERS: csv_util.Encoders = {
@@ -102,6 +103,7 @@ class FineosPeiWritebackStep(Step):
             prior_state=State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK,
             end_state=State.DELEGATED_PAYMENT_ZERO_PAYMENT_FINEOS_WRITEBACK_SENT,
             writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
+            transaction_status=PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
         )
         logger.info(
             "Found %i extracted writeback items in state: %s",
@@ -113,6 +115,7 @@ class FineosPeiWritebackStep(Step):
             prior_state=State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK,
             end_state=State.DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT,
             writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
+            transaction_status=PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
         )
         logger.info(
             "Found %i extracted writeback items in state: %s",
@@ -124,6 +127,7 @@ class FineosPeiWritebackStep(Step):
             prior_state=State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK,
             end_state=State.DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT,
             writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
+            transaction_status=PAID_WRITEBACK_RECORD_TRANSACTION_STATUS,
         )
         logger.info(
             "Found %i extracted writeback items in state: %s",
@@ -135,6 +139,7 @@ class FineosPeiWritebackStep(Step):
             prior_state=State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK,
             end_state=State.DELEGATED_PAYMENT_CANCELLATION_PAYMENT_FINEOS_WRITEBACK_SENT,
             writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
+            transaction_status=PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
         )
         logger.info(
             "Found %i extracted writeback items in state: %s",
@@ -153,7 +158,11 @@ class FineosPeiWritebackStep(Step):
         )
 
     def _get_writeback_items_for_state(
-        self, prior_state: LkState, end_state: LkState, writeback_record_converter: Callable,
+        self,
+        prior_state: LkState,
+        end_state: LkState,
+        writeback_record_converter: Callable,
+        transaction_status: str,
     ) -> List[PeiWritebackItem]:
         pei_writeback_items = []
 
@@ -166,7 +175,7 @@ class FineosPeiWritebackStep(Step):
         for log in state_logs:
             try:
                 payment = log.payment
-                writeback_record = writeback_record_converter(payment)
+                writeback_record = writeback_record_converter(payment, transaction_status)
 
                 pei_writeback_items.append(
                     PeiWritebackItem(
@@ -375,7 +384,9 @@ class FineosPeiWritebackStep(Step):
             )
             raise e
 
-    def _extracted_payment_to_pei_writeback_record(self, payment: Payment) -> PeiWritebackRecord:
+    def _extracted_payment_to_pei_writeback_record(
+        self, payment: Payment, transaction_status: str
+    ) -> PeiWritebackRecord:
         missing_fields = []
 
         for field in REQUIRED_FIELDS_FOR_EXTRACTED_PAYMENT:
@@ -393,7 +404,7 @@ class FineosPeiWritebackStep(Step):
             pei_I_value=payment.fineos_pei_i_value,
             status=ACTIVE_WRITEBACK_RECORD_STATUS,
             extractionDate=payment.fineos_extraction_date,
-            transactionStatus=PENDING_WRITEBACK_RECORD_TRANSACTION_STATUS,
+            transactionStatus=transaction_status,
             transStatusDate=get_now(),
         )
 

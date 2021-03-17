@@ -185,7 +185,9 @@ def test_process_payments_for_writeback(
             == State.DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT.state_id
         )
 
+    accepted_payments_i_values = []
     for payment in accepted_payments:
+        accepted_payments_i_values.append(payment.fineos_pei_i_value)
         state_log = state_log_util.get_latest_state_log_in_flow(
             payment, Flow.DELEGATED_PAYMENT, test_db_other_session
         )
@@ -210,17 +212,30 @@ def test_process_payments_for_writeback(
         [f.name for f in dataclasses.fields(writeback.PeiWritebackRecord)]
     )
 
+    expected_line_pattern = "{},({}),{},,,,{},,({}|{}),{}".format(
+        r"\d\d\d\d",  # C value
+        r"\d\d\d\d",  # I value
+        writeback.ACTIVE_WRITEBACK_RECORD_STATUS,
+        r"\d\d/\d\d/\d\d\d\d",  # Extraction date
+        # Expect both transaction statuses in the writback file.
+        writeback.PAID_WRITEBACK_RECORD_TRANSACTION_STATUS,
+        writeback.PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
+        r"\d\d/\d\d/\d\d\d\d",  # Transaction date
+    )
+    prog = re.compile(expected_line_pattern)
     assert len(all_payments) == len(writeback_file_lines)
     for line in writeback_file_lines:
-        expected_line_pattern = "{},{},{},,,,{},,{},{}".format(
-            r"\d\d\d\d",  # C value
-            r"\d\d\d\d",  # I value
-            writeback.ACTIVE_WRITEBACK_RECORD_STATUS,
-            r"\d\d/\d\d/\d\d\d\d",  # Extraction date
-            writeback.PENDING_WRITEBACK_RECORD_TRANSACTION_STATUS,
-            r"\d\d/\d\d/\d\d\d\d",  # Transaction date
-        )
-        assert re.match(expected_line_pattern, line)
+        # Expect that each line will match our pattern.
+        result = prog.match(line)
+        assert result
+
+        # Expect that payment types will set the appropriate transaction status.
+        i_value = result.group(1)
+        transaction_status = result.group(2)
+        if i_value in accepted_payments_i_values:
+            assert transaction_status == writeback.PAID_WRITEBACK_RECORD_TRANSACTION_STATUS
+        else:
+            assert transaction_status == writeback.PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS
 
 
 def test_process_payments_for_writeback_no_payments_ready_for_writeback(
@@ -301,11 +316,12 @@ def test_get_writeback_items_for_state(
 
 def test_extracted_payment_to_pei_writeback_record(fineos_pei_writeback_step, test_db_session):
     payment = _generate_payment(test_db_session)
+    status = writeback.PAID_WRITEBACK_RECORD_TRANSACTION_STATUS
 
-    writeback_record = fineos_pei_writeback_step._extracted_payment_to_pei_writeback_record(payment)
+    writeback_record = fineos_pei_writeback_step._extracted_payment_to_pei_writeback_record(
+        payment, status
+    )
 
     assert writeback_record.status == writeback.ACTIVE_WRITEBACK_RECORD_STATUS
-    assert (
-        writeback_record.transactionStatus == writeback.PENDING_WRITEBACK_RECORD_TRANSACTION_STATUS
-    )
+    assert writeback_record.transactionStatus == status
     assert writeback_record.transStatusDate is not None
