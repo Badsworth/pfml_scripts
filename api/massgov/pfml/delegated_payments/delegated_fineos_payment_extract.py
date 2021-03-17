@@ -552,7 +552,7 @@ class PaymentExtractStep(Step):
                     extra=payment_data.get_traceable_details(),
                 )
 
-            if employee and employee.employee_id != claim.employee.employee_id:
+            if employee and claim.employee and employee.employee_id != claim.employee.employee_id:
                 # We've found a claim with a different employee ID, this shouldn't happen
                 # This might mean that the FINEOS absence_case_number isn't necessarily unique.
                 logger.error(
