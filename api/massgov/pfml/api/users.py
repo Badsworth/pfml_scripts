@@ -1,27 +1,21 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import connexion
-from pydantic import UUID4, Field
 from werkzeug.exceptions import BadRequest, NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
+from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
+from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
 from massgov.pfml.db.models.employees import Employer, Role, User
 from massgov.pfml.util.aws.cognito import CognitoAccountCreationUserError
-from massgov.pfml.util.pydantic import PydanticBaseModel
-from massgov.pfml.util.pydantic.types import FEINUnformattedStr
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein
 from massgov.pfml.util.users import register_user
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
-
-
-##########################################
-# Handlers
-##########################################
 
 
 def users_post():
@@ -127,55 +121,8 @@ def users_patch(user_id):
 
 
 ##########################################
-# Data types and helpers
+# Data helpers
 ##########################################
-
-
-class RoleRequest(PydanticBaseModel):
-    role_description: str
-
-
-class UserLeaveAdminRequest(PydanticBaseModel):
-    employer_fein: FEINUnformattedStr
-
-
-class UserCreateRequest(PydanticBaseModel):
-    email_address: str
-    password: str
-    role: RoleRequest
-    user_leave_administrator: Optional[UserLeaveAdminRequest]
-
-
-class UserUpdateRequest(PydanticBaseModel):
-    consented_to_data_sharing: bool
-
-
-class RoleResponse(PydanticBaseModel):
-    role_id: int
-    role_description: str
-
-
-class EmployerResponse(PydanticBaseModel):
-    employer_dba: str
-    employer_fein: str
-    employer_id: UUID4
-    has_verification_data: bool
-
-
-class UserLeaveAdminResponse(PydanticBaseModel):
-    employer: EmployerResponse
-    verified: bool
-
-
-class UserResponse(PydanticBaseModel):
-    """Response object for a given User result """
-
-    user_id: UUID4
-    auth_id: str = Field(alias="active_directory_id")
-    email_address: str
-    consented_to_data_sharing: bool
-    roles: List[RoleResponse]
-    user_leave_administrators: List[UserLeaveAdminResponse]
 
 
 def user_response(user: User) -> Dict[str, Any]:

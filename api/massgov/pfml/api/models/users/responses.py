@@ -1,0 +1,33 @@
+from typing import List
+
+from pydantic import UUID4, Field
+
+from massgov.pfml.util.pydantic import PydanticBaseModel
+
+
+class RoleResponse(PydanticBaseModel):
+    role_id: int
+    role_description: str
+
+
+class EmployerResponse(PydanticBaseModel):
+    employer_dba: str
+    employer_fein: str
+    employer_id: UUID4
+    has_verification_data: bool
+
+
+class UserLeaveAdminResponse(PydanticBaseModel):
+    employer: EmployerResponse
+    verified: bool
+
+
+class UserResponse(PydanticBaseModel):
+    """Response object for a given User result """
+
+    user_id: UUID4
+    auth_id: str = Field(alias="active_directory_id")
+    email_address: str
+    consented_to_data_sharing: bool
+    roles: List[RoleResponse]
+    user_leave_administrators: List[UserLeaveAdminResponse]
