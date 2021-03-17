@@ -111,7 +111,7 @@ exports[`EmployerBenefitCard renders fields for an EmployerBenefit instance 1`] 
 </Fragment>
 `;
 
-exports[`EmployerBenefitDetails when the user's claim has employer benefits renders the page 1`] = `
+exports[`EmployerBenefitsDetails when the user's claim has employer benefits renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Other leave, income, and benefits"
@@ -160,7 +160,7 @@ exports[`EmployerBenefitDetails when the user's claim has employer benefits rend
 </QuestionPage>
 `;
 
-exports[`EmployerBenefitDetails when the user's claim has no employer benefits renders the page 1`] = `
+exports[`EmployerBenefitsDetails when the user's claim has no employer benefits renders the page 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Other leave, income, and benefits"

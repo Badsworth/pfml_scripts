@@ -102,11 +102,11 @@ export const EmployerBenefitsDetails = (props) => {
 
   return (
     <QuestionPage
-      title={t("pages.claimsEmployerBenefitDetails.title")}
+      title={t("pages.claimsEmployerBenefitsDetails.title")}
       onSave={handleSave}
     >
       <Heading level="2" size="1">
-        {t("pages.claimsEmployerBenefitDetails.sectionLabel")}
+        {t("pages.claimsEmployerBenefitsDetails.sectionLabel")}
       </Heading>
 
       <LeaveDatesAlert
@@ -116,17 +116,19 @@ export const EmployerBenefitsDetails = (props) => {
       />
 
       <RepeatableFieldset
-        addButtonLabel={t("pages.claimsEmployerBenefitDetails.addButton")}
+        addButtonLabel={t("pages.claimsEmployerBenefitsDetails.addButton")}
         entries={employer_benefits}
         headingPrefix={t(
-          "pages.claimsEmployerBenefitDetails.cardHeadingPrefix"
+          "pages.claimsEmployerBenefitsDetails.cardHeadingPrefix"
         )}
         onAddClick={handleAddClick}
         onRemoveClick={handleRemoveClick}
-        removeButtonLabel={t("pages.claimsEmployerBenefitDetails.removeButton")}
+        removeButtonLabel={t(
+          "pages.claimsEmployerBenefitsDetails.removeButton"
+        )}
         render={render}
         limit={4}
-        limitMessage={t("pages.claimsEmployerBenefitDetails.limitMessage")}
+        limitMessage={t("pages.claimsEmployerBenefitsDetails.limitMessage")}
       />
     </QuestionPage>
   );
@@ -151,7 +153,7 @@ export const EmployerBenefitCard = (props) => {
   const benefitFrequencyChoices = Object.entries(EmployerBenefitFrequency).map(
     ([frequencyKey, frequency]) => {
       return {
-        label: t("pages.claimsEmployerBenefitDetails.amountFrequency", {
+        label: t("pages.claimsEmployerBenefitsDetails.amountFrequency", {
           context: frequencyKey,
         }),
         value: frequency,
@@ -171,16 +173,16 @@ export const EmployerBenefitCard = (props) => {
         ].map((benefitTypeKey) => {
           return {
             checked: selectedType === EmployerBenefitType[benefitTypeKey],
-            label: t("pages.claimsEmployerBenefitDetails.choiceLabel", {
+            label: t("pages.claimsEmployerBenefitsDetails.choiceLabel", {
               context: benefitTypeKey,
             }),
-            hint: t("pages.claimsEmployerBenefitDetails.choiceHint", {
+            hint: t("pages.claimsEmployerBenefitsDetails.choiceHint", {
               context: benefitTypeKey,
             }),
             value: EmployerBenefitType[benefitTypeKey],
           };
         })}
-        label={t("pages.claimsEmployerBenefitDetails.typeLabel")}
+        label={t("pages.claimsEmployerBenefitsDetails.typeLabel")}
         type="radio"
         smallLabel
       />
@@ -188,7 +190,7 @@ export const EmployerBenefitCard = (props) => {
         {...getFunctionalInputProps(
           `employer_benefits[${index}].benefit_start_date`
         )}
-        label={t("pages.claimsEmployerBenefitDetails.startDateLabel")}
+        label={t("pages.claimsEmployerBenefitsDetails.startDateLabel")}
         example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
@@ -199,7 +201,7 @@ export const EmployerBenefitCard = (props) => {
         {...getFunctionalInputProps(
           `employer_benefits[${index}].benefit_end_date`
         )}
-        label={t("pages.claimsEmployerBenefitDetails.endDateLabel")}
+        label={t("pages.claimsEmployerBenefitsDetails.endDateLabel")}
         example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
@@ -212,14 +214,14 @@ export const EmployerBenefitCard = (props) => {
           small
           optionalText={t("components.form.optional")}
         >
-          {t("pages.claimsEmployerBenefitDetails.amountLegend")}
+          {t("pages.claimsEmployerBenefitsDetails.amountLegend")}
         </FormLabel>
         <InputCurrency
           {...getFunctionalInputProps(
             `employer_benefits[${index}].benefit_amount_dollars`,
             { fallbackValue: null }
           )}
-          label={t("pages.claimsEmployerBenefitDetails.amountLabel")}
+          label={t("pages.claimsEmployerBenefitsDetails.amountLabel")}
           labelClassName="text-normal margin-top-0"
           formGroupClassName="margin-top-05"
           width="medium"
@@ -230,7 +232,7 @@ export const EmployerBenefitCard = (props) => {
             `employer_benefits[${index}].benefit_amount_frequency`
           )}
           choices={benefitFrequencyChoices}
-          label={t("pages.claimsEmployerBenefitDetails.amountFrequencyLabel")}
+          label={t("pages.claimsEmployerBenefitsDetails.amountFrequencyLabel")}
           labelClassName="text-normal margin-top-0"
           formGroupClassName="margin-top-1"
           smallLabel

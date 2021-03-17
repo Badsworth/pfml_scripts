@@ -882,7 +882,7 @@ const pages = {
     sectionLabel: "What’s your date of birth?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
-  claimsEmployerBenefitDetails: {
+  claimsEmployerBenefitsDetails: {
     addButton: "Add another benefit",
     amountFrequencyLabel: "Frequency",
     amountFrequency_daily: "$t(shared.amountFrequency_daily)",

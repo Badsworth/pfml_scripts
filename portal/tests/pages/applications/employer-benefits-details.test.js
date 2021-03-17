@@ -2,7 +2,7 @@ import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
-import EmployerBenefitDetails, {
+import EmployerBenefitsDetails, {
   EmployerBenefitCard,
 } from "../../../src/pages/applications/employer-benefits-details";
 import {
@@ -23,7 +23,7 @@ jest.mock("../../../src/hooks/useAppLogic");
 const setup = (claimAttrs) => {
   const claim = new MockClaimBuilder().continuous().create();
 
-  const { appLogic, wrapper } = renderWithAppLogic(EmployerBenefitDetails, {
+  const { appLogic, wrapper } = renderWithAppLogic(EmployerBenefitsDetails, {
     claimAttrs: claimAttrs || claim,
   });
   const { changeField, click, submitForm } = simulateEvents(wrapper);
@@ -119,7 +119,7 @@ const createClaimWithBenefits = () =>
     ])
     .create();
 
-describe("EmployerBenefitDetails", () => {
+describe("EmployerBenefitsDetails", () => {
   describe("when the user's claim has no employer benefits", () => {
     it("renders the page", () => {
       const { wrapper } = setup();
