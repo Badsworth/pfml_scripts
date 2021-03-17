@@ -882,6 +882,20 @@ const pages = {
     sectionLabel: "What’s your date of birth?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
+  claimsEmployerBenefits: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceYes: "$t(shared.choiceYes)",
+    hintHeader: "Employer-sponsored benefits you must report are:",
+    hintList: [
+      "Accrued paid leave, such as vacation time, sick time, personal time, or other paid time off",
+      "Short-term disability insurance",
+      "Permanent disability insurance",
+      "Family or medical leave insurance, such as a maternity leave policy",
+    ],
+    sectionLabel:
+      "Will you use any employer-sponsored benefits during your leave dates for paid leave?",
+    title: "$t(shared.claimsOtherLeaveTitle)",
+  },
   claimsEmployerBenefitsDetails: {
     addButton: "Add another benefit",
     amountFrequencyLabel: "Frequency",
@@ -915,20 +929,6 @@ const pages = {
     startDateLabel: "When will you start using the benefit?",
     title: "$t(shared.claimsOtherLeaveTitle)",
     typeLabel: "What kind of benefit is it?",
-  },
-  claimsEmployerBenefits: {
-    choiceNo: "$t(shared.choiceNo)",
-    choiceYes: "$t(shared.choiceYes)",
-    hintHeader: "Employer-sponsored benefits you must report are:",
-    hintList: [
-      "Accrued paid leave, such as vacation time, sick time, personal time, or other paid time off",
-      "Short-term disability insurance",
-      "Permanent disability insurance",
-      "Family or medical leave insurance, such as a maternity leave policy",
-    ],
-    sectionLabel:
-      "Will you use any employer-sponsored benefits during your leave dates for paid leave?",
-    title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsEmploymentStatus: {
     alertBody:

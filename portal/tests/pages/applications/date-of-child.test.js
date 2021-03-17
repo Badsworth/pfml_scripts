@@ -1,57 +1,63 @@
-import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
+import {
+  MockClaimBuilder,
+  renderWithAppLogic,
+  simulateEvents,
+} from "../../test-utils";
 import DateOfChild from "../../../src/pages/applications/date-of-child";
 import { DateTime } from "luxon";
-import { act } from "react-dom/test-utils";
+import { ReasonQualifier } from "../../../src/models/Claim";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
+const past = DateTime.local().minus({ months: 1 }).toISODate();
+const now = DateTime.local().toISODate();
+const future = DateTime.local().plus({ months: 1 }).toISODate();
+
+const child_birth_date = "leave_details.child_birth_date";
+const child_placement_date = "leave_details.child_placement_date";
+
+const setup = (claimAttrs) => {
+  const { appLogic, claim, wrapper } = renderWithAppLogic(DateOfChild, {
+    claimAttrs,
+  });
+
+  const { changeField, submitForm } = simulateEvents(wrapper);
+
+  return {
+    appLogic,
+    changeField,
+    claim,
+    submitForm,
+    wrapper,
+  };
+};
+
 describe("DateOfChild", () => {
-  let appLogic, claim, wrapper;
-
-  function render() {
-    ({ appLogic, claim, wrapper } = renderWithAppLogic(DateOfChild, {
-      claimAttrs: claim,
-    }));
-  }
-
   it("renders the page", () => {
-    render();
+    const { wrapper } = setup();
     expect(wrapper).toMatchSnapshot();
   });
 
-  const child_birth_date = "leave_details.child_birth_date";
-  const child_placement_date = "leave_details.child_placement_date";
+  it("shows the birth date input with hint text when the claim is for a newborn", () => {
+    const claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
+    const { wrapper } = setup(claim);
 
-  describe("when the claim is for a newborn", () => {
-    beforeEach(() => {
-      claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
-    });
-
-    it("shows the birth date input with hint text", () => {
-      render();
-      expect(wrapper.find({ name: child_birth_date }).exists()).toBeTruthy();
-      expect(wrapper.find({ name: child_placement_date }).exists()).toBeFalsy();
-      expect(wrapper.find("InputDate").prop("hint")).toMatchInlineSnapshot(
-        `"If your child has not been born yet, enter the expected due date."`
-      );
-    });
+    expect(wrapper.find({ name: child_birth_date }).exists()).toBeTruthy();
+    expect(wrapper.find({ name: child_placement_date }).exists()).toBeFalsy();
+    expect(wrapper.find("InputDate").prop("hint")).toMatchInlineSnapshot(
+      `"If your child has not been born yet, enter the expected due date."`
+    );
   });
 
-  describe("when the claim is for an adoption", () => {
-    it("shows the correct input question", () => {
-      claim = new MockClaimBuilder().bondingAdoptionLeaveReason().create();
-      render();
-      expect(
-        wrapper.find({ name: child_placement_date }).exists()
-      ).toBeTruthy();
-      expect(wrapper.find({ name: child_birth_date }).exists()).toBeFalsy();
-    });
+  it("shows the correct input question when the claim is for an adoption", () => {
+    const claim = new MockClaimBuilder().bondingAdoptionLeaveReason().create();
+    const { wrapper } = setup(claim);
+
+    expect(wrapper.find({ name: child_placement_date }).exists()).toBeTruthy();
+    expect(wrapper.find({ name: child_birth_date }).exists()).toBeFalsy();
   });
 
-  describe("when child birth date is in the future", () => {
-    const past = "2020-09-30";
-    const now = "2020-10-01";
-    const future = "2020-10-02";
+  describe("when child birth or placement date is in the future", () => {
     let spy;
 
     beforeAll(() => {
@@ -66,13 +72,13 @@ describe("DateOfChild", () => {
       spy.mockRestore();
     });
 
-    it("sets has_future_child_date as true for future birth bonding leave", () => {
-      claim = new MockClaimBuilder().bondingBirthLeaveReason(future).create();
+    it("sets has_future_child_date as true for future birth bonding leave when claim is already populated", async () => {
+      const claim = new MockClaimBuilder()
+        .bondingBirthLeaveReason(future)
+        .create();
+      const { appLogic, submitForm } = setup(claim);
 
-      render();
-      act(() => {
-        wrapper.find("QuestionPage").simulate("save");
-      });
+      await submitForm();
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
         leave_details: {
@@ -83,32 +89,32 @@ describe("DateOfChild", () => {
       });
     });
 
-    it("sets has_future_child_date as false for past birth bonding leave", () => {
-      claim = new MockClaimBuilder().bondingBirthLeaveReason(past).create();
+    it("sets has_future_child_date as true for future birth bonding leave when data is manually populated", async () => {
+      const claim = new MockClaimBuilder().bondingLeaveReason().create();
+      claim.leave_details.reason_qualifier = ReasonQualifier.newBorn;
 
-      render();
-      act(() => {
-        wrapper.find("QuestionPage").simulate("save");
-      });
+      const { appLogic, changeField, submitForm } = setup(claim);
+
+      changeField("leave_details.child_birth_date", future);
+
+      await submitForm();
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
         leave_details: {
-          child_birth_date: past,
+          child_birth_date: future,
           child_placement_date: null,
-          has_future_child_date: false,
+          has_future_child_date: true,
         },
       });
     });
 
-    it("sets has_future_child_date as true for future placement bonding leave", () => {
-      claim = new MockClaimBuilder()
+    it("sets has_future_child_date as true for future placement bonding leave when claim is already populated", async () => {
+      const claim = new MockClaimBuilder()
         .bondingFosterCareLeaveReason(future)
         .create();
+      const { appLogic, submitForm } = setup(claim);
 
-      render();
-      act(() => {
-        wrapper.find("QuestionPage").simulate("save");
-      });
+      await submitForm();
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
         leave_details: {
@@ -119,15 +125,96 @@ describe("DateOfChild", () => {
       });
     });
 
-    it("sets has_future_child_date as false for past placement bonding leave", () => {
-      claim = new MockClaimBuilder()
+    it("sets has_future_child_date as true for future placement bonding leave when data is manually populated", async () => {
+      const claim = new MockClaimBuilder().bondingLeaveReason().create();
+      claim.leave_details.reason_qualifier = ReasonQualifier.fosterCare;
+
+      const { appLogic, changeField, submitForm } = setup(claim);
+      changeField("leave_details.child_placement_date", future);
+      await submitForm();
+
+      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
+        leave_details: {
+          child_birth_date: null,
+          child_placement_date: future,
+          has_future_child_date: true,
+        },
+      });
+    });
+  });
+
+  describe("when child birth or placement date is in the past", () => {
+    let spy;
+
+    beforeAll(() => {
+      spy = jest.spyOn(DateTime, "local").mockImplementation(() => {
+        return {
+          toISODate: () => now,
+        };
+      });
+    });
+
+    afterAll(() => {
+      spy.mockRestore();
+    });
+
+    it("sets has_future_child_date as false for past birth bonding leave when claim is pre-populated", async () => {
+      const claim = new MockClaimBuilder()
+        .bondingBirthLeaveReason(past)
+        .create();
+      const { appLogic, submitForm } = setup(claim);
+
+      await submitForm();
+
+      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
+        leave_details: {
+          child_birth_date: past,
+          child_placement_date: null,
+          has_future_child_date: false,
+        },
+      });
+    });
+
+    it("sets has_future_child_date as false for past birth bonding leave when data is manually populated", async () => {
+      const claim = new MockClaimBuilder().bondingLeaveReason().create();
+      claim.leave_details.reason_qualifier = ReasonQualifier.newBorn;
+
+      const { appLogic, changeField, submitForm } = setup(claim);
+      changeField("leave_details.child_birth_date", past);
+      await submitForm();
+
+      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
+        leave_details: {
+          child_birth_date: past,
+          child_placement_date: null,
+          has_future_child_date: false,
+        },
+      });
+    });
+
+    it("sets has_future_child_date as false for past placement bonding leave when claim is pre-populated", async () => {
+      const claim = new MockClaimBuilder()
         .bondingFosterCareLeaveReason(past)
         .create();
+      const { appLogic, submitForm } = setup(claim);
+      await submitForm();
 
-      render();
-      act(() => {
-        wrapper.find("QuestionPage").simulate("save");
+      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
+        leave_details: {
+          child_birth_date: null,
+          child_placement_date: past,
+          has_future_child_date: false,
+        },
       });
+    });
+
+    it("sets has_future_child_date as false for past placement bonding leave when data is manually populated", async () => {
+      const claim = new MockClaimBuilder().bondingLeaveReason().create();
+      claim.leave_details.reason_qualifier = ReasonQualifier.fosterCare;
+
+      const { appLogic, changeField, submitForm } = setup(claim);
+      changeField("leave_details.child_placement_date", past);
+      await submitForm();
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
         leave_details: {
