@@ -185,13 +185,11 @@ class PaymentData:
             self.absence_case_number = payments_util.validate_csv_input(
                 "ABSENCECASENU", claim_details, self.validation_container, True
             )
-        # Absence case number is very required to proceed, without it we can't
-        # make a claim whatsoever. This should be impossible and would indicate
-        # a significant issue with the data being received from FINEOS. Halt processing
-        # entirely and alert FINEOS that their extracts are broken.
-        if not self.absence_case_number:
-            raise Exception(
-                "Could not find an absence case number for C=%s I=%s", self.c_value, self.i_value
+        else:
+            # We require the absence case number, if claim details doesn't exist
+            # we want to set the validation issue manually here
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_FIELD, "ABSENCECASENU"
             )
 
         self.full_name = payments_util.validate_csv_input(
@@ -525,9 +523,11 @@ class PaymentExtractStep(Step):
             )
             raise
 
-        # claim might not exist because the employee used the call center, or the employee
-        # errored. Claim should always be created, even without an employee.
-        if not claim:
+        # Claim might not exist because the employee used the call center, or the employee
+        # errored. We do not want to create a claim if we do not have an absence case number
+        # as it's a unique field and we would rather have orphaned payments instead of
+        # errored payments grouped together in null claim object.
+        if not claim and payment_data.absence_case_number:
             claim = Claim(
                 claim_id=uuid.uuid4(),
                 employee=employee,
@@ -535,34 +535,36 @@ class PaymentExtractStep(Step):
             )
             self.db_session.add(claim)
 
-        if not employee and claim.employee:
-            # Somehow we have ended up in a state where we could not find an employee
-            # but did find a claim with some other employee ID. This shouldn't happen
-            # but if it does we need to halt to investigate.
-            logger.error(
-                "Could not find employee for payment, but found claim %s with an attached employee %s",
-                claim.claim_id,
-                claim.employee.employee_id,
-                extra=payment_data.get_traceable_details(),
-            )
-            raise Exception(
-                "Could not find employee for payment, but found a claim",
-                extra=payment_data.get_traceable_details(),
-            )
+        # Do a few validations on the claim+employee
+        if claim:
+            if not employee and claim.employee:
+                # Somehow we have ended up in a state where we could not find an employee
+                # but did find a claim with some other employee ID. This shouldn't happen
+                # but if it does we need to halt to investigate.
+                logger.error(
+                    "Could not find employee for payment, but found claim %s with an attached employee %s",
+                    claim.claim_id,
+                    claim.employee.employee_id,
+                    extra=payment_data.get_traceable_details(),
+                )
+                raise Exception(
+                    "Could not find employee for payment, but found a claim",
+                    extra=payment_data.get_traceable_details(),
+                )
 
-        if employee and employee.employee_id != claim.employee.employee_id:
-            # We've found a claim with a different employee ID, this shouldn't happen
-            # This might mean that the FINEOS absence_case_number isn't necessarily unique.
-            logger.error(
-                "Found claim %s, but its employee ID %s does not match the one we found from the TIN %s",
-                claim.claim_id,
-                claim.employee.employee_id,
-                employee.employee_id,
-                extra=payment_data.get_traceable_details(),
-            )
-            raise Exception(
-                "The claims employee does not match the employee associated with the TIN"
-            )
+            if employee and employee.employee_id != claim.employee.employee_id:
+                # We've found a claim with a different employee ID, this shouldn't happen
+                # This might mean that the FINEOS absence_case_number isn't necessarily unique.
+                logger.error(
+                    "Found claim %s, but its employee ID %s does not match the one we found from the TIN %s",
+                    claim.claim_id,
+                    claim.employee.employee_id,
+                    employee.employee_id,
+                    extra=payment_data.get_traceable_details(),
+                )
+                raise Exception(
+                    "The claims employee does not match the employee associated with the TIN"
+                )
 
         return employee, claim
 

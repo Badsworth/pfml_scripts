@@ -169,7 +169,7 @@ def make_vpei_record(
     return vpei_record
 
 
-def make_claim_detail_record(pe_class_id, pe_index_id, absence_case_number):
+def make_claim_detail_record(pe_class_id, pe_index_id, absence_case_number=None):
     claim_detail_record = OrderedDict()
     claim_detail_record["PECLASSID"] = pe_class_id
     claim_detail_record["PEINDEXID"] = pe_index_id
@@ -890,7 +890,7 @@ def test_process_extract_data_minimal_viable_payment(
         tmp_path, mock_s3_bucket, "vpei.csv", PEI_FIELD_NAMES, [vpei_record]
     )
 
-    claim_record = make_claim_detail_record("1000", "1", "NTN-01-ABS-01")
+    claim_record = make_claim_detail_record("1000", "1")
     make_and_upload_extract_file(
         tmp_path,
         mock_s3_bucket,
@@ -908,13 +908,12 @@ def test_process_extract_data_minimal_viable_payment(
         [payment_details_record],
     )
 
-    # We deliberately do no DB setup, there will not be any prior employee
+    # We deliberately do no DB setup, there will not be any prior employee or claim
     payment_extract_step.run()
 
     payment = test_db_session.query(Payment).one_or_none()
     assert payment
-    assert payment.claim
-    assert payment.claim.fineos_absence_id == "NTN-01-ABS-01"
+    assert payment.claim is None
 
     assert len(payment.state_logs) == 1
     state_log = payment.state_logs[0]
