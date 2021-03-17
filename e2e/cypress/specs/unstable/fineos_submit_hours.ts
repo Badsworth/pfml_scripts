@@ -110,6 +110,21 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
           submission.fineos_absence_id,
           true
         );
+        switch (Cypress.env("E2E_ENVIRONMENT")) {
+          case "performance":
+          case "training":
+          case "uat":
+            fineos.closeReleaseNoticeTask("Approval Notice");
+            break;
+
+          case "test":
+          case "stage":
+            fineos.triggerNoticeRelease("Approval Notice");
+            break;
+
+          default:
+            throw new Error("Env Not Recognized - Try Again!");
+        }
         fineos.submitActualHours(submission.fineos_absence_id);
       });
     }
