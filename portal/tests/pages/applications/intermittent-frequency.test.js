@@ -14,6 +14,9 @@ import {
 
 jest.mock("../../../src/hooks/useAppLogic");
 
+const frequencyBasisInputName =
+  "leave_details.intermittent_leave_periods[0].frequency_interval_basis";
+
 describe("IntermittentFrequency", () => {
   const intermittentClaimAttrs = (attrs) => ({
     leave_details: {
@@ -192,8 +195,6 @@ describe("IntermittentFrequency", () => {
   describe("frequency_basis change handler", () => {
     let changeRadioGroup, wrapper;
     const claimAttrs = intermittentClaimAttrs();
-    const frequencyBasisInputName =
-      "leave_details.intermittent_leave_periods[0].frequency_interval_basis";
 
     beforeEach(() => {
       ({ wrapper } = renderWithAppLogic(IntermittentFrequency, {
@@ -227,7 +228,7 @@ describe("IntermittentFrequency", () => {
     });
   });
 
-  it("sends the page's fields and the leave period ID to the API", () => {
+  it("sends the page's fields and the leave period ID to the API when the data is already on the claim", () => {
     const claim = new MockClaimBuilder().intermittent().create();
     const {
       duration,
@@ -254,6 +255,59 @@ describe("IntermittentFrequency", () => {
             frequency_interval,
             frequency_interval_basis,
             leave_period_id,
+          },
+        ],
+      },
+    });
+  });
+
+  it("sends the page's fields and the leave period ID to the API when the data is newly entered", async () => {
+    const claim = new MockClaimBuilder().intermittent().create();
+
+    const frequency_interval_basis = FrequencyIntervalBasis.months;
+    const frequency = 6;
+    const frequency_interval = 6;
+    const duration_basis = DurationBasis.hours;
+    const duration = 6;
+
+    const { appLogic, wrapper } = renderWithAppLogic(IntermittentFrequency, {
+      claimAttrs: claim,
+    });
+
+    const { changeField, changeRadioGroup, submitForm } = simulateEvents(
+      wrapper
+    );
+
+    changeRadioGroup(
+      frequencyBasisInputName,
+      frequency_interval_basis,
+      irregularOver6MonthsId
+    );
+    changeField(
+      "leave_details.intermittent_leave_periods[0].frequency",
+      frequency
+    );
+    changeRadioGroup(
+      "leave_details.intermittent_leave_periods[0].duration_basis",
+      duration_basis
+    );
+    changeField(
+      "leave_details.intermittent_leave_periods[0].duration",
+      duration
+    );
+
+    await submitForm();
+
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      leave_details: {
+        intermittent_leave_periods: [
+          {
+            duration,
+            duration_basis,
+            frequency,
+            frequency_interval,
+            frequency_interval_basis,
+            leave_period_id: "mock-leave-period-id",
           },
         ],
       },
