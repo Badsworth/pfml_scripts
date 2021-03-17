@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PreviousLeavesDetails PreviousLeaveCard renders fields for a PreviousLeave instance 1`] = `
+exports[`PreviousLeaveCard renders fields for a PreviousLeave instance 1`] = `
 <Fragment>
   <InputChoiceGroup
     choices={
