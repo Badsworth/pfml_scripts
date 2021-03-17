@@ -19,6 +19,7 @@ export default class SubmittedClaimIndex {
       ): Promise<Record<string, string | null | undefined>> => {
         const stateRecord = (await tracker.get(claim.id)) ?? {};
         const row: Record<string, string | null | undefined> = {
+          scenario: claim.scenario,
           id: claim.id,
           ssn: claim.claim.tax_identifier,
           fein: claim.claim.employer_fein,
@@ -31,12 +32,13 @@ export default class SubmittedClaimIndex {
     const formatter = stringify({
       header: true,
       columns: {
+        scenario: "Scenario",
         id: "Claim ID",
         ssn: "SSN",
         fein: "FEIN",
         fineos_absence_id: "Fineos ID",
         error: "Error",
-        time: "Submitted Timestmp",
+        time: "Submitted Timestamp",
       },
     });
     await pipelineP(

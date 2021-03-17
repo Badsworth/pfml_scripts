@@ -264,9 +264,7 @@ function makeChildPlacementDate(
       );
     case "future":
       // A date after 01-02-2021, but no more than startDate
-      return formatISODate(
-        faker.date.between(new Date("2021-01-01"), leaveStart)
-      );
+      return formatISODate(faker.date.between(new Date(), leaveStart));
     default:
       throw new Error(
         `Invalid bondingDate property given. You must set this property with one of "far-past", "past", or "future"`

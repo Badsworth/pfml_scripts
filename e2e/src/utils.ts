@@ -1,6 +1,7 @@
+import puppeteer from "puppeteer";
 import { LeavePeriods } from "./types";
 import { parseISO } from "date-fns";
-import puppeteer from "puppeteer";
+import playwright from "playwright";
 import { SimulationClaim } from "./simulation/types";
 import delay from "delay";
 
@@ -16,12 +17,12 @@ export function extractLeavePeriod(
 }
 
 /**********
- * These are common actions for using puppetter
+ * These are common actions for using puppeteer
  ***********/
 
 export async function click(
-  page: puppeteer.Page,
-  element: puppeteer.ElementHandle | null
+  page: playwright.Page,
+  element: playwright.ElementHandle | puppeteer.ElementHandle | null
 ): Promise<void> {
   if (!element) {
     throw new Error(`No element given`);
@@ -30,10 +31,10 @@ export async function click(
 }
 
 export async function labelled(
-  page: puppeteer.Page,
+  page: playwright.Page,
   label: string
-): Promise<puppeteer.ElementHandle> {
-  const $label = await contains(page, "label", label);
+): Promise<playwright.ElementHandle> {
+  const $label = await page.waitForSelector(`label:text("${label}")`);
   const id = await $label.evaluate((el) => el.getAttribute("for"));
   const input = await page.$(`input[name="${id}"],select[name="${id}"]`);
   if (input !== null) {
@@ -43,16 +44,14 @@ export async function labelled(
 }
 
 export async function contains(
-  page: puppeteer.Page,
+  page: playwright.Page,
   selector: string,
   text: string
-): Promise<puppeteer.ElementHandle> {
+): Promise<playwright.ElementHandle> {
   const candidates = await page.$$(selector);
   const checked = [];
   for (const candidate of candidates) {
-    const candidateText = await candidate
-      .getProperty("innerText")
-      .then((val) => val.jsonValue());
+    const candidateText = await candidate.innerText();
     if (text === candidateText) {
       return candidate;
     }
@@ -66,44 +65,30 @@ export async function contains(
 }
 
 export async function clickTab(
-  page: puppeteer.Page,
+  page: playwright.Page,
   label: string
 ): Promise<void> {
-  await page.waitForSelector("td.TabOn");
-  const tab = await contains(
-    page,
-    ".TabStrip td.TabOn, .TabStrip td.TabOff",
-    label
+  await page.click(
+    `:is(.TabStrip td.TabOn :text("${label}"), .TabStrip td.TabOff :text("${label}"))`
   );
-  // Remove the TabOn class before we start so we can detect when it has been re-added.
-  await tab.evaluate((tab) => {
-    tab.classList.remove("TabOn");
-  });
 
-  await tab.click();
-  await Promise.all([
-    // Wait for the page to stabilize.
-    waitForStablePage(page),
-    // Wait for the tab to have the `TabOn` class added as well.
-    page.waitForFunction(
-      (label) => {
-        const tabs = document.querySelectorAll(".TabStrip td.TabOn");
-        return (
-          Array.prototype.slice
-            .call(tabs)
-            .filter((tab) => tab.innerHTML.match(label)).length > 0
-        );
-      },
-      undefined,
-      [label]
-    ),
-  ]);
+  // await page.waitForSelector("td.TabOn");
+  // const tab = await page.waitForSelector(
+  //   `:is(.TabStrip td.TabOn :text("${label}"), .TabStrip td.TabOff :text("${label}"))`
+  // );
+  // // Remove the TabOn class before we start so we can detect when it has been re-added.
+  // await tab.evaluate((tab) => {
+  //   tab.classList.remove("TabOn");
+  // });
+
+  // await tab.click();
+  await waitForStablePage(page);
   await delay(200);
 }
 
-async function waitForStablePage(page: puppeteer.Page) {
+export async function waitForStablePage(page: playwright.Page): Promise<void> {
   // Waits for all known Fineos ajax stuff to complete.
-  return Promise.all([
+  await Promise.all([
     page.waitForFunction(() => {
       // @ts-ignore - Ignore use of Fineos window properties.
       const requests = Object.values(window.axGetAjaxQueueManager().requests);
@@ -118,31 +103,19 @@ async function waitForStablePage(page: puppeteer.Page) {
 }
 
 export async function gotoCase(
-  page: puppeteer.Page,
+  page: playwright.Page,
   id: string
 ): Promise<void> {
-  await page
-    .$(`.menulink a.Link[aria-label="Cases"]`)
-    .then((el) => click(page, el));
+  await page.click('.menulink a.Link[aria-label="Cases"]');
   await clickTab(page, "Case");
   await labelled(page, "Case Number").then((el) => el.type(id));
   // Uncheck "Search Case Alias".
   await labelled(page, "Search Case Alias").then((el) => el.click());
-  await page
-    .$('input[type="submit"][value="Search"]')
-    .then((el) => click(page, el));
+  await page.click('input[type="submit"][value="Search"]');
   const title = await page
-    .$(".case_pageheader_title")
-    .then((el) => el?.getProperty("innerText").then((val) => val.jsonValue()));
+    .waitForSelector(".case_pageheader_title")
+    .then((el) => el.innerText());
   if (!(typeof title === "string") || !title.match(id)) {
     throw new Error("Page title should include case ID");
   }
-}
-
-export async function withdrawClaim(page: puppeteer.Page): Promise<void> {
-  await page.$('a[aria-label="Withdraw"]').then((el) => click(page, el));
-  await page.select("select", "3");
-  await page
-    .$('input[type="submit"][value="OK"]')
-    .then((el) => click(page, el));
 }

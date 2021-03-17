@@ -127,7 +127,7 @@ export default class DOR {
           employer.fein.replace(/-/g, "").padEnd(14),
           "F",
           employer.fein.replace(/-/g, "").padEnd(14),
-          amt(employer.withholdings[i] ?? 0),
+          amt(employer.withholdings?.[i] ?? 0),
           formatDate(period, "yyyyMMdd"),
           formatDate(period, "yyyyMMddHHmmss"),
         ].join("") + "\n"

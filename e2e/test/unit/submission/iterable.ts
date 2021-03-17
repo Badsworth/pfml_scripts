@@ -7,12 +7,12 @@ import {
 } from "../../../src/submission/iterable";
 
 const successResult = {
-  claim: { id: "123" },
+  claim: { id: "123", scenario: "BHAP1" },
   result: { fineos_absence_id: "NTN-123" },
 } as SubmissionResult;
 
 const errorResult = {
-  claim: { id: "456" },
+  claim: { id: "456", scenario: "BHAP1" },
   error: new Error("Testing"),
 } as SubmissionResult;
 
@@ -38,10 +38,8 @@ describe("logSubmissions", () => {
 
   it("Should produce a log entry for each submission", async () => {
     await consume(logSubmissions([successResult, errorResult]));
-    expect(output.join("\n")).toMatchInlineSnapshot(`
-      "Claim 123 submitted as NTN-123. (1 claims in 00:00:00)
-      Error submitting claim: Testing (2 claims in 00:00:00)"
-    `);
+    expect(output.join("\n")).toContain("Submission completed for NTN-123");
+    expect(output.join("\n")).toContain("Submission ended in an error.");
   });
 });
 

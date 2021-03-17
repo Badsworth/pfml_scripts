@@ -72,10 +72,12 @@ export default class PortalSubmitter {
     const options = await this.getOptions(credentials);
     const application_id = await this.createApplication(options);
     await this.updateApplication(application_id, claim.claim, options);
+
     const submitResponseData = await this.submitApplication(
       application_id,
       options
     );
+
     const { fineos_absence_id, first_name, last_name } = submitResponseData;
     await this.uploadDocuments(application_id, claim.documents, options);
     await this.uploadPaymentPreference(
@@ -179,18 +181,22 @@ export default class PortalSubmitter {
     documents: (DocumentUploadRequest | DocumentWithPromisedFile)[],
     options?: RequestOptions
   ): Promise<void> {
-    const promises = documents.map(async (document) => {
-      const file = this.documentIsPromisedFile(document)
-        ? await document.file().then((d) => d.asStream())
-        : document.file;
+    try {
+      const promises = documents.map(async (document) => {
+        const file = this.documentIsPromisedFile(document)
+          ? await document.file().then((d) => d.asStream())
+          : document.file;
 
-      return postApplicationsByApplication_idDocuments(
-        { application_id },
-        { ...document, file },
-        options
-      );
-    });
-    await Promise.all(promises);
+        return postApplicationsByApplication_idDocuments(
+          { application_id },
+          { ...document, file },
+          options
+        );
+      });
+      await Promise.all(promises);
+    } catch (e) {
+      console.log("ERROR UPLOAD", e);
+    }
   }
 
   private documentIsPromisedFile(

@@ -10,6 +10,8 @@ import {
 } from "../scripts/util";
 import { ApplicationResponse } from "../api";
 import PortalSubmitter from "./PortalSubmitter";
+import * as util from "util";
+import chalk from "chalk";
 
 /**
  * Iterator callback to log progress as submission happens.
@@ -23,19 +25,30 @@ export function logSubmissions(
     const [now] = process.hrtime();
     processed++;
     if (result.error) {
-      console.error(
-        `Error submitting claim: ${
-          result.error.message
-        } (${processed} claims in ${formatTime(now - start)})`
+      log(
+        result.claim,
+        `Submission ended in an error. (${processed} claims in ${formatTime(
+          now - start
+        )})`,
+        result.error
       );
     } else {
-      console.debug(
-        `Claim ${result.claim.id} submitted as ${
+      log(
+        result.claim,
+        `Submission completed for ${
           result.result?.fineos_absence_id
         }. (${processed} claims in ${formatTime(now - start)})`
       );
     }
   }, results);
+}
+
+function log(claim: GeneratedClaim, message: string, error?: Error) {
+  const header = `[${chalk.blue(claim.id)}](${chalk.green(claim.scenario)})`;
+  console.debug(`${header} ${message}`);
+  if (error) {
+    console.log(`${header} ${util.inspect(error)}`);
+  }
 }
 
 /**
@@ -50,13 +63,16 @@ export function submitAll(
       throw new Error("Claim does not have employer_fein property");
     }
     try {
+      log(claim, "Starting API submission");
       const result = await submitter.submit(
         claim,
         getClaimantCredentials(),
         getLeaveAdminCredentials(claim.claim.employer_fein)
       );
+      log(claim, `API submission completed as ${result.fineos_absence_id}`);
       return { claim, result };
     } catch (e) {
+      log(claim, "API submission errored", e);
       return { claim, error: e };
     }
   });
@@ -74,12 +90,16 @@ export function postProcess(
   return transform(concurrency, async (result: SubmissionResult) => {
     // Skip post-process if there was already an error.
     if (result.error || !result.result) {
+      log(result.claim, "Skipping post-processing due to prior error");
       return result;
     }
     try {
+      log(result.claim, "Starting post-processing");
       await fn(result.claim, result.result);
+      log(result.claim, "Post-processing complete");
       return result;
     } catch (e) {
+      log(result.claim, "Post-processing resulted in an error", e);
       return { ...result, error: e };
     }
   });

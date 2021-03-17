@@ -2,7 +2,7 @@ import fs from "fs";
 import stringify from "csv-stringify";
 import parse from "csv-parse";
 import path from "path";
-import puppeteer from "puppeteer";
+import playwright, { chromium, ElementHandle } from "playwright";
 import delay from "delay";
 import { CommandModule } from "yargs";
 import SimulationStorage from "../../simulation/SimulationStorage";
@@ -39,11 +39,12 @@ const cmd: CommandModule<SystemWideArgs, ExtractPaymentDataArgs> = {
 
     const rows = [];
 
-    const browser = await puppeteer.launch({
-      defaultViewport: { width: 1200, height: 1000 },
+    const browser = await chromium.launch({
       headless: false,
     });
-    const page = await browser.newPage();
+    const page = await browser.newPage({
+      viewport: { width: 1200, height: 1000 },
+    });
     page.on("dialog", async (dialog) => {
       // When a dialog is detected, attempt to close it. This is usually
       // a "request in progress" thing, and closing it will allow the rest
@@ -64,7 +65,7 @@ const cmd: CommandModule<SystemWideArgs, ExtractPaymentDataArgs> = {
         await actions.gotoCase(page, fineos_absence_id);
         await actions
           .contains(page, ".tabset a", "Absence Paid Leave Case")
-          .then((el) => actions.click(page, el))
+          .then((el) => el.click())
           .catch((e) => {
             console.log(
               `No absence paid leave case found for case ${fineos_absence_id}: ${e.message}`
@@ -74,17 +75,17 @@ const cmd: CommandModule<SystemWideArgs, ExtractPaymentDataArgs> = {
         await actions.clickTab(page, "Payment History");
         // For each active payment, click on it, click view, get details, click
         // close.
-        const activePayments = await page.$$(
+        const activePayments = (await page.$$(
           'Table[id*="PaymentHistoryDetailsListviewWidget"] tr td[title="Active"]'
-        );
+        )) as ElementHandle<Element>[];
         if (activePayments.length === 0) {
           continue;
         }
         for (let i = 0; i < activePayments.length; i++) {
           await actions.click(page, activePayments[i]);
-          await page
-            .$('input[id*="PaymentHistoryDetailsListviewWidget"][value="View"]')
-            .then((el) => actions.click(page, el));
+          await page.click(
+            'input[id*="PaymentHistoryDetailsListviewWidget"][value="View"]'
+          );
           const paymentDetails = await getPaymentDetails(
             page,
             fineos_absence_id,
@@ -151,7 +152,7 @@ export function writePaymentDetails(
 }
 
 export async function getPaymentDetails(
-  page: puppeteer.Page,
+  page: playwright.Page,
   fineos_absence_id: string,
   scenario: string
 ): Promise<{ [key: string]: string }> {
@@ -178,7 +179,8 @@ export async function getPaymentDetails(
     );
     const value = await (
       await page.evaluateHandle(
-        (el) => el.parentNode.parentNode.nextElementSibling.innerText,
+        // @ts-ignore - Ignore use of Fineos window properties.
+        (el) => el && el?.parentNode?.parentNode?.nextElementSibling?.innerText,
         label
       )
     ).jsonValue();
