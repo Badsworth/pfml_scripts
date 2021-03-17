@@ -21,6 +21,7 @@ export const CreateAccount = (props) => {
 
   const { formState, updateFields } = useFormState({
     password: "",
+    // TODO (CP-1931) Rename username to email_address to match the field name sent to the API, so errors show up inline
     username: "",
   });
 

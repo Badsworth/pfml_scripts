@@ -20,6 +20,7 @@ export const CreateAccount = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
 
+  // TODO (CP-1931) Rename email/ein fields to match the field names sent to the API, so errors show up inline
   const { formState, updateFields } = useFormState({
     password: "",
     username: "",

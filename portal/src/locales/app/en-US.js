@@ -39,6 +39,7 @@ const errors = {
         "Enter the 6 digit code sent to your email and ensure it does not include any punctuation.",
       required: "Enter the 6 digit code sent to your email",
     },
+    // TODO (CP-1768) Remove these auth.ein strings once requests flow through API
     ein: {
       invalid: "Invalid employer ID number. Please try again.",
       required: "Enter your 9-digit Employer Identification Number.",
@@ -55,11 +56,9 @@ const errors = {
         "Select Yes if you are you creating an employer account to manage leave for your company.",
     },
     password: {
-      insecure:
-        "Choose a different password. Avoid commonly used passwords and avoid using the same password on multiple websites.",
-      invalid:
-        "Your password does not meet the requirements. Please check the requirements and try again.",
-      required: "Enter your password",
+      insecure: "$t(shared.auth.passwordError_insecure)",
+      invalid: "$t(shared.auth.passwordError_invalid)",
+      required: "$t(shared.auth.passwordError_required)",
       resetRequiredException:
         'Your password must be reset before you can log in again. Click the "Forgot your password?" link below to reset your password.',
     },
@@ -67,8 +66,8 @@ const errors = {
       "Confirm your account by following the instructions in the verification email sent to your inbox.",
     userNotFound: "Incorrect email",
     username: {
-      exists: "An account with the given email already exists",
-      required: "Enter your email address",
+      exists: "$t(shared.auth.emailError_exists)",
+      required: "$t(shared.auth.emailError_required)",
     },
   },
   caughtError:
@@ -524,6 +523,27 @@ const errors = {
     "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png).",
   network:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumber)",
+  users: {
+    email_address: {
+      exists: "$t(shared.auth.emailError_exists)",
+      format: "Enter a valid email address",
+      required: "$t(shared.auth.emailError_required)",
+    },
+    password: {
+      insecure: "$t(shared.auth.passwordError_insecure)",
+      invalid: "$t(shared.auth.passwordError_invalid)",
+      required: "$t(shared.auth.passwordError_required)",
+    },
+    user_leave_administrator: {
+      employer_fein: {
+        pattern:
+          "Enter your 9-digit Employer Identification Number in the correct format.",
+        require_employer:
+          "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly and the associated business is contributing to Paid Family and Medical Leave.",
+        required: "Enter your 9-digit Employer Identification Number.",
+      },
+    },
+  },
   // These fallbacks shouldn't normally render, but they may if a validation rule or
   // field is introduced and we don't add a custom field-level error message for it.
   validationFallback: {
@@ -545,6 +565,15 @@ const shared = {
   amountPerFrequency_inTotal: "{{amount, currency}} all at once",
   amountPerFrequency_monthly: "{{amount, currency}} per month",
   amountPerFrequency_weekly: "{{amount, currency}} per week",
+  auth: {
+    emailError_exists: "An account with the given email already exists",
+    emailError_required: "Enter your email address",
+    passwordError_insecure:
+      "Choose a different password. Avoid commonly used passwords and avoid using the same password on multiple websites.",
+    passwordError_invalid:
+      "Your password does not meet the requirements. Please check the requirements and try again.",
+    passwordError_required: "Enter your password",
+  },
   backToLoginLink: "Back to log in",
   bondingRegsLeavePeriodDetailsLabel:
     "Do you work in an acute care hospital or the teaching hospital of the University of Massachusetts Medical School?",
