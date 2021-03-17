@@ -38,6 +38,9 @@ class Constants:
 
     CLAIMANT_LIST_FILENAME_PREFIX = "DFML_CLAIMANTS_FOR_DUA_"
     CLAIMANT_LIST_FILENAME_TIME_FORMAT = "%Y%m%d%H%M"
+    # The "DFML Report" is the "payment list" file. Some things will refer to
+    # "payment list" others will use "payment report" or just "report", they are
+    # the all the same thing, means these files.
     PAYMENT_LIST_FILENAME_PREFIX = "DUA_DFML_"
     PAYMENT_LIST_FILENAME_TIME_FORMAT = "%Y%m%d%H%M"
     PAYMENT_REPORT_TIME_FORMAT = "%m/%d/%Y"
@@ -65,22 +68,8 @@ class Constants:
         BENEFIT_START_DATE_FIELD,
     ]
 
-    PAYMENT_LIST_FIELDS = [
-        CASE_ID_FIELD,
-        EMPR_FEIN_FIELD,
-        WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD,
-        RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD,
-        WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD,
-        PAID_AM_OUTBOUND_DFML_REPORT_FIELD,
-        FRAUD_IND_FIELD,
-        BYB_DT_FIELD,
-        BYE_DT_FIELD,
-        DATE_PAYMENT_ADDED_TO_REPORT_FIELD,
-    ]
-
     DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
         CASE_ID_FIELD: "absence_case_id",
-        EMPR_FEIN_FIELD: "employer_fein",
         WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: "payment_date",
         RQST_WK_DT_OUTBOUND_DFML_REPORT_FIELD: "request_week_begin_date",
         WBA_ADDITIONS_OUTBOUND_DFML_REPORT_FIELD: "gross_payment_amount_cents",
@@ -376,13 +365,17 @@ def _format_reduction_payments_for_report(
     reduction_payments: List[DuaReductionPayment],
 ) -> List[Dict]:
     if len(reduction_payments) == 0:
-        return [{field: "NO NEW PAYMENTS" for field in Constants.PAYMENT_LIST_FIELDS}]
+        return [
+            {
+                field: "NO NEW PAYMENTS"
+                for field in Constants.DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP.keys()
+            }
+        ]
 
     payments = []
     for payment in reduction_payments:
         info = {
             Constants.CASE_ID_FIELD: payment.absence_case_id,
-            Constants.EMPR_FEIN_FIELD: payment.employer_fein,
             Constants.WARRANT_DT_OUTBOUND_DFML_REPORT_FIELD: _format_date_for_report(
                 payment.payment_date
             ),
@@ -412,7 +405,11 @@ def _get_new_dua_payments_to_dfml_report_csv_path(
     file_name = Constants.PAYMENT_LIST_FILENAME_PREFIX + get_now().strftime(
         Constants.PAYMENT_LIST_FILENAME_TIME_FORMAT
     )
-    return create_csv_from_list(reduction_payments_info, Constants.PAYMENT_LIST_FIELDS, file_name)
+    return create_csv_from_list(
+        reduction_payments_info,
+        Constants.DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP.keys(),
+        file_name,
+    )
 
 
 def create_report_new_dua_payments_to_dfml(db_session: db.Session) -> None:

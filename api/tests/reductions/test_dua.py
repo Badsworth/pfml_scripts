@@ -897,9 +897,8 @@ def test_format_reduction_payments_for_report_with_no_new_payments():
     report = dua._format_reduction_payments_for_report(no_reduction_payments)
 
     for info in report:
-        assert list(info.keys()) == dua.Constants.PAYMENT_LIST_FIELDS
-        for k, v in info.items():
-            assert k in dua.Constants.PAYMENT_LIST_FIELDS
+        assert info.keys() == dua.Constants.DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP.keys()
+        for _k, v in info.items():
             assert v == "NO NEW PAYMENTS"
 
 
@@ -926,21 +925,18 @@ def test_format_reduction_payments_for_report_with_payments(
     ]
 
     for info in report:
-        assert list(info.keys()) == dua.Constants.PAYMENT_LIST_FIELDS
+        assert info.keys() == dua.Constants.DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP.keys()
         for k, v in info.items():
-            _field = dua.Constants.DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP[k]
-            assert k in dua.Constants.PAYMENT_LIST_FIELDS
+            field = dua.Constants.DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP[k]
 
             if k in dollar_fields:
-                assert v == dua._convert_cent_to_dollars(
-                    str(dua_reduction_payment.__dict__[_field])
-                )
+                assert v == dua._convert_cent_to_dollars(str(dua_reduction_payment.__dict__[field]))
             elif k in date_fields:
-                assert v == dua_reduction_payment.__dict__[_field].strftime(
+                assert v == dua_reduction_payment.__dict__[field].strftime(
                     dua.Constants.PAYMENT_REPORT_TIME_FORMAT
                 )
             else:
-                assert v == dua_reduction_payment.__dict__[_field]
+                assert v == dua_reduction_payment.__dict__[field]
 
 
 def test_create_report_new_dua_payments_to_dfml(
