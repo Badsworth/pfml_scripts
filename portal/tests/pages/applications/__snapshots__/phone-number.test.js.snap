@@ -33,7 +33,7 @@ exports[`PhoneNumber renders the page 1`] = `
           "value": "Phone",
         },
         Object {
-          "checked": false,
+          "checked": true,
           "label": "Mobile",
           "value": "Cell",
         },
@@ -44,7 +44,7 @@ exports[`PhoneNumber renders the page 1`] = `
     onChange={[Function]}
     smallLabel={true}
     type="radio"
-    value="cell"
+    value="Cell"
   />
 </QuestionPage>
 `;
