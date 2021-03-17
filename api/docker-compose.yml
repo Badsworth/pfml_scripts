@@ -102,7 +102,9 @@ services:
       #- PFML_FINEOS_OUTBOUND_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/cps/outbound
       #- PFML_ERROR_REPORTS_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/error-reports/outbound
       #- AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
-      # Sentry Configuration
+
+      # To test Sentry locally, set this to 1.
+      # Errors will be captured under the 'local' environment.
       - ENABLE_SENTRY=0
     networks:
       main:
