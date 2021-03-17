@@ -89,8 +89,9 @@ export class UserNotFoundError extends BasePortalError {
  * An API response returned a status code greater than 400
  */
 export class ApiRequestError extends BasePortalError {
-  constructor(...params) {
+  constructor(data, ...params) {
     super(...params);
+    this.responseData = data;
     this.name = "ApiRequestError";
   }
 }

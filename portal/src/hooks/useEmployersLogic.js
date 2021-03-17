@@ -40,8 +40,11 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow, setUser }) => {
 
       setClaim(claim);
     } catch (error) {
-      const employer_id = get(error, "data.employer_id");
-      const has_verification_data = get(error, "data.has_verification_data");
+      const employer_id = get(error, "responseData.employer_id");
+      const has_verification_data = get(
+        error,
+        "responseData.has_verification_data"
+      );
 
       if (!isNil(employer_id) && !isNil(has_verification_data)) {
         appErrorsLogic.catchError(

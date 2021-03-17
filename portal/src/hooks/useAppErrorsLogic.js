@@ -176,6 +176,8 @@ const useAppErrorsLogic = ({ portalFlow }) => {
 
     addError(appError);
 
+    // Error may include the response data (potentially PII)
+    // we should avoid tracking the entire error in New Relic
     if (error instanceof ApiRequestError) {
       tracker.trackEvent("ApiRequestError", {
         errorMessage: error.message,

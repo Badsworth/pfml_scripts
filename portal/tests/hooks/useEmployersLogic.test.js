@@ -139,7 +139,7 @@ describe("useEmployersLogic", () => {
         getClaimMock.mockImplementationOnce(() => {
           // eslint-disable-next-line no-throw-literal
           throw {
-            data: {
+            responseData: {
               employer_id: "some-employer-id",
               has_verification_data: "true",
             },

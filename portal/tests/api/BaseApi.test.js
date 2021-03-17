@@ -369,13 +369,18 @@ describe("BaseApi", () => {
           global.fetch = jest.fn().mockResolvedValue({
             ok: false,
             status: code,
-            json: jest.fn().mockResolvedValue({}),
+            json: jest
+              .fn()
+              .mockResolvedValue({ data: { mock_response: "mock-data" } }),
           });
 
           const request = async () => await testsApi.request("GET", "users");
 
           await expect(request).rejects.toThrow(
-            new CustomError(`${code} status code received`)
+            new CustomError(
+              { mock_response: "mock-data" },
+              `${code} status code received`
+            )
           );
         });
       });

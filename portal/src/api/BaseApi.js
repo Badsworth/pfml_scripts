@@ -117,7 +117,7 @@ export default class BaseApi {
     }
 
     if (!response.ok) {
-      handleNotOkResponse(url, response, errors, this.i18nPrefix);
+      handleNotOkResponse(url, response, errors, this.i18nPrefix, data);
     }
 
     return {
@@ -226,14 +226,22 @@ export function handleError(error) {
  * @param {object} response
  * @param {object[]} [errors] - Issues returned by the API
  * @param {string} i18nPrefix - Prefix used in ValidationError message strings
+ * @param {object} data - Data from response body
  * @throws {Error} error
  */
-export function handleNotOkResponse(url, response, errors = [], i18nPrefix) {
+export function handleNotOkResponse(
+  url,
+  response,
+  errors = [],
+  i18nPrefix,
+  data
+) {
   if (isEmpty(errors)) {
     // Response didn't include any errors that we could use to
     // display user friendly error message(s) from, so throw
     // an error based on the status code
-    throwError(response);
+    // For Leave Admin permission issues, response data is needed to determine page routing
+    throwError(response, data);
   } else {
     throw new ValidationError(formatIssues(errors), i18nPrefix);
   }
@@ -248,25 +256,25 @@ function removeLeadingSlash(path) {
   return path.replace(/^\//, "");
 }
 
-const throwError = ({ status }) => {
+const throwError = ({ status }, data = {}) => {
   const message = `${status} status code received`;
 
   switch (status) {
     case 400:
-      throw new BadRequestError(message);
+      throw new BadRequestError(data, message);
     case 401:
-      throw new UnauthorizedError(message);
+      throw new UnauthorizedError(data, message);
     case 403:
-      throw new ForbiddenError(message);
+      throw new ForbiddenError(data, message);
     case 404:
-      throw new NotFoundError(message);
+      throw new NotFoundError(data, message);
     case 408:
-      throw new RequestTimeoutError(message);
+      throw new RequestTimeoutError(data, message);
     case 500:
-      throw new InternalServerError(message);
+      throw new InternalServerError(data, message);
     case 503:
-      throw new ServiceUnavailableError(message);
+      throw new ServiceUnavailableError(data, message);
     default:
-      throw new ApiRequestError(message);
+      throw new ApiRequestError(data, message);
   }
 };
