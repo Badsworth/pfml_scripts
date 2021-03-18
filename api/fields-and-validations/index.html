@@ -398,21 +398,28 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pydantic-custom-validators" class="md-nav__link">
-    Pydantic custom validators
+  <a href="#pydantic-field-validator" class="md-nav__link">
+    Pydantic field validator
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#required-and-cross-field-validations" class="md-nav__link">
-    Required and cross-field validations
+  <a href="#required-fields-and-cross-field-validations" class="md-nav__link">
+    Required fields and cross-field validations
   </a>
   
 </li>
         
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-application-validation-works" class="md-nav__link">
+    How Application validation works
+  </a>
   
 </li>
         
@@ -803,21 +810,28 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pydantic-custom-validators" class="md-nav__link">
-    Pydantic custom validators
+  <a href="#pydantic-field-validator" class="md-nav__link">
+    Pydantic field validator
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#required-and-cross-field-validations" class="md-nav__link">
-    Required and cross-field validations
+  <a href="#required-fields-and-cross-field-validations" class="md-nav__link">
+    Required fields and cross-field validations
   </a>
   
 </li>
         
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-application-validation-works" class="md-nav__link">
+    How Application validation works
+  </a>
   
 </li>
         
@@ -858,13 +872,13 @@
 </blockquote>
 <ol>
 <li>Add the field to the <code>openapi.yaml</code> spec.</li>
-<li>Add the field to the <a href="https://github.com/EOLWD/pfml/tree/main/api/massgov/pfml/api/models/applications/requests.py"><code>requests.py</code></a> API Application model</li>
+<li>Add the field to the <a href="https://github.com/EOLWD/pfml/tree/main/api/massgov/pfml/api/models/applications/requests.py"><code>requests.py</code></a> Pydantic model</li>
 <li>Add test coverage to assert the new field is persisted in the DB.</li>
 </ol>
 <h3 id="include-fields-in-responses">Include fields in responses</h3>
 <ol>
 <li>Add the field to the <code>openapi.yaml</code> spec</li>
-<li>Add the field to the <a href="https://github.com/EOLWD/pfml/tree/main/api/massgov/pfml/api/models/applications/responses.py"><code>responses.py</code></a> API Application model</li>
+<li>Add the field to the <a href="https://github.com/EOLWD/pfml/tree/main/api/massgov/pfml/api/models/applications/responses.py"><code>responses.py</code></a> Pydantic model</li>
 <li>Add test coverage to assert the new field is included in responses.</li>
 </ol>
 <h2 id="validation-rules">Validation rules</h2>
@@ -872,8 +886,14 @@
 <p>We should distinguish validation rules from eligibility rules. It’s one thing to automatically deny someone eligibility based on some eligibility criteria (like child birth date being within 12 months) and then allowing that person to appeal (if they have some valid extenuating circumstances), and it’s an entirely different thing to prevent them from applying altogether claiming that the application isn’t even a valid application.</p>
 <p><strong>Validation should only serve to help prevent incorrect data (typos, etc) not prevent ineligible applications</strong>. We should be careful not to accidentally deny a claimant’s right to an appeal or otherwise make the system less flexible than it needs to be as is so often the case with government systems.</p>
 <h3 id="adding-validation-rules">Adding validation rules</h3>
+<p>Validation rules currently are enforced at three different layers:</p>
+<ol>
+<li>OpenAPI generally enforces a subset of rules on individual fields</li>
+<li>Pydantic models enforce some business rules on individual fields</li>
+<li>Custom code enforces presence of required fields or rules requiring context of multiple fields</li>
+</ol>
 <h4 id="openapi">OpenAPI</h4>
-<p>OpenAPI includes keywords that help enforce a subset of validation rules, primarily:</p>
+<p>OpenAPI is the first layer a request flows through, and enforces a subset of validation rules:</p>
 <ul>
 <li><a href="https://swagger.io/docs/specification/data-models/data-types/"><code>type</code></a></li>
 <li><a href="https://swagger.io/docs/specification/data-models/data-types/#string"><code>format</code></a></li>
@@ -882,12 +902,35 @@
 </ul>
 <p>For all endpoints, these validations always result in a 400 status code with <code>errors</code> when a rule is not fulfilled.</p>
 <p>These validations are located in the <code>openapi.yml</code> spec file.</p>
-<h4 id="pydantic-custom-validators">Pydantic custom validators</h4>
-<p><a href="https://pydantic-docs.helpmanual.io/usage/validators/">Pydantic custom validators</a> are used for enforcing more complex validation logic, such as business rules or reality checks on a single field(e.g a birthdate must be in the past).</p>
-<p>For all endpoints, these validations always result in a 400 status code with <code>errors</code> when a rule is not fulfilled.</p>
-<p>These validations are located in <code>requests.py</code>.</p>
-<h4 id="required-and-cross-field-validations">Required and cross-field validations</h4>
-<p>A <code>get_application_issues</code> function also exists for reporting potential "warnings" on an application. These are primarily rules related to required or conditionally required fields, but may also relate to rules that span multiple fields.</p>
+<p><strong>Why we avoid <a href="https://swagger.io/docs/specification/data-models/data-types/#required">OpenAPI's <code>required</code> property</a></strong></p>
+<p>To display a user friendly internationalized error message to Portal users, the error must include the <code>field</code> that is missing and a consistent <code>type</code>. For example:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+  <span class="nt">&quot;errors&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="nt">&quot;field&quot;</span><span class="p">:</span> <span class="s2">&quot;password&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;required&quot;</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>OpenAPI pitfalls:</p>
+<ul>
+<li>The main deal breaker is when using the OpenAPI's <code>required</code> property, the error response <a href="https://github.com/Julian/jsonschema/issues/119">doesn't return the name of the specific field that is missing</a>. It just returns the full array of fields that are required. This prevents Portal from displaying a useful error message.</li>
+<li>Some endpoints are split across multiple pages in the Portal so it will be expected that not all required fields are present at once in a request.</li>
+</ul>
+<h4 id="pydantic-field-validator">Pydantic field validator</h4>
+<p>Individual fields on a Pydantic model can have <a href="https://pydantic-docs.helpmanual.io/usage/validators/">custom validation logic</a> to enforce business rules or reality checks (e.g a birthdate must be in the past). These validators can raise a <code>ValidationException</code> to cause the API endpoint to respond with a 400 response with <code>errors</code>.</p>
+<h4 id="required-fields-and-cross-field-validations">Required fields and cross-field validations</h4>
+<p>Our current approach is to use custom code is enforce the presence of fields, or more complex validation logic dependent on the values of multiple fields.</p>
+<p>The current convention for this set of validations is to:</p>
+<ul>
+<li>Create a <code>*_rules.py</code> module (e.g <code>user_rules.py</code>) for the endpoints' validation logic</li>
+<li>Add <code>get_*_issues</code> method for validating an endpoint</li>
+<li>Call <code>get_*_issues</code> with the API request and check if there are any issues returned</li>
+</ul>
+<hr />
+<h3 id="how-application-validation-works">How Application validation works</h3>
+<p>A <code>get_application_issues</code> function exists for reporting potential "warnings" on an application. These are primarily rules related to required or conditionally required fields, but may also relate to rules that span multiple fields.</p>
 <p>For <code>GET</code> and <code>PATCH</code> requests to the <code>/applications/:application_id</code> endpoint, these validations result in data still saving to our database and a 200 status code with <code>warnings</code> rather than <code>errors</code>, since we expect requests to not always have a complete application, since a user will be filling out the application through a multi-page experience.</p>
 <p>For <code>POST</code> requests to /applications/:application_id/complete_application and /applications/:application_id/submit_application, these validations result in a 400 status code with <code>errors</code> when a rule is not fulfilled.</p>
 <p>These validations are located in <code>application_rules.py</code>.</p>
