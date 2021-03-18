@@ -11,7 +11,7 @@ class Constants:
     # ODFI ID: The ID of the Originating Depository Financial Institution (ODFI)
     # ODFI is a banking term in the US in connection with ACH.
     odfi_id = "22117218"
-    ref_code = "REF CODE"
+    ref_code = ""
     modifier = "A"
     destination = "221172186"
     destination_name = "People'sUnitedBankNA"
@@ -293,7 +293,6 @@ class NachaBatchHeader(NachaRecord):
     MIXED_SERVICE = "200"
     CREDITS_ONLY_SERVICE = "220"
     DEBITS_ONLY_SERVICE = "225"
-    ADVICES_SERVICE = "280"
 
     def __init__(self, effective_date, today):
 

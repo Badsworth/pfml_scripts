@@ -129,10 +129,10 @@ def test_name_truncation(monkeypatch):
         dfi_act_num="122424",
         amount=123.00,
         id="1224asdfgasdf",
-        name="Johnathan Smith-Westfield Westinghouse III",
+        name="Smith-Westfield Johnathan",
     )
 
-    assert entry.get_value("name") == "Johnathan Smith-Westfi"
+    assert entry.get_value("name") == "Smith-Westfield Johnat"
 
 
 @freeze_time("2021-03-17 21:58:00")
@@ -148,7 +148,7 @@ def test_generate_nacha_file(monkeypatch, test_db_session):
         dfi_act_num="122424",
         amount=123.00,
         id="1224asdfgasdf",
-        name="John Smith",
+        name="Smith John",
     )
 
     entry2 = NachaEntry(
@@ -156,7 +156,7 @@ def test_generate_nacha_file(monkeypatch, test_db_session):
         dfi_act_num="122425",
         amount=129.00,
         id="1224asdfgas23r",
-        name="John Smith12",
+        name="Smith John",
     )
 
     batch.add_entry(entry)

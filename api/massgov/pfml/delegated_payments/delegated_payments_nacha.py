@@ -26,7 +26,7 @@ def add_payments_to_nacha_batch(db_session, nacha_batch, payments) -> NachaFile:
             amount=payment.amount,
             # TODO: we are still determining what this ID value should be.
             id=f"{payment.fineos_pei_c_value}{payment.fineos_pei_i_value}",
-            name=f"{payment.claim.employee.first_name} {payment.claim.employee.last_name}",
+            name=f"{payment.claim.employee.last_name} {payment.claim.employee.first_name}",
         )
 
         state_log_util.create_finished_state_log(
