@@ -214,6 +214,7 @@ class ClaimantExtractStep(Step):
         requested_absences = extract_data.requested_absence_info.indexed_data.values()
         updated_employee_ids = set()
         for requested_absence in requested_absences:
+            self.increment("processed_requested_absence_count")
             absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
             # TODO should we skip if absence case id is None?
             if absence_case_id is not None:
@@ -230,6 +231,7 @@ class ClaimantExtractStep(Step):
                         absence_case_id,
                         extra={"absence_case_id": absence_case_id},
                     )
+                    self.increment("evidence_not_id_proofed_count")
                 continue
 
             employee_pfml_entry = None
@@ -305,6 +307,7 @@ class ClaimantExtractStep(Step):
                 absence_case_id,
                 extra={"absence_case_id": absence_case_id},
             )
+            self.increment("claim_created_count")
         else:
             logger.info(
                 "Found existing claim for absence_case_id: %s",
@@ -411,6 +414,7 @@ class ClaimantExtractStep(Step):
                     "fineos_customer_number": fineos_customer_number,
                 },
             )
+            self.increment("employee_not_found_count")
             return None, False
 
         employee_tax_identifier = payments_util.validate_csv_input(
@@ -755,6 +759,7 @@ class ClaimantExtractStep(Step):
                 ),
                 db_session=self.db_session,
             )
+            self.increment("errored_claimant_count")
 
         else:
             state_log_util.create_finished_state_log(
@@ -765,6 +770,7 @@ class ClaimantExtractStep(Step):
                 ),
                 db_session=self.db_session,
             )
+            self.increment("valid_claimant_payment")
 
     # TODO move to payments_util
     def move_files_from_received_to_processed(self, extract_data: ExtractData) -> None:

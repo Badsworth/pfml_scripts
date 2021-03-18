@@ -1,3 +1,4 @@
+import json
 import os
 import tempfile
 from typing import Dict, List, Optional, Tuple
@@ -17,6 +18,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     EmployeeLog,
     GeoState,
+    ImportLog,
     PaymentMethod,
     ReferenceFileType,
     State,
@@ -172,6 +174,12 @@ def test_run_step_happy_path(
         .scalar()
         == 1
     )
+
+    # Confirm metrics added to import log
+    import_log = test_db_session.query(ImportLog).first()
+    import_log_report = json.loads(import_log.report)
+    assert import_log_report["evidence_not_id_proofed_count"] == 3
+    assert import_log_report["valid_claimant_payment"] == 1
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before

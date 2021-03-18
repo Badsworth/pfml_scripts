@@ -1,4 +1,5 @@
 import csv
+import json
 import os
 import tempfile
 from collections import OrderedDict
@@ -485,6 +486,11 @@ def test_process_extract_data(
             state_log = state_logs[0]
             assert "Initiated VENDOR_EFT flow for Employee" in state_log.outcome["message"]
             assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
+
+    # Verify a few of the metrics were added to the import log table
+    import_log_report = json.loads(payment.fineos_extract_import_log.report)
+    assert import_log_report["standard_valid_payment_count"] == 3
+    assert import_log_report["claim_created_count"] == 3
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before

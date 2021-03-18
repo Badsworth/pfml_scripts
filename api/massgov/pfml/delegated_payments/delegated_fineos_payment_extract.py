@@ -380,6 +380,7 @@ class PaymentExtractStep(Step):
                 active_state.end_state.state_description,
                 active_state.payment.payment_id,
             )
+            self.increment("already_active_payment_count")
             return active_state.end_state
 
         return None
@@ -534,6 +535,7 @@ class PaymentExtractStep(Step):
                 fineos_absence_id=payment_data.absence_case_number,
             )
             self.db_session.add(claim)
+            self.increment("claim_created_count")
 
         # Do a few validations on the claim+employee
         if claim:
@@ -827,6 +829,7 @@ class PaymentExtractStep(Step):
         if validation_container.has_validation_issues():
             end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
             message = "Error processing payment record"
+            self.increment("errored_payment_count")
 
         # Zero dollar payments are added to the FINEOS writeback + a report
         elif (
@@ -835,6 +838,7 @@ class PaymentExtractStep(Step):
         ):
             end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
             message = "Zero dollar payment added to pending state for FINEOS writeback"
+            self.increment("zero_dollar_payment_count")
 
         # Overpayments are added to to the FINEOS writeback + a report
         elif (
@@ -843,6 +847,7 @@ class PaymentExtractStep(Step):
         ):
             end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT
             message = "Overpayment payment added to pending state for FINEOS writeback"
+            self.increment("overpayment_count")
 
         # Cancellations depend on the type of payment
         elif (
@@ -853,14 +858,17 @@ class PaymentExtractStep(Step):
             if payment.claim.employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
                 end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
                 message = "Cancellation payment added to pending state for FINEOS writeback"
+                self.increment("ach_cancellation_count")
             # Check cancellations are processed by us and sent to PUB
             else:
                 end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
                 message = "Check cancellation payment added"
+                self.increment("check_cancellation_count")
 
         else:
             end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
             message = "Success"
+            self.increment("standard_valid_payment_count")
 
         state_log_util.create_finished_state_log(
             end_state=end_state,
@@ -891,6 +899,7 @@ class PaymentExtractStep(Step):
 
         for index, record in extract_data.pei.indexed_data.items():
             try:
+                self.increment("processed_payment_count")
                 # Construct a payment data object for easier organization of the many params
                 payment_data = PaymentData(extract_data, index, record)
                 logger.debug(
