@@ -205,6 +205,10 @@ def create_cognito_account(
         )
 
         issue = Issue(field="password", type=issue_type, message=message)
+        logger.info(
+            "Cognito validation issue - InvalidPasswordException",
+            extra={"cognito_error": issue.message},
+        )
 
         raise CognitoAccountCreationUserError(issue.message, issue) from error
     except botocore.exceptions.ParamValidationError as error:
@@ -214,6 +218,10 @@ def create_cognito_account(
         # Number 2 above will be caught by our OpenAPI validations, which check that email_address
         # is an email, so we interpret this error to indicate something is wrong with the password
         issue = Issue(field="password", type=IssueType.invalid, message="{}".format(error))
+        logger.info(
+            "Cognito validation issue - ParamValidationError",
+            extra={"cognito_error": issue.message},
+        )
 
         raise CognitoAccountCreationUserError(issue.message, issue) from error
     except cognito_client.exceptions.UsernameExistsException as error:
@@ -223,8 +231,10 @@ def create_cognito_account(
         raise CognitoAccountCreationUserError(issue.message, issue) from error
     except botocore.exceptions.ClientError as error:
         logger.warning(
-            "create_cognito_account - failed to sign up with unexpected ClientError",
+            # Alarm policy may be configured based on this message. Check before changing it.
+            "Failed to add user to Cognito due to unexpected ClientError",
             extra={"error": error.response["Error"]},
+            exc_info=True,
         )
 
         raise CognitoAccountCreationFailure(

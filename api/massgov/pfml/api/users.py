@@ -24,12 +24,10 @@ def users_post():
     # TODO (CP-1763): Enforce required fields are present
     employer = None
     role_description = body.role.role_description
+    is_employer = role_description == Role.EMPLOYER.role_description
 
     with app.db_session() as db_session:
-        if (
-            role_description == Role.EMPLOYER.role_description
-            and body.user_leave_administrator is not None
-        ):
+        if is_employer and body.user_leave_administrator is not None:
             employer_fein = body.user_leave_administrator.employer_fein
             employer = (
                 db_session.query(Employer)
@@ -71,6 +69,10 @@ def users_post():
                 errors=[e.issue],
                 data={},
             ).to_api_response()
+
+    logger.info(
+        "users_post success - account created", extra={"is_employer": str(is_employer)},
+    )
 
     return response_util.success_response(
         data=user_response(user),

@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import boto3
 import botocore
@@ -35,27 +35,42 @@ def create_user(
 ) -> User:
     """Create API records for a new user (claimant or leave admin)"""
     user = User(active_directory_id=auth_id, email_address=email_address,)
-    db_session.add(user)
 
-    if employer_for_leave_admin:
-        user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
-        user_leave_admin = UserLeaveAdministrator(
-            user=user, employer=employer_for_leave_admin, fineos_web_id=None,
+    try:
+        db_session.add(user)
+
+        if employer_for_leave_admin:
+            user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
+            user_leave_admin = UserLeaveAdministrator(
+                user=user, employer=employer_for_leave_admin, fineos_web_id=None,
+            )
+            db_session.add(user_role)
+            db_session.add(user_leave_admin)
+
+        db_session.commit()
+    except Exception as error:
+        logger.warning(
+            # Alarm policy may be configured based on this message. Check before changing it.
+            "API User records failed to save, but a Cognito account was created. User account is now in a bad state.",
+            extra=get_register_user_log_attributes(employer_for_leave_admin, auth_id),
+            exc_info=True,
         )
-        db_session.add(user_role)
-        db_session.add(user_leave_admin)
-
-    db_session.commit()
-
-    logger.info(
-        "create_user - successfully created User",
-        extra={
-            "current_user.auth_id": auth_id,
-            "isEmployer": str(employer_for_leave_admin is not None),
-        },
-    )
+        raise error
 
     return user
+
+
+def get_register_user_log_attributes(
+    employer_for_leave_admin: Optional[Employer], auth_id: Optional[str] = None
+) -> Dict[str, Optional[str]]:
+    """Extra data to include in register_user logs"""
+
+    # This log should provide enough info to support manually creating records if necessary
+    return {
+        "current_user.auth_id": auth_id,
+        "employer_id": employer_for_leave_admin.employer_id if employer_for_leave_admin else None,
+        "is_employer": str(employer_for_leave_admin is not None),
+    }
 
 
 def register_user(
@@ -78,11 +93,15 @@ def register_user(
         email_address, password, cognito_user_pool_client_id, cognito_client=cognito_client
     )
     logger.info(
-        "register_user - successfully created Cognito user",
-        extra={"current_user.auth_id": auth_id},
+        "Successfully created Cognito user",
+        extra=get_register_user_log_attributes(employer_for_leave_admin, auth_id),
     )
 
     user = create_user(db_session, email_address, auth_id, employer_for_leave_admin)
+    logger.info(
+        "Successfully created User records",
+        extra=get_register_user_log_attributes(employer_for_leave_admin, auth_id),
+    )
 
     return user
 
