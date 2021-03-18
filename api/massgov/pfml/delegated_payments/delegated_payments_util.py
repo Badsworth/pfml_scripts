@@ -147,6 +147,7 @@ class ValidationReason(str, Enum):
     FIELD_TOO_LONG = "FieldTooLong"
     INVALID_LOOKUP_VALUE = "InvalidLookupValue"
     INVALID_VALUE = "InvalidValue"
+    INVALID_TYPE = "InvalidType"
     MULTIPLE_VALUES_FOUND = "MultipleValuesFound"
     VALUE_NOT_FOUND = "ValueNotFound"
     NON_NULLABLE = "NonNullable"
@@ -175,6 +176,14 @@ class ValidationContainer:
 
     def has_validation_issues(self) -> bool:
         return len(self.validation_issues) != 0
+
+
+class ValidationIssueException(Exception):
+    __slots__ = ["issues", "message"]
+
+    def __init__(self, issues: List[ValidationIssue], message: str):
+        self.issues = issues
+        self.message = message
 
 
 def get_now() -> datetime:
