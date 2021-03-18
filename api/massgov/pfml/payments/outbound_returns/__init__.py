@@ -1,5 +1,6 @@
 import os
-from typing import List
+from dataclasses import dataclass
+from typing import List, Optional
 
 import defusedxml.ElementTree as ET
 
@@ -16,6 +17,13 @@ logger = logging.get_logger(__name__)
 
 
 OUTBOUND_STATUS_RETURN_XML_DOC_ROOT_ELEMENT = "AMS_IC_STATUS"
+
+
+@dataclass
+class ProcessOutboundReturnsConfig:
+    process_outbound_vendor_returns: bool = True
+    process_outbound_status_returns: bool = True
+    process_outbound_payment_returns: bool = True
 
 
 class OutboundReturnData:
@@ -108,13 +116,11 @@ def _set_outbound_reference_file_type(
         outbound_return_data.outbound_payment_return_files.append(ref_file)
 
 
-def _process_outbound_returns(outbound_return_data: OutboundReturnData) -> None:
+def _process_outbound_returns(
+    outbound_return_data: OutboundReturnData,
+    process_returns: Optional[ProcessOutboundReturnsConfig] = None,
+) -> None:
     """Process Outbound Return files in order.
-
-    Order matters:
-    1. Outbound Status Returns
-    2. Outbound Vendor Customer Returns
-    3. Outbound Payment Returns
 
     Any exceptions raised deeper in the process that haven't been caught are
     propagated up here.
@@ -128,49 +134,55 @@ def _process_outbound_returns(outbound_return_data: OutboundReturnData) -> None:
     outbound_return_data.sort_returns()
     db_session = outbound_return_data.db_session
 
+    # Determine with Outbound Returns to process
+    if process_returns is None:
+        process_returns = ProcessOutboundReturnsConfig()
+
     # 1. Outbound Vendor Customer Returns
-    # TODO: Outbound Vendor Customer Returns should not change the existing
-    #       state. Instead it should query for the current state and remain
-    #       in that state.
-    for ref_file in outbound_return_data.outbound_vendor_customer_return_files:
-        try:
-            outbound_vendor_customer_return.process_outbound_vendor_customer_return(
-                db_session, ref_file
-            )
-        except Exception:
-            logger.exception(
-                "Fatal error while processing Outbound Vendor Return %s",
-                ref_file.file_location,
-                extra={"file_location", ref_file.file_location},
-            )
-            raise
+    if process_returns.process_outbound_vendor_returns:
+        for ref_file in outbound_return_data.outbound_vendor_customer_return_files:
+            try:
+                outbound_vendor_customer_return.process_outbound_vendor_customer_return(
+                    db_session, ref_file
+                )
+            except Exception:
+                logger.exception(
+                    "Fatal error while processing Outbound Vendor Return %s",
+                    ref_file.file_location,
+                    extra={"file_location", ref_file.file_location},
+                )
+                raise
 
     # 2. Outbound Status Returns
-    for ref_file in outbound_return_data.outbound_status_return_files:
-        try:
-            outbound_status_return.process_outbound_status_return(db_session, ref_file)
-        except Exception:
-            logger.exception(
-                "Fatal error while processing Outbound Status Return %s",
-                ref_file.file_location,
-                extra={"file_location", ref_file.file_location},
-            )
-            raise
+    if process_returns.process_outbound_status_returns:
+        for ref_file in outbound_return_data.outbound_status_return_files:
+            try:
+                outbound_status_return.process_outbound_status_return(db_session, ref_file)
+            except Exception:
+                logger.exception(
+                    "Fatal error while processing Outbound Status Return %s",
+                    ref_file.file_location,
+                    extra={"file_location", ref_file.file_location},
+                )
+                raise
 
     # 3. Outbound Payment Returns
-    for ref_file in outbound_return_data.outbound_payment_return_files:
-        try:
-            outbound_payment_return.process_outbound_payment_return(db_session, ref_file)
-        except Exception:
-            logger.exception(
-                "Fatal error while processing Outbound Payment Return %s",
-                ref_file.file_location,
-                extra={"file_location", ref_file.file_location},
-            )
-            raise
+    if process_returns.process_outbound_payment_returns:
+        for ref_file in outbound_return_data.outbound_payment_return_files:
+            try:
+                outbound_payment_return.process_outbound_payment_return(db_session, ref_file)
+            except Exception:
+                logger.exception(
+                    "Fatal error while processing Outbound Payment Return %s",
+                    ref_file.file_location,
+                    extra={"file_location", ref_file.file_location},
+                )
+                raise
 
 
-def process_outbound_returns(db_session: db.Session) -> None:
+def process_outbound_returns(
+    db_session: db.Session, process_returns: Optional[ProcessOutboundReturnsConfig] = None
+) -> None:
     """Top level function for handling CTR Outbound Return files
 
     Read files that are in /ctr/inbound/received and append ReferenceFile objects to each list,
@@ -191,7 +203,7 @@ def process_outbound_returns(db_session: db.Session) -> None:
         logger.exception("Error connecting to S3 folder: %s", base_filepath)
         raise
 
-    # If we retrived nothing, exit early
+    # If we retrieved nothing, exit early
     if not ctr_inbound_filenames:
         logger.warning(
             "Did not find any files in source S3 directory: %s",
@@ -234,6 +246,6 @@ def process_outbound_returns(db_session: db.Session) -> None:
         raise
 
     # Process each file
-    _process_outbound_returns(outbound_return_data)
+    _process_outbound_returns(outbound_return_data, process_returns)
 
     logger.info("Successfully processed outbound return files")

@@ -1,3 +1,4 @@
+import itertools
 import logging  # noqa: B1
 import os
 import pathlib
@@ -246,6 +247,34 @@ def test_internal_process_outbound_returns_payment_error(
     assert mocked_process_outbound_status_return.call_count == 1
     assert mocked_process_outbound_vendor_customer_return.call_count == 1
     assert mocked_process_outbound_payment_return.call_count == 1
+
+
+@pytest.mark.parametrize("process_returns", (seq for seq in itertools.product(range(2), repeat=3)))
+def test_internal_process_outbound_returns_by_type(
+    test_db_session, mock_s3_bucket, initialize_factories_session, mocker, process_returns
+):
+    outbound_return_data = populate_outbound_return_data(
+        test_db_session, mock_s3_bucket, initialize_factories_session
+    )
+    (
+        mocked_process_outbound_status_return,
+        mocked_process_outbound_vendor_customer_return,
+        mocked_process_outbound_payment_return,
+    ) = setup_mocks(mocker)
+
+    to_process = outbound_returns.ProcessOutboundReturnsConfig()
+    if process_returns[0] == 0:
+        to_process.process_outbound_vendor_returns = False
+    if process_returns[1] == 0:
+        to_process.process_outbound_status_returns = False
+    if process_returns[2] == 0:
+        to_process.process_outbound_payment_returns = False
+
+    outbound_returns._process_outbound_returns(outbound_return_data, to_process)
+
+    assert mocked_process_outbound_vendor_customer_return.call_count == process_returns[0]
+    assert mocked_process_outbound_status_return.call_count == process_returns[1]
+    assert mocked_process_outbound_payment_return.call_count == process_returns[2]
 
 
 def test_process_outbound_returns(
