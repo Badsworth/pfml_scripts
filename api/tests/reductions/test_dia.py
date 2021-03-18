@@ -415,3 +415,60 @@ def test_download_payment_list_if_none_today(
             .scalar()
             == 1
         )
+
+
+def test_load_new_dia_payments_sucessfully(test_db_session, mock_s3_bucket, monkeypatch):
+    source_directory_path = "reductions/dia/pending"
+    archive_directory_path = "reductions/dia/archive"
+
+    monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
+    monkeypatch.setenv("S3_DIA_PENDING_DIRECTORY_PATH", source_directory_path)
+    monkeypatch.setenv("S3_DIA_ARCHIVE_DIRECTORY_PATH", archive_directory_path)
+
+    # Define the full paths to the directories.
+    pending_directory = f"s3://{mock_s3_bucket}/{source_directory_path}"
+    archive_directory = f"s3://{mock_s3_bucket}/{archive_directory_path}"
+
+    # Create some number of ReferenceFiles
+    total_row_count = 0
+    ref_file_count = random.randint(1, 5)
+    for _i in range(ref_file_count):
+        row_count = random.randint(1, 5)
+        total_row_count = total_row_count + row_count
+        _get_loaded_reference_file_in_s3(
+            mock_s3_bucket, _random_csv_filename(), source_directory_path, row_count
+        )
+
+    # Expect no rows in the database before.
+    assert (
+        test_db_session.query(
+            sqlalchemy.func.count(DuaReductionPayment.dia_reduction_payment_id)
+        ).scalar()
+        == 0
+    )
+
+    # Expect files to be in pending directory before.
+    assert len(file_util.list_files(pending_directory)) == ref_file_count
+    assert len(file_util.list_files(archive_directory)) == 0
+
+    dia.load_new_dia_payments(test_db_session)
+
+    # Expect to have loaded some rows to the database.
+    assert (
+        test_db_session.query(
+            sqlalchemy.func.count(DuaReductionPayment.dia_reduction_payment_id)
+        ).scalar()
+        == total_row_count
+    )
+
+    # Expect files to be in archive directory after.
+    assert len(file_util.list_files(pending_directory)) == 0
+    assert len(file_util.list_files(archive_directory)) == ref_file_count
+
+    # Expect to have created a StateLog for each ReferenceFile.
+    assert (
+        test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+        .filter(StateLog.end_state_id == State.DIA_PAYMENT_LIST_SAVED_TO_DB.state_id)
+        .scalar()
+        == ref_file_count
+    )
