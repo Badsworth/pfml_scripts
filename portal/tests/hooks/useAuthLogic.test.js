@@ -614,9 +614,9 @@ describe("useAuthLogic", () => {
     });
   });
 
-  describe("createAccount, with authThroughApi feature flag", () => {
+  describe("createAccount, with claimantAuthThroughApi feature flag", () => {
     beforeEach(() => {
-      process.env.featureFlags = { authThroughApi: true };
+      process.env.featureFlags = { claimantAuthThroughApi: true };
     });
 
     it("sends request through API module", async () => {
@@ -658,9 +658,9 @@ describe("useAuthLogic", () => {
   });
 
   // TODO (CP-1768): Remove code below once requests are always sent through API
-  describe("createAccount, without authThroughApi feature flag", () => {
+  describe("createAccount, without claimantAuthThroughApi feature flag", () => {
     beforeEach(() => {
-      process.env.featureFlags = { authThroughApi: false };
+      process.env.featureFlags = { claimantAuthThroughApi: false };
     });
 
     it("calls Auth.signUp", async () => {
@@ -884,9 +884,9 @@ describe("useAuthLogic", () => {
     });
   });
 
-  describe("createEmployerAccount, with authThroughApi feature flag", () => {
+  describe("createEmployerAccount, with employerAuthThroughApi feature flag", () => {
     beforeEach(() => {
-      process.env.featureFlags = { authThroughApi: true };
+      process.env.featureFlags = { employerAuthThroughApi: true };
     });
 
     it("sends request through API module", async () => {
@@ -930,9 +930,9 @@ describe("useAuthLogic", () => {
     });
   });
 
-  describe("createEmployerAccount, without authThroughApi feature flag", () => {
+  describe("createEmployerAccount, without employerAuthThroughApi feature flag", () => {
     beforeEach(() => {
-      process.env.featureFlags = { authThroughApi: false };
+      process.env.featureFlags = { employerAuthThroughApi: false };
     });
 
     it("calls Auth.signUp with username, password, and ein as a custom attribute", async () => {

@@ -7,9 +7,9 @@ const flagsConfig = {
   // Define a default or all feature flags here.
   // Environments will fallback to these default values.
   defaults: {
-    // When this flag is enabled, Create Account requests will be
+    // When this flag is enabled, Claimant Create Account requests will be
     // sent through the API, rather than directly to Cognito
-    authThroughApi: false,
+    claimantAuthThroughApi: false,
 
     // When this flag is enabled, the user can see the "Employment status"
     // question in the claimant flow (CP-1204)
@@ -26,6 +26,10 @@ const flagsConfig = {
     // a X-FF-Require-Other-Leaves header on API requests.
     // TODO (CP-1346): Show this step once it's been integrated w/ the API.
     claimantShowOtherLeaveStep: false,
+
+    // When this flag is enabled, Employer Create Account requests will be
+    // sent through the API, rather than directly to Cognito
+    employerAuthThroughApi: false,
 
     // When this flag is enabled, "Add Organization" button and navigation to page is enabled
     // TODO (EMPLOYER-913): Remove flag
