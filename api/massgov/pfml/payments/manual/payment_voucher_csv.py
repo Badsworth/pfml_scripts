@@ -43,6 +43,21 @@ class PaymentVoucherCSV:
     leave_request_decision: str
     vcm_flag: str
 
+    # fields mostly to be populated manually by team using the voucher file for
+    # actually processing the payments
+    good_to_pay_from_prior_batch: str
+    had_a_payment_in_a_prior_batch_by_vc_code: str
+    inv: str  # exists on the VALID payments sent to EOLFIN/ MMARS nnnnn
+    payments_offset_to_zero: str
+    claimants_that_have_zero_or_credit_value: str  # fill this column in with "1" if the payment amount is <= $0
+    is_exempt: str
+    leave_decision_not_approved: str
+    has_a_check_preference_with_an_adl2_issue: str
+    adl2_corrected: str
+    removed_or_added_after_audit_of_info: str
+    to_be_removed_from_file: str
+    notes: str
+
 
 PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
     leave_type="Leave type",
@@ -77,6 +92,18 @@ PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
     leave_request_id="Leave request ID",
     leave_request_decision="Leave request decision",
     vcm_flag="Has Pending VCM",
+    good_to_pay_from_prior_batch="Good to pay from prior batch",
+    had_a_payment_in_a_prior_batch_by_vc_code="Had a payment in a prior batch (by VC Code)",
+    inv="Inv # Exists on the VALID payments sent to EOLFIN/ MMARS nnnnn",
+    payments_offset_to_zero="Payments offset to 0",
+    claimants_that_have_zero_or_credit_value="Claimants that have $0 or credit value",
+    is_exempt="Is Exempt",
+    leave_decision_not_approved="LEAVE DECISION NOT APPROVED",
+    has_a_check_preference_with_an_adl2_issue="Has a Check Preference with an ADL2 Issue",
+    adl2_corrected="ADL2 Corrected? (-1)",
+    removed_or_added_after_audit_of_info="REMOVED or ADDED after audit of info",
+    to_be_removed_from_file="TO BE REMOVED FROM FILE",
+    notes="NOTES:",
 )
 
 

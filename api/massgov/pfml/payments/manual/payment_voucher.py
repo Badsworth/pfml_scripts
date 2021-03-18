@@ -396,6 +396,22 @@ def write_row_to_output(
         leave_request_id=vbi_requested_absence.get("LEAVEREQUEST_ID"),
         leave_request_decision=vbi_requested_absence.get("LEAVEREQUEST_DECISION"),
         vcm_flag=vcm_flag,
+        good_to_pay_from_prior_batch="",
+        had_a_payment_in_a_prior_batch_by_vc_code="",
+        inv="",
+        payments_offset_to_zero="",
+        claimants_that_have_zero_or_credit_value=(
+            "1"
+            if payment_data.payment_amount is not None and float(payment_data.payment_amount) <= 0
+            else ""
+        ),
+        is_exempt="",
+        leave_decision_not_approved="",
+        has_a_check_preference_with_an_adl2_issue="",
+        adl2_corrected="",
+        removed_or_added_after_audit_of_info="",
+        to_be_removed_from_file="",
+        notes="",
     )
     output_csv.writerow(asdict(payment_row))
 
