@@ -647,12 +647,12 @@
 <tbody>
 <tr>
 <td>test</td>
-<td><a href="https://github.com/EOLWD/pfml/commits/adb7b1522">adb7b1522</a> (<a href="https://github.com/EOLWD/pfml/compare/portal/v10.0-rc1...adb7b1522">89 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/portal/v10.0-rc1">portal/v10.0-rc1</a>)</td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/portal/v11.0-rc1">portal/v11.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=portal+(test)">GitHub</a></td>
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/portal/v10.0">portal/v10.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/portal/v11.0-rc1">portal/v11.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=portal+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -678,59 +678,10 @@
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/819036412/Portal+Release+Notes">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (CP-1939,CP-1926,CP-1834,CP-1833,CP-1826,CP-1818,CP-1814,EMPLOYER-985,CP-1766,CP-1765,INFRA-262,INFRA-310,CP-1765,INFRA-245,INFRA-226,EMPLOYER-1021)">Jira List</a>):</p>
-<ul>
-<li>removed the word other to reflect newly deployed weekly check processing (<a href="https://github.com/EOLWD/pfml/pull/3356">#3356</a>)</li>
-<li>refactor to use setup and add test for user action and existing data (<a href="https://github.com/EOLWD/pfml/pull/3371">#3371</a>)</li>
-<li>refactor to use setup and add test for previously entered data (<a href="https://github.com/EOLWD/pfml/pull/3362">#3362</a>)</li>
-<li>refactor to use helper methods (<a href="https://github.com/EOLWD/pfml/pull/3361">#3361</a>)</li>
-<li>refactor test to use setup and add user action test (<a href="https://github.com/EOLWD/pfml/pull/3399">#3399</a>)</li>
-<li>add user action test (<a href="https://github.com/EOLWD/pfml/pull/3358">#3358</a>)</li>
-<li>[Internal] Remove commented test to silence lint warning (<a href="https://github.com/EOLWD/pfml/pull/3440">#3440</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-310">INFRA-310</a>: Generate terraform lock files (<a href="https://github.com/EOLWD/pfml/pull/3387">#3387</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-262">INFRA-262</a>: resolve immer vulnerability cve-2020-28477 (<a href="https://github.com/EOLWD/pfml/pull/3279">#3279</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-245">INFRA-245</a>: update terraform to v0.14.x (<a href="https://github.com/EOLWD/pfml/pull/3157">#3157</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-226">INFRA-226</a>: enable additional metrics for cloud front (<a href="https://github.com/EOLWD/pfml/pull/3340">#3340</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-985">EMPLOYER-985</a>: Return response data for non-200 responses (<a href="https://github.com/EOLWD/pfml/pull/3417">#3417</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1021">EMPLOYER-1021</a>: Block redirect behind verifications feature flag (<a href="https://github.com/EOLWD/pfml/pull/3348">#3348</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1939">CP-1939</a>: Split authThroughApi feature flag into two flags for claimants and employers (<a href="https://github.com/EOLWD/pfml/pull/3456">#3456</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1926">CP-1926</a>: Add DocumentRequirements Component (<a href="https://github.com/EOLWD/pfml/pull/3432">#3432</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1834">CP-1834</a>: refactor to use helper methods (<a href="https://github.com/EOLWD/pfml/pull/3418">#3418</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1833">CP-1833</a>: refactor to use setup, break out PreviousLeaveCard test, and add user action test (<a href="https://github.com/EOLWD/pfml/pull/3416">#3416</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1826">CP-1826</a>: refactor leave reason test (<a href="https://github.com/EOLWD/pfml/pull/3359">#3359</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1818">CP-1818</a>: refactor date of child test (<a href="https://github.com/EOLWD/pfml/pull/3225">#3225</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1814">CP-1814</a>: Refactor other-incomes-details tests (<a href="https://github.com/EOLWD/pfml/pull/3398">#3398</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1766">CP-1766</a>: Add error messages for API account creation validations (<a href="https://github.com/EOLWD/pfml/pull/3414">#3414</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1765">CP-1765</a>: Hide Employer fields on verify-account page (<a href="https://github.com/EOLWD/pfml/pull/3382">#3382</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/CP-1765">CP-1765</a>: Don't send EIN when claimant is signing up (<a href="https://github.com/EOLWD/pfml/pull/3385">#3385</a>)</li>
-<li>Update content on Verification Success page (<a href="https://github.com/EOLWD/pfml/pull/3425">#3425</a>)</li>
-</ul>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in ()">Jira List</a>):</p>
 <details>
 <summary>Raw</summary>
- <br>* removed the word other to reflect newly deployed weekly check processing ([#3356](https://github.com/EOLWD/pfml/pull/3356))
- <br>* refactor to use setup and add test for user action and existing data ([#3371](https://github.com/EOLWD/pfml/pull/3371))
- <br>* refactor to use setup and add test for previously entered data ([#3362](https://github.com/EOLWD/pfml/pull/3362))
- <br>* refactor to use helper methods ([#3361](https://github.com/EOLWD/pfml/pull/3361))
- <br>* refactor test to use setup and add user action test ([#3399](https://github.com/EOLWD/pfml/pull/3399))
- <br>* add user action test ([#3358](https://github.com/EOLWD/pfml/pull/3358))
- <br>* [Internal] Remove commented test to silence lint warning ([#3440](https://github.com/EOLWD/pfml/pull/3440))
- <br>* [INFRA-310](https://lwd.atlassian.net/browse/INFRA-310): Generate terraform lock files ([#3387](https://github.com/EOLWD/pfml/pull/3387))
- <br>* [INFRA-262](https://lwd.atlassian.net/browse/INFRA-262): resolve immer vulnerability cve-2020-28477 ([#3279](https://github.com/EOLWD/pfml/pull/3279))
- <br>* [INFRA-245](https://lwd.atlassian.net/browse/INFRA-245): update terraform to v0.14.x ([#3157](https://github.com/EOLWD/pfml/pull/3157))
- <br>* [INFRA-226](https://lwd.atlassian.net/browse/INFRA-226): enable additional metrics for cloud front ([#3340](https://github.com/EOLWD/pfml/pull/3340))
- <br>* [EMPLOYER-985](https://lwd.atlassian.net/browse/EMPLOYER-985): Return response data for non-200 responses ([#3417](https://github.com/EOLWD/pfml/pull/3417))
- <br>* [EMPLOYER-1021](https://lwd.atlassian.net/browse/EMPLOYER-1021): Block redirect behind verifications feature flag ([#3348](https://github.com/EOLWD/pfml/pull/3348))
- <br>* [CP-1939](https://lwd.atlassian.net/browse/CP-1939): Split authThroughApi feature flag into two flags for claimants and employers ([#3456](https://github.com/EOLWD/pfml/pull/3456))
- <br>* [CP-1926](https://lwd.atlassian.net/browse/CP-1926): Add DocumentRequirements Component ([#3432](https://github.com/EOLWD/pfml/pull/3432))
- <br>* [CP-1834](https://lwd.atlassian.net/browse/CP-1834): refactor to use helper methods ([#3418](https://github.com/EOLWD/pfml/pull/3418))
- <br>* [CP-1833](https://lwd.atlassian.net/browse/CP-1833): refactor to use setup, break out PreviousLeaveCard test, and add user action test ([#3416](https://github.com/EOLWD/pfml/pull/3416))
- <br>* [CP-1826](https://lwd.atlassian.net/browse/CP-1826): refactor leave reason test ([#3359](https://github.com/EOLWD/pfml/pull/3359))
- <br>* [CP-1818](https://lwd.atlassian.net/browse/CP-1818): refactor date of child test ([#3225](https://github.com/EOLWD/pfml/pull/3225))
- <br>* [CP-1814](https://lwd.atlassian.net/browse/CP-1814): Refactor other-incomes-details tests ([#3398](https://github.com/EOLWD/pfml/pull/3398))
- <br>* [CP-1766](https://lwd.atlassian.net/browse/CP-1766): Add error messages for API account creation validations ([#3414](https://github.com/EOLWD/pfml/pull/3414))
- <br>* [CP-1765](https://lwd.atlassian.net/browse/CP-1765): Hide Employer fields on verify-account page ([#3382](https://github.com/EOLWD/pfml/pull/3382))
- <br>* [CP-1765](https://lwd.atlassian.net/browse/CP-1765): Don't send EIN when claimant is signing up ([#3385](https://github.com/EOLWD/pfml/pull/3385))
- <br>* Update content on Verification Success page ([#3425](https://github.com/EOLWD/pfml/pull/3425))
+
 </details>
                 
               
