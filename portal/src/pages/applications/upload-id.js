@@ -2,10 +2,10 @@ import Document, { DocumentType } from "../../models/Document";
 import Accordion from "../../components/Accordion";
 import AccordionItem from "../../components/AccordionItem";
 import Alert from "../../components/Alert";
+import DocumentRequirements from "../../components/DocumentRequirements";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/Heading";
-import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -92,21 +92,7 @@ export const UploadId = (props) => {
         <Heading level="2" size="1">
           {t("pages.claimsUploadId.sectionLabel", { context: contentContext })}
         </Heading>
-        <Lead>
-          <Trans
-            i18nKey="pages.claimsUploadId.lead"
-            components={{
-              "mail-fax-instructions-link": (
-                <a
-                  target="_blank"
-                  rel="noopener"
-                  href={routes.external.massgov.mailFaxInstructions}
-                />
-              ),
-            }}
-            tOptions={{ context: contentContext }}
-          />
-        </Lead>
+        <DocumentRequirements />
         {!hasStateId && (
           <div className="border-bottom border-base-light margin-bottom-4 padding-bottom-4">
             <Trans

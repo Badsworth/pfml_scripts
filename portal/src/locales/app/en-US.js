@@ -1868,6 +1868,11 @@ const components = {
     verifyHint:
       "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
   },
+  documentRequirements: {
+    header: "Document Requirements:",
+    body:
+      "<ul><li>The image of the card must be in full color</li><li>The text must be clear and readable</li><li>The front and back can be in one file, or in two separate files</li><li>Each file must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
+  },
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",
   },
