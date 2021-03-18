@@ -210,6 +210,7 @@ def list_s3_files_and_directories_by_level(
     s3 = get_s3_client(bucket_name, boto_session)
 
     contents_by_level: Dict[str, List[str]] = {}
+    logger.info(f"retrieving object list from s3, bucket: {bucket_name}, prefix: {prefix}")
     contents = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix).get("Contents")
     if contents is None:
         return contents_by_level
