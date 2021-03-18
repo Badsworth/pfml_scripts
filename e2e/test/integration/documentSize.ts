@@ -23,6 +23,7 @@ let pmflApiOptions: RequestOptions;
 
 describe("API Documents Test of various file sizes", () => {
   beforeAll(async () => {
+    jest.retryTimes(3);
     const authenticator = getAuthManager();
     const submitter = getPortalSubmitter();
     const employeePool = await getEmployeePool();
@@ -57,7 +58,9 @@ describe("API Documents Test of various file sizes", () => {
         )}`
       );
     }
-
+    console.log(
+      `Documents are being submitted to this application_id: "${res.application_id}"`
+    );
     application_id = res.application_id;
   }, 60000);
 
@@ -92,6 +95,16 @@ describe("API Documents Test of various file sizes", () => {
       ).catch((err) => {
         return err;
       });
+
+      if (docRes.errno) {
+        throw new Error(
+          `request to /applications/${application_id}/documents failed, reason: write EPIPE`
+        );
+      }
+
+      if (docRes.status !== statusCode) {
+        throw new Error(`Unable to add document: ${JSON.stringify(docRes)}`);
+      }
 
       expect(docRes.status).toBe(statusCode);
       if (statusCode === 413) {
