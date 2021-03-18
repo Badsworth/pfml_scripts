@@ -973,7 +973,25 @@ resource "aws_iam_role_policy" "reductions_workflow_task_role_extras" {
 
 data "aws_iam_policy_document" "reductions_workflow_task_role_extras" {
   statement {
-    sid = "AllowS3ReadOnBucket"
+    sid    = "AllowListingOfBucket"
+    effect = "Allow"
+
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/reductions",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reductions/*",
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowS3ReadOnBucket"
+    effect = "Allow"
+
     actions = [
       "s3:Get*",
       "s3:List*"
@@ -982,13 +1000,15 @@ data "aws_iam_policy_document" "reductions_workflow_task_role_extras" {
     resources = [
       "${data.aws_s3_bucket.agency_transfer.arn}/reductions",
       "${data.aws_s3_bucket.agency_transfer.arn}/reductions/*",
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
     ]
-
-    effect = "Allow"
   }
 
   statement {
-    sid = "AllowS3WriteOnBucket"
+    sid    = "AllowS3WriteOnBucket"
+    effect = "Allow"
+
     actions = [
       "s3:PutObject",
       "s3:DeleteObject",
@@ -998,9 +1018,9 @@ data "aws_iam_policy_document" "reductions_workflow_task_role_extras" {
     resources = [
       "${data.aws_s3_bucket.agency_transfer.arn}/reductions",
       "${data.aws_s3_bucket.agency_transfer.arn}/reductions/*",
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
     ]
-
-    effect = "Allow"
   }
 }
 
