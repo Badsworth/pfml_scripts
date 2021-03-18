@@ -62,6 +62,7 @@ class Constants:
     COMPTROLLER_AD_TYPE = "PA"
     DOC_PHASE_CD_FINAL_STATUS = "3 - Final"
 
+    PUB_FILENAME_TEMPLATE = "{}-{}"  # e.g. PUB-NACHA-20210830
     BATCH_ID_TEMPLATE = COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
     MMARS_FILE_SKIPPED = "Did not create file for MMARS because there was no work to do"
 
@@ -721,6 +722,25 @@ def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str
                 date_to_full_path[fixed_date_str].append(full_path)
 
     return date_to_full_path
+
+
+def create_pub_reference_file(
+    now: datetime, file_type: LkReferenceFileType, db_session: db.Session, pub_outbound_path: str
+) -> ReferenceFile:
+    s3_path = os.path.join(pub_outbound_path, Constants.S3_OUTBOUND_READY_DIR)
+    filename = Constants.PUB_FILENAME_TEMPLATE.format(
+        file_type.reference_file_type_description, now.strftime("%Y%m%d"),
+    )
+    dir_path = os.path.join(s3_path, filename)
+
+    ref_file = ReferenceFile(
+        reference_file_id=uuid.uuid4(),
+        file_location=dir_path,
+        reference_file_type_id=file_type.reference_file_type_id,
+    )
+    db_session.add(ref_file)
+
+    return ref_file
 
 
 def create_mmars_files_in_s3(

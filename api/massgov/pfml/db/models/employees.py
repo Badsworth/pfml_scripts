@@ -1828,6 +1828,7 @@ class ReferenceFileType(LookupTable):
     DIA_REDUCTION_REPORT_FOR_DFML = LkReferenceFileType(
         14, "DIA payments for DFML reduction report", 1
     )
+    PUB_TRANSACTION = LkReferenceFileType(15, "PUB-NACHA", 1)
 
     DELEGATED_PAYMENT_AUDIT_REPORT = LkReferenceFileType(20, "Payment Audit Report", 1)
     DELEGATED_PAYMENT_REJECTS = LkReferenceFileType(21, "Payment Rejects", 1)

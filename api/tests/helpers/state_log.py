@@ -7,6 +7,7 @@ from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 from massgov.pfml.db.models.employees import (
+    ClaimType,
     Employee,
     Payment,
     PaymentMethod,
@@ -76,16 +77,27 @@ def setup_db_for_state_log(associated_class, additional_params=None):
             fineos_customer_number=additional_params.fineos_customer_num,
             ctr_vendor_customer_code=additional_params.ctr_vendor_customer_code,
         )
+
+        if additional_params.add_eft:
+            eft = EftFactory.create()
+            employee.eft = eft
+            employee.payment_method_id = PaymentMethod.ACH.payment_method_id
+
         employer = EmployerFactory.create()
         claim = ClaimFactory.create(
             employer_id=employer.employer_id,
             fineos_absence_id=additional_params.fineos_absence_id,
+            claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
             employee=employee,
         )
         if additional_params.payment:
             associated_model = additional_params.payment
         else:
-            associated_model = PaymentFactory.create(payment_date=date(2020, 1, 7), claim=claim)
+            associated_model = PaymentFactory.create(
+                payment_date=date(2020, 1, 7),
+                disb_method_id=PaymentMethod.ACH.payment_method_id,
+                claim=claim,
+            )
     if associated_class == state_log_util.AssociatedClass.REFERENCE_FILE:
         associated_model = ReferenceFileFactory.create()
     return associated_model
