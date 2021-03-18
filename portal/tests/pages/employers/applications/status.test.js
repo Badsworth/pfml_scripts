@@ -75,14 +75,6 @@ describe("Status", () => {
     expect(applicationIdRow.childAt(0).text()).toEqual("NTN-111-ABS-01");
   });
 
-  // TODO (EMPLOYER-656): Display adjudication status
-  // it("shows the status", () => {
-  //   const statusRow = wrapper.find("StatusRow").at(1);
-  //   expect(statusRow.prop("label")).toEqual("Status");
-  //   expect(statusRow.find("Tag").prop("state")).toEqual("success");
-  //   TODO (EMPLOYER-656): Also test tag label
-  // });
-
   it("shows the leave type", () => {
     const leaveTypeRow = wrapper.find("StatusRow").at(1);
     expect(leaveTypeRow.prop("label")).toEqual("Leave type");
