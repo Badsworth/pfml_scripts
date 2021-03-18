@@ -1324,10 +1324,12 @@ components:
       properties:
         email_address:
           type: string
+          nullable: true
           format: email
           example: foo@example.com
         password:
           type: string
+          nullable: true
           example: N~4Hq3>amXJ$
         role:
           type: object
@@ -1341,9 +1343,11 @@ components:
               example: Employer
         user_leave_administrator:
           type: object
+          nullable: true
           properties:
             employer_fein:
               $ref: "#/components/schemas/Fein"
+              nullable: true
 
     UserUpdateRequest:
       type: object

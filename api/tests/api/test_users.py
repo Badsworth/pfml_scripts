@@ -144,6 +144,27 @@ def test_users_post_openapi_validation(
     assert response.status_code == 400
 
 
+def test_users_post_custom_validations(
+    client, mock_cognito_user_pool, valid_claimant_creation_request_body
+):
+    body = valid_claimant_creation_request_body
+    body["email_address"] = None
+    body["password"] = None
+
+    response = client.post("/v1/users", json=body,)
+    errors = response.get_json().get("errors")
+
+    assert {
+        "field": "email_address",
+        "message": "email_address is required",
+        "type": "required",
+    } in errors
+    assert {"field": "password", "message": "password is required", "type": "required",} in errors
+
+    assert len(errors) == 2
+    assert response.status_code == 400
+
+
 def test_users_post_cognito_user_error(
     client,
     mock_cognito,
