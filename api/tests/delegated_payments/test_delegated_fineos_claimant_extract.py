@@ -180,7 +180,7 @@ def test_run_step_happy_path(
     import_log = test_db_session.query(ImportLog).first()
     import_log_report = json.loads(import_log.report)
     assert import_log_report["evidence_not_id_proofed_count"] == 3
-    assert import_log_report["valid_claimant_payment"] == 1
+    assert import_log_report["valid_claimant_count"] == 1
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before

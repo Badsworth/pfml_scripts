@@ -4,8 +4,19 @@ from typing import List, Tuple
 
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
-from massgov.pfml.db.models.employees import Employee, Payment, PrenoteState, PubEft
-from massgov.pfml.delegated_payments.util.ach.nacha import NachaBatch, NachaEntry, NachaFile
+from massgov.pfml.db.models.employees import (
+    BankAccountType,
+    Employee,
+    Payment,
+    PrenoteState,
+    PubEft,
+)
+from massgov.pfml.delegated_payments.util.ach.nacha import (
+    Constants,
+    NachaBatch,
+    NachaEntry,
+    NachaFile,
+)
 
 logger = logging.get_logger(__name__)
 
@@ -56,6 +67,7 @@ def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]):
         #     )
 
         entry = NachaEntry(
+            trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False),
             receiving_dfi_id=payment.pub_eft.routing_nbr,
             dfi_act_num=payment.pub_eft.account_nbr,
             amount=payment.amount,
@@ -85,6 +97,7 @@ def add_eft_prenote_to_nacha_file(
             )
 
         entry = NachaEntry(
+            trans_code=get_trans_code(pub_eft.bank_account_type_id, True),
             receiving_dfi_id=pub_eft.routing_nbr,
             dfi_act_num=pub_eft.account_nbr,
             amount=Decimal("0.00"),
@@ -93,3 +106,21 @@ def add_eft_prenote_to_nacha_file(
         )
 
         nacha_batch.add_entry(entry)
+
+
+def get_trans_code(bank_account_type_id: int, is_prenote: bool) -> str:
+    if bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id:
+        if is_prenote:
+            return Constants.checking_prenote_trans_code
+        else:
+            return Constants.checking_deposit_trans_code
+
+    elif bank_account_type_id == BankAccountType.SAVINGS.bank_account_type_id:
+        if is_prenote:
+            return Constants.savings_deposit_trans_code
+        else:
+            return Constants.savings_prenote_trans_code
+
+    raise Exception(
+        "Unable to determine trans code for bank account type id %i" % bank_account_type_id
+    )

@@ -743,7 +743,7 @@ class ClaimantExtractStep(Step):
                 ),
                 db_session=self.db_session,
             )
-            self.increment("valid_claimant_payment")
+            self.increment("valid_claimant_count")
 
     # TODO move to payments_util
     def move_files_from_received_to_processed(self, extract_data: ExtractData) -> None:

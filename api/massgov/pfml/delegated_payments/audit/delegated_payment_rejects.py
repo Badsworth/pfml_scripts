@@ -165,6 +165,7 @@ class PaymentRejectsStep(Step):
             )
 
         if is_rejected_payment:
+            self.increment("rejected_payment_count")
             state_log_util.create_finished_state_log(
                 payment,
                 State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
@@ -172,6 +173,7 @@ class PaymentRejectsStep(Step):
                 self.db_session,
             )
         else:
+            self.increment("accepted_payment_count")
             state_log_util.create_finished_state_log(
                 payment, ACCEPTED_STATE, ACCEPTED_OUTCOME, self.db_session
             )

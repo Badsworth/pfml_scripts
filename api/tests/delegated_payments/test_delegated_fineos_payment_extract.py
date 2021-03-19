@@ -147,7 +147,9 @@ def make_vpei_record(
     vpei_record["C"] = c_value
     vpei_record["I"] = i_value
 
-    vpei_record["PAYEESOCNUMBE"] = get_value(tin, fake.ssn().replace("-", ""), generate_defaults)
+    ssn = fake.ssn().replace("-", "")
+
+    vpei_record["PAYEESOCNUMBE"] = get_value(tin, ssn, generate_defaults)
     vpei_record["PAYMENTADD1"] = get_value(
         address1,
         f"{fake.building_number()} {fake.street_name()} {fake.street_suffix()}",
@@ -164,8 +166,8 @@ def make_vpei_record(
     )
     vpei_record["PAYMENTDATE"] = get_value(payment_date, "2021-01-01 12:00:00", generate_defaults)
     vpei_record["AMOUNT_MONAMT"] = get_value(payment_amount, "100.00", generate_defaults)
-    vpei_record["PAYEEBANKSORT"] = get_value(routing_nbr, "051000101", generate_defaults)
-    vpei_record["PAYEEACCOUNTN"] = get_value(account_nbr, "12345678910", generate_defaults)
+    vpei_record["PAYEEBANKSORT"] = get_value(routing_nbr, ssn, generate_defaults)
+    vpei_record["PAYEEACCOUNTN"] = get_value(account_nbr, ssn, generate_defaults)
     vpei_record["PAYEEACCOUNTT"] = get_value(account_type, "Checking", generate_defaults)
     vpei_record["EVENTTYPE"] = get_value(payment_type, "PaymentOut", generate_defaults)
 
@@ -220,7 +222,12 @@ def add_db_records(
             tax_identifier=TaxIdentifier(tax_identifier=tin), ctr_address_pair=ctr_address_pair
         )
         if add_eft:
-            EmployeePubEftPairFactory.create(employee=employee)
+            pub_eft = PubEftFactory.create(
+                routing_nbr=tin,
+                account_nbr=tin,
+                prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
+            )
+            EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft)
             employee.payment_method_id = PaymentMethod.ACH.payment_method_id
 
     if add_address:
@@ -482,18 +489,10 @@ def test_process_extract_data(
                 payment.pub_eft.bank_account_type_id
                 == BankAccountType.CHECKING.bank_account_type_id
             )
-            assert payment.pub_eft.prenote_state_id == PrenoteState.PENDING_PRE_PUB.prenote_state_id
-            assert payment.has_eft_update is True
+            assert payment.has_eft_update is False
 
-            assert len(pub_efts) == 2  # A prior one from setup logic and a new one
+            assert len(pub_efts) == 1  # A prior one from setup logic
             assert payment.pub_eft_id in [pub_eft.pub_eft_id for pub_eft in employee.pub_efts]
-
-            # Verify that there is exactly one successful state log per employee that uses ACH
-            state_logs = employee.state_logs
-            assert len(state_logs) == 1
-            state_log = state_logs[0]
-            assert "Initiated DELEGATED_EFT flow for employee" in state_log.outcome["message"]
-            assert state_log.end_state_id == State.DELEGATED_EFT_SEND_PRENOTE.state_id
 
     # Verify a few of the metrics were added to the import log table
     import_log_report = json.loads(payment.fineos_extract_import_log.report)
@@ -581,12 +580,12 @@ def test_process_extract_data_one_bad_record(
         test_db_session,
         add_claim=False,
         add_address=False,
-        add_eft=False,
+        add_eft=True,
         add_second_employee=False,
     )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 2
+    assert employee_log_count_before == 4
 
     payment_extract_step.run()
 
@@ -795,15 +794,10 @@ def test_process_extract_data_no_existing_claim_address_eft(
         assert employee_addresses[0].employee_id == employee.employee_id
         assert employee_addresses[0].address_id == mailing_address.address_id
 
-        # Verify that there is exactly one successful state log per payment
+        # Verify that there is exactly one state log per payment
         state_logs = payment.state_logs
         assert len(state_logs) == 1
         state_log = state_logs[0]
-        assert state_log.outcome == EXPECTED_OUTCOME
-        assert (
-            state_log.end_state_id
-            == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
-        )
 
         pub_efts = employee.pub_efts.all()
 
@@ -814,6 +808,11 @@ def test_process_extract_data_no_existing_claim_address_eft(
             assert payment.pub_eft_id is None
             assert payment.has_eft_update is False
             assert len(pub_efts) == 0  # Not set by setup logic, shouldn't be set at all now
+            assert state_log.outcome == EXPECTED_OUTCOME
+            assert (
+                state_log.end_state_id
+                == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+            )
 
         else:
             assert employee.payment_method_id == PaymentMethod.ACH.payment_method_id
@@ -831,6 +830,21 @@ def test_process_extract_data_no_existing_claim_address_eft(
 
             assert len(pub_efts) == 1
             assert payment.pub_eft_id == pub_efts[0].pub_eft_id
+
+            # The EFT info was new, so the payment is in an error state
+            assert state_log.outcome == {
+                "message": "Error processing payment record",
+                "validation_container": {
+                    "record_key": f"CiIndex(c='7326', i='30{index}')",
+                    "validation_issues": [
+                        {"reason": "EFTPending", "details": "New EFT info found, prenote required"}
+                    ],
+                },
+            }
+            assert (
+                state_log.end_state_id
+                == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+            )
 
             # Verify that there is exactly one successful state log per employee that uses ACH
             state_logs = employee.state_logs
@@ -1301,7 +1315,7 @@ def test_update_eft_existing_eft_matches_and_approved(
     # employee and it has already been prenoted.
 
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
-    setup_process_tests(mock_s3_bucket, test_db_session)
+    setup_process_tests(mock_s3_bucket, test_db_session, add_eft=False)
 
     # Set an employee to have the same EFT we know is going to be extracted
     employee = (
@@ -1365,7 +1379,7 @@ def test_update_eft_existing_eft_matches_and_not_approved(
     # employee and it has already been prenoted.
 
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
-    setup_process_tests(mock_s3_bucket, test_db_session)
+    setup_process_tests(mock_s3_bucket, test_db_session, add_eft=False)
 
     # Set an employee to have the same EFT we know is going to be extracted
     employee = (
@@ -1455,13 +1469,6 @@ def test_update_ctr_address_pair_fineos_address_no_update(
     )
     assert payment is not None
     assert payment.has_address_update is False
-
-    # There should be a EFT_REQUEST_RECEIVED record
-    employee_state_logs_after = (
-        test_db_session.query(StateLog).filter(StateLog.employee_id == employee.employee_id).all()
-    )
-    assert len(employee_state_logs_after) == 1
-    assert employee_state_logs_after[0].end_state_id == State.DELEGATED_EFT_SEND_PRENOTE.state_id
 
 
 def test_extract_to_staging_tables(payment_extract_step, test_db_session):

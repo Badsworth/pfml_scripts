@@ -793,6 +793,12 @@ class PaymentExtractStep(Step):
                 "Initiating DELEGATED_EFT flow for employee associated with payment", extra=extra,
             )
 
+            # We need to put the payment in an error state if it's not prenoted
+            payment_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.EFT_PRENOTE_PENDING,
+                "New EFT info found, prenote required",
+            )
+
             state_log_util.create_finished_state_log(
                 end_state=State.DELEGATED_EFT_SEND_PRENOTE,
                 associated_model=employee,

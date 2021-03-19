@@ -63,6 +63,7 @@ class PaymentAuditReportStep(Step):
             )
 
             payments.append(payment)
+            self.increment("payment_sampled_for_audit_count")
 
         logger.info("Done sampling payments for audit report: %i", len(payments))
 
@@ -105,6 +106,7 @@ class PaymentAuditReportStep(Step):
         payment_audit_data_set: List[Payment] = []
 
         for payment in payments:
+            self.increment("payment_count")
             # populate payment audit data by inspecting the currently sampled payment's history
             is_first_time_payment = False
             is_previously_errored_payment = False

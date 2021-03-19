@@ -32,6 +32,7 @@ from massgov.pfml.delegated_payments.util.ach.nacha import NachaBatch, NachaEntr
 
 def test_name_truncation(monkeypatch):
     entry = NachaEntry(
+        trans_code="22",
         receiving_dfi_id="23138010",
         dfi_act_num="122424",
         amount=123.00,
@@ -51,6 +52,7 @@ def test_generate_nacha_file(monkeypatch, test_db_session):
     batch = NachaBatch(effective_date, today)
 
     entry = NachaEntry(
+        trans_code="22",
         receiving_dfi_id="231380104",
         dfi_act_num="122424",
         amount=123.00,
@@ -59,6 +61,7 @@ def test_generate_nacha_file(monkeypatch, test_db_session):
     )
 
     entry2 = NachaEntry(
+        trans_code="22",
         receiving_dfi_id="231380104",
         dfi_act_num="122425",
         amount=129.00,

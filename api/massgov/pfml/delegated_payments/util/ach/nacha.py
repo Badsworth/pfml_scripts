@@ -36,7 +36,10 @@ class Constants:
     # 94 bytes specified by the format.
     record_size = "094"
 
-    trans_code = "22"  # TODO: Fix this
+    checking_deposit_trans_code = "22"
+    checking_prenote_trans_code = "23"
+    savings_deposit_trans_code = "32"
+    savings_prenote_trans_code = "33"
     batch_number = "0000001"  # We will only send 1 batch per day
 
 
@@ -361,13 +364,13 @@ class NachaBatchControl(NachaRecord):
 
 
 class NachaEntry(NachaRecord):
-    def __init__(self, receiving_dfi_id, dfi_act_num, amount, id, name):
+    def __init__(self, trans_code, receiving_dfi_id, dfi_act_num, amount, id, name):
         # Strip any periods from decimal
         amount = int(str("{:,.2f}".format(decimal.Decimal(amount))).replace(".", ""))
 
         fields = {
             "record_type": NachaField("Record Type", 1, 1, Constants.entry_record_type),
-            "transaction_code": NachaField("Transaction Code", 2, 3, Constants.trans_code),
+            "transaction_code": NachaField("Transaction Code", 2, 3, trans_code),
             "receiving_dfi_id": NachaField(
                 "Receiving DFI Identification", 4, 11, receiving_dfi_id[:-1]
             ),
