@@ -5,7 +5,6 @@ from typing import Dict, List, Optional, Tuple
 
 import boto3
 import pytest
-from sqlalchemy import func
 
 import massgov.pfml.delegated_payments.delegated_fineos_claimant_extract as claimant_extract
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
@@ -20,15 +19,17 @@ from massgov.pfml.db.models.employees import (
     GeoState,
     ImportLog,
     PaymentMethod,
+    PrenoteState,
     ReferenceFileType,
     State,
     StateLog,
 )
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
-    EftFactory,
     EmployeeFactory,
+    EmployeePubEftPairFactory,
     EmployerFactory,
+    PubEftFactory,
     ReferenceFileFactory,
     TaxIdentifierFactory,
 )
@@ -131,7 +132,7 @@ def test_run_step_happy_path(
     assert claim.absence_period_end_date == datetime.date(2021, 7, 22)
     assert claim.is_id_proofed is True
 
-    updated_employee: Optional[Employee] = (
+    updated_employee = (
         test_db_session.query(Employee)
         .filter(Employee.tax_identifier_id == tax_identifier.tax_identifier_id)
         .one_or_none()
@@ -153,27 +154,27 @@ def test_run_step_happy_path(
     assert updated_employee.ctr_address_pair.fineos_address.geo_state_id == GeoState.CA.geo_state_id
     assert updated_employee.ctr_address_pair.fineos_address.zip_code == "94612"
 
-    assert updated_employee.eft.routing_nbr == "123546789"
-    assert updated_employee.eft.account_nbr == "123546789"
-    assert (
-        updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
-    )
+    pub_efts = updated_employee.pub_efts.all()
+    assert len(pub_efts) == 1
+    assert pub_efts[0].pub_eft.routing_nbr == "123546789"
+    assert pub_efts[0].pub_eft.account_nbr == "123546789"
+    assert pub_efts[0].pub_eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+    assert pub_efts[0].pub_eft.prenote_state_id == PrenoteState.PENDING_PRE_PUB.prenote_state_id
 
     # Confirm StateLogs
     state_logs = test_db_session.query(StateLog).all()
 
-    updated_employee_state_log_count = 1
+    updated_employee_state_log_count = 2
 
     assert len(state_logs) == updated_employee_state_log_count
     assert len(updated_employee.state_logs) == updated_employee_state_log_count
 
     # Confirm 1 state log for DELEGATED_EFT flow
-    assert (
-        test_db_session.query(func.count(StateLog.state_log_id))
-        .filter(StateLog.end_state_id == State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS.state_id)
-        .scalar()
-        == 1
-    )
+    for state_log in updated_employee.state_logs:
+        assert state_log.end_state_id in [
+            State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS.state_id,
+            State.DELEGATED_EFT_SEND_PRENOTE.state_id,
+        ]
 
     # Confirm metrics added to import log
     import_log = test_db_session.query(ImportLog).first()
@@ -183,6 +184,119 @@ def test_run_step_happy_path(
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
+
+
+def test_run_step_existing_approved_eft_info(
+    claimant_extract_step,
+    test_db_session,
+    emp_updates_path,
+    set_exporter_env_vars,
+    monkeypatch,
+    create_triggers,
+):
+    # Very similar to the happy path test, but EFT info has already been
+    # previously approved and we do not need to start the prenoting process
+    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-12-20")
+
+    tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
+    employee = EmployeeFactory(tax_identifier=tax_identifier)
+    # Add the eft
+    EmployeePubEftPairFactory.create(
+        employee=employee,
+        pub_eft=PubEftFactory.create(
+            prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
+            routing_nbr="123546789",
+            account_nbr="123546789",
+            bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+        ),
+    )
+
+    EmployerFactory(fineos_employer_id=96)
+
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 1
+
+    claimant_extract_step.run()
+
+    updated_employee = (
+        test_db_session.query(Employee)
+        .filter(Employee.tax_identifier_id == tax_identifier.tax_identifier_id)
+        .one_or_none()
+    )
+
+    pub_efts = updated_employee.pub_efts.all()
+    assert len(pub_efts) == 1
+    assert pub_efts[0].pub_eft.routing_nbr == "123546789"
+    assert pub_efts[0].pub_eft.account_nbr == "123546789"
+    assert pub_efts[0].pub_eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+    assert pub_efts[0].pub_eft.prenote_state_id == PrenoteState.APPROVED.prenote_state_id
+    # We should not have added it to the EFT state flow
+    # and there shouldn't have been any errors
+    assert len(updated_employee.state_logs) == 1
+    assert (
+        updated_employee.state_logs[0].end_state_id
+        == State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS.state_id
+    )
+
+
+def test_run_step_existing_rejected_eft_info(
+    claimant_extract_step,
+    test_db_session,
+    emp_updates_path,
+    set_exporter_env_vars,
+    monkeypatch,
+    create_triggers,
+):
+    # Very similar to the happy path test, but EFT info has already been
+    # previously rejected and thus it goes into an error state instead
+    monkeypatch.setenv("FINEOS_VENDOR_MAX_HISTORY_DATE", "2020-12-20")
+
+    tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
+    employee = EmployeeFactory(tax_identifier=tax_identifier)
+    # Add the eft
+    EmployeePubEftPairFactory.create(
+        employee=employee,
+        pub_eft=PubEftFactory.create(
+            prenote_state_id=PrenoteState.REJECTED.prenote_state_id,
+            routing_nbr="123546789",
+            account_nbr="123546789",
+            bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+            prenote_response_at=datetime.datetime(2020, 12, 6, 12, 0, 0),
+        ),
+    )
+
+    EmployerFactory(fineos_employer_id=96)
+
+    employee_log_count_before = test_db_session.query(EmployeeLog).count()
+    assert employee_log_count_before == 1
+
+    claimant_extract_step.run()
+
+    updated_employee = (
+        test_db_session.query(Employee)
+        .filter(Employee.tax_identifier_id == tax_identifier.tax_identifier_id)
+        .one_or_none()
+    )
+
+    pub_efts = updated_employee.pub_efts.all()
+    assert len(pub_efts) == 1
+    assert pub_efts[0].pub_eft.routing_nbr == "123546789"
+    assert pub_efts[0].pub_eft.account_nbr == "123546789"
+    assert pub_efts[0].pub_eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+    assert pub_efts[0].pub_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id
+    # We should not have added it to the EFT state flow
+    # and there would have been a single error
+    assert len(updated_employee.state_logs) == 1
+    assert (
+        updated_employee.state_logs[0].end_state_id
+        == State.DELEGATED_CLAIMANT_ADD_TO_CLAIMANT_EXTRACT_ERROR_REPORT.state_id
+    )
+    assert updated_employee.state_logs[0].outcome["validation_container"]["validation_issues"] == [
+        {
+            "reason": "EFTRejected",
+            "details": "EFT prenote was rejected at 2020-12-06 12:00:00+00:00",
+        }
+    ]
 
 
 def test_run_step_no_employee(
@@ -357,7 +471,7 @@ def test_update_employee_info_happy_path(claimant_extract_step, test_db_session,
     absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
     validation_container = payments_util.ValidationContainer(record_key=absence_case_id)
 
-    employee, has_claimant_update = claimant_extract_step.update_employee_info(
+    employee = claimant_extract_step.update_employee_info(
         extract_data, requested_absence, formatted_claim, validation_container
     )
 
@@ -365,7 +479,6 @@ def test_update_employee_info_happy_path(claimant_extract_step, test_db_session,
     assert employee is not None
     assert employee.date_of_birth == datetime.date(1967, 4, 27)
     assert employee.payment_method_id == PaymentMethod.ACH.payment_method_id
-    assert has_claimant_update is True
 
 
 def test_update_employee_info_not_in_db(claimant_extract_step, test_db_session, formatted_claim):
@@ -378,12 +491,11 @@ def test_update_employee_info_not_in_db(claimant_extract_step, test_db_session, 
     absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
     validation_container = payments_util.ValidationContainer(record_key=absence_case_id)
 
-    employee, has_claimant_update = claimant_extract_step.update_employee_info(
+    employee = claimant_extract_step.update_employee_info(
         extract_data, requested_absence, formatted_claim, validation_container
     )
 
     assert employee is None
-    assert has_claimant_update is False
 
 
 def test_update_mailing_address_happy_path(claimant_extract_step, test_db_session):
@@ -578,110 +690,41 @@ def test_update_mailing_address_validation_issues(claimant_extract_step, test_db
 
 def test_update_eft_info_happy_path(claimant_extract_step, test_db_session):
     employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
-
-    assert employee.eft is None
-
-    eft_entry = {"SORTCODE": "123456789", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
-    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
-
-    has_eft_update = claimant_extract_step.update_eft_info(
-        eft_entry, employee, validation_container
-    )
-
-    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
-        Employee.employee_id == employee.employee_id
-    ).one_or_none()
-
-    assert updated_employee.eft.routing_nbr == "123456789"
-    assert updated_employee.eft.account_nbr == "123456789"
-    assert (
-        updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
-    )
-    assert has_eft_update is True
-
-
-def test_update_eft_info_update_existing(claimant_extract_step, test_db_session):
-    employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
-    eft = EftFactory.create()
-    employee.eft = eft
-    test_db_session.add(employee)
-    test_db_session.add(eft)
-    test_db_session.commit()
-
-    assert employee.eft is not None
+    assert len(employee.pub_efts.all()) == 0
 
     eft_entry = {"SORTCODE": "123456789", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_eft_update = claimant_extract_step.update_eft_info(
-        eft_entry, employee, validation_container
-    )
+    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
-    assert updated_employee.eft.eft_id == eft.eft_id
-    assert updated_employee.eft.routing_nbr == "123456789"
-    assert updated_employee.eft.account_nbr == "123456789"
-    assert (
-        updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
-    )
-    assert has_eft_update is True
-
-
-def test_update_eft_info_is_same_eft_no_prior_state(claimant_extract_step, test_db_session):
-    employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
-    eft = EftFactory.create()
-    employee.eft = eft
-    test_db_session.add(employee)
-    test_db_session.add(eft)
-    test_db_session.commit()
-
-    assert employee.eft is not None
-
-    eft_entry = {
-        "SORTCODE": eft.routing_nbr,
-        "ACCOUNTNO": eft.account_nbr,
-        "ACCOUNTTYPE": eft.bank_account_type.bank_account_type_description,
-    }
-    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
-
-    has_eft_update = claimant_extract_step.update_eft_info(
-        eft_entry, employee, validation_container
-    )
-
-    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
-        Employee.employee_id == employee.employee_id
-    ).one_or_none()
-
-    assert updated_employee.eft.eft_id == eft.eft_id
-    assert updated_employee.eft.routing_nbr == eft.routing_nbr
-    assert updated_employee.eft.account_nbr == eft.account_nbr
-    assert (
-        updated_employee.eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
-    )
-    assert has_eft_update is True
+    pub_efts = updated_employee.pub_efts.all()
+    assert len(pub_efts) == 1
+    assert pub_efts[0].pub_eft.routing_nbr == "123456789"
+    assert pub_efts[0].pub_eft.account_nbr == "123456789"
+    assert pub_efts[0].pub_eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+    assert pub_efts[0].pub_eft.prenote_state_id == PrenoteState.PENDING_PRE_PUB.prenote_state_id
 
 
 def test_update_eft_info_validation_issues(claimant_extract_step, test_db_session):
     employee = EmployeeFactory()
+    assert len(employee.pub_efts.all()) == 0
 
     # Routing number incorrect length.
     eft_entry = {"SORTCODE": "12345678", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_eft_update = claimant_extract_step.update_eft_info(
-        eft_entry, employee, validation_container
-    )
+    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 1
-    assert updated_employee.eft is None
-    assert has_eft_update is False
+    assert len(updated_employee.pub_efts.all()) == 0
 
     # Account number incorrect length.
     eft_entry = {
@@ -691,17 +734,14 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_eft_update = claimant_extract_step.update_eft_info(
-        eft_entry, employee, validation_container
-    )
+    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 1
-    assert updated_employee.eft is None
-    assert has_eft_update is False
+    assert len(updated_employee.pub_efts.all()) == 0
 
     # Account type incorrect.
     eft_entry = {
@@ -711,17 +751,14 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_eft_update = claimant_extract_step.update_eft_info(
-        eft_entry, employee, validation_container
-    )
+    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 1
-    assert updated_employee.eft is None
-    assert has_eft_update is False
+    assert len(updated_employee.pub_efts.all()) == 0
 
     # Account type and Routing number incorrect.
     eft_entry = {
@@ -731,20 +768,16 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    has_eft_update = claimant_extract_step.update_eft_info(
-        eft_entry, employee, validation_container
-    )
+    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 2
-    assert updated_employee.eft is None
-    assert has_eft_update is False
+    assert len(updated_employee.pub_efts.all()) == 0
 
 
-# TODO: Add test if there are no validation issues with EFT
 def test_process_records_to_db_validation_issues(
     claimant_extract_step, test_db_session, formatted_claim
 ):

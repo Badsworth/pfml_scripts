@@ -13,11 +13,12 @@ import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
-    EFT,
     BankAccountType,
     Country,
     CtrBatchIdentifier,
     GeoState,
+    PrenoteState,
+    PubEft,
     ReferenceFileType,
 )
 from massgov.pfml.db.models.factories import (
@@ -25,11 +26,14 @@ from massgov.pfml.db.models.factories import (
     CtrBatchIdentifierFactory,
     CtrDocumentIdentifierFactory,
     EmployeeFactory,
+    EmployeePubEftPairFactory,
     EmployeeReferenceFileFactory,
+    PubEftFactory,
     ReferenceFileFactory,
 )
 from massgov.pfml.db.models.payments import FineosExtractVpei
 from massgov.pfml.delegated_payments.delegated_payments_util import (
+    find_existing_eft,
     get_fineos_vendor_customer_numbers_from_reference_file,
     get_inf_data_as_plain_text,
     get_inf_data_from_reference_file,
@@ -709,22 +713,17 @@ def test_address_line_two(initialize_factories_session):
     ),
 )
 def test_is_same_eft(routing_nbr, account_nbr, bank_account_type_id, initialize_factories_session):
-    # Verify that the EFT data is the same even in the very contrived and
-    # not real case where the EFT record is tied to different employees
-    employee1 = EmployeeFactory.create()
-    employee2 = EmployeeFactory.create()
-
-    first = EFT(
+    first = PubEft(
         routing_nbr=routing_nbr,
         account_nbr=account_nbr,
         bank_account_type_id=bank_account_type_id,
-        employee=employee1,
+        prenote_state=PrenoteState.PENDING_PRE_PUB,
     )
-    second = EFT(
+    second = PubEft(
         routing_nbr=routing_nbr,
         account_nbr=account_nbr,
         bank_account_type_id=bank_account_type_id,
-        employee=employee2,
+        prenote_state=PrenoteState.REJECTED,  # Does not need to match
     )
 
     assert first != second
@@ -733,15 +732,17 @@ def test_is_same_eft(routing_nbr, account_nbr, bank_account_type_id, initialize_
 
 def test_is_same_eft_different_routing_number():
     account_nbr = fake.random_number(digits=40, fix_len=False)
-    first = EFT(
+    first = PubEft(
         routing_nbr=fake.random_number(digits=9, fix_len=True),
         account_nbr=account_nbr,
         bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+        prenote_state=PrenoteState.PENDING_PRE_PUB,
     )
-    second = EFT(
+    second = PubEft(
         routing_nbr=fake.random_number(digits=9, fix_len=True),
         account_nbr=account_nbr,
         bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+        prenote_state=PrenoteState.PENDING_PRE_PUB,
     )
 
     assert is_same_eft(first, second) is False
@@ -749,15 +750,17 @@ def test_is_same_eft_different_routing_number():
 
 def test_is_same_eft_different_account_number():
     routing_nbr = fake.random_number(digits=9, fix_len=True)
-    first = EFT(
+    first = PubEft(
         routing_nbr=routing_nbr,
         account_nbr=fake.random_number(digits=40, fix_len=False),
         bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+        prenote_state=PrenoteState.PENDING_PRE_PUB,
     )
-    second = EFT(
+    second = PubEft(
         routing_nbr=routing_nbr,
         account_nbr=fake.random_number(digits=40, fix_len=False),
         bank_account_type_id=BankAccountType.SAVINGS.bank_account_type_id,
+        prenote_state=PrenoteState.PENDING_PRE_PUB,
     )
 
     assert is_same_eft(first, second) is False
@@ -766,18 +769,50 @@ def test_is_same_eft_different_account_number():
 def test_is_same_eft_different_bank_account_type():
     routing_nbr = fake.random_number(digits=9, fix_len=True)
     account_nbr = fake.random_number(digits=40, fix_len=False)
-    first = EFT(
+    first = PubEft(
         routing_nbr=routing_nbr,
         account_nbr=account_nbr,
         bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+        prenote_state=PrenoteState.PENDING_PRE_PUB,
     )
-    second = EFT(
+    second = PubEft(
         routing_nbr=routing_nbr,
         account_nbr=account_nbr,
         bank_account_type_id=BankAccountType.SAVINGS.bank_account_type_id,
+        prenote_state=PrenoteState.PENDING_PRE_PUB,
     )
 
     assert is_same_eft(first, second) is False
+
+
+def test_find_existing_eft():
+    eft1 = PubEftFactory.build(prenote_state_id=PrenoteState.PENDING_PRE_PUB.prenote_state_id)
+
+    employee = EmployeeFactory.build()
+
+    # Employee has no EFT info
+    assert len(employee.pub_efts.all()) == 0
+    assert not find_existing_eft(employee, eft1)
+
+    # Add a few associated EFT objects
+    EmployeePubEftPairFactory.build(employee=employee)
+    EmployeePubEftPairFactory.build(employee=employee)
+    assert len(employee.pub_efts.all()) == 2
+    assert not find_existing_eft(employee, eft1)
+
+    # Add another EFT info with the same account info
+    # but currently in a different state
+    EmployeePubEftPairFactory.build(
+        employee=employee,
+        pub_eft=PubEftFactory.build(
+            routing_nbr=eft1.routing_nbr,
+            account_nbr=eft1.account_nbr,
+            bank_account_type_id=eft1.bank_account_type_id,
+            prenote_state_id=PrenoteState.REJECTED,
+        ),
+    )
+    assert len(employee.pub_efts.all()) == 3
+    assert find_existing_eft(employee, eft1)
 
 
 def test_get_inf_data_from_reference_file(test_db_session, initialize_factories_session):

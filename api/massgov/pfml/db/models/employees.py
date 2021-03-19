@@ -28,6 +28,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import Query, dynamic_loader, relationship
+from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.sql.functions import now as sqlnow
 from sqlalchemy.types import JSON, TypeEngine
@@ -369,8 +370,17 @@ class PubEft(Base):
         server_default=sqlnow(),
     )
     prenote_response_at = Column(TIMESTAMP(timezone=True))
+    pub_eft_individual_id_seq: Sequence = Sequence("pub_eft_individual_id_seq")
+    pub_individual_id = Column(
+        Integer,
+        pub_eft_individual_id_seq,
+        index=True,
+        server_default=pub_eft_individual_id_seq.next_value(),
+    )
 
     bank_account_type = relationship(LkBankAccountType)
+    prenote_state = relationship(LkPrenoteState)
+
     employees = relationship("EmployeePubEftPair", back_populates="pub_eft")
 
 
@@ -449,7 +459,9 @@ class Employee(Base):
     claims = cast(Optional[List["Claim"]], relationship("Claim", back_populates="employee"))
     state_logs = relationship("StateLog", back_populates="employee")
     eft = relationship("EFT", back_populates="employee", uselist=False)
-    pub_efts = relationship("EmployeePubEftPair", back_populates="employee")
+    pub_efts: "Query[EmployeePubEftPair]" = dynamic_loader(
+        "EmployeePubEftPair", back_populates="employee"
+    )
     reference_files = relationship("EmployeeReferenceFile", back_populates="employee")
     payment_method = relationship(LkPaymentMethod, foreign_keys=payment_method_id)
     tax_identifier = cast(
@@ -553,6 +565,13 @@ class Payment(Base):
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
     pub_eft_id = Column(UUID(as_uuid=True), ForeignKey("pub_eft.pub_eft_id"))
+    payment_individual_id_seq: Sequence = Sequence("payment_individual_id_seq")
+    pub_individual_id = Column(
+        Integer,
+        payment_individual_id_seq,
+        index=True,
+        server_default=payment_individual_id_seq.next_value(),
+    )
 
     claim = relationship(Claim)
     payment_transaction_type = relationship(LkPaymentTransactionType)

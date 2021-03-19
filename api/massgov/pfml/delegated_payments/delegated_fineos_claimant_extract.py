@@ -13,7 +13,6 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
-    EFT,
     AbsenceStatus,
     Address,
     BankAccountType,
@@ -21,10 +20,12 @@ from massgov.pfml.db.models.employees import (
     CtrAddressPair,
     Employee,
     EmployeeAddress,
+    EmployeePubEftPair,
     EmployeeReferenceFile,
-    Flow,
     GeoState,
     PaymentMethod,
+    PrenoteState,
+    PubEft,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -243,12 +244,10 @@ class ClaimantExtractStep(Step):
 
                 # Update employee info
                 if claim is not None:
-                    employee_pfml_entry, has_claimant_update = self.update_employee_info(
+                    employee_pfml_entry = self.update_employee_info(
                         extract_data, requested_absence, claim, validation_container
                     )
             except Exception as e:
-                # TODO - this should create a validation container and associate it with an
-                #        unassociated employee state_log (see fineos_payment_extract for similar logic for payments)
                 logger.exception(
                     "Unexpected error %s while processing claimant: %s",
                     type(e),
@@ -263,12 +262,7 @@ class ClaimantExtractStep(Step):
                         extract_data, employee_pfml_entry, validation_container
                     )
 
-                    self.manage_state_log(
-                        extract_data,
-                        employee_pfml_entry,
-                        validation_container,
-                        has_claimant_update,
-                    )
+                    self.manage_state_log(extract_data, employee_pfml_entry, validation_container)
 
                     updated_employee_ids.add(employee_pfml_entry.employee_id)
                 else:
@@ -381,8 +375,8 @@ class ClaimantExtractStep(Step):
         requested_absence: Dict[str, str],
         claim: Claim,
         validation_container: payments_util.ValidationContainer,
-    ) -> Tuple[Optional[Employee], bool]:
-        """Returns True if there is an address or EFT update; False otherwise"""
+    ) -> Optional[Employee]:
+        """Returns the employee if found and updates its info"""
         fineos_customer_number = payments_util.validate_csv_input(
             "EMPLOYEE_CUSTOMERNO", requested_absence, validation_container, True
         )
@@ -415,7 +409,7 @@ class ClaimantExtractStep(Step):
                 },
             )
             self.increment("employee_not_found_count")
-            return None, False
+            return None
 
         employee_tax_identifier = payments_util.validate_csv_input(
             "NATINSNO", employee_feed_entry, validation_container, True
@@ -453,7 +447,7 @@ class ClaimantExtractStep(Step):
             logger.exception(
                 f"Employee in employee file with customer nbr {fineos_customer_number} not found in PFML DB.",
             )
-            return None, False
+            return None
 
         with fineos_log_tables_util.update_entity_and_remove_log_entry(
             self.db_session, employee_pfml_entry, commit=False
@@ -468,7 +462,7 @@ class ClaimantExtractStep(Step):
                     date_of_birth
                 )
 
-            has_address_update = self.update_mailing_address(
+            self.update_mailing_address(
                 employee_feed_entry, employee_pfml_entry, validation_container
             )
 
@@ -491,9 +485,7 @@ class ClaimantExtractStep(Step):
                 except KeyError:
                     pass
 
-            has_eft_update = self.update_eft_info(
-                employee_feed_entry, employee_pfml_entry, validation_container
-            )
+            self.update_eft_info(employee_feed_entry, employee_pfml_entry, validation_container)
 
             fineos_customer_number = payments_util.validate_csv_input(
                 "CUSTOMERNO", employee_feed_entry, validation_container, True
@@ -505,33 +497,11 @@ class ClaimantExtractStep(Step):
             # Associate claim with employee in case it is a new claim.
             claim.employee_id = employee_pfml_entry.employee_id
 
-            # TODO --
-            # Identify what the best way to handle multiple records is:
-            # It's technically possible for multiple Employers to have the same
-            # FINEOS employer ID because the database does not make it unique.
-            # Until then, we do not associate the claim with an employer.
-
-            # Associate claim with employer as well, if found.
-            # employer_customer_nbr = payments_util.validate_csv_input(
-            #     "EMPLOYER_CUSTOMERNO", requested_absence, validation_container, False
-            # )
-
-            # if employer_customer_nbr is not None:
-            #     employer_pfml_entry = (
-            #         db_session.query(Employer)
-            #         .filter(Employer.fineos_employer_id == employer_customer_nbr)
-            #         .one_or_none()
-            #     )
-            #     if employer_pfml_entry is not None:
-            #         claim.employer_id = employer_pfml_entry.employer_id
-
             if len(validation_container.validation_issues) == 0:
                 self.db_session.add(employee_pfml_entry)
                 self.db_session.add(claim)
 
-            has_claimant_update = has_address_update or has_eft_update
-
-        return employee_pfml_entry, has_claimant_update
+        return employee_pfml_entry
 
     def update_mailing_address(
         self,
@@ -605,7 +575,7 @@ class ClaimantExtractStep(Step):
         employee_feed_entry: Dict[str, str],
         employee_pfml_entry: Employee,
         validation_container: payments_util.ValidationContainer,
-    ) -> bool:
+    ) -> None:
         """Returns True if there have been EFT updates; False otherwise"""
         nbr_of_validation_errors = len(validation_container.validation_issues)
         eft_required = employee_pfml_entry.payment_method_id == PaymentMethod.ACH.payment_method_id
@@ -632,57 +602,61 @@ class ClaimantExtractStep(Step):
         )
 
         if eft_required and nbr_of_validation_errors == len(validation_container.validation_issues):
-            existing_eft = employee_pfml_entry.eft
-
-            new_eft = EFT(eft_id=uuid.uuid4())
-            # Cast is to satisfy picky linting
-            new_eft.routing_nbr = cast(str, routing_nbr)
-            new_eft.account_nbr = cast(str, account_nbr)
-            new_eft.bank_account_type_id = BankAccountType.get_id(account_type)
-
-            current_claimant_eft_state = state_log_util.get_latest_state_log_in_flow(
-                employee_pfml_entry, Flow.DELEGATED_EFT, self.db_session
+            # Always create an EFT object, we'll use this
+            # to try and find an existing match of PUB eft info
+            # Casts satisfy picky linting on values we validated above
+            new_eft = PubEft(
+                pub_eft_id=uuid.uuid4(),
+                routing_nbr=cast(str, routing_nbr),
+                account_nbr=cast(str, account_nbr),
+                bank_account_type_id=BankAccountType.get_id(account_type),
+                prenote_state_id=PrenoteState.PENDING_PRE_PUB.prenote_state_id,  # If this is new, we want it to be pending
             )
 
-            # If the employee has no existing EFT, then we set it to the new one.
-            if not existing_eft:
-                employee_pfml_entry.eft = new_eft
-                self.db_session.add(new_eft)
+            existing_eft = payments_util.find_existing_eft(employee_pfml_entry, new_eft)
+            # If we found a match, do not need to create anything
+            # but do need to add an error to the report if the EFT
+            # information is invalid
+            if existing_eft:
+                logger.info(
+                    "Found existing EFT info for claimant in prenote state %s",
+                    existing_eft.prenote_state.prenote_state_description,
+                    extra={
+                        "employee_id": employee_pfml_entry.employee_id,
+                        "pub_eft_id": existing_eft.pub_eft_id,
+                    },
+                )
+                if existing_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id:
+                    validation_container.add_validation_issue(
+                        payments_util.ValidationReason.EFT_PRENOTE_REJECTED,
+                        f"EFT prenote was rejected at {existing_eft.prenote_response_at}",
+                    )
 
-            # If there have been no changes to the EFT data, do nothing.
-            elif (
-                payments_util.is_same_eft(existing_eft, new_eft)
-                and current_claimant_eft_state is not None
-            ):
-                return False
-
-            # If there have been changes, update the existing EFT.
             else:
-                employee_pfml_entry.eft.routing_nbr = new_eft.routing_nbr
-                employee_pfml_entry.eft.account_nbr = new_eft.account_nbr
-                employee_pfml_entry.eft.bank_account_type_id = new_eft.bank_account_type_id
+                # This EFT info is new, it needs to be linked to the employee
+                # and added to the EFT prenoting flow
+                logger.info(
+                    "Initiating DELEGATED_EFT flow for employee",
+                    extra={
+                        "end_state_id": State.DELEGATED_EFT_SEND_PRENOTE.state_id,
+                        "employee_id": employee_pfml_entry.employee_id,
+                    },
+                )
 
-            # Only initiate the DELEGATED_EFT_SEND_PRENOTE flow if there have been changes OR
-            # If this employee has never been in the DELEGATED_EFT_SEND_PRENOTE flow before.
-            # The early return if is_same_eft() is True will prevent reaching
-            # this statement.
-            logger.info(
-                "Initiated DELEGATED_EFT_SEND_PRENOTE flow for Employee",
-                extra={
-                    "end_state_id": State.DELEGATED_EFT_SEND_PRENOTE.state_id,
-                    "employee_id": employee_pfml_entry.employee_id,
-                },
-            )
-            # state_log_util.create_finished_state_log(
-            #     end_state=State.DELEGATED_EFT_SEND_PRENOTE,
-            #     associated_model=employee_pfml_entry,
-            #     outcome=state_log_util.build_outcome(
-            #         f"Initiated DELEGATED_EFT_SEND_PRENOTE flow for Employee {employee_pfml_entry.employee_id}"
-            #     ),
-            #     db_session=db_session,
-            # )
-            return True
-        return False
+                employee_pub_eft_pair = EmployeePubEftPair(
+                    employee_id=employee_pfml_entry.employee_id, pub_eft_id=new_eft.pub_eft_id
+                )
+                self.db_session.add(new_eft)
+                self.db_session.add(employee_pub_eft_pair)
+
+                state_log_util.create_finished_state_log(
+                    end_state=State.DELEGATED_EFT_SEND_PRENOTE,
+                    associated_model=employee_pfml_entry,
+                    outcome=state_log_util.build_outcome(
+                        "Claimant with new EFT information found, adding to the EFT flow"
+                    ),
+                    db_session=self.db_session,
+                )
 
     def generate_employee_reference_file(
         self,
@@ -743,7 +717,6 @@ class ClaimantExtractStep(Step):
         extract_data: ExtractData,
         employee_pfml_entry: Employee,
         validation_container: payments_util.ValidationContainer,
-        has_claimant_update: bool,
     ) -> None:
         """Manages the DELEGATED_CLAIMANT states"""
         validation_container.record_key = employee_pfml_entry.employee_id
