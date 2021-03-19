@@ -1,126 +1,33 @@
-import decimal
 import os
 from datetime import datetime
-from typing import List
+from typing import Tuple
 
 import pytest
 from freezegun import freeze_time
 
-import massgov.pfml.api.util.state_log_util as state_log_util
-import massgov.pfml.db as db
-import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
-from massgov.pfml.db.models.employees import ClaimType, Payment, PaymentMethod, State
+import massgov.pfml.util.files as file_util
+from massgov.pfml.db.models.employees import (
+    Employee,
+    LkPaymentMethod,
+    LkPrenoteState,
+    PaymentMethod,
+    PrenoteState,
+    PubEft,
+)
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
     EmployeeFactory,
-    EmployerFactory,
+    EmployeePubEftPairFactory,
     PaymentFactory,
+    PubEftFactory,
 )
 from massgov.pfml.delegated_payments.delegated_payments_nacha import (
+    add_eft_prenote_to_nacha_file,
+    add_payments_to_nacha_file,
     create_nacha_file,
     upload_nacha_file_to_s3,
 )
 from massgov.pfml.delegated_payments.util.ach.nacha import NachaBatch, NachaEntry, NachaFile
-from tests.helpers.state_log import AdditionalParams, setup_state_log
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
-
-def get_payment(
-    fineos_absence_id: str,
-    claim_type_id: int,
-    ctr_vendor_code: str,
-    amount: decimal.Decimal,
-    payment_date: datetime.date,
-    start_date: datetime.date,
-    end_date: datetime.date,
-    payment_method_id: int,
-    fineos_pei_i_value: str,
-) -> Payment:
-    employee = EmployeeFactory(
-        ctr_vendor_customer_code=ctr_vendor_code, payment_method_id=payment_method_id
-    )
-    employer = EmployerFactory()
-
-    return PaymentFactory(
-        payment_date=payment_date,
-        period_start_date=start_date,
-        period_end_date=end_date,
-        amount=amount,
-        fineos_pei_i_value=fineos_pei_i_value,
-        claim=ClaimFactory(
-            employee=employee,
-            employer_id=employer.employer_id,
-            claim_type_id=claim_type_id,
-            fineos_absence_id=fineos_absence_id,
-        ),
-    )
-
-
-def get_payments() -> List[Payment]:
-    return [
-        get_payment(
-            fineos_absence_id="NTN-1234-ABS-01",
-            claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
-            ctr_vendor_code="abc1234",
-            amount=decimal.Decimal("1200.00"),
-            payment_date=datetime(2020, 7, 1).date(),
-            start_date=datetime(2020, 8, 1).date(),
-            end_date=datetime(2020, 12, 1).date(),
-            payment_method_id=PaymentMethod.CHECK.payment_method_id,
-            fineos_pei_i_value="1",
-        ),
-        get_payment(
-            fineos_absence_id="NTN-1234-ABS-02",
-            claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
-            ctr_vendor_code="12345678",
-            amount=decimal.Decimal("1300.00"),
-            payment_date=datetime(2020, 1, 15).date(),
-            start_date=datetime(2020, 2, 15).date(),
-            end_date=datetime(2020, 4, 15).date(),
-            payment_method_id=PaymentMethod.ACH.payment_method_id,
-            fineos_pei_i_value="2",
-        ),
-    ]
-
-
-def create_add_to_pub_state_log_for_payment(payment: Payment, db_session: db.Session) -> None:
-    state_log_util.create_finished_state_log(
-        end_state=State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT,
-        outcome=state_log_util.build_outcome("success"),
-        associated_model=payment,
-        db_session=db_session,
-    )
-
-
-def test_copy_nacha_files_to_s3(
-    initialize_factories_session, test_db_session, mock_s3_bucket, monkeypatch
-):
-    s3_bucket_uri = f"s3://{mock_s3_bucket}"
-    source_directory_path = "payments/pub/outbound"
-    test_pub_outbound_path = os.path.join(s3_bucket_uri, source_directory_path)
-
-    monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
-    monkeypatch.setenv("PFML_PUB_OUTBOUND_PATH", test_pub_outbound_path)
-
-    additional_params = AdditionalParams()
-    additional_params.add_eft = True
-
-    setup_state_log(
-        associated_class=state_log_util.AssociatedClass.PAYMENT,
-        end_states=[State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT],
-        test_db_session=test_db_session,
-        additional_params=additional_params,
-    )
-
-    real_nacha_file = create_nacha_file(test_db_session)
-    real_filepath = upload_nacha_file_to_s3(test_db_session, real_nacha_file)
-
-    formatted_now = payments_util.get_now().strftime("%Y%m%d")
-    path = os.path.join(s3_bucket_uri, source_directory_path, f"ready/PUB-NACHA-{formatted_now}")
-
-    assert real_filepath == path
 
 
 def test_name_truncation(monkeypatch):
@@ -173,15 +80,97 @@ def test_generate_nacha_file(monkeypatch, test_db_session):
     assert ach_output == expected_output
 
 
-@pytest.mark.integration
-def test_build_nacha_files_raise_error_no_payments_error(
-    initialize_factories_session, test_db_session, mock_s3_bucket
-):
-    # The only eligible payment will raise an error.
-    payments = get_payments()
-    invalid_payment_record = payments[0]
-    invalid_payment_record.amount = decimal.Decimal("00.00")
-    create_add_to_pub_state_log_for_payment(invalid_payment_record, test_db_session)
+def test_nacha_file_prenote_entries():
+    nacha_file = create_nacha_file()
 
-    with pytest.raises(Exception):
-        create_nacha_file(test_db_session)
+    employees_with_eft = []
+    for _ in range(5):
+        employees_with_eft.append(
+            build_employee_with_eft(PaymentMethod.ACH, PrenoteState.PENDING_PRE_PUB)
+        )
+
+    add_eft_prenote_to_nacha_file(nacha_file, employees_with_eft)
+
+    assert len(nacha_file.batches[0].entries) == 5
+
+
+def test_nacha_file_prenote_entries_errors():
+    nacha_file = create_nacha_file()
+
+    employee_with_eft = build_employee_with_eft(PaymentMethod.ACH, PrenoteState.APPROVED)
+
+    with pytest.raises(
+        Exception,
+        match=f"Found non pending eft trying to add to prenote list: {employee_with_eft[0].employee_id}, eft: {employee_with_eft[1].pub_eft_id}",
+    ):
+        add_eft_prenote_to_nacha_file(nacha_file, [employee_with_eft])
+
+
+def test_nacha_file_payment_entries():
+    nacha_file = create_nacha_file()
+
+    payments = []
+    for _ in range(5):
+        payments.append(build_payment(PaymentMethod.ACH))
+
+    add_payments_to_nacha_file(nacha_file, payments)
+
+    assert len(nacha_file.batches[0].entries) == 5
+
+
+# TODO check payment method https://lwd.atlassian.net/browse/PUB-106
+# def test_nacha_file_payment_entries_errors():
+#     valid_payment = build_payment(PaymentMethod.ACH)
+#     invalid_payment_record = build_payment(PaymentMethod.CHECK)
+
+#     payments = [valid_payment, invalid_payment_record]
+
+#     nacha_file = create_nacha_file()
+
+#     with pytest.raises(
+#         Exception,
+#         match=f"Non-ACH payment method for payment: {invalid_payment_record.payment_id}",
+#     ):
+#         add_payments_to_nacha_file(nacha_file, payments)
+
+
+# TODO After PUB-40 and PUB-42 are complete
+# parse and validate and contents of generated nacha file for ach and pre note fields
+
+
+def test_nacha_file_upload(tmp_path):
+    nacha_file = create_nacha_file()
+
+    employee_with_eft = build_employee_with_eft(PaymentMethod.ACH, PrenoteState.PENDING_PRE_PUB)
+    add_eft_prenote_to_nacha_file(nacha_file, [employee_with_eft])
+
+    payment = build_payment(PaymentMethod.ACH)
+    add_payments_to_nacha_file(nacha_file, [payment])
+
+    folder_path = str(tmp_path)
+    nacha_file_name = "PUB-NACHA-20210315"
+    file_path = os.path.join(folder_path, nacha_file_name)
+
+    upload_nacha_file_to_s3(nacha_file, file_path)
+
+    assert nacha_file_name in file_util.list_files(folder_path)
+
+
+def build_employee_with_eft(
+    payment_method: LkPaymentMethod, prenote_state: LkPrenoteState
+) -> Tuple[Employee, PubEft]:
+    employee = EmployeeFactory.build(payment_method_id=payment_method.payment_method_id)
+    pub_eft = PubEftFactory.build(prenote_state_id=prenote_state.prenote_state_id)
+    EmployeePubEftPairFactory.build(employee=employee, pub_eft=pub_eft)
+
+    return (employee, pub_eft)
+
+
+def build_payment(payment_method: LkPaymentMethod):
+    employee_with_eft = build_employee_with_eft(payment_method, PrenoteState.PENDING_PRE_PUB)
+    employee = employee_with_eft[0]
+    pub_eft = employee_with_eft[1]
+
+    claim = ClaimFactory.build(employee=employee)
+    payment = PaymentFactory.build(claim=claim, pub_eft=pub_eft)
+    return payment

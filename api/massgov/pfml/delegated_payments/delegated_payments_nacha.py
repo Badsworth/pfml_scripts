@@ -1,95 +1,95 @@
 from datetime import datetime
-from typing import List
+from decimal import Decimal
+from typing import List, Tuple
 
-import massgov.pfml.api.util.state_log_util as state_log_util
-import massgov.pfml.delegated_payments.delegated_config as payments_config
-import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
-from massgov.pfml import db
-from massgov.pfml.db.models.employees import Payment, PaymentMethod, ReferenceFileType, State
+from massgov.pfml.db.models.employees import Employee, Payment, PrenoteState, PubEft
 from massgov.pfml.delegated_payments.util.ach.nacha import NachaBatch, NachaEntry, NachaFile
 
 logger = logging.get_logger(__name__)
 
-PAYMENT_STATE_LOG_PICKUP_STATE = State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT
 
-
-def add_payments_to_nacha_batch(db_session, nacha_batch, payments) -> NachaFile:
-    if len(payments) == 0:
-        raise Exception("No Payment records added to PUB")
-
-    for payment in payments:
-        entry = NachaEntry(
-            receiving_dfi_id=payment.claim.employee.eft.routing_nbr,
-            dfi_act_num=payment.claim.employee.eft.account_nbr,
-            amount=payment.amount,
-            # TODO: we are still determining what this ID value should be.
-            id=f"{payment.fineos_pei_c_value}{payment.fineos_pei_i_value}",
-            name=f"{payment.claim.employee.last_name} {payment.claim.employee.first_name}",
-        )
-
-        state_log_util.create_finished_state_log(
-            associated_model=payment,
-            end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
-            outcome=state_log_util.build_outcome("PUB transaction sent"),
-            db_session=db_session,
-        )
-
-        nacha_batch.add_entry(entry)
-
-
-def upload_nacha_file_to_s3(db_session, nacha_file) -> str:
-    logger.info("Creating NACHA files")
-
-    now = payments_util.get_now()
-    nacha_file.finalize()
-
-    ref_file = payments_util.create_pub_reference_file(
-        now,
-        ReferenceFileType.PUB_TRANSACTION,
-        db_session,
-        payments_config.get_s3_config().pfml_pub_outbound_path,
-    )
-
-    with file_util.write_file(ref_file.file_location, mode="wb") as pub_file:
-        pub_file.write(nacha_file.to_bytes())
-
-    db_session.commit()
-
-    return ref_file.file_location
-
-
-def create_nacha_file(db_session: db.Session) -> NachaFile:
+def create_nacha_file() -> NachaFile:
     effective_date = datetime.now()
     today = datetime.today()
 
     file = NachaFile()
     batch = NachaBatch(effective_date, today)
-    payments = _get_eligible_payments(db_session)
-
-    add_payments_to_nacha_batch(db_session, batch, payments)
 
     file.add_batch(batch)
-    batch.finalize()
 
     return file
 
 
-def _get_eligible_payments(db_session: db.Session) -> List[Payment]:
-    state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        associated_class=state_log_util.AssociatedClass.PAYMENT,
-        end_state=PAYMENT_STATE_LOG_PICKUP_STATE,
-        db_session=db_session,
-    )
+def get_nacha_batch(nacha_file: NachaFile) -> NachaBatch:
+    if len(nacha_file.batches) == 0:
+        raise Exception("Nacha file with no batches")
 
-    # Raise an error if any payments
-    for state_log in state_logs:
-        if state_log.payment.disb_method_id != PaymentMethod.ACH.payment_method_id:
+    nacha_batch: NachaBatch = nacha_file.batches[
+        0
+    ]  # we only use one batch for the PUB transaction file
+    return nacha_batch
+
+
+def upload_nacha_file_to_s3(nacha_file: NachaFile, file_path: str):
+    logger.info("Creating NACHA files")
+
+    nacha_file.finalize()
+
+    with file_util.write_file(file_path, mode="wb") as pub_file:
+        pub_file.write(nacha_file.to_bytes())
+
+
+def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]):
+    if len(payments) == 0:
+        logger.warning("No Payment records to add to PUB transaction file")
+        return
+
+    nacha_batch: NachaBatch = get_nacha_batch(nacha_file)
+
+    for payment in payments:
+        # TODO check payment method https://lwd.atlassian.net/browse/PUB-106
+        # if payment.payment_method_id != PaymentMethod.ACH.payment_method_id:
+        #     raise Exception(
+        #         f"Non-ACH payment method for payment: {payment.payment_id}"
+        #     )
+
+        entry = NachaEntry(
+            receiving_dfi_id=payment.pub_eft.routing_nbr,
+            dfi_act_num=payment.pub_eft.account_nbr,
+            amount=payment.amount,
+            id=f"P{payment.pub_individual_id}",
+            name=f"{payment.claim.employee.last_name} {payment.claim.employee.first_name}",
+        )
+
+        nacha_batch.add_entry(entry)
+
+
+def add_eft_prenote_to_nacha_file(
+    nacha_file: NachaFile, employees_with_eft: List[Tuple[Employee, PubEft]]
+):
+    if len(employees_with_eft) == 0:
+        logger.warning("No claimant EFTs to prenote.")
+        return
+
+    nacha_batch: NachaBatch = get_nacha_batch(nacha_file)
+
+    for employee_with_eft in employees_with_eft:
+        employee = employee_with_eft[0]
+        pub_eft = employee_with_eft[1]
+
+        if pub_eft.prenote_state_id != PrenoteState.PENDING_PRE_PUB.prenote_state_id:
             raise Exception(
-                f"Non-ACH payment method detected in state log: { state_log.state_log_id }"
+                f"Found non pending eft trying to add to prenote list: {employee.employee_id}, eft: {pub_eft.pub_eft_id}"
             )
 
-    ach_payments = [state_log.payment for state_log in state_logs]
+        entry = NachaEntry(
+            receiving_dfi_id=pub_eft.routing_nbr,
+            dfi_act_num=pub_eft.account_nbr,
+            amount=Decimal("0.00"),
+            id=f"E{pub_eft.pub_individual_id}",
+            name=f"{employee.last_name} {employee.first_name}",
+        )
 
-    return ach_payments
+        nacha_batch.add_entry(entry)

@@ -57,6 +57,9 @@ class NachaFile:
 
     def finalize(self):
 
+        for batch in self.batches:
+            batch.finalize()
+
         # Get the totals from all the batches
         entry_count = 0
         entry_hash = 0
