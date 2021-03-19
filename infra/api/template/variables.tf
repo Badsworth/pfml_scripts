@@ -322,3 +322,9 @@ variable "enable_sentry" {
   type        = string
   default     = "0"
 }
+
+variable "release_version" {
+  description = "API release version"
+  type        = string
+  default     = ""
+}

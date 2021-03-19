@@ -1,3 +1,5 @@
+import os
+
 from werkzeug.exceptions import ServiceUnavailable
 
 import massgov.pfml.api.app as app
@@ -18,7 +20,14 @@ def status_get():
             if result[0] != 1:
                 raise Exception("Connection to DB failure")
 
-            return response_util.success_response(message="Service healthy").to_api_response()
+            release_version = os.environ.get("RELEASE_VERSION")
+            if release_version:
+                return response_util.success_response(
+                    message="Service healthy (Version:{release_version})"
+                ).to_api_response()
+            else:
+                return response_util.success_response(message="Service healthy").to_api_response()
+
     except Exception:
         logger.exception("Connection to DB failure")
 
