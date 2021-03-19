@@ -1,7 +1,7 @@
-import { fineos } from "../../../tests/common/actions";
-import { beforeFineos } from "../../../tests/common/before";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
-import { ApplicationResponse } from "../../../../src/api";
+import { fineos } from "../../tests/common/actions";
+import { beforeFineos } from "../../tests/common/before";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
+import { ApplicationResponse } from "../../../src/api";
 
 describe("Payment amounts", () => {
   it(
