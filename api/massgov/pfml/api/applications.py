@@ -1,5 +1,4 @@
 import base64
-from typing import Type, Union
 
 import connexion
 import flask
@@ -38,6 +37,7 @@ from massgov.pfml.api.services.fineos_actions import (
     submit_payment_preference,
     upload_document,
 )
+from massgov.pfml.api.util.response import Issue, IssueType
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.db.models.applications import (
     Application,
@@ -48,6 +48,7 @@ from massgov.pfml.db.models.applications import (
     OtherIncome,
     PreviousLeave,
 )
+from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSFatalUnavailable, FINEOSNotFound
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.sqlalchemy import get_or_404
 
@@ -183,26 +184,40 @@ def applications_update(application_id):
     ).to_api_response()
 
 
-def get_fineos_submit_issues_response(issues, existing_application):
-    status_code: Union[Type[BadRequest], Type[ServiceUnavailable]]
+def get_fineos_submit_issues_response(err, existing_application):
+    if isinstance(err, FINEOSNotFound):
+        return response_util.error_response(
+            status_code=BadRequest,
+            message="Application {} could not be submitted".format(
+                existing_application.application_id
+            ),
+            errors=[
+                Issue(
+                    IssueType.fineos_case_creation_issues, "register_employee did not find a match"
+                )
+            ],
+            data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+        ).to_api_response()
 
-    if issues[0].type == response_util.IssueType.fineos_case_creation_issues:
-        status_code = BadRequest
-        message = "Application {} could not be submitted".format(
-            existing_application.application_id
-        )
+    elif isinstance(err, FINEOSFatalUnavailable):
+        # These errors are usually caught in our error handler and raised with a "fineos_client" issue type.
+        # Once the Portal behavior is changed to handle that type, we can remove this special case.
+        return response_util.error_response(
+            status_code=ServiceUnavailable,
+            message="Application {} could not be submitted, try again later".format(
+                existing_application.application_id
+            ),
+            errors=[
+                Issue(
+                    IssueType.fineos_case_error,
+                    "Unexpected error encountered when submitting to the Claims Processing System",
+                )
+            ],
+            data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+        ).to_api_response()
     else:
-        status_code = ServiceUnavailable
-        message = "Application {} could not be submitted, try again later".format(
-            existing_application.application_id
-        )
-
-    return response_util.error_response(
-        status_code=status_code,
-        message=message,
-        errors=issues,
-        data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-    ).to_api_response()
+        # We don't expect any other errors like 500s. Raise an alarm bell.
+        raise err
 
 
 def applications_submit(application_id):
@@ -271,24 +286,27 @@ def applications_submit(application_id):
         # Only send to fineos if fineos_absence_id isn't set on the claim. If it is set,
         # assume that just complete_intake needs to be reattempted.
         if not existing_application.claim:
-            send_to_fineos_issues = send_to_fineos(existing_application, db_session, current_user)
-            if len(send_to_fineos_issues) != 0:
+            try:
+                send_to_fineos(existing_application, db_session, current_user)
+            except Exception as e:
                 logger.warning(
                     "applications_submit failure - failure sending application to claims processing system",
                     extra=log_attributes,
+                    exc_info=True,
                 )
 
-                return get_fineos_submit_issues_response(
-                    send_to_fineos_issues, existing_application
-                )
+                if not isinstance(e, FINEOSClientError):
+                    raise e
+
+                return get_fineos_submit_issues_response(e, existing_application)
 
             logger.info(
                 "applications_submit - application sent to claims processing system",
                 extra=log_attributes,
             )
 
-        complete_intake_issues = complete_intake(existing_application, db_session)
-        if len(complete_intake_issues) == 0:
+        try:
+            complete_intake(existing_application, db_session)
             existing_application.submitted_time = datetime_util.utcnow()
             # Update log attributes now that submitted_time is set
             log_attributes = get_application_log_attributes(existing_application)
@@ -296,12 +314,17 @@ def applications_submit(application_id):
             logger.info(
                 "applications_submit - application complete intake success", extra=log_attributes
             )
-        else:
+        except Exception as e:
             logger.warning(
                 "applications_submit failure - application complete intake failure",
                 extra=log_attributes,
+                exc_info=True,
             )
-            return get_fineos_submit_issues_response(complete_intake_issues, existing_application)
+
+            if not isinstance(e, FINEOSClientError):
+                raise e
+
+            return get_fineos_submit_issues_response(e, existing_application)
 
         # Send previous leaves, employer benefits, and other incomes as eforms to FINEOS
         create_other_leaves_and_other_incomes_eforms(existing_application, db_session)

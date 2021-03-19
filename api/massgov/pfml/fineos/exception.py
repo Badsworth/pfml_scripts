@@ -8,6 +8,7 @@ class FINEOSClientError(RuntimeError):
     """An exception occurred in an API call. This is the parent exception for all other FINEOSClient errors."""
 
     method_name: Optional[str]
+    message: str
 
 
 # FINEOS Fatal Errors
@@ -25,10 +26,12 @@ class FINEOSFatalError(FINEOSClientError):
         cause: Optional[Exception] = None,
         response_status: Optional[int] = None,
         method_name: str = "",
+        message: str = "",
     ):
         self.cause = cause
         self.response_status = response_status
         self.method_name = method_name
+        self.message = message
 
     def __str__(self) -> str:
         if self.cause:
@@ -59,20 +62,21 @@ class FINEOSClientBadResponse(FINEOSClientError):
     expected_status: int
     response_status: int
 
-    def __init__(self, expected_status: int, response_status: int, method_name: str = ""):
+    def __init__(
+        self, expected_status: int, response_status: int, method_name: str = "", message: str = ""
+    ):
         self.expected_status = expected_status
         self.response_status = response_status
         self.method_name = method_name
+        self.message = message
 
     def __str__(self) -> str:
         return "expected %s, but got %s" % (self.expected_status, self.response_status)
 
 
-# NOTE: This is currently only thrown manually for missing employers in read_employer.
+# NOTE: This is currently only thrown manually for missing employers in read_employer,
+#       and for missing employee occupations in register_api_user.
 class FINEOSNotFound(FINEOSClientBadResponse):
-
-    message: str
-
     def __init__(self, message: str):
         self.message = message
 

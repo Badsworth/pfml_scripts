@@ -26,7 +26,6 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.applications.common import EmployerBenefit, OtherIncome
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import PreviousLeave
-from massgov.pfml.api.util.response import Issue, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
     Document,
@@ -66,7 +65,7 @@ def register_employee(
     employee_ssn: str,
     employer_fein: str,
     db_session: massgov.pfml.db.Session,
-) -> Optional[str]:
+) -> str:
     # If a FINEOS Id exists for SSN/FEIN return it.
     fineos_web_id_ext = (
         db_session.query(FINEOSWebIdExt)
@@ -78,32 +77,36 @@ def register_employee(
     )
 
     if fineos_web_id_ext is not None:
+        # This should never happen and we should have a db constraint,
+        # but keep mypy happy for now.
+        #
+        # We don't have a non-sensitive identifier for fineos_web_id_ext so just log
+        # that something's wrong and have someone take a look at it.
+        if fineos_web_id_ext.fineos_web_id is None:
+            raise ValueError("fineos_web_id_ext is missing a fineos_web_id")
+
         return fineos_web_id_ext.fineos_web_id
 
-    try:
-        # Find FINEOS employer id using employer FEIN
-        employer_id = fineos.find_employer(employer_fein)
-        logger.info("fein %s: found employer_id %s", employer_fein, employer_id)
+    # Find FINEOS employer id using employer FEIN
+    employer_id = fineos.find_employer(employer_fein)
+    logger.info("found employer_id %s", employer_id)
 
-        # Generate external id
-        employee_external_id = "pfml_api_{}".format(str(uuid.uuid4()))
+    # Generate external id
+    employee_external_id = "pfml_api_{}".format(str(uuid.uuid4()))
 
-        employee_registration = massgov.pfml.fineos.models.EmployeeRegistration(
-            user_id=employee_external_id,
-            customer_number=None,
-            date_of_birth=datetime.date(1753, 1, 1),
-            email=None,
-            employer_id=employer_id,
-            first_name=None,
-            last_name=None,
-            national_insurance_no=employee_ssn,
-        )
+    employee_registration = massgov.pfml.fineos.models.EmployeeRegistration(
+        user_id=employee_external_id,
+        customer_number=None,
+        date_of_birth=datetime.date(1753, 1, 1),
+        email=None,
+        employer_id=employer_id,
+        first_name=None,
+        last_name=None,
+        national_insurance_no=employee_ssn,
+    )
 
-        fineos.register_api_user(employee_registration)
-        logger.info("registered as %s", employee_external_id)
-    except massgov.pfml.fineos.FINEOSClientError:
-        logger.exception("FINEOS API error while attempting to register employee/fineos api user.")
-        return None
+    fineos.register_api_user(employee_registration)
+    logger.info("registered as %s", employee_external_id)
 
     # If successful save ExternalIdentifier in the database
     fineos_web_id_ext = FINEOSWebIdExt()
@@ -117,10 +120,8 @@ def register_employee(
 
 def send_to_fineos(
     application: Application, db_session: massgov.pfml.db.Session, current_user: Optional[User]
-) -> List[Issue]:
+) -> None:
     """Send an application to FINEOS for processing."""
-
-    issues = []
 
     if application.employer_fein is None:
         raise ValueError("application.employer_fein is None")
@@ -132,71 +133,49 @@ def send_to_fineos(
     # Create the FINEOS client.
     fineos = massgov.pfml.fineos.create_client()
 
-    try:
-        tax_identifier = application.tax_identifier.tax_identifier
+    tax_identifier = application.tax_identifier.tax_identifier
 
-        fineos_user_id = register_employee(
-            fineos, tax_identifier, application.employer_fein, db_session
+    fineos_user_id = register_employee(
+        fineos, tax_identifier, application.employer_fein, db_session
+    )
+
+    fineos.update_customer_details(fineos_user_id, customer)
+    new_case = fineos.start_absence(fineos_user_id, absence_case)
+
+    new_claim = Claim(
+        fineos_absence_id=new_case.absenceId, fineos_notification_id=new_case.notificationCaseId
+    )
+
+    application.claim = new_claim
+
+    updated_contact_details = fineos.update_customer_contact_details(
+        fineos_user_id, contact_details
+    )
+    phone_numbers = updated_contact_details.phoneNumbers
+    if phone_numbers is not None and len(phone_numbers) > 0:
+        application.phone.fineos_phone_id = phone_numbers[0].id
+
+    if application.leave_reason_qualifier_id in [
+        LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
+        LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id,
+        LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id,
+    ]:
+        reflexive_question = build_bonding_date_reflexive_question(application)
+        fineos.update_reflexive_questions(
+            fineos_user_id, application.claim.fineos_absence_id, reflexive_question
         )
 
-        if fineos_user_id is None:
-            logger.warning("register_employee did not find a match")
-            return [
-                Issue(
-                    IssueType.fineos_case_creation_issues, "register_employee did not find a match"
-                )
-            ]
+    occupation = get_occupation(fineos, fineos_user_id, application)
+    upsert_week_based_work_pattern(fineos, fineos_user_id, application, occupation.occupationId)
+    update_occupation_details(fineos, application, occupation.occupationId)
 
-        fineos.update_customer_details(fineos_user_id, customer)
-        new_case = fineos.start_absence(fineos_user_id, absence_case)
-
-        new_claim = Claim(
-            fineos_absence_id=new_case.absenceId, fineos_notification_id=new_case.notificationCaseId
-        )
-
-        application.claim = new_claim
-
-        updated_contact_details = fineos.update_customer_contact_details(
-            fineos_user_id, contact_details
-        )
-        phone_numbers = updated_contact_details.phoneNumbers
-        if phone_numbers is not None and len(phone_numbers) > 0:
-            application.phone.fineos_phone_id = phone_numbers[0].id
-
-        if application.leave_reason_qualifier_id in [
-            LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
-            LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id,
-            LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id,
-        ]:
-            reflexive_question = build_bonding_date_reflexive_question(application)
-            fineos.update_reflexive_questions(
-                fineos_user_id, application.claim.fineos_absence_id, reflexive_question
-            )
-
-        occupation = get_occupation(fineos, fineos_user_id, application)
-        upsert_week_based_work_pattern(fineos, fineos_user_id, application, occupation.occupationId)
-        update_occupation_details(fineos, application, occupation.occupationId)
-
-        db_session.add(application)
-        db_session.add(new_claim)
-        db_session.commit()
-
-    except massgov.pfml.fineos.FINEOSClientError:
-        logger.exception("FINEOS API error")
-        issues.append(
-            Issue(
-                IssueType.fineos_case_error,
-                "Unexpected error encountered when submitting to the Claims Processing System",
-            )
-        )
-
-    return issues
+    db_session.add(application)
+    db_session.add(new_claim)
+    db_session.commit()
 
 
-def complete_intake(application: Application, db_session: massgov.pfml.db.Session) -> List[Issue]:
+def complete_intake(application: Application, db_session: massgov.pfml.db.Session) -> None:
     """Send an application to FINEOS for completion."""
-
-    issues = []
 
     if application.employer_fein is None:
         raise ValueError("application.employer_fein is None")
@@ -206,35 +185,15 @@ def complete_intake(application: Application, db_session: massgov.pfml.db.Sessio
 
     fineos = massgov.pfml.fineos.create_client()
 
-    try:
-        tax_identifier = application.tax_identifier.tax_identifier
+    tax_identifier = application.tax_identifier.tax_identifier
 
-        fineos_user_id = register_employee(
-            fineos, tax_identifier, application.employer_fein, db_session
-        )
+    fineos_user_id = register_employee(
+        fineos, tax_identifier, application.employer_fein, db_session
+    )
 
-        if not fineos_user_id:
-            logger.warning("register_employee did not find a match")
-            return [
-                Issue(
-                    IssueType.fineos_case_creation_issues, "register_employee did not find a match"
-                )
-            ]
-
-        fineos_user_id = str(fineos_user_id)
-        db_session.commit()
-        fineos.complete_intake(fineos_user_id, str(application.claim.fineos_notification_id))
-
-    except massgov.pfml.fineos.FINEOSClientError:
-        logger.error("FINEOS API error")
-        issues.append(
-            Issue(
-                IssueType.fineos_case_error,
-                "Unexpected error encountered when submitting to the Claims Processing System",
-            )
-        )
-
-    return issues
+    fineos_user_id = str(fineos_user_id)
+    db_session.commit()
+    fineos.complete_intake(fineos_user_id, str(application.claim.fineos_notification_id))
 
 
 DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE = (
@@ -591,13 +550,7 @@ def get_or_register_employee_fineos_user_id(
         raise ValueError("Missing employer fein")
     employer_fein = application.employer_fein
 
-    fineos_user_id = register_employee(fineos, tax_identifier, employer_fein, db_session)
-
-    if fineos_user_id is None:
-        logger.warning("register_employee did not find a match")
-        raise ValueError("register_employee did not find a match")
-
-    return fineos_user_id
+    return register_employee(fineos, tax_identifier, employer_fein, db_session)
 
 
 def get_fineos_absence_id_from_application(application: Application) -> str:
