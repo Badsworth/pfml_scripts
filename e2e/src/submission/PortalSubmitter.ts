@@ -181,22 +181,18 @@ export default class PortalSubmitter {
     documents: (DocumentUploadRequest | DocumentWithPromisedFile)[],
     options?: RequestOptions
   ): Promise<void> {
-    try {
-      const promises = documents.map(async (document) => {
-        const file = this.documentIsPromisedFile(document)
-          ? await document.file().then((d) => d.asStream())
-          : document.file;
+    const promises = documents.map(async (document) => {
+      const file = this.documentIsPromisedFile(document)
+        ? await document.file().then((d) => d.asStream())
+        : document.file;
 
-        return postApplicationsByApplication_idDocuments(
-          { application_id },
-          { ...document, file },
-          options
-        );
-      });
-      await Promise.all(promises);
-    } catch (e) {
-      console.log("ERROR UPLOAD", e);
-    }
+      return postApplicationsByApplication_idDocuments(
+        { application_id },
+        { ...document, file },
+        options
+      );
+    });
+    await Promise.all(promises);
   }
 
   private documentIsPromisedFile(
