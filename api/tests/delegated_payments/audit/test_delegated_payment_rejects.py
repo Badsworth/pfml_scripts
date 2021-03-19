@@ -60,8 +60,6 @@ def test_parse_payment_rejects_file(tmp_path, test_db_session, payment_rejects_s
     payments = test_db_session.query(Payment).all()
     payments_by_id = {str(p.payment_id): p for p in payments}
 
-    assert len(payment_rejects_rows) == len(payments)
-
     rejects_count = 0
     for payment_rejects_row in payment_rejects_rows:
         payment = payments_by_id[payment_rejects_row.pfml_payment_id]
@@ -199,19 +197,9 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     timestamp_file_prefix = "2021-01-15-12-00-00"
 
     # generate the rejects file
-    generate_payment_audit_data_set_and_rejects_file(
+    audit_scenario_data = generate_payment_audit_data_set_and_rejects_file(
         DEFAULT_AUDIT_SCENARIO_DATA_SET, payment_rejects_received_folder_path, test_db_session, 1
     )
-
-    # transition all states to the correct state to simulate audit report sampling
-    payments = test_db_session.query(Payment).all()
-    for payment in payments:
-        state_log_util.create_finished_state_log(
-            payment,
-            State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-            state_log_util.build_outcome("test"),
-            test_db_session,
-        )
 
     # Create a few more payments in pending state (not sampled)
     cancelled_payment = PaymentFactory.create()
@@ -256,7 +244,9 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
         State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT,
         test_db_session,
     )
-    assert len(rejected_state_logs) == len(DEFAULT_AUDIT_SCENARIO_DATA_SET)
+    assert len(rejected_state_logs) > len(
+        audit_scenario_data
+    )  # there are previously rejected statements in scenario
 
     # check all non sampled pending states have transitioned
     payment_state_log = state_log_util.get_latest_state_log_in_flow(
@@ -323,7 +313,7 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     )
     payment_rejects_file_line_count = payment_rejects_file_content.count("\n")
     assert (
-        payment_rejects_file_line_count == len(rejected_state_logs) + 1  # account for header row
+        payment_rejects_file_line_count == len(audit_scenario_data) + 1  # account for header row
     ), f"Unexpected number of lines in payment rejects report - found: {payment_rejects_file_line_count}, expected: {len(rejected_state_logs) + 1}"
 
     expected_rejects_report_sent_folder_path = os.path.join(

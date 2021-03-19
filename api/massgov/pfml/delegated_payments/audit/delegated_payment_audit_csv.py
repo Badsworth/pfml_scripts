@@ -30,9 +30,9 @@ class PaymentAuditCSV(AbstractRecord):
     leave_request_id: Optional[str]
     leave_request_decision: Optional[str]
     is_first_time_payment: str
-    is_updated_payment: str
-    is_rejected_or_error: str
-    days_in_rejected_state: str
+    is_previously_errored_payment: str
+    is_previously_rejected_payment: str
+    number_of_times_in_rejected_or_error_state: str
     rejected_by_program_integrity: str
     rejected_notes: str
 
@@ -60,9 +60,9 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     leave_request_id="Leave Request ID",
     leave_request_decision="Leave Request Decision",
     is_first_time_payment="First Time Payment",
-    is_updated_payment="Updated Payment",
-    is_rejected_or_error="Currently Rejected",
-    days_in_rejected_state="Days in Rejected State",
+    is_previously_errored_payment="Previously Errored Payment",
+    is_previously_rejected_payment="Previously Rejected Payment",
+    number_of_times_in_rejected_or_error_state="Number of times in Error or Rejected State",
     rejected_by_program_integrity="Reject",
     rejected_notes="Reject Notes",
 )

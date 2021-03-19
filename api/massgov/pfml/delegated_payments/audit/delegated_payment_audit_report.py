@@ -1,177 +1,25 @@
-import pathlib
-from dataclasses import dataclass
-from typing import Iterable, List, Optional
+from typing import Iterable, List
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.util.logging as logging
-from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
-    Address,
-    Claim,
-    ClaimType,
-    Employee,
-    EmployeeAddress,
-    Employer,
-    LkClaimType,
-    LkPaymentMethod,
+    Flow,
+    LatestStateLog,
+    LkState,
     Payment,
-    PaymentMethod,
     ReferenceFile,
     ReferenceFileType,
     State,
+    StateLog,
 )
-from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
-    PAYMENT_AUDIT_CSV_HEADERS,
-    PaymentAuditCSV,
-)
-from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting import (
-    FileConfig,
-    Report,
-    ReportGroup,
+from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
+    PaymentAuditData,
+    write_audit_report,
 )
 from massgov.pfml.delegated_payments.step import Step
 
 logger = logging.get_logger(__name__)
-
-#################################
-## Common Audit File Utilities ##
-## TODO move to util file      ##
-#################################
-
-
-class PaymentAuditRowError(Exception):
-    """An error in a row that prevents processing of the payment."""
-
-
-@dataclass
-class PaymentAuditData:
-    """Wrapper class to create payment audit report"""
-
-    payment: Payment
-    is_first_time_payment: bool
-    is_updated_payment: bool
-    is_rejected_or_error: bool
-    days_in_rejected_state: int
-    rejected_by_program_integrity: Optional[bool] = None
-    rejected_notes: str = ""
-
-
-def write_audit_report(
-    payment_audit_data_set: Iterable[PaymentAuditData],
-    output_path: str,
-    db_session: db.Session,
-    report_name: str = "Payment-Audit-Report",
-) -> Optional[pathlib.Path]:
-    payment_audit_report_rows: List[PaymentAuditCSV] = []
-    for payment_audit_data in payment_audit_data_set:
-        payment_audit_report_rows.append(build_audit_report_row(payment_audit_data))
-
-    return write_audit_report_rows(payment_audit_report_rows, output_path, db_session, report_name)
-
-
-def write_audit_report_rows(
-    payment_audit_report_rows: Iterable[PaymentAuditCSV],
-    output_path: str,
-    db_session: db.Session,
-    report_name: str,
-) -> Optional[pathlib.Path]:
-    # Setup the output file
-    file_config = FileConfig(file_prefix=output_path)
-    report_group = ReportGroup(file_config=file_config)
-
-    report = Report(report_name=report_name, header_record=PAYMENT_AUDIT_CSV_HEADERS)
-    report_group.add_report(report)
-
-    for payment_audit_report_row in payment_audit_report_rows:
-        report.add_record(payment_audit_report_row)
-
-    return report_group.create_and_send_reports()
-
-
-def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAuditCSV:
-    """Build a single row of the payment audit report file"""
-
-    payment: Payment = payment_audit_data.payment
-    claim: Claim = payment.claim
-    employee: Employee = claim.employee
-    employee_address: EmployeeAddress = employee.addresses.first()  # TODO adjust after address validation work to get the most recent valid address
-    address: Address = employee_address.address
-    employer: Employer = claim.employer
-
-    payment_audit_row = PaymentAuditCSV(
-        pfml_payment_id=payment.payment_id,
-        leave_type=get_leave_type(claim),
-        first_name=payment.claim.employee.first_name,
-        last_name=payment.claim.employee.last_name,
-        address_line_1=address.address_line_one,
-        address_line_2=address.address_line_two,
-        city=address.city,
-        state=address.geo_state.geo_state_description,
-        zip=address.zip_code,
-        payment_preference=get_payment_preference(employee),
-        scheduled_payment_date=payment.payment_date.isoformat(),
-        payment_period_start_date=payment.period_start_date.isoformat(),
-        payment_period_end_date=payment.period_end_date.isoformat(),
-        payment_amount=payment.amount,
-        absence_case_number=claim.fineos_absence_id,
-        c_value=payment.fineos_pei_c_value,
-        i_value=payment.fineos_pei_i_value,
-        employer_id=employer.fineos_employer_id if employer else None,
-        case_status=claim.fineos_absence_status.absence_status_description
-        if claim.fineos_absence_status
-        else None,
-        leave_request_id="",  # TODO these are not currently persisted - persist somewhere and fetch or take out of audit
-        leave_request_decision="",  # TODO these are not currently persisted - persist somewhere and fetch or take out of audit
-        is_first_time_payment=bool_to_str(payment_audit_data.is_first_time_payment),
-        is_updated_payment=bool_to_str(payment_audit_data.is_updated_payment),
-        is_rejected_or_error=bool_to_str(payment_audit_data.is_rejected_or_error),
-        days_in_rejected_state=payment_audit_data.days_in_rejected_state,
-        rejected_by_program_integrity=bool_to_str(payment_audit_data.rejected_by_program_integrity),
-        rejected_notes=payment_audit_data.rejected_notes,
-    )
-
-    return payment_audit_row
-
-
-def bool_to_str(flag: Optional[bool]) -> str:
-    if flag is None:
-        return ""
-
-    if flag:
-        return "Y"
-    else:
-        return "N"
-
-
-def get_leave_type(claim: Claim) -> Optional[str]:
-    claim_type: LkClaimType = claim.claim_type
-    if not claim_type:
-        return None
-
-    if claim_type.claim_type_id == ClaimType.FAMILY_LEAVE.claim_type_id:
-        return "Family"
-    elif claim_type.claim_type_id == ClaimType.MEDICAL_LEAVE.claim_type_id:
-        return "Medical"
-
-    raise PaymentAuditRowError("Unexpected leave type %s" % claim_type.claim_type_description)
-
-
-def get_payment_preference(employee: Employee) -> str:
-    payment_preference: LkPaymentMethod = employee.payment_method
-    if payment_preference.payment_method_id == PaymentMethod.ACH.payment_method_id:
-        return "ACH"
-    elif payment_preference.payment_method_id == PaymentMethod.CHECK.payment_method_id:
-        return "Check"
-
-    raise PaymentAuditRowError(
-        "Unexpected payment preference %s" % payment_preference.payment_method_description
-    )
-
-
-##########################################
-## Payment Audit Report file processing ##
-##########################################
 
 
 class PaymentAuditError(Exception):
@@ -257,23 +105,76 @@ class PaymentAuditReportStep(Step):
         payment_audit_data_set: List[Payment] = []
 
         for payment in payments:
-            # TODO query state logs to populate the following
-            is_first_time_payment = True
-            is_updated_payment = False
-            is_rejected_or_error = False
-            days_in_rejected_state = 0
+            # populate payment audit data by inspecting the currently sampled payment's history
+            is_first_time_payment = False
+            is_previously_errored_payment = False
+            is_previously_rejected_payment = False
+            number_of_times_in_rejected_or_error_state = 0
+
+            payment_history = (
+                self.db_session.query(Payment)
+                .filter(
+                    Payment.fineos_pei_c_value == payment.fineos_pei_c_value,
+                    Payment.fineos_pei_i_value == payment.fineos_pei_i_value,
+                )
+                .all()
+            )
+
+            if len(payment_history) == 1:
+                is_first_time_payment = True
+            else:
+                payment_history_ids = [p.payment_id for p in payment_history]
+                expected_end_states = [
+                    State.DELEGATED_PAYMENT_ERROR_REPORT_SENT.state_id,
+                    State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT.state_id,
+                ]
+
+                payment_state_log_history = (
+                    self.db_session.query(StateLog)
+                    .join(LatestStateLog)
+                    .join(LkState, StateLog.end_state_id == LkState.state_id)
+                    .filter(
+                        LkState.flow_id == Flow.DELEGATED_PAYMENT.flow_id,
+                        LatestStateLog.payment_id.in_(payment_history_ids),
+                        StateLog.end_state_id.in_(expected_end_states),
+                    )
+                    .all()
+                )
+
+                expected_payments_in_error_or_rejected_state = (
+                    len(payment_history) - 1
+                )  # don't count the active payment
+                if expected_payments_in_error_or_rejected_state != len(payment_state_log_history):
+                    raise PaymentAuditError(
+                        f"Ended payment objects count does not match with error or rejected state counts - expected: {expected_payments_in_error_or_rejected_state}, found: {len(payment_state_log_history)}"
+                    )
+
+                payment_state_history = [sl.end_state_id for sl in payment_state_log_history]
+
+                if State.DELEGATED_PAYMENT_ERROR_REPORT_SENT.state_id in payment_state_history:
+                    is_previously_errored_payment = True
+
+                if (
+                    State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT.state_id
+                    in payment_state_history
+                ):
+                    is_previously_rejected_payment = True
+
+                number_of_times_in_rejected_or_error_state = (
+                    expected_payments_in_error_or_rejected_state
+                )
 
             payment_audit_data = PaymentAuditData(
                 payment=payment,
                 is_first_time_payment=is_first_time_payment,
-                is_updated_payment=is_updated_payment,
-                is_rejected_or_error=is_rejected_or_error,
-                days_in_rejected_state=days_in_rejected_state,
+                is_previously_errored_payment=is_previously_errored_payment,
+                is_previously_rejected_payment=is_previously_rejected_payment,
+                number_of_times_in_rejected_or_error_state=number_of_times_in_rejected_or_error_state,
             )
             payment_audit_data_set.append(payment_audit_data)
 
         logger.info(
-            "Start building payment audit data for sampled payments: %i",
+            "Done building payment audit data for sampled payments: %i",
             len(payment_audit_data_set),
         )
 

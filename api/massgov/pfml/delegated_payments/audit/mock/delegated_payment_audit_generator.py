@@ -8,15 +8,19 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, List, Tuple
 
+import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
+    Claim,
     ClaimType,
     EmployeeAddress,
     LkClaimType,
     LkPaymentMethod,
+    LkState,
     PaymentMethod,
+    State,
 )
 from massgov.pfml.db.models.factories import (
     AddressFactory,
@@ -25,7 +29,7 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     PaymentFactory,
 )
-from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import (
+from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     PaymentAuditData,
     write_audit_report,
 )
@@ -53,9 +57,11 @@ class AuditScenarioName(Enum):
     MEDICAL_LEAVE_CHECK = "MEDICAL_LEAVE_CHECK"
 
     FIRST_TIME_PAYMENT = "First Time Payment"
-    UPDATED_PAYMENT = "Updated Payment"
+    ERROR_PAYMENT = "Error Payment"
     REJECTED_PAYMENT = "Rejected Payment"
+    MULTIPLE_DAYS_IN_ERROR_STATE = "Multiple Days in Error State"
     MULTIPLE_DAYS_IN_REJECTED_STATE = "Multiple Days in Rejected State"
+    MIXED_DAYS_IN_ERROR_OR_REJECTED_STATE = "Mixed Days in Error or Rejected State"
 
 
 @dataclass
@@ -64,9 +70,10 @@ class AuditScenarioDescriptor:
     claim_type: LkClaimType
     payment_method: LkPaymentMethod
     is_first_time_payment: bool
-    is_updated_payment: bool
-    is_rejected_payment: bool
-    is_multiple_days_in_rejected_state: bool
+    is_previously_errored_payment: bool
+    is_previously_rejected_payment: bool
+    number_of_times_in_error_state: bool
+    number_of_times_in_rejected_state: bool
 
 
 @dataclass
@@ -92,9 +99,10 @@ AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.FAMILY_LEAVE_ACH] = AuditScenarioDe
     claim_type=ClaimType.FAMILY_LEAVE,
     payment_method=PaymentMethod.ACH,
     is_first_time_payment=True,
-    is_updated_payment=False,
-    is_rejected_payment=False,
-    is_multiple_days_in_rejected_state=False,
+    is_previously_errored_payment=False,
+    is_previously_rejected_payment=False,
+    number_of_times_in_error_state=0,
+    number_of_times_in_rejected_state=0,
 )
 
 AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.FAMILY_LEAVE_CHECK] = AuditScenarioDescriptor(
@@ -102,9 +110,10 @@ AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.FAMILY_LEAVE_CHECK] = AuditScenario
     claim_type=ClaimType.FAMILY_LEAVE,
     payment_method=PaymentMethod.CHECK,
     is_first_time_payment=True,
-    is_updated_payment=False,
-    is_rejected_payment=False,
-    is_multiple_days_in_rejected_state=False,
+    is_previously_errored_payment=False,
+    is_previously_rejected_payment=False,
+    number_of_times_in_error_state=0,
+    number_of_times_in_rejected_state=0,
 )
 
 AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.MEDICAL_LEAVE_ACH] = AuditScenarioDescriptor(
@@ -112,9 +121,10 @@ AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.MEDICAL_LEAVE_ACH] = AuditScenarioD
     claim_type=ClaimType.MEDICAL_LEAVE,
     payment_method=PaymentMethod.ACH,
     is_first_time_payment=True,
-    is_updated_payment=False,
-    is_rejected_payment=False,
-    is_multiple_days_in_rejected_state=False,
+    is_previously_errored_payment=False,
+    is_previously_rejected_payment=False,
+    number_of_times_in_error_state=0,
+    number_of_times_in_rejected_state=0,
 )
 
 AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.MEDICAL_LEAVE_CHECK] = AuditScenarioDescriptor(
@@ -122,9 +132,10 @@ AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.MEDICAL_LEAVE_CHECK] = AuditScenari
     claim_type=ClaimType.MEDICAL_LEAVE,
     payment_method=PaymentMethod.CHECK,
     is_first_time_payment=True,
-    is_updated_payment=False,
-    is_rejected_payment=False,
-    is_multiple_days_in_rejected_state=False,
+    is_previously_errored_payment=False,
+    is_previously_rejected_payment=False,
+    number_of_times_in_error_state=0,
+    number_of_times_in_rejected_state=0,
 )
 
 AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.FIRST_TIME_PAYMENT] = AuditScenarioDescriptor(
@@ -132,19 +143,21 @@ AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.FIRST_TIME_PAYMENT] = AuditScenario
     claim_type=ClaimType.FAMILY_LEAVE,
     payment_method=PaymentMethod.ACH,
     is_first_time_payment=True,
-    is_updated_payment=False,
-    is_rejected_payment=False,
-    is_multiple_days_in_rejected_state=False,
+    is_previously_errored_payment=False,
+    is_previously_rejected_payment=False,
+    number_of_times_in_error_state=0,
+    number_of_times_in_rejected_state=0,
 )
 
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.UPDATED_PAYMENT] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.UPDATED_PAYMENT,
+AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.ERROR_PAYMENT] = AuditScenarioDescriptor(
+    scenario_name=AuditScenarioName.ERROR_PAYMENT,
     claim_type=ClaimType.FAMILY_LEAVE,
     payment_method=PaymentMethod.ACH,
     is_first_time_payment=False,
-    is_updated_payment=True,
-    is_rejected_payment=False,
-    is_multiple_days_in_rejected_state=False,
+    is_previously_errored_payment=True,
+    is_previously_rejected_payment=False,
+    number_of_times_in_error_state=1,
+    number_of_times_in_rejected_state=0,
 )
 
 AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.REJECTED_PAYMENT] = AuditScenarioDescriptor(
@@ -152,9 +165,23 @@ AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.REJECTED_PAYMENT] = AuditScenarioDe
     claim_type=ClaimType.FAMILY_LEAVE,
     payment_method=PaymentMethod.ACH,
     is_first_time_payment=False,
-    is_updated_payment=False,
-    is_rejected_payment=True,
-    is_multiple_days_in_rejected_state=False,
+    is_previously_errored_payment=False,
+    is_previously_rejected_payment=True,
+    number_of_times_in_error_state=0,
+    number_of_times_in_rejected_state=1,
+)
+
+AUDIT_SCENARIO_DESCRIPTORS[
+    AuditScenarioName.MULTIPLE_DAYS_IN_ERROR_STATE
+] = AuditScenarioDescriptor(
+    scenario_name=AuditScenarioName.MULTIPLE_DAYS_IN_ERROR_STATE,
+    claim_type=ClaimType.FAMILY_LEAVE,
+    payment_method=PaymentMethod.ACH,
+    is_first_time_payment=False,
+    is_previously_errored_payment=True,
+    is_previously_rejected_payment=False,
+    number_of_times_in_error_state=3,
+    number_of_times_in_rejected_state=0,
 )
 
 AUDIT_SCENARIO_DESCRIPTORS[
@@ -164,9 +191,23 @@ AUDIT_SCENARIO_DESCRIPTORS[
     claim_type=ClaimType.FAMILY_LEAVE,
     payment_method=PaymentMethod.ACH,
     is_first_time_payment=False,
-    is_updated_payment=False,
-    is_rejected_payment=True,
-    is_multiple_days_in_rejected_state=True,
+    is_previously_errored_payment=False,
+    is_previously_rejected_payment=True,
+    number_of_times_in_error_state=0,
+    number_of_times_in_rejected_state=3,
+)
+
+AUDIT_SCENARIO_DESCRIPTORS[
+    AuditScenarioName.MIXED_DAYS_IN_ERROR_OR_REJECTED_STATE
+] = AuditScenarioDescriptor(
+    scenario_name=AuditScenarioName.MIXED_DAYS_IN_ERROR_OR_REJECTED_STATE,
+    claim_type=ClaimType.FAMILY_LEAVE,
+    payment_method=PaymentMethod.ACH,
+    is_first_time_payment=False,
+    is_previously_errored_payment=True,
+    is_previously_rejected_payment=True,
+    number_of_times_in_error_state=2,
+    number_of_times_in_rejected_state=3,
 )
 
 DEFAULT_AUDIT_SCENARIO_DATA_SET = [
@@ -179,7 +220,35 @@ DEFAULT_AUDIT_SCENARIO_DATA_SET = [
 #######################
 
 
-def generate_scenario_data(scenario_descriptor: AuditScenarioDescriptor) -> AuditScenarioData:
+def create_payment_with_end_state(
+    c_value: int, i_value: int, claim: Claim, end_state: LkState, db_session: db.Session
+):
+    payment_date = datetime.now()
+    period_start_date = payment_date - timedelta(days=7)
+    period_end_date = payment_date - timedelta(days=1)
+
+    payment_amount = round(decimal.Decimal(random.uniform(1, 1000)), 2)
+
+    payment = PaymentFactory.create(
+        fineos_pei_c_value=c_value,
+        fineos_pei_i_value=i_value,
+        claim=claim,
+        amount=payment_amount,
+        payment_date=payment_date,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    )
+
+    state_log_util.create_finished_state_log(
+        payment, end_state, state_log_util.build_outcome("test"), db_session,
+    )
+
+    return payment
+
+
+def generate_scenario_data(
+    scenario_descriptor: AuditScenarioDescriptor, db_session: db.Session
+) -> AuditScenarioData:
     c_value = str(uuid.uuid4().int)
     i_value = str(uuid.uuid4().int)
 
@@ -205,34 +274,40 @@ def generate_scenario_data(scenario_descriptor: AuditScenarioDescriptor) -> Audi
         fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
     )
 
-    payment_date = datetime.now()
-    period_start_date = payment_date - timedelta(days=7)
-    period_end_date = payment_date - timedelta(days=1)
+    # Populate payments and state log for previous error and rejection scenarios
+    if scenario_descriptor.is_previously_errored_payment:
+        for _ in range(scenario_descriptor.number_of_times_in_error_state):
+            create_payment_with_end_state(
+                c_value, i_value, claim, State.DELEGATED_PAYMENT_ERROR_REPORT_SENT, db_session
+            )
 
-    payment_amount = round(decimal.Decimal(random.uniform(1, 1000)), 2)
+    if scenario_descriptor.is_previously_rejected_payment:
+        for _ in range(scenario_descriptor.number_of_times_in_rejected_state):
+            create_payment_with_end_state(
+                c_value,
+                i_value,
+                claim,
+                State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT,
+                db_session,
+            )
 
-    payment = PaymentFactory.create(
-        fineos_pei_c_value=c_value,
-        fineos_pei_i_value=i_value,
-        claim=claim,
-        amount=payment_amount,
-        payment_date=payment_date,
-        period_start_date=period_start_date,
-        period_end_date=period_end_date,
+    # create the latest payment
+    payment = create_payment_with_end_state(
+        c_value,
+        i_value,
+        claim,
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+        db_session,
     )
 
-    # TODO implement other scenario descriptor flags after PUB-69 is complete
-    # is_first_time_payment
-    # is_updated_payment
-    # is_rejected_payment
-    # is_multiple_days_in_rejected_state
-
+    # create the payment data
     payment_audit_data = PaymentAuditData(
         payment=payment,
         is_first_time_payment=scenario_descriptor.is_first_time_payment,
-        is_updated_payment=scenario_descriptor.is_updated_payment,
-        is_rejected_or_error=scenario_descriptor.is_rejected_payment,
-        days_in_rejected_state=2 if scenario_descriptor.is_multiple_days_in_rejected_state else 0,
+        is_previously_errored_payment=scenario_descriptor.is_previously_errored_payment,
+        is_previously_rejected_payment=scenario_descriptor.is_previously_rejected_payment,
+        number_of_times_in_rejected_or_error_state=scenario_descriptor.number_of_times_in_error_state
+        + scenario_descriptor.number_of_times_in_rejected_state,
     )
 
     return AuditScenarioData(
@@ -241,7 +316,7 @@ def generate_scenario_data(scenario_descriptor: AuditScenarioDescriptor) -> Audi
 
 
 def generate_audit_report_dataset(
-    data_set_config: List[AuditScenarioNameWithCount],
+    data_set_config: List[AuditScenarioNameWithCount], db_session: db.Session
 ) -> List[AuditScenarioData]:
     scenario_data_set: List[Tuple[PaymentAuditData, AuditScenarioName]] = []
 
@@ -251,20 +326,21 @@ def generate_audit_report_dataset(
         scenario_descriptor = AUDIT_SCENARIO_DESCRIPTORS[scenario_name]
 
         for i in range(scenario_count):  # noqa: B007
-            scenario_data = generate_scenario_data(scenario_descriptor)
+            scenario_data = generate_scenario_data(scenario_descriptor, db_session)
             scenario_data_set.append(scenario_data)
 
     return scenario_data_set
 
 
-# TODO pass in batch id and separate data set generation piece (after PUB-76)
 def generate_payment_audit_data_set_and_rejects_file(
     config: List[AuditScenarioNameWithCount],
     folder_path: str,
     db_session: db.Session,
     reject_rate: decimal.Decimal = 0.5,
 ) -> List[AuditScenarioData]:
-    payment_audit_scenario_data_set: List[AuditScenarioData] = generate_audit_report_dataset(config)
+    payment_audit_scenario_data_set: List[AuditScenarioData] = generate_audit_report_dataset(
+        config, db_session
+    )
 
     payment_audit_data_set: List[PaymentAuditData] = []
     for payment_audit_scenario_data in payment_audit_scenario_data_set:
@@ -273,6 +349,14 @@ def generate_payment_audit_data_set_and_rejects_file(
             True if random.random() <= reject_rate else False
         )
         payment_audit_data_set.append(payment_audit_data)
+
+        # transition to sent state to simulate the payment audit report step
+        state_log_util.create_finished_state_log(
+            payment_audit_data.payment,
+            State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+            state_log_util.build_outcome("test"),
+            db_session,
+        )
 
     write_audit_report(
         payment_audit_data_set, folder_path, db_session, report_name="Payment-Rejects"
@@ -292,7 +376,7 @@ def generate_payment_rejects_file():
     folder_path = args.folder
 
     config: List[AuditScenarioNameWithCount] = [
-        AuditScenarioNameWithCount(scenario_name, 10)
+        AuditScenarioNameWithCount(scenario_name, 1)
         for scenario_name in AUDIT_SCENARIO_DESCRIPTORS.keys()
     ]
 
