@@ -279,3 +279,39 @@ variable "enable_reductions_send_wage_replacement_payments_to_dfml_schedule" {
   type        = bool
   default     = false
 }
+
+variable "payment_audit_report_outbound_folder_path" {
+  description = "Payment audit report outbound folder path"
+  type        = string
+  default     = ""
+}
+
+variable "payment_audit_report_sent_folder_path" {
+  description = "Payment audit report sent folder path"
+  type        = string
+  default     = ""
+}
+
+variable "payment_rejects_received_folder_path" {
+  description = "Payment rejects received path"
+  type        = string
+  default     = ""
+}
+
+variable "payment_rejects_processed_folder_path" {
+  description = "Payment rejects processed folder path"
+  type        = string
+  default     = ""
+}
+
+variable "payment_rejects_report_outbound_folder" {
+  description = "Payment rejects outbound folder"
+  type        = string
+  default     = ""
+}
+
+variable "payment_rejects_report_sent_folder_path" {
+  description = "Payment rejects report sent folder path"
+  type        = string
+  default     = ""
+}

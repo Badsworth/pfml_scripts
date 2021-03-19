@@ -40,7 +40,10 @@
       { "name": "FINEOS_VENDOR_MAX_HISTORY_DATE", "value": "${fineos_vendor_max_history_date}" },
       { "name": "FINEOS_PAYMENT_MAX_HISTORY_DATE", "value": "${fineos_payment_max_history_date}" },
 
-      { "name": "ENABLE_SENTRY", "value": "${enable_sentry}"}
+      { "name": "ENABLE_SENTRY", "value": "${enable_sentry}"},
+
+      { "name": "PAYMENT_AUDIT_REPORT_OUTBOUND_FOLDER_PATH", "value":  "payment_audit_report_outbound_folder_path"},
+      { "name": "PAYMENT_AUDIT_REPORT_SENT_FOLDER_PATH", "value":  "payment_audit_report_sent_folder_path"}
 
     ],
     "secrets": [
