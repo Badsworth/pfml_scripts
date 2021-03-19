@@ -10,7 +10,7 @@ import PersonalLetter from "./PersonalLetter";
 import CatPicture from "./CatPicture";
 import FileWrapper from "../FileWrapper";
 
-const generators = {
+export const generators = {
   MASSID: new MassID(),
   OOSID: new OutOfStateID(),
   PREBIRTH: new PrebirthLetter(),
