@@ -866,12 +866,12 @@ def test_move_reference_file_missing_src_dir(test_db_session, initialize_factori
 
 
 def test_move_reference_file_s3_failure(
-    test_db_session, initialize_factories_session, caplog, mock_s3_bucket
+    test_db_session, initialize_factories_session, caplog, mock_s3_bucket, tmp_path
 ):
     (ref_file, src_path, dest_path) = create_test_reference_file(test_db_session, mock_s3_bucket)
 
     # Test S3 failure
-    ref_file.file_location = ref_file.file_location.replace("s3://", "notS3://")
+    ref_file.file_location = os.path.join(tmp_path, ref_file.file_location.replace("s3://", ""))
     with pytest.raises(FileNotFoundError):
         move_reference_file(test_db_session, ref_file, TEST_SRC_DIR, TEST_DEST_DIR)
 
