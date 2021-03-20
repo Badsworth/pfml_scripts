@@ -47,7 +47,7 @@ function log(claim: GeneratedClaim, message: string, error?: Error) {
   const header = `[${chalk.blue(claim.id)}](${chalk.green(claim.scenario)})`;
   console.debug(`${header} ${message}`);
   if (error) {
-    console.log(`${header} ${util.inspect(error)}`);
+    console.log(`${header} ${util.inspect(error, false, 6)}`);
   }
 }
 
