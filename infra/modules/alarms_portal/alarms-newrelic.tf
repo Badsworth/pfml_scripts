@@ -270,7 +270,19 @@ resource "newrelic_nrql_alert_condition" "unexpected_validation_violations" {
   nrql {
     # Ignoring employer_benefits[%].benefit_amount_frequency since we expect an
     # enum ValidationError for it on the Employer review page
-    query             = "SELECT count(*) FROM PageAction WHERE actionName = 'ValidationError' AND environment = '${var.environment_name}' AND (issueType IN ('enum', 'type') OR issueType LIKE 'type_error%') AND issueField NOT LIKE 'employer_benefits[%].benefit_amount_frequency'"
+    query             = <<-NRQL
+    SELECT count(*) FROM PageAction
+    WHERE actionName = 'ValidationError'
+      AND environment = '${var.environment_name}'
+      AND (
+        issueType IN ('enum', 'type')
+        OR issueType LIKE 'type_error%'
+        OR issueType LIKE 'value_error%'
+      )
+      AND issueField NOT LIKE 'employer_benefits[%].benefit_amount_frequency'
+      AND issueField NOT LIKE 'OCOrganization[%].CustomerNo'
+    FACET issueType, issueField
+    NRQL
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
