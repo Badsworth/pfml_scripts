@@ -404,6 +404,7 @@ describe("useAppErrorsLogic", () => {
         beforeEach(() => {
           process.env.featureFlags = { employerShowVerifications: true };
           goToSpy = jest.spyOn(portalFlow, "goTo");
+          portalFlow.pathWithParams = "/foo?bar=true";
         });
 
         describe("when has_verification_data is true", () => {
@@ -432,11 +433,12 @@ describe("useAppErrorsLogic", () => {
           });
 
           it("redirects to verify contributions page", () => {
-            expect(
-              goToSpy
-            ).toHaveBeenCalledWith(
+            expect(goToSpy).toHaveBeenCalledWith(
               "/employers/organizations/verify-contributions",
-              { employer_id: "some-employer-id" }
+              {
+                employer_id: "some-employer-id",
+                next: "/foo?bar=true",
+              }
             );
           });
 
