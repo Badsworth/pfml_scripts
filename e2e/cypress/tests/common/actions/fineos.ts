@@ -8,13 +8,13 @@ export function loginSavilinx(): void {
   cy.visit("/");
 }
 
-export function visitClaim(claimId: string): void {
+export function visitClaim(claimId: string, isApproved = false): void {
   cy.get('a[aria-label="Cases"]').click();
   cy.get('td[keytipnumber="4"]').contains("Case").click();
   cy.labelled("Case Number").type(claimId);
   cy.labelled("Case Type").select("Absence Case");
   cy.get('input[type="submit"][value="Search"]').click();
-  assertOnClaimPage(claimId);
+  assertOnClaimPage(claimId, isApproved);
 }
 
 export function visitEmployer(fein: string): void {
@@ -61,8 +61,14 @@ export function denyClaim(reason: string): void {
   cy.wait(200);
 }
 
-export function assertOnClaimPage(claimNumber: string): void {
-  cy.get("[id*='processPhaseEnum']").should("contain.text", "Adjudication");
+export function assertOnClaimPage(
+  claimNumber: string,
+  isApproved = false
+): void {
+  cy.get("[id*='processPhaseEnum']").should(
+    "contain.text",
+    isApproved ? "Managed Leave" : "Adjudication"
+  );
   cy.get(".case_pageheader_title").contains(claimNumber);
 }
 
@@ -628,6 +634,77 @@ export function claimAdjudicationMailedDoc(claimNumber: string): void {
   assertAdjudicatingClaim(claimNumber);
   clickBottomWidgetButton("OK");
   assertClaimApprovable();
+}
+
+export function claimUpdateAfterApprovalFlow(claimNumber: string): void {
+  visitClaim(claimNumber, true);
+  assertOnClaimPage(claimNumber, true);
+  // Adds task as Contact Center Specialist.
+  onTab("Task");
+  cy.get("input[value='Add']").click();
+  cy.get("input[id*='NameTextBox']").type("Approved Leave Start Date Change");
+  cy.get("input[value='Find']").click();
+  cy.get(
+    "[id*='chooseWorkTypeListDisplayName'][title='Approved Leave Start Date Change']"
+  ).click();
+  clickBottomWidgetButton("Next");
+  cy.get("td[title='Approved Leave Start Date Change']").click();
+  cy.get("input[value='Edit']").click();
+  cy.labelled("Description").type(
+    "Start date is being changed in order to test claimUpdateAfterApprovalFlow"
+  );
+  clickBottomWidgetButton("OK");
+  // Approves claim update as Adjudicator.
+  cy.get("td[title='Approved Leave Start Date Change']").click();
+  cy.get("input[value='Open']").click();
+  cy.get("a[id*='NavCasePageButton']").click();
+  onTab("Leave Details");
+  cy.get("td[id*='leaveRequestListviewWidgetReason']").click();
+  cy.get("input[value='Review']").click();
+  cy.get("td[id*='leaveRequestListviewWidgetReason']").click();
+  cy.get("input[value='Edit']").click();
+  cy.wait(1000);
+  cy.get("input[value='Evaluate Plan']").click();
+  cy.labelled("Leave Plan Status").select("Undecided");
+  clickBottomWidgetButton("OK");
+  onTab("Availability");
+  cy.get("input[value='Manage Time']").click();
+  cy.get("input[type='checkbox'][id*='MasterMultiSelectCB_CHECKBOX']").click();
+  cy.get("select[id*='time-decision-status']").select("Pending");
+  cy.wait(1000);
+  cy.get("select[id*='time-decision-reason']").select("Additional Information");
+  cy.wait(1000);
+  cy.get(
+    "input[value='Apply'][id*='update-availability-status-reason']"
+  ).click();
+  cy.get("[id='PageFooterWidget'] input[value='Close']").click();
+  onTab("Evidence");
+  onTab("Certification Periods");
+  cy.get("input[value='Remove all Certification Periods']").click();
+  cy.get("input[value='Yes']").click();
+  cy.get("input[value='Yes']").click();
+  cy.get("input[value='Yes']").click();
+  onTab("Request Information");
+  onTab("Request Details");
+  cy.get("td[id*='timeOffAbsencePeriodsListviewWidgetStartDate']").click();
+  cy.get("input[value='Edit']").click();
+  cy.get("input[value='Yes']").click();
+  // Updates claim dates.
+  ["Absence start date", "Absence end date"].forEach((label) => {
+    cy.labelled(label)
+      .invoke("val")
+      .then((val) => {
+        const date = new Date(val);
+        // Increment date.
+        const dateFormatted = format(addDays(date, 1), "MM/dd/yyyy");
+        cy.labelled(label).type(
+          `{selectall}{backspace}${dateFormatted}{enter}`
+        );
+        cy.wait("@ajaxRender");
+        cy.wait(200);
+      });
+  });
+  cy.get("input[value='OK'][id*='PopupWidget']").click();
 }
 
 export function addBondingLeaveFlow(timeStamp: Date): void {
