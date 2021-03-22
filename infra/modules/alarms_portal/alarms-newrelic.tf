@@ -280,7 +280,7 @@ resource "newrelic_nrql_alert_condition" "unexpected_validation_violations" {
         OR issueType LIKE 'value_error%'
       )
       AND issueField NOT LIKE 'employer_benefits[%].benefit_amount_frequency'
-      AND issueField NOT LIKE 'OCOrganization[%].CustomerNo'
+      AND issueField NOT LIKE 'OCOrganisation[%].CustomerNo'
     FACET issueType, issueField
     NRQL
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
