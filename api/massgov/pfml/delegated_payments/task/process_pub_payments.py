@@ -6,7 +6,8 @@ import massgov.pfml.db as db
 import massgov.pfml.util.logging as logging
 from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import PaymentRejectsStep
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
-from massgov.pfml.delegated_payments.pub.transaction_file_creator import TransactionFileCreator
+from massgov.pfml.delegated_payments.payment_methods_split_step import PaymentMethodsSplitStep
+from massgov.pfml.delegated_payments.pub.transaction_file_creator import TransactionFileCreatorStep
 from massgov.pfml.util.logging import audit
 
 logger = logging.get_logger(__name__)
@@ -15,28 +16,22 @@ logger = logging.get_logger(__name__)
 ALL = "ALL"
 PROCESS_AUDIT_REJECT = "audit-reject"
 CREATE_PEI_WRITEBACK = "initial-writeback"
-PROCESS_CHECKS = "checks"
-PROCESS_PRENOTES = "prenotes"
-PROCESS_ACH = "ach"
-SEND_FILES = "send"
+SPLIT_PAYMENT_METHODS = "split-payment-methods"
+PUB_TRANSACTION = "pub-transaction"
 ALLOWED_VALUES = [
     ALL,
     PROCESS_AUDIT_REJECT,
     CREATE_PEI_WRITEBACK,
-    PROCESS_CHECKS,
-    PROCESS_PRENOTES,
-    PROCESS_ACH,
-    SEND_FILES,
+    SPLIT_PAYMENT_METHODS,
+    PUB_TRANSACTION,
 ]
 
 
 class Configuration:
     process_audit_reject: bool
     create_pei_writeback: bool
-    process_checks: bool
-    process_prenotes: bool
-    process_ach: bool
-    send_files: bool
+    split_payment_methods: bool
+    pub_transaction: bool
 
     def __init__(self, input_args: List[str]):
         parser = argparse.ArgumentParser(
@@ -56,17 +51,13 @@ class Configuration:
         if ALL in steps:
             self.process_audit_reject = True
             self.create_pei_writeback = True
-            self.process_checks = True
-            self.process_prenotes = True
-            self.process_ach = True
-            self.send_files = True
+            self.split_payment_methods = True
+            self.pub_transaction = True
         else:
             self.process_audit_reject = PROCESS_AUDIT_REJECT in steps
             self.create_pei_writeback = CREATE_PEI_WRITEBACK in steps
-            self.process_checks = PROCESS_CHECKS in steps
-            self.process_prenotes = PROCESS_PRENOTES in steps
-            self.process_ach = PROCESS_ACH in steps
-            self.send_files = SEND_FILES in steps
+            self.split_payment_methods = SPLIT_PAYMENT_METHODS in steps
+            self.pub_transaction = PUB_TRANSACTION in steps
 
 
 def make_db_session() -> db.Session:
@@ -96,20 +87,15 @@ def _process_pub_payments(db_session_raw: db.Session, config: Configuration) -> 
 
         if config.create_pei_writeback:
             FineosPeiWritebackStep(db_session=db_session, log_entry_db_session=db_session_raw).run()
-            pass
 
-        transaction_file_creator = TransactionFileCreator(db_session)
+        if config.split_payment_methods:
+            PaymentMethodsSplitStep(
+                db_session=db_session, log_entry_db_session=db_session_raw
+            ).run()
 
-        if config.process_checks:
-            transaction_file_creator.create_check_file()
-
-        if config.process_prenotes:
-            transaction_file_creator.add_prenotes()
-
-        if config.process_ach:
-            transaction_file_creator.add_ach_payments()
-
-        if config.send_files:
-            transaction_file_creator.send_payment_files()
+        if config.pub_transaction:
+            TransactionFileCreatorStep(
+                db_session=db_session, log_entry_db_session=db_session_raw
+            ).run()
 
     logger.info("Done - PUB Payments ECS Task")

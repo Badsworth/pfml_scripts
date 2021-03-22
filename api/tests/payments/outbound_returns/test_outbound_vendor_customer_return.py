@@ -6,10 +6,12 @@ import boto3
 import defusedxml.ElementTree as ET
 import pytest
 
+import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.outbound_returns.outbound_vendor_customer_return as outbound_vendor_customer_return
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     CtrDocumentIdentifier,
+    Employee,
     EmployeeReferenceFile,
     GeoState,
     ReferenceFileType,
@@ -18,13 +20,15 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
 )
 from massgov.pfml.db.models.factories import (
-    AddressFactory,
     CtrAddressPairFactory,
+    CtrDocumentIdentifierFactory,
     EmployeeFactory,
+    EmployeeReferenceFileFactory,
     ReferenceFileFactory,
     TaxIdentifierFactory,
 )
 from massgov.pfml.payments.payments_util import Constants, ValidationContainer, ValidationReason
+from tests.helpers.state_log import AdditionalParams, setup_state_log
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -75,14 +79,15 @@ def get_ams_document(description="valid"):
 
 
 def create_ovr_dependencies(
-    ams_document_id, TIN, test_db_session,
-) -> [CtrDocumentIdentifier, EmployeeReferenceFile, EmployeeFactory, ReferenceFileFactory]:
+    ams_document_id, tin, test_db_session, previous_states=None
+) -> [CtrDocumentIdentifier, EmployeeReferenceFile, Employee]:
     """
     Successful processing of an AMS Document within an OVR file requires multiple dependencies:
     - An employee
     - A CtrDocumentIdentifier the "ctr_document_identifier" field matching the DOC_ID in the AMS_DOCUMENT
     - A ReferenceFile of type VCC
     - An EmployeeReferenceFile that connects the above Employee, VCC ReferenceFile and CtrDocumentIdentifier
+    - A previous StateLog entry
 
     The test xml file used for these tests contain multiple AMS_DOCUMENT objects. To test processing a specific AMS_DOCUMENT,
     create just the dependencies for that AMS_DOCUMENT by passing in the DOC_ID and TIN values from that AMS_DOCUMENT.
@@ -90,33 +95,32 @@ def create_ovr_dependencies(
     All the other AMS_DOCUMENTS will fail the validation steps, since their depdencies won't exist.
     """
 
-    tax_identifier = TaxIdentifier(tax_identifier=TIN)
-    vcc_reference_file = ReferenceFileFactory.create(
-        reference_file_type_id=ReferenceFileType.VCC.reference_file_type_id
-    )
-    mailing_address = AddressFactory()
-    ctr_address_pair = CtrAddressPairFactory(fineos_address=mailing_address)
-    employee = EmployeeFactory(ctr_address_pair=ctr_address_pair, tax_identifier=tax_identifier)
+    if previous_states is None:
+        previous_states = [State.VCC_SENT]
 
-    ctr_document_identifer = CtrDocumentIdentifier(
+    state_log_setup_results = setup_state_log(
+        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
+        end_states=previous_states,
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(tax_identifier=TaxIdentifier(tax_identifier=tin),),
+    )
+
+    employee = state_log_setup_results.associated_model
+    ctr_address_pair = CtrAddressPairFactory()
+    employee.ctr_address_pair = ctr_address_pair
+    ctr_document_identifier = CtrDocumentIdentifierFactory(
         ctr_document_identifier=ams_document_id, document_date="2021-01-01", document_counter=1
     )
-    test_db_session.add(ctr_document_identifer)
-    test_db_session.commit()
-
-    employee_reference_file = EmployeeReferenceFile(
-        employee_id=employee.employee_id,
-        reference_file_id=vcc_reference_file.reference_file_id,
-        ctr_document_identifier_id=ctr_document_identifer.ctr_document_identifier_id,
+    vcc_reference_file = ReferenceFileFactory(
+        reference_file_type_id=ReferenceFileType.VCC.reference_file_type_id
+    )
+    employee_reference_file = EmployeeReferenceFileFactory(
+        employee=employee,
+        ctr_document_identifier=ctr_document_identifier,
+        reference_file=vcc_reference_file,
     )
 
-    employee.reference_files = [employee_reference_file]
-
-    test_db_session.add(employee_reference_file)
-    test_db_session.add(employee)
-    test_db_session.commit()
-
-    return ctr_document_identifer, employee_reference_file, employee
+    return (ctr_document_identifier, employee_reference_file, employee)
 
 
 def get_ovr_reference_file():
@@ -386,10 +390,10 @@ def test_update_employee_data(test_db_session, initialize_factories_session):
 def test_update_employee_data_when_missing_data(test_db_session, initialize_factories_session):
     ams_document = get_ams_document("missing_city")
     ams_document_id = ams_document.get("DOC_ID")
-    TIN = ams_document.find("VC_DOC_VCUST").find("TIN").text
+    tin = ams_document.find("VC_DOC_VCUST").find("TIN").text
 
     (ctr_document_identifier, employee_reference_file, employee) = create_ovr_dependencies(
-        ams_document_id, TIN, test_db_session
+        ams_document_id, tin, test_db_session
     )
 
     # give the employee a mailing address with all None values
@@ -416,10 +420,10 @@ def test_state_log_creation_with_no_validation_issues(
 ):
     ams_document = get_ams_document()
     ams_document_id = ams_document.get("DOC_ID")
-    TIN = ams_document.find("VC_DOC_VCUST").find("TIN").text
+    tin = ams_document.find("VC_DOC_VCUST").find("TIN").text
 
-    (ctr_document_identifier, employee_reference_file, employee,) = create_ovr_dependencies(
-        ams_document_id, TIN, test_db_session
+    (ctr_document_identifier, employee_reference_file, employee) = create_ovr_dependencies(
+        ams_document_id, tin, test_db_session
     )
 
     ovr_reference_file = get_ovr_reference_file()
@@ -432,6 +436,7 @@ def test_state_log_creation_with_no_validation_issues(
     assert state_log.employee == employee
     assert state_log.payment is None
     assert state_log.reference_file is None
+    assert state_log.end_state_id == State.VCC_SENT.state_id
 
 
 def test_state_log_creation_with_dependency_issues(test_db_session, initialize_factories_session):
@@ -567,10 +572,17 @@ def test_finish_state_log_with_validation_issues(
         test_db_session, ovr_reference_file
     )
 
-    state_log = test_db_session.query(StateLog).filter(StateLog.employee == employee).all()
+    state_log = (
+        test_db_session.query(StateLog)
+        .filter(StateLog.employee == employee)
+        .order_by(StateLog.ended_at)
+        .all()
+    )
 
-    assert len(state_log) == 1
-    state_log = state_log[0]
+    assert len(state_log) == 2
+    # First StateLog is the initial state
+    # Second StateLog is the new state with the error
+    state_log = state_log[1]
     assert state_log.end_state_id == State.VCC_SENT.state_id
     assert state_log.employee_id == employee.employee_id
     assert state_log.outcome == {
@@ -618,10 +630,17 @@ def test_finish_state_log_with_no_validation_issues(
         test_db_session, ovr_reference_file
     )
 
-    state_log = test_db_session.query(StateLog).filter(StateLog.employee == employee).all()
+    state_log = (
+        test_db_session.query(StateLog)
+        .filter(StateLog.employee == employee)
+        .order_by(StateLog.ended_at)
+        .all()
+    )
 
-    assert len(state_log) == 1
-    state_log = state_log[0]
+    assert len(state_log) == 2
+    # First StateLog is the initial state
+    # Second StateLog is the new state
+    state_log = state_log[1]
     assert state_log.end_state_id == State.VCC_SENT.state_id
     assert state_log.employee_id == employee.employee_id
     assert state_log.outcome == {"message": "No validation issues found"}
@@ -637,3 +656,39 @@ def test_finish_state_log_with_no_validation_issues(
     )
     assert employee.ctr_address_pair.ctr_address.zip_code == address.find("ZIP").text
     assert ovr_reference_file.file_location == PROCESSED_S3_PATH
+
+
+def test_finish_state_log_with_alternate_previous_state(
+    test_db_session, initialize_factories_session, mock_s3_bucket
+):
+    # Test case: state log created and finished with "No validation issues found" outcome
+    # By setting up dependencies for the "valid" AMS_DOCUMENT in the test file, the AMS_DOCUMENT should make it through the
+    # process to the point where the state_log is finished with no validation issues
+    setup_mock_s3_bucket(mock_s3_bucket)
+
+    ams_document = get_ams_document()
+    ams_document_id = ams_document.get("DOC_ID")
+    tin = ams_document.find("VC_DOC_VCUST").find("TIN").text
+
+    (ctr_document_identifier, employee_reference_file, employee) = create_ovr_dependencies(
+        ams_document_id, tin, test_db_session, previous_states=[State.IDENTIFY_MMARS_STATUS]
+    )
+
+    ovr_reference_file = get_ovr_reference_file()
+
+    outbound_vendor_customer_return.process_outbound_vendor_customer_return(
+        test_db_session, ovr_reference_file
+    )
+
+    state_log = (
+        test_db_session.query(StateLog)
+        .filter(StateLog.employee == employee)
+        .order_by(StateLog.ended_at)
+        .all()
+    )
+
+    assert len(state_log) == 2
+    # First StateLog is the initial state
+    # Second StateLog is the new state
+    state_log = state_log[1]
+    assert state_log.end_state_id == State.IDENTIFY_MMARS_STATUS.state_id

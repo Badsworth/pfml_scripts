@@ -14,25 +14,7 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
     >
       Upload an identification document
     </Heading>
-    <Lead>
-      <Trans
-        components={
-          Object {
-            "mail-fax-instructions-link": <a
-              href="https://www.mass.gov/pfmlsubmitinfo"
-              rel="noopener"
-              target="_blank"
-            />,
-          }
-        }
-        i18nKey="pages.claimsUploadId.lead"
-        tOptions={
-          Object {
-            "context": "other",
-          }
-        }
-      />
-    </Lead>
+    <DocumentRequirements />
     <div
       className="border-bottom border-base-light margin-bottom-4 padding-bottom-4"
     >
@@ -144,25 +126,7 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID r
     >
       Upload your Massachusetts driver’s license or ID card
     </Heading>
-    <Lead>
-      <Trans
-        components={
-          Object {
-            "mail-fax-instructions-link": <a
-              href="https://www.mass.gov/pfmlsubmitinfo"
-              rel="noopener"
-              target="_blank"
-            />,
-          }
-        }
-        i18nKey="pages.claimsUploadId.lead"
-        tOptions={
-          Object {
-            "context": "mass",
-          }
-        }
-      />
-    </Lead>
+    <DocumentRequirements />
     <FileUploadDetails />
     <FileCardList
       addAnotherFileButtonText="Choose another file"
@@ -206,25 +170,7 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID w
     >
       Upload your Massachusetts driver’s license or ID card
     </Heading>
-    <Lead>
-      <Trans
-        components={
-          Object {
-            "mail-fax-instructions-link": <a
-              href="https://www.mass.gov/pfmlsubmitinfo"
-              rel="noopener"
-              target="_blank"
-            />,
-          }
-        }
-        i18nKey="pages.claimsUploadId.lead"
-        tOptions={
-          Object {
-            "context": "mass",
-          }
-        }
-      />
-    </Lead>
+    <DocumentRequirements />
     <FileUploadDetails />
     <FileCardList
       addAnotherFileButtonText="Choose another file"

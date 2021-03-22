@@ -485,6 +485,7 @@ jobs:
       TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_VAR_cognito_pre_signup_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_CLI_ARGS: '-lock-timeout=120s'
+      TF_VAR_release_version: ${{ github.event.inputs.version }}
 
     steps:
       - uses: actions/checkout@v2

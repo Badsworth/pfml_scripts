@@ -33,7 +33,7 @@ export const VerifyAccount = (props) => {
   const showEmailField = !createAccountUsername;
   // TODO (CP-1768): Remove code related to showing EIN field once sign up requests are always sent through API
   const showEinFields =
-    !isFeatureEnabled("authThroughApi") &&
+    !isFeatureEnabled("employerAuthThroughApi") &&
     !employerIdNumber &&
     createAccountFlow !== "claimant";
 
@@ -77,7 +77,7 @@ export const VerifyAccount = (props) => {
       return;
     }
 
-    if (!isFeatureEnabled("authThroughApi") && formState.isEmployer) {
+    if (!isFeatureEnabled("employerAuthThroughApi") && formState.isEmployer) {
       await auth.verifyEmployerAccount(
         formState.username,
         formState.code,

@@ -34,8 +34,8 @@
     "COGNITO_POOL": "us-east-1_gHLjkp4A8",
     "COGNITO_CLIENTID": "2hr6bckdopamvq92jahr542p5p",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/test-stage-2020-11-30.employees.json",
-    "EMPLOYERS_FILE": "./employers/e2e.json",
+    "EMPLOYEES_FILE": "./employees/e2e-2021-02-22.employees.json",
+    "EMPLOYERS_FILE": "./employers/e2e-2021-02-22.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "performance": {

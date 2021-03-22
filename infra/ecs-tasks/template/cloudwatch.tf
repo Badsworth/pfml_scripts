@@ -244,7 +244,7 @@ module "reductions_send_claimant_lists_scheduler" {
 
   ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-send-claimant-lists"].arn
   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-send-claimant-lists"].family
-  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_executor_role     = aws_iam_role.reductions_workflow_execution_role.arn
   ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
 }
 
@@ -262,7 +262,7 @@ module "reductions_retrieve_payment_listsscheduler" {
 
   ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-retrieve-payment-lists"].arn
   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-retrieve-payment-lists"].family
-  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_executor_role     = aws_iam_role.reductions_workflow_execution_role.arn
   ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
 }
 
@@ -280,6 +280,6 @@ module "reductions-send-wage-replacement-payments-to-dfml" {
 
   ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-send-wage-replacement"].arn
   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-send-wage-replacement"].family
-  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_executor_role     = aws_iam_role.reductions_workflow_execution_role.arn
   ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
 }

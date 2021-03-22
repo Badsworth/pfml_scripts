@@ -88,4 +88,5 @@ module "api" {
 
   dor_fineos_etl_definition          = local.dor_fineos_etl_definition
   dor_fineos_etl_schedule_expression = "cron(0 4 * * ? *)" # Daily at 04:00 UTC [23:00 EST] [00:00 EDT]
+  release_version                    = var.release_version
 }

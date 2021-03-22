@@ -253,7 +253,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} password Password
    */
   const createAccount = async (username = "", password) => {
-    if (isFeatureEnabled("authThroughApi")) {
+    if (isFeatureEnabled("claimantAuthThroughApi")) {
       await _createAccountInApi(username, password, RoleDescription.claimant);
       return;
     }
@@ -283,7 +283,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} ein Employer id number (known as EIN or FEIN)
    */
   const createEmployerAccount = async (username = "", password, ein) => {
-    if (isFeatureEnabled("authThroughApi")) {
+    if (isFeatureEnabled("employerAuthThroughApi")) {
       await _createAccountInApi(
         username,
         password,

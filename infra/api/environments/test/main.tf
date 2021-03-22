@@ -108,6 +108,7 @@ module "api" {
   portal_base_url                                     = "https://paidleave-test.mass.gov"
   enable_application_fraud_check                      = "0"
   enable_sentry                                       = "1"
+  release_version                                     = var.release_version
 
   dor_fineos_etl_definition          = local.dor_fineos_etl_definition
   dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour

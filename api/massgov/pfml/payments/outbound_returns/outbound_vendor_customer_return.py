@@ -16,10 +16,10 @@ from massgov.pfml.db.models.employees import (
     CtrDocumentIdentifier,
     Employee,
     EmployeeReferenceFile,
+    Flow,
     GeoState,
     ReferenceFile,
     ReferenceFileType,
-    State,
 )
 
 logger = logging.get_logger(__name__)
@@ -218,11 +218,29 @@ def update_employee_data(
 
     # update address fields on the CTR half of the CtrAddressPair
     if not employee.ctr_address_pair.ctr_address:
+        logger.info(
+            "Creating CTR address for Employee ID %s",
+            employee.employee_id,
+            extra={
+                "employee_id": employee.employee_id,
+                "fineos_customer_number": employee.fineos_customer_number,
+            },
+        )
         ctr_address = Address(
             address_id=uuid.uuid4(), address_type_id=AddressType.MAILING.address_type_id
         )
         employee.ctr_address_pair.ctr_address = ctr_address
         db_session.add(employee)
+
+    logger.info(
+        "Setting CTR address for Employee ID %s",
+        employee.employee_id,
+        extra={
+            "employee_id": employee.employee_id,
+            "fineos_customer_number": employee.fineos_customer_number,
+            "address_id": ctr_address.address_id,
+        },
+    )
 
     ctr_address = employee.ctr_address_pair.ctr_address
     geo_state_id = GeoState.get_id(validated_address_data.ST)
@@ -353,7 +371,7 @@ def get_ctr_document_identifier(
             ams_document_id,
             extra={"ctr_document_identifier": ams_document_id},
         )
-        # TODO - should we raise an exception in this scenario?
+        raise ValueError("DOC_ID {ams_document_id} not found in PFML DB")
 
     return ctr_document_identifier
 
@@ -463,9 +481,17 @@ def process_ams_document(
             payments_util.ValidationReason.MISSING_IN_DB, "employee.ctr_address_pair"
         )
 
+    current_state = state_log_util.get_latest_state_log_in_flow(
+        dependencies.employee, Flow.VENDOR_CHECK, db_session
+    )
+
+    if current_state is None or current_state.end_state is None:
+        logger.error("An unexpected error occurred with the state_log")
+        raise Exception("Missing state_log or state_log missing end_state")
+
     if validation_container.has_validation_issues():
         state_log = state_log_util.create_finished_state_log(
-            end_state=State.VCC_SENT,
+            end_state=current_state.end_state,
             associated_model=dependencies.employee,
             outcome=state_log_util.build_outcome("Validation issues found", validation_container),
             db_session=db_session,
@@ -481,7 +507,7 @@ def process_ams_document(
         )
 
         state_log = state_log_util.create_finished_state_log(
-            end_state=State.VCC_SENT,
+            end_state=current_state.end_state,
             associated_model=dependencies.employee,
             outcome=state_log_util.build_outcome(
                 "No validation issues found", validation_container
@@ -529,7 +555,12 @@ def process_outbound_vendor_customer_return(
     # Process each AMS_DOCUMENT in the XML Document
     # Move the file to the processed folder
     try:
-        for ams_document in root:
+        for i, ams_document in enumerate(root):
+            logger.info(
+                "Proccessing record %i of %i total records in outbound vendor customer return file",
+                i,
+                len(root),
+            )
             process_ams_document(ams_document, db_session, ref_file)
 
         # Note: this function also calls db_session.commit(), so no need to

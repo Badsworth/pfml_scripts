@@ -37,8 +37,6 @@ export type ClaimSpecification = {
   // Reason for leave. @see ApplicationLeaveDetails
   reason: ApplicationLeaveDetails["reason"];
   reason_qualifier?: ApplicationLeaveDetails["reason_qualifier"];
-  employerExempt?: boolean;
-  gaveAppropriateNotice?: boolean;
   // An object describing documentation that should accompany the claim.
   docs?: DocumentGenerationSpec;
   employerResponse?: SimulatedEmployerResponse;
@@ -62,10 +60,6 @@ export type ClaimSpecification = {
   work_pattern_spec?: WorkPatternSpec;
   // Makes a claim for an extremely short time period (1 day).
   shortClaim?: boolean;
-  // @todo: Get rid of these. You can control them by controlling the employee the claim gets generated with.
-  // For ID-proofing
-  id_proof?: boolean;
-  id_check?: string;
   wages?: WageSpecification;
   // Any additional metadata you want to add to the generated claim.
   // This will not be used during the normal submission process, but we can use it for reporting.

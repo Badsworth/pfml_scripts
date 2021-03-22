@@ -22,7 +22,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
 )
-from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import (
+from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     write_audit_report_rows,
 )
 from massgov.pfml.delegated_payments.step import Step
@@ -128,9 +128,15 @@ class PaymentRejectsStep(Step):
                 leave_request_id=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_id],
                 leave_request_decision=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision],
                 is_first_time_payment=row[PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment],
-                is_updated_payment=row[PAYMENT_AUDIT_CSV_HEADERS.is_updated_payment],
-                is_rejected_or_error=row[PAYMENT_AUDIT_CSV_HEADERS.is_rejected_or_error],
-                days_in_rejected_state=row[PAYMENT_AUDIT_CSV_HEADERS.days_in_rejected_state],
+                is_previously_errored_payment=row[
+                    PAYMENT_AUDIT_CSV_HEADERS.is_previously_errored_payment
+                ],
+                is_previously_rejected_payment=row[
+                    PAYMENT_AUDIT_CSV_HEADERS.is_previously_rejected_payment
+                ],
+                number_of_times_in_rejected_or_error_state=row[
+                    PAYMENT_AUDIT_CSV_HEADERS.number_of_times_in_rejected_or_error_state
+                ],
                 rejected_by_program_integrity=row[
                     PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity
                 ],
@@ -159,6 +165,7 @@ class PaymentRejectsStep(Step):
             )
 
         if is_rejected_payment:
+            self.increment("rejected_payment_count")
             state_log_util.create_finished_state_log(
                 payment,
                 State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
@@ -166,6 +173,7 @@ class PaymentRejectsStep(Step):
                 self.db_session,
             )
         else:
+            self.increment("accepted_payment_count")
             state_log_util.create_finished_state_log(
                 payment, ACCEPTED_STATE, ACCEPTED_OUTCOME, self.db_session
             )
@@ -309,7 +317,7 @@ class PaymentRejectsStep(Step):
 
         logger.info("Parsed %i payment rejects rows", parsed_rows_count)
 
-        # check if returned rows match expected number if our state log
+        # check if returned rows match expected number in our state log
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             state_log_util.AssociatedClass.PAYMENT,
             State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,

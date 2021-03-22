@@ -1,5 +1,6 @@
 import copy
 from datetime import date, datetime
+from typing import Optional
 
 import factory.random
 import pytest
@@ -7,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 from sqlalchemy import inspect
 
+import massgov.pfml.fineos
 import massgov.pfml.fineos.mock_client
 import massgov.pfml.fineos.models
 import massgov.pfml.util.datetime as datetime_util
@@ -38,6 +40,7 @@ from massgov.pfml.db.models.factories import (
     ContinuousLeavePeriodFactory,
     DocumentFactory,
     EmployerBenefitFactory,
+    EmployerFactory,
     IntermittentLeavePeriodFactory,
     OtherIncomeFactory,
     PreviousLeaveFactory,
@@ -47,6 +50,14 @@ from massgov.pfml.db.models.factories import (
     WagesAndContributionsFactory,
     WorkPatternFixedFactory,
 )
+from massgov.pfml.fineos.client import AbstractFINEOSClient
+from massgov.pfml.fineos.exception import (
+    FINEOSClientError,
+    FINEOSFatalResponseError,
+    FINEOSFatalUnavailable,
+    FINEOSNotFound,
+)
+from massgov.pfml.fineos.factory import FINEOSClientConfig
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -2623,6 +2634,91 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
     assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
 
 
+def create_mock_client(err: FINEOSClientError):
+    class MockFINEOSTestClient(massgov.pfml.fineos.mock_client.MockFINEOSClient):
+        def register_api_user(
+            self, employee_registration: massgov.pfml.fineos.models.EmployeeRegistration
+        ) -> None:
+            raise err
+
+    def inner(config: Optional[FINEOSClientConfig] = None) -> AbstractFINEOSClient:
+        return MockFINEOSTestClient()
+
+    return inner
+
+
+@pytest.mark.parametrize(
+    "expected_status,issue_type,err",
+    [
+        (
+            400,
+            IssueType.fineos_case_creation_issues,
+            FINEOSNotFound(
+                "<ErrorDetails><faultcode>com.fineos.common.portalinfrastructure.exceptions.GenericUncheckedException</faultcode><faultstring>The employee does not have an occupation linked.</faultstring><detail></detail></ErrorDetails>"
+            ),
+        ),
+        (
+            500,
+            None,
+            FINEOSFatalResponseError(
+                "<ErrorDetails><faultcode>com.fineos.common.exceptions.WSException</faultcode><faultstring>More than One Employee Details Found for the input Search Criteria.</faultstring><detail></detail></ErrorDetails>"
+            ),
+        ),
+        (503, IssueType.fineos_case_error, FINEOSFatalUnavailable(response_status=504)),
+    ],
+)
+def test_application_post_submit_fineos_register_api_errors(
+    client, user, auth_token, test_db_session, monkeypatch, err, expected_status, issue_type
+):
+    monkeypatch.setattr(massgov.pfml.fineos, "create_client", create_mock_client(err))
+
+    application = ApplicationFactory.create(user=user)
+
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    application.date_of_birth = "1997-06-06"
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+    test_db_session.commit()
+
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == expected_status
+
+    response_body = response.get_json()
+    expected_message = f"Application {str(application.application_id)} could not be submitted"
+
+    if expected_status == 503:
+        expected_message += ", try again later"
+
+    assert response_body.get("message"), expected_message
+
+    fineos_issues = response_body.get("errors")
+    assert not response_body.get("warnings")
+
+    num_issues = len(list(filter(lambda i: i["type"] == issue_type, fineos_issues)))
+
+    if issue_type is None:
+        assert num_issues == 0
+    else:
+        assert num_issues > 0
+        # Simplified check to confirm Application was included in response:
+        assert response_body.get("data").get("application_id") == str(application.application_id)
+        assert not response_body.get("data").get("fineos_absence_id")
+        assert response_body.get("data").get("status") == ApplicationStatus.Started.value
+
+
 def test_application_post_submit_app_already_submitted(client, user, auth_token, test_db_session):
     # This test aims to test the scenario where the application was successfully sent to fineos,
     # but failed when trying to complete the intake. This would mean we have the fineos_absence_id,
@@ -2835,7 +2931,12 @@ def test_application_post_submit_app_fein_not_found(client, user, auth_token):
 
 
 def test_application_post_submit_app_ssn_not_found(client, user, auth_token, test_db_session):
-    application = ApplicationFactory.create(user=user, tax_identifier=TaxIdentifierFactory.create())
+    # An FEIN of 999999999 is simulated as not found in MockFINEOSClient.
+    application = ApplicationFactory.create(
+        user=user,
+        tax_identifier=TaxIdentifierFactory.create(),
+        employer=EmployerFactory.create(employer_fein="999999999"),
+    )
 
     test_db_session.commit()
     response = client.post(

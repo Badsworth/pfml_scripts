@@ -166,6 +166,18 @@ class EftFactory(BaseFactory):
     bank_account_type_id = employee_models.BankAccountType.CHECKING.bank_account_type_id
 
 
+class PubEftFactory(BaseFactory):
+    class Meta:
+        model = employee_models.PubEft
+
+    pub_eft_id = Generators.UuidObj
+    routing_nbr = factory.Sequence(lambda n: "%09d" % n)
+    account_nbr = factory.Sequence(lambda n: "%011d" % n)
+    bank_account_type_id = employee_models.BankAccountType.CHECKING.bank_account_type_id
+    prenote_state_id = employee_models.PrenoteState.PENDING_PRE_PUB.prenote_state_id
+    prenote_response_at = Generators.UtcNow
+
+
 class EmployeeFactory(BaseFactory):
     class Meta:
         model = employee_models.Employee
@@ -181,6 +193,17 @@ class EmployeeFactory(BaseFactory):
     email_address = factory.Faker("email")
     phone_number = "+19425290727"
     ctr_vendor_customer_code = "VC0001201168"
+
+
+class EmployeePubEftPairFactory(BaseFactory):
+    class Meta:
+        model = employee_models.EmployeePubEftPair
+
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda e: e.employee.employee_id)
+
+    pub_eft = factory.SubFactory(PubEftFactory)
+    pub_eft_id = factory.LazyAttribute(lambda p: p.pub_eft.pub_eft_id)
 
 
 class CtrBatchIdentifierFactory(BaseFactory):

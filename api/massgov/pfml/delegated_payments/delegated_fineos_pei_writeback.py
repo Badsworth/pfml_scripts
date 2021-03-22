@@ -105,11 +105,13 @@ class FineosPeiWritebackStep(Step):
             writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
             transaction_status=PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
         )
+        zero_dollar_payment_count = len(zero_dollar_payment_writeback_items)
         logger.info(
             "Found %i extracted writeback items in state: %s",
-            len(zero_dollar_payment_writeback_items),
+            zero_dollar_payment_count,
             State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
         )
+        self.set_metrics(zero_dollar_payment_count=zero_dollar_payment_count)
 
         overpayment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK,
@@ -117,11 +119,13 @@ class FineosPeiWritebackStep(Step):
             writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
             transaction_status=PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
         )
+        overpayment_count = len(overpayment_writeback_items)
         logger.info(
             "Found %i extracted writeback items in state: %s",
-            len(overpayment_writeback_items),
+            overpayment_count,
             State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK.state_description,
         )
+        self.set_metrics(overpayment_count=overpayment_count)
 
         accepted_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK,
@@ -129,11 +133,13 @@ class FineosPeiWritebackStep(Step):
             writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
             transaction_status=PAID_WRITEBACK_RECORD_TRANSACTION_STATUS,
         )
+        accepted_payment_count = len(accepted_payment_writeback_items)
         logger.info(
             "Found %i extracted writeback items in state: %s",
-            len(accepted_payment_writeback_items),
+            accepted_payment_count,
             State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
         )
+        self.set_metrics(accepted_payment_count=accepted_payment_count)
 
         cancelled_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK,
@@ -141,11 +147,13 @@ class FineosPeiWritebackStep(Step):
             writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
             transaction_status=PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
         )
+        cancelled_payment_count = len(cancelled_payment_writeback_items)
         logger.info(
             "Found %i extracted writeback items in state: %s",
-            len(cancelled_payment_writeback_items),
+            cancelled_payment_count,
             State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
         )
+        self.set_metrics(cancelled_payment_count=cancelled_payment_count)
 
         # TODO: Add disbursed payments to this writeback using the same pattern as above but with a
         # writeback_record_converter of _disbursed_payment_to_pei_writeback_record.
@@ -188,6 +196,7 @@ class FineosPeiWritebackStep(Step):
                         ),
                     )
                 )
+                self.increment("writeback_record_count")
             except Exception:
                 logger.exception(
                     "Error adding payment to list of writeback records",

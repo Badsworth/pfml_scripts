@@ -5,17 +5,18 @@ from massgov.pfml.util.pydantic.types import FEINUnformattedStr
 
 
 class RoleRequest(PydanticBaseModel):
-    role_description: str
+    role_description: Optional[str]
 
 
 class UserLeaveAdminRequest(PydanticBaseModel):
-    employer_fein: FEINUnformattedStr
+    employer_fein: Optional[FEINUnformattedStr]
 
 
 class UserCreateRequest(PydanticBaseModel):
-    email_address: str
-    password: str
-    role: RoleRequest
+    # Enforcement of these fields' presence is via user_rules.py
+    email_address: Optional[str]
+    password: Optional[str]
+    role: Optional[RoleRequest]
     user_leave_administrator: Optional[UserLeaveAdminRequest]
 
 

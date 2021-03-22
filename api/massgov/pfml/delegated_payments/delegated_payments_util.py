@@ -26,7 +26,6 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.lookup import LookupTable
 from massgov.pfml.db.models.employees import (
-    EFT,
     Address,
     ClaimType,
     CtrBatchIdentifier,
@@ -37,6 +36,7 @@ from massgov.pfml.db.models.employees import (
     LkReferenceFileType,
     Payment,
     PaymentReferenceFile,
+    PubEft,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -62,6 +62,7 @@ class Constants:
     COMPTROLLER_AD_TYPE = "PA"
     DOC_PHASE_CD_FINAL_STATUS = "3 - Final"
 
+    PUB_FILENAME_TEMPLATE = "{}-{}"  # e.g. PUB-NACHA-20210830
     BATCH_ID_TEMPLATE = COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
     MMARS_FILE_SKIPPED = "Did not create file for MMARS because there was no work to do"
 
@@ -72,27 +73,6 @@ class Constants:
     S3_INBOUND_PROCESSED_DIR = "processed"
     S3_INBOUND_SKIPPED_DIR = "skipped"
     S3_INBOUND_ERROR_DIR = "error"
-
-    # === Metadata for states in the VENDOR_CHECK flow ===
-    # Employees might need to be restarted in the VENDOR_CHECK flow in the
-    # following cases (not exhaustive):
-    # - a payment arrives
-    # - an employee submits a claim for first employer and then submits a
-    #   claim for their second employer
-    # - an employee submits multiple different types of claims
-
-    # These states are restartable.
-    # TODO - delete this when updating PEI writeback
-    RESTARTABLE_VENDOR_CHECK_STATES = [
-        State.VENDOR_CHECK_INITIATED_BY_VENDOR_EXPORT.state_id,
-        State.VENDOR_EXPORT_ERROR_REPORT_SENT.state_id,
-        State.VENDOR_CHECK_INITIATED_BY_PAYMENT_EXPORT.state_id,
-        State.IDENTIFY_MMARS_STATUS.state_id,
-        State.MMARS_STATUS_CONFIRMED.state_id,
-        State.VCM_REPORT_SENT.state_id,
-        State.VENDOR_ALLOWABLE_TIME_IN_STATE_EXCEEDED.state_id,
-        State.VCC_ERROR_REPORT_SENT.state_id,
-    ]
 
     # When processing payments, certain states
     # indicate that a payment is actively being processed
@@ -135,6 +115,7 @@ class Constants:
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED,
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT,
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT,
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION,
     ]
 
 
@@ -146,6 +127,7 @@ class ValidationReason(str, Enum):
     FIELD_TOO_LONG = "FieldTooLong"
     INVALID_LOOKUP_VALUE = "InvalidLookupValue"
     INVALID_VALUE = "InvalidValue"
+    INVALID_TYPE = "InvalidType"
     MULTIPLE_VALUES_FOUND = "MultipleValuesFound"
     VALUE_NOT_FOUND = "ValueNotFound"
     NON_NULLABLE = "NonNullable"
@@ -155,6 +137,8 @@ class ValidationReason(str, Enum):
     UNUSABLE_STATE = "UnusableState"
     RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED = "ReceivedPaymentCurrentlyBeingProcessed"
     UNEXPECTED_PAYMENT_TRANSACTION_TYPE = "UnexpectedPaymentTransactionType"
+    EFT_PRENOTE_PENDING = "EFTPending"
+    EFT_PRENOTE_REJECTED = "EFTRejected"
 
 
 @dataclass(frozen=True, eq=True)
@@ -174,6 +158,14 @@ class ValidationContainer:
 
     def has_validation_issues(self) -> bool:
         return len(self.validation_issues) != 0
+
+
+class ValidationIssueException(Exception):
+    __slots__ = ["issues", "message"]
+
+    def __init__(self, issues: List[ValidationIssue], message: str):
+        self.issues = issues
+        self.message = message
 
 
 def get_now() -> datetime:
@@ -723,6 +715,25 @@ def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str
     return date_to_full_path
 
 
+def create_pub_reference_file(
+    now: datetime, file_type: LkReferenceFileType, db_session: db.Session, pub_outbound_path: str
+) -> ReferenceFile:
+    s3_path = os.path.join(pub_outbound_path, Constants.S3_OUTBOUND_READY_DIR)
+    filename = Constants.PUB_FILENAME_TEMPLATE.format(
+        file_type.reference_file_type_description, now.strftime("%Y%m%d"),
+    )
+    dir_path = os.path.join(s3_path, filename)
+
+    ref_file = ReferenceFile(
+        reference_file_id=uuid.uuid4(),
+        file_location=dir_path,
+        reference_file_type_id=file_type.reference_file_type_id,
+    )
+    db_session.add(ref_file)
+
+    return ref_file
+
+
 def create_mmars_files_in_s3(
     path: str,
     filename: str,
@@ -793,7 +804,7 @@ def is_same_address(first: Address, second: Address) -> bool:
         return False
 
 
-def is_same_eft(first: EFT, second: EFT) -> bool:
+def is_same_eft(first: PubEft, second: PubEft) -> bool:
     """Returns true if all EFT fields match"""
     if (
         first.routing_nbr == second.routing_nbr
@@ -803,6 +814,17 @@ def is_same_eft(first: EFT, second: EFT) -> bool:
         return True
     else:
         return False
+
+
+def find_existing_eft(employee: Optional[Employee], new_eft: PubEft) -> Optional[PubEft]:
+    if not employee or not employee.pub_efts:
+        return None
+
+    for pub_eft_pair in employee.pub_efts:
+        if is_same_eft(pub_eft_pair.pub_eft, new_eft):
+            return pub_eft_pair.pub_eft
+
+    return None
 
 
 def move_file_and_update_ref_file(

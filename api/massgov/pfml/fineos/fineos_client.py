@@ -270,7 +270,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 # Ideally we would never get GATEWAY_TIMEOUT and would instead always keep our client-side timeout lower than the
                 # FINEOS 29s timeout; however, the program has requested that we keep them as high as possible. We should still
                 # manage them the same as a client-side timeout exception.
-                err = exception.FINEOSFatalUnavailable(response_status=response.status_code)
+                err = exception.FINEOSFatalUnavailable(
+                    response_status=response.status_code, message=response.text
+                )
                 log_fn = logger.warning
             elif response.status_code in (
                 requests.codes.UNPROCESSABLE_ENTITY,
@@ -278,12 +280,16 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 requests.codes.FORBIDDEN,
             ):
                 # Ideally we'd raise exceptions that distinguish between 403/404/422 but we'll leave that for another time.
-                err = exception.FINEOSClientBadResponse(requests.codes.ok, response.status_code)
+                err = exception.FINEOSClientBadResponse(
+                    requests.codes.ok, response.status_code, message=response.text
+                )
                 log_fn = logger.warning
             else:
                 # We should never see anything other than these. Log an error and notify Sentry if we do. These include issues
                 # like 400 BAD REQUEST (misformatted request), 500 INTERNAL SERVER ERROR, and 413 SIZE TOO LARGE.
-                err = exception.FINEOSFatalResponseError(response_status=response.status_code)
+                err = exception.FINEOSFatalResponseError(
+                    response_status=response.status_code, message=response.text
+                )
                 log_fn = logger.error
 
             log_fn(
@@ -365,6 +371,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return self._request(method, url, headers, data=xml_data.encode("utf-8"))
 
     def read_employer(self, employer_fein: str) -> models.OCOrganisation:
+        """ Retrieves FINEOS employer info given an FEIN.
+
+        Raises
+        ------
+        FINEOSNotFound
+            If no employer exists in FINEOS that matches the given FEIN.
+        """
         response = self._wscomposer_request(
             "GET", "ReadEmployer", {"param_str_taxId": employer_fein}, ""
         )
@@ -376,17 +389,47 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return models.OCOrganisation.parse_obj(response_decoded)
 
     def find_employer(self, employer_fein: str) -> str:
+        """ Retrieves the FINEOS customer number for an employer given an FEIN.
+
+        Raises
+        ------
+        FINEOSNotFound
+            If no employer exists in FINEOS that matches the given FEIN.
+        """
         employer_response = self.read_employer(employer_fein)
 
         customer_nbr = str(employer_response.OCOrganisation[0].CustomerNo)
         return customer_nbr
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
-        """Create the employee account registration."""
+        """ Creates the employee account registration.
+
+        Raises
+        ------
+        FINEOSNotFound
+            If no employee-employer combination exists in FINEOS
+            that matches the given SSN + employer FEIN.
+        """
         xml_body = self._register_api_user_payload(employee_registration)
-        self._wscomposer_request(
-            "POST", "webservice", {"config": "EmployeeRegisterService"}, xml_body
-        )
+
+        try:
+            self._wscomposer_request(
+                "POST", "webservice", {"config": "EmployeeRegisterService"}, xml_body
+            )
+        except exception.FINEOSFatalResponseError as err:
+            # Expected 500 errors. See #3 and #7 here:
+            # https://lwd.atlassian.net/wiki/spaces/DD/pages/874905740/FINEOS+error+responses
+            #
+            # Although #2 (More than One Employee Details Found) is possible here,
+            # we want to let it bubble up and raise so that it can be triaged.
+            if err.response_status == 500 and (
+                "The employee does not have an occupation linked" in err.message  # noqa: B306
+                or "No Employee Details" in err.message  # noqa: B306
+            ):
+                raise exception.FINEOSNotFound(err.message)  # noqa: B306
+
+            # If not an expected error, bubble it up.
+            raise
 
     @staticmethod
     def _register_api_user_payload(employee_registration: models.EmployeeRegistration,) -> str:

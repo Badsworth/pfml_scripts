@@ -2,5 +2,6 @@
   "testMatch": [
     "**/test/integration/*.[jt]s?(x)"
   ],
-  "testEnvironment": "node"
+  "testEnvironment": "node",
+  "testRunner": "jest-circus/runner"
 }

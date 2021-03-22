@@ -260,8 +260,27 @@ class MockLogEntry:
         pass
 
 
-@freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
-def test_process_payment_record(test_db_session, initialize_factories_session):
+def setup_standard_test_data(
+    test_db_session,
+    *,
+    ci_index=None,
+    pei_csv_row=None,
+    claim_details_csv_row=None,
+    payment_details_csv_row=None,
+    requested_absence_som_csv_row=None,
+    vbi_requested_absence_csv_row=None
+):
+    ci_index = ci_index or test_ci_index
+    pei_csv_row = pei_csv_row or test_pei_csv_row
+    claim_details_csv_row = claim_details_csv_row or test_claim_details_csv_row
+    payment_details_csv_row = payment_details_csv_row or test_payment_details_csv_row
+    requested_absence_som_csv_row = (
+        requested_absence_som_csv_row or test_requested_absence_som_csv_row
+    )
+    vbi_requested_absence_csv_row = (
+        vbi_requested_absence_csv_row or test_vbi_requested_absence_csv_row
+    )
+
     input_files = [
         "s3://bucket/test/2021-01-17-19-14-25-Employee_feed.csv",
         "s3://bucket/test/2021-01-17-19-14-25-LeavePlan_info.csv",
@@ -274,22 +293,22 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
 
     # Build a fineos_payment_export.ExtractData object with 1 row of data.
     extract_data = fineos_payment_export.ExtractData(input_files, "manual")
-    extract_data.pei.indexed_data[test_ci_index] = test_pei_csv_row
-    extract_data.claim_details.indexed_data[test_ci_index] = test_claim_details_csv_row
-    extract_data.payment_details.indexed_data[test_ci_index] = [test_payment_details_csv_row]
+    extract_data.pei.indexed_data[ci_index] = pei_csv_row
+    extract_data.claim_details.indexed_data[ci_index] = claim_details_csv_row
+    extract_data.payment_details.indexed_data[ci_index] = [payment_details_csv_row]
 
     # Build a fineos_vendor_export.Extract object with 1 row of data.
     requested_absence_extract = fineos_vendor_export.Extract(
         "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE_SOM.csv"
     )
-    requested_absence_extract.indexed_data["NTN-308848-ABS-01"] = test_requested_absence_som_csv_row
+    requested_absence_extract.indexed_data["NTN-308848-ABS-01"] = requested_absence_som_csv_row
 
     # Build a custom voucher extract data for data from the VBI_REQUESTEDABSENCE.csv
     # Not to be confused with the similarly named VBI_REQUESTEDABSENCE_SOM.csv
     voucher_extract_data = payment_voucher.VoucherExtractData(input_files)
     voucher_extract_data.vbi_requested_absence.indexed_data[
         "NTN-308848-ABS-01"
-    ] = test_vbi_requested_absence_csv_row
+    ] = vbi_requested_absence_csv_row
 
     setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
@@ -301,26 +320,11 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         ),
     )
 
-    output_csv = MockCSVWriter()
-    writeback_csv = MockCSVWriter()
+    return extract_data, requested_absence_extract, voucher_extract_data, ci_index
 
-    payment_voucher.process_payment_record(
-        extract_data,
-        requested_absence_extract,
-        voucher_extract_data,
-        test_ci_index,
-        test_pei_csv_row,
-        output_csv,
-        writeback_csv,
-        datetime.date(2021, 1, 18),
-        test_db_session,
-        MockLogEntry(),
-    )
 
-    assert len(output_csv.rows) == 1
-    doc_id = output_csv.rows[0]["doc_id"]
-    assert re.match("^GAXMDFMLAAAA........$", doc_id)
-    assert output_csv.rows[0] == {
+def standard_output_row(*, doc_id):
+    return {
         "absence_case_number": "NTN-308848-ABS-01",
         "activity_code": "7247",
         "address_code": "AD010",
@@ -353,10 +357,23 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "leave_request_id": "1234",
         "leave_request_decision": "Pending",
         "vcm_flag": "Yes",
+        "claimants_that_have_zero_or_credit_value": "",
+        "good_to_pay_from_prior_batch": "",
+        "had_a_payment_in_a_prior_batch_by_vc_code": "",
+        "inv": "",
+        "payments_offset_to_zero": "",
+        "is_exempt": "",
+        "leave_decision_not_approved": "",
+        "has_a_check_preference_with_an_adl2_issue": "",
+        "adl2_corrected": "",
+        "removed_or_added_after_audit_of_info": "",
+        "to_be_removed_from_file": "",
+        "notes": "",
     }
 
-    assert len(writeback_csv.rows) == 1
-    assert writeback_csv.rows[0] == {
+
+def standard_writeback_row():
+    return {
         "c_value": "7326",
         "i_value": "249",
         "status": "Active",
@@ -364,6 +381,41 @@ def test_process_payment_record(test_db_session, initialize_factories_session):
         "transaction_status": "",
         "trans_status_date": "2021-01-15",
     }
+
+
+@freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
+def test_process_payment_record(test_db_session, initialize_factories_session):
+    (
+        extract_data,
+        requested_absence_extract,
+        voucher_extract_data,
+        ci_index,
+    ) = setup_standard_test_data(test_db_session)
+
+    output_csv = MockCSVWriter()
+    writeback_csv = MockCSVWriter()
+
+    payment_voucher.process_payment_record(
+        extract_data,
+        requested_absence_extract,
+        voucher_extract_data,
+        ci_index,
+        test_pei_csv_row,
+        output_csv,
+        writeback_csv,
+        datetime.date(2021, 1, 18),
+        test_db_session,
+        MockLogEntry(),
+    )
+
+    assert len(output_csv.rows) == 1
+    doc_id = output_csv.rows[0]["doc_id"]
+    assert re.match("^GAXMDFMLAAAA........$", doc_id)
+    expected_output_row = standard_output_row(doc_id=doc_id)
+    assert output_csv.rows[0] == expected_output_row
+
+    assert len(writeback_csv.rows) == 1
+    assert writeback_csv.rows[0] == standard_writeback_row()
 
 
 @freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
@@ -435,50 +487,136 @@ def test_process_payment_record_multiple_details(test_db_session, initialize_fac
     assert len(output_csv.rows) == 1
     doc_id = output_csv.rows[0]["doc_id"]
     assert re.match("^GAXMDFMLAAAA........$", doc_id)
-    assert output_csv.rows[0] == {
-        "absence_case_number": "NTN-308848-ABS-01",
-        "activity_code": "7247",
-        "address_code": "AD010",
-        "address_line_1": "47 Washington St",
-        "address_line_2": "",
-        "c_value": "7326",
-        "city": "Quincy",
-        "description": "PFML Payment NTN-308848-ABS-01 [01/15/2021-02/04/2021]",
-        "doc_id": doc_id,
-        "event_type": "AP01",
-        "first_last_name": "Grady Bednar",
-        "i_value": "249",
-        "leave_type": "PFMLMEDIFY2170030632",
-        "mmars_vendor_code": "VC0001230001",
-        "payment_amount": "1600.18",
-        "payment_doc_id_code": "GAX",
-        "payment_doc_id_dept": "EOL",
-        "payment_period_end_date": "2021-02-04",
-        "payment_period_start_date": "2021-01-15",
-        "payment_preference": "Check",
-        "scheduled_payment_date": "2021-01-18",
-        "state": "MA",
-        "vendor_invoice_date": "2021-02-05",
-        "vendor_invoice_line": "1",
-        "vendor_invoice_number": "NTN-308848-ABS-01_249",
-        "vendor_single_payment": "Yes",
-        "zip": "02169",
-        "case_status": "Approved",
-        "employer_id": "2626107",
-        "leave_request_id": "1234",
-        "leave_request_decision": "Pending",
-        "vcm_flag": "Missing State",
-    }
+
+    expected_output_row = standard_output_row(doc_id=doc_id)
+    expected_output_row["description"] = "PFML Payment NTN-308848-ABS-01 [01/15/2021-02/04/2021]"
+    expected_output_row["payment_period_end_date"] = "2021-02-04"
+    expected_output_row["vcm_flag"] = "Missing State"
+    expected_output_row["vendor_invoice_date"] = "2021-02-05"
+    assert output_csv.rows[0] == expected_output_row
 
     assert len(writeback_csv.rows) == 1
-    assert writeback_csv.rows[0] == {
-        "c_value": "7326",
-        "i_value": "249",
-        "status": "Active",
-        "stock_no": "",
-        "transaction_status": "",
-        "trans_status_date": "2021-01-15",
-    }
+    assert writeback_csv.rows[0] == standard_writeback_row()
+
+
+@freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
+def test_process_payment_record_zero_amount(test_db_session, initialize_factories_session):
+    test_pei_csv_row_zero_amount = {**test_pei_csv_row, **{"AMOUNT_MONAMT": "0"}}
+
+    (
+        extract_data,
+        requested_absence_extract,
+        voucher_extract_data,
+        ci_index,
+    ) = setup_standard_test_data(test_db_session, pei_csv_row=test_pei_csv_row_zero_amount)
+
+    output_csv = MockCSVWriter()
+    writeback_csv = MockCSVWriter()
+
+    payment_voucher.process_payment_record(
+        extract_data,
+        requested_absence_extract,
+        voucher_extract_data,
+        ci_index,
+        test_pei_csv_row_zero_amount,
+        output_csv,
+        writeback_csv,
+        datetime.date(2021, 1, 18),
+        test_db_session,
+        MockLogEntry(),
+    )
+
+    assert len(output_csv.rows) == 1
+    doc_id = output_csv.rows[0]["doc_id"]
+    assert re.match("^GAXMDFMLAAAA........$", doc_id)
+
+    expected_output_row = standard_output_row(doc_id=doc_id)
+    expected_output_row["payment_amount"] = "0"
+    expected_output_row["claimants_that_have_zero_or_credit_value"] = "1"
+    assert output_csv.rows[0] == expected_output_row
+
+    assert len(writeback_csv.rows) == 1
+    assert writeback_csv.rows[0] == standard_writeback_row()
+
+
+@freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
+def test_process_payment_record_negative_amount(test_db_session, initialize_factories_session):
+    test_pei_csv_row_negative_amount = {**test_pei_csv_row, **{"AMOUNT_MONAMT": "-42.0"}}
+
+    (
+        extract_data,
+        requested_absence_extract,
+        voucher_extract_data,
+        ci_index,
+    ) = setup_standard_test_data(test_db_session, pei_csv_row=test_pei_csv_row_negative_amount)
+
+    output_csv = MockCSVWriter()
+    writeback_csv = MockCSVWriter()
+
+    payment_voucher.process_payment_record(
+        extract_data,
+        requested_absence_extract,
+        voucher_extract_data,
+        ci_index,
+        test_pei_csv_row_negative_amount,
+        output_csv,
+        writeback_csv,
+        datetime.date(2021, 1, 18),
+        test_db_session,
+        MockLogEntry(),
+    )
+
+    assert len(output_csv.rows) == 1
+    doc_id = output_csv.rows[0]["doc_id"]
+    assert re.match("^GAXMDFMLAAAA........$", doc_id)
+
+    expected_output_row = standard_output_row(doc_id=doc_id)
+    expected_output_row["payment_amount"] = "-42.0"
+    expected_output_row["claimants_that_have_zero_or_credit_value"] = "1"
+    assert output_csv.rows[0] == expected_output_row
+
+    assert len(writeback_csv.rows) == 1
+    assert writeback_csv.rows[0] == standard_writeback_row()
+
+
+@freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
+def test_process_payment_record_no_amount(test_db_session, initialize_factories_session):
+    test_pei_csv_row_no_amount = {**test_pei_csv_row, **{"AMOUNT_MONAMT": ""}}
+
+    (
+        extract_data,
+        requested_absence_extract,
+        voucher_extract_data,
+        ci_index,
+    ) = setup_standard_test_data(test_db_session, pei_csv_row=test_pei_csv_row_no_amount)
+
+    output_csv = MockCSVWriter()
+    writeback_csv = MockCSVWriter()
+
+    payment_voucher.process_payment_record(
+        extract_data,
+        requested_absence_extract,
+        voucher_extract_data,
+        ci_index,
+        test_pei_csv_row_no_amount,
+        output_csv,
+        writeback_csv,
+        datetime.date(2021, 1, 18),
+        test_db_session,
+        MockLogEntry(),
+    )
+
+    assert len(output_csv.rows) == 1
+    doc_id = output_csv.rows[0]["doc_id"]
+    assert re.match("^GAXMDFMLAAAA........$", doc_id)
+
+    expected_output_row = standard_output_row(doc_id=doc_id)
+    expected_output_row["payment_amount"] = None
+    expected_output_row["claimants_that_have_zero_or_credit_value"] = ""
+    assert output_csv.rows[0] == expected_output_row
+
+    assert len(writeback_csv.rows) == 1
+    assert writeback_csv.rows[0] == standard_writeback_row()
 
 
 @freezegun.freeze_time("2021-01-21 08:00:00", tz_offset=0)

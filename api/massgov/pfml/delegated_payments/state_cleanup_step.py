@@ -42,6 +42,7 @@ class StateCleanupStep(Step):
         )
 
         for state_log in state_logs:
+            self.increment("audit_state_cleanup_count")
             payment = state_log.payment
 
             # Shouldn't happen as they should always have a payment attached

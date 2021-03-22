@@ -19,7 +19,6 @@ import massgov.pfml.fineos.util.log_tables as fineos_log_tables_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
-    EFT,
     Address,
     AddressType,
     BankAccountType,
@@ -27,6 +26,7 @@ from massgov.pfml.db.models.employees import (
     CtrAddressPair,
     Employee,
     EmployeeAddress,
+    EmployeePubEftPair,
     GeoState,
     LatestStateLog,
     LkPaymentTransactionType,
@@ -35,6 +35,8 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
     PaymentReferenceFile,
     PaymentTransactionType,
+    PrenoteState,
+    PubEft,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -196,31 +198,6 @@ class PaymentData:
             "PAYEEFULLNAME", pei_record, self.validation_container, False
         )
 
-        self.address_line_one = payments_util.validate_csv_input(
-            "PAYMENTADD1", pei_record, self.validation_container, True
-        )
-        self.address_line_two = payments_util.validate_csv_input(
-            "PAYMENTADD2", pei_record, self.validation_container, False
-        )
-        self.city = payments_util.validate_csv_input(
-            "PAYMENTADD4", pei_record, self.validation_container, True
-        )
-        self.state = payments_util.validate_csv_input(
-            "PAYMENTADD6",
-            pei_record,
-            self.validation_container,
-            True,
-            custom_validator_func=payments_util.lookup_validator(GeoState),
-        )
-        self.zip_code = payments_util.validate_csv_input(
-            "PAYMENTPOSTCO",
-            pei_record,
-            self.validation_container,
-            True,
-            min_length=5,
-            max_length=10,
-        )
-
         self.raw_payment_method = payments_util.validate_csv_input(
             "PAYMENTMETHOD",
             pei_record,
@@ -232,6 +209,36 @@ class PaymentData:
                     cast(str, PaymentMethod.DEBIT.payment_method_description)
                 ],
             ),
+        )
+
+        # Address values are only required if we are paying by check
+        address_required = self.raw_payment_method == PaymentMethod.CHECK.payment_method_description
+        self.address_line_one = payments_util.validate_csv_input(
+            "PAYMENTADD1", pei_record, self.validation_container, address_required
+        )
+        self.address_line_two = payments_util.validate_csv_input(
+            "PAYMENTADD2",
+            pei_record,
+            self.validation_container,
+            False,  # Address line two always optional
+        )
+        self.city = payments_util.validate_csv_input(
+            "PAYMENTADD4", pei_record, self.validation_container, address_required
+        )
+        self.state = payments_util.validate_csv_input(
+            "PAYMENTADD6",
+            pei_record,
+            self.validation_container,
+            address_required,
+            custom_validator_func=payments_util.lookup_validator(GeoState),
+        )
+        self.zip_code = payments_util.validate_csv_input(
+            "PAYMENTPOSTCO",
+            pei_record,
+            self.validation_container,
+            address_required,
+            min_length=5,
+            max_length=10,
         )
 
         self.raw_payment_transaction_type = payments_util.validate_csv_input(
@@ -380,6 +387,7 @@ class PaymentExtractStep(Step):
                 active_state.end_state.state_description,
                 active_state.payment.payment_id,
             )
+            self.increment("already_active_payment_count")
             return active_state.end_state
 
         return None
@@ -534,6 +542,7 @@ class PaymentExtractStep(Step):
                 fineos_absence_id=payment_data.absence_case_number,
             )
             self.db_session.add(claim)
+            self.increment("claim_created_count")
 
         # Do a few validations on the claim+employee
         if claim:
@@ -707,8 +716,10 @@ class PaymentExtractStep(Step):
 
         return payment
 
-    def update_eft(self, payment_data: PaymentData, employee: Employee) -> bool:
-        """Create or update the employee's EFT record
+    def update_eft(
+        self, payment_data: PaymentData, employee: Employee
+    ) -> Tuple[Optional[PubEft], bool]:
+        """Create or update the employee's EFT records
 
         Returns:
             bool: True if the payment_data includes EFT updates; False otherwise
@@ -716,46 +727,87 @@ class PaymentExtractStep(Step):
 
         # Only update if the employee is using ACH for payments
         if payment_data.raw_payment_method != PaymentMethod.ACH.payment_method_description:
-            # We deliberately do not delete an EFT record in the case they switched from
-            # EFT to Check for payment method. In the event they switch back, we'll update accordingly later.
-            return False
+            # Any existing EFT information is left alone in the event they switch back
+            return None, False
+
+        if payment_data.validation_container.has_validation_issues():
+            # We will only update EFT information if the payment has no issues up to
+            # this point in the processing, meaning that required fields are present.
+            return None, False
 
         # Need to cast these values as str rather than Optional[str] as we've
         # already validated they're not None for linting
-        routing_nbr = cast(str, payment_data.routing_nbr)
-        account_nbr = cast(str, payment_data.account_nbr)
-        bank_account_type_id = BankAccountType.get_id(payment_data.raw_account_type)
-
         # Construct an EFT object.
-        new_eft = EFT(
-            eft_id=uuid.uuid4(),
-            routing_nbr=routing_nbr,
-            account_nbr=account_nbr,
-            bank_account_type_id=bank_account_type_id,
+        new_eft = PubEft(
+            pub_eft_id=uuid.uuid4(),
+            routing_nbr=cast(str, payment_data.routing_nbr),
+            account_nbr=cast(str, payment_data.account_nbr),
+            bank_account_type_id=BankAccountType.get_id(payment_data.raw_account_type),
+            prenote_state_id=PrenoteState.PENDING_PRE_PUB.prenote_state_id,  # If this is new, we want it to be pending
         )
 
         # Retrieve the employee's existing EFT data, if any
-        existing_eft = employee.eft
+        existing_eft = payments_util.find_existing_eft(employee, new_eft)
 
-        # If the employee has no existing EFT data, set it to the new data
-        if not existing_eft:
-            employee.eft = new_eft
-            self.db_session.add(new_eft)
-            return True
+        # If we found a match, do not need to create anything
+        # but do need to add an error to the report if the EFT
+        # information is invalid or pending. We can't pay someone
+        # unless they have been prenoted
+        extra = payment_data.get_traceable_details()
+        extra["employee_id"] = employee.employee_id
+        if existing_eft:
+            extra["pub_eft_id"] = existing_eft.pub_eft_id
+            logger.info(
+                "Found existing EFT info for claimant in prenote state %s",
+                existing_eft.prenote_state.prenote_state_description,
+                extra=extra,
+            )
 
-        # If the employee's existing EFT data is the same as the new data, then
-        # do nothing
-        elif payments_util.is_same_eft(existing_eft, new_eft):
-            return False
+            if existing_eft.prenote_state_id != PrenoteState.APPROVED.prenote_state_id:
+                reason = (
+                    payments_util.ValidationReason.EFT_PRENOTE_REJECTED
+                    if existing_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id
+                    else payments_util.ValidationReason.EFT_PRENOTE_PENDING
+                )
+                payment_data.validation_container.add_validation_issue(
+                    reason,
+                    f"EFT prenote has not been approved, is currently in state [{existing_eft.prenote_state.prenote_state_description}]",
+                )
 
-        # If the employee's existing EFT data is NOT the same as the new data,
-        # then overwrite the old data
+            return existing_eft, False
+
         else:
-            existing_eft.routing_nbr = routing_nbr
-            existing_eft.account_nbr = account_nbr
-            existing_eft.bank_account_type_id = bank_account_type_id
-            self.db_session.add(existing_eft)
-            return True
+            # This EFT info is new, it needs to be linked to the employee
+            # and added to the EFT prenoting flow
+
+            # We will only add it if the EFT info we require is valid and exists
+            employee_pub_eft_pair = EmployeePubEftPair(
+                employee_id=employee.employee_id, pub_eft_id=new_eft.pub_eft_id
+            )
+
+            self.db_session.add(new_eft)
+            self.db_session.add(employee_pub_eft_pair)
+
+            extra["pub_eft_id"] = new_eft.pub_eft_id
+            logger.info(
+                "Initiating DELEGATED_EFT flow for employee associated with payment", extra=extra,
+            )
+
+            # We need to put the payment in an error state if it's not prenoted
+            payment_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.EFT_PRENOTE_PENDING,
+                "New EFT info found, prenote required",
+            )
+
+            state_log_util.create_finished_state_log(
+                end_state=State.DELEGATED_EFT_SEND_PRENOTE,
+                associated_model=employee,
+                outcome=state_log_util.build_outcome(
+                    "Initiated DELEGATED_EFT flow for employee associated with payment"
+                ),
+                db_session=self.db_session,
+            )
+            return new_eft, True
 
     def add_records_to_db(
         self,
@@ -769,6 +821,7 @@ class PaymentExtractStep(Step):
         # many contexts, so we want to be careful about modifying
         # them with problematic data.
         has_address_update, has_eft_update = False, False
+        payment_eft = None
         if employee and not payment_data.validation_container.has_validation_issues():
             # Update the payment method ID of the employee
             employee.payment_method_id = PaymentMethod.get_id(payment_data.raw_payment_method)
@@ -777,20 +830,22 @@ class PaymentExtractStep(Step):
             has_address_update = self.update_ctr_address_pair_fineos_address(payment_data, employee)
 
             # Update the EFT info with values from FINEOS
-            has_eft_update = self.update_eft(payment_data, employee)
+            payment_eft, has_eft_update = self.update_eft(payment_data, employee)
 
         # Create the payment record
         payment = self.create_payment(payment_data, claim, payment_data.validation_container)
 
         # Specify whether the Payment has an address update
-        # This gets used later in the pipeline (such as during the PEI Writeback
-        # step)
+        # TODO - is this still needed?
         payment.has_address_update = has_address_update
 
         # Specify whether the Payment has an EFT update
-        # This gets used later in the pipeline (such as during the PEI Writeback
-        # step)
+        # TODO - Is this still needed?
         payment.has_eft_update = has_eft_update
+
+        # Attach the EFT info used to the payment
+        if payment_eft:
+            payment.pub_eft_id = payment_eft.pub_eft_id
 
         # Link the payment object to the payment_reference_file
         payment_reference_file = PaymentReferenceFile(
@@ -827,6 +882,7 @@ class PaymentExtractStep(Step):
         if validation_container.has_validation_issues():
             end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
             message = "Error processing payment record"
+            self.increment("errored_payment_count")
 
         # Zero dollar payments are added to the FINEOS writeback + a report
         elif (
@@ -835,6 +891,7 @@ class PaymentExtractStep(Step):
         ):
             end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
             message = "Zero dollar payment added to pending state for FINEOS writeback"
+            self.increment("zero_dollar_payment_count")
 
         # Overpayments are added to to the FINEOS writeback + a report
         elif (
@@ -843,6 +900,7 @@ class PaymentExtractStep(Step):
         ):
             end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT
             message = "Overpayment payment added to pending state for FINEOS writeback"
+            self.increment("overpayment_count")
 
         # Cancellations depend on the type of payment
         elif (
@@ -853,14 +911,17 @@ class PaymentExtractStep(Step):
             if payment.claim.employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
                 end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
                 message = "Cancellation payment added to pending state for FINEOS writeback"
+                self.increment("ach_cancellation_count")
             # Check cancellations are processed by us and sent to PUB
             else:
                 end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
                 message = "Check cancellation payment added"
+                self.increment("check_cancellation_count")
 
         else:
             end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
             message = "Success"
+            self.increment("standard_valid_payment_count")
 
         state_log_util.create_finished_state_log(
             end_state=end_state,
@@ -868,19 +929,6 @@ class PaymentExtractStep(Step):
             associated_model=payment,
             db_session=self.db_session,
         )
-
-        # TODO - redo the EFT triggering logic
-        # This should be the right behavior, but the states need to be updated
-        if payment.has_eft_update and payment.claim and payment.claim.employee:
-            employee = payment.claim.employee
-            state_log_util.create_finished_state_log(
-                end_state=State.EFT_REQUEST_RECEIVED,
-                associated_model=employee,
-                outcome=state_log_util.build_outcome(
-                    f"Initiated VENDOR_EFT flow for Employee {employee.employee_id} from FINEOS payment export"
-                ),
-                db_session=self.db_session,
-            )
 
     def process_records_to_db(self, extract_data: ExtractData) -> None:
         logger.info("Processing payment extract data into db: %s", extract_data.date_str)
@@ -891,6 +939,7 @@ class PaymentExtractStep(Step):
 
         for index, record in extract_data.pei.indexed_data.items():
             try:
+                self.increment("processed_payment_count")
                 # Construct a payment data object for easier organization of the many params
                 payment_data = PaymentData(extract_data, index, record)
                 logger.debug(

@@ -93,5 +93,6 @@ data "template_file" "container_definitions" {
     portal_base_url                            = var.portal_base_url
     enable_application_fraud_check             = var.enable_application_fraud_check
     enable_sentry                              = var.enable_sentry
+    release_version                            = var.release_version
   }
 }

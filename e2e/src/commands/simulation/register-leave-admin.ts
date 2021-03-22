@@ -7,16 +7,28 @@ import { getAuthManager } from "../../scripts/util";
 
 type RegisterLeaveAdminArgs = {
   fein: string;
+  amount?: string;
+  quarter?: string;
 } & SystemWideArgs;
 
 const cmd: CommandModule<SystemWideArgs, RegisterLeaveAdminArgs> = {
-  command: "register-leave-admin <fein>",
+  command: "register-leave-admin <fein> [amount] [quarter]",
   describe: "Registers a new leave admin account for a given employer.",
-  builder: {
-    fein: {
-      type: "string",
-      requiresArg: true,
-    },
+  builder: (yargs) => {
+    return yargs
+      .positional("fein", {
+        type: "string",
+        description: "Employer FEIN",
+        demandOption: true,
+      })
+      .positional("amount", {
+        type: "string",
+        description: "A withholding amount to use for verification",
+      })
+      .positional("quarter", {
+        type: "string",
+        description: "The quarter the withholding amount applies to",
+      });
   },
   async handler(args) {
     const { fein } = args;
@@ -26,12 +38,14 @@ const cmd: CommandModule<SystemWideArgs, RegisterLeaveAdminArgs> = {
       username: `gqzap.employer.${fein.replace("-", "")}@inbox.testmail.app`,
       password: config("EMPLOYER_PORTAL_PASSWORD"),
     };
-    const withholding_amount =
-      parseInt(fein.replace("-", "").slice(0, 6)) / 100;
-    const withholding_quarter = formatISO(
-      endOfQuarter(subQuarters(new Date(), 1)),
-      { representation: "date" }
-    );
+    const amount = args.amount
+      ? parseFloat(args.amount)
+      : parseInt(fein.replace("-", "").slice(0, 6)) / 100;
+    const quarter =
+      args.quarter ??
+      formatISO(endOfQuarter(subQuarters(new Date(), 1)), {
+        representation: "date",
+      });
 
     try {
       args.logger.debug(`Creating Leave Admin account for ${fein}`);
@@ -44,8 +58,8 @@ const cmd: CommandModule<SystemWideArgs, RegisterLeaveAdminArgs> = {
       await authenticator.verifyLeaveAdmin(
         creds.username,
         creds.password,
-        withholding_amount,
-        withholding_quarter
+        amount,
+        quarter
       );
       args.logger.info(`Leave Admin verified for ${fein}: ${creds.username}`);
     } catch (e) {
@@ -64,8 +78,8 @@ const cmd: CommandModule<SystemWideArgs, RegisterLeaveAdminArgs> = {
           await authenticator.verifyLeaveAdmin(
             creds.username,
             creds.password,
-            withholding_amount,
-            withholding_quarter
+            amount,
+            quarter
           );
           args.logger.info(
             `Leave Admin verified for ${fein}: ${creds.username}`

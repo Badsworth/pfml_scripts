@@ -1,4 +1,5 @@
 import csv
+import json
 import os
 import tempfile
 from collections import OrderedDict
@@ -22,6 +23,7 @@ from massgov.pfml.db.models.employees import (
     GeoState,
     Payment,
     PaymentMethod,
+    PrenoteState,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -32,9 +34,10 @@ from massgov.pfml.db.models.factories import (
     AddressFactory,
     ClaimFactory,
     CtrAddressPairFactory,
-    EftFactory,
     EmployeeFactory,
+    EmployeePubEftPairFactory,
     PaymentFactory,
+    PubEftFactory,
     ReferenceFileFactory,
 )
 from massgov.pfml.db.models.payments import (
@@ -144,7 +147,9 @@ def make_vpei_record(
     vpei_record["C"] = c_value
     vpei_record["I"] = i_value
 
-    vpei_record["PAYEESOCNUMBE"] = get_value(tin, fake.ssn().replace("-", ""), generate_defaults)
+    ssn = fake.ssn().replace("-", "")
+
+    vpei_record["PAYEESOCNUMBE"] = get_value(tin, ssn, generate_defaults)
     vpei_record["PAYMENTADD1"] = get_value(
         address1,
         f"{fake.building_number()} {fake.street_name()} {fake.street_suffix()}",
@@ -161,8 +166,8 @@ def make_vpei_record(
     )
     vpei_record["PAYMENTDATE"] = get_value(payment_date, "2021-01-01 12:00:00", generate_defaults)
     vpei_record["AMOUNT_MONAMT"] = get_value(payment_amount, "100.00", generate_defaults)
-    vpei_record["PAYEEBANKSORT"] = get_value(routing_nbr, "051000101", generate_defaults)
-    vpei_record["PAYEEACCOUNTN"] = get_value(account_nbr, "12345678910", generate_defaults)
+    vpei_record["PAYEEBANKSORT"] = get_value(routing_nbr, ssn, generate_defaults)
+    vpei_record["PAYEEACCOUNTN"] = get_value(account_nbr, ssn, generate_defaults)
     vpei_record["PAYEEACCOUNTT"] = get_value(account_type, "Checking", generate_defaults)
     vpei_record["EVENTTYPE"] = get_value(payment_type, "PaymentOut", generate_defaults)
 
@@ -206,10 +211,6 @@ def add_db_records(
     i_value=None,
     additional_payment_state=None,
 ):
-    eft = None
-    if add_eft:
-        eft = EftFactory()
-
     mailing_address = None
     ctr_address_pair = None
     if add_address:
@@ -218,11 +219,15 @@ def add_db_records(
 
     if add_employee:
         employee = EmployeeFactory.create(
-            tax_identifier=TaxIdentifier(tax_identifier=tin),
-            ctr_address_pair=ctr_address_pair,
-            eft=eft,
+            tax_identifier=TaxIdentifier(tax_identifier=tin), ctr_address_pair=ctr_address_pair
         )
         if add_eft:
+            pub_eft = PubEftFactory.create(
+                routing_nbr=tin,
+                account_nbr=tin,
+                prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
+            )
+            EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft)
             employee.payment_method_id = PaymentMethod.ACH.payment_method_id
 
     if add_address:
@@ -462,29 +467,37 @@ def test_process_extract_data(
             == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
         )
 
-        eft = employee.eft
+        pub_efts = employee.pub_efts.all()
 
         # Payment 2 uses CHECK over ACH, so some logic differs for it.
         # The 2nd record is also family leave, the other two are medical leave
         if index == "2":
             assert employee.payment_method_id == PaymentMethod.CHECK.payment_method_id
             assert not mailing_address.address_line_two
+            assert payment.pub_eft_id is None
             assert payment.has_eft_update is False
+            assert len(pub_efts) == 1  # One prior one created by setup logic
 
         else:
             assert employee.payment_method_id == PaymentMethod.ACH.payment_method_id
             assert mailing_address.address_line_two == f"AddressLine2-{index}"
-            assert str(eft.routing_nbr) == index * 9
-            assert str(eft.account_nbr) == index * 9
-            assert eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
-            assert payment.has_eft_update is True
 
-            # Verify that there is exactly one successful state log per employee that uses ACH
-            state_logs = employee.state_logs
-            assert len(state_logs) == 1
-            state_log = state_logs[0]
-            assert "Initiated VENDOR_EFT flow for Employee" in state_log.outcome["message"]
-            assert state_log.end_state_id == State.EFT_REQUEST_RECEIVED.state_id
+            assert payment.pub_eft
+            assert str(payment.pub_eft.routing_nbr) == index * 9
+            assert str(payment.pub_eft.account_nbr) == index * 9
+            assert (
+                payment.pub_eft.bank_account_type_id
+                == BankAccountType.CHECKING.bank_account_type_id
+            )
+            assert payment.has_eft_update is False
+
+            assert len(pub_efts) == 1  # A prior one from setup logic
+            assert payment.pub_eft_id in [pub_eft.pub_eft_id for pub_eft in employee.pub_efts]
+
+    # Verify a few of the metrics were added to the import log table
+    import_log_report = json.loads(payment.fineos_extract_import_log.report)
+    assert import_log_report["standard_valid_payment_count"] == 3
+    assert import_log_report["claim_created_count"] == 3
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -567,12 +580,12 @@ def test_process_extract_data_one_bad_record(
         test_db_session,
         add_claim=False,
         add_address=False,
-        add_eft=False,
+        add_eft=True,
         add_second_employee=False,
     )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 2
+    assert employee_log_count_before == 4
 
     payment_extract_step.run()
 
@@ -781,33 +794,64 @@ def test_process_extract_data_no_existing_claim_address_eft(
         assert employee_addresses[0].employee_id == employee.employee_id
         assert employee_addresses[0].address_id == mailing_address.address_id
 
-        # Verify that there is exactly one successful state log per payment
+        # Verify that there is exactly one state log per payment
         state_logs = payment.state_logs
         assert len(state_logs) == 1
         state_log = state_logs[0]
-        assert state_log.outcome == EXPECTED_OUTCOME
-        assert (
-            state_log.end_state_id
-            == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
-        )
 
-        eft = employee.eft
+        pub_efts = employee.pub_efts.all()
 
         # Payment 2 uses CHECK over ACH, so some logic differs for it.
         if index == "2":
             assert employee.payment_method_id == PaymentMethod.CHECK.payment_method_id
             assert not mailing_address.address_line_two
-
-            assert not eft  # Not set by factory logic, shouldn't be set at all now
+            assert payment.pub_eft_id is None
             assert payment.has_eft_update is False
+            assert len(pub_efts) == 0  # Not set by setup logic, shouldn't be set at all now
+            assert state_log.outcome == EXPECTED_OUTCOME
+            assert (
+                state_log.end_state_id
+                == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+            )
 
         else:
             assert employee.payment_method_id == PaymentMethod.ACH.payment_method_id
             assert mailing_address.address_line_two == f"AddressLine2-{index}"
-            assert str(eft.routing_nbr) == index * 9
-            assert str(eft.account_nbr) == index * 9
-            assert eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
+
+            assert payment.pub_eft
+            assert str(payment.pub_eft.routing_nbr) == index * 9
+            assert str(payment.pub_eft.account_nbr) == index * 9
+            assert (
+                payment.pub_eft.bank_account_type_id
+                == BankAccountType.CHECKING.bank_account_type_id
+            )
+            assert payment.pub_eft.prenote_state_id == PrenoteState.PENDING_PRE_PUB.prenote_state_id
             assert payment.has_eft_update is True
+
+            assert len(pub_efts) == 1
+            assert payment.pub_eft_id == pub_efts[0].pub_eft_id
+
+            # The EFT info was new, so the payment is in an error state
+            assert state_log.outcome == {
+                "message": "Error processing payment record",
+                "validation_container": {
+                    "record_key": f"CiIndex(c='7326', i='30{index}')",
+                    "validation_issues": [
+                        {"reason": "EFTPending", "details": "New EFT info found, prenote required"}
+                    ],
+                },
+            }
+            assert (
+                state_log.end_state_id
+                == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+            )
+
+            # Verify that there is exactly one successful state log per employee that uses ACH
+            state_logs = employee.state_logs
+            assert len(state_logs) == 1
+            state_log = state_logs[0]
+            assert "Initiated DELEGATED_EFT flow for employee" in state_log.outcome["message"]
+            assert state_log.end_state_id == State.DELEGATED_EFT_SEND_PRENOTE.state_id
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -923,7 +967,7 @@ def test_process_extract_data_minimal_viable_payment(
     assert state_log.outcome["validation_container"]["record_key"] == "CiIndex(c='1000', i='1')"
     # Not going to exactly match the errors here as there are many
     # and they may adjust in the future
-    assert len(state_log.outcome["validation_container"]["validation_issues"]) >= 10
+    assert len(state_log.outcome["validation_container"]["validation_issues"]) >= 8
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -1107,10 +1151,6 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
         [
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD1"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD4"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD6"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTPOSTCO"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
@@ -1123,9 +1163,9 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     # We want to make sure missing, "" and Unknown are all treated the same
     # So update a few values, and expect the same result
     extract_data.pei.indexed_data[ci_index]["PAYEESOCNUMBE"] = ""
-    extract_data.pei.indexed_data[ci_index]["PAYMENTADD1"] = ""
-    extract_data.pei.indexed_data[ci_index]["PAYMENTADD4"] = "Unknown"
-    extract_data.pei.indexed_data[ci_index]["PAYMENTPOSTCO"] = "Unknown"
+    extract_data.pei.indexed_data[ci_index]["EVENTTYPE"] = ""
+    extract_data.pei.indexed_data[ci_index]["PAYMENTDATE"] = "Unknown"
+    extract_data.pei.indexed_data[ci_index]["AMOUNT_MONAMT"] = "Unknown"
 
     payment_data = extractor.PaymentData(
         extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
@@ -1136,10 +1176,12 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     extract_data.pei.indexed_data[ci_index][
         "PAYMENTMETHOD"
     ] = PaymentMethod.ACH.payment_method_description
-    expected_missing_values.remove(
+
+    eft_expected_missing_values = set(expected_missing_values)
+    eft_expected_missing_values.remove(
         ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD")
     )  # No longer missing now
-    expected_missing_values.update(
+    eft_expected_missing_values.update(
         [
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEBANKSORT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTN"),
@@ -1150,7 +1192,30 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     payment_data = extractor.PaymentData(
         extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
     )
-    assert set(payment_data.validation_container.validation_issues) == expected_missing_values
+    assert set(payment_data.validation_container.validation_issues) == eft_expected_missing_values
+
+    # Address fields are only required if the payment method is check
+    extract_data.pei.indexed_data[ci_index][
+        "PAYMENTMETHOD"
+    ] = PaymentMethod.CHECK.payment_method_description
+
+    check_expected_missing_values = set(expected_missing_values)
+    check_expected_missing_values.remove(
+        ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD")
+    )  # No longer missing now
+    check_expected_missing_values.update(
+        [
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD1"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD4"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD6"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTPOSTCO"),
+        ]
+    )
+
+    payment_data = extractor.PaymentData(
+        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
+    )
+    assert set(payment_data.validation_container.validation_issues) == check_expected_missing_values
 
 
 def test_validation_param_length(set_exporter_env_vars):
@@ -1243,17 +1308,14 @@ def test_validation_payment_amount(set_exporter_env_vars):
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
-def test_update_eft_no_update(
+def test_update_eft_existing_eft_matches_and_approved(
     payment_extract_step, test_db_session, mock_s3_bucket, set_exporter_env_vars, monkeypatch,
 ):
-    # update_eft() has 3 possible outcomes:
-    #   1. There is no change to EFT
-    #   2. There is no existing EFT, so we add one
-    #   3. There is an existing EFT, but it's different, so we update it
-    # In this test, we cover #1. 2 & 3 are covered by other tests.
+    # This is the happiest of paths, we've already got the EFT info for the
+    # employee and it has already been prenoted.
 
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
-    setup_process_tests(mock_s3_bucket, test_db_session)
+    setup_process_tests(mock_s3_bucket, test_db_session, add_eft=False)
 
     # Set an employee to have the same EFT we know is going to be extracted
     employee = (
@@ -1263,15 +1325,17 @@ def test_update_eft_no_update(
         .first()
     )
     assert employee is not None
-    assert employee.eft is not None
-    employee.eft.routing_nbr = "1" * 9
-    employee.eft.account_nbr = "1" * 9
-    employee.eft.bank_account_type_id = BankAccountType.CHECKING.bank_account_type_id
-    test_db_session.commit()
+    # Create the EFT record
+    pub_eft_record = PubEftFactory.create(
+        prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
+        routing_nbr="1" * 9,
+        account_nbr="1" * 9,
+        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+    )
+    EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft_record)
 
     # Run the process
     payment_extract_step.run()
-    test_db_session.expire_all()
 
     # Verify the payment isn't marked as having an EFT update
     payment = (
@@ -1281,8 +1345,84 @@ def test_update_eft_no_update(
     )
     assert payment is not None
     assert payment.has_eft_update is False
+    # The payment should still be connected to the EFT record
+    assert payment.pub_eft_id == pub_eft_record.pub_eft_id
 
-    # There should not be a EFT_REQUEST_RECEIVED record
+    assert len(payment.state_logs) == 1
+    state_log = payment.state_logs[0]
+    assert (
+        state_log.end_state_id
+        == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+    )
+
+    # There should not be a DELEGATED_EFT_SEND_PRENOTE record
+    employee_state_logs_after = (
+        test_db_session.query(StateLog).filter(StateLog.employee_id == employee.employee_id).all()
+    )
+    assert len(employee_state_logs_after) == 0
+
+
+@pytest.mark.parametrize(
+    "prenote_state",
+    [(PrenoteState.REJECTED), (PrenoteState.PENDING_PRE_PUB), (PrenoteState.PENDING_WITH_PUB)],
+)
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_update_eft_existing_eft_matches_and_not_approved(
+    payment_extract_step,
+    test_db_session,
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    monkeypatch,
+    prenote_state,
+):
+    # This is the happiest of paths, we've already got the EFT info for the
+    # employee and it has already been prenoted.
+
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    setup_process_tests(mock_s3_bucket, test_db_session, add_eft=False)
+
+    # Set an employee to have the same EFT we know is going to be extracted
+    employee = (
+        test_db_session.query(Employee)
+        .join(TaxIdentifier)
+        .filter(TaxIdentifier.tax_identifier == "1" * 9)
+        .first()
+    )
+    assert employee is not None
+    # Create the EFT record
+    pub_eft_record = PubEftFactory.create(
+        prenote_state_id=prenote_state.prenote_state_id,
+        routing_nbr="1" * 9,
+        account_nbr="1" * 9,
+        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+    )
+    EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft_record)
+
+    # Run the process
+    payment_extract_step.run()
+
+    # Verify the payment isn't marked as having an EFT update
+    payment = (
+        test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == "301")
+        .first()
+    )
+    assert payment is not None
+    assert payment.has_eft_update is False
+    # The payment should still be connected to the EFT record
+    assert payment.pub_eft_id == pub_eft_record.pub_eft_id
+
+    assert len(payment.state_logs) == 1
+    state_log = payment.state_logs[0]
+    assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+    issues = state_log.outcome["validation_container"]["validation_issues"]
+    assert len(issues) == 1
+    assert (
+        issues[0]["details"]
+        == f"EFT prenote has not been approved, is currently in state [{prenote_state.prenote_state_description}]"
+    )
+
+    # There should not be a DELEGATED_EFT_SEND_PRENOTE record
     employee_state_logs_after = (
         test_db_session.query(StateLog).filter(StateLog.employee_id == employee.employee_id).all()
     )
@@ -1329,13 +1469,6 @@ def test_update_ctr_address_pair_fineos_address_no_update(
     )
     assert payment is not None
     assert payment.has_address_update is False
-
-    # There should be a EFT_REQUEST_RECEIVED record
-    employee_state_logs_after = (
-        test_db_session.query(StateLog).filter(StateLog.employee_id == employee.employee_id).all()
-    )
-    assert len(employee_state_logs_after) == 1
-    assert employee_state_logs_after[0].end_state_id == State.EFT_REQUEST_RECEIVED.state_id
 
 
 def test_extract_to_staging_tables(payment_extract_step, test_db_session):

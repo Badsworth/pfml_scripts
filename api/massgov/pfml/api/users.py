@@ -9,6 +9,8 @@ import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
 from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
+from massgov.pfml.api.services.user_rules import get_users_post_issues
+from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.db.models.employees import Employer, Role, User
 from massgov.pfml.util.aws.cognito import CognitoAccountCreationUserError
 from massgov.pfml.util.sqlalchemy import get_or_404
@@ -21,16 +23,24 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 def users_post():
     """Create a new user account"""
     body = UserCreateRequest.parse_obj(connexion.request.json)
-    # TODO (CP-1763): Enforce required fields are present
-    employer = None
-    role_description = body.role.role_description
+    issues = get_users_post_issues(body)
+
+    if len(issues) > 0:
+        logger.info("users_post failure - request had validation issues")
+
+        return response_util.error_response(
+            status_code=BadRequest,
+            message="Request does not include valid fields.",
+            errors=issues,
+            data={},
+        ).to_api_response()
 
     with app.db_session() as db_session:
-        if (
-            role_description == Role.EMPLOYER.role_description
-            and body.user_leave_administrator is not None
-        ):
-            employer_fein = body.user_leave_administrator.employer_fein
+        employer = None
+        is_employer = deepgetattr(body, "role.role_description") == Role.EMPLOYER.role_description
+
+        if is_employer:
+            employer_fein = deepgetattr(body, "user_leave_administrator.employer_fein")
             employer = (
                 db_session.query(Employer)
                 .filter(Employer.employer_fein == employer_fein)
@@ -38,6 +48,8 @@ def users_post():
             )
 
             if employer is None:
+                logger.info("users_post failure - Employer not found")
+
                 return response_util.error_response(
                     status_code=BadRequest,
                     data={},
@@ -55,8 +67,8 @@ def users_post():
             user = register_user(
                 db_session,
                 app.get_config().cognito_user_pool_client_id,
-                body.email_address,
-                body.password,
+                deepgetattr(body, "email_address"),
+                deepgetattr(body, "password"),
                 employer,
             )
         except CognitoAccountCreationUserError as e:
@@ -71,6 +83,10 @@ def users_post():
                 errors=[e.issue],
                 data={},
             ).to_api_response()
+
+    logger.info(
+        "users_post success - account created", extra={"is_employer": str(is_employer)},
+    )
 
     return response_util.success_response(
         data=user_response(user),

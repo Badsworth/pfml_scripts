@@ -12,6 +12,7 @@ from massgov.pfml.api.services.applications import (
     IntermittentLeavePeriod,
     ReducedScheduleLeavePeriod,
 )
+from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
@@ -561,21 +562,6 @@ def get_payments_issues(application: Application) -> List[Issue]:
             )
 
     return issues
-
-
-def deepgetattr(obj, attr):
-    """Recurses through an attribute chain to get the ultimate value."""
-    fields = attr.split(".")
-    value = obj
-
-    for field in fields:
-        # Bail at the first instance where a field is empty
-        if value is None:
-            return None
-        else:
-            value = getattr(value, field, None)
-
-    return value
 
 
 # This maps the required field name in the DB to its equivalent in the API

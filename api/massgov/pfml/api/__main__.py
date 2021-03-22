@@ -46,6 +46,13 @@ def main():
 
 def initialize_flask_sentry():
     if os.environ.get("ENABLE_SENTRY", "0") == "1":
+
+        api_release = (
+            ""
+            if not os.environ.get("RELEASE_VERSION")
+            else 'massgov-pfml-api@{os.environ.get("RELEASE_VERSION").replace("api/", "")}'
+        )
+
         sentry_sdk.init(
             dsn="https://3d9b96c9cef846ae8cbd9630530e719c@o514801.ingest.sentry.io/5618604",
             environment=os.environ.get("ENVIRONMENT", "local"),
@@ -57,8 +64,7 @@ def initialize_flask_sentry():
             ignore_errors=[FINEOSFatalUnavailable],
             # Disable tracing since we rely on New Relic already.
             traces_sample_rate=0,
-            # TODO (INFRA-222)
-            # release="myapp@1.0.0",
+            release=api_release,
             debug=False,
         )
         ignore_logger("massgov.pfml.util.logging.audit")

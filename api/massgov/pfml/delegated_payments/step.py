@@ -28,19 +28,32 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
                 self.get_import_log_id(),
             )
             state_log_counts_before = state_log_util.get_state_counts(self.db_session)
-            self.log_entry.set_metrics(state_log_counts_before=state_log_counts_before)
+            self.set_metrics(state_log_counts_before=state_log_counts_before)
             self.run_step()
 
             state_log_counts_after = state_log_util.get_state_counts(self.db_session)
-            self.log_entry.set_metrics(state_log_counts_after=state_log_counts_after)
+            self.set_metrics(state_log_counts_after=state_log_counts_after)
 
     @abc.abstractmethod
     def run_step(self) -> None:
         pass
 
+    # The below are all wrapper functions around the import
+    # log to handle it not being set. Any calls to run() will
+    # have it set in subsequent processing, but specific calls
+    # in tests may not have it set.
+
     def get_import_log_id(self) -> Optional[int]:
-        # If this is called from within something using run
-        # it should never be unset None
         if not self.log_entry:
             return None
         return self.log_entry.import_log.import_log_id
+
+    def set_metrics(self, **metrics) -> None:
+        if not self.log_entry:
+            return
+        self.log_entry.set_metrics(**metrics)
+
+    def increment(self, name: str) -> None:
+        if not self.log_entry:
+            return
+        self.log_entry.increment(name)

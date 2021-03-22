@@ -11,7 +11,7 @@ resource "aws_kinesis_firehose_delivery_stream" "aws_waf" {
   extended_s3_configuration {
     role_arn            = aws_iam_role.kinesis_aws_waf_role.arn
     bucket_arn          = aws_s3_bucket.smx_kinesis_firewall_ingest.arn
-    prefix              = "WAF_Logs/!{timestamp:yyyy-MM-dd}-"
+    prefix              = "WAF_Logs/"
     error_output_prefix = "WAF_Logs_error/"
   }
 }
