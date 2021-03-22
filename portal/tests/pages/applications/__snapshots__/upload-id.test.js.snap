@@ -3,7 +3,7 @@
 exports[`UploadId after documents have been loaded when the user doesn't have a Mass ID renders the page with 'Other' ID content 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Your identity"
+  title="Your identification"
 >
   <div
     className="measure-6"
@@ -12,7 +12,7 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
       level="2"
       size="1"
     >
-      Upload an identification document
+      Upload an identification document issued by state or federal government
     </Heading>
     <DocumentRequirements />
     <div
@@ -59,7 +59,7 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
     <FileUploadDetails />
     <FileCardList
       addAnotherFileButtonText="Choose another file"
-      addFirstFileButtonText="Choose a file"
+      addFirstFileButtonText="Choose files"
       allowedFileTypes={
         Array [
           "image/png",
@@ -88,7 +88,7 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
 exports[`UploadId after documents have been loaded when the user has a Mass ID renders a FileCardList 1`] = `
 <FileCardList
   addAnotherFileButtonText="Choose another file"
-  addFirstFileButtonText="Choose a file"
+  addFirstFileButtonText="Choose files"
   allowedFileTypes={
     Array [
       "image/png",
@@ -115,7 +115,7 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID r
 exports[`UploadId after documents have been loaded when the user has a Mass ID renders the page with Mass ID content 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Your identity"
+  title="Your identification"
 >
   <div
     className="measure-6"
@@ -124,13 +124,13 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID r
       level="2"
       size="1"
     >
-      Upload your Massachusetts driver’s license or ID card
+      Upload the front and back of your Massachusetts driver’s license or ID card
     </Heading>
     <DocumentRequirements />
     <FileUploadDetails />
     <FileCardList
       addAnotherFileButtonText="Choose another file"
-      addFirstFileButtonText="Choose a file"
+      addFirstFileButtonText="Choose files"
       allowedFileTypes={
         Array [
           "image/png",
@@ -159,7 +159,7 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID r
 exports[`UploadId after documents have been loaded when the user has a Mass ID when the user uploads files renders filecards for the files 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Your identity"
+  title="Your identification"
 >
   <div
     className="measure-6"
@@ -168,13 +168,13 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID w
       level="2"
       size="1"
     >
-      Upload your Massachusetts driver’s license or ID card
+      Upload the front and back of your Massachusetts driver’s license or ID card
     </Heading>
     <DocumentRequirements />
     <FileUploadDetails />
     <FileCardList
       addAnotherFileButtonText="Choose another file"
-      addFirstFileButtonText="Choose a file"
+      addFirstFileButtonText="Choose files"
       allowedFileTypes={
         Array [
           "image/png",
