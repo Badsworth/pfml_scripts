@@ -234,7 +234,17 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
   enabled        = true
 
   nrql {
-    query             = "SELECT count(errorMessage) / filter(count(browserInteractionName), WHERE browserInteractionName NOT LIKE 'fetch:%') FROM JavaScriptError, BrowserInteraction WHERE appName = 'PFML-Portal-${upper(var.environment_name)}'"
+    query             = <<-NRQL
+      SELECT filter(
+        count(errorMessage), 
+        WHERE errorMessage != 'undefined is not an object (evaluating \'ceCurrentVideo.currentTime\')'
+      ) / filter(
+        count(browserInteractionName), 
+        WHERE browserInteractionName NOT LIKE 'fetch:%'
+      ) 
+      FROM JavaScriptError, BrowserInteraction 
+      WHERE appName = 'PFML-Portal-${upper(var.environment_name)}'
+    NRQL
     evaluation_offset = 1
   }
 
