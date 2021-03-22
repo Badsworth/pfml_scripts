@@ -5,7 +5,11 @@ import pytest
 
 import tests.api
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
-from massgov.pfml.db.models.factories import EmployerFactory, EmployerQuarterlyContributionFactory
+from massgov.pfml.db.models.factories import (
+    EmployerFactory,
+    EmployerQuarterlyContributionFactory,
+    VerificationFactory,
+)
 from massgov.pfml.db.models.verifications import Verification
 
 # every test in here requires real resources
@@ -26,6 +30,11 @@ def employer():
 @pytest.fixture
 def employer_quarterly_contribution():
     return EmployerQuarterlyContributionFactory.create()
+
+
+@pytest.fixture
+def verification():
+    return VerificationFactory.create()
 
 
 def test_error_if_user_not_connected_to_employer(caplog, client, employer_auth_token):
@@ -164,3 +173,28 @@ def test_verification_successful_for_valid_data(
             "has_verification_data": True,
         }
     ]
+
+
+def test_error_if_users_been_verified(
+    client, employer_auth_token, test_db_session, employer_user, employer, verification
+):
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+        verification=verification,
+    )
+
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    verifications_body["employer_id"] = employer.employer_id
+
+    response = client.post(
+        "/v1/employers/verifications",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=verifications_body,
+    )
+
+    assert response.status_code == 409
+    tests.api.validate_error_response(response, 409, message="User has already been verified.")
