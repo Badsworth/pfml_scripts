@@ -612,7 +612,7 @@ def test_process_extract_unprocessed_folder_files(
         claimant_extract.expected_file_names,
         ReferenceFileType.FINEOS_CLAIMANT_EXTRACT,
     )
-    assert len(copied_files) == 1
+    assert len(copied_files) == 0
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before

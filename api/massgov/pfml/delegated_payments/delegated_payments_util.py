@@ -471,20 +471,26 @@ def get_date_group_folder_name(date_group: str, reference_file_type: LkReference
 def payment_extract_reference_file_exists_by_date_group(
     db_session: db.Session, date_group: str, export_type: LkReferenceFileType
 ) -> bool:
-    path = os.path.join(
+    processed_path = os.path.join(
         payments_config.get_s3_config().pfml_fineos_inbound_path,
         Constants.S3_INBOUND_PROCESSED_DIR,
         get_date_group_folder_name(date_group, export_type),
     )
+
+    skipped_path = os.path.join(
+        payments_config.get_s3_config().pfml_fineos_inbound_path,
+        Constants.S3_INBOUND_SKIPPED_DIR,
+        get_date_group_folder_name(date_group, export_type),
+    )
     reference_file = (
         db_session.query(ReferenceFile)
+        .filter(ReferenceFile.reference_file_type_id == export_type.reference_file_type_id)
         .filter(
-            ReferenceFile.file_location == path,
-            ReferenceFile.reference_file_type_id == export_type.reference_file_type_id,
+            (ReferenceFile.file_location == processed_path)
+            | (ReferenceFile.file_location == skipped_path)
         )
         .first()
     )
-
     return reference_file is not None
 
 

@@ -739,7 +739,7 @@ def test_process_extract_unprocessed_folder_files(
     copied_files = payments_util.copy_fineos_data_to_archival_bucket(
         test_db_session, extractor.expected_file_names, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
     )
-    assert len(copied_files) == 1
+    assert len(copied_files) == 0
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == 0
