@@ -1,5 +1,6 @@
 import os
 
+import newrelic.agent
 from werkzeug.exceptions import ServiceUnavailable
 
 import massgov.pfml.api.app as app
@@ -14,6 +15,8 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def status_get():
+    # prevents this endpoint from sending data to New Relic
+    newrelic.agent.ignore_transaction(flag=True)
     try:
         with app.db_session() as db_session:
             result = db_session.execute("SELECT 1 AS healthy").first()
