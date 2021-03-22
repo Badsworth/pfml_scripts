@@ -366,7 +366,7 @@ class NachaBatchControl(NachaRecord):
 class NachaEntry(NachaRecord):
     def __init__(self, trans_code, receiving_dfi_id, dfi_act_num, amount, id, name):
         # Strip any periods from decimal
-        amount = int(str("{:,.2f}".format(decimal.Decimal(amount))).replace(".", ""))
+        amount = int(decimal.Decimal(amount) * decimal.Decimal(100))
 
         fields = {
             "record_type": NachaField("Record Type", 1, 1, Constants.entry_record_type),
