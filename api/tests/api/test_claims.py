@@ -133,6 +133,85 @@ class TestVerificationEnforcement:
 
 
 @pytest.mark.integration
+class TestNotAuthorizedForAccess:
+    # This class groups the tests that ensure that users get 403s when
+    # attempting to access claim data without an associated user leave administrator
+
+    @pytest.fixture()
+    def employer(self):
+        employer = EmployerFactory.create()
+        return employer
+
+    @pytest.fixture
+    def setup_claim(self, test_db_session, employer_user):
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        test_db_session.add(employer, claim)
+        test_db_session.commit()
+        return claim
+
+    def test_employers_cannot_access_claims_endpoint_without_ula(
+        self, client, auth_token, employer_auth_token, setup_claim
+    ):
+        response = client.get(
+            f"/v1/employers/claims/{setup_claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 403
+        assert (
+            response.get_json()["message"]
+            == "User does not have leave administrator record for this employer"
+        )
+        assert (
+            response.get_json()["errors"][0]["message"]
+            == "User does not have leave administrator record for this employer"
+        )
+        assert response.get_json()["errors"][0]["type"] == "unauthorized_leave_admin"
+        assert response.get_json()["data"]["is_user_linked_to_employer"] is False
+
+    def test_employers_cannot_download_documents_without_ula(
+        self, client, auth_token, employer_auth_token, setup_claim
+    ):
+        response = client.get(
+            f"/v1/employers/claims/{setup_claim.fineos_absence_id}/documents/1111",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 403
+        assert (
+            response.get_json()["message"]
+            == "User does not have leave administrator record for this employer"
+        )
+        assert (
+            response.get_json()["errors"][0]["message"]
+            == "User does not have leave administrator record for this employer"
+        )
+        assert response.get_json()["errors"][0]["type"] == "unauthorized_leave_admin"
+        assert response.get_json()["data"]["is_user_linked_to_employer"] is False
+
+    def test_employers_cannot_update_claim_without_ula(
+        self, client, employer_auth_token, update_claim_body, setup_claim
+    ):
+        response = client.patch(
+            f"/v1/employers/claims/{setup_claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=update_claim_body,
+        )
+        assert response.status_code == 403
+        assert (
+            response.get_json()["message"]
+            == "User does not have leave administrator record for this employer"
+        )
+        assert (
+            response.get_json()["errors"][0]["message"]
+            == "User does not have leave administrator record for this employer"
+        )
+        assert response.get_json()["errors"][0]["type"] == "unauthorized_leave_admin"
+        assert response.get_json()["data"]["is_user_linked_to_employer"] is False
+
+
+@pytest.mark.integration
 class TestDownloadDocuments:
     @pytest.fixture
     def setup_employer(self, test_db_session, employer_user, test_verification):
