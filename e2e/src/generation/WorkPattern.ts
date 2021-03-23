@@ -10,11 +10,7 @@ const daysOfWeek = [
   "Saturday" as const,
 ];
 
-export type WorkPatternSpec =
-  | "standard"
-  | "rotating_shift"
-  | "variable"
-  | string;
+export type WorkPatternSpec = "standard" | "rotating_shift" | string;
 
 export default function generateWorkPattern(
   spec: WorkPatternSpec = "standard"
@@ -25,17 +21,12 @@ export default function generateWorkPattern(
       return generateWorkPatternFromSpec("0,480,480,480,480,480,0");
     case "rotating_shift":
       return generateWorkPatternFromSpec("0,720,0,720,0,720,0;720,0,720,0,720");
-    case "variable":
-      return generateWorkPatternFromSpec("0,480,480,480,480,480,0", "Variable");
     default:
       return generateWorkPatternFromSpec(spec);
   }
 }
 
-function generateWorkPatternFromSpec(
-  scheduleSpec: string,
-  type?: WorkPattern["work_pattern_type"]
-): WorkPattern {
+function generateWorkPatternFromSpec(scheduleSpec: string): WorkPattern {
   const expandWeek = (week_number: number, ...minutesByDay: number[]) =>
     daysOfWeek.map((day_of_week, i) => ({
       day_of_week,
@@ -50,7 +41,7 @@ function generateWorkPatternFromSpec(
   });
 
   return {
-    work_pattern_type: type || (weeks.length > 1 ? "Rotating" : "Fixed"),
+    work_pattern_type: weeks.length > 1 ? "Rotating" : "Fixed",
     work_week_starts: "Monday",
     work_pattern_days: weeks.flat(),
   };
