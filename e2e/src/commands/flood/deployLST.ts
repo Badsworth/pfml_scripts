@@ -65,7 +65,7 @@ export async function deploy(args: Arguments<DeployLSTArgs>): Promise<void> {
       flood.project
     }": \n- Concurrent users: ${flood.threads} \n- Duration: ${
       +flood.duration / 60
-    } minute(s) \n- Ramp-up: ${flood.rampup} minute(s)`;
+    } minute(s) \n- Ramp-up: ${+flood.rampup / 60} minute(s)`;
     // Prepare all the data to launch the flood
     const formData = new FormData();
     const floodData: Util.PromptRes = {

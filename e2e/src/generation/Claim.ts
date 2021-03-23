@@ -28,6 +28,7 @@ import path from "path";
 import * as si from "streaming-iterables";
 import ndjson from "ndjson";
 import { StreamWrapper } from "./FileWrapper";
+import { collect, map } from "streaming-iterables";
 
 const pipelineP = promisify(pipeline);
 
@@ -231,27 +232,25 @@ export class ClaimGenerator {
     claim: GeneratedClaim,
     directory: string
   ): Promise<DehydratedClaim> {
-    const documents = await Promise.all(
-      claim.documents.map(async (document) => {
-        if (typeof document.file !== "function") {
-          throw new Error(
-            `Expected to find a callback for this document's file. Instead, we found a ${typeof document.file}`
-          );
-        }
-        const wrapper = await document.file();
-        await pipelineP(
-          wrapper.asStream(),
-          fs.createWriteStream(path.join(directory, wrapper.filename))
+    const hydrateDocument = map(async (document: DocumentWithPromisedFile) => {
+      if (typeof document.file !== "function") {
+        throw new Error(
+          `Expected to find a callback for this document's file. Instead, we found a ${typeof document.file}`
         );
-        return {
-          ...document,
-          file: wrapper.filename,
-        };
-      })
-    );
+      }
+      const wrapper = await document.file();
+      await pipelineP(
+        wrapper.asStream(),
+        fs.createWriteStream(path.join(directory, wrapper.filename))
+      );
+      return {
+        ...document,
+        file: wrapper.filename,
+      };
+    });
     return {
       ...claim,
-      documents,
+      documents: await collect(hydrateDocument(claim.documents)),
     };
   }
 }
@@ -287,38 +286,16 @@ export default class ClaimPool implements AsyncIterable<GeneratedClaim> {
   /**
    * Load a pool from NDJSON format.
    */
-  static async load(filename: string): Promise<ClaimPool> {
+  static async load(filename: string, documentDir: string): Promise<ClaimPool> {
     // Check readability of the file up front so we can verify its existence.
     await fs.promises.access(filename, fs.constants.R_OK);
 
     // Load the claims from NDJSON, then "rehydrate" each one by replacing the file path
     // with a function to create a UInt8Buffer for the file contents.
     const input = fs.createReadStream(filename).pipe(ndjson.parse());
-
-    const hydrate = si.map((claim: GeneratedClaim) => {
-      const documents = claim.documents.map((document) => {
-        const { file } = document;
-        if (!(typeof file === "string")) {
-          throw new Error(
-            `Unknown file property. Expected a string, got a ${typeof file}`
-          );
-        }
-        const fqp = path.resolve(path.dirname(filename), file);
-        return {
-          ...document,
-          file: async () => {
-            return new StreamWrapper(
-              fs.createReadStream(fqp),
-              path.basename(file)
-            );
-          },
-        };
-      });
-      return {
-        ...claim,
-        documents,
-      };
-    });
+    const hydrate = si.map((claim: DehydratedClaim) =>
+      ClaimGenerator.hydrate(claim, documentDir)
+    );
 
     return new this(hydrate(input));
   }
@@ -328,8 +305,7 @@ export default class ClaimPool implements AsyncIterable<GeneratedClaim> {
   ) {}
 
   static merge(...pools: ClaimPool[]): ClaimPool {
-    const claims = si.merge(...pools.map((p) => p.claims));
-    return new ClaimPool(claims);
+    return new ClaimPool(si.merge(...pools));
   }
 
   /**
@@ -340,36 +316,26 @@ export default class ClaimPool implements AsyncIterable<GeneratedClaim> {
   }
 
   /**
+   * Return the claims in "dehydrated" format.
+   *
+   * This means the claim documents will be saved to disk, and the references replaced with
+   * string file paths.
+   *
+   * @param documentDir
+   */
+  dehydrate(documentDir: string): AsyncIterable<DehydratedClaim> {
+    const dehydrate = si.parallelMap(50, (claim: GeneratedClaim) => {
+      return ClaimGenerator.dehydrate(claim, documentDir);
+    });
+    return dehydrate(this.claims);
+  }
+
+  /**
    * Save the pool to NDJSON format.
    */
   async save(filename: string, documentDir: string): Promise<void> {
-    const relativePath = path.relative(
-      path.dirname(path.resolve(filename)),
-      documentDir
-    );
-    const dehydrate = si.parallelMap(50, async (claim: GeneratedClaim) => {
-      const mapDocuments = si.map(
-        async (document: DocumentWithPromisedFile) => {
-          const wrapper = await document.file();
-          await pipelineP(
-            wrapper.asStream(),
-            fs.createWriteStream(path.join(documentDir, wrapper.filename))
-          );
-          return {
-            ...document,
-            file: path.join(relativePath, wrapper.filename),
-          };
-        }
-      );
-      const documents = await si.collect(mapDocuments(claim.documents));
-      return {
-        ...claim,
-        documents,
-      };
-    });
-
     await pipelineP(
-      Readable.from(dehydrate(this.claims)),
+      Readable.from(this.dehydrate(documentDir)),
       ndjson.stringify(),
       fs.createWriteStream(filename)
     );

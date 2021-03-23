@@ -1,7 +1,8 @@
-import { Browser, TestSettings, ENV } from "@flood/element";
-import { SimulationClaim, FineosUserType } from "../simulation/types";
+import { Browser, TestSettings, ENV, StepOptions } from "@flood/element";
+import { FineosUserType } from "../simulation/types";
 import { DocumentUploadRequest } from "../api";
 import Tasks from "./tasks";
+import { GeneratedClaim } from "../generation/Claim";
 
 export const globalElementSettings: TestSettings = {
   loopCount: 1,
@@ -31,6 +32,7 @@ export type LSTStepFunction = (
 export type StoredStep = {
   name: string;
   time: number;
+  options?: StepOptions;
   test: LSTStepFunction;
 };
 
@@ -86,7 +88,7 @@ export enum ClaimType {
   OTHER = 6, // "Out of work for another reason"
 }
 
-export type LSTSimClaim = SimulationClaim & {
+export type LSTSimClaim = GeneratedClaim & {
   scenario: LSTScenario;
   agentTask?: TaskType;
   priorityTask?: TaskType;
@@ -115,7 +117,7 @@ export async function getFineosBaseUrl(
       ENV.FLOOD_GRID_NODE_SEQUENCE_ID * MAX_BROWSERS +
       ENV.BROWSER_ID;
     if (ENV.FLOOD_LOAD_TEST) {
-      uuid += 10; // perf env test
+      uuid += 20; // perf env test
       username = `${username}${uuid}`;
     }
   } else {

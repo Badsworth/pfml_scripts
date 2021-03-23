@@ -6,6 +6,7 @@ import { SystemWideArgs } from "../../cli";
 import { factory as EnvFactory, E2ELSTConfig } from "../../config";
 import { LSTScenario } from "../../flood/config";
 import * as Util from "./common";
+import generateLSTData from "../../scripts/generateLSTData";
 
 type BundleLSTArgs = Util.BundleLST & SystemWideArgs;
 
@@ -62,8 +63,6 @@ export async function prepareBundle(
     prompts.speed,
     prompts.generateData,
   ]);
-  // Configuration getter
-  const config = EnvFactory(env);
   // Holds new environment vars
   const newEnvConfig: Partial<E2ELSTConfig> = {
     SIMULATION_SPEED: speed,
@@ -100,14 +99,10 @@ export async function prepareBundle(
     }
     // Runs the data generation script
     args.logger.info("Generating test data...");
-    await Util.runCommand(
-      `npm run cli -- simulation generate -f ./src/simulation/scenarios/controlLST.ts -d ./src/flood/data/${bundleDir} -n "${numRecords}" -G "${escape(
-        JSON.stringify(newDataConfig)
-      )}" -e ${config("LST_EMPLOYEES_FILE")} -E ${config(
-        "LST_EMPLOYERS_FILE"
-      )}`,
-      true
-    );
+
+    // Generate LST data
+    await generateLSTData(env, bundleDir, parseInt(numRecords), newDataConfig);
+
     // Log deployment details
     await Util.logDeployment("Generated new data:", {
       deploymentId: Util.deploymentId,

@@ -58,7 +58,7 @@ import DOR from "../generation/writers/DOR";
 
   // Generate a pool of claims. This could happen later, though!
   try {
-    claimPool = await ClaimPool.load(storage.claims);
+    claimPool = await ClaimPool.load(storage.claims, storage.documents);
   } catch (e) {
     if (e.code !== "ENOENT") throw e;
     await ClaimPool.merge(
@@ -110,7 +110,7 @@ import DOR from "../generation/writers/DOR";
     // Last but not least, write the index of submitted claims in CSV format.
     await SubmittedClaimIndex.write(
       path.join(storage.dir, "submitted.csv"),
-      await ClaimPool.load(storage.claims),
+      await ClaimPool.load(storage.claims, storage.documents),
       tracker
     );
   }
