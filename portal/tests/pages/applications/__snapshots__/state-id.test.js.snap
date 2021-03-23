@@ -3,7 +3,7 @@
 exports[`StateId initially renders the page without an id field 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Your identity"
+  title="Your identification"
 >
   <InputChoiceGroup
     choices={

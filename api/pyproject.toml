@@ -104,7 +104,7 @@ fineos-import-employee-updates = "massgov.pfml.fineos.import_fineos_updates:hand
 fineos-bucket-tool = "massgov.pfml.fineos.tool.bucket:main"
 reductions-retrieve-payment-lists-from-agencies = "massgov.pfml.reductions.retrieve_payment_lists_from_agencies:main"
 reductions-send-claimant-lists-to-agencies = "massgov.pfml.reductions.send_claimant_lists_to_agencies:main"
-reductions-send-wage-replacement-payments-to-dfml = "massgov.pfml.send_wage_replacement_payments_to_dfml:main"
+reductions-send-wage-replacement-payments-to-dfml = "massgov.pfml.reductions.send_wage_replacement_payments_to_dfml:main"
 transmogrify-state-logs = "massgov.pfml.util.tasks.transmogrify_states:transmogrify_states"
 delegated-payment-audit-rejects-generate = "massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generator:generate_payment_rejects_file"
 

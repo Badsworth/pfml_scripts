@@ -6,16 +6,18 @@ from datetime import date, timedelta
 from typing import Any, Dict, Optional
 
 import boto3
+import factory
 import faker
 import pytest
 import sqlalchemy
 
 import massgov.pfml.api.util.state_log_util as state_log_util
+import massgov.pfml.reductions.common as reductions_common
 import massgov.pfml.reductions.dua as dua
 import massgov.pfml.util.csv as csv_util
+import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     DuaReductionPayment,
     DuaReductionPaymentReferenceFile,
     LatestStateLog,
@@ -30,9 +32,6 @@ from massgov.pfml.db.models.factories import (
     ReferenceFileFactory,
 )
 from massgov.pfml.payments.payments_util import get_now
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 fake = faker.Faker()
 
@@ -123,6 +122,7 @@ def _get_loaded_reference_file_in_s3(mock_s3_bucket, filename, source_directory_
 @pytest.mark.parametrize(
     "pending_ref_file_count", ((0), (1), (random.randint(2, 10)),),
 )
+@pytest.mark.integration
 def test_get_pending_dua_payment_reference_files(
     initialize_factories_session, test_db_session, pending_ref_file_count
 ):
@@ -201,6 +201,7 @@ def test_get_pending_dua_payment_reference_files(
         ),
     ),
 )
+@pytest.mark.integration
 def test_load_new_rows_from_file_success(
     dua_reduction_payment_unique_index,
     test_db_session,
@@ -260,6 +261,7 @@ def test_load_new_rows_from_file_success(
         )
 
 
+@pytest.mark.integration
 def test_load_new_rows_from_file_dua_example(dua_reduction_payment_unique_index, test_db_session):
     data_row_count = 180
     filepath = os.path.join(
@@ -316,6 +318,7 @@ def test_load_new_rows_from_file_dua_example(dua_reduction_payment_unique_index,
         ),
     ),
 )
+@pytest.mark.integration
 def test_load_new_rows_from_file_error(
     dua_reduction_payment_unique_index, test_db_session, test_db_other_session, headers, csv_rows
 ):
@@ -344,6 +347,7 @@ def test_load_new_rows_from_file_error(
     )
 
 
+@pytest.mark.integration
 def test_load_new_dua_payments_success(
     dua_reduction_payment_unique_index, test_db_session, mock_s3_bucket, monkeypatch
 ):
@@ -403,6 +407,7 @@ def test_load_new_dua_payments_success(
     )
 
 
+@pytest.mark.integration
 def test_load_dua_payment_from_reference_file_success(
     dua_reduction_payment_unique_index, test_db_session, mock_s3_bucket
 ):
@@ -458,6 +463,7 @@ def test_load_dua_payment_from_reference_file_success(
     )
 
 
+@pytest.mark.integration
 def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
     dua_reduction_payment_unique_index, test_db_session, test_db_other_session, mock_s3_bucket
 ):
@@ -499,6 +505,7 @@ def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
     )
 
 
+@pytest.mark.integration
 def test_copy_to_sftp_and_archive_s3_files(
     initialize_factories_session,
     test_db_session,
@@ -574,66 +581,58 @@ def test_copy_to_sftp_and_archive_s3_files(
 
 
 @pytest.mark.parametrize(
-    "approved_claims_count",
+    "claims_count",
     (
-        # No approved claims
-        (0),
-        # General case: Some small number of valid approved claims.
-        (random.randint(1, 5)),
+        # No relevant claims
+        0,
+        # General case: Some small number of valid relevant claims.
+        5,
     ),
 )
-def test_format_claims_for_dua_claimant_list_expected_structure_is_generated(
-    initialize_factories_session, test_db_session, approved_claims_count
-):
-    approved_claims = [ClaimFactory.create() for _i in range(approved_claims_count)]
+def test_format_claims_for_dua_claimant_list_expected_structure_is_generated(claims_count):
+    claims = ClaimFactory.build_batch(size=claims_count)
 
-    formatted_rows = dua._format_claims_for_dua_claimant_list(approved_claims)
+    formatted_rows = dua._format_claims_for_dua_claimant_list(claims)
     expected_rows = [
         {
             dua.Constants.CASE_ID_FIELD: claim.fineos_absence_id,
             dua.Constants.BENEFIT_START_DATE_FIELD: dua.Constants.TEMPORARY_BENEFIT_START_DATE,
             dua.Constants.SSN_FIELD: claim.employee.tax_identifier.tax_identifier.replace("-", ""),
         }
-        for claim in approved_claims
+        for claim in claims
     ]
 
-    assert len(formatted_rows) == len(approved_claims)
+    assert len(formatted_rows) == len(claims)
     assert formatted_rows == expected_rows
 
 
-def test_format_claims_for_dua_claimant_list_expected_structure_with_missing_employee_is_generated(
-    initialize_factories_session, test_db_session
-):
-    approved_claims = [ClaimFactory.create() for _i in range(random.randint(1, 5))]
-    approved_claims[0].employee = None
+def test_format_claims_for_dua_claimant_list_expected_structure_with_missing_employee_is_generated():
+    claims = ClaimFactory.build_batch(size=3)
+    claims[0].employee = None
     expected_rows = [
         {
             dua.Constants.CASE_ID_FIELD: claim.fineos_absence_id,
             dua.Constants.BENEFIT_START_DATE_FIELD: dua.Constants.TEMPORARY_BENEFIT_START_DATE,
             dua.Constants.SSN_FIELD: claim.employee.tax_identifier.tax_identifier.replace("-", ""),
         }
-        for claim in approved_claims[1:]
+        for claim in claims[1:]
     ]
 
-    formatted_rows = dua._format_claims_for_dua_claimant_list(approved_claims)
+    formatted_rows = dua._format_claims_for_dua_claimant_list(claims)
 
-    assert len(formatted_rows) == len(approved_claims) - 1
+    assert len(formatted_rows) == len(claims) - 1
     assert formatted_rows == expected_rows
 
 
-def test_format_claims_for_dua_claimant_list_null_absence_id(
-    initialize_factories_session, test_db_session
-):
-    approved_claims = [
-        ClaimFactory.create(fineos_absence_id=None) for _i in range(random.randint(1, 5))
-    ]
+def test_format_claims_for_dua_claimant_list_null_absence_id():
+    claims = ClaimFactory.build_batch(size=3, fineos_absence_id=None)
 
-    formatted_rows = dua._format_claims_for_dua_claimant_list(approved_claims)
+    formatted_rows = dua._format_claims_for_dua_claimant_list(claims)
 
-    assert len(formatted_rows) == len(approved_claims)
+    assert len(formatted_rows) == len(claims)
 
     for i, row in enumerate(formatted_rows):
-        claim = approved_claims[i]
+        claim = claims[i]
         assert row == {
             dua.Constants.CASE_ID_FIELD: None,
             dua.Constants.BENEFIT_START_DATE_FIELD: dua.Constants.TEMPORARY_BENEFIT_START_DATE,
@@ -642,20 +641,17 @@ def test_format_claims_for_dua_claimant_list_null_absence_id(
 
 
 @pytest.mark.parametrize(
-    "approved_claims_count",
+    "claims_count",
     (
-        # No approved claims
-        (0),
-        # General case: Some small number of valid approved claims.
-        (random.randint(3, 9)),
+        # No relevant claims
+        0,
+        # General case: Some small number of relevant claims.
+        3,
     ),
 )
+@pytest.mark.integration
 def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
-    initialize_factories_session,
-    test_db_session,
-    mock_s3_bucket,
-    monkeypatch,
-    approved_claims_count,
+    initialize_factories_session, test_db_session, mock_s3_bucket, monkeypatch, claims_count,
 ):
     # Set up environment variables.
     s3_bucket_uri = "s3://" + mock_s3_bucket
@@ -663,10 +659,10 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
     monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
     monkeypatch.setenv("S3_DUA_OUTBOUND_DIRECTORY_PATH", dest_dir)
 
-    approved_claims = [
-        ClaimFactory.create(fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id)
-        for _i in range(approved_claims_count)
-    ]
+    claims = ClaimFactory.create_batch(
+        size=claims_count,
+        fineos_absence_status_id=factory.Iterator(reductions_common.OUTBOUND_STATUSES),
+    )
 
     # ReferenceFile.file_location uniqueness errors are possible but unlikely because the
     # file_location values will include the current time in hours and minutes and we don't expect
@@ -720,10 +716,10 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
     assert header_line == ",".join(dua.Constants.CLAIMANT_LIST_FIELDS)
 
     # We've removed the header line so the line counts should match.
-    assert len(csv_file_lines) == approved_claims_count
+    assert len(csv_file_lines) == claims_count
 
     for i, csv_line in enumerate(csv_file_lines):
-        claim = approved_claims[i]
+        claim = claims[i]
         # This manual check against the CSV line is to make sure that the columns and
         # data aren't misaligned. A parser can unintentionally give a false positive here.
         assert csv_line == ",".join(
@@ -750,6 +746,7 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
         (random.randint(1, 4), random.randint(3, 6), 1, True),
     ),
 )
+@pytest.mark.integration
 def test_payment_list_has_been_downloaded_today(
     test_db_session,
     initialize_factories_session,
@@ -790,6 +787,7 @@ def test_payment_list_has_been_downloaded_today(
         (random.randint(2, 5)),
     ),
 )
+@pytest.mark.integration
 def test_download_payment_list_if_none_today(
     initialize_factories_session,
     test_db_session,
@@ -879,11 +877,9 @@ def test_download_payment_list_if_none_today(
         )
 
 
-def test_format_reduction_payments_for_report_optional_fields_empty(
-    initialize_factories_session, test_db_session
-):
+def test_format_reduction_payments_for_report_optional_fields_empty():
     # Set one of the optional fields to None.
-    dua_reduction_payment = DuaReductionPaymentFactory.create()
+    dua_reduction_payment = DuaReductionPaymentFactory.build()
     dua_reduction_payment.request_week_begin_date = None
 
     # Expect that this will not raise an error.
@@ -902,13 +898,10 @@ def test_format_reduction_payments_for_report_with_no_new_payments():
             assert v == "NO NEW PAYMENTS"
 
 
-def test_format_reduction_payments_for_report_with_payments(
-    initialize_factories_session, test_db_session
-):
-    dua_reduction_payment = DuaReductionPaymentFactory.create()
+def test_format_reduction_payments_for_report_with_payments():
+    dua_reduction_payment = DuaReductionPaymentFactory.build(created_at=datetime_util.utcnow())
 
-    reduction_payments = dua._get_non_submitted_reduction_payments(test_db_session)
-    report = dua._format_reduction_payments_for_report(reduction_payments)
+    report = dua._format_reduction_payments_for_report([dua_reduction_payment])
 
     assert len(report) == 1
 
@@ -939,6 +932,7 @@ def test_format_reduction_payments_for_report_with_payments(
                 assert v == dua_reduction_payment.__dict__[field]
 
 
+@pytest.mark.integration
 def test_create_report_new_dua_payments_to_dfml(
     initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session
 ):

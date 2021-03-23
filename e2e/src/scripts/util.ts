@@ -30,8 +30,8 @@ interface DataDirectory {
   dorFile(prefix: string): string;
 }
 
-export function dataDirectory(name: string): DataDirectory {
-  const base = path.join(__dirname, "..", "..", "data");
+export function dataDirectory(name: string, rootDir?: string): DataDirectory {
+  const base = rootDir ?? path.join(__dirname, "..", "..", "data");
   const dir = path.join(base, name);
   const documents = path.join(dir, "documents");
   return {

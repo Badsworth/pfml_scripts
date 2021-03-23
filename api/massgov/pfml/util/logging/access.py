@@ -49,7 +49,9 @@ def access_log_success(request, response, response_time_ms):
 
 
 def access_log_error(request, response, response_time_ms, full_data=False):
-    """Log data for a failed request. Full request and response data is logged for debugging."""
+    """Log data for a failed request. Full request and response data is logged
+    in non-prod environments for debugging and reproducing of errors, which can be
+    difficult to do otherwise for integrations like FINEOS."""
     headers = werkzeug.datastructures.Headers(request.headers)
     headers.remove("Authorization")
     extra = {
@@ -62,10 +64,13 @@ def access_log_error(request, response, response_time_ms, full_data=False):
         "status_code": response.status_code,
     }
 
-    if full_data:
+    # Don't log requests to our /users endpoint to avoid logging passwords
+    if full_data and request.path != "/v1/users":
         extra["request_data"] = request.data
         extra["request_form"] = request.form.to_dict(flat=False)
         extra["request_json"] = request.get_json(silent=True)
+
+    if full_data:
         extra["response_data"] = response.data
 
     logger.warning(

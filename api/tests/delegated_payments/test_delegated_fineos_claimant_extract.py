@@ -146,7 +146,6 @@ def test_run_step_happy_path(
     assert updated_employee.first_name != "Glennie"
     assert updated_employee.last_name != "Balistreri"
     assert updated_employee.date_of_birth == datetime.date(1980, 1, 1)
-    assert updated_employee.payment_method.payment_method_id == PaymentMethod.ACH.payment_method_id
 
     assert updated_employee.ctr_address_pair.fineos_address.address_line_one == "123 Main St"
     assert updated_employee.ctr_address_pair.fineos_address.address_line_two == ""
@@ -478,7 +477,6 @@ def test_update_employee_info_happy_path(claimant_extract_step, test_db_session,
     assert len(validation_container.validation_issues) == 0
     assert employee is not None
     assert employee.date_of_birth == datetime.date(1967, 4, 27)
-    assert employee.payment_method_id == PaymentMethod.ACH.payment_method_id
 
 
 def test_update_employee_info_not_in_db(claimant_extract_step, test_db_session, formatted_claim):
@@ -612,7 +610,7 @@ def test_process_extract_unprocessed_folder_files(
         claimant_extract.expected_file_names,
         ReferenceFileType.FINEOS_CLAIMANT_EXTRACT,
     )
-    assert len(copied_files) == 1
+    assert len(copied_files) == 0
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -689,13 +687,15 @@ def test_update_mailing_address_validation_issues(claimant_extract_step, test_db
 
 
 def test_update_eft_info_happy_path(claimant_extract_step, test_db_session):
-    employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
+    employee = EmployeeFactory.create()
     assert len(employee.pub_efts.all()) == 0
 
     eft_entry = {"SORTCODE": "123456789", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
+    claimant_extract_step.update_eft_info(
+        eft_entry, employee, PaymentMethod.ACH.payment_method_id, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
@@ -713,11 +713,15 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     employee = EmployeeFactory()
     assert len(employee.pub_efts.all()) == 0
 
+    none_payment_method_id = None
+
     # Routing number incorrect length.
     eft_entry = {"SORTCODE": "12345678", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
+    claimant_extract_step.update_eft_info(
+        eft_entry, employee, none_payment_method_id, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
@@ -734,7 +738,9 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
+    claimant_extract_step.update_eft_info(
+        eft_entry, employee, none_payment_method_id, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
@@ -751,7 +757,9 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
+    claimant_extract_step.update_eft_info(
+        eft_entry, employee, none_payment_method_id, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
@@ -768,7 +776,9 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
+    claimant_extract_step.update_eft_info(
+        eft_entry, employee, none_payment_method_id, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id

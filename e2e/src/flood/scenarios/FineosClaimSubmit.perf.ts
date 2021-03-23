@@ -472,7 +472,7 @@ export const steps: Cfg.StoredStep[] = [
         await browser.click(searchTab);
         // search for doc type
         const docType = await Util.labelled(browser, "Business Type");
-        await browser.type(docType, Util.getDocumentType(doc));
+        await browser.type(docType, doc.document_type);
         const searchButton = await Util.waitForElement(
           browser,
           By.css("input[type='submit'][value='Search']")

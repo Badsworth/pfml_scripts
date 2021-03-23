@@ -421,25 +421,12 @@ jobs:
     outputs:
       deploy-state: ${{ steps.deploy-state.outputs.deploy-state }}
     steps:
+        # https://github.com/technote-space/workflow-conclusion-action
+        # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
+      - uses: technote-space/workflow-conclusion-action@v2
       - name: Set deploy-state value
         id: deploy-state
-        env:
-          CLOUDFRONT_RESULT: ${{ needs.invalidate-cloudfront.result }}
-        # the below shellcode must account for both 'cancelled' state, when a running job is cancelled while running
-        # and 'skipped' state, when a job was skipped because a prior job was cancelled or did not need to be run
-        # for brevity both are reported as 'cancelled'; portal releases are not run conditionally
-        run: |
-          if [[ $CLOUDFRONT_RESULT == 'cancelled' ]] || [[ $CLOUDFRONT_RESULT == 'skipped' ]]; then
-            echo "::set-output name=deploy-state::inactive"
-          fi
-
-          if [[ $CLOUDFRONT_RESULT == 'success' ]]; then
-            echo "::set-output name=deploy-state::success"
-          fi
-
-          if [[ $CLOUDFRONT_RESULT == 'failure' ]]; then
-            echo "::set-output name=deploy-state::failure"
-          fi
+        run: echo "::set-output name=deploy-state::${{ env.WORKFLOW_CONCLUSION }}"
 
   finish-comms-github:
     name: Finish deploy comms (GitHub)
@@ -495,9 +482,18 @@ jobs:
           if [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'success' ]]; then
             echo "::set-output name=message::${{ env.deployment_success }}"
             echo "::set-output name=color::good"
-          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'inactive' ]]; then
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'cancelled' ]]; then
             echo "::set-output name=message::${{ env.deployment_cancelled }}"
             echo "::set-output name=color::#35373b"
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'skipped' ]]; then
+            echo "::set-output name=message::${{ env.deployment_cancelled }}"
+            echo "::set-output name=color::#35373b"
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'neutral' ]]; then
+            echo "::set-output name=message::${{ env.deployment_cancelled }}"
+            echo "::set-output name=color::#35373b"
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'timed_out' ]]; then
+            echo "::set-output name=message::${{ env.deployment_failure }}"
+            echo "::set-output name=color::danger"
           elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'failure' ]]; then
             echo "::set-output name=message::${{ env.deployment_failure }}"
             echo "::set-output name=color::danger"

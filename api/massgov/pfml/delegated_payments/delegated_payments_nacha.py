@@ -8,6 +8,7 @@ from massgov.pfml.db.models.employees import (
     BankAccountType,
     Employee,
     Payment,
+    PaymentMethod,
     PrenoteState,
     PubEft,
 )
@@ -60,11 +61,8 @@ def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]):
     nacha_batch: NachaBatch = get_nacha_batch(nacha_file)
 
     for payment in payments:
-        # TODO check payment method https://lwd.atlassian.net/browse/PUB-106
-        # if payment.payment_method_id != PaymentMethod.ACH.payment_method_id:
-        #     raise Exception(
-        #         f"Non-ACH payment method for payment: {payment.payment_id}"
-        #     )
+        if payment.disb_method_id != PaymentMethod.ACH.payment_method_id:
+            raise Exception(f"Non-ACH payment method for payment: {payment.payment_id}")
 
         entry = NachaEntry(
             trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False),

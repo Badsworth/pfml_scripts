@@ -28,9 +28,8 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.reductions.dia import (
     Constants,
     _format_claims_for_dia_claimant_list,
-    _get_approved_claims,
-    _write_approved_claims_to_tempfile,
-    create_list_of_approved_claimants,
+    _write_claims_to_tempfile,
+    create_list_of_claimants,
     download_payment_list_if_none_today,
     upload_claimant_list_to_moveit,
 )
@@ -80,20 +79,20 @@ def set_up(test_db_session, initialize_factories_session):
 
     employee1 = EmployeeFactory.create(**employee_info)
     employee2 = EmployeeFactory.create(**employee_info)
-    ClaimFactory.create(
-        employee=employee1,
-        fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
-        absence_period_start_date=start_date,
-    )
-    ClaimFactory.create(
-        employee=employee2,
-        fineos_absence_status_id=AbsenceStatus.DECLINED.absence_status_id,
-        absence_period_start_date=start_date,
-    )
+    claims = [
+        ClaimFactory.create(
+            employee=employee1,
+            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+            absence_period_start_date=start_date,
+        ),
+        ClaimFactory.create(
+            employee=employee2,
+            fineos_absence_status_id=AbsenceStatus.DECLINED.absence_status_id,
+            absence_period_start_date=start_date,
+        ),
+    ]
 
-    approved_claims = _get_approved_claims(test_db_session)
-
-    return approved_claims
+    return claims
 
 
 @pytest.fixture
@@ -109,55 +108,49 @@ def set_up_invalid_data(test_db_session, initialize_factories_session):
 
     employee1 = EmployeeFactory.create(**employee_info)
     employee2 = EmployeeFactory.create(**employee_info)
-    ClaimFactory.create(
-        employee=employee1,
-        fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
-        absence_period_start_date=start_date,
-    )
-    ClaimFactory.create(
-        employee=employee2,
-        fineos_absence_status_id=AbsenceStatus.DECLINED.absence_status_id,
-        absence_period_start_date=start_date,
-    )
+    claims = [
+        ClaimFactory.create(
+            employee=employee1,
+            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+            absence_period_start_date=start_date,
+        ),
+        ClaimFactory.create(
+            employee=employee2,
+            fineos_absence_status_id=AbsenceStatus.DECLINED.absence_status_id,
+            absence_period_start_date=start_date,
+        ),
+    ]
 
-    approved_claims = _get_approved_claims(test_db_session)
-
-    return approved_claims
-
-
-def test_get_approved_claims(set_up, test_db_session):
-    approved_claims = set_up
-    assert len(approved_claims) == 1
+    return claims
 
 
 def test_format_claims_for_dia_claimant_list(set_up):
-    approved_claims = set_up
-    claim = approved_claims[0]
-    employee = claim.employee
-    approved_claims_dia_info = _format_claims_for_dia_claimant_list(approved_claims)
+    claims = set_up
+    claims_dia_info = _format_claims_for_dia_claimant_list(claims)
 
-    for approved_claim in approved_claims_dia_info:
-        assert approved_claim[Constants.CASE_ID_FIELD] == claim.fineos_absence_id
+    for claim, dia_claim in zip(claims, claims_dia_info):
+        employee = claim.employee
+
+        assert dia_claim[Constants.CASE_ID_FIELD] == claim.fineos_absence_id
         assert (
-            approved_claim[Constants.BENEFIT_START_DATE_FIELD]
-            == Constants.TEMPORARY_BENEFIT_START_DATE
+            dia_claim[Constants.BENEFIT_START_DATE_FIELD] == Constants.TEMPORARY_BENEFIT_START_DATE
         )
-        assert approved_claim[Constants.FIRST_NAME_FIELD] == employee.first_name
-        assert approved_claim[Constants.LAST_NAME_FIELD] == employee.last_name
-        assert approved_claim[Constants.BIRTH_DATE_FIELD] == employee.date_of_birth.strftime(
+        assert dia_claim[Constants.FIRST_NAME_FIELD] == employee.first_name
+        assert dia_claim[Constants.LAST_NAME_FIELD] == employee.last_name
+        assert dia_claim[Constants.BIRTH_DATE_FIELD] == employee.date_of_birth.strftime(
             Constants.DATE_OF_BIRTH_FORMAT
         )
-        assert isinstance(approved_claim[Constants.BIRTH_DATE_FIELD], str)
-        assert approved_claim[Constants.SSN_FIELD] == employee.tax_identifier.tax_identifier
-        assert "-" not in approved_claim[Constants.SSN_FIELD]
+        assert isinstance(dia_claim[Constants.BIRTH_DATE_FIELD], str)
+        assert dia_claim[Constants.SSN_FIELD] == employee.tax_identifier.tax_identifier
+        assert "-" not in dia_claim[Constants.SSN_FIELD]
 
 
-def test_write_approved_claims_to_tempfile_invalid_data(set_up_invalid_data):
-    approved_employees = set_up_invalid_data
+def test_write_claims_to_tempfile_invalid_data(set_up_invalid_data):
+    claims = set_up_invalid_data
 
     with pytest.raises(ValueError):
-        approved_claims_dia_info = _format_claims_for_dia_claimant_list(approved_employees)
-        _write_approved_claims_to_tempfile(approved_claims_dia_info)
+        claims_dia_info = _format_claims_for_dia_claimant_list(claims)
+        _write_claims_to_tempfile(claims_dia_info)
 
 
 def _random_date_in_past_year() -> date:
@@ -270,7 +263,7 @@ def test_copy_to_sftp_and_archive_s3_files(
         )
 
 
-def test_create_list_of_approved_claimants(
+def test_create_list_of_claimants(
     initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session,
 ):
     s3_bucket_uri = "s3://" + mock_s3_bucket
@@ -287,7 +280,7 @@ def test_create_list_of_approved_claimants(
         claim.employee.date_of_birth = fake.date_between(start_date="-100y", end_date="-18y")
         claims.append(claim)
 
-    create_list_of_approved_claimants(test_db_session)
+    create_list_of_claimants(test_db_session)
 
     # Expect that the file to appear in the mock_s3_bucket.
     s3 = boto3.client("s3")

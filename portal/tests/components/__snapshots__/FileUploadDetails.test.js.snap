@@ -2,12 +2,9 @@
 
 exports[`FileUploadDetails renders the details with text 1`] = `
 <Details
-  label="Some tips for uploading documents and images"
+  label="Tips for uploading images or PDFs"
 >
   <div>
-    <p>
-      Files should be 4.5 MB or smaller. If your file is larger than 4.5 MB, try resizing it or splitting it into separate files.
-    </p>
     <List
       key="0"
       list={
@@ -35,19 +32,6 @@ exports[`FileUploadDetails renders the details with text 1`] = `
     />
     <List
       key="2"
-      list={
-        Object {
-          "listHeading": "If you’re taking a picture of your document:",
-          "listItems": Array [
-            "Take a picture of each document page and upload the pictures individually",
-            "If you’re uploading an ID card, upload separate pictures for both the front and back of the card",
-            "Make sure the picture is clear and readable",
-          ],
-        }
-      }
-    />
-    <List
-      key="3"
       list={
         Object {
           "listHeading": "If your document is attached to an email:",

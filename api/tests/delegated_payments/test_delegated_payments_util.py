@@ -171,7 +171,7 @@ def test_get_date_group_folder_name():
     )
 
 
-def test_payment_extract_reference_file_exists_by_date_group(
+def test_payment_extract_reference_file_exists_by_date_group_for_processed_payment(
     test_db_session, initialize_factories_session, set_exporter_env_vars
 ):
     date_group = "2020-12-01-11-30-00"
@@ -183,6 +183,32 @@ def test_payment_extract_reference_file_exists_by_date_group(
     file_location = os.path.join(
         payments_config.get_s3_config().pfml_fineos_inbound_path,
         payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+        payments_util.get_date_group_folder_name(
+            date_group, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
+        ),
+    )
+    ReferenceFileFactory.create(
+        file_location=file_location,
+        reference_file_type_id=ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id,
+    )
+
+    assert payments_util.payment_extract_reference_file_exists_by_date_group(
+        test_db_session, date_group, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
+    )
+
+
+def test_payment_extract_reference_file_exists_by_date_group_for_skipped_payment(
+    test_db_session, initialize_factories_session, set_exporter_env_vars
+):
+    date_group = "2020-12-01-11-30-00"
+
+    assert not payments_util.payment_extract_reference_file_exists_by_date_group(
+        test_db_session, date_group, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
+    )
+
+    file_location = os.path.join(
+        payments_config.get_s3_config().pfml_fineos_inbound_path,
+        payments_util.Constants.S3_INBOUND_SKIPPED_DIR,
         payments_util.get_date_group_folder_name(
             date_group, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         ),
@@ -262,6 +288,7 @@ def test_copy_fineos_data_to_archival_bucket(
 
 def test_copy_fineos_data_to_archival_bucket_skip_old_payment(
     test_db_session,
+    initialize_factories_session,
     mock_fineos_s3_bucket,
     mock_s3_bucket,
     set_exporter_env_vars,
@@ -293,9 +320,32 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_payment(
         mock_fineos_s3_bucket, s3_prefix, not_expected_timestamp_1, PAYMENT_EXTRACT_FILENAMES
     )
 
+    # Check there are no processed or skipped files
+    date_group = "2020-12-01-11-30-00"
+    assert not payments_util.payment_extract_reference_file_exists_by_date_group(
+        test_db_session, date_group, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
+    )
+
     # Actually run the command
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
         test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
+    )
+
+    # Verify there is a skipped file
+    file_location = os.path.join(
+        payments_config.get_s3_config().pfml_fineos_inbound_path,
+        payments_util.Constants.S3_INBOUND_SKIPPED_DIR,
+        payments_util.get_date_group_folder_name(
+            date_group, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
+        ),
+    )
+    ReferenceFileFactory.create(
+        file_location=file_location,
+        reference_file_type_id=ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id,
+    )
+
+    assert payments_util.payment_extract_reference_file_exists_by_date_group(
+        test_db_session, date_group, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
     )
 
     received_s3_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/"

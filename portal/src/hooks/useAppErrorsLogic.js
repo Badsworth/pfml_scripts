@@ -277,10 +277,16 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       hasVerificationData: error.has_verification_data,
     });
 
-    const route = error.has_verification_data
-      ? routes.employers.verifyContributions
-      : routes.employers.cannotVerify;
-    portalFlow.goTo(route, { employer_id: error.employer_id });
+    if (error.has_verification_data) {
+      portalFlow.goTo(routes.employers.verifyContributions, {
+        employer_id: error.employer_id,
+        next: portalFlow.pathWithParams,
+      });
+    } else {
+      portalFlow.goTo(routes.employers.cannotVerify, {
+        employer_id: error.employer_id,
+      });
+    }
   };
 
   return {

@@ -88,9 +88,7 @@ def test_nacha_file_prenote_entries():
 
     employees_with_eft = []
     for _ in range(5):
-        employees_with_eft.append(
-            build_employee_with_eft(PaymentMethod.ACH, PrenoteState.PENDING_PRE_PUB)
-        )
+        employees_with_eft.append(build_employee_with_eft(PrenoteState.PENDING_PRE_PUB))
 
     add_eft_prenote_to_nacha_file(nacha_file, employees_with_eft)
 
@@ -100,7 +98,7 @@ def test_nacha_file_prenote_entries():
 def test_nacha_file_prenote_entries_errors():
     nacha_file = create_nacha_file()
 
-    employee_with_eft = build_employee_with_eft(PaymentMethod.ACH, PrenoteState.APPROVED)
+    employee_with_eft = build_employee_with_eft(PrenoteState.APPROVED)
 
     with pytest.raises(
         Exception,
@@ -144,7 +142,7 @@ def test_nacha_file_payment_entries():
 def test_nacha_file_upload(tmp_path):
     nacha_file = create_nacha_file()
 
-    employee_with_eft = build_employee_with_eft(PaymentMethod.ACH, PrenoteState.PENDING_PRE_PUB)
+    employee_with_eft = build_employee_with_eft(PrenoteState.PENDING_PRE_PUB)
     add_eft_prenote_to_nacha_file(nacha_file, [employee_with_eft])
 
     payment = build_payment(PaymentMethod.ACH)
@@ -159,10 +157,8 @@ def test_nacha_file_upload(tmp_path):
     assert nacha_file_name in file_util.list_files(folder_path)
 
 
-def build_employee_with_eft(
-    payment_method: LkPaymentMethod, prenote_state: LkPrenoteState
-) -> Tuple[Employee, PubEft]:
-    employee = EmployeeFactory.build(payment_method_id=payment_method.payment_method_id)
+def build_employee_with_eft(prenote_state: LkPrenoteState) -> Tuple[Employee, PubEft]:
+    employee = EmployeeFactory.build()
     pub_eft = PubEftFactory.build(prenote_state_id=prenote_state.prenote_state_id)
     EmployeePubEftPairFactory.build(employee=employee, pub_eft=pub_eft)
 
@@ -170,10 +166,12 @@ def build_employee_with_eft(
 
 
 def build_payment(payment_method: LkPaymentMethod):
-    employee_with_eft = build_employee_with_eft(payment_method, PrenoteState.PENDING_PRE_PUB)
+    employee_with_eft = build_employee_with_eft(PrenoteState.PENDING_PRE_PUB)
     employee = employee_with_eft[0]
     pub_eft = employee_with_eft[1]
 
     claim = ClaimFactory.build(employee=employee)
-    payment = PaymentFactory.build(claim=claim, pub_eft=pub_eft)
+    payment = PaymentFactory.build(
+        claim=claim, pub_eft=pub_eft, disb_method_id=payment_method.payment_method_id
+    )
     return payment

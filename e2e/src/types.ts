@@ -10,6 +10,11 @@ export type Credentials = {
   fein?: string;
 };
 
+export type OAuthCreds = {
+  clientID: string;
+  secretID: string;
+};
+
 /**
  * Special type to use to tell Typescript what properties `this` might contain on a Cypress
  * test step.

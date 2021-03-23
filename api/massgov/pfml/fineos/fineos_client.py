@@ -84,6 +84,17 @@ def fineos_document_empty_dates_to_none(response_json: dict) -> dict:
     return response_json
 
 
+def get_fineos_correlation_id(response: requests.Response) -> Optional[Any]:
+    try:
+        response_payload_json = response.json()
+        if isinstance(response_payload_json, dict):
+            return response_payload_json.get("correlationId", "")
+    except ValueError:
+        pass
+
+    return None
+
+
 class FINEOSClient(client.AbstractFINEOSClient):
     """FINEOS API client."""
 
@@ -220,12 +231,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
         except (requests.exceptions.RequestException, requests.exceptions.Timeout) as ex:
             self._handle_client_side_exception(method, url, ex)
 
-        try:
-            response_payload_json = response.json()
-        except ValueError:
-            response_payload_json = {}
-
         if response.status_code != requests.codes.ok:
+
+            # Try to parse correlation ID as metadata from the response.
+            fineos_correlation_id = get_fineos_correlation_id(response)
+
             logger.debug(
                 "%s %s detail",
                 method,
@@ -237,7 +247,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 "FineosError",
                 {
                     "fineos.error.class": "FINEOSClientBadResponse",
-                    "fineos.error.correlation_id": response_payload_json.get("correlationId", ""),
+                    "fineos.error.correlation_id": fineos_correlation_id,
                     "fineos.error.message": response.text,
                     "fineos.response.status": response.status_code,
                     "fineos.request.method": method,
@@ -300,9 +310,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 response.elapsed / MILLISECOND,
                 extra={
                     "response.text": response.text,
-                    "response.fineos_correlation_id": response_payload_json.get(
-                        "correlationId", ""
-                    ),
+                    "response.fineos_correlation_id": fineos_correlation_id,
                 },
                 exc_info=err,
             )

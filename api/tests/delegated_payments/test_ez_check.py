@@ -8,6 +8,7 @@ import pytest
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.delegated_payments.ez_check as ez_check
+import massgov.pfml.util.files as file_util
 
 fake = faker.Faker()
 
@@ -17,7 +18,7 @@ def _random_valid_ez_check_record_args():
         "check_number": fake.random_int(min=1_000_000_000, max=9_999_999_999),
         "check_date": fake.date_between("-3w", "today"),
         "amount": Decimal(fake.random_int(min=10, max=9_999)),
-        "memo": fake.text(max_nb_chars=100),
+        "memo": fake.sentence()[:99],
         "payee_name": fake.name(),
         "address_line_1": fake.street_address(),
         "address_line_2": "",
@@ -25,6 +26,21 @@ def _random_valid_ez_check_record_args():
         "state": fake.state_abbr(),
         "zip_code": fake.postcode(),
         "country": fake.country_code(),
+    }
+
+
+def _random_valid_ez_check_header_args():
+    return {
+        "name_line_1": fake.name(),
+        "name_line_2": fake.company(),
+        "address_line_1": fake.street_address(),
+        "address_line_2": "Bldg. " + fake.building_number(),
+        "city": fake.city(),
+        "state": fake.state_abbr(),
+        "zip_code": fake.postcode(),
+        "country": fake.country_code(),
+        "accounting_number": fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999),
+        "routing_number": fake.random_int(min=10_000_000_000, max=99_999_999_999),
     }
 
 
@@ -231,3 +247,98 @@ def test_ez_check_record_success():
     )
 
     assert str(record) == s.getvalue()
+
+
+@pytest.mark.parametrize(
+    "_description, args, expected_issues",
+    (
+        (
+            "Routing number too long",
+            {**_random_valid_ez_check_header_args(), "routing_number": 123_456_789_012_345},
+            [payments_util.ValidationReason.FIELD_TOO_LONG],
+        ),
+        (
+            "Errors for all invalid fields are raised",
+            {**_random_valid_ez_check_header_args(), "accounting_number": "99", "zip_code": "2021"},
+            [
+                payments_util.ValidationReason.INVALID_TYPE,
+                payments_util.ValidationReason.INVALID_VALUE,
+            ],
+        ),
+    ),
+)
+def test_ez_check_header_failure(_description, args, expected_issues):
+    # Expect to raise an exception when we initialize the object.
+    try:
+        ez_check.EzCheckHeader(**args)
+    except payments_util.ValidationIssueException as e:
+        record_issues = [issue.reason for issue in e.issues]
+        assert sorted(record_issues) == sorted(expected_issues)
+
+
+def test_ez_check_header_success():
+    args = _random_valid_ez_check_header_args()
+
+    header = ez_check.EzCheckHeader(**args)
+
+    s = io.StringIO()
+    w = csv.writer(s)
+    w.writerow(
+        [
+            1,
+            args["name_line_1"],
+            args["name_line_2"],
+            args["address_line_1"],
+            args["address_line_2"],
+            args["city"],
+            args["state"],
+            args["zip_code"],
+            args["country"],
+            args["accounting_number"],
+            args["routing_number"],
+        ]
+    )
+
+    assert str(header) == s.getvalue()
+
+
+@pytest.mark.parametrize("args, exception_type", (({}, TypeError), ({"header": None}, TypeError),))
+def test_ez_check_file_initialization_failure(args, exception_type):
+    with pytest.raises(exception_type):
+        ez_check.EzCheckFile(**args)
+
+
+def test_ez_check_file_success(mock_s3_bucket):
+    ez_check_header = ez_check.EzCheckHeader(**_random_valid_ez_check_header_args())
+    ez_check_file = ez_check.EzCheckFile(ez_check_header)
+
+    # Create some small number of records to add to the file.
+    record_count = fake.random_int(min=1, max=15)
+    for _i in range(record_count):
+        record = ez_check.EzCheckRecord(**_random_valid_ez_check_record_args())
+        ez_check_file.add_record(record)
+
+    # Write the EzCheck file to S3.
+    # s3 = boto3.client("s3")
+    s3_path = "s3://{}/{}".format(mock_s3_bucket, "path/to/ez_check_file.csv")
+    with file_util.write_file(s3_path) as fh:
+        ez_check_file.write_to(fh)
+
+    # Re-open the file for reading so we can assert we wrote each record to the file with the
+    # expected line numbers.
+    file_stream = file_util.open_stream(s3_path)
+
+    line_count = 0
+    for line in file_stream:
+        line_count += 1
+        if line_count == 1:
+            assert line.startswith("1,")
+            continue
+
+        if line_count % 2 == 0:
+            assert line.startswith("2,")
+        else:
+            assert line.startswith("3,")
+
+    # Header line + 2 lines for each record in the file.
+    assert line_count == 1 + 2 * record_count

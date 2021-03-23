@@ -143,7 +143,7 @@ resource "newrelic_nrql_alert_condition" "rds_high_cpu_utilization" {
     evaluation_offset = 3
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold_duration    = 300
@@ -174,7 +174,7 @@ resource "newrelic_nrql_alert_condition" "rds_low_storage_space" {
     evaluation_offset = 3
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold_duration    = 300
@@ -214,7 +214,7 @@ resource "newrelic_nrql_alert_condition" "fineos_aggregated_5xx_rate" {
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold_duration    = 300 # five minutes
@@ -251,7 +251,7 @@ resource "newrelic_nrql_alert_condition" "fineos_aggregated_4xx_rate" {
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold             = 10
@@ -273,12 +273,12 @@ resource "newrelic_nrql_alert_condition" "fineos_claim-submission_5xx_rate" {
   # CRIT: This percentage is > 33% for at least 5 minutes
   # WARN: This percentage is > 10% for any 1 minute in a 5 minute window
 
-  name                 = "[5xx] High rate of claim submission failure in ${upper(var.environment_name)} FINEOS"
-  policy_id            = newrelic_alert_policy.api_alerts.id
-  type                 = "static"
-  value_function       = "single_value"
-  enabled              = true
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  name                         = "[5xx] High rate of claim submission failure in ${upper(var.environment_name)} FINEOS"
+  policy_id                    = newrelic_alert_policy.api_alerts.id
+  type                         = "static"
+  value_function               = "single_value"
+  enabled                      = true
+  violation_time_limit_seconds = 86400 # 24 hours
 
   nrql {
     query = <<-NRQL
@@ -320,12 +320,12 @@ resource "newrelic_nrql_alert_condition" "fineos_claim-submission_4xx_rate" {
   # CRIT: This percentage is > 33% for at least 5 minutes
   # WARN: This percentage is > 10% for any 1 minute in a 5 minute window
 
-  name                 = "[4xx] High rate of claim submission failure in ${upper(var.environment_name)} FINEOS"
-  policy_id            = newrelic_alert_policy.api_alerts.id
-  type                 = "static"
-  value_function       = "single_value"
-  enabled              = true
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  name                         = "[4xx] High rate of claim submission failure in ${upper(var.environment_name)} FINEOS"
+  policy_id                    = newrelic_alert_policy.api_alerts.id
+  type                         = "static"
+  value_function               = "single_value"
+  enabled                      = true
+  violation_time_limit_seconds = 86400 # 24 hours
 
   nrql {
     query = <<-NRQL
@@ -385,7 +385,7 @@ resource "newrelic_nrql_alert_condition" "notifications_endpoint_error_rate" {
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold             = 10
@@ -426,7 +426,7 @@ resource "newrelic_nrql_alert_condition" "servicenow_4xx_rate" {
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold_duration    = 300 # five minutes
@@ -463,7 +463,7 @@ resource "newrelic_nrql_alert_condition" "servicenow_5xx_rate" {
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold_duration    = 300 # five minutes
@@ -484,13 +484,13 @@ resource "newrelic_nrql_alert_condition" "servicenow_5xx_rate" {
 # Alarms relating to problems in the payments pipeline
 
 resource "newrelic_nrql_alert_condition" "payments_errors_from_fineos" {
-  count                = (var.environment_name == "prod") ? 1 : 0
-  name                 = "Errors encountered by the payments-fineos-process task"
-  type                 = "static"
-  value_function       = "single_value"
-  enabled              = true
-  policy_id            = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  count                        = (var.environment_name == "prod") ? 1 : 0
+  name                         = "Errors encountered by the payments-fineos-process task"
+  type                         = "static"
+  value_function               = "single_value"
+  enabled                      = true
+  policy_id                    = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
+  violation_time_limit_seconds = 86400 # 24 hours
 
   nrql {
     evaluation_offset = 3
@@ -511,13 +511,13 @@ resource "newrelic_nrql_alert_condition" "payments_errors_from_fineos" {
 }
 
 resource "newrelic_nrql_alert_condition" "payments_errors_from_comptroller" {
-  count                = (var.environment_name == "prod") ? 1 : 0
-  name                 = "Errors encountered by the payments-ctr-process task"
-  type                 = "static"
-  value_function       = "single_value"
-  enabled              = true
-  policy_id            = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  count                        = (var.environment_name == "prod") ? 1 : 0
+  name                         = "Errors encountered by the payments-ctr-process task"
+  type                         = "static"
+  value_function               = "single_value"
+  enabled                      = true
+  policy_id                    = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
+  violation_time_limit_seconds = 86400 # 24 hours
 
   nrql {
     evaluation_offset = 3
@@ -562,7 +562,7 @@ resource "newrelic_nrql_alert_condition" "rmv_5xx_rate" {
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold_duration    = 300 # five minutes
