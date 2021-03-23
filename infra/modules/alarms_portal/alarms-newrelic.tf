@@ -248,7 +248,7 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
     evaluation_offset = 1
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold_duration    = 300
@@ -272,10 +272,10 @@ resource "newrelic_nrql_alert_condition" "unexpected_validation_violations" {
   policy_id   = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
   runbook_url = "https://lwd.atlassian.net/l/c/XSzdMmJ6"
 
-  aggregation_window   = 120 # 2 minutes, should match threshold_duration
-  type                 = "static"
-  value_function       = "single_value"
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  aggregation_window           = 120 # 2 minutes, should match threshold_duration
+  type                         = "static"
+  value_function               = "single_value"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   nrql {
     # Ignoring employer_benefits[%].benefit_amount_frequency since we expect an
@@ -364,11 +364,11 @@ resource "newrelic_nrql_alert_condition" "cognito_sign_up_client_error" {
 }
 
 resource "newrelic_nrql_alert_condition" "portal_synthetic_ping_failure" {
-  policy_id            = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
-  name                 = "Portal synthetic ping failed"
-  type                 = "static"
-  value_function       = "single_value"
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  policy_id                    = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
+  name                         = "Portal synthetic ping failed"
+  type                         = "static"
+  value_function               = "single_value"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   # ignore performance and training environments
   enabled = contains(["prod", "stage", "test"], var.environment_name)
@@ -387,11 +387,11 @@ resource "newrelic_nrql_alert_condition" "portal_synthetic_ping_failure" {
 }
 
 resource "newrelic_nrql_alert_condition" "portal_synthetic_login_failure" {
-  policy_id            = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
-  name                 = "Portal scripted synthetic login failed"
-  type                 = "static"
-  value_function       = "single_value"
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  policy_id                    = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
+  name                         = "Portal scripted synthetic login failed"
+  type                         = "static"
+  value_function               = "single_value"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   # ignore performance and training environments
   enabled = contains(["prod", "stage", "test"], var.environment_name)
