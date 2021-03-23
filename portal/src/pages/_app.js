@@ -1,5 +1,6 @@
 import "../../styles/app.scss";
 import React, { useEffect, useState } from "react";
+import Alert from "../components/Alert";
 import { Auth } from "@aws-amplify/auth";
 import PageWrapper from "../components/PageWrapper";
 import PropTypes from "prop-types";
@@ -125,6 +126,9 @@ export const App = ({ Component, pageProps }) => {
         process.env.maintenanceRemovalDayAndTime || null
       }
     >
+        <Alert state="success">
+          Team X gon' give it to ya
+        </Alert>
       <Component appLogic={appLogic} query={router.query} {...pageProps} />
     </PageWrapper>
   );

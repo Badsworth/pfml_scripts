@@ -50,6 +50,7 @@
     "react-i18next": "^11.8.5",
     "react-use": "^15.3.4",
     "uswds": "^2.10.0",
+    "webpack": "^4.44.2",
     "xstate": "^4.15.4"
   },
   "devDependencies": {
