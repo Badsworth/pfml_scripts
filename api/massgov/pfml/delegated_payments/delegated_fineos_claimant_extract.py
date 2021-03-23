@@ -479,13 +479,13 @@ class ClaimantExtractStep(Step):
                 ),
             )
 
+            payment_method_id = None
             if payment_method is not None:
-                try:
-                    employee_pfml_entry.payment_method_id = PaymentMethod.get_id(payment_method)
-                except KeyError:
-                    pass
+                payment_method_id = PaymentMethod.get_id(payment_method)
 
-            self.update_eft_info(employee_feed_entry, employee_pfml_entry, validation_container)
+            self.update_eft_info(
+                employee_feed_entry, employee_pfml_entry, payment_method_id, validation_container
+            )
 
             fineos_customer_number = payments_util.validate_csv_input(
                 "CUSTOMERNO", employee_feed_entry, validation_container, True
@@ -574,11 +574,15 @@ class ClaimantExtractStep(Step):
         self,
         employee_feed_entry: Dict[str, str],
         employee_pfml_entry: Employee,
+        payment_method_id: Optional[int],
         validation_container: payments_util.ValidationContainer,
     ) -> None:
         """Returns True if there have been EFT updates; False otherwise"""
         nbr_of_validation_errors = len(validation_container.validation_issues)
-        eft_required = employee_pfml_entry.payment_method_id == PaymentMethod.ACH.payment_method_id
+        eft_required = (
+            payment_method_id is not None
+            and payment_method_id == PaymentMethod.ACH.payment_method_id
+        )
 
         routing_nbr = payments_util.validate_csv_input(
             "SORTCODE",

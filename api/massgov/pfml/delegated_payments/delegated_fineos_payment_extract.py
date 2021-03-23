@@ -656,6 +656,10 @@ class PaymentExtractStep(Step):
         )
         payment = Payment(payment_id=uuid.uuid4())
 
+        # set the payment method
+        if payment_data.raw_payment_method is not None:
+            payment.disb_method_id = PaymentMethod.get_id(payment_data.raw_payment_method)
+
         # Note that these values may have validation issues
         # that is fine as it will get moved to an error state
         payment.claim = claim
@@ -823,9 +827,6 @@ class PaymentExtractStep(Step):
         has_address_update, has_eft_update = False, False
         payment_eft = None
         if employee and not payment_data.validation_container.has_validation_issues():
-            # Update the payment method ID of the employee
-            employee.payment_method_id = PaymentMethod.get_id(payment_data.raw_payment_method)
-
             # Update the mailing address with values from FINEOS
             has_address_update = self.update_ctr_address_pair_fineos_address(payment_data, employee)
 
@@ -908,7 +909,7 @@ class PaymentExtractStep(Step):
             == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
         ):
             # ACH cancellations are added to the FINEOS writeback + a report
-            if payment.claim.employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
+            if payment.disb_method_id == PaymentMethod.ACH.payment_method_id:
                 end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
                 message = "Cancellation payment added to pending state for FINEOS writeback"
                 self.increment("ach_cancellation_count")

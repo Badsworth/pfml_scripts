@@ -228,7 +228,6 @@ def add_db_records(
                 prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
             )
             EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft)
-            employee.payment_method_id = PaymentMethod.ACH.payment_method_id
 
     if add_address:
         employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
@@ -390,7 +389,7 @@ def test_process_extract_data(
     setup_process_tests(mock_s3_bucket, test_db_session)
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 6
+    assert employee_log_count_before == 3
 
     payment_extract_step.run()
 
@@ -472,16 +471,17 @@ def test_process_extract_data(
         # Payment 2 uses CHECK over ACH, so some logic differs for it.
         # The 2nd record is also family leave, the other two are medical leave
         if index == "2":
-            assert employee.payment_method_id == PaymentMethod.CHECK.payment_method_id
             assert not mailing_address.address_line_two
+
+            assert payment.disb_method_id == PaymentMethod.CHECK.payment_method_id
             assert payment.pub_eft_id is None
             assert payment.has_eft_update is False
             assert len(pub_efts) == 1  # One prior one created by setup logic
 
         else:
-            assert employee.payment_method_id == PaymentMethod.ACH.payment_method_id
             assert mailing_address.address_line_two == f"AddressLine2-{index}"
 
+            assert payment.disb_method_id == PaymentMethod.ACH.payment_method_id
             assert payment.pub_eft
             assert str(payment.pub_eft.routing_nbr) == index * 9
             assert str(payment.pub_eft.account_nbr) == index * 9
@@ -522,7 +522,7 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
     )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 6
+    assert employee_log_count_before == 3
 
     payment_extract_step.run()
 
@@ -585,7 +585,7 @@ def test_process_extract_data_one_bad_record(
     )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 4
+    assert employee_log_count_before == 2
 
     payment_extract_step.run()
 
@@ -637,7 +637,7 @@ def test_process_extract_data_rollback(
     setup_process_tests(mock_s3_bucket, test_db_session)
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 6
+    assert employee_log_count_before == 3
 
     # Override the method that moves files at the end to throw
     # an error so that everything will rollback
@@ -803,8 +803,9 @@ def test_process_extract_data_no_existing_claim_address_eft(
 
         # Payment 2 uses CHECK over ACH, so some logic differs for it.
         if index == "2":
-            assert employee.payment_method_id == PaymentMethod.CHECK.payment_method_id
             assert not mailing_address.address_line_two
+
+            assert payment.disb_method_id == PaymentMethod.CHECK.payment_method_id
             assert payment.pub_eft_id is None
             assert payment.has_eft_update is False
             assert len(pub_efts) == 0  # Not set by setup logic, shouldn't be set at all now
@@ -815,9 +816,9 @@ def test_process_extract_data_no_existing_claim_address_eft(
             )
 
         else:
-            assert employee.payment_method_id == PaymentMethod.ACH.payment_method_id
             assert mailing_address.address_line_two == f"AddressLine2-{index}"
 
+            assert payment.disb_method_id == PaymentMethod.ACH.payment_method_id
             assert payment.pub_eft
             assert str(payment.pub_eft.routing_nbr) == index * 9
             assert str(payment.pub_eft.account_nbr) == index * 9
@@ -875,7 +876,7 @@ def test_process_extract_data_existing_payment(
     )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 6
+    assert employee_log_count_before == 3
 
     payment_extract_step.run()
 
