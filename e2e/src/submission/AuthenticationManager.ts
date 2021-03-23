@@ -225,7 +225,6 @@ export default class AuthenticationManager {
     }
     const employer_id = user.data.data.user_leave_administrators[0].employer_id;
     if (!employer_id) {
-      console.log("NONEEE");
       throw new Error("No employer ID found");
     }
 
