@@ -1576,11 +1576,11 @@ const pages = {
   },
   employersCannotVerify: {
     body:
-      "Your account can’t be verified yet, because your organization has not made any paid leave contributions. After you pay quarterly taxes, you can verify your account and review applications.",
+      "We can't verify this account because this organization hasn't submitted contributions through MassTaxConnect. Call the Department of Revenue at $t(shared.departmentOfRevenuePhoneNumber) to make arrangements to submit contributions. Once you do that, you'll be able to review leave applications on the next business day. Learn more about <learn-more-link>verifying your account</learn-more-link> on Mass.gov.",
     companyNameLabel: "<strong>Organization:</strong> {{employerDba}}",
     employerIdNumberLabel:
       "<strong>Employer ID number (EIN):</strong> {{employerFein}}",
-    title: "We are unable to verify this organization online at the moment",
+    title: "We can't verify this organization",
   },
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
