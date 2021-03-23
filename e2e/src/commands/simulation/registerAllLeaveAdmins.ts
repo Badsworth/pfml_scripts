@@ -31,18 +31,18 @@ const cmd: CommandModule<SystemWideArgs, RegisterAllLeaveAdmins> = {
     const employers: Employer[] = JSON.parse(employersFile.toString("utf8"));
 
     for (const employer of employers) {
-      try {
-        await registerLeaveAdmin({
-          ...args,
-          fein: employer.fein,
-          amount: employer.withholdings[
-            employer.withholdings.length - 1
-          ].toString(),
-        });
-      } catch (e) {
-        console.log(e);
-        continue;
-      }
+      if (!employer.withholdings)
+        throw new Error(
+          `Missing withholding amounts for employer ${employer.fein}`
+        );
+
+      await registerLeaveAdmin({
+        ...args,
+        fein: employer.fein,
+        amount: employer.withholdings[
+          employer.withholdings.length - 1
+        ].toString(),
+      });
     }
     args.logger.profile("registerAllLeaveAdmins");
   },
