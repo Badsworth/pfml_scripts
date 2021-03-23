@@ -4,7 +4,7 @@ import stringify from "csv-stringify";
 import fs from "fs";
 import { map, pipeline, writeToStream } from "streaming-iterables";
 
-import { parseISO } from "date-fns";
+import * as scenarios from "../scenarios";
 
 import ClaimPool from "../generation/Claim";
 import EmployerPool, { Employer } from "../generation/Employer";
@@ -25,8 +25,6 @@ import {
 
 import { getFineosBaseUrl } from "../commands/simulation/simulate";
 
-import * as scenarios from "../scenarios";
-
 /**
  * This is a data generation script.
  *
@@ -36,7 +34,7 @@ import * as scenarios from "../scenarios";
  */
 
 (async () => {
-  const storage = dataDirectory("2021-03-17-CPS-1824");
+  const storage = dataDirectory("2021-03-22-end-745-<before | after>");
   await storage.prepare();
 
   if (true) {
@@ -50,85 +48,104 @@ import * as scenarios from "../scenarios";
     try {
       employerPool = await EmployerPool.load(storage.employers);
     } catch (e) {
-      throw new Error(e);
-      // if (e.code !== "ENOENT") throw e;
-      // (employerPool = EmployerPool.generate(500)),
-      //   await employerPool.save(storage.employers);
-      // await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
-      // const buildEmployerIndexLine = (
-      //   employer: Employer
-      // ): Record<string, string | number> => {
-      //   if (!employer.withholdings) {
-      //     throw new Error("No withholdings found for this employer");
-      //   }
-      //   return {
-      //     fein: employer.fein,
-      //     name: employer.name,
-      //     q1: employer.withholdings[0],
-      //     q2: employer.withholdings[1],
-      //     q3: employer.withholdings[2],
-      //     q4: employer.withholdings[3],
-      //   };
-      // };
-      // const employerIndexStream = multipipe(
-      //   stringify({
-      //     header: true,
-      //     columns: {
-      //       fein: "FEIN",
-      //       name: "Name",
-      //       q1: "2020-03-31 Withholdings",
-      //       q2: "2020-06-30 Withholdings",
-      //       q3: "2020-09-30 Withholdings",
-      //       q4: "2020-12-31 Withholdings",
-      //     },
-      //   }),
-      //   fs.createWriteStream(storage.dir + "/employers.csv")
-      // );
-      // await pipeline(
-      //   () => employerPool,
-      //   map(buildEmployerIndexLine),
-      //   writeToStream(employerIndexStream)
-      // );
+      if (e.code !== "ENOENT") throw e;
+      (employerPool = EmployerPool.generate(500)),
+        await employerPool.save(storage.employers);
+      await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
+
+      const buildEmployerIndexLine = (
+        employer: Employer
+      ): Record<string, string | number> => {
+        if (!employer.withholdings) {
+          throw new Error("No withholdings found for this employer");
+        }
+        return {
+          fein: employer.fein,
+          name: employer.name,
+          q1: employer.withholdings[0],
+          q2: employer.withholdings[1],
+          q3: employer.withholdings[2],
+          q4: employer.withholdings[3],
+        };
+      };
+
+      const employerIndexStream = multipipe(
+        stringify({
+          header: true,
+          columns: {
+            fein: "FEIN",
+            name: "Name",
+            q1: "2020-03-31 Withholdings",
+            q2: "2020-06-30 Withholdings",
+            q3: "2020-09-30 Withholdings",
+            q4: "2020-12-31 Withholdings",
+          },
+        }),
+        fs.createWriteStream(storage.dir + "/employers.csv")
+      );
+
+      await pipeline(
+        () => employerPool as EmployerPool,
+        map(buildEmployerIndexLine),
+        writeToStream(employerIndexStream)
+      );
     }
 
     // Generate a pool of employees.
     try {
       employeePool = await EmployeePool.load(storage.employees);
     } catch (e) {
-      throw new Error(e);
-      // if (e.code !== "ENOENT") throw e;
-      // // Define the kinds of employees we need to support. Each type of employee is generated as its own pool,
-      // // then we merge them all together.
-      // employeePool = EmployeePool.merge(
-      //   EmployeePool.generate(500, employerPool, {
-      //     wages: "eligible",
-      //   })
-      // );
+      if (e.code !== "ENOENT") throw e;
+      // Define the kinds of employees we need to support. Each type of employee is generated as its own pool,
+      // then we merge them all together.
+      employeePool = EmployeePool.merge(
+        EmployeePool.generate(500, employerPool, {
+          wages: "eligible",
+        })
+      );
 
-      // await employeePool.save(storage.employees);
-      // await DOR.writeEmployeesFile(
-      //   employerPool,
-      //   employeePool,
-      //   storage.dorFile("DORDFML")
-      // );
-      // await EmployeeIndex.write(
-      //   employeePool,
-      //   path.join(storage.dir, "employees.csv")
-      // );
+      await employeePool.save(storage.employees);
+      await DOR.writeEmployeesFile(
+        employerPool,
+        employeePool,
+        storage.dorFile("DORDFML")
+      );
+      await EmployeeIndex.write(
+        employeePool,
+        path.join(storage.dir, "employees.csv")
+      );
     }
-    // Generate a pool of claims. This could happen later, though!
+    // // Generate a pool of claims. This could happen later, though!
     try {
       claimPool = await ClaimPool.load(storage.claims);
     } catch (e) {
-      // throw new Error(e);
       if (e.code !== "ENOENT") throw e;
-      // Shortcut for generating a new claim pool filled with 1 scenario.
+      // // Shortcut for generating a new claim pool filled with 1 scenario.
       const generate = (spec: ScenarioSpecification, count: number) =>
-        ClaimPool.generate(employeePool, spec.employee, spec.claim, count);
+        ClaimPool.generate(
+          employeePool,
+          spec.employee,
+          spec.claim,
+          count * 1.1
+        );
 
+      // update claim count before submission
       await ClaimPool.merge(
-        generate(scenarios.MDF, 12),
-        generate(scenarios.MDV, 12)
+        generate(scenarios.UATC, 10),
+        generate(scenarios.UATD, 10),
+        generate(scenarios.UATE, 10),
+        generate(scenarios.UATF, 10),
+        generate(scenarios.UATG, 10),
+        generate(scenarios.UATH, 10),
+        generate(scenarios.UATI, 10),
+        generate(scenarios.UATJ, 10),
+        generate(scenarios.UATK, 10),
+        generate(scenarios.UATL, 10),
+        generate(scenarios.UATM, 5),
+        generate(scenarios.UATN, 5),
+        generate(scenarios.UATO, 10),
+        generate(scenarios.UATP, 5),
+        generate(scenarios.UATQ, 5)
       ).save(storage.claims, storage.documents);
     }
 
@@ -164,14 +181,14 @@ import * as scenarios from "../scenarios";
                 );
             }
           },
-          true
+          false
         );
       }
     };
 
     if (claimPool) {
       // Finally, kick off submission submission.
-      await submit(claimPool, tracker, postSubmit);
+      await submit(claimPool, tracker, postSubmit, 3);
       // Last but not least, write the index of submitted claims in CSV format.
       await SubmittedClaimIndex.write(
         path.join(storage.dir, "submitted.csv"),

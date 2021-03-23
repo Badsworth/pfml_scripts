@@ -32,7 +32,7 @@ type LeaveDetailsSpec = {
   has_intermittent_leave_periods?: boolean;
   pregnant_or_recent_birth?: boolean;
   leave_dates?: [Date, Date];
-  bondingDate?: "far-past" | "past" | "future";
+  bondingDate?: "far-past" | "past" | "future" | Date;
 };
 
 export default function generateLeaveDetails(
@@ -252,6 +252,7 @@ function makeChildPlacementDate(
   spec: LeaveDetailsSpec["bondingDate"],
   leaveStart: Date
 ): string {
+  if (spec instanceof Date) return formatISODate(spec);
   switch (spec) {
     case "far-past":
       return formatISODate(

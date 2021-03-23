@@ -78,11 +78,7 @@ export default class PortalSubmitter {
       options
     );
 
-    const { fineos_absence_id, first_name, last_name } = submitResponseData as {
-      fineos_absence_id: string;
-      first_name: string;
-      last_name: string;
-    };
+    const { fineos_absence_id, first_name, last_name } = submitResponseData;
     await this.uploadDocuments(application_id, claim.documents, options);
     await this.uploadPaymentPreference(
       application_id,
@@ -122,12 +118,7 @@ export default class PortalSubmitter {
       application_id,
       options
     );
-
-    const { fineos_absence_id, first_name, last_name } = submitResponseData as {
-      fineos_absence_id: string;
-      first_name: string;
-      last_name: string;
-    };
+    const { fineos_absence_id, first_name, last_name } = submitResponseData;
 
     return {
       fineos_absence_id: fineos_absence_id,
@@ -235,23 +226,18 @@ export default class PortalSubmitter {
     application_id: string,
     options?: RequestOptions
   ) {
-    try {
-      const response = await postApplicationsByApplication_idSubmit_application(
-        { application_id },
-        options
-      );
-      console.log("APP_RESPONSE", response);
-      if (response.data.data && "fineos_absence_id" in response.data.data) {
-        return response.data.data as {
-          fineos_absence_id: string;
-          first_name: string;
-          last_name: string;
-        };
-      }
-    } catch (e) {
-      console.log("ERRORS", e);
-      throw new Error("Submit application data did not contain absence id");
+    const response = await postApplicationsByApplication_idSubmit_application(
+      { application_id },
+      options
+    );
+    if (response.data.data && "fineos_absence_id" in response.data.data) {
+      return response.data.data as {
+        fineos_absence_id: string;
+        first_name: string;
+        last_name: string;
+      };
     }
+    throw new Error("Submit application data did not contain absence id");
   }
 
   private async completeApplication(

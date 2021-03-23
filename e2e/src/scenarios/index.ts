@@ -10,4 +10,4 @@
  */
 export * from "./cypress";
 export * from "./2021-03-11-training";
-export * from "./UAT";
+export * from "./uat";
