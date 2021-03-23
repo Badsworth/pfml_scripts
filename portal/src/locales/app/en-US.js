@@ -472,6 +472,10 @@ const errors = {
     fineos_client: "$t(shared.documentsUploadError)",
   },
   employers: {
+    ein: {
+      employer_verification_data_required:
+        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications.",
+    },
     employer_benefits: {
       benefit_amount_frequency: {
         enum:
