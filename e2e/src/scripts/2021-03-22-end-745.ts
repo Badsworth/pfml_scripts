@@ -131,6 +131,8 @@ import { getFineosBaseUrl } from "../commands/simulation/simulate";
 
       // update claim count before submission
       await ClaimPool.merge(
+        generate(scenarios.UATA, 10),
+        generate(scenarios.UATB, 10),
         generate(scenarios.UATC, 10),
         generate(scenarios.UATD, 10),
         generate(scenarios.UATE, 10),
