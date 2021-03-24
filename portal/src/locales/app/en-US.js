@@ -472,6 +472,10 @@ const errors = {
     fineos_client: "$t(shared.documentsUploadError)",
   },
   employers: {
+    ein: {
+      employer_verification_data_required:
+        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications.",
+    },
     employer_benefits: {
       benefit_amount_frequency: {
         enum:
@@ -590,7 +594,7 @@ const shared = {
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
   claimsOtherLeaveTitle: "Other leave, income, and benefits",
-  claimsVerifyIdTitle: "Your identity",
+  claimsVerifyIdTitle: "Your identification",
   contactCenterAddress:
     "PO Box 838$t(chars.nbsp)Lawrence, MA$t(chars.nbsp)01842",
   contactCenterFaxNumber: "(617)$t(chars.nbsp)855$t(chars.nbhyphen)6180",
@@ -623,7 +627,7 @@ const shared = {
   employerInstructions_followUpDate:
     "<strong>Review and respond by:</strong> {{date}} at 11:59 p.m. Eastern time",
   fileUpload_addAnotherFileButton: "Choose another file",
-  fileUpload_addFirstFileButton: "Choose a file",
+  fileUpload_addFirstFileButton: "Choose files",
   fileUpload_fileHeadingPrefix: "File",
   filesUploaded: "Number of files uploaded",
   hoursLabel: "Hours",
@@ -873,8 +877,8 @@ const pages = {
     stepTitle_payment: "Add payment information",
     stepTitle_reviewAndConfirm: "Review and confirm",
     stepTitle_uploadCertification: "Upload leave certification documents",
-    stepTitle_uploadId: "Upload identity document",
-    stepTitle_verifyId: "Verify your identity",
+    stepTitle_uploadId: "Upload identification document",
+    stepTitle_verifyId: "Verify your identification",
     submitButton: "Review and submit application",
     title: "Checklist: Create a new application",
   },
@@ -1517,9 +1521,11 @@ const pages = {
     lead_other:
       "<p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>To verify your identity you will need valid, unexpired documentation issued by state or federal government.</p>",
     otherIdentityDocs:
-      "<p><strong>You can use a color copy of one of the following documents:</strong></p><ul><li>U.S. State or Territory Real ID, both front and back</li><li>U.S. passport or passport card</li><li>Permanent Resident Card issued by DHS or INS</li><li>Employment Authorization Document (EAD) issued by DHS</li><li>Foreign passport <strong>and</strong> a <work-visa-link>work visa</work-visa-link></li></ul>",
-    sectionLabel_mass: "Upload your Massachusetts driver’s license or ID card",
-    sectionLabel_other: "Upload an identification document",
+      "<p><strong>You can upload a copy of one of the following documents:</strong></p><ul><li>U.S. State or Territory Real ID, both front and back</li><li>U.S. passport or passport card</li><li>Permanent Resident Card issued by DHS or INS</li><li>Employment Authorization Document (EAD) issued by DHS</li><li>Foreign passport <strong>and</strong> a <work-visa-link>work visa</work-visa-link></li></ul>",
+    sectionLabel_mass:
+      "Upload the front and back of your Massachusetts driver’s license or ID card",
+    sectionLabel_other:
+      "Upload an identification document issued by state or federal government",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsWorkPatternType: {
@@ -1574,11 +1580,11 @@ const pages = {
   },
   employersCannotVerify: {
     body:
-      "Your account can’t be verified yet, because your organization has not made any paid leave contributions. After you pay quarterly taxes, you can verify your account and review applications.",
+      "We can't verify this account because this organization hasn't submitted contributions through MassTaxConnect. Call the Department of Revenue at <dor-phone-link>$t(shared.departmentOfRevenuePhoneNumber)</dor-phone-link> to make arrangements to submit contributions. Once you do that, you'll be able to review leave applications on the next business day. Learn more about <learn-more-link>verifying your account</learn-more-link> on Mass.gov.",
     companyNameLabel: "<strong>Organization:</strong> {{employerDba}}",
     employerIdNumberLabel:
       "<strong>Employer ID number (EIN):</strong> {{employerFein}}",
-    title: "We are unable to verify this organization online at the moment",
+    title: "We can't verify this organization",
   },
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
@@ -2068,9 +2074,7 @@ const components = {
     uploadDate: "Date of upload: {{date}}",
   },
   fileUploadDetails: {
-    label: "Some tips for uploading documents and images",
-    sizeNotice:
-      "Files should be 4.5 MB or smaller. If your file is larger than 4.5 MB, try resizing it or splitting it into separate files.",
+    label: "Tips for uploading images or PDFs",
     tips: [
       {
         listHeading: "This website only accepts:",
@@ -2083,14 +2087,6 @@ const components = {
           "Take a picture of the document",
           "Take a screenshot of the document",
           "Save the document as a PDF or image, and try uploading again",
-        ],
-      },
-      {
-        listHeading: "If you’re taking a picture of your document:",
-        listItems: [
-          "Take a picture of each document page and upload the pictures individually",
-          "If you’re uploading an ID card, upload separate pictures for both the front and back of the card",
-          "Make sure the picture is clear and readable",
         ],
       },
       {

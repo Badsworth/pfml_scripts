@@ -3,9 +3,10 @@ import {
   bailIfThisTestFails,
   beforeFineos,
 } from "../../../../tests/common/before";
-import { extractLeavePeriod } from "../../../../../src/utils";
+import { extractLeavePeriod } from "../../../../utils";
 import { getFineosBaseUrl } from "../../../../config";
 import { Submission } from "../../../../../src/types";
+import { ApplicationRequestBody } from "../../../../../src/api";
 
 describe("Create a new continuous leave, bonding claim in FINEOS", () => {
   it(
@@ -14,6 +15,7 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
     () => {
       beforeFineos();
       bailIfThisTestFails();
+      cy.visit("/");
 
       cy.task("generateClaim", "BHAP1").then((claim) => {
         cy.stash("claim", claim.claim);
@@ -25,7 +27,6 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
           throw new Error("Claim is missing a first name, last name, or SSN.");
         }
 
-        cy.visit("/");
         fineos.searchClaimantSSN(claim.claim.tax_identifier);
         fineos.clickBottomWidgetButton("OK");
         fineos.assertOnClaimantPage(

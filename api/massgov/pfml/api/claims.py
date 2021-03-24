@@ -9,6 +9,7 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.services.claim_rules as claim_rules
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
+from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.claims.responses import ClaimResponse
@@ -78,7 +79,11 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
         )
 
         if user_leave_admin is None:
-            raise Forbidden(description="User is not a leave administrator")
+            raise NotAuthorizedForAccess(
+                description="User does not have leave administrator record for this employer",
+                error_type="unauthorized_leave_admin",
+                data={"is_user_linked_to_employer": False},
+            )
 
         if user_leave_admin.fineos_web_id is None:
             raise VerificationRequired(
@@ -108,7 +113,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
 
     try:
         user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
-    except VerificationRequired as error:
+    except (VerificationRequired, NotAuthorizedForAccess) as error:
         return error.to_api_response()
 
     log_attributes = {
@@ -168,7 +173,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     """
     try:
         user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
-    except VerificationRequired as error:
+    except (VerificationRequired, NotAuthorizedForAccess) as error:
         return error.to_api_response()
 
     with app.db_session() as db_session:
@@ -197,7 +202,7 @@ def employer_get_claim_documents(fineos_absence_id: str) -> flask.Response:
     """
     try:
         user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
-    except VerificationRequired as error:
+    except (VerificationRequired, NotAuthorizedForAccess) as error:
         return error.to_api_response()
 
     documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore
@@ -215,7 +220,7 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
     """
     try:
         user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
-    except VerificationRequired as error:
+    except (VerificationRequired, NotAuthorizedForAccess) as error:
         return error.to_api_response()
 
     documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore

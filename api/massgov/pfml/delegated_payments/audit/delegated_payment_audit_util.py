@@ -11,7 +11,6 @@ from massgov.pfml.db.models.employees import (
     EmployeeAddress,
     Employer,
     LkClaimType,
-    LkPaymentMethod,
     Payment,
     PaymentMethod,
 )
@@ -95,7 +94,7 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         city=address.city,
         state=address.geo_state.geo_state_description,
         zip=address.zip_code,
-        payment_preference=get_payment_preference(employee),
+        payment_preference=get_payment_preference(payment),
         scheduled_payment_date=payment.payment_date.isoformat(),
         payment_period_start_date=payment.period_start_date.isoformat(),
         payment_period_end_date=payment.period_end_date.isoformat(),
@@ -138,13 +137,12 @@ def get_leave_type(claim: Claim) -> Optional[str]:
     raise PaymentAuditRowError("Unexpected leave type %s" % claim_type.claim_type_description)
 
 
-def get_payment_preference(employee: Employee) -> str:
-    payment_preference: LkPaymentMethod = employee.payment_method
-    if payment_preference.payment_method_id == PaymentMethod.ACH.payment_method_id:
+def get_payment_preference(payment: Payment) -> str:
+    if payment.disb_method_id == PaymentMethod.ACH.payment_method_id:
         return "ACH"
-    elif payment_preference.payment_method_id == PaymentMethod.CHECK.payment_method_id:
+    elif payment.disb_method_id == PaymentMethod.CHECK.payment_method_id:
         return "Check"
 
     raise PaymentAuditRowError(
-        "Unexpected payment preference %s" % payment_preference.payment_method_description
+        "Unexpected payment preference %s" % payment.disb_method.payment_method_description
     )

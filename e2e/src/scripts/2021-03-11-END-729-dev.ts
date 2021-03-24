@@ -23,7 +23,7 @@ import {
   closeDocuments,
 } from "../submission/PostSubmit";
 
-import { getFineosBaseUrl } from "../commands/simulation/simulate";
+import { getFineosBaseUrl } from "../utils";
 
 /**
  * This is a data generation script.
@@ -120,7 +120,7 @@ import { getFineosBaseUrl } from "../commands/simulation/simulate";
     }
     // Generate a pool of claims. This could happen later, though!
     try {
-      claimPool = await ClaimPool.load(storage.claims);
+      claimPool = await ClaimPool.load(storage.claims, storage.documents);
     } catch (e) {
       if (e.code !== "ENOENT") throw e;
       // Shortcut for generating a new claim pool filled with 1 scenario.
@@ -210,7 +210,7 @@ import { getFineosBaseUrl } from "../commands/simulation/simulate";
       // Last but not least, write the index of submitted claims in CSV format.
       await SubmittedClaimIndex.write(
         path.join(storage.dir, "submitted.csv"),
-        await ClaimPool.load(storage.claims),
+        await ClaimPool.load(storage.claims, storage.documents),
         tracker
       );
     }

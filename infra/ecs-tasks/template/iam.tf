@@ -552,15 +552,30 @@ data "aws_iam_policy_document" "payments_fineos_process_task_role_extras" {
     effect = "Allow"
   }
 
+  # See /docs/api/ses.tf for full details on configuring SES permissions.
   statement {
-    sid = "AllowSESSendEmail"
+    sid    = "AllowSESSendEmail"
+    effect = "Allow"
+
     actions = [
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
-    resources = ["*"]
 
-    effect = "Allow"
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "ses:Recipients"
+      values = [
+        var.dfml_project_manager_email_address,
+        var.ctr_gax_bievnt_email_address,
+        var.ctr_vcc_bievnt_email_address,
+        var.dfml_business_operations_email_address
+      ]
+    }
+
+    resources = [
+      "*"
+    ]
   }
 }
 
@@ -629,14 +644,28 @@ data "aws_iam_policy_document" "payments_ctr_process_task_role_extras" {
     effect = "Allow"
   }
 
+  # See /docs/api/ses.tf for full details on configuring SES permissions.
   statement {
-    sid = "AllowSESSendEmail"
+    sid    = "AllowSESSendEmail"
+    effect = "Allow"
+
     actions = [
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
+
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "ses:Recipients"
+      values = [
+        var.dfml_project_manager_email_address,
+        var.ctr_gax_bievnt_email_address,
+        var.ctr_vcc_bievnt_email_address,
+        var.dfml_business_operations_email_address
+      ]
+    }
+
     resources = ["*"]
-    effect    = "Allow"
   }
 }
 
@@ -794,12 +823,25 @@ data "aws_iam_policy_document" "pub_payments_process_fineos_task_role_extras" {
     effect = "Allow"
   }
 
+  # See /docs/api/ses.tf for full details on configuring SES permissions.
   statement {
     sid = "AllowSESSendEmail"
     actions = [
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
+
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "ses:Recipients"
+      values = [
+        var.dfml_project_manager_email_address,
+        var.ctr_gax_bievnt_email_address,
+        var.ctr_vcc_bievnt_email_address,
+        var.dfml_business_operations_email_address
+      ]
+    }
+
     resources = ["*"]
 
     effect = "Allow"
@@ -876,12 +918,25 @@ data "aws_iam_policy_document" "pub_payments_create_pub_files_task_role_extras" 
     effect = "Allow"
   }
 
+  # See /docs/api/ses.tf for full details on configuring SES permissions.
   statement {
     sid = "AllowSESSendEmail"
     actions = [
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
+
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "ses:Recipients"
+      values = [
+        var.dfml_project_manager_email_address,
+        var.ctr_gax_bievnt_email_address,
+        var.ctr_vcc_bievnt_email_address,
+        var.dfml_business_operations_email_address
+      ]
+    }
+
     resources = ["*"]
     effect    = "Allow"
   }
@@ -953,12 +1008,25 @@ data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extra
     effect = "Allow"
   }
 
+  # See /docs/api/ses.tf for full details on configuring SES permissions.
   statement {
     sid = "AllowSESSendEmail"
     actions = [
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
+
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "ses:Recipients"
+      values = [
+        var.dfml_project_manager_email_address,
+        var.ctr_gax_bievnt_email_address,
+        var.ctr_vcc_bievnt_email_address,
+        var.dfml_business_operations_email_address
+      ]
+    }
+
     resources = ["*"]
     effect    = "Allow"
   }

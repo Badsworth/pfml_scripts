@@ -26,6 +26,8 @@ export interface E2EConfig {
   EMPLOYEES_FILE: string;
   EMPLOYERS_FILE: string;
   ENVIRONMENT: string;
+  API_FINEOS_CLIENT_ID: string;
+  API_FINEOS_CLIENT_SECRET: string;
 }
 export interface LSTConfig {
   FLOOD_DATA_BASEURL: string;

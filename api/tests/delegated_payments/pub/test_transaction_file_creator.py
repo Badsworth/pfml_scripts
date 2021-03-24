@@ -7,6 +7,7 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     Employee,
+    LkPaymentMethod,
     LkPrenoteState,
     PaymentMethod,
     PrenoteState,
@@ -52,7 +53,7 @@ def test_ach_file_creation(
 
     # create payments ready for payment
     for _ in range(pub_eft_count):
-        create_payment_for_pub_transaction(test_db_session)
+        create_payment_for_pub_transaction(test_db_session, PaymentMethod.ACH)
 
     # generate the ach file
     transaction_file_step.run_step()
@@ -99,26 +100,23 @@ def test_ach_file_creation(
         assert pub_eft.prenote_state_id == PrenoteState.PENDING_WITH_PUB.prenote_state_id
 
 
-# TODO check payment method https://lwd.atlassian.net/browse/PUB-106
-# def test_get_eligible_eft_payments_error_states(
-#     transaction_file_step: TransactionFileCreatorStep, test_db_session, initialize_factories_session
-# ):
-#     payment = create_payment_for_pub_transaction(test_db_session)
-#     employee = payment.claim.employee
-#     employee.payment_method_id = PaymentMethod.CHECK.payment_method_id
+def test_get_eligible_eft_payments_error_states(
+    transaction_file_step: TransactionFileCreatorStep, test_db_session, initialize_factories_session
+):
+    create_payment_for_pub_transaction(test_db_session, PaymentMethod.CHECK)
 
-#     test_db_session.commit()
+    test_db_session.commit()
 
-#     with pytest.raises(
-#         Exception, match=r"Non-ACH payment method detected in state log: .+",
-#     ):
-#         transaction_file_step._get_eligible_eft_payments()
+    with pytest.raises(
+        Exception, match=r"Non-ACH payment method detected in state log: .+",
+    ):
+        transaction_file_step._get_eligible_eft_payments()
 
 
 def test_get_pub_efts_for_pre_note(
     transaction_file_step: TransactionFileCreatorStep, test_db_session, initialize_factories_session
 ):
-    employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
+    employee = EmployeeFactory.create()
     assert len(transaction_file_step._get_pub_efts_for_prenote(employee)) == 0
 
     pub_eft_1 = PubEftFactory.create(prenote_state_id=PrenoteState.PENDING_PRE_PUB.prenote_state_id)
@@ -149,7 +147,7 @@ def test_get_pub_efts_for_pre_note(
 def test_get_eft_eligible_employees_with_eft_error_states(
     transaction_file_step: TransactionFileCreatorStep, test_db_session, initialize_factories_session
 ):
-    employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
+    employee = EmployeeFactory.create()
 
     state_log_util.create_finished_state_log(
         employee,
@@ -166,7 +164,7 @@ def test_get_eft_eligible_employees_with_eft_error_states(
 
 
 def create_employee_with_eft(prenote_state: LkPrenoteState) -> Employee:
-    employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
+    employee = EmployeeFactory.create()
     pub_eft = PubEftFactory.create(prenote_state_id=prenote_state.prenote_state_id)
     EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft)
 
@@ -184,13 +182,15 @@ def create_employee_for_prenote(db_session):
     )
 
 
-def create_payment_for_pub_transaction(db_session):
+def create_payment_for_pub_transaction(db_session, payment_method: LkPaymentMethod):
     employee = create_employee_with_eft(PrenoteState.APPROVED)
     employee_pub_eft_pairs = employee.pub_efts.all()
     pub_eft = employee_pub_eft_pairs[0].pub_eft
 
     claim = ClaimFactory.create(employee=employee)
-    payment = PaymentFactory.create(claim=claim, pub_eft=pub_eft)
+    payment = PaymentFactory.create(
+        claim=claim, pub_eft=pub_eft, disb_method_id=payment_method.payment_method_id
+    )
 
     state_log_util.create_finished_state_log(
         payment,

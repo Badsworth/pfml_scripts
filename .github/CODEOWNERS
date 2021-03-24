@@ -30,7 +30,7 @@
 /api/**/fineos/                                        @doshitan @oscarAtNava
 /api/**/formstack/                                     @microwavenby @sharonwarner
 /api/**/payments/                                      @chouinar @rocketnova
-/api/**/reductions/                                    @EyuelAbebe @lowellrex
+/api/**/reductions/                                    @jalcine @doshitan
 /api/**/rmv/                                           @doshitan @kyeah
 /api/**/servicenow/                                    @microwavenby @sharonwarner
 /api/**/user_import/                                   @microwavenby @sharonwarner

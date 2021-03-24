@@ -13,7 +13,6 @@ import massgov.pfml.db as db
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     Claim,
     DuaReductionPayment,
     DuaReductionPaymentReferenceFile,
@@ -27,6 +26,7 @@ from massgov.pfml.payments.sftp_s3_transfer import (
     copy_from_sftp_to_s3_and_archive_files,
     copy_to_sftp_and_archive_s3_files,
 )
+from massgov.pfml.reductions.common import get_claims_for_outbound
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 from massgov.pfml.util.files import create_csv_from_list, upload_to_s3
 
@@ -120,18 +120,10 @@ def copy_claimant_list_to_moveit(db_session: db.Session) -> None:
     db_session.commit()
 
 
-def _get_approved_claims(db_session: db.Session) -> List[Claim]:
-    return (
-        db_session.query(Claim)
-        .filter_by(fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id)
-        .all()
-    )
+def _format_claims_for_dua_claimant_list(claims: List[Claim]) -> List[Dict]:
+    claims_info = []
 
-
-def _format_claims_for_dua_claimant_list(approved_claims: List[Claim]) -> List[Dict]:
-    approved_claims_info = []
-
-    for claim in approved_claims:
+    for claim in claims:
         employee = claim.employee
         if employee is not None:
             _info = {
@@ -140,28 +132,26 @@ def _format_claims_for_dua_claimant_list(approved_claims: List[Claim]) -> List[D
                 Constants.BENEFIT_START_DATE_FIELD: Constants.TEMPORARY_BENEFIT_START_DATE,
             }
 
-            approved_claims_info.append(_info)
+            claims_info.append(_info)
 
-    return approved_claims_info
+    return claims_info
 
 
-def _get_approved_claims_info_csv_path(approved_claims: List[Dict]) -> pathlib.Path:
+def _get_claims_info_csv_path(claims: List[Dict]) -> pathlib.Path:
     file_name = Constants.CLAIMANT_LIST_FILENAME_PREFIX + get_now().strftime(
         Constants.CLAIMANT_LIST_FILENAME_TIME_FORMAT
     )
-    return file_util.create_csv_from_list(
-        approved_claims, Constants.CLAIMANT_LIST_FIELDS, file_name
-    )
+    return file_util.create_csv_from_list(claims, Constants.CLAIMANT_LIST_FIELDS, file_name)
 
 
 def create_list_of_claimants(db_session: db.Session) -> None:
     config = get_s3_config()
 
-    approved_claims = _get_approved_claims(db_session)
+    claims = get_claims_for_outbound(db_session)
 
-    dua_claimant_info = _format_claims_for_dua_claimant_list(approved_claims)
+    dua_claimant_info = _format_claims_for_dua_claimant_list(claims)
 
-    claimant_info_path = _get_approved_claims_info_csv_path(dua_claimant_info)
+    claimant_info_path = _get_claims_info_csv_path(dua_claimant_info)
 
     s3_dest = os.path.join(
         config.s3_bucket_uri, config.s3_dua_outbound_directory_path, claimant_info_path.name
@@ -261,7 +251,7 @@ def _get_matching_dua_reduction_payments(
     # https://stackoverflow.com/questions/7604967/sqlalchemy-build-query-filter-dynamically-from-dict
     query = db_session.query(DuaReductionPayment)
     for attr, value in db_data.items():
-        # Empty fields are read as empty strings. Convert those values to nulls for the datbase.
+        # Empty fields are read as empty strings. Convert those values to nulls for the database.
         if value == "":
             value = None
 

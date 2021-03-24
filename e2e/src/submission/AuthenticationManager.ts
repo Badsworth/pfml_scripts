@@ -6,6 +6,7 @@ import {
   CognitoUserPool,
   CognitoUserSession,
 } from "amazon-cognito-identity-js";
+import { OAuthCreds } from "types";
 import TestMailVerificationFetcher from "../../cypress/plugins/TestMailVerificationFetcher";
 import {
   ApiResponse,
@@ -114,6 +115,30 @@ export default class AuthenticationManager {
         },
       });
     });
+  }
+
+  async getAPIBearerToken(apiCreds: OAuthCreds): Promise<string> {
+    const encodedCreds = Buffer.from(
+      `${apiCreds.clientID}:${apiCreds.secretID}`
+    ).toString("base64");
+    const opts = {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${encodedCreds}`,
+        "User-Agent": "PFML Integration Testing",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: "grant_type=client_credentials",
+    };
+    const res = await fetch(`${this.apiBaseUrl}/oauth2/token`, opts);
+    const { access_token } = await res.json();
+
+    if (!access_token) {
+      throw new Error(
+        `Unable to get an access token. Response was: ${JSON.stringify(res)}`
+      );
+    }
+    return access_token;
   }
 
   private registerCognitoUser(

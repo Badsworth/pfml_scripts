@@ -94,7 +94,7 @@ exports[`Final Review Page when the claim is complete renders Review page with f
     editText="Edit"
     level="2"
   >
-    Your identity
+    Your identification
   </ReviewHeading>
   <ReviewRow
     label="Name"
@@ -444,7 +444,7 @@ exports[`Part 1 Review Page when all data is present renders Review page with Pa
     editText="Edit"
     level="3"
   >
-    Your identity
+    Your identification
   </ReviewHeading>
   <ReviewRow
     label="Name"

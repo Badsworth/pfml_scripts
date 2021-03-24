@@ -19,10 +19,7 @@ function FileUploadDetails() {
 
   return (
     <Details label={t("components.fileUploadDetails.label")}>
-      <div>
-        <p>{t("components.fileUploadDetails.sizeNotice")}</p>
-        {renderedTips}
-      </div>
+      <div>{renderedTips}</div>
     </Details>
   );
 }

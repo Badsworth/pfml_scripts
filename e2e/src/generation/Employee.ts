@@ -1,7 +1,7 @@
 import EmployerPool from "./Employer";
 import fs from "fs";
 import * as faker from "faker";
-import unique from "../simulation/unique";
+import unique from "./unique";
 import { RandomSSN } from "ssn";
 import { add, formatISO } from "date-fns";
 import { promisify } from "util";

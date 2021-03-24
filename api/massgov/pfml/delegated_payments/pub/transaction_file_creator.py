@@ -7,6 +7,7 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Employee,
     Payment,
+    PaymentMethod,
     PrenoteState,
     PubEft,
     ReferenceFileType,
@@ -146,15 +147,11 @@ class TransactionFileCreatorStep(Step):
             db_session=self.db_session,
         )
 
-        # TODO check payment method https://lwd.atlassian.net/browse/PUB-106
-        # for state_log in state_logs:
-        #     if (
-        #         state_log.payment..payment_method_id
-        #         != PaymentMethod.ACH.payment_method_id
-        #     ):
-        #         raise Exception(
-        #             f"Non-ACH payment method detected in state log: { state_log.state_log_id }, payment: {payment.payment_id}"
-        #         )
+        for state_log in state_logs:
+            if state_log.payment.disb_method_id != PaymentMethod.ACH.payment_method_id:
+                raise Exception(
+                    f"Non-ACH payment method detected in state log: { state_log.state_log_id }, payment: {state_log.payment.payment_id}"
+                )
 
         ach_payments = [state_log.payment for state_log in state_logs]
 

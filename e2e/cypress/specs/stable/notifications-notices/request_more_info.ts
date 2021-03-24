@@ -44,12 +44,12 @@ describe(
           fineos.visitClaim(fineos_absence_id);
           fineos.additionalEvidenceRequest(fineos_absence_id);
           switch (Cypress.env("E2E_ENVIRONMENT")) {
-            case "performance":
             case "training":
             case "uat":
               fineos.closeReleaseNoticeTask("Request for more Information");
               break;
 
+            case "performance":
             case "test":
             case "stage":
               fineos.triggerNoticeRelease("Request for more Information");

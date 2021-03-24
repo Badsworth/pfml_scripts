@@ -39,7 +39,12 @@ PY_RUN_CMD := $(RUN_CMD) poetry run
 
 POETRY_CMD := $(RUN_CMD) poetry
 
-DECODE_LOG := 2>&1 | python3 -u massgov/pfml/util/logging/decodelog.py
+ifeq "$(RUN_CMD)" ""
+DECODE_LOG = 2>&1 | python3 -u massgov/pfml/util/logging/decodelog.py
+else
+# Docker already redirects stderr to stdout and doing it again can cause odd output.
+DECODE_LOG := | python3 -u massgov/pfml/util/logging/decodelog.py
+endif
 
 # BuildKit is a more efficient builder for Docker, so use it by default
 ifndef NO_BUILDKIT

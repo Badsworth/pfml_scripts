@@ -100,49 +100,52 @@ class PaymentRejectsStep(Step):
         self.process_rejects()
 
     def parse_payment_rejects_file(self, file_path: str) -> List[PaymentAuditCSV]:
-        parsed_csv = csv.DictReader(open(file_path))
+        with file_util.open_stream(file_path) as csvfile:
+            parsed_csv = csv.DictReader(csvfile)
 
-        payment_rejects_rows: List[PaymentAuditCSV] = []
+            payment_rejects_rows: List[PaymentAuditCSV] = []
 
-        for row in parsed_csv:
-            payment_reject_row = PaymentAuditCSV(
-                pfml_payment_id=row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id],
-                leave_type=row[PAYMENT_AUDIT_CSV_HEADERS.leave_type],
-                first_name=row[PAYMENT_AUDIT_CSV_HEADERS.first_name],
-                last_name=row[PAYMENT_AUDIT_CSV_HEADERS.last_name],
-                address_line_1=row[PAYMENT_AUDIT_CSV_HEADERS.address_line_1],
-                address_line_2=row[PAYMENT_AUDIT_CSV_HEADERS.address_line_2],
-                city=row[PAYMENT_AUDIT_CSV_HEADERS.city],
-                state=row[PAYMENT_AUDIT_CSV_HEADERS.state],
-                zip=row[PAYMENT_AUDIT_CSV_HEADERS.zip],
-                payment_preference=row[PAYMENT_AUDIT_CSV_HEADERS.payment_preference],
-                scheduled_payment_date=row[PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date],
-                payment_period_start_date=row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_start_date],
-                payment_period_end_date=row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_end_date],
-                payment_amount=row[PAYMENT_AUDIT_CSV_HEADERS.payment_amount],
-                absence_case_number=row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_number],
-                c_value=row[PAYMENT_AUDIT_CSV_HEADERS.c_value],
-                i_value=row[PAYMENT_AUDIT_CSV_HEADERS.i_value],
-                employer_id=row[PAYMENT_AUDIT_CSV_HEADERS.employer_id],
-                case_status=row[PAYMENT_AUDIT_CSV_HEADERS.case_status],
-                leave_request_id=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_id],
-                leave_request_decision=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision],
-                is_first_time_payment=row[PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment],
-                is_previously_errored_payment=row[
-                    PAYMENT_AUDIT_CSV_HEADERS.is_previously_errored_payment
-                ],
-                is_previously_rejected_payment=row[
-                    PAYMENT_AUDIT_CSV_HEADERS.is_previously_rejected_payment
-                ],
-                number_of_times_in_rejected_or_error_state=row[
-                    PAYMENT_AUDIT_CSV_HEADERS.number_of_times_in_rejected_or_error_state
-                ],
-                rejected_by_program_integrity=row[
-                    PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity
-                ],
-                rejected_notes=row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes],
-            )
-            payment_rejects_rows.append(payment_reject_row)
+            for row in parsed_csv:
+                payment_reject_row = PaymentAuditCSV(
+                    pfml_payment_id=row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id],
+                    leave_type=row[PAYMENT_AUDIT_CSV_HEADERS.leave_type],
+                    first_name=row[PAYMENT_AUDIT_CSV_HEADERS.first_name],
+                    last_name=row[PAYMENT_AUDIT_CSV_HEADERS.last_name],
+                    address_line_1=row[PAYMENT_AUDIT_CSV_HEADERS.address_line_1],
+                    address_line_2=row[PAYMENT_AUDIT_CSV_HEADERS.address_line_2],
+                    city=row[PAYMENT_AUDIT_CSV_HEADERS.city],
+                    state=row[PAYMENT_AUDIT_CSV_HEADERS.state],
+                    zip=row[PAYMENT_AUDIT_CSV_HEADERS.zip],
+                    payment_preference=row[PAYMENT_AUDIT_CSV_HEADERS.payment_preference],
+                    scheduled_payment_date=row[PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date],
+                    payment_period_start_date=row[
+                        PAYMENT_AUDIT_CSV_HEADERS.payment_period_start_date
+                    ],
+                    payment_period_end_date=row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_end_date],
+                    payment_amount=row[PAYMENT_AUDIT_CSV_HEADERS.payment_amount],
+                    absence_case_number=row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_number],
+                    c_value=row[PAYMENT_AUDIT_CSV_HEADERS.c_value],
+                    i_value=row[PAYMENT_AUDIT_CSV_HEADERS.i_value],
+                    employer_id=row[PAYMENT_AUDIT_CSV_HEADERS.employer_id],
+                    case_status=row[PAYMENT_AUDIT_CSV_HEADERS.case_status],
+                    leave_request_id=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_id],
+                    leave_request_decision=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision],
+                    is_first_time_payment=row[PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment],
+                    is_previously_errored_payment=row[
+                        PAYMENT_AUDIT_CSV_HEADERS.is_previously_errored_payment
+                    ],
+                    is_previously_rejected_payment=row[
+                        PAYMENT_AUDIT_CSV_HEADERS.is_previously_rejected_payment
+                    ],
+                    number_of_times_in_rejected_or_error_state=row[
+                        PAYMENT_AUDIT_CSV_HEADERS.number_of_times_in_rejected_or_error_state
+                    ],
+                    rejected_by_program_integrity=row[
+                        PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity
+                    ],
+                    rejected_notes=row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes],
+                )
+                payment_rejects_rows.append(payment_reject_row)
 
         return payment_rejects_rows
 

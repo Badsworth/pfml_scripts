@@ -131,7 +131,7 @@ class PaymentAuditReportStep(Step):
                     State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT.state_id,
                 ]
 
-                payment_state_log_history = (
+                payment_error_or_rejected_state_log_history = (
                     self.db_session.query(StateLog)
                     .join(LatestStateLog)
                     .join(LkState, StateLog.end_state_id == LkState.state_id)
@@ -143,15 +143,9 @@ class PaymentAuditReportStep(Step):
                     .all()
                 )
 
-                expected_payments_in_error_or_rejected_state = (
-                    len(payment_history) - 1
-                )  # don't count the active payment
-                if expected_payments_in_error_or_rejected_state != len(payment_state_log_history):
-                    raise PaymentAuditError(
-                        f"Ended payment objects count does not match with error or rejected state counts - expected: {expected_payments_in_error_or_rejected_state}, found: {len(payment_state_log_history)}"
-                    )
-
-                payment_state_history = [sl.end_state_id for sl in payment_state_log_history]
+                payment_state_history = [
+                    sl.end_state_id for sl in payment_error_or_rejected_state_log_history
+                ]
 
                 if State.DELEGATED_PAYMENT_ERROR_REPORT_SENT.state_id in payment_state_history:
                     is_previously_errored_payment = True
@@ -162,8 +156,8 @@ class PaymentAuditReportStep(Step):
                 ):
                     is_previously_rejected_payment = True
 
-                number_of_times_in_rejected_or_error_state = (
-                    expected_payments_in_error_or_rejected_state
+                number_of_times_in_rejected_or_error_state = len(
+                    payment_error_or_rejected_state_log_history
                 )
 
             payment_audit_data = PaymentAuditData(

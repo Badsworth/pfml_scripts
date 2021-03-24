@@ -76,10 +76,11 @@ export const steps: Cfg.StoredStep[] = [
     test: completeApplication,
   },
   {
-    time: 15000,
+    time: 35000,
     name: "Point of Contact fills employer response",
+    options: { waitTimeout: 300000 },
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
-      if (data.financiallyIneligible) return;
+      if (data.employerResponse?.employer_decision !== "Approve") return;
       const employerResponseStep = employerResponse(fineosId);
       console.info(employerResponseStep.name);
       await employerResponseStep.test(browser, data);
@@ -185,7 +186,10 @@ function employerResponse(fineosId: string): Cfg.StoredStep {
         // Log in on Portal as Leave Admin
         authToken = await login(
           browser,
-          await Cfg.config("E2E_EMPLOYER_PORTAL_USERNAME"),
+          `gqzap.lst-employer.${data.claim.employer_fein?.replace(
+            "-",
+            ""
+          )}@inbox.testmail.app`,
           await Cfg.config("E2E_EMPLOYER_PORTAL_PASSWORD")
         );
         // Review submited application via direct link on Portal
@@ -458,14 +462,13 @@ async function uploadDocuments(
 ): Promise<void> {
   for (const document of data.documents) {
     const data = await readFile(Cfg.documentUrl);
-    const document_type = Util.getDocumentType(document);
-    const name = `${document_type}.pdf`;
+    const name = `${document.document_type}.pdf`;
     const res = await fetchFormData(
       browser,
       authToken,
       {
-        document_type,
-        description: "LST - Direct to API",
+        document_type: document.document_type,
+        description: `LST - Direct to API - ${document.document_type}`,
         file: { data, name, type: "application/pdf" },
         name,
       },

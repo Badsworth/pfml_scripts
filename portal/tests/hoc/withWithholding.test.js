@@ -60,26 +60,16 @@ describe("withWithholding", () => {
     );
   });
 
-  it("redirects to different page if employer is already verified", async () => {
+  it("redirects to the Verification Success page if employer is already verified", async () => {
     appLogic.users.user = getUser(true);
 
     await render({ appLogic });
 
     expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-      "/employers/organizations"
+      "/employers/organizations/success",
+      {
+        employer_id: "mock-employer-id",
+      }
     );
-  });
-
-  it("redirects to Organizations page if employer is already verified and next page is not provided", async () => {
-    const customQuery = {
-      employer_id: "mock-employer-id",
-      next:
-        "/employers/applications/new-application/?absence_id=mock_absence_id",
-    };
-    appLogic.users.user = getUser(true);
-
-    await render({ appLogic, customQuery });
-
-    expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(customQuery.next);
   });
 });

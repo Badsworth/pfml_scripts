@@ -3,7 +3,7 @@
 exports[`Ssn renders the form 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Your identity"
+  title="Your identification"
 >
   <InputText
     hint="Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number (ITIN)."
