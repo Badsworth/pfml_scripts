@@ -45,6 +45,9 @@ export const CannotVerify = (props) => {
                 rel="noopener"
               />
             ),
+            "dor-phone-link": (
+              <a href={`tel:${t("shared.departmentOfRevenuePhoneNumber")}`} />
+            ),
           }}
         />
       </p>

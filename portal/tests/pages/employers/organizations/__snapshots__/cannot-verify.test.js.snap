@@ -29,6 +29,9 @@ exports[`cannot verify renders the page 1`] = `
     <Trans
       components={
         Object {
+          "dor-phone-link": <a
+            href="tel:(617) 466‑3950"
+          />,
           "learn-more-link": <a
             href="https://www.mass.gov/pfml-verify-employer"
             rel="noopener"
@@ -66,10 +69,17 @@ Array [
 
 exports[`cannot verify renders the page 4`] = `
 Array [
-  "We can't verify this account because this organization hasn't submitted contributions through MassTaxConnect. Call the Department of Revenue at (617) 466‑3950 to make arrangements to submit contributions. Once you do that, you'll be able to review leave applications on the next business day. Learn more about ",
+  "We can't verify this account because this organization hasn't submitted contributions through MassTaxConnect. Call the Department of Revenue at ",
+  <a
+    href="tel:(617) 466‑3950"
+    key="1"
+  >
+    (617) 466‑3950
+  </a>,
+  " to make arrangements to submit contributions. Once you do that, you'll be able to review leave applications on the next business day. Learn more about ",
   <a
     href="https://www.mass.gov/pfml-verify-employer"
-    key="1"
+    key="3"
     rel="noopener"
     target="_blank"
   >
