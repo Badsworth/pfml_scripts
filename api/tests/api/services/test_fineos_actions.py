@@ -1,4 +1,5 @@
 import io
+import re
 from datetime import date, timedelta
 
 import pytest
@@ -30,7 +31,7 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.fineos import FINEOSClient
 from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSClientError, FINEOSNotFound
-from massgov.pfml.fineos.models import CreateOrUpdateEmployer
+from massgov.pfml.fineos.models import CreateOrUpdateEmployer, CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import Address as FineosAddress
 from massgov.pfml.fineos.models.customer_api import CustomerAddress
 
@@ -580,9 +581,10 @@ def test_create_service_agreement_for_employer(test_db_session):
 # not an integration test, but marked as such by global pytest.mark.integration
 # at top of file
 def test_create_service_agreement_payload():
-    payload = FINEOSClient._create_service_agreement_payload(
-        123, "MA PFML - Family, MA PFML - Military Care"
+    service_agreement_inputs = CreateOrUpdateServiceAgreement(
+        absence_management_flag=True, leave_plans="MA PFML - Family, MA PFML - Military Care"
     )
+    payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
 
     assert payload is not None
     assert payload.__contains__("<config-name>ServiceAgreementService</config-name>")
@@ -590,6 +592,30 @@ def test_create_service_agreement_payload():
     assert payload.__contains__("<value>123</value>")
     assert payload.__contains__("<name>LeavePlans</name>")
     assert payload.__contains__("<value>MA PFML - Family, MA PFML - Military Care</value>")
+    assert not payload.__contains__("<name>AbsenceManagement</name>")
+    assert payload.__contains__("<name>UnlinkAllExistingLeavePlans</name>")
+    assert (
+        re.search("<name>UnlinkAllExistingLeavePlans</name>\\s+<value>True</value>", payload)
+        is not None
+    )
+
+    service_agreement_inputs = CreateOrUpdateServiceAgreement(
+        absence_management_flag=False, leave_plans=""
+    )
+    payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
+
+    assert payload is not None
+    assert payload.__contains__("<config-name>ServiceAgreementService</config-name>")
+    assert payload.__contains__("<name>CustomerNumber</name>")
+    assert payload.__contains__("<value>123</value>")
+    assert payload.__contains__("<name>AbsenceManagement</name>")
+    assert re.search("<name>AbsenceManagement</name>\\s+<value>False</value>", payload) is not None
+    assert not payload.__contains__("<name>LeavePlans</name>")
+    assert payload.__contains__("<name>UnlinkAllExistingLeavePlans</name>")
+    assert (
+        re.search("<name>UnlinkAllExistingLeavePlans</name>\\s+<value>True</value>", payload)
+        is not None
+    )
 
 
 # not an integration test, but marked as such by global pytest.mark.integration
@@ -622,10 +648,9 @@ def test_resolve_leave_plans():
 
     # Family Exemption = true
     # Medical Exemption = true
-    # Assign: no plans assigned (empty set)
+    # Assign: no plans assigned
     leave_plans = fineos_actions.resolve_leave_plans(True, True)
     assert len(leave_plans) == 0
-    assert ", ".join(leave_plans) == ""
 
 
 def test_determine_absence_notification_reason(user, test_db_session):
