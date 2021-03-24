@@ -208,10 +208,7 @@ export const UATM: ScenarioSpecification = {
     bondingDate: addWeeks(new Date(), 1),
     has_continuous_leave_periods: true,
     leave_dates: [addWeeks(new Date(), 2), addWeeks(new Date(), 6)],
-    docs: {
-      MASSID: {},
-      HCP: {},
-    },
+    docs: {},
   },
 };
 
@@ -228,10 +225,7 @@ export const UATN: ScenarioSpecification = {
     reduced_leave_spec: "0,240,240,240,240,240,0",
     work_pattern_spec: "0,480,480,480,480,480,0",
     leave_dates: [addWeeks(new Date(), 2), addWeeks(new Date(), 6)],
-    docs: {
-      MASSID: {},
-      HCP: {},
-    },
+    docs: {},
   },
 };
 
