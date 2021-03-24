@@ -109,6 +109,19 @@ export default function generateLeaveDetails(
     default:
       throw new Error(`Invalid reason given`);
   }
+
+  if (
+    details.child_birth_date &&
+    details.child_birth_date > formatISODate(new Date())
+  ) {
+    details.has_future_child_date = true;
+  }
+  if (
+    details.child_placement_date &&
+    details.child_placement_date > formatISODate(new Date())
+  ) {
+    details.has_future_child_date = true;
+  }
   return details;
 }
 
