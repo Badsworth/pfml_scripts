@@ -1,7 +1,8 @@
 import csv
+import io
 import os
 import tempfile
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from sqlalchemy import func
 
@@ -9,7 +10,14 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
-from massgov.pfml.db.models.employees import Claim, ReferenceFile, ReferenceFileType, State
+from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
+    Claim,
+    DiaReductionPayment,
+    ReferenceFile,
+    ReferenceFileType,
+    State,
+)
 from massgov.pfml.payments.payments_util import get_now
 from massgov.pfml.payments.sftp_s3_transfer import (
     SftpS3TransferConfig,
@@ -36,6 +44,21 @@ class Constants:
     LAST_NAME_FIELD = "LAST_NAME"
     BIRTH_DATE_FIELD = "BIRTH_DATE"
     BENEFIT_START_DATE_FIELD = "START_DATE"
+    DFML_CASE_ID_FIELD = "DFML_CASE_ID"
+    BOARD_NO_FIELD = "BOARD_NO"
+    EVENT_ID = "EVENT_ID"
+    INS_FORM_OR_MEET_FIELD = "INS_FORM_OR_MEET"
+    EVE_CREATED_DATE_FIELD = "EVE_CREATED_DATE"
+    FORM_RECEIVED_OR_DISPOSITION_FIELD = "FORM_RECEIVED_OR_DISPOSITION"
+    AWARD_ID_FIELD = "AWARD_ID"
+    AWARD_CODE_FIELD = "AWARD_CODE"
+    AWARD_AMOUNT_FIELD = "AWARD_AMOUNT"
+    AWARD_DATE_FIELD = "AWARD_DATE"
+    START_DATE_FIELD = "START_DATE"
+    END_DATE_FIELD = "END_DATE"
+    WEEKLY_AMOUNT_FIELD = "WEEKLY_AMOUNT"
+    AWARD_CREATED_DATE_FIELD = "AWARD_CREATED_DATE"
+
     CLAIMAINT_LIST_FIELDS = [
         CASE_ID_FIELD,
         SSN_FIELD,
@@ -44,6 +67,40 @@ class Constants:
         BIRTH_DATE_FIELD,
         BENEFIT_START_DATE_FIELD,
     ]
+
+    PAYMENT_LIST_FIELDS = [
+        DFML_CASE_ID_FIELD,
+        BOARD_NO_FIELD,
+        EVENT_ID,
+        INS_FORM_OR_MEET_FIELD,
+        EVE_CREATED_DATE_FIELD,
+        FORM_RECEIVED_OR_DISPOSITION_FIELD,
+        AWARD_ID_FIELD,
+        AWARD_CODE_FIELD,
+        AWARD_AMOUNT_FIELD,
+        AWARD_DATE_FIELD,
+        START_DATE_FIELD,
+        END_DATE_FIELD,
+        WEEKLY_AMOUNT_FIELD,
+        AWARD_CREATED_DATE_FIELD,
+    ]
+
+    PAYMENT_CSV_FIELD_MAPPINGS = {
+        DFML_CASE_ID_FIELD: "absence_case_id",
+        BOARD_NO_FIELD: "board_id",
+        EVENT_ID: "event_id",
+        INS_FORM_OR_MEET_FIELD: "",
+        EVE_CREATED_DATE_FIELD: "eve_created_date",
+        FORM_RECEIVED_OR_DISPOSITION_FIELD: "",
+        AWARD_ID_FIELD: "award_id",
+        AWARD_CODE_FIELD: "award_code",
+        AWARD_AMOUNT_FIELD: "award_amount",
+        AWARD_DATE_FIELD: "award_date",
+        START_DATE_FIELD: "start_date",
+        END_DATE_FIELD: "end_date",
+        WEEKLY_AMOUNT_FIELD: "weekly_amount",
+        AWARD_CREATED_DATE_FIELD: "award_created_date",
+    }
 
 
 def _format_claims_for_dia_claimant_list(claims: List[Claim]) -> List[Dict]:
@@ -238,6 +295,37 @@ def _get_pending_dia_payment_reference_files(
         )
         .all()
     )
+
+
+def _convert_dict_with_csv_keys_to_db_keys(csv_data: Dict[str, Any]) -> Dict[str, Any]:
+    print(csv_data)
+    # Load empty strings as null values.
+    return {
+        Constants.PAYMENT_CSV_FIELD_MAPPINGS[k]: None if v == "" else v for k, v in csv_data.items()
+    }
+
+
+def _get_matching_dia_reduction_payments(
+    db_data: Dict[str, Any], db_session: db.Session
+) -> List[DiaReductionPayment]:
+    # https://stackoverflow.com/questions/7604967/sqlalchemy-build-query-filter-dynamically-from-dict
+    query = db_session.query(DiaReductionPayment)
+    for attr, value in db_data.items():
+        # Empty fields are read as empty strings. Convert those values to nulls for the datbase.
+        if value == "":
+            value = None
+
+        query = query.filter(getattr(DiaReductionPayment, attr) == value)
+
+    return query.all()
+
+
+def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> None:
+    for row in csv.DictReader(file):
+        db_data = _convert_dict_with_csv_keys_to_db_keys(row)
+        if len(_get_matching_dia_reduction_payments(db_data, db_session)) == 0:
+            dua_reduction_payment = DiaReductionPayment(**db_data)
+            db_session.add(dua_reduction_payment)
 
 
 def _load_dia_payment_from_reference_file(

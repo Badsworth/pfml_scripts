@@ -10,10 +10,12 @@ import pytest
 import smart_open
 import sqlalchemy
 
+import massgov.pfml.reductions.dia as dia
 import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
+    DiaReductionPayment,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -37,8 +39,8 @@ from massgov.pfml.reductions.dia import (
 fake = faker.Faker()
 
 
-EXPECTED_DIA_PAYMENT_CSV_FILE_HEADERS = list(Constants.CLAIMAINT_LIST_FIELDS)
-
+EXPECTED_DIA_CLAIMAINT_CSV_FILE_HEADERS = list(Constants.CLAIMAINT_LIST_FIELDS)
+EXPECTED_DIA_PAYMENT_CSV_FILE_HEADERS = list(Constants.PAYMENT_LIST_FIELDS)
 
 DIA_PAYMENT_LIST_ENCODERS: csv_util.Encoders = {
     date: lambda d: d.strftime("%Y%m%d"),
@@ -157,7 +159,7 @@ def _random_date_in_past_year() -> date:
     return fake.date_between(start_date="-1y", end_date="today")
 
 
-def _get_valid_dia_payment_data() -> Dict[str, Any]:
+def _get_valid_dia_claimant_data() -> Dict[str, Any]:
     return {
         "CASE_ID": "NTN-{}-ABS-01".format(fake.random_int(min=1000, max=9999)),
         "SSN": fake.ssn(),
@@ -168,7 +170,63 @@ def _get_valid_dia_payment_data() -> Dict[str, Any]:
     }
 
 
+# NTN-3778-ABS-01,
+# 1275118,
+# 10170549,
+# PC,
+# 20180613,
+# 20180608,
+# 2844892,
+# 34,
+# 0,
+# _,
+# 20210107,
+# _,
+# 416.77,
+# 20180613
+def _get_valid_dia_payment_data() -> Dict[str, Any]:
+    return {
+        "DFML_CASE_ID": "NTN-{}-ABS-01".format(fake.random_int(min=1000, max=9999)),
+        "BOARD_NO": fake.random_int(min=100000, max=999999),
+        "EVENT_ID": fake.random_int(min=100000, max=999999),
+        "INS_FORM_OR_MEET": "PC",
+        "EVE_CREATED_DATE": fake.date(pattern="%Y%m%d"),
+        "FORM_RECEIVED_OR_DISPOSITION": "",
+        "AWARD_ID": "",
+        "AWARD_CODE": "",
+        "AWARD_AMOUNT": "",
+        "AWARD_DATE": "",
+        "START_DATE": "",
+        "END_DATE": "",
+        "WEEKLY_AMOUNT": "",
+        "AWARD_CREATED_DATE": "",
+    }
+
+
 def _get_loaded_reference_file_in_s3(mock_s3_bucket, filename, source_directory_path, row_count):
+    # Create the ReferenceFile.
+    pending_directory = os.path.join(f"s3://{mock_s3_bucket}", source_directory_path)
+    source_filepath = os.path.join(pending_directory, filename)
+    ref_file = _create_dia_payment_list_reference_file("", source_filepath)
+
+    # Create some number of valid rows for our input file.
+    body = ",".join(EXPECTED_DIA_CLAIMAINT_CSV_FILE_HEADERS) + "\n"
+    for _i in range(row_count):
+        db_data = _get_valid_dia_claimant_data()
+        csv_row = csv_util.encode_row(db_data, DIA_PAYMENT_LIST_ENCODERS)
+        body = body + ",".join(list(csv_row.values())) + "\n"
+
+    # Add rows to the file in our mock S3 bucket.
+    s3_key = os.path.join(source_directory_path, filename)
+    s3 = boto3.client("s3")
+    s3.put_object(Bucket=mock_s3_bucket, Key=s3_key, Body=body)
+
+    return ref_file
+
+
+def _get_loaded_payment_reference_file_in_s3(
+    mock_s3_bucket, filename, source_directory_path, row_count
+):
     # Create the ReferenceFile.
     pending_directory = os.path.join(f"s3://{mock_s3_bucket}", source_directory_path)
     source_filepath = os.path.join(pending_directory, filename)
@@ -417,7 +475,9 @@ def test_download_payment_list_if_none_today(
         )
 
 
-def test_load_new_dia_payments_sucessfully(test_db_session, mock_s3_bucket, monkeypatch):
+def test_load_new_dia_payments_sucessfully(
+    test_db_session, mock_s3_bucket, monkeypatch, initialize_factories_session
+):
     source_directory_path = "reductions/dia/pending"
     archive_directory_path = "reductions/dia/archive"
 
@@ -435,14 +495,14 @@ def test_load_new_dia_payments_sucessfully(test_db_session, mock_s3_bucket, monk
     for _i in range(ref_file_count):
         row_count = random.randint(1, 5)
         total_row_count = total_row_count + row_count
-        _get_loaded_reference_file_in_s3(
+        _get_loaded_payment_reference_file_in_s3(
             mock_s3_bucket, _random_csv_filename(), source_directory_path, row_count
         )
 
     # Expect no rows in the database before.
     assert (
         test_db_session.query(
-            sqlalchemy.func.count(DuaReductionPayment.dia_reduction_payment_id)
+            sqlalchemy.func.count(DiaReductionPayment.dia_reduction_payment_id)
         ).scalar()
         == 0
     )
@@ -456,7 +516,7 @@ def test_load_new_dia_payments_sucessfully(test_db_session, mock_s3_bucket, monk
     # Expect to have loaded some rows to the database.
     assert (
         test_db_session.query(
-            sqlalchemy.func.count(DuaReductionPayment.dia_reduction_payment_id)
+            sqlalchemy.func.count(DiaReductionPayment.dia_reduction_payment_id)
         ).scalar()
         == total_row_count
     )
