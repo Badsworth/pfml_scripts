@@ -1098,6 +1098,28 @@ data "aws_iam_policy_document" "reductions_workflow_task_role_extras" {
       "${data.aws_s3_bucket.agency_transfer.arn}/*"
     ]
   }
+
+  statement {
+    sid    = "AllowSESSendEmail"
+    effect = "Allow"
+
+    actions = [
+      "ses:SendEmail",
+      "ses:SendRawEmail"
+    ]
+
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "ses:Recipients"
+      values = [
+        var.dfml_project_manager_email_address,
+        var.dfml_business_operations_email_address,
+        var.agency_reductions_email_address,
+      ]
+    }
+
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role" "reductions_workflow_execution_role" {
