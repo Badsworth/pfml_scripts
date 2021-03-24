@@ -7,7 +7,7 @@ import { dataDirectory, submit, PostSubmitCallback } from "./util";
 import ClaimSubmissionTracker from "../submission/ClaimStateTracker";
 import SubmittedClaimIndex from "../submission/writers/SubmittedClaimIndex";
 import path from "path";
-import { getFineosBaseUrl } from "../commands/simulation/simulate";
+import { getFineosBaseUrl } from "../utils";
 import { approveClaim, withFineosBrowser } from "../submission/PostSubmit";
 
 /**

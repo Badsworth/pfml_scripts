@@ -19,7 +19,7 @@ import {
   watchFailures,
 } from "../submission/iterable";
 
-interface DataDirectory {
+export interface DataDirectory {
   dir: string;
   documents: string;
   employers: string;

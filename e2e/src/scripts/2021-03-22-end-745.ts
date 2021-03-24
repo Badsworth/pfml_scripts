@@ -23,7 +23,7 @@ import {
   closeDocuments,
 } from "../submission/PostSubmit";
 
-import { getFineosBaseUrl } from "../commands/simulation/simulate";
+import { getFineosBaseUrl } from "../utils";
 
 /**
  * This is a data generation script.

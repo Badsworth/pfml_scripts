@@ -472,6 +472,10 @@ const errors = {
     fineos_client: "$t(shared.documentsUploadError)",
   },
   employers: {
+    ein: {
+      employer_verification_data_required:
+        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications.",
+    },
     employer_benefits: {
       benefit_amount_frequency: {
         enum:
@@ -1576,7 +1580,7 @@ const pages = {
   },
   employersCannotVerify: {
     body:
-      "We can't verify this account because this organization hasn't submitted contributions through MassTaxConnect. Call the Department of Revenue at $t(shared.departmentOfRevenuePhoneNumber) to make arrangements to submit contributions. Once you do that, you'll be able to review leave applications on the next business day. Learn more about <learn-more-link>verifying your account</learn-more-link> on Mass.gov.",
+      "We can't verify this account because this organization hasn't submitted contributions through MassTaxConnect. Call the Department of Revenue at <dor-phone-link>$t(shared.departmentOfRevenuePhoneNumber)</dor-phone-link> to make arrangements to submit contributions. Once you do that, you'll be able to review leave applications on the next business day. Learn more about <learn-more-link>verifying your account</learn-more-link> on Mass.gov.",
     companyNameLabel: "<strong>Organization:</strong> {{employerDba}}",
     employerIdNumberLabel:
       "<strong>Employer ID number (EIN):</strong> {{employerFein}}",
