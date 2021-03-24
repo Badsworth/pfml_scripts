@@ -63,6 +63,7 @@ module "tasks" {
   ctr_gax_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
   ctr_vcc_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
   dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
+  agency_reductions_email_address        = "mass-pfml-payments-test-email@navapbc.com"
 
   ctr_data_mart_host        = "duaua-fdm-wdb1.cs.govt.state.ma.us"
   ctr_data_mart_username    = "SRV-LWD-DFML-NONPROD"
