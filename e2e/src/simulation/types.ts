@@ -89,5 +89,4 @@ export type Employer = {
   exemption_cease_date?: Date | string;
   updated_date?: Date | string;
   size?: "small" | "medium" | "large";
-  withholdings?: number[];
 };

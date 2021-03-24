@@ -59,9 +59,7 @@ function wagesInBounds(wages: number, spec: WageSpecification): boolean {
 type EmployeeGenerationSpec = {
   mass_id?: boolean;
   wages?: WageSpecification;
-  work_pattern?: "Fixed" | "Variable";
 };
-
 export class EmployeeGenerator {
   static generate(
     employerPool: EmployerPool,
@@ -132,7 +130,6 @@ export type EmployeePickSpec = {
   mass_id?: boolean;
   wages?: WageSpecification;
 };
-
 export default class EmployeePool implements Iterable<Employee> {
   used: Set<Employee>;
 

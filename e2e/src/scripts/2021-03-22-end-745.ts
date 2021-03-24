@@ -4,7 +4,7 @@ import stringify from "csv-stringify";
 import fs from "fs";
 import { map, pipeline, writeToStream } from "streaming-iterables";
 
-import * as scenarios from "../scenarios";
+import * as scenarios from "../scenarios/uat";
 
 import ClaimPool from "../generation/Claim";
 import EmployerPool, { Employer } from "../generation/Employer";
