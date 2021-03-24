@@ -578,3 +578,76 @@ resource "newrelic_nrql_alert_condition" "rmv_5xx_rate" {
     threshold_occurrences = "all"
   }
 }
+
+# ------------------------------------------------------------------------------------------------------------------------------
+
+resource "newrelic_nrql_alert_condition" "unsuccessful_register_leave_admin_job" {
+  # WARN: Register Leave Admin job has only run 2 times in the past hour
+  # CRIT: Register Leave Admin job has not run in the past hour
+  name           = "Leave admin registration in FINEOS is failing in ${upper(var.environment_name)}"
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  type           = "static"
+  value_function = "single_value"
+  fill_option    = "last_value"
+  enabled        = true
+
+  nrql {
+    query             = <<-NRQL
+    SELECT count(*) AS 'Successful Job completion' FROM Log WHERE message = 'Completed FINEOS Leave Admin Creation Script'
+    AND aws.logGroup = 'service/pfml-api-${var.environment_name}/ecs-tasks'
+    NRQL
+    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
+  }
+
+  violation_time_limit_seconds = 86400 # one day
+
+  warning {
+    threshold_duration    = 1800 # thirty minutes
+    threshold             = 1    # register leave admin job ran only twice in an hour
+    operator              = "below"
+    threshold_occurrences = "all"
+  }
+
+  critical {
+    threshold_duration    = 3600 # sixty minutes
+    threshold             = 1    # register leave admin job didn't run at all in an hour
+    operator              = "below"
+    threshold_occurrences = "all"
+  }
+}
+
+# ------------------------------------------------------------------------------------------------------------------------------
+
+resource "newrelic_nrql_alert_condition" "unprocessed_leave_admin_records" {
+  # WARN: Register Leave Admin job has left unprocessed records twice
+  # CRIT: Register Leave Admin job has left unprocessed records four times
+  name           = "Leave admin registration in FINEOS did not process all records in ${upper(var.environment_name)}"
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  type           = "static"
+  value_function = "single_value"
+  fill_option    = "last_value"
+  enabled        = true
+
+  nrql {
+    query             = <<-NRQL
+    SELECT COUNT(*) as 'Job runs with unprocessed records' FROM Log WHERE message LIKE '%Leave admin records left unprocessed%' AND aws.logGroup = 'service/pfml-api-${var.environment_name}/ecs-tasks' AND numeric(`Left unprocessed`) > 0
+    NRQL
+    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
+  }
+
+  violation_time_limit_seconds = 86400 # one day
+
+  warning {
+    threshold_duration    = 4500 # seventy-five minutes, job runs every 15 minutes, should account for ~4-5 runs
+    threshold             = 1    # more than 1 of the past 4-5 runs has left unprocessed records
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 4500 # seventy-five minutes, job runs every 15 minutes, should account for ~4-5 runs
+    threshold             = 3    # 4 of the past 4-5 runs have left unprocessed records
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+}
