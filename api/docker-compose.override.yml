@@ -18,7 +18,24 @@ services:
       # To make local development easier, mount project code so that we don't
       # have to rebuild the docker container every time we run
       - .:/app:z
+      #
       # You can make your aws credentials accessible in the container by
-      # uncommenting this line with the path to your aws credentials folder
-      # On a mac, this will generally be in a folder with your name
-      # - /Users/{yourname}/.aws:/home/{yourname}/.aws:ro
+      # uncommenting this line with the path to your aws credentials folder.
+      #
+      # - $HOME/.aws:/home/${RUN_USER:-nodummy}/.aws:ro
+      #
+      # On mac/linux, this will generally be your home directory.
+      # If not, you'll need to change the line above.
+      #
+      # Example usage:
+      # 1. Log into AWS:
+      #    $ login-aws
+      #
+      # 2. Update AWS_PROFILE in docker-compose.yml. e.g.
+      #    - AWS_PROFILE=AWS-498823821309-NonPROD-Admins_profile
+      #
+      # 3. Restart container
+      #    $ make stop && make start
+      #
+      # 4. Run whatever you need.
+      #    $ make runcmd cmd="payments-ctr-process ..."

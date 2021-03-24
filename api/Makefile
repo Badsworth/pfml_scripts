@@ -325,6 +325,9 @@ release-tag: ## Tag release image for registry
 	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(RELEASE_TAG)
 	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
 
+runcmd: ## Run poetry command
+	$(PY_RUN_CMD) $(cmd)
+
 run-test: # The second parameter is the number of retries (each followed by
 		  # a second of wait) until a state is determined by the docker daemon
 	./bin/check_container_health.sh 60
