@@ -9,34 +9,12 @@ exports[`UploadCertification after documents have been loaded when leave reason 
 </Heading>
 `;
 
-exports[`UploadCertification after documents have been loaded when leave reason is Bonding leave renders page with bonding leave content 2`] = `
-Array [
-  <p
-    key="p-0"
-  >
-    It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
-    <a
-      href="https://www.mass.gov/pfmlsubmitinfo"
-      key="1"
-      rel="noopener"
-      target="_blank"
-    >
-      fax and mail instructions
-    </a>
-    .
-  </p>,
-  <p
-    key="p-1"
-  >
-    You need to upload one of the following documents to confirm your child’s date of birth:
-  </p>,
-]
-`;
+exports[`UploadCertification after documents have been loaded when leave reason is Bonding leave renders page with bonding leave content 2`] = `"You need to upload one of the following documents to confirm your child’s date of birth:"`;
 
 exports[`UploadCertification after documents have been loaded when leave reason is Medical leave renders a FileCardList 1`] = `
 <FileCardList
   addAnotherFileButtonText="Choose another file"
-  addFirstFileButtonText="Choose a file"
+  addFirstFileButtonText="Choose files"
   allowedFileTypes={
     Array [
       "image/png",
@@ -71,33 +49,15 @@ exports[`UploadCertification after documents have been loaded when leave reason 
 
 exports[`UploadCertification after documents have been loaded when leave reason is Medical leave renders page with medical leave content 2`] = `
 Array [
-  <p
-    key="p-0"
+  "You need to upload a completed ",
+  <a
+    href="https://www.mass.gov/hcp-form"
+    key="1"
+    rel="noopener"
+    target="_blank"
   >
-    It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
-    <a
-      href="https://www.mass.gov/pfmlsubmitinfo"
-      key="1"
-      rel="noopener"
-      target="_blank"
-    >
-      fax and mail instructions
-    </a>
-    .
-  </p>,
-  <p
-    key="p-1"
-  >
-    You need to upload a completed 
-    <a
-      href="https://www.mass.gov/hcp-form"
-      key="1"
-      rel="noopener"
-      target="_blank"
-    >
-      PFML Certification of a Serious Health Condition
-    </a>
-     to prove that you need to take medical leave.
-  </p>,
+    PFML Certification of a Serious Health Condition
+  </a>,
+  " to prove that you need to take medical leave.",
 ]
 `;

@@ -14,7 +14,9 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
     >
       Upload an identification document issued by state or federal government
     </Heading>
-    <DocumentRequirements />
+    <DocumentRequirements
+      type="id"
+    />
     <div
       className="border-bottom border-base-light margin-bottom-4 padding-bottom-4"
     >
@@ -126,7 +128,9 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID r
     >
       Upload the front and back of your Massachusetts driver’s license or ID card
     </Heading>
-    <DocumentRequirements />
+    <DocumentRequirements
+      type="id"
+    />
     <FileUploadDetails />
     <FileCardList
       addAnotherFileButtonText="Choose another file"
@@ -170,7 +174,9 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID w
     >
       Upload the front and back of your Massachusetts driver’s license or ID card
     </Heading>
-    <DocumentRequirements />
+    <DocumentRequirements
+      type="id"
+    />
     <FileUploadDetails />
     <FileCardList
       addAnotherFileButtonText="Choose another file"

@@ -597,7 +597,7 @@ export function addId(idType: string): void {
 }
 
 export function addLeaveDocs(leaveType: string): void {
-  cy.labelled("Choose a file").attachFile({
+  cy.labelled("Choose files").attachFile({
     filePath: `${leaveType}.pdf`,
     encoding: "binary",
   });

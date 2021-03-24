@@ -1476,7 +1476,7 @@ const pages = {
   },
   claimsUploadCertification: {
     addAnotherFileButton: "Choose another file",
-    addFirstFileButton: "Choose a file",
+    addFirstFileButton: "Choose files",
     certificationDocumentsCount: "$t(shared.filesUploaded)",
     documentsLoadError: "$t(shared.documentsLoadError)",
     fileHeadingPrefix: "File",
@@ -1486,11 +1486,11 @@ const pages = {
       "A note from the health care provider of the person who gave birth stating your child’s date of birth.",
     ],
     lead_bonding_adopt_foster:
-      "<p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.</p>",
+      "You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.",
     lead_bonding_newborn:
-      "<p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>You need to upload one of the following documents to confirm your child’s date of birth:</p>",
+      "You need to upload one of the following documents to confirm your child’s date of birth:",
     lead_medical:
-      "<p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>You need to upload a completed <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link> to prove that you need to take medical leave.</p>",
+      "You need to upload a completed <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link> to prove that you need to take medical leave.",
     sectionLabel_bonding: "Upload your documentation",
     sectionLabel_medical:
       "Upload your Certification of a Serious Health Condition",
@@ -1875,9 +1875,11 @@ const components = {
       "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
   },
   documentRequirements: {
-    header: "Document Requirements:",
-    body:
+    body_certification:
+      "<ul><li>The text must be clear and readable</li><li>Upload every page of the document where you or your health care provider have entered information</li><li>Each file you upload must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
+    body_id:
       "<ul><li>The image of the card must be in full color</li><li>The text must be clear and readable</li><li>The front and back can be in one file, or in two separate files</li><li>Each file must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
+    header: "Document Requirements:",
   },
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",
