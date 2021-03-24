@@ -267,11 +267,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
             if (
                 response.status_code
-                in (
-                    requests.codes.SERVICE_UNAVAILABLE,
-                    requests.codes.GATEWAY_TIMEOUT,
-                    requests.codes.BAD_GATEWAY,
-                )
+                in (requests.codes.SERVICE_UNAVAILABLE, requests.codes.GATEWAY_TIMEOUT,)
                 or "ESOCKETTIMEDOUT" in response.text
             ):
                 # The service is unavailable for some reason. Log a warning and don't tell sentry -- there should be a
@@ -379,7 +375,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return self._request(method, url, headers, data=xml_data.encode("utf-8"))
 
     def read_employer(self, employer_fein: str) -> models.OCOrganisation:
-        """ Retrieves FINEOS employer info given an FEIN.
+        """Retrieves FINEOS employer info given an FEIN.
 
         Raises
         ------
@@ -397,7 +393,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return models.OCOrganisation.parse_obj(response_decoded)
 
     def find_employer(self, employer_fein: str) -> str:
-        """ Retrieves the FINEOS customer number for an employer given an FEIN.
+        """Retrieves the FINEOS customer number for an employer given an FEIN.
 
         Raises
         ------
@@ -410,7 +406,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return customer_nbr
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
-        """ Creates the employee account registration.
+        """Creates the employee account registration.
 
         Raises
         ------
