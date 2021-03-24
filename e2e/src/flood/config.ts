@@ -1,5 +1,4 @@
 import { Browser, TestSettings, ENV, StepOptions } from "@flood/element";
-import { FineosUserType } from "../simulation/types";
 import { DocumentUploadRequest } from "../api";
 import Tasks from "./tasks";
 import { GeneratedClaim } from "../generation/Claim";
@@ -44,6 +43,9 @@ export type Agent = {
 export type AgentActions = {
   [k: string]: LSTStepFunction;
 };
+
+export const fineosUserTypeNames = ["SAVILINX", "DFMLOPS"] as const;
+export type FineosUserType = typeof fineosUserTypeNames[number];
 
 export type LSTScenario =
   | "SavilinxAgent"

@@ -10,7 +10,6 @@
 // Import some types here. We'll reference them below.
 type Application = import("./src/types").Application;
 type Credentials = import("./src/types").Credentials;
-type SimulationClaim = import("./src/simulation/types").SimulationClaim;
 type ApplicationRequestBody = import("./src/api").ApplicationRequestBody;
 type ApplicationResponse = import("./src/api").ApplicationResponse;
 type waitForClaimDocuments = import("./cypress/plugins/DocumentWaiter").default["waitForClaimDocuments"];

@@ -1,6 +1,5 @@
 import { Locator, Browser, By, ElementHandle, Until } from "@flood/element";
 import * as Cfg from "./config";
-import { FineosUserType } from "../simulation/types";
 import { getFamilyLeavePlanProp } from "./tasks/ApproveClaim";
 import { actions } from "./scenarios/SavilinxAgent.perf";
 
@@ -271,7 +270,7 @@ export async function getMailVerifier(
 export function assignTasks(
   fineosId: string,
   search = true,
-  agent: FineosUserType = "SAVILINX"
+  agent: Cfg.FineosUserType = "SAVILINX"
 ): Cfg.StoredStep {
   return {
     time: 0,

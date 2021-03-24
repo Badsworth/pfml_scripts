@@ -1,5 +1,4 @@
 import { StepFunction, TestData, Browser, step, By } from "@flood/element";
-import { fineosUserTypeNames, FineosUserType } from "../../simulation/types";
 import * as Cfg from "../config";
 import * as Util from "../helpers";
 
@@ -17,10 +16,10 @@ export default (
   let taskTypeElementLocator = taskTypeElementSelectors.join(", ");
 
   // Decides which user account to login with.
-  let userType: FineosUserType | undefined;
-  for (const typeName of fineosUserTypeNames) {
+  let userType: Cfg.FineosUserType | undefined;
+  for (const typeName of Cfg.fineosUserTypeNames) {
     if (scenario.toUpperCase().includes(typeName)) {
-      userType = typeName as FineosUserType;
+      userType = typeName as Cfg.FineosUserType;
       break;
     }
   }

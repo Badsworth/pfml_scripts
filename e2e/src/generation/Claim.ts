@@ -12,10 +12,6 @@ import {
 import faker from "faker";
 import generateLeaveDetails from "./LeaveDetails";
 import { v4 as uuid } from "uuid";
-import {
-  SimulatedEmployerResponse,
-  WageSpecification,
-} from "../simulation/types";
 import generateDocuments, {
   DehydratedDocument,
   DocumentGenerationSpec,
@@ -28,7 +24,7 @@ import path from "path";
 import * as si from "streaming-iterables";
 import ndjson from "ndjson";
 import { StreamWrapper } from "./FileWrapper";
-import { collect, map } from "streaming-iterables";
+import { collect, map, AnyIterable } from "streaming-iterables";
 
 const pipelineP = promisify(pipeline);
 
@@ -40,7 +36,7 @@ export type ClaimSpecification = {
   reason_qualifier?: ApplicationLeaveDetails["reason_qualifier"];
   // An object describing documentation that should accompany the claim.
   docs?: DocumentGenerationSpec;
-  employerResponse?: SimulatedEmployerResponse;
+  employerResponse?: GeneratedEmployerResponse;
   // @todo: Get rid of skipSubmitClaim.
   // skipSubmitClaim?: boolean;
   shortNotice?: boolean;
@@ -61,7 +57,6 @@ export type ClaimSpecification = {
   work_pattern_spec?: WorkPatternSpec;
   // Makes a claim for an extremely short time period (1 day).
   shortClaim?: boolean;
-  wages?: WageSpecification;
   // Any additional metadata you want to add to the generated claim.
   // This will not be used during the normal submission process, but we can use it for reporting.
   metadata?: GeneratedClaimMetadata;
@@ -83,12 +78,6 @@ export type GeneratedClaim = {
   employerResponse?: GeneratedEmployerResponse | null;
   paymentPreference: PaymentPreferenceRequestBody;
   metadata?: GeneratedClaimMetadata;
-
-  // Deprecated/removed properties. These were used in the old system, but aren't used anymore.
-  // hasInvalidMassId?: boolean;
-  // financiallyIneligible?: boolean;
-  // skipSubmitClaim?: boolean;
-  // wages?: number;
 };
 
 export type DehydratedClaim = Omit<GeneratedClaim, "documents"> & {
@@ -304,7 +293,7 @@ export default class ClaimPool implements AsyncIterable<GeneratedClaim> {
     private claims: AsyncIterable<GeneratedClaim> | Iterable<GeneratedClaim>
   ) {}
 
-  static merge(...pools: ClaimPool[]): ClaimPool {
+  static merge(...pools: AnyIterable<GeneratedClaim>[]): ClaimPool {
     return new ClaimPool(si.merge(...pools));
   }
 
