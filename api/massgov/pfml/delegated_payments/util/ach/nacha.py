@@ -22,7 +22,7 @@ class Constants:
     class_code = "PPD"
     company_name = "MA DFML"
     description = "MA PFML"
-    company_id = "I046002284"
+    company_id = "P046002284"
     blocking_factor = "10"
     format_code = "1"
 
@@ -286,7 +286,7 @@ class NachaFileControl(NachaRecord):
             "entry_hash": NumericNachaField("Entry Hash", 22, 31, entry_hash),
             "debit_amount": NumericNachaField("Total Debit Amount", 32, 43, debit_amount),
             "credit_amount": NumericNachaField("Total Credit Amount", 44, 55, credit_amount),
-            "reserved": NachaField("Reserved", 56, 94, ""),
+            "reserved": AlphanumericNachaField("Reserved", 56, 94, ""),
         }
 
         NachaRecord.__init__(self, fields)
