@@ -13,6 +13,7 @@ from massgov.pfml.db.models.factories import (
     EmployerQuarterlyContributionFactory,
     UserFactory,
 )
+from massgov.pfml.util.aws.cognito import CognitoUserExistsValidationError
 
 fake = faker.Faker()
 
@@ -203,6 +204,34 @@ def test_users_post_cognito_user_error(
         "field": "password",
         "type": "invalid",
         "message": "Password did not conform with policy: Password not long enough",
+    } in errors
+    assert response.status_code == 400
+
+
+def test_users_post_cognito_user_exists_error(
+    client,
+    mock_cognito,
+    mock_cognito_user_pool,
+    monkeypatch,
+    test_db_session,
+    valid_claimant_creation_request_body,
+):
+    existing_user = UserFactory.create(active_directory_id=str(uuid.uuid4()))
+
+    def sign_up(**kwargs):
+        raise CognitoUserExistsValidationError(
+            "Username already exists", existing_user.active_directory_id
+        )
+
+    monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
+
+    response = client.post("/v1/users", json=valid_claimant_creation_request_body,)
+    errors = response.get_json().get("errors")
+
+    assert {
+        "field": "email_address",
+        "type": "exists",
+        "message": "Username already exists",
     } in errors
     assert response.status_code == 400
 

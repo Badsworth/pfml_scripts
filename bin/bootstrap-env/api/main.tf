@@ -48,6 +48,7 @@ module "api" {
   formstack_import_lambda_build_s3_key  = local.formstack_lambda_artifact_s3_key
 
   cognito_user_pool_arn                            = null
+  cognito_user_pool_id                             = ""
   cognito_user_pool_client_id                      = ""
   cognito_user_pool_keys_url                       = ""
   cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key

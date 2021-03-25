@@ -16,6 +16,7 @@ ACTIVE_DIRECTORY_ATTRIBUTE = "sub"
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
+# TODO (CP-1988): Move custom exceptions to an exceptions.py to follow the pattern we use for other modules
 class CognitoSubNotFound(Exception):
     pass
 
@@ -27,12 +28,12 @@ class CognitoLookupFailure(Exception):
 
 
 class CognitoAccountCreationFailure(Exception):
-    """Error response returned from the AWS Cognito service. This does not include network-related errors."""
+    """Error creating a Cognito user that may not be due to a user/validation error. This does not include network-related errors."""
 
     pass
 
 
-class CognitoAccountCreationUserError(Exception):
+class CognitoValidationError(Exception):
     """Error raised due to a user-recoverable Cognito issue
 
     Attributes:
@@ -45,6 +46,23 @@ class CognitoAccountCreationUserError(Exception):
     def __init__(self, message: str, issue: Issue):
         self.message = message
         self.issue = issue
+
+
+class CognitoUserExistsValidationError(CognitoValidationError):
+    """Error raised due to a user with the provided email already existing in the Cognito user pool
+
+    Attributes:
+        message -- Cognito's explanation of the error
+        active_directory_id -- Existing user's ID attribute
+        issue -- used for communicating the error to the user
+    """
+
+    __slots__ = ["active_directory_id", "issue", "message"]
+
+    def __init__(self, message: str, active_directory_id: Optional[str]):
+        self.active_directory_id = active_directory_id
+        self.message = message
+        self.issue = Issue(field="email_address", type=IssueType.exists, message=message)
 
 
 class CognitoPasswordSetFailure(Exception):
@@ -85,32 +103,32 @@ def lookup_cognito_account_id(
         cognito_client = create_cognito_client()
     retries = 0
     response = None
+
+    # TODO (CP-1987) Use Boto's "Standard retry mode" instead of a custom implementation
     while retries < 3:
+        retries += 1
         try:
-            response = cognito_client.list_users(
-                UserPoolId=cognito_user_pool_id, Limit=1, Filter=f'email="{email}"'
+            response = cognito_client.admin_get_user(
+                Username=email, UserPoolId=cognito_user_pool_id
             )
+        except cognito_client.exceptions.UserNotFoundException:
+            return None
+        except cognito_client.exceptions.TooManyRequestsException:
+            logger.info("Too many requests error from Cognito; sleeping before retry")
+            time.sleep(0.2)
         except botocore.exceptions.ClientError as err:
-            if (
-                err.response
-                and err.response.get("Error", {}).get("Code") == "TooManyRequestsException"
-            ):
-                logger.info(
-                    "Too many requests error from Cognito looking up %s; sleeping before retry",
-                    email,
-                )
-                time.sleep(0.2)
-            else:
-                logger.warning("Error looking up user in Cognito", exc_info=err)
+            logger.warning("Error looking up user in Cognito", exc_info=err)
         else:
             break
+
     if not response and retries:
         raise CognitoLookupFailure("Cognito did not succeed at looking up email")
 
-    if response and response["Users"]:
-        for attr in response["Users"][0]["Attributes"]:
+    if response and response["UserAttributes"]:
+        for attr in response["UserAttributes"]:
             if attr["Name"] == ACTIVE_DIRECTORY_ATTRIBUTE:
                 return attr["Value"]
+
         raise CognitoSubNotFound("Cognito did not return an ID for the user!")
     return None
 
@@ -169,6 +187,7 @@ def create_verified_cognito_leave_admin_account(
 def create_cognito_account(
     email_address: str,
     password: str,
+    cognito_user_pool_id: str,
     cognito_user_pool_client_id: str,
     cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
 ) -> str:
@@ -181,8 +200,9 @@ def create_cognito_account(
 
     Raises
     ------
-    - CognitoAccountCreationUserError
     - CognitoAccountCreationFailure
+    - CognitoUserExistsValidationError
+    - CognitoValidationError
     """
 
     if cognito_client is None:
@@ -210,7 +230,7 @@ def create_cognito_account(
             extra={"cognito_error": issue.message},
         )
 
-        raise CognitoAccountCreationUserError(issue.message, issue) from error
+        raise CognitoValidationError(issue.message, issue) from error
     except botocore.exceptions.ParamValidationError as error:
         # Thrown for various reasons:
         # 1. When password is less than 6 characters
@@ -223,12 +243,13 @@ def create_cognito_account(
             extra={"cognito_error": issue.message},
         )
 
-        raise CognitoAccountCreationUserError(issue.message, issue) from error
+        raise CognitoValidationError(issue.message, issue) from error
     except cognito_client.exceptions.UsernameExistsException as error:
         message = error.response["Error"]["Message"]
-        issue = Issue(field="email_address", type=IssueType.exists, message=message)
-
-        raise CognitoAccountCreationUserError(issue.message, issue) from error
+        existing_auth_id = lookup_cognito_account_id(
+            email_address, cognito_user_pool_id, cognito_client
+        )
+        raise CognitoUserExistsValidationError(message, existing_auth_id) from error
     except botocore.exceptions.ClientError as error:
         logger.warning(
             # Alarm policy may be configured based on this message. Check before changing it.

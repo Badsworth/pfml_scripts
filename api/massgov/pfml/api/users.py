@@ -12,7 +12,7 @@ from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, User
 from massgov.pfml.api.services.user_rules import get_users_post_issues
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.db.models.employees import Employer, Role, User
-from massgov.pfml.util.aws.cognito import CognitoAccountCreationUserError
+from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein
 from massgov.pfml.util.users import register_user
@@ -66,12 +66,13 @@ def users_post():
         try:
             user = register_user(
                 db_session,
+                app.get_config().cognito_user_pool_id,
                 app.get_config().cognito_user_pool_client_id,
                 deepgetattr(body, "email_address"),
                 deepgetattr(body, "password"),
                 employer,
             )
-        except CognitoAccountCreationUserError as e:
+        except CognitoValidationError as e:
             logger.info(
                 "users_post failure - Cognito account creation failed with user error",
                 extra={"issueField": e.issue.field, "issueType": e.issue.type},
