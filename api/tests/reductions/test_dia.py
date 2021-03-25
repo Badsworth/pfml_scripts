@@ -196,6 +196,7 @@ def _get_loaded_reference_file_in_s3(mock_s3_bucket, filename, source_directory_
     ref_file = _create_dia_payment_list_reference_file("", source_filepath)
 
     # Create some number of valid rows for our input file.
+    body = ""
     for _i in range(row_count):
         db_data = _get_valid_dia_claimant_data()
         csv_row = csv_util.encode_row(db_data, DIA_PAYMENT_LIST_ENCODERS)
@@ -218,6 +219,7 @@ def _get_loaded_payment_reference_file_in_s3(
     ref_file = _create_dia_payment_list_reference_file("", source_filepath)
 
     # Create some number of valid rows for our input file.
+    body = ""
     for _i in range(row_count):
         db_data = _get_valid_dia_payment_data()
         csv_row = csv_util.encode_row(db_data, DIA_PAYMENT_LIST_ENCODERS)

@@ -319,7 +319,7 @@ def _get_matching_dia_reduction_payments(
 
 
 def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> None:
-    for row in csv.DictReader(file):
+    for row in csv.DictReader(file, fieldnames=Constants.PAYMENT_LIST_FIELDS):
         db_data = _convert_dict_with_csv_keys_to_db_keys(row)
         if len(_get_matching_dia_reduction_payments(db_data, db_session)) == 0:
             dua_reduction_payment = DiaReductionPayment(**db_data)
