@@ -128,6 +128,13 @@ export const GetReady = (props) => {
         >
           {t("pages.getReady.createClaimButton")}
         </ButtonLink>
+
+        <ButtonLink
+          className="margin-top-3 margin-bottom-8"
+          href={appLogic.portalFlow.getNextPageRoute("LINK_APPLICATION")}
+        >
+          {t("pages.getReady.linkClaimButton")}
+        </ButtonLink>
       </div>
     </React.Fragment>
   );

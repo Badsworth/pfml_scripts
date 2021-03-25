@@ -1732,6 +1732,7 @@ const pages = {
     alertPhoneHeading: "Apply by phone",
     applicationsLink: "View all applications",
     createClaimButton: "Create an application",
+    linkClaimButton: "Link an existing application",
     stepOne:
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
     stepOneHeading: "1. Tell your employer that you need to take paid leave",

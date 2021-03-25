@@ -126,9 +126,6 @@ export const App = ({ Component, pageProps }) => {
         process.env.maintenanceRemovalDayAndTime || null
       }
     >
-        <Alert state="success">
-          Team X gon' give it to ya
-        </Alert>
       <Component appLogic={appLogic} query={router.query} {...pageProps} />
     </PageWrapper>
   );

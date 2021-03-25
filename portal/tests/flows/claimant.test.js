@@ -322,6 +322,7 @@ describe("claimFlowConfigs", () => {
     CREATE_CLAIM: {},
     EMPLOYER_INFORMATION: {},
     LEAVE_DETAILS: {},
+    LINK_APPLICATION: {},
     OTHER_LEAVE: {},
     PAYMENT: {},
     REVIEW_AND_CONFIRM: {},

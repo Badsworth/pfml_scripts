@@ -86,6 +86,7 @@ export default {
         CONSENT_TO_DATA_SHARING: routes.user.consentToDataSharing,
         START_APPLICATION: routes.applications.start,
         SHOW_APPLICATIONS: routes.applications.index,
+        LINK_APPLICATION: routes.applications.link
       },
     },
     [routes.applications.start]: {
@@ -93,6 +94,12 @@ export default {
       on: {
         CREATE_CLAIM: routes.applications.checklist,
       },
+    },
+    [routes.applications.link]: {
+      meta: {},
+      on: {
+        LINK_CLAIM: routes.applications.link
+      }
     },
     [routes.user.consentToDataSharing]: {
       meta: {},
