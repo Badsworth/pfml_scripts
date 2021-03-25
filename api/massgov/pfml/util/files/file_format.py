@@ -6,6 +6,10 @@ from dataclasses import dataclass
 from typing import Callable, Dict, Optional, Sequence
 
 
+class LineParseError(Exception):
+    """An error when parsing a FileFormat line."""
+
+
 @dataclass
 class FieldFormat:
     property_name: str
@@ -16,8 +20,15 @@ class FieldFormat:
 class FileFormat:
     def __init__(self, format: Sequence[FieldFormat]):
         self.format = format
+        self.line_length = sum(map(lambda field: field.length, format))
 
     def parse_line(self, line: str) -> Dict:
+        line = line.rstrip("\r\n")
+        if len(line) != self.line_length:
+            raise LineParseError(
+                "invalid line length %i (expected %i)" % (len(line), self.line_length)
+            )
+
         object = {}
         start_index = 0
         for column_format in self.format:
@@ -30,14 +41,14 @@ class FileFormat:
             if conversion_function is None:
                 object[property_name] = column_value
             else:
-                object[property_name] = conversion_function(column_value)
+                try:
+                    object[property_name] = conversion_function(column_value)
+                except ValueError:
+                    raise LineParseError("failed to parse field " + property_name)
 
             start_index = end_index
 
         return object
 
     def get_line_length(self):
-        length = 0
-        for column_format in self.format:
-            length = length + column_format.length
-        return length
+        return self.line_length
