@@ -515,6 +515,8 @@ const errors = {
           "Last day of leave must be on or after the first day of leave.",
       },
     },
+    unauthorized_leave_admin:
+      "Sorry, you do not have permission to view that page. To access it, you need to <add-org-link>add that organization</add-org-link> to your account.",
     withholding_amount: {
       incorrect: "The amount does not match our records. Please try again.",
     },
