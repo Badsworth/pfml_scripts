@@ -35,6 +35,7 @@ export function login(credentials: Credentials): void {
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").typeMasked(credentials.password);
   cy.wait(1000);
+  cy.pause()
   cy.contains("button", "Log in").click();
   cy.wait(1000);
   cy.url().should("not.include", "login");
@@ -771,6 +772,7 @@ export function respondToLeaveAdminRequest(
       "This is a generic explanation of the leave admin's response."
     );
   }
+  cy.pause();
   cy.contains("button", "Submit").click();
   cy.contains("Thanks for reviewing the application");
 }
