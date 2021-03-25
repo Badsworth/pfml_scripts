@@ -1,9 +1,11 @@
 import FormLabel from "../../components/FormLabel"
-import InputCaseNumber from "../../components/InputCaseNumber";
+import InputText from "../../components/InputText";
+import Button from "../../components/Button";
 import PropTypes from "prop-types";
 import React from "react"
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps"
+import useThrottledHandler from "../../hooks/useThrottledHandler"
 
 export const LinkApplication = (props) => {
   const { formState, updateFields } = useFormState({caseNumber: ""});
@@ -13,15 +15,28 @@ export const LinkApplication = (props) => {
     formState,
     updateFields,
   });
+
+  const handleSubmit = useThrottledHandler(async (event) => {
+    event.preventDefault();
+    // needs auth
+    await appLogic.claims.link(formState.caseNumber)
+  });
+
   return (
     <React.Fragment>
-    <form>
+    <form className="usa-form" onSubmit={handleSubmit} method="post">
       <FormLabel>Enter your NTN number to link your application</FormLabel>
-      <InputCaseNumber
-        {...getFunctionalInputProps("case-number")}
+      <InputText
+        {...getFunctionalInputProps("caseNumber")}
+        type="text"
+        // label={t("pages.link.caseNumber")}
+        smallLabel
       />
+      <Button type="submit" loading={handleSubmit.isThrottled}>
+        Submit
+        {/* {t("pages.authCreateAccount.createAccountButton")} */}
+      </Button>
     </form>
-    <p>{formState.caseNumber}</p>
     </React.Fragment>
   );
 };

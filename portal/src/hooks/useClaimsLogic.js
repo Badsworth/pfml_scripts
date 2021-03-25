@@ -265,12 +265,29 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     }
   };
 
+  const link = async (claim_id) => {
+    if (!user) return;
+    appErrorsLogic.clearErrors();
+
+    try {
+      const { claim } = await claimsApi.linkClaim(claim_id);
+      console.log("verify this works:", claim)
+      setClaim(claim);
+      const context = { user };
+      const params = { claim_id: claim.application_id };
+      portalFlow.goToNextPage(context, params);
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  }
+
   return {
     claims,
     complete,
     create,
     hasLoadedAll,
     hasLoadedClaimAndWarnings,
+    link,
     load,
     loadAll,
     update,

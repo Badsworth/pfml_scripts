@@ -84,6 +84,21 @@ export default class ClaimsApi extends BaseApi {
   };
 
   /**
+   * Fetches one claim for a user
+   * @returns {Promise<ClaimsApiListResult>} The result of the API call
+   */
+  linkClaim = async (claim_id) => {
+    const { data } = await this.request(
+      "POST",
+      `${claim_id}/link_application`
+    );
+
+    return {
+      claim: new Claim(data),
+    };
+  };
+
+  /**
    * Signal the data entry is complete and application is ready
    * for intake to be marked as complete in the claims processing system.
    *
