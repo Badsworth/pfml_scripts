@@ -72,9 +72,9 @@ class Constants:
         DFML_CASE_ID_FIELD,
         BOARD_NO_FIELD,
         EVENT_ID,
-        INS_FORM_OR_MEET_FIELD,
+        # INS_FORM_OR_MEET_FIELD,
         EVE_CREATED_DATE_FIELD,
-        FORM_RECEIVED_OR_DISPOSITION_FIELD,
+        # FORM_RECEIVED_OR_DISPOSITION_FIELD,
         AWARD_ID_FIELD,
         AWARD_CODE_FIELD,
         AWARD_AMOUNT_FIELD,
@@ -87,11 +87,9 @@ class Constants:
 
     PAYMENT_CSV_FIELD_MAPPINGS = {
         DFML_CASE_ID_FIELD: "absence_case_id",
-        BOARD_NO_FIELD: "board_id",
+        BOARD_NO_FIELD: "board_no",
         EVENT_ID: "event_id",
-        INS_FORM_OR_MEET_FIELD: "",
         EVE_CREATED_DATE_FIELD: "eve_created_date",
-        FORM_RECEIVED_OR_DISPOSITION_FIELD: "",
         AWARD_ID_FIELD: "award_id",
         AWARD_CODE_FIELD: "award_code",
         AWARD_AMOUNT_FIELD: "award_amount",
@@ -298,7 +296,6 @@ def _get_pending_dia_payment_reference_files(
 
 
 def _convert_dict_with_csv_keys_to_db_keys(csv_data: Dict[str, Any]) -> Dict[str, Any]:
-    print(csv_data)
     # Load empty strings as null values.
     return {
         Constants.PAYMENT_CSV_FIELD_MAPPINGS[k]: None if v == "" else v for k, v in csv_data.items()
@@ -345,8 +342,8 @@ def _load_dia_payment_from_reference_file(
     # Create StateLog entry.
     state_log_util.create_finished_state_log(
         associated_model=ref_file,
-        end_state=State.DUA_PAYMENT_LIST_SAVED_TO_DB,
-        outcome=state_log_util.build_outcome("Loaded DUA payment file into database"),
+        end_state=State.DIA_PAYMENT_LIST_SAVED_TO_DB,
+        outcome=state_log_util.build_outcome("Loaded DIA payment file into database"),
         db_session=db_session,
     )
     db_session.commit()

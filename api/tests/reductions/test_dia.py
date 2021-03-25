@@ -170,36 +170,22 @@ def _get_valid_dia_claimant_data() -> Dict[str, Any]:
     }
 
 
-# NTN-3778-ABS-01,
-# 1275118,
-# 10170549,
-# PC,
-# 20180613,
-# 20180608,
-# 2844892,
-# 34,
-# 0,
-# _,
-# 20210107,
-# _,
-# 416.77,
-# 20180613
 def _get_valid_dia_payment_data() -> Dict[str, Any]:
     return {
         "DFML_CASE_ID": "NTN-{}-ABS-01".format(fake.random_int(min=1000, max=9999)),
         "BOARD_NO": fake.random_int(min=100000, max=999999),
         "EVENT_ID": fake.random_int(min=100000, max=999999),
-        "INS_FORM_OR_MEET": "PC",
+        # "INS_FORM_OR_MEET": "PC",
         "EVE_CREATED_DATE": fake.date(pattern="%Y%m%d"),
-        "FORM_RECEIVED_OR_DISPOSITION": "",
-        "AWARD_ID": "",
-        "AWARD_CODE": "",
-        "AWARD_AMOUNT": "",
-        "AWARD_DATE": "",
-        "START_DATE": "",
-        "END_DATE": "",
-        "WEEKLY_AMOUNT": "",
-        "AWARD_CREATED_DATE": "",
+        # "FORM_RECEIVED_OR_DISPOSITION": fake.date(pattern="%Y%m%d"),
+        "AWARD_ID": fake.random_int(min=5, max=2000),
+        "AWARD_CODE": fake.random_int(min=10, max=4000),
+        "AWARD_AMOUNT": fake.random_int(min=100, max=10000),
+        "AWARD_DATE": fake.date(pattern="%Y%m%d"),
+        "START_DATE": fake.date(pattern="%Y%m%d"),
+        "END_DATE": fake.date(pattern="%Y%m%d"),
+        "WEEKLY_AMOUNT": fake.random_int(min=0.0, max=100.0),
+        "AWARD_CREATED_DATE": fake.date(pattern="%Y%m%d"),
     }
 
 
