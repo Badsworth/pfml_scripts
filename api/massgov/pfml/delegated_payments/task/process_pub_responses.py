@@ -58,11 +58,15 @@ def main():
 
     config = Configuration(sys.argv[1:])
 
-    with db.session_scope(make_db_session(), close=True) as db_session:
-        _process_pub_responses(db_session, config)
+    with db.session_scope(make_db_session(), close=True) as db_session, db.session_scope(
+        make_db_session(), close=True
+    ) as log_entry_db_session:
+        _process_pub_responses(db_session, log_entry_db_session, config)
 
 
-def _process_pub_responses(db_session: db.Session, config: Configuration) -> None:
+def _process_pub_responses(
+    db_session: db.Session, log_entry_db_session: db.Session, config: Configuration
+) -> None:
     """Process PUB Responses"""
     logger.info("Start - PUB Responses ECS Task")
 

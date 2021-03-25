@@ -893,6 +893,8 @@ data "aws_iam_policy_document" "pub_payments_create_pub_files_task_role_extras" 
       "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
     ]
 
     effect = "Allow"
@@ -913,6 +915,8 @@ data "aws_iam_policy_document" "pub_payments_create_pub_files_task_role_extras" 
       "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
     ]
 
     effect = "Allow"
@@ -985,6 +989,8 @@ data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extra
       "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
       "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
     ]
 
     effect = "Allow"
@@ -1003,6 +1009,8 @@ data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extra
       "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
       "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
     ]
 
     effect = "Allow"

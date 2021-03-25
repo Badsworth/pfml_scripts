@@ -66,6 +66,14 @@ NOT_SAMPLED_STATE_TRANSITIONS.append(
 
 NOT_SAMPLED_STATE_TRANSITIONS.append(
     NonSampledStateTransitionDescriptor(
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT,
+        State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK,
+        state_log_util.build_outcome("Employer reimbursement to be added to FINEOS Writeback"),
+    )
+)
+
+NOT_SAMPLED_STATE_TRANSITIONS.append(
+    NonSampledStateTransitionDescriptor(
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED,
         State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK,
         state_log_util.build_outcome(
@@ -73,6 +81,7 @@ NOT_SAMPLED_STATE_TRANSITIONS.append(
         ),
     )
 )
+
 
 NOT_SAMPLED_PAYMENT_NEXT_STATE_BY_CURRENT_STATE = {
     t.from_state.state_id: t.to_state for t in NOT_SAMPLED_STATE_TRANSITIONS

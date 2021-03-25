@@ -301,7 +301,9 @@ class ClaimantExtractStep(Step):
                 absence_case_id,
                 extra={"absence_case_id": absence_case_id},
             )
-            self.increment("claim_created_count")
+            # Note that this claim might not get made if there are
+            # validation issues found for the claimant
+            self.increment("claim_not_found_count")
         else:
             logger.info(
                 "Found existing claim for absence_case_id: %s",

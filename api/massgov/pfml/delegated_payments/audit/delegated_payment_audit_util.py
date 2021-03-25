@@ -81,7 +81,7 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
     claim: Claim = payment.claim
     employee: Employee = claim.employee
     employee_address: EmployeeAddress = employee.addresses.first()  # TODO adjust after address validation work to get the most recent valid address
-    address: Address = employee_address.address
+    address: Address = employee_address.address if employee_address else None
     employer: Employer = claim.employer
 
     payment_audit_row = PaymentAuditCSV(
@@ -89,11 +89,11 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         leave_type=get_leave_type(claim),
         first_name=payment.claim.employee.first_name,
         last_name=payment.claim.employee.last_name,
-        address_line_1=address.address_line_one,
-        address_line_2=address.address_line_two,
-        city=address.city,
-        state=address.geo_state.geo_state_description,
-        zip=address.zip_code,
+        address_line_1=address.address_line_one if address else None,
+        address_line_2=address.address_line_two if address else None,
+        city=address.city if address else None,
+        state=address.geo_state.geo_state_description if address and address.geo_state else None,
+        zip=address.zip_code if address else None,
         payment_preference=get_payment_preference(payment),
         scheduled_payment_date=payment.payment_date.isoformat(),
         payment_period_start_date=payment.period_start_date.isoformat(),

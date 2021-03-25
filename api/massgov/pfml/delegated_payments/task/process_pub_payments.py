@@ -71,31 +71,34 @@ def main():
 
     config = Configuration(sys.argv[1:])
 
-    with db.session_scope(make_db_session(), close=True) as db_session:
-        _process_pub_payments(db_session, config)
+    with db.session_scope(make_db_session(), close=True) as db_session, db.session_scope(
+        make_db_session(), close=True
+    ) as log_entry_db_session:
+        _process_pub_payments(db_session, log_entry_db_session, config)
 
 
-def _process_pub_payments(db_session_raw: db.Session, config: Configuration) -> None:
+def _process_pub_payments(
+    db_session: db.Session, log_entry_db_session: db.Session, config: Configuration
+) -> None:
     """Process PUB Payments"""
     logger.info("Start - PUB Payments ECS Task")
 
-    # db_session_raw is used for the log entries and
-    # this db_session is used by each of the steps directly.
-    with db.session_scope(db_session_raw) as db_session:
-        if config.process_audit_reject:
-            PaymentRejectsStep(db_session=db_session, log_entry_db_session=db_session_raw).run()
+    if config.process_audit_reject:
+        PaymentRejectsStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
-        if config.create_pei_writeback:
-            FineosPeiWritebackStep(db_session=db_session, log_entry_db_session=db_session_raw).run()
+    if config.create_pei_writeback:
+        FineosPeiWritebackStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
 
-        if config.split_payment_methods:
-            PaymentMethodsSplitStep(
-                db_session=db_session, log_entry_db_session=db_session_raw
-            ).run()
+    if config.split_payment_methods:
+        PaymentMethodsSplitStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
 
-        if config.pub_transaction:
-            TransactionFileCreatorStep(
-                db_session=db_session, log_entry_db_session=db_session_raw
-            ).run()
+    if config.pub_transaction:
+        TransactionFileCreatorStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
 
     logger.info("Done - PUB Payments ECS Task")

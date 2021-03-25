@@ -73,6 +73,7 @@ PEI_FIELD_NAMES = [
     "PAYEEACCOUNTN",
     "PAYEEACCOUNTT",
     "EVENTTYPE",
+    "PAYEEIDENTIFI",
 ]
 PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "PAYMENTENDPER"]
 PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU"]
@@ -142,6 +143,7 @@ def make_vpei_record(
     account_nbr=None,
     account_type=None,
     payment_type=None,
+    payee_identifier=None,
 ):
     vpei_record = OrderedDict()
     vpei_record["C"] = c_value
@@ -170,6 +172,9 @@ def make_vpei_record(
     vpei_record["PAYEEACCOUNTN"] = get_value(account_nbr, ssn, generate_defaults)
     vpei_record["PAYEEACCOUNTT"] = get_value(account_type, "Checking", generate_defaults)
     vpei_record["EVENTTYPE"] = get_value(payment_type, "PaymentOut", generate_defaults)
+    vpei_record["PAYEEIDENTIFI"] = get_value(
+        payee_identifier, "Social Security Number", generate_defaults
+    )
 
     return vpei_record
 
@@ -1157,6 +1162,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "AMOUNT_MONAMT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "EVENTTYPE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
         ]
     )
     assert set(validation_container.validation_issues) == expected_missing_values

@@ -1814,6 +1814,21 @@ class State(LookupTable):
         147, "cancellation payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
     )
 
+    # Report states for employer reimbursement payment states
+    DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT = LkState(
+        148,
+        "Waiting for Payment Audit Report response - employer reimbursement payment",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+    DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
+        149,
+        "Add employer reimbursement payment to FINEOS Writeback",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+    DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+        150, "Employer reimbursement payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
 
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType

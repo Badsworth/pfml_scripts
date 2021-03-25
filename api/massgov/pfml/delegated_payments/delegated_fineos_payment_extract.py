@@ -73,6 +73,8 @@ OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = set(
     ["Overpayment"]
 )  # There may be multiple types needed here, need to test further to know
 
+SOCIAL_SECURITY_NUMBER = "Social Security Number"
+
 
 @dataclass(frozen=True, eq=True)
 class CiIndex:
@@ -143,7 +145,7 @@ class PaymentData:
     tin: Optional[str] = None
     absence_case_number: Optional[str] = None
 
-    full_name: Optional[str] = None
+    payee_identifier: Optional[str] = None
 
     address_line_one: Optional[str] = None
     address_line_two: Optional[str] = None
@@ -194,8 +196,8 @@ class PaymentData:
                 payments_util.ValidationReason.MISSING_FIELD, "ABSENCECASENU"
             )
 
-        self.full_name = payments_util.validate_csv_input(
-            "PAYEEFULLNAME", pei_record, self.validation_container, False
+        self.payee_identifier = payments_util.validate_csv_input(
+            "PAYEEIDENTIFI", pei_record, self.validation_container, True
         )
 
         self.raw_payment_method = payments_util.validate_csv_input(
@@ -328,10 +330,8 @@ class PaymentData:
     def payment_period_date_validator(
         self, payment_period_date_str: str
     ) -> Optional[payments_util.ValidationReason]:
-        now = payments_util.get_now()
-        payment_period_date = datetime.strptime(payment_period_date_str, "%Y-%m-%d %H:%M:%S")
-        if payment_period_date.date() > now.date():
-            return payments_util.ValidationReason.INVALID_VALUE
+        # Convert the str into a date to validate the format
+        datetime.strptime(payment_period_date_str, "%Y-%m-%d %H:%M:%S")
         return None
 
     def get_traceable_details(self) -> Dict[str, Optional[str]]:
@@ -494,6 +494,13 @@ class PaymentExtractStep(Step):
     def get_employee_and_claim(
         self, payment_data: PaymentData
     ) -> Tuple[Optional[Employee], Optional[Claim]]:
+        # If the payee_identifier isn't SSN (ie. is an ID or TIN), we want
+        # to skip fetching the employee and claim entirely as we're assuming
+        # that it is the employer. Note that this isn't 100% correct, and a
+        # more sophisticated approach will be added in the future.
+        if payment_data.payee_identifier != SOCIAL_SECURITY_NUMBER:
+            return None, None
+
         # Get the TIN, employee and claim associated with the payment to be made
         employee, claim = None, None
         try:
@@ -546,6 +553,11 @@ class PaymentExtractStep(Step):
 
         # Do a few validations on the claim+employee
         if claim:
+            if not claim.employee_id and employee:
+                # This means we previously created this claim, but didn't have the employee
+                # yet in our system, but have them now. In this case, we want to attach
+                # the employee to the claim. I'm not sure if this is a valid scenario?
+                self.increment("claim_without_employee_found_count")
             if not employee and claim.employee:
                 # Somehow we have ended up in a state where we could not find an employee
                 # but did find a claim with some other employee ID. This shouldn't happen
@@ -556,10 +568,7 @@ class PaymentExtractStep(Step):
                     claim.employee.employee_id,
                     extra=payment_data.get_traceable_details(),
                 )
-                raise Exception(
-                    "Could not find employee for payment, but found a claim",
-                    extra=payment_data.get_traceable_details(),
-                )
+                raise Exception("Could not find employee for payment, but found a claim")
 
             if employee and claim.employee and employee.employee_id != claim.employee.employee_id:
                 # We've found a claim with a different employee ID, this shouldn't happen
@@ -593,7 +602,7 @@ class PaymentExtractStep(Step):
             if payment_data.address_line_two
             else None,
             city=payment_data.city,
-            geo_state_id=GeoState.get_id(payment_data.state),
+            geo_state_id=GeoState.get_id(payment_data.state) if payment_data.state else None,
             zip_code=payment_data.zip_code,
             address_type_id=AddressType.MAILING.address_type_id,
         )
@@ -873,17 +882,22 @@ class PaymentExtractStep(Step):
 
         return payment
 
-    def _setup_state_log(
-        self, payment: Payment, validation_container: payments_util.ValidationContainer
-    ) -> None:
+    def _setup_state_log(self, payment: Payment, payment_data: PaymentData) -> None:
 
         # https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
         # Does the payment have validation issues
         # If so, add to that error state
-        if validation_container.has_validation_issues():
+        if payment_data.validation_container.has_validation_issues():
             end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
             message = "Error processing payment record"
             self.increment("errored_payment_count")
+
+        elif payment_data.payee_identifier != SOCIAL_SECURITY_NUMBER:
+            end_state = (
+                State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT
+            )
+            message = "Employer reimbursement added to pending state for FINEOS writeback"
+            self.increment("employer_reimbursement_count")
 
         # Zero dollar payments are added to the FINEOS writeback + a report
         elif (
@@ -926,7 +940,7 @@ class PaymentExtractStep(Step):
 
         state_log_util.create_finished_state_log(
             end_state=end_state,
-            outcome=state_log_util.build_outcome(message, validation_container),
+            outcome=state_log_util.build_outcome(message, payment_data.validation_container),
             associated_model=payment,
             db_session=self.db_session,
         )
@@ -960,7 +974,7 @@ class PaymentExtractStep(Step):
                 # record to an error state which'll send out a report to address it, otherwise
                 # it will move onto the next step in processing
                 self._setup_state_log(
-                    payment, payment_data.validation_container,
+                    payment, payment_data,
                 )
 
                 logger.info(

@@ -72,13 +72,13 @@ class TransactionFileCreatorStep(Step):
         self._create_ach_file_if_not_exists()
 
         # add eligible employee eft prenotes to transaction file
-        employees_with_eft: List[
+        employees_with_efts: List[
             Tuple[Employee, PubEft]
         ] = self._get_eft_eligible_employees_with_eft()
-        add_eft_prenote_to_nacha_file(self.ach_file, employees_with_eft)
+        add_eft_prenote_to_nacha_file(self.ach_file, employees_with_efts)
 
         # transition eft states for employee
-        for employee_with_eft in employees_with_eft:
+        for employee_with_eft in employees_with_efts:
             employee: Employee = employee_with_eft[0]
             eft: PubEft = employee_with_eft[1]
 
@@ -92,7 +92,9 @@ class TransactionFileCreatorStep(Step):
                 db_session=self.db_session,
             )
 
-        logger.info("Done adding EFT prenotes to PUB transaction file: %i", len(employee_with_eft))
+        logger.info(
+            "Done adding EFT prenotes to PUB transaction file: %i", len(employees_with_efts)
+        )
 
     def add_ach_payments(self) -> None:
         logger.info("Start adding ACH payments to PUB transaction file")
