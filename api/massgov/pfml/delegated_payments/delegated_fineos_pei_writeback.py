@@ -56,6 +56,7 @@ class PeiWritebackItem:
 ACTIVE_WRITEBACK_RECORD_STATUS = "Active"
 PAID_WRITEBACK_RECORD_TRANSACTION_STATUS = "Paid"
 PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS = "Processed"
+ERROR_WRITEBACK_RECORD_TRANSACTION_STATUS = "Error"
 WRITEBACK_FILE_SUFFIX = "-pei_writeback.csv"
 
 PEI_WRITEBACK_CSV_ENCODERS: csv_util.Encoders = {
@@ -90,6 +91,7 @@ class FineosPeiWritebackStep(Step):
         logger.info("Processing payments for PEI writeback")
 
         pei_writeback_items: List[PeiWritebackItem] = self.get_records_to_writeback()
+
         if not pei_writeback_items:
             logger.info("No payment records for PEI writeback. Exiting early.")
             return
@@ -155,6 +157,23 @@ class FineosPeiWritebackStep(Step):
         )
         self.set_metrics(cancelled_payment_count=cancelled_payment_count)
 
+        errored_payment_writeback_items = self._get_writeback_items_for_state(
+            prior_state=State.ADD_TO_ERRORED_PEI_WRITEBACK,
+            end_state=State.ERRORED_PEI_WRITEBACK_SENT,
+            writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
+            transaction_status=ERROR_WRITEBACK_RECORD_TRANSACTION_STATUS,
+        )
+
+        errored_payment_writeback_items_count = len(errored_payment_writeback_items)
+        logger.info(
+            "Found %i extracted writeback items in state: %s",
+            errored_payment_writeback_items_count,
+            State.ADD_TO_ERRORED_PEI_WRITEBACK.state_description,
+        )
+        self.set_metrics(
+            errored_payment_writeback_items_count=errored_payment_writeback_items_count
+        )
+
         # TODO: Add disbursed payments to this writeback using the same pattern as above but with a
         # writeback_record_converter of _disbursed_payment_to_pei_writeback_record.
 
@@ -163,6 +182,7 @@ class FineosPeiWritebackStep(Step):
             + overpayment_writeback_items
             + accepted_payment_writeback_items
             + cancelled_payment_writeback_items
+            + errored_payment_writeback_items
         )
 
     def _get_writeback_items_for_state(

@@ -1829,6 +1829,15 @@ class State(LookupTable):
         150, "Employer reimbursement payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
     )
 
+    # PEI WRITE BACK ERROR TO FINEOS
+    ADD_TO_ERRORED_PEI_WRITEBACK = LkState(
+        151, "Add to Errored PEI writeback", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    ERRORED_PEI_WRITEBACK_SENT = LkState(
+        152, "Errored PEI write back sent to FINEOS", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
 
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType
