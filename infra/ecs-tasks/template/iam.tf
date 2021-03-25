@@ -1030,6 +1030,18 @@ data "aws_iam_policy_document" "reductions_workflow_task_role_extras" {
       "${data.aws_s3_bucket.agency_transfer.arn}/*"
     ]
   }
+
+  statement {
+    sid    = "AllowSESSendEmail"
+    effect = "Allow"
+
+    actions = [
+      "ses:SendEmail",
+      "ses:SendRawEmail"
+    ]
+
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role" "reductions_workflow_execution_role" {
