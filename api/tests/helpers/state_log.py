@@ -11,6 +11,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     Payment,
     PaymentMethod,
+    PrenoteState,
     StateLog,
     TaxIdentifier,
 )
@@ -18,8 +19,10 @@ from massgov.pfml.db.models.factories import (
     ClaimFactory,
     EftFactory,
     EmployeeFactory,
+    EmployeePubEftPairFactory,
     EmployerFactory,
     PaymentFactory,
+    PubEftFactory,
     ReferenceFileFactory,
     TaxIdentifierFactory,
 )
@@ -47,6 +50,7 @@ class AdditionalParams:
     add_claim_payment_for_employee: bool = False
     payment: Optional[Payment] = None
     add_eft: bool = False
+    add_pub_eft: bool = False
 
 
 def setup_db_for_state_log(associated_class, additional_params=None):
@@ -98,6 +102,15 @@ def setup_db_for_state_log(associated_class, additional_params=None):
                 disb_method_id=PaymentMethod.ACH.payment_method_id,
                 claim=claim,
             )
+
+        if additional_params.add_pub_eft:
+            pub_eft = PubEftFactory.build(prenote_state_id=PrenoteState.APPROVED.prenote_state_id)
+            print(pub_eft.bank_account_type_id)
+
+            EmployeePubEftPairFactory.build(employee=employee, pub_eft=pub_eft)
+            associated_model.pub_eft = pub_eft
+            associated_model.payment_method_id = PaymentMethod.ACH.payment_method_id
+
     if associated_class == state_log_util.AssociatedClass.REFERENCE_FILE:
         associated_model = ReferenceFileFactory.create()
     return associated_model

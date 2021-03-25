@@ -1,4 +1,5 @@
 import decimal
+import random
 from datetime import datetime, timedelta
 from math import floor
 from typing import Any
@@ -36,11 +37,64 @@ class Constants:
     # 94 bytes specified by the format.
     record_size = "094"
 
+    checking_return_trans_code = "21"
     checking_deposit_trans_code = "22"
     checking_prenote_trans_code = "23"
+    savings_return_trans_code = "31"
     savings_deposit_trans_code = "32"
     savings_prenote_trans_code = "33"
+
     batch_number = "0000001"  # We will only send 1 batch per day
+
+    addendum_record_type = "7"
+    addendum_type_return = "99"
+    addendum_type_notification_change = "98"
+
+    # "C" codes documented here: https://www.vericheck.com/ach-notification-of-change-noc-codes/
+    addendum_change_reason_codes = [
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06",
+        "C07",
+        "C09",
+        "C10",
+        "C11",
+        "C12",
+    ]
+
+    # "R" codes documented here: https://www.vericheck.com/ach-return-codes/
+    addendum_return_reason_codes = [
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07",
+        "R08",
+        "R09",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R15",
+        "R16",
+        "R17",
+        "R20",
+        "R21",
+        "R22",
+        "R23",
+        "R24",
+        "R29",
+        "R31",
+        "R33",
+    ]
+
+    addendum_return_types = ["98", "99"]
 
 
 class NachaFile:
@@ -114,17 +168,29 @@ class NachaBatch:
         # Initialize the entries list
         self.entries = []
 
+        self.addenda = []
+
         # We only need 1 batch
         self.batch_number = Constants.batch_number
 
         # Create Header and Control records
         self.batch_header = NachaBatchHeader(effective_date, today)
 
-    def add_entry(self, entry):
-        entry.set_value(
-            "trace_number", Constants.odfi_id + str(len(self.entries) + 1).rjust(7, "0")
-        )
+    def add_entry(self, entry, addendum=None):
+        trace_number = Constants.odfi_id + str(len(self.entries) + 1).rjust(7, "0")
+        entry.set_value("trace_number", trace_number)
+
+        if addendum is not None:
+            entry.set_value("addenda", "1")
+
+            addendum.set_value("original_trace_number", trace_number)
+            addendum.set_value("trace_number", trace_number)
+            addendum.set_value("original_receiving_dfi_id", entry.get_value("receiving_dfi_id"))
+
         self.entries.append(entry)
+
+        if addendum is not None:
+            self.entries.append(addendum)
 
     def finalize(self):
         # Calculate and set the Entry Hash
@@ -132,6 +198,9 @@ class NachaBatch:
         debit_amount = 0
         credit_amount = 0
         for entry in self.entries:
+            if entry.get_value("record_type") != Constants.entry_record_type:
+                continue
+
             entry_hash += int(entry.get_value("receiving_dfi_id"))
             # Currently we do not support debits, but this is here anyway
             if Constants.service_code in (
@@ -159,6 +228,7 @@ class NachaBatch:
         header = self.batch_header.data
         control = self.batch_control.data
         entries = NACHA_EOL.join(entry.to_bytes() for entry in self.entries)
+
         return NACHA_EOL.join([header, entries, control])
 
 
@@ -389,6 +459,37 @@ class NachaEntry(NachaRecord):
         }
 
         NachaRecord.__init__(self, fields)
+
+
+class NachaAddendumResponse(NachaRecord):
+    def __init__(self, date_of_death, return_type, return_reason_code):
+
+        fields = {
+            "record_type": NachaField("Record Type", 1, 1, Constants.addendum_record_type),
+            "type_code": NachaField("Addenda Type Code", 2, 3, return_type),
+            "return_reason_code": NachaField(
+                "Return reason code", 4, 6, return_reason_code  # TODO: Fix
+            ),
+            "original_trace_number": NumericNachaField(
+                "Original trace number", 7, 21, 0
+            ),  # This is filled in later
+            "date_of_death": AlphanumericNachaField("Date of death", 22, 27, date_of_death),
+            "original_receiving_dfi_id": NumericNachaField(
+                "Original receiving DFI identification", 28, 35, 0
+            ),  # This is filled in later
+            "addenda_information": AlphanumericNachaField("Addenda information", 36, 79, ""),
+            "trace_number": NachaField("Trace Number", 80, 94, ""),
+        }
+
+        NachaRecord.__init__(self, fields)
+
+    @classmethod
+    def random_return_type(cls):
+        return random.choice(Constants.addendum_return_types)
+
+    @classmethod
+    def random_reason(cls):
+        return random.choice(Constants.addendum_return_reason_codes)
 
 
 class NachaError(Exception):

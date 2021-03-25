@@ -184,6 +184,10 @@ delegated-payment-audit-rejects-generate:
 	mkdir -p mock_payment_rejects_files
 	$(PY_RUN_CMD) delegated-payment-audit-rejects-generate --folder mock_payment_rejects_files $(DECODE_LOG)
 
+delegated-payment-eft-response-generate:
+	mkdir -p mock_payment_eft_response
+	$(PY_RUN_CMD) delegated-payment-eft-response-generate --skiprate 50 --folder mock_payment_eft_response $(DECODE_LOG)
+
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	aws ecr get-login-password --region 'us-east-1' | \

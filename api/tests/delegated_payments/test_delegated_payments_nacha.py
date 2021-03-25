@@ -21,6 +21,9 @@ from massgov.pfml.db.models.factories import (
     PaymentFactory,
     PubEftFactory,
 )
+from massgov.pfml.delegated_payments.audit.mock.pub_outbound_file_generator import (
+    generate_pub_return,
+)
 from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     add_eft_prenote_to_nacha_file,
     add_payments_to_nacha_file,
@@ -162,6 +165,7 @@ def build_employee_with_eft(prenote_state: LkPrenoteState) -> Tuple[Employee, Pu
     pub_eft = PubEftFactory.build(prenote_state_id=prenote_state.prenote_state_id)
     EmployeePubEftPairFactory.build(employee=employee, pub_eft=pub_eft)
 
+    print(pub_eft.bank_account_type_id)
     return (employee, pub_eft)
 
 
@@ -175,3 +179,13 @@ def build_payment(payment_method: LkPaymentMethod):
         claim=claim, pub_eft=pub_eft, disb_method_id=payment_method.payment_method_id
     )
     return payment
+
+
+def test_generate_eft_response(initialize_factories_session, test_db_session, tmp_path):
+
+    prenote_scenario_data, ach_scenario_data = generate_pub_return(test_db_session, tmp_path)
+
+    # TODO: read and parse NACHA file, compare to scenarios
+
+    # assert False
+    # generated_nacha_file.to_bytes()

@@ -65,7 +65,7 @@ def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]):
             raise Exception(f"Non-ACH payment method for payment: {payment.payment_id}")
 
         entry = NachaEntry(
-            trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False),
+            trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False, False),
             receiving_dfi_id=payment.pub_eft.routing_nbr,
             dfi_act_num=payment.pub_eft.account_nbr,
             amount=payment.amount,
@@ -95,7 +95,7 @@ def add_eft_prenote_to_nacha_file(
             )
 
         entry = NachaEntry(
-            trans_code=get_trans_code(pub_eft.bank_account_type_id, True),
+            trans_code=get_trans_code(pub_eft.bank_account_type_id, True, False),
             receiving_dfi_id=pub_eft.routing_nbr,
             dfi_act_num=pub_eft.account_nbr,
             amount=Decimal("0.00"),
@@ -106,16 +106,20 @@ def add_eft_prenote_to_nacha_file(
         nacha_batch.add_entry(entry)
 
 
-def get_trans_code(bank_account_type_id: int, is_prenote: bool) -> str:
+def get_trans_code(bank_account_type_id: int, is_prenote: bool, is_return: bool) -> str:
     if bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id:
         if is_prenote:
             return Constants.checking_prenote_trans_code
+        elif is_return:
+            return Constants.checking_return_trans_code
         else:
             return Constants.checking_deposit_trans_code
 
     elif bank_account_type_id == BankAccountType.SAVINGS.bank_account_type_id:
         if is_prenote:
             return Constants.savings_deposit_trans_code
+        elif is_return:
+            return Constants.savings_return_trans_code
         else:
             return Constants.savings_prenote_trans_code
 
