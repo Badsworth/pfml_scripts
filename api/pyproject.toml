@@ -27,7 +27,7 @@ paramiko = "^2.7.2"
 phonenumbers = "^8.12.13"
 psycopg2-binary = "^2.8.5"
 puremagic = "^1.10"
-pydantic = "^1.5.1"
+pydantic = {extras = ["dotenv"], version = "^1.8.1"}
 pydash = "^4.7.6"
 pyodbc = {version = "^4.0.30", optional = true}
 python = "^3.8"

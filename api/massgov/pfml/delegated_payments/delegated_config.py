@@ -2,12 +2,12 @@ import os
 from dataclasses import dataclass
 
 import massgov.pfml.util.logging
+from massgov.pfml.util.pydantic import PydanticBaseSettings
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-@dataclass
-class PaymentsS3Config:
+class PaymentsS3Config(PydanticBaseSettings):
     """Config for Delegated Payments S3 Buckets
 
     This config is a wrapper around S3 paths (eg. s3://bucket/path/to/folder/).
@@ -76,33 +76,7 @@ class PaymentsS3Config:
 
 
 def get_s3_config() -> PaymentsS3Config:
-    return PaymentsS3Config(
-        fineos_data_export_path=str(os.environ.get("FINEOS_DATA_EXPORT_PATH")),
-        fineos_data_import_path=str(os.environ.get("FINEOS_DATA_IMPORT_PATH")),
-        pfml_pub_inbound_path=str(os.environ.get("PFML_PUB_INBOUND_PATH")),
-        pfml_pub_outbound_path=str(os.environ.get("PFML_PUB_OUTBOUND_PATH")),
-        pfml_fineos_inbound_path=str(os.environ.get("PFML_FINEOS_INBOUND_PATH")),
-        pfml_fineos_outbound_path=str(os.environ.get("PFML_FINEOS_OUTBOUND_PATH")),
-        pfml_error_reports_path=str(os.environ.get("PFML_ERROR_REPORTS_PATH")),
-        payment_audit_report_outbound_folder_path=str(
-            os.environ.get("PAYMENT_AUDIT_REPORT_OUTBOUND_FOLDER_PATH")
-        ),
-        payment_audit_report_sent_folder_path=str(
-            os.environ.get("PAYMENT_AUDIT_REPORT_SENT_FOLDER_PATH")
-        ),
-        payment_rejects_received_folder_path=str(
-            os.environ.get("PAYMENT_REJECTS_RECEIVED_FOLDER_PATH")
-        ),
-        payment_rejects_processed_folder_path=str(
-            os.environ.get("PAYMENT_REJECTS_PROCESSED_FOLDER_PATH")
-        ),
-        payment_rejects_report_outbound_folder=str(
-            os.environ.get("PAYMENT_REJECTS_REPORT_OUTBOUND_FOLDER")
-        ),
-        payment_rejects_report_sent_folder_path=str(
-            os.environ.get("PAYMENT_REJECTS_REPORT_SENT_FOLDER_PATH")
-        ),
-    )
+    return PaymentsS3Config()
 
 
 @dataclass
@@ -220,8 +194,7 @@ def get_email_config() -> PaymentsEmailConfig:
     return payments_email_config
 
 
-@dataclass
-class PaymentsDateConfig:
+class PaymentsDateConfig(PydanticBaseSettings):
     """Config for Payments dates
 
     PFML API processes the following timestamped files from FINEOS:
@@ -241,10 +214,7 @@ class PaymentsDateConfig:
 
 
 def get_date_config() -> PaymentsDateConfig:
-    payments_date_config = PaymentsDateConfig(
-        fineos_vendor_max_history_date=str(os.getenv("FINEOS_VENDOR_MAX_HISTORY_DATE")),
-        fineos_payment_max_history_date=str(os.getenv("FINEOS_PAYMENT_MAX_HISTORY_DATE")),
-    )
+    payments_date_config = PaymentsDateConfig()
 
     logger.info(
         "Constructed payments date config",
