@@ -39,6 +39,10 @@ const flagsConfig = {
     // TODO (EMPLOYER-656): Show adjudication status once it is retrieved from FINEOS
     employerShowAdjudicationStatus: false,
 
+    // When this flag is enabled, dashboard-related features are displayed
+    // TODO (EMPLOYER-1054): Remove flag
+    employerShowDashboard: false,
+
     // When this flag is enabled, the News Banner is visible
     // This will be reused to announce future features and comms
     employerShowNewsBanner: false,
