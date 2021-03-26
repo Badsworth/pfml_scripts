@@ -20,6 +20,7 @@ import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../../src/routes";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
+import { AdjudicationStatusType } from "../../../models/BaseClaim";
 
 export const Status = (props) => {
   const {
@@ -48,6 +49,17 @@ export const Status = (props) => {
   const shouldShowAdjudicationStatus = isFeatureEnabled(
     "employerShowAdjudicationStatus"
   );
+
+  const getStateByAdjudicationStatus = (claim_status) => {
+    const status = findKeyByValue(AdjudicationStatusType, claim_status);
+    if (status === "approved") {
+      return "success";
+    } else if (status === "pending") {
+      return "warning";
+    } else if (status === "denied") {
+      return "error";
+    }
+  };
 
   return (
     <React.Fragment>
@@ -78,7 +90,10 @@ export const Status = (props) => {
       {/* TODO (EMPLOYER-656): Display adjudication status */}
       {shouldShowAdjudicationStatus && (
         <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
-          <Tag state="success" />
+          <Tag
+            state={getStateByAdjudicationStatus(claim.status)}
+            label={findKeyByValue(AdjudicationStatusType, claim.status)}
+          />
         </StatusRow>
       )}
       <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>

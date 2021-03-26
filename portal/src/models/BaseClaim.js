@@ -115,4 +115,14 @@ class BaseClaim extends BaseModel {
   }
 }
 
+/**
+ * Enums for status field
+ * @enum {string}
+ */
+export const AdjudicationStatusType = {
+  pending: "Undecided",
+  approved: "Approved",
+  denied: "Declined",
+};
+
 export default BaseClaim;
