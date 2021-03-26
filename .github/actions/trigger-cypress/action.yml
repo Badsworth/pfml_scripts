@@ -11,6 +11,8 @@ inputs:
   github_token:
     decription: "A Github token that is authorized to trigger workflows"
     required: true
+  github_branch:
+    description: "Alternative Github branch to pull the E2E test suite from."
   workflow_id:
     description: "The ID of the E2E workflow"
     default: "e2e-cypress.yml"
@@ -22,9 +24,14 @@ runs:
   using: "composite"
   steps:
     - run: |
-        # Capture the reference we need to trigger for. If we're inside a PR for any reason,
-        # this will be $GITHUB_HEAD_REF. Otherwise, extract the branch name from $GITHUB_REF.
-        REF=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+        if [ -z "${{ inputs.github_branch }}" ]; then
+          # Capture the reference we need to trigger for. If we're inside a PR for any reason,
+          # this will be $GITHUB_HEAD_REF. Otherwise, extract the branch name from $GITHUB_REF.
+          REF=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+        else
+          REF=${{ inputs.github_branch }}
+        fi
+
         echo "Proceeding with ref: $REF"
 
         function get_running_workflow() {
