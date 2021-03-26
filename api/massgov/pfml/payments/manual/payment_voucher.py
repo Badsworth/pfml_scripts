@@ -438,12 +438,15 @@ def download_and_index_voucher_data(
 
 def write_writeback_row(index, writeback_csv):
     """Write a single row to the FINEOS Writeback CSV."""
+
+    # Note: the trans_status_date is hardcoded because it is just a hint to manual
+    # process. Hardcoding to 12:00:00 to avoid any timezone issues.
     writeback_row = WritebackCSV(
         c_value=index.c,
         i_value=index.i,
         status="Active",
         transaction_status="",
-        trans_status_date=datetime.datetime.now().strftime("%Y-%m-%d"),
+        trans_status_date=datetime.datetime.now().strftime("%Y-%m-%d 12:00:00"),
         stock_no="",
     )
     writeback_csv.writerow(asdict(writeback_row))
