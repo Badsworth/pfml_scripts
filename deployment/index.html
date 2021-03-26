@@ -9,7 +9,7 @@
       
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.6">
     
     
@@ -18,10 +18,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.2c0c5eaf.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.2c0c5eaf.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.7fa14f5b.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.7fa14f5b.min.css">
         
       
     
@@ -69,7 +69,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="PFML" class="md-header__button md-logo" aria-label="PFML" data-md-component="logo">
+    <a href=".." title="PFML" class="md-header__button md-logo" aria-label="PFML" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -163,7 +163,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="PFML" class="md-nav__button md-logo" aria-label="PFML" data-md-component="logo">
+    <a href=".." title="PFML" class="md-nav__button md-logo" aria-label="PFML" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -195,7 +195,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         Massachusetts PFML (Portal and API)
       </a>
     </li>
@@ -210,7 +210,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../contributing/" class="md-nav__link">
+      <a href="../contributing/" class="md-nav__link">
         Contributing
       </a>
     </li>
@@ -225,7 +225,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../creating-environments/" class="md-nav__link">
+      <a href="../creating-environments/" class="md-nav__link">
         Setting up a new environment
       </a>
     </li>
@@ -236,56 +236,6 @@
       
       
 
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../tools/" class="md-nav__link">
-        Tools
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-    
-  
-  
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" checked>
-      
-      <label class="md-nav__link" for="__nav_5">
-        Api
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-      <nav class="md-nav" aria-label="Api" data-md-level="1">
-        <label class="md-nav__title" for="__nav_5">
-          <span class="md-nav__icon md-icon"></span>
-          Api
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../db-roles-and-users/" class="md-nav__link">
-        Database Users
-      </a>
-    </li>
-  
-
-          
-            
   
   
     
@@ -321,16 +271,30 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#triggering-a-deployment" class="md-nav__link">
-    Triggering a deployment
+  <a href="#deploying-to-an-environment" class="md-nav__link">
+    Deploying to an environment
   </a>
   
-    <nav class="md-nav" aria-label="Triggering a deployment">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-environment-coordination" class="md-nav__link">
+    Test Environment Coordination
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Environment Coordination">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#branch-to-environment-mapping" class="md-nav__link">
-    Branch-to-environment mapping
+  <a href="#during-testing" class="md-nav__link">
+    During Testing
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#after-testing" class="md-nav__link">
+    After Testing
   </a>
   
 </li>
@@ -341,8 +305,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#communications" class="md-nav__link">
-    Communications
+  <a href="#branch-to-environment-mapping" class="md-nav__link">
+    Branch-to-environment mapping
   </a>
   
 </li>
@@ -354,69 +318,18 @@
     </li>
   
 
-          
-            
+    
+      
+      
+      
+
   
   
   
     <li class="md-nav__item">
-      <a href="../environment-variables/" class="md-nav__link">
-        Environment Variables
+      <a href="../tools/" class="md-nav__link">
+        Tools
       </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../fields-and-validations/" class="md-nav__link">
-        Fields and validations
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../monitoring/" class="md-nav__link">
-        API Monitoring
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../ses/" class="md-nav__link">
-        Ses
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../writing-tests/" class="md-nav__link">
-        Writing Tests
-      </a>
-    </li>
-  
-
-          
-        </ul>
-      </nav>
     </li>
   
 
@@ -435,13 +348,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
       
       <label class="md-nav__link" for="__nav_6">
-        Portal
+        Api
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Portal" data-md-level="1">
+      <nav class="md-nav" aria-label="Api" data-md-level="1">
         <label class="md-nav__title" for="__nav_6">
           <span class="md-nav__icon md-icon"></span>
-          Portal
+          Api
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -450,8 +363,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../portal/browser-support/" class="md-nav__link">
-        Browser support
+      <a href="../api/db-roles-and-users/" class="md-nav__link">
+        Database Users
       </a>
     </li>
   
@@ -462,8 +375,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../portal/creating-environments/" class="md-nav__link">
-        Setting up a new environment
+      <a href="../api/environment-variables/" class="md-nav__link">
+        Environment Variables
       </a>
     </li>
   
@@ -474,8 +387,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../portal/deployment/" class="md-nav__link">
-        Deployment
+      <a href="../api/fields-and-validations/" class="md-nav__link">
+        Fields and validations
       </a>
     </li>
   
@@ -486,8 +399,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../portal/development/" class="md-nav__link">
-        Portal Development
+      <a href="../api/monitoring/" class="md-nav__link">
+        API Monitoring
       </a>
     </li>
   
@@ -498,8 +411,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../portal/environment-variables/" class="md-nav__link">
-        Environment variables
+      <a href="../api/ses/" class="md-nav__link">
+        Ses
       </a>
     </li>
   
@@ -510,116 +423,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../portal/error-handling/" class="md-nav__link">
-        Error handling
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../portal/feature-flags/" class="md-nav__link">
-        Feature flags
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../portal/internationalization/" class="md-nav__link">
-        Internationalization
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../portal/maintenance-pages/" class="md-nav__link">
-        Maintenance pages
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../portal/monitoring/" class="md-nav__link">
-        Monitoring
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../portal/naming-conventions/" class="md-nav__link">
-        Naming conventions
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../portal/software-architecture/" class="md-nav__link">
-        Software Architecture
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../portal/storybook/" class="md-nav__link">
-        Storybook
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../portal/tests/" class="md-nav__link">
-        Tests
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../portal/web-analytics/" class="md-nav__link">
-        Web Analytics
+      <a href="../api/writing-tests/" class="md-nav__link">
+        Writing Tests
       </a>
     </li>
   
@@ -645,11 +450,209 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
       
       <label class="md-nav__link" for="__nav_7">
+        Portal
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Portal" data-md-level="1">
+        <label class="md-nav__title" for="__nav_7">
+          <span class="md-nav__icon md-icon"></span>
+          Portal
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/browser-support/" class="md-nav__link">
+        Browser support
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/creating-environments/" class="md-nav__link">
+        Setting up a new environment
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/development/" class="md-nav__link">
+        Portal Development
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/environment-variables/" class="md-nav__link">
+        Environment variables
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/error-handling/" class="md-nav__link">
+        Error handling
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/feature-flags/" class="md-nav__link">
+        Feature flags
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/internationalization/" class="md-nav__link">
+        Internationalization
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/maintenance-pages/" class="md-nav__link">
+        Maintenance pages
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/monitoring/" class="md-nav__link">
+        Monitoring
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/naming-conventions/" class="md-nav__link">
+        Naming conventions
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/software-architecture/" class="md-nav__link">
+        Software Architecture
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/storybook/" class="md-nav__link">
+        Storybook
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/tests/" class="md-nav__link">
+        Tests
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../portal/web-analytics/" class="md-nav__link">
+        Web Analytics
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
+      
+      <label class="md-nav__link" for="__nav_8">
         Releases
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Releases" data-md-level="1">
-        <label class="md-nav__title" for="__nav_7">
+        <label class="md-nav__title" for="__nav_8">
           <span class="md-nav__icon md-icon"></span>
           Releases
         </label>
@@ -660,7 +663,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../releases/api/" class="md-nav__link">
+      <a href="../releases/api/" class="md-nav__link">
         Api
       </a>
     </li>
@@ -672,7 +675,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../releases/portal/" class="md-nav__link">
+      <a href="../releases/portal/" class="md-nav__link">
         Portal
       </a>
     </li>
@@ -710,16 +713,30 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#triggering-a-deployment" class="md-nav__link">
-    Triggering a deployment
+  <a href="#deploying-to-an-environment" class="md-nav__link">
+    Deploying to an environment
   </a>
   
-    <nav class="md-nav" aria-label="Triggering a deployment">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-environment-coordination" class="md-nav__link">
+    Test Environment Coordination
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Environment Coordination">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#branch-to-environment-mapping" class="md-nav__link">
-    Branch-to-environment mapping
+  <a href="#during-testing" class="md-nav__link">
+    During Testing
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#after-testing" class="md-nav__link">
+    After Testing
   </a>
   
 </li>
@@ -730,8 +747,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#communications" class="md-nav__link">
-    Communications
+  <a href="#branch-to-environment-mapping" class="md-nav__link">
+    Branch-to-environment mapping
   </a>
   
 </li>
@@ -748,71 +765,102 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/EOLWD/PFML/edit/master/docs/api/deployment.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/EOLWD/PFML/edit/master/docs/deployment.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
                 <h1 id="deployment">Deployment</h1>
 <p>Deployments to all environments are managed through GitHub Actions.</p>
-<p>The <code>main</code> branch is automatically deployed to <code>test</code> as pull requests are merged into it.</p>
-<p>Unlike deployments to <code>test</code>, all deployments to <code>training, performance, stage</code> and <code>prod</code> are triggered manually.</p>
-<hr />
-<h3 id="triggering-a-deployment">Triggering a deployment</h3>
-<p>To deploy the API:</p>
 <ul>
-<li>Visit <a href="https://github.com/EOLWD/pfml/actions?query=workflow%3A%22API+CI+Deploy%22">the API CI Deploy action homepage</a> on GitHub.</li>
-<li>Click the "Run workflow" button, and fill in the inputs:<ul>
-<li>For the "Use workflow from" dropdown, select the <strong>deployment branch</strong> corresponding to your target environment using the table below. This input identifies the environment you will be deploying to.</li>
-<li>For the second input, provide a <code>version</code> to deploy. A <code>version</code> can be either the name of a git tag, or the name of any git branch.</li>
+<li>
+<p>The <code>main</code> branch is automatically deployed to <code>test</code> as pull requests are merged into it.</p>
+</li>
+<li>
+<p>Deployments to other environmments are triggered manually.</p>
+</li>
+</ul>
+<hr />
+<h3 id="deploying-to-an-environment">Deploying to an environment</h3>
+<ol>
+<li>
+<p>Visit the API or Portal Github Actions homepage:</p>
+<ul>
+<li><a href="https://github.com/EOLWD/pfml/actions?query=workflow%3A%22API+CI+Deploy%22">API Deploy</a></li>
+<li><a href="https://github.com/EOLWD/pfml/actions?query=workflow%3A%22Portal+Deploy%22">Portal Deploy</a></li>
 </ul>
 </li>
-<li>Click the green "Run workflow" button.</li>
+<li>
+<p>Click the "Run workflow" button, and fill in the inputs:</p>
+<ul>
+<li>Provide the <code>deployment_env</code> from the list of environments.</li>
+<li>Provide a git branch or tag to deploy. This can be:<ul>
+<li>the name of a git tag, e.g. <code>api/v1.7.0-rc1</code>, or </li>
+<li>the name of a git branch, like <code>release/api/v1.7.0</code> or <code>kev/my-feature-branch</code>.</li>
 </ul>
-<h4 id="branch-to-environment-mapping">Branch-to-environment mapping</h4>
-<blockquote>
-<p>In the past, pushes to these 'deployment branches' were the triggering event that caused new deployments to begin.
-Today, these branches serve an archival role: they record what commit was deployed to which environment at what time.</p>
-</blockquote>
+</li>
+</ul>
+</li>
+<li>
+<p>Click the green "Run workflow" button.</p>
+</li>
+</ol>
+<h3 id="test-environment-coordination">Test Environment Coordination</h3>
+<p>If you are testing a feature branch on the test environment, please go through the following additional steps:</p>
+<h4 id="during-testing">During Testing</h4>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Communicate to #mass-pfml-deploys-shared. "⚠️ I'll be using the API/Portal test environment soon, please let me know if you have any concerns."</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> After running the workflow, click the "Disable Workflow" button to prevent auto-deploys from overriding your deployment.</li>
+</ul>
+<h4 id="after-testing">After Testing</h4>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Click the "Enable Workflow" button.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Re-deploy <code>main</code> to test.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Notify the Slack channel.</li>
+</ul>
+<h3 id="branch-to-environment-mapping">Branch-to-environment mapping</h3>
+<p>At a quick glance, you can view the commit history for any environment based on the branch.</p>
 <table>
 <thead>
 <tr>
-<th>Name of deployment branch</th>
+<th>Name of API deploy branch</th>
+<th>Name of Portal deploy branch</th>
 <th>Corresponding env</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>main</td>
+<td>main</td>
 <td>test</td>
 </tr>
 <tr>
 <td>deploy/api/stage</td>
+<td>deploy/portal/stage</td>
 <td>stage</td>
 </tr>
 <tr>
 <td>deploy/api/prod</td>
+<td>deploy/portal/prod</td>
 <td>prod</td>
 </tr>
 <tr>
 <td>deploy/api/performance</td>
+<td>deploy/portal/performance</td>
 <td>performance</td>
 </tr>
 <tr>
 <td>deploy/api/training</td>
+<td>deploy/portal/training</td>
 <td>training</td>
+</tr>
+<tr>
+<td>deploy/api/uat</td>
+<td>deploy/portal/uat</td>
+<td>uat</td>
 </tr>
 </tbody>
 </table>
-<h3 id="communications">Communications</h3>
-<p>If you are testing a feature branch on the test environment, please go through the following additional steps:</p>
-<ul>
-<li>Communicate to #mass-pfml-engineering. "⚠️ I'll be using the API test environment soon, please let me know if you have any concerns."</li>
-<li>After running the workflow, click the "Disable Workflow" button (see below) to prevent auto-deploys from overriding your deployment.</li>
-<li>After testing is finished, click the "Enable Workflow" button and update the Slack channel.</li>
-</ul>
-<p><img alt="" src="../assets/deploys-disable-autodeploy.png" />
-<img alt="" src="../assets/deploys-enable-autodeploy.png" /></p>
                 
               
               
@@ -830,7 +878,7 @@ Today, these branches serve an archival role: they record what commit was deploy
   
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
-        <a href="../db-roles-and-users/" class="md-footer__link md-footer__link--prev" rel="prev">
+        <a href="../creating-environments/" class="md-footer__link md-footer__link--prev" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -839,19 +887,19 @@ Today, these branches serve an archival role: they record what commit was deploy
               <span class="md-footer__direction">
                 Previous
               </span>
-              Database Users
+              Setting up a new environment
             </div>
           </div>
         </a>
       
       
-        <a href="../environment-variables/" class="md-footer__link md-footer__link--next" rel="next">
+        <a href="../tools/" class="md-footer__link md-footer__link--next" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Environment Variables
+              Tools
             </div>
           </div>
           <div class="md-footer__button md-icon">
@@ -880,10 +928,10 @@ Today, these branches serve an archival role: they record what commit was deploy
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../assets/javascripts/workers/search.fb4a9340.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../assets/javascripts/workers/search.fb4a9340.min.js", "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a1c7c35e.min.js"></script>
+      <script src="../assets/javascripts/bundle.a1c7c35e.min.js"></script>
       
     
   </body>
