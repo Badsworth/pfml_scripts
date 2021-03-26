@@ -69,6 +69,12 @@ const flagsConfig = {
     // update the reference to it in _app.js), but try to keep it prefixed with pfml.
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
+
+    // When this flag is enabled, the user can apply to take leave to
+    // "Care for a family member with a serious health condition" and
+    // Leave Admins can review Caring Leave claims
+    // TODO (CP-1989): Remove this flag once caring leave is made available in Production
+    showCaringLeaveType: false,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
