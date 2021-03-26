@@ -178,7 +178,7 @@ def test_users_post_cognito_user_error(
     body = valid_claimant_creation_request_body
     body["password"] = "test"
 
-    def sign_up(ClientId, Username, Password):
+    def sign_up(**kwargs):
         raise mock_cognito.exceptions.InvalidPasswordException(
             error_response={
                 "Error": {

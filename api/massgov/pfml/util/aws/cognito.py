@@ -210,7 +210,13 @@ def create_cognito_account(
 
     try:
         response = cognito_client.sign_up(
-            ClientId=cognito_user_pool_client_id, Username=email_address, Password=password
+            ClientId=cognito_user_pool_client_id,
+            Username=email_address,
+            Password=password,
+            ClientMetadata={
+                # This can be read by a Pre-Sign up Cognito Lambda function
+                "sign_up_source": "pfml_api"
+            },
         )
     except cognito_client.exceptions.InvalidPasswordException as error:
         # Thrown for various reasons:

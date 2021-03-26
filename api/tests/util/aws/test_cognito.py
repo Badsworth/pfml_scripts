@@ -45,7 +45,7 @@ def test_create_cognito_account_param_validation_error(mock_cognito, mock_cognit
 def test_create_cognito_account_invalid_password_error(
     mock_cognito, mock_cognito_user_pool, monkeypatch
 ):
-    def sign_up(ClientId, Username, Password):
+    def sign_up(**kwargs):
         raise mock_cognito.exceptions.InvalidPasswordException(
             error_response={
                 "Error": {
@@ -74,7 +74,7 @@ def test_create_cognito_account_invalid_password_error(
 def test_create_cognito_account_insecure_password_error(
     mock_cognito, mock_cognito_user_pool, monkeypatch
 ):
-    def sign_up(ClientId, Username, Password):
+    def sign_up(**kwargs):
         raise mock_cognito.exceptions.InvalidPasswordException(
             error_response={
                 "Error": {
@@ -124,7 +124,7 @@ def test_create_cognito_account_username_exists_error(
     # Mock the sign up method to identify the user as already existing.
     # Moto could handle this in the future, making this monkeypatch unnecessary,
     # assuming this gets merged: https://github.com/spulec/moto/pull/3765
-    def sign_up(ClientId, Username, Password):
+    def sign_up(**kwargs):
         raise mock_cognito.exceptions.UsernameExistsException(
             error_response={
                 "Error": {
@@ -153,7 +153,7 @@ def test_create_cognito_account_username_exists_error(
 
 
 def test_create_cognito_account_client_error(mock_cognito, mock_cognito_user_pool, monkeypatch):
-    def sign_up(ClientId, Username, Password):
+    def sign_up(**kwargs):
         raise botocore.exceptions.ClientError(
             error_response={
                 "Error": {
