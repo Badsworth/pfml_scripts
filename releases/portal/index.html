@@ -655,7 +655,7 @@
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/portal/v12.0-rc1">portal/v12.0-rc1</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/portal/v11.1-rc2">portal/v11.1-rc2</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=portal+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -681,29 +681,51 @@
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/819036412/Portal+Release+Notes">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (INFRA-356,EMPLOYER-928,CP-1950,CP-1944,INFRA-1,CP-1927,INFRA-314,EMPLOYER-991,CP-1930)">Jira List</a>):</p>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (INFRA-356,EMPLOYER-928,CP-1950,CP-1944,INFRA-1,CP-1927,INFRA-314,EMPLOYER-991,CP-1930,CP-1930,EMPLOYER-911,CP-1821,EMPLOYER-1049,CP-1285,CP-1928,EMPLOYER-1040,INFRA-298,INFRA-280)">Jira List</a>):</p>
 <ul>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-356">INFRA-356</a>: Pull E2E tests from the last Portal deployment branch (<a href="https://github.com/EOLWD/pfml/pull/3527">#3527</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-314">INFRA-314</a>: update portal deploy yml (<a href="https://github.com/EOLWD/pfml/pull/3493">#3493</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/INFRA-298">INFRA-298</a>: (2/2) Add Slackbot changes to Portal Deploy</li>
+<li><a href="https://lwd.atlassian.net/browse/INFRA-280">INFRA-280</a>: (1/6): Surface errors in send_to_fineos and complete_intake (<a href="https://github.com/EOLWD/pfml/pull/3176">#3176</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/INFRA-1">INFRA-1</a>: (3/3): Fix automated deployments (<a href="https://github.com/EOLWD/pfml/pull/3548">#3548</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/EMPLOYER-991">EMPLOYER-991</a>: Display error message directing users to add organization (<a href="https://github.com/EOLWD/pfml/pull/3526">#3526</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/EMPLOYER-928">EMPLOYER-928</a>: Create dashboard feature flag (<a href="https://github.com/EOLWD/pfml/pull/3539">#3539</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-911">EMPLOYER-911</a>: Display error message for unverifiable EINs due to missing withholding data (<a href="https://github.com/EOLWD/pfml/pull/3499">#3499</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1049">EMPLOYER-1049</a>: Update content on the Cannot Verify page (<a href="https://github.com/EOLWD/pfml/pull/3490">#3490</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1040">EMPLOYER-1040</a>: Redirect back to info request upon successful verification (<a href="https://github.com/EOLWD/pfml/pull/3470">#3470</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/CP-1950">CP-1950</a>: Add caring leave feature flag (<a href="https://github.com/EOLWD/pfml/pull/3523">#3523</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/CP-1944">CP-1944</a>: move <code>clearErrors</code> after checking if user is loaded</li>
 <li><a href="https://lwd.atlassian.net/browse/CP-1930">CP-1930</a>: Update doc upload E2E test to use data attribute (<a href="https://github.com/EOLWD/pfml/pull/3532">#3532</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-1930">CP-1930</a>: Content Changes to Upload Certification (<a href="https://github.com/EOLWD/pfml/pull/3471">#3471</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-1928">CP-1928</a>: Update Upload ID page with new content (<a href="https://github.com/EOLWD/pfml/pull/3438">#3438</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/CP-1927">CP-1927</a>: Add env vars for scheduling maintenance windows (<a href="https://github.com/EOLWD/pfml/pull/3540">#3540</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-1821">CP-1821</a>: Refactor employment-status test (<a href="https://github.com/EOLWD/pfml/pull/3403">#3403</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/CP-1285">CP-1285</a>: Catch logout errors and still redirect to login (<a href="https://github.com/EOLWD/pfml/pull/3496">#3496</a>)</li>
+<li>Redirect to verification success page (<a href="https://github.com/EOLWD/pfml/pull/3492">#3492</a>)</li>
+<li>Make phone number clickable (<a href="https://github.com/EOLWD/pfml/pull/3515">#3515</a>)</li>
 </ul>
 <details>
 <summary>Raw</summary>
  <br>* [INFRA-356](https://lwd.atlassian.net/browse/INFRA-356): Pull E2E tests from the last Portal deployment branch ([#3527](https://github.com/EOLWD/pfml/pull/3527))
  <br>* [INFRA-314](https://lwd.atlassian.net/browse/INFRA-314): update portal deploy yml ([#3493](https://github.com/EOLWD/pfml/pull/3493))
+ <br>* [INFRA-298](https://lwd.atlassian.net/browse/INFRA-298): (2/2) Add Slackbot changes to Portal Deploy
+ <br>* [INFRA-280](https://lwd.atlassian.net/browse/INFRA-280): (1/6): Surface errors in send_to_fineos and complete_intake ([#3176](https://github.com/EOLWD/pfml/pull/3176))
  <br>* [INFRA-1](https://lwd.atlassian.net/browse/INFRA-1): (3/3): Fix automated deployments ([#3548](https://github.com/EOLWD/pfml/pull/3548))
  <br>* [EMPLOYER-991](https://lwd.atlassian.net/browse/EMPLOYER-991): Display error message directing users to add organization ([#3526](https://github.com/EOLWD/pfml/pull/3526))
  <br>* [EMPLOYER-928](https://lwd.atlassian.net/browse/EMPLOYER-928): Create dashboard feature flag ([#3539](https://github.com/EOLWD/pfml/pull/3539))
+ <br>* [EMPLOYER-911](https://lwd.atlassian.net/browse/EMPLOYER-911): Display error message for unverifiable EINs due to missing withholding data ([#3499](https://github.com/EOLWD/pfml/pull/3499))
+ <br>* [EMPLOYER-1049](https://lwd.atlassian.net/browse/EMPLOYER-1049): Update content on the Cannot Verify page ([#3490](https://github.com/EOLWD/pfml/pull/3490))
+ <br>* [EMPLOYER-1040](https://lwd.atlassian.net/browse/EMPLOYER-1040): Redirect back to info request upon successful verification ([#3470](https://github.com/EOLWD/pfml/pull/3470))
  <br>* [CP-1950](https://lwd.atlassian.net/browse/CP-1950): Add caring leave feature flag ([#3523](https://github.com/EOLWD/pfml/pull/3523))
  <br>* [CP-1944](https://lwd.atlassian.net/browse/CP-1944): move `clearErrors` after checking if user is loaded
  <br>* [CP-1930](https://lwd.atlassian.net/browse/CP-1930): Update doc upload E2E test to use data attribute ([#3532](https://github.com/EOLWD/pfml/pull/3532))
+ <br>* [CP-1930](https://lwd.atlassian.net/browse/CP-1930): Content Changes to Upload Certification ([#3471](https://github.com/EOLWD/pfml/pull/3471))
+ <br>* [CP-1928](https://lwd.atlassian.net/browse/CP-1928): Update Upload ID page with new content ([#3438](https://github.com/EOLWD/pfml/pull/3438))
  <br>* [CP-1927](https://lwd.atlassian.net/browse/CP-1927): Add env vars for scheduling maintenance windows ([#3540](https://github.com/EOLWD/pfml/pull/3540))
+ <br>* [CP-1821](https://lwd.atlassian.net/browse/CP-1821): Refactor employment-status test ([#3403](https://github.com/EOLWD/pfml/pull/3403))
+ <br>* [CP-1285](https://lwd.atlassian.net/browse/CP-1285): Catch logout errors and still redirect to login ([#3496](https://github.com/EOLWD/pfml/pull/3496))
+ <br>* Redirect to verification success page ([#3492](https://github.com/EOLWD/pfml/pull/3492))
+ <br>* Make phone number clickable ([#3515](https://github.com/EOLWD/pfml/pull/3515))
 </details>
                 
               
