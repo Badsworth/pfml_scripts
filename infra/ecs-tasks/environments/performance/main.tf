@@ -87,7 +87,7 @@ module "tasks" {
   payment_rejects_report_sent_folder_path = "s3://massgov-pfml-performance-agency-transfer/audit/sent"
 
   enable_recurring_payments_schedule = false
-  enable_register_admins_job         = false
+  enable_register_admins_job         = true
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 }
