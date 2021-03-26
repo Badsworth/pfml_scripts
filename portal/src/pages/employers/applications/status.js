@@ -55,9 +55,7 @@ export const Status = (props) => {
     DocumentType.requestForInfoNotice,
   ]);
 
-  const shouldShowAdjudicationStatus = isFeatureEnabled(
-    "employerShowAdjudicationStatus"
-  );
+  const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
 
   return (
     <React.Fragment>
@@ -85,8 +83,7 @@ export const Status = (props) => {
       <StatusRow label={t("pages.employersClaimsStatus.applicationIdLabel")}>
         {absenceId}
       </StatusRow>
-      {/* TODO (EMPLOYER-656): Display adjudication status */}
-      {shouldShowAdjudicationStatus && displayState[adjudicationStatus] && (
+      {shouldShowDashboard && displayState[adjudicationStatus] && (
         <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
           <Tag
             state={displayState[adjudicationStatus]}

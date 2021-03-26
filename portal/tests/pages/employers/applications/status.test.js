@@ -49,7 +49,7 @@ describe("Status", () => {
 
   beforeEach(() => {
     process.env.featureFlags = {
-      employerShowAdjudicationStatus: false,
+      employerShowDashboard: false,
     };
 
     ({ appLogic, wrapper } = renderWithAppLogic(Status, {
@@ -132,10 +132,10 @@ describe("Status", () => {
     });
   });
 
-  describe("when 'employerShowAdjudicationStatus' is enabled", () => {
+  describe("when 'employerShowDashboard' is enabled", () => {
     beforeEach(() => {
       process.env.featureFlags = {
-        employerShowAdjudicationStatus: true,
+        employerShowDashboard: true,
       };
 
       ({ wrapper } = renderWithAppLogic(Status, {
