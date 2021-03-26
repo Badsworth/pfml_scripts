@@ -18,6 +18,7 @@ from massgov.pfml.db.models.employees import (
     EmployeeLog,
     Flow,
     GeoState,
+    LatestStateLog,
     PaymentMethod,
     ReferenceFileType,
     State,
@@ -935,5 +936,71 @@ def test_process_records_to_db_no_vendor_updates_has_prior_eft_state(
     for state_log in state_logs:
         assert state_log.end_state_id in [
             State.VCC_ERROR_REPORT_SENT.state_id,
+            State.EFT_PENDING.state_id,
+        ]
+
+
+def test_process_records_to_db_no_vendor_updates_has_prior_validation_issues(
+    test_db_session, initialize_factories_session, formatted_claim
+):
+    # Setup
+    extract_data, requested_absence = format_absence_data()
+    add_employee_feed(extract_data)
+    extract_data.requested_absence_info = vendor_export.Extract("test/location/requested_absence")
+    extract_data.requested_absence_info.indexed_data["NTN-001-ABS-01"] = requested_absence
+
+    # Create an employee with address and EFT that exactly matches the input
+    # Make the DOB different. That should not trigger the VENDOR_CHECK state change
+    tax_identifier = TaxIdentifierFactory.create(tax_identifier="123456789")
+    eft = EftFactory.create(
+        routing_nbr=extract_data.employee_feed.indexed_data["12345"]["SORTCODE"],
+        account_nbr=extract_data.employee_feed.indexed_data["12345"]["ACCOUNTNO"],
+        bank_account_type_id=2,
+    )
+    address = AddressFactory.create(
+        address_line_one=extract_data.employee_feed.indexed_data["12345"]["ADDRESS1"],
+        address_line_two=extract_data.employee_feed.indexed_data["12345"]["ADDRESS2"],
+        city=extract_data.employee_feed.indexed_data["12345"]["ADDRESS4"],
+        geo_state_id=GeoState.NY.geo_state_id,
+        zip_code=extract_data.employee_feed.indexed_data["12345"]["POSTCODE"],
+    )
+    ctr_address_pair = CtrAddressPairFactory.create(fineos_address=address,)
+    employee = EmployeeFactory.create(
+        tax_identifier=tax_identifier,
+        # date_of_birth="1967-04-27",
+        eft=eft,
+        ctr_address_pair=ctr_address_pair,
+    )
+
+    # Create a statelog for this employee to verify the state doesn't change
+    state_log_util.create_finished_state_log(
+        associated_model=employee,
+        end_state=State.VENDOR_EXPORT_ERROR_REPORT_SENT,
+        outcome=state_log_util.build_outcome("Vendor Check Foo"),
+        db_session=test_db_session,
+    )
+
+    # Create a state log for the VENDOR_EFT flow
+    state_log_util.create_finished_state_log(
+        associated_model=employee,
+        end_state=State.EFT_PENDING,
+        outcome=state_log_util.build_outcome("Vendor EFT Foo"),
+        db_session=test_db_session,
+    )
+
+    # Verify the state log
+    state_logs = test_db_session.query(StateLog).all()
+    assert len(state_logs) == 2
+
+    # Run the process
+    vendor_export.process_records_to_db(extract_data, test_db_session)
+
+    # Verify the EFT state log is in the same state and the Vendor Check state
+    # log is now in IDENTIFY_MMARS_STATUS
+    state_logs = test_db_session.query(StateLog).join(LatestStateLog).all()
+    assert len(state_logs) == 2
+    for state_log in state_logs:
+        assert state_log.end_state_id in [
+            State.IDENTIFY_MMARS_STATUS.state_id,
             State.EFT_PENDING.state_id,
         ]

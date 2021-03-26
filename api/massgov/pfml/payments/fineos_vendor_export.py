@@ -824,8 +824,6 @@ def manage_state_log(
             db_session=db_session,
         )
 
-    # It's most likely unsafe to move to a new state, because it could be
-    # in-progress. Safer to move to the same state and add a note.
     else:
         # Adding check for typing. This should never happen in practice.
         if current_state.end_state is None:
@@ -834,12 +832,28 @@ def manage_state_log(
                 current_state.state_log_id,
             )
         else:
-            state_log_util.create_finished_state_log(
-                end_state=current_state.end_state,
-                associated_model=employee_pfml_entry,
-                outcome=state_log_util.build_outcome(
+            # It's most likely unsafe to move to a new state, because it could be
+            # in-progress. Safer to move to the same state and add a note.
+            #
+            # Exception: If there are no changes and the previous end_state was
+            # VENDOR_EXPORT_ERROR_REPORT_SENT, then we should send it on to the next
+            # state. Otherwise, employees can get incorrectly trapped in this state
+            # forever. See API-1528, API-1536, and API-1534.
+            if current_state.end_state_id == State.VENDOR_EXPORT_ERROR_REPORT_SENT.state_id:
+                new_end_state = State.IDENTIFY_MMARS_STATUS
+                outcome = state_log_util.build_outcome(
+                    f"No changes to employee {employee_pfml_entry.employee_id} successfully extracted from FINEOS vendor export {extract_data.date_str}, but was previously in VENDOR_EXPORT_ERROR_REPORT_SENT, so moving to IDENTIFY_MMARS_STATUS"
+                )
+            else:
+                new_end_state = current_state.end_state
+                outcome = state_log_util.build_outcome(
                     f"No changes to employee {employee_pfml_entry.employee_id} successfully extracted from FINEOS vendor export {extract_data.date_str}"
-                ),
+                )
+
+            state_log_util.create_finished_state_log(
+                end_state=new_end_state,
+                associated_model=employee_pfml_entry,
+                outcome=outcome,
                 db_session=db_session,
             )
 
