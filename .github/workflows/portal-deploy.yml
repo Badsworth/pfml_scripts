@@ -43,7 +43,8 @@ on:
 env:
   github_api: "https://api.github.com/repos/EOLWD/pfml"
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  version_for_deploy: ${{ github.event.inputs.version }}
+  version: ${{ github.event.inputs.version || 'main' }}
+  deployment_env: ${{ github.event.inputs.deployment_env || 'test' }}
   deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   nodeVersion: 15.x
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -56,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: check users
-        if: contains(github.event.inputs.deployment_env, 'prod')
+        if: contains(env.deployment_env, 'prod')
         id: get_teams
         env:
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
@@ -76,7 +77,7 @@ jobs:
             }
 
       - name: fail if not a member
-        if: contains(github.event.inputs.deployment_env, 'prod') && contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
+        if: contains(env.deployment_env, 'prod') && contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
         run: |
           echo "Not part of pfml-devops, cancelling workflow"
           exit 1
@@ -97,26 +98,26 @@ jobs:
       - name: Calculate commit hash
         id: calculate_commit_hash
         run: |
-          if commit_hash=$(git rev-parse origin/${{github.event.inputs.version}} 2>/dev/null); then
+          if commit_hash=$(git rev-parse origin/${{env.version}} 2>/dev/null); then
             echo "Received branch"
           else
-            commit_hash=$(git rev-parse ${{github.event.inputs.version}})
+            commit_hash=$(git rev-parse ${{env.version}})
             echo "Received tag"
           fi
           
           if [[ -z $commit_hash ]]; then
-            echo "💣 No valid commit hash could be found in Git for the provided branch or tag '${{github.event.inputs.version}}'. This deploy can't proceed."
+            echo "💣 No valid commit hash could be found in Git for the provided branch or tag '${{env.version}}'. This deploy can't proceed."
             exit 1
           fi
        
           echo "::set-output name=commit_hash::$commit_hash"
           
       - name: Commit and push new code to archival branch
-        if: "!contains(github.event.inputs.deployment_env, 'test')"
+        if: "!contains(env.deployment_env, 'test')"
         run: |
           git config user.name "PFMLDevOps"
           git config user.email "68565627+PFMLDevOps@users.noreply.github.com"
-          branch=deploy/portal/${{github.event.inputs.deployment_env}}
+          branch=deploy/portal/${{env.deployment_env}}
           echo "about to commit ${{steps.calculate_commit_hash.outputs.commit_hash}} to $branch..."
           git checkout $branch
           git reset --hard ${{steps.calculate_commit_hash.outputs.commit_hash}}
@@ -133,16 +134,16 @@ jobs:
       - name: Set portal-env value
         id: portal-env
         run: |
-          echo "::set-output name=portal-env::${{ github.event.inputs.deployment_env || 'test' }}"
+          echo "::set-output name=portal-env::${{ env.deployment_env || 'test' }}"
 
       - name: Set deployed-url value
         id: deployed-url
         # steps cannot refer to an output from a previous step in the same job, so portal-env has to be calculated again
         run: |
-          if [[ "${{ github.event.inputs.deployment_env || 'test' }}" == 'prod' ]]; then
+          if [[ "${{ env.deployment_env || 'test' }}" == 'prod' ]]; then
             echo "::set-output name=deployed-url::https://paidleave-api.mass.gov/api/docs/"
           else
-            echo "::set-output name=deployed-url::https://paidleave-api-${{ github.event.inputs.deployment_env || 'test' }}.mass.gov/api/docs/"
+            echo "::set-output name=deployed-url::https://paidleave-api-${{ env.deployment_env || 'test' }}.mass.gov/api/docs/"
           fi
 
   start-comms-github:
@@ -177,7 +178,7 @@ jobs:
     needs: [update-the-deploy-branch, deploy-info]
     outputs:
       subtitle: ${{ steps.choose_start_message.outputs.message }}
-    if: ${{ !contains(github.event.inputs.version, 'main') || !contains(github.event.inputs.deployment_env, 'test' )}} # Mutes notifications for auto-deploys to test # Mutes notifications for auto-deploys to test
+    if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test # Mutes notifications for auto-deploys to test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -207,10 +208,10 @@ jobs:
       - name: Choose deployment start message
         id: choose_start_message
         env:
-          just_the_deploy: "<${{ env.workflow_self_link }}|build logs> | <https://github.com/EOLWD/pfml/commits/${{ env.version_for_deploy }}|commit history>"
-          with_release_notes: "<${{ env.workflow_self_link }}|build logs> | <https://github.com/EOLWD/pfml/releases/tag/${{ env.version_for_deploy }}|release notes>"
+          just_the_deploy: "<${{ env.workflow_self_link }}|build logs> | <https://github.com/EOLWD/pfml/commits/${{ env.version }}|commit history>"
+          with_release_notes: "<${{ env.workflow_self_link }}|build logs> | <https://github.com/EOLWD/pfml/releases/tag/${{ env.version }}|release notes>"
         run: |
-          if [[ ${{ env.version_for_deploy }} == portal/* ]]; then
+          if [[ ${{ env.version }} == portal/* ]]; then
             echo "::set-output name=message::${{ env.with_release_notes }}"
           else
             echo "::set-output name=message::${{ env.just_the_deploy }}"
@@ -227,7 +228,7 @@ jobs:
               "color": "warning",
               "fields": [
                 { "title": "started by", "value": "`${{ github.actor }}`", "short": true },
-                { "title": "releasing", "value": "`${{ env.version_for_deploy }}`", "short": true },
+                { "title": "releasing", "value": "`${{ env.version }}`", "short": true },
                 { "title": "commit details", "value": "`${{ env.commit_details }}`" }
               ]
             }]
@@ -248,7 +249,7 @@ jobs:
         env:
           GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          UAT_DEPLOYMENT_VERSION: ${{ github.event.inputs.version || 'main' }}
+          UAT_DEPLOYMENT_VERSION: ${{ env.version }}
           WORKFLOW_NAME: "portal-deploy.yml"
         run: |
           echo "*** A Portal staging deploy is now in progress. Enqueuing an extra deployment to UAT... ***"
@@ -272,7 +273,7 @@ jobs:
         env:
           GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          PERFORMANCE_DEPLOYMENT_VERSION: ${{ github.event.inputs.version || 'main' }}
+          PERFORMANCE_DEPLOYMENT_VERSION: ${{ env.version }}
           WORKFLOW_NAME: "portal-deploy.yml"
         run: |
           echo "*** A PORTAL staging deploy is now in progress. Enqueuing an extra deployment to Performance... ***"
@@ -444,7 +445,7 @@ jobs:
 
       - name: Update release page
         uses: benc-uk/workflow-dispatch@v1
-        if: ${{!contains(github.event.inputs.deployment_env, 'test')}}
+        if: ${{!contains(env.deployment_env, 'test')}}
         with:
           workflow: GH Pages deploy
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
@@ -454,7 +455,7 @@ jobs:
     name: Finish deploy comms (Slack)
     needs: [start-comms-slack, deploy-info, postdeploy-info]
     runs-on: ubuntu-latest
-    if: always() && needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version, 'main') # Mutes notifications for auto-deploys to test
+    if: always() && needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main') # Mutes notifications for auto-deploys to test
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -512,7 +513,7 @@ jobs:
               "color": "${{ steps.choose_finish_message.outputs.color }}",
               "fields": [
                 { "title": "started by", "value": "`${{ github.actor }}`", "short": true },
-                { "title": "released", "value": "`${{ env.version_for_deploy }}`", "short": true },
+                { "title": "released", "value": "`${{ env.version }}`", "short": true },
               ]
             }]
           }' https://slack.com/api/chat.postMessage)
@@ -530,8 +531,8 @@ jobs:
       - uses: ./.github/actions/trigger-cypress
         name: "Trigger Cypress Run"
         with:
-          target_environment: ${{ github.event.inputs.deployment_env || 'test' }}
+          target_environment: ${{ env.deployment_env }}
           cypress_tags: "Deploy,Deploy-Portal"
           github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           # Limit to "stable" suite for any environment but test.
-          only_stable: ${{ (github.event.inputs.deployment_env || 'test') == 'test' && 'false' || 'true' }}
+          only_stable: ${{ env.deployment_env == 'test' && 'false' || 'true' }}
