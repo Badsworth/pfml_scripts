@@ -8,7 +8,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import Dict, List, Optional, Tuple, cast
+from typing import Callable, Dict, List, Optional, Tuple, cast
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -44,6 +44,7 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
 )
 from massgov.pfml.db.models.payments import (
+    FineosExtractVbiRequestedAbsence,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
@@ -58,11 +59,13 @@ PROCESSED_FOLDER = "processed"
 SKIPPED_FOLDER = "skipped"
 
 # Expected file names
+VBI_REQUESTED_ABSENCE_FILE_NAME = "VBI_REQUESTEDABSENCE.csv"
 PEI_EXPECTED_FILE_NAME = "vpei.csv"
 PAYMENT_DETAILS_EXPECTED_FILE_NAME = "vpeipaymentdetails.csv"
 CLAIM_DETAILS_EXPECTED_FILE_NAME = "vpeiclaimdetails.csv"
 
 expected_file_names = [
+    VBI_REQUESTED_ABSENCE_FILE_NAME,
     PEI_EXPECTED_FILE_NAME,
     PAYMENT_DETAILS_EXPECTED_FILE_NAME,
     CLAIM_DETAILS_EXPECTED_FILE_NAME,
@@ -102,6 +105,7 @@ class ExtractData:
     pei: Extract
     payment_details: ExtractMultiple
     claim_details: Extract
+    requested_absence: Extract
 
     date_str: str
 
@@ -115,6 +119,8 @@ class ExtractData:
                 self.payment_details = ExtractMultiple(s3_location)
             elif s3_location.endswith(CLAIM_DETAILS_EXPECTED_FILE_NAME):
                 self.claim_details = Extract(s3_location)
+            elif s3_location.endswith(VBI_REQUESTED_ABSENCE_FILE_NAME):
+                self.requested_absence = Extract(s3_location)
 
         self.date_str = date_str
 
@@ -145,6 +151,10 @@ class PaymentData:
     tin: Optional[str] = None
     absence_case_number: Optional[str] = None
 
+    leave_request_id: Optional[str] = None
+    leave_request_decision: Optional[str] = None
+
+    full_name: Optional[str] = None
     payee_identifier: Optional[str] = None
 
     address_line_one: Optional[str] = None
@@ -164,7 +174,13 @@ class PaymentData:
     account_nbr: Optional[str] = None
     raw_account_type: Optional[str] = None
 
-    def __init__(self, extract_data: ExtractData, index: CiIndex, pei_record: Dict[str, str]):
+    def __init__(
+        self,
+        extract_data: ExtractData,
+        index: CiIndex,
+        pei_record: Dict[str, str],
+        count_incrementer: Optional[Callable[[str], None]] = None,
+    ):
         self.validation_container = payments_util.ValidationContainer(str(index))
         self.c_value = index.c
         self.i_value = index.i
@@ -189,6 +205,35 @@ class PaymentData:
             self.absence_case_number = payments_util.validate_csv_input(
                 "ABSENCECASENU", claim_details, self.validation_container, True
             )
+
+            requested_absence = extract_data.requested_absence.indexed_data.get(
+                self.absence_case_number
+            )
+            if requested_absence:
+                self.leave_request_id = payments_util.validate_csv_input(
+                    "LEAVEREQUEST_ID", requested_absence, self.validation_container, True
+                )
+
+                def leave_request_decision_validator(
+                    leave_request_decision: str,
+                ) -> Optional[payments_util.ValidationReason]:
+                    if leave_request_decision != "Approved":
+                        if count_incrementer is not None:
+                            count_incrementer("unapproved_leave_request_count")
+                        return payments_util.ValidationReason.INVALID_VALUE
+
+                self.leave_request_decision = payments_util.validate_csv_input(
+                    "LEAVEREQUEST_DECISION",
+                    requested_absence,
+                    self.validation_container,
+                    True,
+                    custom_validator_func=leave_request_decision_validator,
+                )
+            else:
+                self.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISMATCHED_DATA,
+                    f"Payment absence case number not found in requested absence file: {self.absence_case_number}",
+                )
         else:
             # We require the absence case number, if claim details doesn't exist
             # we want to set the validation issue manually here
@@ -392,7 +437,7 @@ class PaymentExtractStep(Step):
 
         return None
 
-    def download_and_process_data(
+    def download_and_extract_data(
         self, extract_data: ExtractData, download_directory: pathlib.Path
     ) -> None:
         logger.info(
@@ -445,6 +490,14 @@ class PaymentExtractStep(Step):
                 record["PECLASSID"],
                 record["PEINDEXID"],
             )
+
+        # Requested absence file
+        requested_absences = self.download_and_parse_data(
+            extract_data.requested_absence.file_location, download_directory
+        )
+        for record in requested_absences:
+            absence_case_number = str(record.get("ABSENCE_CASENUMBER"))
+            extract_data.requested_absence.indexed_data[absence_case_number] = record
 
         logger.info("Successfully downloaded and indexed payment extract data files.")
 
@@ -956,7 +1009,9 @@ class PaymentExtractStep(Step):
             try:
                 self.increment("processed_payment_count")
                 # Construct a payment data object for easier organization of the many params
-                payment_data = PaymentData(extract_data, index, record)
+                payment_data = PaymentData(
+                    extract_data, index, record, count_incrementer=self.increment
+                )
                 logger.debug(
                     "Constructed payment data for extract with CI: %s, %s", index.c, index.i
                 )
@@ -1032,6 +1087,20 @@ class PaymentExtractStep(Step):
             extra={
                 "source": extract_data.claim_details.file_location,
                 "destination": new_claim_s3_path,
+            },
+        )
+
+        new_requested_absence_s3_path = extract_data.requested_absence.file_location.replace(
+            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
+        )
+        file_util.rename_file(
+            extract_data.requested_absence.file_location, new_requested_absence_s3_path
+        )
+        logger.debug(
+            "Moved requested absence file to processed folder.",
+            extra={
+                "source": extract_data.requested_absence.file_location,
+                "destination": new_requested_absence_s3_path,
             },
         )
 
@@ -1212,7 +1281,7 @@ class PaymentExtractStep(Step):
                     previously_processed_date.add(date_str)
                     continue
 
-                self.download_and_process_data(extract_data, download_directory)
+                self.download_and_extract_data(extract_data, download_directory)
                 self.extract_to_staging_tables(extract_data)
 
                 self.process_records_to_db(extract_data)
@@ -1246,6 +1315,10 @@ class PaymentExtractStep(Step):
             payments_util.make_keys_lowercase(v)
             for v in extract_data.claim_details.indexed_data.values()
         ]
+        requested_absence_data = [
+            payments_util.make_keys_lowercase(v)
+            for v in extract_data.requested_absence.indexed_data.values()
+        ]
         payment_details_data = []
         for _, v in extract_data.payment_details.indexed_data.items():
             for data in v:
@@ -1268,3 +1341,9 @@ class PaymentExtractStep(Step):
                 data, FineosExtractVpeiPaymentDetails, ref_file, self.get_import_log_id()
             )
             self.db_session.add(payment_details)
+
+        for data in requested_absence_data:
+            requested_absence = payments_util.create_staging_table_instance(
+                data, FineosExtractVbiRequestedAbsence, ref_file, self.get_import_log_id()
+            )
+            self.db_session.add(requested_absence)

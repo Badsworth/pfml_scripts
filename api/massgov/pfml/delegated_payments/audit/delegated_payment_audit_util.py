@@ -106,8 +106,6 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         case_status=claim.fineos_absence_status.absence_status_description
         if claim.fineos_absence_status
         else None,
-        leave_request_id="",  # TODO these are not currently persisted - persist somewhere and fetch or take out of audit
-        leave_request_decision="",  # TODO these are not currently persisted - persist somewhere and fetch or take out of audit
         is_first_time_payment=bool_to_str[payment_audit_data.is_first_time_payment],
         is_previously_errored_payment=bool_to_str[payment_audit_data.is_previously_errored_payment],
         is_previously_rejected_payment=bool_to_str[

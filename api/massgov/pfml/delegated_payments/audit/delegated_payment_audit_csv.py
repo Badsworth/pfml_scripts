@@ -27,8 +27,6 @@ class PaymentAuditCSV(AbstractRecord):
     i_value: str
     employer_id: Optional[str]
     case_status: Optional[str]
-    leave_request_id: Optional[str]
-    leave_request_decision: Optional[str]
     is_first_time_payment: str
     is_previously_errored_payment: str
     is_previously_rejected_payment: str
@@ -57,8 +55,6 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     i_value="I Value",
     employer_id="Employer ID",
     case_status="Case Status",
-    leave_request_id="Leave Request ID",
-    leave_request_decision="Leave Request Decision",
     is_first_time_payment="First Time Payment",
     is_previously_errored_payment="Previously Errored Payment",
     is_previously_rejected_payment="Previously Rejected Payment",

@@ -1878,7 +1878,7 @@ class ReferenceFileType(LookupTable):
     DELEGATED_PAYMENT_REJECTS = LkReferenceFileType(21, "Payment Rejects", 1)
     DELEGATED_PAYMENT_REJECTS_REPORT = LkReferenceFileType(22, "Payment Rejects Report", 1)
     FINEOS_CLAIMANT_EXTRACT = LkReferenceFileType(24, "Claimant extract", 2)
-    FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 3)
+    FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 4)
 
 
 class Title(LookupTable):

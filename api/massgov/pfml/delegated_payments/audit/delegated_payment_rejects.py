@@ -137,8 +137,6 @@ class PaymentRejectsStep(Step):
                     i_value=row[PAYMENT_AUDIT_CSV_HEADERS.i_value],
                     employer_id=row[PAYMENT_AUDIT_CSV_HEADERS.employer_id],
                     case_status=row[PAYMENT_AUDIT_CSV_HEADERS.case_status],
-                    leave_request_id=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_id],
-                    leave_request_decision=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision],
                     is_first_time_payment=row[PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment],
                     is_previously_errored_payment=row[
                         PAYMENT_AUDIT_CSV_HEADERS.is_previously_errored_payment
