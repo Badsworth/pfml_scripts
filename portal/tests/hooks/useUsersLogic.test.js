@@ -153,6 +153,19 @@ describe("useUsersLogic", () => {
       expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
     });
 
+    it("doesn't clear errors if user has been loaded", async () => {
+      await act(async () => {
+        await usersLogic.loadUser();
+        appErrorsLogic.setAppErrors(
+          new AppErrorInfoCollection([new AppErrorInfo()])
+        );
+        await usersLogic.loadUser();
+      });
+
+      expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
+      expect(appErrorsLogic.appErrors.items).toHaveLength(1);
+    });
+
     it("throws an error if user is not logged in to Cognito", async () => {
       isLoggedIn = false;
       renderHook();
