@@ -9,39 +9,9 @@ import pytest
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.delegated_payments.ez_check as ez_check
 import massgov.pfml.util.files as file_util
+from tests.factories import EzCheckHeaderFactory, EzCheckRecordFactory
 
 fake = faker.Faker()
-
-
-def _random_valid_ez_check_record_args():
-    return {
-        "check_number": fake.random_int(min=1_000_000_000, max=9_999_999_999),
-        "check_date": fake.date_between("-3w", "today"),
-        "amount": Decimal(fake.random_int(min=10, max=9_999)),
-        "memo": fake.sentence()[:99],
-        "payee_name": fake.name(),
-        "address_line_1": fake.street_address(),
-        "address_line_2": "",
-        "city": fake.city(),
-        "state": fake.state_abbr(),
-        "zip_code": fake.postcode(),
-        "country": fake.country_code(),
-    }
-
-
-def _random_valid_ez_check_header_args():
-    return {
-        "name_line_1": fake.name(),
-        "name_line_2": fake.company(),
-        "address_line_1": fake.street_address(),
-        "address_line_2": "Bldg. " + fake.building_number(),
-        "city": fake.city(),
-        "state": fake.state_abbr(),
-        "zip_code": fake.postcode(),
-        "country": fake.country_code(),
-        "accounting_number": fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999),
-        "routing_number": fake.random_int(min=10_000_000_000, max=99_999_999_999),
-    }
 
 
 @pytest.mark.parametrize(
@@ -191,7 +161,7 @@ def test_ez_check_field_success(field_class, description, length, value, str_val
     (
         (
             "All errors for single invalid field raised",
-            {**_random_valid_ez_check_record_args(), "state": "MASS"},
+            {"state": "MASS"},
             [
                 payments_util.ValidationReason.INVALID_VALUE,
                 payments_util.ValidationReason.FIELD_TOO_LONG,
@@ -199,7 +169,7 @@ def test_ez_check_field_success(field_class, description, length, value, str_val
         ),
         (
             "Errors for all invalid fields are raised",
-            {**_random_valid_ez_check_record_args(), "check_date": 1999, "zip_code": 1999},
+            {"check_date": 1999, "zip_code": 1999},
             [
                 payments_util.ValidationReason.INVALID_TYPE,
                 payments_util.ValidationReason.INVALID_VALUE,
@@ -210,14 +180,26 @@ def test_ez_check_field_success(field_class, description, length, value, str_val
 def test_ez_check_record_failure(_description, args, expected_issues):
     # Expect to raise an exception when we initialize the object.
     try:
-        ez_check.EzCheckRecord(**args)
+        EzCheckRecordFactory(**args)
     except payments_util.ValidationIssueException as e:
         record_issues = [issue.reason for issue in e.issues]
         assert sorted(record_issues) == sorted(expected_issues)
 
 
 def test_ez_check_record_success():
-    args = _random_valid_ez_check_record_args()
+    args = {
+        "check_number": fake.random_int(min=1_000_000_000, max=9_999_999_999),
+        "check_date": fake.date_between("-3w", "today"),
+        "amount": Decimal(fake.random_int(min=10, max=9_999)),
+        "memo": fake.sentence()[:99],
+        "payee_name": fake.name(),
+        "address_line_1": fake.street_address(),
+        "address_line_2": "",
+        "city": fake.city(),
+        "state": fake.state_abbr(),
+        "zip_code": fake.postcode(),
+        "country": fake.country_code(),
+    }
 
     record = ez_check.EzCheckRecord(**args)
 
@@ -254,12 +236,12 @@ def test_ez_check_record_success():
     (
         (
             "Routing number too long",
-            {**_random_valid_ez_check_header_args(), "routing_number": 123_456_789_012_345},
+            {"routing_number": 123_456_789_012_345},
             [payments_util.ValidationReason.FIELD_TOO_LONG],
         ),
         (
             "Errors for all invalid fields are raised",
-            {**_random_valid_ez_check_header_args(), "accounting_number": "99", "zip_code": "2021"},
+            {"accounting_number": "99", "zip_code": "2021"},
             [
                 payments_util.ValidationReason.INVALID_TYPE,
                 payments_util.ValidationReason.INVALID_VALUE,
@@ -270,14 +252,25 @@ def test_ez_check_record_success():
 def test_ez_check_header_failure(_description, args, expected_issues):
     # Expect to raise an exception when we initialize the object.
     try:
-        ez_check.EzCheckHeader(**args)
+        EzCheckHeaderFactory(**args)
     except payments_util.ValidationIssueException as e:
         record_issues = [issue.reason for issue in e.issues]
         assert sorted(record_issues) == sorted(expected_issues)
 
 
 def test_ez_check_header_success():
-    args = _random_valid_ez_check_header_args()
+    args = {
+        "name_line_1": fake.name(),
+        "name_line_2": fake.company(),
+        "address_line_1": fake.street_address(),
+        "address_line_2": "Bldg. " + fake.building_number(),
+        "city": fake.city(),
+        "state": fake.state_abbr(),
+        "zip_code": fake.postcode(),
+        "country": fake.country_code(),
+        "accounting_number": fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999),
+        "routing_number": fake.random_int(min=10_000_000_000, max=99_999_999_999),
+    }
 
     header = ez_check.EzCheckHeader(**args)
 
@@ -309,14 +302,12 @@ def test_ez_check_file_initialization_failure(args, exception_type):
 
 
 def test_ez_check_file_success(mock_s3_bucket):
-    ez_check_header = ez_check.EzCheckHeader(**_random_valid_ez_check_header_args())
-    ez_check_file = ez_check.EzCheckFile(ez_check_header)
+    ez_check_file = ez_check.EzCheckFile(EzCheckHeaderFactory())
 
     # Create some small number of records to add to the file.
     record_count = fake.random_int(min=1, max=15)
     for _i in range(record_count):
-        record = ez_check.EzCheckRecord(**_random_valid_ez_check_record_args())
-        ez_check_file.add_record(record)
+        ez_check_file.add_record(EzCheckRecordFactory())
 
     # Write the EzCheck file to S3.
     # s3 = boto3.client("s3")

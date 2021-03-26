@@ -1880,6 +1880,8 @@ class ReferenceFileType(LookupTable):
     FINEOS_CLAIMANT_EXTRACT = LkReferenceFileType(24, "Claimant extract", 2)
     FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 4)
 
+    PUB_EZ_CHECK = LkReferenceFileType(26, "PUB EZ check file", 1)
+
 
 class Title(LookupTable):
     model = LkTitle

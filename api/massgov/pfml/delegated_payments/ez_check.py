@@ -236,6 +236,7 @@ class EzCheckFile:
             raise TypeError("is not an EzCheckHeader")
 
         self.header = header
+        self.records = []
 
     def add_record(self, record: EzCheckRecord) -> None:
         if not isinstance(record, EzCheckRecord):
