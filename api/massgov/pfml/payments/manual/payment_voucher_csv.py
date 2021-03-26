@@ -124,7 +124,7 @@ WRITEBACK_CSV_HEADERS = WritebackCSV(
     i_value="pei_I_Value",
     status="status",
     transaction_status="transactionStatus",
-    trans_status_date="transactionStatusDate",
+    trans_status_date="transStatusDate",
     stock_no="transactionNo",
 )
 

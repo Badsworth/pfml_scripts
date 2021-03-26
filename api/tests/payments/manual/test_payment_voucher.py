@@ -379,7 +379,7 @@ def standard_writeback_row():
         "status": "Active",
         "stock_no": "",
         "transaction_status": "",
-        "trans_status_date": "2021-01-15",
+        "trans_status_date": "2021-01-15 12:00:00",
     }
 
 
@@ -619,7 +619,7 @@ def test_process_payment_record_no_amount(test_db_session, initialize_factories_
     assert writeback_csv.rows[0] == standard_writeback_row()
 
 
-@freezegun.freeze_time("2021-01-21 08:00:00", tz_offset=0)
+@freezegun.freeze_time("2021-01-21 13:12:30", tz_offset=0)
 def test_process_extracts_to_payment_voucher(
     test_db_session, initialize_factories_session, tmp_path
 ):
@@ -657,12 +657,12 @@ def test_process_extracts_to_payment_voucher(
         input_path, tmp_path, None, None, test_db_session, MockLogEntry()
     )
 
-    csv_output = open(os.path.join(tmp_path, "20210121_080000_payment_voucher.csv")).readlines()
+    csv_output = open(os.path.join(tmp_path, "20210121_131230_payment_voucher.csv")).readlines()
     expected_output = open(os.path.join(input_path, "expected_payment_voucher.csv")).readlines()
 
     assert csv_output == expected_output
 
-    writeback = open(os.path.join(tmp_path, "20210121_080000_writeback.csv")).readlines()
+    writeback = open(os.path.join(tmp_path, "20210121_131230_writeback.csv")).readlines()
     expected_writeback = open(os.path.join(input_path, "expected_writeback.csv")).readlines()
 
     assert writeback == expected_writeback
