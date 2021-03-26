@@ -1,5 +1,4 @@
-import * as portal from "../../../tests/common/actions/portal";
-import { fineos } from "../../../tests/common/actions";
+import { fineos, portal } from "../../../tests/common/actions";
 import {
   bailIfThisTestFails,
   beforeFineos,
@@ -14,7 +13,7 @@ describe("Submit a bonding claim and adjudication approval - BHAP1", () => {
     bailIfThisTestFails();
 
     cy.task("generateClaim", "BHAP1").then((claim) => {
-      cy.stash("claim", claim);
+      cy.stash("claim", claim.claim);
       const application: ApplicationRequestBody = claim.claim;
       const paymentPreference = claim.paymentPreference;
 

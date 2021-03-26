@@ -91,26 +91,12 @@ export function startClaim(): void {
 }
 
 export function agreeToStart(): void {
-  cy.contains("button", "I understand and agree").click();
+  cy.contains("button", "I understand and agree", { timeout: 30000 }).click();
 }
 
 export function hasClaimId(): void {
   cy.url().should("include", "claim_id");
 }
-
-// export function startSubmit(
-//   // credentials: Credentials,
-//   scenario: string,
-//   employeeType: string
-// ): void {
-//   submittingClaimType(scenario, employeeType);
-//   // login(credentials); // remove ...
-//   // startClaim();
-//   // onPage("start");
-//   // agreeToStart();
-//   // hasClaimId();
-//   // onPage("checklist");
-// }
 
 export function clickChecklistButton(label: string): void {
   cy.contains(label)
@@ -531,9 +517,10 @@ export function reportOtherLeave(
       cy.contains("button", "Save and continue").click();
     }
   } else {
+    cy.wait(500);
     cy.contains("No").click();
     cy.contains("button", "Save and continue").click();
-    cy.wait(400);
+    cy.wait(500);
     cy.contains("No").click();
     cy.contains("button", "Save and continue").click();
   }

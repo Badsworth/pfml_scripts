@@ -81,12 +81,6 @@ describe("Denial Notification and Notice", { retries: 0 }, () => {
           { timeout: 300000 }
         );
         cy.log("Finished waiting for documents");
-
-        // const portalBaseUrl = Cypress.env("E2E_PORTAL_BASEURL");
-        // if (!portalBaseUrl) {
-        //   throw new Error("Portal base URL must be set");
-        // }
-        // Cypress.config("baseUrl", portalBaseUrl);
         cy.visit("/applications");
         cy.contains("article", submission.fineos_absence_id).within(() => {
           cy.contains("a", "Denial notice").should("be.visible");
@@ -110,39 +104,6 @@ describe("Denial Notification and Notice", { retries: 0 }, () => {
     });
   });
 
-  it("I should receive an 'application started' notification", () => {
-    cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then((submission) => {
-        const employeeFullName = `${claim.first_name} ${claim.last_name}`;
-        const subject = email.getNotificationSubject(
-          employeeFullName,
-          "application started",
-          submission.fineos_absence_id
-        );
-        cy.task<Email[]>(
-          "getEmails",
-          {
-            address: "gqzap.notifications@inbox.testmail.app",
-            subject: subject,
-            timestamp_from: submission.timestamp_from,
-          },
-          { timeout: 180000 }
-        ).then(async (emails) => {
-          const emailContent = await email.getNotificationData(emails[0].html);
-          if (typeof claim.date_of_birth !== "string") {
-            throw new Error("DOB must be a string");
-          }
-          const dob = claim.date_of_birth.replace(/-/g, "/").slice(5) + "/****";
-          expect(emailContent.name).to.equal(employeeFullName);
-          expect(emailContent.dob).to.equal(dob);
-          expect(emailContent.applicationId).to.equal(
-            submission.fineos_absence_id
-          );
-        });
-      });
-    });
-  });
-
   it("I should receive an 'denial (employer)' and 'denial (claimant)' notification", () => {
     cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
@@ -160,31 +121,39 @@ describe("Denial Notification and Notice", { retries: 0 }, () => {
         );
 
         cy.log(subjectEmployer);
+        cy.log(subjectClaimant);
+
         cy.task<Email[]>(
           "getEmails",
           {
             address: "gqzap.notifications@inbox.testmail.app",
             subject: subjectEmployer,
             timestamp_from: submission.timestamp_from,
+            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
           },
           { timeout: 180000 }
         ).then(async (emails) => {
-          const emailContent = await email.getNotificationData(
-            emails[0].html,
-            "denial (employer)"
+          expect(emails.length).to.be.greaterThan(0);
+          const email_match = emails.find((email) =>
+            email.html.includes(submission.fineos_absence_id as string)
           );
-          if (typeof claim.date_of_birth !== "string") {
-            throw new Error("DOB must be a string");
+          if (!email_match) {
+            throw new Error(
+              `No emails quiered match the Finoes Absence ID:
+                timestamp_from: ${submission.timestamp_from} 
+                fineos_absence_id: ${submission.fineos_absence_id}`
+            );
           }
-          const dob = claim.date_of_birth.replace(/-/g, "/").slice(5) + "/****";
-          expect(emailContent.name).to.equal(employeeFullName);
-          expect(emailContent.dob).to.equal(dob);
-          expect(emailContent.applicationId).to.equal(
-            submission.fineos_absence_id
-          );
-          expect(emails[0].html).to.include(
-            `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
-          );
+          email.getNotificationData(email_match.html).then((data) => {
+            const dob =
+              claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
+            expect(data.name).to.equal(employeeFullName);
+            expect(data.dob).to.equal(dob);
+            expect(data.applicationId).to.equal(submission.fineos_absence_id);
+            expect(data.html).to.contain(
+              `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
+            );
+          });
         });
 
         // Check email for Claimant
@@ -194,20 +163,24 @@ describe("Denial Notification and Notice", { retries: 0 }, () => {
             address: "gqzap.notifications@inbox.testmail.app",
             subject: subjectClaimant,
             timestamp_from: submission.timestamp_from,
+            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
           },
           { timeout: 180000 }
         ).then(async (emails) => {
-          for (const emailSingle of emails) {
-            email.getNotificationData(emailSingle.html).then((data) => {
-              if (data.applicationId.includes(submission.fineos_absence_id)) {
-                expect(data.applicationId).to.contain(
-                  submission.fineos_absence_id
-                );
-              } else {
-                throw new Error("No emails match the Fineos Absence ID");
-              }
-            });
+          expect(emails.length).to.be.greaterThan(0);
+          const email_match = emails.find((email) =>
+            email.html.includes(submission.fineos_absence_id as string)
+          );
+          if (!email_match) {
+            throw new Error(
+              `No emails quiered match the Finoes Absence ID:
+                timestamp_from: ${submission.timestamp_from} 
+                fineos_absence_id: ${submission.fineos_absence_id}`
+            );
           }
+          email.getNotificationData(email_match.html).then((data) => {
+            expect(data.applicationId).to.equal(submission.fineos_absence_id);
+          });
         });
       });
     });
