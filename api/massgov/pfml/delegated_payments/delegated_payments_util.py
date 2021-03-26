@@ -216,18 +216,26 @@ def validate_csv_input(
         errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
         return None  # Effectively treating "" and "Unknown" the same
 
+    validation_errors = False
     # Check the length only if it is defined/not empty
     if value:
         if min_length and len(value) < min_length:
             errors.add_validation_issue(ValidationReason.FIELD_TOO_SHORT, key)
+            validation_errors = True
         if max_length and len(value) > max_length:
             errors.add_validation_issue(ValidationReason.FIELD_TOO_LONG, key)
+            validation_errors = True
 
         # Also only bother with custom validation if the value exists
         if custom_validator_func:
             reason = custom_validator_func(value)
             if reason:
                 errors.add_validation_issue(reason, key)
+                validation_errors = True
+
+    # If any of the specific validations hit an error, don't return the value
+    if validation_errors:
+        return None
 
     return value
 

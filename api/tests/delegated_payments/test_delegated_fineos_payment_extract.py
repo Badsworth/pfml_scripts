@@ -1225,7 +1225,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     assert set(payment_data.validation_container.validation_issues) == check_expected_missing_values
 
 
-def test_validation_param_length(set_exporter_env_vars):
+def test_validation_param_length(initialize_factories_session, set_exporter_env_vars):
     # We set it up so the datasets can be joined on ci_index, but don't set any
     # values that aren't specifically used for joining, We are only setting values
     # we are explicitly testing against here, the validation will have missing
@@ -1266,7 +1266,7 @@ def test_validation_param_length(set_exporter_env_vars):
     ).issubset(set(payment_data.validation_container.validation_issues))
 
 
-def test_validation_lookup_validators(set_exporter_env_vars):
+def test_validation_lookup_validators(initialize_factories_session, set_exporter_env_vars):
     # When doing the validation, we verify that the lookup values are
     # valid and will be convertable to their corresponding lookup values in the DB.
     ci_index = extractor.CiIndex("1", "1")
@@ -1294,8 +1294,12 @@ def test_validation_lookup_validators(set_exporter_env_vars):
         ]
     ).issubset(set(payment_data.validation_container.validation_issues))
 
+    assert payment_data.raw_payment_method is None
+    assert payment_data.state is None
+    assert payment_data.raw_account_type is None
 
-def test_validation_payment_amount(set_exporter_env_vars):
+
+def test_validation_payment_amount(initialize_factories_session, set_exporter_env_vars):
     # When doing validation, we verify that payment amount
     # must be a numeric value
 
