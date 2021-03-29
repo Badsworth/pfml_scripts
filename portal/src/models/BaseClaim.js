@@ -120,8 +120,8 @@ class BaseClaim extends BaseModel {
  * @enum {string}
  */
 export const AdjudicationStatusType = {
-  pending: "Undecided",
   approved: "Approved",
+  pending: "Undecided",
   denied: "Declined",
 };
 
