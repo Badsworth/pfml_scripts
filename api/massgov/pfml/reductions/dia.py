@@ -285,7 +285,7 @@ def _get_pending_dia_payment_reference_files(
     pending_directory: str, db_session: db.Session
 ) -> List[ReferenceFile]:
     # Add a trailing % so that we match anything within the directory.
-    return (
+    files = (
         db_session.query(ReferenceFile)
         .filter(
             ReferenceFile.reference_file_type_id
@@ -294,6 +294,7 @@ def _get_pending_dia_payment_reference_files(
         )
         .all()
     )
+    return files
 
 
 def _convert_dict_with_csv_keys_to_db_keys(csv_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -319,7 +320,8 @@ def _get_matching_dia_reduction_payments(
 
 
 def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> None:
-    for row in csv.DictReader(file, fieldnames=Constants.PAYMENT_LIST_FIELDS):
+    rows = csv.DictReader(file, fieldnames=Constants.PAYMENT_LIST_FIELDS)
+    for row in rows:
         db_data = _convert_dict_with_csv_keys_to_db_keys(row)
         if len(_get_matching_dia_reduction_payments(db_data, db_session)) == 0:
             dua_reduction_payment = DiaReductionPayment(**db_data)

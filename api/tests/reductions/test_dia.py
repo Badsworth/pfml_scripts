@@ -175,7 +175,7 @@ def _get_valid_dia_payment_data() -> Dict[str, Any]:
         "DFML_CASE_ID": "NTN-{}-ABS-01".format(fake.random_int(min=1000, max=9999)),
         "BOARD_NO": fake.random_int(min=100000, max=999999),
         "EVENT_ID": fake.random_int(min=100000, max=999999),
-        "INS_FORM_OR_MEET": "PC",
+        "INS_FORM_OR_MEET": fake.random_element(elements=("PC", "LUMP")),
         "EVE_CREATED_DATE": fake.date(pattern="%Y%m%d"),
         "FORM_RECEIVED_OR_DISPOSITION": fake.date(pattern="%Y%m%d"),
         "AWARD_ID": fake.random_int(min=5, max=2000),
@@ -459,6 +459,51 @@ def test_download_payment_list_if_none_today(
             .scalar()
             == 1
         )
+
+
+def test_assert_dia_payments_are_stored_correctly(
+    test_db_session, mock_s3_bucket, monkeypatch, initialize_factories_session
+):
+    source_directory_path = "reductions/dia/pending"
+    archive_directory_path = "reductions/dia/archive"
+
+    monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
+    monkeypatch.setenv("S3_DIA_PENDING_DIRECTORY_PATH", source_directory_path)
+    monkeypatch.setenv("S3_DIA_ARCHIVE_DIRECTORY_PATH", archive_directory_path)
+
+    # Define the full paths to the directories.
+    pending_directory = f"s3://{mock_s3_bucket}/{source_directory_path}"
+    archive_directory = f"s3://{mock_s3_bucket}/{archive_directory_path}"
+
+    # A new reference to a ReferenceFile
+    ref_file = _get_loaded_payment_reference_file_in_s3(
+        mock_s3_bucket, _random_csv_filename(), source_directory_path, 1
+    )
+
+    # Check on the file directory stats
+    assert len(file_util.list_files(pending_directory)) == 1
+    assert len(file_util.list_files(archive_directory)) == 0
+
+    dia.load_new_dia_payments(test_db_session)
+
+    # Files should have been moved.
+    assert len(file_util.list_files(pending_directory)) == 0
+    assert len(file_util.list_files(archive_directory)) == 1
+
+    test_db_session.flush()
+
+    # Expect to have loaded some rows to the database.
+    assert test_db_session.query(sqlalchemy.func.count(DiaReductionPayment.board_no)).scalar() == 1
+
+    # Expect to have created a StateLog for each ReferenceFile.
+    assert (
+        test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+        .filter(StateLog.end_state_id == State.DIA_PAYMENT_LIST_SAVED_TO_DB.state_id)
+        .scalar()
+        == 1
+    )
+
+    print(ref_file)
 
 
 def test_load_new_dia_payments_sucessfully(
