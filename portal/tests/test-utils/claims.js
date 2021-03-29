@@ -236,7 +236,7 @@ export class BaseMockClaimBuilder {
  *    .create();
  */
 export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
-  constructor(middleName = "", status = null) {
+  constructor(middleName = "") {
     super();
     this.claimAttrs = {
       employer_dba: "Work Inc.",
@@ -247,7 +247,6 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
       date_of_birth: "****-07-17",
       tax_identifier: "***-**-1234",
       follow_up_date: "2020-10-10",
-      status,
     };
   }
 
@@ -283,6 +282,14 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
    */
   reviewable(setting = true) {
     set(this.claimAttrs, "is_reviewable", !!setting);
+    return this;
+  }
+
+  /**
+   * @returns {MockEmployerClaimBuilder}
+   */
+  status(status = null) {
+    set(this.claimAttrs, "status", status);
     return this;
   }
 

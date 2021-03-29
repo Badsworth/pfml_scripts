@@ -66,6 +66,10 @@ export const Status = (props) => {
       <Lead>
         <Trans
           i18nKey="pages.employersClaimsStatus.lead"
+          tOptions={{
+            context:
+              claim.status === AdjudicationStatusType.pending ? "pending" : "",
+          }}
           components={{
             "dfml-regulations-link": (
               <a

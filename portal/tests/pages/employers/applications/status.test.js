@@ -8,7 +8,8 @@ import Status from "../../../../src/pages/employers/applications/status";
 
 jest.mock("../../../../src/hooks/useAppLogic");
 
-const CLAIM = new MockEmployerClaimBuilder("", "Undecided")
+const CLAIM = new MockEmployerClaimBuilder()
+  .status("Undecided")
   .completed()
   .create();
 const DOCUMENTS = new DocumentCollection([
@@ -71,8 +72,25 @@ describe("Status", () => {
     );
   });
 
-  it("shows the lead", () => {
-    expect(wrapper.find("Lead").text()).toBeTruthy();
+  it("shows lead text for pending claims", () => {
+    expect(wrapper.find("Lead").exists()).toEqual(true);
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+  });
+
+  it("shows lead text for resolved claims", () => {
+    const resolvedClaim = new MockEmployerClaimBuilder()
+      .status("Approved")
+      .completed()
+      .create();
+    ({ wrapper } = renderWithAppLogic(Status, {
+      employerClaimAttrs: resolvedClaim,
+      props: {
+        query,
+      },
+    }));
+
+    expect(wrapper.find("Lead").exists()).toEqual(true);
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   it("shows the application ID", () => {
