@@ -4411,3 +4411,35 @@ def test_application_patch_benefits_empty_arrays(
     assert response.status_code == 200
     assert len(response_body.get("previous_leaves")) == 0
     assert len(application.previous_leaves) == 0
+
+
+def test_application_post_submit_app_creates_claim(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    WagesAndContributionsFactory.create(
+        employer=application.employer, employee=application.employee
+    )
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    application.date_of_birth = "1997-06-06"
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+
+    test_db_session.commit()
+    client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    submitted_application = (
+        test_db_session.query(Application)
+        .filter(Application.application_id == application.application_id)
+        .one_or_none()
+    )
+
+    assert submitted_application.claim is not None
+    assert submitted_application.claim.employer is not None
