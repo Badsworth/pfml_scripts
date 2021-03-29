@@ -1857,6 +1857,20 @@ class State(LookupTable):
         152, "Errored PEI write back sent to FINEOS", Flow.DELEGATED_PAYMENT.flow_id
     )
 
+    # Delegated payments address validation states.
+    CLAIMANT_READY_FOR_ADDRESS_VALIDATION = LkState(
+        153, "Claimant ready for address validation", Flow.DELEGATED_CLAIMANT.flow_id
+    )
+    CLAIMANT_FAILED_ADDRESS_VALIDATION = LkState(
+        154, "Claimant failed address validation", Flow.DELEGATED_CLAIMANT.flow_id
+    )
+    PAYMENT_READY_FOR_ADDRESS_VALIDATION = LkState(
+        155, "Payment ready for address validation", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    PAYMENT_FAILED_ADDRESS_VALIDATION = LkState(
+        156, "Payment failed address validation", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
 
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType
