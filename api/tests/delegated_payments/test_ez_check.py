@@ -241,7 +241,7 @@ def test_ez_check_record_success():
         ),
         (
             "Errors for all invalid fields are raised",
-            {"accounting_number": "99", "zip_code": "2021"},
+            {"account_number": "99", "zip_code": "2021"},
             [
                 payments_util.ValidationReason.INVALID_TYPE,
                 payments_util.ValidationReason.INVALID_VALUE,
@@ -268,7 +268,7 @@ def test_ez_check_header_success():
         "state": fake.state_abbr(),
         "zip_code": fake.postcode(),
         "country": fake.country_code(),
-        "accounting_number": fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999),
+        "account_number": fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999),
         "routing_number": fake.random_int(min=10_000_000_000, max=99_999_999_999),
     }
 
@@ -287,7 +287,7 @@ def test_ez_check_header_success():
             args["state"],
             args["zip_code"],
             args["country"],
-            args["accounting_number"],
+            args["account_number"],
             args["routing_number"],
         ]
     )

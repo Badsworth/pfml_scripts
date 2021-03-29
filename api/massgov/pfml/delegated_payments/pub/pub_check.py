@@ -167,6 +167,6 @@ def _get_ez_check_header() -> EzCheckHeader:
         state="MA",
         zip_code="02114",  # Pass the zip code in as a string since it starts with a zero.
         country="US",
-        accounting_number=int(os.environ.get("DFML_PUB_ACCOUNTING_NUMBER")),  # type: ignore
+        account_number=int(os.environ.get("DFML_PUB_ACCOUNT_NUMBER")),  # type: ignore
         routing_number=int(os.environ.get("DFML_PUB_ROUTING_NUMBER")),  # type: ignore
     )

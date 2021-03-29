@@ -87,9 +87,9 @@ def test_create_check_file_eligible_payment_error(
 def test_create_check_file_success(
     initialize_factories_session, monkeypatch, test_db_session, test_db_other_session,
 ):
-    accounting_number = str(fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999))
+    account_number = str(fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999))
     routing_number = str(fake.random_int(min=10_000_000_000, max=99_999_999_999))
-    monkeypatch.setenv("DFML_PUB_ACCOUNTING_NUMBER", accounting_number)
+    monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", account_number)
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", routing_number)
 
     payments = []

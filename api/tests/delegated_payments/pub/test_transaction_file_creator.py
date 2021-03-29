@@ -133,7 +133,7 @@ def test_check_file_creation(
     accounting_number = str(fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999))
     routing_number = str(fake.random_int(min=10_000_000_000, max=99_999_999_999))
     monkeypatch.setenv("PFML_PUB_OUTBOUND_PATH", output_folder_path)
-    monkeypatch.setenv("DFML_PUB_ACCOUNTING_NUMBER", accounting_number)
+    monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", accounting_number)
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", routing_number)
 
     # Stock the database with a handful of check payments in the correct state to be picked up.

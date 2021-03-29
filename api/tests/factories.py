@@ -17,7 +17,7 @@ def EzCheckHeaderFactory(**args) -> EzCheckHeader:
         "state": fake.state_abbr(),
         "zip_code": fake.postcode(),
         "country": fake.country_code(),
-        "accounting_number": fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999),
+        "account_number": fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999),
         "routing_number": fake.random_int(min=10_000_000_000, max=99_999_999_999),
     }
     return EzCheckHeader(**{**default_args, **args})

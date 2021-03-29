@@ -191,7 +191,7 @@ class EzCheckHeader:
         state: str,
         zip_code: Any,
         country: str,
-        accounting_number: int,
+        account_number: int,
         routing_number: int,
     ):
         self.fields = (
@@ -204,7 +204,7 @@ class EzCheckHeader:
             EzCheckStateAbbreviationField("Payer state", 2, state),
             EzCheckZipCodeField("Payer zip code", 10, zip_code),
             EzCheckCountryAbbreviationField("Payer country", 2, country),
-            EzCheckIntegerField("Payer accounting number", 16, accounting_number),
+            EzCheckIntegerField("Payer account number", 16, account_number),
             EzCheckIntegerField("Payer routing number", 11, routing_number),
         )
         self.validate_fields()
