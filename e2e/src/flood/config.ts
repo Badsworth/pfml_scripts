@@ -1,6 +1,12 @@
 import { Browser, TestSettings, ENV, StepOptions } from "@flood/element";
-import { DocumentUploadRequest } from "../api";
 import Tasks from "./tasks";
+/*
+ * The (2) imports below are outside of the src/flood/* directory
+ * This means that, if changed, the makeFloodBundle.sh script
+ * also needs to be updated accordingly, otherwise, these changes
+ * will cause issues/bugs running and/or deploying Load & Stress tests
+ */
+import { DocumentUploadRequest } from "../api";
 import { GeneratedClaim } from "../generation/Claim";
 
 export const globalElementSettings: TestSettings = {
@@ -119,7 +125,11 @@ export async function getFineosBaseUrl(
       ENV.FLOOD_GRID_NODE_SEQUENCE_ID * MAX_BROWSERS +
       ENV.BROWSER_ID;
     if (ENV.FLOOD_LOAD_TEST) {
-      uuid += 20; // perf env test
+      /*
+       * This uuid change highly depends on
+       * available agent accounts in a certain environment
+       */
+      uuid += 20;
       username = `${username}${uuid}`;
     }
   } else {
