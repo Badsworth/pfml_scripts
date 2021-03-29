@@ -1,4 +1,4 @@
-import { Credentials } from "../../../../src/types";
+import { Credentials, LeaveDates } from "../../../../src/types";
 import {
   ApplicationResponse,
   WorkPattern,
@@ -9,6 +9,7 @@ import {
   PaymentPreferenceRequestBody,
 } from "../../../../src/api";
 import { inFieldset } from "../actions"; // not used
+import { format } from "date-fns";
 
 export function onPage(page: string): void {
   cy.url().should("include", `/applications/${page}`);
@@ -35,7 +36,7 @@ export function login(credentials: Credentials): void {
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").typeMasked(credentials.password);
   cy.wait(1000);
-  cy.pause()
+  // cy.pause()
   cy.contains("button", "Log in").click();
   cy.wait(1000);
   cy.url().should("not.include", "login");
@@ -740,7 +741,8 @@ export function respondToLeaveAdminRequest(
   fineosAbsenceId: string,
   suspectFraud: boolean,
   gaveNotice: boolean,
-  approval: boolean
+  approval: boolean,
+  leave_periods: LeaveDates = {start_date: "", end_date: ""},
 ): void {
   cy.visit(
     `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
@@ -772,6 +774,9 @@ export function respondToLeaveAdminRequest(
       "This is a generic explanation of the leave admin's response."
     );
   }
+  const res_start = format(new Date(leave_periods.start_date), "M/d/yyy")
+  const res_end = format(new Date(leave_periods.end_date), "M/d/yyy")
+  cy.contains(res_end).should("be.visible").should("not.contain.text", res_start)
   cy.pause();
   cy.contains("button", "Submit").click();
   cy.contains("Thanks for reviewing the application");

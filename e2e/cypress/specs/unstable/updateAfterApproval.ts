@@ -3,7 +3,7 @@ import { bailIfThisTestFails, beforeFineos } from "../../tests/common/before";
 import { beforePortal } from "../../tests/common/before";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
 import { ApplicationResponse } from "../../../src/api";
-import { Submission } from "../../../src/types";
+import { Submission, LeaveDates } from "../../../src/types";
 
 describe("Post-approval (notifications/notices)", { retries: 0 }, () => {
   it("Create a financially eligible claim in which an employer will respond", () => {
@@ -16,8 +16,16 @@ describe("Post-approval (notifications/notices)", { retries: 0 }, () => {
     cy.task("generateCredentials").then((credentials) => {
       cy.stash("credentials", credentials);
       cy.task("registerClaimant", credentials).then(() => {
-        cy.task("generateClaim", "BHAP1").then((claim) => {
+        cy.task("generateClaim", "MHAP1").then((claim) => {
+          if (!claim.claim.leave_details?.continuous_leave_periods) {
+            throw new Error ("No leave Period")
+          }
+          const leave_periods: LeaveDates = {
+            start_date: claim.claim.leave_details.continuous_leave_periods[0].start_date as string,
+            end_date: claim.claim.leave_details.continuous_leave_periods[0].end_date as string
+          }
           cy.stash("claim", claim.claim);
+          cy.stash("leave_periods", leave_periods)
           cy.task("submitClaimToAPI", {
             ...claim,
             credentials,
@@ -59,7 +67,8 @@ describe("Post-approval (notifications/notices)", { retries: 0 }, () => {
               response.fineos_absence_id,
               false,
               true,
-              true
+              true,
+              leave_periods
             );
           });
         });
@@ -89,30 +98,33 @@ describe("Post-approval (notifications/notices)", { retries: 0 }, () => {
   it("As an employer, I should receive a notification about my response being required", () => {
     beforePortal();
     cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<string>("newTimestamp_from").then((timestamp_fromER) => {
-          cy.task<Email[]>(
-            "getEmails",
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: `Action required: Respond to ${claim.first_name} ${claim.last_name}'s paid leave application`,
-              timestamp_from: timestamp_fromER,
-            },
-            { timeout: 360000 }
-          ).then((emails) => {
-            expect(emails.length).to.be.greaterThan(0);
-            expect(emails[0].html).to.contain(
-              `/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}`
-            );
-          });
-      
-          portal.login(getLeaveAdminCredentials(claim.employer_fein as string));
+      cy.unstash<LeaveDates>("leave_periods").then((leave_periods) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          cy.unstash<string>("newTimestamp_from").then((timestamp_fromER) => {
+            cy.task<Email[]>(
+              "getEmails",
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: `Action required: Respond to ${claim.first_name} ${claim.last_name}'s paid leave application`,
+                timestamp_from: timestamp_fromER,
+              },
+              { timeout: 360000 }
+            ).then((emails) => {
+              expect(emails.length).to.be.greaterThan(0);
+              expect(emails[0].html).to.contain(
+                `/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}`
+              );
+            });
+        
+            portal.login(getLeaveAdminCredentials(claim.employer_fein as string));
             portal.respondToLeaveAdminRequest(
               submission.fineos_absence_id,
               false,
               true,
-              true
+              true,
+              leave_periods
             );
+          })
         })
       })
     })

@@ -28,3 +28,8 @@ export type Submission = {
   fineos_absence_id: string;
   timestamp_from: Date;
 };
+
+export type LeaveDates = {
+  start_date: string;
+  end_date: string
+}
