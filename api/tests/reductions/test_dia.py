@@ -1,7 +1,7 @@
 import os
 import random
 import string
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Dict, Optional
 
 import boto3
@@ -217,11 +217,11 @@ def _get_loaded_payment_reference_file_in_s3(
     pending_directory = os.path.join(f"s3://{mock_s3_bucket}", source_directory_path)
     source_filepath = os.path.join(pending_directory, filename)
     ref_file = _create_dia_payment_list_reference_file("", source_filepath)
+    rows = [_get_valid_dia_payment_data() for _i in range(row_count)]
 
     # Create some number of valid rows for our input file.
     body = ""
-    for _i in range(row_count):
-        db_data = _get_valid_dia_payment_data()
+    for db_data in rows:
         csv_row = csv_util.encode_row(db_data, DIA_PAYMENT_LIST_ENCODERS)
         body = body + ",".join(list(csv_row.values())) + "\n"
 
@@ -230,7 +230,7 @@ def _get_loaded_payment_reference_file_in_s3(
     s3 = boto3.client("s3")
     s3.put_object(Bucket=mock_s3_bucket, Key=s3_key, Body=body)
 
-    return ref_file
+    return (rows, ref_file)
 
 
 def test_copy_to_sftp_and_archive_s3_files(
@@ -476,7 +476,7 @@ def test_assert_dia_payments_are_stored_correctly(
     archive_directory = f"s3://{mock_s3_bucket}/{archive_directory_path}"
 
     # A new reference to a ReferenceFile
-    ref_file = _get_loaded_payment_reference_file_in_s3(
+    (params, ref_file) = _get_loaded_payment_reference_file_in_s3(
         mock_s3_bucket, _random_csv_filename(), source_directory_path, 1
     )
 
@@ -493,7 +493,32 @@ def test_assert_dia_payments_are_stored_correctly(
     test_db_session.flush()
 
     # Expect to have loaded some rows to the database.
-    assert test_db_session.query(sqlalchemy.func.count(DiaReductionPayment.board_no)).scalar() == 1
+    assert (
+        test_db_session.query(
+            sqlalchemy.func.count(DiaReductionPayment.dia_reduction_payment_id)
+        ).scalar()
+        == 1
+    )
+
+    # Expect that the inserted row is what we expect.
+    record = test_db_session.query(DiaReductionPayment).all()[0]
+    date_fields = [
+        dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS[dia.Constants.FORM_RECEIVED_OR_DISPOSITION_FIELD],
+        dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS[dia.Constants.EVE_CREATED_DATE_FIELD],
+        dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS[dia.Constants.AWARD_DATE_FIELD],
+        dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS[dia.Constants.START_DATE_FIELD],
+        dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS[dia.Constants.END_DATE_FIELD],
+        dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS[dia.Constants.AWARD_CREATED_DATE_FIELD],
+    ]
+
+    for (csv_property, model_property) in dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS.items():
+        if model_property in date_fields:
+            assert (
+                getattr(record, model_property)
+                == datetime.strptime(params[0][csv_property], "%Y%m%d").date()
+            )
+        else:
+            assert str(getattr(record, model_property)) == str(params[0][csv_property])
 
     # Expect to have created a StateLog for each ReferenceFile.
     assert (
@@ -502,8 +527,6 @@ def test_assert_dia_payments_are_stored_correctly(
         .scalar()
         == 1
     )
-
-    print(ref_file)
 
 
 def test_load_new_dia_payments_sucessfully(
