@@ -8,7 +8,9 @@ import Status from "../../../../src/pages/employers/applications/status";
 
 jest.mock("../../../../src/hooks/useAppLogic");
 
-const CLAIM = new MockEmployerClaimBuilder().completed().create();
+const CLAIM = new MockEmployerClaimBuilder("", "Undecided")
+  .completed()
+  .create();
 const DOCUMENTS = new DocumentCollection([
   new Document({
     content_type: "application/pdf",
@@ -46,6 +48,10 @@ describe("Status", () => {
   let wrapper;
 
   beforeEach(() => {
+    process.env.featureFlags = {
+      employerShowDashboard: false,
+    };
+
     ({ appLogic, wrapper } = renderWithAppLogic(Status, {
       employerClaimAttrs: CLAIM,
       props: {
@@ -61,7 +67,7 @@ describe("Status", () => {
 
   it("shows the claimant name as the title", () => {
     expect(wrapper.find("Title").childAt(0).text()).toEqual(
-      "Notices for Jane Doe"
+      "Application status for Jane Doe"
     );
   });
 
@@ -70,7 +76,7 @@ describe("Status", () => {
   });
 
   it("shows the application ID", () => {
-    const applicationIdRow = wrapper.find("StatusRow").at(0);
+    const applicationIdRow = wrapper.find("StatusRow").first();
     expect(applicationIdRow.prop("label")).toEqual("Application ID");
     expect(applicationIdRow.childAt(0).text()).toEqual("NTN-111-ABS-01");
   });
@@ -82,7 +88,7 @@ describe("Status", () => {
   });
 
   it("shows the leave duration", () => {
-    const leaveDurationRow = wrapper.find("StatusRow").at(2);
+    const leaveDurationRow = wrapper.find("StatusRow").last();
     expect(leaveDurationRow.prop("label")).toEqual("Leave duration");
     expect(leaveDurationRow.childAt(0).text()).toEqual("1/1/2021 – 7/1/2021");
   });
@@ -123,6 +129,43 @@ describe("Status", () => {
       const sectionTitle = wrapper.find("Heading");
       expect(sectionTitle.first()).toStrictEqual(sectionTitle.last());
       expect(sectionTitle.childAt(0).text()).toEqual("Leave details");
+    });
+  });
+
+  describe("when 'employerShowDashboard' is enabled", () => {
+    beforeEach(() => {
+      process.env.featureFlags = {
+        employerShowDashboard: true,
+      };
+
+      ({ wrapper } = renderWithAppLogic(Status, {
+        employerClaimAttrs: CLAIM,
+        props: {
+          query,
+        },
+      }));
+    });
+
+    it("displays adjudication status if status is provided", () => {
+      const tagComponent = wrapper.find("StatusRow").at(1).dive().find("Tag");
+      expect(tagComponent.exists()).toBe(true);
+      expect(tagComponent.prop("state")).toEqual("warning");
+      expect(tagComponent.prop("label")).toEqual("pending");
+    });
+
+    it("hides adjudication status if status is undefined", () => {
+      const claimWithoutStatus = new MockEmployerClaimBuilder()
+        .completed()
+        .create();
+      ({ wrapper } = renderWithAppLogic(Status, {
+        employerClaimAttrs: claimWithoutStatus,
+        props: {
+          query,
+        },
+      }));
+
+      const tagComponent = wrapper.find("StatusRow").at(1).dive().find("Tag");
+      expect(tagComponent.exists()).toBe(false);
     });
   });
 

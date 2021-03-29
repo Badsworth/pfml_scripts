@@ -1656,7 +1656,7 @@ const pages = {
       "$t(shared.noticeName_requestForInfoNotice)",
     noticesLabel: "Notices",
     statusLabel: "Status",
-    title: "Notices for {{name}}",
+    title: "Application status for {{name}}",
   },
   employersClaimsSuccess: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",

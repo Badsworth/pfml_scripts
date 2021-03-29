@@ -236,7 +236,7 @@ export class BaseMockClaimBuilder {
  *    .create();
  */
 export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
-  constructor(middleName = "") {
+  constructor(middleName = "", status = null) {
     super();
     this.claimAttrs = {
       employer_dba: "Work Inc.",
@@ -247,6 +247,7 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
       date_of_birth: "****-07-17",
       tax_identifier: "***-**-1234",
       follow_up_date: "2020-10-10",
+      status,
     };
   }
 

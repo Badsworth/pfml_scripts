@@ -4,7 +4,7 @@ exports[`Status renders the page and correct content in Trans component 1`] = `
 <Fragment>
   <BackButton />
   <Title>
-    Notices for Jane Doe
+    Application status for Jane Doe
   </Title>
   <Lead>
     <Trans
