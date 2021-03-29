@@ -413,6 +413,21 @@ class CtrAddressPair(Base):
     ctr_address = cast("Optional[Address]", relationship("Address", foreign_keys=ctr_address_id))
 
 
+class ExperianAddressPair(Base):
+    __tablename__ = "link_experian_address_pair"
+    fineos_address_id = Column(
+        UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True, unique=True
+    )
+    experian_address_id = Column(
+        UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True, index=True
+    )
+
+    fineos_address = relationship("Address", foreign_keys=fineos_address_id)
+    experian_address = cast(
+        "Optional[Address]", relationship("Address", foreign_keys=experian_address_id)
+    )
+
+
 class Employee(Base):
     __tablename__ = "employee"
     employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -443,6 +458,9 @@ class Employee(Base):
     ctr_address_pair_id = Column(
         UUID(as_uuid=True), ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
     )
+    experian_address_pair_id = Column(
+        UUID(as_uuid=True), ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
+    )
 
     title = relationship(LkTitle)
     race = relationship(LkRace)
@@ -468,6 +486,7 @@ class Employee(Base):
         Optional[TaxIdentifier], relationship("TaxIdentifier", back_populates="employee")
     )
     ctr_address_pair = cast(Optional[CtrAddressPair], relationship("CtrAddressPair"))
+    experian_address_pair = cast(Optional[ExperianAddressPair], relationship("ExperianAddressPair"))
 
     authorized_reps: "Query[AuthorizedRepEmployee]" = dynamic_loader(
         "AuthorizedRepEmployee", back_populates="employee"

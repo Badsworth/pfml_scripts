@@ -147,11 +147,14 @@ def test_run_step_happy_path(
     assert updated_employee.last_name != "Balistreri"
     assert updated_employee.date_of_birth == datetime.date(1980, 1, 1)
 
-    assert updated_employee.ctr_address_pair.fineos_address.address_line_one == "123 Main St"
-    assert updated_employee.ctr_address_pair.fineos_address.address_line_two == ""
-    assert updated_employee.ctr_address_pair.fineos_address.city == "Oakland"
-    assert updated_employee.ctr_address_pair.fineos_address.geo_state_id == GeoState.CA.geo_state_id
-    assert updated_employee.ctr_address_pair.fineos_address.zip_code == "94612"
+    assert updated_employee.experian_address_pair.fineos_address.address_line_one == "123 Main St"
+    assert updated_employee.experian_address_pair.fineos_address.address_line_two == ""
+    assert updated_employee.experian_address_pair.fineos_address.city == "Oakland"
+    assert (
+        updated_employee.experian_address_pair.fineos_address.geo_state_id
+        == GeoState.CA.geo_state_id
+    )
+    assert updated_employee.experian_address_pair.fineos_address.zip_code == "94612"
 
     pub_efts = updated_employee.pub_efts.all()
     assert len(pub_efts) == 1
@@ -515,11 +518,16 @@ def test_update_mailing_address_happy_path(claimant_extract_step, test_db_sessio
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
-    assert updated_employee.ctr_address_pair.fineos_address.address_line_one == "456 Park Avenue"
-    assert updated_employee.ctr_address_pair.fineos_address.address_line_two == ""
-    assert updated_employee.ctr_address_pair.fineos_address.city == "New York"
-    assert updated_employee.ctr_address_pair.fineos_address.geo_state_id == GeoState.NY.geo_state_id
-    assert updated_employee.ctr_address_pair.fineos_address.zip_code == "11020"
+    assert (
+        updated_employee.experian_address_pair.fineos_address.address_line_one == "456 Park Avenue"
+    )
+    assert updated_employee.experian_address_pair.fineos_address.address_line_two == ""
+    assert updated_employee.experian_address_pair.fineos_address.city == "New York"
+    assert (
+        updated_employee.experian_address_pair.fineos_address.geo_state_id
+        == GeoState.NY.geo_state_id
+    )
+    assert updated_employee.experian_address_pair.fineos_address.zip_code == "11020"
     assert has_address_update is True
 
 
@@ -638,7 +646,7 @@ def test_update_mailing_address_validation_issues(claimant_extract_step, test_db
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 1
-    assert updated_employee.ctr_address_pair is None
+    assert updated_employee.experian_address_pair is None
     assert has_address_update is False
 
     # Invalid Geo State Code
@@ -660,7 +668,7 @@ def test_update_mailing_address_validation_issues(claimant_extract_step, test_db
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 1
-    assert updated_employee.ctr_address_pair is None
+    assert updated_employee.experian_address_pair is None
     assert has_address_update is False
 
     # Missing address line 1 and incorrect Geo State Code
@@ -682,7 +690,7 @@ def test_update_mailing_address_validation_issues(claimant_extract_step, test_db
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 2
-    assert updated_employee.ctr_address_pair is None
+    assert updated_employee.experian_address_pair is None
     assert has_address_update is False
 
 

@@ -23,10 +23,10 @@ from massgov.pfml.db.models.employees import (
     AddressType,
     BankAccountType,
     Claim,
-    CtrAddressPair,
     Employee,
     EmployeeAddress,
     EmployeePubEftPair,
+    ExperianAddressPair,
     GeoState,
     LatestStateLog,
     LkState,
@@ -642,7 +642,7 @@ class PaymentExtractStep(Step):
 
         return employee, claim
 
-    def update_ctr_address_pair_fineos_address(
+    def update_experian_address_pair_fineos_address(
         self, payment_data: PaymentData, employee: Employee
     ) -> bool:
         """Create or update the employee's EFT record
@@ -663,18 +663,20 @@ class PaymentExtractStep(Step):
             address_type_id=AddressType.MAILING.address_type_id,
         )
 
-        # If ctr_address_pair exists, compare the existing fineos_address with the payment_data address
+        # If experian_address_pair exists, compare the existing fineos_address with the payment_data address
         #   If they're the same, nothing needs to be done, so we can return
-        #   If they're different or if no ctr_address_pair exists, create a new CtrAddressPair
-        ctr_address_pair = employee.ctr_address_pair
-        if ctr_address_pair:
-            if payments_util.is_same_address(ctr_address_pair.fineos_address, payment_data_address):
+        #   If they're different or if no experian_address_pair exists, create a new ExperianAddressPair
+        experian_address_pair = employee.experian_address_pair
+        if experian_address_pair:
+            if payments_util.is_same_address(
+                experian_address_pair.fineos_address, payment_data_address
+            ):
                 return False
 
-        new_ctr_address_pair = CtrAddressPair(fineos_address=payment_data_address)
-        employee.ctr_address_pair = new_ctr_address_pair
+        new_experian_address_pair = ExperianAddressPair(fineos_address=payment_data_address)
+        employee.experian_address_pair = new_experian_address_pair
         self.db_session.add(payment_data_address)
-        self.db_session.add(new_ctr_address_pair)
+        self.db_session.add(new_experian_address_pair)
         self.db_session.add(employee)
 
         # We also want to make sure the address is linked in the EmployeeAddress table
@@ -891,7 +893,9 @@ class PaymentExtractStep(Step):
         payment_eft = None
         if employee and not payment_data.validation_container.has_validation_issues():
             # Update the mailing address with values from FINEOS
-            has_address_update = self.update_ctr_address_pair_fineos_address(payment_data, employee)
+            has_address_update = self.update_experian_address_pair_fineos_address(
+                payment_data, employee
+            )
 
             # Update the EFT info with values from FINEOS
             payment_eft, has_eft_update = self.update_eft(payment_data, employee)

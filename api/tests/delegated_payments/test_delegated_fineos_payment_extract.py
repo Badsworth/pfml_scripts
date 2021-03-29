@@ -32,9 +32,9 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ClaimFactory,
-    CtrAddressPairFactory,
     EmployeeFactory,
     EmployeePubEftPairFactory,
+    ExperianAddressPairFactory,
     PaymentFactory,
     PubEftFactory,
     ReferenceFileFactory,
@@ -227,14 +227,15 @@ def add_db_records(
     additional_payment_state=None,
 ):
     mailing_address = None
-    ctr_address_pair = None
+    experian_address_pair = None
     if add_address:
         mailing_address = AddressFactory()
-        ctr_address_pair = CtrAddressPairFactory(fineos_address=mailing_address)
+        experian_address_pair = ExperianAddressPairFactory(fineos_address=mailing_address)
 
     if add_employee:
         employee = EmployeeFactory.create(
-            tax_identifier=TaxIdentifier(tax_identifier=tin), ctr_address_pair=ctr_address_pair
+            tax_identifier=TaxIdentifier(tax_identifier=tin),
+            experian_address_pair=experian_address_pair,
         )
         if add_eft:
             pub_eft = PubEftFactory.create(
@@ -449,7 +450,7 @@ def test_process_extract_data(
         employee = claim.employee
         assert employee
 
-        mailing_address = employee.ctr_address_pair.fineos_address
+        mailing_address = employee.experian_address_pair.fineos_address
         assert mailing_address
         assert mailing_address.address_line_one == f"AddressLine1-{index}"
         assert mailing_address.city == f"City{index}"
@@ -804,7 +805,7 @@ def test_process_extract_data_no_existing_claim_address_eft(
         employee = claim.employee
         assert employee
 
-        mailing_address = employee.ctr_address_pair.fineos_address
+        mailing_address = employee.experian_address_pair.fineos_address
         assert mailing_address
         assert mailing_address.address_line_one == f"AddressLine1-{index}"
         assert mailing_address.city == f"City{index}"
@@ -1612,12 +1613,12 @@ def test_update_eft_existing_eft_matches_and_not_approved(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
-def test_update_ctr_address_pair_fineos_address_no_update(
+def test_update_experian_address_pair_fineos_address_no_update(
     payment_extract_step, test_db_session, mock_s3_bucket, set_exporter_env_vars, monkeypatch,
 ):
-    # update_ctr_address_pair_fineos_address() has 2 possible outcomes:
+    # update_experian_address_pair_fineos_address() has 2 possible outcomes:
     #   1. There is no change to address
-    #   2. We create a new CtrAddressPair
+    #   2. We create a new ExperianAddressPair
     # In this test, we cover #1. #2 is covered by other tests.
 
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
@@ -1631,12 +1632,12 @@ def test_update_ctr_address_pair_fineos_address_no_update(
         .first()
     )
     assert employee is not None
-    assert employee.ctr_address_pair is not None
-    employee.ctr_address_pair.fineos_address.address_line_one = "AddressLine1-1"
-    employee.ctr_address_pair.fineos_address.address_line_two = "AddressLine2-1"
-    employee.ctr_address_pair.fineos_address.city = "City1"
-    employee.ctr_address_pair.fineos_address.geo_state_id = GeoState.MA.geo_state_id
-    employee.ctr_address_pair.fineos_address.zip_code = "11111"
+    assert employee.experian_address_pair is not None
+    employee.experian_address_pair.fineos_address.address_line_one = "AddressLine1-1"
+    employee.experian_address_pair.fineos_address.address_line_two = "AddressLine2-1"
+    employee.experian_address_pair.fineos_address.city = "City1"
+    employee.experian_address_pair.fineos_address.geo_state_id = GeoState.MA.geo_state_id
+    employee.experian_address_pair.fineos_address.zip_code = "11111"
     test_db_session.commit()
 
     # Run the process

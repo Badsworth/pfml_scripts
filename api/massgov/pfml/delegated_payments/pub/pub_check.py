@@ -8,8 +8,8 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
-    CtrAddressPair,
     Employee,
+    ExperianAddressPair,
     Payment,
     PaymentMethod,
     ReferenceFile,
@@ -109,11 +109,9 @@ def _get_eligible_check_payments(db_session: db.Session) -> List[Payment]:
 
 def _convert_payment_to_ez_check_record(payment: Payment) -> EzCheckRecord:
     employee = payment.claim.employee
+    experian_address_pair = cast(ExperianAddressPair, employee.experian_address_pair)
+    address = experian_address_pair.fineos_address
 
-    # We cast several values here that much earlier validation would
-    # have verified are set properly.
-    ctr_address_pair = cast(CtrAddressPair, employee.ctr_address_pair)
-    address = ctr_address_pair.fineos_address
     geo_state = address.geo_state
 
     return EzCheckRecord(

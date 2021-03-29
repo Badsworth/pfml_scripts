@@ -17,11 +17,11 @@ from massgov.pfml.db.models.employees import (
     Address,
     BankAccountType,
     Claim,
-    CtrAddressPair,
     Employee,
     EmployeeAddress,
     EmployeePubEftPair,
     EmployeeReferenceFile,
+    ExperianAddressPair,
     GeoState,
     PaymentMethod,
     PrenoteState,
@@ -549,18 +549,20 @@ class ClaimantExtractStep(Step):
                 zip_code=address_zip_code,
             )
 
-            # If ctr_address_pair exists, compare the exisiting fineos_address with the payment_data address
+            # If experian_address_pair exists, compare the exisiting fineos_address with the payment_data address
             #   If they're the same, nothing needs to be done, so we can return
-            #   If they're different or if no ctr_address_pair exists, create a new CtrAddressPair
-            ctr_address_pair = employee_pfml_entry.ctr_address_pair
-            if ctr_address_pair:
-                if payments_util.is_same_address(ctr_address_pair.fineos_address, mailing_address):
+            #   If they're different or if no experian_address_pair exists, create a new ExperianAddressPair
+            experian_address_pair = employee_pfml_entry.experian_address_pair
+            if experian_address_pair:
+                if payments_util.is_same_address(
+                    experian_address_pair.fineos_address, mailing_address
+                ):
                     return False
 
-            new_ctr_address_pair = CtrAddressPair(fineos_address=mailing_address)
-            employee_pfml_entry.ctr_address_pair = new_ctr_address_pair
+            new_experian_address_pair = ExperianAddressPair(fineos_address=mailing_address)
+            employee_pfml_entry.experian_address_pair = new_experian_address_pair
             self.db_session.add(mailing_address)
-            self.db_session.add(new_ctr_address_pair)
+            self.db_session.add(new_experian_address_pair)
             self.db_session.add(employee_pfml_entry)
 
             # We also want to make sure the address is linked in the EmployeeAddress table
