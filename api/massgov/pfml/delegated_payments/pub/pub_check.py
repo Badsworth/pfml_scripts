@@ -1,5 +1,6 @@
 import os
-from typing import List, Optional, Tuple
+from datetime import date
+from typing import List, Optional, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
@@ -7,6 +8,7 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
+    CtrAddressPair,
     Employee,
     Payment,
     PaymentMethod,
@@ -107,19 +109,24 @@ def _get_eligible_check_payments(db_session: db.Session) -> List[Payment]:
 
 def _convert_payment_to_ez_check_record(payment: Payment) -> EzCheckRecord:
     employee = payment.claim.employee
-    address = employee.ctr_address_pair.fineos_address
+
+    # We cast several values here that much earlier validation would
+    # have verified are set properly.
+    ctr_address_pair = cast(CtrAddressPair, employee.ctr_address_pair)
+    address = ctr_address_pair.fineos_address
+    geo_state = address.geo_state
 
     return EzCheckRecord(
-        check_number=payment.pub_individual_id,
-        check_date=payment.payment_date,
+        check_number=cast(int, payment.pub_individual_id),
+        check_date=cast(date, payment.payment_date),
         amount=payment.amount,
         memo=_format_check_memo(payment),
         payee_name=_format_employee_name_for_ez_check(employee),
-        address_line_1=address.address_line_one,
+        address_line_1=cast(str, address.address_line_one),
         address_line_2=address.address_line_two,
-        city=address.city,
-        state=address.geo_state.geo_state_description,
-        zip_code=address.zip_code,
+        city=cast(str, address.city),
+        state=cast(str, geo_state.geo_state_description),
+        zip_code=cast(str, address.zip_code),
         # Hard-coding country to US because we store country codes in 3 characters in our database
         # and the EZcheck format requires 2 character country codes.
         country=Constants.US_COUNTRY_CODE,
@@ -127,8 +134,8 @@ def _convert_payment_to_ez_check_record(payment: Payment) -> EzCheckRecord:
 
 
 def _format_check_memo(payment: Payment) -> str:
-    start_date = payment.period_start_date.strftime(Constants.EZ_CHECK_MEMO_DATE_FORMAT)
-    end_date = payment.period_end_date.strftime(Constants.EZ_CHECK_MEMO_DATE_FORMAT)
+    start_date = cast(date, payment.period_start_date).strftime(Constants.EZ_CHECK_MEMO_DATE_FORMAT)
+    end_date = cast(date, payment.period_end_date).strftime(Constants.EZ_CHECK_MEMO_DATE_FORMAT)
 
     return Constants.EZ_CHECK_MEMO_FORMAT.format(
         payment.claim.fineos_absence_id, start_date, end_date
@@ -154,7 +161,7 @@ def _format_employee_name_for_ez_check(employee: Employee) -> str:
 
 def _get_ez_check_header() -> EzCheckHeader:
     return EzCheckHeader(
-        name_line_1="MA Deptartment of Family and Medical Leave",
+        name_line_1="MA Department of Family and Medical Leave",
         name_line_2="MA DFML",
         address_line_1="1 Ashburton Place",
         address_line_2="",
@@ -162,6 +169,6 @@ def _get_ez_check_header() -> EzCheckHeader:
         state="MA",
         zip_code="02108",  # Pass the zip code in as a string since it starts with a zero.
         country="US",
-        accounting_number=int(os.environ.get("DFML_PUB_ACCOUNTING_NUMBER")),
-        routing_number=int(os.environ.get("DFML_PUB_ROUTING_NUMBER")),
+        accounting_number=int(os.environ.get("DFML_PUB_ACCOUNTING_NUMBER")),  # type: ignore
+        routing_number=int(os.environ.get("DFML_PUB_ROUTING_NUMBER")),  # type: ignore
     )

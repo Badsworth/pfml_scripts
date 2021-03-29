@@ -165,7 +165,6 @@ def build_employee_with_eft(prenote_state: LkPrenoteState) -> Tuple[Employee, Pu
     pub_eft = PubEftFactory.build(prenote_state_id=prenote_state.prenote_state_id)
     EmployeePubEftPairFactory.build(employee=employee, pub_eft=pub_eft)
 
-    print(pub_eft.bank_account_type_id)
     return (employee, pub_eft)
 
 

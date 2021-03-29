@@ -71,7 +71,13 @@ def write_audit_report_rows(
     for payment_audit_report_row in payment_audit_report_rows:
         report.add_record(payment_audit_report_row)
 
-    return report_group.create_and_send_reports()
+    reports = report_group.create_and_send_reports()
+    if not reports:
+        return None  # This will error further up.
+    elif len(reports) != 1:
+        raise Exception("Audit report generation created %i reports: %s" % (len(reports), reports))
+
+    return reports[0]
 
 
 def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAuditCSV:
@@ -80,12 +86,15 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
     payment: Payment = payment_audit_data.payment
     claim: Claim = payment.claim
     employee: Employee = claim.employee
-    employee_address: EmployeeAddress = employee.addresses.first()  # TODO adjust after address validation work to get the most recent valid address
-    address: Address = employee_address.address if employee_address else None
+    # TODO adjust after address validation work to get the most recent valid address
+    employee_address: Optional[
+        EmployeeAddress
+    ] = employee.addresses.first() if employee.addresses else None
+    address: Optional[Address] = employee_address.address if employee_address else None
     employer: Employer = claim.employer
 
     payment_audit_row = PaymentAuditCSV(
-        pfml_payment_id=payment.payment_id,
+        pfml_payment_id=str(payment.payment_id),
         leave_type=get_leave_type(claim),
         first_name=payment.claim.employee.first_name,
         last_name=payment.claim.employee.last_name,
@@ -95,14 +104,18 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         state=address.geo_state.geo_state_description if address and address.geo_state else None,
         zip=address.zip_code if address else None,
         payment_preference=get_payment_preference(payment),
-        scheduled_payment_date=payment.payment_date.isoformat(),
-        payment_period_start_date=payment.period_start_date.isoformat(),
-        payment_period_end_date=payment.period_end_date.isoformat(),
-        payment_amount=payment.amount,
+        scheduled_payment_date=payment.payment_date.isoformat() if payment.payment_date else None,
+        payment_period_start_date=payment.period_start_date.isoformat()
+        if payment.period_start_date
+        else None,
+        payment_period_end_date=payment.period_end_date.isoformat()
+        if payment.period_end_date
+        else None,
+        payment_amount=str(payment.amount),
         absence_case_number=claim.fineos_absence_id,
         c_value=payment.fineos_pei_c_value,
         i_value=payment.fineos_pei_i_value,
-        employer_id=employer.fineos_employer_id if employer else None,
+        employer_id=str(employer.fineos_employer_id) if employer else None,
         case_status=claim.fineos_absence_status.absence_status_description
         if claim.fineos_absence_status
         else None,
@@ -111,7 +124,9 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         is_previously_rejected_payment=bool_to_str[
             payment_audit_data.is_previously_rejected_payment
         ],
-        number_of_times_in_rejected_or_error_state=payment_audit_data.number_of_times_in_rejected_or_error_state,
+        number_of_times_in_rejected_or_error_state=str(
+            payment_audit_data.number_of_times_in_rejected_or_error_state
+        ),
         rejected_by_program_integrity=bool_to_str[payment_audit_data.rejected_by_program_integrity],
         rejected_notes=payment_audit_data.rejected_notes,
     )

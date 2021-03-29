@@ -6,7 +6,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
@@ -19,6 +19,7 @@ from massgov.pfml.db.models.employees import (
     LkClaimType,
     LkPaymentMethod,
     LkState,
+    Payment,
     PaymentMethod,
     State,
 )
@@ -72,8 +73,8 @@ class AuditScenarioDescriptor:
     is_first_time_payment: bool
     is_previously_errored_payment: bool
     is_previously_rejected_payment: bool
-    number_of_times_in_error_state: bool
-    number_of_times_in_rejected_state: bool
+    number_of_times_in_error_state: int
+    number_of_times_in_rejected_state: int
 
 
 @dataclass
@@ -221,13 +222,13 @@ DEFAULT_AUDIT_SCENARIO_DATA_SET = [
 
 
 def create_payment_with_end_state(
-    c_value: int,
-    i_value: int,
+    c_value: str,
+    i_value: str,
     claim: Claim,
     payment_method: LkPaymentMethod,
     end_state: LkState,
     db_session: db.Session,
-):
+) -> Payment:
     payment_date = datetime.now()
     period_start_date = payment_date - timedelta(days=7)
     period_end_date = payment_date - timedelta(days=1)
@@ -329,7 +330,7 @@ def generate_scenario_data(
 def generate_audit_report_dataset(
     data_set_config: List[AuditScenarioNameWithCount], db_session: db.Session
 ) -> List[AuditScenarioData]:
-    scenario_data_set: List[Tuple[PaymentAuditData, AuditScenarioName]] = []
+    scenario_data_set: List[AuditScenarioData] = []
 
     for scenario_with_count in data_set_config:
         scenario_name = scenario_with_count.name
@@ -347,8 +348,10 @@ def generate_payment_audit_data_set_and_rejects_file(
     config: List[AuditScenarioNameWithCount],
     folder_path: str,
     db_session: db.Session,
-    reject_rate: decimal.Decimal = 0.5,
+    reject_rate: Optional[decimal.Decimal] = None,
 ) -> List[AuditScenarioData]:
+    if not reject_rate:
+        reject_rate = decimal.Decimal(0.5)
     payment_audit_scenario_data_set: List[AuditScenarioData] = generate_audit_report_dataset(
         config, db_session
     )

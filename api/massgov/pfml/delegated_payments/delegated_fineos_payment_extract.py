@@ -8,7 +8,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import Callable, Dict, List, Optional, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -29,7 +29,6 @@ from massgov.pfml.db.models.employees import (
     EmployeePubEftPair,
     GeoState,
     LatestStateLog,
-    LkPaymentTransactionType,
     LkState,
     Payment,
     PaymentMethod,
@@ -205,10 +204,11 @@ class PaymentData:
             self.absence_case_number = payments_util.validate_csv_input(
                 "ABSENCECASENU", claim_details, self.validation_container, True
             )
-
-            requested_absence = extract_data.requested_absence.indexed_data.get(
-                self.absence_case_number
-            )
+            requested_absence = None
+            if self.absence_case_number:
+                requested_absence = extract_data.requested_absence.indexed_data.get(
+                    CiIndex(c=self.absence_case_number, i="")
+                )
             if requested_absence:
                 self.leave_request_id = payments_util.validate_csv_input(
                     "LEAVEREQUEST_ID", requested_absence, self.validation_container, True
@@ -221,6 +221,7 @@ class PaymentData:
                         if count_incrementer is not None:
                             count_incrementer("unapproved_leave_request_count")
                         return payments_util.ValidationReason.INVALID_VALUE
+                    return None
 
                 self.leave_request_decision = payments_util.validate_csv_input(
                     "LEAVEREQUEST_DECISION",
@@ -379,7 +380,7 @@ class PaymentData:
         datetime.strptime(payment_period_date_str, "%Y-%m-%d %H:%M:%S")
         return None
 
-    def get_traceable_details(self) -> Dict[str, Optional[str]]:
+    def get_traceable_details(self) -> Dict[str, Optional[Any]]:
         # For logging purposes, this returns useful, traceable details
         # about a payment that isn't PII. Recommended usage is as:
         # logger.info("...", extra=payment_data.get_traceable_details())
@@ -393,7 +394,7 @@ class PaymentData:
 class PaymentExtractStep(Step):
     def run_step(self):
         with tempfile.TemporaryDirectory() as download_directory:
-            self.process_extract_data(download_directory)
+            self.process_extract_data(pathlib.Path(download_directory))
 
     def get_active_payment_state(self, payment: Payment) -> Optional[LkState]:
         """ For the given payment, determine if the payment is being processed or complete
@@ -497,7 +498,9 @@ class PaymentExtractStep(Step):
         )
         for record in requested_absences:
             absence_case_number = str(record.get("ABSENCE_CASENUMBER"))
-            extract_data.requested_absence.indexed_data[absence_case_number] = record
+            extract_data.requested_absence.indexed_data[
+                CiIndex(c=absence_case_number, i="")
+            ] = record
 
         logger.info("Successfully downloaded and indexed payment extract data files.")
 
@@ -523,7 +526,7 @@ class PaymentExtractStep(Step):
         self, s3_path: str, download_directory: pathlib.Path
     ) -> List[Dict[str, str]]:
         file_name = s3_path.split("/")[-1]
-        download_location = os.path.join(download_directory, file_name)
+        download_location = download_directory / file_name
         logger.info("download %s to %s", s3_path, download_location)
         if s3_path.startswith("s3:/"):
             file_util.download_from_s3(s3_path, str(download_location))
@@ -597,10 +600,10 @@ class PaymentExtractStep(Step):
         # errored payments grouped together in null claim object.
         if not claim and payment_data.absence_case_number:
             claim = Claim(
-                claim_id=uuid.uuid4(),
-                employee=employee,
-                fineos_absence_id=payment_data.absence_case_number,
+                claim_id=uuid.uuid4(), fineos_absence_id=payment_data.absence_case_number,
             )
+            if employee:
+                claim.employee = employee
             self.db_session.add(claim)
             self.increment("claim_created_count")
 
@@ -679,9 +682,7 @@ class PaymentExtractStep(Step):
         self.db_session.add(employee_address)
         return True
 
-    def get_payment_transaction_type_id(
-        self, payment_data: PaymentData, amount: Decimal
-    ) -> LkPaymentTransactionType:
+    def get_payment_transaction_type_id(self, payment_data: PaymentData, amount: Decimal) -> int:
         if payment_data.raw_payment_transaction_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
             return PaymentTransactionType.CANCELLATION.payment_transaction_type_id
         elif payment_data.raw_payment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
@@ -704,7 +705,7 @@ class PaymentExtractStep(Step):
     def create_payment(
         self,
         payment_data: PaymentData,
-        claim: Claim,
+        claim: Optional[Claim],
         validation_container: payments_util.ValidationContainer,
     ) -> Payment:
         # We always create a new payment record. This may be completely new
@@ -724,7 +725,8 @@ class PaymentExtractStep(Step):
 
         # Note that these values may have validation issues
         # that is fine as it will get moved to an error state
-        payment.claim = claim
+        if claim:
+            payment.claim = claim
         payment.period_start_date = payments_util.datetime_str_to_date(
             payment_data.payment_start_period
         )
@@ -758,8 +760,7 @@ class PaymentExtractStep(Step):
             # setting a payment that is going further in processing.
             if not validation_container.has_validation_issues():
                 raise Exception(
-                    "A payment without an amount was found and not caught by validation.",
-                    extra=payment_data.get_traceable_details(),
+                    "A payment without an amount was found and not caught by validation."
                 )
 
         payment.fineos_pei_c_value = payment_data.c_value
@@ -908,7 +909,7 @@ class PaymentExtractStep(Step):
 
         # Attach the EFT info used to the payment
         if payment_eft:
-            payment.pub_eft_id = payment_eft.pub_eft_id
+            payment.pub_eft = payment_eft
 
         # Link the payment object to the payment_reference_file
         payment_reference_file = PaymentReferenceFile(
@@ -1305,7 +1306,7 @@ class PaymentExtractStep(Step):
 
         logger.info("Successfully processed payment extract files")
 
-    def extract_to_staging_tables(self, extract_data: ExtractData):
+    def extract_to_staging_tables(self, extract_data: ExtractData) -> None:
         ref_file = extract_data.reference_file
         self.db_session.add(ref_file)
         pei_data = [

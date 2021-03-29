@@ -16,7 +16,6 @@ import pytz
 import smart_open
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.declarative.api import DeclarativeMeta
 from sqlalchemy.orm import ColumnProperty, class_mapper
 from sqlalchemy.orm.exc import MultipleResultsFound
 
@@ -25,6 +24,7 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.lookup import LookupTable
+from massgov.pfml.db.models import base
 from massgov.pfml.db.models.employees import (
     Address,
     ClaimType,
@@ -43,6 +43,7 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.payments import (
     FineosExtractEmployeeFeed,
+    FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
@@ -1183,15 +1184,16 @@ def get_attribute_names(cls):
 def create_staging_table_instance(
     data: Dict,
     db_cls: Union[
-        FineosExtractVpei,
-        FineosExtractVpeiClaimDetails,
-        FineosExtractVpeiPaymentDetails,
-        FineosExtractVbiRequestedAbsenceSom,
-        FineosExtractEmployeeFeed,
+        Type[FineosExtractVpei],
+        Type[FineosExtractVpeiClaimDetails],
+        Type[FineosExtractVpeiPaymentDetails],
+        Type[FineosExtractVbiRequestedAbsenceSom],
+        Type[FineosExtractEmployeeFeed],
+        Type[FineosExtractVbiRequestedAbsence],
     ],
     ref_file: ReferenceFile,
     fineos_extract_import_log_id: Optional[int],
-) -> DeclarativeMeta:
+) -> base.Base:
     """ We check if keys from data have a matching class property in staging model db_cls, if data contains
     properties not yet included in cls, we log a warning. We return an instance of cls, with matching properties
     from data and cls.
@@ -1219,7 +1221,5 @@ def create_staging_table_instance(
         [data.pop(diff) for diff in difference]
 
     return db_cls(
-        **data,
-        reference_file_id=ref_file.reference_file_id,
-        fineos_extract_import_log_id=fineos_extract_import_log_id,
+        **data, reference_file=ref_file, fineos_extract_import_log_id=fineos_extract_import_log_id,
     )

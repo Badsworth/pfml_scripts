@@ -1,5 +1,5 @@
 import abc
-from typing import Optional
+from typing import Any, Optional
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.logging as logging
@@ -48,7 +48,7 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             return None
         return self.log_entry.import_log.import_log_id
 
-    def set_metrics(self, **metrics) -> None:
+    def set_metrics(self, **metrics: Any) -> None:
         if not self.log_entry:
             return
         self.log_entry.set_metrics(**metrics)
