@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
@@ -73,7 +73,8 @@ class TransactionFileCreatorStep(Step):
             return
 
         self._create_ach_file_if_not_exists()
-        add_eft_prenote_to_nacha_file(self.ach_file, employees_with_efts)
+        # Cast the ach_file as we know it's set by _create_ach_file_if_not_exists
+        add_eft_prenote_to_nacha_file(cast(NachaFile, self.ach_file), employees_with_efts)
 
         # transition eft states for employee
         for employee_with_eft in employees_with_efts:
@@ -105,7 +106,8 @@ class TransactionFileCreatorStep(Step):
             return
 
         self._create_ach_file_if_not_exists()
-        add_payments_to_nacha_file(self.ach_file, payments)
+        # Cast the ach_file as we know it's set by _create_ach_file_if_not_exists
+        add_payments_to_nacha_file(cast(NachaFile, self.ach_file), payments)
 
         # transition states
         for payment in payments:

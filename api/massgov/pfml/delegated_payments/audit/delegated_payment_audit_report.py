@@ -103,7 +103,7 @@ class PaymentAuditReportStep(Step):
     ) -> Iterable[PaymentAuditData]:
         logger.info("Start building payment audit data for sampled payments")
 
-        payment_audit_data_set: List[Payment] = []
+        payment_audit_data_set: List[PaymentAuditData] = []
 
         for payment in payments:
             self.increment("payment_count")

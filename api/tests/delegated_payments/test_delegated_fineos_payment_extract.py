@@ -1,7 +1,6 @@
 import csv
 import json
 import os
-import tempfile
 from collections import OrderedDict
 from datetime import date
 
@@ -1306,7 +1305,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
     extract_data.claim_details.indexed_data = {ci_index: {"ABSENCECASENU": "NTN-01-ABS-01"}}
     extract_data.requested_absence.indexed_data = {
-        "NTN-01-ABS-01": {"ABSENCE_CASENUMBER": "NTN-01-ABS-01",}
+        extractor.CiIndex("NTN-01-ABS-01", ""): {"ABSENCE_CASENUMBER": "NTN-01-ABS-01",}
     }
 
     payment_data = extractor.PaymentData(
@@ -1654,8 +1653,7 @@ def test_update_ctr_address_pair_fineos_address_no_update(
     assert payment.has_address_update is False
 
 
-def test_extract_to_staging_tables(payment_extract_step, test_db_session):
-    tempdir = tempfile.mkdtemp()
+def test_extract_to_staging_tables(payment_extract_step, test_db_session, tmp_path):
     date_str = "2020-12-21-19-20-42"
     test_file_name1 = "vpei.csv"
     test_file_name2 = "vpeiclaimdetails.csv"
@@ -1670,7 +1668,7 @@ def test_extract_to_staging_tables(payment_extract_step, test_db_session):
     test_file_names = [test_file_path1, test_file_path2, test_file_path3, test_file_path4]
 
     extract_data = extractor.ExtractData(test_file_names, date_str)
-    payment_extract_step.download_and_extract_data(extract_data, tempdir)
+    payment_extract_step.download_and_extract_data(extract_data, tmp_path)
     payment_extract_step.extract_to_staging_tables(extract_data)
 
     test_db_session.commit()

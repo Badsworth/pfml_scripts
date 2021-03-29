@@ -16,7 +16,7 @@ class Constants:
     modifier = "A"
     destination = "221172186"
     destination_name = "People'sUnitedBankNA"
-    origin = "I046002284"
+    origin = "P046002284"
     origin_name = "MA DFML"
     originator_code = "1"
     service_code = "220"
@@ -104,7 +104,7 @@ class NachaFile:
         self.batches = []
 
         # Initialize the nine_fill
-        self.nine_fill = ""
+        self.nine_fill = b""
 
         # Create the File Header and File Control records
         self.file_header = NachaFileHeader()
@@ -300,17 +300,17 @@ class NumericNachaField(NachaField):
         self.int_value = int(int_value)
         NachaField.__init__(self, name, start, end, int(int_value), truncate_on_overflow)
 
-    def data(self) -> bytes:
+    def data(self) -> str:
         return self.value.rjust(self.length, "0")
 
 
 class AlphanumericNachaField(NachaField):
-    def data(self) -> bytes:
+    def data(self) -> str:
         return self.value.ljust(self.length, " ")
 
 
 class RoutingNachaField(NachaField):
-    def data(self) -> bytes:
+    def data(self) -> str:
         return self.value.rjust(self.length, " ")
 
 

@@ -81,7 +81,7 @@ ach_configs = [
 ]
 
 
-def write_file(folder_path: str, nacha_file: NachaFile):
+def write_file(folder_path: str, nacha_file: NachaFile) -> None:
     now = payments_util.get_now()
     payment_return_filename = delegated_payments_util.Constants.PUB_FILENAME_TEMPLATE.format(
         "PUB-NACHA", now.strftime("%Y%m%d"),
@@ -96,7 +96,10 @@ def write_file(folder_path: str, nacha_file: NachaFile):
 
 
 def generate_pub_return_prenote(
-    db_session, nacha_batch, pre_note_configs: List[PubPaymentReturnScenario], skiprate: int = 0
+    db_session: db.Session,
+    nacha_batch: NachaBatch,
+    pre_note_configs: List[PubPaymentReturnScenario],
+    skiprate: int = 0,
 ) -> List[PubPaymentReturnScenarioData]:
     scenario_data_list = []
 
@@ -187,9 +190,12 @@ def generate_pub_return_prenote(
 
 
 def generate_pub_return_ach(
-    db_session, nacha_batch, ach_configs: List[PubPaymentReturnScenarioData], skiprate: int = 0
-):
-    scenario_data_list = []
+    db_session: db.Session,
+    nacha_batch: NachaBatch,
+    ach_configs: List[PubPaymentReturnScenario],
+    skiprate: int = 0,
+) -> List[PubPaymentReturnScenarioData]:
+    scenario_data_list: List[PubPaymentReturnScenarioData] = []
 
     for ach_config in ach_configs:
 
@@ -278,8 +284,8 @@ def generate_pub_return_ach(
 
 
 def generate_pub_return(
-    db_session,
-    folder_location,
+    db_session: db.Session,
+    folder_location: str,
     pre_note_configs: List[PubPaymentReturnScenario] = pre_note_configs,
     ach_config: List[PubPaymentReturnScenario] = ach_configs,
     skiprate: int = 0,

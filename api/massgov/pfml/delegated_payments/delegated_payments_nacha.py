@@ -44,7 +44,7 @@ def get_nacha_batch(nacha_file: NachaFile) -> NachaBatch:
     return nacha_batch
 
 
-def upload_nacha_file_to_s3(nacha_file: NachaFile, file_path: str):
+def upload_nacha_file_to_s3(nacha_file: NachaFile, file_path: str) -> None:
     logger.info("Creating NACHA files")
 
     nacha_file.finalize()
@@ -53,7 +53,7 @@ def upload_nacha_file_to_s3(nacha_file: NachaFile, file_path: str):
         pub_file.write(nacha_file.to_bytes())
 
 
-def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]):
+def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]) -> None:
     if len(payments) == 0:
         logger.warning("No Payment records to add to PUB transaction file")
         return
@@ -78,7 +78,7 @@ def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]):
 
 def add_eft_prenote_to_nacha_file(
     nacha_file: NachaFile, employees_with_eft: List[Tuple[Employee, PubEft]]
-):
+) -> None:
     if len(employees_with_eft) == 0:
         logger.warning("No claimant EFTs to prenote.")
         return
@@ -117,11 +117,11 @@ def get_trans_code(bank_account_type_id: int, is_prenote: bool, is_return: bool)
 
     elif bank_account_type_id == BankAccountType.SAVINGS.bank_account_type_id:
         if is_prenote:
-            return Constants.savings_deposit_trans_code
+            return Constants.savings_prenote_trans_code
         elif is_return:
             return Constants.savings_return_trans_code
         else:
-            return Constants.savings_prenote_trans_code
+            return Constants.savings_deposit_trans_code
 
     raise Exception(
         "Unable to determine trans code for bank account type id %i" % bank_account_type_id

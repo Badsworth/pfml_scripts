@@ -900,7 +900,7 @@ class ClaimantExtractStep(Step):
 
         logger.info("Successfully moved claimant files to error folder.")
 
-    def extract_to_staging_tables(self, extract_data: ExtractData):
+    def extract_to_staging_tables(self, extract_data: ExtractData) -> None:
         ref_file = extract_data.reference_file
         self.db_session.add(ref_file)
         requested_absence_info_data = [

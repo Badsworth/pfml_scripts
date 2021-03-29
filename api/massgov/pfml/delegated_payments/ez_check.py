@@ -16,7 +16,7 @@ class EzCheckField:
     description: str
     max_length: int
     value: Any
-    value_type: Type[Any] = None
+    value_type: Optional[Type[Any]] = None
     as_string: str = ""
     pattern: Optional[str] = None
     validation_issues: List[payments_util.ValidationIssue] = []
@@ -66,7 +66,7 @@ class EzCheckField:
             )
             self.add_validation_issue(payments_util.ValidationReason.FIELD_TOO_LONG, msg)
 
-    def validate_pattern(self) -> bool:
+    def validate_pattern(self) -> None:
         if self.pattern is not None and not re.match(self.pattern, self.as_string):
             msg = "Expected value for field '{}' to match pattern '{}'".format(
                 self.description, self.pattern
@@ -129,7 +129,7 @@ class EzCheckRecord:
         memo: str,
         payee_name: str,
         address_line_1: str,
-        address_line_2: str,
+        address_line_2: Optional[str],
         city: str,
         state: str,
         zip_code: Any,
