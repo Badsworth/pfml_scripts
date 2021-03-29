@@ -306,6 +306,19 @@ data "aws_iam_policy_document" "register_admins_task_role_policy_document" {
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
     ]
   }
+
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-feature-gate",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-feature-gate/*"
+    ]
+
+  }
 }
 
 
