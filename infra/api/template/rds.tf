@@ -145,11 +145,20 @@ resource "aws_db_instance" "default" {
   }
 
   tags = merge(module.constants.common_tags, {
-    "SMX:Asset"      = "v1:massgov_pfml_${var.environment_name}:${module.constants.smartronix_environment_tags[var.environment_name]}:RDS:PFML:Advanced:None"
-    environment      = module.constants.environment_tags[var.environment_name]
-    Name             = "massgov_pfml_${var.environment_name}"
-    backup           = var.environment_name == "prod" ? "prod" : "nonprod"
-    "Patch Group"    = var.environment_name == "prod" ? "prod-linux1" : "nonprod-linux1"
+    # Required tags
+    "SMX:Asset"   = "v1:massgov_pfml_${var.environment_name}:${module.constants.smartronix_environment_tags[var.environment_name]}:RDS:PFML:Advanced:None"
+    environment   = module.constants.environment_tags[var.environment_name]
+    Name          = "massgov_pfml_${var.environment_name}"
+    backup        = var.environment_name == "prod" ? "prod" : "nonprod"
+    "Patch Group" = var.environment_name == "prod" ? "prod-linux1" : "nonprod-linux1"
+
+    # Scheduler tag for operations team (smartronix)
+    "Scheduler" = var.environment_name == "training" ? "_office-hours-db" : ""
+
+    # Human-readable tag for operations team (smartronix)
+    purpose = "${var.environment_name} database for PFML"
+
+    # Temporary scheduler exception tags
     schedulev2       = "na"
     expenddate       = "01/31/21"
     expenddatedetail = "SCTASK0177777"
