@@ -594,51 +594,33 @@ class PaymentExtractStep(Step):
             )
             raise
 
-        # Claim might not exist because the employee used the call center, or the employee
-        # errored. We do not want to create a claim if we do not have an absence case number
+        # Claim might not exist because the employee used the call center, or the claimant extract
+        # errored for the claimant.
+        # We do not want to create a claim if we do not have an absence case number
         # as it's a unique field and we would rather have orphaned payments instead of
         # errored payments grouped together in null claim object.
         if not claim and payment_data.absence_case_number:
             claim = Claim(
                 claim_id=uuid.uuid4(), fineos_absence_id=payment_data.absence_case_number,
             )
-            if employee:
-                claim.employee = employee
             self.db_session.add(claim)
             self.increment("claim_created_count")
 
-        # Do a few validations on the claim+employee
-        if claim:
-            if not claim.employee_id and employee:
-                # This means we previously created this claim, but didn't have the employee
-                # yet in our system, but have them now. In this case, we want to attach
-                # the employee to the claim. I'm not sure if this is a valid scenario?
-                self.increment("claim_without_employee_found_count")
-            if not employee and claim.employee:
-                # Somehow we have ended up in a state where we could not find an employee
-                # but did find a claim with some other employee ID. This shouldn't happen
-                # but if it does we need to halt to investigate.
-                logger.error(
-                    "Could not find employee for payment, but found claim %s with an attached employee %s",
-                    claim.claim_id,
-                    claim.employee.employee_id,
-                    extra=payment_data.get_traceable_details(),
-                )
-                raise Exception("Could not find employee for payment, but found a claim")
+        # Attach the employee to the claim
+        if claim and employee:
+            claim.employee = employee
 
-            if employee and claim.employee and employee.employee_id != claim.employee.employee_id:
-                # We've found a claim with a different employee ID, this shouldn't happen
-                # This might mean that the FINEOS absence_case_number isn't necessarily unique.
-                logger.error(
-                    "Found claim %s, but its employee ID %s does not match the one we found from the TIN %s",
-                    claim.claim_id,
-                    claim.employee.employee_id,
-                    employee.employee_id,
-                    extra=payment_data.get_traceable_details(),
-                )
-                raise Exception(
-                    "The claims employee does not match the employee associated with the TIN"
-                )
+        # Somehow we have ended up in a state where we could not find an employee
+        # but did find a claim with some other employee ID. This shouldn't happen
+        # but if it does we need to halt to investigate.
+        if claim and not employee and claim.employee:
+            logger.error(
+                "Could not find employee for payment, but found claim %s with an attached employee %s",
+                claim.claim_id,
+                claim.employee.employee_id,
+                extra=payment_data.get_traceable_details(),
+            )
+            raise Exception("Could not find employee for payment, but found a claim")
 
         return employee, claim
 
