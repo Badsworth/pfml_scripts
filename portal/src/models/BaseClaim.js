@@ -121,8 +121,8 @@ class BaseClaim extends BaseModel {
  */
 export const AdjudicationStatusType = {
   approved: "Approved",
-  pending: "Undecided",
   denied: "Declined",
+  pending: "Undecided",
 };
 
 export default BaseClaim;
