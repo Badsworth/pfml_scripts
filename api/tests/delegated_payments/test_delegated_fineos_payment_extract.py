@@ -162,9 +162,7 @@ def make_vpei_record(
     vpei_record["PAYMENTADD2"] = get_value(address2, "", generate_defaults)
     vpei_record["PAYMENTADD4"] = get_value(city, fake.city(), generate_defaults)
     vpei_record["PAYMENTADD6"] = get_value(state, fake.state_abbr().upper(), generate_defaults)
-    vpei_record["PAYMENTPOSTCO"] = get_value(
-        zip_code, fake.zipcode_plus4().replace("-", ""), generate_defaults
-    )
+    vpei_record["PAYMENTPOSTCO"] = get_value(zip_code, fake.zipcode_plus4(), generate_defaults)
     vpei_record["PAYMENTMETHOD"] = get_value(
         payment_method, "Elec Funds Transfer", generate_defaults
     )
@@ -1486,6 +1484,28 @@ def test_validation_payment_amount(initialize_factories_session, set_exporter_en
     )
 
     assert set([ValidationIssue(ValidationReason.INVALID_VALUE, "AMOUNT_MONAMT")]).issubset(
+        set(payment_data.validation_container.validation_issues)
+    )
+
+
+def test_validation_zip_code(initialize_factories_session, set_exporter_env_vars):
+    # When doing validation, we verify that payment amount
+    # must be a numeric value
+
+    ci_index = extractor.CiIndex("1", "1")
+    extract_data = extractor.ExtractData(extractor.expected_file_names, "2020-01-01-11-30-00")
+    extract_data.pei.indexed_data = {ci_index: {"PAYMENTPOSTCO": "ZIP12345"}}
+    extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
+    extract_data.claim_details.indexed_data = {ci_index: {"ABSENCECASENU": "NTN-01-ABS-01"}}
+    extract_data.requested_absence.indexed_data = {
+        "NTN-01-ABS-01": {"ABSENCE_CASENUMBER": "NTN-01-ABS-01"}
+    }
+
+    payment_data = extractor.PaymentData(
+        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
+    )
+
+    assert set([ValidationIssue(ValidationReason.INVALID_VALUE, "PAYMENTPOSTCO")]).issubset(
         set(payment_data.validation_container.validation_issues)
     )
 

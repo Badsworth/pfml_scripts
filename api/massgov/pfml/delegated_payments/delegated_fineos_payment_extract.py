@@ -2,6 +2,7 @@ import csv
 import decimal
 import os
 import pathlib
+import re
 import tempfile
 import uuid
 from collections import OrderedDict
@@ -280,6 +281,7 @@ class PaymentData:
             address_required,
             custom_validator_func=payments_util.lookup_validator(GeoState),
         )
+
         self.zip_code = payments_util.validate_csv_input(
             "PAYMENTPOSTCO",
             pei_record,
@@ -287,6 +289,7 @@ class PaymentData:
             address_required,
             min_length=5,
             max_length=10,
+            custom_validator_func=payments_util.zip_code_validator,
         )
 
         self.raw_payment_transaction_type = payments_util.validate_csv_input(
@@ -306,6 +309,8 @@ class PaymentData:
 
         def amount_validator(amount_str: str) -> Optional[payments_util.ValidationReason]:
             try:
+                if not re.match(payments_util.Regexes.MONETARY_AMOUNT, amount_str):
+                    return payments_util.ValidationReason.INVALID_VALUE
                 Decimal(amount_str)
             except (InvalidOperation, TypeError):  # Amount is not numeric
                 return payments_util.ValidationReason.INVALID_VALUE

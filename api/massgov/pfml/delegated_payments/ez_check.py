@@ -82,7 +82,7 @@ class EzCheckIntegerField(EzCheckField):
 class EzCheckDecimalField(EzCheckField):
     value: Decimal
     value_type = Decimal
-    pattern = r"^\d*\.\d\d$"  # Decimal fields must include 2 digits following the decimal point.
+    pattern = payments_util.Regexes.MONETARY_AMOUNT
 
     def format_value(self) -> str:
         # Force the value to have a two digit decimal part.
@@ -99,7 +99,7 @@ class EzCheckDateField(EzCheckField):
 
 # Same as EzCheckCountryAbbreviationField, separate classes for clarity.
 class EzCheckStateAbbreviationField(EzCheckField):
-    pattern = r"^[A-Z]{2}$"  # State abbreviations should be exactly 2 uppercase letters.
+    pattern = payments_util.Regexes.STATE_ABBREVIATION
 
     def format_value(self) -> str:
         return self.value.upper()
@@ -107,14 +107,14 @@ class EzCheckStateAbbreviationField(EzCheckField):
 
 # Same as EzCheckStateAbbreviationField, separate classes for clarity.
 class EzCheckCountryAbbreviationField(EzCheckField):
-    pattern = r"^[A-Z]{2}$"  # Country abbreviations should be exactly 2 uppercase letters.
+    pattern = payments_util.Regexes.COUNTRY_ABBREVIATION
 
     def format_value(self) -> str:
         return self.value.upper()
 
 
 class EzCheckZipCodeField(EzCheckField):
-    pattern = r"^\d{5}(-\d{4})?$"  # Zip codes must contain 5 digits and may contain +4 identifier.
+    pattern = payments_util.Regexes.ZIP_CODE
 
 
 class EzCheckRecord:

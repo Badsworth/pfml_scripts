@@ -129,6 +129,17 @@ class Constants:
     ]
 
 
+class Regexes:
+    MONETARY_AMOUNT = (
+        r"^\d*\.\d\d$"  # Decimal fields must include 2 digits following the decimal point.
+    )
+    STATE_ABBREVIATION = r"^[A-Z]{2}$"  # State abbreviations should be exactly 2 uppercase letters.
+    COUNTRY_ABBREVIATION = (
+        r"^[A-Z]{2}$"  # Country abbreviations should be exactly 2 uppercase letters.
+    )
+    ZIP_CODE = r"^\d{5}(-\d{4})?$"  # Zip codes must contain 5 digits and may contain +4 identifier.
+
+
 class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"
@@ -200,6 +211,12 @@ def lookup_validator(
         return None
 
     return validator_func
+
+
+def zip_code_validator(zip_code: str) -> Optional[ValidationReason]:
+    if not re.match(Regexes.ZIP_CODE, zip_code):
+        return ValidationReason.INVALID_VALUE
+    return None
 
 
 def validate_csv_input(

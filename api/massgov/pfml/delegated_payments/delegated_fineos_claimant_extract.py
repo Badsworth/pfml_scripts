@@ -537,6 +537,7 @@ class ClaimantExtractStep(Step):
             True,
             min_length=5,
             max_length=10,
+            custom_validator_func=payments_util.zip_code_validator,
         )
 
         if nbr_of_validation_errors == len(validation_container.validation_issues):

@@ -633,7 +633,7 @@ def test_update_mailing_address_validation_issues(claimant_extract_step, test_db
         "ADDRESS2": "",
         "ADDRESS4": "New York",
         "ADDRESS6": "NY",
-        "POSTCODE": "1102",
+        "POSTCODE": "ZIP12345",
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
