@@ -1275,7 +1275,7 @@ def test_process_extract_additional_payment_types(
     assert len(check_cancellation_payment.state_logs) == 1
     assert (
         check_cancellation_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION.state_id
     )
 
     # Unknown should be in the error report state DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT

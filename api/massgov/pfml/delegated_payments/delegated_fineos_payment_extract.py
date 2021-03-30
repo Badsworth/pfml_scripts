@@ -962,21 +962,14 @@ class PaymentExtractStep(Step):
             message = "Overpayment payment added to pending state for FINEOS writeback"
             self.increment("overpayment_count")
 
-        # Cancellations depend on the type of payment
+        # Cancellations are added to the FINEOS writeback + a report
         elif (
             payment.payment_transaction_type_id
             == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
         ):
-            # ACH cancellations are added to the FINEOS writeback + a report
-            if payment.disb_method_id == PaymentMethod.ACH.payment_method_id:
-                end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
-                message = "Cancellation payment added to pending state for FINEOS writeback"
-                self.increment("ach_cancellation_count")
-            # Check cancellations are processed by us and sent to PUB
-            else:
-                end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
-                message = "Check cancellation payment added"
-                self.increment("check_cancellation_count")
+            end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
+            message = "Cancellation payment added to pending state for FINEOS writeback"
+            self.increment("cancellation_count")
 
         else:
             end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
