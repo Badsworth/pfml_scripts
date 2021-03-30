@@ -1114,7 +1114,7 @@ class PaymentExtractStep(Step):
             extract_data.date_str, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         )
         new_pei_s3_path = extract_data.pei.file_location.replace(
-            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
+            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
         )
         file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
         logger.debug(
@@ -1143,6 +1143,20 @@ class PaymentExtractStep(Step):
             extra={
                 "source": extract_data.claim_details.file_location,
                 "destination": new_claim_s3_path,
+            },
+        )
+
+        new_requested_absence_s3_path = extract_data.requested_absence.file_location.replace(
+            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
+        )
+        file_util.rename_file(
+            extract_data.requested_absence.file_location, new_requested_absence_s3_path
+        )
+        logger.debug(
+            "Moved requested absence file to processed folder.",
+            extra={
+                "source": extract_data.requested_absence.file_location,
+                "destination": new_requested_absence_s3_path,
             },
         )
 

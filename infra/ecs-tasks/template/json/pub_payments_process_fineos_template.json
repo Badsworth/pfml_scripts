@@ -47,9 +47,7 @@
 
     ],
     "secrets": [
-      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
-      { "name": "DFML_PUB_ROUTING_NUMBER", "valueFrom": "/service/${app_name}/${environment_name}/dfml_pub_routing_number" },
-      { "name": "DFML_PUB_ACCOUNT_NUMBER", "valueFrom": "/service/${app_name}/${environment_name}/dfml_pub_account_number" }
+      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }
     ]
   }
 ]

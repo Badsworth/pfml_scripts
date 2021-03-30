@@ -737,8 +737,8 @@ def test_process_extract_unprocessed_folder_files(
     )
     processed_files = file_util.list_files(processed_folder, recursive=True)
     skipped_files = file_util.list_files(skipped_folder, recursive=True)
-    assert len(processed_files) == 5
-    assert len(skipped_files) == 2
+    assert len(processed_files) == 4
+    assert len(skipped_files) == 4
 
     expected_file_names = []
     for date_file in [
