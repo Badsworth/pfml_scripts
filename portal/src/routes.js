@@ -66,6 +66,8 @@ const routes = {
     cannotVerify: "/employers/organizations/cannot-verify",
     confirmation: "/employers/applications/confirmation",
     createAccount: "/employers/create-account",
+    // TODO (EMPLOYER-1077) we will soon introduce a new page called "dashboard"
+    // this will become "welcome". make sure to update references throughout the codebase
     dashboard: "/employers",
     finishAccountSetup: "/employers/finish-account-setup",
     newApplication: "/employers/applications/new-application",
