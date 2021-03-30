@@ -879,7 +879,7 @@ paths:
         - Applications
       summary: >
         Temp
-      operationId: massgov.pfml.api.claims.link_claim
+      operationId: massgov.pfml.api.applications.application_link
       parameters:
         - name: fineos_absence_id
           in: path
@@ -890,14 +890,7 @@ paths:
       responses:
         "200":
           description: Application imported without errors.
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessfulResponse"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/ApplicationResponse"
+
         "400":
           $ref: "#/components/responses/BadRequest"
         "503":

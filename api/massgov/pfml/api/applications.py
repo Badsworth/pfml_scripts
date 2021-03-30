@@ -48,11 +48,67 @@ from massgov.pfml.db.models.applications import (
     OtherIncome,
     PreviousLeave,
 )
+from massgov.pfml.db.models.employees import Claim
 from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSFatalUnavailable, FINEOSNotFound
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+
+def application_link(fineos_absence_id: str) -> flask.Response:
+    with app.db_session() as db_session:
+        current_user = app.current_user()
+        claim = (
+            db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == fineos_absence_id)
+            .one_or_none()
+        )
+        # application = (
+        #     db_session.query(Application)
+        #     .filter(Application.claim_id == claim.claim_id)
+        #     .one_or_none()
+        # )
+        application = None
+
+    if claim is None or application is None:
+        logger.info("Claim not in database, fetching from FINEOS")
+        
+        # check if user can actually see this claim
+        # if not user_has_access_to_claim(application): # <-- todo user_can_access_fineos_claim
+        #     logger.warning("User does not have access to claim.")
+        #     return response_util.error_response(
+        #         status_code=Forbidden,
+        #         message="User does not have access to claim.",
+        #         errors=[],
+        #         data={},
+        #     ).to_api_response()
+
+        # else if user can see it
+        # get claim data from fineos
+        # add it to database, belonging to this user
+
+        # get api claim data to return back to portal
+        # with app.db_session() as db_session:
+        #     application = (
+        #         db_session.query(Application)
+        #         .filter(Application.fineos_absence_id == fineos_absence_id)
+        #         .one_or_none()
+        #     )
+    else:
+        return response_util.error_response(
+            status_code=BadRequest,
+            message="User does not have access to claim.",
+            errors=[],
+            data={},
+        ).to_api_response()
+    
+    # ClaimResponse.from_orm(claim).dict()
+    return response_util.success_response(
+        message="Successfully retrieved claim",
+        data="yes", #ApplicationResponse.from_orm(application).dict()
+        status_code=200,
+    ).to_api_response()
 
 
 def application_get(application_id):
