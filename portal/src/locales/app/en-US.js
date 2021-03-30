@@ -544,8 +544,10 @@ const errors = {
       employer_fein: {
         pattern:
           "Enter your 9-digit Employer Identification Number in the correct format.",
-        require_employer:
+        require_contributing_employer:
           "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly and the associated business is contributing to Paid Family and Medical Leave.",
+        require_employer:
+          "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly.",
         required: "Enter your 9-digit Employer Identification Number.",
       },
     },
