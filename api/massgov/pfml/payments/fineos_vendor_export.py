@@ -514,10 +514,10 @@ def update_employee_info(
     ):
         # Use employee feed entry to update PFML DB
         date_of_birth = payments_util.validate_csv_input(
-            "DATEOFBIRTH", employee_feed_entry, validation_container, True
+            "DATEOFBIRTH", employee_feed_entry, validation_container, False
         )
 
-        if date_of_birth is not None:
+        if date_of_birth:
             employee_pfml_entry.date_of_birth = payments_util.datetime_str_to_date(date_of_birth)
 
         has_address_update = update_mailing_address(

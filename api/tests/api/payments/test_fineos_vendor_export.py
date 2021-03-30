@@ -409,6 +409,30 @@ def test_update_employee_info_happy_path(
     assert has_vendor_update is True
 
 
+def test_update_employee_info_dob_not_required(
+    test_db_session, initialize_factories_session, formatted_claim
+):
+    extract_data, requested_absence = format_absence_data()
+    add_employee_feed(extract_data)
+    fineos_customer_number = "12345"
+    extract_data.employee_feed.indexed_data[fineos_customer_number]["DATEOFBIRTH"] = ""
+
+    tax_identifier = TaxIdentifierFactory(tax_identifier="123456789")
+    EmployeeFactory(tax_identifier=tax_identifier, date_of_birth="1970-04-27")
+
+    absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
+    validation_container = payments_util.ValidationContainer(record_key=absence_case_id)
+
+    employee, has_vendor_update = vendor_export.update_employee_info(
+        test_db_session, extract_data, requested_absence, formatted_claim, validation_container
+    )
+
+    # Assert no validation issues even though date of birth field was missing
+    assert len(validation_container.validation_issues) == 0
+    # Assert date of birth was not wiped out
+    assert employee.date_of_birth == datetime.date(1970, 4, 27)
+
+
 def test_update_employee_info_not_in_db(
     test_db_session, initialize_factories_session, formatted_claim
 ):
