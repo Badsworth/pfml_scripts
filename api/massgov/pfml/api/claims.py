@@ -83,7 +83,6 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
             raise NotAuthorizedForAccess(
                 description="User does not have leave administrator record for this employer",
                 error_type="unauthorized_leave_admin",
-                data={"is_user_linked_to_employer": False},
             )
 
         if user_leave_admin.fineos_web_id is None:

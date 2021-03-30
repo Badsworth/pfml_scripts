@@ -181,7 +181,6 @@ class TestNotAuthorizedForAccess:
             == "User does not have leave administrator record for this employer"
         )
         assert response.get_json()["errors"][0]["type"] == "unauthorized_leave_admin"
-        assert response.get_json()["data"]["is_user_linked_to_employer"] is False
 
     def test_employers_cannot_download_documents_without_ula(
         self, client, auth_token, employer_auth_token, setup_claim
@@ -201,7 +200,6 @@ class TestNotAuthorizedForAccess:
             == "User does not have leave administrator record for this employer"
         )
         assert response.get_json()["errors"][0]["type"] == "unauthorized_leave_admin"
-        assert response.get_json()["data"]["is_user_linked_to_employer"] is False
 
     def test_employers_cannot_update_claim_without_ula(
         self, client, employer_auth_token, update_claim_body, setup_claim
@@ -221,7 +219,6 @@ class TestNotAuthorizedForAccess:
             == "User does not have leave administrator record for this employer"
         )
         assert response.get_json()["errors"][0]["type"] == "unauthorized_leave_admin"
-        assert response.get_json()["data"]["is_user_linked_to_employer"] is False
 
 
 @pytest.mark.integration
