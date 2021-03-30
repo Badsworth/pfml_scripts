@@ -37,7 +37,7 @@ def test_ach_reader_simple():
     assert ach_reader.get_ach_returns() == [
         reader.ACHReturn(
             id_number="A1001",
-            return_reason_code=1,
+            return_reason_code="R01",
             original_dfi_id="24823818",
             dfi_account_number="130009783",
             amount=decimal.Decimal("893.73"),
@@ -46,7 +46,7 @@ def test_ach_reader_simple():
         ),
         reader.ACHReturn(
             id_number="B1002",
-            return_reason_code=1,
+            return_reason_code="R01",
             original_dfi_id="73088833",
             dfi_account_number="823795428",
             amount=decimal.Decimal("4809.54"),
@@ -55,7 +55,7 @@ def test_ach_reader_simple():
         ),
         reader.ACHReturn(
             id_number="A1003",
-            return_reason_code=9,
+            return_reason_code="R09",
             original_dfi_id="20844164",
             dfi_account_number="456630883",
             amount=decimal.Decimal("62.93"),
@@ -64,7 +64,7 @@ def test_ach_reader_simple():
         ),
         reader.ACHReturn(
             id_number="B1003",
-            return_reason_code=2,
+            return_reason_code="R02",
             original_dfi_id="78087339",
             dfi_account_number="657340609",
             amount=decimal.Decimal("83.52"),
@@ -73,7 +73,7 @@ def test_ach_reader_simple():
         ),
         reader.ACHReturn(
             id_number="A1004",
-            return_reason_code=2,
+            return_reason_code="R02",
             original_dfi_id="86084788",
             dfi_account_number="362060253",
             amount=decimal.Decimal("3.93"),
@@ -130,7 +130,7 @@ def test_ach_reader_missing_addenda():
     assert ach_reader.get_ach_returns() == [
         reader.ACHReturn(
             id_number="B1002",
-            return_reason_code=2,
+            return_reason_code="R02",
             original_dfi_id="86084788",
             dfi_account_number="362060253",
             amount=decimal.Decimal("3.93"),
@@ -184,7 +184,7 @@ def test_ach_reader_large():
 
     assert ach_reader.get_ach_returns()[0] == reader.ACHReturn(
         id_number="PREN11270247",
-        return_reason_code=3,
+        return_reason_code="R03",
         original_dfi_id="01140153",
         dfi_account_number="3308780523",
         amount=decimal.Decimal("0"),
@@ -193,7 +193,7 @@ def test_ach_reader_large():
     )
     assert ach_reader.get_change_notifications()[0] == reader.ACHChangeNotification(
         id_number="20629",
-        return_reason_code=2,  # C02 - incorrect transit/routing number
+        return_reason_code="C02",  # C02 - incorrect transit/routing number
         original_dfi_id="01140153",
         dfi_account_number="1316271169",
         amount=decimal.Decimal("0"),
@@ -221,7 +221,7 @@ def test_ach_reader_entry_count_wrong():
     assert ach_reader.get_ach_returns() == [
         reader.ACHReturn(
             id_number="A1001",
-            return_reason_code=1,
+            return_reason_code="R01",
             original_dfi_id="24823818",
             dfi_account_number="130009783",
             amount=decimal.Decimal("893.73"),
@@ -262,7 +262,7 @@ def test_ach_reader_no_batch_header():
     assert ach_reader.get_ach_returns() == [
         reader.ACHReturn(
             id_number="A1001",
-            return_reason_code=1,
+            return_reason_code="R01",
             original_dfi_id="24823818",
             dfi_account_number="130009783",
             amount=decimal.Decimal("893.73"),

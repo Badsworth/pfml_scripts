@@ -82,24 +82,23 @@ class RawRecord:
 @dataclasses.dataclass
 class ACHReturn:
     id_number: str
-    return_reason_code: int
+    return_reason_code: str
     original_dfi_id: str  # Routing number
     dfi_account_number: str  # Account number
     amount: decimal.Decimal
     name: str
     line_number: int
+
+    def is_change_notification(self):
+        return False
 
 
 @dataclasses.dataclass
-class ACHChangeNotification:
-    id_number: str
-    return_reason_code: int
-    original_dfi_id: str  # Routing number
-    dfi_account_number: str  # Account number
-    amount: decimal.Decimal
-    name: str
+class ACHChangeNotification(ACHReturn):
     addenda_information: str
-    line_number: int
+
+    def is_change_notification(self):
+        return True
 
 
 @dataclasses.dataclass
@@ -271,7 +270,7 @@ class ACHReader:
         if entry["addenda_type_code"] == TypeCode.ADDENDA_RETURN:
             ach_return = ACHReturn(
                 id_number=entry["id_number"],
-                return_reason_code=int(entry["return_reason_code"][1:]),
+                return_reason_code=entry["return_reason_code"],
                 original_dfi_id=entry["original_dfi_id"],
                 dfi_account_number=entry["dfi_account_number"],
                 amount=decimal.Decimal(entry["amount"]) / decimal.Decimal(100),
@@ -282,7 +281,7 @@ class ACHReader:
         elif entry["addenda_type_code"] == TypeCode.ADDENDA_NOTIFICATION_OF_CHANGE:
             change_notification = ACHChangeNotification(
                 id_number=entry["id_number"],
-                return_reason_code=int(entry["return_reason_code"][1:]),
+                return_reason_code=entry["return_reason_code"],
                 original_dfi_id=entry["original_dfi_id"],
                 dfi_account_number=entry["dfi_account_number"],
                 amount=decimal.Decimal(entry["amount"]) / decimal.Decimal(100),
