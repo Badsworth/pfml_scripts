@@ -500,25 +500,24 @@ def test_assert_dia_payments_are_stored_correctly(
         == 1
     )
 
+    def parse_date(date_str):
+        return datetime.strptime(date_str, "%Y%m%d").date()
+
     # Expect that the inserted row is what we expect.
     record = test_db_session.query(DiaReductionPayment).all()[0]
-    date_fields = [
-        dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS[dia.Constants.FORM_RECEIVED_OR_DISPOSITION_FIELD],
-        dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS[dia.Constants.EVE_CREATED_DATE_FIELD],
-        dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS[dia.Constants.AWARD_DATE_FIELD],
-        dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS[dia.Constants.START_DATE_FIELD],
-        dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS[dia.Constants.END_DATE_FIELD],
-        dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS[dia.Constants.AWARD_CREATED_DATE_FIELD],
-    ]
-
-    for (csv_property, model_property) in dia.Constants.PAYMENT_CSV_FIELD_MAPPINGS.items():
-        if model_property in date_fields:
-            assert (
-                getattr(record, model_property)
-                == datetime.strptime(params[0][csv_property], "%Y%m%d").date()
-            )
-        else:
-            assert str(getattr(record, model_property)) == str(params[0][csv_property])
+    assert record.absence_case_id == params[0]["DFML_CASE_ID"]
+    assert record.award_amount == params[0]["AWARD_AMOUNT"]
+    assert record.award_code == str(params[0]["AWARD_CODE"])
+    assert record.award_created_date == parse_date(params[0]["AWARD_CREATED_DATE"])
+    assert record.award_date == parse_date(params[0]["AWARD_DATE"])
+    assert record.award_id == str(params[0]["AWARD_ID"])
+    assert record.board_no == str(params[0]["BOARD_NO"])
+    assert record.end_date == parse_date(params[0]["END_DATE"])
+    assert record.eve_created_date == parse_date(params[0]["EVE_CREATED_DATE"])
+    assert record.event_description == params[0]["INS_FORM_OR_MEET"]
+    assert record.event_id == str(params[0]["EVENT_ID"])
+    assert record.start_date == parse_date(params[0]["START_DATE"])
+    assert record.weekly_amount == params[0]["WEEKLY_AMOUNT"]
 
     # Expect to have created a StateLog for each ReferenceFile.
     assert (
