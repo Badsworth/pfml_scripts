@@ -1,14 +1,22 @@
 import csv
+import io
 import os
 import tempfile
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from sqlalchemy import func
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
+import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
-from massgov.pfml.db.models.employees import Claim, ReferenceFile, ReferenceFileType, State
+from massgov.pfml.db.models.employees import (
+    Claim,
+    DiaReductionPayment,
+    ReferenceFile,
+    ReferenceFileType,
+    State,
+)
 from massgov.pfml.payments.payments_util import get_now
 from massgov.pfml.payments.sftp_s3_transfer import (
     SftpS3TransferConfig,
@@ -35,6 +43,21 @@ class Constants:
     LAST_NAME_FIELD = "LAST_NAME"
     BIRTH_DATE_FIELD = "BIRTH_DATE"
     BENEFIT_START_DATE_FIELD = "START_DATE"
+    DFML_CASE_ID_FIELD = "DFML_CASE_ID"
+    BOARD_NO_FIELD = "BOARD_NO"
+    EVENT_ID = "EVENT_ID"
+    INS_FORM_OR_MEET_FIELD = "INS_FORM_OR_MEET"
+    EVE_CREATED_DATE_FIELD = "EVE_CREATED_DATE"
+    FORM_RECEIVED_OR_DISPOSITION_FIELD = "FORM_RECEIVED_OR_DISPOSITION"
+    AWARD_ID_FIELD = "AWARD_ID"
+    AWARD_CODE_FIELD = "AWARD_CODE"
+    AWARD_AMOUNT_FIELD = "AWARD_AMOUNT"
+    AWARD_DATE_FIELD = "AWARD_DATE"
+    START_DATE_FIELD = "START_DATE"
+    END_DATE_FIELD = "END_DATE"
+    WEEKLY_AMOUNT_FIELD = "WEEKLY_AMOUNT"
+    AWARD_CREATED_DATE_FIELD = "AWARD_CREATED_DATE"
+
     CLAIMAINT_LIST_FIELDS = [
         CASE_ID_FIELD,
         SSN_FIELD,
@@ -43,6 +66,40 @@ class Constants:
         BIRTH_DATE_FIELD,
         BENEFIT_START_DATE_FIELD,
     ]
+
+    PAYMENT_LIST_FIELDS = [
+        DFML_CASE_ID_FIELD,
+        BOARD_NO_FIELD,
+        EVENT_ID,
+        INS_FORM_OR_MEET_FIELD,
+        EVE_CREATED_DATE_FIELD,
+        FORM_RECEIVED_OR_DISPOSITION_FIELD,
+        AWARD_ID_FIELD,
+        AWARD_CODE_FIELD,
+        AWARD_AMOUNT_FIELD,
+        AWARD_DATE_FIELD,
+        START_DATE_FIELD,
+        END_DATE_FIELD,
+        WEEKLY_AMOUNT_FIELD,
+        AWARD_CREATED_DATE_FIELD,
+    ]
+
+    PAYMENT_CSV_FIELD_MAPPINGS = {
+        DFML_CASE_ID_FIELD: "absence_case_id",
+        BOARD_NO_FIELD: "board_no",
+        EVENT_ID: "event_id",
+        INS_FORM_OR_MEET_FIELD: "event_description",
+        FORM_RECEIVED_OR_DISPOSITION_FIELD: "event_occurrence_date",
+        EVE_CREATED_DATE_FIELD: "eve_created_date",
+        AWARD_ID_FIELD: "award_id",
+        AWARD_CODE_FIELD: "award_code",
+        AWARD_AMOUNT_FIELD: "award_amount",
+        AWARD_DATE_FIELD: "award_date",
+        START_DATE_FIELD: "start_date",
+        END_DATE_FIELD: "end_date",
+        WEEKLY_AMOUNT_FIELD: "weekly_amount",
+        AWARD_CREATED_DATE_FIELD: "award_created_date",
+    }
 
 
 def _format_claims_for_dia_claimant_list(claims: List[Claim]) -> List[Dict]:
@@ -173,7 +230,7 @@ def _payment_list_has_been_downloaded_today(db_session: db.Session) -> bool:
         .filter(
             ReferenceFile.created_at >= midnight_today,
             ReferenceFile.reference_file_type_id
-            == ReferenceFileType.DUA_PAYMENT_LIST.reference_file_type_id,
+            == ReferenceFileType.DIA_PAYMENT_LIST.reference_file_type_id,
         )
         .scalar()
     )
@@ -222,3 +279,93 @@ def download_payment_list_if_none_today(db_session: db.Session) -> None:
     # so we only incur the overhead of that connection if we haven't retrieved a payment list today.
     if _payment_list_has_been_downloaded_today(db_session) is False:
         download_payment_list_from_moveit(db_session)
+
+
+def _get_pending_dia_payment_reference_files(
+    pending_directory: str, db_session: db.Session
+) -> List[ReferenceFile]:
+    # Add a trailing % so that we match anything within the directory.
+    files = (
+        db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.reference_file_type_id
+            == ReferenceFileType.DIA_PAYMENT_LIST.reference_file_type_id,
+            ReferenceFile.file_location.like(pending_directory + "%"),
+        )
+        .all()
+    )
+    return files
+
+
+def _convert_dict_with_csv_keys_to_db_keys(csv_data: Dict[str, Any]) -> Dict[str, Any]:
+    # Load empty strings as null values.
+    return {
+        Constants.PAYMENT_CSV_FIELD_MAPPINGS[k]: None if v == "" else v for k, v in csv_data.items()
+    }
+
+
+def _get_matching_dia_reduction_payments(
+    db_data: Dict[str, Any], db_session: db.Session
+) -> List[DiaReductionPayment]:
+    # https://stackoverflow.com/questions/7604967/sqlalchemy-build-query-filter-dynamically-from-dict
+    query = db_session.query(DiaReductionPayment)
+    for attr, value in db_data.items():
+        # Empty fields are read as empty strings. Convert those values to nulls for the datbase.
+        if value == "":
+            value = None
+
+        query = query.filter(getattr(DiaReductionPayment, attr) == value)
+
+    return query.all()
+
+
+def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> None:
+    rows = csv.DictReader(file, fieldnames=Constants.PAYMENT_LIST_FIELDS)
+    for row in rows:
+        db_data = _convert_dict_with_csv_keys_to_db_keys(row)
+        if len(_get_matching_dia_reduction_payments(db_data, db_session)) == 0:
+            dua_reduction_payment = DiaReductionPayment(**db_data)
+            db_session.add(dua_reduction_payment)
+
+
+def _load_dia_payment_from_reference_file(
+    ref_file: ReferenceFile, archive_directory: str, db_session: db.Session
+) -> None:
+    # Load to database.
+    with file_util.open_stream(ref_file.file_location) as f:
+        _load_new_rows_from_file(f, db_session)
+
+    # Move to archive directory and update ReferenceFile.
+    filename = os.path.basename(ref_file.file_location)
+    dest_path = os.path.join(archive_directory, filename)
+    file_util.rename_file(ref_file.file_location, dest_path)
+    ref_file.file_location = dest_path
+    db_session.commit()
+
+    # Create StateLog entry.
+    state_log_util.create_finished_state_log(
+        associated_model=ref_file,
+        end_state=State.DIA_PAYMENT_LIST_SAVED_TO_DB,
+        outcome=state_log_util.build_outcome("Loaded DIA payment file into database"),
+        db_session=db_session,
+    )
+    db_session.commit()
+
+
+def load_new_dia_payments(db_session: db.Session) -> None:
+    s3_config = get_s3_config()
+    pending_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dia_pending_directory_path)
+    archive_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_dia_archive_directory_path)
+
+    for ref_file in _get_pending_dia_payment_reference_files(pending_dir, db_session):
+        try:
+            _load_dia_payment_from_reference_file(ref_file, archive_dir, db_session)
+        except Exception:
+            # Log exceptions but continue attempting to load other payment files into the database.
+            logger.exception(
+                "Failed to load new DIA payments to database from file",
+                extra={
+                    "file_location": ref_file.file_location,
+                    "reference_file_id": ref_file.reference_file_id,
+                },
+            )
