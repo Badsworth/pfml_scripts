@@ -1,4 +1,5 @@
 from os import getenv
+from typing import Optional
 
 import massgov.pfml.util.logging as logging
 
@@ -7,11 +8,16 @@ from .features_cache import FeaturesCache
 logger = logging.get_logger(__name__)
 features_cache = None  # Singleton instance of FeaturesCache
 
+LEAVE_ADMIN_VERIFICATION = "feature.leave_admin_verification"
 
-def check_enabled(feature_name: str, user_email: str) -> bool:
+
+def check_enabled(feature_name: str, user_email: Optional[str]) -> bool:
     # Since check_enabled is used in some critical code paths we prefer to
     # fail gracefully, log exceptional states and default to restricting users
     # access
+    if user_email is None:
+        return False
+
     try:
         global features_cache
 

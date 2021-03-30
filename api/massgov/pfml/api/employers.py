@@ -16,6 +16,7 @@ from massgov.pfml.db.models.employees import (
     EmployerQuarterlyContribution,
     UserLeaveAdministrator,
 )
+from massgov.pfml.util import feature_gate
 from massgov.pfml.util.strings import mask_fein, sanitize_fein
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -73,7 +74,12 @@ def employer_add_fein() -> flask.Response:
         if employer is None:
             raise BadRequest(description="Invalid FEIN")
 
-        if employer.has_verification_data is False and app.get_config().enforce_verification:
+        verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
+            feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
+            user_email=current_user.email_address,
+        )
+
+        if verification_required and employer.has_verification_data is False:
             return response_util.error_response(
                 status_code=PaymentRequired,
                 message="Employer has no verification data",
