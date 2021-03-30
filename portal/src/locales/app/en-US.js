@@ -693,6 +693,10 @@ const pages = {
     uploadSuccessMessage:
       "Our Contact Center staff will review your documents for {{absence_id}}.",
   },
+  link: {
+    submit: "Submit",
+    caseNumber: "Enter your NTN number to link your application",
+  },
   authCreateAccount: {
     alertBody:
       "<p>You can apply online if you’re currently employed in Massachusetts.</p><p>If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</p><p><mass-benefits-timeline-link>Learn more about the paid leave benefit timeline.</mass-benefits-timeline-link></p>",

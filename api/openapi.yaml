@@ -873,6 +873,46 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /applications/{fineos_absence_id}/link_application:
+    post:
+      tags:
+        - Applications
+      summary: >
+        Temp
+      operationId: massgov.pfml.api.claims.link_claim
+      parameters:
+        - name: fineos_absence_id
+          in: path
+          schema:
+            type: string
+          description: ID of Application to import from FINEOS
+          required: true
+      responses:
+        "200":
+          description: Application imported without errors.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessfulResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ApplicationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "503":
+          description: Application could not be completed in Claims Processing System.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ApplicationResponse"
+
+
+
   /financial-eligibility:
     post:
       security:

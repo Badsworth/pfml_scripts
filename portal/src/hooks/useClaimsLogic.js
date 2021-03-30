@@ -270,6 +270,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     appErrorsLogic.clearErrors();
 
     try {
+      console.log("verify this works:", claim_id)
       const { claim } = await claimsApi.linkClaim(claim_id);
       console.log("verify this works:", claim)
       setClaim(claim);

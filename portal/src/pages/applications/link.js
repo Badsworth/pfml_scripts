@@ -1,14 +1,16 @@
-import FormLabel from "../../components/FormLabel"
+import React from "react"
+import PropTypes from "prop-types";
+import { useTranslation } from "../../locales/i18n";
 import InputText from "../../components/InputText";
 import Button from "../../components/Button";
-import PropTypes from "prop-types";
-import React from "react"
+
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps"
 import useThrottledHandler from "../../hooks/useThrottledHandler"
 
 export const LinkApplication = (props) => {
-  const { formState, updateFields } = useFormState({caseNumber: ""});
+  const { t } = useTranslation();
+  const { formState, updateFields } = useFormState({ caseNumber: "" });
   const { appLogic } = props;
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -19,24 +21,23 @@ export const LinkApplication = (props) => {
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
     // needs auth
-    await appLogic.claims.link(formState.caseNumber)
+    const data = await appLogic.claims.link(formState.caseNumber)
+    console.log("done", { data })
   });
 
   return (
     <React.Fragment>
-    <form className="usa-form" onSubmit={handleSubmit} method="post">
-      <FormLabel>Enter your NTN number to link your application</FormLabel>
-      <InputText
-        {...getFunctionalInputProps("caseNumber")}
-        type="text"
-        // label={t("pages.link.caseNumber")}
-        smallLabel
-      />
-      <Button type="submit" loading={handleSubmit.isThrottled}>
-        Submit
-        {/* {t("pages.authCreateAccount.createAccountButton")} */}
-      </Button>
-    </form>
+      <form className="usa-form" onSubmit={handleSubmit} method="post">
+        <InputText
+          {...getFunctionalInputProps("caseNumber")}
+          type="text"
+          label={t("pages.link.caseNumber")}
+          smallLabel
+        />
+        <Button type="submit" loading={handleSubmit.isThrottled}>
+          {t("pages.link.submit")}
+        </Button>
+      </form>
     </React.Fragment>
   );
 };
