@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Employer dashboard when "employerShowDashboard" is enabled renders the page 1`] = `
+<div
+  className="grid-container"
+>
+  <div
+    className="grid-row"
+  >
+    <EmployerNavigationTabs
+      activePath="/mock-portalFlow-pathname"
+    />
+  </div>
+</div>
+`;

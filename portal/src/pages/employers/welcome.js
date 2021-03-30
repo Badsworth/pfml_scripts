@@ -1,5 +1,6 @@
 import { IconMail, IconPdf } from "@massds/mayflower-react/dist/Icon";
 import Alert from "../../components/Alert";
+import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
 import Heading from "../../components/Heading";
 import { NewsBanner } from "../../components/employers/NewsBanner";
 import PropTypes from "prop-types";
@@ -19,7 +20,7 @@ const IconWait = (props) => (
   </svg>
 );
 
-export const Index = (props) => {
+export const Welcome = ({ appLogic, user }) => {
   const { t } = useTranslation();
   const iconProps = {
     className: "margin-right-2 text-secondary text-middle",
@@ -27,17 +28,23 @@ export const Index = (props) => {
     width: 30,
     fill: "currentColor",
   };
-  const hasVerifiableEmployer = props.user.hasVerifiableEmployer;
-  const showNewsBanner = isFeatureEnabled("employerShowNewsBanner");
-  const showVerifications = isFeatureEnabled("employerShowVerifications");
+  const hasVerifiableEmployer = user.hasVerifiableEmployer;
+  const shouldShowNewsBanner = isFeatureEnabled("employerShowNewsBanner");
+  const shouldShowVerifications = isFeatureEnabled("employerShowVerifications");
+  const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
 
   return (
     <div className="grid-container">
+      {shouldShowDashboard && (
+        <div className="grid-row">
+          <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
+        </div>
+      )}
       <div className="grid-row">
         <div className="desktop:grid-col-8">
           <Title>{t("pages.employersDashboard.welcomeTitle")}</Title>
-          {showNewsBanner && <NewsBanner />}
-          {showVerifications && hasVerifiableEmployer && (
+          {shouldShowNewsBanner && <NewsBanner />}
+          {shouldShowVerifications && hasVerifiableEmployer && (
             <Alert
               state="warning"
               heading={t("pages.employersDashboard.verificationTitle")}
@@ -89,7 +96,7 @@ export const Index = (props) => {
         </div>
         <div className="grid-col-fill" />
         <aside className="desktop:grid-col-3 margin-top-7 desktop:margin-top-1">
-          {showVerifications && (
+          {shouldShowVerifications && (
             <React.Fragment>
               <Heading level="2">
                 {t("pages.employersDashboard.settingsTitle")}
@@ -140,8 +147,13 @@ export const Index = (props) => {
   );
 };
 
-Index.propTypes = {
+Welcome.propTypes = {
+  appLogic: PropTypes.shape({
+    portalFlow: PropTypes.shape({
+      pathname: PropTypes.string.isRequired,
+    }).isRequired,
+  }).isRequired,
   user: PropTypes.instanceOf(User).isRequired,
 };
 
-export default withUser(Index);
+export default withUser(Welcome);

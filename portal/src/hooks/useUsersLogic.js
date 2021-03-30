@@ -110,7 +110,7 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     }
 
     if (user.hasEmployerRole && isApplicationsRoute(pathname)) {
-      portalFlow.goTo(routes.employers.dashboard);
+      portalFlow.goTo(routes.employers.welcome);
     }
   };
 

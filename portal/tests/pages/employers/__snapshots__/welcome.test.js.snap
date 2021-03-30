@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Employer index displays links to Organizations page when employerShowVerifications is true 1`] = `
+exports[`Employer welcome displays links to Organizations page when employerShowVerifications is true 1`] = `
 <h2
   className="font-heading-md text-bold"
 >
@@ -8,7 +8,7 @@ exports[`Employer index displays links to Organizations page when employerShowVe
 </h2>
 `;
 
-exports[`Employer index displays links to Organizations page when employerShowVerifications is true 2`] = `
+exports[`Employer welcome displays links to Organizations page when employerShowVerifications is true 2`] = `
 <h2
   className="font-heading-md text-bold"
 >
@@ -16,7 +16,7 @@ exports[`Employer index displays links to Organizations page when employerShowVe
 </h2>
 `;
 
-exports[`Employer index displays links to Organizations page when employerShowVerifications is true 3`] = `
+exports[`Employer welcome displays links to Organizations page when employerShowVerifications is true 3`] = `
 <ul
   className="usa-list desktop:font-body-2xs desktop:padding-top-05"
   key="0"
@@ -34,7 +34,7 @@ exports[`Employer index displays links to Organizations page when employerShowVe
 </ul>
 `;
 
-exports[`Employer index displays links to Organizations page when employerShowVerifications is true 4`] = `
+exports[`Employer welcome displays links to Organizations page when employerShowVerifications is true 4`] = `
 <ul
   className="usa-list desktop:font-body-2xs desktop:padding-top-05"
   key="0"
@@ -66,7 +66,7 @@ exports[`Employer index displays links to Organizations page when employerShowVe
 </ul>
 `;
 
-exports[`Employer index renders page 1`] = `
+exports[`Employer welcome renders page 1`] = `
 <div
   className="grid-container"
 >
@@ -173,7 +173,7 @@ exports[`Employer index renders page 1`] = `
 </div>
 `;
 
-exports[`Employer index renders page 2`] = `
+exports[`Employer welcome renders page 2`] = `
 Array [
   "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the ",
   <a
@@ -188,7 +188,7 @@ Array [
 ]
 `;
 
-exports[`Employer index renders page 3`] = `
+exports[`Employer welcome renders page 3`] = `
 <ul
   className="usa-list desktop:font-body-2xs desktop:padding-top-05"
   key="0"

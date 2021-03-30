@@ -9,7 +9,7 @@ const TABS = [
   },
   {
     label: "Second",
-    href: routes.employers.dashboard,
+    href: routes.employers.welcome,
   },
   {
     label: "Third",

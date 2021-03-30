@@ -276,7 +276,7 @@ describe("useUsersLogic", () => {
     });
 
     describe("when user has roles", () => {
-      it("redirects to Employers dashboard if user has Employer role", async () => {
+      it("redirects to Employers welcome if user has Employer role", async () => {
         mockRouter.pathname = routes.applications.index;
 
         renderHook();
@@ -286,11 +286,11 @@ describe("useUsersLogic", () => {
 
         usersLogic.requireUserRole();
 
-        expect(goToSpy).toHaveBeenCalledWith("/employers");
+        expect(goToSpy).toHaveBeenCalledWith("/employers/welcome");
       });
 
       it("does not redirect if user has Employer role and currently in Employer Portal", async () => {
-        mockRouter.pathname = routes.employers.dashboard;
+        mockRouter.pathname = routes.employers.welcome;
 
         renderHook();
         await preloadUser(
@@ -302,7 +302,7 @@ describe("useUsersLogic", () => {
         expect(goToSpy).not.toHaveBeenCalled();
       });
 
-      it("redirects to Employers dashboard if user has multiple roles, including Employer", async () => {
+      it("redirects to Employers welcome if user has multiple roles, including Employer", async () => {
         mockRouter.pathname = routes.applications.index;
 
         const userRole = [
@@ -320,11 +320,11 @@ describe("useUsersLogic", () => {
 
         usersLogic.requireUserRole();
 
-        expect(goToSpy).toHaveBeenCalledWith("/employers");
+        expect(goToSpy).toHaveBeenCalledWith("/employers/welcome");
       });
 
       it("redirects to Claims index if user does not have a role", async () => {
-        mockRouter.pathname = routes.employers.dashboard;
+        mockRouter.pathname = routes.employers.welcome;
 
         renderHook();
         await preloadUser(

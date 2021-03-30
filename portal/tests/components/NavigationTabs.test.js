@@ -7,8 +7,8 @@ describe("NavigationTabs", () => {
   let wrapper;
   const tabs = [
     {
-      label: "Employer Dashboard",
-      href: routes.employers.dashboard,
+      label: "Employer Welcome",
+      href: routes.employers.welcome,
     },
     {
       label: "Employer Organizations",

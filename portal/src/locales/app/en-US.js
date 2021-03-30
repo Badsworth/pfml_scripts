@@ -2024,6 +2024,10 @@ const components = {
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
     tableName: "Leave schedule details table",
   },
+  employersNavigationTabs: {
+    dashboard: "Dashboard",
+    welcome: "Welcome",
+  },
   employersPreviousLeaves: {
     commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
