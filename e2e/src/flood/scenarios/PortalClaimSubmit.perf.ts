@@ -305,6 +305,7 @@ async function setFeatureFlags(browser: Browser): Promise<void> {
     value: JSON.stringify({
       pfmlTerriyay: true,
       claimantShowAuth: true,
+      claimantAuthThroughApi: true,
     }),
     url: await Cfg.PortalBaseUrl,
   });
