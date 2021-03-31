@@ -8,4 +8,7 @@ module.exports = {
   envName: "stage",
   domain: "paidleave-stage.mass.gov",
   newRelicAppId: "847043861",
+  maintenancePageRoutes: ["/*"], // required
+  maintenanceStart: "2021-03-31T23:59:00-04:00", // optional ISO 8601 datetime
+  maintenanceEnd: "2021-04-01T05:00:00-04:00", // optional ISO 8601 datetime
 };
