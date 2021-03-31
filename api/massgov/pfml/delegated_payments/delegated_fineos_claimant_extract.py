@@ -745,7 +745,7 @@ class ClaimantExtractStep(Step):
 
         else:
             state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS,
+                end_state=State.CLAIMANT_READY_FOR_ADDRESS_VALIDATION,
                 associated_model=employee_pfml_entry,
                 outcome=state_log_util.build_outcome(
                     f"Employee {employee_pfml_entry.employee_id} successfully extracted from FINEOS claimant extract {extract_data.date_str}"

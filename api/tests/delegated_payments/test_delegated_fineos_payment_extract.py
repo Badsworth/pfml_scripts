@@ -479,10 +479,7 @@ def test_process_extract_data(
         assert len(state_logs) == 1
         state_log = state_logs[0]
         assert state_log.outcome == EXPECTED_OUTCOME
-        assert (
-            state_log.end_state_id
-            == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
-        )
+        assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
 
         pub_efts = employee.pub_efts.all()
 
@@ -634,10 +631,7 @@ def test_process_extract_data_one_bad_record(
                 },
             }
         else:
-            assert (
-                state_log.end_state_id
-                == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
-            )
+            assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
             assert state_log.outcome == EXPECTED_OUTCOME
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
@@ -833,10 +827,7 @@ def test_process_extract_data_no_existing_claim_address_eft(
             assert payment.has_eft_update is False
             assert len(pub_efts) == 0  # Not set by setup logic, shouldn't be set at all now
             assert state_log.outcome == EXPECTED_OUTCOME
-            assert (
-                state_log.end_state_id
-                == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
-            )
+            assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
 
         else:
             assert mailing_address.address_line_two == f"AddressLine2-{index}"
@@ -923,7 +914,7 @@ def test_process_extract_data_existing_payment(
             assert state_log.outcome == EXPECTED_OUTCOME
             # The state ID will be either the prior state ID or the new successful one
             assert state_log.end_state_id in [
-                State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id,
+                State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id,
                 State.DELEGATED_PAYMENT_ERROR_REPORT_SENT.state_id,
             ]
 
@@ -1087,7 +1078,7 @@ def test_process_extract_data_leave_request_decision_validation(
     assert len(valid_payment.state_logs) == 1
     assert (
         valid_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+        == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
     )
 
     unapproved_payment = (
@@ -1266,7 +1257,7 @@ def test_process_extract_additional_payment_types(
         == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION.state_id
     )
 
-    # Check Cancellation should be in the normal path end state of DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+    # Check Cancellation should be in the normal path end state of PAYMENT_READY_FOR_ADDRESS_VALIDATION
     check_cancellation_payment = (
         test_db_session.query(Payment)
         .filter(Payment.fineos_pei_c_value == "4000", Payment.fineos_pei_i_value == "4")
@@ -1553,10 +1544,7 @@ def test_update_eft_existing_eft_matches_and_approved(
 
     assert len(payment.state_logs) == 1
     state_log = payment.state_logs[0]
-    assert (
-        state_log.end_state_id
-        == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
-    )
+    assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
 
     # There should not be a DELEGATED_EFT_SEND_PRENOTE record
     employee_state_logs_after = (

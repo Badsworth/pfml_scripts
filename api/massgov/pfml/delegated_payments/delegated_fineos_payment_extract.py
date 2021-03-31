@@ -972,7 +972,7 @@ class PaymentExtractStep(Step):
             self.increment("cancellation_count")
 
         else:
-            end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+            end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
             message = "Success"
             self.increment("standard_valid_payment_count")
 
