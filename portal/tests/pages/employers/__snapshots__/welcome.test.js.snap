@@ -132,7 +132,7 @@ exports[`Employer welcome renders page 1`] = `
               />,
             }
           }
-          i18nKey="pages.employersDashboard.viewFormsBody"
+          i18nKey="pages.employersWelcome.viewFormsBody"
         />
       </p>
     </div>
@@ -166,7 +166,7 @@ exports[`Employer welcome renders page 1`] = `
             />,
           }
         }
-        i18nKey="pages.employersDashboard.learnMoreLinks"
+        i18nKey="pages.employersWelcome.learnMoreLinks"
       />
     </aside>
   </div>
