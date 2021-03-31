@@ -2,6 +2,8 @@ import os
 from datetime import date
 from typing import List, Optional, Tuple, cast
 
+from sqlalchemy import func
+
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
@@ -45,9 +47,13 @@ def create_check_file(db_session: db.Session) -> Optional[EzCheckFile]:
     # to write an EzCheckFile to PUB.
     encountered_exception = False
     records: List[Tuple[Payment, EzCheckRecord]] = []
+    check_number = db_session.query(func.max(Payment.check_number)).scalar() or 0
+
     for payment in eligible_check_payments:
         try:
-            records.append((payment, _convert_payment_to_ez_check_record(payment)))
+            check_number += 1
+            payment.check_number = check_number
+            records.append((payment, _convert_payment_to_ez_check_record(payment, check_number)))
         except payments_util.ValidationIssueException as e:
             msg = ", ".join([str(issue) for issue in e.issues])
             logger.exception("Error converting payment into PUB EZ check format: " + msg)
@@ -108,7 +114,7 @@ def _get_eligible_check_payments(db_session: db.Session) -> List[Payment]:
     return check_payments
 
 
-def _convert_payment_to_ez_check_record(payment: Payment) -> EzCheckRecord:
+def _convert_payment_to_ez_check_record(payment: Payment, check_number: int) -> EzCheckRecord:
     employee = payment.claim.employee
     experian_address_pair = cast(ExperianAddressPair, employee.experian_address_pair)
     address = cast(Address, experian_address_pair.experian_address)
@@ -116,7 +122,7 @@ def _convert_payment_to_ez_check_record(payment: Payment) -> EzCheckRecord:
     geo_state = address.geo_state
 
     return EzCheckRecord(
-        check_number=cast(int, payment.pub_individual_id),
+        check_number=check_number,
         check_date=cast(date, payment.payment_date),
         amount=payment.amount,
         memo=_format_check_memo(payment),

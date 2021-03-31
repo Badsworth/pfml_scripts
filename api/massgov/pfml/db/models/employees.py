@@ -588,6 +588,7 @@ class Payment(Base):
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
     pub_eft = relationship(PubEft)
     fineos_extract_import_log = relationship("ImportLog")
+    check_number = Column(Integer, index=True, unique=True)
 
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")

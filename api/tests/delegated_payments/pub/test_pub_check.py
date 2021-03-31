@@ -107,7 +107,7 @@ def test_create_check_file_success(
     assert len(ez_check_file.records) == len(payments)
 
     # Confirm that we updated the state log for each payment.
-    for payment in payments:
+    for i, payment in enumerate(payments):
         assert (
             test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
             .filter(
@@ -117,6 +117,8 @@ def test_create_check_file_success(
             .scalar()
             == 1
         )
+
+        assert payment.check_number == (i + 1)
 
 
 def test_send_check_file(mock_s3_bucket):
@@ -194,14 +196,15 @@ def test_get_eligible_check_payments_error(test_db_session, initialize_factories
 
 def test_convert_payment_to_ez_check_record_success(initialize_factories_session, test_db_session):
     payment = _random_valid_check_payment_with_state_log(test_db_session)
-    ez_check_record = pub_check._convert_payment_to_ez_check_record(payment)
+    ez_check_record = pub_check._convert_payment_to_ez_check_record(payment, 0)
+
     assert isinstance(ez_check_record, EzCheckRecord)
 
 
-def test_convert_payment_to_ez_check_record_failure(initialize_factories_session):
+def test_convert_payment_to_ez_check_record_failure(initialize_factories_session, test_db_session):
     payment_without_address = PaymentFactory()
     with pytest.raises(AttributeError):
-        pub_check._convert_payment_to_ez_check_record(payment_without_address)
+        pub_check._convert_payment_to_ez_check_record(payment_without_address, 0)
 
 
 def test_format_check_memo_success(initialize_factories_session, test_db_session):
