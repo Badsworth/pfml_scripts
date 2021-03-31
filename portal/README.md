@@ -73,6 +73,14 @@ Updates _all_ [Jest snapshots](../docs/portal/tests.md#Snapshot%20tests), accept
 
 Runs the project's test suite in watch mode. By default, this will attempt to identify which tests to run based on which files have changed in the current repository. After running, you can interact with the prompt to configure or filter which test files are ran.
 
+### `npm run test:contract`
+
+Run contract tests. This updates the Pact file. This requires `JWT_TOKEN` to be set, for example:
+
+```sh
+JWT_TOKEN=abc123 npm run test:contract
+```
+
 ## Design tooling commands
 
 ### `npm run docs`
@@ -139,6 +147,7 @@ make release-notes refs="portal/v6.1..portal/v7.0"
 ```
 
 The work will generally fall into one of a number of categories, with changes to:
+
 - EMPLOYER
 - INFRA
 - CP

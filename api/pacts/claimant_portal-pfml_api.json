@@ -8,10 +8,14 @@
   "interactions": [
     {
       "description": "a request to get claims",
-      "providerState": "user is not logged in",
+      "providerState": "user access token is expired",
       "request": {
         "method": "GET",
-        "path": "/applications"
+        "path": "/applications",
+        "headers": {
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTcwMDAwMDAsInN1YiI6ImZlNTFiZWRiLTExNGYtNDQwMi04YzY0LTNjNzQ1ZjNkZTQyMiJ9.jkurNNMpABY-bfMis--U80WwrAPv82b_5SfNQVDNDxs",
+          "Content-Type": "application/json"
+        }
       },
       "response": {
         "status": 401,
@@ -39,13 +43,14 @@
         "body": {
           "data": [
             {
-              "application_id": "2a340cf8-6d2a-4f82-a075-73588d003f8f"
+              "application_id": "ce118b6e-d8e1-11e7-9296-cec278b6b50a"
             }
           ]
         },
         "matchingRules": {
           "$.body.data[0].application_id": {
-            "match": "type"
+            "match": "regex",
+            "regex": "^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$"
           }
         }
       }
@@ -61,17 +66,18 @@
         }
       },
       "response": {
-        "status": 200,
+        "status": 201,
         "headers": {
         },
         "body": {
           "data": {
-            "application_id": "2a340cf8-6d2a-4f82-a075-73588d003f8f"
+            "application_id": "ce118b6e-d8e1-11e7-9296-cec278b6b50a"
           }
         },
         "matchingRules": {
           "$.body.data.application_id": {
-            "match": "type"
+            "match": "regex",
+            "regex": "^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$"
           }
         }
       }
