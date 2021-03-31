@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import ErrorBoundary from "./ErrorBoundary";
 import ErrorsSummary from "./ErrorsSummary";
 import Header from "./Header";
@@ -15,6 +16,43 @@ const Footer = dynamic(() => import("./Footer"));
 const MaintenanceTakeover = dynamic(() => import("./MaintenanceTakeover"));
 
 /**
+ * @param {string} [start] - ISO 8601 date time
+ * @param {string} [end] - ISO 8601 date time
+ * @returns {boolean}
+ */
+const isInMaintenanceWindow = (start, end) => {
+  // If no time frame is set, the maintenance window is considered
+  // always open (when maintenance mode is On)
+  if (!start && !end) return true;
+
+  const now = DateTime.local();
+  const isAfterStart = start ? now >= DateTime.fromISO(start) : true;
+  const isBeforeEnd = end ? now < DateTime.fromISO(end) : true;
+
+  return isAfterStart && isBeforeEnd;
+};
+
+/**
+ * Check if a page route should include the maintenance message
+ * @param {string[]} maintenancePageRoutes - routes to apply maintenance message to
+ * @param {string} pathname - current page's path
+ * @returns {boolean}
+ */
+const isMaintenancePageRoute = (maintenancePageRoutes, pathname) => {
+  return (
+    maintenancePageRoutes &&
+    // includes specific page? (pathname doesn't include a trailing slash):
+    (maintenancePageRoutes.includes(pathname) ||
+      // or pages matching a wildcard? (e.g /applications/* or /* for site-wide):
+      maintenancePageRoutes.some(
+        (maintenancePageRoute) =>
+          maintenancePageRoute.endsWith("*") &&
+          pathname.startsWith(maintenancePageRoute.split("*")[0])
+      ))
+  );
+};
+
+/**
  * This component renders the global page elements, such as header/footer, site-level
  * error alert, and maintenance page when enabled. Every page on the site is rendered
  * with this component as its parent.
@@ -24,7 +62,8 @@ const PageWrapper = (props) => {
     appLogic,
     isLoading,
     maintenancePageRoutes,
-    maintenanceRemovalDayAndTime,
+    maintenanceStart,
+    maintenanceEnd,
   } = props;
   const { t } = useTranslation();
 
@@ -40,17 +79,15 @@ const PageWrapper = (props) => {
    * @type {boolean}
    */
   const showMaintenancePageBody =
-    maintenancePageRoutes &&
-    // includes specific page? (pathname doesn't include a trailing slash):
-    (maintenancePageRoutes.includes(appLogic.portalFlow.pathname) ||
-      // or pages matching a wildcard? (e.g /applications/* or /* for site-wide):
-      maintenancePageRoutes.some(
-        (maintenancePageRoute) =>
-          maintenancePageRoute.endsWith("*") &&
-          appLogic.portalFlow.pathname.startsWith(
-            maintenancePageRoute.split("*")[0]
-          )
-      ));
+    isMaintenancePageRoute(
+      maintenancePageRoutes,
+      appLogic.portalFlow.pathname
+    ) && isInMaintenanceWindow(maintenanceStart, maintenanceEnd);
+
+  // User-friendly representation of the maintenance end time
+  const maintenanceRemovalDayAndTimeText = maintenanceEnd
+    ? DateTime.fromISO(maintenanceEnd).toLocaleString(DateTime.DATETIME_FULL)
+    : null;
 
   // Prevent site from being rendered if this feature flag isn't enabled.
   // We render a vague but recognizable message that serves as an indicator
@@ -69,7 +106,7 @@ const PageWrapper = (props) => {
     pageBody = (
       <section id="page" data-test="maintenance page">
         <MaintenanceTakeover
-          scheduledRemovalDayAndTimeText={maintenanceRemovalDayAndTime}
+          scheduledRemovalDayAndTimeText={maintenanceRemovalDayAndTimeText}
         />
       </section>
     );
@@ -116,8 +153,10 @@ PageWrapper.propTypes = {
   isLoading: PropTypes.bool,
   /** Page routes that should render a maintenance page */
   maintenancePageRoutes: PropTypes.arrayOf(PropTypes.string),
-  /** User friendly date and time when the maintenance page will be removed */
-  maintenanceRemovalDayAndTime: PropTypes.string,
+  /** ISO 8601 date time for maintenance window start */
+  maintenanceStart: PropTypes.string,
+  /** ISO 8601 date time for maintenance window end */
+  maintenanceEnd: PropTypes.string,
 };
 
 export default PageWrapper;
