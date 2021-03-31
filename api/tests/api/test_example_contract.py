@@ -22,6 +22,8 @@ PACT_DIR = os.path.dirname(os.path.realpath(__file__))
 def test_example():
     verifier = Verifier(provider='API service', provider_base_url=PACT_URL)
 
-    output, logs = verifier.verify_pacts(PACT_FILE, verbose=False) #  provider_states_setup_url="{}/_pact/provider_states".format(PACT_URL))
+    # Docs for custom provider header: https://github.com/pact-foundation/pact-python#--custom-provider-header
+
+    output, logs = verifier.verify_pacts(PACT_FILE, verbose=False)
 
     assert (output == 0)
