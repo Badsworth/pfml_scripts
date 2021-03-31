@@ -57,6 +57,10 @@ def decode_cognito_token(token):
         decoded_token = _decode_cognito_token(token)
         auth_id = decoded_token.get("sub")
         with app.db_session() as db_session:
+            users = db_session.query(User.user_id).all()
+            #logger.info("userids: " ",".join(users))
+            logger.info("beforehere: " + auth_id)
+            logger.info(users)
             user = db_session.query(User).filter(User.active_directory_id == auth_id).one()
 
             flask.g.current_user = user

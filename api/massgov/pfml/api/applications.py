@@ -33,6 +33,7 @@ from massgov.pfml.api.services.fineos_actions import (
     get_documents,
     mark_documents_as_received,
     mark_single_document_as_received,
+    register_employee,
     send_to_fineos,
     submit_payment_preference,
     upload_document,
@@ -52,14 +53,13 @@ from massgov.pfml.db.models.employees import Claim
 from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSFatalUnavailable, FINEOSNotFound
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.sqlalchemy import get_or_404
-from massgov.pfml.api.services import fineos_actions
-from massgov.pfml.fineos.fineos_client import FINEOSClient
+from massgov.pfml.fineos.mock_client import MockFINEOSClient
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def application_link(fineos_absence_id: str) -> flask.Response:
-    logger.info("Asa_swagger")
+    fineos = MockFINEOSClient()
     with app.db_session() as db_session:
         current_user = app.current_user()
         claim = (
@@ -75,16 +75,12 @@ def application_link(fineos_absence_id: str) -> flask.Response:
         application = None
 
     if claim is None or application is None:
-        logger.info("Claim not in database, fetching from FINEOS")
-        fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-        logger.info("Asa_my_check")
-        result = fineos_actions.register_employee(
-            fineos_client,
-            "626-38-6796", 
+        employee_external_id = register_employee(
+            fineos,
+            "626-38-6794",
             "39-8898158",
             db_session
         )
-        logger.info(f'Asa_result {result}')
         # check if user can actually see this claim
 
         # if not user_has_access_to_claim(application): # <-- todo user_can_access_fineos_claim
