@@ -45,7 +45,6 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
 )
 from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
 from massgov.pfml.util.logging.applications import get_application_log_attributes
-
 logger = logging.get_logger(__name__)
 
 
@@ -66,6 +65,8 @@ def register_employee(
     employer_fein: str,
     db_session: massgov.pfml.db.Session,
 ) -> str:
+    logger.info(f'Asa_registering')
+
     # If a FINEOS Id exists for SSN/FEIN return it.
     fineos_web_id_ext = (
         db_session.query(FINEOSWebIdExt)
@@ -75,6 +76,7 @@ def register_employee(
         )
         .one_or_none()
     )
+    logger.info(f'Asa_fineos_web_id_ext {fineos_web_id_ext}')
 
     if fineos_web_id_ext is not None:
         # This should never happen and we should have a db constraint,
@@ -89,7 +91,7 @@ def register_employee(
 
     # Find FINEOS employer id using employer FEIN
     employer_id = fineos.find_employer(employer_fein)
-    logger.info("found employer_id %s", employer_id)
+    logger.info("Asa_found employer_id %s", employer_id)
 
     # Generate external id
     employee_external_id = "pfml_api_{}".format(str(uuid.uuid4()))
@@ -106,7 +108,8 @@ def register_employee(
     )
 
     fineos.register_api_user(employee_registration)
-    logger.info("registered as %s", employee_external_id)
+
+    logger.info("Asa_registered as %s", employee_external_id)
 
     # If successful save ExternalIdentifier in the database
     fineos_web_id_ext = FINEOSWebIdExt()
