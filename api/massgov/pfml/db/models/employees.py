@@ -360,6 +360,7 @@ class PubEft(Base):
         server_default=sqlnow(),
     )
     prenote_response_at = Column(TIMESTAMP(timezone=True))
+    prenote_response_reason_code = Column(Text)
     pub_eft_individual_id_seq: Sequence = Sequence("pub_eft_individual_id_seq")
     pub_individual_id = Column(
         Integer,
@@ -1853,6 +1854,7 @@ class ReferenceFileType(LookupTable):
         14, "DIA payments for DFML reduction report", 1
     )
     PUB_TRANSACTION = LkReferenceFileType(15, "PUB-NACHA", 1)
+    PUB_ACH_RETURN = LkReferenceFileType(16, "PUB ACH Return", 1)
 
     DELEGATED_PAYMENT_AUDIT_REPORT = LkReferenceFileType(20, "Payment Audit Report", 1)
     DELEGATED_PAYMENT_REJECTS = LkReferenceFileType(21, "Payment Rejects", 1)

@@ -497,6 +497,7 @@ def get_state_counts(db_session: db.Session) -> Dict[str, int]:
 def build_outcome(
     message: str,
     validation_container: Optional[Union[ValidationContainer, DelegatedValidationContainer]] = None,
+    **extra_attributes: str,
 ) -> Dict[str, Any]:
     outcome: Dict[str, Any] = {}
     outcome["message"] = message
@@ -504,6 +505,8 @@ def build_outcome(
     # Only add a validation container if it had any issues (otherwise leave that empty)
     if validation_container and validation_container.has_validation_issues():
         outcome["validation_container"] = asdict(validation_container)
+
+    outcome.update(extra_attributes)
     return outcome
 
 
