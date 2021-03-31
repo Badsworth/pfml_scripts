@@ -13,6 +13,7 @@ import massgov.pfml.delegated_payments.pub.pub_check as pub_check
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import LkState, Payment, PaymentMethod, State, StateLog
 from massgov.pfml.db.models.factories import (
+    AddressFactory,
     ClaimFactory,
     EmployeeFactory,
     ExperianAddressPairFactory,
@@ -34,7 +35,8 @@ def _random_payment_with_state_log(
     db_session: db.Session, method: PaymentMethod, state: LkState
 ) -> Payment:
     # Create the employee and claim ourselves so the payment has an associated address.
-    employee = EmployeeFactory(experian_address_pair=ExperianAddressPairFactory())
+    address_pair = ExperianAddressPairFactory(experian_address=AddressFactory())
+    employee = EmployeeFactory(experian_address_pair=address_pair)
     claim = ClaimFactory(employee=employee)
 
     # Set the dates to some reasonably recent dates in the past.
@@ -72,7 +74,7 @@ def test_create_check_file_eligible_payment_error(
 ):
     # Update zip code so that it fails validation.
     payment = _random_valid_check_payment_with_state_log(test_db_session)
-    payment.claim.employee.experian_address_pair.fineos_address.zip_code = "An invalid zip code"
+    payment.claim.employee.experian_address_pair.experian_address.zip_code = "An invalid zip code"
     test_db_session.commit()
 
     caplog.set_level(logging.ERROR)  # noqa: B1

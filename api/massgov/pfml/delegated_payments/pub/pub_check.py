@@ -8,6 +8,7 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
+    Address,
     Employee,
     ExperianAddressPair,
     Payment,
@@ -110,7 +111,7 @@ def _get_eligible_check_payments(db_session: db.Session) -> List[Payment]:
 def _convert_payment_to_ez_check_record(payment: Payment) -> EzCheckRecord:
     employee = payment.claim.employee
     experian_address_pair = cast(ExperianAddressPair, employee.experian_address_pair)
-    address = experian_address_pair.fineos_address
+    address = cast(Address, experian_address_pair.experian_address)
 
     geo_state = address.geo_state
 
