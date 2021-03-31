@@ -1069,9 +1069,9 @@ pyparsing = ">=2.0.2"
 
 [[package]]
 name = "pact-python"
-version = "1.3.1"
+version = "1.3.5"
 description = "Tools for creating and verifying consumer driven contracts using the Pact framework."
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -1162,7 +1162,7 @@ ssv = ["swagger-spec-validator (>=2.4,<3.0)"]
 name = "psutil"
 version = "5.8.0"
 description = "Cross-platform lib for process and system monitoring in Python."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
@@ -1909,10 +1909,11 @@ mssql-server = ["pyodbc"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "2aa3ee80c8d0836eb15696e0b295817064fe76ecd909bee1555a52706f256f7e"
+content-hash = "e69dcbee3f0ed983066e5bea841b82f349a79c2d82bf003d605ee33b41bd7ea2"
 
 [metadata.files]
 alembic = [
+    {file = "alembic-1.5.5-py2.py3-none-any.whl", hash = "sha256:65b64087cc47bcf2d7ee127698919976223a1e6fa36c7094f15be4fe55c8d788"},
     {file = "alembic-1.5.5.tar.gz", hash = "sha256:df0028c19275a2cff137e39617a39cdcdbd1173733b87b6bfa257b7c0860213b"},
 ]
 appdirs = [
@@ -2317,6 +2318,7 @@ lxml = [
     {file = "lxml-4.6.2.tar.gz", hash = "sha256:cd11c7e8d21af997ee8079037fff88f16fda188a9776eb4b81c7e4c9c0a7d7fc"},
 ]
 mako = [
+    {file = "Mako-1.1.4-py2.py3-none-any.whl", hash = "sha256:aea166356da44b9b830c8023cd9b557fa856bd8b4035d6de771ca027dfc5cc6e"},
     {file = "Mako-1.1.4.tar.gz", hash = "sha256:17831f0b7087c313c0ffae2bcbbd3c1d5ba9eeac9c38f2eb7b50e8c99fe9d5ab"},
 ]
 markupsafe = [
@@ -2451,7 +2453,7 @@ packaging = [
     {file = "packaging-20.9.tar.gz", hash = "sha256:5b327ac1320dc863dca72f4514ecc086f31186744b84a230374cc1fd776feae5"},
 ]
 pact-python = [
-    {file = "pact-python-1.3.1.tar.gz", hash = "sha256:0f014af33180ee4ed4d557acafaddc3f59bd6958fa49700e638197117e742bd0"},
+    {file = "pact-python-1.3.5.tar.gz", hash = "sha256:75b1d24579ed3e7751e2799af19d9b3004e8d2316b4bd171d0f5e1174e00913a"},
 ]
 paramiko = [
     {file = "paramiko-2.7.2-py2.py3-none-any.whl", hash = "sha256:4f3e316fef2ac628b05097a637af35685183111d4bc1b5979bd397c2ab7b5898"},

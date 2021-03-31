@@ -21,11 +21,11 @@ describe("PFML Claims API", () => {
     provider: "PFML API",
     port: 1234,
     log: path.resolve(process.cwd(), "logs", "pact.log"),
-    dir: path.resolve(process.cwd(), "../pacts"),
+    dir: path.resolve(process.cwd(), "../api/pacts"),
     logLevel: "INFO",
   });
   const accessTokenJwt =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTU0MjIzNzEsInN1YiI6ImQ2NjRiM2E4LTkyYjMtNDE3My04NWFiLTIxOWJlMzk2OGUwYSJ9.-8uHNYRGnoADrKOCpB2qFdOEUY2j69Tcz4boEybTsbM";
   const baseRequestHeaders = {
     Authorization: `Bearer ${accessTokenJwt}`,
     "Content-Type": "application/json",
@@ -77,9 +77,7 @@ describe("PFML Claims API", () => {
           withRequest: {
             method: "GET",
             path: `/applications`,
-            headers: {
-              Authorization: like("Bearer 2020-02-10T11:34:18.045Z"),
-            },
+            headers: baseRequestHeaders,
           },
           willRespondWith: {
             body: {
@@ -114,6 +112,7 @@ describe("PFML Claims API", () => {
           withRequest: {
             method: "POST",
             path: `/applications`,
+            headers: baseRequestHeaders,
           },
           willRespondWith: {
             body: {

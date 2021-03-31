@@ -28,12 +28,8 @@
         "method": "GET",
         "path": "/applications",
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTU0MjIzNzEsInN1YiI6ImQ2NjRiM2E4LTkyYjMtNDE3My04NWFiLTIxOWJlMzk2OGUwYSJ9.-8uHNYRGnoADrKOCpB2qFdOEUY2j69Tcz4boEybTsbM"
-        },
-        "matchingRules": {
-          "$.headers.Authorization": {
-            "match": "type"
-          }
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTU0MjIzNzEsInN1YiI6ImQ2NjRiM2E4LTkyYjMtNDE3My04NWFiLTIxOWJlMzk2OGUwYSJ9.-8uHNYRGnoADrKOCpB2qFdOEUY2j69Tcz4boEybTsbM",
+          "Content-Type": "application/json"
         }
       },
       "response": {
@@ -60,11 +56,12 @@
         "method": "POST",
         "path": "/applications",
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTU0MjIzNzEsInN1YiI6ImQ2NjRiM2E4LTkyYjMtNDE3My04NWFiLTIxOWJlMzk2OGUwYSJ9.-8uHNYRGnoADrKOCpB2qFdOEUY2j69Tcz4boEybTsbM"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTU0MjIzNzEsInN1YiI6ImQ2NjRiM2E4LTkyYjMtNDE3My04NWFiLTIxOWJlMzk2OGUwYSJ9.-8uHNYRGnoADrKOCpB2qFdOEUY2j69Tcz4boEybTsbM",
+          "Content-Type": "application/json"
         }
       },
       "response": {
-        "status": 201,
+        "status": 200,
         "headers": {
         },
         "body": {
