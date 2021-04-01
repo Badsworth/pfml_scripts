@@ -23,7 +23,7 @@ exports[`ScheduleFixed renders the page 1`] = `
     name="work_pattern.work_pattern_days[0].minutes"
     onChange={[Function]}
     smallLabel={true}
-    value={480}
+    value={null}
   />
   <InputHours
     hoursLabel="Hours"
@@ -34,7 +34,7 @@ exports[`ScheduleFixed renders the page 1`] = `
     name="work_pattern.work_pattern_days[1].minutes"
     onChange={[Function]}
     smallLabel={true}
-    value={480}
+    value={null}
   />
   <InputHours
     hoursLabel="Hours"
@@ -45,7 +45,7 @@ exports[`ScheduleFixed renders the page 1`] = `
     name="work_pattern.work_pattern_days[2].minutes"
     onChange={[Function]}
     smallLabel={true}
-    value={480}
+    value={null}
   />
   <InputHours
     hoursLabel="Hours"
@@ -56,7 +56,7 @@ exports[`ScheduleFixed renders the page 1`] = `
     name="work_pattern.work_pattern_days[3].minutes"
     onChange={[Function]}
     smallLabel={true}
-    value={480}
+    value={null}
   />
   <InputHours
     hoursLabel="Hours"
@@ -67,7 +67,7 @@ exports[`ScheduleFixed renders the page 1`] = `
     name="work_pattern.work_pattern_days[4].minutes"
     onChange={[Function]}
     smallLabel={true}
-    value={480}
+    value={null}
   />
   <InputHours
     hoursLabel="Hours"
@@ -78,7 +78,7 @@ exports[`ScheduleFixed renders the page 1`] = `
     name="work_pattern.work_pattern_days[5].minutes"
     onChange={[Function]}
     smallLabel={true}
-    value={480}
+    value={null}
   />
   <InputHours
     hoursLabel="Hours"
@@ -89,7 +89,7 @@ exports[`ScheduleFixed renders the page 1`] = `
     name="work_pattern.work_pattern_days[6].minutes"
     onChange={[Function]}
     smallLabel={true}
-    value={480}
+    value={null}
   />
 </QuestionPage>
 `;
