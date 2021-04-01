@@ -7,61 +7,12 @@
   },
   "interactions": [
     {
-      "description": "a request to get claims",
-      "providerState": "user access token is expired",
-      "request": {
-        "method": "GET",
-        "path": "/applications",
-        "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTcwMDAwMDAsInN1YiI6ImZlNTFiZWRiLTExNGYtNDQwMi04YzY0LTNjNzQ1ZjNkZTQyMiJ9.jkurNNMpABY-bfMis--U80WwrAPv82b_5SfNQVDNDxs",
-          "Content-Type": "application/json"
-        }
-      },
-      "response": {
-        "status": 401,
-        "headers": {
-        },
-        "body": {
-        }
-      }
-    },
-    {
-      "description": "a request to get claims",
-      "providerState": "user is logged in",
-      "request": {
-        "method": "GET",
-        "path": "/applications",
-        "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTU0MjIzNzEsInN1YiI6ImQ2NjRiM2E4LTkyYjMtNDE3My04NWFiLTIxOWJlMzk2OGUwYSJ9.-8uHNYRGnoADrKOCpB2qFdOEUY2j69Tcz4boEybTsbM",
-          "Content-Type": "application/json"
-        }
-      },
-      "response": {
-        "status": 200,
-        "headers": {
-        },
-        "body": {
-          "data": [
-            {
-              "application_id": "ce118b6e-d8e1-11e7-9296-cec278b6b50a"
-            }
-          ]
-        },
-        "matchingRules": {
-          "$.body.data[0].application_id": {
-            "match": "regex",
-            "regex": "^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$"
-          }
-        }
-      }
-    },
-    {
       "description": "a request to create a claim",
       "request": {
         "method": "POST",
         "path": "/applications",
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTU0MjIzNzEsInN1YiI6ImQ2NjRiM2E4LTkyYjMtNDE3My04NWFiLTIxOWJlMzk2OGUwYSJ9.-8uHNYRGnoADrKOCpB2qFdOEUY2j69Tcz4boEybTsbM",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTczODQ4NzEsInN1YiI6ImQ2NjRiM2E4LTkyYjMtNDE3My04NWFiLTIxOWJlMzk2OGUwYSJ9.LY0jsh0SLswXPlwaMrHidzr7DdsWFjnIiqUn6g78J-k",
           "Content-Type": "application/json"
         }
       },

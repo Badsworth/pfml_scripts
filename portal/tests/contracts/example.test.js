@@ -128,8 +128,8 @@ describe("PFML Claims API", () => {
 
   describe("createClaim", () => {
     describe("When a request to create a claim is made", () => {
-      beforeEach(() =>
-        provider.addInteraction({
+      beforeEach(async () => {
+        await provider.addInteraction({
           uponReceiving: "a request to create a claim",
           withRequest: {
             method: "POST",
@@ -144,8 +144,8 @@ describe("PFML Claims API", () => {
             },
             status: 201,
           },
-        })
-      );
+        });
+      });
 
       it("should return the correct data", async () => {
         const response = await claimsApi.createClaim();
