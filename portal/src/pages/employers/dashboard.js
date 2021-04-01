@@ -23,34 +23,19 @@ export const Dashboard = ({ appLogic, user }) => {
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
 
   return (
-    <div className="grid-container">
+    <React.Fragment>
+      <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
+      <Title>{t("pages.employersDashboard.title")}</Title>
       <div className="grid-row">
-        <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
-        <div className="grid-row">
-          <div className="grid-col">
-            <Title>{t("pages.employersDashboard.title")}</Title>
-            {shouldShowVerifications && hasVerifiableEmployer && (
-              <Alert
-                state="warning"
-                heading={t("pages.employersDashboard.verificationTitle")}
-              >
-                <p>
-                  <Trans
-                    i18nKey="pages.employersDashboard.verificationBody"
-                    components={{
-                      "your-organizations-link": (
-                        <a href={routes.employers.organizations} />
-                      ),
-                    }}
-                  />
-                </p>
-              </Alert>
-            )}
-            <p>{t("pages.employersDashboard.instructions")}</p>
-            {shouldShowVerifications && hasOnlyUnverifiedEmployers && (
+        <div className="grid-col">
+          {shouldShowVerifications && hasVerifiableEmployer && (
+            <Alert
+              state="warning"
+              heading={t("pages.employersDashboard.verificationTitle")}
+            >
               <p>
                 <Trans
-                  i18nKey="pages.employersDashboard.verificationInstructions"
+                  i18nKey="pages.employersDashboard.verificationBody"
                   components={{
                     "your-organizations-link": (
                       <a href={routes.employers.organizations} />
@@ -58,11 +43,24 @@ export const Dashboard = ({ appLogic, user }) => {
                   }}
                 />
               </p>
-            )}
-          </div>
+            </Alert>
+          )}
+          <p>{t("pages.employersDashboard.instructions")}</p>
+          {shouldShowVerifications && hasOnlyUnverifiedEmployers && (
+            <p>
+              <Trans
+                i18nKey="pages.employersDashboard.verificationInstructions"
+                components={{
+                  "your-organizations-link": (
+                    <a href={routes.employers.organizations} />
+                  ),
+                }}
+              />
+            </p>
+          )}
         </div>
       </div>
-    </div>
+    </React.Fragment>
   );
 };
 

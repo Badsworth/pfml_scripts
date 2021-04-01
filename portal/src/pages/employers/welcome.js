@@ -34,7 +34,7 @@ export const Welcome = ({ appLogic, user }) => {
   const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
 
   return (
-    <div className="grid-container">
+    <React.Fragment>
       {shouldShowDashboard && (
         <div className="grid-row">
           <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
@@ -143,7 +143,7 @@ export const Welcome = ({ appLogic, user }) => {
           />
         </aside>
       </div>
-    </div>
+    </React.Fragment>
   );
 };
 

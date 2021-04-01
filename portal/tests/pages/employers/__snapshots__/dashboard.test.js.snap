@@ -1,31 +1,25 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Employer dashboard when "employerShowDashboard" is enabled renders the page 1`] = `
-<div
-  className="grid-container"
->
+<Fragment>
+  <EmployerNavigationTabs
+    activePath="/mock-portalFlow-pathname"
+  />
+  <Title>
+    Dashboard
+  </Title>
   <div
     className="grid-row"
   >
-    <EmployerNavigationTabs
-      activePath="/mock-portalFlow-pathname"
-    />
     <div
-      className="grid-row"
+      className="grid-col"
     >
-      <div
-        className="grid-col"
-      >
-        <Title>
-          Dashboard
-        </Title>
-        <p>
-          Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.
-        </p>
-      </div>
+      <p>
+        Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.
+      </p>
     </div>
   </div>
-</div>
+</Fragment>
 `;
 
 exports[`Employer dashboard when "employerShowVerifications" is also enabled renders instructions if there are no verified employers 1`] = `

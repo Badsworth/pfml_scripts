@@ -67,9 +67,7 @@ exports[`Employer welcome displays links to Organizations page when employerShow
 `;
 
 exports[`Employer welcome renders page 1`] = `
-<div
-  className="grid-container"
->
+<Fragment>
   <div
     className="grid-row"
   >
@@ -170,7 +168,7 @@ exports[`Employer welcome renders page 1`] = `
       />
     </aside>
   </div>
-</div>
+</Fragment>
 `;
 
 exports[`Employer welcome renders page 2`] = `
