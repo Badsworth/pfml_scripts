@@ -88,7 +88,7 @@ def find_admins_without_registration(db_session: db.Session):
     )
 
     for leave_admin in leave_admins_without_fineos:
-        verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
+        verification_required = feature_gate.check_enabled(
             feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
             user_email=leave_admin.user.email_address,
         )
