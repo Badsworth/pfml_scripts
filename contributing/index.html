@@ -907,12 +907,14 @@ See <em><a href="https://chris.beams.io/posts/git-commit/#seven-rules">Seven Rul
 </li>
 <li>
 <p>To keep your branch updated with others' changes, you can:</p>
+<ul>
+<li>
+<p>Rebase your changes onto main with <code>git rebase main</code>, or</p>
 </li>
-<li>Rebase your changes onto main with <code>git rebase main</code>, or</li>
 <li>
 <p>Merge main onto your own branch: <code>git merge main</code>.</p>
 </li>
-<li>
+</ul>
 <p>The favored pathway to keep your branch updated is to use <code>git merge main.</code>
 It's still possible to rebase and force-push your branch using <code>git rebase main</code>, but this pathway should be avoided
 if your branch is being worked on by more than one person at a time, due to the risk of causing unnecessary conflicts.</p>
@@ -936,11 +938,17 @@ These guidelines are meant to reinforce those two goals.</p>
 <li>
 <p>Include a <a href="https://github.com/EOLWD/pfml/labels">GitHub label</a> if relevant.
 These labels can be a helpful wayfinding and context building tool, especially for new engineers onboarding into the codebase.</p>
+<ul>
+<li>
+<p>The <code>architecture</code> label should be used for changes to abstractions or interfaces that usually affect multiple existing files.</p>
 </li>
-<li>The <code>architecture</code> label should be used for changes to abstractions or interfaces that usually affect multiple existing files.</li>
-<li>The <code>pattern</code> label should be used for a new structure or interface that will be reused later.</li>
+<li>
+<p>The <code>pattern</code> label should be used for a new structure or interface that will be reused later.</p>
+</li>
 <li>
 <p>The <code>operations</code> label should be used for changes to engineering operations, such as dev set-up or deployment.</p>
+</li>
+</ul>
 </li>
 <li>
 <p>If your PR is a work-in-progress, or if you are looking for specific feedback on things,
