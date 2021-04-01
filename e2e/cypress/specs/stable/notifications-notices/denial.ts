@@ -49,13 +49,13 @@ describe("Denial Notification and Notice", { retries: 0 }, () => {
     cy.wait(200);
     switch (Cypress.env("E2E_ENVIRONMENT")) {
       case "training":
-      case "uat":
         fineos.closeReleaseNoticeTask("Denial Notice");
         break;
 
       case "performance":
       case "test":
       case "stage":
+      case "uat":
         fineos.triggerNoticeRelease("Denial Notice");
         break;
 

@@ -97,13 +97,13 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
         fineos.claimAdjudicationFlow(submission.fineos_absence_id, true);
         switch (Cypress.env("E2E_ENVIRONMENT")) {
           case "training":
-          case "uat":
             fineos.closeReleaseNoticeTask("Approval Notice");
             break;
 
           case "performance":
           case "test":
           case "stage":
+          case "uat":
             fineos.triggerNoticeRelease("Approval Notice");
             break;
 
