@@ -10,6 +10,10 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import
 )
 from massgov.pfml.delegated_payments.delegated_fineos_claimant_extract import ClaimantExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import PaymentExtractStep
+from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
+from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
+    PROCESS_FINEOS_EXTRACT_REPORTS,
+)
 from massgov.pfml.delegated_payments.state_cleanup_step import StateCleanupStep
 from massgov.pfml.util.logging import audit
 
@@ -22,7 +26,7 @@ CLAIMANT_EXTRACT = "claimant-extract"
 PAYMENT_EXTRACT = "payment-extract"
 VALIDATE_ADDRESSES = "validate-addresses"
 CREATE_AUDIT_REPORT = "audit-report"
-ERROR_REPORT = "error-report"
+REPORT = "report"
 ALLOWED_VALUES = [
     ALL,
     RUN_AUDIT_CLEANUP,
@@ -30,7 +34,7 @@ ALLOWED_VALUES = [
     PAYMENT_EXTRACT,
     VALIDATE_ADDRESSES,
     CREATE_AUDIT_REPORT,
-    ERROR_REPORT,
+    REPORT,
 ]
 
 
@@ -40,7 +44,7 @@ class Configuration:
     do_payment_extract: bool
     validate_addresses: bool
     make_audit_report: bool
-    make_error_report: bool
+    make_reports: bool
 
     def __init__(self, input_args: List[str]):
         parser = argparse.ArgumentParser(
@@ -63,14 +67,14 @@ class Configuration:
             self.do_payment_extract = True
             self.validate_addresses = True
             self.make_audit_report = True
-            self.make_error_report = True
+            self.make_reports = True
         else:
             self.do_audit_cleanup = RUN_AUDIT_CLEANUP in steps
             self.do_claimant_extract = CLAIMANT_EXTRACT in steps
             self.do_payment_extract = PAYMENT_EXTRACT in steps
             self.validate_addresses = VALIDATE_ADDRESSES in steps
             self.make_audit_report = CREATE_AUDIT_REPORT in steps
-            self.make_error_report = CREATE_AUDIT_REPORT in steps
+            self.make_reports = REPORT in steps
 
 
 def make_db_session() -> db.Session:
@@ -115,8 +119,11 @@ def _process_fineos_extracts(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
 
-    if config.make_error_report:
-        # TODO
-        pass
+    if config.make_reports:
+        ReportStep(
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            report_names=PROCESS_FINEOS_EXTRACT_REPORTS,
+        ).run()
 
     logger.info("End - FINEOS Payment+Claimant Extract ECS Task")

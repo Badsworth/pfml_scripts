@@ -64,6 +64,7 @@ class PaymentsS3Config(PydanticBaseSettings):
     # This is where the store that copy
     # Ex: s3://massgov-pfml-prod-agency-transfer/error-reports/outbound/
     pfml_error_reports_path: str
+    pfml_error_reports_archive_path: str
 
     # Delegated configs start here
     payment_audit_report_outbound_folder_path: str

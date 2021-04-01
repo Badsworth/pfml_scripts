@@ -29,6 +29,7 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             )
             state_log_counts_before = state_log_util.get_state_counts(self.db_session)
             self.set_metrics(state_log_counts_before=state_log_counts_before)
+
             self.run_step()
 
             state_log_counts_after = state_log_util.get_state_counts(self.db_session)
