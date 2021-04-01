@@ -1,22 +1,57 @@
+import argparse
+import sys
+from typing import List
+
 import massgov.pfml.db as db
+import massgov.pfml.reductions.dia as dia
 import massgov.pfml.reductions.dua as dua
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit as audit
 
-# import massgov.pfml.reductions.dia as dia
-
 logger = logging.get_logger(__name__)
+
+ALL = "ALL"
+DIA = "DIA"
+DUA = "DUA"
+ALLOWED_VALUES = [ALL, DIA, DUA]
+
+
+class Configuration:
+    get_dia_list: bool
+    get_dua_list: bool
+
+    def __init__(self, input_args: List[str]):
+        parser = argparse.ArgumentParser(description="Send claimant list to agency")
+        parser.add_argument(
+            "--steps",
+            nargs="+",
+            choices=ALLOWED_VALUES,
+            default=[DUA],
+            help="Indicate which agency, DIA or DUA, to create claimant list for",
+        )
+
+        args = parser.parse_args(input_args)
+        steps = set(args.steps)
+
+        if ALL in steps:
+            self.get_dia_list = True
+            self.get_dua_list = True
+        else:
+            self.get_dia_list = DIA in steps
+            self.get_dua_list = DUA in steps
 
 
 def main():
     audit.init_security_logging()
     logging.init("Retrieving payments list")
+    config = Configuration(sys.argv[1:])
 
     with db.session_scope(db.init(), close=True) as db_session:
-        # Expect retreive_dua_payments_list() to retrieve environment variables set via terraform.
 
-        dua.download_payment_list_if_none_today(db_session)
-        dua.load_new_dua_payments(db_session)
+        if config.get_dia_list:
+            dia.download_payment_list_if_none_today(db_session)
+            dia.load_new_dia_payments(db_session)
 
-        # TODO: Uncomment this once the work in API-475 is complete.
-        # dia.retreive_dia_payments_list(db_session)
+        if config.get_dua_list:
+            dua.download_payment_list_if_none_today(db_session)
+            dua.load_new_dua_payments(db_session)
