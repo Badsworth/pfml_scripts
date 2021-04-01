@@ -24,10 +24,12 @@ Your local commit history will persist on the PR's page unless you force-push a 
 See _[Seven Rules](https://chris.beams.io/posts/git-commit/#seven-rules)_ for an external reference on commit message best practices.
 
 - To keep your branch updated with others' changes, you can:
-  - Rebase your changes onto main with `git rebase main`, or
-  - Merge main onto your own branch: `git merge main`.
+
+    - Rebase your changes onto main with `git rebase main`, or
   
-- The favored pathway to keep your branch updated is to use `git merge main.`
+    - Merge main onto your own branch: `git merge main`.
+  
+    The favored pathway to keep your branch updated is to use `git merge main.`
 It's still possible to rebase and force-push your branch using `git rebase main`, but this pathway should be avoided
 if your branch is being worked on by more than one person at a time, due to the risk of causing unnecessary conflicts.
 
@@ -53,9 +55,12 @@ These guidelines are meant to reinforce those two goals.
 
 - Include a [GitHub label](https://github.com/EOLWD/pfml/labels) if relevant.
 These labels can be a helpful wayfinding and context building tool, especially for new engineers onboarding into the codebase.
-  - The `architecture` label should be used for changes to abstractions or interfaces that usually affect multiple existing files.
-  - The `pattern` label should be used for a new structure or interface that will be reused later.
-  - The `operations` label should be used for changes to engineering operations, such as dev set-up or deployment.
+
+    - The `architecture` label should be used for changes to abstractions or interfaces that usually affect multiple existing files.
+
+    - The `pattern` label should be used for a new structure or interface that will be reused later.
+
+    - The `operations` label should be used for changes to engineering operations, such as dev set-up or deployment.
 
 - If your PR is a work-in-progress, or if you are looking for specific feedback on things,
 create a [Draft Pull Request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests)
