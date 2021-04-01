@@ -22,6 +22,9 @@ flask-bouncer = "^0.3.0"
 flask_cors = "^3.0.9"
 Flask-HTTPAuth = "^4.2.0"
 gunicorn = "^20.0.4"
+# Locking indirect lxml dependency to version that addresses CVE-2021-28957. Can remove when Zeep
+# pins lxml dependency to version that addresses CVE-2021-28957.
+lxml = "^4.6.3"
 newrelic = "^5.14.1"
 paramiko = "^2.7.2"
 phonenumbers = "^8.12.13"
