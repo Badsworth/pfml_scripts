@@ -54,12 +54,31 @@ from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSFatalUnavaila
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
+from massgov.pfml.fineos.fineos_client import FINEOSClient
+
+import oauthlib.oauth2
+import requests.packages.urllib3.connection
+import requests_oauthlib
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-
 def application_link(fineos_absence_id: str) -> flask.Response:
-    fineos = MockFINEOSClient()
+
+
+    # Create the client.
+    backend = oauthlib.oauth2.BackendApplicationClient(client_id="1ral5e957i0l9shul52bhk0037")
+    oauth_session = requests_oauthlib.OAuth2Session(client=backend, scope="service-gateway/all")
+    fineos = massgov.pfml.fineos.FINEOSClient(
+        integration_services_api_url="https://dt2-api.masspfml.fineos.com/integration-services/",
+        customer_api_url="https://dt2-api.masspfml.fineos.com/customerapi/",
+        group_client_api_url="https://dt2-api.masspfml.fineos.com/groupclientapi/",
+        wscomposer_url="https://dt2-api.masspfml.fineos.com/integration-services/wscomposer/",
+        wscomposer_user_id="CONTENT",
+        oauth2_url="https://dt2-api.masspfml.fineos.com/oauth2/token",
+        client_id="1ral5e957i0l9shul52bhk0037",
+        client_secret="45qqfa12nl9gm8ts2gd6nl552o7vur83l7i34k3vv6f2l5077gg",
+        oauth_session=oauth_session,
+    )
     with app.db_session() as db_session:
         current_user = app.current_user()
         claim = (
@@ -77,10 +96,14 @@ def application_link(fineos_absence_id: str) -> flask.Response:
     if claim is None or application is None:
         employee_external_id = register_employee(
             fineos,
-            "626-38-6794",
-            "39-8898158",
+            "518076702",
+            "398898158",
             db_session
         )
+        logger.info(f'MP__{employee_external_id}')
+        logger.info(f'MP__{fineos.read_customer_details(employee_external_id)}')
+        logger.info(f'MP__{fineos.get_absence(employee_external_id, "NTN-37586-ABS-01")}')
+
         # check if user can actually see this claim
 
         # if not user_has_access_to_claim(application): # <-- todo user_can_access_fineos_claim

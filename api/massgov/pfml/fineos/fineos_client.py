@@ -544,6 +544,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     def get_absence(self, user_id: str, absence_id: str) -> models.customer_api.AbsenceDetails:
         response = self._customer_api("GET", f"customer/absence/absences/{absence_id}", user_id)
+        logger.info(f'MP__{response.json()}')
+        # todo: find out how to parse dates into acceptable format
         return models.customer_api.AbsenceDetails.parse_obj(response.json())
 
     def get_absence_period_decisions(
