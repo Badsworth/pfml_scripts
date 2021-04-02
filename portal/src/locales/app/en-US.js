@@ -1673,6 +1673,13 @@ const pages = {
   employersDashboard: {
     instructions:
       "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
+    noClaimResults: "No applications on file",
+    tableColHeading_created_at: "Date filed",
+    tableColHeading_employee_name: "Employee name",
+    tableColHeading_employer_dba: "Organization",
+    tableColHeading_employer_fein: "Employer ID number",
+    tableColHeading_fineos_absence_id: "Application ID",
+    tableColHeading_status: "Status",
     title: "Dashboard",
     verificationBody:
       "Every employer must verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.",
