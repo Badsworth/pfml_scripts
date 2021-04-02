@@ -8,6 +8,7 @@
  */
 const path = require("path");
 const nextConfig = require("../next.config");
+const postcssPresetEnv = require("postcss-preset-env");
 const webpack = require("webpack");
 
 module.exports = {
@@ -32,13 +33,24 @@ module.exports = {
         "style-loader",
         "css-loader",
         {
+          /**
+           * Next.js sets this automatically for us, but we need to manually set it here for Storybook.
+           * The main thing this enables is autoprefixer, so any experimental CSS properties work.
+           */
+          loader: "postcss-loader",
+          options: {
+            ident: "postcss",
+            plugins: () => [postcssPresetEnv()],
+          },
+        },
+        {
           loader: "sass-loader",
           options: {
             sassOptions: nextConfig.sassOptions,
           },
         },
       ],
-      include: [path.resolve(__dirname, "../styles")],
+      exclude: /node_modules/,
     });
 
     // So that we can use the node.js __filename

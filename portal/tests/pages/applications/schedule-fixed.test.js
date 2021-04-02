@@ -1,21 +1,45 @@
-import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
+import {
+  MockClaimBuilder,
+  renderWithAppLogic,
+  simulateEvents,
+} from "../../test-utils";
 import { WorkPattern, WorkPatternType } from "../../../src/models/Claim";
 import { map, sum } from "lodash";
 
 import ScheduleFixed from "../../../src/pages/applications/schedule-fixed";
-import { act } from "react-dom/test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
+const MINUTES_WORKED_PER_WEEK = 60 * 8 * 7;
+
+const setup = (claim) => {
+  if (!claim) {
+    claim = new MockClaimBuilder()
+      .continuous()
+      .workPattern({
+        work_pattern_type: WorkPatternType.fixed,
+      })
+      .create();
+  }
+
+  const { appLogic, wrapper } = renderWithAppLogic(ScheduleFixed, {
+    claimAttrs: claim,
+  });
+
+  const { changeField, submitForm } = simulateEvents(wrapper);
+
+  return { appLogic, changeField, claim, submitForm, wrapper };
+};
+
 describe("ScheduleFixed", () => {
-  let appLogic, workPattern, wrapper;
+  it("renders the page", () => {
+    const { wrapper } = setup();
+    expect(wrapper).toMatchSnapshot();
+  });
 
-  // 8 hours days for 7 days
-  const defaultMinutesWorked = 8 * 60 * 7;
-
-  beforeEach(() => {
-    workPattern = WorkPattern.createWithWeek(defaultMinutesWorked);
-    const mockClaim = new MockClaimBuilder()
+  it("displays work schedule values that were previously entered", () => {
+    const workPattern = WorkPattern.createWithWeek(MINUTES_WORKED_PER_WEEK);
+    const claim = new MockClaimBuilder()
       .continuous()
       .workPattern({
         work_pattern_type: WorkPatternType.fixed,
@@ -23,16 +47,7 @@ describe("ScheduleFixed", () => {
       })
       .create();
 
-    ({ appLogic, wrapper } = renderWithAppLogic(ScheduleFixed, {
-      claimAttrs: mockClaim,
-    }));
-  });
-
-  it("renders the page", () => {
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it("fills inputHours with minutes worked each day", () => {
+    const { wrapper } = setup(claim);
     const inputHoursValues = wrapper
       .find("InputHours")
       .map((el) => el.props().value);
@@ -41,40 +56,23 @@ describe("ScheduleFixed", () => {
     );
   });
 
-  it("creates an empty work pattern if work pattern has no days", () => {
-    expect.assertions(1);
-    const mockClaim = new MockClaimBuilder()
-      .continuous()
-      .workPattern({
-        work_pattern_type: WorkPatternType.fixed,
-        work_pattern_days: [],
-      })
-      .create();
+  it("updates the claim's work_pattern_days and hours_worked_per_week when the page is submitted", async () => {
+    const { appLogic, changeField, submitForm } = setup();
 
-    ({ appLogic, wrapper } = renderWithAppLogic(ScheduleFixed, {
-      claimAttrs: mockClaim,
-      render: "mount",
-      diveLevels: 0,
-    }));
-
-    const values = wrapper.find("InputHours").map((el) => el.props().value);
-    expect(sum(values)).toEqual(0);
-  });
-
-  it("updates API with work_pattern_days and hours_worked_per_week", () => {
-    act(() => {
-      wrapper.find("QuestionPage").simulate("save");
-    });
+    for (let day = 0; day < 7; day++) {
+      changeField(`work_pattern.work_pattern_days[${day}].minutes`, 8 * 60);
+    }
+    await submitForm();
 
     const {
       hours_worked_per_week,
       work_pattern,
     } = appLogic.claims.update.mock.calls[0][1];
 
-    expect(hours_worked_per_week).toEqual(defaultMinutesWorked / 60);
+    expect(hours_worked_per_week).toEqual(MINUTES_WORKED_PER_WEEK / 60);
     expect(work_pattern.work_pattern_days.length).toEqual(7);
     expect(sum(map(work_pattern.work_pattern_days, "minutes"))).toEqual(
-      defaultMinutesWorked
+      MINUTES_WORKED_PER_WEEK
     );
   });
 });

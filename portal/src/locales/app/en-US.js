@@ -930,7 +930,7 @@ const pages = {
     choiceLabel_shortTermDisability:
       "$t(shared.employerBenefitType_shortTermDisability)",
     endDateLabel: "When will you stop using the benefit?",
-    limitMessage: "You can only add up to 4 benefits",
+    limitMessage: "You can only add up to 3 benefits",
     removeButton: "Remove benefit",
     sectionLabel:
       "Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.",
@@ -1132,7 +1132,7 @@ const pages = {
     amountLegend: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.otherIncomeEntryPrefix)",
     endDateLabel: "When will you stop receiving this income?",
-    limitMessage: "You can only add up to 6 incomes",
+    limitMessage: "You can only add up to 3 incomes",
     removeButton: "Remove income",
     sectionLabel:
       "Tell us about your other sources of income$t(chars.nbsp)during your leave dates for paid$t(chars.nbsp)leave.",
@@ -1635,6 +1635,8 @@ const pages = {
     applicationIdLabel: "Application ID",
     lead:
       "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
+    lead_pending:
+      "This application is being reviewed by the Department. It was either reviewed by an administrator on your team or the review deadline has passed. No action is required of you.<br /><br />After we make a decision, you'll receive an email with a direct link for more details.",
     leaveDetailsLabel: "$t(shared.claimsLeaveDetailsTitle)",
     leaveDurationLabel: "$t(shared.claimsLeaveDurationTitle)",
     leaveReasonLabel: "Leave type",
@@ -1658,7 +1660,7 @@ const pages = {
       "$t(shared.noticeName_requestForInfoNotice)",
     noticesLabel: "Notices",
     statusLabel: "Status",
-    title: "Notices for {{name}}",
+    title: "Application status for {{name}}",
   },
   employersClaimsSuccess: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
@@ -1669,27 +1671,14 @@ const pages = {
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {
-    checkEmailBody:
-      "When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.",
-    checkEmailTitle: "Check your email regularly",
-    learnMoreLinks:
-      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
-    learnMoreTitle: "Learn more",
-    respondBody:
-      "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
-    respondTitle: "Respond to applications within 10 business days",
-    settingsLinks:
-      "<ul><li><your-organizations-link>Your organizations</your-organizations-link></li></ul>",
-    settingsTitle: "Settings",
+    instructions:
+      "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
+    title: "Dashboard",
     verificationBody:
-      "We require every employer to verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team.",
-    verificationTitle: "Verify your account to continue",
-    viewFormsBody:
-      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process.",
-    viewFormsTitle: "View forms and notices online",
-    welcomeBody:
-      "Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.",
-    welcomeTitle: "Welcome",
+      "Every employer must verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.",
+    verificationInstructions:
+      "You have not verified any organizations. <your-organizations-link>Complete this process</your-organizations-link> to review applications.",
+    verificationTitle: "Verify your account",
   },
   employersOrganizations: {
     addOrganizationButton: "Add organization",
@@ -1729,6 +1718,29 @@ const pages = {
     title: "Verify your paid leave contributions from MassTaxConnect",
     withholdingAmountHint: "Include the full amount with dollars and cents.",
     withholdingAmountLabel: "Paid leave contributions from {{date}}",
+  },
+  employersWelcome: {
+    checkEmailBody:
+      "When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.",
+    checkEmailTitle: "Check your email regularly",
+    learnMoreLinks:
+      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
+    learnMoreTitle: "Learn more",
+    respondBody:
+      "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
+    respondTitle: "Respond to applications within 10 business days",
+    settingsLinks:
+      "<ul><li><your-organizations-link>Your organizations</your-organizations-link></li></ul>",
+    settingsTitle: "Settings",
+    verificationBody:
+      "We require every employer to verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team.",
+    verificationTitle: "Verify your account to continue",
+    viewFormsBody:
+      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process.",
+    viewFormsTitle: "View forms and notices online",
+    welcomeBody:
+      "Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.",
+    welcomeTitle: "Welcome",
   },
   getReady: {
     alertHeading: "Only some people can apply online for now",

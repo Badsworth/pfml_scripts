@@ -77,7 +77,7 @@ export async function prepareBundle(
     while (assignedChance < 100) {
       // Prompt which scenario to run and it's frequency
       const { scenario, chance }: Util.PromptRes = await prompt([
-        prompts.scenario(newDataConfig),
+        prompts.scenario,
         prompts.chance(assignedChance),
       ]);
       // if we're using a claim submission scenario,

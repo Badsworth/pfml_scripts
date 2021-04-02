@@ -1736,7 +1736,7 @@ def test_application_patch_replace_existing_employer_benefits(
 
 def test_application_patch_employer_benefit_exceed_limit(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-    limit = 4
+    limit = 3
 
     benefits = EmployerBenefitFactory.create_batch(
         size=2, application_id=application.application_id
@@ -1928,7 +1928,7 @@ def test_application_patch_replace_existing_other_incomes(
 
 def test_application_patch_other_income_exceed_limit(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-    limit = 6
+    limit = 3
 
     incomes = OtherIncomeFactory.create_batch(size=2, application_id=application.application_id,)
     application.other_incomes = incomes

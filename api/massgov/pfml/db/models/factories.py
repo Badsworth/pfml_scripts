@@ -195,6 +195,11 @@ class EmployeeFactory(BaseFactory):
     ctr_vendor_customer_code = "VC0001201168"
 
 
+class EmployeeWithFineosNumberFactory(EmployeeFactory):
+    date_of_birth = factory.Faker("date_of_birth", minimum_age=14, maximum_age=100)
+    fineos_customer_number = factory.Faker("numerify", text="####")
+
+
 class EmployeePubEftPairFactory(BaseFactory):
     class Meta:
         model = employee_models.EmployeePubEftPair

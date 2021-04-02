@@ -1,15 +1,67 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Employer dashboard when "employerShowDashboard" is enabled renders the page 1`] = `
-<div
-  className="grid-container"
->
+<Fragment>
+  <EmployerNavigationTabs
+    activePath="/mock-portalFlow-pathname"
+  />
+  <Title>
+    Dashboard
+  </Title>
   <div
     className="grid-row"
   >
-    <EmployerNavigationTabs
-      activePath="/mock-portalFlow-pathname"
-    />
+    <div
+      className="grid-col"
+    >
+      <p>
+        Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.
+      </p>
+    </div>
   </div>
-</div>
+</Fragment>
+`;
+
+exports[`Employer dashboard when "employerShowVerifications" is also enabled renders instructions if there are no verified employers 1`] = `
+<Trans
+  components={
+    Object {
+      "your-organizations-link": <a
+        href="/employers/organizations"
+      />,
+    }
+  }
+  i18nKey="pages.employersDashboard.verificationBody"
+>
+  Every employer must verify paid leave contributions when creating an account. You need to 
+  <a
+    href="/employers/organizations"
+    key="1"
+  >
+    complete this process
+  </a>
+   to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.
+</Trans>
+`;
+
+exports[`Employer dashboard when "employerShowVerifications" is also enabled renders instructions if there are no verified employers 2`] = `
+<Trans
+  components={
+    Object {
+      "your-organizations-link": <a
+        href="/employers/organizations"
+      />,
+    }
+  }
+  i18nKey="pages.employersDashboard.verificationInstructions"
+>
+  You have not verified any organizations. 
+  <a
+    href="/employers/organizations"
+    key="1"
+  >
+    Complete this process
+  </a>
+   to review applications.
+</Trans>
 `;

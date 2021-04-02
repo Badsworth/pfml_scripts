@@ -46,6 +46,7 @@ declare namespace Cypress {
     ): Chainable<DehydratedClaim>;
 
     task(event: "getAuthVerification", mail: string): Chainable<string>;
+    task(event: "completeSSOLoginFineos"): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;
     task(event: "generateLeaveAdminCredentials"): Chainable<Credentials>;
     task(event: "noticeReader", noticeType: string): Chainable<Result>;

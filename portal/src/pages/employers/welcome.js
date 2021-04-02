@@ -34,7 +34,7 @@ export const Welcome = ({ appLogic, user }) => {
   const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
 
   return (
-    <div className="grid-container">
+    <React.Fragment>
       {shouldShowDashboard && (
         <div className="grid-row">
           <EmployerNavigationTabs activePath={appLogic.portalFlow.pathname} />
@@ -42,16 +42,16 @@ export const Welcome = ({ appLogic, user }) => {
       )}
       <div className="grid-row">
         <div className="desktop:grid-col-8">
-          <Title>{t("pages.employersDashboard.welcomeTitle")}</Title>
+          <Title>{t("pages.employersWelcome.welcomeTitle")}</Title>
           {shouldShowNewsBanner && <NewsBanner />}
           {shouldShowVerifications && hasVerifiableEmployer && (
             <Alert
               state="warning"
-              heading={t("pages.employersDashboard.verificationTitle")}
+              heading={t("pages.employersWelcome.verificationTitle")}
             >
               <p>
                 <Trans
-                  i18nKey="pages.employersDashboard.verificationBody"
+                  i18nKey="pages.employersWelcome.verificationBody"
                   components={{
                     "your-organizations-link": (
                       <a href={routes.employers.organizations} />
@@ -61,27 +61,27 @@ export const Welcome = ({ appLogic, user }) => {
               </p>
             </Alert>
           )}
-          <p>{t("pages.employersDashboard.welcomeBody")}</p>
+          <p>{t("pages.employersWelcome.welcomeBody")}</p>
 
           <Heading level="2">
             <IconMail {...iconProps} />
-            {t("pages.employersDashboard.checkEmailTitle")}
+            {t("pages.employersWelcome.checkEmailTitle")}
           </Heading>
-          <p>{t("pages.employersDashboard.checkEmailBody")}</p>
+          <p>{t("pages.employersWelcome.checkEmailBody")}</p>
 
           <Heading level="2">
             <IconWait {...iconProps} />
-            {t("pages.employersDashboard.respondTitle")}
+            {t("pages.employersWelcome.respondTitle")}
           </Heading>
-          <p>{t("pages.employersDashboard.respondBody")}</p>
+          <p>{t("pages.employersWelcome.respondBody")}</p>
 
           <Heading level="2">
             <IconPdf {...iconProps} />
-            {t("pages.employersDashboard.viewFormsTitle")}
+            {t("pages.employersWelcome.viewFormsTitle")}
           </Heading>
           <p>
             <Trans
-              i18nKey="pages.employersDashboard.viewFormsBody"
+              i18nKey="pages.employersWelcome.viewFormsBody"
               components={{
                 "healthcare-provider-form-link": (
                   <a
@@ -99,10 +99,10 @@ export const Welcome = ({ appLogic, user }) => {
           {shouldShowVerifications && (
             <React.Fragment>
               <Heading level="2">
-                {t("pages.employersDashboard.settingsTitle")}
+                {t("pages.employersWelcome.settingsTitle")}
               </Heading>
               <Trans
-                i18nKey="pages.employersDashboard.settingsLinks"
+                i18nKey="pages.employersWelcome.settingsLinks"
                 components={{
                   ul: (
                     <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05" />
@@ -116,10 +116,10 @@ export const Welcome = ({ appLogic, user }) => {
             </React.Fragment>
           )}
           <Heading level="2">
-            {t("pages.employersDashboard.learnMoreTitle")}
+            {t("pages.employersWelcome.learnMoreTitle")}
           </Heading>
           <Trans
-            i18nKey="pages.employersDashboard.learnMoreLinks"
+            i18nKey="pages.employersWelcome.learnMoreLinks"
             components={{
               ul: (
                 <ul className="usa-list desktop:font-body-2xs desktop:padding-top-05" />
@@ -143,7 +143,7 @@ export const Welcome = ({ appLogic, user }) => {
           />
         </aside>
       </div>
-    </div>
+    </React.Fragment>
   );
 };
 

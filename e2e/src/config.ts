@@ -28,6 +28,8 @@ export interface E2EConfig {
   ENVIRONMENT: string;
   API_FINEOS_CLIENT_ID: string;
   API_FINEOS_CLIENT_SECRET: string;
+  SSO_PASSWORD: string;
+  SSO_USERNAME: string;
 }
 export interface LSTConfig {
   FLOOD_DATA_BASEURL: string;

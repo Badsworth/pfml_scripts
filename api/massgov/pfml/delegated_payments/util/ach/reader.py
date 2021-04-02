@@ -5,7 +5,7 @@
 import dataclasses
 import decimal
 import enum
-from typing import List, Sequence, TextIO
+from typing import List, Optional, Sequence, TextIO
 
 import massgov.pfml.util.logging
 from massgov.pfml.util.files.file_format import FieldFormat, FileFormat, LineParseError
@@ -168,7 +168,9 @@ class ACHReader:
             },
         )
 
-    def validate_file_control_record(self, file_control: dict, raw_record: RawRecord) -> None:
+    def validate_file_control_record(
+        self, file_control: Optional[dict], raw_record: RawRecord
+    ) -> None:
         """Validate counts in file control record, if one was present (it is required)."""
         if not file_control:
             return

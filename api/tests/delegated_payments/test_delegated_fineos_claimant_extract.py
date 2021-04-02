@@ -174,7 +174,7 @@ def test_run_step_happy_path(
     # Confirm 1 state log for DELEGATED_EFT flow
     for state_log in updated_employee.state_logs:
         assert state_log.end_state_id in [
-            State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS.state_id,
+            State.CLAIMANT_READY_FOR_ADDRESS_VALIDATION.state_id,
             State.DELEGATED_EFT_SEND_PRENOTE.state_id,
         ]
 
@@ -237,7 +237,7 @@ def test_run_step_existing_approved_eft_info(
     assert len(updated_employee.state_logs) == 1
     assert (
         updated_employee.state_logs[0].end_state_id
-        == State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS.state_id
+        == State.CLAIMANT_READY_FOR_ADDRESS_VALIDATION.state_id
     )
 
 

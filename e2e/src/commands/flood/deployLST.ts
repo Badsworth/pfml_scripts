@@ -107,7 +107,7 @@ export async function deploy(args: Arguments<DeployLSTArgs>): Promise<void> {
       }": \n- Concurrent users: ${flood.threads} \n- Duration: ${
         +flood.duration / 60
       } minute(s) \n- Ramp-up: ${
-        flood.rampup
+        +flood.rampup / 60
       } minute(s) \n- Results: ${permalink}`;
       await Util.logDeployment(message);
       args.logger.info(message);

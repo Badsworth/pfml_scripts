@@ -22,6 +22,9 @@ flask-bouncer = "^0.3.0"
 flask_cors = "^3.0.9"
 Flask-HTTPAuth = "^4.2.0"
 gunicorn = "^20.0.4"
+# Locking indirect lxml dependency to version that addresses CVE-2021-28957. Can remove when Zeep
+# pins lxml dependency to version that addresses CVE-2021-28957.
+lxml = "^4.6.3"
 newrelic = "^5.14.1"
 paramiko = "^2.7.2"
 phonenumbers = "^8.12.13"
@@ -97,6 +100,7 @@ payments-manual-payment-voucher = "massgov.pfml.payments.manual.payment_voucher:
 pub-payments-process-fineos = "massgov.pfml.delegated_payments.task.process_fineos_extracts:main"
 pub-payments-create-pub-files = "massgov.pfml.delegated_payments.task.process_pub_payments:main"
 pub-payments-process-pub-returns = "massgov.pfml.delegated_payments.task.process_pub_responses:main"
+pub-payments-mock-generate = "massgov.pfml.delegated_payments.mock.generate:main"
 ach-reader = "massgov.pfml.delegated_payments.util.ach.ach_tool:ach_reader"
 fineos-payments-mock-generate = "massgov.pfml.payments.mock.fineos_extract_generator:main"
 fineos-test-vendor-export-generate = "massgov.pfml.payments.mock.fineos_extract_generator:create_test_vendor_export"

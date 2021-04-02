@@ -111,6 +111,11 @@ export type DeployLST = {
   stopAfter?: number;
 } & BundleLST;
 
+/*
+ * Bug: Enquirer's initial values do not apply to "choice" questions/prompts
+ * and it will default to whatever is the first option everytime instead.
+ * We can go around this by limiting the choices to one, when it is in args
+ */
 export const getChoiceIndexByName = (
   choices: Choice[],
   name: string
@@ -152,7 +157,7 @@ export const bundlerPrompts = (args: BundleLST) => ({
     message: "Simulation speed (higher means slower)?",
     min: 0,
     max: 2,
-    initial: args.speed || 1,
+    initial: args.speed || 0.1,
     required: true,
     skip: "speed" in args,
   },
@@ -164,24 +169,20 @@ export const bundlerPrompts = (args: BundleLST) => ({
     required: true,
     skip: !!args.generateData,
   },
-  scenario: (chosenScenarios: LSTDataConfig[]) => ({
+  scenario: {
     type: "select",
     name: "scenario",
     message: "Scenario?",
-    // todo: optimize
-    choices: scenarioChoices.reduce((choices, choice) => {
-      if (!chosenScenarios.find((v) => v.scenario === choice.name)) {
-        choices.push(choice);
-      }
-      return choices;
-    }, [] as Choice[]),
+    choices: args.scenario
+      ? [scenarioChoices.find((s) => s.name === args.scenario)]
+      : scenarioChoices,
     initial: getChoiceIndexByName(
       scenarioChoices,
       args.scenario || "PortalClaimSubmit"
     ),
     required: true,
     skip: !!args.scenario,
-  }),
+  },
   chance: (occupied: number) => ({
     type: "numeral",
     name: "chance",
@@ -251,7 +252,9 @@ export const deployPrompts = (args: DeployLST) => ({
     type: "select",
     name: "tool",
     message: "Testing tool?",
-    choices: toolChoices,
+    choices: args.tool
+      ? [toolChoices.find((s) => s.name === args.tool)]
+      : toolChoices,
     initial: getChoiceIndexByName(toolChoices, args.tool || "flood-chrome"),
     skip: !!args.tool,
   },
@@ -306,7 +309,9 @@ export const deployPrompts = (args: DeployLST) => ({
     type: "select",
     name: "privacy",
     message: "Privacy?",
-    choices: privacyChoices,
+    choices: args.privacy
+      ? [privacyChoices.find((s) => s.name === args.privacy)]
+      : privacyChoices,
     initial: getChoiceIndexByName(privacyChoices, args.privacy || "public"),
     skip: !!args.privacy,
   },
@@ -314,7 +319,9 @@ export const deployPrompts = (args: DeployLST) => ({
     type: "select",
     name: "region",
     message: "Region?",
-    choices: regionChoices,
+    choices: args.region
+      ? [regionChoices.find((s) => s.name === args.region)]
+      : regionChoices,
     initial: getChoiceIndexByName(regionChoices, args.region || "us-east-1"),
     required: true,
     skip: !!args.region,
@@ -323,7 +330,9 @@ export const deployPrompts = (args: DeployLST) => ({
     type: "select",
     name: "infrastructure",
     message: "Grid type?",
-    choices: infrastructureChoices,
+    choices: args.infrastructure
+      ? [infrastructureChoices.find((s) => s.name === args.infrastructure)]
+      : infrastructureChoices,
     initial: getChoiceIndexByName(
       infrastructureChoices,
       args.infrastructure || "demand"

@@ -21,12 +21,13 @@ class User extends BaseModel {
   }
 
   /**
-   * Determines whether an employer is verifiable (unverified and has verification data)
-   * @param {UserLeaveAdministrator} employer
+   * Determines whether user_leave_administrators has only unverified employers
    * @returns {boolean}
    */
-  isVerifiableEmployer(employer) {
-    return !employer.verified && employer.has_verification_data;
+  get hasOnlyUnverifiedEmployers() {
+    return this.user_leave_administrators.every(
+      (employer) => !employer.verified
+    );
   }
 
   /**
@@ -37,6 +38,20 @@ class User extends BaseModel {
     return this.user_leave_administrators.some(
       (employer) => employer && this.isVerifiableEmployer(employer)
     );
+  }
+
+  /**
+   * Returns an unverifiable employer by employer id
+   * @param {string} employerId
+   * @returns {UserLeaveAdministrator}
+   */
+  getUnverifiableEmployerById(employerId) {
+    return this.user_leave_administrators.find((employer) => {
+      return (
+        employerId === employer.employer_id &&
+        this.isUnverifiableEmployer(employer)
+      );
+    });
   }
 
   /**
@@ -63,28 +78,12 @@ class User extends BaseModel {
   }
 
   /**
-   * Determines whether user_leave_administrators has an employer that cannot be verified
-   * due to a lack of verification data.
+   * Determines whether an employer is verifiable (unverified and has verification data)
+   * @param {UserLeaveAdministrator} employer
    * @returns {boolean}
    */
-  get hasUnverifiableEmployer() {
-    return this.user_leave_administrators.some((employer) =>
-      this.isUnverifiableEmployer(employer)
-    );
-  }
-
-  /**
-   * Returns an unverifiable employer by employer id
-   * @param {string} employerId
-   * @returns {UserLeaveAdministrator}
-   */
-  getUnverifiableEmployerById(employerId) {
-    return this.user_leave_administrators.find((employer) => {
-      return (
-        employerId === employer.employer_id &&
-        this.isUnverifiableEmployer(employer)
-      );
-    });
+  isVerifiableEmployer(employer) {
+    return !employer.verified && employer.has_verification_data;
   }
 }
 

@@ -72,30 +72,66 @@ resource "newrelic_alert_policy_channel" "pfml_prod_low_priority_alerts" {
 # ----------------------------------------------------------------------------------------------------------------------
 # Alerts relating to the API's generic performance metrics
 
-resource "newrelic_alert_condition" "api_error_rate" {
-  # WARN: error rate above 1% for at least five minutes
-  # CRIT: error rate above 10% at least once in any five-minute period
-  policy_id       = newrelic_alert_policy.api_alerts.id
-  name            = "API error rate too high"
-  type            = "apm_app_metric"
-  entities        = [data.newrelic_entity.pfml-api.application_id]
-  metric          = "error_percentage"
-  condition_scope = "application"
+resource "newrelic_nrql_alert_condition" "api_error_rate" {
+  # WARN: error rate above 5% in any five-minute period
+  # CRIT: error rate above 10% in any five-minute period
+  #
+  # These should be tuned down once we can better distinguish
+  # certain types of errors.
+  name               = "API error rate too high"
+  policy_id          = newrelic_alert_policy.api_alerts.id
+  type               = "static"
+  value_function     = "single_value"
+  enabled            = true
+  aggregation_window = 300 # 5-minute window
 
-  term {
-    priority      = "warning"
-    time_function = "all" # e.g. "for at least..."
-    duration      = 5     # units: minutes
-    operator      = "above"
-    threshold     = 1 # units: percentage
+  nrql {
+    # Calculate error percentage.
+    #
+    # Ignore the following triaged errors until they are resolved:
+    # - documents_get 403 (PSD-112)
+    # - document_upload 422 (PSD-842)
+    # - OCOrganization.[*].CustomerNo type issue (PSD-161)
+    # - FINEOSFatalUnavailable (Should be ignored entirely in https://github.com/EOLWD/pfml/pull/3516)
+    #
+    # This keeps the error rate signal clean so we can catch new issues.
+    #
+    query             = <<-NRQL
+      SELECT filter(
+        count(error.message), 
+        WHERE NOT (
+          error.message LIKE 'expected 200, but got 403' 
+          AND request.uri LIKE '%applications%/documents' 
+          AND request.method LIKE 'GET'
+        )
+        AND NOT (
+          error.message LIKE 'expected 200, but got 422' 
+          AND request.uri LIKE '%applications%/documents' 
+          AND request.method LIKE 'POST'
+        )
+        AND NOT error.message LIKE '%1 validation error for OCOrganisation%CustomerNo none is not an allowed value%'
+        AND NOT error.class = 'massgov.pfml.fineos.exception:FINEOSFatalUnavailable'
+      ) * 100 / uniqueCount(traceId)
+      FROM Transaction, TransactionError
+      WHERE appName='PFML-API-${upper(var.environment_name)}'
+    NRQL
+    evaluation_offset = 1 # offset by one window
   }
 
-  term {
-    priority      = "critical"
-    time_function = "any" # e.g. "at least once in..."
-    duration      = 5     # units: minutes
-    operator      = "above"
-    threshold     = 10 # units: percentage
+  violation_time_limit_seconds = 86400 # 24 hours
+
+  warning {
+    threshold_duration    = 300 # five minutes
+    threshold             = 5   # units: percentage
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 300 # five minutes
+    threshold             = 10  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
   }
 }
 

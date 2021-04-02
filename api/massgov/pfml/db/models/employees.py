@@ -360,6 +360,7 @@ class PubEft(Base):
         server_default=sqlnow(),
     )
     prenote_response_at = Column(TIMESTAMP(timezone=True))
+    prenote_response_reason_code = Column(Text)
     pub_eft_individual_id_seq: Sequence = Sequence("pub_eft_individual_id_seq")
     pub_individual_id = Column(
         Integer,
@@ -587,6 +588,7 @@ class Payment(Base):
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
     pub_eft = relationship(PubEft)
     fineos_extract_import_log = relationship("ImportLog")
+    check_number = Column(Integer, index=True, unique=True)
 
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")
@@ -1033,7 +1035,7 @@ class DiaReductionPayment(Base):
     __tablename__ = "dia_reduction_payment"
     dia_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
-    absence_case_id = Column(Text, nullable=False)
+    fineos_customer_number = Column(Text, nullable=False)
     board_no = Column(Text)
     event_id = Column(Text)
     event_description = Column(Text)
@@ -1853,6 +1855,7 @@ class ReferenceFileType(LookupTable):
         14, "DIA payments for DFML reduction report", 1
     )
     PUB_TRANSACTION = LkReferenceFileType(15, "PUB-NACHA", 1)
+    PUB_ACH_RETURN = LkReferenceFileType(16, "PUB ACH Return", 1)
 
     DELEGATED_PAYMENT_AUDIT_REPORT = LkReferenceFileType(20, "Payment Audit Report", 1)
     DELEGATED_PAYMENT_REJECTS = LkReferenceFileType(21, "Payment Rejects", 1)

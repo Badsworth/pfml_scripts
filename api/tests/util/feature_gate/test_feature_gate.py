@@ -20,22 +20,6 @@ class TestFeaturesCache:
 
         assert enabled is True
 
-    def test_enabled_feature_check_enabled_interface(self, monkeypatch, features_file_path):
-        # calls the check_enabled public function of feature_gate to determine feature eligibilty
-        # note that file_path is injected via an environment variable
-        enabled = check_enabled(
-            feature_name="test_feature_enabled", user_email="user_1_email@domain.org",
-        )
-        assert enabled is False
-
-        monkeypatch.setenv("FEATURES_FILE_PATH", str(features_file_path))
-        enabled = check_enabled(
-            feature_name="test_feature_enabled", user_email="user_1_email@domain.org",
-        )
-        assert enabled is True
-
-        monkeypatch.delenv("FEATURES_FILE_PATH", str(features_file_path))
-
     def test_feature_gate_unknown_feature(self, features_file_path):
         features_cache = FeaturesCache(file_path=features_file_path, ttl=60 * 15)
         enabled = features_cache.check_enabled(
@@ -166,6 +150,45 @@ test_feature_disabled:
         )
 
         assert enabled is False
+
+
+class TestFeaturesEnabled:
+    """
+    Tests the check_enabled public function of the feature_gate package. Note that
+    file_path is defined via an environment variable
+    """
+
+    @pytest.fixture(autouse=True)
+    def env_features_file(self, monkeypatch, features_file_path):
+        monkeypatch.setenv("FEATURES_FILE_PATH", str(features_file_path))
+        yield
+        monkeypatch.delenv("FEATURES_FILE_PATH")
+
+    def test_check_enabled(self):
+        enabled = check_enabled(
+            feature_name="test_feature_enabled", user_email="user_1_email@domain.org",
+        )
+        assert enabled is True
+
+    def test_raise_arbitrary_error(self, monkeypatch):
+        class ArbitraryError(Exception):
+            """An arbitrary error"""
+
+            pass
+
+        enabled = check_enabled(
+            feature_name="test_feature_enabled", user_email="user_1_email@domain.org",
+        )
+        assert enabled is True
+
+        def mock_check_enabled(feature_name: str, user_email: str):
+            raise ArbitraryError
+
+        monkeypatch.setattr(FeaturesCache, "check_enabled", mock_check_enabled)
+        enabled = check_enabled(
+            feature_name="test_feature_enabled", user_email="user_1_email@domain.org",
+        )
+        assert enabled is False  # Default to false if FeatureCache errors out
 
 
 @pytest.fixture
