@@ -468,6 +468,14 @@ class CtrAddressPairFactory(BaseFactory):
     fineos_address_id = factory.LazyAttribute(lambda c: c.fineos_address.address_id)
 
 
+class ExperianAddressPairFactory(BaseFactory):
+    class Meta:
+        model = employee_models.ExperianAddressPair
+
+    fineos_address = factory.SubFactory(AddressFactory)
+    fineos_address_id = factory.LazyAttribute(lambda c: c.fineos_address.address_id)
+
+
 class PaymentPreferenceFactory(BaseFactory):
     class Meta:
         model = application_models.ApplicationPaymentPreference

@@ -102,6 +102,20 @@ def test_full_request_data_logged_when_enabled(caplog):
             assert {"request_data", "request_form", "request_json", "response_data"}.issubset(keys)
 
 
+def test_full_request_data_not_logged_when_users_endpoint(caplog):
+    caplog.set_level(logging.INFO)  # noqa: B1
+    access.access_log_end(FakeRequest("POST", "/v1/users"), FakeResponse(400), 100, True)
+
+    for record in caplog.records:
+        if 400 <= record.status_code:
+            keys = set(vars(record).keys())
+            assert "request_data" not in keys
+            assert "request_form" not in keys
+            assert "request_json" not in keys
+            # Okay to return response data though
+            assert "response_data" in keys
+
+
 def test_request_headers_logged_for_errors_only(caplog):
     caplog.set_level(logging.INFO)  # noqa: B1
 

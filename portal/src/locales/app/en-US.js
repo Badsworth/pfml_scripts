@@ -472,6 +472,10 @@ const errors = {
     fineos_client: "$t(shared.documentsUploadError)",
   },
   employers: {
+    ein: {
+      employer_verification_data_required:
+        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications.",
+    },
     employer_benefits: {
       benefit_amount_frequency: {
         enum:
@@ -511,6 +515,8 @@ const errors = {
           "Last day of leave must be on or after the first day of leave.",
       },
     },
+    unauthorized_leave_admin:
+      "Sorry, you do not have permission to view that page. To access it, you need to <add-org-link>add that organization</add-org-link> to your account.",
     withholding_amount: {
       incorrect: "The amount does not match our records. Please try again.",
     },
@@ -538,8 +544,10 @@ const errors = {
       employer_fein: {
         pattern:
           "Enter your 9-digit Employer Identification Number in the correct format.",
-        require_employer:
+        require_contributing_employer:
           "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly and the associated business is contributing to Paid Family and Medical Leave.",
+        require_employer:
+          "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly.",
         required: "Enter your 9-digit Employer Identification Number.",
       },
     },
@@ -590,7 +598,7 @@ const shared = {
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
   claimsOtherLeaveTitle: "Other leave, income, and benefits",
-  claimsVerifyIdTitle: "Your identity",
+  claimsVerifyIdTitle: "Your identification",
   contactCenterAddress:
     "PO Box 838$t(chars.nbsp)Lawrence, MA$t(chars.nbsp)01842",
   contactCenterFaxNumber: "(617)$t(chars.nbsp)855$t(chars.nbhyphen)6180",
@@ -623,7 +631,7 @@ const shared = {
   employerInstructions_followUpDate:
     "<strong>Review and respond by:</strong> {{date}} at 11:59 p.m. Eastern time",
   fileUpload_addAnotherFileButton: "Choose another file",
-  fileUpload_addFirstFileButton: "Choose a file",
+  fileUpload_addFirstFileButton: "Choose files",
   fileUpload_fileHeadingPrefix: "File",
   filesUploaded: "Number of files uploaded",
   hoursLabel: "Hours",
@@ -873,8 +881,8 @@ const pages = {
     stepTitle_payment: "Add payment information",
     stepTitle_reviewAndConfirm: "Review and confirm",
     stepTitle_uploadCertification: "Upload leave certification documents",
-    stepTitle_uploadId: "Upload identity document",
-    stepTitle_verifyId: "Verify your identity",
+    stepTitle_uploadId: "Upload identification document",
+    stepTitle_verifyId: "Verify your identification",
     submitButton: "Review and submit application",
     title: "Checklist: Create a new application",
   },
@@ -922,7 +930,7 @@ const pages = {
     choiceLabel_shortTermDisability:
       "$t(shared.employerBenefitType_shortTermDisability)",
     endDateLabel: "When will you stop using the benefit?",
-    limitMessage: "You can only add up to 4 benefits",
+    limitMessage: "You can only add up to 3 benefits",
     removeButton: "Remove benefit",
     sectionLabel:
       "Tell us about employer-sponsored benefits you will use during your leave dates for paid leave.",
@@ -1124,7 +1132,7 @@ const pages = {
     amountLegend: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.otherIncomeEntryPrefix)",
     endDateLabel: "When will you stop receiving this income?",
-    limitMessage: "You can only add up to 6 incomes",
+    limitMessage: "You can only add up to 3 incomes",
     removeButton: "Remove income",
     sectionLabel:
       "Tell us about your other sources of income$t(chars.nbsp)during your leave dates for paid$t(chars.nbsp)leave.",
@@ -1472,7 +1480,7 @@ const pages = {
   },
   claimsUploadCertification: {
     addAnotherFileButton: "Choose another file",
-    addFirstFileButton: "Choose a file",
+    addFirstFileButton: "Choose files",
     certificationDocumentsCount: "$t(shared.filesUploaded)",
     documentsLoadError: "$t(shared.documentsLoadError)",
     fileHeadingPrefix: "File",
@@ -1482,11 +1490,11 @@ const pages = {
       "A note from the health care provider of the person who gave birth stating your child’s date of birth.",
     ],
     lead_bonding_adopt_foster:
-      "<p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.</p>",
+      "You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.",
     lead_bonding_newborn:
-      "<p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>You need to upload one of the following documents to confirm your child’s date of birth:</p>",
+      "You need to upload one of the following documents to confirm your child’s date of birth:",
     lead_medical:
-      "<p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>You need to upload a completed <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link> to prove that you need to take medical leave.</p>",
+      "You need to upload a completed <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link> to prove that you need to take medical leave.",
     sectionLabel_bonding: "Upload your documentation",
     sectionLabel_medical:
       "Upload your Certification of a Serious Health Condition",
@@ -1517,9 +1525,11 @@ const pages = {
     lead_other:
       "<p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p><p>To verify your identity you will need valid, unexpired documentation issued by state or federal government.</p>",
     otherIdentityDocs:
-      "<p><strong>You can use a color copy of one of the following documents:</strong></p><ul><li>U.S. State or Territory Real ID, both front and back</li><li>U.S. passport or passport card</li><li>Permanent Resident Card issued by DHS or INS</li><li>Employment Authorization Document (EAD) issued by DHS</li><li>Foreign passport <strong>and</strong> a <work-visa-link>work visa</work-visa-link></li></ul>",
-    sectionLabel_mass: "Upload your Massachusetts driver’s license or ID card",
-    sectionLabel_other: "Upload an identification document",
+      "<p><strong>You can upload a copy of one of the following documents:</strong></p><ul><li>U.S. State or Territory Real ID, both front and back</li><li>U.S. passport or passport card</li><li>Permanent Resident Card issued by DHS or INS</li><li>Employment Authorization Document (EAD) issued by DHS</li><li>Foreign passport <strong>and</strong> a <work-visa-link>work visa</work-visa-link></li></ul>",
+    sectionLabel_mass:
+      "Upload the front and back of your Massachusetts driver’s license or ID card",
+    sectionLabel_other:
+      "Upload an identification document issued by state or federal government",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsWorkPatternType: {
@@ -1574,11 +1584,11 @@ const pages = {
   },
   employersCannotVerify: {
     body:
-      "Your account can’t be verified yet, because your organization has not made any paid leave contributions. After you pay quarterly taxes, you can verify your account and review applications.",
+      "We can't verify this account because this organization hasn't submitted contributions through MassTaxConnect. Call the Department of Revenue at <dor-phone-link>$t(shared.departmentOfRevenuePhoneNumber)</dor-phone-link> to make arrangements to submit contributions. Once you do that, you'll be able to review leave applications on the next business day. Learn more about <learn-more-link>verifying your account</learn-more-link> on Mass.gov.",
     companyNameLabel: "<strong>Organization:</strong> {{employerDba}}",
     employerIdNumberLabel:
       "<strong>Employer ID number (EIN):</strong> {{employerFein}}",
-    title: "We are unable to verify this organization online at the moment",
+    title: "We can't verify this organization",
   },
   employersClaimsConfirmation: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
@@ -1659,27 +1669,14 @@ const pages = {
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {
-    checkEmailBody:
-      "When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.",
-    checkEmailTitle: "Check your email regularly",
-    learnMoreLinks:
-      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
-    learnMoreTitle: "Learn more",
-    respondBody:
-      "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
-    respondTitle: "Respond to applications within 10 business days",
-    settingsLinks:
-      "<ul><li><your-organizations-link>Your organizations</your-organizations-link></li></ul>",
-    settingsTitle: "Settings",
+    instructions:
+      "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
+    title: "Dashboard",
     verificationBody:
-      "We require every employer to verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team.",
-    verificationTitle: "Verify your account to continue",
-    viewFormsBody:
-      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process.",
-    viewFormsTitle: "View forms and notices online",
-    welcomeBody:
-      "Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.",
-    welcomeTitle: "Welcome",
+      "Every employer must verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.",
+    verificationInstructions:
+      "You have not verified any organizations. <your-organizations-link>Complete this process</your-organizations-link> to review applications.",
+    verificationTitle: "Verify your account",
   },
   employersOrganizations: {
     addOrganizationButton: "Add organization",
@@ -1720,6 +1717,29 @@ const pages = {
     withholdingAmountHint: "Include the full amount with dollars and cents.",
     withholdingAmountLabel: "Paid leave contributions from {{date}}",
   },
+  employersWelcome: {
+    checkEmailBody:
+      "When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.",
+    checkEmailTitle: "Check your email regularly",
+    learnMoreLinks:
+      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
+    learnMoreTitle: "Learn more",
+    respondBody:
+      "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
+    respondTitle: "Respond to applications within 10 business days",
+    settingsLinks:
+      "<ul><li><your-organizations-link>Your organizations</your-organizations-link></li></ul>",
+    settingsTitle: "Settings",
+    verificationBody:
+      "We require every employer to verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team.",
+    verificationTitle: "Verify your account to continue",
+    viewFormsBody:
+      "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process.",
+    viewFormsTitle: "View forms and notices online",
+    welcomeBody:
+      "Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.",
+    welcomeTitle: "Welcome",
+  },
   getReady: {
     alertHeading: "Only some people can apply online for now",
     alertOnline:
@@ -1734,7 +1754,7 @@ const pages = {
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
     stepOneHeading: "1. Tell your employer that you need to take paid leave",
     stepThree:
-      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>If your application is approved. PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of your paid leave benefits.</p>",
+      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of your paid leave benefits.</p>",
     stepThreeHeading: "3. Apply",
     stepTwo:
       "<p>For medical leave your health care provider must complete the <healthcare-provider-form-link>PFML Certification of a Serious Health Condition</healthcare-provider-form-link>.</p><p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
@@ -1869,9 +1889,11 @@ const components = {
       "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
   },
   documentRequirements: {
-    header: "Document Requirements:",
-    body:
+    body_certification:
+      "<ul><li>The text must be clear and readable</li><li>Upload every page of the document where you or your health care provider have entered information</li><li>Each file you upload must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
+    body_id:
       "<ul><li>The image of the card must be in full color</li><li>The text must be clear and readable</li><li>The front and back can be in one file, or in two separate files</li><li>Each file must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
+    header: "Document Requirements:",
   },
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",
@@ -2012,6 +2034,10 @@ const components = {
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
     tableName: "Leave schedule details table",
   },
+  employersNavigationTabs: {
+    dashboard: "Dashboard",
+    welcome: "Welcome",
+  },
   employersPreviousLeaves: {
     commentInstructions: "$t(shared.employerInstructions_addComment)",
     dateRangeLabel: "Date range",
@@ -2068,9 +2094,7 @@ const components = {
     uploadDate: "Date of upload: {{date}}",
   },
   fileUploadDetails: {
-    label: "Some tips for uploading documents and images",
-    sizeNotice:
-      "Files should be 4.5 MB or smaller. If your file is larger than 4.5 MB, try resizing it or splitting it into separate files.",
+    label: "Tips for uploading images or PDFs",
     tips: [
       {
         listHeading: "This website only accepts:",
@@ -2083,14 +2107,6 @@ const components = {
           "Take a picture of the document",
           "Take a screenshot of the document",
           "Save the document as a PDF or image, and try uploading again",
-        ],
-      },
-      {
-        listHeading: "If you’re taking a picture of your document:",
-        listItems: [
-          "Take a picture of each document page and upload the pictures individually",
-          "If you’re uploading an ID card, upload separate pictures for both the front and back of the card",
-          "Make sure the picture is clear and readable",
         ],
       },
       {

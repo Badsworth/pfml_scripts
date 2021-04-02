@@ -132,9 +132,7 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
     assert row[PAYMENT_AUDIT_CSV_HEADERS.city] == address.city
     assert row[PAYMENT_AUDIT_CSV_HEADERS.state] == address.geo_state.geo_state_description
     assert row[PAYMENT_AUDIT_CSV_HEADERS.zip] == address.zip_code
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_preference] == get_payment_preference(
-        payment.claim.employee
-    )
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_preference] == get_payment_preference(payment)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date] == payment.payment_date.isoformat()
     assert (
         row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_start_date]
@@ -155,8 +153,6 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
         row[PAYMENT_AUDIT_CSV_HEADERS.case_status]
         == payment.claim.fineos_absence_status.absence_status_description
     )
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_id] == ""
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision] == ""
 
 
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time

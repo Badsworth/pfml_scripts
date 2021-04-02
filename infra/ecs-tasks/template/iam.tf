@@ -306,6 +306,19 @@ data "aws_iam_policy_document" "register_admins_task_role_policy_document" {
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
     ]
   }
+
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-feature-gate",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-feature-gate/*"
+    ]
+
+  }
 }
 
 
@@ -552,15 +565,30 @@ data "aws_iam_policy_document" "payments_fineos_process_task_role_extras" {
     effect = "Allow"
   }
 
+  # See /docs/api/ses.tf for full details on configuring SES permissions.
   statement {
-    sid = "AllowSESSendEmail"
+    sid    = "AllowSESSendEmail"
+    effect = "Allow"
+
     actions = [
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
-    resources = ["*"]
 
-    effect = "Allow"
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "ses:Recipients"
+      values = [
+        var.dfml_project_manager_email_address,
+        var.ctr_gax_bievnt_email_address,
+        var.ctr_vcc_bievnt_email_address,
+        var.dfml_business_operations_email_address
+      ]
+    }
+
+    resources = [
+      "*"
+    ]
   }
 }
 
@@ -629,14 +657,28 @@ data "aws_iam_policy_document" "payments_ctr_process_task_role_extras" {
     effect = "Allow"
   }
 
+  # See /docs/api/ses.tf for full details on configuring SES permissions.
   statement {
-    sid = "AllowSESSendEmail"
+    sid    = "AllowSESSendEmail"
+    effect = "Allow"
+
     actions = [
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
+
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "ses:Recipients"
+      values = [
+        var.dfml_project_manager_email_address,
+        var.ctr_gax_bievnt_email_address,
+        var.ctr_vcc_bievnt_email_address,
+        var.dfml_business_operations_email_address
+      ]
+    }
+
     resources = ["*"]
-    effect    = "Allow"
   }
 }
 
@@ -794,12 +836,25 @@ data "aws_iam_policy_document" "pub_payments_process_fineos_task_role_extras" {
     effect = "Allow"
   }
 
+  # See /docs/api/ses.tf for full details on configuring SES permissions.
   statement {
     sid = "AllowSESSendEmail"
     actions = [
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
+
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "ses:Recipients"
+      values = [
+        var.dfml_project_manager_email_address,
+        var.ctr_gax_bievnt_email_address,
+        var.ctr_vcc_bievnt_email_address,
+        var.dfml_business_operations_email_address
+      ]
+    }
+
     resources = ["*"]
 
     effect = "Allow"
@@ -851,6 +906,8 @@ data "aws_iam_policy_document" "pub_payments_create_pub_files_task_role_extras" 
       "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
     ]
 
     effect = "Allow"
@@ -871,17 +928,32 @@ data "aws_iam_policy_document" "pub_payments_create_pub_files_task_role_extras" 
       "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit",
       "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
     ]
 
     effect = "Allow"
   }
 
+  # See /docs/api/ses.tf for full details on configuring SES permissions.
   statement {
     sid = "AllowSESSendEmail"
     actions = [
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
+
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "ses:Recipients"
+      values = [
+        var.dfml_project_manager_email_address,
+        var.ctr_gax_bievnt_email_address,
+        var.ctr_vcc_bievnt_email_address,
+        var.dfml_business_operations_email_address
+      ]
+    }
+
     resources = ["*"]
     effect    = "Allow"
   }
@@ -930,6 +1002,8 @@ data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extra
       "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
       "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
     ]
 
     effect = "Allow"
@@ -948,17 +1022,32 @@ data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extra
       "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
       "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports",
       "${data.aws_s3_bucket.agency_transfer.arn}/internal/error-reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
     ]
 
     effect = "Allow"
   }
 
+  # See /docs/api/ses.tf for full details on configuring SES permissions.
   statement {
     sid = "AllowSESSendEmail"
     actions = [
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
+
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "ses:Recipients"
+      values = [
+        var.dfml_project_manager_email_address,
+        var.ctr_gax_bievnt_email_address,
+        var.ctr_vcc_bievnt_email_address,
+        var.dfml_business_operations_email_address
+      ]
+    }
+
     resources = ["*"]
     effect    = "Allow"
   }
@@ -1029,6 +1118,28 @@ data "aws_iam_policy_document" "reductions_workflow_task_role_extras" {
       data.aws_s3_bucket.agency_transfer.arn,
       "${data.aws_s3_bucket.agency_transfer.arn}/*"
     ]
+  }
+
+  statement {
+    sid    = "AllowSESSendEmail"
+    effect = "Allow"
+
+    actions = [
+      "ses:SendEmail",
+      "ses:SendRawEmail"
+    ]
+
+    condition {
+      test     = "ForAllValues:StringLike"
+      variable = "ses:Recipients"
+      values = [
+        var.dfml_project_manager_email_address,
+        var.dfml_business_operations_email_address,
+        var.agency_reductions_email_address,
+      ]
+    }
+
+    resources = ["*"]
   }
 }
 

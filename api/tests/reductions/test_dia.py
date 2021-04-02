@@ -1,7 +1,7 @@
 import os
 import random
 import string
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Dict, Optional
 
 import boto3
@@ -10,10 +10,12 @@ import pytest
 import smart_open
 import sqlalchemy
 
+import massgov.pfml.reductions.dia as dia
 import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
+    DiaReductionPayment,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -28,9 +30,8 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.reductions.dia import (
     Constants,
     _format_claims_for_dia_claimant_list,
-    _get_approved_claims,
-    _write_approved_claims_to_tempfile,
-    create_list_of_approved_claimants,
+    _write_claims_to_tempfile,
+    create_list_of_claimants,
     download_payment_list_if_none_today,
     upload_claimant_list_to_moveit,
 )
@@ -38,8 +39,8 @@ from massgov.pfml.reductions.dia import (
 fake = faker.Faker()
 
 
-EXPECTED_DIA_PAYMENT_CSV_FILE_HEADERS = list(Constants.CLAIMAINT_LIST_FIELDS)
-
+EXPECTED_DIA_CLAIMAINT_CSV_FILE_HEADERS = list(Constants.CLAIMAINT_LIST_FIELDS)
+EXPECTED_DIA_PAYMENT_CSV_FILE_HEADERS = list(Constants.PAYMENT_LIST_FIELDS)
 
 DIA_PAYMENT_LIST_ENCODERS: csv_util.Encoders = {
     date: lambda d: d.strftime("%Y%m%d"),
@@ -80,20 +81,20 @@ def set_up(test_db_session, initialize_factories_session):
 
     employee1 = EmployeeFactory.create(**employee_info)
     employee2 = EmployeeFactory.create(**employee_info)
-    ClaimFactory.create(
-        employee=employee1,
-        fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
-        absence_period_start_date=start_date,
-    )
-    ClaimFactory.create(
-        employee=employee2,
-        fineos_absence_status_id=AbsenceStatus.DECLINED.absence_status_id,
-        absence_period_start_date=start_date,
-    )
+    claims = [
+        ClaimFactory.create(
+            employee=employee1,
+            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+            absence_period_start_date=start_date,
+        ),
+        ClaimFactory.create(
+            employee=employee2,
+            fineos_absence_status_id=AbsenceStatus.DECLINED.absence_status_id,
+            absence_period_start_date=start_date,
+        ),
+    ]
 
-    approved_claims = _get_approved_claims(test_db_session)
-
-    return approved_claims
+    return claims
 
 
 @pytest.fixture
@@ -109,62 +110,56 @@ def set_up_invalid_data(test_db_session, initialize_factories_session):
 
     employee1 = EmployeeFactory.create(**employee_info)
     employee2 = EmployeeFactory.create(**employee_info)
-    ClaimFactory.create(
-        employee=employee1,
-        fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
-        absence_period_start_date=start_date,
-    )
-    ClaimFactory.create(
-        employee=employee2,
-        fineos_absence_status_id=AbsenceStatus.DECLINED.absence_status_id,
-        absence_period_start_date=start_date,
-    )
+    claims = [
+        ClaimFactory.create(
+            employee=employee1,
+            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+            absence_period_start_date=start_date,
+        ),
+        ClaimFactory.create(
+            employee=employee2,
+            fineos_absence_status_id=AbsenceStatus.DECLINED.absence_status_id,
+            absence_period_start_date=start_date,
+        ),
+    ]
 
-    approved_claims = _get_approved_claims(test_db_session)
-
-    return approved_claims
-
-
-def test_get_approved_claims(set_up, test_db_session):
-    approved_claims = set_up
-    assert len(approved_claims) == 1
+    return claims
 
 
 def test_format_claims_for_dia_claimant_list(set_up):
-    approved_claims = set_up
-    claim = approved_claims[0]
-    employee = claim.employee
-    approved_claims_dia_info = _format_claims_for_dia_claimant_list(approved_claims)
+    claims = set_up
+    claims_dia_info = _format_claims_for_dia_claimant_list(claims)
 
-    for approved_claim in approved_claims_dia_info:
-        assert approved_claim[Constants.CASE_ID_FIELD] == claim.fineos_absence_id
+    for claim, dia_claim in zip(claims, claims_dia_info):
+        employee = claim.employee
+
+        assert dia_claim[Constants.CASE_ID_FIELD] == claim.fineos_absence_id
         assert (
-            approved_claim[Constants.BENEFIT_START_DATE_FIELD]
-            == Constants.TEMPORARY_BENEFIT_START_DATE
+            dia_claim[Constants.BENEFIT_START_DATE_FIELD] == Constants.TEMPORARY_BENEFIT_START_DATE
         )
-        assert approved_claim[Constants.FIRST_NAME_FIELD] == employee.first_name
-        assert approved_claim[Constants.LAST_NAME_FIELD] == employee.last_name
-        assert approved_claim[Constants.BIRTH_DATE_FIELD] == employee.date_of_birth.strftime(
+        assert dia_claim[Constants.FIRST_NAME_FIELD] == employee.first_name
+        assert dia_claim[Constants.LAST_NAME_FIELD] == employee.last_name
+        assert dia_claim[Constants.BIRTH_DATE_FIELD] == employee.date_of_birth.strftime(
             Constants.DATE_OF_BIRTH_FORMAT
         )
-        assert isinstance(approved_claim[Constants.BIRTH_DATE_FIELD], str)
-        assert approved_claim[Constants.SSN_FIELD] == employee.tax_identifier.tax_identifier
-        assert "-" not in approved_claim[Constants.SSN_FIELD]
+        assert isinstance(dia_claim[Constants.BIRTH_DATE_FIELD], str)
+        assert dia_claim[Constants.SSN_FIELD] == employee.tax_identifier.tax_identifier
+        assert "-" not in dia_claim[Constants.SSN_FIELD]
 
 
-def test_write_approved_claims_to_tempfile_invalid_data(set_up_invalid_data):
-    approved_employees = set_up_invalid_data
+def test_write_claims_to_tempfile_invalid_data(set_up_invalid_data):
+    claims = set_up_invalid_data
 
     with pytest.raises(ValueError):
-        approved_claims_dia_info = _format_claims_for_dia_claimant_list(approved_employees)
-        _write_approved_claims_to_tempfile(approved_claims_dia_info)
+        claims_dia_info = _format_claims_for_dia_claimant_list(claims)
+        _write_claims_to_tempfile(claims_dia_info)
 
 
 def _random_date_in_past_year() -> date:
     return fake.date_between(start_date="-1y", end_date="today")
 
 
-def _get_valid_dia_payment_data() -> Dict[str, Any]:
+def _get_valid_dia_claimant_data() -> Dict[str, Any]:
     return {
         "CASE_ID": "NTN-{}-ABS-01".format(fake.random_int(min=1000, max=9999)),
         "SSN": fake.ssn(),
@@ -175,6 +170,25 @@ def _get_valid_dia_payment_data() -> Dict[str, Any]:
     }
 
 
+def _get_valid_dia_payment_data() -> Dict[str, Any]:
+    return {
+        "DFML_CASE_ID": "NTN-{}-ABS-01".format(fake.random_int(min=1000, max=9999)),
+        "BOARD_NO": fake.random_int(min=100000, max=999999),
+        "EVENT_ID": fake.random_int(min=100000, max=999999),
+        "INS_FORM_OR_MEET": fake.random_element(elements=("PC", "LUMP")),
+        "EVE_CREATED_DATE": fake.date(pattern="%Y%m%d"),
+        "FORM_RECEIVED_OR_DISPOSITION": fake.date(pattern="%Y%m%d"),
+        "AWARD_ID": fake.random_int(min=5, max=2000),
+        "AWARD_CODE": fake.random_int(min=10, max=4000),
+        "AWARD_AMOUNT": fake.random_int(min=100, max=10000),
+        "AWARD_DATE": fake.date(pattern="%Y%m%d"),
+        "START_DATE": fake.date(pattern="%Y%m%d"),
+        "END_DATE": fake.date(pattern="%Y%m%d"),
+        "WEEKLY_AMOUNT": fake.random_int(min=0.0, max=100.0),
+        "AWARD_CREATED_DATE": fake.date(pattern="%Y%m%d"),
+    }
+
+
 def _get_loaded_reference_file_in_s3(mock_s3_bucket, filename, source_directory_path, row_count):
     # Create the ReferenceFile.
     pending_directory = os.path.join(f"s3://{mock_s3_bucket}", source_directory_path)
@@ -182,9 +196,9 @@ def _get_loaded_reference_file_in_s3(mock_s3_bucket, filename, source_directory_
     ref_file = _create_dia_payment_list_reference_file("", source_filepath)
 
     # Create some number of valid rows for our input file.
-    body = ",".join(EXPECTED_DIA_PAYMENT_CSV_FILE_HEADERS) + "\n"
+    body = ""
     for _i in range(row_count):
-        db_data = _get_valid_dia_payment_data()
+        db_data = _get_valid_dia_claimant_data()
         csv_row = csv_util.encode_row(db_data, DIA_PAYMENT_LIST_ENCODERS)
         body = body + ",".join(list(csv_row.values())) + "\n"
 
@@ -194,6 +208,29 @@ def _get_loaded_reference_file_in_s3(mock_s3_bucket, filename, source_directory_
     s3.put_object(Bucket=mock_s3_bucket, Key=s3_key, Body=body)
 
     return ref_file
+
+
+def _get_loaded_payment_reference_file_in_s3(
+    mock_s3_bucket, filename, source_directory_path, row_count
+):
+    # Create the ReferenceFile.
+    pending_directory = os.path.join(f"s3://{mock_s3_bucket}", source_directory_path)
+    source_filepath = os.path.join(pending_directory, filename)
+    ref_file = _create_dia_payment_list_reference_file("", source_filepath)
+    rows = [_get_valid_dia_payment_data() for _i in range(row_count)]
+
+    # Create some number of valid rows for our input file.
+    body = ""
+    for db_data in rows:
+        csv_row = csv_util.encode_row(db_data, DIA_PAYMENT_LIST_ENCODERS)
+        body = body + ",".join(list(csv_row.values())) + "\n"
+
+    # Add rows to the file in our mock S3 bucket.
+    s3_key = os.path.join(source_directory_path, filename)
+    s3 = boto3.client("s3")
+    s3.put_object(Bucket=mock_s3_bucket, Key=s3_key, Body=body)
+
+    return (rows, ref_file)
 
 
 def test_copy_to_sftp_and_archive_s3_files(
@@ -270,7 +307,7 @@ def test_copy_to_sftp_and_archive_s3_files(
         )
 
 
-def test_create_list_of_approved_claimants(
+def test_create_list_of_claimants(
     initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session,
 ):
     s3_bucket_uri = "s3://" + mock_s3_bucket
@@ -287,7 +324,7 @@ def test_create_list_of_approved_claimants(
         claim.employee.date_of_birth = fake.date_between(start_date="-100y", end_date="-18y")
         claims.append(claim)
 
-    create_list_of_approved_claimants(test_db_session)
+    create_list_of_claimants(test_db_session)
 
     # Expect that the file to appear in the mock_s3_bucket.
     s3 = boto3.client("s3")
@@ -422,3 +459,129 @@ def test_download_payment_list_if_none_today(
             .scalar()
             == 1
         )
+
+
+def test_assert_dia_payments_are_stored_correctly(
+    test_db_session, mock_s3_bucket, monkeypatch, initialize_factories_session
+):
+    source_directory_path = "reductions/dia/pending"
+    archive_directory_path = "reductions/dia/archive"
+
+    monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
+    monkeypatch.setenv("S3_DIA_PENDING_DIRECTORY_PATH", source_directory_path)
+    monkeypatch.setenv("S3_DIA_ARCHIVE_DIRECTORY_PATH", archive_directory_path)
+
+    # Define the full paths to the directories.
+    pending_directory = f"s3://{mock_s3_bucket}/{source_directory_path}"
+    archive_directory = f"s3://{mock_s3_bucket}/{archive_directory_path}"
+
+    # A new reference to a ReferenceFile
+    (params, ref_file) = _get_loaded_payment_reference_file_in_s3(
+        mock_s3_bucket, _random_csv_filename(), source_directory_path, 1
+    )
+
+    # Check on the file directory stats
+    assert len(file_util.list_files(pending_directory)) == 1
+    assert len(file_util.list_files(archive_directory)) == 0
+
+    dia.load_new_dia_payments(test_db_session)
+
+    # Files should have been moved.
+    assert len(file_util.list_files(pending_directory)) == 0
+    assert len(file_util.list_files(archive_directory)) == 1
+
+    test_db_session.flush()
+
+    # Expect to have loaded some rows to the database.
+    assert (
+        test_db_session.query(
+            sqlalchemy.func.count(DiaReductionPayment.dia_reduction_payment_id)
+        ).scalar()
+        == 1
+    )
+
+    def parse_date(date_str):
+        return datetime.strptime(date_str, "%Y%m%d").date()
+
+    # Expect that the inserted row is what we expect.
+    record = test_db_session.query(DiaReductionPayment).all()[0]
+    assert record.absence_case_id == params[0]["DFML_CASE_ID"]
+    assert record.award_amount == params[0]["AWARD_AMOUNT"]
+    assert record.award_code == str(params[0]["AWARD_CODE"])
+    assert record.award_created_date == parse_date(params[0]["AWARD_CREATED_DATE"])
+    assert record.award_date == parse_date(params[0]["AWARD_DATE"])
+    assert record.award_id == str(params[0]["AWARD_ID"])
+    assert record.board_no == str(params[0]["BOARD_NO"])
+    assert record.end_date == parse_date(params[0]["END_DATE"])
+    assert record.eve_created_date == parse_date(params[0]["EVE_CREATED_DATE"])
+    assert record.event_description == params[0]["INS_FORM_OR_MEET"]
+    assert record.event_id == str(params[0]["EVENT_ID"])
+    assert record.start_date == parse_date(params[0]["START_DATE"])
+    assert record.weekly_amount == params[0]["WEEKLY_AMOUNT"]
+
+    # Expect to have created a StateLog for each ReferenceFile.
+    assert (
+        test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+        .filter(StateLog.end_state_id == State.DIA_PAYMENT_LIST_SAVED_TO_DB.state_id)
+        .scalar()
+        == 1
+    )
+
+
+def test_load_new_dia_payments_sucessfully(
+    test_db_session, mock_s3_bucket, monkeypatch, initialize_factories_session
+):
+    source_directory_path = "reductions/dia/pending"
+    archive_directory_path = "reductions/dia/archive"
+
+    monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
+    monkeypatch.setenv("S3_DIA_PENDING_DIRECTORY_PATH", source_directory_path)
+    monkeypatch.setenv("S3_DIA_ARCHIVE_DIRECTORY_PATH", archive_directory_path)
+
+    # Define the full paths to the directories.
+    pending_directory = f"s3://{mock_s3_bucket}/{source_directory_path}"
+    archive_directory = f"s3://{mock_s3_bucket}/{archive_directory_path}"
+
+    # Create some number of ReferenceFiles
+    total_row_count = 0
+    ref_file_count = random.randint(1, 5)
+    for _i in range(ref_file_count):
+        row_count = random.randint(1, 5)
+        total_row_count = total_row_count + row_count
+        _get_loaded_payment_reference_file_in_s3(
+            mock_s3_bucket, _random_csv_filename(), source_directory_path, row_count
+        )
+
+    # Expect no rows in the database before.
+    assert (
+        test_db_session.query(
+            sqlalchemy.func.count(DiaReductionPayment.dia_reduction_payment_id)
+        ).scalar()
+        == 0
+    )
+
+    # Expect files to be in pending directory before.
+    assert len(file_util.list_files(pending_directory)) == ref_file_count
+    assert len(file_util.list_files(archive_directory)) == 0
+
+    dia.load_new_dia_payments(test_db_session)
+
+    # Expect to have loaded some rows to the database.
+    assert (
+        test_db_session.query(
+            sqlalchemy.func.count(DiaReductionPayment.dia_reduction_payment_id)
+        ).scalar()
+        == total_row_count
+    )
+
+    # Expect files to be in archive directory after.
+    assert len(file_util.list_files(pending_directory)) == 0
+    assert len(file_util.list_files(archive_directory)) == ref_file_count
+
+    # Expect to have created a StateLog for each ReferenceFile.
+    assert (
+        test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+        .filter(StateLog.end_state_id == State.DIA_PAYMENT_LIST_SAVED_TO_DB.state_id)
+        .scalar()
+        == ref_file_count
+    )

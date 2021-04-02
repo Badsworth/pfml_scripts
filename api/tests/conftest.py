@@ -237,6 +237,7 @@ def mock_cognito_user_pool(monkeypatch, mock_cognito):
             UserPoolId=user_pool_id, ClientName="test"
         )["UserPoolClient"]["ClientId"]
 
+        monkeypatch.setenv("COGNITO_USER_POOL_ID", user_pool_id)
         monkeypatch.setenv("COGNITO_USER_POOL_CLIENT_ID", user_pool_client_id)
 
         yield {"id": user_pool_id, "client_id": user_pool_client_id}

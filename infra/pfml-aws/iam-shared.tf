@@ -110,6 +110,9 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       # Allow teams to deploy CloudFormation stacks to manage resources
       # Terraform can not
       "cloudformation:*",
+
+      # Allow listing of IAM role policies
+      "iam:ListRolePolicies"
     ]
 
     resources = [

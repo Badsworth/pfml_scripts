@@ -7,6 +7,7 @@ import json
 import pathlib
 import time
 import xml.etree.ElementTree
+from unittest import mock
 
 import defusedxml
 import pytest
@@ -461,3 +462,35 @@ def test_get_absence_period_decisions_with_error(caplog, httpserver, fineos_clie
     with pytest.raises(FINEOSClientError):
         fineos_client.get_absence_period_decisions("FINEOS_WEB_ID", "NTN-251-ABS-01")
     assert "FINEOS Client Exception: get_absence_period_decisions" in caplog.text
+
+
+def test_get_fineos_correlation_id_with_non_json():
+    response = requests.Response()
+    type(response).text = mock.PropertyMock(return_value="not_json")
+
+    cid = massgov.pfml.fineos.fineos_client.get_fineos_correlation_id(response)
+    assert cid is None
+
+
+def test_get_fineos_correlation_id_with_json_list():
+    response = requests.Response()
+    type(response).text = mock.PropertyMock(return_value='[{"ha":"ha"}]')
+
+    cid = massgov.pfml.fineos.fineos_client.get_fineos_correlation_id(response)
+    assert cid is None
+
+
+def test_get_fineos_correlation_id_with_string():
+    response = requests.Response()
+    type(response).text = mock.PropertyMock(return_value='{"correlationId":"1234"}')
+
+    cid = massgov.pfml.fineos.fineos_client.get_fineos_correlation_id(response)
+    assert cid == "1234"
+
+
+def test_get_fineos_correlation_id_with_int():
+    response = requests.Response()
+    type(response).text = mock.PropertyMock(return_value='{"correlationId":1234}')
+
+    cid = massgov.pfml.fineos.fineos_client.get_fineos_correlation_id(response)
+    assert cid == 1234

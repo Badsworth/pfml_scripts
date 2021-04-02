@@ -1,4 +1,5 @@
 import json
+import logging  # noqa: B1
 import os
 
 import pytest
@@ -21,11 +22,12 @@ def event_dict(event_json):
 
 
 def test_main_success_on_existing_fein_with_fineos_employer_id(
-    test_db_session, event_dict, logging_fix
+    caplog, test_db_session, event_dict, logging_fix
 ):
     from massgov.pfml.db.models.employees import Employer
     import massgov.pfml.cognito_pre_signup_lambda.main as main
 
+    caplog.set_level(logging.INFO)  # noqa: B1
     employer = Employer(employer_fein="133701337", employer_dba="Acme Corp", fineos_employer_id=93)
 
     test_db_session.add(employer)
@@ -38,6 +40,7 @@ def test_main_success_on_existing_fein_with_fineos_employer_id(
     expected_response = event_dict
 
     assert response == expected_response
+    assert "Signup is for a leave administrator account" in caplog.text
 
 
 def test_main_error_on_existing_fein_with_no_fineos(test_db_session, event_dict, logging_fix):
@@ -62,3 +65,30 @@ def test_main_error_on_no_existing_fein(test_db_session, event_dict, logging_fix
 
     with pytest.raises(Exception, match="No employer found with specified FEIN"):
         assert main.handler(event_dict, {})
+
+
+def test_main_success_claimant(caplog, event_dict, logging_fix):
+    import massgov.pfml.cognito_pre_signup_lambda.main as main
+
+    caplog.set_level(logging.INFO)  # noqa: B1
+    event_dict["request"]["clientMetadata"] = None
+
+    response = main.handler(event_dict, {})
+    expected_response = event_dict
+
+    assert response == expected_response
+    assert "Signup is for a claimant account" in caplog.text
+
+
+def test_main_success_on_pfml_api_source(caplog, test_db_session, event_dict, logging_fix):
+    import massgov.pfml.cognito_pre_signup_lambda.main as main
+
+    caplog.set_level(logging.INFO)  # noqa: B1
+    event_dict["request"]["clientMetadata"] = {"sign_up_source": "pfml_api"}
+
+    response = main.handler(event_dict, {})
+    expected_response = event_dict
+
+    assert response == expected_response
+    assert "Signup is from API" in caplog.text
+    assert "Signup is for " not in caplog.text

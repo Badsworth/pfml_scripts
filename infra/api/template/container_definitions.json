@@ -34,6 +34,7 @@
       { "name": "DB_NAME", "value": "${db_name}" },
       { "name": "DB_USERNAME", "value": "${db_username}" },
       { "name": "CORS_ORIGINS", "value": "${cors_origins}" },
+      { "name": "COGNITO_USER_POOL_ID", "value": "${cognito_user_pool_id}"},
       { "name": "COGNITO_USER_POOL_CLIENT_ID", "value": "${cognito_user_pool_client_id}"},
       { "name": "COGNITO_USER_POOL_KEYS_URL", "value": "${cognito_user_pool_keys_url}"},
       { "name": "LOGGING_LEVEL", "value": "${logging_level}" },
@@ -54,7 +55,8 @@
       { "name": "SERVICE_NOW_BASE_URL", "value": "${service_now_base_url}" },
       { "name": "PORTAL_BASE_URL", "value": "${portal_base_url}" },
       { "name": "ENABLE_SENTRY", "value": "${enable_sentry}" },
-      { "name": "RELEASE_VERSION", "value": "${release_version}" }
+      { "name": "RELEASE_VERSION", "value": "${release_version}" },
+      { "name": "FEATURES_FILE_PATH", "value": "s3://massgov-pfml-${environment_name}-feature-gate/features.yaml"}
     ],
     "secrets": [
       { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"},

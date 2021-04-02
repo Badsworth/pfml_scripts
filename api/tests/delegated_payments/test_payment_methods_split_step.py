@@ -31,7 +31,7 @@ def create_payment_in_state(state, db_session, payment_method_id: Optional[int] 
     )
 
     if payment_method_id is not None:
-        payment.claim.employee.payment_method_id = payment_method_id
+        payment.disb_method_id = payment_method_id
 
 
 def test_split_payment_methods(payment_split_step, test_db_session):

@@ -91,26 +91,12 @@ export function startClaim(): void {
 }
 
 export function agreeToStart(): void {
-  cy.contains("button", "I understand and agree").click();
+  cy.contains("button", "I understand and agree", { timeout: 30000 }).click();
 }
 
 export function hasClaimId(): void {
   cy.url().should("include", "claim_id");
 }
-
-// export function startSubmit(
-//   // credentials: Credentials,
-//   scenario: string,
-//   employeeType: string
-// ): void {
-//   submittingClaimType(scenario, employeeType);
-//   // login(credentials); // remove ...
-//   // startClaim();
-//   // onPage("start");
-//   // agreeToStart();
-//   // hasClaimId();
-//   // onPage("checklist");
-// }
 
 export function clickChecklistButton(label: string): void {
   cy.contains(label)
@@ -531,9 +517,10 @@ export function reportOtherLeave(
       cy.contains("button", "Save and continue").click();
     }
   } else {
+    cy.wait(500);
     cy.contains("No").click();
     cy.contains("button", "Save and continue").click();
-    cy.wait(400);
+    cy.wait(500);
     cy.contains("No").click();
     cy.contains("button", "Save and continue").click();
   }
@@ -589,7 +576,7 @@ export function addPaymentInfo(
 
 export function addId(idType: string): void {
   const docName = idType.replace(" ", "_");
-  cy.labelled("Choose a file").attachFile({
+  cy.labelled("Choose files").attachFile({
     filePath: `${docName}.pdf`,
     encoding: "binary",
   });
@@ -597,7 +584,7 @@ export function addId(idType: string): void {
 }
 
 export function addLeaveDocs(leaveType: string): void {
-  cy.labelled("Choose a file").attachFile({
+  cy.labelled("Choose files").attachFile({
     filePath: `${leaveType}.pdf`,
     encoding: "binary",
   });
@@ -815,7 +802,7 @@ export function submitClaimPartOne(
   const reasonQualifier =
     application.leave_details && application.leave_details.reason_qualifier;
 
-  clickChecklistButton("Verify your identity");
+  clickChecklistButton("Verify your identification");
   verifyIdentity(application, "normal");
   onPage("checklist");
   clickChecklistButton("Enter employment information");
@@ -853,7 +840,7 @@ export function submitPartsTwoThreeNoLeaveCert(
   clickChecklistButton("Add payment information");
   addPaymentInfo(paymentPreference);
   onPage("checklist");
-  clickChecklistButton("Upload identity document");
+  clickChecklistButton("Upload identification document");
   addId("MA ID");
   cy.wait(1000);
 }
@@ -866,11 +853,13 @@ export function submitClaimPartsTwoThree(
   clickChecklistButton("Add payment information");
   addPaymentInfo(paymentPreference);
   onPage("checklist");
-  clickChecklistButton("Upload identity document");
+  clickChecklistButton("Upload identification document");
   addId("MA ID");
   onPage("checklist");
   clickChecklistButton("Upload leave certification documents");
-  addId(reason === "Serious Health Condition - Employee" ? "HCP" : "FOSTER");
+  addLeaveDocs(
+    reason === "Serious Health Condition - Employee" ? "HCP" : "FOSTER"
+  );
   onPage("checklist");
   reviewAndSubmit();
   onPage("review");

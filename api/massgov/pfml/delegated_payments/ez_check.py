@@ -4,7 +4,7 @@ import re
 from datetime import date
 from decimal import Decimal
 from itertools import chain
-from typing import Any, List, Optional, Tuple, Type
+from typing import Any, List, Optional, TextIO, Tuple, Type
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 
@@ -16,7 +16,7 @@ class EzCheckField:
     description: str
     max_length: int
     value: Any
-    value_type: Type[Any] = None
+    value_type: Optional[Type[Any]] = None
     as_string: str = ""
     pattern: Optional[str] = None
     validation_issues: List[payments_util.ValidationIssue] = []
@@ -66,7 +66,7 @@ class EzCheckField:
             )
             self.add_validation_issue(payments_util.ValidationReason.FIELD_TOO_LONG, msg)
 
-    def validate_pattern(self) -> bool:
+    def validate_pattern(self) -> None:
         if self.pattern is not None and not re.match(self.pattern, self.as_string):
             msg = "Expected value for field '{}' to match pattern '{}'".format(
                 self.description, self.pattern
@@ -82,7 +82,7 @@ class EzCheckIntegerField(EzCheckField):
 class EzCheckDecimalField(EzCheckField):
     value: Decimal
     value_type = Decimal
-    pattern = r"^\d*\.\d\d$"  # Decimal fields must include 2 digits following the decimal point.
+    pattern = payments_util.Regexes.MONETARY_AMOUNT
 
     def format_value(self) -> str:
         # Force the value to have a two digit decimal part.
@@ -99,7 +99,7 @@ class EzCheckDateField(EzCheckField):
 
 # Same as EzCheckCountryAbbreviationField, separate classes for clarity.
 class EzCheckStateAbbreviationField(EzCheckField):
-    pattern = r"^[A-Z]{2}$"  # State abbreviations should be exactly 2 uppercase letters.
+    pattern = payments_util.Regexes.STATE_ABBREVIATION
 
     def format_value(self) -> str:
         return self.value.upper()
@@ -107,20 +107,19 @@ class EzCheckStateAbbreviationField(EzCheckField):
 
 # Same as EzCheckStateAbbreviationField, separate classes for clarity.
 class EzCheckCountryAbbreviationField(EzCheckField):
-    pattern = r"^[A-Z]{2}$"  # Country abbreviations should be exactly 2 uppercase letters.
+    pattern = payments_util.Regexes.COUNTRY_ABBREVIATION
 
     def format_value(self) -> str:
         return self.value.upper()
 
 
 class EzCheckZipCodeField(EzCheckField):
-    pattern = r"^\d{5}(-\d{4})?$"  # Zip codes must contain 5 digits and may contain +4 identifier.
+    pattern = payments_util.Regexes.ZIP_CODE
 
 
 class EzCheckRecord:
     line_2: Tuple[EzCheckField, ...]
     line_3: Tuple[EzCheckField, ...]
-    as_string: str = ""
 
     def __init__(
         self,
@@ -130,7 +129,7 @@ class EzCheckRecord:
         memo: str,
         payee_name: str,
         address_line_1: str,
-        address_line_2: str,
+        address_line_2: Optional[str],
         city: str,
         state: str,
         zip_code: Any,
@@ -158,10 +157,14 @@ class EzCheckRecord:
         )
 
         self.validate_lines()
-        self.as_string = self.format_value()
 
     def __str__(self) -> str:
-        return self.as_string
+        s = io.StringIO()
+        w = csv.writer(s)
+        w.writerow(self.line_2)
+        w.writerow(self.line_3)
+
+        return s.getvalue()
 
     def validate_lines(self) -> None:
         # Collect all validation issues and raise all of them at once.
@@ -174,10 +177,74 @@ class EzCheckRecord:
                 issues=validation_issues,
             )
 
-    def format_value(self) -> str:
+
+class EzCheckHeader:
+    fields: Tuple[EzCheckField, ...]
+
+    def __init__(
+        self,
+        name_line_1: str,
+        name_line_2: str,
+        address_line_1: str,
+        address_line_2: str,
+        city: str,
+        state: str,
+        zip_code: Any,
+        country: str,
+        account_number: int,
+        routing_number: int,
+    ):
+        self.fields = (
+            EzCheckIntegerField("Line indicator", 1, 1),
+            EzCheckField("Payer name line 1", 85, name_line_1),
+            EzCheckField("Payer name line 2", 85, name_line_2),
+            EzCheckField("Payer address line 1", 85, address_line_1),
+            EzCheckField("Payer address line 2", 85, address_line_2),
+            EzCheckField("Payer city", 35, city),
+            EzCheckStateAbbreviationField("Payer state", 2, state),
+            EzCheckZipCodeField("Payer zip code", 10, zip_code),
+            EzCheckCountryAbbreviationField("Payer country", 2, country),
+            EzCheckIntegerField("Payer account number", 16, account_number),
+            EzCheckIntegerField("Payer routing number", 11, routing_number),
+        )
+        self.validate_fields()
+
+    def __str__(self) -> str:
         s = io.StringIO()
         w = csv.writer(s)
-        w.writerow(self.line_2)
-        w.writerow(self.line_3)
+        w.writerow(self.fields)
 
         return s.getvalue()
+
+    def validate_fields(self) -> None:
+        validation_issues = list(
+            chain.from_iterable([field.validation_issues for field in self.fields])
+        )
+        if len(validation_issues) > 0:
+            raise payments_util.ValidationIssueException(
+                message="Encountered validation issues when creating EZ check header",
+                issues=validation_issues,
+            )
+
+
+class EzCheckFile:
+    header: EzCheckHeader
+    records: List[EzCheckRecord] = []
+
+    def __init__(self, header: EzCheckHeader):
+        if not isinstance(header, EzCheckHeader):
+            raise TypeError("is not an EzCheckHeader")
+
+        self.header = header
+        self.records = []
+
+    def add_record(self, record: EzCheckRecord) -> None:
+        if not isinstance(record, EzCheckRecord):
+            raise TypeError("is not an EzCheckRecord")
+
+        self.records.append(record)
+
+    def write_to(self, fout: TextIO) -> None:
+        fout.write(str(self.header))
+        for record in self.records:
+            fout.write(str(record))

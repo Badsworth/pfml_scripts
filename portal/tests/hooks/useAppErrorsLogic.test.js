@@ -404,6 +404,7 @@ describe("useAppErrorsLogic", () => {
         beforeEach(() => {
           process.env.featureFlags = { employerShowVerifications: true };
           goToSpy = jest.spyOn(portalFlow, "goTo");
+          portalFlow.pathWithParams = "/foo?bar=true";
         });
 
         describe("when has_verification_data is true", () => {
@@ -432,11 +433,12 @@ describe("useAppErrorsLogic", () => {
           });
 
           it("redirects to verify contributions page", () => {
-            expect(
-              goToSpy
-            ).toHaveBeenCalledWith(
+            expect(goToSpy).toHaveBeenCalledWith(
               "/employers/organizations/verify-contributions",
-              { employer_id: "some-employer-id" }
+              {
+                employer_id: "some-employer-id",
+                next: "/foo?bar=true",
+              }
             );
           });
 
@@ -530,6 +532,32 @@ describe("useAppErrorsLogic", () => {
             }
           }
           i18nKey="errors.claims.fineos_case_creation_issues"
+        />
+      `);
+    });
+
+    it("returns Trans component when error type is unauthorized_leave_admin", () => {
+      const issues = [
+        {
+          message: "User is not authorized for access",
+          type: "unauthorized_leave_admin",
+        },
+      ];
+
+      act(() => {
+        appErrorsLogic.catchError(new ValidationError(issues, "employers"));
+      });
+
+      expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(`
+        <Trans
+          components={
+            Object {
+              "add-org-link": <a
+                href="/employers/organizations/add-organization"
+              />,
+            }
+          }
+          i18nKey="errors.employers.unauthorized_leave_admin"
         />
       `);
     });

@@ -3,7 +3,7 @@
 exports[`Ssn renders the form 1`] = `
 <QuestionPage
   onSave={[Function]}
-  title="Your identity"
+  title="Your identification"
 >
   <InputText
     hint="Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number (ITIN)."
@@ -12,7 +12,7 @@ exports[`Ssn renders the form 1`] = `
     name="tax_identifier"
     onChange={[Function]}
     pii={true}
-    value="123-123-1234"
+    value="*****1234"
   />
 </QuestionPage>
 `;

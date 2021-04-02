@@ -28,7 +28,9 @@ const withWithholding = (Component) => {
 
     useEffect(() => {
       if (employer.verified) {
-        appLogic.portalFlow.goTo(query.next || routes.employers.organizations);
+        appLogic.portalFlow.goTo(routes.employers.verificationSuccess, {
+          employer_id: query.employer_id,
+        });
       } else {
         const loadWithholding = async () => {
           const data = await appLogic.employers.loadWithholding(

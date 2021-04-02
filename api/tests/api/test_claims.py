@@ -14,19 +14,27 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     VerificationFactory,
 )
+from massgov.pfml.util import feature_gate
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
 
 
-@pytest.fixture(params=["enabled", "disabled"])
+@pytest.fixture(params=["env_var", "feature_gate", "disabled"])
 def test_verification(request, monkeypatch):
     # This checks that all tests work _both_ with
     # 1. Verification disabled and no verification record AND
     # 2. Verification enabled and verification record
     # TODO: Remove the params behavior after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
-    if request.param == "enabled":
+    if request.param == "env_var":
         monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
+        return VerificationFactory.create()
+    elif request.param == "feature_gate":
+        monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
+        monkeypatch.setattr(
+            feature_gate, "check_enabled", lambda feature_name, user_email: True,
+        )
+
         return VerificationFactory.create()
     else:
         monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
@@ -70,9 +78,15 @@ class TestVerificationEnforcement:
         employer = EmployerFactory.create()
         return employer
 
-    @pytest.fixture(autouse=True)
-    def _enforce_verifications(self, monkeypatch):
-        monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
+    @pytest.fixture(autouse=True, params=["env_var", "feature_gate"])
+    def _enforce_verifications(self, request, monkeypatch, employer_user):
+        if request.param == "env_var":
+            monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
+        else:
+            monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
+            monkeypatch.setattr(
+                feature_gate, "check_enabled", lambda feature_name, user_email: True,
+            )
 
     @pytest.fixture
     def setup_claim(self, test_db_session, employer_user):
@@ -130,6 +144,81 @@ class TestVerificationEnforcement:
 
         assert response.status_code == 403
         assert response.get_json()["message"] == "User does not have access to claim."
+
+
+@pytest.mark.integration
+class TestNotAuthorizedForAccess:
+    # This class groups the tests that ensure that users get 403s when
+    # attempting to access claim data without an associated user leave administrator
+    @pytest.fixture()
+    def employer(self):
+        employer = EmployerFactory.create()
+        return employer
+
+    @pytest.fixture
+    def setup_claim(self, test_db_session, employer_user):
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        test_db_session.add(employer, claim)
+        test_db_session.commit()
+        return claim
+
+    def test_employers_cannot_access_claims_endpoint_without_ula(
+        self, client, auth_token, employer_auth_token, setup_claim
+    ):
+        response = client.get(
+            f"/v1/employers/claims/{setup_claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 403
+        assert (
+            response.get_json()["message"]
+            == "User does not have leave administrator record for this employer"
+        )
+        assert (
+            response.get_json()["errors"][0]["message"]
+            == "User does not have leave administrator record for this employer"
+        )
+        assert response.get_json()["errors"][0]["type"] == "unauthorized_leave_admin"
+
+    def test_employers_cannot_download_documents_without_ula(
+        self, client, auth_token, employer_auth_token, setup_claim
+    ):
+        response = client.get(
+            f"/v1/employers/claims/{setup_claim.fineos_absence_id}/documents/1111",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 403
+        assert (
+            response.get_json()["message"]
+            == "User does not have leave administrator record for this employer"
+        )
+        assert (
+            response.get_json()["errors"][0]["message"]
+            == "User does not have leave administrator record for this employer"
+        )
+        assert response.get_json()["errors"][0]["type"] == "unauthorized_leave_admin"
+
+    def test_employers_cannot_update_claim_without_ula(
+        self, client, employer_auth_token, update_claim_body, setup_claim
+    ):
+        response = client.patch(
+            f"/v1/employers/claims/{setup_claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=update_claim_body,
+        )
+        assert response.status_code == 403
+        assert (
+            response.get_json()["message"]
+            == "User does not have leave administrator record for this employer"
+        )
+        assert (
+            response.get_json()["errors"][0]["message"]
+            == "User does not have leave administrator record for this employer"
+        )
+        assert response.get_json()["errors"][0]["type"] == "unauthorized_leave_admin"
 
 
 @pytest.mark.integration

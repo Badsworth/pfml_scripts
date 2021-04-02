@@ -72,30 +72,66 @@ resource "newrelic_alert_policy_channel" "pfml_prod_low_priority_alerts" {
 # ----------------------------------------------------------------------------------------------------------------------
 # Alerts relating to the API's generic performance metrics
 
-resource "newrelic_alert_condition" "api_error_rate" {
-  # WARN: error rate above 1% for at least five minutes
-  # CRIT: error rate above 10% at least once in any five-minute period
-  policy_id       = newrelic_alert_policy.api_alerts.id
-  name            = "API error rate too high"
-  type            = "apm_app_metric"
-  entities        = [data.newrelic_entity.pfml-api.application_id]
-  metric          = "error_percentage"
-  condition_scope = "application"
+resource "newrelic_nrql_alert_condition" "api_error_rate" {
+  # WARN: error rate above 5% in any five-minute period
+  # CRIT: error rate above 10% in any five-minute period
+  #
+  # These should be tuned down once we can better distinguish
+  # certain types of errors.
+  name               = "API error rate too high"
+  policy_id          = newrelic_alert_policy.api_alerts.id
+  type               = "static"
+  value_function     = "single_value"
+  enabled            = true
+  aggregation_window = 300 # 5-minute window
 
-  term {
-    priority      = "warning"
-    time_function = "all" # e.g. "for at least..."
-    duration      = 5     # units: minutes
-    operator      = "above"
-    threshold     = 1 # units: percentage
+  nrql {
+    # Calculate error percentage.
+    #
+    # Ignore the following triaged errors until they are resolved:
+    # - documents_get 403 (PSD-112)
+    # - document_upload 422 (PSD-842)
+    # - OCOrganization.[*].CustomerNo type issue (PSD-161)
+    # - FINEOSFatalUnavailable (Should be ignored entirely in https://github.com/EOLWD/pfml/pull/3516)
+    #
+    # This keeps the error rate signal clean so we can catch new issues.
+    #
+    query             = <<-NRQL
+      SELECT filter(
+        count(error.message), 
+        WHERE NOT (
+          error.message LIKE 'expected 200, but got 403' 
+          AND request.uri LIKE '%applications%/documents' 
+          AND request.method LIKE 'GET'
+        )
+        AND NOT (
+          error.message LIKE 'expected 200, but got 422' 
+          AND request.uri LIKE '%applications%/documents' 
+          AND request.method LIKE 'POST'
+        )
+        AND NOT error.message LIKE '%1 validation error for OCOrganisation%CustomerNo none is not an allowed value%'
+        AND NOT error.class = 'massgov.pfml.fineos.exception:FINEOSFatalUnavailable'
+      ) * 100 / uniqueCount(traceId)
+      FROM Transaction, TransactionError
+      WHERE appName='PFML-API-${upper(var.environment_name)}'
+    NRQL
+    evaluation_offset = 1 # offset by one window
   }
 
-  term {
-    priority      = "critical"
-    time_function = "any" # e.g. "at least once in..."
-    duration      = 5     # units: minutes
-    operator      = "above"
-    threshold     = 10 # units: percentage
+  violation_time_limit_seconds = 86400 # 24 hours
+
+  warning {
+    threshold_duration    = 300 # five minutes
+    threshold             = 5   # units: percentage
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 300 # five minutes
+    threshold             = 10  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
   }
 }
 
@@ -143,7 +179,7 @@ resource "newrelic_nrql_alert_condition" "rds_high_cpu_utilization" {
     evaluation_offset = 3
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold_duration    = 300
@@ -174,7 +210,7 @@ resource "newrelic_nrql_alert_condition" "rds_low_storage_space" {
     evaluation_offset = 3
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold_duration    = 300
@@ -214,7 +250,7 @@ resource "newrelic_nrql_alert_condition" "fineos_aggregated_5xx_rate" {
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold_duration    = 300 # five minutes
@@ -251,7 +287,7 @@ resource "newrelic_nrql_alert_condition" "fineos_aggregated_4xx_rate" {
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold             = 10
@@ -273,12 +309,12 @@ resource "newrelic_nrql_alert_condition" "fineos_claim-submission_5xx_rate" {
   # CRIT: This percentage is > 33% for at least 5 minutes
   # WARN: This percentage is > 10% for any 1 minute in a 5 minute window
 
-  name                 = "[5xx] High rate of claim submission failure in ${upper(var.environment_name)} FINEOS"
-  policy_id            = newrelic_alert_policy.api_alerts.id
-  type                 = "static"
-  value_function       = "single_value"
-  enabled              = true
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  name                         = "[5xx] High rate of claim submission failure in ${upper(var.environment_name)} FINEOS"
+  policy_id                    = newrelic_alert_policy.api_alerts.id
+  type                         = "static"
+  value_function               = "single_value"
+  enabled                      = true
+  violation_time_limit_seconds = 86400 # 24 hours
 
   nrql {
     query = <<-NRQL
@@ -320,12 +356,12 @@ resource "newrelic_nrql_alert_condition" "fineos_claim-submission_4xx_rate" {
   # CRIT: This percentage is > 33% for at least 5 minutes
   # WARN: This percentage is > 10% for any 1 minute in a 5 minute window
 
-  name                 = "[4xx] High rate of claim submission failure in ${upper(var.environment_name)} FINEOS"
-  policy_id            = newrelic_alert_policy.api_alerts.id
-  type                 = "static"
-  value_function       = "single_value"
-  enabled              = true
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  name                         = "[4xx] High rate of claim submission failure in ${upper(var.environment_name)} FINEOS"
+  policy_id                    = newrelic_alert_policy.api_alerts.id
+  type                         = "static"
+  value_function               = "single_value"
+  enabled                      = true
+  violation_time_limit_seconds = 86400 # 24 hours
 
   nrql {
     query = <<-NRQL
@@ -385,7 +421,7 @@ resource "newrelic_nrql_alert_condition" "notifications_endpoint_error_rate" {
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold             = 10
@@ -426,7 +462,7 @@ resource "newrelic_nrql_alert_condition" "servicenow_4xx_rate" {
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold_duration    = 300 # five minutes
@@ -463,7 +499,7 @@ resource "newrelic_nrql_alert_condition" "servicenow_5xx_rate" {
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold_duration    = 300 # five minutes
@@ -484,13 +520,13 @@ resource "newrelic_nrql_alert_condition" "servicenow_5xx_rate" {
 # Alarms relating to problems in the payments pipeline
 
 resource "newrelic_nrql_alert_condition" "payments_errors_from_fineos" {
-  count                = (var.environment_name == "prod") ? 1 : 0
-  name                 = "Errors encountered by the payments-fineos-process task"
-  type                 = "static"
-  value_function       = "single_value"
-  enabled              = true
-  policy_id            = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  count                        = (var.environment_name == "prod") ? 1 : 0
+  name                         = "Errors encountered by the payments-fineos-process task"
+  type                         = "static"
+  value_function               = "single_value"
+  enabled                      = true
+  policy_id                    = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
+  violation_time_limit_seconds = 86400 # 24 hours
 
   nrql {
     evaluation_offset = 3
@@ -511,13 +547,13 @@ resource "newrelic_nrql_alert_condition" "payments_errors_from_fineos" {
 }
 
 resource "newrelic_nrql_alert_condition" "payments_errors_from_comptroller" {
-  count                = (var.environment_name == "prod") ? 1 : 0
-  name                 = "Errors encountered by the payments-ctr-process task"
-  type                 = "static"
-  value_function       = "single_value"
-  enabled              = true
-  policy_id            = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  count                        = (var.environment_name == "prod") ? 1 : 0
+  name                         = "Errors encountered by the payments-ctr-process task"
+  type                         = "static"
+  value_function               = "single_value"
+  enabled                      = true
+  policy_id                    = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
+  violation_time_limit_seconds = 86400 # 24 hours
 
   nrql {
     evaluation_offset = 3
@@ -562,7 +598,7 @@ resource "newrelic_nrql_alert_condition" "rmv_5xx_rate" {
     evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
   }
 
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   warning {
     threshold_duration    = 300 # five minutes
@@ -576,5 +612,78 @@ resource "newrelic_nrql_alert_condition" "rmv_5xx_rate" {
     threshold             = 33  # units: percentage
     operator              = "above"
     threshold_occurrences = "all"
+  }
+}
+
+# ------------------------------------------------------------------------------------------------------------------------------
+
+resource "newrelic_nrql_alert_condition" "unsuccessful_register_leave_admin_job" {
+  # WARN: Register Leave Admin job has only run 2 times in the past hour
+  # CRIT: Register Leave Admin job has not run in the past hour
+  name           = "Leave admin registration in FINEOS is failing in ${upper(var.environment_name)}"
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  type           = "static"
+  value_function = "single_value"
+  fill_option    = "last_value"
+  enabled        = true
+
+  nrql {
+    query             = <<-NRQL
+    SELECT count(*) AS 'Successful Job completion' FROM Log WHERE message = 'Completed FINEOS Leave Admin Creation Script'
+    AND aws.logGroup = 'service/pfml-api-${var.environment_name}/ecs-tasks'
+    NRQL
+    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
+  }
+
+  violation_time_limit_seconds = 86400 # one day
+
+  warning {
+    threshold_duration    = 1800 # thirty minutes
+    threshold             = 1    # register leave admin job ran only twice in an hour
+    operator              = "below"
+    threshold_occurrences = "all"
+  }
+
+  critical {
+    threshold_duration    = 3600 # sixty minutes
+    threshold             = 1    # register leave admin job didn't run at all in an hour
+    operator              = "below"
+    threshold_occurrences = "all"
+  }
+}
+
+# ------------------------------------------------------------------------------------------------------------------------------
+
+resource "newrelic_nrql_alert_condition" "unprocessed_leave_admin_records" {
+  # WARN: Register Leave Admin job has left unprocessed records twice
+  # CRIT: Register Leave Admin job has left unprocessed records four times
+  name           = "Leave admin registration in FINEOS did not process all records in ${upper(var.environment_name)}"
+  policy_id      = newrelic_alert_policy.api_alerts.id
+  type           = "static"
+  value_function = "single_value"
+  fill_option    = "last_value"
+  enabled        = true
+
+  nrql {
+    query             = <<-NRQL
+    SELECT COUNT(*) as 'Job runs with unprocessed records' FROM Log WHERE message LIKE '%Leave admin records left unprocessed%' AND aws.logGroup = 'service/pfml-api-${var.environment_name}/ecs-tasks' AND numeric(`Left unprocessed`) > 0
+    NRQL
+    evaluation_offset = 3 # recommended offset from the Terraform docs for this resource
+  }
+
+  violation_time_limit_seconds = 86400 # one day
+
+  warning {
+    threshold_duration    = 4500 # seventy-five minutes, job runs every 15 minutes, should account for ~4-5 runs
+    threshold             = 1    # more than 1 of the past 4-5 runs has left unprocessed records
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 4500 # seventy-five minutes, job runs every 15 minutes, should account for ~4-5 runs
+    threshold             = 3    # 4 of the past 4-5 runs have left unprocessed records
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
   }
 }

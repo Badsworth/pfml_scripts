@@ -73,6 +73,7 @@ data "template_file" "container_definitions" {
     cloudwatch_logs_group_name                 = aws_cloudwatch_log_group.service_logs.name
     aws_region                                 = data.aws_region.current.name
     cors_origins                               = join(",", var.cors_origins)
+    cognito_user_pool_id                       = var.cognito_user_pool_id
     cognito_user_pool_client_id                = var.cognito_user_pool_client_id
     cognito_user_pool_keys_url                 = var.cognito_user_pool_keys_url
     logging_level                              = var.logging_level

@@ -8,6 +8,10 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import Paym
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
 from massgov.pfml.delegated_payments.payment_methods_split_step import PaymentMethodsSplitStep
 from massgov.pfml.delegated_payments.pub.transaction_file_creator import TransactionFileCreatorStep
+from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
+from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
+    CREATE_PUB_FILES_REPORTS,
+)
 from massgov.pfml.util.logging import audit
 
 logger = logging.get_logger(__name__)
@@ -18,12 +22,14 @@ PROCESS_AUDIT_REJECT = "audit-reject"
 CREATE_PEI_WRITEBACK = "initial-writeback"
 SPLIT_PAYMENT_METHODS = "split-payment-methods"
 PUB_TRANSACTION = "pub-transaction"
+REPORT = "report"
 ALLOWED_VALUES = [
     ALL,
     PROCESS_AUDIT_REJECT,
     CREATE_PEI_WRITEBACK,
     SPLIT_PAYMENT_METHODS,
     PUB_TRANSACTION,
+    REPORT,
 ]
 
 
@@ -32,6 +38,7 @@ class Configuration:
     create_pei_writeback: bool
     split_payment_methods: bool
     pub_transaction: bool
+    make_reports: bool
 
     def __init__(self, input_args: List[str]):
         parser = argparse.ArgumentParser(
@@ -53,11 +60,13 @@ class Configuration:
             self.create_pei_writeback = True
             self.split_payment_methods = True
             self.pub_transaction = True
+            self.make_reports = True
         else:
             self.process_audit_reject = PROCESS_AUDIT_REJECT in steps
             self.create_pei_writeback = CREATE_PEI_WRITEBACK in steps
             self.split_payment_methods = SPLIT_PAYMENT_METHODS in steps
             self.pub_transaction = PUB_TRANSACTION in steps
+            self.make_reports = REPORT in steps
 
 
 def make_db_session() -> db.Session:
@@ -71,31 +80,41 @@ def main():
 
     config = Configuration(sys.argv[1:])
 
-    with db.session_scope(make_db_session(), close=True) as db_session:
-        _process_pub_payments(db_session, config)
+    with db.session_scope(make_db_session(), close=True) as db_session, db.session_scope(
+        make_db_session(), close=True
+    ) as log_entry_db_session:
+        _process_pub_payments(db_session, log_entry_db_session, config)
 
 
-def _process_pub_payments(db_session_raw: db.Session, config: Configuration) -> None:
+def _process_pub_payments(
+    db_session: db.Session, log_entry_db_session: db.Session, config: Configuration
+) -> None:
     """Process PUB Payments"""
     logger.info("Start - PUB Payments ECS Task")
 
-    # db_session_raw is used for the log entries and
-    # this db_session is used by each of the steps directly.
-    with db.session_scope(db_session_raw) as db_session:
-        if config.process_audit_reject:
-            PaymentRejectsStep(db_session=db_session, log_entry_db_session=db_session_raw).run()
+    if config.process_audit_reject:
+        PaymentRejectsStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
-        if config.create_pei_writeback:
-            FineosPeiWritebackStep(db_session=db_session, log_entry_db_session=db_session_raw).run()
+    if config.create_pei_writeback:
+        FineosPeiWritebackStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
 
-        if config.split_payment_methods:
-            PaymentMethodsSplitStep(
-                db_session=db_session, log_entry_db_session=db_session_raw
-            ).run()
+    if config.split_payment_methods:
+        PaymentMethodsSplitStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
 
-        if config.pub_transaction:
-            TransactionFileCreatorStep(
-                db_session=db_session, log_entry_db_session=db_session_raw
-            ).run()
+    if config.pub_transaction:
+        TransactionFileCreatorStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
+
+    if config.make_reports:
+        ReportStep(
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            report_names=CREATE_PUB_FILES_REPORTS,
+        ).run()
 
     logger.info("Done - PUB Payments ECS Task")

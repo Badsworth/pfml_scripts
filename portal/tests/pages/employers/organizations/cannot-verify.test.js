@@ -30,5 +30,8 @@ describe("cannot verify", () => {
 
   it("renders the page", () => {
     expect(wrapper).toMatchSnapshot();
+    wrapper.find("Trans").forEach((trans) => {
+      expect(trans.dive()).toMatchSnapshot();
+    });
   });
 });

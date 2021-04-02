@@ -276,12 +276,7 @@ export default {
     },
     [routes.applications.leavePeriodReducedSchedule]: {
       meta: {
-        applicableRules: [
-          "disallow_12mo_reduced_leave_period",
-          // This page is after the Continuous page, so on this page is
-          // where we can surface validation issues related to the following rules:
-          "disallow_overlapping_leave_periods",
-        ],
+        applicableRules: ["disallow_12mo_reduced_leave_period"],
         step: ClaimSteps.leaveDetails,
         fields: leavePeriodReducedScheduleFields,
       },

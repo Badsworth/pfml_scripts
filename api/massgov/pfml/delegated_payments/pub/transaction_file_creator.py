@@ -1,12 +1,14 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
+import massgov.pfml.delegated_payments.pub.pub_check as pub_check
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Employee,
     Payment,
+    PaymentMethod,
     PrenoteState,
     PubEft,
     ReferenceFileType,
@@ -18,6 +20,7 @@ from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     create_nacha_file,
     upload_nacha_file_to_s3,
 )
+from massgov.pfml.delegated_payments.ez_check import EzCheckFile
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.util.ach.nacha import NachaFile
 
@@ -25,7 +28,7 @@ logger = logging.get_logger(__name__)
 
 
 class TransactionFileCreatorStep(Step):
-    # check_file: Optional[CheckFile] = None
+    check_file: Optional[EzCheckFile] = None
     ach_file: Optional[NachaFile] = None
 
     def run_step(self) -> None:
@@ -40,7 +43,7 @@ class TransactionFileCreatorStep(Step):
             self.add_prenotes()
 
             # Check
-            self.create_check_file()
+            self.check_file = pub_check.create_check_file(self.db_session)
 
             # Send the file
             self.send_payment_files(transaction_files_path)
@@ -57,27 +60,24 @@ class TransactionFileCreatorStep(Step):
             # We do not want to run any subsequent steps if this fails
             raise
 
-    def create_check_file(self) -> None:
-        # TODO: After PUB-30 is complete, call the function that adds check payments to an ACH
-        # transaction file.
-        #
-        # self.check_file = _create_check_file()
-
-        return None
-
     def add_prenotes(self):
         logger.info("Start adding EFT prenotes to PUB transaction file")
 
-        self._create_ach_file_if_not_exists()
-
         # add eligible employee eft prenotes to transaction file
-        employees_with_eft: List[
+        employees_with_efts: List[
             Tuple[Employee, PubEft]
         ] = self._get_eft_eligible_employees_with_eft()
-        add_eft_prenote_to_nacha_file(self.ach_file, employees_with_eft)
+
+        if len(employees_with_efts) == 0:
+            logger.info("No EFT prenotes to add to PUB transaction file")
+            return
+
+        self._create_ach_file_if_not_exists()
+        # Cast the ach_file as we know it's set by _create_ach_file_if_not_exists
+        add_eft_prenote_to_nacha_file(cast(NachaFile, self.ach_file), employees_with_efts)
 
         # transition eft states for employee
-        for employee_with_eft in employees_with_eft:
+        for employee_with_eft in employees_with_efts:
             employee: Employee = employee_with_eft[0]
             eft: PubEft = employee_with_eft[1]
 
@@ -91,16 +91,23 @@ class TransactionFileCreatorStep(Step):
                 db_session=self.db_session,
             )
 
-        logger.info("Done adding EFT prenotes to PUB transaction file: %i", len(employee_with_eft))
+        logger.info(
+            "Done adding EFT prenotes to PUB transaction file: %i", len(employees_with_efts)
+        )
 
     def add_ach_payments(self) -> None:
         logger.info("Start adding ACH payments to PUB transaction file")
 
-        self._create_ach_file_if_not_exists()
-
         # add eligible payments to transaction file
         payments: List[Payment] = self._get_eligible_eft_payments()
-        add_payments_to_nacha_file(self.ach_file, payments)
+
+        if len(payments) == 0:
+            logger.info("No ACH payments to add to PUB transaction file")
+            return
+
+        self._create_ach_file_if_not_exists()
+        # Cast the ach_file as we know it's set by _create_ach_file_if_not_exists
+        add_payments_to_nacha_file(cast(NachaFile, self.ach_file), payments)
 
         # transition states
         for payment in payments:
@@ -114,13 +121,15 @@ class TransactionFileCreatorStep(Step):
         logger.info("Done adding ACH payments to PUB transaction file: %i", len(payments))
 
     def send_payment_files(self, ach_file_folder_path: str) -> None:
-        # TODO: If we've created a check and/or ACH file send them to PUB's S3 bucket, FTP server,
-        # or whatever else.
-        #
-        # if self.check_file is not None:
-        #     _send_to_pub(self.check_file)
-        #
-        if self.ach_file is not None:
+        if self.check_file is None:
+            logger.info("No check file to send to PUB")
+        else:
+            ref_file = pub_check.send_check_file(self.check_file, ach_file_folder_path)
+            self.db_session.add(ref_file)
+
+        if self.ach_file is None:
+            logger.info("No ACH file to send to PUB")
+        else:
             ref_file = payments_util.create_pub_reference_file(
                 payments_util.get_now(),
                 ReferenceFileType.PUB_TRANSACTION,
@@ -146,15 +155,11 @@ class TransactionFileCreatorStep(Step):
             db_session=self.db_session,
         )
 
-        # TODO check payment method https://lwd.atlassian.net/browse/PUB-106
-        # for state_log in state_logs:
-        #     if (
-        #         state_log.payment..payment_method_id
-        #         != PaymentMethod.ACH.payment_method_id
-        #     ):
-        #         raise Exception(
-        #             f"Non-ACH payment method detected in state log: { state_log.state_log_id }, payment: {payment.payment_id}"
-        #         )
+        for state_log in state_logs:
+            if state_log.payment.disb_method_id != PaymentMethod.ACH.payment_method_id:
+                raise Exception(
+                    f"Non-ACH payment method detected in state log: { state_log.state_log_id }, payment: {state_log.payment.payment_id}"
+                )
 
         ach_payments = [state_log.payment for state_log in state_logs]
 

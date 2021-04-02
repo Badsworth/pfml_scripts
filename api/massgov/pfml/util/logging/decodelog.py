@@ -28,7 +28,8 @@ def main() -> None:
     for line in sys.stdin:
         processed = process_line(line)
         if processed is not None:
-            print(processed)
+            sys.stdout.write(processed)
+            sys.stdout.write("\r\n")
 
 
 def process_line(line: str) -> Optional[str]:

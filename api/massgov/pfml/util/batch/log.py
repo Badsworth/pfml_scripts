@@ -82,10 +82,13 @@ class LogEntry:
 
         if exc_type is None:
             self.import_log.status = "success"
-            self._set_import_log_report()
+            self._set_metrics_import_log_report()
         else:
             self.import_log.status = "error"
-            self.import_log.report = "%s: %s" % (exc_type.__name__, str(exc_val))
+            self._set_metrics_import_log_report()
+
+            error_message = "%s: %s" % (exc_type.__name__, str(exc_val))
+            set_import_log_with_error_message(self.import_log, error_message)
 
         self.import_log.end = massgov.pfml.util.datetime.utcnow()
         self.db_session.commit()
@@ -111,7 +114,7 @@ class LogEntry:
         # isn't slow.
         if time.monotonic() - self.last_commit < METRIC_COMMIT_INTERVAL:
             return
-        self._set_import_log_report()
+        self._set_metrics_import_log_report()
         self.db_session.commit()
         self.last_commit = time.monotonic()
         logger.info(
@@ -119,7 +122,7 @@ class LogEntry:
             extra={"import_log_id": self.import_log.import_log_id, **self.metrics},
         )
 
-    def _set_import_log_report(self):
+    def _set_metrics_import_log_report(self):
         """Set the import_log.report string from member variables."""
         self.import_log.report = json.dumps(self.metrics)
 
@@ -133,8 +136,16 @@ def log_entry(db_session, source, import_type):
         import_log.status = "success"
     except Exception as ex:
         import_log.status = "error"
-        import_log.report = "%s: %s" % (type(ex).__name__, str(ex))
+
+        error_message = "%s: %s" % (type(ex).__name__, str(ex))
+        set_import_log_with_error_message(import_log, error_message)
+
         raise
     finally:
         import_log.end = massgov.pfml.util.datetime.utcnow()
         db_session.commit()
+
+
+def set_import_log_with_error_message(import_log: ImportLog, error_message: str) -> None:
+    existing_report = json.loads(import_log.report) if import_log.report is not None else {}
+    import_log.report = json.dumps({"message": error_message, **existing_report})

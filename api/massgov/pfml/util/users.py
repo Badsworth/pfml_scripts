@@ -18,6 +18,7 @@ from massgov.pfml.util.aws.cognito import (
     CognitoAccountCreationFailure,
     CognitoLookupFailure,
     CognitoPasswordSetFailure,
+    CognitoUserExistsValidationError,
     create_cognito_account,
     create_verified_cognito_leave_admin_account,
     lookup_cognito_account_id,
@@ -75,6 +76,7 @@ def get_register_user_log_attributes(
 
 def register_user(
     db_session: db.Session,
+    cognito_user_pool_id: str,
     cognito_user_pool_client_id: str,
     email_address: str,
     password: str,
@@ -85,17 +87,37 @@ def register_user(
 
     Raises
     ------
-    - CognitoAccountCreationUserError
+    - CognitoValidationError
     - CognitoAccountCreationFailure
     """
 
-    auth_id = create_cognito_account(
-        email_address, password, cognito_user_pool_client_id, cognito_client=cognito_client
-    )
-    logger.info(
-        "Successfully created Cognito user",
-        extra=get_register_user_log_attributes(employer_for_leave_admin, auth_id),
-    )
+    try:
+        auth_id = create_cognito_account(
+            email_address,
+            password,
+            cognito_user_pool_id,
+            cognito_user_pool_client_id,
+            cognito_client=cognito_client,
+        )
+        logger.info(
+            "Successfully created Cognito user",
+            extra=get_register_user_log_attributes(employer_for_leave_admin, auth_id),
+        )
+    except CognitoUserExistsValidationError as error:
+        # Cognito user already exists, but confirm we have DB records for the user. If we do then reraise the error (bc claimant is trying to create a duplicate account) and if we don't then continue to create the DB records (bc somehow this step failed the last time).
+        if error.active_directory_id:
+            auth_id = error.active_directory_id
+            existing_user = (
+                db_session.query(User).filter(User.active_directory_id == auth_id).one_or_none()
+            )
+
+            if existing_user is not None:
+                raise error
+
+            logger.warning(
+                "Cognito user existed but DB records did not. Attempting to create DB records.",
+                extra=get_register_user_log_attributes(employer_for_leave_admin, auth_id),
+            )
 
     user = create_user(db_session, email_address, auth_id, employer_for_leave_admin)
     logger.info(

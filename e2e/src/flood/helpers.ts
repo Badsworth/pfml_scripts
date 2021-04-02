@@ -1,6 +1,5 @@
 import { Locator, Browser, By, ElementHandle, Until } from "@flood/element";
 import * as Cfg from "./config";
-import { ClaimDocument, FineosUserType } from "../simulation/types";
 import { getFamilyLeavePlanProp } from "./tasks/ApproveClaim";
 import { actions } from "./scenarios/SavilinxAgent.perf";
 
@@ -9,8 +8,7 @@ import { actions } from "./scenarios/SavilinxAgent.perf";
 export function simulateRealTime(step: Cfg.StoredStep): Cfg.StoredStep {
   const { time, name, test } = step;
   return {
-    time: time,
-    name: name,
+    ...step,
     test: async (browser: Browser, data: Cfg.LSTSimClaim) => {
       // Start the timer
       const start = Date.now();
@@ -269,20 +267,10 @@ export async function getMailVerifier(
   };
 }
 
-export function getDocumentType(
-  document: ClaimDocument
-): Cfg.StandardDocumentType {
-  if (["MASSID", "OOSID"].includes(document.type)) {
-    return "Identification Proof";
-  } else {
-    return "State managed Paid Leave Confirmation";
-  }
-}
-
 export function assignTasks(
   fineosId: string,
   search = true,
-  agent: FineosUserType = "SAVILINX"
+  agent: Cfg.FineosUserType = "SAVILINX"
 ): Cfg.StoredStep {
   return {
     time: 0,

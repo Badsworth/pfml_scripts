@@ -31,19 +31,24 @@ export type GetEmailsOpts = {
   subject?: string;
   subjectWildcard?: string;
   timestamp_from?: number;
+  debugInfo?: Record<string, string>;
 };
 type Filter = { field: string; match: string; action: string; value: string };
 
 export default class TestMailClient {
   namespace: string;
   client: GraphQLClient;
+  headers: Record<string, string>;
+  apiKey: string;
 
   constructor(apiKey: string, namespace: string, timeout = 120000) {
+    this.headers = { Authorization: `Bearer ${apiKey}` };
     this.client = new GraphQLClient("https://api.testmail.app/api/graphql", {
-      headers: { Authorization: `Bearer ${apiKey}` },
+      headers: this.headers,
       // Limit the amount of time we'll wait for a response.
       fetch: wrapFetchWithTimeout(fetch, timeout),
     });
+    this.apiKey = apiKey;
     this.namespace = namespace;
   }
 
@@ -67,18 +72,37 @@ export default class TestMailClient {
       });
     }
     const tag = this.getTagFromAddress(opts.address);
+    const variables = {
+      tag: tag,
+      namespace: this.namespace,
+      advanced_filters: filters,
+      timestamp_from: opts.timestamp_from,
+    };
     try {
-      const response = await this.client.request(unifiedQuery, {
-        tag: tag,
-        namespace: this.namespace,
-        advanced_filters: filters,
-        timestamp_from: opts.timestamp_from,
-      });
+      const response = await this.client.request(unifiedQuery, variables);
       return response.inbox.emails;
     } catch (e) {
       if (e.name === "AbortError") {
+        const searchParams = new URLSearchParams({
+          query: unifiedQuery,
+          // Note: variables and headers can't currently be read from the query string in GraphiQL.
+        });
+        const debugInfo = {
+          "GraphQL URL": `https://api.testmail.app/api/graphql?${searchParams}`,
+          "GraphQL Variables": JSON.stringify(variables, undefined, 4),
+          "GraphQL Headers": JSON.stringify(this.headers, undefined, 4),
+          ...opts.debugInfo,
+          timestamp_to: Date.now(),
+        };
         throw new Error(
-          "Timed out while looking for e-mail. This can happen when an e-mail is taking a long time to arrive, the e-mail was never sent, or you're looking for the wrong message."
+          `Timed out while looking for e-mail. This can happen when an e-mail is taking a long time to arrive, the e-mail was never sent, or you're looking for the wrong message.
+
+          Debug information: 
+          ------------------
+
+          ${Object.entries(debugInfo)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join("\n\n")}`
         );
       }
       throw e;

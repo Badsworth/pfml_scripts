@@ -10,7 +10,6 @@
 // Import some types here. We'll reference them below.
 type Application = import("./src/types").Application;
 type Credentials = import("./src/types").Credentials;
-type SimulationClaim = import("./src/simulation/types").SimulationClaim;
 type ApplicationRequestBody = import("./src/api").ApplicationRequestBody;
 type ApplicationResponse = import("./src/api").ApplicationResponse;
 type waitForClaimDocuments = import("./cypress/plugins/DocumentWaiter").default["waitForClaimDocuments"];
@@ -47,6 +46,7 @@ declare namespace Cypress {
     ): Chainable<DehydratedClaim>;
 
     task(event: "getAuthVerification", mail: string): Chainable<string>;
+    task(event: "completeSSOLoginFineos"): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;
     task(event: "generateLeaveAdminCredentials"): Chainable<Credentials>;
     task(event: "noticeReader", noticeType: string): Chainable<Result>;

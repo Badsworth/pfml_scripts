@@ -12,9 +12,9 @@ import os
 from datetime import date
 
 import sqlalchemy
-from smart_open import open as smart_open
 
 import massgov.pfml.db
+import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.audit
 from massgov.pfml.util.sentry import initialize_sentry
@@ -62,17 +62,23 @@ def execute_sql():
 def execute_sql_statement_s3(db_session, sql, bucket, file_target):
     """ Export the results of an SQL statement to S3 """
     logger.info("exporting results of %r to %s in %s", sql, file_target, bucket)
+    file_path = f"s3://{bucket}/{file_target}"
+    execute_sql_statement_file_path(db_session, sql, file_path)
+    db_session.commit()
+
+
+def execute_sql_statement_file_path(db_session, sql, file_path):
+    logger.info("exporting results of %r to %s", sql, file_path)
     result = db_session.execute(sql)
     dictwriter = None
     fields = None
-    with smart_open(f"s3://{bucket}/{file_target}", "w") as open_fh:
+    with file_util.open_stream(file_path, mode="w") as open_fh:
         for row in result:
             if not dictwriter:
                 fields = row.keys()
                 dictwriter = csv.DictWriter(open_fh, fieldnames=fields, restval="")
                 dictwriter.writeheader()
             dictwriter.writerow({f: getattr(row, f, "") for f in fields})
-    db_session.commit()
 
 
 def execute_sql_statement(db_session, sql, print_limit):

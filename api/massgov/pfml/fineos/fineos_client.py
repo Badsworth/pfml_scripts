@@ -84,6 +84,17 @@ def fineos_document_empty_dates_to_none(response_json: dict) -> dict:
     return response_json
 
 
+def get_fineos_correlation_id(response: requests.Response) -> Optional[Any]:
+    try:
+        response_payload_json = response.json()
+        if isinstance(response_payload_json, dict):
+            return response_payload_json.get("correlationId", "")
+    except ValueError:
+        pass
+
+    return None
+
+
 class FINEOSClient(client.AbstractFINEOSClient):
     """FINEOS API client."""
 
@@ -220,12 +231,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
         except (requests.exceptions.RequestException, requests.exceptions.Timeout) as ex:
             self._handle_client_side_exception(method, url, ex)
 
-        try:
-            response_payload_json = response.json()
-        except ValueError:
-            response_payload_json = {}
-
         if response.status_code != requests.codes.ok:
+
+            # Try to parse correlation ID as metadata from the response.
+            fineos_correlation_id = get_fineos_correlation_id(response)
+
             logger.debug(
                 "%s %s detail",
                 method,
@@ -237,7 +247,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 "FineosError",
                 {
                     "fineos.error.class": "FINEOSClientBadResponse",
-                    "fineos.error.correlation_id": response_payload_json.get("correlationId", ""),
+                    "fineos.error.correlation_id": fineos_correlation_id,
                     "fineos.error.message": response.text,
                     "fineos.response.status": response.status_code,
                     "fineos.request.method": method,
@@ -257,11 +267,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
             if (
                 response.status_code
-                in (
-                    requests.codes.SERVICE_UNAVAILABLE,
-                    requests.codes.GATEWAY_TIMEOUT,
-                    requests.codes.BAD_GATEWAY,
-                )
+                in (requests.codes.SERVICE_UNAVAILABLE, requests.codes.GATEWAY_TIMEOUT,)
                 or "ESOCKETTIMEDOUT" in response.text
             ):
                 # The service is unavailable for some reason. Log a warning and don't tell sentry -- there should be a
@@ -300,9 +306,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 response.elapsed / MILLISECOND,
                 extra={
                     "response.text": response.text,
-                    "response.fineos_correlation_id": response_payload_json.get(
-                        "correlationId", ""
-                    ),
+                    "response.fineos_correlation_id": fineos_correlation_id,
                 },
                 exc_info=err,
             )
@@ -371,7 +375,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return self._request(method, url, headers, data=xml_data.encode("utf-8"))
 
     def read_employer(self, employer_fein: str) -> models.OCOrganisation:
-        """ Retrieves FINEOS employer info given an FEIN.
+        """Retrieves FINEOS employer info given an FEIN.
 
         Raises
         ------
@@ -389,7 +393,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return models.OCOrganisation.parse_obj(response_decoded)
 
     def find_employer(self, employer_fein: str) -> str:
-        """ Retrieves the FINEOS customer number for an employer given an FEIN.
+        """Retrieves the FINEOS customer number for an employer given an FEIN.
 
         Raises
         ------
@@ -402,7 +406,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return customer_nbr
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
-        """ Creates the employee account registration.
+        """Creates the employee account registration.
 
         Raises
         ------

@@ -146,13 +146,15 @@ def test_run_step_happy_path(
     assert updated_employee.first_name != "Glennie"
     assert updated_employee.last_name != "Balistreri"
     assert updated_employee.date_of_birth == datetime.date(1980, 1, 1)
-    assert updated_employee.payment_method.payment_method_id == PaymentMethod.ACH.payment_method_id
 
-    assert updated_employee.ctr_address_pair.fineos_address.address_line_one == "123 Main St"
-    assert updated_employee.ctr_address_pair.fineos_address.address_line_two == ""
-    assert updated_employee.ctr_address_pair.fineos_address.city == "Oakland"
-    assert updated_employee.ctr_address_pair.fineos_address.geo_state_id == GeoState.CA.geo_state_id
-    assert updated_employee.ctr_address_pair.fineos_address.zip_code == "94612"
+    assert updated_employee.experian_address_pair.fineos_address.address_line_one == "123 Main St"
+    assert updated_employee.experian_address_pair.fineos_address.address_line_two == ""
+    assert updated_employee.experian_address_pair.fineos_address.city == "Oakland"
+    assert (
+        updated_employee.experian_address_pair.fineos_address.geo_state_id
+        == GeoState.CA.geo_state_id
+    )
+    assert updated_employee.experian_address_pair.fineos_address.zip_code == "94612"
 
     pub_efts = updated_employee.pub_efts.all()
     assert len(pub_efts) == 1
@@ -172,7 +174,7 @@ def test_run_step_happy_path(
     # Confirm 1 state log for DELEGATED_EFT flow
     for state_log in updated_employee.state_logs:
         assert state_log.end_state_id in [
-            State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS.state_id,
+            State.CLAIMANT_READY_FOR_ADDRESS_VALIDATION.state_id,
             State.DELEGATED_EFT_SEND_PRENOTE.state_id,
         ]
 
@@ -235,7 +237,7 @@ def test_run_step_existing_approved_eft_info(
     assert len(updated_employee.state_logs) == 1
     assert (
         updated_employee.state_logs[0].end_state_id
-        == State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS.state_id
+        == State.CLAIMANT_READY_FOR_ADDRESS_VALIDATION.state_id
     )
 
 
@@ -478,7 +480,6 @@ def test_update_employee_info_happy_path(claimant_extract_step, test_db_session,
     assert len(validation_container.validation_issues) == 0
     assert employee is not None
     assert employee.date_of_birth == datetime.date(1967, 4, 27)
-    assert employee.payment_method_id == PaymentMethod.ACH.payment_method_id
 
 
 def test_update_employee_info_not_in_db(claimant_extract_step, test_db_session, formatted_claim):
@@ -517,11 +518,16 @@ def test_update_mailing_address_happy_path(claimant_extract_step, test_db_sessio
         Employee.employee_id == employee.employee_id
     ).one_or_none()
 
-    assert updated_employee.ctr_address_pair.fineos_address.address_line_one == "456 Park Avenue"
-    assert updated_employee.ctr_address_pair.fineos_address.address_line_two == ""
-    assert updated_employee.ctr_address_pair.fineos_address.city == "New York"
-    assert updated_employee.ctr_address_pair.fineos_address.geo_state_id == GeoState.NY.geo_state_id
-    assert updated_employee.ctr_address_pair.fineos_address.zip_code == "11020"
+    assert (
+        updated_employee.experian_address_pair.fineos_address.address_line_one == "456 Park Avenue"
+    )
+    assert updated_employee.experian_address_pair.fineos_address.address_line_two == ""
+    assert updated_employee.experian_address_pair.fineos_address.city == "New York"
+    assert (
+        updated_employee.experian_address_pair.fineos_address.geo_state_id
+        == GeoState.NY.geo_state_id
+    )
+    assert updated_employee.experian_address_pair.fineos_address.zip_code == "11020"
     assert has_address_update is True
 
 
@@ -627,7 +633,7 @@ def test_update_mailing_address_validation_issues(claimant_extract_step, test_db
         "ADDRESS2": "",
         "ADDRESS4": "New York",
         "ADDRESS6": "NY",
-        "POSTCODE": "1102",
+        "POSTCODE": "ZIP12345",
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
@@ -640,7 +646,7 @@ def test_update_mailing_address_validation_issues(claimant_extract_step, test_db
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 1
-    assert updated_employee.ctr_address_pair is None
+    assert updated_employee.experian_address_pair is None
     assert has_address_update is False
 
     # Invalid Geo State Code
@@ -662,7 +668,7 @@ def test_update_mailing_address_validation_issues(claimant_extract_step, test_db
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 1
-    assert updated_employee.ctr_address_pair is None
+    assert updated_employee.experian_address_pair is None
     assert has_address_update is False
 
     # Missing address line 1 and incorrect Geo State Code
@@ -684,18 +690,20 @@ def test_update_mailing_address_validation_issues(claimant_extract_step, test_db
     ).one_or_none()
 
     assert len(validation_container.validation_issues) == 2
-    assert updated_employee.ctr_address_pair is None
+    assert updated_employee.experian_address_pair is None
     assert has_address_update is False
 
 
 def test_update_eft_info_happy_path(claimant_extract_step, test_db_session):
-    employee = EmployeeFactory.create(payment_method_id=PaymentMethod.ACH.payment_method_id)
+    employee = EmployeeFactory.create()
     assert len(employee.pub_efts.all()) == 0
 
     eft_entry = {"SORTCODE": "123456789", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
+    claimant_extract_step.update_eft_info(
+        eft_entry, employee, PaymentMethod.ACH.payment_method_id, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
@@ -713,11 +721,15 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     employee = EmployeeFactory()
     assert len(employee.pub_efts.all()) == 0
 
+    none_payment_method_id = None
+
     # Routing number incorrect length.
     eft_entry = {"SORTCODE": "12345678", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
+    claimant_extract_step.update_eft_info(
+        eft_entry, employee, none_payment_method_id, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
@@ -734,7 +746,9 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
+    claimant_extract_step.update_eft_info(
+        eft_entry, employee, none_payment_method_id, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
@@ -751,7 +765,9 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
+    claimant_extract_step.update_eft_info(
+        eft_entry, employee, none_payment_method_id, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id
@@ -768,7 +784,9 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     }
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
-    claimant_extract_step.update_eft_info(eft_entry, employee, validation_container)
+    claimant_extract_step.update_eft_info(
+        eft_entry, employee, none_payment_method_id, validation_container
+    )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
         Employee.employee_id == employee.employee_id

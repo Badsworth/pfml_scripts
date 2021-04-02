@@ -1,38 +1,55 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import {
+  MockClaimBuilder,
+  renderWithAppLogic,
+  simulateEvents,
+} from "../../test-utils";
 import { EmploymentStatus } from "../../../src/models/Claim";
 import EmploymentStatusPage from "../../../src/pages/applications/employment-status";
-import { act } from "react-dom/test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
+const setup = (claimAttrs) => {
+  const { appLogic, claim, wrapper } = renderWithAppLogic(
+    EmploymentStatusPage,
+    {
+      claimAttrs: claimAttrs || new MockClaimBuilder().create(),
+    }
+  );
+  const { changeField, changeRadioGroup, submitForm } = simulateEvents(wrapper);
+  return {
+    appLogic,
+    changeField,
+    changeRadioGroup,
+    claim,
+    submitForm,
+    wrapper,
+  };
+};
+
+const notificationFeinQuestionWrapper = (wrapper) => {
+  return wrapper.find({ name: "employer_fein" });
+};
+
 describe("EmploymentStatusPage", () => {
-  let appLogic, changeField, changeRadioGroup, claim, wrapper;
-
-  function notificationFeinQuestionWrapper() {
-    return wrapper.find({ name: "employer_fein" });
-  }
-
   describe("when claimantShowEmploymentStatus feature flag is disabled", () => {
     beforeEach(() => {
       process.env.featureFlags = {
         claimantShowEmploymentStatus: false,
       };
-      ({ appLogic, claim, wrapper } = renderWithAppLogic(EmploymentStatusPage));
-      ({ changeField, changeRadioGroup } = simulateEvents(wrapper));
     });
 
     it("renders the page without the employment status field", () => {
+      const { wrapper } = setup();
       expect(wrapper).toMatchSnapshot();
       expect(wrapper.find("Trans").dive()).toMatchSnapshot();
     });
 
     it("submits status and FEIN", () => {
+      const { appLogic, claim, changeField, submitForm } = setup();
       const testFein = 123456789;
       changeField("employer_fein", testFein);
 
-      act(() => {
-        wrapper.find("QuestionPage").simulate("save");
-      });
+      submitForm();
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(
         claim.application_id,
@@ -49,33 +66,37 @@ describe("EmploymentStatusPage", () => {
       process.env.featureFlags = {
         claimantShowEmploymentStatus: true,
       };
-      ({ appLogic, claim, wrapper } = renderWithAppLogic(EmploymentStatusPage));
-      ({ changeField, changeRadioGroup } = simulateEvents(wrapper));
     });
 
     it("renders the page with the employment status field", () => {
+      const { wrapper } = setup();
       expect(wrapper).toMatchSnapshot();
     });
 
     describe("when user selects employed in MA as their employment status", () => {
-      beforeEach(() => {
-        changeRadioGroup("employment_status", EmploymentStatus.employed);
-      });
-
       it("shows FEIN question", () => {
+        const { changeRadioGroup, wrapper } = setup();
+        changeRadioGroup("employment_status", EmploymentStatus.employed);
+
         expect(
-          notificationFeinQuestionWrapper()
+          notificationFeinQuestionWrapper(wrapper)
             .parents("ConditionalContent")
             .prop("visible")
         ).toBeTruthy();
       });
 
       it("submits status and FEIN", () => {
+        const {
+          appLogic,
+          claim,
+          changeField,
+          changeRadioGroup,
+          submitForm,
+        } = setup();
+        changeRadioGroup("employment_status", EmploymentStatus.employed);
         const testFein = 123456789;
         changeField("employer_fein", testFein);
-        act(() => {
-          wrapper.find("QuestionPage").simulate("save");
-        });
+        submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
@@ -88,22 +109,20 @@ describe("EmploymentStatusPage", () => {
     });
 
     describe("when user selects self-employed as their employment status", () => {
-      beforeEach(() => {
-        changeRadioGroup("employment_status", EmploymentStatus.selfEmployed);
-      });
-
       it("hides FEIN question", () => {
+        const { changeRadioGroup, wrapper } = setup();
+        changeRadioGroup("employment_status", EmploymentStatus.selfEmployed);
         expect(
-          notificationFeinQuestionWrapper()
+          notificationFeinQuestionWrapper(wrapper)
             .parents("ConditionalContent")
             .prop("visible")
         ).toBeFalsy();
       });
 
       it("submits status and empty FEIN", () => {
-        act(() => {
-          wrapper.find("QuestionPage").simulate("save");
-        });
+        const { appLogic, claim, changeRadioGroup, submitForm } = setup();
+        changeRadioGroup("employment_status", EmploymentStatus.selfEmployed);
+        submitForm();
 
         expect(appLogic.claims.update).toHaveBeenCalledWith(
           claim.application_id,
@@ -116,15 +135,31 @@ describe("EmploymentStatusPage", () => {
     });
 
     describe("when user selects unemployed as their employment status", () => {
-      beforeEach(() => {
-        changeRadioGroup("employment_status", EmploymentStatus.unemployed);
-      });
       it("hides FEIN question", () => {
+        const { changeRadioGroup, wrapper } = setup();
+        changeRadioGroup("employment_status", EmploymentStatus.unemployed);
         expect(
-          notificationFeinQuestionWrapper()
+          notificationFeinQuestionWrapper(wrapper)
             .parents("ConditionalContent")
             .prop("visible")
         ).toBeFalsy();
+      });
+    });
+
+    describe("when claim has existing employment status", () => {
+      it("submits status and FEIN without changing fields", () => {
+        const test = new MockClaimBuilder().employed().create();
+        const { appLogic, claim, submitForm } = setup(test);
+
+        submitForm();
+
+        expect(appLogic.claims.update).toHaveBeenCalledWith(
+          claim.application_id,
+          {
+            employment_status: EmploymentStatus.employed,
+            employer_fein: "12-3456789",
+          }
+        );
       });
     });
   });

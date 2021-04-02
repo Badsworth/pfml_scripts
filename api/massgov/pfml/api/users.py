@@ -9,10 +9,13 @@ import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
 from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
-from massgov.pfml.api.services.user_rules import get_users_post_issues
+from massgov.pfml.api.services.user_rules import (
+    get_users_post_employer_issues,
+    get_users_post_required_fields_issues,
+)
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.db.models.employees import Employer, Role, User
-from massgov.pfml.util.aws.cognito import CognitoAccountCreationUserError
+from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein
 from massgov.pfml.util.users import register_user
@@ -23,15 +26,15 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 def users_post():
     """Create a new user account"""
     body = UserCreateRequest.parse_obj(connexion.request.json)
-    issues = get_users_post_issues(body)
+    required_fields_issues = get_users_post_required_fields_issues(body)
 
-    if len(issues) > 0:
-        logger.info("users_post failure - request had validation issues")
+    if required_fields_issues:
+        logger.info("users_post failure - request missing required fields")
 
         return response_util.error_response(
             status_code=BadRequest,
             message="Request does not include valid fields.",
-            errors=issues,
+            errors=required_fields_issues,
             data={},
         ).to_api_response()
 
@@ -46,32 +49,27 @@ def users_post():
                 .filter(Employer.employer_fein == employer_fein)
                 .one_or_none()
             )
+            employer_issues = get_users_post_employer_issues(employer)
 
-            if employer is None:
-                logger.info("users_post failure - Employer not found")
-
+            if employer_issues:
+                logger.info("users_post failure - Employer not valid")
                 return response_util.error_response(
                     status_code=BadRequest,
+                    message="Employer not valid",
+                    errors=employer_issues,
                     data={},
-                    message="Invalid employer details",
-                    errors=[
-                        response_util.Issue(
-                            field="user_leave_administrator.employer_fein",
-                            message="Invalid EIN",
-                            type=response_util.IssueType.require_employer,
-                        )
-                    ],
                 ).to_api_response()
 
         try:
             user = register_user(
                 db_session,
+                app.get_config().cognito_user_pool_id,
                 app.get_config().cognito_user_pool_client_id,
                 deepgetattr(body, "email_address"),
                 deepgetattr(body, "password"),
                 employer,
             )
-        except CognitoAccountCreationUserError as e:
+        except CognitoValidationError as e:
             logger.info(
                 "users_post failure - Cognito account creation failed with user error",
                 extra={"issueField": e.issue.field, "issueType": e.issue.type},

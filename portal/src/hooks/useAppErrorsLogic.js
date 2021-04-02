@@ -129,6 +129,18 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       );
     }
 
+    // TODO (CP-1532): Remove once links in error messages are fully supported
+    if (type === "unauthorized_leave_admin") {
+      return (
+        <Trans
+          i18nKey={issueMessageKey}
+          components={{
+            "add-org-link": <a href={routes.employers.addOrganization} />,
+          }}
+        />
+      );
+    }
+
     // 1. Display a field or rule-level message if present:
     //    a. Field-level: "errors.claims.ssn.required" => "Please enter your SSN."
     //    b. Rule-level: "errors.claims.rules.min_leave_periods" => "At least one leave period is required."
@@ -277,10 +289,16 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       hasVerificationData: error.has_verification_data,
     });
 
-    const route = error.has_verification_data
-      ? routes.employers.verifyContributions
-      : routes.employers.cannotVerify;
-    portalFlow.goTo(route, { employer_id: error.employer_id });
+    if (error.has_verification_data) {
+      portalFlow.goTo(routes.employers.verifyContributions, {
+        employer_id: error.employer_id,
+        next: portalFlow.pathWithParams,
+      });
+    } else {
+      portalFlow.goTo(routes.employers.cannotVerify, {
+        employer_id: error.employer_id,
+      });
+    }
   };
 
   return {

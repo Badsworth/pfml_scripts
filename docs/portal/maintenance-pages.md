@@ -30,11 +30,24 @@ Use `*` to match any string:
 ```
 
 ## Enable scheduled maintenance page
-If the maintenance page is being added because of scheduled down time, add the user friendly day and time that the maintenance pages will be removed to the configs.
+
+If the maintenance page is being added because of scheduled down time, you can optionally schedule the beginning and end of this maintenance time by setting the `maintenanceStart` and/or `maintenanceEnd` environment variable to an [ISO 8601](https://xkcd.com/1179/) datetime string.
+
+- Daylight savings time needs taken into account! For Eastern Daylight Time (EDT), use `-04:00`, for Eastern Standard Time (EST), use `-05:00`.
+- The start and end time are optional.
+  - If start time is not set, the start time begins immediately.
+  - If end time is not set, an engineer will need to manually turn off the maintenance page.
+  - When end time is set, it will be displayed to the user using their timezone and localization preferences.
+
+For example, to enable the maintenance page on all routes, starting at March 25 at 3:30am EDT and ending at March 26 at 8pm EDT.
 
 ```json
-"maintenanceRemovalDayAndTime": "Sunday, January 1st, at 6 p.m. EST"
+"maintenancePageRoutes": ["/*"], // required
+"maintenanceStart": "2021-03-25T03:30:00-04:00",
+"maintenanceEnd": "2021-03-26T20:00:00-04:00",
 ```
+
+We're using Eastern time zone above since that's what Massachusetts is, but it could technically be whatever timezone.
 
 ## Testing
 

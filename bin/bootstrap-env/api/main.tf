@@ -17,6 +17,17 @@ provider "aws" {
 terraform {
   required_version = "0.14.7"
 
+required_providers {
+  aws = {
+    source = "hashicorp/aws"
+  }
+  newrelic = {
+    source = "newrelic/newrelic"
+  }
+  pagerduty = {
+    source = "pagerduty/pagerduty"
+  }
+
   backend "s3" {
     bucket         = "massgov-pfml-$ENV_NAME-env-mgmt"
     key            = "terraform/api.tfstate"
@@ -46,28 +57,42 @@ module "api" {
   nlb_port                              = UNIQUE_NLB_PORT_RESERVED_IN_ENV_SHARED
   cors_origins                          = [API_DOCS_DOMAIN, PORTAL_DOMAIN]
   formstack_import_lambda_build_s3_key  = local.formstack_lambda_artifact_s3_key
+  enforce_leave_admin_verification                 = "0"
+  enable_application_fraud_check                   = "0"
+  release_version = var.release_version
 
+  # TODO: Fill this in after the portal is deployed.
   cognito_user_pool_arn                            = null
+  cognito_user_pool_id                             = ""
   cognito_user_pool_client_id                      = ""
   cognito_user_pool_keys_url                       = ""
+
   cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
   cognito_pre_signup_lambda_artifact_s3_key        = local.cognito_pre_signup_lambda_artifact_s3_key
+
+  # TODO: Connect to an RMV endpoint if desired. All nonprod environments are connected to the staging API
+  #       in either a fully-mocked or partially-mocked setting.
   rmv_client_base_url                              = null
   rmv_client_certificate_binary_arn                = null
   rmv_check_behavior                               = "fully_mocked"
   rmv_check_mock_success                           = "1"
+  
+  # TODO: These values are provided by FINEOS.
   fineos_client_integration_services_api_url       = ""
   fineos_client_customer_api_url                   = ""
   fineos_client_group_client_api_url               = ""
   fineos_client_wscomposer_api_url                 = ""
   fineos_client_wscomposer_user_id                 = ""
   fineos_client_oauth2_url                         = ""
-  fineos_client_oauth2_client_id                   = ""
-  fineos_eligibility_feed_output_directory_path    = null
   fineos_import_employee_updates_input_directory_path = null
   fineos_aws_iam_role_arn                          = null
   fineos_aws_iam_role_external_id                  = null
-  enable_application_fraud_check                   = "0"
+
+  # TODO: This value is provided by FINEOS over Interchange.
+  fineos_client_oauth2_client_id                   = ""
+
+  # TODO: Connect to ServiceNow.
+  service_now_base_url                                = ""  
 
   dor_fineos_etl_definition                        = local.dor_fineos_etl_definition
   dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour

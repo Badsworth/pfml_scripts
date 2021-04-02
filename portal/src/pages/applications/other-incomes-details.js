@@ -124,7 +124,7 @@ export const OtherIncomesDetails = (props) => {
         onRemoveClick={handleRemoveClick}
         removeButtonLabel={t("pages.claimsOtherIncomesDetails.removeButton")}
         render={render}
-        limit={6}
+        limit={3}
         limitMessage={t("pages.claimsOtherIncomesDetails.limitMessage")}
       />
     </QuestionPage>

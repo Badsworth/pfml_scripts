@@ -1,7 +1,7 @@
 import json
 
 import connexion
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, Conflict
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
@@ -52,6 +52,11 @@ def verifications():
                 message="User not associated with this employer.",
                 errors=[],
                 data=verification_request.dict(exclude_none=True),
+            ).to_api_response()
+
+        if user_leave_administrator.verification is not None:
+            return response_util.error_response(
+                status_code=Conflict, message="User has already been verified.", errors=[]
             ).to_api_response()
 
         employer_quarterly_contribution = (

@@ -15,6 +15,7 @@ def test_register_user_success(test_db_session, mock_cognito, mock_cognito_user_
 
     user = users_util.register_user(
         test_db_session,
+        mock_cognito_user_pool["id"],
         mock_cognito_user_pool["client_id"],
         email_address,
         fake.password(length=12),
@@ -51,8 +52,57 @@ def test_register_user_raises_sql_exception(
     with pytest.raises(SQLAlchemyError):
         users_util.register_user(
             test_db_session,
+            mock_cognito_user_pool["id"],
             mock_cognito_user_pool["client_id"],
             fake.email(domain="example.com"),
             fake.password(length=12),
             cognito_client=mock_cognito,
         )
+
+
+@pytest.mark.integration
+def test_register_user_creates_missing_db_records(
+    initialize_factories_session, test_db_session, mock_cognito, mock_cognito_user_pool, monkeypatch
+):
+    active_directory_id = "mock-auth-id"
+    email_address = fake.email(domain="example.com")
+
+    # This test is based on the assumption that in a previous request, a user was
+    # successfully added to the Cognito user pool, but something prevented the
+    # database records from being created. This requires us to mock a few
+    # Cognito methods in order to simulate this.
+
+    # Mock the sign up method to identify the user as already existing.
+    def sign_up(**kwargs):
+        raise mock_cognito.exceptions.UsernameExistsException(
+            error_response={
+                "Error": {
+                    "Code": "UserNotFoundException",
+                    "Message": "An account with the given email already exists.",
+                }
+            },
+            operation_name="SignUp",
+        )
+
+    # Mock the admin_get_user method to return the user with their Sub attribute,
+    # which moto does not do, but the real boto does
+    def admin_get_user(Username: str = None, UserPoolId: str = None):
+        return {
+            "Username": Username,
+            "UserAttributes": [{"Name": "sub", "Value": active_directory_id}],
+        }
+
+    monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
+    monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
+
+    user = users_util.register_user(
+        test_db_session,
+        mock_cognito_user_pool["id"],
+        mock_cognito_user_pool["client_id"],
+        email_address,
+        fake.password(length=12),
+        cognito_client=mock_cognito,
+    )
+
+    assert user.active_directory_id == active_directory_id
+    assert user.email_address == email_address

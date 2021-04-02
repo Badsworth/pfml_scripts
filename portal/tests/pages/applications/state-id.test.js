@@ -1,61 +1,75 @@
+import { renderWithAppLogic, simulateEvents } from "../../test-utils";
 import StateId from "../../../src/pages/applications/state-id";
-import { renderWithAppLogic } from "../../test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
+const setup = (claimAttrs = {}) => {
+  const { appLogic, claim, wrapper } = renderWithAppLogic(StateId, {
+    claimAttrs,
+  });
+
+  const { changeField, changeRadioGroup, submitForm } = simulateEvents(wrapper);
+
+  return {
+    appLogic,
+    changeField,
+    changeRadioGroup,
+    claim,
+    submitForm,
+    wrapper,
+  };
+};
+
+const isStateIdTextFieldVisible = (wrapper) => {
+  return wrapper.find("ConditionalContent").prop("visible");
+};
+
 describe("StateId", () => {
-  it("initially renders the page without an id field", () => {
-    const { wrapper } = renderWithAppLogic(StateId);
+  it("initially renders the page with the ID text field hidden", () => {
+    const { wrapper } = setup();
 
     expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find("ConditionalContent").prop("visible")).toBeFalsy();
+    expect(isStateIdTextFieldVisible(wrapper)).toBeFalsy();
   });
 
-  describe("when user has a state id", () => {
-    it("renders id field", () => {
-      const { wrapper } = renderWithAppLogic(StateId, {
-        claimAttrs: {
-          has_state_id: true,
-        },
-      });
+  it("renders ID text field only when user indicates they have a state id", () => {
+    const { changeRadioGroup, wrapper } = setup();
 
-      expect(
-        wrapper.update().find("ConditionalContent").prop("visible")
-      ).toBeTruthy();
-    });
+    // I have a state ID
+    changeRadioGroup("has_state_id", "true");
+    expect(isStateIdTextFieldVisible(wrapper)).toBe(true);
+
+    // I don't have a state ID
+    changeRadioGroup("has_state_id", "false");
+    expect(isStateIdTextFieldVisible(wrapper)).toBe(false);
   });
 
-  describe("when the form is successfully submitted", () => {
-    it("calls claims.update and transforms state ID to uppercase", () => {
-      const { appLogic, wrapper } = renderWithAppLogic(StateId, {
-        claimAttrs: {
-          has_state_id: true,
-          mass_id: "sa3456789",
-        },
-      });
+  it("calls claims.update when the form is submitted", async () => {
+    const mass_id = "sa3456789";
+    const {
+      appLogic,
+      changeField,
+      changeRadioGroup,
+      claim,
+      submitForm,
+    } = setup({ has_state_id: false });
 
-      wrapper.find("QuestionPage").simulate("save");
+    // Existing data
+    await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
-        has_state_id: true,
-        mass_id: "SA3456789",
-      });
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      has_state_id: false,
+      mass_id: null,
     });
 
-    it("calls claims.update successfully when has_state_id is false", () => {
-      const { appLogic, wrapper } = renderWithAppLogic(StateId, {
-        claimAttrs: {
-          has_state_id: false,
-          mass_id: null,
-        },
-      });
+    // Changed answer to Yes
+    changeRadioGroup("has_state_id", "true");
+    changeField("mass_id", mass_id.toLowerCase());
+    await submitForm();
 
-      wrapper.find("QuestionPage").simulate("save");
-
-      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
-        has_state_id: false,
-        mass_id: null,
-      });
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      has_state_id: true,
+      mass_id: mass_id.toUpperCase(),
     });
   });
 });

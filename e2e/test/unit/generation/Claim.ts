@@ -508,7 +508,7 @@ describe("ClaimPool", () => {
     );
 
     await new ClaimPool(expected).save(file, tempDir);
-    const actual = await collect(await ClaimPool.load(file));
+    const actual = await collect(await ClaimPool.load(file, tempDir));
 
     // Compare everything except for the documents, which are not directly comparable.
     const expectedComparable = expected.map(({ documents, ...rest }) => rest);
@@ -534,6 +534,8 @@ describe("ClaimPool", () => {
 
   it("Should throw an error if requested to open a nonexistent file", async () => {
     const file = path.join(tempDir, "claims-nonexistent.ndjson");
-    await expect(() => ClaimPool.load(file)).rejects.toThrowError("ENOENT");
+    await expect(() => ClaimPool.load(file, tempDir)).rejects.toThrowError(
+      "ENOENT"
+    );
   });
 });
