@@ -21,18 +21,36 @@ from massgov.pfml.util.strings import mask_fein
 from massgov.pfml.util.users import register_user, convert_user
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-def users_convert(employer_for_leave_admin):
+def users_convert(user_id):
     """Converts a user account from employee to leave admin"""
     body = UserConvertRequest.parse_obj(connexion.request.json)
     # required_fields_issues = get_users_post_required_fields_issues(body)
     employer_for_leave_admin = deepgetattr(body, "employer_for_leave_admin")
 
+    user = None
     with app.db_session() as db_session:
         user = app.current_user()
-        try: 
-            user = convert_user(user, db_session, employer_for_leave_admin)
-        except Exception as e:
-            return e
+        employer = (
+            db_session.query(Employer)
+            .filter(Employer.employer_fein == employer_for_leave_admin)
+            .one_or_none()
+        )
+        if employer is None:
+            return response_util.error_response(
+                status_code=BadRequest,
+                message="Invalid Employer EIN",
+                errors=["Invalid Employer EIN"],
+                data={},
+            ).to_api_response()
+
+        user = convert_user(db_session, user, employer)
+    
+    return response_util.success_response(
+        data=user_response(user),
+        message="Successfully converted user.",
+        status_code=201,
+    ).to_api_response()
+    
 
 def users_post():
     """Create a new user account"""

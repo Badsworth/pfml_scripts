@@ -1052,6 +1052,12 @@ components:
           scopes: {}
 
   requestBodies:
+    UserConvertRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UserConvertRequest"
+      required: true
     UserUpdateRequest:
       content:
         application/json:
