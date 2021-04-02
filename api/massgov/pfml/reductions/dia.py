@@ -108,20 +108,29 @@ def _format_claimants_for_dia_claimant_list(claimants: List[Employee]) -> List[D
     value_errors = []
 
     for employee in claimants:
-        formatted_dob = (
-            employee.date_of_birth.strftime(Constants.DATE_OF_BIRTH_FORMAT)
-            if employee.date_of_birth
-            else ""
-        )
+        fineos_customer_number = employee.fineos_customer_number
+        date_of_birth = employee.date_of_birth
+        tax_id = employee.tax_identifier
+
+        if not (fineos_customer_number and date_of_birth and tax_id):
+            logger.warning(
+                "Employee missing required information. Skipping.",
+                extra={
+                    "employee_id": employee.employee_id,
+                    "has_fineos_customer_number": bool(fineos_customer_number),
+                    "has_date_of_birth": bool(date_of_birth),
+                    "has_tax_id": bool(tax_id),
+                },
+            )
+            continue
+
         info: Dict[str, str] = {
-            Constants.CUSTOMER_NUMBER_FIELD: (
-                employee.fineos_customer_number if employee.fineos_customer_number else ""
-            ),
+            Constants.CUSTOMER_NUMBER_FIELD: fineos_customer_number,
             Constants.BENEFIT_START_DATE_FIELD: Constants.TEMPORARY_BENEFIT_START_DATE,
             Constants.FIRST_NAME_FIELD: employee.first_name,
             Constants.LAST_NAME_FIELD: employee.last_name,
-            Constants.BIRTH_DATE_FIELD: formatted_dob,
-            Constants.SSN_FIELD: employee.tax_identifier.tax_identifier.replace("-", ""),
+            Constants.BIRTH_DATE_FIELD: date_of_birth.strftime(Constants.DATE_OF_BIRTH_FORMAT),
+            Constants.SSN_FIELD: tax_id.tax_identifier.replace("-", ""),
         }
 
         for key in info:

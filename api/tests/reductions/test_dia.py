@@ -301,6 +301,76 @@ def test_create_list_of_claimants(
     assert ref_file[0].file_location == full_s3_filepath
 
 
+def test_create_list_of_claimants_skips_claims_with_missing_data(
+    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session,
+):
+    s3_bucket_uri = "s3://" + mock_s3_bucket
+    dest_dir = "reductions/dia/outbound"
+    monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
+    monkeypatch.setenv("S3_DIA_OUTBOUND_DIRECTORY_PATH", dest_dir)
+
+    # Set up a small number of claims.
+    claims = []
+
+    claims.append(
+        ClaimFactory.create(
+            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+            employee=EmployeeWithFineosNumberFactory.create(date_of_birth=None),
+        )
+    )
+
+    claims.append(
+        ClaimFactory.create(
+            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+            employee=EmployeeWithFineosNumberFactory.create(fineos_customer_number=None),
+        )
+    )
+
+    claims.append(
+        ClaimFactory.create(
+            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+            employee=EmployeeWithFineosNumberFactory.create(
+                tax_identifier_id=None, tax_identifier=None
+            ),
+        )
+    )
+
+    create_list_of_claimants(test_db_session)
+
+    # Expect that the file to appear in the mock_s3_bucket.
+    s3 = boto3.client("s3")
+
+    # Confirm that the file is uploaded to S3 with the expected filename.
+    object_list = s3.list_objects(Bucket=mock_s3_bucket, Prefix=dest_dir)["Contents"]
+    assert object_list
+    assert len(object_list) == 1
+    s3_filename = object_list[0]["Key"]
+    full_s3_filepath = os.path.join(s3_bucket_uri, s3_filename)
+    dest_filepath_and_prefix = os.path.join(dest_dir, Constants.CLAIMAINT_LIST_FILENAME_PREFIX)
+    assert s3_filename.startswith(dest_filepath_and_prefix)
+
+    # Confirm the file we uploaded to S3 contains a single row for each claim and no header row.
+    with smart_open.open(full_s3_filepath) as s3_file:
+        assert 0 == len(list(s3_file))
+
+    ref_file = (
+        test_db_session.query(ReferenceFile)
+        .filter_by(
+            reference_file_type_id=ReferenceFileType.DIA_CLAIMANT_LIST.reference_file_type_id
+        )
+        .all()
+    )
+    state_log = (
+        test_db_session.query(StateLog)
+        .filter_by(end_state_id=State.DIA_CLAIMANT_LIST_CREATED.state_id)
+        .all()
+    )
+
+    assert len(ref_file) == 1
+    assert len(state_log) == 1
+    assert ref_file[0].file_location == full_s3_filepath
+
+
 @pytest.mark.parametrize(
     "moveit_file_count",
     (
