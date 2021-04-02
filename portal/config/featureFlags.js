@@ -35,11 +35,7 @@ const flagsConfig = {
     // TODO (EMPLOYER-913): Remove flag
     employerShowAddOrganization: false,
 
-    // When this flag is enabled, adjudication status is visible on the Status page
-    // TODO (EMPLOYER-656): Show adjudication status once it is retrieved from FINEOS
-    employerShowAdjudicationStatus: false,
-
-    // When this flag is enabled, dashboard-related features are displayed
+    // When this flag is enabled, dashboard-related features (including adjudication status on Status page) are displayed
     // TODO (EMPLOYER-1054): Remove flag
     employerShowDashboard: false,
 
