@@ -27,7 +27,6 @@ from massgov.pfml.util.employers import lookup_employer
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-
 def create_user(
     db_session: db.Session,
     email_address: str,
@@ -73,6 +72,35 @@ def get_register_user_log_attributes(
         "is_employer": str(employer_for_leave_admin is not None),
     }
 
+def convert_user(
+    user: User,
+    db_session: db.Session,
+    employer_for_leave_admin: Optional[Employer] = None,
+) -> User:
+    """
+    Converts a user from an employee to a Leave Admin
+
+    Raises
+    ------
+    - SomeError
+    """
+
+    try:
+        user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
+        user_leave_admin = UserLeaveAdministrator(
+            user=user, employer=employer_for_leave_admin, fineos_web_id=None,
+        )
+        db_session.add(user_role)
+        db_session.add(user_leave_admin)    
+    except Exception as e:
+        print(e)
+
+    logger.info(
+        "Successfully converted User records",
+        extra=get_register_user_log_attributes(employer_for_leave_admin, auth_id),
+    )
+
+    return user
 
 def register_user(
     db_session: db.Session,

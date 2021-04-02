@@ -7,7 +7,7 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
-from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
+from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest, UserConvertRequest
 from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
 from massgov.pfml.api.services.user_rules import (
     get_users_post_employer_issues,
@@ -18,10 +18,21 @@ from massgov.pfml.db.models.employees import Employer, Role, User
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein
-from massgov.pfml.util.users import register_user
-
+from massgov.pfml.util.users import register_user, convert_user
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
+def users_convert(employer_for_leave_admin):
+    """Converts a user account from employee to leave admin"""
+    body = UserConvertRequest.parse_obj(connexion.request.json)
+    # required_fields_issues = get_users_post_required_fields_issues(body)
+    employer_for_leave_admin = deepgetattr(body, "employer_for_leave_admin")
+
+    with app.db_session() as db_session:
+        user = app.current_user()
+        try: 
+            user = convert_user(user, db_session, employer_for_leave_admin)
+        except Exception as e:
+            return e
 
 def users_post():
     """Create a new user account"""
