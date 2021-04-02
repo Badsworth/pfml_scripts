@@ -14,27 +14,6 @@ locals {
   # This lambda ingests CloudWatch logs from several sources, and packages them for transmission to New Relic's servers.
   # This lambda was modified post-installation to fix an apparent bug in the processing/packaging of its telemetry data.
   newrelic_log_ingestion_lambda = module.constants.newrelic_log_ingestion_arn
-  fineos_data_extract_prefixes = [
-    "VBI_CASE",
-    "VBI_DOCUMENT",
-    "VBI_EPISODICABSENCEPERIOD",
-    "VBI_REDUCEDSCHEDABSENCEPERIOD",
-    "VBI_REQUESTEDABSENCE",
-    "VBI_REQUESTEDABSENCE_SOM",
-    "VBI_TIMEOFFABSENCEPERIOD",
-    "vtaskreport",
-    "VBI_MANAGEDREQUIREMENT",
-    "VBI_OTHERINCOME",
-    "VBI_ABSENCEAPPEALCASES",
-    "VBI_ABSENCECASEByOrg",
-    "VBI_ABSENCECASEByStage",
-    "VBI_ABSENCECASE",
-    "VBI_NEW_REQUESTEDABSENCE_SOM",
-    "VBI_TASKREPORT_SOM",
-    "VBI_PERSON_SOM",
-    "VBI_ORGANISATION",
-    "Exception_Report_Variance"
-  ]
   fineos_error_extract_prefixes = [
     "EmployeeFileError"
   ]
@@ -119,13 +98,13 @@ module "payments_fineos_process_scheduler" {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Run fineos-bucket-tool daily at 8am EST (9am EDT) (1pm UTC)
+# Run fineos-bucket-tool daily at 3am EST (4am EDT) (8am UTC)
 module "fineos_bucket_tool_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
   task_name           = "fineos-data-export-tool"
-  schedule_expression = "cron(0 13 * * ? *)"
+  schedule_expression = "cron(0 8 * * ? *)"
   environment_name    = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
@@ -144,10 +123,10 @@ module "fineos_bucket_tool_scheduler" {
         "name": "fineos-bucket-tool",
         "command": [
           "fineos-bucket-tool",
-          "--recursive", 
-          "--copy_dir", "${var.fineos_data_export_path}", 
-          "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/dataexports", 
-          "--file_prefixes", "${join(",", local.fineos_data_extract_prefixes)}"
+          "--recursive",
+          "--copy_dir", "${var.fineos_data_export_path}",
+          "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/dataexports",
+          "--file_prefixes", "all"
         ]
       }
     ]
@@ -181,9 +160,9 @@ module "fineos_error_extract_scheduler" {
         "name": "fineos-bucket-tool",
         "command": [
           "fineos-bucket-tool",
-          "--recursive", 
-          "--copy_dir", "${var.fineos_error_export_path}", 
-          "--to_dir", "s3://${data.aws_s3_bucket.agency_transfer.bucket}/cps-errors/received/", 
+          "--recursive",
+          "--copy_dir", "${var.fineos_error_export_path}",
+          "--to_dir", "s3://${data.aws_s3_bucket.agency_transfer.bucket}/cps-errors/received/",
           "--file_prefixes", "all"
         ]
       }
