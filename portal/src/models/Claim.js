@@ -87,6 +87,14 @@ class Claim extends BaseClaim {
   }
 
   /**
+   * Determine if claim is a Caring Leave claim
+   * @returns {boolean}
+   */
+  get isCaringLeave() {
+    return get(this, "leave_details.reason") === LeaveReason.care;
+  }
+
+  /**
    * Check if Claim has been submitted yet. This affects the editability
    * of some fields, and as a result, the user experience.
    * @returns {boolean}

@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CaringLeaveAttestation renders the page 1`] = `
+<Fragment>
+  <BackButton />
+  <form
+    className="usa-form"
+    method="post"
+    onSubmit={[Function]}
+  >
+    <Title>
+      Confirm that you are an eligible caregiver
+    </Title>
+    <Alert
+      className="measure-6"
+      noIcon={true}
+      state="info"
+    >
+      <Button
+        type="submit"
+      >
+        I understand and agree
+      </Button>
+    </Alert>
+  </form>
+</Fragment>
+`;

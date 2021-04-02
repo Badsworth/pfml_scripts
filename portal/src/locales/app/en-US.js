@@ -680,6 +680,7 @@ const shared = {
   resendVerificationCodeLink: "Resend the code",
   siteDescription:
     "Paid Family and Medical Leave is a state-offered benefit for anyone who works in Massachusetts and is eligible to take up to 26 weeks of paid leave for medical or family reasons.",
+  submitApplicationButton: "I understand and agree",
   usernameLabel: "Email address",
   verificationCodeLabel: "6-digit code",
 };
@@ -815,10 +816,14 @@ const pages = {
   claimsBondingLeaveAttestation: {
     lead:
       "<p>This paid leave applies to parents of children who have joined their family in the past 12 months via:</p><ul><li>Birth</li><li>Foster placement</li><li>Adoption</li></ul>",
-    submitApplicationButton: "I understand and agree",
+    submitApplicationButton: "$t(shared.submitApplicationButton)",
     title: "Confirm that you are an eligible parent",
     truthAttestation:
       "I agree that I am a new parent by one of the routes listed and can provide certification to support this relationship.",
+  },
+  claimsCaringLeaveAttestation: {
+    title: "Confirm that you are an eligible caregiver",
+    submitApplicationButton: "$t(shared.submitApplicationButton)",
   },
   claimsChecklist: {
     backButtonLabel: "Back to applications",
@@ -952,6 +957,16 @@ const pages = {
     furloughQuestion: "What if I’ve been furloughed?",
     sectionLabel: "What is your employment status?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
+  },
+  claimsFamilyMemberDateOfBirth: {
+    sectionLabel: "What is your family member's date of birth?",
+  },
+  claimsFamilyMemberName: {
+    sectionLabel: "What is your family member's name?",
+  },
+  claimsFamilyMemberRelationship: {
+    sectionLabel:
+      "What is your relationship with the family member you are caring for?",
   },
   claimsIntermittentFrequency: {
     durationBasisChoice_days: "At least a day",
@@ -1431,7 +1446,7 @@ const pages = {
   claimsStart: {
     explanation:
       "<p>We use this application to determine the leave time and benefit amount you will receive.</p><p>We need true answers to every question so that we can manage the program the way the law requires. You can read more about the <mass-consent-agreement-link>requirement to answer truthfully</mass-consent-agreement-link>.</p><p>Please confirm that you will answer as truthfully as you can.</p>",
-    submitApplicationButton: "I understand and agree",
+    submitApplicationButton: "$t(shared.submitApplicationButton)",
     title: "Start your application",
     truthAttestation:
       "I understand that I need to give true answers to all questions in order to receive and keep my paid leave benefits and job protections. I understand false answers may forfeit my rights to paid leave and may result in other penalties.",
