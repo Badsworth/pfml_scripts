@@ -37,6 +37,7 @@
     "@sentry/react": "^6.1.0",
     "assert": "^2.0.0",
     "classnames": "^2.2.6",
+    "compressorjs": "^1.0.7",
     "core-js": "^3.8.2",
     "downloadjs": "^1.4.7",
     "i18next": "^19.8.4",

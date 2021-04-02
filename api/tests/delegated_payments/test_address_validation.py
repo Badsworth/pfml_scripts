@@ -24,7 +24,7 @@ from massgov.pfml.db.models.factories import (
     ExperianAddressPairFactory,
     PaymentFactory,
 )
-from massgov.pfml.delegated_payments.address_validation import AddressValidationStep
+from massgov.pfml.delegated_payments.address_validation import AddressValidationStep, Constants
 from massgov.pfml.experian.physical_address.client.mock import MockClient
 from massgov.pfml.experian.physical_address.client.models import Confidence
 
@@ -77,6 +77,59 @@ def _assert_employee_state(
     assert db_session.query(sqlalchemy.func.count(StateLog.state_log_id)).filter(
         StateLog.end_state_id == state.state_id
     ).filter(StateLog.employee_id.in_(employee_ids)).scalar() == len(employees)
+
+
+def _assert_employee_state_log_outcome(
+    db_session: db.Session,
+    employees: List[Employee],
+    state: LkState,
+    confidence: Optional[str] = None,
+    match_count: int = 0,
+) -> None:
+    employee_ids = [employee.employee_id for employee in employees]
+
+    # Expect Employees with already valid addresses to never have hit the database but to have
+    # the correct number of rows in state_log.
+    if confidence is None:
+        assert db_session.query(sqlalchemy.func.count(StateLog.state_log_id)).filter(
+            StateLog.end_state_id == state.state_id
+        ).filter(StateLog.employee_id.in_(employee_ids)).scalar() == len(employees)
+        assert (
+            db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            .filter(StateLog.end_state_id == state.state_id)
+            .filter(StateLog.outcome[Constants.EXPERIAN_RESULT_KEY].isnot(None))
+            .filter(StateLog.employee_id.in_(employee_ids))
+            .scalar()
+            == 0
+        )
+        return
+
+    # Employees with addresses that hit the Experian API have the expected fields.
+    assert db_session.query(sqlalchemy.func.count(StateLog.state_log_id)).filter(
+        StateLog.outcome[Constants.EXPERIAN_RESULT_KEY].isnot(None)
+    ).filter(
+        StateLog.outcome[Constants.EXPERIAN_RESULT_KEY][Constants.INPUT_ADDRESS_KEY].isnot(None)
+    ).filter(
+        StateLog.outcome[Constants.EXPERIAN_RESULT_KEY][Constants.CONFIDENCE_KEY].as_string()
+        == confidence
+    ).filter(
+        StateLog.end_state_id == state.state_id
+    ).filter(
+        StateLog.employee_id.in_(employee_ids)
+    ).scalar() == len(
+        employees
+    )
+
+    # Expect addresses that returned multiple matches to have multiple output_addresses.
+    if match_count > 0:
+        key = Constants.OUTPUT_ADDRESS_KEY_PREFIX + str(match_count)
+        assert db_session.query(sqlalchemy.func.count(StateLog.state_log_id)).filter(
+            StateLog.outcome[Constants.EXPERIAN_RESULT_KEY][key].isnot(None)
+        ).filter(StateLog.end_state_id == state.state_id).filter(
+            StateLog.employee_id.in_(employee_ids)
+        ).scalar() == len(
+            employees
+        )
 
 
 def _random_valid_check_payment_with_state_log(db_session: db.Session) -> Payment:
@@ -139,6 +192,59 @@ def _assert_payment_state(db_session: db.Session, state: LkState, payments: List
     assert db_session.query(sqlalchemy.func.count(StateLog.state_log_id)).filter(
         StateLog.end_state_id == state.state_id
     ).filter(StateLog.payment_id.in_(payment_ids)).scalar() == len(payments)
+
+
+def _assert_payment_state_log_outcome(
+    db_session: db.Session,
+    payments: List[Payment],
+    state: LkState,
+    confidence: Optional[str] = None,
+    match_count: int = 0,
+) -> None:
+    payment_ids = [payment.payment_id for payment in payments]
+
+    # Expect Employees with already valid addresses to never have hit the database but to have
+    # the correct number of rows in state_log.
+    if confidence is None:
+        assert db_session.query(sqlalchemy.func.count(StateLog.state_log_id)).filter(
+            StateLog.end_state_id == state.state_id
+        ).filter(StateLog.payment_id.in_(payment_ids)).scalar() == len(payments)
+        assert (
+            db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            .filter(StateLog.end_state_id == state.state_id)
+            .filter(StateLog.outcome[Constants.EXPERIAN_RESULT_KEY].isnot(None))
+            .filter(StateLog.payment_id.in_(payment_ids))
+            .scalar()
+            == 0
+        )
+        return
+
+    # Employees with addresses that hit the Experian API have the expected fields.
+    assert db_session.query(sqlalchemy.func.count(StateLog.state_log_id)).filter(
+        StateLog.outcome[Constants.EXPERIAN_RESULT_KEY].isnot(None)
+    ).filter(
+        StateLog.outcome[Constants.EXPERIAN_RESULT_KEY][Constants.INPUT_ADDRESS_KEY].isnot(None)
+    ).filter(
+        StateLog.outcome[Constants.EXPERIAN_RESULT_KEY][Constants.CONFIDENCE_KEY].as_string()
+        == confidence
+    ).filter(
+        StateLog.end_state_id == state.state_id
+    ).filter(
+        StateLog.payment_id.in_(payment_ids)
+    ).scalar() == len(
+        payments
+    )
+
+    # Expect addresses that returned multiple matches to have multiple output_addresses.
+    if match_count > 0:
+        key = Constants.OUTPUT_ADDRESS_KEY_PREFIX + str(match_count)
+        assert db_session.query(sqlalchemy.func.count(StateLog.state_log_id)).filter(
+            StateLog.outcome[Constants.EXPERIAN_RESULT_KEY][key].isnot(None)
+        ).filter(StateLog.end_state_id == state.state_id).filter(
+            StateLog.payment_id.in_(payment_ids)
+        ).scalar() == len(
+            payments
+        )
 
 
 def test_run_step_state_transitions(
@@ -301,4 +407,120 @@ def test_run_step_no_database_changes_on_exception(
         .filter(StateLog.end_state_id.in_(post_address_validation_states))
         .scalar()
         == 0
+    )
+
+
+def test_run_step_state_log_outcome_field(
+    initialize_factories_session, test_db_session, test_db_other_session
+):
+    experian_api_multiple_match_count = fake.random_int(min=2, max=9)
+    client = MockClient(multiple_count=experian_api_multiple_match_count)
+
+    employees_with_validated_addresses = _set_up_employees(
+        client, test_db_session, fake.random_int(min=1, max=7)
+    )
+    employees_with_single_verified_matching_addresses = _set_up_employees(
+        client, test_db_session, fake.random_int(min=3, max=6), Confidence.VERIFIED_MATCH
+    )
+    employees_with_non_matching_addresses = _set_up_employees(
+        client, test_db_session, fake.random_int(min=4, max=9), Confidence.NO_MATCHES
+    )
+    employees_with_multiple_matching_addresses = _set_up_employees(
+        client, test_db_session, fake.random_int(min=8, max=12), Confidence.MULTIPLE_MATCHES
+    )
+
+    check_payments_with_validated_addresses = _set_up_payments(
+        client, test_db_session, fake.random_int(min=5, max=8)
+    )
+    check_payments_with_single_verified_matching_addresses = _set_up_payments(
+        client, test_db_session, fake.random_int(min=7, max=11), Confidence.VERIFIED_MATCH
+    )
+    check_payments_with_non_matching_addresses = _set_up_payments(
+        client, test_db_session, fake.random_int(min=1, max=6), Confidence.NO_MATCHES
+    )
+    check_payments_with_multiple_matching_addresses = _set_up_payments(
+        client, test_db_session, fake.random_int(min=4, max=7), Confidence.MULTIPLE_MATCHES
+    )
+
+    # Commit the various experian_address_pair.experian_address = None changes to the database.
+    test_db_session.commit()
+
+    with mock.patch(
+        "massgov.pfml.delegated_payments.address_validation._get_experian_client",
+        return_value=client,
+    ):
+        AddressValidationStep(
+            db_session=test_db_session, log_entry_db_session=test_db_other_session
+        ).run()
+
+    # Expect employees with already valid addresses to not have any an experian_result element
+    # of the state_log.outcome field.
+    _assert_employee_state_log_outcome(
+        test_db_other_session,
+        employees_with_validated_addresses,
+        State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS,
+    )
+
+    # Expect employees with addresses that return a verified match to have a
+    # state_log.outcome.experian_result element with the correct confidence level.
+    _assert_employee_state_log_outcome(
+        test_db_other_session,
+        employees_with_single_verified_matching_addresses,
+        State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS,
+        Confidence.VERIFIED_MATCH.value,
+    )
+
+    # Expect employees with addresses that return no matches to have a
+    # state_log.outcome.experian_result element with the correct confidence level.
+    _assert_employee_state_log_outcome(
+        test_db_other_session,
+        employees_with_non_matching_addresses,
+        State.CLAIMANT_FAILED_ADDRESS_VALIDATION,
+        Confidence.NO_MATCHES.value,
+    )
+
+    # Expect employees with addresses that return no matches to have a
+    # state_log.outcome.experian_result element with multiple output_address_ elements.
+    _assert_employee_state_log_outcome(
+        test_db_other_session,
+        employees_with_multiple_matching_addresses,
+        State.CLAIMANT_FAILED_ADDRESS_VALIDATION,
+        Confidence.MULTIPLE_MATCHES.value,
+        experian_api_multiple_match_count,
+    )
+
+    # Expect payments with already valid addresses to not have any an experian_result element
+    # of the state_log.outcome field.
+    _assert_payment_state_log_outcome(
+        test_db_other_session,
+        check_payments_with_validated_addresses,
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+    )
+
+    # Expect payments with addresses that return a verified match to have a
+    # state_log.outcome.experian_result element with the correct confidence level.
+    _assert_payment_state_log_outcome(
+        test_db_other_session,
+        check_payments_with_single_verified_matching_addresses,
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+        Confidence.VERIFIED_MATCH.value,
+    )
+
+    # Expect payments with addresses that return no matches to have a
+    # state_log.outcome.experian_result element with the correct confidence level.
+    _assert_payment_state_log_outcome(
+        test_db_other_session,
+        check_payments_with_non_matching_addresses,
+        State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+        Confidence.NO_MATCHES.value,
+    )
+
+    # Expect payments with addresses that return no matches to have a
+    # state_log.outcome.experian_result element with multiple output_address_ elements.
+    _assert_payment_state_log_outcome(
+        test_db_other_session,
+        check_payments_with_multiple_matching_addresses,
+        State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+        Confidence.MULTIPLE_MATCHES.value,
+        experian_api_multiple_match_count,
     )

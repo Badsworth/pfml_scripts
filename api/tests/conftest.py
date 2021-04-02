@@ -401,7 +401,7 @@ def initialize_factories_session_via_migrations(test_db_session_via_migrations):
 
 
 @pytest.fixture
-def test_db_via_migrations(test_db_schema):
+def test_db_via_migrations(test_db_schema, logging_fix):
     """
     Creates a test schema, runs migrations through Alembic. Schema is dropped
     after the test completes.

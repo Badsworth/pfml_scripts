@@ -1,7 +1,7 @@
 from typing import List
 
 import massgov.pfml.db as db
-from massgov.pfml.db.models.employees import AbsenceStatus, Claim
+from massgov.pfml.db.models.employees import AbsenceStatus, Claim, Employee
 
 OUTBOUND_STATUSES = {
     AbsenceStatus.ADJUDICATION.absence_status_id,
@@ -13,7 +13,17 @@ OUTBOUND_STATUSES = {
 
 
 def get_claims_for_outbound(db_session: db.Session) -> List[Claim]:
-    """Return claims with the statuses releveant to send to DUA/DIA"""
+    """Return claims with the statuses relevant to send to DUA/DIA"""
     return (
         db_session.query(Claim).filter(Claim.fineos_absence_status_id.in_(OUTBOUND_STATUSES)).all()
+    )
+
+
+def get_claimants_for_outbound(db_session: db.Session) -> List[Employee]:
+    """Return employees that have claims with the statuses relevant to send to DUA/DIA"""
+    return (
+        db_session.query(Employee)
+        .join(Claim)
+        .filter(Claim.fineos_absence_status_id.in_(OUTBOUND_STATUSES))
+        .all()
     )
