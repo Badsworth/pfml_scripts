@@ -1,4 +1,4 @@
-from typing import List, cast
+from typing import Any, Dict, List, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
@@ -9,11 +9,23 @@ from massgov.pfml.experian.physical_address.client import Client
 from massgov.pfml.experian.physical_address.client.models.search import (
     AddressSearchV1Request,
     AddressSearchV1Response,
+    AddressSearchV1Result,
     Confidence,
 )
-from massgov.pfml.experian.physical_address.service import address_to_experian_search_request
+from massgov.pfml.experian.physical_address.service import (
+    address_to_experian_search_request,
+    address_to_experian_suggestion_text_format,
+)
 
 logger = logging.get_logger(__name__)
+
+
+class Constants:
+    MESSAGE_KEY = "message"
+    EXPERIAN_RESULT_KEY = "experian_result"
+    CONFIDENCE_KEY = "confidence"
+    INPUT_ADDRESS_KEY = "input_address"
+    OUTPUT_ADDRESS_KEY_PREFIX = "output_address_"
 
 
 class AddressValidationStep(Step):
@@ -34,23 +46,35 @@ class AddressValidationStep(Step):
 
             address = address_pair.fineos_address
             response = _experian_response_for_address(experian_client, address)
-            if (
-                response.result is not None
-                and response.result.confidence == Confidence.VERIFIED_MATCH
-            ):
-                address_pair.experian_address = address
-                state_log_util.create_finished_state_log(
-                    associated_model=employee,
-                    end_state=State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS,
-                    outcome=state_log_util.build_outcome("Address validated by Experian"),
-                    db_session=self.db_session,
-                )
-            else:
-                # TODO (PUB-111): Add alternative addresses to state_log.outcome.
+            if response.result is None:
                 state_log_util.create_finished_state_log(
                     associated_model=employee,
                     end_state=State.CLAIMANT_FAILED_ADDRESS_VALIDATION,
-                    outcome=state_log_util.build_outcome("Address not valid in Experian"),
+                    outcome=state_log_util.build_outcome("Invalid response from Experian API"),
+                    db_session=self.db_session,
+                )
+
+            result = cast(AddressSearchV1Result, response.result)
+            if result.confidence == Confidence.VERIFIED_MATCH:
+                address_pair.experian_address = address
+
+                outcome = _outcome_for_search_result(
+                    result, "Address validated by Experian", address
+                )
+                state_log_util.create_finished_state_log(
+                    associated_model=employee,
+                    end_state=State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS,
+                    outcome=outcome,
+                    db_session=self.db_session,
+                )
+            else:
+                outcome = _outcome_for_search_result(
+                    result, "Address not valid in Experian", address
+                )
+                state_log_util.create_finished_state_log(
+                    associated_model=employee,
+                    end_state=State.CLAIMANT_FAILED_ADDRESS_VALIDATION,
+                    outcome=outcome,
                     db_session=self.db_session,
                 )
 
@@ -68,23 +92,35 @@ class AddressValidationStep(Step):
 
             address = address_pair.fineos_address
             response = _experian_response_for_address(experian_client, address)
-            if (
-                response.result is not None
-                and response.result.confidence == Confidence.VERIFIED_MATCH
-            ):
-                address_pair.experian_address = address
-                state_log_util.create_finished_state_log(
-                    associated_model=payment,
-                    end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
-                    outcome=state_log_util.build_outcome("Address validated by Experian"),
-                    db_session=self.db_session,
-                )
-            else:
-                # TODO (PUB-111): Add alternative addresses to state_log.outcome.
+            if response.result is None:
                 state_log_util.create_finished_state_log(
                     associated_model=payment,
                     end_state=State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-                    outcome=state_log_util.build_outcome("Address not valid in Experian"),
+                    outcome=state_log_util.build_outcome("Invalid response from Experian API"),
+                    db_session=self.db_session,
+                )
+
+            result = cast(AddressSearchV1Result, response.result)
+            if result.confidence == Confidence.VERIFIED_MATCH:
+                address_pair.experian_address = address
+
+                outcome = _outcome_for_search_result(
+                    result, "Address validated by Experian", address
+                )
+                state_log_util.create_finished_state_log(
+                    associated_model=payment,
+                    end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+                    outcome=outcome,
+                    db_session=self.db_session,
+                )
+            else:
+                outcome = _outcome_for_search_result(
+                    result, "Address not valid in Experian", address
+                )
+                state_log_util.create_finished_state_log(
+                    associated_model=payment,
+                    end_state=State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+                    outcome=outcome,
                     db_session=self.db_session,
                 )
 
@@ -123,3 +159,23 @@ def _address_has_been_validated(address_pair: ExperianAddressPair) -> bool:
 def _experian_response_for_address(client: Client, address: Address) -> AddressSearchV1Response:
     request_formatted_address: AddressSearchV1Request = address_to_experian_search_request(address)
     return client.search(request_formatted_address)
+
+
+def _outcome_for_search_result(
+    result: AddressSearchV1Result, msg: str, address: Address
+) -> Dict[str, Any]:
+    outcome: Dict[str, Any] = {
+        Constants.MESSAGE_KEY: msg,
+        Constants.EXPERIAN_RESULT_KEY: {
+            Constants.INPUT_ADDRESS_KEY: address_to_experian_suggestion_text_format(address),
+            Constants.CONFIDENCE_KEY: result.confidence,
+        },
+    }
+
+    if result.suggestions is not None:
+        for i, suggestion in enumerate(result.suggestions):
+            # Start list of output addresses at 1.
+            label = Constants.OUTPUT_ADDRESS_KEY_PREFIX + str(1 + i)
+            outcome[Constants.EXPERIAN_RESULT_KEY][label] = suggestion.text
+
+    return outcome
