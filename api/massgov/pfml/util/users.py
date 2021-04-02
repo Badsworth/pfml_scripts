@@ -73,9 +73,9 @@ def get_register_user_log_attributes(
     }
 
 def convert_user(
-    user: User,
     db_session: db.Session,
-    employer_for_leave_admin: Optional[Employer] = None,
+    user: User,
+    employer_for_leave_admin: Employer,
 ) -> User:
     """
     Converts a user from an employee to a Leave Admin
@@ -95,10 +95,7 @@ def convert_user(
     except Exception as e:
         print(e)
 
-    logger.info(
-        "Successfully converted User records",
-        extra=get_register_user_log_attributes(employer_for_leave_admin, auth_id),
-    )
+    logger.info("Successfully converted User records")
 
     return user
 
