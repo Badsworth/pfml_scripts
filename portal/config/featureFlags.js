@@ -85,25 +85,32 @@ const flagsConfig = {
   // environment config files.
   development: {
     example: true,
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
     pfmlTerriyay: true,
   },
   test: {
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
   },
   stage: {
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
   },
   training: {
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
   },
   performance: {
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
   },
   uat: {
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
   },
   prod: {
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
     pfmlTerriyay: true,
   },
