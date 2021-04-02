@@ -50,7 +50,7 @@
     "react-helmet": "^6.1.0",
     "react-i18next": "^11.8.5",
     "react-use": "^15.3.4",
-    "uswds": "^2.10.0",
+    "uswds": "^2.11.1",
     "xstate": "^4.15.4"
   },
   "devDependencies": {
@@ -68,6 +68,7 @@
     "next": "^10.1.2",
     "next-images": "^1.7.0",
     "next-transpile-modules": "^6.3.0",
+    "postcss-preset-env": "^6.7.0",
     "react-is": "^16.13.1",
     "readdirp": "^3.5.0",
     "sass": "^1.32.0",
