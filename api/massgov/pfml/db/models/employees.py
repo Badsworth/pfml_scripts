@@ -1035,7 +1035,7 @@ class DiaReductionPayment(Base):
     __tablename__ = "dia_reduction_payment"
     dia_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
-    absence_case_id = Column(Text, nullable=False)
+    fineos_customer_number = Column(Text, nullable=False)
     board_no = Column(Text)
     event_id = Column(Text)
     event_description = Column(Text)

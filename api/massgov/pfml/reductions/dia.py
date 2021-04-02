@@ -11,8 +11,8 @@ import massgov.pfml.db as db
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
-    Claim,
     DiaReductionPayment,
+    Employee,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -23,7 +23,7 @@ from massgov.pfml.payments.sftp_s3_transfer import (
     copy_from_sftp_to_s3_and_archive_files,
     copy_to_sftp_and_archive_s3_files,
 )
-from massgov.pfml.reductions.common import get_claims_for_outbound
+from massgov.pfml.reductions.common import get_claimants_for_outbound
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 from massgov.pfml.util.files import upload_to_s3
 
@@ -37,13 +37,12 @@ class Constants:
     CLAIMAINT_LIST_FILENAME_PREFIX = "DFML_DIA_CLAIMANTS_"
     CLAIMAINT_LIST_FILENAME_TIME_FORMAT = "%Y%m%d%H%M"
 
-    CASE_ID_FIELD = "CASE_ID"
+    CUSTOMER_NUMBER_FIELD = "DFML_ID"
     SSN_FIELD = "SSN"
     FIRST_NAME_FIELD = "FIRST_NAME"
     LAST_NAME_FIELD = "LAST_NAME"
     BIRTH_DATE_FIELD = "BIRTH_DATE"
     BENEFIT_START_DATE_FIELD = "START_DATE"
-    DFML_CASE_ID_FIELD = "DFML_CASE_ID"
     BOARD_NO_FIELD = "BOARD_NO"
     EVENT_ID = "EVENT_ID"
     INS_FORM_OR_MEET_FIELD = "INS_FORM_OR_MEET"
@@ -59,7 +58,7 @@ class Constants:
     AWARD_CREATED_DATE_FIELD = "AWARD_CREATED_DATE"
 
     CLAIMAINT_LIST_FIELDS = [
-        CASE_ID_FIELD,
+        CUSTOMER_NUMBER_FIELD,
         SSN_FIELD,
         FIRST_NAME_FIELD,
         LAST_NAME_FIELD,
@@ -68,7 +67,7 @@ class Constants:
     ]
 
     PAYMENT_LIST_FIELDS = [
-        DFML_CASE_ID_FIELD,
+        CUSTOMER_NUMBER_FIELD,
         BOARD_NO_FIELD,
         EVENT_ID,
         INS_FORM_OR_MEET_FIELD,
@@ -85,7 +84,7 @@ class Constants:
     ]
 
     PAYMENT_CSV_FIELD_MAPPINGS = {
-        DFML_CASE_ID_FIELD: "absence_case_id",
+        CUSTOMER_NUMBER_FIELD: "fineos_customer_number",
         BOARD_NO_FIELD: "board_no",
         EVENT_ID: "event_id",
         INS_FORM_OR_MEET_FIELD: "event_description",
@@ -102,52 +101,52 @@ class Constants:
     }
 
 
-def _format_claims_for_dia_claimant_list(claims: List[Claim]) -> List[Dict]:
-    claims_info = []
+def _format_claimants_for_dia_claimant_list(claimants: List[Employee]) -> List[Dict[str, str]]:
+    claimants_info = []
 
     # DIA cannot accept CSVs that contain commas
     value_errors = []
 
-    for claim in claims:
-        employee = claim.employee
-        if employee is not None:
-            formatted_dob = (
-                employee.date_of_birth.strftime(Constants.DATE_OF_BIRTH_FORMAT)
-                if employee.date_of_birth
-                else ""
-            )
-            info = {
-                Constants.CASE_ID_FIELD: claim.fineos_absence_id,
-                Constants.BENEFIT_START_DATE_FIELD: Constants.TEMPORARY_BENEFIT_START_DATE,
-                Constants.FIRST_NAME_FIELD: employee.first_name,
-                Constants.LAST_NAME_FIELD: employee.last_name,
-                Constants.BIRTH_DATE_FIELD: formatted_dob,
-                Constants.SSN_FIELD: employee.tax_identifier.tax_identifier.replace("-", ""),
-            }
+    for employee in claimants:
+        formatted_dob = (
+            employee.date_of_birth.strftime(Constants.DATE_OF_BIRTH_FORMAT)
+            if employee.date_of_birth
+            else ""
+        )
+        info: Dict[str, str] = {
+            Constants.CUSTOMER_NUMBER_FIELD: (
+                employee.fineos_customer_number if employee.fineos_customer_number else ""
+            ),
+            Constants.BENEFIT_START_DATE_FIELD: Constants.TEMPORARY_BENEFIT_START_DATE,
+            Constants.FIRST_NAME_FIELD: employee.first_name,
+            Constants.LAST_NAME_FIELD: employee.last_name,
+            Constants.BIRTH_DATE_FIELD: formatted_dob,
+            Constants.SSN_FIELD: employee.tax_identifier.tax_identifier.replace("-", ""),
+        }
 
-            for key in info:
-                value = info[key]
-                if "," in value:
-                    value_errors.append(f"({claim.claim_id}, {key})")
+        for key in info:
+            value = info[key]
+            if "," in value:
+                value_errors.append(f"({employee.employee_id}, {key})")
 
-            claims_info.append(info)
+        claimants_info.append(info)
 
     # API-1335: DIA cannot accept values that contain commas, and we don't expect to see values
     # commas. If/when we encounter this situation, discuss a solution with DIA (Different file
-    # format? Update DIA process to accept commas? Exclude claims in code in the meantime?).
+    # format? Update DIA process to accept commas? Exclude in code in the meantime.).
     if len(value_errors) > 0:
         errors = ", ".join(value_errors)
-        raise ValueError(f"Value for claims contains comma: {errors}")
+        raise ValueError(f"Value for claimants contains comma: {errors}")
 
-    return claims_info
+    return claimants_info
 
 
-def _write_claims_to_tempfile(claims: List[Dict]) -> str:
+def _write_claimants_to_tempfile(claimants: List[Dict]) -> str:
     # Not using file_util.create_csv_from_list() because DIA does not want a header row.
     _handle, csv_filepath = tempfile.mkstemp()
     with open(csv_filepath, mode="w") as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=Constants.CLAIMAINT_LIST_FIELDS)
-        for data in claims:
+        for data in claimants:
             writer.writerow(data)
 
     return csv_filepath
@@ -183,12 +182,10 @@ def upload_claimant_list_to_moveit(db_session: db.Session) -> None:
 def create_list_of_claimants(db_session: db.Session) -> None:
     s3_config = get_s3_config()
 
-    claims = get_claims_for_outbound(db_session)
+    claimants = get_claimants_for_outbound(db_session)
+    dia_claimant_info = _format_claimants_for_dia_claimant_list(claimants)
 
-    # get dia info for claims
-    dia_claimant_info = _format_claims_for_dia_claimant_list(claims)
-
-    tempfile_path = _write_claims_to_tempfile(dia_claimant_info)
+    tempfile_path = _write_claimants_to_tempfile(dia_claimant_info)
 
     # Upload info to s3
     file_name = (
@@ -310,7 +307,7 @@ def _get_matching_dia_reduction_payments(
     # https://stackoverflow.com/questions/7604967/sqlalchemy-build-query-filter-dynamically-from-dict
     query = db_session.query(DiaReductionPayment)
     for attr, value in db_data.items():
-        # Empty fields are read as empty strings. Convert those values to nulls for the datbase.
+        # Empty fields are read as empty strings. Convert those values to nulls for the database.
         if value == "":
             value = None
 
