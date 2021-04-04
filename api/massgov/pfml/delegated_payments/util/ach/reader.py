@@ -5,7 +5,7 @@
 import dataclasses
 import decimal
 import enum
-from typing import List, Optional, Sequence, TextIO
+from typing import Any, Dict, List, Optional, Sequence, TextIO
 
 import massgov.pfml.util.logging
 from massgov.pfml.util.files.file_format import FieldFormat, FileFormat, LineParseError
@@ -88,9 +88,24 @@ class ACHReturn:
     amount: decimal.Decimal
     name: str
     line_number: int
+    raw_record: RawRecord
 
     def is_change_notification(self):
         return False
+
+    def get_details_for_log(self) -> Dict[str, Any]:
+        return {
+            "type_code": self.raw_record.type_code.value,
+            "raw_data": self.raw_record.data,
+            "ach_id_number": self.id_number,
+            "reason_code": self.return_reason_code,
+        }
+
+    def get_details_for_error(self) -> Dict[str, Any]:
+        return {
+            "ach_id_number": self.id_number,
+            "reason_code": self.return_reason_code,
+        }
 
 
 @dataclasses.dataclass
@@ -100,11 +115,25 @@ class ACHChangeNotification(ACHReturn):
     def is_change_notification(self):
         return True
 
+    def get_details_for_log(self) -> Dict[str, Any]:
+        ach_return_details = super().get_details_for_log()
+        return {**ach_return_details, "addenda_information": self.addenda_information}
+
+    def get_details_for_error(self) -> Dict[str, Any]:
+        ach_return_details = super().get_details_for_error()
+        return {**ach_return_details, "addenda_information": self.addenda_information}
+
 
 @dataclasses.dataclass
 class ACHWarning:
     raw_record: RawRecord
     warning: str
+
+    def get_details_for_log(self) -> Dict[str, Any]:
+        return {
+            "type_code": self.raw_record.type_code.value,
+            "raw_data": self.raw_record.data,
+        }
 
 
 class ACHReader:
@@ -118,6 +147,7 @@ class ACHReader:
         self.warnings: List[ACHWarning] = []
         self.batch_count = 0
         self.entry_count = 0
+
         self.parse_ach_file()
 
     def get_ach_returns(self) -> List[ACHReturn]:
@@ -278,6 +308,7 @@ class ACHReader:
                 amount=decimal.Decimal(entry["amount"]) / decimal.Decimal(100),
                 name=entry["individual_name"],
                 line_number=raw_entry_detail.line_number,
+                raw_record=raw_entry_detail,
             )
             self.ach_returns.append(ach_return)
         elif entry["addenda_type_code"] == TypeCode.ADDENDA_NOTIFICATION_OF_CHANGE:
@@ -290,6 +321,7 @@ class ACHReader:
                 name=entry["individual_name"],
                 addenda_information=entry["addenda_information"],
                 line_number=raw_entry_detail.line_number,
+                raw_record=raw_entry_detail,
             )
             self.change_notifications.append(change_notification)
         else:

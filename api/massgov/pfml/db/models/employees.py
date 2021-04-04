@@ -1060,6 +1060,68 @@ class DiaReductionPayment(Base):
     # Each row should be unique.
 
 
+class PubError(Base):
+    __tablename__ = "pub_error"
+    pub_error_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+
+    pub_error_type_id = Column(
+        Integer, ForeignKey("lk_pub_error_type.pub_error_type_id"), nullable=False
+    )
+
+    message = Column(Text, nullable=False)
+    line_number = Column(Integer, nullable=False)
+    type_code = Column(Integer, nullable=False)
+    raw_data = Column(Text, nullable=False)
+    details = Column(JSON)
+
+    payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"))
+    pub_eft_id = Column(PostgreSQLUUID, ForeignKey("pub_eft.pub_eft_id"))
+
+    import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True, nullable=False
+    )
+    reference_file_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("reference_file.reference_file_id"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    pub_error_type = relationship("LkPubErrorType")
+    payment = relationship("Payment")
+    pub_eft = relationship("PubEft")
+    import_log = relationship("ImportLog")
+    reference_file = relationship("ReferenceFile")
+
+
+class LkPubErrorType(Base):
+    __tablename__ = "lk_pub_error_type"
+    pub_error_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    pub_error_type_description = Column(Text)
+
+    def __init__(self, pub_error_type_id, pub_error_type_description):
+        self.pub_error_type_id = pub_error_type_id
+        self.pub_error_type_description = pub_error_type_description
+
+
+class PubErrorType(LookupTable):
+    model = LkPubErrorType
+    column_names = ("pub_error_type_id", "pub_error_type_description")
+
+    ACH_WARNING = LkPubErrorType(1, "ACH Warning")
+    ACH_RETURN = LkPubErrorType(2, "ACH Return")
+    ACH_PRENOTE = LkPubErrorType(3, "ACH Prenote")
+    ACH_NOTIFICATION = LkPubErrorType(4, "ACH Notification")
+    ACH_SUCCESS_WITH_NOTIFICATION = LkPubErrorType(5, "ACH Success with Notification")
+
+
 class AbsenceStatus(LookupTable):
     model = LkAbsenceStatus
     column_names = ("absence_status_id", "absence_status_description")
@@ -1903,4 +1965,5 @@ def sync_lookup_tables(db_session):
     State.sync_to_database(db_session)
     PaymentTransactionType.sync_to_database(db_session)
     PrenoteState.sync_to_database(db_session)
+    PubErrorType.sync_to_database(db_session)
     db_session.commit()
