@@ -74,7 +74,7 @@ describe("Post-approval (notifications/notices)", { retries: 0 }, () => {
 
   // Adudicaiton and Post Approval Flow
   it(
-    "In Fineos, complete an Adjudication Approval",
+    "In Fineos, complete an Adjudication Approval along w/Post Approval Flow",
     { baseUrl: getFineosBaseUrl() },
     () => {
       beforeFineos();
@@ -92,7 +92,7 @@ describe("Post-approval (notifications/notices)", { retries: 0 }, () => {
   );
 
   // Check for new RFI ER form
-  it("As an employer, I should receive a notification about my response being required", () => {
+  it("As an employer, I should receive a second notification (RFI w/updated dates) about my response being required", () => {
     beforePortal();
     cy.unstash<Date>("newTimestamp_from").then((newTimestamp_from) => {
       cy.unstash<Submission>("submission").then((submission) => {
