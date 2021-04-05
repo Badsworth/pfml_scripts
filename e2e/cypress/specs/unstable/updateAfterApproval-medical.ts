@@ -4,10 +4,10 @@ import { beforePortal } from "../../tests/common/before";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
 import { ApplicationResponse } from "../../../src/api";
 import { Submission, LeaveDates } from "../../../src/types";
-import { extractLeavePeriod } from "../../../cypress/utils";
+import { extractLeavePeriod } from "../../utils";
 
 describe("Post-approval (notifications/notices)", { retries: 0 }, () => {
-  it("Create a financially eligible claim in which an employer will respond", () => {
+  it("Create a financially eligible MEDICAL claim in which an employer will respond", () => {
     beforePortal();
     bailIfThisTestFails();
 
@@ -18,11 +18,6 @@ describe("Post-approval (notifications/notices)", { retries: 0 }, () => {
       if (!claim.claim.leave_details?.continuous_leave_periods) {
         throw new Error("No leave Period");
       }
-      // const [startDate, endDate] = extractLeavePeriod(claim.claim);
-      // const leave_periods: LeaveDates = {
-      //   start_date: startDate,
-      //   end_date: endDate
-      // }
       cy.stash("claim", claim.claim);
       cy.task<ApplicationResponse>("submitClaimToAPI", claim).then(
         (response) => {

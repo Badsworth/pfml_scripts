@@ -681,13 +681,14 @@ export function claimUpdateAfterApprovalFlow(claimNumber: string): void {
   ).click();
   cy.get("[id='PageFooterWidget'] input[value='Close']").click();
   onTab("Evidence");
+  cy.wait("@ajaxRender");
+  cy.wait(200);
   onTab("Certification Periods");
   cy.get("input[value='Remove all Certification Periods']").click();
   cy.get("input[value='Yes']").click();
   cy.get("input[value='Yes']").click();
   cy.get("input[value='Yes']").click();
   onTab("Request Information");
-  onTab("Request Details");
   cy.get("td[id*='timeOffAbsencePeriodsListviewWidgetStartDate']").click();
   cy.get("input[value='Edit']").click();
   cy.get("input[value='Yes']").click();
@@ -708,7 +709,6 @@ export function claimUpdateAfterApprovalFlow(claimNumber: string): void {
   });
   cy.get("input[value='OK'][id*='PopupWidget']").click();
   // Step 24 and beyond:
-  // cy.pause();
   fillAbsencePeriod(claimNumber);
   clickBottomWidgetButton("OK");
   onTab("Outstanding Requirements");
