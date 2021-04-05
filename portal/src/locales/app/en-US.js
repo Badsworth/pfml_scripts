@@ -472,10 +472,6 @@ const errors = {
     fineos_client: "$t(shared.documentsUploadError)",
   },
   employers: {
-    ein: {
-      employer_verification_data_required:
-        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications.",
-    },
     employer_benefits: {
       benefit_amount_frequency: {
         enum:
@@ -493,6 +489,10 @@ const errors = {
     employer_fein: {
       duplicate:
         "The employer ID you entered is already associated with your account.",
+      employer_verification_data_required:
+        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications.",
+      invalid:
+        "Enter your 9-digit Employer Identification Number in the correct format.",
     },
     hours_worked_per_week: {
       // TODO (EMPLOYER-723) remove this
