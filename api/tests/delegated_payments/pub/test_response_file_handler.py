@@ -5,6 +5,10 @@
 import datetime
 import pathlib
 import shutil
+import uuid
+from collections import Counter
+
+import pytest
 
 import massgov.pfml.api.util.state_log_util
 from massgov.pfml.db.models import factories
@@ -14,17 +18,22 @@ from massgov.pfml.db.models.employees import (
     ClaimType,
     EmployeePubEftPair,
     Flow,
+    ImportLog,
     Payment,
     PaymentMethod,
     PaymentTransactionType,
     PrenoteState,
     PubEft,
+    PubError,
+    PubErrorType,
     ReferenceFile,
     ReferenceFileType,
     State,
 )
+from massgov.pfml.db.models.factories import PaymentFactory, PubEftFactory
 from massgov.pfml.delegated_payments import delegated_config
 from massgov.pfml.delegated_payments.pub import response_file_handler
+from massgov.pfml.util.batch.log import LogEntry
 
 
 def test_process_return_file_step_full(test_db_session, tmp_path, initialize_factories_session):
@@ -129,6 +138,107 @@ def test_process_return_file_step_full(test_db_session, tmp_path, initialize_fac
         "payment_rejected_count": 1,
     }
     assert expected_metrics.items() <= process_return_file_step.log_entry.metrics.items()
+
+    pub_errors = test_db_session.query(PubError).all()
+    pub_error_count = Counter(p.pub_error_type_id for p in pub_errors)
+
+    # TODO test for metrics and PubError entry (account for in PUB-127):
+    # warning_count
+    # unknown_id_format_count
+    # eft_prenote_unexpected_state_count
+    # payment_unexpected_state_count
+    # payment_notification_unexpected_state_count
+
+    assert (
+        pub_error_count.get(PubErrorType.ACH_WARNING.pub_error_type_id) is None
+    )  # TODO expected_metrics["warning_count"]
+
+    assert pub_error_count[PubErrorType.ACH_PRENOTE.pub_error_type_id] == (
+        expected_metrics["eft_prenote_id_not_found_count"]
+        + expected_metrics["eft_prenote_already_approved_count"]
+        # expected_metrics["eft_prenote_unexpected_state_count"] # TODO
+    )
+
+    assert pub_error_count[PubErrorType.ACH_RETURN.pub_error_type_id] == (
+        expected_metrics["payment_id_not_found_count"]
+        # expected_metrics["unknown_id_format_count"] # TODO
+        # expected_metrics["payment_unexpected_state_count"] # TODO
+    )
+
+    assert (
+        pub_error_count.get(PubErrorType.ACH_NOTIFICATION.pub_error_type_id) is None
+    )  # TODO expected_metrics["payment_notification_unexpected_state_count"]
+
+    assert pub_error_count[PubErrorType.ACH_SUCCESS_WITH_NOTIFICATION.pub_error_type_id] == (
+        expected_metrics["payment_complete_with_change_count"]
+    )
+
+
+def test_add_pub_error(test_db_session, tmp_path, initialize_factories_session):
+    s3_config = delegated_config.PaymentsS3Config(pfml_pub_inbound_path=str(tmp_path))
+
+    step = response_file_handler.ProcessReturnFileStep(test_db_session, test_db_session, s3_config)
+
+    # error if log entry has not been set (i.e. process has not been run)
+    with pytest.raises(
+        Exception, match="'ProcessReturnFileStep' object has no log entry set",
+    ):
+        step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, 6, "")
+
+    step.log_entry = LogEntry(test_db_session, "Test")
+
+    # error if reference file has not been set (i.e. process has not been run)
+    with pytest.raises(
+        AttributeError, match="'ProcessReturnFileStep' object has no attribute 'reference_file",
+    ):
+        step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, 6, "")
+
+    # add reference file and log entry
+    reference_file = ReferenceFile(
+        file_location=str(tmp_path),
+        reference_file_type_id=ReferenceFileType.PUB_ACH_RETURN.reference_file_type_id,
+        reference_file_id=uuid.uuid4(),
+    )
+    step.reference_file = reference_file
+    test_db_session.add(reference_file)
+
+    test_db_session.commit()
+
+    details = {"foo": "bar"}
+    raw_data = "62244400000303030000003      0000010375P3             Stephens John           1221172180000002"
+
+    # no payment or pub_eft
+    pub_error = step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, 6, raw_data, details=details)
+
+    assert pub_error.pub_error_type_id == PubErrorType.ACH_RETURN.pub_error_type_id
+    assert pub_error.message == "test"
+    assert pub_error.line_number == 2
+    assert pub_error.type_code == 6
+    assert pub_error.raw_data == raw_data
+    assert pub_error.details == details
+    assert pub_error.import_log_id == test_db_session.query(ImportLog).one_or_none().import_log_id
+    assert pub_error.reference_file_id == step.reference_file.reference_file_id
+    assert pub_error.created_at is not None
+    assert pub_error.payment_id is None
+    assert pub_error.pub_eft is None
+
+    # no details
+    pub_error = step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, 6, raw_data)
+    assert pub_error.details == {}
+
+    # with payment
+    payment = PaymentFactory.create()
+    pub_error = step.add_pub_error(
+        PubErrorType.ACH_RETURN, "test", 2, 6, raw_data, details=details, payment=payment
+    )
+    assert pub_error.payment_id == payment.payment_id
+
+    # with pub_eft
+    pub_eft = PubEftFactory.create()
+    pub_error = step.add_pub_error(
+        PubErrorType.ACH_RETURN, "test", 2, 6, raw_data, details=details, pub_eft=pub_eft
+    )
+    assert pub_error.pub_eft_id == pub_eft.pub_eft_id
 
 
 def pub_eft_pending_with_pub_factory(pub_individual_id, test_db_session):

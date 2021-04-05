@@ -43,6 +43,7 @@ def test_ach_reader_simple():
             amount=decimal.Decimal("893.73"),
             name="Emily Schenck",
             line_number=3,
+            raw_record=build_rr_from_return(SIMPLE_RETURN, 3),
         ),
         reader.ACHReturn(
             id_number="B1002",
@@ -52,6 +53,7 @@ def test_ach_reader_simple():
             amount=decimal.Decimal("4809.54"),
             name="The Beatles",
             line_number=5,
+            raw_record=build_rr_from_return(SIMPLE_RETURN, 5),
         ),
         reader.ACHReturn(
             id_number="A1003",
@@ -61,6 +63,7 @@ def test_ach_reader_simple():
             amount=decimal.Decimal("62.93"),
             name="John Krazit",
             line_number=7,
+            raw_record=build_rr_from_return(SIMPLE_RETURN, 7),
         ),
         reader.ACHReturn(
             id_number="B1003",
@@ -70,6 +73,7 @@ def test_ach_reader_simple():
             amount=decimal.Decimal("83.52"),
             name="Debbie Glasser",
             line_number=9,
+            raw_record=build_rr_from_return(SIMPLE_RETURN, 9),
         ),
         reader.ACHReturn(
             id_number="A1004",
@@ -79,6 +83,7 @@ def test_ach_reader_simple():
             amount=decimal.Decimal("3.93"),
             name="Daniel Longest",
             line_number=11,
+            raw_record=build_rr_from_return(SIMPLE_RETURN, 11),
         ),
     ]
     assert ach_reader.get_change_notifications() == []
@@ -136,6 +141,7 @@ def test_ach_reader_missing_addenda():
             amount=decimal.Decimal("3.93"),
             name="Daniel Longest",
             line_number=6,
+            raw_record=build_rr_from_return(MISSING_ADDENDA_RETURN, 6),
         )
     ]
     assert ach_reader.get_change_notifications() == []
@@ -176,6 +182,9 @@ def test_ach_reader_empty_file():
 def test_ach_reader_large():
     test_files = os.path.join(os.path.dirname(__file__), "test_files")
 
+    return_str = open(
+        os.path.join(test_files, "PUBACHRTRN__scrambled.txt"), mode="r", newline=None
+    ).read()
     stream = open(os.path.join(test_files, "PUBACHRTRN__scrambled.txt"), mode="r", newline=None)
     ach_reader = reader.ACHReader(stream)
 
@@ -190,6 +199,7 @@ def test_ach_reader_large():
         amount=decimal.Decimal("0"),
         name="BPBHSR  BPSPPP",
         line_number=3,
+        raw_record=build_rr_from_return(return_str, 3, delimiter="\n"),
     )
     assert ach_reader.get_change_notifications()[0] == reader.ACHChangeNotification(
         id_number="20629",
@@ -200,6 +210,7 @@ def test_ach_reader_large():
         name="BPBH X APDHAX",
         addenda_information="211070175",
         line_number=53,
+        raw_record=build_rr_from_return(return_str, 53, delimiter="\n"),
     )
     assert warnings_summary(ach_reader.get_warnings()) == ()
 
@@ -227,6 +238,7 @@ def test_ach_reader_entry_count_wrong():
             amount=decimal.Decimal("893.73"),
             name="Emily Schenck",
             line_number=3,
+            raw_record=build_rr_from_return(ENTRY_COUNT_WRONG_RETURN, 3),
         ),
     ]
     assert ach_reader.get_change_notifications() == []
@@ -268,6 +280,7 @@ def test_ach_reader_no_batch_header():
             amount=decimal.Decimal("893.73"),
             name="Emily Schenck",
             line_number=2,
+            raw_record=build_rr_from_return(NO_BATCH_HEADER_RETURN, 2),
         ),
     ]
     assert ach_reader.get_change_notifications() == []
@@ -315,6 +328,14 @@ def test_ach_reader_fuzz_single_line(line):
     stream = io.StringIO(FILE_HEADER + line, newline=None)
     ach_reader = reader.ACHReader(stream)
     assert len(ach_reader.get_warnings()) >= 1
+
+
+def build_rr_from_return(return_str, line_number, delimiter="\r\n"):
+    split = return_str.split(delimiter)
+    data = split[line_number - 1]
+    type_code = int(data[0:1])
+
+    return reader.RawRecord(type_code=type_code, line_number=line_number, data=data)
 
 
 def build_rr(type_code, line_number):
