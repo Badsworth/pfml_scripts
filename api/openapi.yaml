@@ -1390,13 +1390,10 @@ components:
       type: object
       additionalProperties: false
       properties:
-        consented_to_data_sharing:
-          type: boolean
-          example: true
         employer_for_leave_admin:
           type: string
           example: "111111111"
-      required: ["consented_to_data_sharing", "employer_for_leave_admin"]
+      required: ["employer_for_leave_admin"]
 
     EmployeeUpdateRequest:
       type: object

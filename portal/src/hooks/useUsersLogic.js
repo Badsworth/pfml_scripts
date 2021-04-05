@@ -114,11 +114,18 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     }
   };
 
+  const convertToEmployer = async (user_id, data) => {
+    if(!user.hasEmployerRole) {
+      await usersApi.convertToEmployer(user_id, data)
+    }
+  };
+
   return {
     user,
     updateUser,
     loadUser,
     requireUserConsentToDataAgreement,
+    convertToEmployer,
     requireUserRole,
     setUser,
   };

@@ -14,7 +14,7 @@ from massgov.pfml.api.services.user_rules import (
     get_users_post_required_fields_issues,
 )
 from massgov.pfml.api.util.deepgetattr import deepgetattr
-from massgov.pfml.db.models.employees import Employer, Role, User
+from massgov.pfml.db.models.employees import Employer, Role, User, UserRole, UserLeaveAdministrator
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein
@@ -27,9 +27,17 @@ def users_convert(user_id):
     # required_fields_issues = get_users_post_required_fields_issues(body)
     employer_for_leave_admin = deepgetattr(body, "employer_for_leave_admin")
 
-    user = None
+    user = app.current_user()
+    # ensure(EDIT, user)
+    if not user or not employer_for_leave_admin:
+        return response_util.error_response(
+            status_code=BadRequest,
+            message="Invalid identification",
+            errors=["Invalid identification"],
+            data={},
+        ).to_api_response()
+
     with app.db_session() as db_session:
-        user = app.current_user()
         employer = (
             db_session.query(Employer)
             .filter(Employer.employer_fein == employer_for_leave_admin)
@@ -173,6 +181,9 @@ def user_response(user: User) -> Dict[str, Any]:
     response["user_leave_administrators"] = [
         normalize_user_leave_admin_response(ula) for ula in response["user_leave_administrators"]
     ]
+    
+    logger.info(f'MP_{user.roles}')
+    logger.info(f'MP_{response}')
     return response
 
 
