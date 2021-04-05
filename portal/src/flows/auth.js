@@ -36,5 +36,10 @@ export default {
         SUBMIT: routes.auth.login,
       },
     },
+    [routes.auth.convert]: {
+      on: {
+        // SUBMIT: routes.auth.login,
+      },
+    },
   },
 };

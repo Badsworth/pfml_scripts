@@ -53,7 +53,6 @@ const routes = {
     uploadDocsOptions: "/applications/upload-docs-options",
     uploadId: "/applications/upload-id",
     workPatternType: "/applications/work-pattern-type",
-    convert: "/employers/convert-to-employer",
   },
   auth: {
     createAccount: "/create-account",
@@ -61,6 +60,7 @@ const routes = {
     login: "/login",
     resetPassword: "/reset-password",
     verifyAccount: "/verify-account",
+    convert: "/convert-to-employer",
   },
   employers: {
     addOrganization: "/employers/organizations/add-organization",
@@ -77,7 +77,6 @@ const routes = {
     verificationSuccess: "/employers/organizations/success",
     verifyContributions: "/employers/organizations/verify-contributions",
     welcome: "/employers/welcome",
-    convert: "/employers/convert-to-employer",
   },
   external: {
     massTaxConnect: "https://mtc.dor.state.ma.us/mtc/_/",

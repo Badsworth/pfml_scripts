@@ -40,8 +40,7 @@ export const GetReady = (props) => {
       )}
       <Link href={appLogic.portalFlow.getNextPageRoute("CONVERT_TO_EMPLOYER")}>
         <a className="display-inline-block margin-bottom-5">
-          {/* {t("pages.convert.goTo")} */}
-          Go to convert
+          {t("pages.getReady.convertToEmployer")}
         </a>
       </Link>
 
