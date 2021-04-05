@@ -2,11 +2,11 @@
 // import Heading from "../components/Heading";
 // import Icon from "../components/Icon";
 // import Link from "next/link";
+// import ButtonLink from "../components/ButtonLink";
 
 import Alert from "../components/Alert";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
-// import ButtonLink from "../components/ButtonLink";
 import ClaimCollection from "../models/ClaimCollection";
 import InputText from "../components/InputText";
 import PropTypes from "prop-types";
@@ -17,8 +17,8 @@ import User from "../models/User"
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps"
+import useThrottledHandler from "../hooks/useThrottledHandler"
 import { useTranslation } from "../locales/i18n";
-// import useThrottledHandler from "../hooks/useThrottledHandler"
 import withClaims from "../hoc/withClaims";
 
 export const ConvertToEmployer = (props) => {
@@ -105,6 +105,7 @@ ConvertToEmployer.propTypes = {
     portalFlow: PropTypes.shape({
       getNextPageRoute: PropTypes.func.isRequired,
       pathname: PropTypes.string.isRequired,
+      goTo: PropTypes.func.isRequired
     }),
     appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
   }).isRequired,
