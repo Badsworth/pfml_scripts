@@ -86,7 +86,14 @@ export default {
         CONSENT_TO_DATA_SHARING: routes.user.consentToDataSharing,
         START_APPLICATION: routes.applications.start,
         SHOW_APPLICATIONS: routes.applications.index,
+        CONVERT_TO_EMPLOYER: routes.employers.convert,
       },
+    },
+    [routes.employers.convert]: {
+      meta: {},
+      on: {
+        CONVERT_TO_EMPLOYER: routes.applications.convert
+      }
     },
     [routes.applications.start]: {
       meta: {},

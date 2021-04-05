@@ -790,6 +790,10 @@ const pages = {
     title: "Verify your email address",
     usernameLabel: "$t(shared.usernameLabel)",
   },
+  convertToEmployer: {
+    title: "Convert to employer account",
+
+  },
   claimsAddress: {
     choiceNo: "No, I would like to add a mailing address",
     choiceYes: "$t(shared.choiceYes)",
