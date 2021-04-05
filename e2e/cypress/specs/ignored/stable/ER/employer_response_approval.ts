@@ -2,9 +2,9 @@ import {
   beforePortal,
   beforeFineos,
   bailIfThisTestFails,
-} from "../../../tests/common/before";
-import { fineos, portal, email } from "../../../tests/common/actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
+} from "../../../../tests/common/before";
+import { fineos, portal, email } from "../../../../tests/common/actions";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../../config";
 
 describe("Employer Responses", () => {
   it("As an employer, I should recieve an email asking for my response to a claim and also fill out the ER form", () => {
@@ -60,8 +60,8 @@ describe("Employer Responses", () => {
         portal.respondToLeaveAdminRequest(
           response.fineos_absence_id,
           false,
-          false,
-          false
+          true,
+          true
         );
       });
     });
@@ -75,7 +75,7 @@ describe("Employer Responses", () => {
       cy.unstash<string>("fineos_absence_id").then((claimNumber) => {
         cy.visit("/");
         fineos.visitClaim(claimNumber);
-        fineos.assertClaimHasLeaveAdminResponse(false);
+        fineos.assertClaimHasLeaveAdminResponse(true);
       });
     }
   );

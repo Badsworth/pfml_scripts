@@ -1,12 +1,12 @@
-import { fineos, portal, email } from "../../../tests/common/actions";
+import { fineos, portal, email } from "../../../../tests/common/actions";
 import {
   bailIfThisTestFails,
   beforeFineos,
   beforePortal,
-} from "../../../tests/common/before";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
-import { ApplicationResponse } from "../../../../src/api";
-import { Submission } from "../../../../src/types";
+} from "../../../../tests/common/before";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../../config";
+import { ApplicationResponse } from "../../../../../src/api";
+import { Submission } from "../../../../../src/types";
 
 describe("Denial Notification and Notice", { retries: 0 }, () => {
   it("Submit a financially ineligible claim to API", () => {

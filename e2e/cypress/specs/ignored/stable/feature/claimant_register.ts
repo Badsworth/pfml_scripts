@@ -1,5 +1,5 @@
-import * as portal from "../../../tests/common/actions/portal";
-import { beforePortal } from "../../../tests/common/before";
+import * as portal from "../../../../tests/common/actions/portal";
+import { beforePortal } from "../../../../tests/common/before";
 
 describe("Claimant Registration", () => {
   it("Should allow a new claimant to register", () => {

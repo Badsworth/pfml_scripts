@@ -1,16 +1,12 @@
-import { fineos, portal } from "../../../tests/common/actions";
-import {
-  bailIfThisTestFails,
-  beforeFineos,
-} from "../../../tests/common/before";
-import { beforePortal } from "../../../tests/common/before";
-import { getFineosBaseUrl } from "../../../config";
-import { Submission } from "../../../../src/types";
+import * as portal from "../../../../tests/common/actions/portal";
+import { fineos } from "../../../../tests/common/actions";
+import { beforeFineos } from "../../../../tests/common/before";
+import { beforePortal } from "../../../../tests/common/before";
+import { getFineosBaseUrl } from "../../../../config";
 
-describe("Submit a medical claim and adjucation approval - MHAP1", () => {
-  it("As a claimant, I should be able to submit a Medical Leave claim (MHAP1) through the portal", () => {
+describe("Submit Part One of a claim, without documents, and then find in FINEOS", () => {
+  it("As a claimant, I submit a claim through the portal (part one only)", () => {
     beforePortal();
-    bailIfThisTestFails();
 
     cy.task("generateClaim", "MHAP1").then((claim) => {
       if (!claim) {
@@ -18,7 +14,6 @@ describe("Submit a medical claim and adjucation approval - MHAP1", () => {
       }
       cy.log("generated claim", claim.claim);
       const application: ApplicationRequestBody = claim.claim;
-      const paymentPreference = claim.paymentPreference;
 
       const credentials: Credentials = {
         username: Cypress.env("E2E_PORTAL_USERNAME"),
@@ -34,7 +29,7 @@ describe("Submit a medical claim and adjucation approval - MHAP1", () => {
       portal.hasClaimId();
       portal.onPage("checklist");
 
-      // Submit Claim
+      // Submit Part 1
       portal.submitClaimPartOne(application);
       cy.wait("@submitClaimResponse").then((xhr) => {
         if (!xhr.response || !xhr.response.body) {
@@ -44,13 +39,9 @@ describe("Submit a medical claim and adjucation approval - MHAP1", () => {
           typeof xhr.response.body === "string"
             ? JSON.parse(xhr.response.body)
             : xhr.response.body;
-        cy.stash("submission", {
-          application_id: body.data.application_id,
-          fineos_absence_id: body.data.fineos_absence_id,
-          timestamp_from: Date.now(),
-        });
+        cy.stashLog("claimNumber", body.data.fineos_absence_id);
+        cy.stashLog("applicationId", body.data.application_id);
       });
-      portal.submitClaimPartsTwoThree(application, paymentPreference);
     });
   });
 
@@ -62,8 +53,8 @@ describe("Submit a medical claim and adjucation approval - MHAP1", () => {
       beforeFineos();
       cy.visit("/");
 
-      cy.unstash<Submission>("submission").then((submission) => {
-        fineos.claimAdjudicationFlow(submission.fineos_absence_id);
+      cy.unstash<string>("claimNumber").then((claimNumber) => {
+        fineos.visitClaim(claimNumber);
       });
     }
   );

@@ -1,19 +1,17 @@
-import * as portal from "../../../tests/common/actions/portal";
-import { fineos } from "../../../tests/common/actions";
-import { beforeFineos } from "../../../tests/common/before";
-import { beforePortal } from "../../../tests/common/before";
-import { getFineosBaseUrl } from "../../../config";
+import * as portal from "../../../../tests/common/actions/portal";
+import { beforePortal } from "../../../../tests/common/before";
 
-describe("Submit Part One of a claim, without documents, and then find in FINEOS", () => {
-  it("As a claimant, I submit a claim through the portal (part one only)", () => {
+describe("Submit a REDUCED LEAVE bonding claim and adjucation approval - BHAP8", () => {
+  it("As a claimant, I should be able to submit a Reduced Leave claim (BHAP8) through the portal", () => {
     beforePortal();
 
-    cy.task("generateClaim", "MHAP1").then((claim) => {
+    cy.task("generateClaim", "BHAP9").then((claim) => {
       if (!claim) {
         throw new Error("Claim Was Not Generated");
       }
       cy.log("generated claim", claim.claim);
       const application: ApplicationRequestBody = claim.claim;
+      const paymentPreference = claim.paymentPreference;
 
       const credentials: Credentials = {
         username: Cypress.env("E2E_PORTAL_USERNAME"),
@@ -29,7 +27,7 @@ describe("Submit Part One of a claim, without documents, and then find in FINEOS
       portal.hasClaimId();
       portal.onPage("checklist");
 
-      // Submit Part 1
+      // Submit Claim
       portal.submitClaimPartOne(application);
       cy.wait("@submitClaimResponse").then((xhr) => {
         if (!xhr.response || !xhr.response.body) {
@@ -39,23 +37,13 @@ describe("Submit Part One of a claim, without documents, and then find in FINEOS
           typeof xhr.response.body === "string"
             ? JSON.parse(xhr.response.body)
             : xhr.response.body;
-        cy.stashLog("claimNumber", body.data.fineos_absence_id);
-        cy.stashLog("applicationId", body.data.application_id);
+        cy.stash("submission", {
+          application_id: body.data.application_id,
+          fineos_absence_id: body.data.fineos_absence_id,
+          timestamp_from: Date.now(),
+        });
       });
+      portal.submitClaimPartsTwoThree(application, paymentPreference);
     });
   });
-
-  // Prepare for adjudication approval
-  it(
-    "As a CSR (Savilinx), I should be able to Approve a MHAP1 claim submission",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      beforeFineos();
-      cy.visit("/");
-
-      cy.unstash<string>("claimNumber").then((claimNumber) => {
-        fineos.visitClaim(claimNumber);
-      });
-    }
-  );
 });

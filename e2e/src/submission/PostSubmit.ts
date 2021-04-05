@@ -61,7 +61,7 @@ export async function approveClaim(
 
   await closeTask(page, "ID Review");
   await closeTask(page, "Certification Review");
-  await closeTask(page, "Employer Approval Received");
+  // await closeTask(page, "Employer Approval Received");
   await actions.clickTab(page, "Absence Hub");
 
   // Approve the claim.
@@ -150,9 +150,9 @@ async function approveDocuments(page: playwright.Page): Promise<void> {
       .labelled(page, "Evidence Decision")
       .then((el) => el.selectOption("0"));
     await page.click('.WidgetPanel_PopupWidget input[value="OK"]');
-    await page
-      .waitForSelector("#disablingLayer")
-      .then((el) => el.waitForElementState("hidden"));
+    // await page
+    //   .waitForSelector("#disablingLayer")
+    //   .then((el) => el.waitForElementState("hidden"));
   }
   await delay(150);
 }
@@ -160,6 +160,7 @@ async function approveDocuments(page: playwright.Page): Promise<void> {
 async function approveCertificationPeriods(
   page: playwright.Page
 ): Promise<void> {
+  await delay(3000);
   await actions.clickTab(page, "Certification Periods");
   await page.click('input[value="Prefill with Requested Absence Periods"]');
   await Promise.all([

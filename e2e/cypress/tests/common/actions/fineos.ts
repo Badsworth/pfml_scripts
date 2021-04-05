@@ -648,8 +648,8 @@ export function claimUpdateAfterApprovalFlow(claimNumber: string): void {
     "[id*='chooseWorkTypeListDisplayName'][title='Approved Leave Start Date Change']"
   ).click();
   clickBottomWidgetButton("Next");
-  cy.wait("@ajaxRender")
-  cy.wait(500)
+  cy.wait("@ajaxRender");
+  cy.wait(500);
   cy.get("td[title='Approved Leave Start Date Change']").click();
   cy.get("input[value='Edit']").click();
   cy.labelled("Description").type(
@@ -709,17 +709,19 @@ export function claimUpdateAfterApprovalFlow(claimNumber: string): void {
   cy.get("input[value='OK'][id*='PopupWidget']").click();
   // Step 24 and beyond:
   // cy.pause();
-  fillAbsencePeriod(claimNumber)
-  clickBottomWidgetButton("OK")
-  onTab("Outstanding Requirements")
+  fillAbsencePeriod(claimNumber);
+  clickBottomWidgetButton("OK");
+  onTab("Outstanding Requirements");
+  cy.wait("@ajaxRender");
+  cy.wait(500);
   cy.get('input[value="Add"]').click();
   cy.get(".WidgetPanel_PopupWidget").within(() => {
     cy.get("input[type='submit'][value='Ok']").click();
     // Wait till modal has fully closed before moving on.
     cy.get("#disablingLayer").should("not.exist");
   });
-  clickBottomWidgetButton("OK")
-  cy.wait(1000)
+  clickBottomWidgetButton("OK");
+  cy.wait(1000);
 }
 
 export function addBondingLeaveFlow(timeStamp: Date): void {

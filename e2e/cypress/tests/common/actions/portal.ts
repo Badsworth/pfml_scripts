@@ -729,7 +729,7 @@ export function respondToLeaveAdminRequest(
   suspectFraud: boolean,
   gaveNotice: boolean,
   approval: boolean,
-  leave_periods: LeaveDates = {start_date: "", end_date: ""},
+  leave_periods?: LeaveDates
 ): void {
   cy.visit(
     `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
@@ -761,10 +761,18 @@ export function respondToLeaveAdminRequest(
       "This is a generic explanation of the leave admin's response."
     );
   }
-  const res_start = format(new Date(leave_periods.start_date), "M/d/yyy")
-  const res_end = format(new Date(leave_periods.end_date), "M/d/yyy")
-  cy.contains(res_end).should("be.visible").should("not.contain.text", res_start)
-  cy.pause();
+  // cy.log(leave_periods?.start_date as string)
+  // cy.log(leave_periods?.end_date as string)
+  if (leave_periods) {
+    const res_start = format(leave_periods.start_date, "M/d/yyy");
+    const res_end = format(leave_periods.end_date, "M/d/yyy");
+    cy.log(res_start);
+    cy.log(res_end);
+    cy.contains(res_end)
+      .should("be.visible")
+      .should("not.contain.text", res_start);
+  }
+  // cy.pause()
   cy.contains("button", "Submit").click();
   cy.contains("Thanks for reviewing the application");
 }

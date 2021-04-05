@@ -1,13 +1,14 @@
-import { fineos, email } from "../../../../tests/common/actions";
+import { fineos, email } from "../../../../../tests/common/actions";
 import {
   bailIfThisTestFails,
   beforeFineos,
-} from "../../../../tests/common/before";
-import { extractLeavePeriod } from "../../../../utils";
-import { getFineosBaseUrl } from "../../../../config";
-import { Submission } from "../../../../../src/types";
+} from "../../../../../tests/common/before";
+import { extractLeavePeriod } from "../../../../../utils";
+import { getFineosBaseUrl } from "../../../../../config";
+import { Submission } from "../../../../../../src/types";
+import { ApplicationRequestBody } from "../../../../../../src/api";
 
-describe("Create a new continuous leave, military caregiver claim in FINEOS", () => {
+describe("Create a new continuous leave, bonding claim in FINEOS", () => {
   it(
     "Should be able to create a claim",
     { baseUrl: getFineosBaseUrl() },
@@ -25,7 +26,6 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
         ) {
           throw new Error("Claim is missing a first name, last name, or SSN.");
         }
-
         fineos.searchClaimantSSN(claim.claim.tax_identifier);
         fineos.clickBottomWidgetButton("OK");
         fineos.assertOnClaimantPage(
@@ -33,7 +33,7 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
           claim.claim.last_name
         );
         const [startDate, endDate] = extractLeavePeriod(claim.claim);
-        fineos.createNotification(startDate, endDate, "military care leave");
+        fineos.createNotification(startDate, endDate);
         cy.get("a[name*='CaseMapWidget']")
           .invoke("text")
           .then((text) => {
@@ -47,6 +47,7 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
       });
     }
   );
+
   it("I should receive an 'application started' notification", () => {
     cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
@@ -57,7 +58,6 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
           "application started",
           submission.fineos_absence_id
         );
-        cy.log(subject);
         cy.task<Email[]>(
           "getEmails",
           {

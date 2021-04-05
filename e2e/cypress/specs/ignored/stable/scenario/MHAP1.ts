@@ -1,11 +1,22 @@
-import * as portal from "../../../tests/common/actions/portal";
-import { beforePortal } from "../../../tests/common/before";
+import { fineos, portal } from "../../../../tests/common/actions";
+import {
+  bailIfThisTestFails,
+  beforeFineos,
+} from "../../../../tests/common/before";
+import { beforePortal } from "../../../../tests/common/before";
+import { getFineosBaseUrl } from "../../../../config";
+import { Submission } from "../../../../../src/types";
 
-describe("Submit a REDUCED LEAVE bonding claim and adjucation approval - BHAP8", () => {
-  it("As a claimant, I should be able to submit a Reduced Leave claim (BHAP8) through the portal", () => {
+describe("Submit a medical claim and adjucation approval - MHAP1", () => {
+  it("As a claimant, I should be able to submit a Medical Leave claim (MHAP1) through the portal", () => {
     beforePortal();
+    bailIfThisTestFails();
 
-    cy.task("generateClaim", "BHAP8").then((claim) => {
+    cy.task("generateClaim", "MHAP1").then((claim) => {
+      if (!claim) {
+        throw new Error("Claim Was Not Generated");
+      }
+      cy.log("generated claim", claim.claim);
       const application: ApplicationRequestBody = claim.claim;
       const paymentPreference = claim.paymentPreference;
 
@@ -42,4 +53,18 @@ describe("Submit a REDUCED LEAVE bonding claim and adjucation approval - BHAP8",
       portal.submitClaimPartsTwoThree(application, paymentPreference);
     });
   });
+
+  // Prepare for adjudication approval
+  it(
+    "As a CSR (Savilinx), I should be able to Approve a MHAP1 claim submission",
+    { baseUrl: getFineosBaseUrl() },
+    () => {
+      beforeFineos();
+      cy.visit("/");
+
+      cy.unstash<Submission>("submission").then((submission) => {
+        fineos.claimAdjudicationFlow(submission.fineos_absence_id);
+      });
+    }
+  );
 });

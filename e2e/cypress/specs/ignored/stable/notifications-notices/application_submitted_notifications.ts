@@ -1,7 +1,7 @@
-import { email } from "../../../tests/common/actions";
-import { bailIfThisTestFails } from "../../../tests/common/before";
-import { ApplicationResponse } from "../../../../src/api";
-import { Submission } from "../../../../src/types";
+import { email } from "../../../../tests/common/actions";
+import { bailIfThisTestFails } from "../../../../tests/common/before";
+import { ApplicationResponse } from "../../../../../src/api";
+import { Submission } from "../../../../../src/types";
 
 describe(
   "Testing email notificaitons sent for both employee & employer after initial submission w/documents",

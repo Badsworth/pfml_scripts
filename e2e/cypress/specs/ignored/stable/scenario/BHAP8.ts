@@ -1,19 +1,11 @@
-import { fineos, portal } from "../../../tests/common/actions";
-import {
-  bailIfThisTestFails,
-  beforeFineos,
-} from "../../../tests/common/before";
-import { beforePortal } from "../../../tests/common/before";
-import { getFineosBaseUrl } from "../../../config";
-import { Submission } from "../../../../src/types";
+import * as portal from "../../../../tests/common/actions/portal";
+import { beforePortal } from "../../../../tests/common/before";
 
-describe("Submit a bonding claim and adjudication approval - BHAP1", () => {
-  it("As a claimant, I should be able to submit a claim (BHAP1) through the portal", () => {
+describe("Submit a REDUCED LEAVE bonding claim and adjucation approval - BHAP8", () => {
+  it("As a claimant, I should be able to submit a Reduced Leave claim (BHAP8) through the portal", () => {
     beforePortal();
-    bailIfThisTestFails();
 
-    cy.task("generateClaim", "BHAP1").then((claim) => {
-      cy.stash("claim", claim.claim);
+    cy.task("generateClaim", "BHAP8").then((claim) => {
       const application: ApplicationRequestBody = claim.claim;
       const paymentPreference = claim.paymentPreference;
 
@@ -50,18 +42,4 @@ describe("Submit a bonding claim and adjudication approval - BHAP1", () => {
       portal.submitClaimPartsTwoThree(application, paymentPreference);
     });
   });
-
-  it(
-    "CSR rep should prepare claim for Adjudication",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      beforeFineos();
-      cy.wait(1000);
-      cy.visit("/");
-
-      cy.unstash<Submission>("submission").then((submission) => {
-        fineos.claimAdjudicationFlow(submission.fineos_absence_id);
-      });
-    }
-  );
 });

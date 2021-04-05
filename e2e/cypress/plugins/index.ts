@@ -121,6 +121,16 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return cookiesJson;
     },
 
+    async approveFineosClaim(fineos_absence_id): Promise<boolean> {
+      await postSubmit.withFineosBrowser(
+        actions.getFineosBaseUrl(),
+        async (page) => {
+          await postSubmit.approveClaim(page, fineos_absence_id);
+        }
+      );
+      return true;
+    },
+
     waitForClaimDocuments: documentWaiter.waitForClaimDocuments.bind(
       documentWaiter
     ),

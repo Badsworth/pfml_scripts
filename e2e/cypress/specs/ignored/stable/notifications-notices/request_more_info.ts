@@ -1,10 +1,10 @@
-import { fineos, portal, email } from "../../../tests/common/actions";
+import { fineos, portal, email } from "../../../../tests/common/actions";
 import {
   bailIfThisTestFails,
   beforeFineos,
-} from "../../../tests/common/before";
-import { beforePortal } from "../../../tests/common/before";
-import { getFineosBaseUrl } from "../../../config";
+} from "../../../../tests/common/before";
+import { beforePortal } from "../../../../tests/common/before";
+import { getFineosBaseUrl } from "../../../../config";
 
 describe(
   "Request for More Information (notifications/notices)",
