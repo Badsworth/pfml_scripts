@@ -2,7 +2,6 @@ import argparse
 import decimal
 import os
 from dataclasses import dataclass
-from datetime import datetime
 from random import randrange
 from typing import List, Tuple
 
@@ -31,7 +30,11 @@ from massgov.pfml.db.models.factories import (
     PaymentFactory,
     PubEftFactory,
 )
-from massgov.pfml.delegated_payments.delegated_payments_nacha import get_trans_code
+from massgov.pfml.delegated_payments.delegated_payments_nacha import (
+    NachaBatchType,
+    create_nacha_batch,
+    get_trans_code,
+)
 from massgov.pfml.delegated_payments.util.ach.nacha import (
     NachaAddendumResponse,
     NachaBatch,
@@ -290,11 +293,9 @@ def generate_pub_return(
     ach_config: List[PubPaymentReturnScenario] = ach_configs,
     skiprate: int = 0,
 ) -> Tuple[List[PubPaymentReturnScenarioData], List[PubPaymentReturnScenarioData]]:
-    effective_date = datetime.now()
-    today = datetime.today()
 
     nacha_file = NachaFile()
-    batch = NachaBatch(effective_date, today)
+    batch = create_nacha_batch(NachaBatchType.MEDICAL_LEAVE)
 
     nacha_file.add_batch(batch)
 

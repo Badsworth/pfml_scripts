@@ -296,7 +296,7 @@ def test_run_step_existing_rejected_eft_info(
     assert updated_employee.state_logs[0].outcome["validation_container"]["validation_issues"] == [
         {
             "reason": "EFTRejected",
-            "details": "EFT prenote was rejected at 2020-12-06 12:00:00+00:00",
+            "details": "EFT prenote was rejected - cannot pay with this account info",
         }
     ]
 

@@ -19,6 +19,9 @@ import { fields as dateOfChildFields } from "../pages/applications/date-of-child
 import { fields as employerBenefitsDetailsFields } from "../pages/applications/employer-benefits-details";
 import { fields as employerBenefitsFields } from "../pages/applications/employer-benefits";
 import { fields as employmentStatusFields } from "../pages/applications/employment-status";
+import { fields as familyMemberDateOfBirthFields } from "../pages/applications/family-member-date-of-birth";
+import { fields as familyMemberNameFields } from "../pages/applications/family-member-name";
+import { fields as familyMemberRelationshipFields } from "../pages/applications/family-member-relationship";
 import { get } from "lodash";
 import { fields as intermittentFrequencyFields } from "../pages/applications/intermittent-frequency";
 import { fields as leavePeriodContinuousFields } from "../pages/applications/leave-period-continuous";
@@ -46,6 +49,7 @@ import { fields as workPatternTypeFields } from "../pages/applications/work-patt
  * @see https://xstate.js.org/docs/guides/guards.html
  */
 export const guards = {
+  isCaringLeave: ({ claim }) => claim.isCaringLeave,
   isMedicalLeave: ({ claim }) => claim.isMedicalLeave,
   isBondingLeave: ({ claim }) => claim.isBondingLeave,
   isEmployed: ({ claim }) =>
@@ -113,6 +117,10 @@ export default {
           {
             target: routes.applications.bondingLeaveAttestation,
             cond: "isBondingLeave",
+          },
+          {
+            target: routes.applications.caringLeaveAttestation,
+            cond: "isCaringLeave",
           },
           { target: routes.applications.review },
         ],
@@ -212,6 +220,10 @@ export default {
           {
             target: routes.applications.dateOfChild,
             cond: "isBondingLeave",
+          },
+          {
+            target: routes.applications.familyMemberRelationship,
+            cond: "isCaringLeave",
           },
           {
             target: routes.applications.checklist,
@@ -512,6 +524,42 @@ export default {
       },
       on: {
         CONTINUE: routes.applications.checklist,
+      },
+    },
+    [routes.applications.familyMemberDateOfBirth]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+        fields: familyMemberDateOfBirthFields,
+      },
+      on: {
+        CONTINUE: routes.applications.leavePeriodContinuous,
+      },
+    },
+    [routes.applications.familyMemberName]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+        fields: familyMemberNameFields,
+      },
+      on: {
+        CONTINUE: routes.applications.familyMemberDateOfBirth,
+      },
+    },
+    [routes.applications.familyMemberRelationship]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+        fields: familyMemberRelationshipFields,
+      },
+      on: {
+        CONTINUE: routes.applications.familyMemberName,
+      },
+    },
+    [routes.applications.caringLeaveAttestation]: {
+      meta: {
+        step: ClaimSteps.reviewAndConfirm,
+        fields: [],
+      },
+      on: {
+        CONTINUE: routes.applications.review,
       },
     },
   },

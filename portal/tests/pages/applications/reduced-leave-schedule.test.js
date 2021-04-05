@@ -7,57 +7,68 @@ import ReducedLeaveSchedule from "../../../src/pages/applications/reduced-leave-
 
 jest.mock("../../../src/hooks/useAppLogic");
 
+const fixedWorkPatternClaim = new MockClaimBuilder()
+  .reducedSchedule()
+  .fixedWorkPattern()
+  .create();
+
+const variableScheduleClaim = new MockClaimBuilder()
+  .reducedSchedule()
+  .variableWorkPattern()
+  .create();
+
+const setup = (claimAttrs) => {
+  const { appLogic, claim, wrapper } = renderWithAppLogic(
+    ReducedLeaveSchedule,
+    {
+      claimAttrs,
+    }
+  );
+
+  const { changeField, submitForm } = simulateEvents(wrapper);
+
+  return {
+    appLogic,
+    claim,
+    changeField,
+    submitForm,
+    wrapper,
+  };
+};
+
 describe("ReducedLeaveSchedule", () => {
-  let mockClaim;
+  it("renders lead with expected content when leave reason is Medical", () => {
+    const claim = new MockClaimBuilder()
+      .medicalLeaveReason()
+      .reducedSchedule()
+      .variableWorkPattern()
+      .create();
 
-  describe("when leave reason is Medical", () => {
-    it("renders lead with expected content", () => {
-      const { wrapper } = renderWithAppLogic(ReducedLeaveSchedule, {
-        claimAttrs: new MockClaimBuilder()
-          .medicalLeaveReason()
-          .reducedSchedule()
-          .variableWorkPattern()
-          .create(),
-      });
-
-      expect(wrapper.find("Lead").find("Trans").dive()).toMatchSnapshot();
-    });
+    const { wrapper } = setup(claim);
+    expect(wrapper.find("Lead").find("Trans").dive()).toMatchSnapshot();
   });
 
-  describe("when leave reason is Bonding", () => {
-    it("renders lead with expected content", () => {
-      const { wrapper } = renderWithAppLogic(ReducedLeaveSchedule, {
-        claimAttrs: new MockClaimBuilder()
-          .bondingBirthLeaveReason()
-          .reducedSchedule()
-          .variableWorkPattern()
-          .create(),
-      });
+  it("renders lead with expected content when leave reason is Bonding", () => {
+    const claim = new MockClaimBuilder()
+      .bondingBirthLeaveReason()
+      .reducedSchedule()
+      .variableWorkPattern()
+      .create();
 
-      expect(wrapper.find("Lead").find("Trans").dive()).toMatchSnapshot();
-    });
+    const { wrapper } = setup(claim);
+
+    expect(wrapper.find("Lead").find("Trans").dive()).toMatchSnapshot();
   });
 
   describe("when work pattern is a fixed schedule", () => {
-    beforeEach(() => {
-      mockClaim = new MockClaimBuilder()
-        .reducedSchedule()
-        .fixedWorkPattern()
-        .create();
-    });
-
     it("renders section label with expected content", () => {
-      const { wrapper } = renderWithAppLogic(ReducedLeaveSchedule, {
-        claimAttrs: mockClaim,
-      });
+      const { wrapper } = setup(fixedWorkPatternClaim);
 
       expect(wrapper.find("Heading")).toMatchSnapshot();
     });
 
     it("renders the WeeklyTimeTable with the work schedule", () => {
-      const { wrapper } = renderWithAppLogic(ReducedLeaveSchedule, {
-        claimAttrs: mockClaim,
-      });
+      const { claim, wrapper } = setup(fixedWorkPatternClaim);
 
       const details = wrapper.find("Details");
       const table = wrapper.find("WeeklyTimeTable");
@@ -65,13 +76,11 @@ describe("ReducedLeaveSchedule", () => {
       expect(details.prop("label")).toMatchInlineSnapshot(
         `"View your work schedule"`
       );
-      expect(table.prop("weeks")).toEqual(mockClaim.work_pattern.weeks);
+      expect(table.prop("weeks")).toEqual(claim.work_pattern.weeks);
     });
 
     it("renders the page with an input for each day", () => {
-      const { wrapper } = renderWithAppLogic(ReducedLeaveSchedule, {
-        claimAttrs: mockClaim,
-      });
+      const { wrapper } = setup(fixedWorkPatternClaim);
 
       const inputs = wrapper.find("InputHours");
 
@@ -79,12 +88,10 @@ describe("ReducedLeaveSchedule", () => {
       expect(inputs).toMatchSnapshot();
     });
 
-    it("submits the leave_period_id and minutes for each day", () => {
-      const { appLogic, wrapper } = renderWithAppLogic(ReducedLeaveSchedule, {
-        claimAttrs: mockClaim,
-      });
-
-      const { changeField } = simulateEvents(wrapper);
+    it("submits the leave_period_id and minutes for each day when the data is manually entered", () => {
+      const { appLogic, changeField, claim, submitForm } = setup(
+        fixedWorkPatternClaim
+      );
 
       changeField(
         "leave_details.reduced_schedule_leave_periods[0].monday_off_minutes",
@@ -95,10 +102,40 @@ describe("ReducedLeaveSchedule", () => {
         480
       );
 
-      wrapper.find("QuestionPage").simulate("save");
+      submitForm();
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(
-        mockClaim.application_id,
+        claim.application_id,
+        {
+          leave_details: {
+            reduced_schedule_leave_periods: [
+              {
+                friday_off_minutes: 480,
+                leave_period_id: "mock-leave-period-id",
+                monday_off_minutes: 480,
+                saturday_off_minutes: null,
+                sunday_off_minutes: null,
+                thursday_off_minutes: null,
+                tuesday_off_minutes: null,
+                wednesday_off_minutes: null,
+              },
+            ],
+          },
+        }
+      );
+    });
+
+    it("submits the leave_period_id and minutes for each day when the data was previously entered", () => {
+      const claimWithHours = Object.assign({}, fixedWorkPatternClaim);
+      claimWithHours.leave_details.reduced_schedule_leave_periods[0].monday_off_minutes = 480;
+      claimWithHours.leave_details.reduced_schedule_leave_periods[0].friday_off_minutes = 480;
+
+      const { appLogic, claim, submitForm } = setup(claimWithHours);
+
+      submitForm();
+
+      expect(appLogic.claims.update).toHaveBeenCalledWith(
+        claim.application_id,
         {
           leave_details: {
             reduced_schedule_leave_periods: [
@@ -120,25 +157,14 @@ describe("ReducedLeaveSchedule", () => {
   });
 
   describe("when work pattern is a variable schedule", () => {
-    beforeEach(() => {
-      mockClaim = new MockClaimBuilder()
-        .reducedSchedule()
-        .variableWorkPattern()
-        .create();
-    });
-
     it("renders section label with expected content", () => {
-      const { wrapper } = renderWithAppLogic(ReducedLeaveSchedule, {
-        claimAttrs: mockClaim,
-      });
+      const { wrapper } = setup(variableScheduleClaim);
 
       expect(wrapper.find("Heading")).toMatchSnapshot();
     });
 
     it("renders the work schedule as a weekly average", () => {
-      const { wrapper } = renderWithAppLogic(ReducedLeaveSchedule, {
-        claimAttrs: mockClaim,
-      });
+      const { wrapper } = setup(variableScheduleClaim);
 
       expect(wrapper.find("Details")).toMatchInlineSnapshot(`
         <Details
@@ -150,9 +176,7 @@ describe("ReducedLeaveSchedule", () => {
     });
 
     it("renders a single field for gathering the schedule", () => {
-      const { wrapper } = renderWithAppLogic(ReducedLeaveSchedule, {
-        claimAttrs: mockClaim,
-      });
+      const { wrapper } = setup(variableScheduleClaim);
 
       const inputs = wrapper.find("InputHours");
 
@@ -160,19 +184,17 @@ describe("ReducedLeaveSchedule", () => {
       expect(inputs).toMatchSnapshot();
     });
 
-    it("submits the leave_period_id and minutes for each day", () => {
-      const { appLogic, wrapper } = renderWithAppLogic(ReducedLeaveSchedule, {
-        claimAttrs: mockClaim,
-      });
-
-      const { changeField } = simulateEvents(wrapper);
+    it("submits the leave_period_id and minutes for each day when data is manually entered", () => {
+      const { appLogic, changeField, claim, wrapper } = setup(
+        variableScheduleClaim
+      );
 
       changeField("totalMinutesOff", 480);
 
       wrapper.find("QuestionPage").simulate("save");
 
       expect(appLogic.claims.update).toHaveBeenCalledWith(
-        mockClaim.application_id,
+        claim.application_id,
         {
           leave_details: {
             reduced_schedule_leave_periods: [
@@ -188,6 +210,39 @@ describe("ReducedLeaveSchedule", () => {
               },
             ],
           },
+        }
+      );
+    });
+
+    it("submits the leave_period_id and minutes for each day when data was previously entered", () => {
+      const leave_details = {
+        reduced_schedule_leave_periods: [
+          {
+            friday_off_minutes: 68,
+            leave_period_id: "mock-leave-period-id",
+            monday_off_minutes: 69,
+            saturday_off_minutes: 68,
+            sunday_off_minutes: 69,
+            thursday_off_minutes: 68,
+            tuesday_off_minutes: 69,
+            wednesday_off_minutes: 69,
+          },
+        ],
+      };
+
+      const claimWithMinutes = Object.assign({}, variableScheduleClaim);
+      claimWithMinutes.leave_details = leave_details;
+
+      const { appLogic, changeField, claim, wrapper } = setup(claimWithMinutes);
+
+      changeField("totalMinutesOff", 480);
+
+      wrapper.find("QuestionPage").simulate("save");
+
+      expect(appLogic.claims.update).toHaveBeenCalledWith(
+        claim.application_id,
+        {
+          leave_details,
         }
       );
     });
