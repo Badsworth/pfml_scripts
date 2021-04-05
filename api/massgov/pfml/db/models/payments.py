@@ -322,6 +322,79 @@ class FineosExtractVbiRequestedAbsenceSom(Base):
     reference_file = relationship(ReferenceFile)
 
 
+class FineosExtractVbiRequestedAbsence(Base):
+    __tablename__ = "fineos_extract_vbi_requested_absence"
+
+    vbi_requested_absence_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+
+    notification_casenumber = Column(Text)
+    absence_casenumber = Column(Text)
+    absence_casetypename = Column(Text)
+    absence_casestatus = Column(Text)
+    absence_caseowner = Column(Text)
+    absence_casecreationdate = Column(Text)
+    absence_caselastupdatedate = Column(Text)
+    absence_intakesource = Column(Text)
+    absence_notifiedby = Column(Text)
+    employee_customerno = Column(Text)
+    employee_manager_customerno = Column(Text)
+    employee_addtl_mngr_customerno = Column(Text)
+    employer_customerno = Column(Text)
+    employer_name = Column(Text)
+    employment_classid = Column(Text)
+    employment_indexid = Column(Text)
+    leaverequest_id = Column(Text)
+    leaverequest_notificationdate = Column(Text)
+    leaverequest_lastupdatedate = Column(Text)
+    leaverequest_originalrequest = Column(Text)
+    leaverequest_decision = Column(Text)
+    leaverequest_diagnosis = Column(Text)
+    absencereason_classid = Column(Text)
+    absencereason_indexid = Column(Text)
+    absencereason_name = Column(Text)
+    absencereason_qualifier1 = Column(Text)
+    absencereason_qualifier2 = Column(Text)
+    absencereason_coverage = Column(Text)
+    primary_relationship_name = Column(Text)
+    primary_relationship_qual1 = Column(Text)
+    primary_relationship_qual2 = Column(Text)
+    primary_relationship_cover = Column(Text)
+    secondary_relationship_name = Column(Text)
+    secondary_relationship_qual1 = Column(Text)
+    secondary_relationship_qual2 = Column(Text)
+    secondary_relationship_cover = Column(Text)
+    absenceperiod_classid = Column(Text)
+    absenceperiod_indexid = Column(Text)
+    absenceperiod_type = Column(Text)
+    absenceperiod_status = Column(Text)
+    absenceperiod_start = Column(Text)
+    absenceperiod_end = Column(Text)
+    episode_frequency_count = Column(Text)
+    episode_frequency_period = Column(Text)
+    episodic_frequency_period_unit = Column(Text)
+    episode_duration = Column(Text)
+    episodic_duration_unit = Column(Text)
+    reference_file_id = Column(
+        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+    reference_file = relationship(ReferenceFile)
+
+
 class FineosExtractEmployeeFeed(Base):
     __tablename__ = "fineos_extract_employee_feed"
 

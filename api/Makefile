@@ -184,6 +184,10 @@ delegated-payment-audit-rejects-generate:
 	mkdir -p mock_payment_rejects_files
 	$(PY_RUN_CMD) delegated-payment-audit-rejects-generate --folder mock_payment_rejects_files $(DECODE_LOG)
 
+delegated-payment-eft-response-generate:
+	mkdir -p mock_payment_eft_response
+	$(PY_RUN_CMD) delegated-payment-eft-response-generate --skiprate 50 --folder mock_payment_eft_response $(DECODE_LOG)
+
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	aws ecr get-login-password --region 'us-east-1' | \
@@ -325,6 +329,9 @@ release-tag: ## Tag release image for registry
 	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(RELEASE_TAG)
 	docker tag $(APP_NAME):$(RELEASE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
 
+runcmd: ## Run poetry command
+	$(PY_RUN_CMD) $(cmd)
+
 run-test: # The second parameter is the number of retries (each followed by
 		  # a second of wait) until a state is determined by the docker daemon
 	./bin/check_container_health.sh 60
@@ -383,12 +390,15 @@ ifndef MIGRATE_MSG
 endif
 
 define run_tests
-	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest $(1)
-	$(PY_RUN_CMD) coverage report
+	$(PY_RUN_CMD) pytest $(1)
 endef
 
 test: ## Run tests, set $args to pass flags to `pytest`
-	$(call run_tests,$(args))
+	$(call run_tests, $(args))
+
+test-coverage: ## Run tests run 
+	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest $(args)
+	$(PY_RUN_CMD) coverage report
 
 test-changed: ## Run only tests that have changed
 	$(PY_RUN_CMD) python -m pytest --testmon

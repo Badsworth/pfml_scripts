@@ -912,8 +912,12 @@ export function closeReleaseNoticeTask(docType: string): void {
 
 export function triggerNoticeRelease(docType: string): void {
   onTab("Task");
-  cy.get("td").contains("Processes").click({ force: true });
-  cy.get("span").contains("SOM Generate Legal Notice").click();
+  onTab("Processes");
+  cy.wait("@ajaxRender");
+  cy.wait(500);
+  cy.get(".TreeRootContainer").contains("SOM Generate Legal Notice").click();
+  cy.wait("@ajaxRender");
+  cy.wait(500);
   cy.get('input[type="submit"][value="Properties"]').click({ force: true });
   cy.get('input[type="submit"][value="Continue"]').click({ force: true });
   cy.wait("@ajaxRender");

@@ -32,7 +32,7 @@ jobs:
 
       - name: install project dependencies not built into container
         run: make deps
-      
+
       - name: check dependencies
         run: make deps-check
 
@@ -68,8 +68,8 @@ jobs:
       - name: create database users
         run: make db-create-users
 
-      - name: test
-        run: make test
+      - name: test with coverage
+        run: make test-coverage
 
   # Check we can build a release
   build-release:
@@ -80,7 +80,7 @@ jobs:
 
       - name: build
         run: make release-build
-  
+
       - name: pre-flight-test
         run: make release-test
 
@@ -93,7 +93,7 @@ jobs:
 
       - name: build image
         run: make release-build
-        
+
       - name: pull latest tenable image
         env:
           DOCKER_PW: ${{ secrets.PFML_TENABLE_DOCKER_PASSWORD }}

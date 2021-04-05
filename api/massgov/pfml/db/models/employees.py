@@ -246,16 +246,6 @@ class LkTitle(Base):
         self.title_description = title_description
 
 
-class LkAgency(Base):
-    __tablename__ = "lk_agency"
-    agency_id = Column(Integer, primary_key=True, autoincrement=True)
-    agency_description = Column(Text)
-
-    def __init__(self, agency_id, agency_description):
-        self.agency_id = agency_id
-        self.agency_description = agency_description
-
-
 class AuthorizedRepresentative(Base):
     __tablename__ = "authorized_representative"
     authorized_representative_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -370,6 +360,7 @@ class PubEft(Base):
         server_default=sqlnow(),
     )
     prenote_response_at = Column(TIMESTAMP(timezone=True))
+    prenote_response_reason_code = Column(Text)
     pub_eft_individual_id_seq: Sequence = Sequence("pub_eft_individual_id_seq")
     pub_individual_id = Column(
         Integer,
@@ -413,6 +404,21 @@ class CtrAddressPair(Base):
     ctr_address = cast("Optional[Address]", relationship("Address", foreign_keys=ctr_address_id))
 
 
+class ExperianAddressPair(Base):
+    __tablename__ = "link_experian_address_pair"
+    fineos_address_id = Column(
+        UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True, unique=True
+    )
+    experian_address_id = Column(
+        UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True, index=True
+    )
+
+    fineos_address = relationship("Address", foreign_keys=fineos_address_id)
+    experian_address = cast(
+        "Optional[Address]", relationship("Address", foreign_keys=experian_address_id)
+    )
+
+
 class Employee(Base):
     __tablename__ = "employee"
     employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
@@ -443,6 +449,9 @@ class Employee(Base):
     ctr_address_pair_id = Column(
         UUID(as_uuid=True), ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
     )
+    experian_address_pair_id = Column(
+        UUID(as_uuid=True), ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
+    )
 
     title = relationship(LkTitle)
     race = relationship(LkRace)
@@ -468,6 +477,7 @@ class Employee(Base):
         Optional[TaxIdentifier], relationship("TaxIdentifier", back_populates="employee")
     )
     ctr_address_pair = cast(Optional[CtrAddressPair], relationship("CtrAddressPair"))
+    experian_address_pair = cast(Optional[ExperianAddressPair], relationship("ExperianAddressPair"))
 
     authorized_reps: "Query[AuthorizedRepEmployee]" = dynamic_loader(
         "AuthorizedRepEmployee", back_populates="employee"
@@ -578,6 +588,7 @@ class Payment(Base):
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
     pub_eft = relationship(PubEft)
     fineos_extract_import_log = relationship("ImportLog")
+    check_number = Column(Integer, index=True, unique=True)
 
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")
@@ -850,29 +861,6 @@ class ImportLog(Base):
     end = Column(TIMESTAMP(timezone=True))
 
 
-class AgencyReductionPayment(Base):
-    __tablename__ = "agency_reduction_payment"
-    agency_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    absence_case_id = Column(Text, index=True)
-    agency_id = Column(Integer, ForeignKey("lk_agency.agency_id"), nullable=False)
-    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
-    payment_issued_date = Column(TIMESTAMP(timezone=True), index=True)
-    gross_benefit_amount_cents = Column(Numeric)
-    net_benefit_amount_cents = Column(Numeric)
-    has_fraud_indicator = Column(Boolean)
-    benefit_week_start_date = Column(TIMESTAMP(timezone=True), index=True)
-    benefit_week_end_date = Column(TIMESTAMP(timezone=True), index=True)
-    benefit_year_start_date = Column(TIMESTAMP(timezone=True), index=True)
-    benefit_year_end_date = Column(TIMESTAMP(timezone=True), index=True)
-    created_at = Column(TIMESTAMP(timezone=True), index=True)
-
-    agency = relationship(LkAgency)
-    claim = relationship(Claim)
-    reference_file = relationship(
-        "AgencyReductionPaymentReferenceFile", back_populates="agency_reduction_payment"
-    )
-
-
 class ReferenceFile(Base):
     __tablename__ = "reference_file"
     reference_file_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -892,9 +880,6 @@ class ReferenceFile(Base):
     employees = relationship("EmployeeReferenceFile", back_populates="reference_file")
     state_logs = relationship("StateLog", back_populates="reference_file")
     ctr_batch_identifier = relationship("CtrBatchIdentifier", back_populates="reference_files")
-    agency_reduction_payment = relationship(
-        "AgencyReductionPaymentReferenceFile", back_populates="reference_file"
-    )
     dia_reduction_payment = relationship(
         "DiaReductionPaymentReferenceFile", back_populates="reference_file"
     )
@@ -903,23 +888,6 @@ class ReferenceFile(Base):
     )
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=True, default=utc_timestamp_gen, server_default=sqlnow(),
-    )
-
-
-class AgencyReductionPaymentReferenceFile(Base):
-    __tablename__ = "link_agency_reduction_payment_reference_file"
-    reference_file_id = Column(
-        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), primary_key=True
-    )
-    agency_reduction_payment_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("agency_reduction_payment.agency_reduction_payment_id"),
-        primary_key=True,
-    )
-
-    reference_file = relationship("ReferenceFile", back_populates="agency_reduction_payment")
-    agency_reduction_payment = relationship(
-        "AgencyReductionPayment", back_populates="reference_file"
     )
 
 
@@ -1067,7 +1035,7 @@ class DiaReductionPayment(Base):
     __tablename__ = "dia_reduction_payment"
     dia_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
 
-    absence_case_id = Column(Text, nullable=False)
+    fineos_customer_number = Column(Text, nullable=False)
     board_no = Column(Text)
     event_id = Column(Text)
     event_description = Column(Text)
@@ -1090,6 +1058,68 @@ class DiaReductionPayment(Base):
     )
 
     # Each row should be unique.
+
+
+class PubError(Base):
+    __tablename__ = "pub_error"
+    pub_error_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+
+    pub_error_type_id = Column(
+        Integer, ForeignKey("lk_pub_error_type.pub_error_type_id"), nullable=False
+    )
+
+    message = Column(Text, nullable=False)
+    line_number = Column(Integer, nullable=False)
+    type_code = Column(Integer, nullable=False)
+    raw_data = Column(Text, nullable=False)
+    details = Column(JSON)
+
+    payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"))
+    pub_eft_id = Column(PostgreSQLUUID, ForeignKey("pub_eft.pub_eft_id"))
+
+    import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True, nullable=False
+    )
+    reference_file_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("reference_file.reference_file_id"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        default=utc_timestamp_gen,
+        server_default=sqlnow(),
+    )
+
+    pub_error_type = relationship("LkPubErrorType")
+    payment = relationship("Payment")
+    pub_eft = relationship("PubEft")
+    import_log = relationship("ImportLog")
+    reference_file = relationship("ReferenceFile")
+
+
+class LkPubErrorType(Base):
+    __tablename__ = "lk_pub_error_type"
+    pub_error_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    pub_error_type_description = Column(Text)
+
+    def __init__(self, pub_error_type_id, pub_error_type_description):
+        self.pub_error_type_id = pub_error_type_id
+        self.pub_error_type_description = pub_error_type_description
+
+
+class PubErrorType(LookupTable):
+    model = LkPubErrorType
+    column_names = ("pub_error_type_id", "pub_error_type_description")
+
+    ACH_WARNING = LkPubErrorType(1, "ACH Warning")
+    ACH_RETURN = LkPubErrorType(2, "ACH Return")
+    ACH_PRENOTE = LkPubErrorType(3, "ACH Prenote")
+    ACH_NOTIFICATION = LkPubErrorType(4, "ACH Notification")
+    ACH_SUCCESS_WITH_NOTIFICATION = LkPubErrorType(5, "ACH Success with Notification")
 
 
 class AbsenceStatus(LookupTable):
@@ -1814,6 +1844,44 @@ class State(LookupTable):
         147, "cancellation payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
     )
 
+    # Report states for employer reimbursement payment states
+    DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT = LkState(
+        148,
+        "Waiting for Payment Audit Report response - employer reimbursement payment",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+    DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
+        149,
+        "Add employer reimbursement payment to FINEOS Writeback",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+    DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+        150, "Employer reimbursement payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    # PEI WRITE BACK ERROR TO FINEOS
+    ADD_TO_ERRORED_PEI_WRITEBACK = LkState(
+        151, "Add to Errored PEI writeback", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    ERRORED_PEI_WRITEBACK_SENT = LkState(
+        152, "Errored PEI write back sent to FINEOS", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    # Delegated payments address validation states.
+    CLAIMANT_READY_FOR_ADDRESS_VALIDATION = LkState(
+        153, "Claimant ready for address validation", Flow.DELEGATED_CLAIMANT.flow_id
+    )
+    CLAIMANT_FAILED_ADDRESS_VALIDATION = LkState(
+        154, "Claimant failed address validation", Flow.DELEGATED_CLAIMANT.flow_id
+    )
+    PAYMENT_READY_FOR_ADDRESS_VALIDATION = LkState(
+        155, "Payment ready for address validation", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    PAYMENT_FAILED_ADDRESS_VALIDATION = LkState(
+        156, "Payment failed address validation", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
 
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType
@@ -1849,12 +1917,15 @@ class ReferenceFileType(LookupTable):
         14, "DIA payments for DFML reduction report", 1
     )
     PUB_TRANSACTION = LkReferenceFileType(15, "PUB-NACHA", 1)
+    PUB_ACH_RETURN = LkReferenceFileType(16, "PUB ACH Return", 1)
 
     DELEGATED_PAYMENT_AUDIT_REPORT = LkReferenceFileType(20, "Payment Audit Report", 1)
     DELEGATED_PAYMENT_REJECTS = LkReferenceFileType(21, "Payment Rejects", 1)
     DELEGATED_PAYMENT_REJECTS_REPORT = LkReferenceFileType(22, "Payment Rejects Report", 1)
     FINEOS_CLAIMANT_EXTRACT = LkReferenceFileType(24, "Claimant extract", 2)
-    FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 3)
+    FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 4)
+
+    PUB_EZ_CHECK = LkReferenceFileType(26, "PUB EZ check file", 1)
 
 
 class Title(LookupTable):
@@ -1869,14 +1940,6 @@ class Title(LookupTable):
     DR = LkTitle(6, "Dr")
     MADAM = LkTitle(7, "Madam")
     SIR = LkTitle(8, "Sir")
-
-
-class Agency(LookupTable):
-    model = LkAgency
-    column_names = ("agency_id", "agency_description")
-
-    DIA = LkAgency(1, "Department of Industrial Accidents")
-    DUA = LkAgency(2, "Department of Unemployment Assistance")
 
 
 def sync_lookup_tables(db_session):
@@ -1902,4 +1965,5 @@ def sync_lookup_tables(db_session):
     State.sync_to_database(db_session)
     PaymentTransactionType.sync_to_database(db_session)
     PrenoteState.sync_to_database(db_session)
+    PubErrorType.sync_to_database(db_session)
     db_session.commit()

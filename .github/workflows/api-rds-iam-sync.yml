@@ -1,0 +1,68 @@
+# This job periodically updates the RDS IAM access role that the API uses to connect to the database.
+# This is needed because RDS IAM can only reference the database by ID, which changes every time the
+# database is restored/replaced.
+#
+# This happens periodically for the training environment, so we automate the step.
+# Note that this also forces an apply of the RDS database, which depends on this IAM role.
+#
+name: API RDS IAM Sync
+
+on:
+  workflow_dispatch:
+    environment:
+      inputs:
+        description: "Name of the environment"
+        required: true
+        default: 'training'
+  # scheduled to run every 30 minutes on Fridays
+  # Start: 7AM EST (8AM EDT) (12 UTC)
+  # End: 12AM EST (1AM EDT Saturday) (5 UTC Saturday)
+  schedule:
+    - cron: '0,30 12-23 * * FRI'
+    - cron: '0,30 0-5 * * SAT'
+
+env:
+  working-directory: ./infra/api/environments/
+  terraform-version: 0.14.7
+  default-environment: training
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    env:
+      TF_CLI_ARGS: '-lock-timeout=120s'
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: deploy/api/${{ github.event.inputs.environment || env.default-environment }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-to-assume: ci-run-deploys
+
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: ${{ env.terraform-version }}
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        id: terraform_init
+        run: terraform init
+        working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}
+
+      - name: Terraform Plan with RDS IAM target
+        id: terraform_plan
+        run: terraform plan --target module.api.aws_iam_policy.db_user_pfml_api
+        working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}
+
+      - name: Terraform Apply from execution plan
+        id: terraform_apply
+        run: terraform apply --target module.api.aws_iam_policy.db_user_pfml_api -auto-approve
+        working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}

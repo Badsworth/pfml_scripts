@@ -17,7 +17,10 @@ export default (
 
   // Decides which user account to login with.
   let userType: Cfg.FineosUserType | undefined;
-  for (const typeName of Cfg.fineosUserTypeNames) {
+
+  // Unknown compilation issue where we cannot use "Cfg.fineosUserTypeNames"
+  // instead of the array of agents directly
+  for (const typeName of ["SAVILINX", "DFMLOPS"]) {
     if (scenario.toUpperCase().includes(typeName)) {
       userType = typeName as Cfg.FineosUserType;
       break;

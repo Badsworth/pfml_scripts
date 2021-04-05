@@ -25,8 +25,11 @@ class PreSignupEvent(aws_lambda.CognitoUserPoolEvent):
 def handler(
     db_session: db.Session, event: PreSignupEvent, context: aws_lambda.LambdaContext,
 ) -> PreSignupEvent:
-
     cognito_metadata = event.request.clientMetadata
+
+    if cognito_metadata is not None and cognito_metadata.get("sign_up_source", None) == "pfml_api":
+        logger.info("Signup is from API so not checking it further in pre-sign up lambda")
+        return event
 
     if cognito_metadata is not None and "ein" in cognito_metadata:
         logger.info("Signup is for a leave administrator account")

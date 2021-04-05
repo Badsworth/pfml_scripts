@@ -121,6 +121,15 @@ resource "aws_iam_role_policy" "api_service" {
   policy = data.aws_iam_policy_document.api_service.json
 }
 
+# Temporary additions for Feature Gate S3 access
+
+resource "aws_iam_role_policy" "feature_gate_s3_access" {
+  name   = "${local.app_name}-${var.environment_name}-feature-gate-s3-access-policy"
+  role   = aws_iam_role.api_service.id
+  policy = data.aws_iam_policy_document.feature_gate.json
+}
+
+
 data "aws_iam_policy_document" "api_service" {
   statement {
     effect = "Allow"
@@ -570,3 +579,22 @@ data "aws_iam_policy_document" "document_upload" {
   #  }
 }
 
+# IAM policy that defines get access rights to the S3 feature gate buckets
+data "aws_iam_policy_document" "feature_gate" {
+
+  statement {
+
+    effect = "Allow"
+
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-feature-gate",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-feature-gate/*"
+    ]
+
+  }
+}

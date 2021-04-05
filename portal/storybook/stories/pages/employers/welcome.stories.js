@@ -1,10 +1,11 @@
-import { Index } from "src/pages/employers";
 import React from "react";
 import User from "src/models/User";
+import { Welcome } from "src/pages/employers/welcome";
+import routes from "src/routes";
 
 export default {
   title: "Pages/Employers/Welcome",
-  component: Index,
+  component: Welcome,
   argTypes: {
     hasVerifiableEmployer: {
       defaultValue: "Yes",
@@ -17,6 +18,11 @@ export default {
 };
 
 export const Default = ({ hasVerifiableEmployer }) => {
+  const appLogic = {
+    portalFlow: {
+      pathname: routes.employers.welcome,
+    },
+  };
   const user = new User({
     user_leave_administrators: [
       {
@@ -28,5 +34,5 @@ export const Default = ({ hasVerifiableEmployer }) => {
       },
     ],
   });
-  return <Index user={user} />;
+  return <Welcome appLogic={appLogic} user={user} />;
 };

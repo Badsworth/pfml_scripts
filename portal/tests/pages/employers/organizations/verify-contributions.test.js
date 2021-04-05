@@ -45,7 +45,7 @@ describe("VerifyContributions", () => {
 
     it("redirects to the employer welcome page", () => {
       expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        routes.employers.dashboard
+        routes.employers.welcome
       );
     });
   });

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`StateId initially renders the page without an id field 1`] = `
+exports[`StateId initially renders the page with the ID text field hidden 1`] = `
 <QuestionPage
   onSave={[Function]}
   title="Your identification"

@@ -154,7 +154,7 @@ locals {
       task_role           = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-workflow"
       execution_role      = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-reductions-wrkflw-execution-role"
       vars = {
-        eolwd_moveit_sftp_uri = var.eolwd_moveit_sftp_uri
+        agency_reductions_email_address = var.agency_reductions_email_address
       }
     },
 

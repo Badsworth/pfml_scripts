@@ -195,6 +195,11 @@ class EmployeeFactory(BaseFactory):
     ctr_vendor_customer_code = "VC0001201168"
 
 
+class EmployeeWithFineosNumberFactory(EmployeeFactory):
+    date_of_birth = factory.Faker("date_of_birth", minimum_age=14, maximum_age=100)
+    fineos_customer_number = factory.Faker("numerify", text="####")
+
+
 class EmployeePubEftPairFactory(BaseFactory):
     class Meta:
         model = employee_models.EmployeePubEftPair
@@ -463,6 +468,14 @@ class AddressFactory(BaseFactory):
 class CtrAddressPairFactory(BaseFactory):
     class Meta:
         model = employee_models.CtrAddressPair
+
+    fineos_address = factory.SubFactory(AddressFactory)
+    fineos_address_id = factory.LazyAttribute(lambda c: c.fineos_address.address_id)
+
+
+class ExperianAddressPairFactory(BaseFactory):
+    class Meta:
+        model = employee_models.ExperianAddressPair
 
     fineos_address = factory.SubFactory(AddressFactory)
     fineos_address_id = factory.LazyAttribute(lambda c: c.fineos_address.address_id)

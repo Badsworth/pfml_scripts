@@ -9,6 +9,7 @@ export function beforePortal(): void {
       noMaintenance: true,
       employerShowSelfRegistrationForm: true,
       claimantShowOtherLeaveStep: true,
+      claimantAuthThroughApi: true,
     }),
     { log: true }
   );
@@ -47,6 +48,30 @@ export function bailIfThisTestFails(): void {
   });
 }
 
+/**
+ * This function is used to fetch and set the proper cookies for access Fineos UAT
+ *
+ * Note: Only used for UAT enviornment
+ */
+function SSO(): void {
+  cy.clearCookies();
+  // Perform SSO login in a task. We can't visit other domains in Cypress.
+  cy.task("completeSSOLoginFineos").then((cookiesJson) => {
+    const deserializedCookies: Record<string, string>[] = JSON.parse(
+      cookiesJson
+    );
+    // There's no way we can stop the redirection from Fineos -> SSO login.
+    // What we _can_ do is set the login cookies so that when that request is made,
+    // it bounces back immediately with a HTTP redirect instead of showing the login page.
+    const noSecure = deserializedCookies.filter((cookie) =>
+      cookie.domain.match(/login\.microsoftonline/)
+    );
+    for (const cookie_info of noSecure) {
+      cy.setCookie(cookie_info.name, cookie_info.value, cookie_info);
+    }
+  });
+}
+
 export function beforeFineos(): void {
   // Suppress known application errors in Fineos.
   cy.on("uncaught:exception", (e) => {
@@ -70,4 +95,8 @@ export function beforeFineos(): void {
 
   // Set up a route we can listen to wait on ajax rendering to complete.
   cy.intercept(/ajax\/pagerender\.jsp/).as("ajaxRender");
+
+  if (Cypress.env("E2E_ENVIRONMENT") === "uat") {
+    SSO();
+  }
 }

@@ -2,13 +2,14 @@ import csv
 import decimal
 import os
 import pathlib
+import re
 import tempfile
 import uuid
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import Dict, List, Optional, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -23,13 +24,12 @@ from massgov.pfml.db.models.employees import (
     AddressType,
     BankAccountType,
     Claim,
-    CtrAddressPair,
     Employee,
     EmployeeAddress,
     EmployeePubEftPair,
+    ExperianAddressPair,
     GeoState,
     LatestStateLog,
-    LkPaymentTransactionType,
     LkState,
     Payment,
     PaymentMethod,
@@ -44,6 +44,7 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
 )
 from massgov.pfml.db.models.payments import (
+    FineosExtractVbiRequestedAbsence,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
@@ -58,11 +59,13 @@ PROCESSED_FOLDER = "processed"
 SKIPPED_FOLDER = "skipped"
 
 # Expected file names
+VBI_REQUESTED_ABSENCE_FILE_NAME = "VBI_REQUESTEDABSENCE.csv"
 PEI_EXPECTED_FILE_NAME = "vpei.csv"
 PAYMENT_DETAILS_EXPECTED_FILE_NAME = "vpeipaymentdetails.csv"
 CLAIM_DETAILS_EXPECTED_FILE_NAME = "vpeiclaimdetails.csv"
 
 expected_file_names = [
+    VBI_REQUESTED_ABSENCE_FILE_NAME,
     PEI_EXPECTED_FILE_NAME,
     PAYMENT_DETAILS_EXPECTED_FILE_NAME,
     CLAIM_DETAILS_EXPECTED_FILE_NAME,
@@ -72,6 +75,8 @@ CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
 OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = set(
     ["Overpayment"]
 )  # There may be multiple types needed here, need to test further to know
+
+SOCIAL_SECURITY_NUMBER = "Social Security Number"
 
 
 @dataclass(frozen=True, eq=True)
@@ -100,6 +105,7 @@ class ExtractData:
     pei: Extract
     payment_details: ExtractMultiple
     claim_details: Extract
+    requested_absence: Extract
 
     date_str: str
 
@@ -113,6 +119,8 @@ class ExtractData:
                 self.payment_details = ExtractMultiple(s3_location)
             elif s3_location.endswith(CLAIM_DETAILS_EXPECTED_FILE_NAME):
                 self.claim_details = Extract(s3_location)
+            elif s3_location.endswith(VBI_REQUESTED_ABSENCE_FILE_NAME):
+                self.requested_absence = Extract(s3_location)
 
         self.date_str = date_str
 
@@ -143,7 +151,11 @@ class PaymentData:
     tin: Optional[str] = None
     absence_case_number: Optional[str] = None
 
+    leave_request_id: Optional[str] = None
+    leave_request_decision: Optional[str] = None
+
     full_name: Optional[str] = None
+    payee_identifier: Optional[str] = None
 
     address_line_one: Optional[str] = None
     address_line_two: Optional[str] = None
@@ -162,7 +174,13 @@ class PaymentData:
     account_nbr: Optional[str] = None
     raw_account_type: Optional[str] = None
 
-    def __init__(self, extract_data: ExtractData, index: CiIndex, pei_record: Dict[str, str]):
+    def __init__(
+        self,
+        extract_data: ExtractData,
+        index: CiIndex,
+        pei_record: Dict[str, str],
+        count_incrementer: Optional[Callable[[str], None]] = None,
+    ):
         self.validation_container = payments_util.ValidationContainer(str(index))
         self.c_value = index.c
         self.i_value = index.i
@@ -187,6 +205,37 @@ class PaymentData:
             self.absence_case_number = payments_util.validate_csv_input(
                 "ABSENCECASENU", claim_details, self.validation_container, True
             )
+            requested_absence = None
+            if self.absence_case_number:
+                requested_absence = extract_data.requested_absence.indexed_data.get(
+                    CiIndex(c=self.absence_case_number, i="")
+                )
+            if requested_absence:
+                self.leave_request_id = payments_util.validate_csv_input(
+                    "LEAVEREQUEST_ID", requested_absence, self.validation_container, True
+                )
+
+                def leave_request_decision_validator(
+                    leave_request_decision: str,
+                ) -> Optional[payments_util.ValidationReason]:
+                    if leave_request_decision != "Approved":
+                        if count_incrementer is not None:
+                            count_incrementer("unapproved_leave_request_count")
+                        return payments_util.ValidationReason.INVALID_VALUE
+                    return None
+
+                self.leave_request_decision = payments_util.validate_csv_input(
+                    "LEAVEREQUEST_DECISION",
+                    requested_absence,
+                    self.validation_container,
+                    True,
+                    custom_validator_func=leave_request_decision_validator,
+                )
+            else:
+                self.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISMATCHED_DATA,
+                    f"Payment absence case number not found in requested absence file: {self.absence_case_number}",
+                )
         else:
             # We require the absence case number, if claim details doesn't exist
             # we want to set the validation issue manually here
@@ -194,8 +243,8 @@ class PaymentData:
                 payments_util.ValidationReason.MISSING_FIELD, "ABSENCECASENU"
             )
 
-        self.full_name = payments_util.validate_csv_input(
-            "PAYEEFULLNAME", pei_record, self.validation_container, False
+        self.payee_identifier = payments_util.validate_csv_input(
+            "PAYEEIDENTIFI", pei_record, self.validation_container, True
         )
 
         self.raw_payment_method = payments_util.validate_csv_input(
@@ -232,6 +281,7 @@ class PaymentData:
             address_required,
             custom_validator_func=payments_util.lookup_validator(GeoState),
         )
+
         self.zip_code = payments_util.validate_csv_input(
             "PAYMENTPOSTCO",
             pei_record,
@@ -239,6 +289,7 @@ class PaymentData:
             address_required,
             min_length=5,
             max_length=10,
+            custom_validator_func=payments_util.zip_code_validator,
         )
 
         self.raw_payment_transaction_type = payments_util.validate_csv_input(
@@ -258,6 +309,8 @@ class PaymentData:
 
         def amount_validator(amount_str: str) -> Optional[payments_util.ValidationReason]:
             try:
+                if not re.match(payments_util.Regexes.MONETARY_AMOUNT, amount_str):
+                    return payments_util.ValidationReason.INVALID_VALUE
                 Decimal(amount_str)
             except (InvalidOperation, TypeError):  # Amount is not numeric
                 return payments_util.ValidationReason.INVALID_VALUE
@@ -328,13 +381,11 @@ class PaymentData:
     def payment_period_date_validator(
         self, payment_period_date_str: str
     ) -> Optional[payments_util.ValidationReason]:
-        now = payments_util.get_now()
-        payment_period_date = datetime.strptime(payment_period_date_str, "%Y-%m-%d %H:%M:%S")
-        if payment_period_date.date() > now.date():
-            return payments_util.ValidationReason.INVALID_VALUE
+        # Convert the str into a date to validate the format
+        datetime.strptime(payment_period_date_str, "%Y-%m-%d %H:%M:%S")
         return None
 
-    def get_traceable_details(self) -> Dict[str, Optional[str]]:
+    def get_traceable_details(self) -> Dict[str, Optional[Any]]:
         # For logging purposes, this returns useful, traceable details
         # about a payment that isn't PII. Recommended usage is as:
         # logger.info("...", extra=payment_data.get_traceable_details())
@@ -348,7 +399,7 @@ class PaymentData:
 class PaymentExtractStep(Step):
     def run_step(self):
         with tempfile.TemporaryDirectory() as download_directory:
-            self.process_extract_data(download_directory)
+            self.process_extract_data(pathlib.Path(download_directory))
 
     def get_active_payment_state(self, payment: Payment) -> Optional[LkState]:
         """ For the given payment, determine if the payment is being processed or complete
@@ -392,7 +443,7 @@ class PaymentExtractStep(Step):
 
         return None
 
-    def download_and_process_data(
+    def download_and_extract_data(
         self, extract_data: ExtractData, download_directory: pathlib.Path
     ) -> None:
         logger.info(
@@ -446,6 +497,16 @@ class PaymentExtractStep(Step):
                 record["PEINDEXID"],
             )
 
+        # Requested absence file
+        requested_absences = self.download_and_parse_data(
+            extract_data.requested_absence.file_location, download_directory
+        )
+        for record in requested_absences:
+            absence_case_number = str(record.get("ABSENCE_CASENUMBER"))
+            extract_data.requested_absence.indexed_data[
+                CiIndex(c=absence_case_number, i="")
+            ] = record
+
         logger.info("Successfully downloaded and indexed payment extract data files.")
 
     def determine_field_names(self, download_location: pathlib.Path) -> List[str]:
@@ -470,7 +531,7 @@ class PaymentExtractStep(Step):
         self, s3_path: str, download_directory: pathlib.Path
     ) -> List[Dict[str, str]]:
         file_name = s3_path.split("/")[-1]
-        download_location = os.path.join(download_directory, file_name)
+        download_location = download_directory / file_name
         logger.info("download %s to %s", s3_path, download_location)
         if s3_path.startswith("s3:/"):
             file_util.download_from_s3(s3_path, str(download_location))
@@ -494,6 +555,13 @@ class PaymentExtractStep(Step):
     def get_employee_and_claim(
         self, payment_data: PaymentData
     ) -> Tuple[Optional[Employee], Optional[Claim]]:
+        # If the payee_identifier isn't SSN (ie. is an ID or TIN), we want
+        # to skip fetching the employee and claim entirely as we're assuming
+        # that it is the employer. Note that this isn't 100% correct, and a
+        # more sophisticated approach will be added in the future.
+        if payment_data.payee_identifier != SOCIAL_SECURITY_NUMBER:
+            return None, None
+
         # Get the TIN, employee and claim associated with the payment to be made
         employee, claim = None, None
         try:
@@ -531,53 +599,37 @@ class PaymentExtractStep(Step):
             )
             raise
 
-        # Claim might not exist because the employee used the call center, or the employee
-        # errored. We do not want to create a claim if we do not have an absence case number
+        # Claim might not exist because the employee used the call center, or the claimant extract
+        # errored for the claimant.
+        # We do not want to create a claim if we do not have an absence case number
         # as it's a unique field and we would rather have orphaned payments instead of
         # errored payments grouped together in null claim object.
         if not claim and payment_data.absence_case_number:
             claim = Claim(
-                claim_id=uuid.uuid4(),
-                employee=employee,
-                fineos_absence_id=payment_data.absence_case_number,
+                claim_id=uuid.uuid4(), fineos_absence_id=payment_data.absence_case_number,
             )
             self.db_session.add(claim)
             self.increment("claim_created_count")
 
-        # Do a few validations on the claim+employee
-        if claim:
-            if not employee and claim.employee:
-                # Somehow we have ended up in a state where we could not find an employee
-                # but did find a claim with some other employee ID. This shouldn't happen
-                # but if it does we need to halt to investigate.
-                logger.error(
-                    "Could not find employee for payment, but found claim %s with an attached employee %s",
-                    claim.claim_id,
-                    claim.employee.employee_id,
-                    extra=payment_data.get_traceable_details(),
-                )
-                raise Exception(
-                    "Could not find employee for payment, but found a claim",
-                    extra=payment_data.get_traceable_details(),
-                )
+        # Attach the employee to the claim
+        if claim and employee:
+            claim.employee = employee
 
-            if employee and claim.employee and employee.employee_id != claim.employee.employee_id:
-                # We've found a claim with a different employee ID, this shouldn't happen
-                # This might mean that the FINEOS absence_case_number isn't necessarily unique.
-                logger.error(
-                    "Found claim %s, but its employee ID %s does not match the one we found from the TIN %s",
-                    claim.claim_id,
-                    claim.employee.employee_id,
-                    employee.employee_id,
-                    extra=payment_data.get_traceable_details(),
-                )
-                raise Exception(
-                    "The claims employee does not match the employee associated with the TIN"
-                )
+        # Somehow we have ended up in a state where we could not find an employee
+        # but did find a claim with some other employee ID. This shouldn't happen
+        # but if it does we need to halt to investigate.
+        if claim and not employee and claim.employee:
+            logger.error(
+                "Could not find employee for payment, but found claim %s with an attached employee %s",
+                claim.claim_id,
+                claim.employee.employee_id,
+                extra=payment_data.get_traceable_details(),
+            )
+            raise Exception("Could not find employee for payment, but found a claim")
 
         return employee, claim
 
-    def update_ctr_address_pair_fineos_address(
+    def update_experian_address_pair_fineos_address(
         self, payment_data: PaymentData, employee: Employee
     ) -> bool:
         """Create or update the employee's EFT record
@@ -593,23 +645,25 @@ class PaymentExtractStep(Step):
             if payment_data.address_line_two
             else None,
             city=payment_data.city,
-            geo_state_id=GeoState.get_id(payment_data.state),
+            geo_state_id=GeoState.get_id(payment_data.state) if payment_data.state else None,
             zip_code=payment_data.zip_code,
             address_type_id=AddressType.MAILING.address_type_id,
         )
 
-        # If ctr_address_pair exists, compare the existing fineos_address with the payment_data address
+        # If experian_address_pair exists, compare the existing fineos_address with the payment_data address
         #   If they're the same, nothing needs to be done, so we can return
-        #   If they're different or if no ctr_address_pair exists, create a new CtrAddressPair
-        ctr_address_pair = employee.ctr_address_pair
-        if ctr_address_pair:
-            if payments_util.is_same_address(ctr_address_pair.fineos_address, payment_data_address):
+        #   If they're different or if no experian_address_pair exists, create a new ExperianAddressPair
+        experian_address_pair = employee.experian_address_pair
+        if experian_address_pair:
+            if payments_util.is_same_address(
+                experian_address_pair.fineos_address, payment_data_address
+            ):
                 return False
 
-        new_ctr_address_pair = CtrAddressPair(fineos_address=payment_data_address)
-        employee.ctr_address_pair = new_ctr_address_pair
+        new_experian_address_pair = ExperianAddressPair(fineos_address=payment_data_address)
+        employee.experian_address_pair = new_experian_address_pair
         self.db_session.add(payment_data_address)
-        self.db_session.add(new_ctr_address_pair)
+        self.db_session.add(new_experian_address_pair)
         self.db_session.add(employee)
 
         # We also want to make sure the address is linked in the EmployeeAddress table
@@ -617,9 +671,7 @@ class PaymentExtractStep(Step):
         self.db_session.add(employee_address)
         return True
 
-    def get_payment_transaction_type_id(
-        self, payment_data: PaymentData, amount: Decimal
-    ) -> LkPaymentTransactionType:
+    def get_payment_transaction_type_id(self, payment_data: PaymentData, amount: Decimal) -> int:
         if payment_data.raw_payment_transaction_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
             return PaymentTransactionType.CANCELLATION.payment_transaction_type_id
         elif payment_data.raw_payment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
@@ -642,7 +694,7 @@ class PaymentExtractStep(Step):
     def create_payment(
         self,
         payment_data: PaymentData,
-        claim: Claim,
+        claim: Optional[Claim],
         validation_container: payments_util.ValidationContainer,
     ) -> Payment:
         # We always create a new payment record. This may be completely new
@@ -662,7 +714,8 @@ class PaymentExtractStep(Step):
 
         # Note that these values may have validation issues
         # that is fine as it will get moved to an error state
-        payment.claim = claim
+        if claim:
+            payment.claim = claim
         payment.period_start_date = payments_util.datetime_str_to_date(
             payment_data.payment_start_period
         )
@@ -696,8 +749,7 @@ class PaymentExtractStep(Step):
             # setting a payment that is going further in processing.
             if not validation_container.has_validation_issues():
                 raise Exception(
-                    "A payment without an amount was found and not caught by validation.",
-                    extra=payment_data.get_traceable_details(),
+                    "A payment without an amount was found and not caught by validation."
                 )
 
         payment.fineos_pei_c_value = payment_data.c_value
@@ -828,7 +880,9 @@ class PaymentExtractStep(Step):
         payment_eft = None
         if employee and not payment_data.validation_container.has_validation_issues():
             # Update the mailing address with values from FINEOS
-            has_address_update = self.update_ctr_address_pair_fineos_address(payment_data, employee)
+            has_address_update = self.update_experian_address_pair_fineos_address(
+                payment_data, employee
+            )
 
             # Update the EFT info with values from FINEOS
             payment_eft, has_eft_update = self.update_eft(payment_data, employee)
@@ -846,7 +900,7 @@ class PaymentExtractStep(Step):
 
         # Attach the EFT info used to the payment
         if payment_eft:
-            payment.pub_eft_id = payment_eft.pub_eft_id
+            payment.pub_eft = payment_eft
 
         # Link the payment object to the payment_reference_file
         payment_reference_file = PaymentReferenceFile(
@@ -873,17 +927,22 @@ class PaymentExtractStep(Step):
 
         return payment
 
-    def _setup_state_log(
-        self, payment: Payment, validation_container: payments_util.ValidationContainer
-    ) -> None:
+    def _setup_state_log(self, payment: Payment, payment_data: PaymentData) -> None:
 
         # https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
         # Does the payment have validation issues
         # If so, add to that error state
-        if validation_container.has_validation_issues():
+        if payment_data.validation_container.has_validation_issues():
             end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
             message = "Error processing payment record"
             self.increment("errored_payment_count")
+
+        elif payment_data.payee_identifier != SOCIAL_SECURITY_NUMBER:
+            end_state = (
+                State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT
+            )
+            message = "Employer reimbursement added to pending state for FINEOS writeback"
+            self.increment("employer_reimbursement_count")
 
         # Zero dollar payments are added to the FINEOS writeback + a report
         elif (
@@ -903,30 +962,23 @@ class PaymentExtractStep(Step):
             message = "Overpayment payment added to pending state for FINEOS writeback"
             self.increment("overpayment_count")
 
-        # Cancellations depend on the type of payment
+        # Cancellations are added to the FINEOS writeback + a report
         elif (
             payment.payment_transaction_type_id
             == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
         ):
-            # ACH cancellations are added to the FINEOS writeback + a report
-            if payment.disb_method_id == PaymentMethod.ACH.payment_method_id:
-                end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
-                message = "Cancellation payment added to pending state for FINEOS writeback"
-                self.increment("ach_cancellation_count")
-            # Check cancellations are processed by us and sent to PUB
-            else:
-                end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
-                message = "Check cancellation payment added"
-                self.increment("check_cancellation_count")
+            end_state = State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
+            message = "Cancellation payment added to pending state for FINEOS writeback"
+            self.increment("cancellation_count")
 
         else:
-            end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+            end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
             message = "Success"
             self.increment("standard_valid_payment_count")
 
         state_log_util.create_finished_state_log(
             end_state=end_state,
-            outcome=state_log_util.build_outcome(message, validation_container),
+            outcome=state_log_util.build_outcome(message, payment_data.validation_container),
             associated_model=payment,
             db_session=self.db_session,
         )
@@ -942,7 +994,9 @@ class PaymentExtractStep(Step):
             try:
                 self.increment("processed_payment_count")
                 # Construct a payment data object for easier organization of the many params
-                payment_data = PaymentData(extract_data, index, record)
+                payment_data = PaymentData(
+                    extract_data, index, record, count_incrementer=self.increment
+                )
                 logger.debug(
                     "Constructed payment data for extract with CI: %s, %s", index.c, index.i
                 )
@@ -960,7 +1014,7 @@ class PaymentExtractStep(Step):
                 # record to an error state which'll send out a report to address it, otherwise
                 # it will move onto the next step in processing
                 self._setup_state_log(
-                    payment, payment_data.validation_container,
+                    payment, payment_data,
                 )
 
                 logger.info(
@@ -1021,6 +1075,20 @@ class PaymentExtractStep(Step):
             },
         )
 
+        new_requested_absence_s3_path = extract_data.requested_absence.file_location.replace(
+            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
+        )
+        file_util.rename_file(
+            extract_data.requested_absence.file_location, new_requested_absence_s3_path
+        )
+        logger.debug(
+            "Moved requested absence file to processed folder.",
+            extra={
+                "source": extract_data.requested_absence.file_location,
+                "destination": new_requested_absence_s3_path,
+            },
+        )
+
         # Update the reference file DB record to point to the new folder for these files
         extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
             RECEIVED_FOLDER, f"{PROCESSED_FOLDER}"
@@ -1046,7 +1114,7 @@ class PaymentExtractStep(Step):
             extract_data.date_str, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         )
         new_pei_s3_path = extract_data.pei.file_location.replace(
-            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
+            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
         )
         file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
         logger.debug(
@@ -1075,6 +1143,20 @@ class PaymentExtractStep(Step):
             extra={
                 "source": extract_data.claim_details.file_location,
                 "destination": new_claim_s3_path,
+            },
+        )
+
+        new_requested_absence_s3_path = extract_data.requested_absence.file_location.replace(
+            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
+        )
+        file_util.rename_file(
+            extract_data.requested_absence.file_location, new_requested_absence_s3_path
+        )
+        logger.debug(
+            "Moved requested absence file to processed folder.",
+            extra={
+                "source": extract_data.requested_absence.file_location,
+                "destination": new_requested_absence_s3_path,
             },
         )
 
@@ -1198,7 +1280,7 @@ class PaymentExtractStep(Step):
                     previously_processed_date.add(date_str)
                     continue
 
-                self.download_and_process_data(extract_data, download_directory)
+                self.download_and_extract_data(extract_data, download_directory)
                 self.extract_to_staging_tables(extract_data)
 
                 self.process_records_to_db(extract_data)
@@ -1222,7 +1304,7 @@ class PaymentExtractStep(Step):
 
         logger.info("Successfully processed payment extract files")
 
-    def extract_to_staging_tables(self, extract_data: ExtractData):
+    def extract_to_staging_tables(self, extract_data: ExtractData) -> None:
         ref_file = extract_data.reference_file
         self.db_session.add(ref_file)
         pei_data = [
@@ -1231,6 +1313,10 @@ class PaymentExtractStep(Step):
         claim_details_data = [
             payments_util.make_keys_lowercase(v)
             for v in extract_data.claim_details.indexed_data.values()
+        ]
+        requested_absence_data = [
+            payments_util.make_keys_lowercase(v)
+            for v in extract_data.requested_absence.indexed_data.values()
         ]
         payment_details_data = []
         for _, v in extract_data.payment_details.indexed_data.items():
@@ -1254,3 +1340,9 @@ class PaymentExtractStep(Step):
                 data, FineosExtractVpeiPaymentDetails, ref_file, self.get_import_log_id()
             )
             self.db_session.add(payment_details)
+
+        for data in requested_absence_data:
+            requested_absence = payments_util.create_staging_table_instance(
+                data, FineosExtractVbiRequestedAbsence, ref_file, self.get_import_log_id()
+            )
+            self.db_session.add(requested_absence)

@@ -25,6 +25,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministrator
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EmployerClaimReviewEFormBuilder
+from massgov.pfml.util import feature_gate
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -82,7 +83,6 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
             raise NotAuthorizedForAccess(
                 description="User does not have leave administrator record for this employer",
                 error_type="unauthorized_leave_admin",
-                data={"is_user_linked_to_employer": False},
             )
 
         if user_leave_admin.fineos_web_id is None:
@@ -91,7 +91,11 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
             )
 
         # TODO: Remove this after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
-        if app.get_config().enforce_verification and not user_leave_admin.verified:
+        verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
+            feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
+            user_email=current_user.email_address,
+        )
+        if verification_required and not user_leave_admin.verified:
             raise VerificationRequired(user_leave_admin, "User is not Verified")
 
         return user_leave_admin
@@ -256,7 +260,12 @@ def user_has_access_to_claim(claim: Claim) -> bool:
     if can(READ, "EMPLOYER_API") and claim.employer in current_user.employers:
         # User is leave admin for the employer associated with claim
         # TODO: Remove this after rollout https://lwd.atlassian.net/browse/EMPLOYER-962
-        if app.get_config().enforce_verification:
+        verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
+            feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
+            user_email=current_user.email_address,
+        )
+
+        if verification_required:
             return current_user.verified_employer(claim.employer)
         return True
 

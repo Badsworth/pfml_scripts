@@ -71,6 +71,7 @@ data "aws_iam_policy_document" "restrict_ses_senders" {
         "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-pub-payments-process-fineos/*",
         "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-pub-payments-create-pub-files/*",
         "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-pub-payments-process-pub-returns/*",
+        "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-reductions-workflow/*",
       ]
     }
   }

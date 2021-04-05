@@ -14,7 +14,7 @@ export const Success = (props) => {
   const { t } = useTranslation();
 
   if (!isFeatureEnabled("employerShowVerifications")) {
-    appLogic.portalFlow.goTo(routes.employers.dashboard);
+    appLogic.portalFlow.goTo(routes.employers.welcome);
   }
 
   const employer = user.user_leave_administrators.find((employer) => {

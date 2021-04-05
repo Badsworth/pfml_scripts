@@ -63,6 +63,7 @@ module "tasks" {
   ctr_gax_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
   ctr_vcc_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
   dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
+  agency_reductions_email_address        = "mass-pfml-payments-test-email@navapbc.com"
 
   ctr_data_mart_host        = "duaua-fdm-wdb1.cs.govt.state.ma.us"
   ctr_data_mart_username    = "SRV-LWD-DFML-NONPROD"
@@ -86,7 +87,7 @@ module "tasks" {
   payment_rejects_report_sent_folder_path = "s3://massgov-pfml-performance-agency-transfer/audit/sent"
 
   enable_recurring_payments_schedule = false
-  enable_register_admins_job         = false
+  enable_register_admins_job         = true
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 }

@@ -75,8 +75,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
       cy.unstash<string>("applicationId").then((application_id) => {
         portal.goToUploadCertificationPage(application_id);
         cy.contains("form", "Upload your documentation")
-          .find("h3", { timeout: 30000 })
-          .should("contain.text", "File 1")
+          .find("*[data-test='file-card']", { timeout: 30000 })
           .should("have.length", 1);
       });
     });

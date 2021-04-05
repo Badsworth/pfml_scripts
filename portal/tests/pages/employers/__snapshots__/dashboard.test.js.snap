@@ -1,0 +1,135 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Employer dashboard renders a 'no results' message in the table if no claims are present 1`] = `
+<tr>
+  <td
+    colSpan={6}
+  >
+    No applications on file
+  </td>
+</tr>
+`;
+
+exports[`Employer dashboard renders a table of claims 1`] = `
+Array [
+  <tr
+    key="NTN-111-ABS-01"
+  >
+    <th
+      data-label="Employee name"
+      scope="row"
+    >
+      <a
+        href="#"
+      >
+        Jane Doe
+      </a>
+    </th>
+    <td
+      data-label="Application ID"
+      key="fineos_absence_id"
+    >
+      <a
+        href="#"
+      >
+        NTN-111-ABS-01
+      </a>
+    </td>
+    <td
+      data-label="Organization"
+      key="employer_dba"
+    >
+      Work Inc.
+    </td>
+    <td
+      data-label="Employer ID number"
+      key="employer_fein"
+    >
+      12-3456789
+    </td>
+    <td
+      data-label="Date filed"
+      key="created_at"
+    />
+    <td
+      data-label="Status"
+      key="status"
+    >
+      --
+    </td>
+  </tr>,
+  <tr
+    key="NTN-111-ABS-01"
+  >
+    <th
+      data-label="Employee name"
+      scope="row"
+    >
+      <a
+        href="#"
+      >
+        Jane Doe
+      </a>
+    </th>
+    <td
+      data-label="Application ID"
+      key="fineos_absence_id"
+    >
+      <a
+        href="#"
+      >
+        NTN-111-ABS-01
+      </a>
+    </td>
+    <td
+      data-label="Organization"
+      key="employer_dba"
+    >
+      Work Inc.
+    </td>
+    <td
+      data-label="Employer ID number"
+      key="employer_fein"
+    >
+      12-3456789
+    </td>
+    <td
+      data-label="Date filed"
+      key="created_at"
+    />
+    <td
+      data-label="Status"
+      key="status"
+    >
+      --
+    </td>
+  </tr>,
+]
+`;
+
+exports[`Employer dashboard renders the page 1`] = `
+<Title>
+  Dashboard
+</Title>
+`;
+
+exports[`Employer dashboard renders the page 2`] = `
+<p
+  className="margin-bottom-4"
+>
+  Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.
+</p>
+`;
+
+exports[`Employer dashboard when employerShowVerifications flag is enabled renders instructions if there are no verified employers 1`] = `
+Array [
+  "You have not verified any organizations. ",
+  <a
+    href="/employers/organizations"
+    key="1"
+  >
+    Complete this process
+  </a>,
+  " to review applications.",
+]
+`;

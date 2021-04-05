@@ -3,8 +3,13 @@ import React from "react";
 import { shallow } from "enzyme";
 
 describe("DocumentRequirements", () => {
-  const wrapper = shallow(<DocumentRequirements />);
-  it("renders Document Requirements content", () => {
+  it("renders ID Document Requirements content", () => {
+    const wrapper = shallow(<DocumentRequirements type="id" />);
+    expect(wrapper.find("Heading")).toMatchSnapshot();
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+  });
+  it("renders Certification Document Requirements content", () => {
+    const wrapper = shallow(<DocumentRequirements type="certification" />);
     expect(wrapper.find("Heading")).toMatchSnapshot();
     expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });

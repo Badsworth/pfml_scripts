@@ -14,8 +14,8 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
     () => {
       beforeFineos();
       bailIfThisTestFails();
-      cy.visit("/");
 
+      cy.visit("/");
       cy.task("generateClaim", "BHAP1").then((claim) => {
         cy.stash("claim", claim.claim);
         if (
@@ -67,11 +67,21 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
           },
           { timeout: 360000 }
         ).then(async (emails) => {
-          const emailContent = await email.getNotificationData(emails[0].html);
-          expect(emailContent.name).to.equal(employeeFullName);
-          expect(emailContent.applicationId).to.equal(
-            submission.fineos_absence_id
+          expect(emails.length).to.be.greaterThan(0);
+          const email_match = emails.find((email) =>
+            email.html.includes(submission.fineos_absence_id as string)
           );
+          if (!email_match) {
+            throw new Error(
+              `No emails queried match the Fineos Absence ID:
+                timestamp_from: ${submission.timestamp_from} 
+                fineos_absence_id: ${submission.fineos_absence_id}`
+            );
+          }
+          email.getNotificationData(email_match.html).then((data) => {
+            expect(data.name).to.equal(employeeFullName);
+            expect(data.applicationId).to.equal(submission.fineos_absence_id);
+          });
         });
       });
     });

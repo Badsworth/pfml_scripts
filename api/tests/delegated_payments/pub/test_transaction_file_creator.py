@@ -1,6 +1,9 @@
 import os
+import re
 
+import faker
 import pytest
+import sqlalchemy
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
@@ -14,6 +17,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFile,
     ReferenceFileType,
     State,
+    StateLog,
 )
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
@@ -22,7 +26,11 @@ from massgov.pfml.db.models.factories import (
     PaymentFactory,
     PubEftFactory,
 )
+from massgov.pfml.delegated_payments.ez_check import EzCheckFile
 from massgov.pfml.delegated_payments.pub.transaction_file_creator import TransactionFileCreatorStep
+from tests.delegated_payments.pub.test_pub_check import _random_valid_check_payment_with_state_log
+
+fake = faker.Faker()
 
 
 @pytest.fixture
@@ -66,6 +74,18 @@ def test_ach_file_creation(
     )
     assert pub_ach_file_name in file_util.list_files(expected_ach_file_folder)
 
+    # check that no check file was created because no check payments were in the correct state.
+    assert transaction_file_step.check_file is None
+    assert (
+        test_db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.reference_file_type_id
+            == ReferenceFileType.PUB_EZ_CHECK.reference_file_type_id
+        )
+        .one_or_none()
+        is None
+    )
+
     # check that corresponding reference file was created
     assert (
         test_db_session.query(ReferenceFile)
@@ -98,6 +118,68 @@ def test_ach_file_creation(
         employee_pub_eft_pairs = prenote_sent_state.employee.pub_efts.all()
         pub_eft = employee_pub_eft_pairs[0].pub_eft
         assert pub_eft.prenote_state_id == PrenoteState.PENDING_WITH_PUB.prenote_state_id
+
+
+def test_check_file_creation(
+    transaction_file_step: TransactionFileCreatorStep,
+    test_db_session,
+    test_db_other_session,
+    initialize_factories_session,
+    tmp_path,
+    monkeypatch,
+):
+    # set environment variables
+    output_folder_path = str(tmp_path)
+    accounting_number = str(fake.random_int(min=1_000_000_000_000_000, max=9_999_999_999_999_999))
+    routing_number = str(fake.random_int(min=10_000_000_000, max=99_999_999_999))
+    monkeypatch.setenv("PFML_PUB_OUTBOUND_PATH", output_folder_path)
+    monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", accounting_number)
+    monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", routing_number)
+
+    # Stock the database with a handful of check payments in the correct state to be picked up.
+    payments = []
+    for _i in range(fake.random_int(min=6, max=15)):
+        payments.append(_random_valid_check_payment_with_state_log(test_db_session))
+
+    # generate the check file
+    transaction_file_step.run_step()
+
+    ez_check_file = transaction_file_step.check_file
+    assert isinstance(ez_check_file, EzCheckFile)
+    assert len(ez_check_file.records) == len(payments)
+
+    file_location_pattern = os.path.join(
+        output_folder_path, payments_util.Constants.S3_OUTBOUND_READY_DIR, "%"
+    )
+    ref_file = (
+        test_db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.reference_file_type_id
+            == ReferenceFileType.PUB_EZ_CHECK.reference_file_type_id
+        )
+        .filter(ReferenceFile.file_location.like(file_location_pattern))
+        .one_or_none()
+    )
+    assert ref_file is not None
+
+    filename_pattern = r"PUB-EZ-CHECK_\d{4}\d{2}\d{2}-\d{2}\d{2}\.csv"
+    assert re.search(filename_pattern, ref_file.file_location)
+
+    # Confirm output file has 2 rows for each record and 1 for the header.
+    file_stream = file_util.open_stream(ref_file.file_location)
+    assert len([line for line in file_stream]) == 1 + 2 * len(ez_check_file.records)
+
+    # Confirm that we updated the state log for each payment.
+    for payment in payments:
+        assert (
+            test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+            .filter(
+                StateLog.end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_id
+            )
+            .filter(StateLog.payment_id == payment.payment_id)
+            .scalar()
+            == 1
+        )
 
 
 def test_get_eligible_eft_payments_error_states(

@@ -8,33 +8,31 @@ from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting impo
 class PaymentAuditCSV(AbstractRecord):
     """Payment Audit Report CSV format"""
 
-    pfml_payment_id: str
-    leave_type: str
-    first_name: str
-    last_name: str
-    address_line_1: str
+    pfml_payment_id: Optional[str]
+    leave_type: Optional[str]
+    first_name: Optional[str]
+    last_name: Optional[str]
+    address_line_1: Optional[str]
     address_line_2: Optional[str]
-    city: str
-    state: str
-    zip: str
-    payment_preference: str
-    scheduled_payment_date: str
-    payment_period_start_date: str
-    payment_period_end_date: str
-    payment_amount: str
-    absence_case_number: str
-    c_value: str
-    i_value: str
+    city: Optional[str]
+    state: Optional[str]
+    zip: Optional[str]
+    payment_preference: Optional[str]
+    scheduled_payment_date: Optional[str]
+    payment_period_start_date: Optional[str]
+    payment_period_end_date: Optional[str]
+    payment_amount: Optional[str]
+    absence_case_number: Optional[str]
+    c_value: Optional[str]
+    i_value: Optional[str]
     employer_id: Optional[str]
     case_status: Optional[str]
-    leave_request_id: Optional[str]
-    leave_request_decision: Optional[str]
-    is_first_time_payment: str
-    is_previously_errored_payment: str
-    is_previously_rejected_payment: str
-    number_of_times_in_rejected_or_error_state: str
-    rejected_by_program_integrity: str
-    rejected_notes: str
+    is_first_time_payment: Optional[str]
+    is_previously_errored_payment: Optional[str]
+    is_previously_rejected_payment: Optional[str]
+    number_of_times_in_rejected_or_error_state: Optional[str]
+    rejected_by_program_integrity: Optional[str]
+    rejected_notes: Optional[str]
 
 
 PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
@@ -57,8 +55,6 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     i_value="I Value",
     employer_id="Employer ID",
     case_status="Case Status",
-    leave_request_id="Leave Request ID",
-    leave_request_decision="Leave Request Decision",
     is_first_time_payment="First Time Payment",
     is_previously_errored_payment="Previously Errored Payment",
     is_previously_rejected_payment="Previously Rejected Payment",

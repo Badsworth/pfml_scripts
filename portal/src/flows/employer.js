@@ -45,5 +45,6 @@ export default {
       },
     },
     [routes.employers.verificationSuccess]: {},
+    [routes.employers.welcome]: {},
   },
 };

@@ -22,12 +22,15 @@ flask-bouncer = "^0.3.0"
 flask_cors = "^3.0.9"
 Flask-HTTPAuth = "^4.2.0"
 gunicorn = "^20.0.4"
+# Locking indirect lxml dependency to version that addresses CVE-2021-28957. Can remove when Zeep
+# pins lxml dependency to version that addresses CVE-2021-28957.
+lxml = "^4.6.3"
 newrelic = "^5.14.1"
 paramiko = "^2.7.2"
 phonenumbers = "^8.12.13"
 psycopg2-binary = "^2.8.5"
 puremagic = "^1.10"
-pydantic = "^1.5.1"
+pydantic = {extras = ["dotenv"], version = "^1.8.1"}
 pydash = "^4.7.6"
 pyodbc = {version = "^4.0.30", optional = true}
 python = "^3.8"
@@ -97,6 +100,8 @@ payments-manual-payment-voucher = "massgov.pfml.payments.manual.payment_voucher:
 pub-payments-process-fineos = "massgov.pfml.delegated_payments.task.process_fineos_extracts:main"
 pub-payments-create-pub-files = "massgov.pfml.delegated_payments.task.process_pub_payments:main"
 pub-payments-process-pub-returns = "massgov.pfml.delegated_payments.task.process_pub_responses:main"
+pub-payments-mock-generate = "massgov.pfml.delegated_payments.mock.generate:main"
+ach-reader = "massgov.pfml.delegated_payments.util.ach.ach_tool:ach_reader"
 fineos-payments-mock-generate = "massgov.pfml.payments.mock.fineos_extract_generator:main"
 fineos-test-vendor-export-generate = "massgov.pfml.payments.mock.fineos_extract_generator:create_test_vendor_export"
 fineos-daily-generate = "massgov.pfml.fineos.mock.generate:main"
@@ -107,6 +112,7 @@ reductions-send-claimant-lists-to-agencies = "massgov.pfml.reductions.send_claim
 reductions-send-wage-replacement-payments-to-dfml = "massgov.pfml.reductions.send_wage_replacement_payments_to_dfml:main"
 transmogrify-state-logs = "massgov.pfml.util.tasks.transmogrify_states:transmogrify_states"
 delegated-payment-audit-rejects-generate = "massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generator:generate_payment_rejects_file"
+delegated-payment-eft-response-generate = "massgov.pfml.delegated_payments.audit.mock.pub_outbound_file_generator:generate_pub_payment_return_file"
 
 [tool.black]
 line-length = 100

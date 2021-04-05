@@ -64,6 +64,30 @@ describe("User", () => {
     });
   });
 
+  describe("#hasOnlyUnverifiedEmployers", () => {
+    it("returns true if all employers are not verified", () => {
+      const user = new User({
+        user_leave_administrators: [
+          UNVERIFIED_EMPLOYER_WITH_DATA,
+          UNVERIFIED_EMPLOYER_WITHOUT_DATA,
+        ],
+      });
+
+      expect(user.hasOnlyUnverifiedEmployers).toBe(true);
+    });
+
+    it("returns false if a single employer is verified", () => {
+      const user = new User({
+        user_leave_administrators: [
+          UNVERIFIED_EMPLOYER_WITH_DATA,
+          VERIFIED_EMPLOYER_WITH_DATA,
+        ],
+      });
+
+      expect(user.hasOnlyUnverifiedEmployers).toBe(false);
+    });
+  });
+
   describe("#isVerifiableEmployer", () => {
     const user = new User({});
 

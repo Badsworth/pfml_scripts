@@ -29,7 +29,7 @@ const FileCard = (props) => {
   const readOnly = !!document;
 
   return (
-    <div className={cardClasses}>
+    <div className={cardClasses} data-test="file-card">
       <Thumbnail file={file} />
       <div className="c-file-card__content">
         <Heading level="3" className="margin-bottom-1 margin-top-1" size="4">

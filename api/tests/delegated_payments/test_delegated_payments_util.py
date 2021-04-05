@@ -53,7 +53,12 @@ TEST_SRC_DIR = "received"
 TEST_DEST_DIR = "error"
 
 # TODO: These should really be in payments_util or payments_config
-PAYMENT_EXTRACT_FILENAMES = ["vpei.csv", "vpeiclaimdetails.csv", "vpeipaymentdetails.csv"]
+PAYMENT_EXTRACT_FILENAMES = [
+    "vpei.csv",
+    "vpeiclaimdetails.csv",
+    "vpeipaymentdetails.csv",
+    "VBI_REQUESTEDABSENCE.csv",
+]
 
 CLAIMANT_EXTRACT_FILENAMES = [
     "Employee_feed.csv",

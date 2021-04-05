@@ -17,12 +17,14 @@ import {
   postApplicationsByApplication_idSubmit_application,
   postApplicationsByApplication_idComplete_application,
   postApplicationsByApplication_idSubmit_payment_preference,
+  HttpError,
 } from "../api";
 import pRetry from "p-retry";
 import AuthenticationManager from "./AuthenticationManager";
 import { Credentials } from "../types";
 import { GeneratedClaim, GeneratedEmployerResponse } from "../generation/Claim";
 import { DocumentWithPromisedFile } from "../generation/documents";
+import { enrichHttpError } from "../errors";
 
 if (!global.FormData) {
   // @ts-ignore
@@ -70,40 +72,48 @@ export default class PortalSubmitter {
     employerCredentials?: Credentials
   ): Promise<ApplicationResponse> {
     const options = await this.getOptions(credentials);
-    const application_id = await this.createApplication(options);
-    await this.updateApplication(application_id, claim.claim, options);
 
-    const submitResponseData = await this.submitApplication(
-      application_id,
-      options
-    );
+    try {
+      const application_id = await this.createApplication(options);
+      await this.updateApplication(application_id, claim.claim, options);
 
-    const { fineos_absence_id, first_name, last_name } = submitResponseData;
-    await this.uploadDocuments(application_id, claim.documents, options);
-    await this.uploadPaymentPreference(
-      application_id,
-      claim.paymentPreference,
-      options
-    );
-    await this.completeApplication(application_id, options);
-    if (claim.employerResponse) {
-      if (!employerCredentials) {
-        throw new Error(
-          "Unable to submit employer response without leave admin credentials"
+      const submitResponseData = await this.submitApplication(
+        application_id,
+        options
+      );
+
+      const { fineos_absence_id, first_name, last_name } = submitResponseData;
+      await this.uploadDocuments(application_id, claim.documents, options);
+      await this.uploadPaymentPreference(
+        application_id,
+        claim.paymentPreference,
+        options
+      );
+      await this.completeApplication(application_id, options);
+      if (claim.employerResponse) {
+        if (!employerCredentials) {
+          throw new Error(
+            "Unable to submit employer response without leave admin credentials"
+          );
+        }
+        await this.submitEmployerResponse(
+          employerCredentials,
+          fineos_absence_id,
+          claim.employerResponse
         );
       }
-      await this.submitEmployerResponse(
-        employerCredentials,
-        fineos_absence_id,
-        claim.employerResponse
-      );
+      return {
+        fineos_absence_id: fineos_absence_id,
+        application_id: application_id,
+        first_name: first_name,
+        last_name: last_name,
+      };
+    } catch (e) {
+      if (e instanceof HttpError) {
+        enrichHttpError(e);
+      }
+      throw e;
     }
-    return {
-      fineos_absence_id: fineos_absence_id,
-      application_id: application_id,
-      first_name: first_name,
-      last_name: last_name,
-    };
   }
 
   async submitPartOne(
@@ -243,24 +253,10 @@ export default class PortalSubmitter {
     application_id: string,
     options?: RequestOptions
   ) {
-    try {
-      return await postApplicationsByApplication_idComplete_application(
-        { application_id },
-        options
-      );
-    } catch (e) {
-      // No-op.  Unfortunately, we're expecting the completion endpoint to throw
-      // a fatal error regularly due to timeouts.
-      if (
-        "data" in e &&
-        Array.isArray(e.data.errors) &&
-        e.data.errors.length === 0
-      ) {
-        console.log("Caught error - ignoring");
-        return;
-      }
-      throw e;
-    }
+    return postApplicationsByApplication_idComplete_application(
+      { application_id },
+      options
+    );
   }
 
   private async uploadPaymentPreference(

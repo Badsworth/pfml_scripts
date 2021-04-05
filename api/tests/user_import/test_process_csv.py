@@ -1,10 +1,10 @@
 import logging  # noqa: B1
-import re
 import uuid
 from pathlib import Path
 
+import boto3
+import moto
 import pytest
-from botocore.exceptions import ClientError
 
 import massgov.pfml.fineos.mock_client
 from massgov.pfml import fineos
@@ -25,6 +25,10 @@ class MockCognito:
     def __init__(self):
         self._memo = dict()
 
+        with moto.mock_cognitoidp():
+            self.client = boto3.client("cognito-idp", "us-east-1")
+            self.exceptions = self.client.exceptions
+
     def admin_create_user(self, *args, UserPoolId="", **kwargs):
         sub = str(uuid.uuid4())
         self._memo[kwargs["Username"]] = sub
@@ -33,19 +37,26 @@ class MockCognito:
     def admin_set_user_password(self, *args, **kwargs):
         pass
 
-    def list_users(self, *args, UserPoolId="", Filter="", **kwargs):
-        email = re.match(r'email="(.*?)"', Filter).group(1)
-        sub = self._memo.get(email)
+    def admin_get_user(self, *args, UserPoolId="", Username="", **kwargs):
+        sub = self._memo.get(Username)
         if sub:
-            return {"Users": [{"Attributes": [{"Name": "sub", "Value": sub}]}]}
-        return {"Users": []}
+            return {"UserAttributes": [{"Name": "sub", "Value": sub}]}
+
+        raise self.client.exceptions.UserNotFoundException(
+            error_response={
+                "Error": {"Code": "UserNotFoundException", "Message": "User not found",}
+            },
+            operation_name="AdminGetUser",
+        )
 
 
 class MockCognitoPasswordError(MockCognito):
     def admin_set_user_password(self, *args, **kwargs):
-        raise ClientError(
-            {"Error": {"Code": "UserNotFoundException", "Message": "That thar user don't exist"}},
-            {...},
+        raise self.client.exceptions.UserNotFoundException(
+            error_response={
+                "Error": {"Code": "UserNotFoundException", "Message": "User not found",}
+            },
+            operation_name="AdminGetUser",
         )
 
 
@@ -54,20 +65,17 @@ class MockCognitoListRateLimit(MockCognito):
         self._retries = 0
         super().__init__()
 
-    def list_users(self, *args, UserPoolId="", Filter="", **kwargs):
+    def admin_get_user(self, *args, UserPoolId="", Username="", **kwargs):
         self._retries += 1
         if (self._retries % 2) == 0:
-            raise ClientError(
-                {
-                    "Error": {
-                        "Code": "TooManyRequestsException",
-                        "Message": "You are doing it too loud",
-                    }
+            raise self.client.exceptions.TooManyRequestsException(
+                error_response={
+                    "Error": {"Code": "TooManyRequestsException", "Message": "Too many requests",}
                 },
-                {...},
+                operation_name="AdminGetUser",
             )
         else:
-            return super().list_users(*args, UserPoolId=UserPoolId, Filter=Filter, **kwargs)
+            return super().admin_get_user(*args, UserPoolId=UserPoolId, Username=Username, **kwargs)
 
 
 @pytest.fixture
@@ -234,7 +242,7 @@ class TestProcessByEmail:
         #  Only 3 emails in the file
         assert count_error_in_cognito == 3
 
-    def test_process_by_email_flaky_list_users(
+    def test_process_by_email_flaky_get_user(
         self, test_file_location, test_db_session, create_employers, caplog
     ):
         caplog.set_level(logging.INFO)  # noqa: B1
@@ -253,12 +261,12 @@ class TestProcessByEmail:
             )
         # 5 records in this file
         assert processed == 5
-        count_error_in_cognito_list_users = 0
+        count_error_in_cognito_get_user = 0
         for record in caplog.records:
             if "Too many requests error from Cognito" in record.getMessage():
-                count_error_in_cognito_list_users += 1
+                count_error_in_cognito_get_user += 1
 
-        assert count_error_in_cognito_list_users == 4
+        assert count_error_in_cognito_get_user == 4
 
     def test_process_files(self, test_file_location, test_db_session, create_employers, caplog):
         caplog.set_level(logging.INFO)  # noqa: B1

@@ -5,15 +5,19 @@ from massgov.pfml.api.models.users.requests import (
     UserCreateRequest,
     UserLeaveAdminRequest,
 )
-from massgov.pfml.api.services.user_rules import get_users_post_issues
+from massgov.pfml.api.services.user_rules import (
+    get_users_post_employer_issues,
+    get_users_post_required_fields_issues,
+)
 from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
 from massgov.pfml.db.models.employees import Role
+from massgov.pfml.db.models.factories import EmployerFactory, EmployerOnlyRequiredFactory
 
 fake = faker.Faker()
 
 
-def test_get_users_post_issues_always_required_fields():
-    issues = get_users_post_issues(UserCreateRequest())
+def test_get_users_post_required_fields_issues_always_required_fields():
+    issues = get_users_post_required_fields_issues(UserCreateRequest())
 
     assert (
         Issue(type=IssueType.required, field="email_address", message="email_address is required")
@@ -33,7 +37,7 @@ def test_get_users_post_issues_always_required_fields():
     assert len(issues) == 3
 
 
-def test_get_users_post_issues_ein_required_for_employer():
+def test_get_users_post_required_fields_issues_ein_required_for_employer():
     def expect_ein_issue(issues):
         assert (
             Issue(
@@ -46,13 +50,13 @@ def test_get_users_post_issues_ein_required_for_employer():
         )
 
     expect_ein_issue(
-        get_users_post_issues(
+        get_users_post_required_fields_issues(
             UserCreateRequest(role=RoleRequest(role_description=Role.EMPLOYER.role_description),)
         )
     )
 
     expect_ein_issue(
-        get_users_post_issues(
+        get_users_post_required_fields_issues(
             UserCreateRequest(
                 user_leave_administrator=UserLeaveAdminRequest(),
                 role=RoleRequest(role_description=Role.EMPLOYER.role_description),
@@ -61,8 +65,8 @@ def test_get_users_post_issues_ein_required_for_employer():
     )
 
 
-def test_get_users_post_issues_valid_claimant():
-    issues = get_users_post_issues(
+def test_get_users_post_required_fields_issues_valid_claimant():
+    issues = get_users_post_required_fields_issues(
         UserCreateRequest(
             email_address=fake.email(domain="example.com"),
             password=fake.password(length=12),
@@ -73,8 +77,8 @@ def test_get_users_post_issues_valid_claimant():
     assert len(issues) == 0
 
 
-def test_get_users_post_issues_valid_employer():
-    issues = get_users_post_issues(
+def test_get_users_post_required_fields_issues_valid_employer():
+    issues = get_users_post_required_fields_issues(
         UserCreateRequest(
             email_address=fake.email(domain="example.com"),
             password=fake.password(length=12),
@@ -84,3 +88,35 @@ def test_get_users_post_issues_valid_employer():
     )
 
     assert len(issues) == 0
+
+
+def test_get_users_post_employer_issues_valid():
+    issues = get_users_post_employer_issues(EmployerFactory.build())
+
+    assert len(issues) == 0
+
+
+def test_get_users_post_employer_issues_require_employer():
+    issues = get_users_post_employer_issues(None)
+
+    assert (
+        Issue(
+            field="user_leave_administrator.employer_fein",
+            message="Invalid EIN",
+            type=IssueType.require_employer,
+        )
+        in issues
+    )
+
+
+def test_get_users_post_employer_issues_contributing_employer_required():
+    issues = get_users_post_employer_issues(EmployerOnlyRequiredFactory.build())
+
+    assert (
+        Issue(
+            field="user_leave_administrator.employer_fein",
+            message="Confirm that you have the correct EIN, and that the Employer is contributing to Paid Family and Medical Leave.",
+            type=IssueType.require_contributing_employer,
+        )
+        in issues
+    )
