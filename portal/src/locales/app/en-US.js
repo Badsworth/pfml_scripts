@@ -790,11 +790,6 @@ const pages = {
     title: "Verify your email address",
     usernameLabel: "$t(shared.usernameLabel)",
   },
-  convertToEmployer: {
-    title: "Convert to employer account",
-    einLabel: "Employer ID number (EIN)",
-    submit: "Convert account",
-  },
   claimsAddress: {
     choiceNo: "No, I would like to add a mailing address",
     choiceYes: "$t(shared.choiceYes)",
@@ -1562,6 +1557,11 @@ const pages = {
     sectionLabel: "How would you describe your work schedule?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
+  convertToEmployer: {
+    einLabel: "Employer ID number (EIN)",
+    submit: "Convert account",
+    title: "Convert to employer account",
+  },
   employersAuthCreateAccount: {
     alertHeading:
       "Workers who wish to apply for paid leave should follow <create-account-link>these instructions</create-account-link>.",
@@ -1777,7 +1777,6 @@ const pages = {
       "<p>Apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> if <strong>any</strong> of the following are true:</p><ul><li>You are self-employed or unemployed and you are applying for paid leave</li><li>You need paid family leave to care for a family member who serves in the armed forces</li><li>You need paid family leave to manage family affairs when a family member is on active duty in the armed forces</li></ul>",
     alertPhoneHeading: "Apply by phone",
     applicationsLink: "View all applications",
-    convertToEmployer: "This is an employee account. Are you an employer? Click here!",
     createClaimButton: "Create an application",
     stepOne:
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
@@ -1916,6 +1915,9 @@ const components = {
     title: "Verify your email address",
     verifyHint:
       "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
+  },
+  convertToEmployerBanner: {
+    message: "This is an employee account. Are you an employer? <convert-link>Click here!</convert-link>"
   },
   documentRequirements: {
     body_certification:

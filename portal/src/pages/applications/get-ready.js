@@ -2,6 +2,7 @@ import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
 import Alert from "../../components/Alert";
 import ButtonLink from "../../components/ButtonLink";
 import ClaimCollection from "../../models/ClaimCollection";
+import ConvertToEmployerBanner from "../../components/ConvertToEmployerBanner"
 import Heading from "../../components/Heading";
 import Icon from "../../components/Icon";
 import Link from "next/link";
@@ -18,7 +19,7 @@ export const GetReady = (props) => {
   const { t } = useTranslation();
 
   const hasClaims = !claims.isEmpty;
-
+  const convertLink = appLogic.portalFlow.getNextPageRoute("CONVERT_TO_EMPLOYER")
   const iconClassName =
     "margin-right-1 text-secondary text-middle margin-top-neg-05";
 
@@ -31,19 +32,15 @@ export const GetReady = (props) => {
 
   return (
     <React.Fragment>
+      <ConvertToEmployerBanner link={convertLink}/>
       {hasClaims && (
-        <Link href={appLogic.portalFlow.getNextPageRoute("SHOW_APPLICATIONS")}>
-          <a className="display-inline-block margin-bottom-5">
+        <ButtonLink 
+            className="margin-top-3 margin-bottom-5"
+            href={appLogic.portalFlow.getNextPageRoute("SHOW_APPLICATIONS")}
+        >
             {t("pages.getReady.applicationsLink")}
-          </a>
-        </Link>
+        </ButtonLink>
       )}
-      <Link href={appLogic.portalFlow.getNextPageRoute("CONVERT_TO_EMPLOYER")}>
-        <a className="display-inline-block margin-bottom-5">
-          {t("pages.getReady.convertToEmployer")}
-        </a>
-      </Link>
-
       <Title>{t("pages.getReady.title")}</Title>
 
       <Alert
