@@ -14,6 +14,8 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     register_leave_admin_with_fineos,
 )
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
+from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
+from massgov.pfml.api.models.users.responses import RoleResponse
 from massgov.pfml.util.aws.cognito import (
     CognitoAccountCreationFailure,
     CognitoLookupFailure,
@@ -74,7 +76,7 @@ def get_register_user_log_attributes(
 
 def convert_user(
     db_session: db.Session,
-    user: User,
+    current_user: User,
     employer_for_leave_admin: Employer,
 ) -> User:
     """
@@ -85,23 +87,20 @@ def convert_user(
     - SomeError
     """
 
-    try:
-        user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
-        user_leave_admin = UserLeaveAdministrator(
-            user=user, employer=employer_for_leave_admin, fineos_web_id=None,
-        )
-        db_session.add(user_role)
-        db_session.add(user_leave_admin)
-        db_session.commit()
-
-        logger.info(f'MP_{user.roles}')
-
-    except Exception as e:
-        print(e)
-
+    user_role = UserRole(user=current_user, role_id=Role.EMPLOYER.role_id)
+    user_leave_admin = UserLeaveAdministrator(
+        user=current_user, employer=employer_for_leave_admin, fineos_web_id=None,
+    )
+    db_session.add(user_role)
+    db_session.commit()
+    db_session.add(user_leave_admin)
+    db_session.commit()
+    #'RoleResponse' object has no attribute '_sa_instance_state'
+    # current_user.roles.append(RoleResponse(role_id=user_role.role_id, role_description="Yep"))
+    # user_role.append(user)
     logger.info("Successfully converted User records")
 
-    return app.current_user()
+    return current_user
 
 def register_user(
     db_session: db.Session,
