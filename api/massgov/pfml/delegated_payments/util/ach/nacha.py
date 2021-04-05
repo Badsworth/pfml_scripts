@@ -17,12 +17,13 @@ class Constants:
     destination = "221172186"
     destination_name = "People'sUnitedBankNA"
     origin = "P046002284"
-    origin_name = "MA DFML"
+    origin_name = "EOL-DFML"
     originator_code = "1"
     service_code = "220"
     class_code = "PPD"
-    company_name = "MA DFML"
-    description = "MA PFML"
+    company_name = "EOL-DFML"
+    description_family_leave = "PFML FAM"
+    description_medical_leave = "PFML MED"
     company_id = "P046002284"
     blocking_factor = "10"
     format_code = "1"
@@ -164,7 +165,7 @@ class NachaFile:
 
 
 class NachaBatch:
-    def __init__(self, effective_date, today):
+    def __init__(self, effective_date, today, description):
         # Initialize the entries list
         self.entries = []
 
@@ -174,7 +175,7 @@ class NachaBatch:
         self.batch_number = Constants.batch_number
 
         # Create Header and Control records
-        self.batch_header = NachaBatchHeader(effective_date, today)
+        self.batch_header = NachaBatchHeader(effective_date, today, description)
 
     def add_entry(self, entry, addendum=None):
         trace_number = Constants.odfi_id + str(len(self.entries) + 1).rjust(7, "0")
@@ -193,6 +194,7 @@ class NachaBatch:
             self.entries.append(addendum)
 
     def finalize(self):
+
         # Calculate and set the Entry Hash
         entry_hash = 0
         debit_amount = 0
@@ -370,7 +372,7 @@ class NachaBatchHeader(NachaRecord):
     CREDITS_ONLY_SERVICE = "220"
     DEBITS_ONLY_SERVICE = "225"
 
-    def __init__(self, effective_date, today):
+    def __init__(self, effective_date, today, description):
 
         while effective_date.weekday() in [5, 6]:
             effective_date += timedelta(days=1)
@@ -387,7 +389,7 @@ class NachaBatchHeader(NachaRecord):
                 "Standard Entry Class Code", 51, 53, Constants.class_code
             ),
             "entry_description": AlphanumericNachaField(
-                "Company Entry Description", 54, 63, Constants.description
+                "Company Entry Description", 54, 63, description
             ),
             "descriptive_date": AlphanumericNachaField(
                 "Company Descriptive Date", 64, 69, today.strftime("%b %y")
