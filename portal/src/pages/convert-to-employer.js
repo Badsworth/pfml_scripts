@@ -1,21 +1,24 @@
 // import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
-// import Alert from "../components/Alert";
-import ButtonLink from "../components/ButtonLink";
-import ClaimCollection from "../models/ClaimCollection";
 // import Heading from "../components/Heading";
 // import Icon from "../components/Icon";
 // import Link from "next/link";
+
+import Alert from "../components/Alert";
+import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
+import Button from "../components/Button";
+// import ButtonLink from "../components/ButtonLink";
+import ClaimCollection from "../models/ClaimCollection";
+import InputText from "../components/InputText";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
-import InputText from "../components/InputText";
-import Button from "../components/Button";
 import { Trans } from "react-i18next";
+import User from "../models/User"
 import routes from "../routes";
-import { useTranslation } from "../locales/i18n";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps"
-import useThrottledHandler from "../hooks/useThrottledHandler"
+import { useTranslation } from "../locales/i18n";
+// import useThrottledHandler from "../hooks/useThrottledHandler"
 import withClaims from "../hoc/withClaims";
 
 export const ConvertToEmployer = (props) => {
@@ -95,12 +98,17 @@ export const ConvertToEmployer = (props) => {
 
 ConvertToEmployer.propTypes = {
   appLogic: PropTypes.shape({
+    users: PropTypes.shape({
+      convertToEmployer: PropTypes.func.isRequired
+    }),
     portalFlow: PropTypes.shape({
       getNextPageRoute: PropTypes.func.isRequired,
       pathname: PropTypes.string.isRequired,
     }),
+    appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
   }).isRequired,
   claims: PropTypes.instanceOf(ClaimCollection).isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
 };
 
 export default withClaims(ConvertToEmployer);
