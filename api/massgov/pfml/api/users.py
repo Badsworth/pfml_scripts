@@ -8,13 +8,13 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest, UserConvertRequest
-from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
+from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse, RoleResponse
 from massgov.pfml.api.services.user_rules import (
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
 )
 from massgov.pfml.api.util.deepgetattr import deepgetattr
-from massgov.pfml.db.models.employees import Employer, Role, User, UserRole, UserLeaveAdministrator
+from massgov.pfml.db.models.employees import Employer, Role, User, UserRole, UserLeaveAdministrator, LkRole
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein
@@ -23,12 +23,16 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 def users_convert(user_id):
     """Converts a user account from employee to leave admin"""
+    user = None
+    with app.db_session() as db_session:
+        user = get_or_404(db_session, User, user_id)
+
+    ensure(EDIT, user)
+
     body = UserConvertRequest.parse_obj(connexion.request.json)
     # required_fields_issues = get_users_post_required_fields_issues(body)
     employer_for_leave_admin = deepgetattr(body, "employer_for_leave_admin")
 
-    user = app.current_user()
-    # ensure(EDIT, user)
     if not user or not employer_for_leave_admin:
         return response_util.error_response(
             status_code=BadRequest,
@@ -178,13 +182,27 @@ def users_patch(user_id):
 
 def user_response(user: User) -> Dict[str, Any]:
     response = UserResponse.from_orm(user).dict()
+
+    logger.info(f'MP_{response}')
+    with app.db_session() as db_session:
+        userRoles = db_session.query(UserRole, LkRole).filter(LkRole.role_id == UserRole.role_id and UserRole.user_id == user.user_id).all()
+
+        logger.info(f'MP_{userRoles}')
+        response["roles"] = [normalize_user_role(ur) for ur in userRoles]
+    
     response["user_leave_administrators"] = [
         normalize_user_leave_admin_response(ula) for ula in response["user_leave_administrators"]
     ]
     
-    logger.info(f'MP_{user.roles}')
     logger.info(f'MP_{response}')
     return response
+
+
+def normalize_user_role(
+    userRole,
+) -> Dict[str, Any]:
+    role = userRole[1]
+    return dict(RoleResponse(role_id=role.role_id, role_description=role.role_description))
 
 
 def normalize_user_leave_admin_response(
