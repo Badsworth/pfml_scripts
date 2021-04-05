@@ -12,6 +12,7 @@ const routes = {
   applications: {
     address: "/applications/address",
     bondingLeaveAttestation: "/applications/bonding-leave-attestation",
+    caringLeaveAttestation: "/applications/caring-leave-attestation",
     checklist: "/applications/checklist",
     dashboard: "/dashboard",
     dateOfBirth: "/applications/date-of-birth",
@@ -19,6 +20,9 @@ const routes = {
     employerBenefits: "/applications/employer-benefits",
     employerBenefitsDetails: "/applications/employer-benefits-details",
     employmentStatus: "/applications/employment-status",
+    familyMemberDateOfBirth: "/applications/family-member-date-of-birth",
+    familyMemberName: "/applications/family-member-name",
+    familyMemberRelationship: "/applications/family-member-relationship",
     getReady: "/applications/get-ready",
     index: "/applications",
     intermittentFrequency: "/applications/intermittent-frequency",

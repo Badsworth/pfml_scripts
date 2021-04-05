@@ -286,6 +286,14 @@ export class MockEmployerClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
+   * @returns {MockEmployerClaimBuilder}
+   */
+  status(status = null) {
+    set(this.claimAttrs, "status", status);
+    return this;
+  }
+
+  /**
    * @returns {EmployerClaim}
    */
   create() {

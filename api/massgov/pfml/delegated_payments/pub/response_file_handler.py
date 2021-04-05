@@ -6,7 +6,7 @@
 
 import os.path
 import re
-from typing import Optional, Sequence, TextIO, cast
+from typing import Any, Dict, Optional, Sequence, TextIO, cast
 
 import massgov.pfml.db
 import massgov.pfml.util.datetime
@@ -15,10 +15,13 @@ import massgov.pfml.util.logging
 from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
     Flow,
+    LkPubErrorType,
     Payment,
     PaymentReferenceFile,
     PrenoteState,
     PubEft,
+    PubError,
+    PubErrorType,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -130,9 +133,17 @@ class ProcessReturnFileStep(Step):
         ach_reader = reader.ACHReader(stream)
 
         for warning in ach_reader.get_warnings():
-            # TODO: add to general error report (not connected to a prenote or payment)
-            logger.info("warning %s", warning)
+            logger.warning("ACH Warning: %s", warning.warning, extra=warning.get_details_for_log())
             self.increment("warning_count")
+
+            self.add_pub_error(
+                pub_error_type=PubErrorType.ACH_WARNING,
+                message=warning.warning,
+                line_number=warning.raw_record.line_number,
+                type_code=warning.raw_record.type_code.value,
+                raw_data=warning.raw_record.data,
+            )
+
         self.process_ach_returns(ach_reader.get_ach_returns())
         self.process_change_notifications(ach_reader.get_change_notifications())
 
@@ -167,12 +178,20 @@ class ProcessReturnFileStep(Step):
             self.process_payment_return(pub_individual_id, ach_return)
             self.increment("payment_count")
         else:
-            # TODO: add to general error report
             logger.warning(
-                "id number not in known PFML formats",
-                extra={"payments.ach.id_number": ach_return.id_number},
+                "ACH Return: id number not in known PFML formats",
+                extra=ach_return.get_details_for_log(),
             )
             self.increment("unknown_id_format_count")
+
+            self.add_pub_error(
+                pub_error_type=PubErrorType.ACH_RETURN,
+                message="id number not in known PFML formats",
+                line_number=ach_return.line_number,
+                type_code=ach_return.raw_record.type_code.value,
+                raw_data=ach_return.raw_record.data,
+                details=ach_return.get_details_for_error(),
+            )
 
     def process_eft_prenote_return(
         self, pub_individual_id: int, ach_return: reader.ACHReturn
@@ -184,35 +203,61 @@ class ProcessReturnFileStep(Step):
             .one_or_none()
         )
         if pub_eft is None:
-            # TODO: add to a report
             logger.warning(
-                "id number not in pub_eft table",
-                extra={"payments.ach.id_number": ach_return.id_number},
+                "Prenote: id number not in pub_eft table", extra=ach_return.get_details_for_log(),
             )
             self.increment("eft_prenote_id_not_found_count")
+
+            self.add_pub_error(
+                pub_error_type=PubErrorType.ACH_PRENOTE,
+                message="id number not in pub_eft table",
+                line_number=ach_return.line_number,
+                type_code=ach_return.raw_record.type_code.value,
+                raw_data=ach_return.raw_record.data,
+                details=ach_return.get_details_for_error(),
+            )
             return
+
         self.reject_pub_eft_prenote(pub_eft, ach_return)
 
     def reject_pub_eft_prenote(self, pub_eft: PubEft, ach_return: reader.ACHReturn) -> None:
         """Set a pub_eft to rejected in the database and add it to a report."""
         if pub_eft.prenote_state_id == PrenoteState.PENDING_PRE_PUB.prenote_state_id:
-            # TODO: add to a report
+            message = f"got prenote return but in state {PrenoteState.PENDING_PRE_PUB.prenote_state_description} not {PrenoteState.PENDING_WITH_PUB.prenote_state_description}"
             logger.warning(
-                "got prenote return but in state PENDING_PRE_PUB not PENDING_WITH_PUB",
-                extra={"payments.ach.id_number": ach_return.id_number},
+                f"Prenote: {message}", extra=ach_return.get_details_for_log(),
             )
             self.increment("eft_prenote_unexpected_state_count")
+
+            self.add_pub_error(
+                pub_error_type=PubErrorType.ACH_PRENOTE,
+                message=message,
+                line_number=ach_return.line_number,
+                type_code=ach_return.raw_record.type_code.value,
+                raw_data=ach_return.raw_record.data,
+                details=ach_return.get_details_for_error(),
+                pub_eft=pub_eft,
+            )
             return
         elif pub_eft.prenote_state_id == PrenoteState.APPROVED.prenote_state_id:
             # May be a late rejection, approved after n days, then return arrived late
-            # TODO: add to a report
+            message = f"got prenote return but in state {PrenoteState.APPROVED.prenote_state_description} not {PrenoteState.PENDING_WITH_PUB.prenote_state_description}"
             logger.warning(
-                "got prenote return but in state APPROVED not PENDING_WITH_PUB",
-                extra={"payments.ach.id_number": ach_return.id_number},
+                f"Prenote: {message}", extra=ach_return.get_details_for_log(),
             )
             self.increment("eft_prenote_already_approved_count")
+
+            self.add_pub_error(
+                pub_error_type=PubErrorType.ACH_PRENOTE,
+                message=message,
+                line_number=ach_return.line_number,
+                type_code=ach_return.raw_record.type_code.value,
+                raw_data=ach_return.raw_record.data,
+                details=ach_return.get_details_for_error(),
+                pub_eft=pub_eft,
+            )
             return
-        # TODO: add to a report
+
         pub_eft.prenote_state_id = PrenoteState.REJECTED.prenote_state_id
         pub_eft.prenote_response_at = massgov.pfml.util.datetime.utcnow()
         pub_eft.prenote_response_reason_code = ach_return.return_reason_code
@@ -229,12 +274,20 @@ class ProcessReturnFileStep(Step):
             .one_or_none()
         )
         if payment is None:
-            # TODO: add to a report
             logger.warning(
-                "id number not in payment table",
-                extra={"payments.ach.id_number": ach_return.id_number},
+                "ACH Return: id number not in payment table",
+                extra=ach_return.get_details_for_log(),
             )
             self.increment("payment_id_not_found_count")
+
+            self.add_pub_error(
+                pub_error_type=PubErrorType.ACH_RETURN,
+                message="id number not in payment table",
+                line_number=ach_return.line_number,
+                type_code=ach_return.raw_record.type_code.value,
+                raw_data=ach_return.raw_record.data,
+                details=ach_return.get_details_for_error(),
+            )
             return
 
         payment_reference_file = PaymentReferenceFile(
@@ -286,16 +339,25 @@ class ProcessReturnFileStep(Step):
             self.increment("payment_already_rejected_count")
         else:
             # The latest state for this payment is not compatible with receiving an ACH return.
-            # TODO: add to a report
+            details = {
+                **ach_return.get_details_for_log(),
+                "payments.state": end_state_id,
+            }
+
             logger.error(
-                "unexpected state for payment",
-                extra={
-                    "payments.ach.id_number": ach_return.id_number,
-                    "payments.state": end_state_id,
-                    "payments.payment_id": payment.payment_id,
-                },
+                "ACH Return: unexpected state for payment", extra=details,
             )
             self.increment("payment_unexpected_state_count")
+
+            self.add_pub_error(
+                pub_error_type=PubErrorType.ACH_RETURN,
+                message="unexpected state for payment",
+                line_number=ach_return.line_number,
+                type_code=ach_return.raw_record.type_code.value,
+                raw_data=ach_return.raw_record.data,
+                details=details,
+                payment=payment,
+            )
 
     def accept_payment_with_change(
         self, payment: Payment, change_notification: reader.ACHChangeNotification
@@ -322,8 +384,22 @@ class ProcessReturnFileStep(Step):
                 ),
                 self.db_session,
             )
+
+            logger.warning(
+                "ACH Notification: Payment complete with change notification",
+                extra=change_notification.get_details_for_log(),
+            )
             self.increment("payment_complete_with_change_count")
-            # TODO: add to a report
+
+            self.add_pub_error(
+                pub_error_type=PubErrorType.ACH_SUCCESS_WITH_NOTIFICATION,
+                message="Payment complete with change notification",
+                line_number=change_notification.line_number,
+                type_code=change_notification.raw_record.type_code.value,
+                raw_data=change_notification.raw_record.data,
+                details=change_notification.get_details_for_error(),
+                payment=payment,
+            )
         elif end_state_id == State.DELEGATED_PAYMENT_COMPLETE.state_id:
             # Payment already reached a successful state.
             logger.info(
@@ -338,16 +414,60 @@ class ProcessReturnFileStep(Step):
         else:
             # The latest state for this payment is not compatible with receiving an ACH change
             # notification.
-            # TODO: add to a report
+            details = {
+                **change_notification.get_details_for_log(),
+                "payments.state": end_state_id,
+            }
+
             logger.error(
-                "unexpected state for payment",
-                extra={
-                    "payments.ach.id_number": change_notification.id_number,
-                    "payments.state": end_state_id,
-                    "payments.payment_id": payment.payment_id,
-                },
+                "ACH Notification: unexpected state for payment", extra=details,
             )
-            self.increment("payment_unexpected_state_count")
+            self.increment("payment_notification_unexpected_state_count")
+
+            self.add_pub_error(
+                pub_error_type=PubErrorType.ACH_NOTIFICATION,
+                message="unexpected state for payment",
+                line_number=change_notification.line_number,
+                type_code=change_notification.raw_record.type_code.value,
+                raw_data=change_notification.raw_record.data,
+                details=details,
+                payment=payment,
+            )
+
+    def add_pub_error(
+        self,
+        pub_error_type: LkPubErrorType,
+        message: str,
+        line_number: int,
+        type_code: int,
+        raw_data: str,
+        details: Optional[Dict[str, Any]] = None,
+        payment: Optional[Payment] = None,
+        pub_eft: Optional[PubEft] = None,
+    ) -> PubError:
+        if self.get_import_log_id() is None:
+            raise Exception("'ProcessReturnFileStep' object has no log entry set")
+
+        pub_error = PubError(
+            pub_error_type_id=pub_error_type.pub_error_type_id,
+            message=message,
+            line_number=line_number,
+            type_code=type_code,
+            raw_data=raw_data,
+            details=details or {},
+            import_log_id=cast(int, self.get_import_log_id()),
+            reference_file_id=self.reference_file.reference_file_id,
+        )
+
+        if payment is not None:
+            pub_error.payment_id = payment.payment_id
+
+        if pub_eft is not None:
+            pub_error.pub_eft_id = pub_eft.pub_eft_id
+
+        self.db_session.add(pub_error)
+
+        return pub_error
 
 
 def parse_eft_prenote_pub_individual_id(id_number: str) -> Optional[int]:

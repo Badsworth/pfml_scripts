@@ -9,6 +9,23 @@ export default {
   title: "Pages/Employers/Applications/Status",
   component: Status,
   argTypes: {
+    adjudicationStatus: {
+      defaultValue: "Pending",
+      control: {
+        type: "radio",
+        options: [
+          "Approved",
+          "Cancelled",
+          "Denied",
+          "In Review",
+          "Pending",
+          "Projected",
+          "Unknown",
+          "Voided",
+          "Withdrawn",
+        ],
+      },
+    },
     document: {
       defaultValue: "Approval notice",
       control: {
@@ -26,8 +43,9 @@ export default {
   },
 };
 
-export const Default = ({ document }) => {
+export const Default = ({ adjudicationStatus, document }) => {
   const claim = new MockEmployerClaimBuilder()
+    .status(adjudicationStatus)
     .continuous()
     .bondingLeaveReason()
     .create();

@@ -1,81 +1,107 @@
-import User, { UserLeaveAdministrator } from "../../../src/models/User";
-import { mount, shallow } from "enzyme";
+import { MockEmployerClaimBuilder, renderWithAppLogic } from "../../test-utils";
 import Dashboard from "../../../src/pages/employers/dashboard";
-import React from "react";
-import { act } from "react-dom/test-utils";
+import { UserLeaveAdministrator } from "../../../src/models/User";
 import routes from "../../../src/routes";
-import { testHook } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
+const verifiedUserLeaveAdministrator = new UserLeaveAdministrator({
+  employer_dba: "Acme Co",
+  employer_fein: "**-***0001",
+  employer_id: "mock-employer-id-1",
+  has_verification_data: true,
+  verified: true,
+});
+const verifiableUserLeaveAdministrator = new UserLeaveAdministrator({
+  employer_dba: "Book Bindings 'R Us",
+  employer_fein: "**-***0002",
+  employer_id: "mock-employer-id-2",
+  has_verification_data: true,
+  verified: false,
+});
+
+const setup = (claims = [], userAttrs = {}) => {
+  const { appLogic, wrapper } = renderWithAppLogic(Dashboard, {
+    diveLevels: 1,
+    props: { claims },
+    userAttrs,
+  });
+
+  return {
+    appLogic,
+    wrapper,
+  };
+};
+
 describe("Employer dashboard", () => {
-  let appLogic, wrapper;
-
   beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
+    process.env.featureFlags = { employerShowDashboard: true };
   });
 
-  describe('when "employerShowDashboard" is enabled', () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowDashboard: true };
-      wrapper = shallow(<Dashboard appLogic={appLogic} />).dive();
-    });
+  it("renders the page", () => {
+    const { wrapper } = setup();
 
-    it("renders the page", () => {
-      expect(wrapper).toMatchSnapshot();
-      wrapper
-        .find("Trans")
-        .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
-    });
+    // Take targeted snapshots of content elements to avoid snapshotting noisy props
+    expect(wrapper.find("Title")).toMatchSnapshot();
+    wrapper.find("p").forEach((el) => expect(el).toMatchSnapshot());
+    wrapper
+      .find("Trans")
+      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
-  describe('when "employerShowDashboard" is disabled', () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowDashboard: false };
-    });
+  it("renders a table of claims", () => {
+    const claims = [
+      new MockEmployerClaimBuilder().completed().create(),
+      new MockEmployerClaimBuilder().completed().create(),
+    ];
+    const { wrapper } = setup(claims);
 
-    it("redirects to the Welcome page", () => {
-      wrapper = shallow(<Dashboard appLogic={appLogic} />).dive();
-      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        routes.employers.welcome
-      );
-    });
+    expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
   });
 
-  describe('when "employerShowVerifications" is also enabled', () => {
+  it("renders a 'no results' message in the table if no claims are present", () => {
+    const { wrapper } = setup([]);
+
+    expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
+  });
+
+  it("redirects to the Welcome page when employerShowDashboard flag is disabled", () => {
+    process.env.featureFlags = { employerShowDashboard: false };
+    const { appLogic } = setup();
+
+    expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+      routes.employers.welcome
+    );
+  });
+
+  describe("when employerShowVerifications flag is enabled", () => {
     beforeEach(() => {
       process.env.featureFlags = {
-        employerShowDashboard: true,
+        ...process.env.featureFlags,
         employerShowVerifications: true,
       };
-      appLogic.users.user = new User({
-        user_id: "mock_user_id",
-        consented_to_data_sharing: true,
-        user_leave_administrators: [
-          new UserLeaveAdministrator({
-            employer_dba: "Book Bindings 'R Us",
-            employer_fein: "**-***1823",
-            employer_id: "dda903f-f093f-ff900",
-            has_verification_data: true,
-            verified: false,
-          }),
-        ],
-      });
-      act(() => {
-        wrapper = mount(<Dashboard appLogic={appLogic} />);
-      });
     });
 
     it("renders the banner if there are any unverified employers", () => {
+      const { wrapper } = setup([], {
+        user_leave_administrators: [
+          // Mix of verified and unverified
+          verifiedUserLeaveAdministrator,
+          verifiableUserLeaveAdministrator,
+        ],
+      });
       expect(wrapper.find("Alert").exists()).toEqual(true);
     });
 
     it("renders instructions if there are no verified employers", () => {
-      expect(wrapper.find("Trans")).toHaveLength(2);
-      wrapper.find("Trans").forEach((trans) => expect(trans).toMatchSnapshot());
+      const { wrapper } = setup([], {
+        // No verified employers
+        user_leave_administrators: [verifiableUserLeaveAdministrator],
+      });
+
+      expect(
+        wrapper.find("[data-test='verification-instructions-row'] Trans").dive()
+      ).toMatchSnapshot();
     });
   });
 });
