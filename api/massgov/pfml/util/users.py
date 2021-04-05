@@ -91,13 +91,17 @@ def convert_user(
             user=user, employer=employer_for_leave_admin, fineos_web_id=None,
         )
         db_session.add(user_role)
-        db_session.add(user_leave_admin)    
+        db_session.add(user_leave_admin)
+        db_session.commit()
+
+        logger.info(f'MP_{user.roles}')
+
     except Exception as e:
         print(e)
 
     logger.info("Successfully converted User records")
 
-    return user
+    return app.current_user()
 
 def register_user(
     db_session: db.Session,

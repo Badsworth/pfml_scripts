@@ -24,5 +24,4 @@ class UserUpdateRequest(PydanticBaseModel):
     consented_to_data_sharing: bool
 
 class UserConvertRequest(PydanticBaseModel):
-    consented_to_data_sharing: bool
     employer_for_leave_admin: str
