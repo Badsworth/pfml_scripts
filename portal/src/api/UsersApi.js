@@ -75,8 +75,8 @@ export default class UsersApi extends BaseApi {
     };
   };
 
-  /* convertToEmployer = async (user_id, patchData) => {
-    const { data } = await this.request("POST", user_id, { });
+  convertToEmployer = async (user_id, postData) => {
+    const { data } = await this.request("POST", user_id, postData);
     console.log(data)
     const roles = this.createUserRoles(data.roles);
     const user_leave_administrators = this.createUserLeaveAdministrators(
@@ -91,7 +91,7 @@ export default class UsersApi extends BaseApi {
         user_leave_administrators,
       }),
     };
-  }; */
+  };
 
   createUserLeaveAdministrators = (leaveAdmins) => {
     return (leaveAdmins || []).map(

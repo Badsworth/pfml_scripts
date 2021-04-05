@@ -1,17 +1,17 @@
 // import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
-// import Alert from "../../components/Alert";
+// import Alert from "../components/Alert";
 import ButtonLink from "../components/ButtonLink";
 import ClaimCollection from "../models/ClaimCollection";
-// import Heading from "../../components/Heading";
-// import Icon from "../../components/Icon";
+// import Heading from "../components/Heading";
+// import Icon from "../components/Icon";
 // import Link from "next/link";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
 import InputText from "../components/InputText";
 import Button from "../components/Button";
-// import { Trans } from "react-i18next";
-// import routes from "../../routes";
+import { Trans } from "react-i18next";
+import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps"
@@ -21,7 +21,7 @@ import withClaims from "../hoc/withClaims";
 export const ConvertToEmployer = (props) => {
   const { appLogic, claims, user } = props;
   const { t } = useTranslation();
-  const { updateUser } = appLogic.users;
+  const { convertToEmployer } = appLogic.users;
   const { formState, updateFields } = useFormState({ employer_fein: "" });
   const hasClaims = !claims.isEmpty;
   const iconClassName =
@@ -35,11 +35,11 @@ export const ConvertToEmployer = (props) => {
  */
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    // needs auth
-    const data = await appLogic.claims.link(formState.caseNumber)
-    updateUser(user.user_id, {
-      employer_fein: true,
+    console.log(user.user_id, formState, appLogic.users)
+    await convertToEmployer(user.user_id, {
+      employer_fein: formState.employer_fein.replace("-", ""),
     });
+    // navigate to employer page
   })
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -64,11 +64,26 @@ export const ConvertToEmployer = (props) => {
       <div className="measure-6">
         <form className="usa-form" onSubmit={handleSubmit} method="post">
           <InputText
-            {...getFunctionalInputProps("employer_fein")}
-            type="text"
-            label={t("pages.convertToEmployer.einLabel")}
-            smallLabel
-          />
+              {...getFunctionalInputProps("employer_fein")}
+              inputMode="numeric"
+              mask="fein"
+              hint={
+                <Trans
+                  i18nKey="pages.employersAuthCreateAccount.einHint"
+                  components={{
+                    "ein-link": (
+                      <a
+                        target="_blank"
+                        rel="noopener"
+                        href={routes.external.massgov.federalEmployerIdNumber}
+                      />
+                    ),
+                  }}
+                />
+              }
+              label={t("pages.employersAuthCreateAccount.einLabel")}
+              smallLabel
+            />
           <Button type="submit" loading={handleSubmit.isThrottled}>
             {t("pages.convertToEmployer.submit")}
           </Button>

@@ -792,7 +792,7 @@ const pages = {
   convertToEmployer: {
     title: "Convert to employer account",
     einLabel: "Employer ID number (EIN)",
-    submit: "Convert",
+    submit: "Convert account",
   },
   claimsAddress: {
     choiceNo: "No, I would like to add a mailing address",
