@@ -698,7 +698,12 @@ jobs:
     name: Finish deploy comms (Slack)
     needs: [start-comms-slack, deploy-info, postdeploy-info]
     runs-on: ubuntu-latest
-    if: always() && needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main') # Mutes notifications for auto-deploys to test
+    # Notifies if there's a failure on auto-deploys to test
+    if: always() && 
+      (
+        (needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main')) ||
+        (needs.postdeploy-info.outputs.deploy-state == 'timed_out' || needs.postdeploy-info.outputs.deploy-state == 'failure')
+      )
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
