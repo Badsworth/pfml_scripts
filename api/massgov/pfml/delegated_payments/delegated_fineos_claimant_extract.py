@@ -638,7 +638,7 @@ class ClaimantExtractStep(Step):
                 if existing_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id:
                     validation_container.add_validation_issue(
                         payments_util.ValidationReason.EFT_PRENOTE_REJECTED,
-                        f"EFT prenote was rejected at {existing_eft.prenote_response_at}",
+                        "EFT prenote was rejected - cannot pay with this account info",
                     )
 
             else:

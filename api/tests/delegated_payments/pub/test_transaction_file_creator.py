@@ -9,6 +9,7 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
+    ClaimType,
     Employee,
     LkPaymentMethod,
     LkPrenoteState,
@@ -269,7 +270,9 @@ def create_payment_for_pub_transaction(db_session, payment_method: LkPaymentMeth
     employee_pub_eft_pairs = employee.pub_efts.all()
     pub_eft = employee_pub_eft_pairs[0].pub_eft
 
-    claim = ClaimFactory.create(employee=employee)
+    claim = ClaimFactory.create(
+        employee=employee, claim_type_id=ClaimType.MEDICAL_LEAVE.claim_type_id
+    )
     payment = PaymentFactory.create(
         claim=claim, pub_eft=pub_eft, disb_method_id=payment_method.payment_method_id
     )

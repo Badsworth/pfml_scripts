@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ReducedLeaveSchedule when leave reason is Bonding renders lead with expected content 1`] = `"Enter 0 for days you won’t work a reduced schedule."`;
+exports[`ReducedLeaveSchedule renders lead with expected content when leave reason is Bonding 1`] = `"Enter 0 for days you won’t work a reduced schedule."`;
 
-exports[`ReducedLeaveSchedule when leave reason is Medical renders lead with expected content 1`] = `
+exports[`ReducedLeaveSchedule renders lead with expected content when leave reason is Medical 1`] = `
 Array [
   "Enter 0 for days you won’t work a reduced schedule.",
   <br

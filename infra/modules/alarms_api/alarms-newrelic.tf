@@ -687,3 +687,18 @@ resource "newrelic_nrql_alert_condition" "unprocessed_leave_admin_records" {
     threshold_occurrences = "at_least_once"
   }
 }
+
+# ------------------------------------------------------------------------------------------------------------------------------
+
+module "newrelic_alert_info_request-errors" {
+  source    = "../newrelic_baseline_error_rate"
+  policy_id = newrelic_alert_policy.api_alerts.id
+
+  name  = "Info request error rate too high"
+  query = <<-NRQL
+    SELECT percentage(
+            COUNT(*), WHERE status_code != '200' 
+          ) FROM Log
+          WHERE method in ('GET', 'PATCH') AND path LIKE '/v1/employers/claims/%/review' and aws.logGroup like '%${var.environment_name}' and status_code IS NOT NULL
+    NRQL
+}
