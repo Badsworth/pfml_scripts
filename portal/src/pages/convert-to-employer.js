@@ -33,14 +33,14 @@ export const ConvertToEmployer = (props) => {
     fill: "currentColor",
   };
  */
-  const handleSubmit = useThrottledHandler(async (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault();
     console.log(user.user_id, formState, appLogic.users)
-    await convertToEmployer(user.user_id, {
+    convertToEmployer(user.user_id, {
       employer_fein: formState.employer_fein.replace("-", ""),
     });
     // navigate to employer page
-  })
+  }
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,

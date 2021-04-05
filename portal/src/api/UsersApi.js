@@ -75,6 +75,12 @@ export default class UsersApi extends BaseApi {
     };
   };
 
+  /**
+   * Convert an employee to employer
+   * @param {object} user_id - ID of user being updated
+   * @param {object} postData - Employer fein to update
+   * @returns {Promise<UsersApiResult>}
+   */
   convertToEmployer = async (user_id, postData) => {
     const { data } = await this.request("POST", user_id, postData);
     console.log(data)
