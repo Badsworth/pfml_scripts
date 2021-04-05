@@ -1,4 +1,3 @@
-@use "~@massds/mayflower-assets/scss/00-base/_color-tokens.scss" as *;
 @use "../../styles/uswds-theme-color" as *;
 
 // USWDS doesn't currently have Sass variables for theming the Alert icon colors
@@ -19,7 +18,8 @@
 }
 
 .c-alert--neutral {
-  background-color: $c-gray-lightest;
+  background-color: $theme-color-base-lightest;
+  border-left-color: $theme-color-base-lighter;
 }
 
 .c-alert--auto-width {
