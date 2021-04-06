@@ -21,6 +21,14 @@
           }
         }
       },
+      "Retry": [ 
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        } 
+      ],
       "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "fineos_import_employee_updates_notify_failure"}],
       "Next": "dor_import"
     },
@@ -63,6 +71,14 @@
           }
         }
       },
+      "Retry": [ 
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        } 
+      ],
       "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "dor_import_notify_failure"}],
       "Next": "load_employers_to_fineos_init"
     },
@@ -132,7 +148,14 @@
           }
         }
       },
-
+      "Retry": [ 
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        } 
+      ],
       "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "load_employers_to_fineos_notify_failure"}],
       "Next": "fineos_eligibility_feed_export"
     },
@@ -177,6 +200,14 @@
           }
         }
       },
+      "Retry": [ 
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        } 
+      ],
       "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "fineos_eligibility_feed_export_notify_failure"}],
       "Next": "success"
     },
