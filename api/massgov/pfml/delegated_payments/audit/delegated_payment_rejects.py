@@ -1,6 +1,5 @@
 import csv
 import os
-import pathlib
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -21,9 +20,6 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
-)
-from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
-    write_audit_report_rows,
 )
 from massgov.pfml.delegated_payments.step import Step
 
@@ -271,40 +267,6 @@ class PaymentRejectsStep(Step):
 
         logger.info("Completed transition of not sampled payment audit pending states")
 
-    def transition_rejected_payments_to_sent_state(self):
-        logger.info("Start transition of rejected payments to sent state")
-
-        state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-            state_log_util.AssociatedClass.PAYMENT,
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-            self.db_session,
-        )
-        state_log_count = len(state_logs)
-
-        logger.info(
-            "%i payments found for state %s, moving them to %s",
-            state_log_count,
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_description,
-            State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT.state_description,
-        )
-
-        for state_log in state_logs:
-            payment = state_log.payment
-
-            state_log_util.create_finished_state_log(
-                payment,
-                State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT,
-                state_log_util.build_outcome("Payment Reject Report sent"),
-                self.db_session,
-            )
-
-        logger.info(
-            "Successfully moved %i state logs from %s to %s",
-            state_log_count,
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_description,
-            State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT.state_description,
-        )
-
     def process_rejects_and_send_report(
         self,
         payment_rejects_received_folder_path: str,
@@ -379,62 +341,6 @@ class PaymentRejectsStep(Step):
 
         logger.info(
             "Created reference file for Payment Rejects file: %s", reference_file.file_location
-        )
-
-        # create and send Payment Rejects Report file
-        # TODO split this out and use state? we'll need to figure out how to get derived data to mirror PaymentAuditData
-
-        logger.info("Creating Payment Rejects Report file")
-
-        rejected_payment_rows: List[PaymentAuditCSV] = list(
-            filter(
-                lambda payment_rejects_row: payment_rejects_row.rejected_by_program_integrity
-                == "Y",
-                payment_rejects_rows,
-            )
-        )
-
-        # write to outbound folder
-        outbound_file_path = write_audit_report_rows(
-            rejected_payment_rows,
-            payment_rejects_report_outbound_folder,
-            self.db_session,
-            report_name="Payment-Rejects-Report",
-        )
-
-        if outbound_file_path is None:
-            raise Exception("Payment rejects file not written to outbound folder")
-
-        logger.info(
-            "Done writing Payment Rejects Report file to outbound folder: %s", outbound_file_path
-        )
-
-        # also write it to the outbund folder
-        send_file_path: Optional[pathlib.Path] = write_audit_report_rows(
-            rejected_payment_rows,
-            payment_rejects_report_sent_folder_path,
-            self.db_session,
-            report_name="Payment-Rejects-Report",
-        )
-
-        if send_file_path is None:
-            raise Exception("Payment rejects file not written to sent folder")
-
-        logger.info("Done writing Payment Rejects Report file to sent folder: %s", send_file_path)
-
-        # transition state for rejected files
-        self.transition_rejected_payments_to_sent_state()
-
-        # create a reference file
-        reference_file = ReferenceFile(
-            file_location=str(send_file_path),
-            reference_file_type_id=ReferenceFileType.DELEGATED_PAYMENT_REJECTS_REPORT.reference_file_type_id,
-        )
-        self.db_session.add(reference_file)
-
-        logger.info(
-            "Created reference file for Payment Rejects Report file: %s",
-            reference_file.file_location,
         )
 
         logger.info("Done processing Payment Rejects file: %s", payment_rejects_file_path)

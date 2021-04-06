@@ -14,6 +14,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
+from massgov.pfml.delegated_payments.check_issue_file import CheckIssueFile
 from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     add_eft_prenote_to_nacha_file,
     add_payments_to_nacha_file,
@@ -29,6 +30,7 @@ logger = logging.get_logger(__name__)
 
 class TransactionFileCreatorStep(Step):
     check_file: Optional[EzCheckFile] = None
+    positive_pay_file: Optional[CheckIssueFile]
     ach_file: Optional[NachaFile] = None
 
     def run_step(self) -> None:
@@ -42,8 +44,8 @@ class TransactionFileCreatorStep(Step):
             self.add_ach_payments()
             self.add_prenotes()
 
-            # Check
-            self.check_file = pub_check.create_check_file(self.db_session)
+            # Check and positive pay
+            self.check_file, self.positive_pay_file = pub_check.create_check_file(self.db_session)
 
             # Send the file
             self.send_payment_files(transaction_files_path)
@@ -125,6 +127,14 @@ class TransactionFileCreatorStep(Step):
             logger.info("No check file to send to PUB")
         else:
             ref_file = pub_check.send_check_file(self.check_file, ach_file_folder_path)
+            self.db_session.add(ref_file)
+
+        if self.positive_pay_file is None:
+            logger.info("No positive pay file to send to PUB")
+        else:
+            ref_file = pub_check.send_positive_pay_file(
+                self.positive_pay_file, ach_file_folder_path
+            )
             self.db_session.add(ref_file)
 
         if self.ach_file is None:

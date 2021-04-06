@@ -14,8 +14,6 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     register_leave_admin_with_fineos,
 )
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
-from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
-from massgov.pfml.api.models.users.responses import RoleResponse
 from massgov.pfml.util.aws.cognito import (
     CognitoAccountCreationFailure,
     CognitoLookupFailure,
@@ -28,6 +26,7 @@ from massgov.pfml.util.aws.cognito import (
 from massgov.pfml.util.employers import lookup_employer
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
 
 def create_user(
     db_session: db.Session,
@@ -74,33 +73,6 @@ def get_register_user_log_attributes(
         "is_employer": str(employer_for_leave_admin is not None),
     }
 
-def convert_user(
-    db_session: db.Session,
-    current_user: User,
-    employer_for_leave_admin: Employer,
-) -> User:
-    """
-    Converts a user from an employee to a Leave Admin
-
-    Raises
-    ------
-    - SomeError
-    """
-
-    user_role = UserRole(user=current_user, role_id=Role.EMPLOYER.role_id)
-    user_leave_admin = UserLeaveAdministrator(
-        user=current_user, employer=employer_for_leave_admin, fineos_web_id=None,
-    )
-    db_session.add(user_role)
-    db_session.commit()
-    db_session.add(user_leave_admin)
-    db_session.commit()
-    #'RoleResponse' object has no attribute '_sa_instance_state'
-    # current_user.roles.append(RoleResponse(role_id=user_role.role_id, role_description="Yep"))
-    # user_role.append(user)
-    logger.info("Successfully converted User records")
-
-    return current_user
 
 def register_user(
     db_session: db.Session,

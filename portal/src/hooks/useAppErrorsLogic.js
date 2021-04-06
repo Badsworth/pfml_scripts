@@ -141,6 +141,23 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       );
     }
 
+    if (type === "employer_verification_data_required") {
+      return (
+        <Trans
+          i18nKey={issueMessageKey}
+          components={{
+            "file-a-return-link": (
+              <a
+                target="_blank"
+                rel="noreferrer noopener"
+                href={routes.external.massgov.zeroBalanceEmployer}
+              />
+            ),
+          }}
+        />
+      );
+    }
+
     // 1. Display a field or rule-level message if present:
     //    a. Field-level: "errors.claims.ssn.required" => "Please enter your SSN."
     //    b. Rule-level: "errors.claims.rules.min_leave_periods" => "At least one leave period is required."

@@ -63,25 +63,14 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
           {
             address: "gqzap.notifications@inbox.testmail.app",
             subject: subject,
+            messageWildcard: submission.fineos_absence_id,
             timestamp_from: submission.timestamp_from,
           },
           { timeout: 360000 }
         ).then(async (emails) => {
-          expect(emails.length).to.be.greaterThan(0);
-          const email_match = emails.find((email) =>
-            email.html.includes(submission.fineos_absence_id as string)
-          );
-          if (!email_match) {
-            throw new Error(
-              `No emails queried match the Fineos Absence ID:
-                timestamp_from: ${submission.timestamp_from} 
-                fineos_absence_id: ${submission.fineos_absence_id}`
-            );
-          }
-          email.getNotificationData(email_match.html).then((data) => {
-            expect(data.name).to.equal(employeeFullName);
-            expect(data.applicationId).to.equal(submission.fineos_absence_id);
-          });
+          const data = email.getNotificationData(emails[0].html);
+          expect(data.name).to.equal(employeeFullName);
+          expect(data.applicationId).to.equal(submission.fineos_absence_id);
         });
       });
     });

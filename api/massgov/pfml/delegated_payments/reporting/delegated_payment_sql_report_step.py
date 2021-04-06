@@ -9,6 +9,7 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.execute_sql import execute_sql_statement_file_path
+from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
     Report,
     ReportName,
@@ -105,6 +106,13 @@ class ReportStep(Step):
 
         file_util.copy_file(report_file_path, file_path)
         file_util.copy_file(report_file_path, archive_file_path)
+
+        # create a reference file for the archive report file
+        reference_file = ReferenceFile(
+            file_location=str(archive_file_path),
+            reference_file_type_id=ReferenceFileType.DELEGATED_PAYMENT_REPORT_FILE.reference_file_type_id,
+        )
+        self.db_session.add(reference_file)
 
         logger.info(
             "Done generating report: %s, path: %s, archive path: %s",

@@ -9,6 +9,13 @@ export default {
   title: "Pages/Employers/Applications/Status",
   component: Status,
   argTypes: {
+    leaveDurationType: {
+      defaultValue: ["Continuous"],
+      control: {
+        type: "check",
+        options: ["Continuous", "Intermittent", "Reduced"],
+      },
+    },
     adjudicationStatus: {
       defaultValue: "Pending",
       control: {
@@ -43,12 +50,26 @@ export default {
   },
 };
 
-export const Default = ({ adjudicationStatus, document }) => {
+export const Default = ({
+  adjudicationStatus,
+  document,
+  leaveDurationType,
+}) => {
   const claim = new MockEmployerClaimBuilder()
     .status(adjudicationStatus)
-    .continuous()
-    .bondingLeaveReason()
-    .create();
+    .bondingLeaveReason();
+
+  if (leaveDurationType.includes("Continuous")) {
+    claim.continuous();
+  }
+
+  if (leaveDurationType.includes("Intermittent")) {
+    claim.intermittent();
+  }
+
+  if (leaveDurationType.includes("Reduced")) {
+    claim.reducedSchedule();
+  }
 
   const documentData = {
     application_id: "mock-application-id",
@@ -86,7 +107,7 @@ export const Default = ({ adjudicationStatus, document }) => {
   const appLogic = {
     appErrors: new AppErrorInfoCollection(),
     employers: {
-      claim,
+      claim: claim.create(),
       documents,
       downloadDocument: () => {},
       loadClaim: () => {},

@@ -43,6 +43,12 @@ const DOCUMENTS = new DocumentCollection([
   }),
 ]);
 
+function assertStatusRow(wrapper, expectedValue) {
+  const label = wrapper.prop("label");
+  const child = wrapper.childAt(0).text();
+  expect([label, child]).toEqual(expectedValue);
+}
+
 describe("Status", () => {
   const query = { absence_id: "NTN-111-ABS-01" };
   let appLogic;
@@ -95,20 +101,59 @@ describe("Status", () => {
 
   it("shows the application ID", () => {
     const applicationIdRow = wrapper.find("StatusRow").first();
-    expect(applicationIdRow.prop("label")).toEqual("Application ID");
-    expect(applicationIdRow.childAt(0).text()).toEqual("NTN-111-ABS-01");
+    // added to satisfy "Test has no assertions" lint
+    expect(applicationIdRow.exists()).toBe(true);
+    assertStatusRow(applicationIdRow, ["Application ID", "NTN-111-ABS-01"]);
   });
 
   it("shows the leave type", () => {
     const leaveTypeRow = wrapper.find("StatusRow").at(1);
-    expect(leaveTypeRow.prop("label")).toEqual("Leave type");
-    expect(leaveTypeRow.childAt(0).text()).toEqual("Medical leave");
+    // added to satisfy "Test has no assertions" lint
+    expect(leaveTypeRow.exists()).toBe(true);
+    assertStatusRow(leaveTypeRow, ["Leave type", "Medical leave"]);
   });
 
   it("shows the leave duration", () => {
-    const leaveDurationRow = wrapper.find("StatusRow").last();
-    expect(leaveDurationRow.prop("label")).toEqual("Leave duration");
-    expect(leaveDurationRow.childAt(0).text()).toEqual("1/1/2021 – 7/1/2021");
+    const leaveDurationRow = wrapper.find("StatusRow").at(2);
+    // added to satisfy "Test has no assertions" lint
+    expect(leaveDurationRow.exists()).toBe(true);
+    assertStatusRow(leaveDurationRow, [
+      "Leave duration",
+      "1/1/2021 – 7/1/2021",
+    ]);
+  });
+
+  it("shows the leave duration types", () => {
+    const busyClaim = new MockEmployerClaimBuilder()
+      .completed()
+      .continuous()
+      .intermittent()
+      .reducedSchedule()
+      .create();
+    ({ appLogic, wrapper } = renderWithAppLogic(Status, {
+      employerClaimAttrs: busyClaim,
+      props: {
+        query,
+      },
+    }));
+
+    const leaveDurationRows = wrapper.find("StatusRow");
+    // added to satisfy "Test has no assertions" lint
+    expect(leaveDurationRows.exists()).toBe(true);
+
+    const continuousRow = leaveDurationRows.at(3);
+    const intermittentRow = leaveDurationRows.at(4);
+    const reducedScheduleRow = leaveDurationRows.at(5);
+
+    assertStatusRow(continuousRow, ["Continuous leave", "1/1/2021 – 6/1/2021"]);
+    assertStatusRow(intermittentRow, [
+      "Intermittent leave",
+      "2/1/2021 – 7/1/2021",
+    ]);
+    assertStatusRow(reducedScheduleRow, [
+      "Reduced leave schedule",
+      "2/1/2021 – 7/1/2021",
+    ]);
   });
 
   describe("when documents haven't been loaded yet", () => {

@@ -33,23 +33,11 @@ describe(
             subject:
               "Thank you for successfully submitting your Paid Family and Medical Leave Application",
             timestamp_from: submission.timestamp_from,
+            messageWildcard: submission.fineos_absence_id,
             debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
           },
           { timeout: 180000 }
-        ).then((emails) => {
-          expect(emails.length).to.be.greaterThan(0);
-          const email_match = emails.find((email) =>
-            email.html.includes(submission.fineos_absence_id as string)
-          );
-          if (!email_match) {
-            throw new Error(
-              `No emails quiered match the Finoes Absence ID:
-              timestamp_from: ${submission.timestamp_from} 
-              fineos_absence_id: ${submission.fineos_absence_id}`
-            );
-          }
-          expect(email_match.html).to.contain(submission.fineos_absence_id);
-        });
+        ).should("not.be.empty");
       });
     });
 
@@ -68,28 +56,17 @@ describe(
               address: "gqzap.notifications@inbox.testmail.app",
               subject: subject,
               timestamp_from: submission.timestamp_from,
+              messageWildcard: submission.fineos_absence_id,
               debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
             },
             { timeout: 180000 }
           ).then(async (emails) => {
-            expect(emails.length).to.be.greaterThan(0);
-            const email_match = emails.find((email) =>
-              email.html.includes(submission.fineos_absence_id as string)
-            );
-            if (!email_match) {
-              throw new Error(
-                `No emails quiered match the Finoes Absence ID:
-                timestamp_from: ${submission.timestamp_from} 
-                fineos_absence_id: ${submission.fineos_absence_id}`
-              );
-            }
-            email.getNotificationData(email_match.html).then((data) => {
-              const dob =
-                claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
-              expect(data.name).to.equal(employeeFullName);
-              expect(data.dob).to.equal(dob);
-              expect(data.applicationId).to.equal(submission.fineos_absence_id);
-            });
+            const data = email.getNotificationData(emails[0].html);
+            const dob =
+              claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
+            expect(data.name).to.equal(employeeFullName);
+            expect(data.dob).to.equal(dob);
+            expect(data.applicationId).to.equal(submission.fineos_absence_id);
           });
         });
       });

@@ -473,7 +473,7 @@ const errors = {
   employers: {
     ein: {
       employer_verification_data_required:
-        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications.",
+        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. <file-a-return-link>Learn more about filing returns and remitting contributions</file-a-return-link>.",
     },
     employer_benefits: {
       benefit_amount_frequency: {
@@ -492,6 +492,10 @@ const errors = {
     employer_fein: {
       duplicate:
         "The employer ID you entered is already associated with your account.",
+      employer_verification_data_required:
+        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications.",
+      invalid:
+        "Enter your 9-digit Employer Identification Number in the correct format.",
     },
     hours_worked_per_week: {
       // TODO (EMPLOYER-723) remove this
@@ -1561,6 +1565,8 @@ const pages = {
     einLabel: "Employer ID number (EIN)",
     submit: "Convert account",
     title: "Convert to employer account",
+    alertHeading: "This action is irreversible!",
+    alertDescription: "Converting your account from \"employee\" to \"employer\" is irreversible and will invalidate all claims created, in-progress or completed up until now.",
   },
   employersAuthCreateAccount: {
     alertHeading:
@@ -1658,6 +1664,9 @@ const pages = {
       "This application is being reviewed by the Department. It was either reviewed by an administrator on your team or the review deadline has passed. No action is required of you.<br /><br />After we make a decision, you'll receive an email with a direct link for more details.",
     leaveDetailsLabel: "$t(shared.claimsLeaveDetailsTitle)",
     leaveDurationLabel: "$t(shared.claimsLeaveDurationTitle)",
+    leaveDurationLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
+    leaveDurationLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
+    leaveDurationLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
     leaveReasonLabel: "Leave type",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",

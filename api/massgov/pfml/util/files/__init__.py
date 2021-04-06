@@ -8,7 +8,7 @@ import os
 import pathlib
 import shutil
 import tempfile
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional
 from urllib.parse import urlparse
 
 import boto3
@@ -474,7 +474,7 @@ def remove_if_exists(path: str) -> None:
 
 
 def create_csv_from_list(
-    customer_data: List[Dict], fieldnames: List[str], file_name: str
+    customer_data: Iterable[Dict], fieldnames: Iterable[str], file_name: str
 ) -> pathlib.Path:
     directory = tempfile.mkdtemp()
 

@@ -33,7 +33,7 @@ def address_to_experian_suggestion_text_format(address: Address) -> str:
     Experian's AddressSearchV1MatchedResult.text field for the benefit of comparing input addresses
     and addresses returned by the Experian API in CSV reports we create.
 
-    | line 1    | | line 2|  |citt||st||zip|
+    | line 1    | | line 2|  |city||st||zip|
     125 Summer St Suite 200, Boston MA 02110
     """
     address_lines = [address.address_line_one, address.address_line_two]

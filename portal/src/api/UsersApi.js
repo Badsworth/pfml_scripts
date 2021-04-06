@@ -85,27 +85,4 @@ export default class UsersApi extends BaseApi {
     return (roles || []).map((role) => new UserRole(role));
   };
 
-  /**
-   * Convert an employee to employer
-   * @param {object} user_id - ID of user being updated
-   * @param {object} postData - Employer fein to update
-   * @returns {Promise<UsersApiResult>}
-   */
-   convertToEmployer = async (user_id, postData) => {
-    const { data } = await this.request("POST", user_id, postData);
-    console.log(data)
-    const roles = this.createUserRoles(data.roles);
-    const user_leave_administrators = this.createUserLeaveAdministrators(
-      data.user_leave_administrators
-    );
-
-    return {
-      user: new User({
-        ...data,
-        roles,
-        user_leave_administrators,
-      }),
-    };
-  };
-
 }

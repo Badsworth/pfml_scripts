@@ -29,6 +29,7 @@ export const Status = (props) => {
   const {
     employers: { claim, documents },
   } = appLogic;
+  const { isContinuous, isIntermittent, isReducedSchedule } = claim;
   const { t } = useTranslation();
 
   const getDisplayState = (status) => {
@@ -102,6 +103,29 @@ export const Status = (props) => {
       <StatusRow label={t("pages.employersClaimsStatus.leaveDurationLabel")}>
         {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
       </StatusRow>
+      {isContinuous && (
+        <StatusRow
+          label={t("pages.employersClaimsStatus.leaveDurationLabel_continuous")}
+        >
+          {claim.continuousLeaveDateRange()}
+        </StatusRow>
+      )}
+      {isIntermittent && (
+        <StatusRow
+          label={t(
+            "pages.employersClaimsStatus.leaveDurationLabel_intermittent"
+          )}
+        >
+          {claim.intermittentLeaveDateRange()}
+        </StatusRow>
+      )}
+      {isReducedSchedule && (
+        <StatusRow
+          label={t("pages.employersClaimsStatus.leaveDurationLabel_reduced")}
+        >
+          {claim.reducedLeaveDateRange()}
+        </StatusRow>
+      )}
       {legalNotices.length > 0 && (
         <div className="border-top-2px border-base-lighter padding-top-2">
           <Heading level="2">

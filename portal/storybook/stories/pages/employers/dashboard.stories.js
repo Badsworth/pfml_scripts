@@ -25,6 +25,16 @@ const verificationScenarios = {
       ],
     }),
   },
+  "Single verified employer": {
+    user: new User({
+      user_leave_administrators: [
+        createUserLeaveAdministrator({
+          has_verification_data: true,
+          verified: true,
+        }),
+      ],
+    }),
+  },
   "All employers not verified + unverifiable": {
     user: new User({
       user_leave_administrators: [
@@ -83,11 +93,7 @@ export default {
       defaultValue: "Has claims",
       control: {
         type: "radio",
-        options: [
-          "Has claims",
-          "Has claims for multiple employers",
-          "No claims",
-        ],
+        options: ["Has claims", "No claims"],
       },
     },
     verification: {
@@ -102,8 +108,7 @@ export default {
 
 export const Default = (args) => {
   const { user } = verificationScenarios[args.verification];
-  const hasMultipleEmployers =
-    args.claims === "Has claims for multiple employers";
+  const hasMultipleEmployers = user.user_leave_administrators.length > 1;
   const claims =
     args.claims === "No claims"
       ? []
@@ -115,10 +120,12 @@ export const Default = (args) => {
           employer_dba: hasMultipleEmployers
             ? faker.company.companyName()
             : "Dunder-Mifflin",
-          employer_fein: `**-***${faker.datatype.number({
-            min: 1000,
-            max: 9999,
-          })}`,
+          employer_fein: hasMultipleEmployers
+            ? `**-***${faker.datatype.number({
+                min: 1000,
+                max: 9999,
+              })}`
+            : "**-***1234",
           created_at: DateTime.local().minus({ days: num }).toISODate(),
         }));
 

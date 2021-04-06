@@ -108,6 +108,14 @@ describe("BaseClaim", () => {
     });
   });
 
+  describe("#continuousLeaveDateRange", () => {
+    it("returns the expected date range", () => {
+      expect(claimWithContinuousLeave.continuousLeaveDateRange()).toEqual(
+        "3/1/2021 – 9/1/2021"
+      );
+    });
+  });
+
   describe("#isReducedSchedule", () => {
     it("returns true if continuous leave data is set", () => {
       expect(claimWithContinuousLeave.isReducedSchedule).toBe(false);
@@ -117,12 +125,28 @@ describe("BaseClaim", () => {
     });
   });
 
+  describe("#reducedLeaveDateRange", () => {
+    it("returns the expected date range", () => {
+      expect(claimWithReducedLeave.reducedLeaveDateRange()).toBe(
+        "1/1/2021 – 8/1/2021"
+      );
+    });
+  });
+
   describe("#isIntermittent", () => {
     it("returns true if continuous leave data is set", () => {
       expect(claimWithContinuousLeave.isIntermittent).toBe(false);
       expect(claimWithIntermittentLeave.isIntermittent).toBe(true);
       expect(claimWithMultipleLeavePeriods.isIntermittent).toBe(false);
       expect(claimWithReducedLeave.isIntermittent).toBe(false);
+    });
+  });
+
+  describe("#intermittentLeaveDateRange", () => {
+    it("returns the expected date range", () => {
+      expect(claimWithIntermittentLeave.intermittentLeaveDateRange()).toEqual(
+        "2/1/2021 – 8/1/2021"
+      );
     });
   });
 

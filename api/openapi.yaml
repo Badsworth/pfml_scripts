@@ -53,29 +53,6 @@ paths:
             schema:
               $ref: "#/components/schemas/UserCreateRequest"
   /users/{user_id}:
-    post: 
-      tags:
-        - Users
-      summary: Convert a User account
-      operationId: massgov.pfml.api.users.users_convert
-      parameters:
-        - name: user_id
-          in: path
-          schema:
-            type: string
-          description: ID of User to update
-          required: true
-      responses:
-        "200":
-          description: A successful request returns a 200 status code and a user object.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-      requestBody:
-        $ref: "#/components/requestBodies/UserConvertRequest"
     get:
       tags:
         - Users
@@ -1052,12 +1029,6 @@ components:
           scopes: {}
 
   requestBodies:
-    UserConvertRequest:
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/UserConvertRequest"
-      required: true
     UserUpdateRequest:
       content:
         application/json:
@@ -1401,15 +1372,6 @@ components:
             employer_fein:
               $ref: "#/components/schemas/Fein"
               nullable: true
-
-    UserConvertRequest:
-      type: object
-      additionalProperties: false
-      properties:
-        employer_for_leave_admin:
-          type: string
-          example: "111111111"
-      required: ["employer_for_leave_admin"]
 
     EmployeeUpdateRequest:
       type: object
