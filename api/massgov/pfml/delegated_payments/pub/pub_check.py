@@ -40,7 +40,7 @@ class Constants:
     EZ_CHECK_MEMO_FORMAT = "PFML Payment {} [{}-{}]"
     EZ_CHECK_MEMO_DATE_FORMAT = "%d/%m/%Y"
 
-    POSITIVE_PAY_FILENAME_FORMAT = "PUB-POSITIVE-PAY_%Y%m%d-%H%M.csv"
+    POSITIVE_PAY_FILENAME_FORMAT = "PUB-POSITIVE-PAY_%Y%m%d-%H%M.txt"
 
     US_COUNTRY_CODE = "US"
 
