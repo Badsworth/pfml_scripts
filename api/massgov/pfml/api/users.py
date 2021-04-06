@@ -14,16 +14,17 @@ from massgov.pfml.api.services.user_rules import (
     get_users_post_required_fields_issues,
 )
 from massgov.pfml.api.util.deepgetattr import deepgetattr
-from massgov.pfml.db.models.employees import Employer, Role, User, UserRole, UserLeaveAdministrator, LkRole
+from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole, LkRole
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein
 from massgov.pfml.util.users import register_user, convert_user
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
+
 def users_convert(user_id):
-    """Converts a user account from employee to leave admin"""
     user = None
+    """Converts a user account from employee to leave admin"""
     with app.db_session() as db_session:
         user = get_or_404(db_session, User, user_id)
 
@@ -56,13 +57,13 @@ def users_convert(user_id):
             ).to_api_response()
 
         user = convert_user(db_session, user, employer)
-    
+
     return response_util.success_response(
         data=user_response(user),
         message="Successfully converted user.",
         status_code=201,
     ).to_api_response()
-    
+
 
 def users_post():
     """Create a new user account"""
@@ -164,6 +165,39 @@ def users_patch(user_id):
 
     with app.db_session() as db_session:
         updated_user = get_or_404(db_session, User, user_id)
+
+        role_description = deepgetattr(body, "role.role_description")
+        employer_fein = deepgetattr(body, "user_leave_administrator.employer_fein")
+
+        if role_description:
+            existing_roles = [role.role_description for role in
+                              updated_user.roles]
+            if Role.EMPLOYER.role_description not in existing_roles:
+                user_role = UserRole(user=updated_user, role_id=Role.EMPLOYER.role_id)
+                db_session.add(user_role)
+
+        if employer_fein:
+            employer = (
+                db_session.query(Employer)
+                .filter(Employer.employer_fein == employer_fein)
+                .one_or_none()
+            )
+            # TODO why does this generate an error?
+            employer_issues = None  # employer_issues = get_users_post_employer_issues(employer)
+
+            if employer_issues:
+                logger.info("users_post failure - Employer not valid")
+                return response_util.error_response(
+                    status_code=BadRequest,
+                    message="Employer not valid",
+                    errors=employer_issues,
+                    data={},
+                ).to_api_response()
+
+                user_leave_admin = UserLeaveAdministrator(
+                    user=updated_user, employer=employer, fineos_web_id=None,
+                )
+                db_session.add(user_leave_admin)
 
         ensure(EDIT, updated_user)
         for key in body.__fields_set__:
