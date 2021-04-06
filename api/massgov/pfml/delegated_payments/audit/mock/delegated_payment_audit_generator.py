@@ -298,7 +298,7 @@ def generate_scenario_data(
                 i_value,
                 claim,
                 scenario_descriptor.payment_method,
-                State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT,
+                State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
                 db_session,
             )
 

@@ -1790,9 +1790,6 @@ class State(LookupTable):
     DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT = LkState(
         132, "Add to Payment Reject Report", Flow.DELEGATED_PAYMENT.flow_id
     )
-    DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT = LkState(
-        133, "Payment Reject Report sent", Flow.DELEGATED_PAYMENT.flow_id
-    )
 
     DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
         134, "Add accepted payment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
@@ -1921,12 +1918,13 @@ class ReferenceFileType(LookupTable):
 
     DELEGATED_PAYMENT_AUDIT_REPORT = LkReferenceFileType(20, "Payment Audit Report", 1)
     DELEGATED_PAYMENT_REJECTS = LkReferenceFileType(21, "Payment Rejects", 1)
-    DELEGATED_PAYMENT_REJECTS_REPORT = LkReferenceFileType(22, "Payment Rejects Report", 1)
     FINEOS_CLAIMANT_EXTRACT = LkReferenceFileType(24, "Claimant extract", 2)
     FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 4)
 
     PUB_EZ_CHECK = LkReferenceFileType(26, "PUB EZ check file", 1)
     PUB_POSITIVE_PAYMENT = LkReferenceFileType(27, "PUB positive pay file", 1)
+
+    DELEGATED_PAYMENT_REPORT_FILE = LkReferenceFileType(27, "SQL Report", 1)
 
 
 class Title(LookupTable):
