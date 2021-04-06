@@ -26,10 +26,10 @@ export const removeTags = function (str: string): string {
   return str.replace(/(<([^>]+)>)/gi, "");
 };
 
-export const getNotificationData = async function (
+export const getNotificationData = function (
   str: string,
   notificationType?: string
-): Promise<{ [key: string]: string }> {
+): { [key: string]: string } {
   const cleanedString = removeTags(str);
   const notificationData: { [key: string]: string } = {
     name: this.getTextBetween(cleanedString, "Employee name:", "Date of birth"),

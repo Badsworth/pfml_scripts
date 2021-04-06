@@ -114,26 +114,12 @@ describe(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
                 subject: subjectClaimant,
+                messageWildcard: caseNumber,
                 timestamp_from,
                 debugInfo: { "Fineos Claim ID": caseNumber },
               },
               { timeout: 180000 }
-            ).then(async (emails) => {
-              expect(emails.length).to.be.greaterThan(0);
-              const email_match = emails.find((email) =>
-                email.html.includes(caseNumber as string)
-              );
-              if (!email_match) {
-                throw new Error(
-                  `No emails quiered match the Finoes Absence ID:
-                    timestamp_from: ${timestamp_from} 
-                    fineos_absence_id: ${caseNumber}`
-                );
-              }
-              email.getNotificationData(email_match.html).then((data) => {
-                expect(data.applicationId).to.equal(caseNumber);
-              });
-            });
+            ).should("not.be.empty");
           });
         });
       });
