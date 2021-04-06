@@ -77,7 +77,11 @@ PEI_FIELD_NAMES = [
 ]
 PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "PAYMENTENDPER"]
 PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU"]
-REQUESTED_ABSENCE_FIELD_NAMES = ["ABSENCE_CASENUMBER", "LEAVEREQUEST_ID", "LEAVEREQUEST_DECISION"]
+REQUESTED_ABSENCE_FIELD_NAMES = [
+    "ABSENCE_CASENUMBER",
+    "LEAVEREQUEST_DECISION",
+    "ABSENCEREASON_COVERAGE",
+]
 
 
 fake = faker.Faker()
@@ -203,11 +207,11 @@ def make_payment_details_record(
     return payment_detail_record
 
 
-def make_requested_absence_record(absence_case_number, leave_request_id, leave_request_decision):
+def make_requested_absence_record(absence_case_number, leave_request_decision, claim_type):
     requested_absence_record = OrderedDict()
     requested_absence_record["ABSENCE_CASENUMBER"] = absence_case_number
-    requested_absence_record["LEAVEREQUEST_ID"] = leave_request_id
     requested_absence_record["LEAVEREQUEST_DECISION"] = leave_request_decision
+    requested_absence_record["ABSENCEREASON_COVERAGE"] = claim_type
     return requested_absence_record
 
 
@@ -967,7 +971,7 @@ def test_process_extract_data_minimal_viable_payment(
         [payment_details_record],
     )
 
-    requested_absence_record = make_requested_absence_record("NTN-01-ABS-01", "1234", "Approved")
+    requested_absence_record = make_requested_absence_record("NTN-01-ABS-01", "Approved", "Family")
     make_and_upload_extract_file(
         tmp_path,
         mock_s3_bucket,
@@ -1053,8 +1057,10 @@ def test_process_extract_data_leave_request_decision_validation(
         [payment_details_record, payment_details_record_2],
     )
 
-    requested_absence_record = make_requested_absence_record("NTN-01-ABS-01", "1234", "Approved")
-    requested_absence_record_2 = make_requested_absence_record("NTN-02-ABS-02", "1234", "Pending")
+    requested_absence_record = make_requested_absence_record("NTN-01-ABS-01", "Approved", "Family")
+    requested_absence_record_2 = make_requested_absence_record(
+        "NTN-02-ABS-02", "Pending", "Employee"
+    )
     make_and_upload_extract_file(
         tmp_path,
         mock_s3_bucket,
@@ -1115,7 +1121,7 @@ def test_process_extract_additional_payment_types(
     claim_record_zero_dollar = make_claim_detail_record("1000", "1", "NTN-01-ABS-01")
     payment_details_record_zero_dollar = make_payment_details_record("1000", "1")
     requested_absence_record_zero_dollar = make_requested_absence_record(
-        "NTN-01-ABS-01", "1", "Approved"
+        "NTN-01-ABS-01", "Approved", "Family"
     )
     add_db_records_from_row(test_db_session, vpei_record_zero_dollar, claim_record_zero_dollar)
 
@@ -1124,7 +1130,7 @@ def test_process_extract_additional_payment_types(
     claim_record_overpayment = make_claim_detail_record("2000", "2", "NTN-02-ABS-02")
     payment_details_record_overpayment = make_payment_details_record("2000", "2")
     requested_absence_record_overpayment = make_requested_absence_record(
-        "NTN-02-ABS-02", "2", "Approved"
+        "NTN-02-ABS-02", "Approved", "Employee"
     )
     add_db_records_from_row(test_db_session, vpei_record_overpayment, claim_record_overpayment)
 
@@ -1135,7 +1141,7 @@ def test_process_extract_additional_payment_types(
     claim_record_ach_cancellation = make_claim_detail_record("3000", "3", "NTN-03-ABS-03")
     payment_details_record_ach_cancellation = make_payment_details_record("3000", "3")
     requested_absence_record_ach_cancellation = make_requested_absence_record(
-        "NTN-03-ABS-03", "3", "Approved"
+        "NTN-03-ABS-03", "Approved", "Employee"
     )
     add_db_records_from_row(
         test_db_session, vpei_record_ach_cancellation, claim_record_ach_cancellation
@@ -1148,7 +1154,7 @@ def test_process_extract_additional_payment_types(
     claim_record_check_cancellation = make_claim_detail_record("4000", "4", "NTN-04-ABS-04")
     payment_details_record_check_cancellation = make_payment_details_record("4000", "4")
     requested_absence_record_check_cancellation = make_requested_absence_record(
-        "NTN-04-ABS-04", "4", "Approved"
+        "NTN-04-ABS-04", "Approved", "Employee"
     )
     add_db_records_from_row(
         test_db_session, vpei_record_check_cancellation, claim_record_check_cancellation
@@ -1161,7 +1167,7 @@ def test_process_extract_additional_payment_types(
     claim_record_unknown = make_claim_detail_record("5000", "5", "NTN-05-ABS-05")
     payment_details_record_unknown = make_payment_details_record("5000", "5")
     requested_absence_record_unknown = make_requested_absence_record(
-        "NTN-05-ABS-05", "5", "Approved"
+        "NTN-05-ABS-05", "Approved", "Employee"
     )
     add_db_records_from_row(test_db_session, vpei_record_unknown, claim_record_unknown)
 
@@ -1305,7 +1311,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_ID"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD"),

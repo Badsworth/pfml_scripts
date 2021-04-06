@@ -2,7 +2,6 @@ import csv
 import decimal
 import os
 import pathlib
-import re
 import tempfile
 import uuid
 from collections import OrderedDict
@@ -151,8 +150,8 @@ class PaymentData:
     tin: Optional[str] = None
     absence_case_number: Optional[str] = None
 
-    leave_request_id: Optional[str] = None
     leave_request_decision: Optional[str] = None
+    claim_type_raw: Optional[str] = None
 
     full_name: Optional[str] = None
     payee_identifier: Optional[str] = None
@@ -211,9 +210,6 @@ class PaymentData:
                     CiIndex(c=self.absence_case_number, i="")
                 )
             if requested_absence:
-                self.leave_request_id = payments_util.validate_csv_input(
-                    "LEAVEREQUEST_ID", requested_absence, self.validation_container, True
-                )
 
                 def leave_request_decision_validator(
                     leave_request_decision: str,
@@ -231,6 +227,22 @@ class PaymentData:
                     True,
                     custom_validator_func=leave_request_decision_validator,
                 )
+
+                def claim_type_validator(
+                    claim_type_str: str,
+                ) -> Optional[payments_util.ValidationReason]:
+                    if claim_type_str == "Family" or claim_type_str == "Employee":
+                        return None
+                    return payments_util.ValidationReason.INVALID_VALUE
+
+                self.claim_type_raw = payments_util.validate_csv_input(
+                    "ABSENCEREASON_COVERAGE",
+                    requested_absence,
+                    self.validation_container,
+                    True,
+                    custom_validator_func=claim_type_validator,
+                )
+
             else:
                 self.validation_container.add_validation_issue(
                     payments_util.ValidationReason.MISMATCHED_DATA,
@@ -309,8 +321,6 @@ class PaymentData:
 
         def amount_validator(amount_str: str) -> Optional[payments_util.ValidationReason]:
             try:
-                if not re.match(payments_util.Regexes.MONETARY_AMOUNT, amount_str):
-                    return payments_util.ValidationReason.INVALID_VALUE
                 Decimal(amount_str)
             except (InvalidOperation, TypeError):  # Amount is not numeric
                 return payments_util.ValidationReason.INVALID_VALUE
@@ -611,9 +621,14 @@ class PaymentExtractStep(Step):
             self.db_session.add(claim)
             self.increment("claim_created_count")
 
-        # Attach the employee to the claim
-        if claim and employee:
-            claim.employee = employee
+        # Attach the employee+claim type to the claim
+        if claim:
+            if employee:
+                claim.employee = employee
+            if payment_data.claim_type_raw:
+                claim.claim_type_id = payments_util.get_mapped_claim_type(
+                    payment_data.claim_type_raw
+                ).claim_type_id
 
         # Somehow we have ended up in a state where we could not find an employee
         # but did find a claim with some other employee ID. This shouldn't happen
