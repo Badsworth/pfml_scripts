@@ -128,7 +128,11 @@ def _format_claims_for_dua_claimant_list(claims: List[Claim]) -> List[Dict]:
         if employee is not None:
             _info = {
                 Constants.CASE_ID_FIELD: claim.fineos_absence_id,
-                Constants.SSN_FIELD: employee.tax_identifier.tax_identifier.replace("-", ""),
+                Constants.SSN_FIELD: (
+                    employee.tax_identifier.tax_identifier.replace("-", "")
+                    if employee.tax_identifier
+                    else ""
+                ),
                 Constants.BENEFIT_START_DATE_FIELD: Constants.TEMPORARY_BENEFIT_START_DATE,
             }
 

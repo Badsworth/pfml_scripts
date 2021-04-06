@@ -1,5 +1,4 @@
 import os
-import pathlib
 from typing import List
 
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
@@ -74,9 +73,8 @@ def _update_state_log(ref_file: ReferenceFile, db_session: db.Session) -> None:
 
 
 def _send_dia_payments_email(
-    ref_file: ReferenceFile, db_session: db.Session, report: pathlib.Path
+    ref_file: ReferenceFile, db_session: db.Session, report_file_path: str
 ) -> None:
-
     email_config = reductions_config.get_email_config()
     sender = email_config.pfml_email_address
     recipient = email_config.agency_reductions_email_address
@@ -85,11 +83,11 @@ def _send_dia_payments_email(
     bounce_forwarding_email_address_arn = email_config.bounce_forwarding_email_address_arn
 
     email_recipient = EmailRecipient(to_addresses=[recipient])
-    return send_email(
+    send_email(
         recipient=email_recipient,
         subject=subject,
         body_text=body,
         sender=sender,
         bounce_forwarding_email_address_arn=bounce_forwarding_email_address_arn,
-        attachments=[report],
+        attachments=[report_file_path],
     )
