@@ -1926,6 +1926,7 @@ class ReferenceFileType(LookupTable):
     FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 4)
 
     PUB_EZ_CHECK = LkReferenceFileType(26, "PUB EZ check file", 1)
+    PUB_POSITIVE_PAYMENT = LkReferenceFileType(27, "PUB positive pay file", 1)
 
 
 class Title(LookupTable):

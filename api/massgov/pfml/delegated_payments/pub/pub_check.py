@@ -1,4 +1,5 @@
 import os
+from dataclasses import dataclass
 from datetime import date
 from typing import List, Optional, Tuple, cast
 
@@ -19,9 +20,16 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
+from massgov.pfml.delegated_payments.check_issue_file import CheckIssueEntry, CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile, EzCheckHeader, EzCheckRecord
 
 logger = logging.get_logger(__name__)
+
+
+@dataclass
+class RecordContainer:
+    ez_check_record: EzCheckRecord
+    positive_pay_record: CheckIssueEntry
 
 
 class Constants:
@@ -32,28 +40,42 @@ class Constants:
     EZ_CHECK_MEMO_FORMAT = "PFML Payment {} [{}-{}]"
     EZ_CHECK_MEMO_DATE_FORMAT = "%d/%m/%Y"
 
+    POSITIVE_PAY_FILENAME_FORMAT = "PUB-POSITIVE-PAY_%Y%m%d-%H%M.csv"
+
     US_COUNTRY_CODE = "US"
 
 
-def create_check_file(db_session: db.Session) -> Optional[EzCheckFile]:
+def create_check_file(
+    db_session: db.Session,
+) -> Tuple[Optional[EzCheckFile], Optional[CheckIssueFile]]:
     eligible_check_payments = _get_eligible_check_payments(db_session)
 
     if len(eligible_check_payments) == 0:
         logger.info("Not creating a check file because we found no eligible check payments")
-        return None
+        return (None, None)
 
     # Convert all the payments into EzCheckRecords before initializing the EzCheckFile because
     # all of the eligible payments may fail to be converted. If that happens we also don't want
     # to write an EzCheckFile to PUB.
     encountered_exception = False
-    records: List[Tuple[Payment, EzCheckRecord]] = []
+    records: List[Tuple[Payment, RecordContainer]] = []
     check_number = db_session.query(func.max(Payment.check_number)).scalar() or 0
 
     for payment in eligible_check_payments:
         try:
             check_number += 1
             payment.check_number = check_number
-            records.append((payment, _convert_payment_to_ez_check_record(payment, check_number)))
+            ez_check_record = _convert_payment_to_ez_check_record(payment, check_number)
+            positive_pay_record = _convert_payment_to_check_issue_entry(payment)
+
+            records.append(
+                (
+                    payment,
+                    RecordContainer(
+                        ez_check_record=ez_check_record, positive_pay_record=positive_pay_record
+                    ),
+                )
+            )
         except payments_util.ValidationIssueException as e:
             msg = ", ".join([str(issue) for issue in e.issues])
             logger.exception("Error converting payment into PUB EZ check format: " + msg)
@@ -64,12 +86,15 @@ def create_check_file(db_session: db.Session) -> Optional[EzCheckFile]:
 
     if encountered_exception:
         logger.info("Not creating a check file because we encountered issues adding records")
-        return None
+        return (None, None)
 
     ez_check_file = EzCheckFile(_get_ez_check_header())
+    check_issue_file = CheckIssueFile()
 
     for payment, record in records:
-        ez_check_file.add_record(record)
+        ez_check_file.add_record(record.ez_check_record)
+        check_issue_file.add_entry(record.positive_pay_record)
+
         state_log_util.create_finished_state_log(
             associated_model=payment,
             end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
@@ -77,7 +102,7 @@ def create_check_file(db_session: db.Session) -> Optional[EzCheckFile]:
             db_session=db_session,
         )
 
-    return ez_check_file
+    return ez_check_file, check_issue_file
 
 
 def send_check_file(check_file: EzCheckFile, folder_path: str) -> ReferenceFile:
@@ -93,6 +118,22 @@ def send_check_file(check_file: EzCheckFile, folder_path: str) -> ReferenceFile:
     return ReferenceFile(
         file_location=s3_path,
         reference_file_type_id=ReferenceFileType.PUB_EZ_CHECK.reference_file_type_id,
+    )
+
+
+def send_positive_pay_file(check_file: CheckIssueFile, folder_path: str) -> ReferenceFile:
+    s3_path = os.path.join(
+        folder_path,
+        payments_util.Constants.S3_OUTBOUND_READY_DIR,
+        payments_util.get_now().strftime(Constants.POSITIVE_PAY_FILENAME_FORMAT),
+    )
+
+    with file_util.write_file(s3_path, "wb") as s3_file:
+        s3_file.write(check_file.to_bytes())
+
+    return ReferenceFile(
+        file_location=s3_path,
+        reference_file_type_id=ReferenceFileType.PUB_POSITIVE_PAYMENT.reference_file_type_id,
     )
 
 
@@ -112,6 +153,20 @@ def _get_eligible_check_payments(db_session: db.Session) -> List[Payment]:
     check_payments = [state_log.payment for state_log in state_logs]
 
     return check_payments
+
+
+def _convert_payment_to_check_issue_entry(payment: Payment) -> CheckIssueEntry:
+    employee = payment.claim.employee
+
+    return CheckIssueEntry(
+        status_code="I",  # Always use the issue code? Use "V" for void.
+        check_number=payment.check_number,  # check number has already been generated in previous EZ Check step
+        issue_date=cast(date, payment.payment_date),
+        amount=payment.amount,
+        payee_id=payment.pub_individual_id,
+        payee_name=_format_employee_name_for_ez_check(employee),
+        account_number=int(os.environ.get("DFML_PUB_ACCOUNT_NUMBER")),  # type: ignore
+    )
 
 
 def _convert_payment_to_ez_check_record(payment: Payment, check_number: int) -> EzCheckRecord:
