@@ -136,7 +136,7 @@ def users_patch(user_id):
         if employer_fein:
             employer = (
                 db_session.query(Employer)
-                .filter(Employer.employer_fein == employer_fein)
+                .filter(Employer.employer_fein == employer_fein.replace("-", "", 10))
                 .one_or_none()
             )
             # TODO why does this generate an error?

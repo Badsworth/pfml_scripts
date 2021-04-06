@@ -1565,6 +1565,8 @@ const pages = {
     einLabel: "Employer ID number (EIN)",
     submit: "Convert account",
     title: "Convert to employer account",
+    alertHeading: "This action is irreversible!",
+    alertDescription: "Converting your account from \"employee\" to \"employer\" is irreversible and will invalidate all claims created, in-progress or completed up until now.",
   },
   employersAuthCreateAccount: {
     alertHeading:

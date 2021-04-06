@@ -2,8 +2,7 @@ import Alert from "../components/Alert";
 import Button from "../components/Button";
 import InputText from "../components/InputText";
 import Title from "../components/Title";
-import User from "../models/User"
-import ClaimCollection from "../models/ClaimCollection";
+import User, { RoleDescription } from "../models/User";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import React from "react";
 import PropTypes from "prop-types";
@@ -16,11 +15,18 @@ import useFunctionalInputProps from "../hooks/useFunctionalInputProps"
 import useThrottledHandler from "../hooks/useThrottledHandler"
 
 export const ConvertToEmployer = (props) => {
-  const { appLogic, claims, user } = props;
+  const { appLogic, user } = props;
   const { t } = useTranslation();
-  const { convertToEmployer } = appLogic.users;
+  const { updateUser } = appLogic.users;
   const { formState, updateFields } = useFormState({ employer_fein: "" });
-  const hasClaims = !claims.isEmpty;
+  
+  if (typeof user === "undefined") {
+    appLogic.portalFlow.goTo(routes.auth.login);
+    return;
+  }
+  if (user.hasEmployerRole) {
+    appLogic.portalFlow.goTo(routes.employers.welcome);
+  }
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -30,47 +36,51 @@ export const ConvertToEmployer = (props) => {
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await convertToEmployer(user.user_id, {
-      employer_for_leave_admin: formState.employer_fein.replace("-", ""),
-    });
+    await updateUser(user.user_id,
+      {
+        "role": { "role_description": RoleDescription.employer },
+        "user_leave_administrator": {
+          "employer_fein": formState.employer_fein
+        }
+      }
+    );
   })
+
 
   return (
     <React.Fragment>
       <Title>{t("pages.convertToEmployer.title")}</Title>
-      {hasClaims && (
-        <Alert
-          heading={t("pages.getReady.alertHeading")}
-          state="info"
-          neutral
-          className="margin-bottom-3"
-        >
-          oh no u got claims tho
-        </Alert>
-      )}
+      <Alert
+        heading={t("pages.convertToEmployer.alertHeading")}
+        state="warning"
+        neutral
+        className="margin-bottom-3"
+      >
+        {t("pages.convertToEmployer.alertDescription")}
+      </Alert>
       <div className="measure-6">
         <form className="usa-form" onSubmit={handleSubmit} method="post">
           <InputText
-              {...getFunctionalInputProps("employer_fein")}
-              inputMode="numeric"
-              mask="fein"
-              hint={
-                <Trans
-                  i18nKey="pages.employersAuthCreateAccount.einHint"
-                  components={{
-                    "ein-link": (
-                      <a
-                        target="_blank"
-                        rel="noopener"
-                        href={routes.external.massgov.federalEmployerIdNumber}
-                      />
-                    ),
-                  }}
-                />
-              }
-              label={t("pages.employersAuthCreateAccount.einLabel")}
-              smallLabel
-            />
+            {...getFunctionalInputProps("employer_fein")}
+            inputMode="numeric"
+            mask="fein"
+            hint={
+              <Trans
+                i18nKey="pages.employersAuthCreateAccount.einHint"
+                components={{
+                  "ein-link": (
+                    <a
+                      target="_blank"
+                      rel="noopener"
+                      href={routes.external.massgov.federalEmployerIdNumber}
+                    />
+                  ),
+                }}
+              />
+            }
+            label={t("pages.employersAuthCreateAccount.einLabel")}
+            smallLabel
+          />
           <Button type="submit" loading={handleSubmit.isThrottled}>
             {t("pages.convertToEmployer.submit")}
           </Button>
@@ -83,16 +93,13 @@ export const ConvertToEmployer = (props) => {
 ConvertToEmployer.propTypes = {
   appLogic: PropTypes.shape({
     users: PropTypes.shape({
-      convertToEmployer: PropTypes.func.isRequired
+      updateUser: PropTypes.func.isRequired
     }),
     portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-      pathname: PropTypes.string.isRequired,
       goTo: PropTypes.func.isRequired
     }),
     appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
   }).isRequired,
-  claims: PropTypes.instanceOf(ClaimCollection).isRequired,
   user: PropTypes.instanceOf(User).isRequired,
 };
 
