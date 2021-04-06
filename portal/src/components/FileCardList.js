@@ -1,139 +1,11 @@
+import React, { useState } from "react";
 import AppErrorInfo from "../models/AppErrorInfo";
 import Document from "../models/Document";
 import FileCard from "./FileCard";
 import PropTypes from "prop-types";
-import React from "react";
-import TempFile from "../models/TempFile";
+import Spinner from "./Spinner";
 import TempFileCollection from "../models/TempFileCollection";
-import { ValidationError } from "../errors";
-import { snakeCase } from "lodash";
-import { t } from "../locales/i18n";
-import tracker from "../services/tracker";
-
-// Only image and pdf files are allowed to be uploaded
-const defaultAllowedFileTypes = ["image/png", "image/jpeg", "application/pdf"];
-
-// Max file size in bytes
-const defaultMaximumFileSize = 4500000;
-
-// Exclusion reasons
-const disallowedReasons = {
-  size: "size",
-  sizeAndType: "sizeAndType",
-  type: "type",
-};
-
-/**
- * Return ValidationError issues for disallowed file
- * @param {File} disallowedFile - file that is not allowed
- * @param {string} disallowedReason - reason file is not allowed (size, sizeAndType, or type)
- * @returns {Issue}
- */
-function getIssueForDisallowedFile(disallowedFile, disallowedReason) {
-  const i18nKey = `errors.invalidFile_${disallowedReason}`;
-
-  return {
-    message: t(i18nKey, {
-      context: disallowedReason,
-      disallowedFileNames: disallowedFile.name,
-    }),
-  };
-}
-
-/**
- * Filter a list of files into sets of allowed files and disallowed files based on file types and sizes.
- * Track disallowed files with a ValidationError event.
- * @param {File[]} files Files to filter
- * @returns {Array.<Array.<File>>} Arrays of Files -- [allowedFiles, disallowedFilesForSize, disallowedFilesForType, disallowedFilesForSizeAndType]
- * @example const [allowedFiles, disallowedFilesForSize, disallowedFilesForType, disallowedFilesForSizeAndType] = filterAllowedFiles(files);
- */
-function filterAllowedFiles(files, { allowedFileTypes, maximumFileSize }) {
-  const allowedFiles = [];
-  const issues = [];
-
-  files.forEach((file) => {
-    let disallowedReason = null;
-
-    if (file.size > maximumFileSize) {
-      disallowedReason = disallowedReasons.size;
-    }
-    if (!allowedFileTypes.includes(file.type)) {
-      if (disallowedReason === disallowedReasons.size) {
-        disallowedReason = disallowedReasons.sizeAndType;
-      } else {
-        disallowedReason = disallowedReasons.type;
-      }
-    }
-
-    const fileTrackingData = {
-      fileSize: file.size,
-      fileType: file.type,
-    };
-
-    if (disallowedReason) {
-      issues.push(getIssueForDisallowedFile(file, disallowedReason));
-      // TODO (CP-1771): Remove tracking once error handling supports additional event data
-      tracker.trackEvent("FileValidationError", {
-        ...fileTrackingData,
-        issueType: `invalid_${snakeCase(disallowedReason)}`,
-        issueField: "file",
-      });
-    } else {
-      allowedFiles.push(file);
-      tracker.trackEvent("File selected", fileTrackingData);
-    }
-  });
-
-  return {
-    allowedFiles,
-    issues,
-  };
-}
-
-/**
- * Return an onChange handler which filters out invalid file types and then saves any new
- * files with onAddTempFiles.
- * @param {Function} onAddTempFiles a setter function for updating the files state
- * @param {Function} onInvalidFilesError a setter function for updating the files state
- * @param {number} maximumFileSize Maximum allowed file size
- * @param {string[]} allowedFileTypes Array of allowed file mimetypes
- * @returns {Function} onChange handler function
- */
-function useChangeHandler(
-  onAddTempFiles,
-  onInvalidFilesError,
-  maximumFileSize,
-  allowedFileTypes
-) {
-  return (event) => {
-    // This will only have files selected this time, not previously selected files
-    // e.target.files is a FileList type which isn't an array, but we can turn it into one
-    // @see https://developer.mozilla.org/en-US/docs/Web/API/FileList
-    const files = Array.from(event.target.files);
-
-    // Reset the input element's value. When a user selects a file which was already
-    // selected it normally won't trigger the onChange event, but that's not what we want.
-    // By resetting the value here we ensure that the onChange event occurs even if the
-    // user just selects the same file(s). This is important eg if the user selected file 'A',
-    // removed that file, and then selected file 'A' again. We tried using the onInput event
-    // instead of onChange but it behaved the same way as onChange.
-    // Additionally, we do this step _after_ we've already retrieved the event's files because
-    // this step will reset event.target.files to an empty FileList.
-    event.target.value = "";
-
-    const { allowedFiles, issues } = filterAllowedFiles(files, {
-      maximumFileSize,
-      allowedFileTypes,
-    });
-
-    onAddTempFiles(allowedFiles.map((file) => new TempFile({ file })));
-
-    if (issues.length > 0) {
-      const i18nPrefix = "files";
-      onInvalidFilesError(new ValidationError(issues, i18nPrefix));
-    }
-  };
-}
+import { useTranslation } from "../locales/i18n";
 
 /**
  * Render a FileCard. This handles some busy work such as creating a onRemove handler and
@@ -195,16 +67,15 @@ function renderDocumentFileCard(document, index, fileHeadingPrefix) {
  * FileCards for each selected file.
  */
 const FileCardList = (props) => {
+  const { t } = useTranslation();
+  const [isLoading, setIsLoading] = useState(false);
   const {
     documents,
     tempFiles,
-    onAddTempFiles,
-    onInvalidFilesError,
+    onChange,
     onRemoveTempFile,
     fileHeadingPrefix,
     fileErrors,
-    maximumFileSize,
-    allowedFileTypes,
   } = props;
 
   let documentFileCount = 0;
@@ -235,12 +106,25 @@ const FileCardList = (props) => {
     ? props.addFirstFileButtonText
     : props.addAnotherFileButtonText;
 
-  const handleChange = useChangeHandler(
-    onAddTempFiles,
-    onInvalidFilesError,
-    maximumFileSize,
-    allowedFileTypes
-  );
+  const handleChange = async (event) => {
+    // This will only have files selected this time, not previously selected files
+    // e.target.files is a FileList type which isn't an array, but we can turn it into one
+    // @see https://developer.mozilla.org/en-US/docs/Web/API/FileList
+    const files = Array.from(event.target.files);
+
+    // Reset the input element's value. When a user selects a file which was already
+    // selected it normally won't trigger the onChange event, but that's not what we want.
+    // By resetting the value here we ensure that the onChange event occurs even if the
+    // user just selects the same file(s). This is important eg if the user selected file 'A',
+    // removed that file, and then selected file 'A' again. We tried using the onInput event
+    // instead of onChange but it behaved the same way as onChange.
+    // Additionally, we do this step _after_ we've already retrieved the event's files because
+    // this step will reset event.target.files to an empty FileList.
+    event.target.value = "";
+    setIsLoading(true);
+    await onChange(files);
+    setIsLoading(false);
+  };
 
   return (
     <div className="margin-bottom-4">
@@ -248,30 +132,31 @@ const FileCardList = (props) => {
         {documentFileCards}
       </ul>
       <ul className="usa-list usa-list--unstyled measure-5">{fileCards}</ul>
-      <label className="margin-top-2 usa-button usa-button--outline">
-        {button}
-        <input
-          className="c-file-card-list__input"
-          type="file"
-          accept="image/*,.pdf"
-          multiple
-          onChange={handleChange}
-        />
-      </label>
+      {isLoading ? (
+        <div className="text-center measure-5">
+          <Spinner aria-valuetext={t("components.fileCardList.loadingLabel")} />
+        </div>
+      ) : (
+        <label className="margin-top-2 usa-button usa-button--outline">
+          {button}
+          <input
+            className="c-file-card-list__input"
+            type="file"
+            accept="image/*,.pdf"
+            multiple
+            onChange={handleChange}
+          />
+        </label>
+      )}
     </div>
   );
-};
-
-FileCardList.defaultProps = {
-  allowedFileTypes: defaultAllowedFileTypes,
-  maximumFileSize: defaultMaximumFileSize,
 };
 
 FileCardList.propTypes = {
   /**
    * Instance of TempFileCollection representing files selected by the user but not yet uploaded
    * and are rendered as FileCards. This should be a state variable which can be set
-   * with onAddTempFiles below.
+   * with onChange below.
    */
   tempFiles: PropTypes.instanceOf(TempFileCollection).isRequired,
   fileErrors: PropTypes.arrayOf(PropTypes.instanceOf(AppErrorInfo)),
@@ -279,12 +164,7 @@ FileCardList.propTypes = {
    * Files change event handler. Receives array of allowed files
    *
    */
-  onAddTempFiles: PropTypes.func.isRequired,
-  /**
-   * Invalid file error handler. Receives ValidationError with list of
-   * validation issues
-   */
-  onInvalidFilesError: PropTypes.func.isRequired,
+  onChange: PropTypes.func.isRequired,
   /** Remove file event handlers. Receives a single file instance */
   onRemoveTempFile: PropTypes.func.isRequired,
   /**
@@ -298,10 +178,6 @@ FileCardList.propTypes = {
   addAnotherFileButtonText: PropTypes.string.isRequired,
   /** Documents that need to be rendered as read-only FileCards, representing previously uploaded files */
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  /** Maximum allowed file size in bytes */
-  maximumFileSize: PropTypes.number,
-  /** Array of allowed file mimetypes */
-  allowedFileTypes: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default FileCardList;
