@@ -48,6 +48,7 @@ strict-rfc3339 = "^0.7"
 tenacity = "^6.2.0"
 xmlschema = "^1.2.2"
 zeep = "^3.4.0"
+pytest-reraise = "^1.0.3"
 
 
 [tool.poetry.dev-dependencies]
