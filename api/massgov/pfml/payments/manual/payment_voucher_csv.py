@@ -124,7 +124,7 @@ WRITEBACK_CSV_HEADERS = WritebackCSV(
     i_value="pei_I_Value",
     status="status",
     transaction_status="transactionStatus",
-    trans_status_date="transactionStatusDate",
+    trans_status_date="transStatusDate",
     stock_no="transactionNo",
 )
 
@@ -134,6 +134,7 @@ def payment_voucher_csv_writer(output_stream):
         output_stream,
         fieldnames=dataclasses.asdict(PAYMENT_VOUCHER_CSV_HEADERS).keys(),
         lineterminator="\n",
+        quoting=csv.QUOTE_ALL,
     )
     writer.writerow(dataclasses.asdict(PAYMENT_VOUCHER_CSV_HEADERS))
     return writer
@@ -144,6 +145,7 @@ def writeback_csv_writer(output_stream):
         output_stream,
         fieldnames=dataclasses.asdict(WRITEBACK_CSV_HEADERS).keys(),
         lineterminator="\n",
+        quoting=csv.QUOTE_ALL,
     )
     writer.writerow(dataclasses.asdict(WRITEBACK_CSV_HEADERS))
     return writer

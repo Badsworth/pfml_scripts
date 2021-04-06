@@ -54,6 +54,7 @@ module "api" {
   formstack_import_lambda_build_s3_key = local.formstack_lambda_artifact_s3_key
 
   cognito_user_pool_arn                               = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_gHLjkp4A8"
+  cognito_user_pool_id                                = "us-east-1_gHLjkp4A8"
   cognito_user_pool_client_id                         = "2hr6bckdopamvq92jahr542p5p"
   cognito_user_pool_keys_url                          = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_gHLjkp4A8/.well-known/jwks.json"
   cognito_post_confirmation_lambda_artifact_s3_key    = local.cognito_post_confirmation_lambda_artifact_s3_key

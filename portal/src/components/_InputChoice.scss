@@ -1,9 +1,0 @@
-.usa-checkbox__label::before,
-.usa-radio__label::before {
-  // https://github.com/uswds/uswds/pull/4080
-  // Radios and checkboxes use "\a0" (nbsp character) as the value of the
-  // content property. It sometimes renders as an A circumflex (Â), which is
-  // likely a result of UTF-8 being viewd as ISO-8859-1.
-  content: " "; // a regular space
-  white-space: pre; // prevent the space collapsing
-}

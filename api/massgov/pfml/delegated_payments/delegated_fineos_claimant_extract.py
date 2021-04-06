@@ -17,11 +17,11 @@ from massgov.pfml.db.models.employees import (
     Address,
     BankAccountType,
     Claim,
-    CtrAddressPair,
     Employee,
     EmployeeAddress,
     EmployeePubEftPair,
     EmployeeReferenceFile,
+    ExperianAddressPair,
     GeoState,
     PaymentMethod,
     PrenoteState,
@@ -301,7 +301,9 @@ class ClaimantExtractStep(Step):
                 absence_case_id,
                 extra={"absence_case_id": absence_case_id},
             )
-            self.increment("claim_created_count")
+            # Note that this claim might not get made if there are
+            # validation issues found for the claimant
+            self.increment("claim_not_found_count")
         else:
             logger.info(
                 "Found existing claim for absence_case_id: %s",
@@ -479,13 +481,13 @@ class ClaimantExtractStep(Step):
                 ),
             )
 
+            payment_method_id = None
             if payment_method is not None:
-                try:
-                    employee_pfml_entry.payment_method_id = PaymentMethod.get_id(payment_method)
-                except KeyError:
-                    pass
+                payment_method_id = PaymentMethod.get_id(payment_method)
 
-            self.update_eft_info(employee_feed_entry, employee_pfml_entry, validation_container)
+            self.update_eft_info(
+                employee_feed_entry, employee_pfml_entry, payment_method_id, validation_container
+            )
 
             fineos_customer_number = payments_util.validate_csv_input(
                 "CUSTOMERNO", employee_feed_entry, validation_container, True
@@ -535,6 +537,7 @@ class ClaimantExtractStep(Step):
             True,
             min_length=5,
             max_length=10,
+            custom_validator_func=payments_util.zip_code_validator,
         )
 
         if nbr_of_validation_errors == len(validation_container.validation_issues):
@@ -547,18 +550,20 @@ class ClaimantExtractStep(Step):
                 zip_code=address_zip_code,
             )
 
-            # If ctr_address_pair exists, compare the exisiting fineos_address with the payment_data address
+            # If experian_address_pair exists, compare the exisiting fineos_address with the payment_data address
             #   If they're the same, nothing needs to be done, so we can return
-            #   If they're different or if no ctr_address_pair exists, create a new CtrAddressPair
-            ctr_address_pair = employee_pfml_entry.ctr_address_pair
-            if ctr_address_pair:
-                if payments_util.is_same_address(ctr_address_pair.fineos_address, mailing_address):
+            #   If they're different or if no experian_address_pair exists, create a new ExperianAddressPair
+            experian_address_pair = employee_pfml_entry.experian_address_pair
+            if experian_address_pair:
+                if payments_util.is_same_address(
+                    experian_address_pair.fineos_address, mailing_address
+                ):
                     return False
 
-            new_ctr_address_pair = CtrAddressPair(fineos_address=mailing_address)
-            employee_pfml_entry.ctr_address_pair = new_ctr_address_pair
+            new_experian_address_pair = ExperianAddressPair(fineos_address=mailing_address)
+            employee_pfml_entry.experian_address_pair = new_experian_address_pair
             self.db_session.add(mailing_address)
-            self.db_session.add(new_ctr_address_pair)
+            self.db_session.add(new_experian_address_pair)
             self.db_session.add(employee_pfml_entry)
 
             # We also want to make sure the address is linked in the EmployeeAddress table
@@ -574,11 +579,15 @@ class ClaimantExtractStep(Step):
         self,
         employee_feed_entry: Dict[str, str],
         employee_pfml_entry: Employee,
+        payment_method_id: Optional[int],
         validation_container: payments_util.ValidationContainer,
     ) -> None:
         """Returns True if there have been EFT updates; False otherwise"""
         nbr_of_validation_errors = len(validation_container.validation_issues)
-        eft_required = employee_pfml_entry.payment_method_id == PaymentMethod.ACH.payment_method_id
+        eft_required = (
+            payment_method_id is not None
+            and payment_method_id == PaymentMethod.ACH.payment_method_id
+        )
 
         routing_nbr = payments_util.validate_csv_input(
             "SORTCODE",
@@ -629,7 +638,7 @@ class ClaimantExtractStep(Step):
                 if existing_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id:
                     validation_container.add_validation_issue(
                         payments_util.ValidationReason.EFT_PRENOTE_REJECTED,
-                        f"EFT prenote was rejected at {existing_eft.prenote_response_at}",
+                        "EFT prenote was rejected - cannot pay with this account info",
                     )
 
             else:
@@ -736,7 +745,7 @@ class ClaimantExtractStep(Step):
 
         else:
             state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS,
+                end_state=State.CLAIMANT_READY_FOR_ADDRESS_VALIDATION,
                 associated_model=employee_pfml_entry,
                 outcome=state_log_util.build_outcome(
                     f"Employee {employee_pfml_entry.employee_id} successfully extracted from FINEOS claimant extract {extract_data.date_str}"
@@ -894,7 +903,7 @@ class ClaimantExtractStep(Step):
 
         logger.info("Successfully moved claimant files to error folder.")
 
-    def extract_to_staging_tables(self, extract_data: ExtractData):
+    def extract_to_staging_tables(self, extract_data: ExtractData) -> None:
         ref_file = extract_data.reference_file
         self.db_session.add(ref_file)
         requested_absence_info_data = [

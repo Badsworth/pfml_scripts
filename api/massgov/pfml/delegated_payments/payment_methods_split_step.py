@@ -40,7 +40,7 @@ class PaymentMethodsSplitStep(Step):
                     state_log.state_log_id,
                 )
 
-            payment_method_id = payment.claim.employee.payment_method_id
+            payment_method_id = payment.disb_method_id
 
             if payment_method_id == PaymentMethod.ACH.payment_method_id:
                 self.increment("ach_payment_count")
@@ -53,7 +53,7 @@ class PaymentMethodsSplitStep(Step):
                     outcome=message,
                     db_session=self.db_session,
                 )
-            elif payment.claim.employee.payment_method_id == PaymentMethod.CHECK.payment_method_id:
+            elif payment_method_id == PaymentMethod.CHECK.payment_method_id:
                 self.increment("check_payment_count")
                 message = state_log_util.build_outcome(
                     "Moving payment to the Check PUB file creation state"

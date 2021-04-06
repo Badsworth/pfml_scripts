@@ -22,14 +22,13 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
             ...claim,
             credentials,
           }).then((response: ApplicationResponse) => {
-            console.log(response);
             const timestamp_fromER = Date.now();
             cy.stash("submission", {
               application_id: response.application_id,
               fineos_absence_id: response.fineos_absence_id,
               timestamp_from: Date.now(),
             });
-            // Complete Employer Response
+
             if (typeof claim.claim.employer_fein !== "string") {
               throw new Error("Claim must include employer FEIN");
             }
@@ -37,48 +36,22 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
               throw new Error("Response must include FINEOS absence ID");
             }
 
-            // As an employer, I should receive a notification about my response being required
+            cy.log(
+              "Checking email notification for Employer Response (Action Required)"
+            );
             cy.task<Email[]>(
               "getEmails",
               {
                 address: "gqzap.notifications@inbox.testmail.app",
                 subject: `Action required: Respond to ${claim.claim.first_name} ${claim.claim.last_name}'s paid leave application`,
+                messageWildcard: response.fineos_absence_id,
                 timestamp_from: timestamp_fromER,
+                fineos_absence_id: response.fineos_absence_id,
               },
               { timeout: 360000 }
             ).then((emails) => {
-              expect(emails.length).to.be.greaterThan(0);
               expect(emails[0].html).to.contain(
                 `/employers/applications/new-application/?absence_id=${response.fineos_absence_id}`
-              );
-            });
-
-            cy.task<Email[]>(
-              "getEmails",
-              {
-                address: "gqzap.notifications@inbox.testmail.app",
-                subject:
-                  "Thank you for successfully submitting your Paid Family and Medical Leave Application",
-                timestamp_from: timestamp_fromER,
-              },
-              { timeout: 360000 }
-            ).then((emails) => {
-              expect(emails.length).to.be.greaterThan(0);
-              for (const emailSingle of emails) {
-                if (
-                  response.fineos_absence_id &&
-                  emailSingle.html.includes(response.fineos_absence_id)
-                ) {
-                  expect(emailSingle.html).to.contain(
-                    response.fineos_absence_id
-                  );
-                  return;
-                } else {
-                  cy.log("f");
-                }
-              }
-              throw new Error(
-                "Successful Submission emails did not include correct Fineos Absence ID"
               );
             });
 
@@ -108,14 +81,14 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
         cy.visit("/");
         fineos.claimAdjudicationFlow(submission.fineos_absence_id, true);
         switch (Cypress.env("E2E_ENVIRONMENT")) {
-          case "performance":
           case "training":
-          case "uat":
             fineos.closeReleaseNoticeTask("Approval Notice");
             break;
 
+          case "performance":
           case "test":
           case "stage":
+          case "uat":
             fineos.triggerNoticeRelease("Approval Notice");
             break;
 
@@ -188,23 +161,18 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
             {
               address: "gqzap.notifications@inbox.testmail.app",
               subject: subjectEmployer,
+              messageWildcard: submission.fineos_absence_id,
               timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
             },
             { timeout: 180000 }
           ).then(async (emails) => {
-            const emailContent = await email.getNotificationData(
-              emails[0].html
-            );
-            if (typeof claim.date_of_birth !== "string") {
-              throw new Error("DOB must be a string");
-            }
+            const data = email.getNotificationData(emails[0].html);
             const dob =
-              claim.date_of_birth.replace(/-/g, "/").slice(5) + "/****";
-            expect(emailContent.name).to.equal(employeeFullName);
-            expect(emailContent.dob).to.equal(dob);
-            expect(emailContent.applicationId).to.equal(
-              submission.fineos_absence_id
-            );
+              claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
+            expect(data.name).to.equal(employeeFullName);
+            expect(data.dob).to.equal(dob);
+            expect(data.applicationId).to.equal(submission.fineos_absence_id);
             expect(emails[0].html).to.contain(
               `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
             );
@@ -216,22 +184,12 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
             {
               address: "gqzap.notifications@inbox.testmail.app",
               subject: subjectClaimant,
+              messageWildcard: submission.fineos_absence_id,
               timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
             },
             { timeout: 180000 }
-          ).then(async (emails) => {
-            for (const emailSingle of emails) {
-              email.getNotificationData(emailSingle.html).then((data) => {
-                if (data.applicationId.includes(submission.fineos_absence_id)) {
-                  expect(data.applicationId).to.contain(
-                    submission.fineos_absence_id
-                  );
-                } else {
-                  throw new Error("No emails match the Fineos Absence ID");
-                }
-              });
-            }
-          });
+          ).should("not.be.empty");
         });
       });
     });

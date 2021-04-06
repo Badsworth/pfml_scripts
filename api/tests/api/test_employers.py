@@ -3,8 +3,10 @@ from decimal import Decimal
 
 import pytest
 
+import tests.api
 from massgov.pfml.db.models.employees import EmployerQuarterlyContribution, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory, EmployerQuarterlyContributionFactory
+from massgov.pfml.util import feature_gate
 from massgov.pfml.util.strings import mask_fein
 
 # every test in here requires real resources
@@ -71,80 +73,123 @@ def test_employers_receive_400_from_bad_fein(
     assert response.status_code == 400
 
 
-def test_employers_receive_201_if_no_withholding_data_but_no_enforcement(
-    monkeypatch, client, employer_user, employer_auth_token, test_db_session
-):
-    monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
-    EmployerFactory.create(employer_fein="999999999")
+class TestVerificationEnforcement:
+    # This class groups the tests that ensure that existing users with UserLeaveAdministrator records
+    # get 403s when attempting to access employer data without a Verification
 
-    post_body = {"employer_fein": "999999999"}
+    @pytest.fixture(autouse=True, params=["env_var", "feature_gate"])
+    def _enforce_verifications(self, request, monkeypatch, employer_user):
+        if request.param == "env_var":
+            monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
+        else:
+            monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
+            monkeypatch.setattr(
+                feature_gate, "check_enabled", lambda feature_name, user_email: True,
+            )
 
-    response = client.post(
-        "/v1/employers/add",
-        json=post_body,
-        headers={"Authorization": f"Bearer {employer_auth_token}"},
-    )
+    def test_employers_receive_201_from_add_fein(
+        self, monkeypatch, client, employer_user, employer_auth_token, test_db_session
+    ):
+        current_employer = EmployerFactory.create()
+        employer_to_add = EmployerFactory.create(employer_fein="999999999")
+        yesterday = datetime.now() - timedelta(days=1)
+        EmployerQuarterlyContributionFactory.create(
+            employer=employer_to_add, filing_period=yesterday.strftime("%Y-%m-%d")
+        )
 
-    assert response.status_code == 201
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=current_employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+        )
 
+        test_db_session.add(link)
+        test_db_session.commit()
 
-def test_employers_receive_402_if_no_withholding_data(
-    monkeypatch, client, employer_user, employer_auth_token, test_db_session
-):
-    monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
-    EmployerFactory.create(employer_fein="999999999")
+        post_body = {"employer_fein": "999999999"}
 
-    post_body = {"employer_fein": "999999999"}
+        response = client.post(
+            "/v1/employers/add",
+            json=post_body,
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
 
-    response = client.post(
-        "/v1/employers/add",
-        json=post_body,
-        headers={"Authorization": f"Bearer {employer_auth_token}"},
-    )
+        response_data = response.get_json()["data"]
+        assert response.status_code == 201
+        assert response_data["employer_dba"] == employer_to_add.employer_dba
+        assert response_data["employer_fein"] == mask_fein(employer_to_add.employer_fein)
+        assert type(response_data["employer_id"]) is str
 
-    assert response.status_code == 402
+    def test_employers_receive_201_if_no_withholding_data_and_no_enforcement(
+        self, monkeypatch, client, employer_user, employer_auth_token, test_db_session
+    ):
+        monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "0")
+        monkeypatch.setattr(feature_gate, "check_enabled", lambda feature_name, user_email: False)
 
+        EmployerFactory.create(employer_fein="999999999")
 
-def test_employers_receive_402_if_old_withholding_data(
-    monkeypatch, client, employer_user, employer_auth_token, test_db_session
-):
-    monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
-    employer_to_add = EmployerFactory.create(employer_fein="999999999")
-    yesterday = datetime.now() - timedelta(days=400)
-    EmployerQuarterlyContributionFactory.create(
-        employer=employer_to_add, filing_period=yesterday.strftime("%Y-%m-%d")
-    )
+        post_body = {"employer_fein": "999999999"}
 
-    post_body = {"employer_fein": "999999999"}
+        response = client.post(
+            "/v1/employers/add",
+            json=post_body,
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
 
-    response = client.post(
-        "/v1/employers/add",
-        json=post_body,
-        headers={"Authorization": f"Bearer {employer_auth_token}"},
-    )
+        assert response.status_code == 201
 
-    assert response.status_code == 402
+    def test_employers_receive_402_if_no_withholding_data(
+        self, monkeypatch, client, employer_user, employer_auth_token, test_db_session
+    ):
+        EmployerFactory.create(employer_fein="999999999")
 
+        post_body = {"employer_fein": "999999999"}
 
-def test_employers_receive_402_if_future_withholding_data(
-    monkeypatch, client, employer_user, employer_auth_token, test_db_session
-):
-    monkeypatch.setenv("ENFORCE_LEAVE_ADMIN_VERIFICATION", "1")
-    employer_to_add = EmployerFactory.create(employer_fein="999999999")
-    thirty_days_in_the_future = datetime.now() + timedelta(days=30)
-    EmployerQuarterlyContributionFactory.create(
-        employer=employer_to_add, filing_period=thirty_days_in_the_future.strftime("%Y-%m-%d")
-    )
+        response = client.post(
+            "/v1/employers/add",
+            json=post_body,
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
 
-    post_body = {"employer_fein": "999999999"}
+        assert response.status_code == 402
 
-    response = client.post(
-        "/v1/employers/add",
-        json=post_body,
-        headers={"Authorization": f"Bearer {employer_auth_token}"},
-    )
+    def test_employers_receive_402_if_old_withholding_data(
+        self, monkeypatch, client, employer_user, employer_auth_token, test_db_session
+    ):
+        employer_to_add = EmployerFactory.create(employer_fein="999999999")
+        yesterday = datetime.now() - timedelta(days=400)
+        EmployerQuarterlyContributionFactory.create(
+            employer=employer_to_add, filing_period=yesterday.strftime("%Y-%m-%d")
+        )
 
-    assert response.status_code == 402
+        post_body = {"employer_fein": "999999999"}
+
+        response = client.post(
+            "/v1/employers/add",
+            json=post_body,
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 402
+
+    def test_employers_receive_402_if_future_withholding_data(
+        self, monkeypatch, client, employer_user, employer_auth_token, test_db_session
+    ):
+        employer_to_add = EmployerFactory.create(employer_fein="999999999")
+        thirty_days_in_the_future = datetime.now() + timedelta(days=30)
+        EmployerQuarterlyContributionFactory.create(
+            employer=employer_to_add, filing_period=thirty_days_in_the_future.strftime("%Y-%m-%d")
+        )
+
+        post_body = {"employer_fein": "999999999"}
+
+        response = client.post(
+            "/v1/employers/add",
+            json=post_body,
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 402
 
 
 def test_employers_receive_409_if_duplicate_fein(
@@ -280,3 +325,19 @@ def test_employers_receive_402_for_zero_amount_contributions(
         headers={"Authorization": f"Bearer {employer_auth_token}"},
     )
     assert response.status_code == 402
+
+
+def test_employers_receive_400_if_invalid_fein(
+    monkeypatch, client, employer_user, employer_auth_token, test_db_session
+):
+
+    post_body = {"employer_fein": "fake_company"}
+
+    response = client.post(
+        "/v1/employers/add",
+        json=post_body,
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 400
+    tests.api.validate_error_response(response, 400, message="Invalid FEIN")

@@ -47,14 +47,13 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
    * and add user to application's state
    */
   const loadUser = async () => {
-    appErrorsLogic.clearErrors();
-
     if (!isLoggedIn) {
       throw new Error("Cannot load user before logging in to Cognito");
     }
     // Caching logic: if user has already been loaded, just reuse the cached user
     if (user) return;
 
+    appErrorsLogic.clearErrors();
     try {
       const { user } = await usersApi.getCurrentUser();
 
@@ -111,7 +110,7 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     }
 
     if (user.hasEmployerRole && isApplicationsRoute(pathname)) {
-      portalFlow.goTo(routes.employers.dashboard);
+      portalFlow.goTo(routes.employers.welcome);
     }
   };
 

@@ -1695,13 +1695,13 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/EmployerBenefit"
-              maxItems: 4
+              maxItems: 3
             other_incomes:
               nullable: true
               type: array
               items:
                 $ref: "#/components/schemas/OtherIncome"
-              maxItems: 6
+              maxItems: 3
             phone:
               $ref: "#/components/schemas/Phone"
             has_previous_leaves:

@@ -42,6 +42,7 @@ export default async (): Promise<void> => {
       step.if(
         () => curr === scenario,
         stepName,
+        stepDef.options ?? {},
         async (browser: Browser, data: Cfg.LSTSimClaim) => {
           try {
             await stepDef.test(browser, data);

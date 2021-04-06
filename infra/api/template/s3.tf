@@ -22,6 +22,30 @@ resource "aws_s3_bucket" "document_upload" {
   })
 }
 
+# Temporary feature gate storage bucket
+resource "aws_s3_bucket" "feature_gate" {
+  bucket = "massgov-pfml-${var.environment_name}-feature-gate"
+  acl    = "private"
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+
+  versioning {
+    enabled = "false"
+  }
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+    public      = "no"
+    Name        = "pfml-${var.environment_name}-feature-gate"
+  })
+}
+
 resource "aws_s3_bucket" "business_intelligence_tool" {
   bucket = "massgov-pfml-${var.environment_name}-business-intelligence-tool"
   acl    = "private"

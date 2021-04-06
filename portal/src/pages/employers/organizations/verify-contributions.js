@@ -30,7 +30,7 @@ export const VerifyContributions = (props) => {
   });
 
   if (!isFeatureEnabled("employerShowVerifications")) {
-    appLogic.portalFlow.goTo(routes.employers.dashboard);
+    appLogic.portalFlow.goTo(routes.employers.welcome);
   }
 
   const { formState, updateFields } = useFormState({

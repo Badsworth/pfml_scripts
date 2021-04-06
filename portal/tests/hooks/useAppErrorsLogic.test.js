@@ -535,6 +535,60 @@ describe("useAppErrorsLogic", () => {
         />
       `);
     });
+
+    it("returns Trans component when error type is unauthorized_leave_admin", () => {
+      const issues = [
+        {
+          message: "User is not authorized for access",
+          type: "unauthorized_leave_admin",
+        },
+      ];
+
+      act(() => {
+        appErrorsLogic.catchError(new ValidationError(issues, "employers"));
+      });
+
+      expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(`
+        <Trans
+          components={
+            Object {
+              "add-org-link": <a
+                href="/employers/organizations/add-organization"
+              />,
+            }
+          }
+          i18nKey="errors.employers.unauthorized_leave_admin"
+        />
+      `);
+    });
+
+    it("returns Trans component when error type is employer_verification_data_required", () => {
+      const issues = [
+        {
+          field: "ein",
+          type: "employer_verification_data_required",
+        },
+      ];
+
+      act(() => {
+        appErrorsLogic.catchError(new ValidationError(issues, "employers"));
+      });
+
+      expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(`
+        <Trans
+          components={
+            Object {
+              "file-a-return-link": <a
+                href="https://www.mass.gov/pfml-zero-balance-employer"
+                rel="noreferrer noopener"
+                target="_blank"
+              />,
+            }
+          }
+          i18nKey="errors.employers.ein.employer_verification_data_required"
+        />
+      `);
+    });
   });
 
   describe("clearErrors", () => {

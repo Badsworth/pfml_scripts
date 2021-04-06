@@ -245,6 +245,12 @@ variable "dfml_business_operations_email_address" {
   default     = ""
 }
 
+variable "agency_reductions_email_address" {
+  description = "Generic send from address for outgoing emails"
+  type        = string
+  default     = ""
+}
+
 variable "enable_register_admins_job" {
   description = "Is the cloudwatch event to register admins enabled?"
   type        = bool

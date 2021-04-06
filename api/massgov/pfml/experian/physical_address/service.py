@@ -28,6 +28,31 @@ def address_to_experian_search_request(address: Address) -> AddressSearchV1Reque
     )
 
 
+def address_to_experian_suggestion_text_format(address: Address) -> str:
+    """Format an Address object in a way that matches the address format that is returned by
+    Experian's AddressSearchV1MatchedResult.text field for the benefit of comparing input addresses
+    and addresses returned by the Experian API in CSV reports we create.
+
+    | line 1    | | line 2|  |city||st||zip|
+    125 Summer St Suite 200, Boston MA 02110
+    """
+    address_lines = [address.address_line_one, address.address_line_two]
+    address_line_str = " ".join([p for p in address_lines if p])
+
+    postal_parts = [
+        str(p)
+        for p in [
+            address.city,
+            address.geo_state.geo_state_description if address.geo_state else None,
+            address.zip_code,
+        ]
+        if p
+    ]
+    postal_part_str = " ".join([p for p in postal_parts if p])
+
+    return ", ".join([address_line_str, postal_part_str])
+
+
 def experian_format_response_to_address(
     format_response: AddressFormatV1Response,
 ) -> Optional[Address]:

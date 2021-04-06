@@ -403,13 +403,7 @@ export const Review = (props) => {
         })}
       >
         {claim.isContinuous
-          ? formatDateRange(
-              get(
-                claim,
-                "leave_details.continuous_leave_periods[0].start_date"
-              ),
-              get(claim, "leave_details.continuous_leave_periods[0].end_date")
-            )
+          ? claim.continuousLeaveDateRange()
           : t("pages.claimsReview.leavePeriodNotSelected")}
       </ReviewRow>
 
@@ -420,16 +414,7 @@ export const Review = (props) => {
         })}
       >
         {claim.isReducedSchedule
-          ? formatDateRange(
-              get(
-                claim,
-                "leave_details.reduced_schedule_leave_periods[0].start_date"
-              ),
-              get(
-                claim,
-                "leave_details.reduced_schedule_leave_periods[0].end_date"
-              )
-            )
+          ? claim.reducedLeaveDateRange()
           : t("pages.claimsReview.leavePeriodNotSelected")}
       </ReviewRow>
 
@@ -465,13 +450,7 @@ export const Review = (props) => {
         })}
       >
         {claim.isIntermittent
-          ? formatDateRange(
-              get(
-                claim,
-                "leave_details.intermittent_leave_periods[0].start_date"
-              ),
-              get(claim, "leave_details.intermittent_leave_periods[0].end_date")
-            )
+          ? claim.intermittentLeaveDateRange()
           : t("pages.claimsReview.leavePeriodNotSelected")}
       </ReviewRow>
 

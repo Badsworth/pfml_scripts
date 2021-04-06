@@ -12,6 +12,7 @@ const routes = {
   applications: {
     address: "/applications/address",
     bondingLeaveAttestation: "/applications/bonding-leave-attestation",
+    caringLeaveAttestation: "/applications/caring-leave-attestation",
     checklist: "/applications/checklist",
     dashboard: "/dashboard",
     dateOfBirth: "/applications/date-of-birth",
@@ -19,6 +20,9 @@ const routes = {
     employerBenefits: "/applications/employer-benefits",
     employerBenefitsDetails: "/applications/employer-benefits-details",
     employmentStatus: "/applications/employment-status",
+    familyMemberDateOfBirth: "/applications/family-member-date-of-birth",
+    familyMemberName: "/applications/family-member-name",
+    familyMemberRelationship: "/applications/family-member-relationship",
     getReady: "/applications/get-ready",
     index: "/applications",
     intermittentFrequency: "/applications/intermittent-frequency",
@@ -67,7 +71,7 @@ const routes = {
     cannotVerify: "/employers/organizations/cannot-verify",
     confirmation: "/employers/applications/confirmation",
     createAccount: "/employers/create-account",
-    dashboard: "/employers",
+    dashboard: "/employers/dashboard",
     finishAccountSetup: "/employers/finish-account-setup",
     newApplication: "/employers/applications/new-application",
     organizations: "/employers/organizations",
@@ -76,6 +80,7 @@ const routes = {
     success: "/employers/applications/success",
     verificationSuccess: "/employers/organizations/success",
     verifyContributions: "/employers/organizations/verify-contributions",
+    welcome: "/employers/welcome",
   },
   external: {
     massTaxConnect: "https://mtc.dor.state.ma.us/mtc/_/",
@@ -134,6 +139,7 @@ const routes = {
       verifyEmployer: "https://www.mass.gov/pfml-verify-employer",
       whatToExpect:
         "https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits",
+      zeroBalanceEmployer: "https://www.mass.gov/pfml-zero-balance-employer",
     },
     puertoRicanBirthCertificate: "https://prfaa.pr.gov/faqs",
     workVisa:

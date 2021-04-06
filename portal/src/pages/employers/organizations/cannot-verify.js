@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../../components/Title";
 import User from "../../../models/User";
+import routes from "../../../routes";
 import withUser from "../../../hoc/withUser";
 
 export const CannotVerify = (props) => {
@@ -33,7 +34,23 @@ export const CannotVerify = (props) => {
           tOptions={{ employerFein }}
         />
       </Lead>
-      <p>{t("pages.employersCannotVerify.body")}</p>
+      <p>
+        <Trans
+          i18nKey="pages.employersCannotVerify.body"
+          components={{
+            "learn-more-link": (
+              <a
+                href={routes.external.massgov.verifyEmployer}
+                target="_blank"
+                rel="noopener"
+              />
+            ),
+            "dor-phone-link": (
+              <a href={`tel:${t("shared.departmentOfRevenuePhoneNumber")}`} />
+            ),
+          }}
+        />
+      </p>
     </React.Fragment>
   );
 };

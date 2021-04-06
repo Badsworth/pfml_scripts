@@ -237,6 +237,7 @@ def mock_cognito_user_pool(monkeypatch, mock_cognito):
             UserPoolId=user_pool_id, ClientName="test"
         )["UserPoolClient"]["ClientId"]
 
+        monkeypatch.setenv("COGNITO_USER_POOL_ID", user_pool_id)
         monkeypatch.setenv("COGNITO_USER_POOL_CLIENT_ID", user_pool_client_id)
 
         yield {"id": user_pool_id, "client_id": user_pool_client_id}
@@ -400,7 +401,7 @@ def initialize_factories_session_via_migrations(test_db_session_via_migrations):
 
 
 @pytest.fixture
-def test_db_via_migrations(test_db_schema):
+def test_db_via_migrations(test_db_schema, logging_fix):
     """
     Creates a test schema, runs migrations through Alembic. Schema is dropped
     after the test completes.

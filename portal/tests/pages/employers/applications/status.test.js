@@ -8,7 +8,10 @@ import Status from "../../../../src/pages/employers/applications/status";
 
 jest.mock("../../../../src/hooks/useAppLogic");
 
-const CLAIM = new MockEmployerClaimBuilder().completed().create();
+const CLAIM = new MockEmployerClaimBuilder()
+  .status("Pending")
+  .completed()
+  .create();
 const DOCUMENTS = new DocumentCollection([
   new Document({
     content_type: "application/pdf",
@@ -40,12 +43,22 @@ const DOCUMENTS = new DocumentCollection([
   }),
 ]);
 
+function assertStatusRow(wrapper, expectedValue) {
+  const label = wrapper.prop("label");
+  const child = wrapper.childAt(0).text();
+  expect([label, child]).toEqual(expectedValue);
+}
+
 describe("Status", () => {
   const query = { absence_id: "NTN-111-ABS-01" };
   let appLogic;
   let wrapper;
 
   beforeEach(() => {
+    process.env.featureFlags = {
+      employerShowDashboard: false,
+    };
+
     ({ appLogic, wrapper } = renderWithAppLogic(Status, {
       employerClaimAttrs: CLAIM,
       props: {
@@ -61,30 +74,86 @@ describe("Status", () => {
 
   it("shows the claimant name as the title", () => {
     expect(wrapper.find("Title").childAt(0).text()).toEqual(
-      "Notices for Jane Doe"
+      "Application status for Jane Doe"
     );
   });
 
-  it("shows the lead", () => {
-    expect(wrapper.find("Lead").text()).toBeTruthy();
+  it("shows lead text for pending claims", () => {
+    expect(wrapper.find("Lead").exists()).toEqual(true);
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+  });
+
+  it("shows lead text for resolved claims", () => {
+    const resolvedClaim = new MockEmployerClaimBuilder()
+      .status("Approved")
+      .completed()
+      .create();
+    ({ wrapper } = renderWithAppLogic(Status, {
+      employerClaimAttrs: resolvedClaim,
+      props: {
+        query,
+      },
+    }));
+
+    expect(wrapper.find("Lead").exists()).toEqual(true);
+    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   it("shows the application ID", () => {
-    const applicationIdRow = wrapper.find("StatusRow").at(0);
-    expect(applicationIdRow.prop("label")).toEqual("Application ID");
-    expect(applicationIdRow.childAt(0).text()).toEqual("NTN-111-ABS-01");
+    const applicationIdRow = wrapper.find("StatusRow").first();
+    // added to satisfy "Test has no assertions" lint
+    expect(applicationIdRow.exists()).toBe(true);
+    assertStatusRow(applicationIdRow, ["Application ID", "NTN-111-ABS-01"]);
   });
 
   it("shows the leave type", () => {
     const leaveTypeRow = wrapper.find("StatusRow").at(1);
-    expect(leaveTypeRow.prop("label")).toEqual("Leave type");
-    expect(leaveTypeRow.childAt(0).text()).toEqual("Medical leave");
+    // added to satisfy "Test has no assertions" lint
+    expect(leaveTypeRow.exists()).toBe(true);
+    assertStatusRow(leaveTypeRow, ["Leave type", "Medical leave"]);
   });
 
   it("shows the leave duration", () => {
     const leaveDurationRow = wrapper.find("StatusRow").at(2);
-    expect(leaveDurationRow.prop("label")).toEqual("Leave duration");
-    expect(leaveDurationRow.childAt(0).text()).toEqual("1/1/2021 – 7/1/2021");
+    // added to satisfy "Test has no assertions" lint
+    expect(leaveDurationRow.exists()).toBe(true);
+    assertStatusRow(leaveDurationRow, [
+      "Leave duration",
+      "1/1/2021 – 7/1/2021",
+    ]);
+  });
+
+  it("shows the leave duration types", () => {
+    const busyClaim = new MockEmployerClaimBuilder()
+      .completed()
+      .continuous()
+      .intermittent()
+      .reducedSchedule()
+      .create();
+    ({ appLogic, wrapper } = renderWithAppLogic(Status, {
+      employerClaimAttrs: busyClaim,
+      props: {
+        query,
+      },
+    }));
+
+    const leaveDurationRows = wrapper.find("StatusRow");
+    // added to satisfy "Test has no assertions" lint
+    expect(leaveDurationRows.exists()).toBe(true);
+
+    const continuousRow = leaveDurationRows.at(3);
+    const intermittentRow = leaveDurationRows.at(4);
+    const reducedScheduleRow = leaveDurationRows.at(5);
+
+    assertStatusRow(continuousRow, ["Continuous leave", "1/1/2021 – 6/1/2021"]);
+    assertStatusRow(intermittentRow, [
+      "Intermittent leave",
+      "2/1/2021 – 7/1/2021",
+    ]);
+    assertStatusRow(reducedScheduleRow, [
+      "Reduced leave schedule",
+      "2/1/2021 – 7/1/2021",
+    ]);
   });
 
   describe("when documents haven't been loaded yet", () => {
@@ -123,6 +192,43 @@ describe("Status", () => {
       const sectionTitle = wrapper.find("Heading");
       expect(sectionTitle.first()).toStrictEqual(sectionTitle.last());
       expect(sectionTitle.childAt(0).text()).toEqual("Leave details");
+    });
+  });
+
+  describe("when 'employerShowDashboard' is enabled", () => {
+    beforeEach(() => {
+      process.env.featureFlags = {
+        employerShowDashboard: true,
+      };
+
+      ({ wrapper } = renderWithAppLogic(Status, {
+        employerClaimAttrs: CLAIM,
+        props: {
+          query,
+        },
+      }));
+    });
+
+    it("displays adjudication status if status is provided", () => {
+      const tagComponent = wrapper.find("StatusRow").at(1).dive().find("Tag");
+      expect(tagComponent.exists()).toBe(true);
+      expect(tagComponent.prop("state")).toEqual("warning");
+      expect(tagComponent.prop("label")).toEqual("Pending");
+    });
+
+    it("hides adjudication status if status is undefined", () => {
+      const claimWithoutStatus = new MockEmployerClaimBuilder()
+        .completed()
+        .create();
+      ({ wrapper } = renderWithAppLogic(Status, {
+        employerClaimAttrs: claimWithoutStatus,
+        props: {
+          query,
+        },
+      }));
+
+      const tagComponent = wrapper.find("StatusRow").at(1).dive().find("Tag");
+      expect(tagComponent.exists()).toBe(false);
     });
   });
 

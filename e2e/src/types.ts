@@ -1,8 +1,4 @@
-import {
-  ApplicationRequestBody,
-  ApplicationLeaveDetails,
-  PaymentPreferenceRequestBody,
-} from "./api";
+import { ApplicationLeaveDetails } from "./api";
 
 export type Credentials = {
   username: string;
@@ -13,22 +9,6 @@ export type Credentials = {
 export type OAuthCreds = {
   clientID: string;
   secretID: string;
-};
-
-/**
- * Special type to use to tell Typescript what properties `this` might contain on a Cypress
- * test step.
- *
- * Because we alias `credentials` and `application`, they can later be used by accessing `this.credentials`
- * and `this.application`, respectively.
- *
- * @see https://www.typescriptlang.org/docs/handbook/functions.html#this-parameters
- */
-export type CypressStepThis = {
-  credentials?: Credentials;
-  employerUsername?: string;
-  application?: ApplicationRequestBody;
-  paymentPreference: PaymentPreferenceRequestBody;
 };
 
 export type LeavePeriods = Pick<

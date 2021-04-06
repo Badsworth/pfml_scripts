@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FamilyMemberRelationship renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Leave details"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    What is your relationship with the family member you are caring for?
+  </Heading>
+</QuestionPage>
+`;

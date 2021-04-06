@@ -17,7 +17,6 @@ from massgov.pfml.db.models.employees import (
     LatestStateLog,
     LkState,
     Payment,
-    PaymentMethod,
     State,
     StateLog,
 )
@@ -281,30 +280,6 @@ def _build_state_log(
             outcome=state_log_util.build_outcome("Successfully sent email"),
             db_session=db_session,
         )
-
-    # If a vendor's payment method is EFT:
-    # - If they do not yet exist in MMARS, then we add them to the next VCC
-    #   and move the employee forward in the VENDOR_EFT flow to the
-    #   EFT_PENDING step. The VCC will add the EFT information for the
-    #   Employee into MMARS.
-    # - If they do already exist in MMARS, then we add them to the VCM report
-    #   for a manual person to update the EFT information in MMARS. Once we
-    #   send the VCM report, we need to move the Employee forward in the
-    #   VENDOR_EFT flow to the EFT_PENDING step.
-    if (
-        next_state == State.VCM_REPORT_SENT
-        and associated_class == state_log_util.AssociatedClass.EMPLOYEE
-    ):
-        employee = cast(Employee, associated_model)
-        if employee.eft and employee.payment_method_id == PaymentMethod.ACH.payment_method_id:
-            state_log_util.create_finished_state_log(
-                associated_model=associated_model,
-                end_state=State.EFT_PENDING,
-                outcome=state_log_util.build_outcome(
-                    "Added vendor to VCM Report, EFT data is included"
-                ),
-                db_session=db_session,
-            )
 
 
 def _make_simple_report(

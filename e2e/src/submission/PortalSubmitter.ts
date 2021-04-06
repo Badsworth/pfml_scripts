@@ -70,6 +70,7 @@ export default class PortalSubmitter {
     employerCredentials?: Credentials
   ): Promise<ApplicationResponse> {
     const options = await this.getOptions(credentials);
+
     const application_id = await this.createApplication(options);
     await this.updateApplication(application_id, claim.claim, options);
 
@@ -243,24 +244,10 @@ export default class PortalSubmitter {
     application_id: string,
     options?: RequestOptions
   ) {
-    try {
-      return await postApplicationsByApplication_idComplete_application(
-        { application_id },
-        options
-      );
-    } catch (e) {
-      // No-op.  Unfortunately, we're expecting the completion endpoint to throw
-      // a fatal error regularly due to timeouts.
-      if (
-        "data" in e &&
-        Array.isArray(e.data.errors) &&
-        e.data.errors.length === 0
-      ) {
-        console.log("Caught error - ignoring");
-        return;
-      }
-      throw e;
-    }
+    return postApplicationsByApplication_idComplete_application(
+      { application_id },
+      options
+    );
   }
 
   private async uploadPaymentPreference(

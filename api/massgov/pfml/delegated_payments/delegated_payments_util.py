@@ -16,7 +16,6 @@ import pytz
 import smart_open
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.declarative.api import DeclarativeMeta
 from sqlalchemy.orm import ColumnProperty, class_mapper
 from sqlalchemy.orm.exc import MultipleResultsFound
 
@@ -25,6 +24,7 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.lookup import LookupTable
+from massgov.pfml.db.models import base
 from massgov.pfml.db.models.employees import (
     Address,
     ClaimType,
@@ -43,6 +43,7 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.payments import (
     FineosExtractEmployeeFeed,
+    FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
@@ -105,6 +106,14 @@ class Constants:
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT.state_id,
         State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK.state_id,
         State.DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT.state_id,
+        # These states are a part of the cancellation flow
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION.state_id,
+        State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK.state_id,
+        State.DELEGATED_PAYMENT_CANCELLATION_PAYMENT_FINEOS_WRITEBACK_SENT.state_id,
+        # These states are a part of the employer reimbursement flow
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT.state_id,
+        State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK.state_id,
+        State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_PAYMENT_FINEOS_WRITEBACK_SENT.state_id,
     ]
 
     # States that we wait in while waiting for the reject file
@@ -116,7 +125,19 @@ class Constants:
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT,
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT,
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION,
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT,
     ]
+
+
+class Regexes:
+    MONETARY_AMOUNT = (
+        r"^\d*\.\d\d$"  # Decimal fields must include 2 digits following the decimal point.
+    )
+    STATE_ABBREVIATION = r"^[A-Z]{2}$"  # State abbreviations should be exactly 2 uppercase letters.
+    COUNTRY_ABBREVIATION = (
+        r"^[A-Z]{2}$"  # Country abbreviations should be exactly 2 uppercase letters.
+    )
+    ZIP_CODE = r"^\d{5}(-\d{4})?$"  # Zip codes must contain 5 digits and may contain +4 identifier.
 
 
 class ValidationReason(str, Enum):
@@ -192,6 +213,12 @@ def lookup_validator(
     return validator_func
 
 
+def zip_code_validator(zip_code: str) -> Optional[ValidationReason]:
+    if not re.match(Regexes.ZIP_CODE, zip_code):
+        return ValidationReason.INVALID_VALUE
+    return None
+
+
 def validate_csv_input(
     key: str,
     data: Dict[str, str],
@@ -207,18 +234,26 @@ def validate_csv_input(
         errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
         return None  # Effectively treating "" and "Unknown" the same
 
+    validation_errors = False
     # Check the length only if it is defined/not empty
     if value:
         if min_length and len(value) < min_length:
             errors.add_validation_issue(ValidationReason.FIELD_TOO_SHORT, key)
+            validation_errors = True
         if max_length and len(value) > max_length:
             errors.add_validation_issue(ValidationReason.FIELD_TOO_LONG, key)
+            validation_errors = True
 
         # Also only bother with custom validation if the value exists
         if custom_validator_func:
             reason = custom_validator_func(value)
             if reason:
                 errors.add_validation_issue(reason, key)
+                validation_errors = True
+
+    # If any of the specific validations hit an error, don't return the value
+    if validation_errors:
+        return None
 
     return value
 
@@ -1166,15 +1201,16 @@ def get_attribute_names(cls):
 def create_staging_table_instance(
     data: Dict,
     db_cls: Union[
-        FineosExtractVpei,
-        FineosExtractVpeiClaimDetails,
-        FineosExtractVpeiPaymentDetails,
-        FineosExtractVbiRequestedAbsenceSom,
-        FineosExtractEmployeeFeed,
+        Type[FineosExtractVpei],
+        Type[FineosExtractVpeiClaimDetails],
+        Type[FineosExtractVpeiPaymentDetails],
+        Type[FineosExtractVbiRequestedAbsenceSom],
+        Type[FineosExtractEmployeeFeed],
+        Type[FineosExtractVbiRequestedAbsence],
     ],
     ref_file: ReferenceFile,
     fineos_extract_import_log_id: Optional[int],
-) -> DeclarativeMeta:
+) -> base.Base:
     """ We check if keys from data have a matching class property in staging model db_cls, if data contains
     properties not yet included in cls, we log a warning. We return an instance of cls, with matching properties
     from data and cls.
@@ -1202,7 +1238,5 @@ def create_staging_table_instance(
         [data.pop(diff) for diff in difference]
 
     return db_cls(
-        **data,
-        reference_file_id=ref_file.reference_file_id,
-        fineos_extract_import_log_id=fineos_extract_import_log_id,
+        **data, reference_file=ref_file, fineos_extract_import_log_id=fineos_extract_import_log_id,
     )

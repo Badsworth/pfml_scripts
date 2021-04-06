@@ -3,7 +3,7 @@ import {
   bailIfThisTestFails,
   beforeFineos,
 } from "../../../../tests/common/before";
-import { extractLeavePeriod } from "../../../../../src/utils";
+import { extractLeavePeriod } from "../../../../utils";
 import { getFineosBaseUrl } from "../../../../config";
 import { Submission } from "../../../../../src/types";
 
@@ -15,6 +15,7 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
       beforeFineos();
       bailIfThisTestFails();
 
+      cy.visit("/");
       cy.task("generateClaim", "BHAP1").then((claim) => {
         cy.stash("claim", claim.claim);
         if (
@@ -25,7 +26,6 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
           throw new Error("Claim is missing a first name, last name, or SSN.");
         }
 
-        cy.visit("/");
         fineos.searchClaimantSSN(claim.claim.tax_identifier);
         fineos.clickBottomWidgetButton("OK");
         fineos.assertOnClaimantPage(
@@ -62,16 +62,15 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
           "getEmails",
           {
             address: "gqzap.notifications@inbox.testmail.app",
+            messageWildcard: submission.fineos_absence_id,
             subject: subject,
             timestamp_from: submission.timestamp_from,
           },
           { timeout: 360000 }
         ).then(async (emails) => {
-          const emailContent = await email.getNotificationData(emails[0].html);
-          expect(emailContent.name).to.equal(employeeFullName);
-          expect(emailContent.applicationId).to.equal(
-            submission.fineos_absence_id
-          );
+          const data = email.getNotificationData(emails[0].html);
+          expect(data.name).to.equal(employeeFullName);
+          expect(data.applicationId).to.equal(submission.fineos_absence_id);
         });
       });
     });

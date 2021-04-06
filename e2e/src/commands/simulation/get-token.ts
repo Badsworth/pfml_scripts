@@ -1,19 +1,13 @@
 import { CommandModule } from "yargs";
 import { SystemWideArgs } from "../../cli";
 import config from "../../config";
-import AuthenticationManager from "../../simulation/AuthenticationManager";
-import { CognitoUserPool } from "amazon-cognito-identity-js";
+import { getAuthManager } from "../../scripts/util";
 
 const cmd: CommandModule<SystemWideArgs, SystemWideArgs> = {
   command: "get-token",
   describe: "Generate a bearer token for use in postman",
   async handler(args) {
-    const authenticator = new AuthenticationManager(
-      new CognitoUserPool({
-        UserPoolId: config("COGNITO_POOL"),
-        ClientId: config("COGNITO_CLIENTID"),
-      })
-    );
+    const authenticator = getAuthManager();
 
     args.logger.debug(`Logging in as ${config("PORTAL_USERNAME")}`);
     const session = await authenticator.authenticate(

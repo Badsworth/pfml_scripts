@@ -572,6 +572,24 @@ describe("useAuthLogic", () => {
       Object.getOwnPropertyDescriptor(window, "location").get.mockRestore();
     });
 
+    it("redirects to login while receiving PasswordResetRequiredException error", async () => {
+      jest.spyOn(Auth, "signOut").mockImplementationOnce(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "PasswordResetRequiredException",
+          message: "User is not confirmed.",
+          name: "PasswordResetRequiredException",
+        };
+      });
+
+      await act(async () => {
+        await logout();
+      });
+
+      expect(window.location.assign).toHaveBeenCalledWith(routes.auth.login);
+    });
+
     describe("when called with no parameters", () => {
       beforeEach(async () => {
         await act(async () => {

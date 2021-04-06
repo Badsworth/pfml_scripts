@@ -16,7 +16,7 @@ class EzCheckField:
     description: str
     max_length: int
     value: Any
-    value_type: Type[Any] = None
+    value_type: Optional[Type[Any]] = None
     as_string: str = ""
     pattern: Optional[str] = None
     validation_issues: List[payments_util.ValidationIssue] = []
@@ -66,7 +66,7 @@ class EzCheckField:
             )
             self.add_validation_issue(payments_util.ValidationReason.FIELD_TOO_LONG, msg)
 
-    def validate_pattern(self) -> bool:
+    def validate_pattern(self) -> None:
         if self.pattern is not None and not re.match(self.pattern, self.as_string):
             msg = "Expected value for field '{}' to match pattern '{}'".format(
                 self.description, self.pattern
@@ -82,7 +82,7 @@ class EzCheckIntegerField(EzCheckField):
 class EzCheckDecimalField(EzCheckField):
     value: Decimal
     value_type = Decimal
-    pattern = r"^\d*\.\d\d$"  # Decimal fields must include 2 digits following the decimal point.
+    pattern = payments_util.Regexes.MONETARY_AMOUNT
 
     def format_value(self) -> str:
         # Force the value to have a two digit decimal part.
@@ -99,7 +99,7 @@ class EzCheckDateField(EzCheckField):
 
 # Same as EzCheckCountryAbbreviationField, separate classes for clarity.
 class EzCheckStateAbbreviationField(EzCheckField):
-    pattern = r"^[A-Z]{2}$"  # State abbreviations should be exactly 2 uppercase letters.
+    pattern = payments_util.Regexes.STATE_ABBREVIATION
 
     def format_value(self) -> str:
         return self.value.upper()
@@ -107,14 +107,14 @@ class EzCheckStateAbbreviationField(EzCheckField):
 
 # Same as EzCheckStateAbbreviationField, separate classes for clarity.
 class EzCheckCountryAbbreviationField(EzCheckField):
-    pattern = r"^[A-Z]{2}$"  # Country abbreviations should be exactly 2 uppercase letters.
+    pattern = payments_util.Regexes.COUNTRY_ABBREVIATION
 
     def format_value(self) -> str:
         return self.value.upper()
 
 
 class EzCheckZipCodeField(EzCheckField):
-    pattern = r"^\d{5}(-\d{4})?$"  # Zip codes must contain 5 digits and may contain +4 identifier.
+    pattern = payments_util.Regexes.ZIP_CODE
 
 
 class EzCheckRecord:
@@ -129,7 +129,7 @@ class EzCheckRecord:
         memo: str,
         payee_name: str,
         address_line_1: str,
-        address_line_2: str,
+        address_line_2: Optional[str],
         city: str,
         state: str,
         zip_code: Any,
@@ -191,7 +191,7 @@ class EzCheckHeader:
         state: str,
         zip_code: Any,
         country: str,
-        accounting_number: int,
+        account_number: int,
         routing_number: int,
     ):
         self.fields = (
@@ -204,7 +204,7 @@ class EzCheckHeader:
             EzCheckStateAbbreviationField("Payer state", 2, state),
             EzCheckZipCodeField("Payer zip code", 10, zip_code),
             EzCheckCountryAbbreviationField("Payer country", 2, country),
-            EzCheckIntegerField("Payer accounting number", 16, accounting_number),
+            EzCheckIntegerField("Payer account number", 16, account_number),
             EzCheckIntegerField("Payer routing number", 11, routing_number),
         )
         self.validate_fields()
@@ -236,6 +236,7 @@ class EzCheckFile:
             raise TypeError("is not an EzCheckHeader")
 
         self.header = header
+        self.records = []
 
     def add_record(self, record: EzCheckRecord) -> None:
         if not isinstance(record, EzCheckRecord):

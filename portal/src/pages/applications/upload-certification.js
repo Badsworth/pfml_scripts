@@ -2,6 +2,7 @@ import Claim, { ReasonQualifier } from "../../models/Claim";
 import Document, { DocumentType } from "../../models/Document";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
+import DocumentRequirements from "../../components/DocumentRequirements";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/Heading";
@@ -110,13 +111,6 @@ export const UploadCertification = (props) => {
         <Trans
           i18nKey="pages.claimsUploadCertification.lead"
           components={{
-            "mail-fax-instructions-link": (
-              <a
-                target="_blank"
-                rel="noopener"
-                href={routes.external.massgov.mailFaxInstructions}
-              />
-            ),
             "healthcare-provider-form-link": (
               <a
                 target="_blank"
@@ -144,6 +138,7 @@ export const UploadCertification = (props) => {
           ))}
         </ul>
       </ConditionalContent>
+      <DocumentRequirements type="certification" />
       <FileUploadDetails />
 
       {hasLoadingDocumentsError && (

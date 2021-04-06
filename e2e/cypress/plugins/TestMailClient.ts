@@ -2,24 +2,8 @@ import { GraphQLClient, gql } from "graphql-request";
 import fetch, { RequestInfo, RequestInit } from "node-fetch";
 import AbortController from "abort-controller";
 
-/**
- * Wrap the fetch function to give it a timeout.
- *
- * Without this, fetch against livequery APIs will just spin forever.
- */
-const wrapFetchWithTimeout = (fetchProto: typeof fetch, timeout: number) => {
-  return (url: RequestInfo, init?: RequestInit): ReturnType<typeof fetch> => {
-    if (!init) {
-      init = {};
-    }
-    const controller = new AbortController();
-    init.signal = controller.signal;
-    setTimeout(() => controller.abort(), timeout);
-    return fetchProto(url, init);
-  };
-};
-
 export type Email = {
+  id: string;
   from: string;
   subject: string;
   text: string;
@@ -30,24 +14,64 @@ export type GetEmailsOpts = {
   address: string;
   subject?: string;
   subjectWildcard?: string;
+  messageWildcard?: string;
   timestamp_from?: number;
+  debugInfo?: Record<string, string>;
 };
 type Filter = { field: string; match: string; action: string; value: string };
 
 export default class TestMailClient {
   namespace: string;
-  client: GraphQLClient;
+  headers: Record<string, string>;
+  apiKey: string;
+  timeout: number;
 
   constructor(apiKey: string, namespace: string, timeout = 120000) {
-    this.client = new GraphQLClient("https://api.testmail.app/api/graphql", {
-      headers: { Authorization: `Bearer ${apiKey}` },
-      // Limit the amount of time we'll wait for a response.
-      fetch: wrapFetchWithTimeout(fetch, timeout),
-    });
+    this.headers = { Authorization: `Bearer ${apiKey}` };
+    this.timeout = timeout;
+    this.apiKey = apiKey;
     this.namespace = namespace;
   }
 
   async getEmails(opts: GetEmailsOpts): Promise<Email[]> {
+    // We instantiate a new client for every call. This is the only way to share a single timeout across multiple
+    // API calls (ie: we may make 5 requests, but we want to time out 120s from the time we started making calls).
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), this.timeout);
+    const client = new GraphQLClient("https://api.testmail.app/api/graphql", {
+      headers: this.headers,
+      fetch: (url: RequestInfo, init: RequestInit = {}) =>
+        fetch(url, { ...init, signal: controller.signal }),
+    });
+
+    const { messageWildcard } = opts;
+    if (messageWildcard === undefined) {
+      // For non-wildcard searches, use the basic logic.
+      return this._getEmails(opts, client);
+    }
+
+    // If we've requested a message wildcard, we first query for all messages that match, then check to see if any of
+    // the messages returned match the message wildcard. If they don't, we go back and look for more, excluding the
+    // ones we've already found.
+    let excludedIds: string[] = [];
+    while (true) {
+      const emails = await this._getEmails(opts, client, excludedIds);
+      const matches = emails.filter((email) =>
+        email.html.includes(messageWildcard)
+      );
+      if (matches.length > 0) {
+        return matches;
+      }
+      // Exclude these IDs from our next search, as we already know they're not matching.
+      excludedIds = excludedIds.concat(emails.map((e) => e.id));
+    }
+  }
+
+  private async _getEmails(
+    opts: GetEmailsOpts,
+    client: GraphQLClient,
+    excludedIds: string[] = []
+  ): Promise<Email[]> {
     const filters: Filter[] = [];
 
     if (opts.subject) {
@@ -66,35 +90,51 @@ export default class TestMailClient {
         value: opts.subjectWildcard,
       });
     }
-    const tag = this.getTagFromAddress(opts.address);
-    try {
-      const response = await this.client.request(unifiedQuery, {
-        tag: tag,
-        namespace: this.namespace,
-        advanced_filters: filters,
-        timestamp_from: opts.timestamp_from,
+    // Exclude any IDs we've specifically requested be excluded from this search.
+    excludedIds.forEach((id) => {
+      filters.push({
+        field: "id",
+        match: "exact",
+        action: "exclude",
+        value: id,
       });
+    });
+    const tag = this.getTagFromAddress(opts.address);
+    const variables = {
+      tag: tag,
+      namespace: this.namespace,
+      advanced_filters: filters,
+      timestamp_from: opts.timestamp_from,
+    };
+    try {
+      const response = await client.request(unifiedQuery, variables);
       return response.inbox.emails;
     } catch (e) {
       if (e.name === "AbortError") {
+        const searchParams = new URLSearchParams({
+          query: unifiedQuery,
+          // Note: variables and headers can't currently be read from the query string in GraphiQL.
+        });
+        const debugInfo = {
+          "GraphQL URL": `https://api.testmail.app/api/graphql?${searchParams}`,
+          "GraphQL Variables": JSON.stringify(variables, undefined, 4),
+          "GraphQL Headers": JSON.stringify(this.headers, undefined, 4),
+          ...opts.debugInfo,
+          timestamp_to: Date.now(),
+        };
         throw new Error(
-          "Timed out while looking for e-mail. This can happen when an e-mail is taking a long time to arrive, the e-mail was never sent, or you're looking for the wrong message."
+          `Timed out while looking for e-mail. This can happen when an e-mail is taking a long time to arrive, the e-mail was never sent, or you're looking for the wrong message.
+
+          Debug information:
+          ------------------
+
+          ${Object.entries(debugInfo)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join("\n\n")}`
         );
       }
       throw e;
     }
-  }
-
-  /**
-   * Fetch all emails matching a given tag and subject.
-   */
-  async getEmailsBySubject(address: string, subject: string): Promise<Email[]> {
-    const response = await this.client.request(getEmailsBySubjectQuery, {
-      tag: this.getTagFromAddress(address),
-      subject,
-      namespace: this.namespace,
-    });
-    return response.inbox.emails;
   }
 
   getTagFromAddress(address: string): string {
@@ -129,33 +169,8 @@ const unifiedQuery = gql`
       result
       message
       emails {
+        id
         timestamp
-        from
-        subject
-        text
-        html
-      }
-      count
-    }
-  }
-`;
-const getEmailsBySubjectQuery = gql`
-  query getEmailsBySubject(
-    $namespace: String!
-    $tag: String!
-    $subject: String!
-  ) {
-    inbox(
-      namespace: $namespace
-      tag: $tag
-      livequery: true
-      advanced_filters: [
-        { field: subject, match: wildcard, action: include, value: $subject }
-      ]
-    ) {
-      result
-      message
-      emails {
         from
         subject
         text

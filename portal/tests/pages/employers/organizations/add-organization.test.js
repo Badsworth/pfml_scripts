@@ -44,7 +44,7 @@ describe("AddOrganization", () => {
 
     it("redirects to Welcome page", () => {
       expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        routes.employers.dashboard
+        routes.employers.welcome
       );
     });
   });

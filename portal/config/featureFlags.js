@@ -35,9 +35,9 @@ const flagsConfig = {
     // TODO (EMPLOYER-913): Remove flag
     employerShowAddOrganization: false,
 
-    // When this flag is enabled, adjudication status is visible on the Status page
-    // TODO (EMPLOYER-656): Show adjudication status once it is retrieved from FINEOS
-    employerShowAdjudicationStatus: false,
+    // When this flag is enabled, dashboard-related features (including adjudication status on Status page) are displayed
+    // TODO (EMPLOYER-1054): Remove flag
+    employerShowDashboard: false,
 
     // When this flag is enabled, the News Banner is visible
     // This will be reused to announce future features and comms
@@ -69,31 +69,44 @@ const flagsConfig = {
     // update the reference to it in _app.js), but try to keep it prefixed with pfml.
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
+
+    // When this flag is enabled, the user can apply to take leave to
+    // "Care for a family member with a serious health condition" and
+    // Leave Admins can review Caring Leave claims
+    // TODO (CP-1989): Remove this flag once caring leave is made available in Production
+    showCaringLeaveType: false,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
   development: {
     example: true,
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
     pfmlTerriyay: true,
   },
   test: {
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
   },
   stage: {
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
   },
   training: {
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
   },
   performance: {
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
   },
   uat: {
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
   },
   prod: {
+    employerAuthThroughApi: true,
     employerShowNewsBanner: true,
     pfmlTerriyay: true,
   },

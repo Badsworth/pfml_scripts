@@ -18,7 +18,7 @@ export const AddOrganization = (props) => {
   const { t } = useTranslation();
 
   if (!isFeatureEnabled("employerShowAddOrganization")) {
-    appLogic.portalFlow.goTo(routes.employers.dashboard);
+    appLogic.portalFlow.goTo(routes.employers.welcome);
   }
 
   const { formState, updateFields } = useFormState({

@@ -1,11 +1,25 @@
-@use "~@massds/mayflower-assets/scss/00-base/_color-tokens.scss" as *;
+@use "../../styles/uswds-theme-color" as *;
+
+// USWDS doesn't currently have Sass variables for theming the Alert icon colors
+.usa-alert--error::before {
+  background-color: $theme-color-error;
+}
+
+.usa-alert--info::before {
+  background-color: $theme-color-info;
+}
+
+.usa-alert--success::before {
+  background-color: $theme-color-success;
+}
+
+.usa-alert--warning::before {
+  background-color: $theme-color-warning;
+}
 
 .c-alert--neutral {
-  background-color: $c-gray-lightest;
-
-  &::before {
-    background-color: $c-gray-light;
-  }
+  background-color: $theme-color-base-lightest;
+  border-left-color: $theme-color-base-lighter;
 }
 
 .c-alert--auto-width {

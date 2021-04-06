@@ -15,9 +15,9 @@ resource "newrelic_nrql_alert_condition" "newrelic_baseline_error_rate" {
   fill_option = "static"
   fill_value  = 0
 
-  type                 = "static"
-  value_function       = "single_value"
-  violation_time_limit = "TWENTY_FOUR_HOURS"
+  type                         = "static"
+  value_function               = "single_value"
+  violation_time_limit_seconds = 86400 # 24 hours
 
   nrql {
     query             = var.query

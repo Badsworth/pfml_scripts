@@ -7,7 +7,7 @@ import { dataDirectory, submit, PostSubmitCallback } from "./util";
 import ClaimSubmissionTracker from "../submission/ClaimStateTracker";
 import SubmittedClaimIndex from "../submission/writers/SubmittedClaimIndex";
 import path from "path";
-import { getFineosBaseUrl } from "../commands/simulation/simulate";
+import { getFineosBaseUrl } from "../utils";
 import { approveClaim, withFineosBrowser } from "../submission/PostSubmit";
 
 /**
@@ -57,7 +57,7 @@ import { approveClaim, withFineosBrowser } from "../submission/PostSubmit";
 
   // Generate a pool of claims. This could happen later, though!
   try {
-    claimPool = await ClaimPool.load(storage.claims);
+    claimPool = await ClaimPool.load(storage.claims, storage.documents);
   } catch (e) {
     if (e.code !== "ENOENT") throw e;
 
@@ -130,7 +130,7 @@ import { approveClaim, withFineosBrowser } from "../submission/PostSubmit";
     // Last but not least, write the index of submitted claims in CSV format.
     await SubmittedClaimIndex.write(
       path.join(storage.dir, "submitted.csv"),
-      await ClaimPool.load(storage.claims),
+      await ClaimPool.load(storage.claims, storage.documents),
       tracker
     );
   }

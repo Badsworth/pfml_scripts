@@ -1,7 +1,7 @@
 import faker from "faker";
 import fs from "fs";
 import { formatISO } from "date-fns";
-import unique from "../simulation/unique";
+import unique from "./unique";
 import { pipeline, Readable } from "stream";
 import JSONStream from "JSONStream";
 import { promisify } from "util";
@@ -37,6 +37,10 @@ const employerSizeWheel = [
 type EmployerGenerationSpec = {
   size?: Employer["size"];
   withholdings?: (number | null)[]; // quarters with 0 or null withholding amounts
+  family_expemtion?: boolean;
+  medical_exemption?: boolean;
+  exemption_commence_date?: Date;
+  exemption_cease_date?: Date;
 };
 
 export class EmployerGenerator {
@@ -85,8 +89,10 @@ export class EmployerGenerator {
       state: "MA",
       zip: faker.address.zipCode("#####-####"),
       dba: name,
-      family_exemption: false,
-      medical_exemption: false,
+      family_exemption: spec.family_expemtion || false,
+      medical_exemption: spec.medical_exemption || false,
+      exemption_commence_date: spec.exemption_commence_date,
+      exemption_cease_date: spec.exemption_cease_date,
       updated_date: formatISO(new Date()),
       size: spec.size ?? this.generateSize(),
       withholdings,

@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import { Employee } from "../generation/Employee";
-import { SimulationClaim } from "../simulation/types";
 import path from "path";
+import { GeneratedClaim } from "../generation/Claim";
 
 /**
  * Contains code to convert all existing employee datasets in the employees directory to an employee file.
@@ -14,7 +14,7 @@ import path from "path";
       .readFile(`${dir}/${file}`, "utf-8")
       .then((d) => JSON.parse(d));
     const employees = claims.map(
-      (claim: SimulationClaim): Employee => {
+      (claim: GeneratedClaim): Employee => {
         if (!claim.claim.first_name) {
           throw new Error("No first name given");
         }
@@ -39,7 +39,12 @@ import path from "path";
           occupations: [
             {
               fein: claim.claim.employer_fein,
-              wages: claim.wages ?? (claim.financiallyIneligible ? 4800 : 6000),
+              wages:
+                (claim as { wages?: number }).wages ??
+                ((claim as { financiallyIneligible?: boolean })
+                  .financiallyIneligible
+                  ? 4800
+                  : 6000),
             },
           ],
         };

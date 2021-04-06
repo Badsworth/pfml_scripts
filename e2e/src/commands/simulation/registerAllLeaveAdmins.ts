@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { CommandModule } from "yargs";
-import { Employer } from "../../simulation/types";
+import { Employer } from "../../generation/Employer";
 import { SystemWideArgs } from "../../cli";
 import { handler as registerLeaveAdmin } from "./register-leave-admin";
 

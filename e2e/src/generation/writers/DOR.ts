@@ -1,10 +1,9 @@
-import EmployerPool, { Employer } from "../Employer";
-import EmployeePool, { Employee, EmployeeOccupation } from "../Employee";
-import quarters, { parseOrPassISODate } from "../../simulation/quarters";
+import { Employer } from "../Employer";
+import { Employee, EmployeeOccupation } from "../Employee";
 import { pipeline, Readable } from "stream";
 import fs from "fs";
 import { promisify } from "util";
-import { format as formatDate } from "date-fns";
+import { endOfQuarter, format as formatDate, subQuarters } from "date-fns";
 
 const pipelineP = promisify(pipeline);
 
@@ -12,6 +11,33 @@ const pipelineP = promisify(pipeline);
 const NO_EXEMPTION_DATE = "99991231";
 
 const amt = (num: number): string => num.toFixed(2).padStart(20);
+
+/**
+ * Return an ISO date, given either a date object (already in ISO time), or a date string.
+ * @param candidate
+ */
+function parseOrPassISODate(candidate: string | Date): Date {
+  if (candidate instanceof Date) {
+    return candidate;
+  }
+  const utc = new Date(candidate);
+  return new Date(utc.getTime() + utc.getTimezoneOffset() * 1000 * 60);
+}
+
+/**
+ * Generate a list of the last 4 quarters.
+ * @param refDate
+ * @param number
+ */
+const now = new Date();
+function quarters(refDate = now, number = 4): Date[] {
+  const quarters = [];
+
+  for (let i = number; i > 0; i--) {
+    quarters.push(endOfQuarter(subQuarters(refDate, i)));
+  }
+  return quarters;
+}
 
 /**
  * This class handles creation and formatting of DOR files from employee and employer pools.
@@ -29,7 +55,7 @@ export default class DOR {
    * Writes a single DOR "employers" file.
    */
   static async writeEmployersFile(
-    employerPool: EmployerPool,
+    employerPool: Iterable<Employer>,
     filename: string
   ): Promise<void> {
     // This is a generator function. It iterates through an EmployerPool, yielding one record at a time.
@@ -45,8 +71,8 @@ export default class DOR {
    * Writes a single DOR "employees" file.
    */
   static async writeEmployeesFile(
-    employerPool: EmployerPool,
-    employeePool: EmployeePool,
+    employerPool: Iterable<Employer>,
+    employeePool: Iterable<Employee>,
     filename: string
   ): Promise<void> {
     const lines = function* () {

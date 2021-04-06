@@ -29,7 +29,17 @@ export const Status = (props) => {
   const {
     employers: { claim, documents },
   } = appLogic;
+  const { isContinuous, isIntermittent, isReducedSchedule } = claim;
   const { t } = useTranslation();
+
+  const getDisplayState = (status) => {
+    const successState = ["Approved"];
+    const errorState = ["Denied", "Cancelled", "Withdrawn", "Voided"];
+
+    if (successState.includes(status)) return "success";
+    if (errorState.includes(status)) return "error";
+    return "warning";
+  };
 
   useEffect(() => {
     if (!documents) {
@@ -45,9 +55,7 @@ export const Status = (props) => {
     DocumentType.requestForInfoNotice,
   ]);
 
-  const shouldShowAdjudicationStatus = isFeatureEnabled(
-    "employerShowAdjudicationStatus"
-  );
+  const shouldShowDashboard = isFeatureEnabled("employerShowDashboard");
 
   return (
     <React.Fragment>
@@ -58,6 +66,10 @@ export const Status = (props) => {
       <Lead>
         <Trans
           i18nKey="pages.employersClaimsStatus.lead"
+          tOptions={{
+            context:
+              getDisplayState(claim.status) === "warning" ? "pending" : "",
+          }}
           components={{
             "dfml-regulations-link": (
               <a
@@ -75,10 +87,9 @@ export const Status = (props) => {
       <StatusRow label={t("pages.employersClaimsStatus.applicationIdLabel")}>
         {absenceId}
       </StatusRow>
-      {/* TODO (EMPLOYER-656): Display adjudication status */}
-      {shouldShowAdjudicationStatus && (
+      {shouldShowDashboard && claim.status && (
         <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
-          <Tag state="success" />
+          <Tag state={getDisplayState(claim.status)} label={claim.status} />
         </StatusRow>
       )}
       <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>
@@ -92,6 +103,29 @@ export const Status = (props) => {
       <StatusRow label={t("pages.employersClaimsStatus.leaveDurationLabel")}>
         {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
       </StatusRow>
+      {isContinuous && (
+        <StatusRow
+          label={t("pages.employersClaimsStatus.leaveDurationLabel_continuous")}
+        >
+          {claim.continuousLeaveDateRange()}
+        </StatusRow>
+      )}
+      {isIntermittent && (
+        <StatusRow
+          label={t(
+            "pages.employersClaimsStatus.leaveDurationLabel_intermittent"
+          )}
+        >
+          {claim.intermittentLeaveDateRange()}
+        </StatusRow>
+      )}
+      {isReducedSchedule && (
+        <StatusRow
+          label={t("pages.employersClaimsStatus.leaveDurationLabel_reduced")}
+        >
+          {claim.reducedLeaveDateRange()}
+        </StatusRow>
+      )}
       {legalNotices.length > 0 && (
         <div className="border-top-2px border-base-lighter padding-top-2">
           <Heading level="2">

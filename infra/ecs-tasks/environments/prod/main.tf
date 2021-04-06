@@ -64,6 +64,7 @@ module "tasks" {
   ctr_gax_bievnt_email_address           = "Accounts.Payable@detma.org"
   ctr_vcc_bievnt_email_address           = "EOL-DL-DFML-GAXVCC_Confirmation@mass.gov"
   dfml_business_operations_email_address = "EOL-DL-DFML-GAXVCC_Confirmation@mass.gov"
+  agency_reductions_email_address        = "EOL-DL-DFML-Agency-Reductions@mass.gov"
 
   ctr_data_mart_host     = "dua-fdm-wdb1.cs.govt.state.ma.us"
   ctr_data_mart_username = "SRV-LWD-DFML-PROD"

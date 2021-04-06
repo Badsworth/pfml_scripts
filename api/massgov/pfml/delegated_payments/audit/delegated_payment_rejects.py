@@ -38,7 +38,7 @@ class NonSampledStateTransitionDescriptor:
     outcome: Dict[str, Any]
 
 
-NOT_SAMPLED_STATE_TRANSITIONS: NonSampledStateTransitionDescriptor = []
+NOT_SAMPLED_STATE_TRANSITIONS: List[NonSampledStateTransitionDescriptor] = []
 
 NOT_SAMPLED_STATE_TRANSITIONS.append(
     NonSampledStateTransitionDescriptor(
@@ -66,6 +66,14 @@ NOT_SAMPLED_STATE_TRANSITIONS.append(
 
 NOT_SAMPLED_STATE_TRANSITIONS.append(
     NonSampledStateTransitionDescriptor(
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT,
+        State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK,
+        state_log_util.build_outcome("Employer reimbursement to be added to FINEOS Writeback"),
+    )
+)
+
+NOT_SAMPLED_STATE_TRANSITIONS.append(
+    NonSampledStateTransitionDescriptor(
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED,
         State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK,
         state_log_util.build_outcome(
@@ -73,6 +81,7 @@ NOT_SAMPLED_STATE_TRANSITIONS.append(
         ),
     )
 )
+
 
 NOT_SAMPLED_PAYMENT_NEXT_STATE_BY_CURRENT_STATE = {
     t.from_state.state_id: t.to_state for t in NOT_SAMPLED_STATE_TRANSITIONS
@@ -95,6 +104,12 @@ class PaymentRejectsException(Exception):
     """An error during Payment Rejects file processing."""
 
 
+def get_row(row: Dict[str, str], key: Optional[str]) -> Optional[str]:
+    if not key:
+        return None
+    return row[key]
+
+
 class PaymentRejectsStep(Step):
     def run_step(self) -> None:
         self.process_rejects()
@@ -107,49 +122,55 @@ class PaymentRejectsStep(Step):
 
             for row in parsed_csv:
                 payment_reject_row = PaymentAuditCSV(
-                    pfml_payment_id=row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id],
-                    leave_type=row[PAYMENT_AUDIT_CSV_HEADERS.leave_type],
-                    first_name=row[PAYMENT_AUDIT_CSV_HEADERS.first_name],
-                    last_name=row[PAYMENT_AUDIT_CSV_HEADERS.last_name],
-                    address_line_1=row[PAYMENT_AUDIT_CSV_HEADERS.address_line_1],
-                    address_line_2=row[PAYMENT_AUDIT_CSV_HEADERS.address_line_2],
-                    city=row[PAYMENT_AUDIT_CSV_HEADERS.city],
-                    state=row[PAYMENT_AUDIT_CSV_HEADERS.state],
-                    zip=row[PAYMENT_AUDIT_CSV_HEADERS.zip],
-                    payment_preference=row[PAYMENT_AUDIT_CSV_HEADERS.payment_preference],
-                    scheduled_payment_date=row[PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date],
-                    payment_period_start_date=row[
-                        PAYMENT_AUDIT_CSV_HEADERS.payment_period_start_date
-                    ],
-                    payment_period_end_date=row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_end_date],
-                    payment_amount=row[PAYMENT_AUDIT_CSV_HEADERS.payment_amount],
-                    absence_case_number=row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_number],
-                    c_value=row[PAYMENT_AUDIT_CSV_HEADERS.c_value],
-                    i_value=row[PAYMENT_AUDIT_CSV_HEADERS.i_value],
-                    employer_id=row[PAYMENT_AUDIT_CSV_HEADERS.employer_id],
-                    case_status=row[PAYMENT_AUDIT_CSV_HEADERS.case_status],
-                    leave_request_id=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_id],
-                    leave_request_decision=row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision],
-                    is_first_time_payment=row[PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment],
-                    is_previously_errored_payment=row[
-                        PAYMENT_AUDIT_CSV_HEADERS.is_previously_errored_payment
-                    ],
-                    is_previously_rejected_payment=row[
-                        PAYMENT_AUDIT_CSV_HEADERS.is_previously_rejected_payment
-                    ],
-                    number_of_times_in_rejected_or_error_state=row[
-                        PAYMENT_AUDIT_CSV_HEADERS.number_of_times_in_rejected_or_error_state
-                    ],
-                    rejected_by_program_integrity=row[
-                        PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity
-                    ],
-                    rejected_notes=row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes],
+                    pfml_payment_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id),
+                    leave_type=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.leave_type),
+                    first_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.first_name),
+                    last_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.last_name),
+                    address_line_1=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.address_line_1),
+                    address_line_2=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.address_line_2),
+                    city=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.city),
+                    state=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.state),
+                    zip=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.zip),
+                    payment_preference=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.payment_preference),
+                    scheduled_payment_date=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date
+                    ),
+                    payment_period_start_date=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.payment_period_start_date
+                    ),
+                    payment_period_end_date=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.payment_period_end_date
+                    ),
+                    payment_amount=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.payment_amount),
+                    absence_case_number=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_number),
+                    c_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.c_value),
+                    i_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.i_value),
+                    employer_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_id),
+                    case_status=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.case_status),
+                    is_first_time_payment=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment
+                    ),
+                    is_previously_errored_payment=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.is_previously_errored_payment
+                    ),
+                    is_previously_rejected_payment=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.is_previously_rejected_payment
+                    ),
+                    number_of_times_in_rejected_or_error_state=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.number_of_times_in_rejected_or_error_state
+                    ),
+                    rejected_by_program_integrity=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity
+                    ),
+                    rejected_notes=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.rejected_notes),
                 )
                 payment_rejects_rows.append(payment_reject_row)
 
         return payment_rejects_rows
 
-    def transition_audit_pending_payment_state(self, payment: Payment, is_rejected_payment: bool):
+    def transition_audit_pending_payment_state(
+        self, payment: Payment, is_rejected_payment: bool
+    ) -> None:
         payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
             payment, Flow.DELEGATED_PAYMENT, self.db_session
         )
@@ -160,11 +181,11 @@ class PaymentRejectsStep(Step):
             )
 
         if (
-            payment_state_log.end_state.state_id
+            payment_state_log.end_state_id
             != State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id
         ):
             raise PaymentRejectsException(
-                f"Found payment state log not in audit response pending state: {payment_state_log.end_state.state_description}, payment_id: {payment.payment_id}"
+                f"Found payment state log not in audit response pending state: {payment_state_log.end_state.state_description if payment_state_log.end_state else None}, payment_id: {payment.payment_id}"
             )
 
         if is_rejected_payment:
@@ -181,7 +202,9 @@ class PaymentRejectsStep(Step):
                 payment, ACCEPTED_STATE, ACCEPTED_OUTCOME, self.db_session
             )
 
-    def transition_audit_pending_payment_states(self, payment_rejects_rows: List[PaymentAuditCSV]):
+    def transition_audit_pending_payment_states(
+        self, payment_rejects_rows: List[PaymentAuditCSV]
+    ) -> None:
         for payment_rejects_row in payment_rejects_rows:
             payment = (
                 self.db_session.query(Payment)
@@ -198,7 +221,7 @@ class PaymentRejectsStep(Step):
 
             self.transition_audit_pending_payment_state(payment, is_rejected_payment)
 
-    def _transition_not_sampled_payment_audit_pending_state(self, pending_state: LkState):
+    def _transition_not_sampled_payment_audit_pending_state(self, pending_state: LkState) -> None:
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             state_log_util.AssociatedClass.PAYMENT, pending_state, self.db_session
         )
@@ -288,7 +311,7 @@ class PaymentRejectsStep(Step):
         payment_rejects_processed_folder_path: str,
         payment_rejects_report_outbound_folder: str,
         payment_rejects_report_sent_folder_path: str,
-    ):
+    ) -> None:
         # TODO Confirm we should look in a dated folder? if so today or yesterday's date?
         payment_rejects_received_folder_dated_path = os.path.join(
             payment_rejects_received_folder_path, payments_util.get_now().strftime("%Y-%m-%d")

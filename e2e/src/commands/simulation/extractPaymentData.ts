@@ -5,10 +5,10 @@ import path from "path";
 import playwright, { chromium, ElementHandle } from "playwright";
 import delay from "delay";
 import { CommandModule } from "yargs";
-import SimulationStorage from "../../simulation/SimulationStorage";
 import { SystemWideArgs } from "../../cli";
 import * as actions from "../../utils";
-import { getFineosBaseUrl } from "../../commands/simulation/simulate";
+import { getFineosBaseUrl } from "../../utils";
+import { DataDirectory, dataDirectory } from "../../scripts/util";
 
 type ExtractPaymentDataArgs = {
   directory: string;
@@ -35,7 +35,7 @@ const cmd: CommandModule<SystemWideArgs, ExtractPaymentDataArgs> = {
   },
   async handler(args) {
     args.logger.info("Starting extraction of payment information");
-    const storage = new SimulationStorage(args.directory);
+    const storage = dataDirectory(args.directory);
 
     const rows = [];
 
@@ -103,27 +103,25 @@ const cmd: CommandModule<SystemWideArgs, ExtractPaymentDataArgs> = {
 };
 
 export async function getReportRecords(
-  storage: SimulationStorage
+  storage: DataDirectory
 ): Promise<Array<ReportRecord>> {
   const records = [];
-  const parser = fs
-    .createReadStream(path.join(storage.directory, "report.csv"))
-    .pipe(
-      parse({
-        columns: [
-          "unique_id",
-          "scenario",
-          "first_name",
-          "last_name",
-          "ssn",
-          "fein",
-          "fineos_case",
-          "yearly_wages",
-          "error_message",
-        ],
-        from_line: 2,
-      })
-    );
+  const parser = fs.createReadStream(path.join(storage.dir, "report.csv")).pipe(
+    parse({
+      columns: [
+        "unique_id",
+        "scenario",
+        "first_name",
+        "last_name",
+        "ssn",
+        "fein",
+        "fineos_case",
+        "yearly_wages",
+        "error_message",
+      ],
+      from_line: 2,
+    })
+  );
 
   for await (const record of parser) {
     records.push(record);
@@ -133,7 +131,7 @@ export async function getReportRecords(
 
 export function writePaymentDetails(
   rows: Array<{ [key: string]: string }>,
-  storage: SimulationStorage
+  storage: DataDirectory
 ): void {
   stringify(
     rows,
@@ -142,10 +140,7 @@ export function writePaymentDetails(
     },
     function (err, output) {
       if (typeof output === "string") {
-        fs.writeFileSync(
-          path.join(storage.directory, "paymentDetails.csv"),
-          output
-        );
+        fs.writeFileSync(path.join(storage.dir, "paymentDetails.csv"), output);
       }
     }
   );

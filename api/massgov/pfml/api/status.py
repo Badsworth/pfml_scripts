@@ -26,7 +26,7 @@ def status_get():
             release_version = os.environ.get("RELEASE_VERSION")
             if release_version:
                 return response_util.success_response(
-                    message="Service healthy (Version:{release_version})"
+                    message=f"Service healthy (Version: {release_version})"
                 ).to_api_response()
             else:
                 return response_util.success_response(message="Service healthy").to_api_response()

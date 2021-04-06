@@ -59,13 +59,8 @@ export async function deploy(args: Arguments<DeployLSTArgs>): Promise<void> {
     ]);
     // Log deployment details
     await Util.logDeployment("Flood:", { flood });
-    // todo: verify token is correctly fetched
+    // Verify token is correctly fetched
     const token = environmentVars["E2E_FLOOD_API_TOKEN"];
-    const message = `Flood "${flood.name}" launched on "${
-      flood.project
-    }": \n- Concurrent users: ${flood.threads} \n- Duration: ${
-      +flood.duration / 60
-    } minute(s) \n- Ramp-up: ${flood.rampup} minute(s)`;
     // Prepare all the data to launch the flood
     const formData = new FormData();
     const floodData: Util.PromptRes = {
@@ -106,9 +101,16 @@ export async function deploy(args: Arguments<DeployLSTArgs>): Promise<void> {
     });
     // Error handling
     if (newFlood.status < 400) {
-      console.log(message);
+      const { permalink } = (await newFlood.json()) as { permalink: string };
+      const message = `Flood "${flood.name}" launched on "${
+        flood.project
+      }": \n- Concurrent users: ${flood.threads} \n- Duration: ${
+        +flood.duration / 60
+      } minute(s) \n- Ramp-up: ${
+        +flood.rampup / 60
+      } minute(s) \n- Results: ${permalink}`;
       await Util.logDeployment(message);
-      args.logger.info("Done!");
+      args.logger.info(message);
     } else {
       args.logger.error("Deployment failed:");
       console.log(newFlood);

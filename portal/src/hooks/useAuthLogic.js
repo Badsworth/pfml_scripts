@@ -153,7 +153,11 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     //    - https://dzone.com/articles/aws-cognito-user-pool-access-token-invalidation-1
     //    - https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GlobalSignOut.html
     //    - https://github.com/aws-amplify/amplify-js/issues/3435
-    await Auth.signOut({ global: true });
+    try {
+      await Auth.signOut({ global: true });
+    } catch (error) {
+      tracker.noticeError(error);
+    }
     setIsLoggedIn(false);
     const params = {};
     if (sessionTimedOut) {

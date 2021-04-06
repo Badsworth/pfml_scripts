@@ -1,4 +1,5 @@
 import Heading from "../components/Heading";
+import PropTypes from "prop-types";
 import React from "react";
 import { Trans } from "react-i18next";
 import routes from "../routes";
@@ -8,7 +9,7 @@ import { useTranslation } from "../locales/i18n";
  * A summary box that highlights key information.
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/summary-box/)
  */
-function DocumentRequirements() {
+function DocumentRequirements(props) {
   const { t } = useTranslation();
   return (
     <div className="usa-summary-box margin-bottom-2" role="complementary">
@@ -19,6 +20,7 @@ function DocumentRequirements() {
         <div className="usa-summary-box__text">
           <Trans
             i18nKey="components.documentRequirements.body"
+            tOptions={{ context: props.type }}
             components={{
               ul: <ul className="usa-list" />,
               li: <li />,
@@ -36,5 +38,9 @@ function DocumentRequirements() {
     </div>
   );
 }
+
+DocumentRequirements.propTypes = {
+  type: PropTypes.oneOf(["id", "certification"]),
+};
 
 export default DocumentRequirements;

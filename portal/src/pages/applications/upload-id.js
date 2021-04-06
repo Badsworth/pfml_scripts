@@ -92,7 +92,7 @@ export const UploadId = (props) => {
         <Heading level="2" size="1">
           {t("pages.claimsUploadId.sectionLabel", { context: contentContext })}
         </Heading>
-        <DocumentRequirements />
+        <DocumentRequirements type="id" />
         {!hasStateId && (
           <div className="border-bottom border-base-light margin-bottom-4 padding-bottom-4">
             <Trans

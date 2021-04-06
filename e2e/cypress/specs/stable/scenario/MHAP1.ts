@@ -1,5 +1,4 @@
-import * as portal from "../../../tests/common/actions/portal";
-import { fineos } from "../../../tests/common/actions";
+import { fineos, portal } from "../../../tests/common/actions";
 import {
   bailIfThisTestFails,
   beforeFineos,

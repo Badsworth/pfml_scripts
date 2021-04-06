@@ -239,6 +239,34 @@ const machineTests = {
       },
     },
   },
+  [routes.applications.caringLeaveAttestation]: {
+    meta: {
+      test: (_, event) => {
+        expect(event.context.claim.isCaringLeave).toEqual(true);
+      },
+    },
+  },
+  [routes.applications.familyMemberDateOfBirth]: {
+    meta: {
+      test: (_, event) => {
+        expect(event.context.claim.isCaringLeave).toEqual(true);
+      },
+    },
+  },
+  [routes.applications.familyMemberName]: {
+    meta: {
+      test: (_, event) => {
+        expect(event.context.claim.isCaringLeave).toEqual(true);
+      },
+    },
+  },
+  [routes.applications.familyMemberRelationship]: {
+    meta: {
+      test: (_, event) => {
+        expect(event.context.claim.isCaringLeave).toEqual(true);
+      },
+    },
+  },
 };
 
 const machineConfigsWithTests = {
@@ -256,6 +284,7 @@ describe("claimFlowConfigs", () => {
   // different routing paths
   const medicalClaim = { leave_details: { reason: LeaveReason.medical } };
   const bondingClaim = { leave_details: { reason: LeaveReason.bonding } };
+  const caringLeaveClaim = { leave_details: { reason: LeaveReason.care } };
   const employed = {
     employment_status: EmploymentStatus.employed,
   };
@@ -289,6 +318,7 @@ describe("claimFlowConfigs", () => {
     { claimData: completed, userData: {} },
     { claimData: fixedWorkPattern, userData: {} },
     { claimData: variableWorkPattern, userData: {} },
+    { claimData: caringLeaveClaim, userData: {} },
   ];
 
   // Action that's fired when exiting getReady state and creating a claim and

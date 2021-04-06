@@ -34,12 +34,10 @@
       { "name": "S3_DFML_OUTBOUND_DIRECTORY_PATH", "value": "reductions/dfml/outbound" },
       { "name": "S3_DFML_PENDING_DIRECTORY_PATH", "value": "reductions/dfml/pending" },
 
-      { "name": "DFML_PROJECT_MANAGER_EMAIL_ADDRESS", "value": "" },
-      { "name": "PFML_EMAIL_ADDRESS", "value": "noreplypfml@mass.gov" },
-      { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS", "value": "noreplypfml@mass.gov" },
-      { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", "value": "" },
-      { "name": "DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", "value": "" },
-      { "name": "AGENCY_REDUCTIONS_EMAIL_ADDRESS", "value": "EOL-DL-DFML-Agency-Reductions@mass.gov" }
+      { "name": "PFML_EMAIL_ADDRESS", "value": "${pfml_email_address}" },
+      { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS", "value": "${bounce_forwarding_email_address}" },
+      { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", "value": "${bounce_forwarding_email_address_arn}" },
+      { "name": "AGENCY_REDUCTIONS_EMAIL_ADDRESS", "value": "${agency_reductions_email_address}" }
     ],
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }

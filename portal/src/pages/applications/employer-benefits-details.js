@@ -127,7 +127,7 @@ export const EmployerBenefitsDetails = (props) => {
           "pages.claimsEmployerBenefitsDetails.removeButton"
         )}
         render={render}
-        limit={4}
+        limit={3}
         limitMessage={t("pages.claimsEmployerBenefitsDetails.limitMessage")}
       />
     </QuestionPage>

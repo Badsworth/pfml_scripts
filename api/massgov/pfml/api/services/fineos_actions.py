@@ -143,9 +143,17 @@ def send_to_fineos(
     fineos.update_customer_details(fineos_user_id, customer)
     new_case = fineos.start_absence(fineos_user_id, absence_case)
 
+    employer = (
+        db_session.query(Employer)
+        .filter(Employer.employer_fein == application.employer_fein)
+        .one_or_none()
+    )
+
     new_claim = Claim(
         fineos_absence_id=new_case.absenceId, fineos_notification_id=new_case.notificationCaseId
     )
+    if employer:
+        new_claim.employer = employer
 
     application.claim = new_claim
 
