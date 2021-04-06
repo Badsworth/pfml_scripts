@@ -1,25 +1,19 @@
-// import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
-// import Heading from "../components/Heading";
-// import Icon from "../components/Icon";
-// import Link from "next/link";
-// import ButtonLink from "../components/ButtonLink";
-
 import Alert from "../components/Alert";
-import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
-import ClaimCollection from "../models/ClaimCollection";
 import InputText from "../components/InputText";
-import PropTypes from "prop-types";
-import React from "react";
 import Title from "../components/Title";
-import { Trans } from "react-i18next";
 import User from "../models/User"
+import ClaimCollection from "../models/ClaimCollection";
+import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
+import React from "react";
+import PropTypes from "prop-types";
+import { Trans } from "react-i18next";
 import routes from "../routes";
+import { useTranslation } from "../locales/i18n";
+import withClaims from "../hoc/withClaims";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps"
 import useThrottledHandler from "../hooks/useThrottledHandler"
-import { useTranslation } from "../locales/i18n";
-import withClaims from "../hoc/withClaims";
 
 export const ConvertToEmployer = (props) => {
   const { appLogic, claims, user } = props;
@@ -27,30 +21,19 @@ export const ConvertToEmployer = (props) => {
   const { convertToEmployer } = appLogic.users;
   const { formState, updateFields } = useFormState({ employer_fein: "" });
   const hasClaims = !claims.isEmpty;
-  const iconClassName =
-    "margin-right-1 text-secondary text-middle margin-top-neg-05";
-  /* const alertIconProps = {
-    className: iconClassName,
-    height: 20,
-    width: 20,
-    fill: "currentColor",
-  };
- */
-  const handleSubmit = useThrottledHandler(async (event) => {
-    event.preventDefault();
-    console.log(user.user_id, formState, appLogic.users)
-    convertToEmployer(user.user_id, {
-      employer_for_leave_admin: formState.employer_fein.replace("-", ""),
-    });
-    // navigate to employer page
-    appLogic.portalFlow.goTo(routes.employers.welcome)
-  })
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
     formState,
     updateFields,
   });
+
+  const handleSubmit = useThrottledHandler(async (event) => {
+    event.preventDefault();
+    await convertToEmployer(user.user_id, {
+      employer_for_leave_admin: formState.employer_fein.replace("-", ""),
+    });
+  })
 
   return (
     <React.Fragment>
