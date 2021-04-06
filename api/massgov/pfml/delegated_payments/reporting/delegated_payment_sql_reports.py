@@ -23,6 +23,7 @@ class ReportName(str, Enum):
     PUB_ERROR_REPORT = "pub-error-report"  # TODO wait for PUB-75
     EFT_ERROR_REPORT = "eft-error-report"  # TODO wait for PUB-75
     PAYMENT_RECONCILIATION_SUMMARY_REPORT = "payment-reconciliation-summary-report"
+    PAYMENT_REJECT_REPORT = "payment-reject-report"
 
 
 # Reports grouped by processing tasks
@@ -40,6 +41,7 @@ CREATE_PUB_FILES_REPORTS: List[ReportName] = [
     ReportName.ACH_PAYMENT_REPORT,
     ReportName.CHECK_PAYMENT_REPORT,
     ReportName.DAILY_CASH_REPORT,
+    ReportName.PAYMENT_REJECT_REPORT,
 ]
 PROCESS_PUB_RESPONSES_REPORTS: List[ReportName] = [
     ReportName.PUB_ERROR_REPORT,
