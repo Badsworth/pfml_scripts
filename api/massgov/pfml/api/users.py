@@ -194,10 +194,10 @@ def users_patch(user_id):
                     data={},
                 ).to_api_response()
 
-                user_leave_admin = UserLeaveAdministrator(
-                    user=updated_user, employer=employer, fineos_web_id=None,
-                )
-                db_session.add(user_leave_admin)
+            user_leave_admin = UserLeaveAdministrator(
+                user=updated_user, employer=employer, fineos_web_id=None,
+            )
+            db_session.add(user_leave_admin)
 
         ensure(EDIT, updated_user)
         for key in body.__fields_set__:
