@@ -977,11 +977,15 @@ class StateLog(Base):
     prev_state_log_id = Column(UUID(as_uuid=True), ForeignKey("state_log.state_log_id"))
     associated_type = Column(Text, index=True)
 
+    import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True, nullable=True,
+    )
     end_state = cast("Optional[LkState]", relationship(LkState, foreign_keys=[end_state_id]))
     payment = relationship("Payment", back_populates="state_logs")
     reference_file = relationship("ReferenceFile", back_populates="state_logs")
     employee = relationship("Employee", back_populates="state_logs")
     prev_state_log = relationship("StateLog", uselist=False, remote_side=state_log_id)
+    import_log = cast("Optional[ImportLog]", relationship(ImportLog, foreign_keys=[import_log_id]))
 
 
 class LatestStateLog(Base):

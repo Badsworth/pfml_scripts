@@ -178,6 +178,8 @@ def test_run_step_happy_path(
             State.DELEGATED_EFT_SEND_PRENOTE.state_id,
         ]
 
+        assert state_log.import_log_id == 1
+
     # Confirm metrics added to import log
     import_log = test_db_session.query(ImportLog).first()
     import_log_report = json.loads(import_log.report)
