@@ -24,7 +24,3 @@ class UserUpdateRequest(PydanticBaseModel):
     consented_to_data_sharing: Optional[bool]
     role: Optional[RoleRequest]
     user_leave_administrator: Optional[UserLeaveAdminRequest]
-
-
-class UserConvertRequest(PydanticBaseModel):
-    employer_for_leave_admin: str
