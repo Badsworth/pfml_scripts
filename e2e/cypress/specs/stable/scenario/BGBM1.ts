@@ -37,16 +37,9 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
 
       // Submit Claim
       portal.submitClaimPartOne(application);
-      cy.wait("@submitClaimResponse").then((xhr) => {
-        if (!xhr.response || !xhr.response.body) {
-          throw new Error("No response body detected");
-        }
-        const body =
-          typeof xhr.response.body === "string"
-            ? JSON.parse(xhr.response.body)
-            : xhr.response.body;
-        cy.stashLog("claimNumber", body.data.fineos_absence_id);
-        cy.stashLog("applicationId", body.data.application_id);
+      portal.waitForClaimSubmission().then((data) => {
+        cy.stashLog("claimNumber", data.fineos_absence_id);
+        cy.stashLog("applicationId", data.application_id);
       });
       portal.submitPartsTwoThreeNoLeaveCert(paymentPreference);
     });
