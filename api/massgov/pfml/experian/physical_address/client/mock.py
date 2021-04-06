@@ -1,7 +1,10 @@
 from typing import Dict, List, Optional, cast
 
 from massgov.pfml.db.models.employees import Address, GeoState, LkGeoState
-from massgov.pfml.experian.physical_address.service import address_to_experian_search_request
+from massgov.pfml.experian.physical_address.service import (
+    address_to_experian_search_request,
+    address_to_experian_suggestion_text_format,
+)
 
 from .base import BaseClient
 from .models import (
@@ -160,20 +163,21 @@ class MockClient(BaseClient):
         )
 
     def add_mock_address_response(
-        self, address: Address, confidence: Confidence
+        self, address: Address, confidence: Confidence, suggestion: Optional[str] = None,
     ) -> AddressSearchV1Response:
         # Pull out the raw address as text as the process will later see it.
         expected_request = address_to_experian_search_request(address)
         raw_address = expected_request.components.unspecified[0]
+        suggestion_text_address = suggestion or address_to_experian_suggestion_text_format(address)
 
         suggestions = []
 
         if confidence == Confidence.VERIFIED_MATCH:
-            suggestions.append(self._build_matched_result(raw_address))
+            suggestions.append(self._build_matched_result(suggestion_text_address))
 
         elif confidence == Confidence.MULTIPLE_MATCHES:
             for _ in range(self.multiple_count):
-                suggestions.append(self._build_matched_result(raw_address))
+                suggestions.append(self._build_matched_result(suggestion_text_address))
 
         # For NO_MATCHES or INSUFFICIENT_SEARCH_TERMS, we just
         # don't add suggestions, their responses just have the confidence value
