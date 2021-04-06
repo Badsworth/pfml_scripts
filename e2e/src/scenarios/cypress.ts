@@ -1,5 +1,5 @@
 import { ScenarioSpecification } from "../generation/Scenario";
-import { addDays, subDays } from "date-fns";
+import { addWeeks, subWeeks, startOfWeek } from "date-fns";
 
 /**
  * Cypress Testing Scenarios.
@@ -101,6 +101,7 @@ export const MHAP4: ScenarioSpecification = {
   },
 };
 
+const mostRecentSunday = startOfWeek(new Date());
 export const Jill: ScenarioSpecification = {
   employee: {
     wages: 30000,
@@ -119,7 +120,30 @@ export const Jill: ScenarioSpecification = {
       employer_decision: "Approve",
       fraud: "No",
     },
-    // This scenario requires a 1 week leave time for payment calculation purposes.
-    leave_dates: [subDays(new Date(), 1), addDays(new Date(), 6)],
+    // This scenario requires a 2 week leave time for payment calculation purposes.
+    leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
+  },
+};
+
+export const Dave: ScenarioSpecification = {
+  employee: {
+    wages: 90000,
+    mass_id: true,
+  },
+  claim: {
+    label: "Dave",
+    reason: "Serious Health Condition - Employee",
+    work_pattern_spec: "0,720,0,720,0,720,0",
+    docs: {
+      MASSID: {},
+      HCP: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 36,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+    // This scenario requires a 2 week leave time for payment calculation purposes.
+    leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
   },
 };

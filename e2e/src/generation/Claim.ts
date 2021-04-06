@@ -8,6 +8,7 @@ import {
   PaymentPreference,
   PaymentPreferenceRequestBody,
   Phone,
+  WorkPattern,
 } from "../api";
 import faker from "faker";
 import generateLeaveDetails from "./LeaveDetails";
@@ -126,8 +127,7 @@ export class ClaimGenerator {
       has_mailing_address: true,
       mailing_address: address,
       residential_address: address,
-      // @todo: This doesn't seem right given variable work patterns.
-      hours_worked_per_week: 40,
+      hours_worked_per_week: this.calculateAverageWeeklyHours(workPattern),
       work_pattern: workPattern,
       phone: this.generatePhone(),
       leave_details: leaveDetails,
@@ -152,6 +152,23 @@ export class ClaimGenerator {
       employerResponse: spec.employerResponse ?? null,
       metadata: spec.metadata,
     };
+  }
+
+  private static calculateAverageWeeklyHours(workPattern: WorkPattern): number {
+    if (!workPattern.work_pattern_days) {
+      return 40;
+    }
+    // Each item in the array is the number of minutes per week.
+    const weeks: Array<number> = [];
+    workPattern.work_pattern_days.forEach((workDay) => {
+      // The week_number starts at 1, instead start at 0.
+      const week_index = (workDay.week_number ?? 1) - 1;
+      if (!(week_index in weeks)) {
+        weeks[week_index] = 0;
+      }
+      weeks[week_index] = weeks[week_index] + (workDay.minutes || 0);
+    });
+    return weeks.reduce((a, b) => a + b) / weeks.length / 60;
   }
 
   private static generateAddress(): Address {
