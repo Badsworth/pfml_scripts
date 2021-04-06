@@ -134,27 +134,27 @@ def users_patch(user_id):
                 db_session.add(user_role)
 
         if employer_fein:
-            employer = (
-                db_session.query(Employer)
-                .filter(Employer.employer_fein == employer_fein.replace("-", "", 10))
-                .one_or_none()
-            )
-            # TODO why does this generate an error?
-            employer_issues = None  # employer_issues = get_users_post_employer_issues(employer)
-
-            if employer_issues:
-                logger.info("users_post failure - Employer not valid")
-                return response_util.error_response(
-                    status_code=BadRequest,
-                    message="Employer not valid",
-                    errors=employer_issues,
-                    data={},
-                ).to_api_response()
-
-            user_leave_admin = UserLeaveAdministrator(
-                user=updated_user, employer=employer, fineos_web_id=None,
-            )
-            db_session.add(user_leave_admin)
+            employer_feins = [ula.employer.employer_fein for ula in updated_user.user_leave_administrators]
+            if employer_fein not in employer_feins:
+                employer = (
+                    db_session.query(Employer)
+                    .filter(Employer.employer_fein == employer_fein.replace("-", "", 10))
+                    .one_or_none()
+                )
+                # TODO why is this returning a fineos error?
+                employer_issues = None  # employer_issues = get_users_post_employer_issues(employer)
+                if employer_issues:
+                    logger.info("users_post failure - Employer not valid")
+                    return response_util.error_response(
+                        status_code=BadRequest,
+                        message="Employer not valid",
+                        errors=employer_issues,
+                        data={},
+                    ).to_api_response()
+                user_leave_admin = UserLeaveAdministrator(
+                    user=updated_user, employer=employer, fineos_web_id=None,
+                )
+                db_session.add(user_leave_admin)
 
         ensure(EDIT, updated_user)
         for key in body.__fields_set__:
