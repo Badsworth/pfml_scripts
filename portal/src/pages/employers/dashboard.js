@@ -28,6 +28,14 @@ export const Dashboard = (props) => {
   const showVerificationRowInPlaceOfClaims =
     shouldShowVerifications && hasOnlyUnverifiedEmployers;
 
+  const tableColumnVisibility = {
+    employee_name: true,
+    fineos_absence_id: true,
+    employer_dba: user.user_leave_administrators.length > 1,
+    employer_fein: true,
+    created_at: true,
+    status: true,
+  };
   /**
    * Columns rendered in the table.
    * Used for rendering header labels and the field(s) in each column. These
@@ -35,14 +43,9 @@ export const Dashboard = (props) => {
    * since some columns might require multiple fields.
    * @type {string[]}
    */
-  const tableColumnKeys = [
-    "employee_name",
-    "fineos_absence_id",
-    "employer_dba",
-    "employer_fein",
-    "created_at",
-    "status",
-  ];
+  const tableColumnKeys = Object.entries(tableColumnVisibility)
+    .filter(([columnKey, isVisible]) => isVisible)
+    .map(([columnKey, isVisible]) => columnKey);
 
   return (
     <React.Fragment>
@@ -151,11 +154,11 @@ const ClaimTableRows = (props) => {
       case "created_at":
         return formatDateRange(get(claim, columnKey));
       case "fineos_absence_id":
-        // TODO (EMPLOYER-858): Make this routing actually work
+        // TODO (EMPLOYER-861): Make this routing actually work
         return <a href="#">{get(claim, columnKey)}</a>;
       case "employee_name":
         // TODO (EMPLOYER-858): Use a fullName getter on the claim instance
-        // TODO (EMPLOYER-858): Make this routing actually work
+        // TODO (EMPLOYER-861): Make this routing actually work
         return (
           <a href="#">
             {[get(claim, "first_name"), get(claim, "last_name")].join(" ")}
