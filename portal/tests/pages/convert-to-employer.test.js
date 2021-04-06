@@ -1,18 +1,18 @@
-import ConvertToEmployer from "../../src/pages/convert-to-employer";
-import React from "react";
-import { act } from "react-dom/test-utils";
-import { shallow } from "enzyme";
-import tracker from "../../src/services/tracker";
-import useAppLogic from "../../src/hooks/useAppLogic";
+import User, { RoleDescription } from "../../src/models/User";
 import {
-  MockClaimBuilder,
   renderWithAppLogic,
   simulateEvents,
   testHook
 } from "../test-utils";
+import ConvertToEmployer from "../../src/pages/convert-to-employer";
+import React from "react";
+import { shallow } from "enzyme";
+import tracker from "../../src/services/tracker";
+import useAppLogic from "../../src/hooks/useAppLogic";
+
 import ClaimCollection from "../../src/models/ClaimCollection";
 import GetReady from "../../src/pages/applications/get-ready";
-import User from "../../src/models/User";
+import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
 
@@ -43,5 +43,22 @@ describe("ConvertToEmployer", () => {
     const wrapper = render();
     expect(wrapper).toMatchSnapshot();
   });
-  // Test 
+  it("submits an FEIN", async () => {
+    const fein = "123456789"
+    const {appLogic, wrapper} = render();
+    const { changeField, submitForm } = simulateEvents(wrapper);
+    changeField("employer_fein", fein);
+    await submitForm();
+    expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect.any(String),
+      {
+        "role": { 
+          "role_description": RoleDescription.employer 
+        },
+        "user_leave_administrator": {
+            "employer_fein": fein
+        }
+      } 
+      );
+  })
 })
