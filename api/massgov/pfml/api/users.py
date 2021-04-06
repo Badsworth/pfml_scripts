@@ -14,11 +14,11 @@ from massgov.pfml.api.services.user_rules import (
     get_users_post_required_fields_issues,
 )
 from massgov.pfml.api.util.deepgetattr import deepgetattr
-from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole, LkRole
+from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein
-from massgov.pfml.util.users import register_user, convert_user
+from massgov.pfml.util.users import register_user
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
@@ -174,26 +174,10 @@ def users_patch(user_id):
 def user_response(user: User) -> Dict[str, Any]:
     response = UserResponse.from_orm(user).dict()
 
-    logger.info(f'MP_{response}')
-    with app.db_session() as db_session:
-        userRoles = db_session.query(UserRole, LkRole).filter(LkRole.role_id == UserRole.role_id and UserRole.user_id == user.user_id).all()
-
-        logger.info(f'MP_{userRoles}')
-        response["roles"] = [normalize_user_role(ur) for ur in userRoles]
-    
     response["user_leave_administrators"] = [
         normalize_user_leave_admin_response(ula) for ula in response["user_leave_administrators"]
     ]
-    
-    logger.info(f'MP_{response}')
     return response
-
-
-def normalize_user_role(
-    userRole,
-) -> Dict[str, Any]:
-    role = userRole[1]
-    return dict(RoleResponse(role_id=role.role_id, role_description=role.role_description))
 
 
 def normalize_user_leave_admin_response(
