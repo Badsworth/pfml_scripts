@@ -11,7 +11,7 @@ import classnames from "classnames";
 const ConvertToEmployerBanner = (props) => {
   const link = props.link
   const classes = classnames(
-    "bg-yellow padding-1 text-center"
+    "bg-yellow padding-1 margin-bottom-2 text-center"
   );
 
   return (
@@ -23,8 +23,6 @@ const ConvertToEmployerBanner = (props) => {
             "convert-link": (
               <a
                 href={link}
-                target="_blank"
-                rel="noreferrer noopener"
               />
             ),
           }}

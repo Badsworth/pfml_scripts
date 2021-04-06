@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConvertToEmployerBanner renders HTML comment and the banner message 1`] = `
+Array [
+  "This is an employee account. Are you an employer? ",
+  <a
+    key="1"
+  >
+    Click here!
+  </a>,
+]
+`;
+
+exports[`UnsupportedBrowserBanner renders HTML comment and the banner message 1`] = `
+Array [
+  "This is an employee account. Are you an employer? ",
+  <a
+    key="1"
+  >
+    Click here!
+  </a>,
+]
+`;
+
+exports[`UnsupportedBrowserBanner renders conditional HTML comment and the banner message 1`] = `
+Array [
+  "This is an employee account. Are you an employer? ",
+  <a
+    key="1"
+  >
+    Click here!
+  </a>,
+]
+`;

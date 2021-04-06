@@ -115,9 +115,16 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
   };
 
   const convertToEmployer = async (user_id, data) => {
-    if(!user.hasEmployerRole) {
-      await usersApi.convertToEmployer(user_id, data)
+    appErrorsLogic.clearErrors();
+    if (!user.hasEmployerRole) {
+      try {
+        const { user } = await usersApi.convertToEmployer(user_id, data)
+        setUser(user);
+      } catch (error) {
+        appErrorsLogic.catchError(error);
+      }
     }
+    portalFlow.goTo(routes.employers.welcome);
   };
 
   return {
