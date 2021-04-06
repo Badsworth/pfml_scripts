@@ -45,6 +45,16 @@ exports[`Status renders the page and correct content in Trans component 1`] = `
   >
     1/1/2021 – 7/1/2021
   </StatusRow>
+  <StatusRow
+    label="Continuous leave"
+  >
+    1/1/2021 – 6/1/2021
+  </StatusRow>
+  <StatusRow
+    label="Reduced leave schedule"
+  >
+    2/1/2021 – 7/1/2021
+  </StatusRow>
 </Fragment>
 `;
 

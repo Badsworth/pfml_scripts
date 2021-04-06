@@ -6,6 +6,7 @@ import { compact, get, map } from "lodash";
 import Address from "./Address";
 import BaseModel from "./BaseModel";
 import LeaveReason from "./LeaveReason";
+import formatDateRange from "../utils/formatDateRange";
 
 class BaseClaim extends BaseModel {
   get defaults() {
@@ -53,6 +54,19 @@ class BaseClaim extends BaseModel {
   }
 
   /**
+   * Returns the start and end dates of the specific continuous leave period in a
+   * human-readable format. Ex: "1/1/2021 - 6/1/2021".
+   * @returns {string} a representation of the leave period
+   */
+  continuousLeaveDateRange() {
+    const { start_date, end_date } = get(
+      this,
+      `leave_details.continuous_leave_periods[0]`
+    );
+    return formatDateRange(start_date, end_date);
+  }
+
+  /**
    * Determine if claim is an intermittent leave claim
    * @returns {boolean}
    */
@@ -61,11 +75,37 @@ class BaseClaim extends BaseModel {
   }
 
   /**
+   * Returns the start and end dates of the specific intermittent leave period in a
+   * human-readable format. Ex: "1/1/2021 - 6/1/2021".
+   * @returns {string} a representation of the leave period
+   */
+  intermittentLeaveDateRange() {
+    const { start_date, end_date } = get(
+      this,
+      `leave_details.intermittent_leave_periods[0]`
+    );
+    return formatDateRange(start_date, end_date);
+  }
+
+  /**
    * Determine if claim is a reduced schedule leave claim
    * @returns {boolean}
    */
   get isReducedSchedule() {
     return !!get(this, "leave_details.reduced_schedule_leave_periods[0]");
+  }
+
+  /**
+   * Returns the start and end dates of the specific reduced schedule leave period in a
+   * human-readable format. Ex: "1/1/2021 - 6/1/2021".
+   * @returns {string} a representation of the leave period
+   */
+  reducedLeaveDateRange() {
+    const { start_date, end_date } = get(
+      this,
+      `leave_details.reduced_schedule_leave_periods[0]`
+    );
+    return formatDateRange(start_date, end_date);
   }
 
   /**

@@ -44,30 +44,15 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
               {
                 address: "gqzap.notifications@inbox.testmail.app",
                 subject: `Action required: Respond to ${claim.claim.first_name} ${claim.claim.last_name}'s paid leave application`,
+                messageWildcard: response.fineos_absence_id,
                 timestamp_from: timestamp_fromER,
                 fineos_absence_id: response.fineos_absence_id,
               },
               { timeout: 360000 }
             ).then((emails) => {
-              expect(emails.length).to.be.greaterThan(0);
-              for (const emailSingle of emails) {
-                email.getNotificationData(emailSingle.html).then((data) => {
-                  if (
-                    data.applicationId.includes(
-                      response.fineos_absence_id as string
-                    )
-                  ) {
-                    expect(data.applicationId).to.equal(
-                      response.fineos_absence_id
-                    );
-                    expect(emailSingle.html).to.contain(
-                      `/employers/applications/new-application/?absence_id=${response.fineos_absence_id}`
-                    );
-                  } else {
-                    throw new Error("No emails match the Fineos Absence ID");
-                  }
-                });
-              }
+              expect(emails[0].html).to.contain(
+                `/employers/applications/new-application/?absence_id=${response.fineos_absence_id}`
+              );
             });
 
             // Access and fill out ER form
@@ -176,32 +161,21 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
             {
               address: "gqzap.notifications@inbox.testmail.app",
               subject: subjectEmployer,
+              messageWildcard: submission.fineos_absence_id,
               timestamp_from: submission.timestamp_from,
               debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
             },
             { timeout: 180000 }
           ).then(async (emails) => {
-            expect(emails.length).to.be.greaterThan(0);
-            const email_match = emails.find((email) =>
-              email.html.includes(submission.fineos_absence_id as string)
+            const data = email.getNotificationData(emails[0].html);
+            const dob =
+              claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
+            expect(data.name).to.equal(employeeFullName);
+            expect(data.dob).to.equal(dob);
+            expect(data.applicationId).to.equal(submission.fineos_absence_id);
+            expect(emails[0].html).to.contain(
+              `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
             );
-            if (!email_match) {
-              throw new Error(
-                `No emails quiered match the Finoes Absence ID:
-                  timestamp_from: ${submission.timestamp_from} 
-                  fineos_absence_id: ${submission.fineos_absence_id}`
-              );
-            }
-            email.getNotificationData(email_match.html).then((data) => {
-              const dob =
-                claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
-              expect(data.name).to.equal(employeeFullName);
-              expect(data.dob).to.equal(dob);
-              expect(data.applicationId).to.equal(submission.fineos_absence_id);
-              expect(data.html).to.contain(
-                `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
-              );
-            });
           });
 
           // Check email for Claimant/Employee
@@ -210,26 +184,12 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
             {
               address: "gqzap.notifications@inbox.testmail.app",
               subject: subjectClaimant,
+              messageWildcard: submission.fineos_absence_id,
               timestamp_from: submission.timestamp_from,
               debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
             },
             { timeout: 180000 }
-          ).then(async (emails) => {
-            expect(emails.length).to.be.greaterThan(0);
-            const email_match = emails.find((email) =>
-              email.html.includes(submission.fineos_absence_id as string)
-            );
-            if (!email_match) {
-              throw new Error(
-                `No emails quiered match the Finoes Absence ID:
-                  timestamp_from: ${submission.timestamp_from} 
-                  fineos_absence_id: ${submission.fineos_absence_id}`
-              );
-            }
-            email.getNotificationData(email_match.html).then((data) => {
-              expect(data.applicationId).to.equal(submission.fineos_absence_id);
-            });
-          });
+          ).should("not.be.empty");
         });
       });
     });

@@ -54,9 +54,51 @@ describe("Employer dashboard", () => {
       new MockEmployerClaimBuilder().completed().create(),
       new MockEmployerClaimBuilder().completed().create(),
     ];
-    const { wrapper } = setup(claims);
+    const userAttrs = {
+      // Set multiple employers so the table shows all possible columns
+      user_leave_administrators: [
+        verifiedUserLeaveAdministrator,
+        verifiableUserLeaveAdministrator,
+      ],
+    };
+    const { wrapper } = setup(claims, userAttrs);
 
     expect(wrapper.find("ClaimTableRows").dive()).toMatchSnapshot();
+  });
+
+  it("does not render Employer DBA when user has only one Employer associated", () => {
+    const { wrapper: soloEmployerWrapper } = setup([], {
+      user_leave_administrators: [verifiedUserLeaveAdministrator],
+    });
+    const { wrapper: multipleEmployerWrapper } = setup([], {
+      user_leave_administrators: [
+        verifiedUserLeaveAdministrator,
+        verifiableUserLeaveAdministrator,
+      ],
+    });
+
+    expect(soloEmployerWrapper.find("ClaimTableRows").prop("tableColumnKeys"))
+      .toMatchInlineSnapshot(`
+      Array [
+        "employee_name",
+        "fineos_absence_id",
+        "employer_fein",
+        "created_at",
+        "status",
+      ]
+    `);
+    expect(
+      multipleEmployerWrapper.find("ClaimTableRows").prop("tableColumnKeys")
+    ).toMatchInlineSnapshot(`
+      Array [
+        "employee_name",
+        "fineos_absence_id",
+        "employer_dba",
+        "employer_fein",
+        "created_at",
+        "status",
+      ]
+    `);
   });
 
   it("renders a 'no results' message in the table if no claims are present", () => {

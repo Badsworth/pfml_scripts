@@ -72,7 +72,16 @@ def employer_add_fein() -> flask.Response:
         )
 
         if employer is None:
-            raise BadRequest(description="Invalid FEIN")
+            return response_util.error_response(
+                status_code=BadRequest,
+                message="Invalid FEIN",
+                errors=[
+                    response_util.custom_issue(
+                        type="invalid", message="Invalid FEIN", field="employer_fein",
+                    )
+                ],
+                data={},
+            ).to_api_response()
 
         verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
             feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
@@ -88,7 +97,7 @@ def employer_add_fein() -> flask.Response:
                         type="employer_verification_data_required",
                         message="Employer has no verification data",
                         rule="employer_requires_verification_data",
-                        field="ein",
+                        field="employer_fein",
                     )
                 ],
                 data={},

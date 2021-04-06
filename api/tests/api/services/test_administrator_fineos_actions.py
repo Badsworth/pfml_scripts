@@ -357,7 +357,7 @@ def test_get_claim_plan(mock_fineos_period_decisions, initialize_factories_sessi
     leave_details = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
-    assert leave_details.status == "Undecided"
+    assert leave_details.status == "Pending"
 
 
 @pytest.mark.integration

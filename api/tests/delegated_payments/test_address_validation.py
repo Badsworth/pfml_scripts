@@ -289,10 +289,15 @@ def test_run_step_state_transitions(
             db_session=test_db_session, log_entry_db_session=test_db_other_session
         ).run()
 
-    for employee in (
-        employees_with_validated_addresses + employees_with_single_verified_matching_addresses
-    ):
-        assert employee.experian_address_pair.experian_address is not None
+    for employee in employees_with_validated_addresses:
+        address_pair = employee.experian_address_pair
+        assert address_pair.experian_address is not None
+
+    # Expect to have received a newly formatted address in Experian /format response.
+    for employee in employees_with_single_verified_matching_addresses:
+        address_pair = employee.experian_address_pair
+        assert address_pair.experian_address is not None
+        assert address_pair.experian_address != address_pair.fineos_address
 
     # Expect employees with already valid addresses to transition into the
     # DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS state.
@@ -326,11 +331,15 @@ def test_run_step_state_transitions(
         employees_with_multiple_matching_addresses,
     )
 
-    for payment in (
-        check_payments_with_validated_addresses
-        + check_payments_with_single_verified_matching_addresses
-    ):
-        assert payment.claim.employee.experian_address_pair.experian_address is not None
+    for payment in check_payments_with_validated_addresses:
+        address_pair = payment.claim.employee.experian_address_pair
+        assert address_pair.experian_address is not None
+
+    # Expect to have received a newly formatted address in Experian /format response.
+    for payment in check_payments_with_single_verified_matching_addresses:
+        address_pair = payment.claim.employee.experian_address_pair
+        assert address_pair.experian_address is not None
+        assert address_pair.experian_address != address_pair.fineos_address
 
     # Expect payments with already valid addresses to transition into the
     # DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING state.

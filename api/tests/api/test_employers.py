@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import pytest
 
+import tests.api
 from massgov.pfml.db.models.employees import EmployerQuarterlyContribution, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory, EmployerQuarterlyContributionFactory
 from massgov.pfml.util import feature_gate
@@ -324,3 +325,19 @@ def test_employers_receive_402_for_zero_amount_contributions(
         headers={"Authorization": f"Bearer {employer_auth_token}"},
     )
     assert response.status_code == 402
+
+
+def test_employers_receive_400_if_invalid_fein(
+    monkeypatch, client, employer_user, employer_auth_token, test_db_session
+):
+
+    post_body = {"employer_fein": "fake_company"}
+
+    response = client.post(
+        "/v1/employers/add",
+        json=post_body,
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+
+    assert response.status_code == 400
+    tests.api.validate_error_response(response, 400, message="Invalid FEIN")

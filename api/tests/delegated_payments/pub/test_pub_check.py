@@ -19,6 +19,7 @@ from massgov.pfml.db.models.factories import (
     ExperianAddressPairFactory,
     PaymentFactory,
 )
+from massgov.pfml.delegated_payments.check_issue_file import CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile, EzCheckRecord
 from tests.factories import EzCheckFileFactory
 
@@ -66,7 +67,9 @@ def _random_payment_with_state_log(
 
 def test_create_check_file_no_eligible_payments(test_db_session):
     # Expect to return None when there are no payments to be added to a check file.
-    assert pub_check.create_check_file(test_db_session) is None
+    ez_check_file, positive_pay_file = pub_check.create_check_file(test_db_session)
+    assert ez_check_file is None
+    assert positive_pay_file is None
 
 
 def test_create_check_file_eligible_payment_error(
@@ -79,7 +82,9 @@ def test_create_check_file_eligible_payment_error(
 
     caplog.set_level(logging.ERROR)  # noqa: B1
 
-    assert pub_check.create_check_file(test_db_session) is None
+    ez_check_file, positive_pay_file = pub_check.create_check_file(test_db_session)
+    assert ez_check_file is None
+    assert positive_pay_file is None
 
     assert len(caplog.records) == 1
     error_message_pattern = r"ValidationReason\.FIELD_TOO_LONG.*ValidationReason\.INVALID_VALUE"
@@ -98,12 +103,13 @@ def test_create_check_file_success(
     for _i in range(fake.random_int(min=3, max=8)):
         payments.append(_random_valid_check_payment_with_state_log(test_db_session))
 
-    ez_check_file = pub_check.create_check_file(test_db_session)
+    ez_check_file, positive_pay_file = pub_check.create_check_file(test_db_session)
 
     # Explicitly commit the changes to the database since we expect the calling code to do it.
     test_db_session.commit()
 
     assert isinstance(ez_check_file, EzCheckFile)
+    assert isinstance(positive_pay_file, CheckIssueFile)
     assert len(ez_check_file.records) == len(payments)
 
     # Confirm that we updated the state log for each payment.

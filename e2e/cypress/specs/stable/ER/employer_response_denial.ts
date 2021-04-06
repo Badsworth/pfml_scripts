@@ -29,28 +29,17 @@ describe("Employer Responses", () => {
           {
             address: "gqzap.notifications@inbox.testmail.app",
             subject: `Action required: Respond to ${claim.claim.first_name} ${claim.claim.last_name}'s paid leave application`,
+            messageWildcard: response.fineos_absence_id,
             timestamp_from,
             debugInfo: { "Fineos Claim ID": response.fineos_absence_id },
           },
           { timeout: 180000 }
         ).then((emails) => {
-          expect(emails.length).to.be.greaterThan(0);
-          const email_match = emails.find((email) =>
-            email.html.includes(response.fineos_absence_id as string)
+          const data = email.getNotificationData(emails[0].html);
+          expect(data.applicationId).to.equal(response.fineos_absence_id);
+          expect(emails[0].html).to.contain(
+            `/employers/applications/new-application/?absence_id=${response.fineos_absence_id}`
           );
-          if (!email_match) {
-            throw new Error(
-              `No emails quiered match the Finoes Absence ID:
-                timestamp_from: ${timestamp_from} 
-                fineos_absence_id: ${response.fineos_absence_id}`
-            );
-          }
-          email.getNotificationData(email_match.html).then((data) => {
-            expect(data.applicationId).to.equal(response.fineos_absence_id);
-            expect(email_match.html).to.contain(
-              `/employers/applications/new-application/?absence_id=${response.fineos_absence_id}`
-            );
-          });
         });
 
         // Access and fill out ER form

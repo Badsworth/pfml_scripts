@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import os
-import pathlib
 import re
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 import boto3
 from botocore.exceptions import ClientError
@@ -13,6 +14,9 @@ from pydantic import BaseModel, validator
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
 from massgov.pfml.util.files import read_file
+
+if TYPE_CHECKING:
+    from _typeshed import AnyPath
 
 logger = logging.get_logger(__name__)
 
@@ -64,7 +68,7 @@ def send_email(
     body_text: str,
     sender: str,
     bounce_forwarding_email_address_arn: str,
-    attachments: Optional[List[pathlib.Path]] = None,
+    attachments: Optional[List[AnyPath]] = None,
 ) -> Dict:
     """
     attachments is a list containing the full-paths to the file that will be attached to the email.
@@ -114,7 +118,7 @@ def send_email(
         raise RuntimeError("Error sending email: %s", error_message)
 
 
-def create_email_attachments(msg_container: MIMEMultipart, attachments: List[pathlib.Path]) -> None:
+def create_email_attachments(msg_container: MIMEMultipart, attachments: List[AnyPath]) -> None:
     for attachment in attachments:
         att = MIMEApplication(read_file(attachment, mode="rb"))
         att.add_header("Content-Disposition", "attachment", filename=os.path.basename(attachment))
