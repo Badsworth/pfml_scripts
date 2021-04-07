@@ -29,7 +29,7 @@ export const ConvertToEmployer = (props) => {
   }
 
   // Do not allow conversion if user has created claims and got sent to fineos
-  if(claims.items.find(c => c.fineos_absence_id.includes("NTN"))) {
+  if(claims.items.find(c => c.fineos_absence_id !== null)) {
     appLogic.portalFlow.goTo(routes.applications.getReady);
   }
 
@@ -105,6 +105,7 @@ ConvertToEmployer.propTypes = {
     }),
     appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
   }).isRequired,
+  claims: PropTypes.instanceOf(ClaimCollection).isRequired,
   user: PropTypes.instanceOf(User).isRequired,
 };
 
