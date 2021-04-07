@@ -1,0 +1,31 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="API server" type="PythonConfigurationType" factoryName="Python">
+    <module name="pfml" />
+    <option name="INTERPRETER_OPTIONS" value="" />
+    <option name="PARENT_ENVS" value="true" />
+    <envs>
+      <env name="PYTHONUNBUFFERED" value="1" />
+      <env name="CORS_ORIGINS" value="https://pfml.navateam.com,https://pfml-sandbox-v2.navateam.com/" />
+      <env name="DB_URL" value="localhost" />
+      <env name="ENVIRONMENT" value="local" />
+      <env name="DB_NAME" value="pfml" />
+      <env name="DB_USERNAME" value="pfml" />
+      <env name="DB_PASSWORD" value="secret123" />
+      <env name="DB_SSL_OPTIONAL_DEVELOPMENT_ONLY" value="1" />
+      <env name="COGNITO_USER_POOL_KEYS_URL" value="file://$PROJECT_DIR$/api/jwks.json" />
+    </envs>
+    <option name="SDK_HOME" value="$USER_HOME$/.cache/pypoetry/virtualenvs/massgov.pfml.api-cRt58js_-py3.8/bin/python" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/api" />
+    <option name="IS_MODULE_SDK" value="false" />
+    <option name="ADD_CONTENT_ROOTS" value="true" />
+    <option name="ADD_SOURCE_ROOTS" value="true" />
+    <option name="SCRIPT_NAME" value="massgov.pfml.api.__main__" />
+    <option name="PARAMETERS" value="" />
+    <option name="SHOW_COMMAND_LINE" value="false" />
+    <option name="EMULATE_TERMINAL" value="false" />
+    <option name="MODULE_MODE" value="true" />
+    <option name="REDIRECT_INPUT" value="false" />
+    <option name="INPUT_FILE" value="" />
+    <method v="2" />
+  </configuration>
+</component>
