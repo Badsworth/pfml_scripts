@@ -13,6 +13,15 @@
         "PlatformVersion": "1.4.0",
         "Cluster": "${cluster_arn}",
         "TaskDefinition": "pfml-api-${environment_name}-fineos-import-employee-updates",
+        "Overrides": {
+          "ContainerOverrides": [
+            {
+              "Environment": [
+                { "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id" }
+              ]
+            }
+          ]
+        },
         "NetworkConfiguration": {
           "AwsvpcConfiguration": {
             "SecurityGroups": ["${security_group}"],
@@ -58,7 +67,8 @@
             {
               "Name": "dor-import",
               "Environment": [
-                { "Name": "DECRYPT", "Value": "false" }
+                { "Name": "DECRYPT", "Value": "false" },
+                { "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id" }
               ]
             }
           ]
@@ -130,7 +140,8 @@
                   {
                     "Name": "load-employers-to-fineos",
                     "Environment": [
-                      { "Name": "EMPLOYER_LOAD_MODE", "Value": "updates" }
+                      { "Name": "EMPLOYER_LOAD_MODE", "Value": "updates" },
+                      { "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id" }
                     ],
                     "Command.$": "$"
                   }
@@ -187,7 +198,8 @@
               "Environment": [
                 { "Name": "ELIGIBILITY_FEED_MODE", "Value": "updates" },
                 { "Name": "ELIGIBILITY_FEED_UPDATE_BATCH_SIZE", "Value": "50000" },
-                { "Name": "ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT", "Value": "20000" }
+                { "Name": "ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT", "Value": "20000" },
+                { "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id" }
               ]
             }
           ]

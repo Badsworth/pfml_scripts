@@ -34,7 +34,8 @@
     "secrets": [
       { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
       { "name": "GPG_DECRYPTION_KEY", "valueFrom": "/service/${app_name}-dor-import/${environment_name}/gpg_decryption_key" },
-      { "name": "GPG_DECRYPTION_KEY_PASSPHRASE", "valueFrom": "/service/${app_name}-dor-import/${environment_name}/gpg_decryption_key_passphrase" }
+      { "name": "GPG_DECRYPTION_KEY_PASSPHRASE", "valueFrom": "/service/${app_name}-dor-import/${environment_name}/gpg_decryption_key_passphrase" },
+      { "name": "NR_INSERT_API_KEY", "valueFrom": "/admin/pfml-api/newrelic-insert-api-key" }
     ]
   }
 ]

@@ -70,7 +70,8 @@
             {
               "Name": "dor-import",
               "Environment": [
-                { "Name": "DECRYPT", "Value": "false" }
+                { "Name": "DECRYPT", "Value": "false" },
+                { "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id" }
               ]
             }
           ]
@@ -142,7 +143,8 @@
                   {
                     "Name": "load-employers-to-fineos",
                     "Environment": [
-                      { "Name": "EMPLOYER_LOAD_MODE", "Value": "updates" }
+                      { "Name": "EMPLOYER_LOAD_MODE", "Value": "updates" },
+                      { "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id" }
                     ],
                     "Command.$": "$"
                   }
@@ -198,7 +200,8 @@
               "Name": "fineos-eligibility-feed-export",
               "Environment": [
                 { "Name": "ELIGIBILITY_FEED_MODE", "Value": "updates" },
-                { "Name": "ELIGIBILITY_FEED_UPDATE_BATCH_SIZE", "Value": "50000" }
+                { "Name": "ELIGIBILITY_FEED_UPDATE_BATCH_SIZE", "Value": "50000" },
+                { "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id" }
               ]
             }
           ]

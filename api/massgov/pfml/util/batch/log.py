@@ -9,13 +9,14 @@ from dataclasses import asdict
 
 import massgov.pfml.util.datetime
 import massgov.pfml.util.logging
+import massgov.pfml.util.newrelic.events
 from massgov.pfml.db.models.employees import ImportLog
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def create_log_entry(db_session, source, import_type, report=None):
-    """Creating a a report log entry in the database"""
+    """Creating a report log entry in the database"""
     import_log = ImportLog(
         source=source,
         import_type=import_type,
@@ -34,13 +35,24 @@ def create_log_entry(db_session, source, import_type, report=None):
 
 
 def update_log_entry(db_session, existing_import_log, status, report):
-    """Update an existing import log entry with the supplied report"""
+    """Update an existing import log entry with the supplied report, and send that entry as event data to New Relic"""
     existing_import_log.status = status
     existing_import_log.report = json.dumps(asdict(report), indent=2)
     existing_import_log.end = massgov.pfml.util.datetime.utcnow()
+
     db_session.merge(existing_import_log)
     db_session.commit()
     logger.info("Finished saving import report in log")
+
+    report_with_metadata = asdict(report)
+    report_with_metadata.update(
+        {
+            "job.id": existing_import_log.import_log_id,
+            "job.data_source": existing_import_log.source,
+            "job.job_type": existing_import_log.import_type,
+        }
+    )
+    massgov.pfml.util.newrelic.events.log_newrelic_event(report_with_metadata)
 
 
 METRIC_COMMIT_INTERVAL = 5  # Seconds between writes to import_log.
@@ -144,6 +156,16 @@ def log_entry(db_session, source, import_type):
     finally:
         import_log.end = massgov.pfml.util.datetime.utcnow()
         db_session.commit()
+
+        report_with_metadata = json.loads(import_log.report)
+        report_with_metadata.update(
+            {
+                "job.id": import_log.import_log_id,
+                "job.data_source": import_log.source,
+                "job.job_type": import_log.import_type,
+            }
+        )
+        massgov.pfml.util.newrelic.events.log_newrelic_event(report_with_metadata)
 
 
 def set_import_log_with_error_message(import_log: ImportLog, error_message: str) -> None:

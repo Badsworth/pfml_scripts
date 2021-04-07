@@ -252,8 +252,8 @@ class EligibilityFeedRecord(NoneMeansDefault):
 
 @dataclass
 class EligibilityFeedExportReport:
-    started_at: str
-    completed_at: Optional[str] = None
+    start: str
+    end: Optional[str] = None
     employers_total_count: int = 0
     employers_success_count: int = 0
     employers_skipped_count: int = 0
@@ -398,7 +398,7 @@ def process_employee_updates(
     batch_size: int = 1000,
     export_file_number_limit: Optional[int] = None,
 ) -> EligibilityFeedExportReport:
-    report = EligibilityFeedExportReport(started_at=utcnow().isoformat())
+    report = EligibilityFeedExportReport(start=utcnow().isoformat())
 
     logger.info(
         "Starting eligibility feeds generation for employee updates.",
@@ -463,7 +463,7 @@ def process_employee_updates(
     if report.employers_total_count == 0:
         logger.info("Eligibility Feed: No updates found to process.")
 
-    report.completed_at = utcnow().isoformat()
+    report.end = utcnow().isoformat()
 
     return report
 
@@ -656,7 +656,7 @@ def process_all_employers(
     db_session = make_db_session()
 
     start_time = utcnow()
-    report = EligibilityFeedExportReport(started_at=start_time.isoformat())
+    report = EligibilityFeedExportReport(start=start_time.isoformat())
 
     logger.info("Starting eligibility feeds generation for all employers")
 
@@ -730,7 +730,7 @@ def process_all_employers(
     db_session.close()
 
     end_time = utcnow()
-    report.completed_at = end_time.isoformat()
+    report.end = end_time.isoformat()
 
     return report
 
