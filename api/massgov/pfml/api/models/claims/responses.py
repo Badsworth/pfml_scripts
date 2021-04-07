@@ -47,6 +47,7 @@ class ClaimResponse(PydanticBaseModel):
     absence_period_end_date: Optional[date]
     fineos_absence_status: Optional[FineosAbsenceStatusResponse]
     claim_type: Optional[ClaimTypeResponse]
+    created_at: Optional[date]
 
 
 class ClaimReviewResponse(PydanticBaseModel):
