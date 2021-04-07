@@ -14,12 +14,13 @@ from massgov.pfml.api.services.user_rules import (
     get_users_post_required_fields_issues,
 )
 from massgov.pfml.api.util.deepgetattr import deepgetattr
+from massgov.pfml.api.util.response import Issue, IssueType
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
 from massgov.pfml.util.aws.cognito import CognitoValidationError
-from massgov.pfml.api.util.response import Issue, IssueType
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein
 from massgov.pfml.util.users import register_user
+
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
@@ -128,8 +129,7 @@ def users_patch(user_id):
         employer_fein = deepgetattr(body, "user_leave_administrator.employer_fein")
 
         if role_description:
-            existing_roles = [role.role_description for role in
-                              updated_user.roles]
+            existing_roles = [role.role_description for role in updated_user.roles]
             if Role.EMPLOYER.role_description not in existing_roles:
                 user_role = UserRole(user=updated_user, role_id=Role.EMPLOYER.role_id)
                 db_session.add(user_role)
@@ -137,7 +137,9 @@ def users_patch(user_id):
                 db_session.refresh(updated_user)
 
         if employer_fein:
-            employer_feins = [ula.employer.employer_fein for ula in updated_user.user_leave_administrators]
+            employer_feins = [
+                ula.employer.employer_fein for ula in updated_user.user_leave_administrators
+            ]
             if employer_fein not in employer_feins:
                 employer = (
                     db_session.query(Employer)
@@ -149,11 +151,13 @@ def users_patch(user_id):
                 # get_users_post_employer_issues() later.
                 employer_issues = []  # employer_issues = get_users_post_employer_issues(employer)
                 if employer is None:
-                    employer_issues.append(Issue(
-                        field="user_leave_administrator.employer_fein",
-                        message="Invalid EIN",
-                        type=IssueType.require_employer,
-                    ))
+                    employer_issues.append(
+                        Issue(
+                            field="user_leave_administrator.employer_fein",
+                            message="Invalid EIN",
+                            type=IssueType.require_employer,
+                        )
+                    )
                 if employer_issues:
                     logger.info("users_post failure - Employer not valid")
                     return response_util.error_response(

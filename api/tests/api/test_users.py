@@ -376,8 +376,8 @@ def test_users_patch(client, user, auth_token, test_db_session):
 def test_users_patch_employer(client, user, employer_for_new_user, auth_token, test_db_session):
     ein = employer_for_new_user.employer_fein
     body = {
-        "role": {"role_description":"Employer"},
-        "user_leave_administrator": {"employer_fein": "-".join([ein[:2], ein[2:9]])}
+        "role": {"role_description": "Employer"},
+        "user_leave_administrator": {"employer_fein": "-".join([ein[:2], ein[2:9]])},
     }
     response = client.patch(
         "v1/users/{}".format(user.user_id),
@@ -396,10 +396,7 @@ def test_users_patch_employer(client, user, employer_for_new_user, auth_token, t
         }
     ]
     assert response_body.get("data")["roles"] == [
-        {
-            "role_description": "Employer",
-            "role_id": Role.EMPLOYER.role_id,
-        }
+        {"role_description": "Employer", "role_id": Role.EMPLOYER.role_id,}
     ]
 
     test_db_session.refresh(user)
