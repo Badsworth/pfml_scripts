@@ -8,7 +8,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
-from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse, RoleResponse
+from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
 from massgov.pfml.api.services.user_rules import (
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
@@ -16,6 +16,7 @@ from massgov.pfml.api.services.user_rules import (
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
 from massgov.pfml.util.aws.cognito import CognitoValidationError
+from massgov.pfml.api.util.response import Issue, IssueType
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.strings import mask_fein
 from massgov.pfml.util.users import register_user
@@ -132,6 +133,8 @@ def users_patch(user_id):
             if Role.EMPLOYER.role_description not in existing_roles:
                 user_role = UserRole(user=updated_user, role_id=Role.EMPLOYER.role_id)
                 db_session.add(user_role)
+                db_session.commit()
+                db_session.refresh(updated_user)
 
         if employer_fein:
             employer_feins = [ula.employer.employer_fein for ula in updated_user.user_leave_administrators]
@@ -141,8 +144,16 @@ def users_patch(user_id):
                     .filter(Employer.employer_fein == employer_fein.replace("-", "", 10))
                     .one_or_none()
                 )
-                # TODO why is this returning a fineos error?
-                employer_issues = None  # employer_issues = get_users_post_employer_issues(employer)
+                # TODO why is this returning a fineos error? Validate that
+                # the employer exists for now. Change to
+                # get_users_post_employer_issues() later.
+                employer_issues = []  # employer_issues = get_users_post_employer_issues(employer)
+                if employer is None:
+                    employer_issues.append(Issue(
+                        field="user_leave_administrator.employer_fein",
+                        message="Invalid EIN",
+                        type=IssueType.require_employer,
+                    ))
                 if employer_issues:
                     logger.info("users_post failure - Employer not valid")
                     return response_util.error_response(
@@ -155,6 +166,8 @@ def users_patch(user_id):
                     user=updated_user, employer=employer, fineos_web_id=None,
                 )
                 db_session.add(user_leave_admin)
+                db_session.commit()
+                db_session.refresh(updated_user)
 
         ensure(EDIT, updated_user)
         for key in body.__fields_set__:

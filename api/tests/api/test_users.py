@@ -373,6 +373,42 @@ def test_users_patch(client, user, auth_token, test_db_session):
     assert user.consented_to_data_sharing is True
 
 
+def test_users_patch_employer(client, user, employer_for_new_user, auth_token, test_db_session):
+    ein = employer_for_new_user.employer_fein
+    body = {
+        "role": {"role_description":"Employer"},
+        "user_leave_administrator": {"employer_fein": "-".join([ein[:2], ein[2:9]])}
+    }
+    response = client.patch(
+        "v1/users/{}".format(user.user_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=body,
+    )
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data")["user_leave_administrators"] == [
+        {
+            "employer_dba": employer_for_new_user.employer_dba,
+            "employer_fein": f"**-***{employer_for_new_user.employer_fein[5:]}",
+            "employer_id": str(employer_for_new_user.employer_id),
+            "verified": False,
+            "has_verification_data": False,
+        }
+    ]
+    assert response_body.get("data")["roles"] == [
+        {
+            "role_description": "Employer",
+            "role_id": Role.EMPLOYER.role_id,
+        }
+    ]
+
+    test_db_session.refresh(user)
+    assert len(user.roles) == 1
+    assert user.roles[0].role_id == Role.EMPLOYER.role_id
+    assert len(user.user_leave_administrators) == 1
+    assert user.user_leave_administrators[0].employer_id == employer_for_new_user.employer_id
+
+
 def test_users_unauthorized_patch(client, user, auth_token, test_db_session):
     user_2 = UserFactory.create()
 
