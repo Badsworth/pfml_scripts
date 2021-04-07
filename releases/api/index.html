@@ -650,12 +650,12 @@
 <tbody>
 <tr>
 <td>test</td>
-<td><a href="https://github.com/EOLWD/pfml/commits/e439fd9b8">e439fd9b8</a> (<a href="https://github.com/EOLWD/pfml/compare/api/v1.19.0...e439fd9b8">49 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.19.0">api/v1.19.0</a>)</td>
+<td><a href="https://github.com/EOLWD/pfml/commits/e439fd9b8">e439fd9b8</a> (<a href="https://github.com/EOLWD/pfml/compare/api/v1.20.0-rc1...e439fd9b8">4 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.20.0-rc1">api/v1.20.0-rc1</a>)</td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(test)">GitHub</a></td>
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.19.0">api/v1.19.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v1.20.0-rc1">api/v1.20.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -681,65 +681,13 @@
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (EMPLOYER-1006,PUB-130,API-1555,EMPLOYER-1005,API-1493,INFRA-345,INFRA-375,PUB-130,PUB-135,INFRA-208,EMPLOYER-762,API-1493,PUB-145,PUB-139,PUB-148,PUB-144,INFRA-330,API-1543,PUB-134,PUB-142,EMPLOYER-1109,EMPLOYER-1106,API-1493,PUB-121,PUB-131,INFRA-324)">Jira List</a>):</p>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (EMPLOYER-1006)">Jira List</a>):</p>
 <ul>
-<li><a href="https://lwd.atlassian.net/browse/PUB-148">PUB-148</a>: Leave type needs to be set for claims in payment extract (<a href="https://github.com/EOLWD/pfml/pull/3672">#3672</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-145">PUB-145</a>: Treat near match in Experian response with multiple matches as valid address (<a href="https://github.com/EOLWD/pfml/pull/3676">#3676</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-144">PUB-144</a>: Replace rejects report with SQL based report. (<a href="https://github.com/EOLWD/pfml/pull/3651">#3651</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-142">PUB-142</a>: Format Experian address verified matches (<a href="https://github.com/EOLWD/pfml/pull/3656">#3656</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-139">PUB-139</a>: Add import_log_id to state_log (<a href="https://github.com/EOLWD/pfml/pull/3668">#3668</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-135">PUB-135</a>: update pub eft after 7 days (<a href="https://github.com/EOLWD/pfml/pull/3641">#3641</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-134">PUB-134</a>: Format and send positive pay file for checks (<a href="https://github.com/EOLWD/pfml/pull/3644">#3644</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-131">PUB-131</a>: Split NACHA by leave type into batches (<a href="https://github.com/EOLWD/pfml/pull/3607">#3607</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-130">PUB-130</a>: Revert removal of employee.experian_address_pair_id (<a href="https://github.com/EOLWD/pfml/pull/3688">#3688</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-130">PUB-130</a>: Addresses live exclusively on the payment (<a href="https://github.com/EOLWD/pfml/pull/3638">#3638</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PUB-121">PUB-121</a>: Add missing migrations for check and experian address model constraints. (<a href="https://github.com/EOLWD/pfml/pull/3640">#3640</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-375">INFRA-375</a>: Set global terraform lock timeout for api deployment (<a href="https://github.com/EOLWD/pfml/pull/3658">#3658</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-345">INFRA-345</a>: (2/2): Add breakfix API Gateway (<a href="https://github.com/EOLWD/pfml/pull/3622">#3622</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-330">INFRA-330</a>: added retry block for test (<a href="https://github.com/EOLWD/pfml/pull/3558">#3558</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-324">INFRA-324</a>: Alert Slack when Auto-deploys to Test Fail (<a href="https://github.com/EOLWD/pfml/pull/3586">#3586</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-208">INFRA-208</a>: Record DOR/FINEOS ETL reports as New Relic events (<a href="https://github.com/EOLWD/pfml/pull/3553">#3553</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-762">EMPLOYER-762</a>: Add "Unknown" as a valid enum value for info request in OpenAPI spec</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1109">EMPLOYER-1109</a>: Remove logic to return adjudication status (<a href="https://github.com/EOLWD/pfml/pull/3645">#3645</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1106">EMPLOYER-1106</a>: Return custom issue for invalid FEIN (<a href="https://github.com/EOLWD/pfml/pull/3634">#3634</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1006">EMPLOYER-1006</a>: Erroring if file is missing FEIN or email for a row (<a href="https://github.com/EOLWD/pfml/pull/3650">#3650</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/EMPLOYER-1005">EMPLOYER-1005</a>: Fix for different encodings (<a href="https://github.com/EOLWD/pfml/pull/3653">#3653</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1555">API-1555</a>: Add fineos customer number and event type to Payment Voucher (<a href="https://github.com/EOLWD/pfml/pull/3683">#3683</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1543">API-1543</a>: Enable typechecking reductions code (<a href="https://github.com/EOLWD/pfml/pull/3608">#3608</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1493">API-1493</a>: (3/3): Include all payments from PEI file in the Payment Voucher file (<a href="https://github.com/EOLWD/pfml/pull/3681">#3681</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1493">API-1493</a>: (2/3): Refactor payment voucher tests (<a href="https://github.com/EOLWD/pfml/pull/3631">#3631</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1493">API-1493</a>: (1/?): Archive e2e payments tests (<a href="https://github.com/EOLWD/pfml/pull/3630">#3630</a>)</li>
-<li>Change file extension to TXT (<a href="https://github.com/EOLWD/pfml/pull/3675">#3675</a>)</li>
 </ul>
 <details>
 <summary>Raw</summary>
- <br>* [PUB-148](https://lwd.atlassian.net/browse/PUB-148): Leave type needs to be set for claims in payment extract ([#3672](https://github.com/EOLWD/pfml/pull/3672))
- <br>* [PUB-145](https://lwd.atlassian.net/browse/PUB-145): Treat near match in Experian response with multiple matches as valid address ([#3676](https://github.com/EOLWD/pfml/pull/3676))
- <br>* [PUB-144](https://lwd.atlassian.net/browse/PUB-144): Replace rejects report with SQL based report. ([#3651](https://github.com/EOLWD/pfml/pull/3651))
- <br>* [PUB-142](https://lwd.atlassian.net/browse/PUB-142): Format Experian address verified matches ([#3656](https://github.com/EOLWD/pfml/pull/3656))
- <br>* [PUB-139](https://lwd.atlassian.net/browse/PUB-139): Add import_log_id to state_log ([#3668](https://github.com/EOLWD/pfml/pull/3668))
- <br>* [PUB-135](https://lwd.atlassian.net/browse/PUB-135): update pub eft after 7 days ([#3641](https://github.com/EOLWD/pfml/pull/3641))
- <br>* [PUB-134](https://lwd.atlassian.net/browse/PUB-134): Format and send positive pay file for checks ([#3644](https://github.com/EOLWD/pfml/pull/3644))
- <br>* [PUB-131](https://lwd.atlassian.net/browse/PUB-131): Split NACHA by leave type into batches ([#3607](https://github.com/EOLWD/pfml/pull/3607))
- <br>* [PUB-130](https://lwd.atlassian.net/browse/PUB-130): Revert removal of employee.experian_address_pair_id ([#3688](https://github.com/EOLWD/pfml/pull/3688))
- <br>* [PUB-130](https://lwd.atlassian.net/browse/PUB-130): Addresses live exclusively on the payment ([#3638](https://github.com/EOLWD/pfml/pull/3638))
- <br>* [PUB-121](https://lwd.atlassian.net/browse/PUB-121): Add missing migrations for check and experian address model constraints. ([#3640](https://github.com/EOLWD/pfml/pull/3640))
- <br>* [INFRA-375](https://lwd.atlassian.net/browse/INFRA-375): Set global terraform lock timeout for api deployment ([#3658](https://github.com/EOLWD/pfml/pull/3658))
- <br>* [INFRA-345](https://lwd.atlassian.net/browse/INFRA-345): (2/2): Add breakfix API Gateway ([#3622](https://github.com/EOLWD/pfml/pull/3622))
- <br>* [INFRA-330](https://lwd.atlassian.net/browse/INFRA-330): added retry block for test ([#3558](https://github.com/EOLWD/pfml/pull/3558))
- <br>* [INFRA-324](https://lwd.atlassian.net/browse/INFRA-324): Alert Slack when Auto-deploys to Test Fail ([#3586](https://github.com/EOLWD/pfml/pull/3586))
- <br>* [INFRA-208](https://lwd.atlassian.net/browse/INFRA-208): Record DOR/FINEOS ETL reports as New Relic events ([#3553](https://github.com/EOLWD/pfml/pull/3553))
- <br>* [EMPLOYER-762](https://lwd.atlassian.net/browse/EMPLOYER-762): Add "Unknown" as a valid enum value for info request in OpenAPI spec
- <br>* [EMPLOYER-1109](https://lwd.atlassian.net/browse/EMPLOYER-1109): Remove logic to return adjudication status ([#3645](https://github.com/EOLWD/pfml/pull/3645))
- <br>* [EMPLOYER-1106](https://lwd.atlassian.net/browse/EMPLOYER-1106): Return custom issue for invalid FEIN ([#3634](https://github.com/EOLWD/pfml/pull/3634))
  <br>* [EMPLOYER-1006](https://lwd.atlassian.net/browse/EMPLOYER-1006): Erroring if file is missing FEIN or email for a row ([#3650](https://github.com/EOLWD/pfml/pull/3650))
- <br>* [EMPLOYER-1005](https://lwd.atlassian.net/browse/EMPLOYER-1005): Fix for different encodings ([#3653](https://github.com/EOLWD/pfml/pull/3653))
- <br>* [API-1555](https://lwd.atlassian.net/browse/API-1555): Add fineos customer number and event type to Payment Voucher ([#3683](https://github.com/EOLWD/pfml/pull/3683))
- <br>* [API-1543](https://lwd.atlassian.net/browse/API-1543): Enable typechecking reductions code ([#3608](https://github.com/EOLWD/pfml/pull/3608))
- <br>* [API-1493](https://lwd.atlassian.net/browse/API-1493): (3/3): Include all payments from PEI file in the Payment Voucher file ([#3681](https://github.com/EOLWD/pfml/pull/3681))
- <br>* [API-1493](https://lwd.atlassian.net/browse/API-1493): (2/3): Refactor payment voucher tests ([#3631](https://github.com/EOLWD/pfml/pull/3631))
- <br>* [API-1493](https://lwd.atlassian.net/browse/API-1493): (1/?): Archive e2e payments tests ([#3630](https://github.com/EOLWD/pfml/pull/3630))
- <br>* Change file extension to TXT ([#3675](https://github.com/EOLWD/pfml/pull/3675))
 </details>
                 
               
