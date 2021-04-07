@@ -6,7 +6,6 @@ import {
   testHook,
 } from "../../test-utils";
 import ClaimCollection from "../../../src/models/ClaimCollection";
-import TempFile from "../../../src/models/TempFile";
 import UploadId from "../../../src/pages/applications/upload-id";
 import { ValidationError } from "../../../src/errors";
 import { act } from "react-dom/test-utils";
@@ -18,9 +17,6 @@ jest.mock("../../../src/services/tracker");
 
 // Dive more levels to account for withClaimDocuments HOC
 const diveLevels = 4;
-
-const makeTempFile = (fileAttrs = {}) =>
-  new TempFile({ file: makeFile(fileAttrs) });
 
 describe("UploadId", () => {
   let appLogic, claim, wrapper;
@@ -113,37 +109,34 @@ describe("UploadId", () => {
       });
 
       describe("when the user uploads files", () => {
-        it("renders filecards for the files", () => {
+        it("renders filecards for the files", async () => {
           render();
-          const tempFiles = [makeTempFile(), makeTempFile(), makeTempFile()];
+          const tempFiles = [makeFile(), makeFile(), makeFile()];
 
-          act(() => {
-            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
+          await act(async () => {
+            await wrapper.find("FileCardList").simulate("change", tempFiles);
           });
 
           expect(wrapper).toMatchSnapshot();
         });
 
-        it("clears errors", () => {
+        it("clears errors", async () => {
           render();
-          const tempFiles = [makeTempFile(), makeTempFile(), makeTempFile()];
-          act(() => {
-            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
+          const tempFiles = [makeFile(), makeFile(), makeFile()];
+          await act(async () => {
+            await wrapper.find("FileCardList").simulate("change", tempFiles);
           });
 
           expect(appLogic.clearErrors).toHaveBeenCalledTimes(1);
         });
 
-        it("catches invalid files", () => {
+        it("catches invalid files", async () => {
           render();
-
-          act(() => {
-            wrapper
-              .find("FileCardList")
-              .simulate(
-                "invalidFilesError",
-                new ValidationError([{ message: "Validation message." }])
-              );
+          const invalidFiles = [
+            makeFile({ name: "file1", type: "image/heic" }),
+          ];
+          await act(async () => {
+            await wrapper.find("FileCardList").simulate("change", invalidFiles);
           });
 
           const error = appLogic.catchError.mock.calls[0][0];
@@ -151,7 +144,7 @@ describe("UploadId", () => {
           expect(error.issues).toMatchInlineSnapshot(`
             Array [
               Object {
-                "message": "Validation message.",
+                "message": "We could not upload: file1. Choose a PDF or an image file (.jpg, .jpeg, .png).",
               },
             ]
           `);
@@ -163,12 +156,12 @@ describe("UploadId", () => {
 
           // Add files to the page state
           const tempFiles = [
-            makeTempFile({ name: "file1" }),
-            makeTempFile({ name: "file2" }),
+            makeFile({ name: "file1" }),
+            makeFile({ name: "file2" }),
           ];
 
-          act(() => {
-            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
+          await act(async () => {
+            await wrapper.find("FileCardList").simulate("change", tempFiles);
           });
 
           await act(async () => {
@@ -185,10 +178,13 @@ describe("UploadId", () => {
 
         it("navigates the user to the next page if there are no errors", async () => {
           render();
-          const tempFiles = [makeTempFile(), makeTempFile(), makeTempFile()];
+          const tempFiles = [makeFile(), makeFile(), makeFile()];
 
           await act(async () => {
-            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
+            await wrapper.find("FileCardList").simulate("change", tempFiles);
+          });
+
+          await act(async () => {
             await wrapper.find("QuestionPage").simulate("save");
           });
 
@@ -202,9 +198,13 @@ describe("UploadId", () => {
               Promise.resolve({ success: false }),
             ]);
           render();
-          const tempFiles = [makeTempFile()];
+          const tempFiles = [makeFile()];
+
           await act(async () => {
-            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
+            await wrapper.find("FileCardList").simulate("change", tempFiles);
+          });
+
+          await act(async () => {
             await wrapper.find("QuestionPage").simulate("save");
           });
 
@@ -229,13 +229,13 @@ describe("UploadId", () => {
           render();
 
           const tempFiles = [
-            makeTempFile({ name: "File1" }),
-            makeTempFile({ name: "File2" }),
-            makeTempFile({ name: "File3" }),
+            makeFile({ name: "File1" }),
+            makeFile({ name: "File2" }),
+            makeFile({ name: "File3" }),
           ];
 
-          act(() => {
-            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
+          await act(async () => {
+            await wrapper.find("FileCardList").simulate("change", tempFiles);
           });
 
           let removableFileCards = wrapper
@@ -320,13 +320,13 @@ describe("UploadId", () => {
           render();
 
           const tempFiles = [
-            makeTempFile({ name: "File1" }),
-            makeTempFile({ name: "File2" }),
-            makeTempFile({ name: "File3" }),
+            makeFile({ name: "File1" }),
+            makeFile({ name: "File2" }),
+            makeFile({ name: "File3" }),
           ];
 
-          act(() => {
-            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
+          await act(async () => {
+            await wrapper.find("FileCardList").simulate("change", tempFiles);
           });
 
           let removableFileCards = wrapper
@@ -393,9 +393,9 @@ describe("UploadId", () => {
         appLogic.claims.claims = new ClaimCollection([claim]);
         render();
         // Add files to the page state
-        const tempFiles = [makeTempFile(), makeTempFile()];
-        act(() => {
-          wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
+        const tempFiles = [makeFile(), makeFile()];
+        await act(async () => {
+          await wrapper.find("FileCardList").simulate("change", tempFiles);
         });
 
         await act(async () => {
@@ -442,11 +442,15 @@ describe("UploadId", () => {
 
           // Add files to the page state
           const tempFiles = [
-            makeTempFile({ name: "file1" }),
-            makeTempFile({ name: "file2" }),
+            makeFile({ name: "file1" }),
+            makeFile({ name: "file2" }),
           ];
+
           await act(async () => {
-            wrapper.find("FileCardList").simulate("addTempFiles", tempFiles);
+            await wrapper.find("FileCardList").simulate("change", tempFiles);
+          });
+
+          await act(async () => {
             await wrapper.find("QuestionPage").simulate("save");
           });
 

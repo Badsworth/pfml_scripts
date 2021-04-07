@@ -222,7 +222,9 @@ def test_format_check_memo_success(initialize_factories_session, test_db_session
 
 
 def test_format_check_memo_failure(initialize_factories_session, test_db_session):
-    payment_without_dates = PaymentFactory()
+    payment_without_dates = PaymentFactory(
+        period_start_date=None, period_end_date=None, payment_date=None
+    )
 
     with pytest.raises(AttributeError):
         pub_check._format_check_memo(payment_without_dates)

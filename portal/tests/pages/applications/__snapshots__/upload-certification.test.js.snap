@@ -15,19 +15,10 @@ exports[`UploadCertification after documents have been loaded when leave reason 
 <FileCardList
   addAnotherFileButtonText="Choose another file"
   addFirstFileButtonText="Choose files"
-  allowedFileTypes={
-    Array [
-      "image/png",
-      "image/jpeg",
-      "application/pdf",
-    ]
-  }
   documents={Array []}
   fileErrors={Array []}
   fileHeadingPrefix="File"
-  maximumFileSize={4500000}
-  onAddTempFiles={[Function]}
-  onInvalidFilesError={[MockFunction]}
+  onChange={[Function]}
   onRemoveTempFile={[Function]}
   tempFiles={
     TempFileCollection {

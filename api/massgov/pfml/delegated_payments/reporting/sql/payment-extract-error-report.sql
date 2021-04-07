@@ -10,9 +10,9 @@ SELECT P.PAYMENT_ID "Payment ID",
        P.FINEOS_PEI_C_VALUE "C", 
        P.FINEOS_PEI_I_VALUE "I", 
        P.FINEOS_EXTRACTION_DATE "Fineos Extraction Date", 
-       SL.OUTCOME->>'message',-- "Error Message",
-       json_array_elements(SL.OUTCOME->'validation_container'->'validation_issues')->>'reason',-- "Reason",
-       json_array_elements(SL.OUTCOME->'validation_container'->'validation_issues')->>'details'-- "Details"
+       SL.OUTCOME->>'message' "Error Message",
+       json_array_elements(SL.OUTCOME->'validation_container'->'validation_issues')->>'reason' "Reason",
+       json_array_elements(SL.OUTCOME->'validation_container'->'validation_issues')->>'details' "Details"
 FROM PAYMENT P
 LEFT OUTER JOIN CLAIM C ON P.CLAIM_ID = C.CLAIM_ID
 INNER JOIN STATE_LOG SL ON P.PAYMENT_ID = SL.PAYMENT_ID

@@ -10,6 +10,7 @@ import sqlalchemy
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 from massgov.pfml.db.models.employees import (
+    Address,
     Employee,
     LkState,
     Payment,
@@ -24,9 +25,14 @@ from massgov.pfml.db.models.factories import (
     ExperianAddressPairFactory,
     PaymentFactory,
 )
-from massgov.pfml.delegated_payments.address_validation import AddressValidationStep, Constants
+from massgov.pfml.delegated_payments.address_validation import (
+    AddressValidationStep,
+    Constants,
+    _get_end_state_and_outcome_for_multiple_matches,
+    _normalize_address_string,
+)
 from massgov.pfml.experian.physical_address.client.mock import MockClient
-from massgov.pfml.experian.physical_address.client.models import Confidence
+from massgov.pfml.experian.physical_address.client.models.search import Confidence
 
 fake = faker.Faker()
 
@@ -51,6 +57,7 @@ def _set_up_employees(
     db_session: db.Session,
     payment_count: int,
     confidence: Optional[Confidence] = None,
+    suggested_address_mismatch: bool = False,
 ) -> List[Employee]:
     employees = []
     for _i in range(payment_count):
@@ -63,7 +70,11 @@ def _set_up_employees(
 
             # Add experian_address_pair.fineos_address to mock client.
             address = employee.experian_address_pair.fineos_address
-            client.add_mock_address_response(address, confidence)
+
+            # Mock client returns input address in suggestions list unless we explicitly
+            # indicate that we want a mismatch.
+            suggested_address = "Fake address string" if suggested_address_mismatch else None
+            client.add_mock_address_response(address, confidence, suggested_address)
 
         employees.append(employee)
 
@@ -168,6 +179,7 @@ def _set_up_payments(
     db_session: db.Session,
     payment_count: int,
     confidence: Optional[Confidence] = None,
+    suggested_address_mismatch: bool = False,
 ) -> List[Payment]:
     payments = []
     for _i in range(payment_count):
@@ -180,7 +192,11 @@ def _set_up_payments(
 
             # Add experian_address_pair.fineos_address to mock client.
             address = payment.claim.employee.experian_address_pair.fineos_address
-            client.add_mock_address_response(address, confidence)
+
+            # Mock client returns input address in suggestions list unless we explicitly
+            # indicate that we want a mismatch.
+            suggested_address = "Fake address string" if suggested_address_mismatch else None
+            client.add_mock_address_response(address, confidence, suggested_address)
 
         payments.append(payment)
 
@@ -262,7 +278,7 @@ def test_run_step_state_transitions(
         client, test_db_session, fake.random_int(min=4, max=9), Confidence.NO_MATCHES
     )
     employees_with_multiple_matching_addresses = _set_up_employees(
-        client, test_db_session, fake.random_int(min=8, max=12), Confidence.MULTIPLE_MATCHES
+        client, test_db_session, fake.random_int(min=8, max=12), Confidence.MULTIPLE_MATCHES, True
     )
 
     check_payments_with_validated_addresses = _set_up_payments(
@@ -275,7 +291,10 @@ def test_run_step_state_transitions(
         client, test_db_session, fake.random_int(min=1, max=6), Confidence.NO_MATCHES
     )
     check_payments_with_multiple_matching_addresses = _set_up_payments(
-        client, test_db_session, fake.random_int(min=4, max=7), Confidence.MULTIPLE_MATCHES
+        client, test_db_session, fake.random_int(min=4, max=7), Confidence.MULTIPLE_MATCHES, True
+    )
+    check_payments_with_multiple_matching_addresses_and_near_match = _set_up_payments(
+        client, test_db_session, fake.random_int(min=1, max=4), Confidence.MULTIPLE_MATCHES
     )
 
     # Commit the various experian_address_pair.experian_address = None changes to the database.
@@ -373,6 +392,14 @@ def test_run_step_state_transitions(
         check_payments_with_multiple_matching_addresses,
     )
 
+    # Expect payments with a near match in the multiple matching addresses set to transition into
+    # the DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING state.
+    _assert_payment_state(
+        test_db_other_session,
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+        check_payments_with_multiple_matching_addresses_and_near_match,
+    )
+
 
 def test_run_step_no_database_changes_on_exception(
     initialize_factories_session, test_db_session, test_db_other_session
@@ -435,7 +462,7 @@ def test_run_step_state_log_outcome_field(
         client, test_db_session, fake.random_int(min=4, max=9), Confidence.NO_MATCHES
     )
     employees_with_multiple_matching_addresses = _set_up_employees(
-        client, test_db_session, fake.random_int(min=8, max=12), Confidence.MULTIPLE_MATCHES
+        client, test_db_session, fake.random_int(min=8, max=12), Confidence.MULTIPLE_MATCHES, True
     )
 
     check_payments_with_validated_addresses = _set_up_payments(
@@ -448,7 +475,10 @@ def test_run_step_state_log_outcome_field(
         client, test_db_session, fake.random_int(min=1, max=6), Confidence.NO_MATCHES
     )
     check_payments_with_multiple_matching_addresses = _set_up_payments(
-        client, test_db_session, fake.random_int(min=4, max=7), Confidence.MULTIPLE_MATCHES
+        client, test_db_session, fake.random_int(min=4, max=7), Confidence.MULTIPLE_MATCHES, True
+    )
+    check_payments_with_multiple_matching_addresses_and_near_match = _set_up_payments(
+        client, test_db_session, fake.random_int(min=1, max=4), Confidence.MULTIPLE_MATCHES
     )
 
     # Commit the various experian_address_pair.experian_address = None changes to the database.
@@ -533,3 +563,83 @@ def test_run_step_state_log_outcome_field(
         Confidence.MULTIPLE_MATCHES.value,
         experian_api_multiple_match_count,
     )
+
+    _assert_payment_state_log_outcome(
+        test_db_other_session,
+        check_payments_with_multiple_matching_addresses_and_near_match,
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+        Confidence.MULTIPLE_MATCHES.value,
+        experian_api_multiple_match_count,
+    )
+
+
+@pytest.mark.parametrize(
+    "_description, suggested_address, expected_end_state, new_address_count",
+    (
+        (
+            "Near match in multiple matches",
+            None,
+            State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+            1,
+        ),
+        (
+            "Near match in multiple matches",
+            "9999 Obviously fake BLVD",
+            State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+            0,
+        ),
+    ),
+)
+def test_get_end_state_and_outcome_for_multiple_matches(
+    initialize_factories_session,
+    test_db_session,
+    test_db_other_session,
+    _description,
+    suggested_address,
+    expected_end_state,
+    new_address_count,
+):
+    address_pair = ExperianAddressPairFactory()
+    client = MockClient()
+    mocked_response = client.add_mock_address_response(
+        address_pair.fineos_address, Confidence.MULTIPLE_MATCHES, suggested_address
+    )
+
+    address_count_before = test_db_other_session.query(
+        sqlalchemy.func.count(Address.address_id)
+    ).scalar()
+
+    end_state, _outcome = _get_end_state_and_outcome_for_multiple_matches(
+        mocked_response.result, client, address_pair
+    )
+
+    # Commit the new address_pair.experian_address to the database.
+    test_db_session.commit()
+
+    assert end_state == expected_end_state
+
+    # Either None (if no near match) or new Address.
+    assert address_pair.experian_address != address_pair.fineos_address
+    assert (
+        address_count_before + new_address_count
+        == test_db_other_session.query(sqlalchemy.func.count(Address.address_id)).scalar()
+    )
+
+
+@pytest.mark.parametrize(
+    "_description, address_in, expected_address",
+    (
+        (
+            "Excess spaces removed",
+            " 4 S   Market St  , Boston MA 02109 ",
+            "4 s market st, boston ma 02109",
+        ),
+        (
+            "Address with no changes needed untouched",
+            "1040 mass moca way, north adams ma 01247",
+            "1040 mass moca way, north adams ma 01247",
+        ),
+    ),
+)
+def test_normalize_address_string(_description, address_in, expected_address):
+    assert _normalize_address_string(address_in) == expected_address

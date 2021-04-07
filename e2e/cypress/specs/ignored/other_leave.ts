@@ -32,17 +32,10 @@ describe("Submit a bonding claim with other income and other leave - BHAP1", () 
       portal.onPage("checklist");
       // Submit Claim
       portal.submitClaimPartOne(application, true);
-      cy.wait("@submitClaimResponse").then((xhr) => {
-        if (!xhr.response || !xhr.response.body) {
-          throw new Error("No response body detected");
-        }
-        const body =
-          typeof xhr.response.body === "string"
-            ? JSON.parse(xhr.response.body)
-            : xhr.response.body;
+      portal.waitForClaimSubmission().then((data) => {
         cy.stash("submission", {
-          application_id: body.data.application_id,
-          fineos_absence_id: body.data.fineos_absence_id,
+          application_id: data.application_id,
+          fineos_absence_id: data.fineos_absence_id,
           timestamp_from: Date.now(),
         });
       });

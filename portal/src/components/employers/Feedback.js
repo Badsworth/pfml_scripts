@@ -5,10 +5,9 @@ import FormLabel from "../FormLabel";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
-import TempFileCollection from "../../models/TempFileCollection";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../services/featureFlags";
-import useTempFileCollection from "../../hooks/useTempFileCollection";
+import useFilesLogic from "../../hooks/useFilesLogic";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -26,19 +25,14 @@ const Feedback = ({
 }) => {
   // TODO (EMPLOYER-583) add frontend validation
   const { t } = useTranslation();
-  const {
-    tempFiles,
-    addTempFiles,
-    removeTempFile,
-    setTempFiles,
-  } = useTempFileCollection(new TempFileCollection(), {
+  const { files, processFiles, removeFile } = useFilesLogic({
     clearErrors: appLogic.clearErrors,
+    catchError: appLogic.catchError,
   });
   const [shouldShowCommentBox, setShouldShowCommentBox] = useState(false);
 
   useEffect(() => {
     if (!shouldShowCommentBox) {
-      setTempFiles(new TempFileCollection());
       setComment("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,10 +111,9 @@ const Feedback = ({
                 {t("components.employersFeedback.supportingDocumentationLabel")}
               </FormLabel>
               <FileCardList
-                tempFiles={tempFiles}
-                onAddTempFiles={addTempFiles}
-                onRemoveTempFile={removeTempFile}
-                onInvalidFilesError={appLogic.catchError}
+                tempFiles={files}
+                onChange={processFiles}
+                onRemoveTempFile={removeFile}
                 fileHeadingPrefix={t(
                   "components.employersFeedback.fileHeadingPrefix"
                 )}

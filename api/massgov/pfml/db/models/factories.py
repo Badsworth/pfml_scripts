@@ -69,7 +69,12 @@ class Generators:
     )
     UtcNow = factory.LazyFunction(datetime_util.utcnow)
     UuidObj = factory.Faker("uuid4", cast_to=None)
-    S3Path = factory.Sequence(lambda n: f"s3://bucket/path/to/file{n}.txt")
+    S3Path = factory.LazyFunction(
+        lambda: os.path.join(
+            "s3://bucket/path/to/",
+            "".join(random.choices(string.ascii_letters + string.digits, k=8)) + ".txt",
+        )
+    )
     CtrDocumentIdentifier = factory.LazyFunction(
         lambda: "INTFDFML" + "".join(random.choices(string.ascii_uppercase + string.digits, k=12))
     )
@@ -359,7 +364,23 @@ class PaymentFactory(BaseFactory):
 
     payment_id = Generators.UuidObj
 
-    amount = 100.00
+    amount = Generators.Money
+    # Using dates set in Jan 2021 similar to magic dates in other factories, such as
+    # IntermittentLeavePeriodFactory and ContinuousLeavePeriodFactory.
+    # TODO: We should see if we can convert all dates made by factories to be
+    #       more random.
+    period_start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
+    )
+    period_end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 16), date_end=date(2021, 1, 28)
+    )
+    payment_date = factory.LazyAttribute(lambda a: a.period_end_date - timedelta(days=1))
+    # Magic number: the C value is the same for all payments, but it doesn't actually
+    # matter what number it is, so picking a static number is fine.
+    fineos_pei_c_value = "9000"
+    # The I value is unique for all payments and should be a string, not an int.
+    fineos_pei_i_value = factory.Faker("numerify", text="####")
 
     claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
