@@ -16,6 +16,7 @@
         "Overrides": {
           "ContainerOverrides": [
             {
+              "Name": "fineos-import-employee-updates",
               "Environment": [
                 { "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id" }
               ]
