@@ -147,3 +147,27 @@ export const Dave: ScenarioSpecification = {
     leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
   },
 };
+
+export const Sally: ScenarioSpecification = {
+  employee: {
+    wages: 60000,
+    mass_id: true,
+  },
+  claim: {
+    label: "Sally",
+    reason: "Child Bonding",
+    reason_qualifier: "Foster Care",
+    docs: {
+      MASSID: {},
+      FOSTERPLACEMENT: {},
+    },
+    has_intermittent_leave_periods: true,
+    employerResponse: {
+      hours_worked_per_week: 20,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+    // This scenario requires a 2 week leave time for payment calculation purposes.
+    leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
+  },
+};
