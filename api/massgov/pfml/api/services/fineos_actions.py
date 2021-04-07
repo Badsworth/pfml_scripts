@@ -106,10 +106,9 @@ def register_employee(
             national_insurance_no=employee_ssn,
         )
 
-        fineos.register_api_user(employee_registration)
         logger.info("registered as %s", employee_external_id)
     except massgov.pfml.fineos.FINEOSClientError:
-        logger.exception("FINEOS API error while attempting to register employee/fineos api user.")
+        logger.exception("FINEOS API error while attempting to register employee/FINEOS api user.")
         return None
 
     # If successful save ExternalIdentifier in the database
@@ -120,6 +119,7 @@ def register_employee(
     db_session.add(fineos_web_id_ext)
 
     db_session.commit()
+    fineos.register_api_user(employee_registration)
 
     return employee_external_id
 
