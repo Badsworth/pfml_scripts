@@ -161,7 +161,7 @@ export const Sally: ScenarioSpecification = {
       MASSID: {},
       FOSTERPLACEMENT: {},
     },
-    has_intermittent_leave_periods: true,
+    // has_intermittent_leave_periods: true,
     employerResponse: {
       hours_worked_per_week: 20,
       employer_decision: "Approve",
