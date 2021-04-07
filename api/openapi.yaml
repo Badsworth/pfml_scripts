@@ -2461,6 +2461,7 @@ components:
             - Per Week
             - Per Month
             - In Total
+            - Unknown
           example: "Per Month"
         benefit_type:
           type: string
