@@ -11,7 +11,14 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.pub.pub_check as pub_check
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import LkState, Payment, PaymentMethod, State, StateLog
+from massgov.pfml.db.models.employees import (
+    ClaimType,
+    LkState,
+    Payment,
+    PaymentMethod,
+    State,
+    StateLog,
+)
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ClaimFactory,
@@ -38,7 +45,7 @@ def _random_payment_with_state_log(
     # Create the employee and claim ourselves so the payment has an associated address.
     address_pair = ExperianAddressPairFactory(experian_address=AddressFactory())
     employee = EmployeeFactory()
-    claim = ClaimFactory(employee=employee)
+    claim = ClaimFactory(employee=employee, claim_type_id=ClaimType.MEDICAL_LEAVE.claim_type_id)
 
     # Set the dates to some reasonably recent dates in the past.
     start_date = fake.date_between("-10w", "-2w")
@@ -214,11 +221,21 @@ def test_convert_payment_to_ez_check_record_failure(initialize_factories_session
         pub_check._convert_payment_to_ez_check_record(payment_without_address, 0)
 
 
+def test_convert_payment_to_ez_check_record_unsupported_claimtype(
+    initialize_factories_session, test_db_session
+):
+    claim = ClaimFactory(claim_type_id=ClaimType.MILITARY_LEAVE.claim_type_id)
+    payment_without_address = PaymentFactory(claim=claim)
+    with pytest.raises(pub_check.UnSupportedClaimTypeException):
+        pub_check._convert_payment_to_ez_check_record(payment_without_address, 0)
+
+
 def test_format_check_memo_success(initialize_factories_session, test_db_session):
     payment = _random_valid_check_payment_with_state_log(test_db_session)
     memo = pub_check._format_check_memo(payment)
+    claim_type = payment.claim.claim_type.claim_type_description
 
-    pattern = r"PFML Payment NTN-\d+-ABS-\d+ \[\d{2}/\d{2}/\d{4}-\d{2}/\d{2}/\d{4}]"
+    pattern = "PFML Payment {} {}".format(claim_type, payment.claim.fineos_absence_id)
     assert re.search(pattern, memo)
 
 
