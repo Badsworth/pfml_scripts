@@ -3,7 +3,7 @@
 
 import decimal
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -11,6 +11,7 @@ import faker
 
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
     BankAccountType,
     Claim,
     ClaimType,
@@ -57,6 +58,7 @@ VALID_ADDRESSES = [
 
 
 class ScenarioName(Enum):
+    # For Payments E2E test scenarios
     SCENARIO_A = "A"
     SCENARIO_B = "B"
     SCENARIO_C = "C"
@@ -83,6 +85,13 @@ class ScenarioName(Enum):
     SCENARIO_X = "X"
     SCENARIO_Y = "Y"
     SCENARIO_Z = "Z"
+
+    # For Payment Voucher testing
+    SCENARIO_VOUCHER_A = "VA"
+    SCENARIO_VOUCHER_B = "VB"
+    SCENARIO_VOUCHER_C = "VC"
+    SCENARIO_VOUCHER_D = "VD"
+    SCENARIO_VOUCHER_E = "VE"
 
 
 @dataclass
@@ -132,6 +141,16 @@ class EmployeePaymentScenarioDescriptor:
     has_broken_outbound_vendor_return: bool = False  # Requires above to also be true
 
     has_outbound_payment_return: bool = False
+
+    # To have multiple payments per absence claim
+    payment_amounts_count: int = 0
+    # To set a specific payment amounts
+    payment_amounts: List[decimal.Decimal] = field(default_factory=list)
+    # To set a missing payment
+    missing_payment: bool = False
+    # To specify a payment has multiple sub-payments (e.g. multiple rows in the vpeipaymentdetailscsv)
+    has_multiple_payment_details: bool = False
+    payment_details_count: int = 0
 
 
 SCENARIO_DESCRIPTORS: Dict[ScenarioName, EmployeePaymentScenarioDescriptor] = {}
@@ -390,6 +409,75 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_Z] = EmployeePaymentScenarioDescripto
     has_outbound_payment_return=False,
 )
 
+# Start Payment Voucher scenarios
+# EmployeeA with valid address, payment method is check, leave type is medical leave, 2 payments
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_A] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_A,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
+    has_payment_extract=True,
+    has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
+    has_gax_status_return=True,
+    has_outbound_payment_return=True,
+    payment_amounts_count=2,
+)
+
+# EmployeeB with valid address, payment method is check, leave type is bonding leave, payment is zero dollars
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_B] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_B,
+    leave_type=ClaimType.FAMILY_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
+    has_payment_extract=True,
+    has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
+    has_gax_status_return=True,
+    has_outbound_payment_return=True,
+    payment_amounts=[decimal.Decimal(0)],
+)
+
+# EmployeeC with valid address, real routing number, fake bank account number, payment method is ACH, leave type is medical leave, payment is negative
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_C] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_C,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.ACH,
+    account_type=BankAccountType.CHECKING,
+    has_vcc_status_return=True,
+    has_payment_extract=True,
+    has_outbound_vendor_return=True,
+    has_gax_status_return=True,
+    has_outbound_payment_return=True,
+    payment_amounts=[decimal.Decimal(random.uniform(1, 1000)) * -1],
+)
+
+# EmployeeD with valid address, real routing number, fake bank account number, payment method is ACH, leave type is bonding leave, payment is missing
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_D] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_D,
+    leave_type=ClaimType.FAMILY_LEAVE,
+    payee_payment_method=PaymentMethod.ACH,
+    account_type=BankAccountType.SAVINGS,
+    has_payment_extract=True,
+    has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
+    has_gax_status_return=True,
+    has_outbound_payment_return=True,
+    missing_payment=True,
+)
+
+# EmployeeA with valid address, payment method is check, leave type is medical leave, zero dollar payment amount
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_E] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_E,
+    leave_type=ClaimType.FAMILY_LEAVE,
+    payee_payment_method=PaymentMethod.ACH,
+    account_type=BankAccountType.SAVINGS,
+    has_payment_extract=True,
+    has_outbound_vendor_return=True,
+    has_vcc_status_return=True,
+    has_gax_status_return=True,
+    has_outbound_payment_return=True,
+    has_multiple_payment_details=True,
+)
+
 
 # Scenario Generation Config and Data
 @dataclass
@@ -418,7 +506,7 @@ class CiProvider:
     payment_period_ci_indices: List[CiIndex]
 
     def __init__(self):
-        self.vendor_c_i = CiIndex(c=str(_new_index()), i=str(_new_index()))
+        self.vendor_c_i = CiIndex(c="7000", i=str(_new_index()))
         self.claim_ci = None
         self.payment_ci = None
         self.payment_period_ci = None
@@ -433,7 +521,7 @@ class CiProvider:
     def get_claim_ci(self, next: bool = False) -> CiIndex:
         # TODO do we need to associate with vendor?
         if self.claim_ci is None or next:
-            self.claim_ci = CiIndex(c=str(_new_index()), i=str(_new_index()))
+            self.claim_ci = CiIndex(c="8000", i=str(_new_index()))
             self.claim_ci_indices.append(self.claim_ci)
 
         return self.claim_ci
@@ -441,18 +529,10 @@ class CiProvider:
     def get_payment_ci(self, next: bool = False) -> CiIndex:
         # TODO confirm I value should equal claim I value
         if self.payment_ci is None or next:
-            self.payment_ci = CiIndex(c=str(_new_index()), i=self.get_claim_ci().i)
+            self.payment_ci = CiIndex(c="9000", i=str((_new_index())))
             self.payment_ci_indices.append(self.payment_ci)
 
         return self.payment_ci
-
-    def get_payment_period_ci(self) -> CiIndex:
-        # TODO do we need to associate with payment?
-        if self.payment_period_ci is None or next:
-            self.payment_period_ci = CiIndex(c=str(_new_index()), i=str(_new_index()))
-            self.payment_period_ci_indices.append(self.payment_period_ci)
-
-        return self.payment_period_ci
 
 
 @dataclass
@@ -466,9 +546,13 @@ class ScenarioData:
     employee_customer_number: str
     vendor_customer_code: str
     ci_provider: CiProvider
+    leave_request_id: str
+    leave_request_decision: str
 
     def __repr__(self):
-        return f"[Name: {self.scenario_descriptor.scenario_name}, Employee: {self.employee.employee_id}"
+        return (
+            f"Name: {self.scenario_descriptor.scenario_name}, Employee: {self.employee.employee_id}"
+        )
 
 
 # TODO validate scenario descriptor before starting generate
@@ -481,6 +565,8 @@ def generate_scenario_data_db(
     fineos_notification_id: str,
     employee_customer_number: str,
     vendor_customer_code: str,
+    leave_request_id: str,
+    leave_request_decision: str,
     build_reference_files: bool = False,
 ) -> ScenarioData:
     eft = None
@@ -528,6 +614,14 @@ def generate_scenario_data_db(
     claims: List[Claim] = []
     payment_amounts: List[decimal.Decimal] = []
     payments: List[Payment] = []
+    ci_provider = CiProvider()
+
+    # If the scenario has a payment extract, create at least 1 payment.
+    if scenario_descriptor.has_payment_extract:
+        if scenario_descriptor.payment_amounts_count == 0:
+            scenario_descriptor.payment_amounts_count = 1
+        if scenario_descriptor.payment_details_count == 0:
+            scenario_descriptor.payment_details_count = 1
 
     for c in range(scenario_descriptor.absence_claims_count):
         absence_case_index = c + 1
@@ -536,37 +630,49 @@ def generate_scenario_data_db(
         )
 
         claim = ClaimFactory.create(
-            employer_id=employer.employer_id, employee=employee, fineos_absence_id=absence_case_id,
+            employer_id=employer.employer_id,
+            employee=employee,
+            fineos_absence_id=absence_case_id,
+            claim_type_id=scenario_descriptor.leave_type.claim_type_id,
+            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
         )
         claims.append(claim)
 
-        # Create a random payment amount between $1-1000
-        payment_amount = decimal.Decimal(random.uniform(1, 1000))
-        payment_amounts.append(payment_amount)
+        # For each claim, return the specified number of payments
+        for i in range(scenario_descriptor.payment_amounts_count):
+            # Use the specified payment amount if there is one
+            # Otherwise, create a random payment amount between $1-1000
+            if scenario_descriptor.payment_amounts and i < len(scenario_descriptor.payment_amounts):
+                payment_amount = scenario_descriptor.payment_amounts[i]
+            else:
+                payment_amount = decimal.Decimal(random.uniform(1, 1000))
+            payment_amounts.append(payment_amount)
 
-        if build_reference_files:
-            if (
-                scenario_descriptor.has_vcc_status_return
-                or scenario_descriptor.has_outbound_vendor_return
-            ):
-                emp_ref_file = EmployeeReferenceFileFactory.create(employee=employee)
-                emp_ref_file.reference_file.ctr_batch_identifier = (
-                    CtrBatchIdentifierFactory.create()
-                )
+            if scenario_descriptor.has_multiple_payment_details:
+                scenario_descriptor.payment_details_count = random.randint(2, 5)
 
-            if (
-                scenario_descriptor.has_gax_status_return
-                or scenario_descriptor.has_outbound_payment_return
-            ):
-                payment = PaymentFactory.create(claim=claim)
-                payment_ref_file = PaymentReferenceFileFactory.create(payment=payment)
-                payment_ref_file.reference_file.ctr_batch_identifier = (
-                    CtrBatchIdentifierFactory.create()
-                )
-                payment_ref_file.reference_file.reference_file_type_id = (
-                    ReferenceFileType.GAX.reference_file_type_id
-                )
-                payments.append(payment)
+            payment_ci_index = ci_provider.get_payment_ci(next=True)
+            payment = PaymentFactory.create(
+                claim=claim,
+                amount=payment_amount,
+                fineos_pei_c_value=payment_ci_index.c,
+                fineos_pei_i_value=payment_ci_index.i,
+            )
+            payment_ref_file = PaymentReferenceFileFactory.create(payment=payment)
+            payment_ref_file.reference_file.ctr_batch_identifier = (
+                CtrBatchIdentifierFactory.create()
+            )
+            payment_ref_file.reference_file.reference_file_type_id = (
+                ReferenceFileType.GAX.reference_file_type_id
+            )
+            payments.append(payment)
+
+        if (
+            scenario_descriptor.has_vcc_status_return
+            or scenario_descriptor.has_outbound_vendor_return
+        ):
+            emp_ref_file = EmployeeReferenceFileFactory.create(employee=employee)
+            emp_ref_file.reference_file.ctr_batch_identifier = CtrBatchIdentifierFactory.create()
 
     return ScenarioData(
         scenario_descriptor=scenario_descriptor,
@@ -577,7 +683,9 @@ def generate_scenario_data_db(
         payments=payments,
         employee_customer_number=employee_customer_number,
         vendor_customer_code=vendor_customer_code,
-        ci_provider=CiProvider(),
+        ci_provider=ci_provider,
+        leave_request_id=leave_request_id,
+        leave_request_decision=leave_request_decision,
     )
 
 
@@ -593,6 +701,10 @@ def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
         for scenario_and_count in config.scenario_config:
             scenario_name = scenario_and_count.name
             scenario_count = scenario_and_count.count
+
+            if scenario_name not in SCENARIO_DESCRIPTORS:
+                logger.warning("Scenario %s is not defined", scenario_name)
+                continue
             scenario_descriptor = SCENARIO_DESCRIPTORS[scenario_name]
 
             for i in range(scenario_count):  # noqa: B007
@@ -603,6 +715,11 @@ def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
                 fineos_notification_id = f"NTN-{ssn_part_str}"
                 employee_customer_number = ssn_part_str.rjust(9, "5")
                 vendor_customer_code = ssn_part_str.rjust(9, "6")
+
+                # Data for VBI_REQUSTEDABSENCE.csv (not _SOM), which is not
+                # saved to the database
+                leave_request_id = ssn_part_str.rjust(9, "7")
+                leave_request_decision = "Approved"
 
                 logger.info(
                     f"scenario_name: {scenario_name}, vendor_customer_code: {vendor_customer_code}"
@@ -616,6 +733,8 @@ def generate_scenario_dataset(config: ScenarioDataConfig) -> List[ScenarioData]:
                     fineos_notification_id=fineos_notification_id,
                     vendor_customer_code=vendor_customer_code,
                     employee_customer_number=employee_customer_number,
+                    leave_request_id=leave_request_id,
+                    leave_request_decision=leave_request_decision,
                 )
                 scenario_dataset.append(scenario_data)
 

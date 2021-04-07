@@ -7,8 +7,18 @@
 #
 # Makes no database changes. Does not move or remove any processed files.
 #
-# Test like this:
+# Test like this (requires database records to exist):
 #   poetry run payments-manual-payment-voucher tests/payments/manual/test_files/ manual_payments/ |& python3 massgov/pfml/util/logging/decodelog.py
+#
+# Run locally like this from within poetry run python REPL (see test_payment_voucher.py for details about test scenarios):
+#   import massgov.pfml.payments.mock.fineos_extract_generator as fineos_extract_generator
+#   import massgov.pfml.payments.mock.payments_test_scenario_generator as scenario_generator
+#   from massgov.pfml.payments.manual import payment_voucher
+#   scenario_list = [scenario_generator.ScenarioNameWithCount(scenario_generator.ScenarioName.SCENARIO_VOUCHER_E, 1)]
+#   scenario_config = scenario_generator.ScenarioDataConfig(scenario_list, ssn_id_base=526000028, fein_id_base=626000028)
+#   scenario_data_list = fineos_extract_generator.generate(scenario_config, "mock_fineos_payments_input_files")
+#   config = payment_voucher.Configuration(["mock_fineos_payments_input_files", "mock_voucher_output_files"])
+#   payment_voucher.run_voucher_process(config)
 #
 
 import argparse
@@ -64,52 +74,67 @@ class VoucherExtractData:
                 self.vbi_requested_absence = Extract(s3_location)
 
 
+class Configuration:
+    input_path: str
+    output_path: str
+    payment_date: Optional[datetime.date]
+    writeback: Optional[str]
+
+    def __init__(self, input_args: List[str]):
+        """Parse command line arguments."""
+        parser = argparse.ArgumentParser(description="Manual payment voucher tool")
+        parser.add_argument("input_path", type=str, help="Input directory path (local or s3)")
+        parser.add_argument("output_path", type=str, help="Output directory path (local or s3)")
+        parser.add_argument(
+            "--payment_date", type=datetime.date.fromisoformat, help="Override payment date"
+        )
+        parser.add_argument(
+            "--writeback", type=str, help="Destination path for FINEOS writeback CSV"
+        )
+
+        args = parser.parse_args(input_args)
+        self.input_path = args.input_path
+        self.output_path = args.output_path
+        self.payment_date = args.payment_date
+        self.writeback = args.writeback
+
+
 def main():
     """Main entry point for manual payment voucher tool."""
     initialize_sentry()
     massgov.pfml.util.logging.audit.init_security_logging()
     massgov.pfml.util.logging.init("manual_payment")
 
-    db_session_raw = massgov.pfml.db.init(sync_lookups=True)
-
-    args = parse_args()
+    config = Configuration(sys.argv[1:])
 
     logger.info(
         "input_path %s, output_path %s, payment_date %s, writeback %s",
-        args.input_path,
-        args.output_path,
-        args.payment_date,
-        args.writeback,
+        config.input_path,
+        config.output_path,
+        config.payment_date,
+        config.writeback,
     )
+    run_voucher_process(config)
 
+
+def run_voucher_process(config: Configuration) -> None:
+    db_session_raw = massgov.pfml.db.init(sync_lookups=True)
     try:
         with massgov.pfml.util.batch.log.LogEntry(
             db_session_raw, "Payment voucher"
         ) as log_entry, massgov.pfml.db.session_scope(db_session_raw) as db_session:
-            log_entry.set_metrics(**vars(args))
+            log_entry.set_metrics(**vars(config))
             process_extracts_to_payment_voucher(
-                args.input_path,
-                args.output_path,
-                args.payment_date,
-                args.writeback,
+                config.input_path,
+                config.output_path,
+                config.payment_date,
+                config.writeback,
                 db_session,
                 log_entry,
             )
     except Exception as ex:
         logger.exception("%s", ex)
         sys.exit(1)
-
-
-def parse_args():
-    """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="Manual payment voucher tool")
-    parser.add_argument("input_path", type=str, help="Input directory path (local or s3)")
-    parser.add_argument("output_path", type=str, help="Output directory path (local or s3)")
-    parser.add_argument(
-        "--payment_date", type=datetime.date.fromisoformat, help="Override payment date"
-    )
-    parser.add_argument("--writeback", type=str, help="Destination path for FINEOS writeback CSV")
-    return parser.parse_args()
 
 
 def process_extracts_to_payment_voucher(

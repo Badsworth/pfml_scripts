@@ -140,3 +140,16 @@ def setup_state_log(
     test_db_session.flush()
     test_db_session.commit()
     return StateLogSetupResult(state_logs=state_logs, associated_model=associated_model)
+
+
+def setup_state_log_only(*, associated_model, end_state, now, test_db_session):
+    with freeze_time(now):
+        state_log = state_log_util.create_finished_state_log(
+            end_state=end_state,
+            outcome={},
+            associated_model=associated_model,
+            db_session=test_db_session,
+        )
+    test_db_session.flush()
+    test_db_session.commit()
+    return state_log

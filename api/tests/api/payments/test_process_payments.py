@@ -53,7 +53,7 @@ def test_fineos_process(
     fineos_extract_generator.generate(config, fineos_data_export_path)
 
     mock_fineos_export_files = file_util.list_files(fineos_data_export_path)
-    assert len(mock_fineos_export_files) == 6
+    assert len(mock_fineos_export_files) == 7
 
     # Run the process
     _fineos_process(test_db_session, Configuration(["--steps", "ALL"]))
