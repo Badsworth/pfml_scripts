@@ -161,12 +161,12 @@ export const Sally: ScenarioSpecification = {
       MASSID: {},
       FOSTERPLACEMENT: {},
     },
-    // has_intermittent_leave_periods: true,
     employerResponse: {
       hours_worked_per_week: 20,
       employer_decision: "Approve",
       fraud: "No",
     },
+    has_intermittent_leave_periods: true,
     // This scenario requires a 2 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
   },
