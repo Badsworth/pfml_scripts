@@ -27,7 +27,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import Query, dynamic_loader, relationship
+from sqlalchemy.orm import Query, deferred, dynamic_loader, relationship
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.sql.functions import now as sqlnow
@@ -449,6 +449,13 @@ class Employee(Base):
     ctr_vendor_customer_code = Column(Text)
     ctr_address_pair_id = Column(
         UUID(as_uuid=True), ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
+    )
+    experian_address_pair_id = deferred(
+        Column(
+            UUID(as_uuid=True).evaluates_none(),
+            ForeignKey("link_experian_address_pair.fineos_address_id"),
+            index=True,
+        )
     )
 
     title = relationship(LkTitle)
