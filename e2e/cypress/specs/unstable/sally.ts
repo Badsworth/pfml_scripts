@@ -5,7 +5,7 @@ import { ApplicationResponse } from "../../../src/api";
 
 describe("Payment amounts", () => {
   it(
-    "Verify the payment amount for an intermittent bonding claim with 20 hrs work week schedule",
+    "Verify the payment amount for a continuous bonding claim with 20 hrs work week schedule",
     { baseUrl: getFineosBaseUrl() },
     () => {
       beforeFineos();
