@@ -42,6 +42,11 @@ function optimizeFileSize(file, maximumFileSize) {
       success: (compressedBlob) => {
         const fileName = compressedBlob.name;
         const fileNameWithPrefix = "Compressed_" + fileName;
+
+        tracker.trackEvent("CompressorSize", {
+          originalSize: file.size,
+          compressedSize: compressedBlob.size,
+        });
         resolve(
           // convert Blob to File
           new File([compressedBlob], fileNameWithPrefix, {
