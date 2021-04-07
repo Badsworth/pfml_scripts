@@ -99,7 +99,7 @@ export function postProcess(
       log(result.claim, "Post-processing complete");
       return result;
     } catch (e) {
-      log(result.claim, "Post-processing resulted in an error", e);
+      log(result.claim, "Post-processing resulted in an error");
       return { ...result, error: e };
     }
   });

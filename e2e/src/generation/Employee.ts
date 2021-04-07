@@ -21,6 +21,7 @@ export type Employee = {
   date_of_birth: string;
   occupations: EmployeeOccupation[];
   mass_id?: string | null;
+  metadata?: Record<string, unknown>;
 };
 
 export type WageSpecification =
@@ -59,6 +60,7 @@ function wagesInBounds(wages: number, spec: WageSpecification): boolean {
 type EmployeeGenerationSpec = {
   mass_id?: boolean;
   wages?: WageSpecification;
+  metadata?: Record<string, unknown>;
 };
 export class EmployeeGenerator {
   static generate(
@@ -79,6 +81,7 @@ export class EmployeeGenerator {
       date_of_birth: this.generateDateOfBirth(),
       occupations: occupations,
       mass_id: spec.mass_id ? this.generateMassId() : null,
+      metadata: spec.metadata,
     };
   }
   private static generateSSN = unique(() => {
@@ -127,9 +130,13 @@ export class EmployeeGenerator {
 }
 
 export type EmployeePickSpec = {
+  // Whether or not the employee has a massachussetts ID #.
   mass_id?: boolean;
+  // A specific wage specification that needs to be matched (# or level name).
   wages?: WageSpecification;
+  metadata?: Record<string, unknown>;
 };
+
 export default class EmployeePool implements Iterable<Employee> {
   used: Set<Employee>;
 
@@ -191,12 +198,20 @@ export default class EmployeePool implements Iterable<Employee> {
   ): (employee: Employee) => boolean {
     return (e) => {
       const wageSpec = spec.wages;
+      const { metadata } = spec;
       // For each condition in the pick spec, return false if it is not met for this employee.
       if (
         wageSpec &&
         !e.occupations.some(({ wages }) => wagesInBounds(wages, wageSpec))
       ) {
         return false;
+      }
+      if (metadata) {
+        for (const [k, v] of Object.entries(metadata)) {
+          if (!e.metadata || e.metadata[k] !== v) {
+            return false;
+          }
+        }
       }
       // If we've met all conditions, this is a matching employee.
       return true;
@@ -255,7 +270,9 @@ export default class EmployeePool implements Iterable<Employee> {
       this.used.add(employee);
       return employee;
     }
-    throw new Error("No employee is left matching the specification");
+    throw new Error(
+      `No employee is left matching the specification: ${JSON.stringify(spec)}`
+    );
   }
 }
 
