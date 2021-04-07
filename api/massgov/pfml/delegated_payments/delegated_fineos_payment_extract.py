@@ -49,8 +49,12 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiPaymentDetails,
 )
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.payments.payments_util import get_now
 
 logger = logging.get_logger(__name__)
+
+# waiting period for pending prenote
+PRENOTE_PRENDING_WAITING_PERIOD = 7
 
 # folder constants
 RECEIVED_FOLDER = "received"
@@ -834,7 +838,16 @@ class PaymentExtractStep(Step):
                 extra=extra,
             )
 
-            if existing_eft.prenote_state_id != PrenoteState.APPROVED.prenote_state_id:
+            if PrenoteState.APPROVED.prenote_state_id == existing_eft.prenote_state_id:
+                self.increment("approved_prenote_count")
+            elif (
+                (PrenoteState.PENDING_WITH_PUB.prenote_state_id == existing_eft.prenote_state_id)
+                and existing_eft.prenote_sent_at
+                and (get_now() - existing_eft.prenote_sent_at).days
+                >= PRENOTE_PRENDING_WAITING_PERIOD
+            ):
+                self.increment("prenote_past_waiting_period_accepted_count")
+            else:
                 reason = (
                     payments_util.ValidationReason.EFT_PRENOTE_REJECTED
                     if existing_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id

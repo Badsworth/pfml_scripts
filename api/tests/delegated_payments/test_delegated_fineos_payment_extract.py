@@ -2,7 +2,7 @@ import csv
 import json
 import os
 from collections import OrderedDict
-from datetime import date
+from datetime import date, timedelta
 
 import boto3
 import faker
@@ -49,6 +49,7 @@ from massgov.pfml.delegated_payments.delegated_config import get_s3_config
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     ValidationIssue,
     ValidationReason,
+    get_now,
 )
 
 # every test in here requires real resources
@@ -1591,6 +1592,7 @@ def test_update_eft_existing_eft_matches_and_not_approved(
         prenote_state_id=prenote_state.prenote_state_id,
         routing_nbr="1" * 9,
         account_nbr="1" * 9,
+        prenote_sent_at=get_now(),
         bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
     )
     EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft_record)
@@ -1618,6 +1620,61 @@ def test_update_eft_existing_eft_matches_and_not_approved(
         issues[0]["details"]
         == f"EFT prenote has not been approved, is currently in state [{prenote_state.prenote_state_description}]"
     )
+
+    # There should not be a DELEGATED_EFT_SEND_PRENOTE record
+    employee_state_logs_after = (
+        test_db_session.query(StateLog).filter(StateLog.employee_id == employee.employee_id).all()
+    )
+    assert len(employee_state_logs_after) == 0
+
+
+def test_update_eft_existing_eft_matches_and_pending_with_pub(
+    payment_extract_step, test_db_session, mock_s3_bucket, set_exporter_env_vars, monkeypatch,
+):
+    # This is the happiest of paths, we've already got the EFT info for the
+    # employee and it has already been prenoted.
+
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    setup_process_tests(mock_s3_bucket, test_db_session, add_eft=False)
+
+    # Set an employee to have the same EFT we know is going to be extracted
+    employee = (
+        test_db_session.query(Employee)
+        .join(TaxIdentifier)
+        .filter(TaxIdentifier.tax_identifier == "1" * 9)
+        .first()
+    )
+    assert employee is not None
+    # Create the EFT record
+    pub_eft_record = PubEftFactory.create(
+        prenote_state_id=PrenoteState.PENDING_WITH_PUB.prenote_state_id,
+        routing_nbr="1" * 9,
+        account_nbr="1" * 9,
+        prenote_sent_at=get_now() - timedelta(10),
+        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+    )
+    EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft_record)
+
+    # Run the process
+    payment_extract_step.run()
+
+    # Verify the payment isn't marked as having an EFT update
+    payment = (
+        test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == "301")
+        .first()
+    )
+    assert payment is not None
+    assert payment.has_eft_update is False
+    # The payment should still be connected to the EFT record
+    assert payment.pub_eft_id == pub_eft_record.pub_eft_id
+
+    assert len(payment.state_logs) == 1
+    state_log = payment.state_logs[0]
+    assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+
+    import_log_report = json.loads(payment.fineos_extract_import_log.report)
+    assert import_log_report["prenote_past_waiting_period_accepted_count"] == 1
 
     # There should not be a DELEGATED_EFT_SEND_PRENOTE record
     employee_state_logs_after = (

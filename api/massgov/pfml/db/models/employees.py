@@ -360,6 +360,7 @@ class PubEft(Base):
         server_default=sqlnow(),
     )
     prenote_response_at = Column(TIMESTAMP(timezone=True))
+    prenote_sent_at = Column(TIMESTAMP(timezone=True))
     prenote_response_reason_code = Column(Text)
     pub_eft_individual_id_seq: Sequence = Sequence("pub_eft_individual_id_seq")
     pub_individual_id = Column(

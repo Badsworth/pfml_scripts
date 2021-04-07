@@ -119,6 +119,7 @@ def test_ach_file_creation(
         employee_pub_eft_pairs = prenote_sent_state.employee.pub_efts.all()
         pub_eft = employee_pub_eft_pairs[0].pub_eft
         assert pub_eft.prenote_state_id == PrenoteState.PENDING_WITH_PUB.prenote_state_id
+        assert pub_eft.prenote_sent_at is not None
 
 
 def test_check_file_creation(
