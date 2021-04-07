@@ -96,6 +96,11 @@ def test_file_location():
 
 
 @pytest.fixture
+def bom_test_file_location():
+    return Path(__file__).parent / "bom_test_users1.csv"
+
+
+@pytest.fixture
 def create_employers(test_db_session):
     test_db_session.add(
         Employer(employer_fein="847847847", employer_dba="Wayne Enterprises", fineos_employer_id=1)
@@ -124,6 +129,12 @@ class TestProcessCSV:
         assert len(pivoted) == 3
         assert sum(len(x) for x in pivoted.values()) == 5
         assert len(pivoted["test_user@gmail.com"]) == 2
+
+    def test_pivot_csv_bom_encoding(self, bom_test_file_location):
+        pivoted = pivot_csv_file(bom_test_file_location)
+        assert pivoted["bogus@yahoo.com"] == [
+            {"fein": "222222222", "email": "bogus@yahoo.com", "verification_code": ""}
+        ]
 
     def test_log_progress(self, caplog):
         caplog.set_level(logging.INFO)  # noqa: B1

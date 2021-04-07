@@ -57,7 +57,7 @@ def log_progress(
 
 def pivot_csv_file(file: str) -> dict:
     data = defaultdict(list)
-    with smart_open(file) as open_fh:
+    with smart_open(file, encoding="utf-8-sig") as open_fh:
         csv_file = csv.DictReader(open_fh)
         for row in csv_file:
             email = row.get("email", "UNKNOWN") or "UNKNOWN"
