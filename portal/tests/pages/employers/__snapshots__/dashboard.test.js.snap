@@ -20,7 +20,7 @@ Array [
       scope="row"
     >
       <a
-        href="#"
+        href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
       >
         Jane Doe
       </a>
@@ -30,7 +30,7 @@ Array [
       key="fineos_absence_id"
     >
       <a
-        href="#"
+        href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
       >
         NTN-111-ABS-01
       </a>
@@ -66,7 +66,7 @@ Array [
       scope="row"
     >
       <a
-        href="#"
+        href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
       >
         Jane Doe
       </a>
@@ -76,7 +76,7 @@ Array [
       key="fineos_absence_id"
     >
       <a
-        href="#"
+        href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
       >
         NTN-111-ABS-01
       </a>
