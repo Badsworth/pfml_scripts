@@ -6,7 +6,7 @@ import { ApplicationResponse } from "../../../src/api";
 describe("Payment amounts", () => {
   it(
     "Verify the payment amount for an intermittent bonding claim with 20 hrs work week schedule",
-    { baseUrl: getFineosBaseUrl()},
+    { baseUrl: getFineosBaseUrl() },
     () => {
       beforeFineos();
       cy.visit("/");
