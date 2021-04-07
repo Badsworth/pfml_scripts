@@ -96,6 +96,11 @@ def test_file_location():
 
 
 @pytest.fixture
+def broken_test_file_location():
+    return Path(__file__).parent / "broken_test_users1.csv"
+
+
+@pytest.fixture
 def bom_test_file_location():
     return Path(__file__).parent / "bom_test_users1.csv"
 
@@ -340,3 +345,19 @@ class TestProcessByEmail:
             assert ula.fineos_web_id is None
         capture = massgov.pfml.fineos.mock_client.get_capture()
         assert len(capture) == 0
+
+    def test_error_if_file_has_invalid_headers(
+        self, broken_test_file_location, test_db_session, caplog
+    ):
+        caplog.set_level(logging.INFO)  # noqa: B1
+        cognito_client = MockCognito()
+
+        with pytest.raises(Exception):
+            process_files(
+                files=[broken_test_file_location],
+                db_session=test_db_session,
+                force_registration=True,
+                cognito_client=cognito_client,
+                cognito_pool_id="fake_pool",
+            )
+        assert "File has invalid headers" in caplog.text
