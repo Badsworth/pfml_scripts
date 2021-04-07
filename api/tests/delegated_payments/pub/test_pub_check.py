@@ -37,7 +37,7 @@ def _random_payment_with_state_log(
 ) -> Payment:
     # Create the employee and claim ourselves so the payment has an associated address.
     address_pair = ExperianAddressPairFactory(experian_address=AddressFactory())
-    employee = EmployeeFactory(experian_address_pair=address_pair)
+    employee = EmployeeFactory()
     claim = ClaimFactory(employee=employee)
 
     # Set the dates to some reasonably recent dates in the past.
@@ -52,6 +52,7 @@ def _random_payment_with_state_log(
         payment_date=payment_date,
         amount=Decimal(fake.random_int(min=10, max=9_999)),
         disb_method_id=method.payment_method_id,
+        experian_address_pair=address_pair,
     )
 
     state_log_util.create_finished_state_log(
@@ -77,7 +78,7 @@ def test_create_check_file_eligible_payment_error(
 ):
     # Update zip code so that it fails validation.
     payment = _random_valid_check_payment_with_state_log(test_db_session)
-    payment.claim.employee.experian_address_pair.experian_address.zip_code = "An invalid zip code"
+    payment.experian_address_pair.experian_address.zip_code = "An invalid zip code"
     test_db_session.commit()
 
     caplog.set_level(logging.ERROR)  # noqa: B1

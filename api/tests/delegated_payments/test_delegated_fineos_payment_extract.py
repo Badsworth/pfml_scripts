@@ -236,10 +236,7 @@ def add_db_records(
         experian_address_pair = ExperianAddressPairFactory(fineos_address=mailing_address)
 
     if add_employee:
-        employee = EmployeeFactory.create(
-            tax_identifier=TaxIdentifier(tax_identifier=tin),
-            experian_address_pair=experian_address_pair,
-        )
+        employee = EmployeeFactory.create(tax_identifier=TaxIdentifier(tax_identifier=tin))
         if add_eft:
             pub_eft = PubEftFactory.create(
                 routing_nbr=tin,
@@ -257,7 +254,10 @@ def add_db_records(
         # Payment needs to be attached to a claim
         if add_payment:
             payment = PaymentFactory.create(
-                claim=claim, fineos_pei_c_value=c_value, fineos_pei_i_value=i_value
+                claim=claim,
+                fineos_pei_c_value=c_value,
+                fineos_pei_i_value=i_value,
+                experian_address_pair=experian_address_pair,
             )
             state_log_util.create_finished_state_log(
                 payment, additional_payment_state, EXPECTED_OUTCOME, db_session
@@ -453,7 +453,7 @@ def test_process_extract_data(
         employee = claim.employee
         assert employee
 
-        mailing_address = employee.experian_address_pair.fineos_address
+        mailing_address = payment.experian_address_pair.fineos_address
         assert mailing_address
         assert mailing_address.address_line_one == f"AddressLine1-{index}"
         assert mailing_address.city == f"City{index}"
@@ -802,7 +802,7 @@ def test_process_extract_data_no_existing_claim_address_eft(
         employee = claim.employee
         assert employee
 
-        mailing_address = employee.experian_address_pair.fineos_address
+        mailing_address = payment.experian_address_pair.fineos_address
         assert mailing_address
         assert mailing_address.address_line_one == f"AddressLine1-{index}"
         assert mailing_address.city == f"City{index}"
@@ -1703,12 +1703,19 @@ def test_update_experian_address_pair_fineos_address_no_update(
         .first()
     )
     assert employee is not None
-    assert employee.experian_address_pair is not None
-    employee.experian_address_pair.fineos_address.address_line_one = "AddressLine1-1"
-    employee.experian_address_pair.fineos_address.address_line_two = "AddressLine2-1"
-    employee.experian_address_pair.fineos_address.city = "City1"
-    employee.experian_address_pair.fineos_address.geo_state_id = GeoState.MA.geo_state_id
-    employee.experian_address_pair.fineos_address.zip_code = "11111"
+
+    # Add the expected address to another payment associated with the employee
+    claim = ClaimFactory.create(employee=employee)
+    address_pair = ExperianAddressPairFactory(
+        fineos_address=AddressFactory.create(
+            address_line_one="AddressLine1-1",
+            address_line_two="AddressLine2-1",
+            city="City1",
+            geo_state_id=GeoState.MA.geo_state_id,
+            zip_code="11111",
+        )
+    )
+    payment = PaymentFactory.create(claim=claim, experian_address_pair=address_pair)
     test_db_session.commit()
 
     # Run the process

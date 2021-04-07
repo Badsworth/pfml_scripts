@@ -450,9 +450,6 @@ class Employee(Base):
     ctr_address_pair_id = Column(
         UUID(as_uuid=True), ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
     )
-    experian_address_pair_id = Column(
-        UUID(as_uuid=True), ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
-    )
 
     title = relationship(LkTitle)
     race = relationship(LkRace)
@@ -478,8 +475,6 @@ class Employee(Base):
         Optional[TaxIdentifier], relationship("TaxIdentifier", back_populates="employee")
     )
     ctr_address_pair = cast(Optional[CtrAddressPair], relationship("CtrAddressPair"))
-    experian_address_pair = cast(Optional[ExperianAddressPair], relationship("ExperianAddressPair"))
-
     authorized_reps: "Query[AuthorizedRepEmployee]" = dynamic_loader(
         "AuthorizedRepEmployee", back_populates="employee"
     )
@@ -570,6 +565,9 @@ class Payment(Base):
     disb_check_eft_issue_date = Column(Date)
     disb_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     disb_amount = Column(Numeric(asdecimal=True))
+    experian_address_pair_id = Column(
+        UUID(as_uuid=True), ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
+    )
     has_address_update = Column(Boolean, default=False, server_default="FALSE", nullable=False)
     has_eft_update = Column(Boolean, default=False, server_default="FALSE", nullable=False)
     fineos_extract_import_log_id = Column(
@@ -588,6 +586,7 @@ class Payment(Base):
     payment_transaction_type = relationship(LkPaymentTransactionType)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
     pub_eft = relationship(PubEft)
+    experian_address_pair = relationship(ExperianAddressPair, foreign_keys=experian_address_pair_id)
     fineos_extract_import_log = relationship("ImportLog")
     check_number = Column(Integer, index=True, unique=True)
 

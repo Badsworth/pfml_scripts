@@ -14,15 +14,11 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
-    Address,
     BankAccountType,
     Claim,
     Employee,
-    EmployeeAddress,
     EmployeePubEftPair,
     EmployeeReferenceFile,
-    ExperianAddressPair,
-    GeoState,
     PaymentMethod,
     PrenoteState,
     PubEft,
@@ -464,10 +460,6 @@ class ClaimantExtractStep(Step):
                     date_of_birth
                 )
 
-            self.update_mailing_address(
-                employee_feed_entry, employee_pfml_entry, validation_container
-            )
-
             payment_method = payments_util.validate_csv_input(
                 "PAYMENTMETHOD",
                 employee_feed_entry,
@@ -504,76 +496,6 @@ class ClaimantExtractStep(Step):
                 self.db_session.add(claim)
 
         return employee_pfml_entry
-
-    def update_mailing_address(
-        self,
-        employee_feed_entry: Dict[str, str],
-        employee_pfml_entry: Employee,
-        validation_container: payments_util.ValidationContainer,
-    ) -> bool:
-        """Return True if there are mailing address updates; False otherwise"""
-        nbr_of_validation_errors = len(validation_container.validation_issues)
-
-        address_line_one = payments_util.validate_csv_input(
-            "ADDRESS1", employee_feed_entry, validation_container, True
-        )
-        address_line_two = payments_util.validate_csv_input(
-            "ADDRESS2", employee_feed_entry, validation_container, False
-        )
-        address_city = payments_util.validate_csv_input(
-            "ADDRESS4", employee_feed_entry, validation_container, True
-        )
-        address_state = payments_util.validate_csv_input(
-            "ADDRESS6",
-            employee_feed_entry,
-            validation_container,
-            True,
-            custom_validator_func=payments_util.lookup_validator(GeoState),
-        )
-        address_zip_code = payments_util.validate_csv_input(
-            "POSTCODE",
-            employee_feed_entry,
-            validation_container,
-            True,
-            min_length=5,
-            max_length=10,
-            custom_validator_func=payments_util.zip_code_validator,
-        )
-
-        if nbr_of_validation_errors == len(validation_container.validation_issues):
-            mailing_address = Address(
-                address_id=uuid.uuid4(),
-                address_line_one=address_line_one,
-                address_line_two=address_line_two,
-                city=address_city,
-                geo_state_id=GeoState.get_id(address_state),
-                zip_code=address_zip_code,
-            )
-
-            # If experian_address_pair exists, compare the exisiting fineos_address with the payment_data address
-            #   If they're the same, nothing needs to be done, so we can return
-            #   If they're different or if no experian_address_pair exists, create a new ExperianAddressPair
-            experian_address_pair = employee_pfml_entry.experian_address_pair
-            if experian_address_pair:
-                if payments_util.is_same_address(
-                    experian_address_pair.fineos_address, mailing_address
-                ):
-                    return False
-
-            new_experian_address_pair = ExperianAddressPair(fineos_address=mailing_address)
-            employee_pfml_entry.experian_address_pair = new_experian_address_pair
-            self.db_session.add(mailing_address)
-            self.db_session.add(new_experian_address_pair)
-            self.db_session.add(employee_pfml_entry)
-
-            # We also want to make sure the address is linked in the EmployeeAddress table
-            employee_address = EmployeeAddress(
-                employee=employee_pfml_entry, address=mailing_address
-            )
-            self.db_session.add(employee_address)
-            return True
-
-        return False
 
     def update_eft_info(
         self,
@@ -747,7 +669,7 @@ class ClaimantExtractStep(Step):
 
         else:
             state_log_util.create_finished_state_log(
-                end_state=State.CLAIMANT_READY_FOR_ADDRESS_VALIDATION,
+                end_state=State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS,
                 associated_model=employee_pfml_entry,
                 import_log_id=self.get_import_log_id(),
                 outcome=state_log_util.build_outcome(

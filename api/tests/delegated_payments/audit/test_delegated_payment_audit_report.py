@@ -11,7 +11,6 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     Address,
-    EmployeeAddress,
     Payment,
     ReferenceFile,
     ReferenceFileType,
@@ -116,8 +115,7 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
 
 
 def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Payment):
-    employee_address: EmployeeAddress = payment.claim.employee.addresses.first()  # TODO adjust after address validation work to get the most recent valid address
-    address: Address = employee_address.address
+    address: Address = payment.experian_address_pair.experian_address
 
     assert row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id] == str(payment.payment_id)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment.claim)

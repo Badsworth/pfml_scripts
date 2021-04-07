@@ -15,7 +15,7 @@ from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
     ClaimType,
-    EmployeeAddress,
+    ExperianAddressPair,
     LkClaimType,
     LkPaymentMethod,
     LkState,
@@ -28,6 +28,7 @@ from massgov.pfml.db.models.factories import (
     ClaimFactory,
     EmployeeFactory,
     EmployerFactory,
+    ExperianAddressPairFactory,
     PaymentFactory,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
@@ -225,6 +226,7 @@ def create_payment_with_end_state(
     c_value: str,
     i_value: str,
     claim: Claim,
+    address_pair: ExperianAddressPair,
     payment_method: LkPaymentMethod,
     end_state: LkState,
     db_session: db.Session,
@@ -244,6 +246,7 @@ def create_payment_with_end_state(
         payment_date=payment_date,
         period_start_date=period_start_date,
         period_end_date=period_end_date,
+        experian_address_pair=address_pair,
     )
 
     state_log_util.create_finished_state_log(
@@ -270,7 +273,7 @@ def generate_scenario_data(
     employer = EmployerFactory.create()
 
     employee = EmployeeFactory.create()
-    employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
+    address_pair = ExperianAddressPairFactory.create(experian_address=mailing_address)
 
     claim = ClaimFactory.create(
         employee=employee,
@@ -286,6 +289,7 @@ def generate_scenario_data(
                 c_value,
                 i_value,
                 claim,
+                address_pair,
                 scenario_descriptor.payment_method,
                 State.DELEGATED_PAYMENT_ERROR_REPORT_SENT,
                 db_session,
@@ -297,6 +301,7 @@ def generate_scenario_data(
                 c_value,
                 i_value,
                 claim,
+                address_pair,
                 scenario_descriptor.payment_method,
                 State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
                 db_session,
@@ -307,6 +312,7 @@ def generate_scenario_data(
         c_value,
         i_value,
         claim,
+        address_pair,
         scenario_descriptor.payment_method,
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
         db_session,

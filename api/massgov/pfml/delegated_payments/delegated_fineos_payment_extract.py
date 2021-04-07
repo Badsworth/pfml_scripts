@@ -650,12 +650,18 @@ class PaymentExtractStep(Step):
 
     def update_experian_address_pair_fineos_address(
         self, payment_data: PaymentData, employee: Employee
-    ) -> bool:
+    ) -> Tuple[Optional[ExperianAddressPair], bool]:
         """Create or update the employee's EFT record
 
         Returns:
             bool: True if payment_data has address updates; False otherwise
         """
+        # Only update if the employee is using Check for payments
+        if payment_data.validation_container.has_validation_issues():
+            # We will only update address information if the payment has no issues up to
+            # this point in the processing, meaning that required fields are present.
+            return None, False
+
         # Construct an Address from the payment_data
         payment_data_address = Address(
             address_id=uuid.uuid4(),
@@ -669,26 +675,26 @@ class PaymentExtractStep(Step):
             address_type_id=AddressType.MAILING.address_type_id,
         )
 
-        # If experian_address_pair exists, compare the existing fineos_address with the payment_data address
-        #   If they're the same, nothing needs to be done, so we can return
-        #   If they're different or if no experian_address_pair exists, create a new ExperianAddressPair
-        experian_address_pair = employee.experian_address_pair
-        if experian_address_pair:
-            if payments_util.is_same_address(
-                experian_address_pair.fineos_address, payment_data_address
-            ):
-                return False
+        # If existing_address_pair exists, compare the existing fineos_address with the payment_data address
+        #   If they're the same, nothing needs to be done, so we can return the address
+        existing_address_pair = payments_util.find_existing_address_pair(
+            employee, payment_data_address, self.db_session
+        )
+        if existing_address_pair:
+            return existing_address_pair, False
 
+        # We need to add the address to the employee.
+        # TODO - If FINEOS provides a value that indicates an address
+        # has been validated, we would also set the experian_address here.
         new_experian_address_pair = ExperianAddressPair(fineos_address=payment_data_address)
-        employee.experian_address_pair = new_experian_address_pair
+
         self.db_session.add(payment_data_address)
         self.db_session.add(new_experian_address_pair)
-        self.db_session.add(employee)
 
         # We also want to make sure the address is linked in the EmployeeAddress table
         employee_address = EmployeeAddress(employee=employee, address=payment_data_address)
         self.db_session.add(employee_address)
-        return True
+        return new_experian_address_pair, True
 
     def get_payment_transaction_type_id(self, payment_data: PaymentData, amount: Decimal) -> int:
         if payment_data.raw_payment_transaction_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
@@ -905,10 +911,10 @@ class PaymentExtractStep(Step):
         # many contexts, so we want to be careful about modifying
         # them with problematic data.
         has_address_update, has_eft_update = False, False
-        payment_eft = None
+        payment_eft, address_pair = None, None
         if employee and not payment_data.validation_container.has_validation_issues():
             # Update the mailing address with values from FINEOS
-            has_address_update = self.update_experian_address_pair_fineos_address(
+            address_pair, has_address_update = self.update_experian_address_pair_fineos_address(
                 payment_data, employee
             )
 
@@ -929,6 +935,10 @@ class PaymentExtractStep(Step):
         # Attach the EFT info used to the payment
         if payment_eft:
             payment.pub_eft = payment_eft
+
+        # Attach the address info used to the payment
+        if address_pair:
+            payment.experian_address_pair = address_pair
 
         # Link the payment object to the payment_reference_file
         payment_reference_file = PaymentReferenceFile(

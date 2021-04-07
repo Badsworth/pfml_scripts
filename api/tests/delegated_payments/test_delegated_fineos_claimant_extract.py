@@ -16,7 +16,6 @@ from massgov.pfml.db.models.employees import (
     ClaimType,
     Employee,
     EmployeeLog,
-    GeoState,
     ImportLog,
     PaymentMethod,
     PrenoteState,
@@ -139,22 +138,13 @@ def test_run_step_happy_path(
     )
 
     # Sample employee file above has two records for Glennie. Only one has the
-    # DEFPAYMENTPREF flag set to Y, with the address and EFT instructions tested
+    # DEFPAYMENTPREF flag set to Y, with the EFT instructions tested
     # here.
     assert updated_employee is not None
     # We are not updating first or last name with FINEOS data as DOR is source of truth.
     assert updated_employee.first_name != "Glennie"
     assert updated_employee.last_name != "Balistreri"
     assert updated_employee.date_of_birth == datetime.date(1980, 1, 1)
-
-    assert updated_employee.experian_address_pair.fineos_address.address_line_one == "123 Main St"
-    assert updated_employee.experian_address_pair.fineos_address.address_line_two == ""
-    assert updated_employee.experian_address_pair.fineos_address.city == "Oakland"
-    assert (
-        updated_employee.experian_address_pair.fineos_address.geo_state_id
-        == GeoState.CA.geo_state_id
-    )
-    assert updated_employee.experian_address_pair.fineos_address.zip_code == "94612"
 
     pub_efts = updated_employee.pub_efts.all()
     assert len(pub_efts) == 1
@@ -174,7 +164,7 @@ def test_run_step_happy_path(
     # Confirm 1 state log for DELEGATED_EFT flow
     for state_log in updated_employee.state_logs:
         assert state_log.end_state_id in [
-            State.CLAIMANT_READY_FOR_ADDRESS_VALIDATION.state_id,
+            State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS.state_id,
             State.DELEGATED_EFT_SEND_PRENOTE.state_id,
         ]
 
@@ -239,7 +229,7 @@ def test_run_step_existing_approved_eft_info(
     assert len(updated_employee.state_logs) == 1
     assert (
         updated_employee.state_logs[0].end_state_id
-        == State.CLAIMANT_READY_FOR_ADDRESS_VALIDATION.state_id
+        == State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS.state_id
     )
 
 
@@ -452,11 +442,6 @@ def add_employee_feed(extract_data: claimant_extract.ExtractData):
             "DATEOFBIRTH": "1967-04-27",
             "PAYMENTMETHOD": "Elec Funds Transfer",
             "CUSTOMERNO": "12345",
-            "ADDRESS1": "456 Park Avenue",
-            "ADDRESS2": "",
-            "ADDRESS4": "New York",
-            "ADDRESS6": "NY",
-            "POSTCODE": "11020",
             "SORTCODE": "123456789",
             "ACCOUNTNO": "123456789",
             "ACCOUNTTYPE": "Checking",
@@ -499,38 +484,6 @@ def test_update_employee_info_not_in_db(claimant_extract_step, test_db_session, 
     )
 
     assert employee is None
-
-
-def test_update_mailing_address_happy_path(claimant_extract_step, test_db_session):
-    employee = EmployeeFactory()
-    feed_entry = {
-        "ADDRESS1": "456 Park Avenue",
-        "ADDRESS2": "",
-        "ADDRESS4": "New York",
-        "ADDRESS6": "NY",
-        "POSTCODE": "11020",
-    }
-    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
-
-    has_address_update = claimant_extract_step.update_mailing_address(
-        feed_entry, employee, validation_container
-    )
-
-    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
-        Employee.employee_id == employee.employee_id
-    ).one_or_none()
-
-    assert (
-        updated_employee.experian_address_pair.fineos_address.address_line_one == "456 Park Avenue"
-    )
-    assert updated_employee.experian_address_pair.fineos_address.address_line_two == ""
-    assert updated_employee.experian_address_pair.fineos_address.city == "New York"
-    assert (
-        updated_employee.experian_address_pair.fineos_address.geo_state_id
-        == GeoState.NY.geo_state_id
-    )
-    assert updated_employee.experian_address_pair.fineos_address.zip_code == "11020"
-    assert has_address_update is True
 
 
 def test_process_extract_unprocessed_folder_files(
@@ -624,76 +577,6 @@ def test_process_extract_unprocessed_folder_files(
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
-
-
-def test_update_mailing_address_validation_issues(claimant_extract_step, test_db_session):
-    employee = EmployeeFactory()
-
-    # Invalid zip code
-    feed_entry = {
-        "ADDRESS1": "456 Park Avenue",
-        "ADDRESS2": "",
-        "ADDRESS4": "New York",
-        "ADDRESS6": "NY",
-        "POSTCODE": "ZIP12345",
-    }
-    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
-
-    has_address_update = claimant_extract_step.update_mailing_address(
-        feed_entry, employee, validation_container
-    )
-
-    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
-        Employee.employee_id == employee.employee_id
-    ).one_or_none()
-
-    assert len(validation_container.validation_issues) == 1
-    assert updated_employee.experian_address_pair is None
-    assert has_address_update is False
-
-    # Invalid Geo State Code
-    feed_entry = {
-        "ADDRESS1": "456 Park Avenue",
-        "ADDRESS2": "",
-        "ADDRESS4": "New York",
-        "ADDRESS6": "NZ",
-        "POSTCODE": "11020",
-    }
-    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
-
-    has_address_update = claimant_extract_step.update_mailing_address(
-        feed_entry, employee, validation_container
-    )
-
-    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
-        Employee.employee_id == employee.employee_id
-    ).one_or_none()
-
-    assert len(validation_container.validation_issues) == 1
-    assert updated_employee.experian_address_pair is None
-    assert has_address_update is False
-
-    # Missing address line 1 and incorrect Geo State Code
-    feed_entry = {
-        "ADDRESS1": "",
-        "ADDRESS2": "",
-        "ADDRESS4": "New York",
-        "ADDRESS6": "NZ",
-        "POSTCODE": "11020",
-    }
-    validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
-
-    has_address_update = claimant_extract_step.update_mailing_address(
-        feed_entry, employee, validation_container
-    )
-
-    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
-        Employee.employee_id == employee.employee_id
-    ).one_or_none()
-
-    assert len(validation_container.validation_issues) == 2
-    assert updated_employee.experian_address_pair is None
-    assert has_address_update is False
 
 
 def test_update_eft_info_happy_path(claimant_extract_step, test_db_session):

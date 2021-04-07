@@ -13,7 +13,6 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Address,
     Employee,
-    ExperianAddressPair,
     Payment,
     PaymentMethod,
     ReferenceFile,
@@ -171,7 +170,7 @@ def _convert_payment_to_check_issue_entry(payment: Payment) -> CheckIssueEntry:
 
 def _convert_payment_to_ez_check_record(payment: Payment, check_number: int) -> EzCheckRecord:
     employee = payment.claim.employee
-    experian_address_pair = cast(ExperianAddressPair, employee.experian_address_pair)
+    experian_address_pair = payment.experian_address_pair
     address = cast(Address, experian_address_pair.experian_address)
 
     geo_state = address.geo_state
