@@ -166,12 +166,13 @@ def users_patch(user_id):
                         errors=employer_issues,
                         data={},
                     ).to_api_response()
-                user_leave_admin = UserLeaveAdministrator(
-                    user=updated_user, employer=employer, fineos_web_id=None,
-                )
-                db_session.add(user_leave_admin)
-                db_session.commit()
-                db_session.refresh(updated_user)
+                if employer:
+                    user_leave_admin = UserLeaveAdministrator(
+                        user=updated_user, employer=employer, fineos_web_id=None,
+                    )
+                    db_session.add(user_leave_admin)
+                    db_session.commit()
+                    db_session.refresh(updated_user)
 
         ensure(EDIT, updated_user)
         for key in body.__fields_set__:
