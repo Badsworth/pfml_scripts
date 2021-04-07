@@ -22,7 +22,9 @@
 #
 
 import argparse
+import csv
 import datetime
+import io
 import os.path
 import pathlib
 import random
@@ -37,7 +39,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 import massgov.pfml.db
 import massgov.pfml.payments.payments_util as payments_util
-import massgov.pfml.util.batch.log
+import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.datetime
 import massgov.pfml.util.files
 import massgov.pfml.util.logging
@@ -120,7 +122,7 @@ def main():
 def run_voucher_process(config: Configuration) -> None:
     db_session_raw = massgov.pfml.db.init(sync_lookups=True)
     try:
-        with massgov.pfml.util.batch.log.LogEntry(
+        with batch_log.LogEntry(
             db_session_raw, "Payment voucher"
         ) as log_entry, massgov.pfml.db.session_scope(db_session_raw) as db_session:
             log_entry.set_metrics(**vars(config))
@@ -138,8 +140,13 @@ def run_voucher_process(config: Configuration) -> None:
 
 
 def process_extracts_to_payment_voucher(
-    input_path, output_path, payment_date, writeback, db_session, log_entry
-):
+    input_path: str,
+    output_path: str,
+    payment_date: Optional[datetime.date],
+    writeback: Optional[str],
+    db_session: massgov.pfml.db.Session,
+    log_entry: batch_log.LogEntry,
+) -> None:
     """Get FINEOS extract files from input path and write to payment voucher CSV."""
     if payment_date is None:
         payment_date = datetime.date.today()
@@ -147,9 +154,11 @@ def process_extracts_to_payment_voucher(
     input_files = copy_input_files_to_output_path(input_path, output_path)
 
     # Read vpei.csv, vpeipaymentdetails.csv, vpeiclaimdetails.csv
-    extract_data = fineos_payment_export.ExtractData(input_files, "manual")
+    payment_extract_data = fineos_payment_export.ExtractData(input_files, "manual")
     with tempfile.TemporaryDirectory() as temp_dir:
-        fineos_payment_export.download_and_process_data(extract_data, pathlib.Path(temp_dir))
+        fineos_payment_export.download_and_process_data(
+            payment_extract_data, pathlib.Path(temp_dir)
+        )
 
     # Read VBI_REQUESTEDABSENCE_SOM.csv, Employee_feed.csv, LeavePlan_info.csv
     vendor_extract_data = fineos_vendor_export.ExtractData(input_files, "manual")
@@ -172,8 +181,8 @@ def process_extracts_to_payment_voucher(
         writeback_path, "w", newline=""
     ) as writeback_file:
         process_payment_records(
-            extract_data,
-            vendor_extract_data.requested_absence_info,
+            payment_extract_data,
+            vendor_extract_data,
             voucher_extract_data,
             output_file,
             writeback_file,
@@ -215,35 +224,35 @@ def copy_input_files_to_output_path(input_path, output_path):
 
 
 def process_payment_records(
-    extract_data,
-    requested_absence_extract,
-    voucher_extract_data,
-    output_file,
-    writeback_file,
-    payment_date,
-    db_session,
-    log_entry,
-):
+    payment_extract_data: fineos_payment_export.ExtractData,
+    vendor_extract_data: fineos_vendor_export.ExtractData,
+    voucher_extract_data: VoucherExtractData,
+    output_file: io.TextIOWrapper,
+    writeback_file: io.TextIOWrapper,
+    payment_date: datetime.date,
+    db_session: massgov.pfml.db.Session,
+    log_entry: batch_log.LogEntry,
+) -> None:
     """Process the extracted records and write to output CSV."""
     output_csv = payment_voucher_csv_writer(output_file)
     writeback_csv = writeback_csv_writer(writeback_file)
 
-    log_entry.set_metrics(total=len(extract_data.pei.indexed_data))
+    log_entry.set_metrics(total=len(payment_extract_data.pei.indexed_data))
 
-    for index, record in massgov.pfml.util.logging.log_every(
+    for ci_index, pei_record in massgov.pfml.util.logging.log_every(
         logger,
-        extract_data.pei.indexed_data.items(),
+        payment_extract_data.pei.indexed_data.items(),
         count=10,
-        total_count=len(extract_data.pei.indexed_data),
+        total_count=len(payment_extract_data.pei.indexed_data),
         start_time=massgov.pfml.util.datetime.utcnow(),
         item_name="pei record",
     ):
         process_payment_record(
-            extract_data,
-            requested_absence_extract,
+            payment_extract_data,
+            vendor_extract_data,
             voucher_extract_data,
-            index,
-            record,
+            ci_index,
+            pei_record,
             output_csv,
             writeback_csv,
             payment_date,
@@ -259,28 +268,23 @@ class PaymentRowError(Exception):
 
 
 def process_payment_record(
-    extract_data,
-    requested_absence_extract,
-    voucher_extract_data,
-    index,
-    record,
-    output_csv,
-    writeback_csv,
-    payment_date,
-    db_session,
-    log_entry,
-):
+    payment_extract_data: fineos_payment_export.ExtractData,
+    vendor_extract_data: fineos_vendor_export.ExtractData,
+    voucher_extract_data: VoucherExtractData,
+    ci_index: fineos_payment_export.CiIndex,
+    pei_record: Dict[str, str],
+    output_csv: csv.DictWriter,
+    writeback_csv: csv.DictWriter,
+    payment_date: datetime.date,
+    db_session: massgov.pfml.db.Session,
+    log_entry: batch_log.LogEntry,
+) -> None:
     """Process a single payment record with the given index."""
     extra: Dict[str, Optional[str]] = {}
 
     try:
-        payment_data = fineos_payment_export.PaymentData(extract_data, index, record)
-        extra.update(absence_case=payment_data.absence_case_number, i_value=index.i)
-
-        requested_absence = requested_absence_extract.indexed_data[payment_data.absence_case_number]
-        vbi_requested_absence = voucher_extract_data.vbi_requested_absence.indexed_data[
-            payment_data.absence_case_number
-        ]
+        payment_data = fineos_payment_export.PaymentData(payment_extract_data, ci_index, pei_record)
+        extra.update(absence_case=payment_data.absence_case_number, i_value=ci_index.i)
 
         if payment_data.validation_container.has_validation_issues():
             logger.warning(
@@ -289,33 +293,32 @@ def process_payment_record(
                 extra=extra,
             )
 
-        employee = get_employee(payment_data.tin, db_session)
-
-        mmars_vendor_code = get_mmars_vendor_code(employee)
-
-        vcm_flag = get_vcm_flag(employee, db_session)
-
-        write_row_to_output(
-            index,
+        voucher_has_errors = write_row_to_output(
+            ci_index,
             payment_data,
-            requested_absence,
-            vbi_requested_absence,
-            mmars_vendor_code,
-            vcm_flag,
+            vendor_extract_data,
+            voucher_extract_data,
             payment_date,
             output_csv,
+            log_entry,
+            extra,
+            db_session,
         )
-        write_writeback_row(index, writeback_csv)
+        write_writeback_row(ci_index, voucher_has_errors, writeback_csv)
 
         logger.info("wrote payment row", extra=extra)
-        log_entry.increment("success")
+
+        if voucher_has_errors:
+            log_entry.increment("error")
+        else:
+            log_entry.increment("success")
 
     except PaymentRowError as err:
-        logger.warning("%s", err, extra=extra)
+        logger.warning("Unexpected: %s", err, extra=extra)
         log_entry.increment("error")
 
     except Exception:
-        logger.exception("exception for payment row", extra=extra)
+        logger.exception("Unexpected: exception for payment row", extra=extra)
         log_entry.increment("exception")
 
 
@@ -369,22 +372,157 @@ def get_vcm_flag(employee: Employee, db_session: massgov.pfml.db.Session) -> str
 
 
 def write_row_to_output(
-    index,
-    payment_data,
-    requested_absence,
-    vbi_requested_absence,
-    mmars_vendor_code,
-    vcm_flag,
-    payment_date,
-    output_csv,
-):
-    """Write a single row to the output CSV."""
-    payment_start_period = datetime.datetime.fromisoformat(payment_data.payment_start_period).date()
-    payment_end_period = datetime.datetime.fromisoformat(payment_data.payment_end_period).date()
+    ci_index: fineos_payment_export.CiIndex,
+    payment_data: fineos_payment_export.PaymentData,
+    vendor_extract_data: fineos_vendor_export.ExtractData,
+    voucher_extract_data: VoucherExtractData,
+    payment_date: datetime.date,
+    output_csv: csv.DictWriter,
+    log_entry: batch_log.LogEntry,
+    extra: Dict[str, Optional[str]],
+    db_session: massgov.pfml.db.Session,
+) -> bool:
+    """Write a single row to the output CSV.
 
+    Payment Voucher should have one row for each row in the vpei.csv.
+
+    All fields should be filled if possible; otherwise they should be left blank.
+
+    Returns:
+        - bool: True if one or more errors were encountered; False otherwise.
+    """
+    has_errors = False
+
+    # Process fields requiring database lookups.
+    mmars_vendor_code = ""
+    vcm_flag = ""
+    try:
+        employee = get_employee(payment_data.tin, db_session)
+        vcm_flag = get_vcm_flag(employee, db_session)
+        mmars_vendor_code = get_mmars_vendor_code(employee)
+    except Exception as err:
+        logger.warning("%s; cannot set mmars_vendor_code, vcm_flag", err, extra=extra)
+        has_errors = True
+
+    # Process fields from vpeiclaimdetails.csv.
+    absence_case_number = ""
+    vendor_invoice_number = ""
+    if payment_data.absence_case_number is not None:
+        absence_case_number = payment_data.absence_case_number
+        vendor_invoice_number = gax.get_vendor_invoice_number(
+            payment_data.absence_case_number, ci_index.i
+        )
+    else:
+        logger.warning(
+            "Absence case missing from vpei.csv; cannot set absence_case_number, vendor_invoice_number",
+            extra=extra,
+        )
+        has_errors = True
+
+    # Process fields from VBI_REQUESTEDABSENCE_SOM.csv.
+    leave_type = ""
+    activity_code = ""
+    case_status = ""
+    employer_id = ""
+    if (
+        payment_data.absence_case_number is not None
+        and payment_data.absence_case_number
+        in vendor_extract_data.requested_absence_info.indexed_data
+    ):
+        requested_absence = vendor_extract_data.requested_absence_info.indexed_data[
+            payment_data.absence_case_number
+        ]
+        case_status = requested_absence["ABSENCE_CASESTATUS"]
+        employer_id = requested_absence["EMPLOYER_CUSTOMERNO"]
+
+        try:
+            leave_type = get_leave_type(requested_absence)
+            activity_code = get_activity_code(requested_absence)
+        except PaymentRowError as err:
+            logger.warning("%s", err, extra=extra)
+            has_errors = True
+    else:
+        logger.warning(
+            "Absence case missing and/or absence case not found in VBI_REQUESTEDABSENCE_SOM.csv; cannot set leave_type, activity_code, case_status, employer_id",
+            extra=extra,
+        )
+        has_errors = True
+
+    # Process fields from VBI_REQUESTEDABSENCE.csv.
+    leave_request_id: Optional[str] = ""
+    leave_request_decision: Optional[str] = ""
+    if (
+        payment_data.absence_case_number is not None
+        and payment_data.absence_case_number
+        in voucher_extract_data.vbi_requested_absence.indexed_data
+    ):
+        vbi_requested_absence = voucher_extract_data.vbi_requested_absence.indexed_data[
+            payment_data.absence_case_number
+        ]
+        leave_request_id = vbi_requested_absence.get("LEAVEREQUEST_ID")
+        leave_request_decision = vbi_requested_absence.get("LEAVEREQUEST_DECISION")
+    else:
+        logger.warning(
+            "Absence case missing and/or absence case not found in VBI_REQUESTEDABSENCE.csv; cannot set leave_request_id, leave_request_decision",
+            extra=extra,
+        )
+        has_errors = True
+
+    # Process fields from vpeipaymentdetails.csv.
+    payment_period_start_date = None
+    payment_period_start_date_str = ""
+    if hasattr(payment_data, "payment_start_period") and payment_data.payment_start_period:
+        payment_period_start_date = datetime.datetime.fromisoformat(
+            payment_data.payment_start_period
+        ).date()
+        payment_period_start_date_str = payment_period_start_date.isoformat()
+    else:
+        logger.warning("Pay period start date missing", extra=extra)
+        has_errors = True
+
+    payment_period_end_date = None
+    payment_period_end_date_str = ""
+    vendor_invoice_date = ""
+    if hasattr(payment_data, "payment_end_period") and payment_data.payment_end_period:
+        payment_period_end_date = datetime.datetime.fromisoformat(
+            payment_data.payment_end_period
+        ).date()
+        payment_period_end_date_str = payment_period_end_date.isoformat()
+        vendor_invoice_date = gax.get_vendor_invoice_date_str(payment_period_end_date)
+    else:
+        logger.warning("Pay period end date missing; cannot set vendor_invoice_date", extra=extra)
+        has_errors = True
+
+    # Composite field: check description.
+    check_description = ""
+    if (
+        payment_data.absence_case_number is not None
+        and payment_period_start_date
+        and payment_period_end_date
+    ):
+        check_description = gax.get_check_description(
+            absence_case_id=payment_data.absence_case_number,
+            payment_start_period=payment_period_start_date,
+            payment_end_period=payment_period_end_date,
+        )
+    else:
+        logger.warning(
+            "Absence case missing and/or pay period start date missing and/or pay period end date missing; cannot set check_description",
+            extra=extra,
+        )
+        has_errors = True
+
+    # Calculate whether the payment amount is zero or negative.
+    claimants_that_have_zero_or_credit_value = ""
+    if payment_data.payment_amount is not None and float(payment_data.payment_amount) <= 0:
+        claimants_that_have_zero_or_credit_value = "1"
+
+    # Any values directly from vpei.csv are looked up here using:
+    # - payment_data.<field>
+    # - ci_index.<field>
     payment_row = PaymentVoucherCSV(
-        leave_type=get_leave_type(requested_absence),
-        activity_code=get_activity_code(requested_absence),
+        leave_type=leave_type,
+        activity_code=activity_code,
         payment_doc_id_code="GAX",
         payment_doc_id_dept="EOL",
         doc_id=get_doc_id(),
@@ -401,35 +539,25 @@ def write_row_to_output(
         vendor_single_payment="Yes",
         event_type="AP01",
         payment_amount=payment_data.payment_amount,
-        description=gax.get_check_description(
-            absence_case_id=payment_data.absence_case_number,
-            payment_start_period=payment_start_period,
-            payment_end_period=payment_end_period,
-        ),
-        vendor_invoice_number=gax.get_vendor_invoice_number(
-            payment_data.absence_case_number, index.i
-        ),
+        description=check_description,
+        vendor_invoice_number=vendor_invoice_number,
         vendor_invoice_line="1",
-        vendor_invoice_date=gax.get_vendor_invoice_date_str(payment_end_period),
-        payment_period_start_date=payment_start_period.isoformat(),
-        payment_period_end_date=payment_end_period.isoformat(),
-        absence_case_number=payment_data.absence_case_number,
-        c_value=index.c,
-        i_value=index.i,
-        case_status=requested_absence["ABSENCE_CASESTATUS"],
-        employer_id=requested_absence["EMPLOYER_CUSTOMERNO"],
-        leave_request_id=vbi_requested_absence.get("LEAVEREQUEST_ID"),
-        leave_request_decision=vbi_requested_absence.get("LEAVEREQUEST_DECISION"),
+        vendor_invoice_date=vendor_invoice_date,
+        payment_period_start_date=payment_period_start_date_str,
+        payment_period_end_date=payment_period_end_date_str,
+        absence_case_number=absence_case_number,
+        c_value=ci_index.c,
+        i_value=ci_index.i,
+        case_status=case_status,
+        employer_id=employer_id,
+        leave_request_id=leave_request_id,
+        leave_request_decision=leave_request_decision,
         vcm_flag=vcm_flag,
         good_to_pay_from_prior_batch="",
         had_a_payment_in_a_prior_batch_by_vc_code="",
         inv="",
         payments_offset_to_zero="",
-        claimants_that_have_zero_or_credit_value=(
-            "1"
-            if payment_data.payment_amount is not None and float(payment_data.payment_amount) <= 0
-            else ""
-        ),
+        claimants_that_have_zero_or_credit_value=claimants_that_have_zero_or_credit_value,
         is_exempt="",
         leave_decision_not_approved="",
         has_a_check_preference_with_an_adl2_issue="",
@@ -439,6 +567,8 @@ def write_row_to_output(
         notes="",
     )
     output_csv.writerow(asdict(payment_row))
+
+    return has_errors
 
 
 def download_and_index_voucher_data(
@@ -461,15 +591,21 @@ def download_and_index_voucher_data(
     return
 
 
-def write_writeback_row(index, writeback_csv):
+def write_writeback_row(
+    ci_index: fineos_payment_export.CiIndex, set_inactive: bool, writeback_csv: csv.DictWriter
+) -> None:
     """Write a single row to the FINEOS Writeback CSV."""
+
+    # Set status: if there were errors in the corresponding payment voucher row, then
+    # leave status blank. Otherwise, set to "Active".
+    status = "" if set_inactive else "Active"
 
     # Note: the trans_status_date is hardcoded because it is just a hint to manual
     # process. Hardcoding to 12:00:00 to avoid any timezone issues.
     writeback_row = WritebackCSV(
-        c_value=index.c,
-        i_value=index.i,
-        status="Active",
+        c_value=ci_index.c,
+        i_value=ci_index.i,
+        status=status,
         transaction_status="",
         trans_status_date=datetime.datetime.now().strftime("%Y-%m-%d 12:00:00"),
         stock_no="",

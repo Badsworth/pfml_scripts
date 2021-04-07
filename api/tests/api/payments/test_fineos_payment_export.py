@@ -708,11 +708,13 @@ def test_validation_of_joining_datasets(set_exporter_env_vars):
     # and all of the non-PEI datasets
     validation_container = payment_data.validation_container
     assert validation_container.record_key == str(ci_index)
-    assert set(validation_container.validation_issues) == set(
-        [
-            ValidationIssue(ValidationReason.MISSING_DATASET, "payment_details"),
-            ValidationIssue(ValidationReason.MISSING_DATASET, "claim_details"),
-        ]
+    assert (
+        ValidationIssue(ValidationReason.MISSING_DATASET, "payment_details")
+        in validation_container.validation_issues
+    )
+    assert (
+        ValidationIssue(ValidationReason.MISSING_DATASET, "claim_details")
+        in validation_container.validation_issues
     )
 
 

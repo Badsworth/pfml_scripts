@@ -19,6 +19,7 @@ import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import AbsenceStatus, ClaimType, PaymentMethod
+from massgov.pfml.db.models.factories import TaxIdentifierFactory
 from massgov.pfml.payments.mock.payments_test_scenario_generator import (
     SCENARIO_DESCRIPTORS,
     ScenarioData,
@@ -265,60 +266,69 @@ def _generate_fineos_payment_rows_for_scenario(
         pei_csv_writer.writerow(vpei_row)
 
         # PEI Payment Details File
-        payment_start = payment.period_start_date
-        payment_end = payment.period_end_date
+        if not scenario_descriptor.missing_from_vpeipaymentdetails:
+            payment_start = payment.period_start_date
+            payment_end = payment.period_end_date
 
-        if scenario_descriptor.future_payment_benefit_week_update:
-            payment_start = payments_util.get_now() + timedelta(weeks=1)
-            payment_start = payments_util.get_now() + timedelta(weeks=2)
+            if scenario_descriptor.future_payment_benefit_week_update:
+                payment_start = payments_util.get_now() + timedelta(weeks=1)
+                payment_end = payments_util.get_now() + timedelta(weeks=2)
 
-        # A payment can have more than entry in vpeipaymentdetails.csv for a given
-        # CI pair. We generate a slightly randomized number of sub-payments for the
-        # same CI pair.
+            # A payment can have more than entry in vpeipaymentdetails.csv for a given
+            # CI pair. We generate a slightly randomized number of sub-payments for the
+            # same CI pair.
 
-        # Split the payment period into segments.
-        start_dates = []
-        if scenario_descriptor.has_multiple_payment_details:
-            num_pairs = scenario_descriptor.payment_details_count
-            date_diff = (payment_end - payment_start) / num_pairs
-            for i in range(num_pairs):
-                start_dates.append((payment_start + date_diff * i))
-        else:
-            start_dates.append(payment_start)
-
-        # For each segment, write a row to vpeipaymentdetails.csv.
-        for i, start_date in enumerate(start_dates):
-            vpei_payment_details_row = {}
-            vpei_payment_details_row[
-                "PECLASSID"
-            ] = payment_c_value  # Current setup: 1 payment period per payment
-            vpei_payment_details_row["PEINDEXID"] = payment_i_value
-            vpei_payment_details_row["PAYMENTSTARTP"] = start_date.strftime("%Y-%m-%d %H:%M:%S")
-
-            # If this the last start_date, the end date should be the end of the entire time period
-            if i == len(start_dates) - 1:
-                vpei_payment_details_row["PAYMENTENDPER"] = payment_end.strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                )
+            # Split the payment period into segments.
+            start_dates = []
+            if scenario_descriptor.has_multiple_payment_details and payment_start and payment_end:
+                num_pairs = scenario_descriptor.payment_details_count
+                date_diff = (payment_end - payment_start) / num_pairs
+                for i in range(num_pairs):
+                    start_dates.append((payment_start + date_diff * i))
             else:
-                # Otherwise, the end date should be one day before the next start date
-                end_date = start_dates[i + 1] - timedelta(days=1)
-                vpei_payment_details_row["PAYMENTENDPER"] = end_date.strftime("%Y-%m-%d %H:%M:%S")
+                start_dates.append(payment_start)
 
-            # Write out the row.
-            pei_payment_details_csv_writer.writerow(vpei_payment_details_row)
+            # For each segment, write a row to vpeipaymentdetails.csv.
+            for i, start_date in enumerate(start_dates):
+                vpei_payment_details_row = {}
+                vpei_payment_details_row[
+                    "PECLASSID"
+                ] = payment_c_value  # Current setup: 1 payment period per payment
+                vpei_payment_details_row["PEINDEXID"] = payment_i_value
+                if start_date:
+                    vpei_payment_details_row["PAYMENTSTARTP"] = start_date.strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
 
-            # TODO do we still want this
-            # if invalid_row:
-            #     vpei_payment_details_row["PECLASSID"] = "NON_EXISTENT_C_ID"
-            #     vpei_payment_details_row["PEINDEXID"] = "NON_EXISTENT_I_ID"
+                # If this the last start_date, the end date should be the end of the entire time period
+                if i == len(start_dates) - 1:
+                    if payment_end:
+                        vpei_payment_details_row["PAYMENTENDPER"] = payment_end.strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
+                else:
+                    # Otherwise, the end date should be one day before the next start date
+                    if start_dates[i + 1]:
+                        end_date = start_dates[i + 1] - timedelta(days=1)
+                        vpei_payment_details_row["PAYMENTENDPER"] = end_date.strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
 
-        # PEI Claim Details File
-        vpei_claim_details_row = {}
-        vpei_claim_details_row["PECLASSID"] = payment_c_value
-        vpei_claim_details_row["PEINDEXID"] = payment_i_value
-        vpei_claim_details_row["ABSENCECASENU"] = payment.claim.fineos_absence_id
-        pei_claim_details_csv_writer.writerow(vpei_claim_details_row)
+                # Write out the row.
+                pei_payment_details_csv_writer.writerow(vpei_payment_details_row)
+
+                # TODO do we still want this
+                # if invalid_row:
+                #     vpei_payment_details_row["PECLASSID"] = "NON_EXISTENT_C_ID"
+                #     vpei_payment_details_row["PEINDEXID"] = "NON_EXISTENT_I_ID"
+
+        if not scenario_descriptor.missing_from_vpeiclaimdetails:
+            # PEI Claim Details File
+            vpei_claim_details_row = {}
+            vpei_claim_details_row["PECLASSID"] = payment_c_value
+            vpei_claim_details_row["PEINDEXID"] = payment_i_value
+            vpei_claim_details_row["ABSENCECASENU"] = payment.claim.fineos_absence_id
+            pei_claim_details_csv_writer.writerow(vpei_claim_details_row)
 
 
 def _generate_fineos_vendor_rows_for_scenario(
@@ -348,39 +358,49 @@ def _generate_fineos_vendor_rows_for_scenario(
     absence_end = application_date + timedelta(weeks=random.randint(4, 12))
 
     for claim in claims:
-        # Most fields are drawn from VBI_REQUESTEDABSENCE_SOM.csv, the customized version
-        # of VBI_REQUESTEDOBSENCE.csv
-        requested_absence_som_row = {}
-        requested_absence_som_row["ABSENCE_CASENUMBER"] = claim.fineos_absence_id
-        requested_absence_som_row["NOTIFICATION_CASENUMBER"] = claim.fineos_absence_id[:11]
-        requested_absence_som_row["ABSENCE_CASESTATUS"] = (
-            AbsenceStatus.ADJUDICATION.absence_status_description
-            if claim.fineos_absence_status_id is None
-            else claim.fineos_absence_status.absence_status_description
-        )
-        requested_absence_som_row["ABSENCEPERIOD_START"] = absence_start.strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
-        requested_absence_som_row["ABSENCEPERIOD_END"] = absence_end.strftime("%Y-%m-%d %H:%M:%S")
-        requested_absence_som_row["LEAVEREQUEST_EVIDENCERESULTTYPE"] = (
-            "Not Satisfied" if not scenario_descriptor.evidence_satisfied else "Satisfied"
-        )
-        requested_absence_som_row["ABSENCEREASON_COVERAGE"] = CLAIM_TYPE_TRANSLATION[
-            scenario_descriptor.leave_type.claim_type_description
-        ]
+        if not scenario_descriptor.missing_from_vbi_requestedabsence_som:
+            # Most fields are drawn from VBI_REQUESTEDABSENCE_SOM.csv, the customized version
+            # of VBI_REQUESTEDOBSENCE.csv
+            requested_absence_som_row = {}
+            requested_absence_som_row["ABSENCE_CASENUMBER"] = claim.fineos_absence_id
+            requested_absence_som_row["NOTIFICATION_CASENUMBER"] = (
+                claim.fineos_absence_id[:11] if claim.fineos_absence_id else ""
+            )
+            requested_absence_som_row["ABSENCE_CASESTATUS"] = (
+                AbsenceStatus.ADJUDICATION.absence_status_description
+                if claim.fineos_absence_status_id is None
+                else claim.fineos_absence_status.absence_status_description
+            )
+            requested_absence_som_row["ABSENCEPERIOD_START"] = absence_start.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            requested_absence_som_row["ABSENCEPERIOD_END"] = absence_end.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            requested_absence_som_row["LEAVEREQUEST_EVIDENCERESULTTYPE"] = (
+                "Not Satisfied" if not scenario_descriptor.evidence_satisfied else "Satisfied"
+            )
+            requested_absence_som_row["ABSENCEREASON_COVERAGE"] = CLAIM_TYPE_TRANSLATION[
+                scenario_descriptor.leave_type.claim_type_description
+            ]
 
-        requested_absence_som_row["EMPLOYEE_CUSTOMERNO"] = scenario_data.employee_customer_number
-        requested_absence_som_row["EMPLOYER_CUSTOMERNO"] = employer.fineos_employer_id
+            requested_absence_som_row[
+                "EMPLOYEE_CUSTOMERNO"
+            ] = scenario_data.employee_customer_number
 
-        requested_absence_som_csv_writer.writerow(requested_absence_som_row)
+            if not scenario_descriptor.missing_from_vpeiclaimdetails:
+                requested_absence_som_row["EMPLOYER_CUSTOMERNO"] = employer.fineos_employer_id
 
-        # A few fields are still needed from the unmodified version of
-        # VBI_REQUSTEDABSENCE.csv
-        requested_absence_row = {}
-        requested_absence_row["ABSENCE_CASENUMBER"] = claim.fineos_absence_id
-        requested_absence_row["LEAVEREQUEST_ID"] = scenario_data.leave_request_id
-        requested_absence_row["LEAVEREQUEST_DECISION"] = scenario_data.leave_request_decision
-        requested_absence_csv_writer.writerow(requested_absence_row)
+            requested_absence_som_csv_writer.writerow(requested_absence_som_row)
+
+        if not scenario_descriptor.missing_from_vbi_requestedabsence:
+            # A few fields are still needed from the unmodified version of
+            # VBI_REQUSTEDABSENCE.csv
+            requested_absence_row = {}
+            requested_absence_row["ABSENCE_CASENUMBER"] = claim.fineos_absence_id
+            requested_absence_row["LEAVEREQUEST_ID"] = scenario_data.leave_request_id
+            requested_absence_row["LEAVEREQUEST_DECISION"] = scenario_data.leave_request_decision
+            requested_absence_csv_writer.writerow(requested_absence_row)
 
     # Employee Feed file
     if scenario_descriptor.missing_from_employee_feed:
@@ -488,6 +508,11 @@ def generate(config: ScenarioDataConfig, folder_path: str) -> List[ScenarioData]
     date_prefix = payments_util.get_now().strftime("%Y-%m-%d-%H-%M-%S-")
     generate_vendor_extract_files(scenario_dataset, folder_path, date_prefix)
     generate_payment_extract_files(scenario_dataset, folder_path, date_prefix)
+
+    # To make so that it is impossible to lookup the correct employee in the database
+    for scenario_data in scenario_dataset:
+        if scenario_data.scenario_descriptor.employee_not_in_db:
+            scenario_data.employee.tax_identifier = TaxIdentifierFactory.create()
 
     return scenario_dataset
 

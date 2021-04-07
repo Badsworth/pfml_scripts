@@ -92,6 +92,15 @@ class ScenarioName(Enum):
     SCENARIO_VOUCHER_C = "VC"
     SCENARIO_VOUCHER_D = "VD"
     SCENARIO_VOUCHER_E = "VE"
+    SCENARIO_VOUCHER_F = "VF"
+    SCENARIO_VOUCHER_G = "VG"
+    SCENARIO_VOUCHER_H = "VH"
+    SCENARIO_VOUCHER_I = "VI"
+    SCENARIO_VOUCHER_J = "VJ"
+    SCENARIO_VOUCHER_K = "VK"
+    SCENARIO_VOUCHER_L = "VL"
+    SCENARIO_VOUCHER_M = "VM"
+    SCENARIO_VOUCHER_N = "VN"
 
 
 @dataclass
@@ -151,6 +160,20 @@ class EmployeePaymentScenarioDescriptor:
     # To specify a payment has multiple sub-payments (e.g. multiple rows in the vpeipaymentdetailscsv)
     has_multiple_payment_details: bool = False
     payment_details_count: int = 0
+    # To make so that it is impossible to lookup the correct employee in the database
+    employee_not_in_db: bool = False
+    # To set VBI_REQUESTEDABSENCE.csv to be missing
+    missing_from_vbi_requestedabsence: bool = False
+    # To set VBI_REQUESTEDABSENCE_SOM.csv to be missing
+    missing_from_vbi_requestedabsence_som: bool = False
+    # To set vpeipaymentdetails.csv to be missing
+    missing_from_vpeipaymentdetails: bool = False
+    # To set vpeiclaimdetails.csv to be missing
+    missing_from_vpeiclaimdetails: bool = False
+    # To set missing payment start dates
+    missing_payment_start_date: bool = False
+    # To set missing payment end dates
+    missing_payment_end_date: bool = False
 
 
 SCENARIO_DESCRIPTORS: Dict[ScenarioName, EmployeePaymentScenarioDescriptor] = {}
@@ -410,72 +433,130 @@ SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_Z] = EmployeePaymentScenarioDescripto
 )
 
 # Start Payment Voucher scenarios
-# EmployeeA with valid address, payment method is check, leave type is medical leave, 2 payments
+# valid address, payment method is check, leave type is medical leave, 2 payments
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_A] = EmployeePaymentScenarioDescriptor(
     scenario_name=ScenarioName.SCENARIO_VOUCHER_A,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     has_payment_extract=True,
-    has_outbound_vendor_return=True,
-    has_vcc_status_return=True,
-    has_gax_status_return=True,
-    has_outbound_payment_return=True,
     payment_amounts_count=2,
 )
 
-# EmployeeB with valid address, payment method is check, leave type is bonding leave, payment is zero dollars
+# valid address, payment method is check, leave type is bonding leave, payment is zero dollars
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_B] = EmployeePaymentScenarioDescriptor(
     scenario_name=ScenarioName.SCENARIO_VOUCHER_B,
     leave_type=ClaimType.FAMILY_LEAVE,
     payee_payment_method=PaymentMethod.CHECK,
     has_payment_extract=True,
-    has_outbound_vendor_return=True,
-    has_vcc_status_return=True,
-    has_gax_status_return=True,
-    has_outbound_payment_return=True,
     payment_amounts=[decimal.Decimal(0)],
 )
 
-# EmployeeC with valid address, real routing number, fake bank account number, payment method is ACH, leave type is medical leave, payment is negative
+# valid address, real routing number, fake bank account number, payment method is ACH, leave type is medical leave
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_C] = EmployeePaymentScenarioDescriptor(
     scenario_name=ScenarioName.SCENARIO_VOUCHER_C,
     leave_type=ClaimType.MEDICAL_LEAVE,
     payee_payment_method=PaymentMethod.ACH,
     account_type=BankAccountType.CHECKING,
-    has_vcc_status_return=True,
     has_payment_extract=True,
-    has_outbound_vendor_return=True,
-    has_gax_status_return=True,
-    has_outbound_payment_return=True,
-    payment_amounts=[decimal.Decimal(random.uniform(1, 1000)) * -1],
 )
 
-# EmployeeD with valid address, real routing number, fake bank account number, payment method is ACH, leave type is bonding leave, payment is missing
+# valid address, real routing number, fake bank account number, payment method is ACH, leave type is bonding leave
 SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_D] = EmployeePaymentScenarioDescriptor(
     scenario_name=ScenarioName.SCENARIO_VOUCHER_D,
     leave_type=ClaimType.FAMILY_LEAVE,
     payee_payment_method=PaymentMethod.ACH,
     account_type=BankAccountType.SAVINGS,
     has_payment_extract=True,
-    has_outbound_vendor_return=True,
-    has_vcc_status_return=True,
-    has_gax_status_return=True,
-    has_outbound_payment_return=True,
+)
+
+# valid address, payment method is check, leave type is medical leave, has multiple payment detail entries
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_E] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_E,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
+    has_payment_extract=True,
+    has_multiple_payment_details=True,
+)
+
+# valid address, payment method is check, leave type is medical leave, payment is negative
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_F] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_F,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
+    has_payment_extract=True,
+    payment_amounts=[decimal.Decimal(random.uniform(1, 1000)) * -1],
+)
+
+# valid address, payment method is check, leave type is medical leave, payment is missing
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_G] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_G,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
+    has_payment_extract=True,
     missing_payment=True,
 )
 
-# EmployeeA with valid address, payment method is check, leave type is medical leave, zero dollar payment amount
-SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_E] = EmployeePaymentScenarioDescriptor(
-    scenario_name=ScenarioName.SCENARIO_VOUCHER_E,
-    leave_type=ClaimType.FAMILY_LEAVE,
-    payee_payment_method=PaymentMethod.ACH,
-    account_type=BankAccountType.SAVINGS,
+# valid address, payment method is check, leave type is medical leave, employee is missing
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_H] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_H,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
     has_payment_extract=True,
-    has_outbound_vendor_return=True,
-    has_vcc_status_return=True,
-    has_gax_status_return=True,
-    has_outbound_payment_return=True,
-    has_multiple_payment_details=True,
+    employee_not_in_db=True,
+)
+
+# valid address, payment method is check, leave type is medical leave, vpeiclaimdetails.csv is missing
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_I] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_I,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
+    has_payment_extract=True,
+    missing_from_vpeiclaimdetails=True,
+)
+
+# valid address, payment method is check, leave type is medical leave, VBI_REQUESTEDABSENCE.csv is missing
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_J] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_J,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
+    has_payment_extract=True,
+    missing_from_vbi_requestedabsence=True,
+)
+
+# valid address, payment method is check, leave type is medical leave, VBI_REQUESTEDABSENCE_SOM.csv is missing
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_K] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_K,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
+    has_payment_extract=True,
+    missing_from_vbi_requestedabsence_som=True,
+)
+
+# valid address, payment method is check, leave type is medical leave, vpeipaymentdetails.csv is missing
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_L] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_L,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
+    has_payment_extract=True,
+    missing_from_vpeipaymentdetails=True,
+)
+
+# valid address, payment method is check, leave type is medical leave, vpeipaymentdetails.csv is missing start dates
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_M] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_M,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
+    has_payment_extract=True,
+    missing_payment_start_date=True,
+)
+
+# valid address, payment method is check, leave type is medical leave, vpeipaymentdetails.csv is missing end dates
+SCENARIO_DESCRIPTORS[ScenarioName.SCENARIO_VOUCHER_N] = EmployeePaymentScenarioDescriptor(
+    scenario_name=ScenarioName.SCENARIO_VOUCHER_N,
+    leave_type=ClaimType.MEDICAL_LEAVE,
+    payee_payment_method=PaymentMethod.CHECK,
+    has_payment_extract=True,
+    missing_payment_end_date=True,
 )
 
 
@@ -539,7 +620,7 @@ class CiProvider:
 class ScenarioData:
     scenario_descriptor: EmployeePaymentScenarioDescriptor
     employee: Employee
-    employer: Employer
+    employer: Optional[Employer]
     claims: List[Claim]
     payment_amounts: List[decimal.Decimal]
     payments: Optional[List[Payment]]
@@ -598,6 +679,11 @@ def generate_scenario_data_db(
     )
 
     ctr_address_pair = CtrAddressPairFactory.create(fineos_address=mailing_address)
+
+    # Note: if the employee is not in the database, then we should wipe out the vendor customer code.
+    if scenario_descriptor.employee_not_in_db:
+        vendor_customer_code = ""
+
     employee = EmployeeFactory.create(
         first_name=fake.first_name(),
         tax_identifier=TaxIdentifier(tax_identifier=ssn),
@@ -624,17 +710,36 @@ def generate_scenario_data_db(
             scenario_descriptor.payment_details_count = 1
 
     for c in range(scenario_descriptor.absence_claims_count):
-        absence_case_index = c + 1
-        absence_case_id = (
-            f"{fineos_notification_id}-ABS-{str(absence_case_index)}"  # maximum length of 19
-        )
+        if scenario_descriptor.missing_from_vpeiclaimdetails:
+            absence_case_id = ""
+        else:
+            absence_case_index = c + 1
+            absence_case_id = (
+                f"{fineos_notification_id}-ABS-{str(absence_case_index)}"  # maximum length of 19
+            )
+
+        if (
+            scenario_descriptor.missing_from_vbi_requestedabsence_som
+            or scenario_descriptor.missing_from_vpeiclaimdetails
+        ):
+            claim_type_id = None
+        else:
+            claim_type_id = scenario_descriptor.leave_type.claim_type_id
+
+        if (
+            scenario_descriptor.missing_from_vbi_requestedabsence_som
+            or scenario_descriptor.missing_from_vpeiclaimdetails
+        ):
+            fineos_absence_status_id = None
+        else:
+            fineos_absence_status_id = AbsenceStatus.APPROVED.absence_status_id
 
         claim = ClaimFactory.create(
             employer_id=employer.employer_id,
             employee=employee,
             fineos_absence_id=absence_case_id,
-            claim_type_id=scenario_descriptor.leave_type.claim_type_id,
-            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+            claim_type_id=claim_type_id,
+            fineos_absence_status_id=fineos_absence_status_id,
         )
         claims.append(claim)
 
@@ -658,6 +763,19 @@ def generate_scenario_data_db(
                 fineos_pei_c_value=payment_ci_index.c,
                 fineos_pei_i_value=payment_ci_index.i,
             )
+
+            if (
+                scenario_descriptor.missing_from_vpeipaymentdetails
+                or scenario_descriptor.missing_payment_start_date
+            ):
+                payment.period_start_date = None
+
+            if (
+                scenario_descriptor.missing_from_vpeipaymentdetails
+                or scenario_descriptor.missing_payment_end_date
+            ):
+                payment.period_end_date = None
+
             payment_ref_file = PaymentReferenceFileFactory.create(payment=payment)
             payment_ref_file.reference_file.ctr_batch_identifier = (
                 CtrBatchIdentifierFactory.create()
@@ -673,6 +791,19 @@ def generate_scenario_data_db(
         ):
             emp_ref_file = EmployeeReferenceFileFactory.create(employee=employee)
             emp_ref_file.reference_file.ctr_batch_identifier = CtrBatchIdentifierFactory.create()
+
+        if (
+            scenario_descriptor.missing_from_vbi_requestedabsence
+            or scenario_descriptor.missing_from_vpeiclaimdetails
+        ):
+            leave_request_id = ""
+            leave_request_decision = ""
+
+        if (
+            scenario_descriptor.missing_from_vbi_requestedabsence_som
+            or scenario_descriptor.missing_from_vpeiclaimdetails
+        ):
+            employer = None
 
     return ScenarioData(
         scenario_descriptor=scenario_descriptor,

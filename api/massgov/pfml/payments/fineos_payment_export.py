@@ -122,7 +122,7 @@ class PaymentData:
     customer_no: str
 
     tin: Optional[str]
-    absence_case_number: Optional[str]
+    absence_case_number: Optional[str] = None
 
     full_name: Optional[str]
 
@@ -147,30 +147,9 @@ class PaymentData:
         self.c_value = index.c
         self.i_value = index.i
 
-        # Find the record in the other datasets.
-        payment_details = extract_data.payment_details.indexed_data.get(index)
-        claim_details = extract_data.claim_details.indexed_data.get(index)
-        if not payment_details:
-            self.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_DATASET, "payment_details"
-            )
-        if not claim_details:
-            self.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_DATASET, "claim_details"
-            )
-
-        if self.validation_container.has_validation_issues():
-            return
-        # Cast these to non-optional values as we've validated them above (for linting)
-        payment_details = cast(List[Dict[str, str]], payment_details)
-        claim_details = cast(Dict[str, str], claim_details)
-
-        # Grab every value we might need out of the datasets
+        # Grab every value we might need out of the main vpei dataset.
         self.tin = payments_util.validate_csv_input(
             "PAYEESOCNUMBE", pei_record, self.validation_container, True
-        )
-        self.absence_case_number = payments_util.validate_csv_input(
-            "ABSENCECASENU", claim_details, self.validation_container, True
         )
 
         self.full_name = payments_util.validate_csv_input(
@@ -223,20 +202,12 @@ class PaymentData:
             custom_validator_func=payment_period_date_validator,
         )
 
-        self.aggregate_payment_details(payment_details)
-
-        def amount_validator(amount_str: str) -> Optional[payments_util.ValidationReason]:
-            amount = float(amount_str)
-            if amount <= 0:
-                return payments_util.ValidationReason.INVALID_VALUE
-            return None
-
         self.payment_amount = payments_util.validate_csv_input(
             "AMOUNT_MONAMT",
             pei_record,
             self.validation_container,
             True,
-            custom_validator_func=amount_validator,
+            custom_validator_func=self.amount_validator,
         )
 
         # These are only required if payment_method is for EFT
@@ -259,6 +230,25 @@ class PaymentData:
             eft_required,
             custom_validator_func=payments_util.lookup_validator(BankAccountType),
         )
+
+        # Find the record in the other datasets.
+        payment_details = extract_data.payment_details.indexed_data.get(index)
+        if not payment_details:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_DATASET, "payment_details"
+            )
+        else:
+            self.aggregate_payment_details(payment_details)
+
+        claim_details = extract_data.claim_details.indexed_data.get(index)
+        if not claim_details:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_DATASET, "claim_details"
+            )
+        else:
+            self.absence_case_number = payments_util.validate_csv_input(
+                "ABSENCECASENU", claim_details, self.validation_container, True
+            )
 
     def aggregate_payment_details(self, payment_details):
         """Aggregate payment period dates across all the payment details for this payment.
@@ -292,6 +282,12 @@ class PaymentData:
             self.payment_start_period = min(start_periods)
         if end_periods:
             self.payment_end_period = max(end_periods)
+
+    def amount_validator(self, amount_str: str) -> Optional[payments_util.ValidationReason]:
+        amount = float(amount_str)
+        if amount <= 0:
+            return payments_util.ValidationReason.INVALID_VALUE
+        return None
 
     def get_traceable_details(self) -> Dict[str, Optional[str]]:
         # For logging purposes, this returns useful, traceable details
