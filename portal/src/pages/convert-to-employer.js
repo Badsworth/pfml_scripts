@@ -1,18 +1,18 @@
+import User, { RoleDescription } from "../models/User";
 import Alert from "../components/Alert";
+import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
 import InputText from "../components/InputText";
-import Title from "../components/Title";
-import User, { RoleDescription } from "../models/User";
-import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
-import React from "react";
 import PropTypes from "prop-types";
+import React from "react";
+import Title from "../components/Title";
 import { Trans } from "react-i18next";
 import routes from "../routes";
-import { useTranslation } from "../locales/i18n";
-import withClaims from "../hoc/withClaims";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps"
 import useThrottledHandler from "../hooks/useThrottledHandler"
+import { useTranslation } from "../locales/i18n";
+import withClaims from "../hoc/withClaims";
 
 export const ConvertToEmployer = (props) => {
   const { appLogic, user } = props;
