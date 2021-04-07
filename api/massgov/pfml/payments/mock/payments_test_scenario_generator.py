@@ -629,6 +629,7 @@ class ScenarioData:
     ci_provider: CiProvider
     leave_request_id: str
     leave_request_decision: str
+    payment_event_type: str
 
     def __repr__(self):
         return (
@@ -691,6 +692,7 @@ def generate_scenario_data_db(
         eft=eft,
         payment_method_id=payment_method_id,
         ctr_vendor_customer_code=vendor_customer_code,
+        fineos_customer_number=employee_customer_number,
     )
 
     employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
@@ -805,6 +807,8 @@ def generate_scenario_data_db(
         ):
             employer = None
 
+        payment_event_type = "Some kind of event string"
+
     return ScenarioData(
         scenario_descriptor=scenario_descriptor,
         employee=employee,
@@ -817,6 +821,7 @@ def generate_scenario_data_db(
         ci_provider=ci_provider,
         leave_request_id=leave_request_id,
         leave_request_decision=leave_request_decision,
+        payment_event_type=payment_event_type,
     )
 
 

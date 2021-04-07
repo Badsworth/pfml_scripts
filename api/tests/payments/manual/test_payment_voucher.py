@@ -194,6 +194,7 @@ class ScenarioOutput:
             "event_type": "AP01",
             "first_last_name": f"{self.scenario_data.employee.first_name} {self.scenario_data.employee.last_name}",
             "i_value": payment.fineos_pei_i_value,
+            "fineos_customer_number_employee": self.scenario_data.employee.fineos_customer_number,
             "leave_type": leave_type,
             "mmars_vendor_code": self.scenario_data.employee.ctr_vendor_customer_code,
             "payment_amount": (
@@ -217,6 +218,7 @@ class ScenarioOutput:
             "employer_id": employer_id,
             "leave_request_id": self.scenario_data.leave_request_id,
             "leave_request_decision": self.scenario_data.leave_request_decision,
+            "payment_event_type": self.scenario_data.payment_event_type,
             "vcm_flag": "Yes",  # This should be overridden as needed
             "claimants_that_have_zero_or_credit_value": (
                 "1" if payment.amount is not None and float(payment.amount) <= 0 else ""

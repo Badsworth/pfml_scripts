@@ -119,7 +119,7 @@ class PaymentData:
 
     c_value: str
     i_value: str
-    customer_no: str
+    fineos_employee_customer_number: str
 
     tin: Optional[str]
     absence_case_number: Optional[str] = None
@@ -137,6 +137,7 @@ class PaymentData:
     payment_end_period: Optional[str]
     payment_date: Optional[str]
     payment_amount: Optional[str]
+    payment_event_type: Optional[str]
 
     routing_nbr: Optional[str]
     account_nbr: Optional[str]
@@ -150,6 +151,14 @@ class PaymentData:
         # Grab every value we might need out of the main vpei dataset.
         self.tin = payments_util.validate_csv_input(
             "PAYEESOCNUMBE", pei_record, self.validation_container, True
+        )
+
+        # Validate and set the FINEOS customer number. This value is directly passed
+        # through to the Payment Voucher and SHOULD NOT be saved to the PFML database
+        # without first discussing and determining if there will be any unexpected
+        # negative side effects.
+        self.fineos_customer_number_employee = payments_util.validate_csv_input(
+            "PAYEECUSTOMER", pei_record, self.validation_container, True
         )
 
         self.full_name = payments_util.validate_csv_input(
@@ -208,6 +217,10 @@ class PaymentData:
             self.validation_container,
             True,
             custom_validator_func=self.amount_validator,
+        )
+
+        self.payment_event_type = payments_util.validate_csv_input(
+            "EVENTTYPE", pei_record, self.validation_container, True
         )
 
         # These are only required if payment_method is for EFT

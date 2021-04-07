@@ -75,6 +75,8 @@ PEI_FIELD_NAMES = [
     "I",
     "PAYEESOCNUMBE",
     "PAYEEFULLNAME",
+    "PAYEECUSTOMER",
+    "EVENTTYPE",
     "PAYMENTADD1",
     "PAYMENTADD2",
     "PAYMENTADD4",
@@ -212,6 +214,8 @@ def _generate_fineos_payment_rows_for_scenario(
         vpei_row["I"] = payment_i_value
         vpei_row["PAYEEFULLNAME"] = f"{employee.first_name} {employee.last_name}"
         vpei_row["PAYEESOCNUMBE"] = employee.tax_identifier.tax_identifier
+        vpei_row["PAYEECUSTOMER"] = employee.fineos_customer_number
+        vpei_row["EVENTTYPE"] = scenario_data.payment_event_type
         vpei_row["PAYMENTADD1"] = address.address_line_one
         vpei_row["PAYMENTADD2"] = address.address_line_two
         vpei_row["PAYMENTADD4"] = address.city
