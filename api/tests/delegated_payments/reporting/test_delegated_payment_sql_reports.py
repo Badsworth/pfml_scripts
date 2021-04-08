@@ -135,8 +135,11 @@ def test_all_reports(
     report_archive_path,
 ):
     """Validate that all reports run without any exceptions"""
+    report_names = [report.value for report in ReportName]
+    # Make sure every named report has report details defined.
+    for report_name in report_names:
+        assert REPORTS_BY_NAME.get(report_name) is not None
 
-    report_names = [report.report_name for report in REPORTS]
     step = init_step(test_db_session, test_db_other_session, report_names)
     step.run()
 
