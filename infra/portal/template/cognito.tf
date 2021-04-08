@@ -7,6 +7,12 @@ locals {
   # This lambda ingests CloudWatch logs from several sources, and packages them for transmission to New Relic's servers.
   # This lambda was modified post-installation to fix an apparent bug in the processing/packaging of its telemetry data.
   newrelic_log_ingestion_lambda = module.constants.newrelic_log_ingestion_arn
+
+  # Logic for naming the FROM email address in the email configuration
+  shorthand_env_name          = module.constants.environment_shorthand[var.environment_name]
+  prod_from_email_address     = "Department of Family and Medical Leave <${var.ses_email_address}>"
+  non_prod_from_email_address = "${upper(local.shorthand_env_name)}_${local.prod_from_email_address}"
+  from_email_address          = var.environment_name == "prod" ? local.prod_from_email_address : local.non_prod_from_email_address
 }
 
 # It should noted that 'claimants_pool' is a misnomer as this user pool will also contain Leave Administrators
@@ -24,7 +30,7 @@ resource "aws_cognito_user_pool" "claimants_pool" {
     #
     # Note that this name should _also_ match what is being sent by ServiceNow. If they ever change their sender name
     # or we change ours, we need coordination to keep them in sync and provide a consistent user experience.
-    from_email_address = var.ses_email_address == "" ? null : "\"Department of Family and Medical Leave\" <${var.ses_email_address}>"
+    from_email_address = var.ses_email_address == "" ? null : local.from_email_address
   }
 
   sms_authentication_message = "Your authentication code is {####}. "
