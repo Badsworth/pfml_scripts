@@ -41,7 +41,7 @@ class PaymentCancellationStep(Step):
             if len(matched_payments_to_cancel) > 0:
                 state_log_util.create_finished_state_log(
                     associated_model=state_log.payment,
-                    end_state=State.DELEGATED_EFT_ADD_TO_ERROR_REPORT,
+                    end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
                     outcome=state_log_util.build_outcome("Payment cancelled"),
                     db_session=self.db_session,
                     import_log_id=self.get_import_log_id(),
