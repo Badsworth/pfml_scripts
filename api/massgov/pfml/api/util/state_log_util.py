@@ -63,9 +63,10 @@ def get_now() -> datetime:
 def create_finished_state_log(
     associated_model: AssociatedModel,
     end_state: LkState,
-    outcome: Dict[str, str],
+    outcome: Dict[str, Any],
     db_session: db.Session,
     start_time: Optional[datetime] = None,
+    import_log_id: Optional[int] = None,
 ) -> StateLog:
     # Let the user pass in a start time so start/end aren't the same
     start_state_time = start_time if start_time else get_now()
@@ -78,6 +79,7 @@ def create_finished_state_log(
         outcome=outcome,
         start_time=start_state_time,
         db_session=db_session,
+        import_log_id=import_log_id,
     )
 
 
@@ -89,6 +91,7 @@ def _create_state_log(
     db_session: db.Session,
     start_time: datetime,
     prev_state_log: Optional[StateLog] = None,
+    import_log_id: Optional[int] = None,
 ) -> StateLog:
 
     now = get_now()
@@ -98,6 +101,7 @@ def _create_state_log(
         started_at=start_time,
         associated_type=associated_class.value,
         ended_at=now,
+        import_log_id=import_log_id,
     )
 
     messages = []

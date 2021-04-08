@@ -1,9 +1,12 @@
-import { fineos, portal, email } from "../../tests/common/actions";
-import { bailIfThisTestFails, beforeFineos } from "../../tests/common/before";
-import { beforePortal } from "../../tests/common/before";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
-import { ApplicationResponse } from "../../../src/api";
-import { Submission } from "../../../src/types";
+import { fineos, portal, email } from "../../../tests/common/actions";
+import {
+  bailIfThisTestFails,
+  beforeFineos,
+} from "../../../tests/common/before";
+import { beforePortal } from "../../../tests/common/before";
+import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
+import { ApplicationResponse } from "../../../../src/api";
+import { Submission } from "../../../../src/types";
 
 describe("Approval (notifications/notices)", { retries: 0 }, () => {
   it("Create a financially eligible claim in which an employer will respond", () => {
@@ -46,7 +49,7 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
                 subject: `Action required: Respond to ${claim.claim.first_name} ${claim.claim.last_name}'s paid leave application`,
                 messageWildcard: response.fineos_absence_id,
                 timestamp_from: timestamp_fromER,
-                fineos_absence_id: response.fineos_absence_id,
+                debugInfo: { "Fineos Claim ID": response.fineos_absence_id },
               },
               { timeout: 360000 }
             ).then((emails) => {
@@ -80,21 +83,7 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
       cy.unstash<Submission>("submission").then((submission) => {
         cy.visit("/");
         fineos.claimAdjudicationFlow(submission.fineos_absence_id, true);
-        switch (Cypress.env("E2E_ENVIRONMENT")) {
-          case "training":
-            fineos.closeReleaseNoticeTask("Approval Notice");
-            break;
-
-          case "performance":
-          case "test":
-          case "stage":
-          case "uat":
-            fineos.triggerNoticeRelease("Approval Notice");
-            break;
-
-          default:
-            throw new Error("Env Not Recognized - Try Again!");
-        }
+        fineos.triggerNoticeRelease("Approval Notice");
       });
     }
   );

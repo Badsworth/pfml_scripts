@@ -1,247 +1,76 @@
 #
 # Tests for massgov.pfml.payments.manual.payment_voucher.
 #
+# Payment Voucher Scenarios:
+# See massgov.pfml.payments.mock.payments_test_scenario_generator for definitions
+#
+#
+# Positive cases:
+# --------------
+# SCENARIO_VOUCHER_A: medical leave, pay by check, 2 payments for different pay periods, (default) vcm_flag is No
+# SCENARIO_VOUCHER_B: bonding leave, pay by check, payment is zero dollar, vcm_flag is Yes
+# SCENARIO_VOUCHER_C: medical leave, pay by eft
+# SCENARIO_VOUCHER_D: bonding leave, pay by eft
+# SCENARIO_VOUCHER_E: multiple vpeipaymentdetails.csv rows for the same CI pair
+#
+#
+# Negative cases regarding payment amounts (writeback should be Active):
+# --------------
+# SCENARIO_VOUCHER_F: payment is negative, vcm_flag is Missing State
+# SCENARIO_VOUCHER_G: payment is missing
+#
+#
+# Negative cases for entries missing in cross-referenced datasets (writeback should be empty):
+# --------------
+# SCENARIO_VOUCHER_H: missing employee and therefore missing mmars vendor customer code and vcm flag is empty
+# SCENARIO_VOUCHER_I: missing entry in vpeiclaimdetails.csv and therefore missing:
+#                     absence case number, vendor invoice number, leave type, activity code, case status,
+#                     employer ID, leave request ID, leave request decision, check description
+# SCENARIO_VOUCHER_J: missing entry in VBI_REQUSTEDABSENCE.csv and therefore missing leave request ID and decision
+# SCENARIO_VOUCHER_K: missing entry in VBI_REQUESTEDABSENCE_SOM.csv and therefore missing:
+#                     leave type, activity code, case status, employer ID
+# SCENARIO_VOUCHER_L: missing entry in vpeipaymentdetails.csv and therefore missing:
+#                     payment period start date, payment period end date, check description, vendor invoice date
+#
+#
+# Negative cases for missing individual fields (writeback should be empty):
+# --------------
+# SCENARIO_VOUCHER_M: missing payment period start dates in vpeipaymentdetails.csv and therefore also missing:
+#                     check description
+# SCENARIO_VOUCHER_N: missing payment period end dates in vpeipaymentdetails.csv and therefore also missing:
+#                     check description, vendor invoice date
 
-import datetime
+
 import os.path
 import random
 import re
+from dataclasses import dataclass
+from datetime import date, datetime
+from typing import Any, Dict, List
 
+import faker
 import freezegun
 import pytest
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-from massgov.pfml.db.models.employees import State, TaxIdentifier
+import massgov.pfml.payments.mock.fineos_extract_generator as fineos_extract_generator
+import massgov.pfml.payments.mock.payments_test_scenario_generator as scenario_generator
+import massgov.pfml.util.files as file_util
+from massgov.pfml.db.models.employees import Address, Payment, State, TaxIdentifier
 from massgov.pfml.db.models.factories import EmployeeFactory
-from massgov.pfml.payments import fineos_payment_export, fineos_vendor_export
+from massgov.pfml.payments import fineos_payment_export, fineos_vendor_export, gax
 from massgov.pfml.payments.manual import payment_voucher
-from tests.helpers.state_log import AdditionalParams, setup_state_log
+from massgov.pfml.util.csv import CSVSourceWrapper
+from tests.helpers.state_log import AdditionalParams, setup_state_log, setup_state_log_only
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
 
-test_ci_index = fineos_payment_export.CiIndex(c="7326", i="249")
-test_pei_csv_row = {
-    "C": "7326",
-    "I": "249",
-    "LASTUPDATEDATE": "2021-01-15 19:18:35",
-    "C_OSUSER_UPDATEDBY": "1000",
-    "I_OSUSER_UPDATEDBY": "15",
-    "ADDRESSLINE1": "47 Washington St",
-    "ADDRESSLINE2": "",
-    "ADDRESSLINE3": "",
-    "ADDRESSLINE4": "Quincy",
-    "ADDRESSLINE5": "",
-    "ADDRESSLINE6": "MA",
-    "ADDRESSLINE7": "",
-    "ADVICETOPAY": "true",
-    "ADVICETOPAYOV": "Unknown",
-    "AMALGAMATIONC": "Fully Certified",
-    "AMOUNT_MONAMT": "1600.18",
-    "AMOUNT_MONCUR": "33600000",
-    "CHECKCUTTING": "Non Check Cutting",
-    "CONFIRMEDBYUS": "GeneratePayments1Process",
-    "CONFIRMEDUID": "GENERATEPAYMENTS1PROCESS",
-    "CONTRACTREF": "",
-    "CORRESPCOUNTR": "USA",
-    "CURRENCY": "---",
-    "DATEINTERFACE": "2021-01-16 23:59:59",
-    "DESCRIPTION": "",
-    "EMPLOYEECONTR": "100",
-    "EVENTEFFECTIV": "2021-01-16 00:00:00",
-    "EVENTREASON": "Automatic Main Payment",
-    "EVENTTYPE": "PaymentOut",
-    "EXTRACTIONDAT": "",
-    "GROSSPAYMENTA_MONAMT": "1600.18",
-    "GROSSPAYMENTA_MONCUR": "33600000",
-    "INSUREDRESIDE": "Unknown",
-    "NAMETOPRINTON": "",
-    "NOMINATEDPAYE": "Unknown",
-    "NOMPAYEECUSTO": "",
-    "NOMPAYEEDOB": "",
-    "NOMPAYEEFULLN": "",
-    "NOMPAYEESOCNU": "",
-    "NOTES": "",
-    "PAYEEACCOUNTN": "",
-    "PAYEEACCOUNTT": "",
-    "PAYEEADDRESS": "47 Washington St\nQuincy\nMA\n02169",
-    "PAYEEBANKBRAN": "",
-    "PAYEEBANKCODE": "",
-    "PAYEEBANKINST": "",
-    "PAYEEBANKSORT": "",
-    "PAYEECORRESPO": "MA",
-    "PAYEECUSTOMER": "2629401",
-    "PAYEEDOB": "1974-03-15 00:00:00",
-    "PAYEEFULLNAME": "Grady Bednar",
-    "PAYEEIDENTIFI": "ID",
-    "PAYEESOCNUMBE": "999004400",
-    "PAYMENTADD": "47 Washington St\nQuincy\nMA\n02169",
-    "PAYMENTADD1": "47 Washington St",
-    "PAYMENTADD2": "",
-    "PAYMENTADD3": "",
-    "PAYMENTADD4": "Quincy",
-    "PAYMENTADD5": "",
-    "PAYMENTADD6": "MA",
-    "PAYMENTADD7": "",
-    "PAYMENTADDCOU": "USA",
-    "PAYMENTCORRST": "MA",
-    "PAYMENTDATE": "2021-01-19 00:00:00",
-    "PAYMENTFREQUE": "Weekly",
-    "PAYMENTMETHOD": "Check",
-    "PAYMENTPOSTCO": "02169",
-    "PAYMENTPREMIS": "",
-    "PAYMENTTRIGGE": "2021-01-16 23:59:59",
-    "PAYMENTTYPE": "Recurring",
-    "PAYMETHCURREN": "---",
-    "POSTCODE": "02169",
-    "PREMISESNO": "",
-    "SETUPBYUSERID": "GENERATEPAYMENTS1PROCESS",
-    "SETUPBYUSERNA": "GeneratePayments1Process",
-    "STATUS": "PendingActive",
-    "STATUSEFFECTI": "2021-01-16 23:59:59",
-    "STATUSREASON": "Standard",
-    "STOCKNO": "",
-    "SUMMARYEFFECT": "2021-01-15 19:18:34",
-    "SUMMARYSTATUS": "PendingActive",
-    "TRANSSTATUSDA": "2021-01-16 23:59:59",
-}
-test_claim_details_csv_row = {
-    "C": "7733",
-    "I": "249",
-    "LASTUPDATEDATE": "2021-01-15 19:18:35",
-    "C_OSUSER_UPDATEDBY": "1000",
-    "I_OSUSER_UPDATEDBY": "15",
-    "ABSENCECASENU": "NTN-308848-ABS-01",
-    "BENEFITRIGHTT": "Absence Benefit",
-    "CLAIMANTAGE": "0",
-    "CLAIMANTCUSTO": "",
-    "CLAIMANTDOB": "",
-    "CLAIMANTGENDE": "",
-    "CLAIMANTNAME": "",
-    "CLAIMANTRELTO": "",
-    "CLAIMNUMBER": "PL ABS-308849",
-    "DIAGCODE2": "",
-    "DIAGCODE3": "",
-    "DIAGCODE4": "",
-    "DIAGCODE5": "",
-    "EMPLOYEEID": "",
-    "EVENTCAUSE": "Unknown",
-    "INCURREDDATE": "2021-01-01 00:00:00",
-    "INSUREDADDRES": "47 Washington St\nQuincy\nMA\n02169",
-    "INSUREDADDRL1": "47 Washington St",
-    "INSUREDADDRL2": "",
-    "INSUREDADDRL3": "",
-    "INSUREDADDRL4": "Quincy",
-    "INSUREDADDRL5": "",
-    "INSUREDADDRL6": "MA",
-    "INSUREDADDRL7": "",
-    "INSUREDAGE": "46",
-    "INSUREDCORCOU": "USA",
-    "INSUREDCORRES": "MA",
-    "INSUREDCUSTOM": "2629401",
-    "INSUREDDOB": "1974-03-15 00:00:00",
-    "INSUREDEMPLOY": "",
-    "INSUREDFULLNA": "Grady Bednar",
-    "INSUREDGENDER": "Unknown",
-    "INSUREDPOSTCO": "02169",
-    "INSUREDPREMIS": "",
-    "INSUREDRETIRE": "0",
-    "INSUREDSOCNUM": "999004400",
-    "LEAVEPLANID": "F5626",
-    "LEAVEREQUESTI": "5456",
-    "NOTIFIEDDATE": "2021-01-14 12:29:38",
-    "PAYEEAGEATINC": "46",
-    "PAYEECASEROLE": "Employee",
-    "PAYEERELTOINS": "Unknown",
-    "PRIMARYDIAGNO": "",
-    "PRIMARYMEDICA": "70144000",
-    "DIAG2MEDICALC": "70144000",
-    "DIAG3MEDICALC": "70144000",
-    "DIAG4MEDICALC": "70144000",
-    "DIAG5MEDICALC": "70144000",
-    "PECLASSID": "7326",
-    "PEINDEXID": "249",
-    "DATEINTERFACE": "2021-01-16 23:59:59",
-}
-test_payment_details_csv_row = {
-    "C": "7806",
-    "I": "401",
-    "LASTUPDATEDATE": "2021-01-15 19:18:35",
-    "C_OSUSER_UPDATEDBY": "1000",
-    "I_OSUSER_UPDATEDBY": "15",
-    "BENEFITEFFECT": "2021-01-08 00:00:00",
-    "BENEFITFINALP": "2021-02-01 00:00:00",
-    "DESCRIPTION_PAYMENTDTLS": "Unknown",
-    "PAYMENTENDPER": "2021-01-21 00:00:00",
-    "PAYMENTSTARTP": "2021-01-15 00:00:00",
-    "BALANCINGAMOU_MONAMT": "800.09",
-    "BALANCINGAMOU_MONCUR": "33600000",
-    "BUSINESSNETBE_MONAMT": "800.09",
-    "BUSINESSNETBE_MONCUR": "33600000",
-    "DUETYPE": "ScheduledMain",
-    "GROUPID": "",
-    "PECLASSID": "7326",
-    "PEINDEXID": "249",
-    "CLAIMDETAILSCLASSID": "7733",
-    "CLAIMDETAILSINDEXID": "249",
-    "DATEINTERFACE": "2021-01-16 23:59:59",
-}
-test_requested_absence_som_csv_row = {
-    "NOTIFICATION_CASENUMBER": "NTN-308848",
-    "ABSENCE_CASENUMBER": "NTN-308848-ABS-01",
-    "ABSENCE_CASETYPENAME": "Absence Case",
-    "ABSENCE_CASESTATUS": "Approved",
-    "ABSENCE_CASEOWNER": "SaviLinx",
-    "ABSENCE_CASECREATIONDATE": "2021-01-14 12:29:38",
-    "ABSENCE_CASELASTUPDATEDATE": "2021-01-14 12:30:07",
-    "ABSENCE_INTAKESOURCE": "Self-Service",
-    "ABSENCE_NOTIFIEDBY": "Employee",
-    "EMPLOYEE_CUSTOMERNO": "2629401",
-    "EMPLOYEE_MANAGER_CUSTOMERNO": "",
-    "EMPLOYEE_ADDTL_MNGR_CUSTOMERNO": "",
-    "EMPLOYER_CUSTOMERNO": "2626107",
-    "EMPLOYER_NAME": "Revolutionary Empower Schemas Inc",
-    "EMPLOYMENT_CLASSID": "14453",
-    "EMPLOYMENT_INDEXID": "2357482",
-    "LEAVEREQUEST_ID": "5456",
-    "LEAVEREQUEST_NOTIFICATIONDATE": "2021-01-14 12:29:38",
-    "LEAVEREQUEST_LASTUPDATEDATE": "2021-01-14 12:30:07",
-    "LEAVEREQUEST_ORIGINALREQUEST": "1",
-    "LEAVEREQUEST_EVIDENCERESULTTYPE": "Satisfied",
-    "LEAVEREQUEST_DECISION": "Approved",
-    "LEAVEREQUEST_DIAGNOSIS": "",
-    "ABSENCEREASON_CLASSID": "14412",
-    "ABSENCEREASON_INDEXID": "19",
-    "ABSENCEREASON_NAME": "Serious Health Condition - Employee",
-    "ABSENCEREASON_QUALIFIER1": "Not Work Related",
-    "ABSENCEREASON_QUALIFIER2": "Sickness",
-    "ABSENCEREASON_COVERAGE": "Employee",
-    "PRIMARY_RELATIONSHIP_NAME": "",
-    "PRIMARY_RELATIONSHIP_QUAL1": "",
-    "PRIMARY_RELATIONSHIP_QUAL2": "",
-    "PRIMARY_RELATIONSHIP_COVER": "Please Select",
-    "SECONDARY_RELATIONSHIP_NAME": "",
-    "SECONDARY_RELATIONSHIP_QUAL1": "",
-    "SECONDARY_RELATIONSHIP_QUAL2": "",
-    "SECONDARY_RELATIONSHIP_COVER": "Please Select",
-    "ABSENCEPERIOD_CLASSID": "14449",
-    "ABSENCEPERIOD_INDEXID": "9477",
-    "ABSENCEPERIOD_TYPE": "Time off period",
-    "ABSENCEPERIOD_STATUS": "Known",
-    "ABSENCEPERIOD_START": "2021-01-01 00:00:00",
-    "ABSENCEPERIOD_END": "2021-02-01 00:00:00",
-    "EPISODE_FREQUENCY_COUNT": "",
-    "EPISODE_FREQUENCY_PERIOD": "",
-    "EPISODIC_FREQUENCY_PERIOD_UNIT": "Please Select",
-    "EPISODE_DURATION": "",
-    "EPISODIC_DURATION_UNIT": "Please Select",
-}
-
-test_vbi_requested_absence_csv_row = {
-    "ABSENCE_CASENUMBER": "NTN-308848-ABS-01",
-    "LEAVEREQUEST_ID": "1234",
-    "LEAVEREQUEST_DECISION": "Pending",
-}
+# Constants for payment voucher 'vcm_flag'
+VCM_FLAG_YES = "Yes"
+VCM_FLAG_NO = "No"
+VCM_FLAG_MISSING = "Missing State"
+VCM_FLAG_EMPTY = ""
 
 
 class MockCSVWriter:
@@ -260,369 +89,343 @@ class MockLogEntry:
         pass
 
 
-def setup_standard_test_data(
-    test_db_session,
-    *,
-    ci_index=None,
-    pei_csv_row=None,
-    claim_details_csv_row=None,
-    payment_details_csv_row=None,
-    requested_absence_som_csv_row=None,
-    vbi_requested_absence_csv_row=None
-):
-    ci_index = ci_index or test_ci_index
-    pei_csv_row = pei_csv_row or test_pei_csv_row
-    claim_details_csv_row = claim_details_csv_row or test_claim_details_csv_row
-    payment_details_csv_row = payment_details_csv_row or test_payment_details_csv_row
-    requested_absence_som_csv_row = (
-        requested_absence_som_csv_row or test_requested_absence_som_csv_row
+class ScenarioOutput:
+    scenario_data: scenario_generator.ScenarioData
+    address: Address
+    payments: List[Payment]
+    payment_voucher_rows: List[Dict[str, Any]]
+    writeback_rows: List[Dict[str, str]]
+    payment_date: date
+    inactive_writeback: bool = False
+
+    def __init__(self, payment_date: date, scenario_data: scenario_generator.ScenarioData) -> None:
+        self.scenario_data = scenario_data
+        self.payment_date = payment_date
+
+        # Set up some helper vars.
+        self.address = self.scenario_data.employee.ctr_address_pair.fineos_address
+        self.payments = self.scenario_data.payments
+
+        # Identify if there are errors.
+        possible_error_states = [
+            "employee_not_in_db",
+            "missing_from_vbi_requestedabsence",
+            "missing_from_vbi_requestedabsence_som",
+            "missing_from_vpeiclaimdetails",
+            "missing_from_vpeipaymentdetails",
+            "missing_payment_start_date",
+            "missing_payment_end_date",
+        ]
+        for error_state in possible_error_states:
+            if getattr(scenario_data.scenario_descriptor, error_state):
+                self.inactive_writeback = True
+                break
+
+        # Get rows for all payments for this scenario.
+        self.payment_voucher_rows = []
+        self.writeback_rows = []
+        for payment in self.payments:
+            self.payment_voucher_rows.append(self.get_payment_voucher_dict(payment))
+            self.writeback_rows.append(self.get_writeback_dict(payment))
+
+    def get_payment_voucher_dict(self, payment: Payment) -> Dict[str, Any]:
+        """Returns the dictionary representation of a Payment Voucher row for a single payment."""
+
+        # Default these values to empty strings.
+        activity_code = ""
+        case_status = ""
+        check_description = ""
+        employer_id = ""
+        leave_type = ""
+        payment_period_start_date = ""
+        payment_period_end_date = ""
+        vendor_invoice_date = ""
+        vendor_invoice_number = ""
+
+        # Override with values if they are accessible.
+        try:
+            activity_code = gax.get_activity_code(payment.claim.claim_type_id)
+        except Exception:
+            pass
+
+        try:
+            leave_type = gax.get_rfed_doc_id(payment.claim.claim_type_id)
+        except Exception:
+            pass
+
+        if payment.claim.fineos_absence_status:
+            case_status = payment.claim.fineos_absence_status.absence_status_description
+
+        if self.scenario_data.employer:
+            employer_id = self.scenario_data.employer.fineos_employer_id
+
+        if payment.period_start_date:
+            payment_period_start_date = payment.period_start_date.isoformat()
+
+        if payment.period_end_date:
+            payment_period_end_date = payment.period_end_date.isoformat()
+            vendor_invoice_date = gax.get_vendor_invoice_date_str(payment.period_end_date)
+
+        if (
+            payment.claim.fineos_absence_id
+            and payment.period_start_date
+            and payment.period_end_date
+        ):
+            check_description = gax.get_check_description(
+                payment.claim.fineos_absence_id, payment.period_start_date, payment.period_end_date
+            )
+
+        if payment.claim.fineos_absence_id:
+            vendor_invoice_number = gax.get_vendor_invoice_number(
+                payment.claim.fineos_absence_id, payment.fineos_pei_i_value
+            )
+
+        # Construct and return the dictionary.
+        return {
+            "absence_case_number": payment.claim.fineos_absence_id,
+            "activity_code": activity_code,
+            "address_code": "AD010",
+            "address_line_1": self.address.address_line_one,
+            "address_line_2": self.address.address_line_two,
+            "c_value": payment.fineos_pei_c_value,
+            "city": self.address.city,
+            "description": check_description,
+            # "doc_id":  # DOC_ID is generated as part of the payment voucher processes
+            "event_type": "AP01",
+            "first_last_name": f"{self.scenario_data.employee.first_name} {self.scenario_data.employee.last_name}",
+            "i_value": payment.fineos_pei_i_value,
+            "fineos_customer_number_employee": self.scenario_data.employee.fineos_customer_number,
+            "leave_type": leave_type,
+            "mmars_vendor_code": self.scenario_data.employee.ctr_vendor_customer_code,
+            "payment_amount": (
+                "{:.2f}".format(payment.amount)
+                if not self.scenario_data.scenario_descriptor.missing_payment
+                else None
+            ),
+            "payment_doc_id_code": "GAX",
+            "payment_doc_id_dept": "EOL",
+            "payment_period_end_date": payment_period_end_date,
+            "payment_period_start_date": payment_period_start_date,
+            "payment_preference": self.scenario_data.employee.payment_method.payment_method_description,
+            "scheduled_payment_date": self.payment_date.strftime("%Y-%m-%d"),
+            "state": self.address.geo_state.geo_state_description,
+            "vendor_invoice_date": vendor_invoice_date,
+            "vendor_invoice_line": "1",
+            "vendor_invoice_number": vendor_invoice_number,
+            "vendor_single_payment": "Yes",
+            "zip": self.address.zip_code,
+            "case_status": case_status,
+            "employer_id": employer_id,
+            "leave_request_id": self.scenario_data.leave_request_id,
+            "leave_request_decision": self.scenario_data.leave_request_decision,
+            "payment_event_type": self.scenario_data.payment_event_type,
+            "vcm_flag": "Yes",  # This should be overridden as needed
+            "claimants_that_have_zero_or_credit_value": (
+                "1" if payment.amount is not None and float(payment.amount) <= 0 else ""
+            ),
+            "good_to_pay_from_prior_batch": "",
+            "had_a_payment_in_a_prior_batch_by_vc_code": "",
+            "inv": "",
+            "payments_offset_to_zero": "",
+            "is_exempt": "",
+            "leave_decision_not_approved": "",
+            "has_a_check_preference_with_an_adl2_issue": "",
+            "adl2_corrected": "",
+            "removed_or_added_after_audit_of_info": "",
+            "to_be_removed_from_file": "",
+            "notes": "",
+        }
+
+    def get_writeback_dict(self, payment: Payment) -> Dict[str, str]:
+        return {
+            "c_value": payment.fineos_pei_c_value,
+            "i_value": payment.fineos_pei_i_value,
+            "status": "" if self.inactive_writeback else "Active",
+            "stock_no": "",
+            "transaction_status": "",
+            "trans_status_date": "2021-01-15 12:00:00",
+        }
+
+
+@dataclass
+class StandardTestDataWrapper:
+    scenario_outputs: List[ScenarioOutput]
+    payment_extract_data: fineos_payment_export.ExtractData
+    vendor_extract_data: fineos_vendor_export.ExtractData
+    voucher_extract_data: payment_voucher.VoucherExtractData
+    input_file_path: str
+
+
+def get_standard_test_data(*, now, scenario_name, test_db_session, tmp_path, vcm_flag):
+    """Helper function that generates mock files and database records
+
+    Uses the FINEOS mock file and scenario generators.
+
+    Requires pre-existing:
+        - scenario_generator.ScenarioName
+        - matching entry in scenario_generator.EmployeePaymentScenarioDescriptor in
+          SCENARIO_DESCRIPTORS
+
+    Parameters:
+        - now: datetime.now(); for use with freezegun
+        - scenario_name: scenario_generator.ScenarioName
+        - vcm_flag: Optional[str]: for creating the correct StateLog entry
+                    for a given scenario
+    """
+    # Seed to get reproducible output.
+    random.seed(1)
+
+    # Create a list of Payment Voucher scenarios we want to test.
+    scenario_list = [scenario_generator.ScenarioNameWithCount(scenario_name, 1)]
+
+    # Setup scenario configuration with random SSN and FEINs.
+    fake = faker.Faker()
+    scenario_config = scenario_generator.ScenarioDataConfig(
+        scenario_list,
+        ssn_id_base=fake.random_number(digits=9),
+        fein_id_base=fake.random_number(digits=9),
     )
-    vbi_requested_absence_csv_row = (
-        vbi_requested_absence_csv_row or test_vbi_requested_absence_csv_row
-    )
 
-    input_files = [
-        "s3://bucket/test/2021-01-17-19-14-25-Employee_feed.csv",
-        "s3://bucket/test/2021-01-17-19-14-25-LeavePlan_info.csv",
-        "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE_SOM.csv",
-        "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE.csv",
-        "s3://bucket/test/2021-01-17-19-14-25-vpeiclaimdetails.csv",
-        "s3://bucket/test/2021-01-17-19-14-25-vpei.csv",
-        "s3://bucket/test/2021-01-17-19-14-25-vpeipaymentdetails.csv",
-    ]
+    # Generate the database records and extract files.
+    file_path = os.path.join(tmp_path, "mock_fineos_payments_files")
+    scenario_data_list = fineos_extract_generator.generate(scenario_config, file_path)
 
-    # Build a fineos_payment_export.ExtractData object with 1 row of data.
-    extract_data = fineos_payment_export.ExtractData(input_files, "manual")
-    extract_data.pei.indexed_data[ci_index] = pei_csv_row
-    extract_data.claim_details.indexed_data[ci_index] = claim_details_csv_row
-    extract_data.payment_details.indexed_data[ci_index] = [payment_details_csv_row]
-
-    # Build a fineos_vendor_export.Extract object with 1 row of data.
-    requested_absence_extract = fineos_vendor_export.Extract(
-        "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE_SOM.csv"
-    )
-    requested_absence_extract.indexed_data["NTN-308848-ABS-01"] = requested_absence_som_csv_row
-
-    # Build a custom voucher extract data for data from the VBI_REQUESTEDABSENCE.csv
-    # Not to be confused with the similarly named VBI_REQUESTEDABSENCE_SOM.csv
-    voucher_extract_data = payment_voucher.VoucherExtractData(input_files)
-    voucher_extract_data.vbi_requested_absence.indexed_data[
-        "NTN-308848-ABS-01"
-    ] = vbi_requested_absence_csv_row
-
-    setup_state_log(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        end_states=[State.VCM_REPORT_SENT],
-        test_db_session=test_db_session,
-        additional_params=AdditionalParams(
-            tax_identifier=TaxIdentifier(tax_identifier="999004400"),
-            ctr_vendor_customer_code="VC0001230001",
-        ),
-    )
-
-    return extract_data, requested_absence_extract, voucher_extract_data, ci_index
-
-
-def standard_output_row(*, doc_id):
-    return {
-        "absence_case_number": "NTN-308848-ABS-01",
-        "activity_code": "7247",
-        "address_code": "AD010",
-        "address_line_1": "47 Washington St",
-        "address_line_2": "",
-        "c_value": "7326",
-        "city": "Quincy",
-        "description": "PFML Payment NTN-308848-ABS-01 [01/15/2021-01/21/2021]",
-        "doc_id": doc_id,
-        "event_type": "AP01",
-        "first_last_name": "Grady Bednar",
-        "i_value": "249",
-        "leave_type": "PFMLMEDIFY2170030632",
-        "mmars_vendor_code": "VC0001230001",
-        "payment_amount": "1600.18",
-        "payment_doc_id_code": "GAX",
-        "payment_doc_id_dept": "EOL",
-        "payment_period_end_date": "2021-01-21",
-        "payment_period_start_date": "2021-01-15",
-        "payment_preference": "Check",
-        "scheduled_payment_date": "2021-01-18",
-        "state": "MA",
-        "vendor_invoice_date": "2021-01-22",
-        "vendor_invoice_line": "1",
-        "vendor_invoice_number": "NTN-308848-ABS-01_249",
-        "vendor_single_payment": "Yes",
-        "zip": "02169",
-        "case_status": "Approved",
-        "employer_id": "2626107",
-        "leave_request_id": "1234",
-        "leave_request_decision": "Pending",
-        "vcm_flag": "Yes",
-        "claimants_that_have_zero_or_credit_value": "",
-        "good_to_pay_from_prior_batch": "",
-        "had_a_payment_in_a_prior_batch_by_vc_code": "",
-        "inv": "",
-        "payments_offset_to_zero": "",
-        "is_exempt": "",
-        "leave_decision_not_approved": "",
-        "has_a_check_preference_with_an_adl2_issue": "",
-        "adl2_corrected": "",
-        "removed_or_added_after_audit_of_info": "",
-        "to_be_removed_from_file": "",
-        "notes": "",
-    }
-
-
-def standard_writeback_row():
-    return {
-        "c_value": "7326",
-        "i_value": "249",
-        "status": "Active",
-        "stock_no": "",
-        "transaction_status": "",
-        "trans_status_date": "2021-01-15 12:00:00",
-    }
-
-
-@freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
-def test_process_payment_record(test_db_session, initialize_factories_session):
-    (
-        extract_data,
-        requested_absence_extract,
-        voucher_extract_data,
-        ci_index,
-    ) = setup_standard_test_data(test_db_session)
-
-    output_csv = MockCSVWriter()
-    writeback_csv = MockCSVWriter()
-
-    payment_voucher.process_payment_record(
-        extract_data,
-        requested_absence_extract,
-        voucher_extract_data,
-        ci_index,
-        test_pei_csv_row,
-        output_csv,
-        writeback_csv,
-        datetime.date(2021, 1, 18),
-        test_db_session,
-        MockLogEntry(),
-    )
-
-    assert len(output_csv.rows) == 1
-    doc_id = output_csv.rows[0]["doc_id"]
-    assert re.match("^GAXMDFMLAAAA........$", doc_id)
-    expected_output_row = standard_output_row(doc_id=doc_id)
-    assert output_csv.rows[0] == expected_output_row
-
-    assert len(writeback_csv.rows) == 1
-    assert writeback_csv.rows[0] == standard_writeback_row()
-
-
-@freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
-def test_process_payment_record_multiple_details(test_db_session, initialize_factories_session):
-    input_files = [
-        "s3://bucket/test/2021-01-17-19-14-25-Employee_feed.csv",
-        "s3://bucket/test/2021-01-17-19-14-25-LeavePlan_info.csv",
-        "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE_SOM.csv",
-        "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE.csv",
-        "s3://bucket/test/2021-01-17-19-14-25-vpeiclaimdetails.csv",
-        "s3://bucket/test/2021-01-17-19-14-25-vpei.csv",
-        "s3://bucket/test/2021-01-17-19-14-25-vpeipaymentdetails.csv",
-    ]
-
-    # Build a fineos_payment_export.ExtractData object with 1 row of data.
-    extract_data = fineos_payment_export.ExtractData(input_files, "manual")
-    extract_data.pei.indexed_data[test_ci_index] = test_pei_csv_row
-    extract_data.claim_details.indexed_data[test_ci_index] = test_claim_details_csv_row
-
-    # Multiple rows for this payment in payment_details.
-    test_payment_details_csv_row_2 = test_payment_details_csv_row.copy()
-    test_payment_details_csv_row_2["PAYMENTSTARTP"] = "2021-01-22 00:00:00"
-    test_payment_details_csv_row_2["PAYMENTENDPER"] = "2021-01-28 00:00:00"
-    test_payment_details_csv_row_3 = test_payment_details_csv_row.copy()
-    test_payment_details_csv_row_3["PAYMENTSTARTP"] = "2021-01-29 00:00:00"
-    test_payment_details_csv_row_3["PAYMENTENDPER"] = "2021-02-04 00:00:00"
-    extract_data.payment_details.indexed_data[test_ci_index] = [
-        test_payment_details_csv_row,
-        test_payment_details_csv_row_3,
-        test_payment_details_csv_row_2,
-    ]
-
-    # Build a fineos_vendor_export.Extract object with 1 row of data.
-    requested_absence_extract = fineos_vendor_export.Extract(
-        "s3://bucket/test/2021-01-17-19-14-25-VBI_REQUESTEDABSENCE_SOM.csv"
-    )
-    requested_absence_extract.indexed_data["NTN-308848-ABS-01"] = test_requested_absence_som_csv_row
-
-    # Build a custom voucher extract data for data from the VBI_REQUESTEDABSENCE.csv
-    # Not to be confused with the similarly named VBI_REQUESTEDABSENCE_SOM.csv
-    voucher_extract_data = payment_voucher.VoucherExtractData(input_files)
-    voucher_extract_data.vbi_requested_absence.indexed_data[
-        "NTN-308848-ABS-01"
-    ] = test_vbi_requested_absence_csv_row
-
-    test_db_session.add(
-        EmployeeFactory(
-            tax_identifier=TaxIdentifier(tax_identifier="999004400"),
-            ctr_vendor_customer_code="VC0001230001",
+    # Create a dict of scenario output we assert against.
+    scenario_outputs = {}
+    for scenario_data in scenario_data_list:
+        scenario_name = scenario_data.scenario_descriptor.scenario_name.name
+        scenario_outputs[scenario_name] = ScenarioOutput(
+            payment_date=now, scenario_data=scenario_data
         )
+        employee = scenario_outputs[scenario_name].scenario_data.employee
+
+        # Setup state logs.
+        if vcm_flag in [VCM_FLAG_EMPTY, VCM_FLAG_MISSING]:
+            setup_state_log_only(
+                associated_model=employee,
+                end_state=State.VCM_REPORT_SENT if vcm_flag else State.IDENTIFY_MMARS_STATUS,
+                now=now,
+                test_db_session=test_db_session,
+            )
+
+        # Overwrite vcm_flag.
+        if vcm_flag == VCM_FLAG_EMPTY:
+            vcm_flag_str = ""
+        else:
+            vcm_flag_str = payment_voucher.get_vcm_flag(employee, test_db_session)
+        for row in scenario_outputs[scenario_name].payment_voucher_rows:
+            row["vcm_flag"] = vcm_flag_str
+
+    # Process generated extract files.
+    input_files = []
+    file_names = file_util.list_files(file_path)
+    for file_name in file_names:
+        input_files.append(os.path.join(file_path, file_name))
+
+    # Read vpei.csv, vpeipaymentdetails.csv, vpeiclaimdetails.csv
+    payment_extract_data = fineos_payment_export.ExtractData(input_files, "manual")
+    fineos_payment_export.download_and_process_data(payment_extract_data, tmp_path)
+
+    # Read VBI_REQUESTEDABSENCE_SOM.csv, Employee_feed.csv, LeavePlan_info.csv
+    vendor_extract_data = fineos_vendor_export.ExtractData(input_files, "manual")
+    fineos_vendor_export.download_and_index_data(vendor_extract_data, tmp_path)
+
+    # Read the VBI_REQUESTEDABSENCE.csv
+    # Not to be confused with the similarly named VBI_REQUESTEDABSENCE_SOM.csv
+    voucher_extract_data = payment_voucher.VoucherExtractData(input_files)
+    payment_voucher.download_and_index_voucher_data(voucher_extract_data, tmp_path)
+
+    return StandardTestDataWrapper(
+        scenario_outputs=scenario_outputs,
+        payment_extract_data=payment_extract_data,
+        vendor_extract_data=vendor_extract_data,
+        voucher_extract_data=voucher_extract_data,
+        input_file_path=file_path,
     )
 
-    output_csv = MockCSVWriter()
-    writeback_csv = MockCSVWriter()
 
-    payment_voucher.process_payment_record(
-        extract_data,
-        requested_absence_extract,
-        voucher_extract_data,
-        test_ci_index,
-        test_pei_csv_row,
-        output_csv,
-        writeback_csv,
-        datetime.date(2021, 1, 18),
-        test_db_session,
-        MockLogEntry(),
-    )
-
-    assert len(output_csv.rows) == 1
-    doc_id = output_csv.rows[0]["doc_id"]
-    assert re.match("^GAXMDFMLAAAA........$", doc_id)
-
-    expected_output_row = standard_output_row(doc_id=doc_id)
-    expected_output_row["description"] = "PFML Payment NTN-308848-ABS-01 [01/15/2021-02/04/2021]"
-    expected_output_row["payment_period_end_date"] = "2021-02-04"
-    expected_output_row["vcm_flag"] = "Missing State"
-    expected_output_row["vendor_invoice_date"] = "2021-02-05"
-    assert output_csv.rows[0] == expected_output_row
-
-    assert len(writeback_csv.rows) == 1
-    assert writeback_csv.rows[0] == standard_writeback_row()
+# === TESTS BEGIN === #
 
 
+@pytest.mark.parametrize(
+    "scenario_name, vcm_flag",
+    [
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_A, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_B, VCM_FLAG_YES),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_C, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_D, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_E, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_F, VCM_FLAG_MISSING),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_G, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_H, VCM_FLAG_EMPTY),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_I, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_J, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_K, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_L, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_M, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_N, VCM_FLAG_NO),
+    ],
+)
 @freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
-def test_process_payment_record_zero_amount(test_db_session, initialize_factories_session):
-    test_pei_csv_row_zero_amount = {**test_pei_csv_row, **{"AMOUNT_MONAMT": "0"}}
+def test_process_payment_record(
+    initialize_factories_session, scenario_name, test_db_session, tmp_path, vcm_flag
+):
+    """Test the data within the CSVs is calculated and formatted as expected
 
-    (
-        extract_data,
-        requested_absence_extract,
-        voucher_extract_data,
-        ci_index,
-    ) = setup_standard_test_data(test_db_session, pei_csv_row=test_pei_csv_row_zero_amount)
-
+    - Modify the scenarios and the mock file generators to modify the test data.
+    - Modify ScenarioOutput and get_standard_test_data() to modify the logic.
+    """
     output_csv = MockCSVWriter()
     writeback_csv = MockCSVWriter()
 
-    payment_voucher.process_payment_record(
-        extract_data,
-        requested_absence_extract,
-        voucher_extract_data,
-        ci_index,
-        test_pei_csv_row_zero_amount,
-        output_csv,
-        writeback_csv,
-        datetime.date(2021, 1, 18),
-        test_db_session,
-        MockLogEntry(),
+    standard_test_data = get_standard_test_data(
+        now=datetime.now(),
+        scenario_name=scenario_name,
+        test_db_session=test_db_session,
+        tmp_path=tmp_path,
+        vcm_flag=vcm_flag,
     )
+    voucher_scenario = standard_test_data.scenario_outputs[scenario_name.name]
 
-    assert len(output_csv.rows) == 1
-    doc_id = output_csv.rows[0]["doc_id"]
-    assert re.match("^GAXMDFMLAAAA........$", doc_id)
+    for i, payment in enumerate(voucher_scenario.scenario_data.payments):
+        payment_ci = fineos_payment_export.CiIndex(
+            c=payment.fineos_pei_c_value, i=payment.fineos_pei_i_value
+        )
+        pei_record = standard_test_data.payment_extract_data.pei.indexed_data[payment_ci]
 
-    expected_output_row = standard_output_row(doc_id=doc_id)
-    expected_output_row["payment_amount"] = "0"
-    expected_output_row["claimants_that_have_zero_or_credit_value"] = "1"
-    assert output_csv.rows[0] == expected_output_row
+        payment_voucher.process_payment_record(
+            payment_extract_data=standard_test_data.payment_extract_data,
+            vendor_extract_data=standard_test_data.vendor_extract_data,
+            voucher_extract_data=standard_test_data.voucher_extract_data,
+            ci_index=payment_ci,
+            pei_record=pei_record,
+            output_csv=output_csv,
+            writeback_csv=writeback_csv,
+            payment_date=date.today(),
+            db_session=test_db_session,
+            log_entry=MockLogEntry(),
+        )
 
-    assert len(writeback_csv.rows) == 1
-    assert writeback_csv.rows[0] == standard_writeback_row()
+        doc_id = output_csv.rows[i]["doc_id"]
+        assert re.match("^GAXMDFMLAAAA........$", doc_id)
+        voucher_row = voucher_scenario.payment_voucher_rows[i]
+        # DOC_ID is generated by the payment voucher process, so we substitute it in the output
+        voucher_row["doc_id"] = doc_id
+        assert output_csv.rows[i] == voucher_row
+        assert writeback_csv.rows[i] == voucher_scenario.writeback_rows[i]
 
-
-@freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
-def test_process_payment_record_negative_amount(test_db_session, initialize_factories_session):
-    test_pei_csv_row_negative_amount = {**test_pei_csv_row, **{"AMOUNT_MONAMT": "-42.0"}}
-
-    (
-        extract_data,
-        requested_absence_extract,
-        voucher_extract_data,
-        ci_index,
-    ) = setup_standard_test_data(test_db_session, pei_csv_row=test_pei_csv_row_negative_amount)
-
-    output_csv = MockCSVWriter()
-    writeback_csv = MockCSVWriter()
-
-    payment_voucher.process_payment_record(
-        extract_data,
-        requested_absence_extract,
-        voucher_extract_data,
-        ci_index,
-        test_pei_csv_row_negative_amount,
-        output_csv,
-        writeback_csv,
-        datetime.date(2021, 1, 18),
-        test_db_session,
-        MockLogEntry(),
-    )
-
-    assert len(output_csv.rows) == 1
-    doc_id = output_csv.rows[0]["doc_id"]
-    assert re.match("^GAXMDFMLAAAA........$", doc_id)
-
-    expected_output_row = standard_output_row(doc_id=doc_id)
-    expected_output_row["payment_amount"] = "-42.0"
-    expected_output_row["claimants_that_have_zero_or_credit_value"] = "1"
-    assert output_csv.rows[0] == expected_output_row
-
-    assert len(writeback_csv.rows) == 1
-    assert writeback_csv.rows[0] == standard_writeback_row()
-
-
-@freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
-def test_process_payment_record_no_amount(test_db_session, initialize_factories_session):
-    test_pei_csv_row_no_amount = {**test_pei_csv_row, **{"AMOUNT_MONAMT": ""}}
-
-    (
-        extract_data,
-        requested_absence_extract,
-        voucher_extract_data,
-        ci_index,
-    ) = setup_standard_test_data(test_db_session, pei_csv_row=test_pei_csv_row_no_amount)
-
-    output_csv = MockCSVWriter()
-    writeback_csv = MockCSVWriter()
-
-    payment_voucher.process_payment_record(
-        extract_data,
-        requested_absence_extract,
-        voucher_extract_data,
-        ci_index,
-        test_pei_csv_row_no_amount,
-        output_csv,
-        writeback_csv,
-        datetime.date(2021, 1, 18),
-        test_db_session,
-        MockLogEntry(),
-    )
-
-    assert len(output_csv.rows) == 1
-    doc_id = output_csv.rows[0]["doc_id"]
-    assert re.match("^GAXMDFMLAAAA........$", doc_id)
-
-    expected_output_row = standard_output_row(doc_id=doc_id)
-    expected_output_row["payment_amount"] = None
-    expected_output_row["claimants_that_have_zero_or_credit_value"] = ""
-    assert output_csv.rows[0] == expected_output_row
-
-    assert len(writeback_csv.rows) == 1
-    assert writeback_csv.rows[0] == standard_writeback_row()
+    assert len(output_csv.rows) == len(voucher_scenario.payment_voucher_rows)
+    assert len(writeback_csv.rows) == len(voucher_scenario.writeback_rows)
 
 
 @freezegun.freeze_time("2021-01-21 13:12:30", tz_offset=0)
 def test_process_extracts_to_payment_voucher(
     test_db_session, initialize_factories_session, tmp_path
 ):
+    """Test the CSVs are written out in the expected format
+
+    - Modify the test files to modify the test data.
+    """
     input_path = os.path.join(os.path.dirname(__file__), "test_files")
 
     for ssn in (
@@ -657,12 +460,57 @@ def test_process_extracts_to_payment_voucher(
         input_path, tmp_path, None, None, test_db_session, MockLogEntry()
     )
 
+    # Outcome:
+    # Of the 22 vpei rows:
+    # - 7 have employees seeded in the database and should have all the expected columns
+    # - 1 has an employee without a VC code, state log entry, and from
+    #   VBI_REQUSTEDABSENCE.csv so it should be missing a number of columns
+    # - 14 are missing employees and missing from VBI_REQUESTEDABSENCE.csv, so should be
+    #   missing a number of columns
+
     csv_output = open(os.path.join(tmp_path, "20210121_131230_payment_voucher.csv")).readlines()
     expected_output = open(os.path.join(input_path, "expected_payment_voucher.csv")).readlines()
-
     assert csv_output == expected_output
 
     writeback = open(os.path.join(tmp_path, "20210121_131230_writeback.csv")).readlines()
     expected_writeback = open(os.path.join(input_path, "expected_writeback.csv")).readlines()
-
     assert writeback == expected_writeback
+
+
+def test_run_voucher_process(initialize_factories_session, test_db_session, tmp_path):
+    # Create files with one payment.
+    standard_test_data = get_standard_test_data(
+        now=datetime.now(),
+        scenario_name=scenario_generator.ScenarioName.SCENARIO_VOUCHER_A,
+        test_db_session=test_db_session,
+        tmp_path=tmp_path,
+        vcm_flag=False,
+    )
+
+    # Run the process.
+    output_file_path = os.path.join(tmp_path, "voucher_output")
+    config = payment_voucher.Configuration([standard_test_data.input_file_path, output_file_path])
+    payment_voucher.run_voucher_process(config)
+
+    # Validate the outcome.
+    output_files = file_util.list_files(output_file_path)
+    voucher_file = None
+    writeback_file = None
+    for file_path in output_files:
+        if file_path.endswith("payment_voucher.csv"):
+            voucher_file = os.path.join(output_file_path, file_path)
+        if file_path.endswith("writeback.csv"):
+            writeback_file = os.path.join(output_file_path, file_path)
+
+    # Validate that files were generated.
+    assert len(output_files) == 9
+    assert voucher_file is not None
+    assert writeback_file is not None
+
+    # Validate the payment voucher.
+    payment_voucher_rows = list(CSVSourceWrapper(voucher_file))
+    assert len(payment_voucher_rows) == 2
+
+    # Validate the writeback.
+    writeback_rows = list(CSVSourceWrapper(writeback_file))
+    assert len(writeback_rows) == 2

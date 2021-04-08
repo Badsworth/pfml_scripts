@@ -1,6 +1,5 @@
-// import {FetchError} from "node-fetch";
 import { ErrorResponse, HttpError } from "./api";
-import { URL, URLSearchParams } from "url";
+import { URLSearchParams } from "url";
 
 type APIError = HttpError & {
   data: ErrorResponse;
@@ -25,33 +24,59 @@ function isAPIError(e: HttpError): e is APIError {
  * @param error
  */
 export function enrichHttpError(error: HttpError): void {
-  const debugInfo: Record<string, string> = {};
+  let debugInfo: Record<string, string> = {
+    ...extractDebugInfoFromHeaders(error.headers),
+  };
   if (isAPIError(error)) {
-    if (error.data.message) {
-      debugInfo["API Error Message"] = error.data.message ?? "Unknown";
-    }
-    if (error.data.warnings) {
-      debugInfo["API Warnings"] = error.data.errors
-        .map((e) => `- ${e.field}(${e.type}): ${e.message}`)
-        .join(", ");
-    }
-    if (error.data.errors) {
-      debugInfo["API Errors"] = error.data.errors
-        .map((e) => `- ${e.field}(${e.type}): ${e.message}`)
-        .join(", ");
-    }
+    debugInfo = { ...debugInfo, ...extractDebugInfoFromBody(error.data) };
   }
-  if (typeof error.headers["x-amzn-requestid"] === "string") {
-    debugInfo["New Relic Logs"] = buildNRDebugURL(
-      error.headers["x-amzn-requestid"]
-    );
-  }
+
   if (Object.keys(debugInfo).length > 0) {
     const debugInfoString = Object.entries(debugInfo)
       .map(([key, value]) => `${key}: ${value}`)
       .join("\n");
     error.message += `\n\nDebug Information\n------------------\n${debugInfoString}`;
   }
+}
+
+/**
+ * Extract debug information from API response headers.
+ *
+ * @param headers
+ */
+export function extractDebugInfoFromHeaders(
+  headers: Record<string, string>
+): Record<string, string> {
+  const debugInfo: Record<string, string> = {};
+  if (typeof headers["x-amzn-requestid"] === "string") {
+    debugInfo["New Relic Logs"] = buildNRDebugURL(headers["x-amzn-requestid"]);
+  }
+  return debugInfo;
+}
+
+/**
+ * Extract debug information from an API response body.
+ *
+ * @param body
+ */
+export function extractDebugInfoFromBody(
+  body: ErrorResponse
+): Record<string, string> {
+  const debugInfo: Record<string, string> = {};
+  if (body.message) {
+    debugInfo["API Error Message"] = body.message ?? "Unknown";
+  }
+  if (body.warnings) {
+    debugInfo["API Warnings"] = body.warnings
+      .map((e) => `- ${e.field}(${e.type}): ${e.message}`)
+      .join(", ");
+  }
+  if (body.errors) {
+    debugInfo["API Errors"] = body.errors
+      .map((e) => `- ${e.field}(${e.type}): ${e.message}`)
+      .join(", ");
+  }
+  return debugInfo;
 }
 
 /**
@@ -86,13 +111,14 @@ function buildNRDebugURL(request_id: string): string {
     ],
     isEntitled: true,
   };
-  const searchParams = new URLSearchParams({
+  // Important: This code can operate in the browser or Node. URLSearchParams is different between the two.
+  // Use this ponyfill so it can work in both places.
+  const CrossUrlSearchParams = URLSearchParams || window.URLSearchParams;
+  const searchParams = new CrossUrlSearchParams({
     launcher: new Buffer(JSON.stringify(launcherParams)).toString("base64"),
     // Start and end 15 minutes before and after "now".
     "platform[timeRange][begin_time]": (Date.now() - 10 * 60 * 1000).toString(),
     "platform[timeRange][end_time]": (Date.now() + 10 * 60 * 1000).toString(),
   });
-  const url = new URL("https://one.newrelic.com/launcher/logger.log-launcher");
-  url.search = searchParams.toString();
-  return url.toString();
+  return `https://one.newrelic.com/launcher/logger.log-launcher?${searchParams.toString()}`;
 }

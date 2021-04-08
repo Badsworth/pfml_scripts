@@ -241,7 +241,7 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     # TODO adjust scenario config to specify desired rejection state instead of random sampling
     rejected_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         state_log_util.AssociatedClass.PAYMENT,
-        State.DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
         test_db_session,
     )
     assert len(rejected_state_logs) > len(
@@ -296,41 +296,6 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
             == str(os.path.join(expected_processed_folder_path, rejects_file_name)),
             ReferenceFile.reference_file_type_id
             == ReferenceFileType.DELEGATED_PAYMENT_REJECTS.reference_file_type_id,
-        )
-        .one_or_none()
-        is not None
-    )
-
-    # check rejects report sent to program integrity and archive folder
-    expected_rejects_report_outbound_folder_path = os.path.join(
-        payment_rejects_report_outbound_folder, date_folder
-    )
-    payment_rejects_file_name = f"{timestamp_file_prefix}-Payment-Rejects-Report.csv"
-    assert_files(expected_rejects_report_outbound_folder_path, [payment_rejects_file_name])
-
-    payment_rejects_file_content = file_util.read_file(
-        os.path.join(expected_rejects_report_outbound_folder_path, payment_rejects_file_name)
-    )
-    payment_rejects_file_line_count = payment_rejects_file_content.count("\n")
-    assert (
-        payment_rejects_file_line_count == len(audit_scenario_data) + 1  # account for header row
-    ), f"Unexpected number of lines in payment rejects report - found: {payment_rejects_file_line_count}, expected: {len(rejected_state_logs) + 1}"
-
-    expected_rejects_report_sent_folder_path = os.path.join(
-        payment_rejects_report_sent_folder_path, date_folder
-    )
-    assert_files(expected_rejects_report_sent_folder_path, [payment_rejects_file_name])
-
-    # check reference files created - sent
-    assert (
-        test_db_session.query(ReferenceFile)
-        .filter(
-            ReferenceFile.file_location
-            == str(
-                os.path.join(expected_rejects_report_sent_folder_path, payment_rejects_file_name)
-            ),
-            ReferenceFile.reference_file_type_id
-            == ReferenceFileType.DELEGATED_PAYMENT_REJECTS_REPORT.reference_file_type_id,
         )
         .one_or_none()
         is not None

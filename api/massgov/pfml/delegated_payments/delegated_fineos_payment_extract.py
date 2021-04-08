@@ -2,7 +2,6 @@ import csv
 import decimal
 import os
 import pathlib
-import re
 import tempfile
 import uuid
 from collections import OrderedDict
@@ -50,8 +49,12 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiPaymentDetails,
 )
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.payments.payments_util import get_now
 
 logger = logging.get_logger(__name__)
+
+# waiting period for pending prenote
+PRENOTE_PRENDING_WAITING_PERIOD = 7
 
 # folder constants
 RECEIVED_FOLDER = "received"
@@ -151,8 +154,8 @@ class PaymentData:
     tin: Optional[str] = None
     absence_case_number: Optional[str] = None
 
-    leave_request_id: Optional[str] = None
     leave_request_decision: Optional[str] = None
+    claim_type_raw: Optional[str] = None
 
     full_name: Optional[str] = None
     payee_identifier: Optional[str] = None
@@ -211,9 +214,6 @@ class PaymentData:
                     CiIndex(c=self.absence_case_number, i="")
                 )
             if requested_absence:
-                self.leave_request_id = payments_util.validate_csv_input(
-                    "LEAVEREQUEST_ID", requested_absence, self.validation_container, True
-                )
 
                 def leave_request_decision_validator(
                     leave_request_decision: str,
@@ -231,6 +231,22 @@ class PaymentData:
                     True,
                     custom_validator_func=leave_request_decision_validator,
                 )
+
+                def claim_type_validator(
+                    claim_type_str: str,
+                ) -> Optional[payments_util.ValidationReason]:
+                    if claim_type_str == "Family" or claim_type_str == "Employee":
+                        return None
+                    return payments_util.ValidationReason.INVALID_VALUE
+
+                self.claim_type_raw = payments_util.validate_csv_input(
+                    "ABSENCEREASON_COVERAGE",
+                    requested_absence,
+                    self.validation_container,
+                    True,
+                    custom_validator_func=claim_type_validator,
+                )
+
             else:
                 self.validation_container.add_validation_issue(
                     payments_util.ValidationReason.MISMATCHED_DATA,
@@ -309,8 +325,6 @@ class PaymentData:
 
         def amount_validator(amount_str: str) -> Optional[payments_util.ValidationReason]:
             try:
-                if not re.match(payments_util.Regexes.MONETARY_AMOUNT, amount_str):
-                    return payments_util.ValidationReason.INVALID_VALUE
                 Decimal(amount_str)
             except (InvalidOperation, TypeError):  # Amount is not numeric
                 return payments_util.ValidationReason.INVALID_VALUE
@@ -611,9 +625,14 @@ class PaymentExtractStep(Step):
             self.db_session.add(claim)
             self.increment("claim_created_count")
 
-        # Attach the employee to the claim
-        if claim and employee:
-            claim.employee = employee
+        # Attach the employee+claim type to the claim
+        if claim:
+            if employee:
+                claim.employee = employee
+            if payment_data.claim_type_raw:
+                claim.claim_type_id = payments_util.get_mapped_claim_type(
+                    payment_data.claim_type_raw
+                ).claim_type_id
 
         # Somehow we have ended up in a state where we could not find an employee
         # but did find a claim with some other employee ID. This shouldn't happen
@@ -631,12 +650,18 @@ class PaymentExtractStep(Step):
 
     def update_experian_address_pair_fineos_address(
         self, payment_data: PaymentData, employee: Employee
-    ) -> bool:
+    ) -> Tuple[Optional[ExperianAddressPair], bool]:
         """Create or update the employee's EFT record
 
         Returns:
             bool: True if payment_data has address updates; False otherwise
         """
+        # Only update if the employee is using Check for payments
+        if payment_data.validation_container.has_validation_issues():
+            # We will only update address information if the payment has no issues up to
+            # this point in the processing, meaning that required fields are present.
+            return None, False
+
         # Construct an Address from the payment_data
         payment_data_address = Address(
             address_id=uuid.uuid4(),
@@ -650,26 +675,26 @@ class PaymentExtractStep(Step):
             address_type_id=AddressType.MAILING.address_type_id,
         )
 
-        # If experian_address_pair exists, compare the existing fineos_address with the payment_data address
-        #   If they're the same, nothing needs to be done, so we can return
-        #   If they're different or if no experian_address_pair exists, create a new ExperianAddressPair
-        experian_address_pair = employee.experian_address_pair
-        if experian_address_pair:
-            if payments_util.is_same_address(
-                experian_address_pair.fineos_address, payment_data_address
-            ):
-                return False
+        # If existing_address_pair exists, compare the existing fineos_address with the payment_data address
+        #   If they're the same, nothing needs to be done, so we can return the address
+        existing_address_pair = payments_util.find_existing_address_pair(
+            employee, payment_data_address, self.db_session
+        )
+        if existing_address_pair:
+            return existing_address_pair, False
 
+        # We need to add the address to the employee.
+        # TODO - If FINEOS provides a value that indicates an address
+        # has been validated, we would also set the experian_address here.
         new_experian_address_pair = ExperianAddressPair(fineos_address=payment_data_address)
-        employee.experian_address_pair = new_experian_address_pair
+
         self.db_session.add(payment_data_address)
         self.db_session.add(new_experian_address_pair)
-        self.db_session.add(employee)
 
         # We also want to make sure the address is linked in the EmployeeAddress table
         employee_address = EmployeeAddress(employee=employee, address=payment_data_address)
         self.db_session.add(employee_address)
-        return True
+        return new_experian_address_pair, True
 
     def get_payment_transaction_type_id(self, payment_data: PaymentData, amount: Decimal) -> int:
         if payment_data.raw_payment_transaction_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
@@ -819,7 +844,16 @@ class PaymentExtractStep(Step):
                 extra=extra,
             )
 
-            if existing_eft.prenote_state_id != PrenoteState.APPROVED.prenote_state_id:
+            if PrenoteState.APPROVED.prenote_state_id == existing_eft.prenote_state_id:
+                self.increment("approved_prenote_count")
+            elif (
+                (PrenoteState.PENDING_WITH_PUB.prenote_state_id == existing_eft.prenote_state_id)
+                and existing_eft.prenote_sent_at
+                and (get_now() - existing_eft.prenote_sent_at).days
+                >= PRENOTE_PRENDING_WAITING_PERIOD
+            ):
+                self.increment("prenote_past_waiting_period_accepted_count")
+            else:
                 reason = (
                     payments_util.ValidationReason.EFT_PRENOTE_REJECTED
                     if existing_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id
@@ -877,10 +911,10 @@ class PaymentExtractStep(Step):
         # many contexts, so we want to be careful about modifying
         # them with problematic data.
         has_address_update, has_eft_update = False, False
-        payment_eft = None
+        payment_eft, address_pair = None, None
         if employee and not payment_data.validation_container.has_validation_issues():
             # Update the mailing address with values from FINEOS
-            has_address_update = self.update_experian_address_pair_fineos_address(
+            address_pair, has_address_update = self.update_experian_address_pair_fineos_address(
                 payment_data, employee
             )
 
@@ -901,6 +935,10 @@ class PaymentExtractStep(Step):
         # Attach the EFT info used to the payment
         if payment_eft:
             payment.pub_eft = payment_eft
+
+        # Attach the address info used to the payment
+        if address_pair:
+            payment.experian_address_pair = address_pair
 
         # Link the payment object to the payment_reference_file
         payment_reference_file = PaymentReferenceFile(

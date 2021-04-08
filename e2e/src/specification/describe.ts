@@ -111,7 +111,8 @@ function describeScenario(
     documentCertification: describeCertificationDocs(scenario.claim),
     documentIDProof: describeIDProofDocs(scenario.claim),
     employerResponse: describeEmployerResponse(scenario.claim),
-    postSubmit: scenario.claim.metadata?.postSubmit?.toString() ?? "N/A",
+    employeeMetadata: yaml.dump(scenario.employee.metadata),
+    claimMetadata: yaml.dump(scenario.claim.metadata),
   };
 }
 
@@ -129,7 +130,8 @@ const columns = {
   documentCertification: "Certification Document",
   documentIDProof: "ID Proof Document",
   employerResponse: "Employer Response",
-  postSubmit: "Post-Submit Action",
+  employeeMetadata: "Employee Metadata",
+  claimMetadata: "Claim Metadata",
 };
 
 const describeScenarios = map(describeScenario);

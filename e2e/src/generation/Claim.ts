@@ -8,6 +8,7 @@ import {
   PaymentPreference,
   PaymentPreferenceRequestBody,
   Phone,
+  WorkPattern,
 } from "../api";
 import faker from "faker";
 import generateLeaveDetails from "./LeaveDetails";
@@ -28,37 +29,48 @@ import { collect, map, AnyIterable } from "streaming-iterables";
 
 const pipelineP = promisify(pipeline);
 
+/**
+ * Specifies how a claim should be generated.
+ */
 export type ClaimSpecification = {
-  // A human-readable name or ID for this type of claim.
+  /** A human-readable name or ID for this type of claim. */
   label: string;
-  // Reason for leave. @see ApplicationLeaveDetails
+  /** Reason for leave. */
   reason: ApplicationLeaveDetails["reason"];
+  /** The qualifier for the leave reason */
   reason_qualifier?: ApplicationLeaveDetails["reason_qualifier"];
-  // An object describing documentation that should accompany the claim.
+  /** An object describing documentation that should accompany the claim. */
   docs?: DocumentGenerationSpec;
+  /** Describes the employer response that accompanies this claim */
   employerResponse?: GeneratedEmployerResponse;
-  // @todo: Get rid of skipSubmitClaim.
-  // skipSubmitClaim?: boolean;
+  /** Generate an employer notification date that is considered "short notice" by law. */
   shortNotice?: boolean;
+  /** Flag to make this a continuous leave claim */
   has_continuous_leave_periods?: boolean;
-  // Reduced leave can be specified in a specification. See work_pattern_spec for the expected
-  // format.
+  /**
+   * Controls the reduced leave periods. If this is set, we will generate a reduced leave claim
+   * following the specification given here. See work_pattern_spec for information on the format.
+   */
   reduced_leave_spec?: string;
+  /** Flag to make this an intermittent leave claim */
   has_intermittent_leave_periods?: boolean;
   pregnant_or_recent_birth?: boolean;
   bondingDate?: "far-past" | "past" | "future";
+  /** Specify explicit leave dates for the claim. These will be used for the reduced/intermittent/continuous leave periods. */
   leave_dates?: [Date, Date];
+  /** Specify an explicit address to use for the claim. */
   address?: Address;
+  /** Specify explicit payment details to be used for the claim. */
   payment?: PaymentPreference;
-  // Specifies work pattern. Can be one of "standard" or "rotating_shift", or a granular
-  // schedule in the format of "0,240,240,0;240,0,0,0", where days are delineated by commas,
-  // weeks delineated by semicolon, and the numbers are minutes worked on that day of the week
-  // (starting Sunday).
+  /**
+   * Specifies work pattern. Can be one of "standard" or "rotating_shift", or a granular schedule in the format of
+   * "0,240,240,0;240,0,0,0", where days are delineated by commas, weeks delineated by semicolon, and the numbers
+   * are minutes worked on that day of the week (starting Sunday).
+   */
   work_pattern_spec?: WorkPatternSpec;
-  // Makes a claim for an extremely short time period (1 day).
+  /** Makes a claim for an extremely short time period (1 day). */
   shortClaim?: boolean;
-  // Any additional metadata you want to add to the generated claim.
-  // This will not be used during the normal submission process, but we can use it for reporting.
+  /** Optional metadata to be saved verbatim on the claim object. Not submitted in any way. */
   metadata?: GeneratedClaimMetadata;
 };
 
@@ -126,8 +138,7 @@ export class ClaimGenerator {
       has_mailing_address: true,
       mailing_address: address,
       residential_address: address,
-      // @todo: This doesn't seem right given variable work patterns.
-      hours_worked_per_week: 40,
+      hours_worked_per_week: this.calculateAverageWeeklyHours(workPattern),
       work_pattern: workPattern,
       phone: this.generatePhone(),
       leave_details: leaveDetails,
@@ -152,6 +163,23 @@ export class ClaimGenerator {
       employerResponse: spec.employerResponse ?? null,
       metadata: spec.metadata,
     };
+  }
+
+  private static calculateAverageWeeklyHours(workPattern: WorkPattern): number {
+    if (!workPattern.work_pattern_days) {
+      return 40;
+    }
+    // Each item in the array is the number of minutes per week.
+    const weeks: Array<number> = [];
+    workPattern.work_pattern_days.forEach((workDay) => {
+      // The week_number starts at 1, instead start at 0.
+      const week_index = (workDay.week_number ?? 1) - 1;
+      if (!(week_index in weeks)) {
+        weeks[week_index] = 0;
+      }
+      weeks[week_index] = weeks[week_index] + (workDay.minutes || 0);
+    });
+    return weeks.reduce((a, b) => a + b) / weeks.length / 60;
   }
 
   private static generateAddress(): Address {

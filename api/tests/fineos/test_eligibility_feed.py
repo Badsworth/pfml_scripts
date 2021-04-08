@@ -520,8 +520,8 @@ def test_process_all_employers_simple(
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 1
     assert process_results.employers_success_count == 1
     assert process_results.employers_error_count == 0
@@ -536,8 +536,8 @@ def test_process_all_employers_no_records(
 ):
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 0
     assert process_results.employers_success_count == 0
     assert process_results.employers_error_count == 0
@@ -557,8 +557,8 @@ def test_process_all_employers_with_skip(
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 1
     assert process_results.employers_success_count == 0
     assert process_results.employers_error_count == 0
@@ -578,8 +578,8 @@ def test_process_all_employers_with_error(
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 1
     assert process_results.employers_success_count == 0
     assert process_results.employers_error_count == 1
@@ -598,8 +598,8 @@ def test_process_all_employers_for_single_employee_different_employers(
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 5
     assert process_results.employers_success_count == 5
     assert process_results.employers_error_count == 0
@@ -620,8 +620,8 @@ def test_process_all_employers_for_single_employer_different_employees(
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 1
     assert process_results.employers_success_count == 1
     assert process_results.employers_error_count == 0
@@ -644,8 +644,8 @@ def test_process_all_employers_for_multiple_wages_for_single_employee_employer_p
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 1
     assert process_results.employers_success_count == 1
     assert process_results.employers_error_count == 0
@@ -675,8 +675,8 @@ def test_process_all_employers_skips_nonexistent_employer(
 
     process_results = call_process_all_employers(monkeypatch, tmp_path)
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 2
     assert process_results.employers_success_count == 1
     assert process_results.employers_error_count == 0
@@ -735,8 +735,8 @@ def test_process_employee_updates_simple(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 1
     assert process_results.employers_success_count == 1
     assert process_results.employers_error_count == 0
@@ -772,8 +772,8 @@ def test_process_employee_updates_for_single_employer_different_employees(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 1
     assert process_results.employers_success_count == 1
     assert process_results.employers_error_count == 0
@@ -795,8 +795,8 @@ def test_process_employee_updates_for_multiple_wages_for_single_employee_employe
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 1
     assert process_results.employers_success_count == 1
     assert process_results.employers_error_count == 0
@@ -824,8 +824,8 @@ def test_process_employee_updates_skips_nonexistent_employer(
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
     process_results = ef.process_employee_updates(test_db_session, fineos_client, tmp_path)
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 2
     assert process_results.employers_success_count == 1
     assert process_results.employers_error_count == 0
@@ -850,8 +850,8 @@ def test_process_employee_updates_with_error(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
     )
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 1
     assert process_results.employers_success_count == 0
     assert process_results.employers_error_count == 1
@@ -884,8 +884,8 @@ def test_process_employee_updates_with_error_continues_processing_other_employer
     employee_log_entries_after = test_db_session.query(EmployeeLog).all()
     assert len(employee_log_entries_after) == 1
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 2
     assert process_results.employers_success_count == 1
     assert process_results.employers_error_count == 1
@@ -914,8 +914,8 @@ def test_process_employee_updates_with_recovery(
     employee_log_entries_after = test_db_session.query(EmployeeLog).all()
     assert len(employee_log_entries_after) == 0
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 1
     assert process_results.employers_success_count == 1
     assert process_results.employers_error_count == 0
@@ -941,8 +941,8 @@ def test_process_employee_updates_export_file_number_limit(
 
     process_employee_batch_spy.assert_called_once()
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 5
     assert process_results.employers_success_count == 5
     assert process_results.employers_error_count == 0
@@ -969,8 +969,8 @@ def test_process_employee_updates_export_file_number_limit_mismatched_batch_size
 
     assert process_employee_batch_spy.call_count == 3
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 5
     assert process_results.employers_success_count == 5
     assert process_results.employers_error_count == 0
@@ -993,8 +993,8 @@ def test_process_employee_updates_export_file_number_limit_fewer_than_limit_exis
         export_file_number_limit=5,
     )
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 2
     assert process_results.employers_success_count == 2
     assert process_results.employers_error_count == 0
@@ -1027,8 +1027,8 @@ def test_process_employee_updates_export_file_number_limit_with_error_continues_
         export_file_number_limit=5,
     )
 
-    assert process_results.started_at
-    assert process_results.completed_at
+    assert process_results.start
+    assert process_results.end
     assert process_results.employers_total_count == 5
     assert process_results.employers_success_count == 4
     assert process_results.employers_error_count == 1

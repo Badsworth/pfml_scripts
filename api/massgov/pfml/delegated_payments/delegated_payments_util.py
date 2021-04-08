@@ -27,11 +27,13 @@ from massgov.pfml.db.lookup import LookupTable
 from massgov.pfml.db.models import base
 from massgov.pfml.db.models.employees import (
     Address,
+    Claim,
     ClaimType,
     CtrBatchIdentifier,
     CtrDocumentIdentifier,
     Employee,
     EmployeeReferenceFile,
+    ExperianAddressPair,
     LkClaimType,
     LkReferenceFileType,
     Payment,
@@ -845,6 +847,39 @@ def is_same_address(first: Address, second: Address) -> bool:
         return False
 
 
+def find_existing_address_pair(
+    employee: Optional[Employee], new_address: Address, db_session: db.Session
+) -> Optional[ExperianAddressPair]:
+    if not employee:
+        return None
+
+    subquery = (
+        db_session.query(Payment.payment_id)
+        .join(Claim)
+        .filter(Claim.employee_id == employee.employee_id)
+    )
+    experian_address_pairs = (
+        db_session.query(ExperianAddressPair)
+        .join(Payment, Payment.experian_address_pair_id == ExperianAddressPair.fineos_address_id)
+        .filter(Payment.payment_id.in_(subquery))
+        .all()
+    )
+
+    # TODO
+    for experian_address_pair in experian_address_pairs:
+
+        existing_fineos_address = experian_address_pair.fineos_address
+        existing_experian_address = experian_address_pair.experian_address
+
+        if existing_fineos_address and is_same_address(new_address, existing_fineos_address):
+            return experian_address_pair
+
+        if existing_experian_address and is_same_address(new_address, existing_experian_address):
+            return experian_address_pair
+
+    return None
+
+
 def is_same_eft(first: PubEft, second: PubEft) -> bool:
     """Returns true if all EFT fields match"""
     if (
@@ -858,10 +893,10 @@ def is_same_eft(first: PubEft, second: PubEft) -> bool:
 
 
 def find_existing_eft(employee: Optional[Employee], new_eft: PubEft) -> Optional[PubEft]:
-    if not employee or not employee.pub_efts:
+    if not employee:
         return None
 
-    for pub_eft_pair in employee.pub_efts:
+    for pub_eft_pair in employee.pub_efts.all():
         if is_same_eft(pub_eft_pair.pub_eft, new_eft):
             return pub_eft_pair.pub_eft
 

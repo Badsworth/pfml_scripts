@@ -115,14 +115,18 @@ export default class DOR {
         employer.zip.replace(/-/g, ""),
         "USA",
         employer.dba.padEnd(255),
+        // If both of these are set to true, the employer gets a special flag set
+        // at the API (absenceManagement = False).
         employer.family_exemption ? "T" : "F",
         employer.medical_exemption ? "T" : "F",
+        // Sets start date of leave plan.
         employer.exemption_commence_date
           ? formatDate(
               parseOrPassISODate(employer.exemption_commence_date),
               "yyyyMMdd"
             )
           : NO_EXEMPTION_DATE,
+        // Not actually used at the moment.
         employer.exemption_cease_date
           ? formatDate(
               parseOrPassISODate(employer.exemption_cease_date),

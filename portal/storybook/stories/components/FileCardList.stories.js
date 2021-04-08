@@ -1,9 +1,8 @@
+/* eslint-disable no-alert */
 import Document from "src/models/Document";
 import FileCardList from "src/components/FileCardList";
 import React from "react";
-import TempFile from "src/models/TempFile";
-import TempFileCollection from "src/models/TempFileCollection";
-import useTempFileCollection from "src/hooks/useTempFileCollection";
+import useFilesLogic from "src/hooks/useFilesLogic";
 
 export default {
   title: "Components/FileCardList",
@@ -22,28 +21,20 @@ export const Default = (args) => {
       created_at: "2021-01-30",
     }),
   ];
-  const initialFiles = new TempFileCollection([
-    new TempFile({
-      file: new File([], "WH-380-E.pdf", {
-        type: "application/pdf",
-      }),
-    }),
-  ]);
 
-  const { tempFiles, addTempFiles, removeTempFile } = useTempFileCollection(
-    initialFiles,
-    {
-      clearErrors: () => {},
-    }
-  );
+  const { files, processFiles, removeFile } = useFilesLogic({
+    clearErrors: () => {},
+    catchError: () => {
+      alert("invaid file");
+    },
+  });
 
   return (
     <FileCardList
       documents={initialDocuments}
-      tempFiles={tempFiles}
-      onAddTempFiles={addTempFiles}
-      onInvalidFilesError={alert}
-      onRemoveTempFile={removeTempFile}
+      tempFiles={files}
+      onChange={processFiles}
+      onRemoveTempFile={removeFile}
       fileErrors={[]}
       {...args}
     />

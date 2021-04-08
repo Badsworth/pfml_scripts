@@ -1,9 +1,17 @@
-from typing import Any, Dict, List, Optional, cast
+import re
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.util.logging as logging
-from massgov.pfml.db.models.employees import Address, Employee, ExperianAddressPair, Payment, State
+from massgov.pfml.db.models.employees import (
+    Address,
+    ExperianAddressPair,
+    LkState,
+    Payment,
+    PaymentMethod,
+    State,
+)
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.experian.physical_address.client import Client
 from massgov.pfml.experian.physical_address.client.models.search import (
@@ -27,15 +35,22 @@ class Constants:
     CONFIDENCE_KEY = "confidence"
     INPUT_ADDRESS_KEY = "input_address"
     OUTPUT_ADDRESS_KEY_PREFIX = "output_address_"
+    PREVIOUSLY_VERIFIED = "Previously verified"
+
+    ERROR_STATE = State.PAYMENT_FAILED_ADDRESS_VALIDATION
+    SUCCESS_STATE = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+
+    MESSAGE_ALREADY_VALIDATED = "Address has already been validated"
+    MESSAGE_INVALID_EXPERIAN_RESPONSE = "Invalid response from Experian search API"
+    MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE = "Invalid response from Experian format API"
+    MESSAGE_VALID_ADDRESS = "Address validated by Experian"
+    MESSAGE_VALID_MATCHING_ADDRESS = "Matching address validated by Experian"
+    MESSAGE_INVALID_ADDRESS = "Address not valid in Experian"
 
 
 class AddressValidationStep(Step):
     def run_step(self) -> None:
         experian_client = _get_experian_client()
-
-        employees = _get_employees_awaiting_address_validation(self.db_session)
-        for employee in employees:
-            self._validate_address_for_employee(employee, experian_client)
 
         payments = _get_payments_awaiting_address_validation(self.db_session)
         for payment in payments:
@@ -44,125 +59,108 @@ class AddressValidationStep(Step):
         self.db_session.commit()
         return None
 
-    def _validate_address_for_employee(self, employee: Employee, experian_client: Client) -> None:
-        address_pair = cast(ExperianAddressPair, employee.experian_address_pair)
-        if _address_has_been_validated(address_pair):
-            state_log_util.create_finished_state_log(
-                associated_model=employee,
-                end_state=State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS,
-                outcome=state_log_util.build_outcome("Address has already been validated"),
-                db_session=self.db_session,
-            )
-            return None
-
-        address = address_pair.fineos_address
-        response = _experian_response_for_address(experian_client, address)
-        if response.result is None:
-            state_log_util.create_finished_state_log(
-                associated_model=employee,
-                end_state=State.CLAIMANT_FAILED_ADDRESS_VALIDATION,
-                outcome=state_log_util.build_outcome("Invalid response from Experian search API"),
-                db_session=self.db_session,
-            )
-            return None
-
-        result = response.result
-        if result.confidence != Confidence.VERIFIED_MATCH:
-            outcome = _outcome_for_search_result(result, "Address not valid in Experian", address)
-            state_log_util.create_finished_state_log(
-                associated_model=employee,
-                end_state=State.CLAIMANT_FAILED_ADDRESS_VALIDATION,
-                outcome=outcome,
-                db_session=self.db_session,
-            )
-            return None
-
-        formatted_address = _formatted_address_for_match(experian_client, address, result)
-        if formatted_address is None:
-            state_log_util.create_finished_state_log(
-                associated_model=employee,
-                end_state=State.CLAIMANT_FAILED_ADDRESS_VALIDATION,
-                outcome=state_log_util.build_outcome("Invalid response from Experian format API"),
-                db_session=self.db_session,
-            )
-            return None
-
-        address_pair.experian_address = formatted_address
-        outcome = _outcome_for_search_result(result, "Address validated by Experian", address)
-        state_log_util.create_finished_state_log(
-            associated_model=employee,
-            end_state=State.DELEGATED_CLAIMANT_EXTRACTED_FROM_FINEOS,
-            outcome=outcome,
-            db_session=self.db_session,
-        )
-        return None
-
     def _validate_address_for_payment(self, payment: Payment, experian_client: Client) -> None:
-        address_pair = cast(ExperianAddressPair, payment.claim.employee.experian_address_pair)
+        address_pair = payment.experian_address_pair
+
+        # already validated
         if _address_has_been_validated(address_pair):
             state_log_util.create_finished_state_log(
                 associated_model=payment,
-                end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
-                outcome=state_log_util.build_outcome("Address has already been validated"),
+                end_state=Constants.SUCCESS_STATE,
+                outcome=_build_experian_outcome(
+                    Constants.MESSAGE_ALREADY_VALIDATED,
+                    cast(Address, address_pair.experian_address),
+                    Constants.PREVIOUSLY_VERIFIED,
+                ),
                 db_session=self.db_session,
             )
             return None
 
+        # No response
         address = address_pair.fineos_address
         response = _experian_response_for_address(experian_client, address)
         if response.result is None:
             state_log_util.create_finished_state_log(
                 associated_model=payment,
-                end_state=State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-                outcome=state_log_util.build_outcome("Invalid response from Experian search API"),
+                end_state=Constants.ERROR_STATE,
+                outcome=state_log_util.build_outcome(Constants.MESSAGE_INVALID_EXPERIAN_RESPONSE),
                 db_session=self.db_session,
             )
             return None
 
         result = response.result
-        if result.confidence != Confidence.VERIFIED_MATCH:
-            outcome = _outcome_for_search_result(result, "Address not valid in Experian", address)
-            state_log_util.create_finished_state_log(
-                associated_model=payment,
-                end_state=State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-                outcome=outcome,
+
+        # Exactly one response
+        if result.confidence == Confidence.VERIFIED_MATCH:
+            formatted_address = _formatted_address_for_match(experian_client, address, result)
+            if formatted_address is None:
+                end_state = Constants.ERROR_STATE
+                message = Constants.MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE
+            else:
+                address_pair.experian_address = formatted_address
+                end_state = Constants.SUCCESS_STATE
+                message = Constants.MESSAGE_VALID_ADDRESS
+            _create_end_state_by_payment_type(
+                payment=payment,
+                address=address,
+                address_validation_result=result,
+                end_state=end_state,
+                message=message,
                 db_session=self.db_session,
             )
             return None
 
-        formatted_address = _formatted_address_for_match(experian_client, address, result)
-        if formatted_address is None:
-            state_log_util.create_finished_state_log(
-                associated_model=payment,
-                end_state=State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-                outcome=state_log_util.build_outcome("Invalid response from Experian format API"),
+        # Multiple responses
+        if result.confidence == Confidence.MULTIPLE_MATCHES:
+            end_state, message = _get_end_state_and_message_for_multiple_matches(
+                result, experian_client, address_pair
+            )
+            _create_end_state_by_payment_type(
+                payment=payment,
+                address=address,
+                address_validation_result=result,
+                end_state=end_state,
+                message=message,
                 db_session=self.db_session,
             )
-            return None
+            return
 
-        address_pair.experian_address = formatted_address
-        outcome = _outcome_for_search_result(result, "Address validated by Experian", address)
-        state_log_util.create_finished_state_log(
-            associated_model=payment,
-            end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
-            outcome=outcome,
+        # Zero responses
+        _create_end_state_by_payment_type(
+            payment=payment,
+            address=address,
+            address_validation_result=result,
+            end_state=Constants.ERROR_STATE,
+            message=Constants.MESSAGE_INVALID_EXPERIAN_RESPONSE,
             db_session=self.db_session,
         )
-        return None
+
+
+def _create_end_state_by_payment_type(
+    payment: Payment,
+    address: Address,
+    address_validation_result: AddressSearchV1Result,
+    end_state: LkState,
+    message: str,
+    db_session: db.Session,
+) -> None:
+    # We don't need to block ACH payments for bad addresses, but
+    # still want to put it in the log so it can end up in a report
+    if payment.disb_method_id != PaymentMethod.CHECK.payment_method_id:
+        if end_state != Constants.ERROR_STATE:
+            # Update the message to mention that for EFT we do not
+            # require the address to be valid.
+            message += " but not required for EFT payment"
+        end_state = Constants.SUCCESS_STATE
+
+    outcome = _outcome_for_search_result(address_validation_result, message, address)
+    state_log_util.create_finished_state_log(
+        associated_model=payment, end_state=end_state, outcome=outcome, db_session=db_session,
+    )
 
 
 def _get_experian_client() -> Client:
     return Client()
-
-
-def _get_employees_awaiting_address_validation(db_session: db.Session) -> List[Employee]:
-    state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.CLAIMANT_READY_FOR_ADDRESS_VALIDATION,
-        db_session=db_session,
-    )
-
-    return [state_log.employee for state_log in state_logs]
 
 
 def _get_payments_awaiting_address_validation(db_session: db.Session) -> List[Payment]:
@@ -206,15 +204,11 @@ def _formatted_address_for_match(
 
 
 def _outcome_for_search_result(
-    result: AddressSearchV1Result, msg: str, address: Address
+    result: AddressSearchV1Result, msg: str, address: Address,
 ) -> Dict[str, Any]:
-    outcome: Dict[str, Any] = {
-        Constants.MESSAGE_KEY: msg,
-        Constants.EXPERIAN_RESULT_KEY: {
-            Constants.INPUT_ADDRESS_KEY: address_to_experian_suggestion_text_format(address),
-            Constants.CONFIDENCE_KEY: result.confidence,
-        },
-    }
+
+    confidence_value = result.confidence.value if result.confidence else "Unknown"
+    outcome: Dict[str, Any] = _build_experian_outcome(msg, address, confidence_value)
 
     if result.suggestions is not None:
         for i, suggestion in enumerate(result.suggestions):
@@ -223,3 +217,51 @@ def _outcome_for_search_result(
             outcome[Constants.EXPERIAN_RESULT_KEY][label] = suggestion.text
 
     return outcome
+
+
+def _build_experian_outcome(msg: str, address: Address, confidence: str) -> Dict[str, Any]:
+    outcome: Dict[str, Any] = {
+        Constants.MESSAGE_KEY: msg,
+        Constants.EXPERIAN_RESULT_KEY: {
+            Constants.INPUT_ADDRESS_KEY: address_to_experian_suggestion_text_format(address),
+            Constants.CONFIDENCE_KEY: confidence,
+        },
+    }
+    return outcome
+
+
+# If Experian's /search endpoint returns "Multiple matches" for a given address, we attempt to find
+# a "near match" and count that as the validated address in order to reduce the amount of manual
+# intervention required of the Program Integrity team (https://lwd.atlassian.net/browse/PUB-145).
+def _get_end_state_and_message_for_multiple_matches(
+    result: AddressSearchV1Result, client: Client, address_pair: ExperianAddressPair
+) -> Tuple[LkState, str]:
+    address = address_pair.fineos_address
+    if result.suggestions is not None:
+        input_address = _normalize_address_string(
+            address_to_experian_suggestion_text_format(address)
+        )
+        for suggestion in result.suggestions:
+            # We need the global_address_key to return the formatted version of the address if we
+            # find an imprecise match. If we don't have the global_address_key then we can't get the
+            # formatted address so we won't even attempt to find an imprecise match.
+            if (
+                suggestion.text is not None
+                and suggestion.global_address_key is not None
+                and input_address == _normalize_address_string(suggestion.text)
+            ):
+                key = suggestion.global_address_key
+                formatted_address = experian_format_response_to_address(client.format(key))
+                address_pair.experian_address = formatted_address
+
+                return Constants.SUCCESS_STATE, Constants.MESSAGE_VALID_MATCHING_ADDRESS
+
+    # If there are no suggestions or no suggestions matches then we return a failure end state.
+    return Constants.ERROR_STATE, Constants.MESSAGE_INVALID_ADDRESS
+
+
+def _normalize_address_string(address_str: str) -> str:
+    # 1. Remove space characters if they precede another space or a comma.
+    # 2. Lowercase the entire address string.
+    # 3. Strip leading and trailing space characters.
+    return re.sub(r"\s+([\s,])", r"\1", address_str).lower().strip()

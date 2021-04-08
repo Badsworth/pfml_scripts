@@ -13,7 +13,10 @@ output "newrelic_log_ingestion_arn" {
   value = "arn:aws:lambda:us-east-1:498823821309:function:newrelic-log-ingestion"
 }
 
-# Mapping of different environments/VPC names to EOTSS-mandated AWS tags
+# Mapping of different environments/VPC names to EOTSS-mandated AWS tags.
+#
+# NOTE: This needs to be approved from the list of tags in
+#       https://lwd.atlassian.net/wiki/spaces/DD/pages/272072807/Tagging+Standards.
 output "environment_tags" {
   value = {
     "test"        = "test"
@@ -23,6 +26,8 @@ output "environment_tags" {
     "performance" = "qa"
     "training"    = "train"
     "uat"         = "uat"
+    "breakfix"    = "qa"
+    "cps-preview" = "qa"
   }
 }
 
@@ -34,6 +39,8 @@ output "environment_shorthand" {
     "performance" = "perf"
     "training"    = "train"
     "uat"         = "uat"
+    "breakfix"    = "bfx"
+    "cps-preview" = "cpspre"
   }
 }
 
@@ -45,6 +52,8 @@ output "smartronix_environment_tags" {
     "performance" = "QA"
     "training"    = "Sandbox"
     "uat"         = "UAT"
+    "breakfix"    = "Breakfix"
+    "cps-preview" = "CPSPreview"
   }
 }
 

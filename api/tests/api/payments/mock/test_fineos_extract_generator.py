@@ -12,7 +12,8 @@ from massgov.pfml.payments.mock.fineos_extract_generator import (
     PEI_CLAIM_DETAILS_FILE_NAME,
     PEI_FILE_NAME,
     PEI_PAYMENT_DETAILS_FILE_NAME,
-    REQUESTED_ABSENCES_FILE_NAME,
+    REQUESTED_ABSENCE_FILE_NAME,
+    REQUESTED_ABSENCE_SOM_FILE_NAME,
 )
 from massgov.pfml.payments.mock.payments_test_scenario_generator import (
     EmployeePaymentScenarioDescriptor,
@@ -24,7 +25,7 @@ from massgov.pfml.payments.mock.payments_test_scenario_generator import (
 pytestmark = pytest.mark.integration
 
 
-def test_generate_to_fs(test_db_session, mock_s3_bucket, initialize_factories_session):
+def test_generate_to_fs(test_db_session, initialize_factories_session):
     folder_path = tempfile.mkdtemp().__str__()
     generate_and_validate(test_db_session, folder_path)
 
@@ -39,10 +40,11 @@ def generate_and_validate(db_session, folder_path):
     scenario_dataset: List[ScenarioData] = fineos_extract_generator.generate(config, folder_path)
 
     files = file_util.list_files(folder_path)
-    assert len(files) == 6
+    assert len(files) == 7
 
     line_counts = {}
-    line_counts[REQUESTED_ABSENCES_FILE_NAME] = 0
+    line_counts[REQUESTED_ABSENCE_SOM_FILE_NAME] = 0
+    line_counts[REQUESTED_ABSENCE_FILE_NAME] = 0
     line_counts[EMPLOYEE_FEED_FILE_NAME] = 0
     line_counts[LEAVE_PLAN_FILE_NAME] = 0  # this file is no longer used, TODO remove
     line_counts[PEI_FILE_NAME] = 0
@@ -53,15 +55,24 @@ def generate_and_validate(db_session, folder_path):
     for scenario_data in scenario_dataset:
         scenario_descriptor: EmployeePaymentScenarioDescriptor = scenario_data.scenario_descriptor
 
-        line_counts[REQUESTED_ABSENCES_FILE_NAME] += scenario_descriptor.absence_claims_count
+        if not scenario_descriptor.missing_from_vbi_requestedabsence_som:
+            line_counts[REQUESTED_ABSENCE_SOM_FILE_NAME] += scenario_descriptor.absence_claims_count
+
+        if not scenario_descriptor.missing_from_vbi_requestedabsence:
+            line_counts[REQUESTED_ABSENCE_FILE_NAME] += scenario_descriptor.absence_claims_count
 
         if not scenario_descriptor.missing_from_employee_feed:
             line_counts[EMPLOYEE_FEED_FILE_NAME] += 1
 
         if scenario_descriptor.has_payment_extract:
-            line_counts[PEI_FILE_NAME] += scenario_descriptor.absence_claims_count
-            line_counts[PEI_PAYMENT_DETAILS_FILE_NAME] += scenario_descriptor.absence_claims_count
-            line_counts[PEI_CLAIM_DETAILS_FILE_NAME] += scenario_descriptor.absence_claims_count
+            line_counts[PEI_FILE_NAME] += len(scenario_data.payments)
+            if not scenario_descriptor.missing_from_vpeipaymentdetails:
+                line_counts[
+                    PEI_PAYMENT_DETAILS_FILE_NAME
+                ] += scenario_descriptor.payment_details_count * len(scenario_data.payments)
+
+        if not scenario_descriptor.missing_from_vpeiclaimdetails:
+            line_counts[PEI_CLAIM_DETAILS_FILE_NAME] += len(scenario_data.payments)
 
     for filename in files:
         for expected_filename, expected_count in line_counts.items():

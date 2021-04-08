@@ -27,7 +27,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import Query, dynamic_loader, relationship
+from sqlalchemy.orm import Query, deferred, dynamic_loader, relationship
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.sql.functions import now as sqlnow
@@ -360,6 +360,7 @@ class PubEft(Base):
         server_default=sqlnow(),
     )
     prenote_response_at = Column(TIMESTAMP(timezone=True))
+    prenote_sent_at = Column(TIMESTAMP(timezone=True))
     prenote_response_reason_code = Column(Text)
     pub_eft_individual_id_seq: Sequence = Sequence("pub_eft_individual_id_seq")
     pub_individual_id = Column(
@@ -449,8 +450,12 @@ class Employee(Base):
     ctr_address_pair_id = Column(
         UUID(as_uuid=True), ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
     )
-    experian_address_pair_id = Column(
-        UUID(as_uuid=True), ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
+    experian_address_pair_id = deferred(
+        Column(
+            UUID(as_uuid=True).evaluates_none(),
+            ForeignKey("link_experian_address_pair.fineos_address_id"),
+            index=True,
+        )
     )
 
     title = relationship(LkTitle)
@@ -477,8 +482,6 @@ class Employee(Base):
         Optional[TaxIdentifier], relationship("TaxIdentifier", back_populates="employee")
     )
     ctr_address_pair = cast(Optional[CtrAddressPair], relationship("CtrAddressPair"))
-    experian_address_pair = cast(Optional[ExperianAddressPair], relationship("ExperianAddressPair"))
-
     authorized_reps: "Query[AuthorizedRepEmployee]" = dynamic_loader(
         "AuthorizedRepEmployee", back_populates="employee"
     )
@@ -569,6 +572,9 @@ class Payment(Base):
     disb_check_eft_issue_date = Column(Date)
     disb_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     disb_amount = Column(Numeric(asdecimal=True))
+    experian_address_pair_id = Column(
+        UUID(as_uuid=True), ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
+    )
     has_address_update = Column(Boolean, default=False, server_default="FALSE", nullable=False)
     has_eft_update = Column(Boolean, default=False, server_default="FALSE", nullable=False)
     fineos_extract_import_log_id = Column(
@@ -587,6 +593,7 @@ class Payment(Base):
     payment_transaction_type = relationship(LkPaymentTransactionType)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
     pub_eft = relationship(PubEft)
+    experian_address_pair = relationship(ExperianAddressPair, foreign_keys=experian_address_pair_id)
     fineos_extract_import_log = relationship("ImportLog")
     check_number = Column(Integer, index=True, unique=True)
 
@@ -977,11 +984,15 @@ class StateLog(Base):
     prev_state_log_id = Column(UUID(as_uuid=True), ForeignKey("state_log.state_log_id"))
     associated_type = Column(Text, index=True)
 
+    import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True, nullable=True,
+    )
     end_state = cast("Optional[LkState]", relationship(LkState, foreign_keys=[end_state_id]))
     payment = relationship("Payment", back_populates="state_logs")
     reference_file = relationship("ReferenceFile", back_populates="state_logs")
     employee = relationship("Employee", back_populates="state_logs")
     prev_state_log = relationship("StateLog", uselist=False, remote_side=state_log_id)
+    import_log = cast("Optional[ImportLog]", relationship(ImportLog, foreign_keys=[import_log_id]))
 
 
 class LatestStateLog(Base):
@@ -1790,9 +1801,6 @@ class State(LookupTable):
     DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT = LkState(
         132, "Add to Payment Reject Report", Flow.DELEGATED_PAYMENT.flow_id
     )
-    DELEGATED_PAYMENT_PAYMENT_REJECT_REPORT_SENT = LkState(
-        133, "Payment Reject Report sent", Flow.DELEGATED_PAYMENT.flow_id
-    )
 
     DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
         134, "Add accepted payment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
@@ -1921,12 +1929,13 @@ class ReferenceFileType(LookupTable):
 
     DELEGATED_PAYMENT_AUDIT_REPORT = LkReferenceFileType(20, "Payment Audit Report", 1)
     DELEGATED_PAYMENT_REJECTS = LkReferenceFileType(21, "Payment Rejects", 1)
-    DELEGATED_PAYMENT_REJECTS_REPORT = LkReferenceFileType(22, "Payment Rejects Report", 1)
     FINEOS_CLAIMANT_EXTRACT = LkReferenceFileType(24, "Claimant extract", 2)
     FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 4)
 
     PUB_EZ_CHECK = LkReferenceFileType(26, "PUB EZ check file", 1)
     PUB_POSITIVE_PAYMENT = LkReferenceFileType(27, "PUB positive pay file", 1)
+
+    DELEGATED_PAYMENT_REPORT_FILE = LkReferenceFileType(27, "SQL Report", 1)
 
 
 class Title(LookupTable):

@@ -2,7 +2,6 @@ import csv
 import json
 import logging  # noqa: B1
 import os
-import tempfile
 from collections import Counter
 
 import pytest
@@ -11,7 +10,7 @@ from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import ImportLog, State
+from massgov.pfml.db.models.employees import ImportLog, ReferenceFile, ReferenceFileType, State
 from massgov.pfml.db.models.factories import EmployeeFactory
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
@@ -22,15 +21,15 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports imp
 
 
 @pytest.fixture
-def report_path(monkeypatch):
-    pfml_error_reports_path = str(tempfile.mkdtemp())
+def report_path(monkeypatch, mock_s3_bucket):
+    pfml_error_reports_path = f"s3://{mock_s3_bucket}/archive"
     monkeypatch.setenv("PFML_ERROR_REPORTS_PATH", pfml_error_reports_path)
     return pfml_error_reports_path
 
 
 @pytest.fixture
-def report_archive_path(monkeypatch):
-    pfml_error_reports_archive_path = str(tempfile.mkdtemp())
+def report_archive_path(monkeypatch, mock_s3_bucket):
+    pfml_error_reports_archive_path = f"s3://{mock_s3_bucket}/archive"
     monkeypatch.setenv("PFML_ERROR_REPORTS_ARCHIVE_PATH", pfml_error_reports_archive_path)
     return pfml_error_reports_archive_path
 
@@ -84,15 +83,20 @@ def test_report_generation(
     timestamp_prefix = "2021-01-15-12-00-00"
 
     folder_path = os.path.join(report_path, folder_name)
-    archive_file_path = os.path.join(report_archive_path, folder_name, date_folder)
+    archive_folder_path = os.path.join(report_archive_path, folder_name, date_folder)
 
     file_name = f"{timestamp_prefix}-test-error-report.csv"
 
+    # confirm report was generated
     assert_files(folder_path, [file_name])
-    assert_files(archive_file_path, [file_name])
+    assert_files(archive_folder_path, [file_name])
 
+    # confirm we have a reference file for archive
+    assert_report_reference_files([os.path.join(archive_folder_path, file_name)], test_db_session)
+
+    # confirm content of report
     file_path = os.path.join(folder_path, file_name)
-    reader = csv.DictReader(open(file_path), delimiter=",")
+    reader = csv.DictReader(file_util.open_stream(file_path), delimiter=",")
     rows = [record for record in reader]
 
     assert len(rows) == 2
@@ -151,7 +155,7 @@ def test_all_reports(
 
     for folder_name in folder_names:
         folder_path = os.path.join(report_path, folder_name)
-        archive_file_path = os.path.join(report_archive_path, folder_name, date_folder)
+        archive_folder_path = os.path.join(report_archive_path, folder_name, date_folder)
 
         expected_files = [
             f"{timestamp_prefix}-{report.report_name}.csv"
@@ -160,7 +164,10 @@ def test_all_reports(
         ]
 
         assert_files(folder_path, expected_files)
-        assert_files(archive_file_path, expected_files)
+        assert_files(archive_folder_path, expected_files)
+
+        file_paths = [os.path.join(archive_folder_path, file_name) for file_name in expected_files]
+        assert_report_reference_files(file_paths, test_db_session)
 
 
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
@@ -209,3 +216,15 @@ def assert_files(folder_path, expected_files):
     files_in_folder = file_util.list_files(folder_path)
     for expected_file in expected_files:
         assert expected_file in files_in_folder
+
+
+def assert_report_reference_files(file_paths, db_session):
+    assert len(
+        db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.file_location.in_(file_paths),
+            ReferenceFile.reference_file_type_id
+            == ReferenceFileType.DELEGATED_PAYMENT_REPORT_FILE.reference_file_type_id,
+        )
+        .all()
+    ) == len(file_paths)

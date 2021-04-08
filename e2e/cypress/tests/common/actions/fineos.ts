@@ -773,12 +773,10 @@ export function getPaymentAmount(): Cypress.Chainable<string> {
   cy.contains("Absence Paid Leave Case").click();
   cy.wait("@ajaxRender");
   onTab("Financials");
-  onTab("Recurring Payments");
-  onTab("Benefit Amount and Adjustments");
+  onTab("Payment History");
+  onTab("Amounts Pending");
   return cy
-    .get(
-      '#BenefitAmountOffsetsAndDeductionsListView td[id*="OffsetsAndDeductionsAmount0"]'
-    )
+    .get('#amountspendingtabWidget td[id*="benefit_amount_money0"]')
     .invoke("text");
 }
 

@@ -12,8 +12,8 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Address,
+    ClaimType,
     Employee,
-    ExperianAddressPair,
     Payment,
     PaymentMethod,
     ReferenceFile,
@@ -24,6 +24,10 @@ from massgov.pfml.delegated_payments.check_issue_file import CheckIssueEntry, Ch
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile, EzCheckHeader, EzCheckRecord
 
 logger = logging.get_logger(__name__)
+
+
+class UnSupportedClaimTypeException(Exception):
+    """An error during Claim Type other than Family or Medical"""
 
 
 @dataclass
@@ -37,10 +41,10 @@ class Constants:
     EZ_CHECK_MAX_NAME_LENGTH = 85
 
     # e.g. PFML Payment NTN-240483-ABS-01 [03/01/2021-03/07/2021]
-    EZ_CHECK_MEMO_FORMAT = "PFML Payment {} [{}-{}]"
-    EZ_CHECK_MEMO_DATE_FORMAT = "%d/%m/%Y"
+    EZ_CHECK_MEMO_FORMAT = "PFML Payment {} {} [{}-{}]"
+    EZ_CHECK_MEMO_DATE_FORMAT = "%m/%d/%Y"
 
-    POSITIVE_PAY_FILENAME_FORMAT = "PUB-POSITIVE-PAY_%Y%m%d-%H%M.csv"
+    POSITIVE_PAY_FILENAME_FORMAT = "PUB-POSITIVE-PAY_%Y%m%d-%H%M.txt"
 
     US_COUNTRY_CODE = "US"
 
@@ -170,8 +174,18 @@ def _convert_payment_to_check_issue_entry(payment: Payment) -> CheckIssueEntry:
 
 
 def _convert_payment_to_ez_check_record(payment: Payment, check_number: int) -> EzCheckRecord:
+    if payment.claim.claim_type.claim_type_id not in [
+        ClaimType.FAMILY_LEAVE.claim_type_id,
+        ClaimType.MEDICAL_LEAVE.claim_type_id,
+    ]:
+        raise UnSupportedClaimTypeException(
+            "Expected claim type to be either family or medical. Found {}".format(
+                payment.claim.claim_type.claim_type_description
+            )
+        )
+
     employee = payment.claim.employee
-    experian_address_pair = cast(ExperianAddressPair, employee.experian_address_pair)
+    experian_address_pair = payment.experian_address_pair
     address = cast(Address, experian_address_pair.experian_address)
 
     geo_state = address.geo_state
@@ -197,8 +211,10 @@ def _format_check_memo(payment: Payment) -> str:
     start_date = cast(date, payment.period_start_date).strftime(Constants.EZ_CHECK_MEMO_DATE_FORMAT)
     end_date = cast(date, payment.period_end_date).strftime(Constants.EZ_CHECK_MEMO_DATE_FORMAT)
 
+    claim_type = payment.claim.claim_type.claim_type_description
+
     return Constants.EZ_CHECK_MEMO_FORMAT.format(
-        payment.claim.fineos_absence_id, start_date, end_date
+        claim_type, payment.claim.fineos_absence_id, start_date, end_date
     )
 
 

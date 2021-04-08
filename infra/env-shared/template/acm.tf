@@ -1,6 +1,5 @@
 locals {
-  cert_domain = module.constants.cert_domains[var.environment_name]
-  api_domain  = var.environment_name == "prod" ? "paidleave-api.mass.gov" : "paidleave-api-${var.environment_name}.mass.gov"
+  api_domain = var.environment_name == "prod" ? "paidleave-api.mass.gov" : "paidleave-api-${var.environment_name}.mass.gov"
 }
 
 // NOTE: These must be requested through the AWS Console instead of terraform in order
@@ -23,7 +22,7 @@ locals {
 //
 data "aws_acm_certificate" "domain" {
   count       = var.enable_pretty_domain ? 1 : 0
-  domain      = local.cert_domain
+  domain      = module.constants.cert_domains[var.environment_name]
   statuses    = ["ISSUED"]
   most_recent = true
 }
