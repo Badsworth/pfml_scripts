@@ -40,6 +40,10 @@ resource "aws_api_gateway_deployment" "stage" {
     aws_api_gateway_integration.integration_api_proxy,
     aws_api_gateway_integration.integration_ui,
     aws_api_gateway_integration.integration_ui_proxy,
+    aws_api_gateway_integration.integration_cognito_proxy, # maybe not necessary?
+    aws_api_gateway_integration.s3_integration_get_reports,
+    aws_api_gateway_integration.s3_integration_put_reports,
+    aws_api_gateway_integration.s3_integration_delete_reports,
     aws_cloudwatch_log_group.gateway_execution_log_group
   ]
 }

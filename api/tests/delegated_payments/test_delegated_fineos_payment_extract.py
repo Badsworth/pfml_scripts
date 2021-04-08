@@ -2,7 +2,7 @@ import csv
 import json
 import os
 from collections import OrderedDict
-from datetime import date
+from datetime import date, timedelta
 
 import boto3
 import faker
@@ -49,6 +49,7 @@ from massgov.pfml.delegated_payments.delegated_config import get_s3_config
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     ValidationIssue,
     ValidationReason,
+    get_now,
 )
 
 # every test in here requires real resources
@@ -235,10 +236,7 @@ def add_db_records(
         experian_address_pair = ExperianAddressPairFactory(fineos_address=mailing_address)
 
     if add_employee:
-        employee = EmployeeFactory.create(
-            tax_identifier=TaxIdentifier(tax_identifier=tin),
-            experian_address_pair=experian_address_pair,
-        )
+        employee = EmployeeFactory.create(tax_identifier=TaxIdentifier(tax_identifier=tin))
         if add_eft:
             pub_eft = PubEftFactory.create(
                 routing_nbr=tin,
@@ -256,7 +254,10 @@ def add_db_records(
         # Payment needs to be attached to a claim
         if add_payment:
             payment = PaymentFactory.create(
-                claim=claim, fineos_pei_c_value=c_value, fineos_pei_i_value=i_value
+                claim=claim,
+                fineos_pei_c_value=c_value,
+                fineos_pei_i_value=i_value,
+                experian_address_pair=experian_address_pair,
             )
             state_log_util.create_finished_state_log(
                 payment, additional_payment_state, EXPECTED_OUTCOME, db_session
@@ -452,7 +453,7 @@ def test_process_extract_data(
         employee = claim.employee
         assert employee
 
-        mailing_address = employee.experian_address_pair.fineos_address
+        mailing_address = payment.experian_address_pair.fineos_address
         assert mailing_address
         assert mailing_address.address_line_one == f"AddressLine1-{index}"
         assert mailing_address.city == f"City{index}"
@@ -801,7 +802,7 @@ def test_process_extract_data_no_existing_claim_address_eft(
         employee = claim.employee
         assert employee
 
-        mailing_address = employee.experian_address_pair.fineos_address
+        mailing_address = payment.experian_address_pair.fineos_address
         assert mailing_address
         assert mailing_address.address_line_one == f"AddressLine1-{index}"
         assert mailing_address.city == f"City{index}"
@@ -1591,6 +1592,7 @@ def test_update_eft_existing_eft_matches_and_not_approved(
         prenote_state_id=prenote_state.prenote_state_id,
         routing_nbr="1" * 9,
         account_nbr="1" * 9,
+        prenote_sent_at=get_now(),
         bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
     )
     EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft_record)
@@ -1626,6 +1628,61 @@ def test_update_eft_existing_eft_matches_and_not_approved(
     assert len(employee_state_logs_after) == 0
 
 
+def test_update_eft_existing_eft_matches_and_pending_with_pub(
+    payment_extract_step, test_db_session, mock_s3_bucket, set_exporter_env_vars, monkeypatch,
+):
+    # This is the happiest of paths, we've already got the EFT info for the
+    # employee and it has already been prenoted.
+
+    monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    setup_process_tests(mock_s3_bucket, test_db_session, add_eft=False)
+
+    # Set an employee to have the same EFT we know is going to be extracted
+    employee = (
+        test_db_session.query(Employee)
+        .join(TaxIdentifier)
+        .filter(TaxIdentifier.tax_identifier == "1" * 9)
+        .first()
+    )
+    assert employee is not None
+    # Create the EFT record
+    pub_eft_record = PubEftFactory.create(
+        prenote_state_id=PrenoteState.PENDING_WITH_PUB.prenote_state_id,
+        routing_nbr="1" * 9,
+        account_nbr="1" * 9,
+        prenote_sent_at=get_now() - timedelta(10),
+        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
+    )
+    EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft_record)
+
+    # Run the process
+    payment_extract_step.run()
+
+    # Verify the payment isn't marked as having an EFT update
+    payment = (
+        test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_c_value == "7326", Payment.fineos_pei_i_value == "301")
+        .first()
+    )
+    assert payment is not None
+    assert payment.has_eft_update is False
+    # The payment should still be connected to the EFT record
+    assert payment.pub_eft_id == pub_eft_record.pub_eft_id
+
+    assert len(payment.state_logs) == 1
+    state_log = payment.state_logs[0]
+    assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+
+    import_log_report = json.loads(payment.fineos_extract_import_log.report)
+    assert import_log_report["prenote_past_waiting_period_accepted_count"] == 1
+
+    # There should not be a DELEGATED_EFT_SEND_PRENOTE record
+    employee_state_logs_after = (
+        test_db_session.query(StateLog).filter(StateLog.employee_id == employee.employee_id).all()
+    )
+    assert len(employee_state_logs_after) == 0
+
+
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_update_experian_address_pair_fineos_address_no_update(
     payment_extract_step, test_db_session, mock_s3_bucket, set_exporter_env_vars, monkeypatch,
@@ -1646,12 +1703,19 @@ def test_update_experian_address_pair_fineos_address_no_update(
         .first()
     )
     assert employee is not None
-    assert employee.experian_address_pair is not None
-    employee.experian_address_pair.fineos_address.address_line_one = "AddressLine1-1"
-    employee.experian_address_pair.fineos_address.address_line_two = "AddressLine2-1"
-    employee.experian_address_pair.fineos_address.city = "City1"
-    employee.experian_address_pair.fineos_address.geo_state_id = GeoState.MA.geo_state_id
-    employee.experian_address_pair.fineos_address.zip_code = "11111"
+
+    # Add the expected address to another payment associated with the employee
+    claim = ClaimFactory.create(employee=employee)
+    address_pair = ExperianAddressPairFactory(
+        fineos_address=AddressFactory.create(
+            address_line_one="AddressLine1-1",
+            address_line_two="AddressLine2-1",
+            city="City1",
+            geo_state_id=GeoState.MA.geo_state_id,
+            zip_code="11111",
+        )
+    )
+    payment = PaymentFactory.create(claim=claim, experian_address_pair=address_pair)
     test_db_session.commit()
 
     # Run the process

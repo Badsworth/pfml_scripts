@@ -11,7 +11,14 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.pub.pub_check as pub_check
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import LkState, Payment, PaymentMethod, State, StateLog
+from massgov.pfml.db.models.employees import (
+    ClaimType,
+    LkState,
+    Payment,
+    PaymentMethod,
+    State,
+    StateLog,
+)
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ClaimFactory,
@@ -37,8 +44,8 @@ def _random_payment_with_state_log(
 ) -> Payment:
     # Create the employee and claim ourselves so the payment has an associated address.
     address_pair = ExperianAddressPairFactory(experian_address=AddressFactory())
-    employee = EmployeeFactory(experian_address_pair=address_pair)
-    claim = ClaimFactory(employee=employee)
+    employee = EmployeeFactory()
+    claim = ClaimFactory(employee=employee, claim_type_id=ClaimType.MEDICAL_LEAVE.claim_type_id)
 
     # Set the dates to some reasonably recent dates in the past.
     start_date = fake.date_between("-10w", "-2w")
@@ -52,6 +59,7 @@ def _random_payment_with_state_log(
         payment_date=payment_date,
         amount=Decimal(fake.random_int(min=10, max=9_999)),
         disb_method_id=method.payment_method_id,
+        experian_address_pair=address_pair,
     )
 
     state_log_util.create_finished_state_log(
@@ -77,7 +85,7 @@ def test_create_check_file_eligible_payment_error(
 ):
     # Update zip code so that it fails validation.
     payment = _random_valid_check_payment_with_state_log(test_db_session)
-    payment.claim.employee.experian_address_pair.experian_address.zip_code = "An invalid zip code"
+    payment.experian_address_pair.experian_address.zip_code = "An invalid zip code"
     test_db_session.commit()
 
     caplog.set_level(logging.ERROR)  # noqa: B1
@@ -213,11 +221,21 @@ def test_convert_payment_to_ez_check_record_failure(initialize_factories_session
         pub_check._convert_payment_to_ez_check_record(payment_without_address, 0)
 
 
+def test_convert_payment_to_ez_check_record_unsupported_claimtype(
+    initialize_factories_session, test_db_session
+):
+    claim = ClaimFactory(claim_type_id=ClaimType.MILITARY_LEAVE.claim_type_id)
+    payment_without_address = PaymentFactory(claim=claim)
+    with pytest.raises(pub_check.UnSupportedClaimTypeException):
+        pub_check._convert_payment_to_ez_check_record(payment_without_address, 0)
+
+
 def test_format_check_memo_success(initialize_factories_session, test_db_session):
     payment = _random_valid_check_payment_with_state_log(test_db_session)
     memo = pub_check._format_check_memo(payment)
+    claim_type = payment.claim.claim_type.claim_type_description
 
-    pattern = r"PFML Payment NTN-\d+-ABS-\d+ \[\d{2}/\d{2}/\d{4}-\d{2}/\d{2}/\d{4}]"
+    pattern = "PFML Payment {} {}".format(claim_type, payment.claim.fineos_absence_id)
     assert re.search(pattern, memo)
 
 

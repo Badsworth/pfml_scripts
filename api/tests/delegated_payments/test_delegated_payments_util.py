@@ -23,16 +23,20 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.factories import (
     AddressFactory,
+    ClaimFactory,
     CtrBatchIdentifierFactory,
     CtrDocumentIdentifierFactory,
     EmployeeFactory,
     EmployeePubEftPairFactory,
     EmployeeReferenceFileFactory,
+    ExperianAddressPairFactory,
+    PaymentFactory,
     PubEftFactory,
     ReferenceFileFactory,
 )
 from massgov.pfml.db.models.payments import FineosExtractVpei
 from massgov.pfml.delegated_payments.delegated_payments_util import (
+    find_existing_address_pair,
     find_existing_eft,
     get_fineos_vendor_customer_numbers_from_reference_file,
     get_inf_data_as_plain_text,
@@ -838,6 +842,45 @@ def test_is_same_eft_different_bank_account_type():
     )
 
     assert is_same_eft(first, second) is False
+
+
+def test_find_existing_address_pair(test_db_session, initialize_factories_session):
+    lookup_address = AddressFactory.create()
+    employee = EmployeeFactory.create()
+    claim = ClaimFactory.create(employee=employee)
+
+    # Doesn't break if employee isn't set
+    assert not find_existing_address_pair(None, lookup_address, test_db_session)
+
+    # Verify it can match the fineos address of another payment
+    fineos_lookup_address = AddressFactory.create()
+    fineos_address_pair = ExperianAddressPairFactory.create(fineos_address=fineos_lookup_address)
+    PaymentFactory.create(claim=claim, experian_address_pair=fineos_address_pair)
+
+    result = find_existing_address_pair(employee, fineos_lookup_address, test_db_session)
+    assert result and result.fineos_address_id == fineos_address_pair.fineos_address_id
+
+    # Verify it can match the experian address of another payment
+    experian_lookup_address = AddressFactory.create()
+    experian_address_pair = ExperianAddressPairFactory.create(
+        fineos_address=AddressFactory.create(), experian_address=experian_lookup_address
+    )
+    PaymentFactory.create(claim=claim, experian_address_pair=experian_address_pair)
+
+    result = find_existing_address_pair(employee, experian_lookup_address, test_db_session)
+    assert (
+        result and result.fineos_address_id == experian_address_pair.fineos_address_id
+    )  # Primary key is the fineos address
+
+    # Verify that an address won't be found if it's not associated with that employee
+    # Even if it exists elsewhere with another employee
+    employee2 = EmployeeFactory.create()
+    claim2 = ClaimFactory.create(employee=employee2)
+    address_pair2 = ExperianAddressPairFactory.create()
+    PaymentFactory.create(claim=claim2, experian_address_pair=address_pair2)
+
+    assert not find_existing_address_pair(employee2, fineos_lookup_address, test_db_session)
+    assert not find_existing_address_pair(employee2, experian_lookup_address, test_db_session)
 
 
 def test_find_existing_eft():

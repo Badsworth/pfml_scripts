@@ -116,4 +116,20 @@ describe("EmployeePool", () => {
       "No employee is left matching the specification"
     );
   });
+
+  const expectEmployee = expect.objectContaining({
+    ssn: expect.any(String),
+  });
+
+  it("Can pick employees based on metadata", () => {
+    const pool = EmployeePool.generate(1, employerPool, {
+      metadata: {
+        prenoted: true,
+      },
+    });
+    expect(() => pool.pick({ metadata: { prenoted: false } })).toThrowError(
+      "No employee is left matching the specification"
+    );
+    expect(pool.pick({ metadata: { prenoted: true } })).toEqual(expectEmployee);
+  });
 });

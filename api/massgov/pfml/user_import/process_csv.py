@@ -24,6 +24,7 @@ from massgov.pfml.util.users import register_or_update_leave_admin
 
 initialize_sentry()
 logger = massgov.pfml.util.logging.get_logger(__name__)
+REQUIRED_FIELDS = set(("fein", "email"))
 
 
 def parse_args():
@@ -57,8 +58,12 @@ def log_progress(
 
 def pivot_csv_file(file: str) -> dict:
     data = defaultdict(list)
-    with smart_open(file) as open_fh:
+    with smart_open(file, encoding="utf-8-sig") as open_fh:
         csv_file = csv.DictReader(open_fh)
+        headers = csv_file.fieldnames
+        if not headers or not REQUIRED_FIELDS.issubset(headers):
+            logger.error(f"File has invalid headers; requires at minimum {REQUIRED_FIELDS}")
+            raise Exception(f"File has invalid headers; requires at minimum {REQUIRED_FIELDS}")
         for row in csv_file:
             email = row.get("email", "UNKNOWN") or "UNKNOWN"
             data[email].append(row)
@@ -118,37 +123,33 @@ def process_files(
         cognito_client = boto3.client("cognito-idp", region_name="us-east-1")
     fineos_client = massgov.pfml.fineos.create_client()
 
-    try:
-        for input_file in files:
-            data = pivot_csv_file(input_file)
-            records_to_import = sum(len(x) for x in data.values())
-            processed = 0
-            last_updated = 0
-            logger.info("found %s emails to import in %s", len(data.keys()), input_file)
-            for email, employers in data.items():
-                # Insert parallelization here :tada:
-                processed += process_by_email(
-                    email=email,
-                    input_data=employers,
-                    db_session=db_session,
-                    force_registration=force_registration,
-                    cognito_pool_id=cognito_pool_id,
-                    filename=input_file,
-                    cognito_client=cognito_client,
-                    fineos_client=fineos_client,
-                )
-                last_updated = log_progress(
-                    processed, records_to_import, last_updated, update_every=100
-                )
-            logger.info(
-                "processed file: %s; imported %s emails, %s records",
-                input_file,
-                len(data.keys()),
-                records_to_import,
+    for input_file in files:
+        data = pivot_csv_file(input_file)
+        records_to_import = sum(len(x) for x in data.values())
+        processed = 0
+        last_updated = 0
+        logger.info("found %s emails to import in %s", len(data.keys()), input_file)
+        for email, employers in data.items():
+            # Insert parallelization here :tada:
+            processed += process_by_email(
+                email=email,
+                input_data=employers,
+                db_session=db_session,
+                force_registration=force_registration,
+                cognito_pool_id=cognito_pool_id,
+                filename=input_file,
+                cognito_client=cognito_client,
+                fineos_client=fineos_client,
             )
-
-    except Exception as ex:
-        logger.error("error during import: %s %s", ex.__class__, str(ex))
+            last_updated = log_progress(
+                processed, records_to_import, last_updated, update_every=100
+            )
+        logger.info(
+            "processed file: %s; imported %s emails, %s records",
+            input_file,
+            len(data.keys()),
+            records_to_import,
+        )
 
     logger.info("done processing files ")
 

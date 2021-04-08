@@ -14,10 +14,10 @@ const InputHours = (props) => {
   });
   const inputFormGroupClasses = {
     hours: classnames("display-inline-block margin-right-3", {
-      "margin-top-neg-105": props.smallLabel,
+      "margin-top-105": props.smallLabel,
     }),
     minutes: classnames("display-inline-block", {
-      "margin-top-neg-105": props.smallLabel,
+      "margin-top-105": props.smallLabel,
     }),
   };
 

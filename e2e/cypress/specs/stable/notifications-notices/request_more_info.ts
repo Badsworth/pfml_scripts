@@ -11,7 +11,7 @@ describe(
   { retries: 0 },
   () => {
     it(
-      "Create a financially eligible claim that is denied by an agent",
+      "Create a financially eligible claim in which a CSR rep will 'Request for More Information'",
       { baseUrl: getFineosBaseUrl() },
       () => {
         beforeFineos();
@@ -43,21 +43,7 @@ describe(
         cy.get<string>("@fineos_absence_id").then((fineos_absence_id) => {
           fineos.visitClaim(fineos_absence_id);
           fineos.additionalEvidenceRequest(fineos_absence_id);
-          switch (Cypress.env("E2E_ENVIRONMENT")) {
-            case "training":
-              fineos.closeReleaseNoticeTask("Request for more Information");
-              break;
-
-            case "performance":
-            case "test":
-            case "stage":
-            case "uat":
-              fineos.triggerNoticeRelease("Request for more Information");
-              break;
-
-            default:
-              throw new Error("Env Not Recognized - Try Again!");
-          }
+          fineos.triggerNoticeRelease("Request for more Information");
         });
       }
     );

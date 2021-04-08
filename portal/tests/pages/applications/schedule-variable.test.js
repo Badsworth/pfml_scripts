@@ -1,100 +1,125 @@
-import { MockClaimBuilder, renderWithAppLogic } from "../../test-utils";
-import { WorkPattern, WorkPatternType } from "../../../src/models/Claim";
-import { map, sum } from "lodash";
+import {
+  DayOfWeek,
+  WorkPattern,
+  WorkPatternDay,
+  WorkPatternType,
+} from "../../../src/models/Claim";
+import {
+  MockClaimBuilder,
+  renderWithAppLogic,
+  simulateEvents,
+} from "../../test-utils";
 import ScheduleVariable from "../../../src/pages/applications/schedule-variable";
-import { act } from "react-dom/test-utils";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-describe("ScheduleVariable", () => {
-  let appLogic, workPattern, wrapper;
+const defaultClaim = new MockClaimBuilder()
+  .continuous()
+  .workPattern({
+    work_pattern_days: [],
+    work_pattern_type: WorkPatternType.variable,
+  })
+  .create();
 
-  // 8 hours days for 7 days
-  const defaultMinutesWorked = 8 * 60 * 7;
-
-  beforeEach(() => {
-    workPattern = WorkPattern.createWithWeek(defaultMinutesWorked);
-    const claim = new MockClaimBuilder()
-      .continuous()
-      .workPattern({
-        work_pattern_days: workPattern.work_pattern_days,
-        work_pattern_type: WorkPatternType.variable,
-      })
-      .create();
-
-    ({ appLogic, wrapper } = renderWithAppLogic(ScheduleVariable, {
-      claimAttrs: claim,
-    }));
+const setup = (claimAttrs = defaultClaim) => {
+  const { appLogic, claim, wrapper } = renderWithAppLogic(ScheduleVariable, {
+    claimAttrs,
   });
 
+  const { changeField, submitForm } = simulateEvents(wrapper);
+
+  return {
+    appLogic,
+    changeField,
+    claim,
+    submitForm,
+    wrapper,
+  };
+};
+
+describe("ScheduleVariable", () => {
   it("renders the form", () => {
+    const { wrapper } = setup();
+
     expect(wrapper).toMatchSnapshot();
     expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
-  it("creates an empty work pattern if work pattern has no days", () => {
-    expect.assertions(2);
+  it("submits hours_worked_per_week and 7 day work pattern when entering hours for the first time", async () => {
+    const { appLogic, claim, changeField, submitForm } = setup();
 
-    const mockClaim = new MockClaimBuilder()
-      .continuous()
-      .workPattern({
-        work_pattern_type: WorkPatternType.fixed,
-        work_pattern_days: [],
-      })
-      .create();
+    changeField("work_pattern.work_pattern_days[0].minutes", 60 * 7); // 1 hour each day
+    await submitForm();
 
-    ({ appLogic, wrapper } = renderWithAppLogic(ScheduleVariable, {
-      claimAttrs: mockClaim,
-    }));
-
-    act(() => {
-      wrapper
-        .find("InputHours")
-        .simulate("change", { target: { value: 8 * 60 * 7 } });
-      wrapper.find("QuestionPage").simulate("save");
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      hours_worked_per_week: 7,
+      work_pattern: {
+        work_pattern_days: Object.values(DayOfWeek).map(
+          (day_of_week) => new WorkPatternDay({ day_of_week, minutes: 60 })
+        ),
+      },
     });
-
-    const { work_pattern } = appLogic.claims.update.mock.calls[0][1];
-    expect(work_pattern.work_pattern_days.length).toEqual(7);
-    expect(
-      work_pattern.work_pattern_days.every((day) => day.minutes === 8 * 60)
-    ).toBe(true);
   });
 
-  it("updates API with work_pattern_days and hours_worked_per_week", () => {
-    const changedMinutes = 8 * 60 * 7;
-    act(() => {
-      wrapper
-        .find("InputHours")
-        .simulate("change", { target: { value: changedMinutes } });
-      wrapper.find("QuestionPage").simulate("save");
-    });
-
-    const {
-      hours_worked_per_week,
-      work_pattern,
-    } = appLogic.claims.update.mock.calls[0][1];
-
-    expect(hours_worked_per_week).toEqual(changedMinutes / 60);
-    expect(work_pattern.work_pattern_days.length).toEqual(7);
-    expect(sum(map(work_pattern.work_pattern_days, "minutes"))).toEqual(
-      changedMinutes
+  it("submits updated data when user changes their answer", async () => {
+    const initialWorkPattern = WorkPattern.createWithWeek(60 * 7); // 1 hour each day
+    const { appLogic, claim, changeField, submitForm } = setup(
+      new MockClaimBuilder()
+        .continuous()
+        .workPattern({
+          work_pattern_days: initialWorkPattern.work_pattern_days,
+          work_pattern_type: WorkPatternType.variable,
+        })
+        .create()
     );
+
+    changeField("work_pattern.work_pattern_days[0].minutes", 2 * 60 * 7); // 2 hour each day
+    await submitForm();
+
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      hours_worked_per_week: 14,
+      work_pattern: {
+        work_pattern_days: Object.values(DayOfWeek).map(
+          (day_of_week) => new WorkPatternDay({ day_of_week, minutes: 120 })
+        ),
+      },
+    });
   });
 
-  it("creates a blank work pattern when user doesn't enter a time amount", () => {
-    const claim = new MockClaimBuilder().continuous().create();
+  it("submits data when user doesn't change their answers", async () => {
+    const initialWorkPattern = WorkPattern.createWithWeek(60 * 7); // 1 hour each day
+    const { appLogic, claim, submitForm } = setup(
+      new MockClaimBuilder()
+        .continuous()
+        .workPattern({
+          work_pattern_days: initialWorkPattern.work_pattern_days,
+          work_pattern_type: WorkPatternType.variable,
+        })
+        .create()
+    );
 
-    ({ appLogic, wrapper } = renderWithAppLogic(ScheduleVariable, {
-      claimAttrs: claim,
-    }));
+    await submitForm();
 
-    act(() => {
-      wrapper.find("QuestionPage").simulate("save");
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      hours_worked_per_week: 7,
+      work_pattern: {
+        work_pattern_days: Object.values(DayOfWeek).map(
+          (day_of_week) => new WorkPatternDay({ day_of_week, minutes: 60 })
+        ),
+      },
     });
+  });
 
-    const { work_pattern } = appLogic.claims.update.mock.calls[0][1];
+  it("creates a blank work pattern when user doesn't enter a time amount", async () => {
+    const { appLogic, claim, submitForm } = setup();
 
-    expect(work_pattern.work_pattern_days.length).toEqual(0);
+    await submitForm();
+
+    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
+      hours_worked_per_week: null,
+      work_pattern: {
+        work_pattern_days: [],
+      },
+    });
   });
 });

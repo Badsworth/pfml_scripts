@@ -4,6 +4,7 @@
 
 import csv
 import dataclasses
+from typing import Optional
 
 
 @dataclasses.dataclass
@@ -16,18 +17,18 @@ class PaymentVoucherCSV:
     payment_doc_id_dept: str
     doc_id: str
     mmars_vendor_code: str
-    first_last_name: str
-    payment_preference: str
+    first_last_name: Optional[str]
+    payment_preference: Optional[str]
     address_code: str
-    address_line_1: str
-    address_line_2: str
-    city: str
-    state: str
-    zip: str
+    address_line_1: Optional[str]
+    address_line_2: Optional[str]
+    city: Optional[str]
+    state: Optional[str]
+    zip: Optional[str]
     scheduled_payment_date: str
     vendor_single_payment: str
     event_type: str
-    payment_amount: str
+    payment_amount: Optional[str]
     description: str
     vendor_invoice_number: str
     vendor_invoice_line: str
@@ -37,10 +38,12 @@ class PaymentVoucherCSV:
     absence_case_number: str
     c_value: str
     i_value: str
+    fineos_customer_number_employee: Optional[str]
     case_status: str
     employer_id: str
-    leave_request_id: str
-    leave_request_decision: str
+    leave_request_id: Optional[str]
+    leave_request_decision: Optional[str]
+    payment_event_type: Optional[str]
     vcm_flag: str
 
     # fields mostly to be populated manually by team using the voucher file for
@@ -87,10 +90,12 @@ PAYMENT_VOUCHER_CSV_HEADERS = PaymentVoucherCSV(
     absence_case_number="Absence case number",
     c_value="C value",
     i_value="I value",
+    fineos_customer_number_employee="FINEOS customer number (Employee)",
     case_status="Case Status",
     employer_id="Employer ID",
     leave_request_id="Leave request ID",
     leave_request_decision="Leave request decision",
+    payment_event_type="FINEOS PEI event type",
     vcm_flag="Has Pending VCM",
     good_to_pay_from_prior_batch="Good to pay from prior batch",
     had_a_payment_in_a_prior_batch_by_vc_code="Had a payment in a prior batch (by VC Code)",

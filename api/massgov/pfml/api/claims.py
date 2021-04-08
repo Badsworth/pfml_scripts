@@ -22,6 +22,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
 )
+from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Claim, Employer, UserLeaveAdministrator
 from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EmployerClaimReviewEFormBuilder
@@ -305,4 +306,46 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
         message="Successfully retrieved claim",
         data=ClaimResponse.from_orm(claim).dict(),
         status_code=200,
+    ).to_api_response()
+
+
+def get_claims() -> flask.Response:
+    current_user = app.current_user()
+    with app.db_session() as db_session:
+        # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims) so if something changes there,  it probably
+        # needs to be changed here
+        if current_user and current_user.employers:
+            verification_required = app.get_config().enforce_verification or feature_gate.check_enabled(
+                feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
+                user_email=current_user.email_address,
+            )
+
+            if verification_required:
+                employer_ids_list = [
+                    e.employer_id
+                    for e in current_user.employers
+                    if current_user.verified_employer(e)
+                ]
+            else:
+                employer_ids_list = [e.employer_id for e in current_user.employers]
+
+            claims = (
+                db_session.query(Claim)
+                .order_by(Claim.created_at.desc())
+                .filter(Claim.employer_id.in_(employer_ids_list))
+                .limit(25)
+                .all()
+            )
+        else:
+            claims = (
+                db_session.query(Claim)
+                .filter(Claim.application.has(Application.user_id == current_user.user_id))  # type: ignore
+                .order_by(Claim.created_at.desc())
+                .limit(25)
+                .all()
+            )
+    claims_response = [ClaimResponse.from_orm(claim).dict() for claim in claims]
+
+    return response_util.success_response(
+        message="Successfully retrieved claims", data=claims_response, status_code=200,
     ).to_api_response()

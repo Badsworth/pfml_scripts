@@ -57,8 +57,8 @@ def test_main_success_fineos_location(
 
     response = main.main_with_return()
 
-    assert response["started_at"]
-    assert response["completed_at"]
+    assert response["start"]
+    assert response["end"]
     assert response["employers_total_count"] == 1
     assert response["employers_success_count"] == 1
     assert response["employers_error_count"] == 0
@@ -93,8 +93,8 @@ def test_main_success_non_fineos_location(
 
     response = main.main_with_return()
 
-    assert response["started_at"]
-    assert response["completed_at"]
+    assert response["start"]
+    assert response["end"]
     assert response["employers_total_count"] == 1
     assert response["employers_success_count"] == 1
     assert response["employers_error_count"] == 0
@@ -137,8 +137,8 @@ def test_main_success_non_fineos_location_updates(
 
     assert test_db_session.query(EmployeeLog).count() == 0
 
-    assert response["started_at"]
-    assert response["completed_at"]
+    assert response["start"]
+    assert response["end"]
     assert response["employers_total_count"] == 10
     assert response["employers_success_count"] == 10
     assert response["employers_error_count"] == 0
@@ -181,8 +181,8 @@ def test_main_success_non_fineos_location_updates_with_limit(
 
     assert test_db_session.query(EmployeeLog).count() == 5
 
-    assert response["started_at"]
-    assert response["completed_at"]
+    assert response["start"]
+    assert response["end"]
     assert response["employers_total_count"] == 5
     assert response["employers_success_count"] == 5
     assert response["employers_error_count"] == 0
