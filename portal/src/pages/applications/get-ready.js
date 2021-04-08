@@ -29,16 +29,19 @@ export const GetReady = (props) => {
     width: 20,
     fill: "currentColor",
   };
-
   return (
     <React.Fragment>
-      <ConvertToEmployerBanner link={convertLink}/>
+      {
+        !claims.items.find(c => c.fineos_absence_id !== null) ? 
+          <ConvertToEmployerBanner link={convertLink} />  
+          : null
+      }
       {hasClaims && (
-        <ButtonLink 
-            className="margin-top-3 margin-bottom-5"
-            href={appLogic.portalFlow.getNextPageRoute("SHOW_APPLICATIONS")}
+        <ButtonLink
+          className="margin-top-3 margin-bottom-5"
+          href={appLogic.portalFlow.getNextPageRoute("SHOW_APPLICATIONS")}
         >
-            {t("pages.getReady.applicationsLink")}
+          {t("pages.getReady.applicationsLink")}
         </ButtonLink>
       )}
       <Title>{t("pages.getReady.title")}</Title>

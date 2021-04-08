@@ -8,7 +8,11 @@ import {
   PaymentPreference,
   PaymentPreferenceRequestBody,
 } from "../../../../src/api";
-import { inFieldset } from "../actions"; // not used
+import { inFieldset } from "../actions";
+import {
+  extractDebugInfoFromBody,
+  extractDebugInfoFromHeaders,
+} from "../../../../src/errors";
 
 export function onPage(page: string): void {
   cy.url().should("include", `/applications/${page}`);
@@ -25,6 +29,61 @@ export function submitClaimDirectlyToAPI(scenario: string): void {
         cy.stashLog("firstName", responseData.first_name);
         cy.stashLog("lastName", responseData.last_name);
       });
+  });
+}
+
+/**
+ * Waits for the claim submission response to come from the API.
+ *
+ * If an error is received during submission, it enriches the error with additional metadata.
+ */
+export function waitForClaimSubmission(): Cypress.Chainable<{
+  fineos_absence_id: string;
+  application_id: string;
+}> {
+  return cy.wait("@submitClaimResponse").then((xhr) => {
+    if (xhr.error) {
+      throw new Error(`Error while waiting for claim submission: ${xhr.error}`);
+    }
+    if (!xhr.response) {
+      throw new Error(
+        "No response received while waiting for claim submission."
+      );
+    }
+
+    if (xhr.response.statusCode < 200 || xhr.response.statusCode > 299) {
+      const debugInfo: Record<string, string> = {
+        ...extractDebugInfoFromHeaders(xhr.response?.headers ?? {}),
+        ...extractDebugInfoFromBody(xhr.response?.body),
+      };
+      const debugInfoString = Object.entries(debugInfo)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join("\n");
+      throw new Error(
+        `Application submission failed: ${xhr.response.url} - ${xhr.response.statusMessage} (${xhr.response.statusCode}\n\nDebug Information\n------------------\n${debugInfoString}`
+      );
+    }
+
+    const body =
+      typeof xhr.response.body === "string"
+        ? JSON.parse(xhr.response.body)
+        : xhr.response.body;
+
+    if (!body.data.fineos_absence_id || !body.data.application_id) {
+      throw new Error(
+        `Submission response is missing required properties: ${JSON.stringify(
+          body
+        )}`
+      );
+    }
+
+    return cy.wrap(
+      {
+        fineos_absence_id: body.data.fineos_absence_id,
+        application_id: body.data.application_id,
+      },
+      { log: false }
+    );
   });
 }
 

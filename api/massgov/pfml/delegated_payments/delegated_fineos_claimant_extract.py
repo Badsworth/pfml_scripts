@@ -661,6 +661,7 @@ class ClaimantExtractStep(Step):
                 state_log_util.create_finished_state_log(
                     end_state=State.DELEGATED_EFT_SEND_PRENOTE,
                     associated_model=employee_pfml_entry,
+                    import_log_id=self.get_import_log_id(),
                     outcome=state_log_util.build_outcome(
                         "Claimant with new EFT information found, adding to the EFT flow"
                     ),
@@ -735,6 +736,7 @@ class ClaimantExtractStep(Step):
             state_log_util.create_finished_state_log(
                 end_state=State.DELEGATED_CLAIMANT_ADD_TO_CLAIMANT_EXTRACT_ERROR_REPORT,
                 associated_model=employee_pfml_entry,
+                import_log_id=self.get_import_log_id(),
                 outcome=state_log_util.build_outcome(
                     f"Employee {employee_pfml_entry.employee_id} had validation issues in FINEOS claimant extract {extract_data.date_str}",
                     validation_container,
@@ -747,6 +749,7 @@ class ClaimantExtractStep(Step):
             state_log_util.create_finished_state_log(
                 end_state=State.CLAIMANT_READY_FOR_ADDRESS_VALIDATION,
                 associated_model=employee_pfml_entry,
+                import_log_id=self.get_import_log_id(),
                 outcome=state_log_util.build_outcome(
                     f"Employee {employee_pfml_entry.employee_id} successfully extracted from FINEOS claimant extract {extract_data.date_str}"
                 ),

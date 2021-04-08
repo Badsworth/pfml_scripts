@@ -23,7 +23,7 @@ const dependencyRules = [
           "usePreviousValue",
           "useUniqueId",
           "usePiiHandlers",
-          "useTempFileCollection",
+          "useFilesLogic",
           "useCollectionState",
           "useThrottledHandler",
         ],

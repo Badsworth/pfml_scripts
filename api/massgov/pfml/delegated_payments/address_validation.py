@@ -1,9 +1,17 @@
-from typing import Any, Dict, List, Optional, cast
+import re
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.util.logging as logging
-from massgov.pfml.db.models.employees import Address, Employee, ExperianAddressPair, Payment, State
+from massgov.pfml.db.models.employees import (
+    Address,
+    Employee,
+    ExperianAddressPair,
+    LkState,
+    Payment,
+    State,
+)
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.experian.physical_address.client import Client
 from massgov.pfml.experian.physical_address.client.models.search import (
@@ -120,6 +128,18 @@ class AddressValidationStep(Step):
             return None
 
         result = response.result
+        if result.confidence == Confidence.MULTIPLE_MATCHES:
+            end_state, outcome = _get_end_state_and_outcome_for_multiple_matches(
+                result, experian_client, address_pair
+            )
+            state_log_util.create_finished_state_log(
+                associated_model=payment,
+                end_state=end_state,
+                outcome=outcome,
+                db_session=self.db_session,
+            )
+            return None
+
         if result.confidence != Confidence.VERIFIED_MATCH:
             outcome = _outcome_for_search_result(result, "Address not valid in Experian", address)
             state_log_util.create_finished_state_log(
@@ -223,3 +243,45 @@ def _outcome_for_search_result(
             outcome[Constants.EXPERIAN_RESULT_KEY][label] = suggestion.text
 
     return outcome
+
+
+# If Experian's /search endpoint returns "Multiple matches" for a given address, we attempt to find
+# a "near match" and count that as the validated address in order to reduce the amount of manual
+# intervention required of the Program Integrity team (https://lwd.atlassian.net/browse/PUB-145).
+def _get_end_state_and_outcome_for_multiple_matches(
+    result: AddressSearchV1Result, client: Client, address_pair: ExperianAddressPair
+) -> Tuple[LkState, Dict[str, Any]]:
+    address = address_pair.fineos_address
+    if result.suggestions is not None:
+        input_address = _normalize_address_string(
+            address_to_experian_suggestion_text_format(address)
+        )
+        for suggestion in result.suggestions:
+            # We need the global_address_key to return the formatted version of the address if we
+            # find an imprecise match. If we don't have the global_address_key then we can't get the
+            # formatted address so we won't even attempt to find an imprecise match.
+            if (
+                suggestion.text is not None
+                and suggestion.global_address_key is not None
+                and input_address == _normalize_address_string(suggestion.text)
+            ):
+                key = suggestion.global_address_key
+                formatted_address = experian_format_response_to_address(client.format(key))
+                address_pair.experian_address = formatted_address
+
+                end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+                outcome = _outcome_for_search_result(
+                    result, "Matching address validated by Experian", address
+                )
+                return end_state, outcome
+
+    # If there are no suggestions or no suggestions matches then we return a failure end state.
+    outcome = _outcome_for_search_result(result, "Address not valid in Experian", address)
+    return State.PAYMENT_FAILED_ADDRESS_VALIDATION, outcome
+
+
+def _normalize_address_string(address_str: str) -> str:
+    # 1. Remove space characters if they precede another space or a comma.
+    # 2. Lowercase the entire address string.
+    # 3. Strip leading and trailing space characters.
+    return re.sub(r"\s+([\s,])", r"\1", address_str).lower().strip()

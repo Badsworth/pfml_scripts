@@ -13,9 +13,10 @@ import useFunctionalInputProps from "../hooks/useFunctionalInputProps"
 import useThrottledHandler from "../hooks/useThrottledHandler"
 import { useTranslation } from "../locales/i18n";
 import withClaims from "../hoc/withClaims";
+import ClaimCollection from "../models/ClaimCollection";
 
 export const ConvertToEmployer = (props) => {
-  const { appLogic, user } = props;
+  const { appLogic, user, claims } = props;
   const { t } = useTranslation();
   const { updateUser } = appLogic.users;
   const { formState, updateFields } = useFormState({ employer_fein: "" });
@@ -26,6 +27,11 @@ export const ConvertToEmployer = (props) => {
   }
   if (user.hasEmployerRole) {
     appLogic.portalFlow.goTo(routes.employers.welcome);
+  }
+
+  // Do not allow conversion if user has created claims and got sent to fineos
+  if(claims.items.find(c => c.fineos_absence_id !== null)) {
+    appLogic.portalFlow.goTo(routes.applications.getReady);
   }
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -101,6 +107,7 @@ ConvertToEmployer.propTypes = {
     }),
     appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
   }).isRequired,
+  claims: PropTypes.instanceOf(ClaimCollection).isRequired,
   user: PropTypes.instanceOf(User).isRequired,
 };
 
