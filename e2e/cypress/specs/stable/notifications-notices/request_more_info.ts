@@ -1,56 +1,52 @@
 import { fineos, portal, email } from "../../../tests/common/actions";
-import {
-  bailIfThisTestFails,
-  beforeFineos,
-} from "../../../tests/common/before";
+import { beforeFineos } from "../../../tests/common/before";
 import { beforePortal } from "../../../tests/common/before";
 import { getFineosBaseUrl } from "../../../config";
 
-describe(
-  "Request for More Information (notifications/notices)",
-  { retries: 0 },
-  () => {
-    it(
-      "Create a financially eligible claim in which a CSR rep will 'Request for More Information'",
-      { baseUrl: getFineosBaseUrl() },
-      () => {
-        beforeFineos();
-        bailIfThisTestFails();
+describe("Request for More Information (notifications/notices)", () => {
+  const submit = it(
+    "Create a financially eligible claim in which a CSR rep will 'Request for More Information'",
+    { baseUrl: getFineosBaseUrl() },
+    () => {
+      beforeFineos();
+      cy.visit("/");
 
-        cy.visit("/");
-
-        // Generate Creds for Registration/Login - submit claim via API
-        cy.task("generateCredentials").then((credentials) => {
-          cy.stash("credentials", credentials);
-          cy.task("registerClaimant", credentials).then(() => {
-            cy.task("generateClaim", "BHAP1").then((claim) => {
-              cy.stash("claim", claim.claim);
-              cy.stash("timestamp_from", Date.now());
-              cy.task("submitClaimToAPI", {
-                ...claim,
-                credentials,
-              }).then((response) => {
-                console.log(response);
-                cy.wrap(response.fineos_absence_id).as("fineos_absence_id");
-                cy.stashLog("fineos_absence_id", response.fineos_absence_id);
-                cy.stashLog("applicationId", response.application_id);
-              });
+      // Generate Creds for Registration/Login - submit claim via API
+      cy.task("generateCredentials").then((credentials) => {
+        cy.stash("credentials", credentials);
+        cy.task("registerClaimant", credentials).then(() => {
+          cy.task("generateClaim", "BHAP1").then((claim) => {
+            cy.stash("claim", claim.claim);
+            cy.stash("timestamp_from", Date.now());
+            cy.task("submitClaimToAPI", {
+              ...claim,
+              credentials,
+            }).then((response) => {
+              console.log(response);
+              cy.wrap(response.fineos_absence_id).as("fineos_absence_id");
+              cy.stashLog("fineos_absence_id", response.fineos_absence_id);
+              cy.stashLog("applicationId", response.application_id);
             });
           });
         });
+      });
 
-        // Request for additional Info in Fineos
-        cy.get<string>("@fineos_absence_id").then((fineos_absence_id) => {
-          fineos.visitClaim(fineos_absence_id);
-          fineos.additionalEvidenceRequest(fineos_absence_id);
-          fineos.triggerNoticeRelease("Request for more Information");
-        });
-      }
-    );
+      // Request for additional Info in Fineos
+      cy.get<string>("@fineos_absence_id").then((fineos_absence_id) => {
+        fineos.visitClaim(fineos_absence_id);
+        fineos.additionalEvidenceRequest(fineos_absence_id);
+        fineos.triggerNoticeRelease("Request for more Information");
+      });
+    }
+  );
 
-    // Check for Legal Notice in claimant Portal
-    it("As a claimant, I should see a request for additional info notice reflected in the portal", () => {
+  // Check for Legal Notice in claimant Portal
+  it(
+    "As a claimant, I should see a request for additional info notice reflected in the portal",
+    { retries: 0 },
+    () => {
       beforePortal();
+      cy.dependsOnPreviousPass([submit]);
 
       cy.unstash<Credentials>("credentials").then((credentials) => {
         portal.login(credentials);
@@ -76,39 +72,40 @@ describe(
           });
         });
       });
-    });
+    }
+  );
 
-    // Check for email notification in regards to providing additional information
-    it("As a claimant, I should receive a notification requesting additional info", () => {
-      cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-        if (!claim.employer_fein || !claim.first_name || !claim.last_name) {
-          throw new Error("This employer has no FEIN");
-        }
-        cy.unstash<string>("fineos_absence_id").then((caseNumber) => {
-          cy.unstash<number>("timestamp_from").then((timestamp_from) => {
-            const employeeFullName = `${claim.first_name} ${claim.last_name}`;
-            const subjectClaimant = email.getNotificationSubject(
-              employeeFullName,
-              "request for additional info",
-              caseNumber
-            );
-            cy.log(subjectClaimant);
+  // Check for email notification in regards to providing additional information
+  it("As a claimant, I should receive a notification requesting additional info", () => {
+    cy.dependsOnPreviousPass([submit]);
+    cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+      if (!claim.employer_fein || !claim.first_name || !claim.last_name) {
+        throw new Error("This employer has no FEIN");
+      }
+      cy.unstash<string>("fineos_absence_id").then((caseNumber) => {
+        cy.unstash<number>("timestamp_from").then((timestamp_from) => {
+          const employeeFullName = `${claim.first_name} ${claim.last_name}`;
+          const subjectClaimant = email.getNotificationSubject(
+            employeeFullName,
+            "request for additional info",
+            caseNumber
+          );
+          cy.log(subjectClaimant);
 
-            // Check email notification for claimant
-            cy.task<Email[]>(
-              "getEmails",
-              {
-                address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectClaimant,
-                messageWildcard: caseNumber,
-                timestamp_from,
-                debugInfo: { "Fineos Claim ID": caseNumber },
-              },
-              { timeout: 180000 }
-            ).should("not.be.empty");
-          });
+          // Check email notification for claimant
+          cy.task<Email[]>(
+            "getEmails",
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: subjectClaimant,
+              messageWildcard: caseNumber,
+              timestamp_from,
+              debugInfo: { "Fineos Claim ID": caseNumber },
+            },
+            { timeout: 180000 }
+          ).should("not.be.empty");
         });
       });
     });
-  }
-);
+  });
+});

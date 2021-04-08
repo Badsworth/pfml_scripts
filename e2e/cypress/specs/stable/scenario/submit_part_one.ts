@@ -5,7 +5,7 @@ import { beforePortal } from "../../../tests/common/before";
 import { getFineosBaseUrl } from "../../../config";
 
 describe("Submit Part One of a claim, without documents, and then find in FINEOS", () => {
-  it("As a claimant, I submit a claim through the portal (part one only)", () => {
+  const submit = it("As a claimant, I submit a claim through the portal (part one only)", () => {
     beforePortal();
 
     cy.task("generateClaim", "MHAP1").then((claim) => {
@@ -43,6 +43,7 @@ describe("Submit Part One of a claim, without documents, and then find in FINEOS
     "As a CSR (Savilinx), I should be able to Approve a MHAP1 claim submission",
     { baseUrl: getFineosBaseUrl() },
     () => {
+      cy.dependsOnPreviousPass([submit]);
       beforeFineos();
       cy.visit("/");
 

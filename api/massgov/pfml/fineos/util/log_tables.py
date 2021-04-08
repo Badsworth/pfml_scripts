@@ -73,6 +73,20 @@ def delete_most_recent_update_entry_for_employee(
     ).delete(synchronize_session=False)
 
 
+def delete_created_entry_for_employee(db_session: db.Session, employee: Employee) -> None:
+    db_session.query(EmployeeLog).filter(
+        EmployeeLog.employee_log_id
+        == (
+            db_session.query(EmployeeLog.employee_log_id)
+            .filter(
+                EmployeeLog.employee_id == employee.employee_id, EmployeeLog.action == "INSERT",
+            )
+            .order_by(EmployeeLog.modified_at.desc())
+            .limit(1)
+        )
+    ).delete(synchronize_session=False)
+
+
 def delete_most_recent_update_entry_for_employer(
     db_session: db.Session, employer: Employer
 ) -> None:

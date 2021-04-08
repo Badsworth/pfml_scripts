@@ -926,3 +926,21 @@ export function submitClaimPartsTwoThree(
   goToDashboardFromSuccessPage();
   cy.wait(3000);
 }
+
+export function verifyLeaveAdmin(withholding: string): void {
+  cy.get('a[href="/employers/organizations"]').first().click();
+  cy.get('a[href^="/employers/organizations/verify-contributions"]')
+    .last()
+    .click();
+  cy.get('input[id="InputText1"]').type(withholding);
+  cy.get('button[type="submit"').click();
+  cy.contains("h1", "Thanks for verifying your paid leave contributions");
+  cy.contains(
+    "p",
+    "Your account has been verified. In 15 minutes you will be able to log in and review applications"
+  );
+  cy.contains("button", "Continue").click();
+  cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
+    "not.exist"
+  );
+}

@@ -21,6 +21,7 @@ from massgov.pfml.db.models.employees import (
     LkMaritalStatus,
     LkOccupation,
     LkTitle,
+    TaxIdentifier,
 )
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import utcnow
@@ -40,7 +41,10 @@ class ImportFineosEmployeeUpdatesConfig(BaseSettings):
 class ImportFineosEmployeeUpdatesReport:
     start: str = utcnow().isoformat()
     total_employees_received_count: int = 0
+    created_employees_count: int = 0
     updated_employees_count: int = 0
+    emp_id_discrepancies_count: int = 0
+    no_ssn_present_count: int = 0
     errored_employees_count: int = 0
     errored_employee_occupation_count: int = 0
     end: Optional[str] = None
@@ -148,6 +152,8 @@ def process_fineos_updates(
 def process_csv_row(
     db_session: db.Session, row: Dict[Any, Any], report: ImportFineosEmployeeUpdatesReport
 ) -> None:
+    is_new_employee = False
+
     employee_id = row.get("EMPLOYEEIDENTIFIER")
     # lint made me do it!
     emp_id = str(employee_id)
@@ -155,15 +161,67 @@ def process_csv_row(
     employee: Optional[Employee] = db_session.query(Employee).get(emp_id)
 
     if employee is None:
-        logger.info(f"Employee not found in PFML DB for employee_id {emp_id}")
-        report.errored_employees_count += 1
-        # Without employee cannot create occupation.
-        report.errored_employee_occupation_count += 1
-        return
+        # Find employee by SSN
+        employee_tax_id: str = row.get("EMPLOYEENATIONALID", None)
+        if employee_tax_id:
+            employee = (
+                db_session.query(Employee)
+                .join(TaxIdentifier)
+                .filter(TaxIdentifier.tax_identifier == employee_tax_id)
+                .one_or_none()
+            )
+        else:
+            logger.info(
+                f"Employee not found in PFML DB and no SSN provided."
+                f" FINEOS employee_id is {emp_id}."
+            )
+            report.no_ssn_present_count += 1
+            report.errored_employees_count += 1
+            return
+
+        if employee is None:
+            is_new_employee = True
+            employee = Employee(employee_id=emp_id)
+
+            tax_identifier = (
+                db_session.query(TaxIdentifier)
+                .filter(TaxIdentifier.tax_identifier == employee_tax_id)
+                .one_or_none()
+            )
+            employee.tax_identifier = (
+                tax_identifier if tax_identifier else TaxIdentifier(tax_identifier=employee_tax_id)
+            )
+
+            first_name = row.get("EMPLOYEEFIRSTNAME", "")
+            employee.first_name = first_name
+            last_name = row.get("EMPLOYEELASTNAME", "")
+            employee.last_name = last_name
+
+            db_session.add(employee)
+
+            # Remove insert from employee log so we do not send
+            # this employee in the eligibility feed.
+            fineos_log_tables_util.delete_created_entry_for_employee(db_session, employee)
+            report.created_employees_count += 1
+        else:
+            # Employee found but with a different employee_id value (UUID)
+            logger.info(
+                f"Employee found in PFML DB by SSN with different emp_id."
+                f" PFML employee_id is {employee.employee_id},"
+                f" FINEOS employee_id is {emp_id}."
+            )
+            report.emp_id_discrepancies_count += 1
+            report.errored_employees_count += 1
+            report.errored_employee_occupation_count += 1
+            return
 
     with fineos_log_tables_util.update_entity_and_remove_log_entry(
         db_session, employee, commit=True
     ):
+        customer_no = row.get("CUSTOMERNO")
+        if customer_no is not None and customer_no != "":
+            employee.fineos_customer_number = customer_no
+
         title = row.get("EMPLOYEETITLE")
         title_id = (
             db_session.query(LkTitle.title_id)
@@ -253,12 +311,13 @@ def process_csv_row(
         employee_occupation: Optional[EmployeeOccupation] = db_session.query(
             EmployeeOccupation
         ).filter(
-            EmployeeOccupation.employee_id == emp_id, EmployeeOccupation.employer_id == employer_id,
+            EmployeeOccupation.employee_id == employee.employee_id,
+            EmployeeOccupation.employer_id == employer_id,
         ).one_or_none()
 
         if employee_occupation is None:
             employee_occupation = EmployeeOccupation()
-            employee_occupation.employee_id = emp_id
+            employee_occupation.employee_id = employee.employee_id
             employee_occupation.employer_id = employer_id
 
             db_session.add(employee_occupation)
@@ -303,4 +362,5 @@ def process_csv_row(
         if occupation_qualifier is not None:
             employee_occupation.occupation_qualifier = occupation_qualifier
 
-    report.updated_employees_count += 1
+    if not is_new_employee:
+        report.updated_employees_count += 1

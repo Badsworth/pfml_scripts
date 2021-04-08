@@ -7,6 +7,7 @@ import massgov.pfml.delegated_payments.pub.response_file_handler as response_fil
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit as audit
 from massgov.pfml.delegated_payments import delegated_config
+from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
     PROCESS_PUB_RESPONSES_REPORTS,
@@ -19,11 +20,13 @@ ALL = "ALL"
 PICKUP_FILES = "pickup"
 PROCESS_RESPONSES = "process"
 REPORT = "report"
+WRITEBACK = "writeback"
 ALLOWED_VALUES = [
     ALL,
     PICKUP_FILES,
     PROCESS_RESPONSES,
     REPORT,
+    WRITEBACK,
 ]
 
 
@@ -51,10 +54,12 @@ class Configuration:
             self.pickup_files = True
             self.process_responses = True
             self.make_reports = True
+            self.send_fineos_writeback = True
         else:
             self.pickup_files = PICKUP_FILES in steps
             self.process_responses = PROCESS_RESPONSES in steps
             self.make_reports = REPORT in steps
+            self.send_fineos_writeback = WRITEBACK in steps
 
 
 def make_db_session() -> db.Session:
@@ -93,6 +98,11 @@ def _process_pub_responses(
         )
         while process_return_files_step.have_more_files_to_process():
             process_return_files_step.run()
+
+    if config.send_fineos_writeback:
+        FineosPeiWritebackStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
 
     if config.make_reports:
         ReportStep(

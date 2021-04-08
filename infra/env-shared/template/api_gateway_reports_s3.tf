@@ -11,7 +11,7 @@ resource "aws_api_gateway_resource" "reports" {
 resource "aws_api_gateway_resource" "reports_file" {
   rest_api_id = aws_api_gateway_rest_api.pfml.id
   parent_id   = aws_api_gateway_resource.reports.id
-  path_part   = "{file}"
+  path_part   = "{file+}"
 }
 
 # INFRA-364:
