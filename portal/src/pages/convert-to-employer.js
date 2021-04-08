@@ -13,6 +13,7 @@ import useFunctionalInputProps from "../hooks/useFunctionalInputProps"
 import useThrottledHandler from "../hooks/useThrottledHandler"
 import { useTranslation } from "../locales/i18n";
 import withClaims from "../hoc/withClaims";
+import ClaimCollection from "../models/ClaimCollection";
 
 export const ConvertToEmployer = (props) => {
   const { appLogic, user, claims } = props;
