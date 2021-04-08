@@ -1,4 +1,4 @@
-import { bailIfThisTestFails, beforePortal } from "../../tests/common/before";
+import { beforePortal } from "../../tests/common/before";
 import { portal, email } from "../../tests/common/actions";
 
 describe("Employer Responses", () => {
@@ -14,7 +14,6 @@ describe("Employer Responses", () => {
       const timestamp_from = Date.now();
 
       beforePortal();
-      bailIfThisTestFails();
 
       // Create a new employee account
       cy.task("generateCredentials").then((credentials) => {
