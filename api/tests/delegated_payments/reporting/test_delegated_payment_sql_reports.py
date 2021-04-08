@@ -2,7 +2,6 @@ import csv
 import json
 import logging  # noqa: B1
 import os
-import tempfile
 from collections import Counter
 
 import pytest
@@ -22,15 +21,15 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports imp
 
 
 @pytest.fixture
-def report_path(monkeypatch):
-    pfml_error_reports_path = str(tempfile.mkdtemp())
+def report_path(monkeypatch, mock_s3_bucket):
+    pfml_error_reports_path = f"s3://{mock_s3_bucket}/archive"
     monkeypatch.setenv("PFML_ERROR_REPORTS_PATH", pfml_error_reports_path)
     return pfml_error_reports_path
 
 
 @pytest.fixture
-def report_archive_path(monkeypatch):
-    pfml_error_reports_archive_path = str(tempfile.mkdtemp())
+def report_archive_path(monkeypatch, mock_s3_bucket):
+    pfml_error_reports_archive_path = f"s3://{mock_s3_bucket}/archive"
     monkeypatch.setenv("PFML_ERROR_REPORTS_ARCHIVE_PATH", pfml_error_reports_archive_path)
     return pfml_error_reports_archive_path
 
@@ -97,7 +96,7 @@ def test_report_generation(
 
     # confirm content of report
     file_path = os.path.join(folder_path, file_name)
-    reader = csv.DictReader(open(file_path), delimiter=",")
+    reader = csv.DictReader(file_util.open_stream(file_path), delimiter=",")
     rows = [record for record in reader]
 
     assert len(rows) == 2
