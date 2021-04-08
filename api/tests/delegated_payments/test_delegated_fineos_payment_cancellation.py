@@ -16,12 +16,9 @@ def payment_cancellation_step(initialize_factories_session, test_db_session, tes
 def test_cancel_payments(
     payment_cancellation_step, test_db_session, monkeypatch, create_triggers,
 ):
-    state_log_results = setup_state_log(
+    setup_result = setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
-        end_states=[
-            State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION,
-            State.PAYMENT_READY_FOR_ADDRESS_VALIDATION,
-        ],
+        end_states=[State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION,],
         test_db_session=test_db_session,
         additional_params=AdditionalParams(
             fineos_customer_num="012345678",
@@ -30,11 +27,30 @@ def test_cancel_payments(
         ),
     )
 
-    assert len(state_log_results.state_logs) == 2
+    setup_result_2 = setup_state_log(
+        associated_class=state_log_util.AssociatedClass.PAYMENT,
+        end_states=[State.PAYMENT_READY_FOR_ADDRESS_VALIDATION,],
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(
+            fineos_customer_num="012345678",
+            fineos_absence_id="NTN-01-ABS-02",
+            add_claim_payment_for_employee=True,
+            employee=setup_result.state_logs[0].payment.claim.employee,
+        ),
+    )
+
+    assert (
+        setup_result.state_logs[0].payment.claim.employee_id
+        == setup_result_2.state_logs[0].payment.claim.employee_id
+    )
 
     results_error_before = (
         test_db_session.query(StateLog)
-        .filter(StateLog.end_state_id.in_([State.DELEGATED_EFT_ADD_TO_ERROR_REPORT.state_id]),)
+        .filter(
+            StateLog.end_state_id.in_(
+                [State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id]
+            ),
+        )
         .all()
     )
 
@@ -42,30 +58,26 @@ def test_cancel_payments(
 
     payment_cancellation_step.run()
 
-    results_error = (
-        test_db_session.query(StateLog)
-        .filter(StateLog.end_state_id.in_([State.DELEGATED_EFT_ADD_TO_ERROR_REPORT.state_id]),)
-        .all()
+    results_error = state_log_util.get_all_latest_state_logs_in_end_state(
+        state_log_util.AssociatedClass.PAYMENT,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+        test_db_session,
     )
 
     assert len(results_error) == 2
 
-    results = (
-        test_db_session.query(StateLog)
-        .filter(
-            StateLog.end_state_id.in_(
-                [State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION.state_id]
-            ),
-        )
-        .all()
+    results = state_log_util.get_all_latest_state_logs_in_end_state(
+        state_log_util.AssociatedClass.PAYMENT,
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION,
+        test_db_session,
     )
 
-    assert len(results) == 1
+    assert len(results) == 0
 
-    results_error_report = (
-        test_db_session.query(StateLog)
-        .filter(StateLog.end_state_id.in_([State.DELEGATED_EFT_ADD_TO_ERROR_REPORT.state_id]),)
-        .all()
+    results_error_report = state_log_util.get_all_latest_state_logs_in_end_state(
+        state_log_util.AssociatedClass.PAYMENT,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+        test_db_session,
     )
 
     assert len(results_error_report) == 2

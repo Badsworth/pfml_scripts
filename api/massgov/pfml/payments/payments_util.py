@@ -99,6 +99,7 @@ class Constants:
 
 
 class ValidationReason(str, Enum):
+    CANCELLATION_ERROR ="CancellationError"
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"
     MISSING_IN_DB = "MissingInDB"

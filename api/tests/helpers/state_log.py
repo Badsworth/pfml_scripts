@@ -51,6 +51,7 @@ class AdditionalParams:
     payment: Optional[Payment] = None
     add_eft: bool = False
     add_pub_eft: bool = False
+    employee: Optional[Employee] = None
 
 
 def setup_db_for_state_log(associated_class, additional_params=None):
@@ -76,11 +77,14 @@ def setup_db_for_state_log(associated_class, additional_params=None):
             associated_model.payment_method_id = PaymentMethod.ACH.payment_method_id
 
     if associated_class == state_log_util.AssociatedClass.PAYMENT:
-        employee = EmployeeFactory.create(
-            tax_identifier=additional_params.tax_identifier,
-            fineos_customer_number=additional_params.fineos_customer_num,
-            ctr_vendor_customer_code=additional_params.ctr_vendor_customer_code,
-        )
+        if additional_params.employee is not None:
+            employee = additional_params.employee
+        else:
+            employee = EmployeeFactory.create(
+                tax_identifier=additional_params.tax_identifier,
+                fineos_customer_number=additional_params.fineos_customer_num,
+                ctr_vendor_customer_code=additional_params.ctr_vendor_customer_code,
+            )
 
         if additional_params.add_eft:
             eft = EftFactory.create()
