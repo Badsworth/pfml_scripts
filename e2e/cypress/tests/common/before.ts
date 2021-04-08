@@ -10,6 +10,8 @@ export function beforePortal(): void {
       employerShowSelfRegistrationForm: true,
       claimantShowOtherLeaveStep: true,
       claimantAuthThroughApi: true,
+      employerShowAddOrganization: true,
+      employerShowVerifications: true,
     }),
     { log: true }
   );
