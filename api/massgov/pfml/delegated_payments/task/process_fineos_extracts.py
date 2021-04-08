@@ -71,18 +71,18 @@ class Configuration:
             self.do_audit_cleanup = True
             self.do_claimant_extract = True
             self.do_payment_extract = True
+            self.do_payment_cancellation = True
             self.validate_addresses = True
             self.make_audit_report = True
             self.make_reports = True
-            self.do_payment_cancellation = True
         else:
             self.do_audit_cleanup = RUN_AUDIT_CLEANUP in steps
             self.do_claimant_extract = CLAIMANT_EXTRACT in steps
             self.do_payment_extract = PAYMENT_EXTRACT in steps
+            self.do_payment_cancellation = PAYMENT_CANCELLATION in steps
             self.validate_addresses = VALIDATE_ADDRESSES in steps
             self.make_audit_report = CREATE_AUDIT_REPORT in steps
             self.make_reports = REPORT in steps
-            self.do_payment_cancellation = PAYMENT_CANCELLATION in steps
 
 
 def make_db_session() -> db.Session:
