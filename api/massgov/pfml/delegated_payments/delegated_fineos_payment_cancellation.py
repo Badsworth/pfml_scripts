@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.payments_util as payments_util
@@ -56,7 +56,9 @@ class PaymentCancellationStep(Step):
                 )
 
 
-def _build_outcome(state_log: StateLog, related_state_log: Optional[StateLog] = None):
+def _build_outcome(
+    state_log: StateLog, related_state_log: Optional[StateLog] = None
+) -> Dict[str, Any]:
     validation_container = payments_util.ValidationContainer(
         f"{state_log.payment.fineos_pei_c_value},{state_log.payment.fineos_pei_i_value}"
     )
