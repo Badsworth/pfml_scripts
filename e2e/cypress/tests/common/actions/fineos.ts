@@ -31,7 +31,9 @@ export function visitEmployer(fein: string): void {
 }
 
 export function confirmPOC(email: string): void {
-  cy.get('td[keytipnumber="6"]').contains("Party History").click();
+  cy.get('td[keytipnumber="6"]')
+    .contains("Party History")
+    .click({ force: true });
   cy.wait("@ajaxRender");
   cy.contains("span", email);
 }

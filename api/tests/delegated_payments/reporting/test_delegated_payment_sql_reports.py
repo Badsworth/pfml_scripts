@@ -2,7 +2,6 @@ import csv
 import json
 import logging  # noqa: B1
 import os
-import tempfile
 from collections import Counter
 
 import pytest
@@ -22,15 +21,15 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports imp
 
 
 @pytest.fixture
-def report_path(monkeypatch):
-    pfml_error_reports_path = str(tempfile.mkdtemp())
+def report_path(monkeypatch, mock_s3_bucket):
+    pfml_error_reports_path = f"s3://{mock_s3_bucket}/archive"
     monkeypatch.setenv("PFML_ERROR_REPORTS_PATH", pfml_error_reports_path)
     return pfml_error_reports_path
 
 
 @pytest.fixture
-def report_archive_path(monkeypatch):
-    pfml_error_reports_archive_path = str(tempfile.mkdtemp())
+def report_archive_path(monkeypatch, mock_s3_bucket):
+    pfml_error_reports_archive_path = f"s3://{mock_s3_bucket}/archive"
     monkeypatch.setenv("PFML_ERROR_REPORTS_ARCHIVE_PATH", pfml_error_reports_archive_path)
     return pfml_error_reports_archive_path
 
@@ -97,7 +96,7 @@ def test_report_generation(
 
     # confirm content of report
     file_path = os.path.join(folder_path, file_name)
-    reader = csv.DictReader(open(file_path), delimiter=",")
+    reader = csv.DictReader(file_util.open_stream(file_path), delimiter=",")
     rows = [record for record in reader]
 
     assert len(rows) == 2
@@ -136,8 +135,11 @@ def test_all_reports(
     report_archive_path,
 ):
     """Validate that all reports run without any exceptions"""
+    report_names = [report.value for report in ReportName]
+    # Make sure every named report has report details defined.
+    for report_name in report_names:
+        assert REPORTS_BY_NAME.get(report_name) is not None
 
-    report_names = [report.report_name for report in REPORTS]
     step = init_step(test_db_session, test_db_other_session, report_names)
     step.run()
 

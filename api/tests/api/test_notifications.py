@@ -49,6 +49,25 @@ claimant_body = {
     },
 }
 
+invalid_fein_body = {
+    "absence_case_id": "NTN-111-ABS-01",
+    "document_type": "Legal Notice",
+    "fein": "invalid-fein",
+    "organization_name": "Wayne Enterprises",
+    "trigger": "claim.approved",
+    "source": "Self-Service",
+    "recipient_type": "Claimant",
+    "recipients": [
+        {"first_name": "john", "last_name": "smith", "email_address": "example@gmail.com"}
+    ],
+    "claimant_info": {
+        "first_name": "jane",
+        "last_name": "doe",
+        "date_of_birth": "1970-01-01",
+        "customer_id": "1234",
+    },
+}
+
 
 @pytest.fixture
 def employer():
@@ -120,6 +139,20 @@ def test_notifications_post_leave_admin_no_document_type(
     assert notification.fineos_absence_id == leave_admin_body["absence_case_id"]
     request_json = json.loads(notification.request_json)
     assert request_json == leave_admin_body_no_document_type
+
+
+def test_notifications_invalid_fein_error(client, test_db_session, fineos_user_token, employer):
+    response = client.post(
+        "/v1/notifications",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json=invalid_fein_body,
+    )
+    assert response.status_code == 400
+    tests.api.validate_error_response(
+        response,
+        400,
+        message="Failed to lookup the specified FEIN to add Claim record on Notification POST request",
+    )
 
 
 def test_notifications_post_leave_admin_empty_str_document_type(

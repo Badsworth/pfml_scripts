@@ -1,16 +1,12 @@
 import { fineos, portal } from "../../../tests/common/actions";
-import {
-  bailIfThisTestFails,
-  beforeFineos,
-} from "../../../tests/common/before";
+import { beforeFineos } from "../../../tests/common/before";
 import { beforePortal } from "../../../tests/common/before";
 import { getFineosBaseUrl } from "../../../config";
 import { Submission } from "../../../../src/types";
 
 describe("Submit a medical claim and adjucation approval - MHAP1", () => {
-  it("As a claimant, I should be able to submit a Medical Leave claim (MHAP1) through the portal", () => {
+  const submit = it("As a claimant, I should be able to submit a Medical Leave claim (MHAP1) through the portal", () => {
     beforePortal();
-    bailIfThisTestFails();
 
     cy.task("generateClaim", "MHAP1").then((claim) => {
       if (!claim) {
@@ -52,6 +48,7 @@ describe("Submit a medical claim and adjucation approval - MHAP1", () => {
     "As a CSR (Savilinx), I should be able to Approve a MHAP1 claim submission",
     { baseUrl: getFineosBaseUrl() },
     () => {
+      cy.dependsOnPreviousPass([submit]);
       beforeFineos();
       cy.visit("/");
 

@@ -3,9 +3,9 @@
 #
 # To run this locally, use `make pub-payments-process-pub-returns`.
 #
-
 import os.path
 import re
+import uuid
 from typing import Any, Dict, Optional, Sequence, TextIO, cast
 
 import massgov.pfml.db
@@ -107,6 +107,7 @@ class ProcessReturnFileStep(Step):
     def process_return_file(self, path: str) -> None:
         """Parse an ACH return file and process each record."""
         self.reference_file = ReferenceFile(
+            reference_file_id=uuid.uuid4(),
             file_location=path,
             reference_file_type_id=ReferenceFileType.PUB_ACH_RETURN.reference_file_type_id,
         )

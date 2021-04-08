@@ -79,9 +79,13 @@ def notifications_post():
                 status_code=BadRequest,
                 message="Multiple employers found for specified FEIN",
                 errors=[],
+                data={},
             ).to_api_response()
 
         if employer is None:
+            logger.warning(
+                "Failed to lookup the specified FEIN to add Claim record on Notification POST request"
+            )
 
             newrelic.agent.record_custom_event(
                 "FineosError",
@@ -103,6 +107,7 @@ def notifications_post():
                 status_code=BadRequest,
                 message="Failed to lookup the specified FEIN to add Claim record on Notification POST request",
                 errors=[],
+                data={},
             ).to_api_response()
 
         if claim is None:

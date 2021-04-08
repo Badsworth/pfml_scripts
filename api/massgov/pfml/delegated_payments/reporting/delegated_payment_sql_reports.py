@@ -131,6 +131,11 @@ REPORTS: List[Report] = [
         report_name=ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT,
         folder_name=FolderName.FINANCE,
     ),
+    Report(
+        sql_command="select * from lk_state",
+        report_name=ReportName.PAYMENT_REJECT_REPORT,
+        folder_name=FolderName.PROGRAM_INTEGRITY,
+    ),
 ]
 
 REPORTS_BY_NAME: Dict[ReportName, Report] = {r.report_name: r for r in REPORTS}

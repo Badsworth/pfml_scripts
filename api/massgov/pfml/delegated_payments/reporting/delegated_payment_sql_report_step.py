@@ -104,8 +104,15 @@ class ReportStep(Step):
         file_path = os.path.join(outbound_path, folder_name, file_name)
         archive_file_path = os.path.join(archive_path, folder_name, date_folder, file_name)
 
-        file_util.copy_file(report_file_path, file_path)
-        file_util.copy_file(report_file_path, archive_file_path)
+        if file_util.is_s3_path(file_path):
+            file_util.upload_to_s3(report_file_path, file_path)
+        else:
+            file_util.copy_file(report_file_path, file_path)
+
+        if file_util.is_s3_path(archive_file_path):
+            file_util.upload_to_s3(report_file_path, archive_file_path)
+        else:
+            file_util.copy_file(report_file_path, archive_file_path)
 
         # create a reference file for the archive report file
         reference_file = ReferenceFile(

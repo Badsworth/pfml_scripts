@@ -1,19 +1,15 @@
 import { fineos, email } from "../../../../tests/common/actions";
-import {
-  bailIfThisTestFails,
-  beforeFineos,
-} from "../../../../tests/common/before";
+import { beforeFineos } from "../../../../tests/common/before";
 import { extractLeavePeriod } from "../../../../utils";
 import { getFineosBaseUrl } from "../../../../config";
 import { Submission } from "../../../../../src/types";
 
 describe("Create a new continuous leave, military caregiver claim in FINEOS", () => {
-  it(
+  const submit = it(
     "Should be able to create a claim",
     { baseUrl: getFineosBaseUrl() },
     () => {
       beforeFineos();
-      bailIfThisTestFails();
 
       cy.visit("/");
       cy.task("generateClaim", "BHAP1").then((claim) => {
@@ -47,32 +43,37 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
       });
     }
   );
-  it("I should receive an 'application started' notification", () => {
-    cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then((submission) => {
-        const employeeFullName = `${claim.first_name} ${claim.last_name}`;
-        cy.log(employeeFullName);
-        const subject = email.getNotificationSubject(
-          employeeFullName,
-          "application started",
-          submission.fineos_absence_id
-        );
-        cy.log(subject);
-        cy.task<Email[]>(
-          "getEmails",
-          {
-            address: "gqzap.notifications@inbox.testmail.app",
-            messageWildcard: submission.fineos_absence_id,
-            subject: subject,
-            timestamp_from: submission.timestamp_from,
-          },
-          { timeout: 360000 }
-        ).then(async (emails) => {
-          const data = email.getNotificationData(emails[0].html);
-          expect(data.name).to.equal(employeeFullName);
-          expect(data.applicationId).to.equal(submission.fineos_absence_id);
+  it(
+    "I should receive an 'application started' notification",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([submit]);
+      cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          const employeeFullName = `${claim.first_name} ${claim.last_name}`;
+          cy.log(employeeFullName);
+          const subject = email.getNotificationSubject(
+            employeeFullName,
+            "application started",
+            submission.fineos_absence_id
+          );
+          cy.log(subject);
+          cy.task<Email[]>(
+            "getEmails",
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              messageWildcard: submission.fineos_absence_id,
+              subject: subject,
+              timestamp_from: submission.timestamp_from,
+            },
+            { timeout: 180000 }
+          ).then(async (emails) => {
+            const data = email.getNotificationData(emails[0].html);
+            expect(data.name).to.equal(employeeFullName);
+            expect(data.applicationId).to.equal(submission.fineos_absence_id);
+          });
         });
       });
-    });
-  });
+    }
+  );
 });
