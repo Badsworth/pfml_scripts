@@ -2,8 +2,7 @@ import pytest
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_fineos_payment_cancellation as processor
-import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
-from massgov.pfml.db.models.employees import Payment, State, StateLog
+from massgov.pfml.db.models.employees import State, StateLog
 from tests.helpers.state_log import AdditionalParams, setup_state_log
 
 
