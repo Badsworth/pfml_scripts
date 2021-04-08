@@ -2,10 +2,9 @@ import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
 import Alert from "../../components/Alert";
 import ButtonLink from "../../components/ButtonLink";
 import ClaimCollection from "../../models/ClaimCollection";
-import ConvertToEmployerBanner from "../../components/ConvertToEmployerBanner"
+import ConvertToEmployerBanner from "../../components/ConvertToEmployerBanner";
 import Heading from "../../components/Heading";
 import Icon from "../../components/Icon";
-import Link from "next/link";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
@@ -19,7 +18,9 @@ export const GetReady = (props) => {
   const { t } = useTranslation();
 
   const hasClaims = !claims.isEmpty;
-  const convertLink = appLogic.portalFlow.getNextPageRoute("CONVERT_TO_EMPLOYER")
+  const convertLink = appLogic.portalFlow.getNextPageRoute(
+    "CONVERT_TO_EMPLOYER"
+  );
   const iconClassName =
     "margin-right-1 text-secondary text-middle margin-top-neg-05";
 
@@ -31,11 +32,9 @@ export const GetReady = (props) => {
   };
   return (
     <React.Fragment>
-      {
-        !claims.items.find(c => c.fineos_absence_id !== null) ? 
-          <ConvertToEmployerBanner link={convertLink} />  
-          : null
-      }
+      {!claims.items.find((c) => c.fineos_absence_id !== null) ? (
+        <ConvertToEmployerBanner link={convertLink} />
+      ) : null}
       {hasClaims && (
         <ButtonLink
           className="margin-top-3 margin-bottom-5"

@@ -85,8 +85,9 @@ const errors = {
     date_of_birth: {
       format: "Date of birth must include a valid month, day, and year.",
       invalid_age: "The person taking leave must be at least 14 years old.",
-      invalid_year_range: `Date of birth year must be on or after ${new Date().getFullYear() - 100
-        }.`,
+      invalid_year_range: `Date of birth year must be on or after ${
+        new Date().getFullYear() - 100
+      }.`,
       required: "Enter a date of birth.",
     },
     employer_benefits: {
@@ -1562,11 +1563,12 @@ const pages = {
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   convertToEmployer: {
+    alertDescription:
+      'Converting your account from "employee" to "employer" is irreversible and will invalidate all claims created, in-progress or completed up until now.',
+    alertHeading: "This action is irreversible!",
     einLabel: "Employer ID number (EIN)",
     submit: "Convert account",
     title: "Convert to employer account",
-    alertHeading: "This action is irreversible!",
-    alertDescription: "Converting your account from \"employee\" to \"employer\" is irreversible and will invalidate all claims created, in-progress or completed up until now.",
   },
   employersAuthCreateAccount: {
     alertHeading:
@@ -1926,7 +1928,8 @@ const components = {
       "We sent a 6-digit verification code to {{emailAddress}}. Enter the code to verify your email.",
   },
   convertToEmployerBanner: {
-    message: "This is an employee account. Are you an employer? <convert-link>Click here!</convert-link>"
+    message:
+      "This is an employee account. Are you an employer? <convert-link>Click here!</convert-link>",
   },
   documentRequirements: {
     body_certification:

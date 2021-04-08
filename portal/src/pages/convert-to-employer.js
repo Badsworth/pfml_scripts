@@ -2,6 +2,7 @@ import User, { RoleDescription } from "../models/User";
 import Alert from "../components/Alert";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Button from "../components/Button";
+import ClaimCollection from "../models/ClaimCollection";
 import InputText from "../components/InputText";
 import PropTypes from "prop-types";
 import React from "react";
@@ -9,18 +10,17 @@ import Title from "../components/Title";
 import { Trans } from "react-i18next";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
-import useFunctionalInputProps from "../hooks/useFunctionalInputProps"
-import useThrottledHandler from "../hooks/useThrottledHandler"
+import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
+import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 import withClaims from "../hoc/withClaims";
-import ClaimCollection from "../models/ClaimCollection";
 
 export const ConvertToEmployer = (props) => {
   const { appLogic, user, claims } = props;
   const { t } = useTranslation();
   const { updateUser } = appLogic.users;
   const { formState, updateFields } = useFormState({ employer_fein: "" });
-  
+
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
     formState,
@@ -29,15 +29,13 @@ export const ConvertToEmployer = (props) => {
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await updateUser(user.user_id,
-      {
-        "role": { "role_description": RoleDescription.employer },
-        "user_leave_administrator": {
-          "employer_fein": formState.employer_fein
-        }
-      }
-    );
-  })
+    await updateUser(user.user_id, {
+      role: { role_description: RoleDescription.employer },
+      user_leave_administrator: {
+        employer_fein: formState.employer_fein,
+      },
+    });
+  });
 
   if (typeof user === "undefined") {
     appLogic.portalFlow.goTo(routes.auth.login);
@@ -47,7 +45,7 @@ export const ConvertToEmployer = (props) => {
     appLogic.portalFlow.goTo(routes.employers.welcome);
   }
   // Do not allow conversion if user has created claims and got sent to fineos
-  if(claims.items.find(c => c.fineos_absence_id !== null)) {
+  if (claims.items.find((c) => c.fineos_absence_id !== null)) {
     appLogic.portalFlow.goTo(routes.applications.getReady);
   }
 
@@ -63,7 +61,12 @@ export const ConvertToEmployer = (props) => {
         {t("pages.convertToEmployer.alertDescription")}
       </Alert>
       <div className="measure-6">
-        <form className="usa-form" onSubmit={handleSubmit} method="post" data-cy="fein-form">
+        <form
+          className="usa-form"
+          onSubmit={handleSubmit}
+          method="post"
+          data-cy="fein-form"
+        >
           <InputText
             {...getFunctionalInputProps("employer_fein")}
             inputMode="numeric"
@@ -98,10 +101,10 @@ export const ConvertToEmployer = (props) => {
 ConvertToEmployer.propTypes = {
   appLogic: PropTypes.shape({
     users: PropTypes.shape({
-      updateUser: PropTypes.func.isRequired
+      updateUser: PropTypes.func.isRequired,
     }),
     portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired
+      goTo: PropTypes.func.isRequired,
     }),
     appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
   }).isRequired,

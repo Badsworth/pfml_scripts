@@ -59,12 +59,12 @@ const routes = {
     workPatternType: "/applications/work-pattern-type",
   },
   auth: {
+    convert: "/convert-to-employer",
     createAccount: "/create-account",
     forgotPassword: "/forgot-password",
     login: "/login",
     resetPassword: "/reset-password",
     verifyAccount: "/verify-account",
-    convert: "/convert-to-employer",
   },
   employers: {
     addOrganization: "/employers/organizations/add-organization",
