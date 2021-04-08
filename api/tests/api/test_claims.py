@@ -1054,6 +1054,27 @@ class TestUpdateClaim:
         assert capture[1][0] == "create_eform"
 
 
+def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> bool:
+    assert claim_response["absence_period_end_date"] == claim_query.absence_period_end_date
+    assert claim_response["absence_period_start_date"] == claim_query.absence_period_start_date
+    assert claim_response["fineos_absence_id"] == claim_query.fineos_absence_id
+    assert claim_response["fineos_notification_id"] == claim_query.fineos_notification_id
+    assert claim_response["employer"]["employer_dba"] == claim_query.employer.employer_dba
+    assert claim_response["employer"]["employer_fein"] == claim_query.employer.employer_fein
+    assert claim_response["employee"]["first_name"] == claim_query.employee.first_name
+    assert claim_response["employee"]["middle_name"] == claim_query.employee.middle_name
+    assert claim_response["employee"]["last_name"] == claim_query.employee.last_name
+    assert claim_response["employee"]["other_name"] == claim_query.employee.other_name
+    assert (
+        claim_response["fineos_absence_status"]["absence_status_description"]
+        == claim_query.fineos_absence_status.absence_status_description
+    )
+    assert (
+        claim_response["claim_type"]["claim_type_description"]
+        == claim_query.claim_type.claim_type_description
+    )
+
+
 class TestGetClaimEndpoint:
     def test_get_claim_claim_does_not_exist(self, caplog, client, employer_auth_token):
         response = client.get(
@@ -1079,13 +1100,7 @@ class TestGetClaimEndpoint:
         assert "User does not have access to claim." in caplog.text
 
     def test_get_claim_user_has_access_as_leave_admin(
-        self,
-        caplog,
-        client,
-        employer_auth_token,
-        employer_user,
-        test_db_session,
-        test_verification,
+        self, client, employer_auth_token, employer_user, test_db_session, test_verification,
     ):
         employer = EmployerFactory.create()
         employee = EmployeeFactory.create()
@@ -1110,24 +1125,7 @@ class TestGetClaimEndpoint:
         assert response.status_code == 200
         response_body = response.get_json()
         claim_data = response_body.get("data")
-        assert claim_data["absence_period_end_date"] == claim.absence_period_end_date
-        assert claim_data["absence_period_start_date"] == claim.absence_period_start_date
-        assert claim_data["fineos_absence_id"] == claim.fineos_absence_id
-        assert claim_data["fineos_notification_id"] == claim.fineos_notification_id
-        assert claim_data["employer"]["employer_dba"] == claim.employer.employer_dba
-        assert claim_data["employer"]["employer_fein"] == claim.employer.employer_fein
-        assert claim_data["employee"]["first_name"] == claim.employee.first_name
-        assert claim_data["employee"]["middle_name"] == claim.employee.middle_name
-        assert claim_data["employee"]["last_name"] == claim.employee.last_name
-        assert claim_data["employee"]["other_name"] == claim.employee.other_name
-        assert (
-            claim_data["fineos_absence_status"]["absence_status_description"]
-            == claim.fineos_absence_status.absence_status_description
-        )
-        assert (
-            claim_data["claim_type"]["claim_type_description"]
-            == claim.claim_type.claim_type_description
-        )
+        assert_claim_response_equal_to_claim_query(claim_data, claim)
 
     def test_get_claim_user_has_access_as_claimant(self, caplog, client, auth_token, user):
         employer = EmployerFactory.create()
@@ -1144,21 +1142,71 @@ class TestGetClaimEndpoint:
         assert response.status_code == 200
         response_body = response.get_json()
         claim_data = response_body.get("data")
-        assert claim_data["absence_period_end_date"] == claim.absence_period_end_date
-        assert claim_data["absence_period_start_date"] == claim.absence_period_start_date
-        assert claim_data["fineos_absence_id"] == claim.fineos_absence_id
-        assert claim_data["fineos_notification_id"] == claim.fineos_notification_id
-        assert claim_data["employer"]["employer_dba"] == claim.employer.employer_dba
-        assert claim_data["employer"]["employer_fein"] == claim.employer.employer_fein
-        assert claim_data["employee"]["first_name"] == claim.employee.first_name
-        assert claim_data["employee"]["middle_name"] == claim.employee.middle_name
-        assert claim_data["employee"]["last_name"] == claim.employee.last_name
-        assert claim_data["employee"]["other_name"] == claim.employee.other_name
-        assert (
-            claim_data["fineos_absence_status"]["absence_status_description"]
-            == claim.fineos_absence_status.absence_status_description
+        assert_claim_response_equal_to_claim_query(claim_data, claim)
+
+
+class TestGetClaimsEndpoint:
+    def test_get_claims_as_leave_admin(
+        self, client, employer_auth_token, employer_user, test_db_session, test_verification
+    ):
+        employerA = EmployerFactory.create()
+        employee = EmployeeFactory.create()
+
+        generated_claims = [
+            ClaimFactory.create(
+                employer=employerA, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            )
+            for _ in range(3)
+        ]
+
+        # Create another employer and claim that should not be returned
+        employerB = EmployerFactory.create()
+        ClaimFactory.create(
+            employer=employerB, employee=employee, fineos_absence_status_id=1, claim_type_id=1
         )
-        assert (
-            claim_data["claim_type"]["claim_type_description"]
-            == claim.claim_type.claim_type_description
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employerA.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
         )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        response = client.get(
+            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert len(claim_data) == len(generated_claims)
+        for i in range(3):
+            assert_claim_response_equal_to_claim_query(claim_data[i], generated_claims[2 - i])
+
+    def test_get_claims_as_claimant(self, client, auth_token, user):
+        employer = EmployerFactory.create()
+        employeeA = EmployeeFactory.create()
+        generated_claims = []
+
+        for _ in range(3):
+            new_claim = ClaimFactory.create(
+                employer=employer, employee=employeeA, fineos_absence_status_id=1, claim_type_id=1,
+            )
+            generated_claims.append(new_claim)
+            ApplicationFactory.create(user=user, claim=new_claim)
+
+        # Create a claim that is not expected to be returned
+        employeeB = EmployeeFactory.create()
+        ClaimFactory.create(
+            employer=employer, employee=employeeB, fineos_absence_status_id=1, claim_type_id=1
+        )
+
+        response = client.get("/v1/claims", headers={"Authorization": f"Bearer {auth_token}"},)
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        for i in range(3):
+            assert_claim_response_equal_to_claim_query(claim_data[i], generated_claims[2 - i])

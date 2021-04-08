@@ -4,12 +4,42 @@
 # Payment Voucher Scenarios:
 # See massgov.pfml.payments.mock.payments_test_scenario_generator for definitions
 #
-# SCENARIO_VOUCHER_A: medical leave, pay by check, 2 payments for different pay periods, vcm_flag is No
+#
+# Positive cases:
+# --------------
+# SCENARIO_VOUCHER_A: medical leave, pay by check, 2 payments for different pay periods, (default) vcm_flag is No
 # SCENARIO_VOUCHER_B: bonding leave, pay by check, payment is zero dollar, vcm_flag is Yes
-# SCENARIO_VOUCHER_C: medical leave, pay by eft, payment is negative, vcm_flag is Missing State
-# SCENARIO_VOUCHER_D: bonding leave, pay by eft, payment is missing, vcm_flag is No
+# SCENARIO_VOUCHER_C: medical leave, pay by eft
+# SCENARIO_VOUCHER_D: bonding leave, pay by eft
 # SCENARIO_VOUCHER_E: multiple vpeipaymentdetails.csv rows for the same CI pair
 #
+#
+# Negative cases regarding payment amounts (writeback should be Active):
+# --------------
+# SCENARIO_VOUCHER_F: payment is negative, vcm_flag is Missing State
+# SCENARIO_VOUCHER_G: payment is missing
+#
+#
+# Negative cases for entries missing in cross-referenced datasets (writeback should be empty):
+# --------------
+# SCENARIO_VOUCHER_H: missing employee and therefore missing mmars vendor customer code and vcm flag is empty
+# SCENARIO_VOUCHER_I: missing entry in vpeiclaimdetails.csv and therefore missing:
+#                     absence case number, vendor invoice number, leave type, activity code, case status,
+#                     employer ID, leave request ID, leave request decision, check description
+# SCENARIO_VOUCHER_J: missing entry in VBI_REQUSTEDABSENCE.csv and therefore missing leave request ID and decision
+# SCENARIO_VOUCHER_K: missing entry in VBI_REQUESTEDABSENCE_SOM.csv and therefore missing:
+#                     leave type, activity code, case status, employer ID
+# SCENARIO_VOUCHER_L: missing entry in vpeipaymentdetails.csv and therefore missing:
+#                     payment period start date, payment period end date, check description, vendor invoice date
+#
+#
+# Negative cases for missing individual fields (writeback should be empty):
+# --------------
+# SCENARIO_VOUCHER_M: missing payment period start dates in vpeipaymentdetails.csv and therefore also missing:
+#                     check description
+# SCENARIO_VOUCHER_N: missing payment period end dates in vpeipaymentdetails.csv and therefore also missing:
+#                     check description, vendor invoice date
+
 
 import os.path
 import random
@@ -36,6 +66,12 @@ from tests.helpers.state_log import AdditionalParams, setup_state_log, setup_sta
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
 
+# Constants for payment voucher 'vcm_flag'
+VCM_FLAG_YES = "Yes"
+VCM_FLAG_NO = "No"
+VCM_FLAG_MISSING = "Missing State"
+VCM_FLAG_EMPTY = ""
+
 
 class MockCSVWriter:
     def __init__(self):
@@ -60,6 +96,7 @@ class ScenarioOutput:
     payment_voucher_rows: List[Dict[str, Any]]
     writeback_rows: List[Dict[str, str]]
     payment_date: date
+    inactive_writeback: bool = False
 
     def __init__(self, payment_date: date, scenario_data: scenario_generator.ScenarioData) -> None:
         self.scenario_data = scenario_data
@@ -68,6 +105,21 @@ class ScenarioOutput:
         # Set up some helper vars.
         self.address = self.scenario_data.employee.ctr_address_pair.fineos_address
         self.payments = self.scenario_data.payments
+
+        # Identify if there are errors.
+        possible_error_states = [
+            "employee_not_in_db",
+            "missing_from_vbi_requestedabsence",
+            "missing_from_vbi_requestedabsence_som",
+            "missing_from_vpeiclaimdetails",
+            "missing_from_vpeipaymentdetails",
+            "missing_payment_start_date",
+            "missing_payment_end_date",
+        ]
+        for error_state in possible_error_states:
+            if getattr(scenario_data.scenario_descriptor, error_state):
+                self.inactive_writeback = True
+                break
 
         # Get rows for all payments for this scenario.
         self.payment_voucher_rows = []
@@ -78,22 +130,72 @@ class ScenarioOutput:
 
     def get_payment_voucher_dict(self, payment: Payment) -> Dict[str, Any]:
         """Returns the dictionary representation of a Payment Voucher row for a single payment."""
+
+        # Default these values to empty strings.
+        activity_code = ""
+        case_status = ""
+        check_description = ""
+        employer_id = ""
+        leave_type = ""
+        payment_period_start_date = ""
+        payment_period_end_date = ""
+        vendor_invoice_date = ""
+        vendor_invoice_number = ""
+
+        # Override with values if they are accessible.
+        try:
+            activity_code = gax.get_activity_code(payment.claim.claim_type_id)
+        except Exception:
+            pass
+
+        try:
+            leave_type = gax.get_rfed_doc_id(payment.claim.claim_type_id)
+        except Exception:
+            pass
+
+        if payment.claim.fineos_absence_status:
+            case_status = payment.claim.fineos_absence_status.absence_status_description
+
+        if self.scenario_data.employer:
+            employer_id = self.scenario_data.employer.fineos_employer_id
+
+        if payment.period_start_date:
+            payment_period_start_date = payment.period_start_date.isoformat()
+
+        if payment.period_end_date:
+            payment_period_end_date = payment.period_end_date.isoformat()
+            vendor_invoice_date = gax.get_vendor_invoice_date_str(payment.period_end_date)
+
+        if (
+            payment.claim.fineos_absence_id
+            and payment.period_start_date
+            and payment.period_end_date
+        ):
+            check_description = gax.get_check_description(
+                payment.claim.fineos_absence_id, payment.period_start_date, payment.period_end_date
+            )
+
+        if payment.claim.fineos_absence_id:
+            vendor_invoice_number = gax.get_vendor_invoice_number(
+                payment.claim.fineos_absence_id, payment.fineos_pei_i_value
+            )
+
+        # Construct and return the dictionary.
         return {
             "absence_case_number": payment.claim.fineos_absence_id,
-            "activity_code": gax.get_activity_code(payment.claim.claim_type_id),
+            "activity_code": activity_code,
             "address_code": "AD010",
             "address_line_1": self.address.address_line_one,
             "address_line_2": self.address.address_line_two,
             "c_value": payment.fineos_pei_c_value,
             "city": self.address.city,
-            "description": gax.get_check_description(
-                payment.claim.fineos_absence_id, payment.period_start_date, payment.period_end_date
-            ),
+            "description": check_description,
             # "doc_id":  # DOC_ID is generated as part of the payment voucher processes
             "event_type": "AP01",
             "first_last_name": f"{self.scenario_data.employee.first_name} {self.scenario_data.employee.last_name}",
             "i_value": payment.fineos_pei_i_value,
-            "leave_type": gax.get_rfed_doc_id(payment.claim.claim_type_id),
+            "fineos_customer_number_employee": self.scenario_data.employee.fineos_customer_number,
+            "leave_type": leave_type,
             "mmars_vendor_code": self.scenario_data.employee.ctr_vendor_customer_code,
             "payment_amount": (
                 "{:.2f}".format(payment.amount)
@@ -102,22 +204,21 @@ class ScenarioOutput:
             ),
             "payment_doc_id_code": "GAX",
             "payment_doc_id_dept": "EOL",
-            "payment_period_end_date": payment.period_end_date.isoformat(),
-            "payment_period_start_date": payment.period_start_date.isoformat(),
+            "payment_period_end_date": payment_period_end_date,
+            "payment_period_start_date": payment_period_start_date,
             "payment_preference": self.scenario_data.employee.payment_method.payment_method_description,
             "scheduled_payment_date": self.payment_date.strftime("%Y-%m-%d"),
             "state": self.address.geo_state.geo_state_description,
-            "vendor_invoice_date": gax.get_vendor_invoice_date_str(payment.period_end_date),
+            "vendor_invoice_date": vendor_invoice_date,
             "vendor_invoice_line": "1",
-            "vendor_invoice_number": gax.get_vendor_invoice_number(
-                payment.claim.fineos_absence_id, payment.fineos_pei_i_value
-            ),
+            "vendor_invoice_number": vendor_invoice_number,
             "vendor_single_payment": "Yes",
             "zip": self.address.zip_code,
-            "case_status": payment.claim.fineos_absence_status.absence_status_description,
-            "employer_id": self.scenario_data.employer.fineos_employer_id,
+            "case_status": case_status,
+            "employer_id": employer_id,
             "leave_request_id": self.scenario_data.leave_request_id,
             "leave_request_decision": self.scenario_data.leave_request_decision,
+            "payment_event_type": self.scenario_data.payment_event_type,
             "vcm_flag": "Yes",  # This should be overridden as needed
             "claimants_that_have_zero_or_credit_value": (
                 "1" if payment.amount is not None and float(payment.amount) <= 0 else ""
@@ -139,7 +240,7 @@ class ScenarioOutput:
         return {
             "c_value": payment.fineos_pei_c_value,
             "i_value": payment.fineos_pei_i_value,
-            "status": "Active",
+            "status": "" if self.inactive_writeback else "Active",
             "stock_no": "",
             "transaction_status": "",
             "trans_status_date": "2021-01-15 12:00:00",
@@ -152,7 +253,6 @@ class StandardTestDataWrapper:
     payment_extract_data: fineos_payment_export.ExtractData
     vendor_extract_data: fineos_vendor_export.ExtractData
     voucher_extract_data: payment_voucher.VoucherExtractData
-    vbi_requested_absence_som_extract: fineos_vendor_export.Extract
     input_file_path: str
 
 
@@ -169,7 +269,7 @@ def get_standard_test_data(*, now, scenario_name, test_db_session, tmp_path, vcm
     Parameters:
         - now: datetime.now(); for use with freezegun
         - scenario_name: scenario_generator.ScenarioName
-        - vcm_flag: Optional[bool]: for creating the correct StateLog entry
+        - vcm_flag: Optional[str]: for creating the correct StateLog entry
                     for a given scenario
     """
     # Seed to get reproducible output.
@@ -200,7 +300,7 @@ def get_standard_test_data(*, now, scenario_name, test_db_session, tmp_path, vcm
         employee = scenario_outputs[scenario_name].scenario_data.employee
 
         # Setup state logs.
-        if vcm_flag is not None:
+        if vcm_flag in [VCM_FLAG_EMPTY, VCM_FLAG_MISSING]:
             setup_state_log_only(
                 associated_model=employee,
                 end_state=State.VCM_REPORT_SENT if vcm_flag else State.IDENTIFY_MMARS_STATUS,
@@ -209,7 +309,10 @@ def get_standard_test_data(*, now, scenario_name, test_db_session, tmp_path, vcm
             )
 
         # Overwrite vcm_flag.
-        vcm_flag_str = payment_voucher.get_vcm_flag(employee, test_db_session)
+        if vcm_flag == VCM_FLAG_EMPTY:
+            vcm_flag_str = ""
+        else:
+            vcm_flag_str = payment_voucher.get_vcm_flag(employee, test_db_session)
         for row in scenario_outputs[scenario_name].payment_voucher_rows:
             row["vcm_flag"] = vcm_flag_str
 
@@ -237,7 +340,6 @@ def get_standard_test_data(*, now, scenario_name, test_db_session, tmp_path, vcm
         payment_extract_data=payment_extract_data,
         vendor_extract_data=vendor_extract_data,
         voucher_extract_data=voucher_extract_data,
-        vbi_requested_absence_som_extract=vendor_extract_data.requested_absence_info,
         input_file_path=file_path,
     )
 
@@ -248,11 +350,20 @@ def get_standard_test_data(*, now, scenario_name, test_db_session, tmp_path, vcm
 @pytest.mark.parametrize(
     "scenario_name, vcm_flag",
     [
-        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_A, False),
-        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_B, True),
-        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_C, None),
-        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_D, False),
-        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_E, False),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_A, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_B, VCM_FLAG_YES),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_C, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_D, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_E, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_F, VCM_FLAG_MISSING),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_G, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_H, VCM_FLAG_EMPTY),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_I, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_J, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_K, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_L, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_M, VCM_FLAG_NO),
+        (scenario_generator.ScenarioName.SCENARIO_VOUCHER_N, VCM_FLAG_NO),
     ],
 )
 @freezegun.freeze_time("2021-01-15 08:00:00", tz_offset=0)
@@ -283,11 +394,11 @@ def test_process_payment_record(
         pei_record = standard_test_data.payment_extract_data.pei.indexed_data[payment_ci]
 
         payment_voucher.process_payment_record(
-            extract_data=standard_test_data.payment_extract_data,
-            requested_absence_extract=standard_test_data.vbi_requested_absence_som_extract,
+            payment_extract_data=standard_test_data.payment_extract_data,
+            vendor_extract_data=standard_test_data.vendor_extract_data,
             voucher_extract_data=standard_test_data.voucher_extract_data,
-            index=payment_ci,
-            record=pei_record,
+            ci_index=payment_ci,
+            pei_record=pei_record,
             output_csv=output_csv,
             writeback_csv=writeback_csv,
             payment_date=date.today(),
@@ -349,14 +460,20 @@ def test_process_extracts_to_payment_voucher(
         input_path, tmp_path, None, None, test_db_session, MockLogEntry()
     )
 
+    # Outcome:
+    # Of the 22 vpei rows:
+    # - 7 have employees seeded in the database and should have all the expected columns
+    # - 1 has an employee without a VC code, state log entry, and from
+    #   VBI_REQUSTEDABSENCE.csv so it should be missing a number of columns
+    # - 14 are missing employees and missing from VBI_REQUESTEDABSENCE.csv, so should be
+    #   missing a number of columns
+
     csv_output = open(os.path.join(tmp_path, "20210121_131230_payment_voucher.csv")).readlines()
     expected_output = open(os.path.join(input_path, "expected_payment_voucher.csv")).readlines()
-
     assert csv_output == expected_output
 
     writeback = open(os.path.join(tmp_path, "20210121_131230_writeback.csv")).readlines()
     expected_writeback = open(os.path.join(input_path, "expected_writeback.csv")).readlines()
-
     assert writeback == expected_writeback
 
 

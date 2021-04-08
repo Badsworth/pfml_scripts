@@ -52,13 +52,6 @@ locals {
       }
     },
 
-    "ad-hoc-verification" = {
-      command = ["generate-verification-codes",
-        "--input=s3://massgov-pfml-${var.environment_name}-verification-codes/source.csv",
-      "--output=s3://massgov-pfml-${var.environment_name}-verification-codes/output.csv"],
-      task_role = aws_iam_role.task_adhoc_verification_task_role.arn
-    },
-
     "bulk-user-import" = {
       command             = ["bulk-user-import"]
       containers_template = "bulk_user_import_template.json"

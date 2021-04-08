@@ -9,6 +9,7 @@ import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
 import { isFeatureEnabled } from "../../services/featureFlags";
+import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
@@ -150,17 +151,20 @@ const ClaimTableRows = (props) => {
    * @returns {string|React.ReactNode}
    */
   const getValueForColumn = (claim, columnKey) => {
+    // New Application page handles conditional routing for claims (if is not reviewable, navigates to Status page)
+    const infoRequestRoute = routeWithParams("employers.newApplication", {
+      absence_id: get(claim, "fineos_absence_id"),
+    });
+
     switch (columnKey) {
       case "created_at":
         return formatDateRange(get(claim, columnKey));
       case "fineos_absence_id":
-        // TODO (EMPLOYER-861): Make this routing actually work
-        return <a href="#">{get(claim, columnKey)}</a>;
+        return <a href={infoRequestRoute}>{get(claim, columnKey)}</a>;
       case "employee_name":
         // TODO (EMPLOYER-858): Use a fullName getter on the claim instance
-        // TODO (EMPLOYER-861): Make this routing actually work
         return (
-          <a href="#">
+          <a href={infoRequestRoute}>
             {[get(claim, "first_name"), get(claim, "last_name")].join(" ")}
           </a>
         );

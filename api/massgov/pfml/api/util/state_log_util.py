@@ -63,7 +63,7 @@ def get_now() -> datetime:
 def create_finished_state_log(
     associated_model: AssociatedModel,
     end_state: LkState,
-    outcome: Dict[str, str],
+    outcome: Dict[str, Any],
     db_session: db.Session,
     start_time: Optional[datetime] = None,
     import_log_id: Optional[int] = None,

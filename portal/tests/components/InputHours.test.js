@@ -39,13 +39,13 @@ describe("InputHours", () => {
       wrapper
         .find("InputNumber")
         .props()
-        .formGroupClassName.includes("margin-top-neg-105")
+        .formGroupClassName.includes("margin-top-105")
     ).toBe(true);
     expect(
       wrapper
         .find("Dropdown")
         .props()
-        .formGroupClassName.includes("margin-top-neg-105")
+        .formGroupClassName.includes("margin-top-105")
     ).toBe(true);
   });
 

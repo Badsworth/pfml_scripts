@@ -84,6 +84,7 @@ class TransactionFileCreatorStep(Step):
             eft: PubEft = employee_with_eft[1]
 
             eft.prenote_state_id = PrenoteState.PENDING_WITH_PUB.prenote_state_id
+            eft.prenote_sent_at = payments_util.get_now()
             self.db_session.add(eft)
 
             state_log_util.create_finished_state_log(

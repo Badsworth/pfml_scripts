@@ -20,6 +20,7 @@ import massgov.pfml.util.batch.log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.logging.audit
+import massgov.pfml.util.newrelic.events
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import EmployeeLog, ImportLog, WagesAndContributions
 from massgov.pfml.dor.importer.dor_file_formats import (
@@ -99,7 +100,7 @@ class ImportRunReport:
 
 
 def handler(event=None, context=None):
-    """Lambda handler function."""
+    """ECS task main method."""
     initialize_sentry()
     massgov.pfml.util.logging.audit.init_security_logging()
     logging.init(__name__)
@@ -137,7 +138,7 @@ def handler(event=None, context=None):
         sys.exit(1)
     except Exception as e:
         report.end = datetime.now().isoformat()
-        message = f"Unexpected error during import run: {type(e)}"
+        message = f"Unexpected error during import run: {type(e)} -- {e}"
         report.message = message
         logger.error(message, extra={"report": asdict(report)})
         sys.exit(1)

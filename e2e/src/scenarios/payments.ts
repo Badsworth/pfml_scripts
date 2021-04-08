@@ -6,7 +6,7 @@ import { ScenarioSpecification } from "../generation/Scenario";
 const start = parseISO("2021-03-15");
 const end = parseISO("2021-05-15");
 const retroactiveStart = parseISO("2021-02-01");
-const retroactiveEnd = parseISO("2020-03-31");
+const retroactiveEnd = parseISO("2021-03-31");
 
 // Happy Path - Employee A: Bonding, Check payment
 export const PMTA: ScenarioSpecification = {

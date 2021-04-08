@@ -308,6 +308,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  
+  /claims:
+    get:
+      summary: Retrieve claims 
+      operationId: massgov.pfml.api.claims.get_claims
+      tags:
+        - Claims
+      parameters:
+        - in: query
+          name: orderBy
+          schema:
+            type: string
+            example: "created_at"
+          description: "Field to order by"
+        - in: query
+          name: sortDirection
+          schema:
+            type: string
+            example: "ascending"
+          description: "Sort direction of ascending or descending"
+        - in: query
+          name: page
+          schema:
+            type: integer
+            example: 2
+          description: "Page to request"
+      responses:
+        "200":
+          description: The claim information.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ClaimsResponse"
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /employers/claims/{fineos_absence_id}/documents/{fineos_document_id}:
     get:
@@ -1893,9 +1936,21 @@ components:
           format: date
           example: "1970-06-01"
 
+    EmployerResponse:
+      type: object
+      properties:
+        employer_dba:
+          type: string
+        employer_fein:
+          type: string
+
     ClaimResponse:
       type: object
       properties:
+        employer:
+          $ref: "#/components/schemas/EmployerResponse"
+        employee:
+          $ref: "#/components/schemas/EmployeeResponse"
         fineos_absence_id:
           format: string
           example: "NTN-01-ABS-01"
@@ -1908,7 +1963,17 @@ components:
         absence_period_end_date:
           format: date
           example: "1970-06-01"
+        fineos_absence_status:
+          format: string
+        claim_type:
+          format: string
+        created_at:
+          format: date
 
+    ClaimsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/ClaimResponse"
 
     EmployerAddFeinResponse:
       type: object
@@ -2461,6 +2526,7 @@ components:
             - Per Week
             - Per Month
             - In Total
+            - Unknown
           example: "Per Month"
         benefit_type:
           type: string

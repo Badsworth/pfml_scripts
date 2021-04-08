@@ -53,7 +53,9 @@ export default class DocumentsApi extends BaseApi {
   ) => {
     const formData = new FormData();
     formData.append("document_type", document_type);
-    formData.append("description", "Placeholder");
+    if (file.name.includes("Compressed_")) {
+      formData.append("description", "Compressed Image");
+    }
 
     assert(file);
     formData.append("file", file);

@@ -8,7 +8,6 @@ from massgov.pfml.db.models.employees import (
     Claim,
     ClaimType,
     Employee,
-    EmployeeAddress,
     Employer,
     LkClaimType,
     Payment,
@@ -86,18 +85,17 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
     payment: Payment = payment_audit_data.payment
     claim: Claim = payment.claim
     employee: Employee = claim.employee
-    # TODO adjust after address validation work to get the most recent valid address
-    employee_address: Optional[
-        EmployeeAddress
-    ] = employee.addresses.first() if employee.addresses else None
-    address: Optional[Address] = employee_address.address if employee_address else None
+    experian_address_pair = payment.experian_address_pair
+    address: Optional[
+        Address
+    ] = experian_address_pair.experian_address if experian_address_pair else None
     employer: Employer = claim.employer
 
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
         leave_type=get_leave_type(claim),
-        first_name=payment.claim.employee.first_name,
-        last_name=payment.claim.employee.last_name,
+        first_name=employee.first_name,
+        last_name=employee.last_name,
         address_line_1=address.address_line_one if address else None,
         address_line_2=address.address_line_two if address else None,
         city=address.city if address else None,

@@ -33,7 +33,7 @@ exports[`ScheduleVariable renders the form 1`] = `
     name="work_pattern.work_pattern_days[0].minutes"
     onChange={[Function]}
     smallLabel={true}
-    value={3360}
+    value={null}
   />
 </QuestionPage>
 `;
