@@ -59,7 +59,7 @@ export const ConvertToEmployer = (props) => {
         {t("pages.convertToEmployer.alertDescription")}
       </Alert>
       <div className="measure-6">
-        <form className="usa-form" onSubmit={handleSubmit} method="post">
+        <form className="usa-form" onSubmit={handleSubmit} method="post" data-cy="fein-form">
           <InputText
             {...getFunctionalInputProps("employer_fein")}
             inputMode="numeric"
@@ -80,6 +80,7 @@ export const ConvertToEmployer = (props) => {
             }
             label={t("pages.employersAuthCreateAccount.einLabel")}
             smallLabel
+            dataCy="fein-input"
           />
           <Button type="submit" loading={handleSubmit.isThrottled}>
             {t("pages.convertToEmployer.submit")}

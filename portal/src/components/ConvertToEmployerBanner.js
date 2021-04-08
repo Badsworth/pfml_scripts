@@ -22,6 +22,7 @@ const ConvertToEmployerBanner = (props) => {
           components={{
             "convert-link": (
               <a
+                data-cy="convert-link"
                 href={link}
               />
             ),

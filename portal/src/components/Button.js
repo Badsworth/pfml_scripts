@@ -41,6 +41,7 @@ function Button({ type = "button", ...props }) {
       className={classes}
       name={props.name}
       onClick={props.onClick}
+      data-cy={props.dataCy}
       type={type === "submit" ? "submit" : "button"}
       disabled={props.disabled || showLoading}
     >
@@ -120,6 +121,7 @@ Button.propTypes = {
     "secondary",
     "unstyled",
   ]),
+  dataCy: PropTypes.string
 };
 
 export default Button;

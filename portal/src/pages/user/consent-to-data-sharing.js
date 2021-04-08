@@ -88,7 +88,7 @@ export const ConsentToDataSharing = (props) => {
 
       <Alert state="info" noIcon>
         <p>{t("pages.userConsentToDataSharing.agreementBody")}</p>
-        <Button type="submit" loading={handleSubmit.isThrottled}>
+        <Button type="submit" loading={handleSubmit.isThrottled} dataCy="consent-to-data-sharing-btn">
           {t("pages.userConsentToDataSharing.continueButton")}
         </Button>
       </Alert>

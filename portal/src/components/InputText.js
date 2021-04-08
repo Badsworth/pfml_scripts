@@ -47,6 +47,7 @@ function InputText({ type = "text", ...props }) {
       autoComplete={props.autoComplete}
       className={fieldClasses}
       data-value-type={props.valueType}
+      data-cy={props.dataCy}
       id={inputId}
       inputMode={inputMode}
       maxLength={props.maxLength}
@@ -189,6 +190,7 @@ InputText.propTypes = {
    * saving it back to the API.
    */
   valueType: PropTypes.oneOf(["integer", "float", "string"]),
+  dataCy: PropTypes.string
 };
 
 export default InputText;
