@@ -21,19 +21,6 @@ export const ConvertToEmployer = (props) => {
   const { updateUser } = appLogic.users;
   const { formState, updateFields } = useFormState({ employer_fein: "" });
   
-  if (typeof user === "undefined") {
-    appLogic.portalFlow.goTo(routes.auth.login);
-    return;
-  }
-  if (user.hasEmployerRole) {
-    appLogic.portalFlow.goTo(routes.employers.welcome);
-  }
-
-  // Do not allow conversion if user has created claims and got sent to fineos
-  if(claims.items.find(c => c.fineos_absence_id !== null)) {
-    appLogic.portalFlow.goTo(routes.applications.getReady);
-  }
-
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
     formState,
@@ -52,6 +39,17 @@ export const ConvertToEmployer = (props) => {
     );
   })
 
+  if (typeof user === "undefined") {
+    appLogic.portalFlow.goTo(routes.auth.login);
+    return;
+  }
+  if (user.hasEmployerRole) {
+    appLogic.portalFlow.goTo(routes.employers.welcome);
+  }
+  // Do not allow conversion if user has created claims and got sent to fineos
+  if(claims.items.find(c => c.fineos_absence_id !== null)) {
+    appLogic.portalFlow.goTo(routes.applications.getReady);
+  }
 
   return (
     <React.Fragment>
