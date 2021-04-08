@@ -1,46 +1,46 @@
 import User, { RoleDescription } from "../../src/models/User";
-import {
-  renderWithAppLogic,
-  simulateEvents,
-  testHook
-} from "../test-utils";
 import ConvertToEmployer from "../../src/pages/convert-to-employer";
-import React from "react";
-import { shallow } from "enzyme";
 import tracker from "../../src/services/tracker";
-import useAppLogic from "../../src/hooks/useAppLogic";
 
-import ClaimCollection from "../../src/models/ClaimCollection";
-import GetReady from "../../src/pages/applications/get-ready";
 import { act } from "react-dom/test-utils";
+
+import {
+  MockClaimBuilder,
+  simulateEvents,
+  renderWithAppLogic,
+  testHook,
+} from "../test-utils";
+import ClaimCollection from "../../src/models/ClaimCollection";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
+import useAppLogic from "../../src/hooks/useAppLogic";
 
-jest.mock("@aws-amplify/auth");
-jest.mock("../../src/services/tracker");
-jest.mock("../../src/hooks/useAppLogic");
+// jest.mock("@aws-amplify/auth");
+// jest.mock("../../src/services/tracker");
+// jest.mock("../../src/hooks/useAppLogic");
+
 
 describe("ConvertToEmployer", () => {
   function render(customProps = {}, options = { claims: [] }) {
-    let appLogic, claims, user
-
+    let appLogic;
+    mockRouter.pathname = routes.applications.getReady;
+  
     testHook(() => {
       appLogic = useAppLogic();
-      claims = new ClaimCollection(options.claims);
-      user = new User({ consented_to_data_sharing: true });
+      appLogic.users.user = new User({ consented_to_data_sharing: true });
+      appLogic.claims.claims = new ClaimCollection(options.claims);
+      appLogic.claims.hasLoadedAll = true;
     });
-    
+  
     const { wrapper } = renderWithAppLogic(ConvertToEmployer, {
-      diveLevels: 0,
-      render: "mount",
-      props: { appLogic, claims, user, ...customProps },
+      props: { appLogic, ...customProps },
     });
-
-    return {appLogic, claims, user, wrapper}
+  
+    return { appLogic, wrapper };
   }
-
   it("renders form", () => { 
-    const wrapper = render();
+    const { wrapper } = render();
+    console.log(wrapper.debug())
     expect(wrapper).toMatchSnapshot();
   });
   it("submits an FEIN", async () => {
