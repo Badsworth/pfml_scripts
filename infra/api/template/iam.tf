@@ -140,6 +140,16 @@ data "aws_iam_policy_document" "api_service" {
       var.rmv_client_certificate_binary_arn,
     ]
   }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "cognito-idp:AdminGetUser",
+    ]
+    resources = [
+      var.cognito_user_pool_arn
+    ]
+  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
