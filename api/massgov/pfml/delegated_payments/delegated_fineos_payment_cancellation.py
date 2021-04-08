@@ -10,6 +10,7 @@ logger = logging.get_logger(__name__)
 
 REASON_TEXT = "This payment and another payment are waiting for audit response cancellation."
 
+
 class PaymentCancellationStep(Step):
     def run_step(self):
         # Get payments eligible to cancel
@@ -56,18 +57,20 @@ class PaymentCancellationStep(Step):
 
 
 def _build_outcome(state_log: StateLog, related_state_log: Optional[StateLog] = None):
-    validation_container = payments_util.ValidationContainer(f"{state_log.payment.fineos_pei_c_value},{state_log.payment.fineos_pei_i_value}")
+    validation_container = payments_util.ValidationContainer(
+        f"{state_log.payment.fineos_pei_c_value},{state_log.payment.fineos_pei_i_value}"
+    )
 
     # TODO: improve validation reason and message
     if related_state_log is None:
         validation_container.add_validation_issue(
             reason=payments_util.ValidationReason.CANCELLATION_ERROR,
-            details=f"{state_log.payment.payment_id} cancelled in address validation state."
+            details=f"{state_log.payment.payment_id} cancelled in address validation state.",
         )
     else:
         validation_container.add_validation_issue(
             reason=payments_util.ValidationReason.CANCELLATION_ERROR,
-            details=f"{state_log.payment.payment_id} cancelled {related_state_log.payment.payment_id}"
+            details=f"{state_log.payment.payment_id} cancelled {related_state_log.payment.payment_id}",
         )
 
     return state_log_util.build_outcome(REASON_TEXT, validation_container)
