@@ -1,18 +1,13 @@
 import { fineos, portal, email } from "../../../tests/common/actions";
-import {
-  bailIfThisTestFails,
-  beforeFineos,
-} from "../../../tests/common/before";
+import { beforeFineos } from "../../../tests/common/before";
 import { beforePortal } from "../../../tests/common/before";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { ApplicationResponse } from "../../../../src/api";
 import { Submission } from "../../../../src/types";
 
-describe("Approval (notifications/notices)", { retries: 0 }, () => {
-  it("Create a financially eligible claim in which an employer will respond", () => {
+describe("Approval (notifications/notices)", () => {
+  const submit = it("Create a financially eligible claim in which an employer will respond", () => {
     beforePortal();
-    bailIfThisTestFails();
-
     cy.visit("/");
 
     // Generate Creds for Registration/Login - submit claim via API
@@ -73,12 +68,12 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
   });
 
   // Check for ER and approval claim in Fineos
-  it(
+  const adjudicate = it(
     "In Fineos, complete an Adjudication Approval",
     { baseUrl: getFineosBaseUrl() },
     () => {
+      cy.dependsOnPreviousPass([submit]);
       beforeFineos();
-      bailIfThisTestFails();
 
       cy.unstash<Submission>("submission").then((submission) => {
         cy.visit("/");
@@ -89,98 +84,103 @@ describe("Approval (notifications/notices)", { retries: 0 }, () => {
   );
 
   // Check Legal Notice for both claimant/Leave-admin
-  it("Checking Legal Notice and Notifications for both claimant and Leave-Admin", () => {
-    beforePortal();
-    cy.unstash<Credentials>("credentials").then((credentials) => {
-      // Check Legal Notice for Claimaint
-      portal.login(credentials);
-      cy.unstash<Submission>("submission").then((submission) => {
+  it(
+    "Checking Legal Notice and Notifications for both claimant and Leave-Admin",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([submit, adjudicate]);
+      beforePortal();
+      cy.unstash<Credentials>("credentials").then((credentials) => {
+        // Check Legal Notice for Claimaint
         portal.login(credentials);
-        cy.log("Waiting for documents");
-        cy.task(
-          "waitForClaimDocuments",
-          {
-            credentials: credentials,
-            application_id: submission.application_id,
-            document_type: "Approval Notice",
-          },
-          { timeout: 300000 }
-        );
-        cy.log("Finished waiting for documents");
-
-        cy.visit("/applications");
-        cy.contains("article", submission.fineos_absence_id).within(() => {
-          cy.contains("a", "Approval notice").should("be.visible");
-        });
-        portal.logout();
-
-        // Check Legal Notice for Leave-Admin
-        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          const employeeFullName = `${claim.first_name} ${claim.last_name}`;
-          if (typeof claim.employer_fein !== "string") {
-            throw new Error("Claim must include employer FEIN");
-          }
-          portal.login(getLeaveAdminCredentials(claim.employer_fein));
-          portal.checkNoticeForLeaveAdmin(
-            submission.fineos_absence_id,
-            employeeFullName,
-            "approval"
-          );
-
-          // Checking email notifications for both claimant and Leave-Admin
-          if (!claim.employer_fein || !claim.first_name || !claim.last_name) {
-            throw new Error("This employer has no FEIN");
-          }
-          const subjectEmployer = email.getNotificationSubject(
-            employeeFullName,
-            "approval (employer)",
-            submission.fineos_absence_id
-          );
-          const subjectClaimant = email.getNotificationSubject(
-            employeeFullName,
-            "approval (claimant)",
-            submission.fineos_absence_id
-          );
-          cy.log(subjectEmployer);
-          cy.log(subjectClaimant);
-
-          // Check email for Employer/Leave Admin
-          cy.task<Email[]>(
-            "getEmails",
+        cy.unstash<Submission>("submission").then((submission) => {
+          portal.login(credentials);
+          cy.log("Waiting for documents");
+          cy.task(
+            "waitForClaimDocuments",
             {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subjectEmployer,
-              messageWildcard: submission.fineos_absence_id,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+              credentials: credentials,
+              application_id: submission.application_id,
+              document_type: "Approval Notice",
             },
-            { timeout: 180000 }
-          ).then(async (emails) => {
-            const data = email.getNotificationData(emails[0].html);
-            const dob =
-              claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
-            expect(data.name).to.equal(employeeFullName);
-            expect(data.dob).to.equal(dob);
-            expect(data.applicationId).to.equal(submission.fineos_absence_id);
-            expect(emails[0].html).to.contain(
-              `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
-            );
+            { timeout: 300000 }
+          );
+          cy.log("Finished waiting for documents");
+
+          cy.visit("/applications");
+          cy.contains("article", submission.fineos_absence_id).within(() => {
+            cy.contains("a", "Approval notice").should("be.visible");
           });
+          portal.logout();
 
-          // Check email for Claimant/Employee
-          cy.task<Email[]>(
-            "getEmails",
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subjectClaimant,
-              messageWildcard: submission.fineos_absence_id,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            { timeout: 180000 }
-          ).should("not.be.empty");
+          // Check Legal Notice for Leave-Admin
+          cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+            const employeeFullName = `${claim.first_name} ${claim.last_name}`;
+            if (typeof claim.employer_fein !== "string") {
+              throw new Error("Claim must include employer FEIN");
+            }
+            portal.login(getLeaveAdminCredentials(claim.employer_fein));
+            portal.checkNoticeForLeaveAdmin(
+              submission.fineos_absence_id,
+              employeeFullName,
+              "approval"
+            );
+
+            // Checking email notifications for both claimant and Leave-Admin
+            if (!claim.employer_fein || !claim.first_name || !claim.last_name) {
+              throw new Error("This employer has no FEIN");
+            }
+            const subjectEmployer = email.getNotificationSubject(
+              employeeFullName,
+              "approval (employer)",
+              submission.fineos_absence_id
+            );
+            const subjectClaimant = email.getNotificationSubject(
+              employeeFullName,
+              "approval (claimant)",
+              submission.fineos_absence_id
+            );
+            cy.log(subjectEmployer);
+            cy.log(subjectClaimant);
+
+            // Check email for Employer/Leave Admin
+            cy.task<Email[]>(
+              "getEmails",
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: subjectEmployer,
+                messageWildcard: submission.fineos_absence_id,
+                timestamp_from: submission.timestamp_from,
+                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+              },
+              { timeout: 180000 }
+            ).then(async (emails) => {
+              const data = email.getNotificationData(emails[0].html);
+              const dob =
+                claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
+              expect(data.name).to.equal(employeeFullName);
+              expect(data.dob).to.equal(dob);
+              expect(data.applicationId).to.equal(submission.fineos_absence_id);
+              expect(emails[0].html).to.contain(
+                `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`
+              );
+            });
+
+            // Check email for Claimant/Employee
+            cy.task<Email[]>(
+              "getEmails",
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: subjectClaimant,
+                messageWildcard: submission.fineos_absence_id,
+                timestamp_from: submission.timestamp_from,
+                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+              },
+              { timeout: 180000 }
+            ).should("not.be.empty");
+          });
         });
       });
-    });
-  });
+    }
+  );
 });

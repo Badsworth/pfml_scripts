@@ -37,20 +37,6 @@ export function beforePortal(): void {
 }
 
 /**
- * Calling this function triggers a bail out if the test function fails.
- *
- * This is useful when you have a step that _must_ complete for the others to be successful, as it prevents us
- * from wasting time and producing confusing results if the initial step is unsuccessful.
- */
-export function bailIfThisTestFails(): void {
-  // Bail on the rest of the tests in this suite if this part fails.
-  cy.on("fail", (err, runnable) => {
-    runnable.parent?.bail(true);
-    throw err;
-  });
-}
-
-/**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
  *
  * Note: Only used for UAT enviornment

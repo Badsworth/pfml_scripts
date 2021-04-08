@@ -40,6 +40,7 @@ declare namespace Cypress {
     unstash<T extends unknown>(key: string): Chainable<T>;
     // Declare our custom tasks.
     stashLog(key: string, value: string | null | undefined): null;
+    dependsOnPreviousPass(dependencies?: Mocha.Test[]): null;
     task(
       event: "generateClaim",
       scenario: string

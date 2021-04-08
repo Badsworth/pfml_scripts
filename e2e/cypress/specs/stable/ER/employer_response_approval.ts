@@ -1,16 +1,10 @@
-import {
-  beforePortal,
-  beforeFineos,
-  bailIfThisTestFails,
-} from "../../../tests/common/before";
+import { beforePortal, beforeFineos } from "../../../tests/common/before";
 import { fineos, portal, email } from "../../../tests/common/actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 
 describe("Employer Responses", () => {
-  it("As an employer, I should recieve an email asking for my response to a claim and also fill out the ER form", () => {
+  const submit = it("As an employer, I should recieve an email asking for my response to a claim and also fill out the ER form", () => {
     beforePortal();
-    bailIfThisTestFails();
-
     cy.task("generateClaim", "BHAP1").then((claim) => {
       const { employer_fein } = claim.claim;
       if (!(typeof employer_fein === "string")) {
@@ -60,6 +54,7 @@ describe("Employer Responses", () => {
     "In Fineos, I should see the employer's response recorded",
     { baseUrl: getFineosBaseUrl() },
     () => {
+      cy.dependsOnPreviousPass([submit]);
       beforeFineos();
       cy.unstash<string>("fineos_absence_id").then((claimNumber) => {
         cy.visit("/");
