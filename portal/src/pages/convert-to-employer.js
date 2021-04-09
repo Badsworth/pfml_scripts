@@ -8,13 +8,13 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 import withClaims from "../hoc/withClaims";
-import { isFeatureEnabled } from "../services/featureFlags";
 
 export const ConvertToEmployer = (props) => {
   const { appLogic, user, claims } = props;
@@ -38,9 +38,7 @@ export const ConvertToEmployer = (props) => {
     });
   });
 
-  const showConvertToEmployer = isFeatureEnabled(
-    "claimantConvertToEmployer"
-  );
+  const showConvertToEmployer = isFeatureEnabled("claimantConvertToEmployer");
 
   // Do not allow access to this feature without feature flag
   if (!showConvertToEmployer) {

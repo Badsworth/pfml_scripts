@@ -9,10 +9,10 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
-import { isFeatureEnabled } from "../../services/featureFlags";
 
 export const GetReady = (props) => {
   const { appLogic, claims } = props;
@@ -22,9 +22,7 @@ export const GetReady = (props) => {
   const convertLink = appLogic.portalFlow.getNextPageRoute(
     "CONVERT_TO_EMPLOYER"
   );
-  const showConvertToEmployer = isFeatureEnabled(
-    "claimantConvertToEmployer"
-  );
+  const showConvertToEmployer = isFeatureEnabled("claimantConvertToEmployer");
   const iconClassName =
     "margin-right-1 text-secondary text-middle margin-top-neg-05";
 

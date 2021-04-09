@@ -8,7 +8,7 @@ from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Employer, Role
 
 
-def get_users_patch_employer_issues(user_id, employer: Optional[Employer]) -> List[Issue]:
+def get_users_patch_employer_issues(user_id: str, employer: Optional[Employer]) -> List[Issue]:
     """Validate that the Employer a user is signing up to administer is valid"""
     issues = []
 
