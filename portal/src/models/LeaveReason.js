@@ -8,7 +8,7 @@ const LeaveReason = {
   activeDutyFamily: "Military Exigency Family",
   bonding: "Child Bonding",
   // TODO (CP-2042): Confirm this enum value once integrated with the API
-  care: "Care for a Family Member",
+  care: "Care For A Family Member",
   medical: "Serious Health Condition - Employee",
   // TODO (CP-1164): Send this option to the API when user indicates they're pregnant
   pregnancy: "Pregnancy/Maternity",
