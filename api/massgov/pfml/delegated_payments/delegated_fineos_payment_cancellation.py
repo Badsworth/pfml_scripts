@@ -72,7 +72,7 @@ def _build_outcome(
     else:
         validation_container.add_validation_issue(
             reason=payments_util.ValidationReason.CANCELLATION_ERROR,
-            details=f"{state_log.payment.payment_id} cancelled {related_state_log.payment.payment_id}",
+            details=f"Payment cancelled by payment with  C={related_state_log.payment.fineos_pei_c_value},I={related_state_log.payment.fineos_pei_i_value}",
         )
 
     return state_log_util.build_outcome(REASON_TEXT, validation_container)
