@@ -4,6 +4,7 @@ import { beforePortal } from "../../../tests/common/before";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { ApplicationResponse } from "../../../../src/api";
 import { Submission } from "../../../../src/types";
+import { getEmails } from "../../../tests/common/actions/email";
 
 describe("Approval (notifications/notices)", () => {
   const submit = it("Create a financially eligible claim in which an employer will respond", () => {
@@ -37,8 +38,7 @@ describe("Approval (notifications/notices)", () => {
             cy.log(
               "Checking email notification for Employer Response (Action Required)"
             );
-            cy.task<Email[]>(
-              "getEmails",
+            getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
                 subject: `Action required: Respond to ${claim.claim.first_name} ${claim.claim.last_name}'s paid leave application`,
@@ -46,7 +46,7 @@ describe("Approval (notifications/notices)", () => {
                 timestamp_from: timestamp_fromER,
                 debugInfo: { "Fineos Claim ID": response.fineos_absence_id },
               },
-              { timeout: 360000 }
+              360000
             ).then((emails) => {
               expect(emails[0].html).to.contain(
                 `/employers/applications/new-application/?absence_id=${response.fineos_absence_id}`
@@ -144,8 +144,7 @@ describe("Approval (notifications/notices)", () => {
             cy.log(subjectClaimant);
 
             // Check email for Employer/Leave Admin
-            cy.task<Email[]>(
-              "getEmails",
+            getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
                 subject: subjectEmployer,
@@ -153,7 +152,7 @@ describe("Approval (notifications/notices)", () => {
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              { timeout: 180000 }
+              180000
             ).then(async (emails) => {
               const data = email.getNotificationData(emails[0].html);
               const dob =
@@ -167,8 +166,7 @@ describe("Approval (notifications/notices)", () => {
             });
 
             // Check email for Claimant/Employee
-            cy.task<Email[]>(
-              "getEmails",
+            getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
                 subject: subjectClaimant,
@@ -176,7 +174,7 @@ describe("Approval (notifications/notices)", () => {
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              { timeout: 180000 }
+              180000
             ).should("not.be.empty");
           });
         });

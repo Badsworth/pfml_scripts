@@ -4,16 +4,10 @@ import { beforeFineos } from "../../tests/common/before";
 import { beforePortal } from "../../tests/common/before";
 import { getLeaveAdminCredentials, getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
-import { DehydratedClaim } from "../../../src/generation/Claim";
 
 describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineos", () => {
   it("Create a financially eligible claim (MHAP4) in which an employer will respond", () => {
     beforePortal();
-
-    const x = {} as DehydratedClaim;
-    cy.task("submitClaimToAPI", x).then((response) => {
-      console.log(response.application_id);
-    });
 
     cy.task("generateClaim", "MHAP4").then((claim) => {
       cy.task("submitClaimToAPI", claim).then((response) => {
@@ -51,7 +45,7 @@ describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineo
       cy.unstash<Submission>("submission").then((submission) => {
         cy.visit("/");
         fineos.claimAdjudicationFlow(submission.fineos_absence_id, true);
-        fineos.addBondingLeaveFlow(submission.timestamp_from);
+        fineos.addBondingLeaveFlow(new Date());
       });
     }
   );
