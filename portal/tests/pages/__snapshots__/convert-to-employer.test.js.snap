@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ConvertToEmployer renders form 1`] = `
+exports[`ConvertToEmployer when convertToEmployer is set to true when user has no claims renders form 1`] = `
 <Fragment>
   <Title>
     Convert to employer account
