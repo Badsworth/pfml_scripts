@@ -92,6 +92,7 @@ def _generate_errored_payment(test_db_session: db.Session) -> Payment:
             fake.random_int(min=1, max=3),
         ),
     ),
+    ids=["state_payments"],
 )
 def test_process_payments_for_writeback(
     fineos_pei_writeback_step,
@@ -305,6 +306,7 @@ def test_process_payments_for_writeback_no_payments_ready_for_writeback(
             fake.random_int(min=2, max=6),
         ),
     ),
+    ids=["writeback", "payments"],
 )
 def test_get_writeback_items_for_state(
     fineos_pei_writeback_step,

@@ -160,6 +160,7 @@ def test_send_check_file(mock_s3_bucket):
         ),
         ("No payments", 0, 0, 0),
     ),
+    ids=["some_payments", "no_payments"],
 )
 def test_get_eligible_check_payments_success(
     initialize_factories_session,
