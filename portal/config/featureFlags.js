@@ -88,7 +88,6 @@ const flagsConfig = {
     example: true,
     employerShowNewsBanner: true,
     pfmlTerriyay: true,
-    claimantConvertToEmployer: true,
   },
   test: {
     employerShowNewsBanner: true,
