@@ -20,7 +20,7 @@ class PaymentCancellationStep(Step):
             self.db_session,
         )
 
-        # for each of those, get payments that share a claim and leave period
+        # for each of those, get payments that share an employee
         for state_log in eligible_payments_to_cancel:
             matched_payments_to_cancel = (
                 self.db_session.query(StateLog)
