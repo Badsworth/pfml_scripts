@@ -8,7 +8,7 @@ from massgov.pfml.delegated_payments.step import Step
 
 logger = logging.get_logger(__name__)
 
-REASON_TEXT = "This payment and another payment are waiting for audit response cancellation."
+REASON_TEXT = "Payment and cancellation received in same extract, moving both to error state."
 
 
 class PaymentCancellationStep(Step):
