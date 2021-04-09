@@ -839,6 +839,16 @@ resource "aws_iam_role" "pub_payments_create_pub_files_task_role" {
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
 }
 
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "pub_payments_create_pub_files_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-create-pub-files-fineos-assume-policy"
+  role   = aws_iam_role.pub_payments_create_pub_files_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
+}
+
 resource "aws_iam_role_policy" "pub_payments_create_pub_files_task_role_extras" {
   name   = "${local.app_name}-${var.environment_name}-pub-payments-create-pub-files-extras"
   role   = aws_iam_role.pub_payments_create_pub_files_task_role.id
@@ -935,6 +945,16 @@ data "aws_iam_policy_document" "pub_payments_create_pub_files_task_role_extras" 
 resource "aws_iam_role" "pub_payments_process_pub_returns_task_role" {
   name               = "${local.app_name}-${var.environment_name}-pub-payments-process-pub-returns"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "pub_payments_process_pub_returns_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-pub-returns-fineos-assume-policy"
+  role   = aws_iam_role.pub_payments_process_pub_returns_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
 }
 
 resource "aws_iam_role_policy" "pub_payments_process_pub_returns_task_role_extras" {
