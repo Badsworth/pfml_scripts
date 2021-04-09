@@ -45,22 +45,22 @@ export const ConvertToEmployer = (props) => {
   // Do not allow access to this feature without feature flag
   if (!showConvertToEmployer) {
     appLogic.portalFlow.goTo(routes.applications.getReady);
-    return;
+    return null;
   }
   // Do not allow access without being logged in
   if (typeof user === "undefined") {
     appLogic.portalFlow.goTo(routes.auth.login);
-    return;
+    return null;
   }
   // If user is already an employer, go directly to employer welcome page
   if (user.hasEmployerRole) {
     appLogic.portalFlow.goTo(routes.employers.welcome);
-    return;
+    return null;
   }
   // Do not allow conversion if user has created claims and got sent to fineos
   if (hasClaims) {
     appLogic.portalFlow.goTo(routes.applications.getReady);
-    return;
+    return null;
   }
 
   return (
