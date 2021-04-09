@@ -75,7 +75,8 @@ data "aws_iam_policy_document" "task_executor" {
 
     resources = [
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin/*"
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin/*",
+      "${local.ssm_arn_prefix}/${local.app_name}/common/*"
     ]
   }
 
@@ -86,7 +87,8 @@ data "aws_iam_policy_document" "task_executor" {
 
     resources = [
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin"
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin",
+      "${local.ssm_arn_prefix}/${local.app_name}/common"
     ]
   }
 }
