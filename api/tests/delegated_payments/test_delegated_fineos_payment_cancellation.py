@@ -13,9 +13,86 @@ def payment_cancellation_step(initialize_factories_session, test_db_session, tes
     )
 
 
-def test_cancel_payments(
-    payment_cancellation_step, test_db_session, monkeypatch, create_triggers,
-):
+def test_cancellation_impact_non_cancellable_payments(payment_cancellation_step, test_db_session):
+    # scenario with 2 different employees
+    setup_state_log(
+        associated_class=state_log_util.AssociatedClass.PAYMENT,
+        end_states=[State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION,],
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(
+            fineos_customer_num="012345678",
+            fineos_absence_id="NTN-01-ABS-01",
+            add_claim_payment_for_employee=True,
+        ),
+    )
+
+    setup_state_log(
+        associated_class=state_log_util.AssociatedClass.PAYMENT,
+        end_states=[State.PAYMENT_READY_FOR_ADDRESS_VALIDATION,],
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(
+            fineos_customer_num="012345678",
+            fineos_absence_id="NTN-01-ABS-02",
+            add_claim_payment_for_employee=True,
+        ),
+    )
+
+    results_error_before = state_log_util.get_all_latest_state_logs_in_end_state(
+        state_log_util.AssociatedClass.PAYMENT,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+        test_db_session,
+    )
+
+    assert len(results_error_before) == 0
+
+    payment_cancellation_step.run()
+
+    results_error_after = state_log_util.get_all_latest_state_logs_in_end_state(
+        state_log_util.AssociatedClass.PAYMENT,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+        test_db_session,
+    )
+
+    # confirm there are still no payments that go into an error state
+    assert len(results_error_after) == 0
+
+    # same employee, but wrong states
+    setup_result = setup_state_log(
+        associated_class=state_log_util.AssociatedClass.PAYMENT,
+        end_states=[State.DELEGATED_PAYMENT_ADD_TO_PUB_PAYMENT_FINEOS_WRITEBACK,],
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(
+            fineos_customer_num="012345678",
+            fineos_absence_id="NTN-01-ABS-03",
+            add_claim_payment_for_employee=True,
+        ),
+    )
+
+    setup_state_log(
+        associated_class=state_log_util.AssociatedClass.PAYMENT,
+        end_states=[State.PAYMENT_READY_FOR_ADDRESS_VALIDATION,],
+        test_db_session=test_db_session,
+        additional_params=AdditionalParams(
+            fineos_customer_num="012345678",
+            fineos_absence_id="NTN-01-ABS-04",
+            add_claim_payment_for_employee=True,
+            employee=setup_result.state_logs[0].payment.claim.employee,
+        ),
+    )
+
+    payment_cancellation_step.run()
+
+    results_error_after_again = state_log_util.get_all_latest_state_logs_in_end_state(
+        state_log_util.AssociatedClass.PAYMENT,
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+        test_db_session,
+    )
+
+    # confirm there are still no payments that go into an error state
+    assert len(results_error_after_again) == 0
+
+
+def test_cancel_payments(payment_cancellation_step, test_db_session):
     setup_result = setup_state_log(
         associated_class=state_log_util.AssociatedClass.PAYMENT,
         end_states=[State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION,],
