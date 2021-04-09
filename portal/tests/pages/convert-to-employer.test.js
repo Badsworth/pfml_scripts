@@ -13,11 +13,17 @@ import useAppLogic from "../../src/hooks/useAppLogic";
 describe("ConvertToEmployer", () => {
   function render(customProps = {}, options = { claims: [] }) {
     let appLogic;
-    mockRouter.pathname = routes.applications.getReady;
+    mockRouter.pathname = routes.auth.convert;
+    process.env.featureFlags = {
+      claimantConvertToEmployer: true,
+    };
 
     testHook(() => {
       appLogic = useAppLogic();
-      appLogic.users.user = new User({ consented_to_data_sharing: true });
+      appLogic.users.user = new User({
+        user_id: "mock_user_id",
+        consented_to_data_sharing: true
+      });
       appLogic.claims.claims = new ClaimCollection(options.claims);
       appLogic.claims.hasLoadedAll = true;
     });
@@ -32,13 +38,14 @@ describe("ConvertToEmployer", () => {
     const { wrapper } = render();
     expect(wrapper).toMatchSnapshot();
   });
-  it("submits an FEIN", async () => {
+  it("can convert to employer account", async () => {
     const fein = "123456789";
     const { appLogic, wrapper } = render();
     const { changeField, submitForm } = simulateEvents(wrapper);
     changeField("employer_fein", fein);
     await submitForm();
-    expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
+    expect(appLogic.users.updateUser).toHaveBeenCalledWith(
+      expect.any(String), {
       role: {
         role_description: RoleDescription.employer,
       },

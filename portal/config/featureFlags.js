@@ -27,6 +27,11 @@ const flagsConfig = {
     // TODO (CP-1346): Show this step once it's been integrated w/ the API.
     claimantShowOtherLeaveStep: false,
 
+    // When this flag is enabled, employee user accounts have access to
+    // the convert-to-employer page, which allows for a self-service fix
+    // for employers that registered as employees by mistake
+    claimantConvertToEmployer: false,
+
     // When this flag is enabled, Employer Create Account requests will be
     // sent through the API, rather than directly to Cognito
     employerAuthThroughApi: false,
@@ -83,6 +88,7 @@ const flagsConfig = {
     example: true,
     employerShowNewsBanner: true,
     pfmlTerriyay: true,
+    claimantConvertToEmployer: true,
   },
   test: {
     employerShowNewsBanner: true,

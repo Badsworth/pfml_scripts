@@ -12,6 +12,7 @@ import { Trans } from "react-i18next";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
+import { isFeatureEnabled } from "../../services/featureFlags";
 
 export const GetReady = (props) => {
   const { appLogic, claims } = props;
@@ -20,6 +21,9 @@ export const GetReady = (props) => {
   const hasClaims = !claims.isEmpty;
   const convertLink = appLogic.portalFlow.getNextPageRoute(
     "CONVERT_TO_EMPLOYER"
+  );
+  const showConvertToEmployer = isFeatureEnabled(
+    "claimantConvertToEmployer"
   );
   const iconClassName =
     "margin-right-1 text-secondary text-middle margin-top-neg-05";
@@ -32,7 +36,7 @@ export const GetReady = (props) => {
   };
   return (
     <React.Fragment>
-      {!claims.items.find((c) => c.fineos_absence_id !== null) ? (
+      {!hasClaims && showConvertToEmployer ? (
         <ConvertToEmployerBanner link={convertLink} />
       ) : null}
       {hasClaims && (

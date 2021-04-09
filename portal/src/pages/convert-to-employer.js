@@ -14,13 +14,14 @@ import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 import withClaims from "../hoc/withClaims";
+import { isFeatureEnabled } from "../services/featureFlags";
 
 export const ConvertToEmployer = (props) => {
   const { appLogic, user, claims } = props;
   const { t } = useTranslation();
   const { updateUser } = appLogic.users;
   const { formState, updateFields } = useFormState({ employer_fein: "" });
-
+  const hasClaims = !claims.isEmpty;
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
     formState,
@@ -37,16 +38,29 @@ export const ConvertToEmployer = (props) => {
     });
   });
 
+  const showConvertToEmployer = isFeatureEnabled(
+    "claimantConvertToEmployer"
+  );
+
+  // Do not allow access to this feature without feature flag
+  if (!showConvertToEmployer) {
+    appLogic.portalFlow.goTo(routes.applications.getReady);
+    return;
+  }
+  // Do not allow access without being logged in
   if (typeof user === "undefined") {
     appLogic.portalFlow.goTo(routes.auth.login);
     return;
   }
+  // If user is already an employer, go directly to employer welcome page
   if (user.hasEmployerRole) {
     appLogic.portalFlow.goTo(routes.employers.welcome);
+    return;
   }
   // Do not allow conversion if user has created claims and got sent to fineos
-  if (claims.items.find((c) => c.fineos_absence_id !== null)) {
+  if (hasClaims) {
     appLogic.portalFlow.goTo(routes.applications.getReady);
+    return;
   }
 
   return (
