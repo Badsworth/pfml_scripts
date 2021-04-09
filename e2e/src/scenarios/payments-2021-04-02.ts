@@ -1,7 +1,6 @@
 // Unhappy path:
 import { ScenarioSpecification } from "../generation/Scenario";
 import { addWeeks } from "date-fns";
-import { Employee } from "../generation/Employee";
 
 const addresses = {
   valid: {

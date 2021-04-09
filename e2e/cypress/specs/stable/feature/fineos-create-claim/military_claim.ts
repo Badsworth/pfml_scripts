@@ -3,6 +3,7 @@ import { beforeFineos } from "../../../../tests/common/before";
 import { extractLeavePeriod } from "../../../../utils";
 import { getFineosBaseUrl } from "../../../../config";
 import { Submission } from "../../../../../src/types";
+import { getEmails } from "../../../../tests/common/actions/email";
 
 describe("Create a new continuous leave, military caregiver claim in FINEOS", () => {
   const submit = it(
@@ -58,15 +59,15 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
             submission.fineos_absence_id
           );
           cy.log(subject);
-          cy.task<Email[]>(
-            "getEmails",
+          getEmails(
             {
               address: "gqzap.notifications@inbox.testmail.app",
               messageWildcard: submission.fineos_absence_id,
               subject: subject,
               timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
             },
-            { timeout: 180000 }
+            180000
           ).then(async (emails) => {
             const data = email.getNotificationData(emails[0].html);
             expect(data.name).to.equal(employeeFullName);

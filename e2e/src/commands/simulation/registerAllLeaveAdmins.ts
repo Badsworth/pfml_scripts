@@ -1,39 +1,46 @@
-import fs from "fs";
-import path from "path";
 import { CommandModule } from "yargs";
-import { Employer } from "../../generation/Employer";
+import EmployerPool, { Employer } from "../../generation/Employer";
 import { SystemWideArgs } from "../../cli";
 import { handler as registerLeaveAdmin } from "./register-leave-admin";
+import config from "../../config";
+import { filter } from "streaming-iterables";
 
-type RegisterAllLeaveAdmins = { directory: string } & SystemWideArgs;
+type RegisterAllLeaveAdmins = { file: string } & SystemWideArgs;
 
 const cmd: CommandModule<SystemWideArgs, RegisterAllLeaveAdmins> = {
   command: "registerAllLeaveAdmins",
   describe:
     "Registers all employers as leave admins using an employers.json dataset",
   builder: {
-    directory: {
+    file: {
       type: "string",
-      description: "The directory with an existing employer json file",
+      description: "The JSON file to read employers from",
       demandOption: true,
       requiresArg: true,
       normalize: true,
-      alias: "d",
+      alias: "f",
+      default: config("EMPLOYERS_FILE"),
     },
   },
   async handler(args) {
     args.logger.profile("registerAllLeaveAdmins");
 
-    const employersFile = await fs.promises.readFile(
-      path.join(args.directory, "employers.json")
-    );
+    const employers = await EmployerPool.load(args.file);
+    // Filter out employers with 0 withholdings. We can't set up leave admins
+    // for them.
+    const filterDeadbeats = filter((employer: Employer) => {
+      return employer.withholdings.some((withholding) => withholding > 0);
+    });
 
-    const employers: Employer[] = JSON.parse(employersFile.toString("utf8"));
-
-    for (const employer of employers) {
+    for await (const employer of filterDeadbeats(employers)) {
+      const amount = employer.withholdings.pop();
+      if (!amount) {
+        throw new Error("No withholding in the last quarter");
+      }
       await registerLeaveAdmin({
         ...args,
         fein: employer.fein,
+        amount: amount.toString(),
       });
     }
     args.logger.profile("registerAllLeaveAdmins");

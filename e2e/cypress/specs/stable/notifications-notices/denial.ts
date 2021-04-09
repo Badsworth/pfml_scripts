@@ -3,6 +3,7 @@ import { beforeFineos, beforePortal } from "../../../tests/common/before";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { ApplicationResponse } from "../../../../src/api";
 import { Submission } from "../../../../src/types";
+import { getEmails } from "../../../tests/common/actions/email";
 
 describe("Denial Notification and Notice", () => {
   const submit = it("Submit a financially ineligible claim to API", () => {
@@ -117,8 +118,7 @@ describe("Denial Notification and Notice", () => {
           cy.log(subjectEmployer);
           cy.log(subjectClaimant);
 
-          cy.task<Email[]>(
-            "getEmails",
+          getEmails(
             {
               address: "gqzap.notifications@inbox.testmail.app",
               subject: subjectEmployer,
@@ -126,7 +126,7 @@ describe("Denial Notification and Notice", () => {
               messageWildcard: submission.fineos_absence_id,
               debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
             },
-            { timeout: 180000 }
+            180000
           ).then(async (emails) => {
             const data = email.getNotificationData(emails[0].html);
             const dob =
@@ -140,7 +140,7 @@ describe("Denial Notification and Notice", () => {
           });
 
           // Check email for Claimant
-          cy.task<Email[]>("getEmails", {
+          getEmails({
             address: "gqzap.notifications@inbox.testmail.app",
             subject: subjectClaimant,
             timestamp_from: submission.timestamp_from,

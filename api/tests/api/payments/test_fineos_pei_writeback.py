@@ -226,7 +226,7 @@ def test_return_early_from_process_payments_for_writeback_if_no_records(test_db_
 
 
 @pytest.mark.parametrize(
-    "payment_count", ((0), (1), (fake.random_int(min=2, max=10)),),
+    "payment_count", ((0), (1), (fake.random_int(min=2, max=10)),), ids=["zero", "one", "many"],
 )
 def test_create_db_records_for_payments(
     test_db_session, test_db_other_session, initialize_factories_session, payment_count

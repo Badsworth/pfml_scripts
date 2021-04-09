@@ -770,6 +770,8 @@ def test_address_line_two(initialize_factories_session):
             BankAccountType.CHECKING.bank_account_type_id,
         ),
     ),
+    # pytest-xdist marks each parameterized test as a unique instance. Example: xdist will recieve test_is_same_eft[123-1], test_is_same_eft[456-2] on one instance and test_is_same_eft[789-1], test_is_same_eft[000-2] on a different instance. this causes errors because the "name" isn't the same
+    ids=["savings", "checking"],
 )
 def test_is_same_eft(routing_nbr, account_nbr, bank_account_type_id, initialize_factories_session):
     first = PubEft(

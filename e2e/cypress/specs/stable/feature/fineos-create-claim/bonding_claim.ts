@@ -4,6 +4,7 @@ import { extractLeavePeriod } from "../../../../utils";
 import { getFineosBaseUrl } from "../../../../config";
 import { Submission } from "../../../../../src/types";
 import { ApplicationRequestBody } from "../../../../../src/api";
+import { getEmails } from "../../../../tests/common/actions/email";
 
 describe("Create a new continuous leave, bonding claim in FINEOS", () => {
   const submit = it(
@@ -58,15 +59,15 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
             "application started",
             submission.fineos_absence_id
           );
-          cy.task<Email[]>(
-            "getEmails",
+          getEmails(
             {
               address: "gqzap.notifications@inbox.testmail.app",
               subject: subject,
               messageWildcard: submission.fineos_absence_id,
               timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
             },
-            { timeout: 180000 }
+            180000
           ).then(async (emails) => {
             const data = email.getNotificationData(emails[0].html);
             expect(data.name).to.equal(employeeFullName);

@@ -17,6 +17,7 @@ export type GetEmailsOpts = {
   messageWildcard?: string;
   timestamp_from?: number;
   debugInfo?: Record<string, string>;
+  timeout?: number;
 };
 type Filter = { field: string; match: string; action: string; value: string };
 
@@ -26,7 +27,7 @@ export default class TestMailClient {
   apiKey: string;
   timeout: number;
 
-  constructor(apiKey: string, namespace: string, timeout = 120000) {
+  constructor(apiKey: string, namespace: string, timeout = 60000) {
     this.headers = { Authorization: `Bearer ${apiKey}` };
     this.timeout = timeout;
     this.apiKey = apiKey;
@@ -37,7 +38,7 @@ export default class TestMailClient {
     // We instantiate a new client for every call. This is the only way to share a single timeout across multiple
     // API calls (ie: we may make 5 requests, but we want to time out 120s from the time we started making calls).
     const controller = new AbortController();
-    setTimeout(() => controller.abort(), this.timeout);
+    setTimeout(() => controller.abort(), opts.timeout ?? this.timeout);
     const client = new GraphQLClient("https://api.testmail.app/api/graphql", {
       headers: this.headers,
       fetch: (url: RequestInfo, init: RequestInit = {}) =>

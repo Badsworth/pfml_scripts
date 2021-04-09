@@ -26,5 +26,5 @@ export type notificationRequest = {
 export type Submission = {
   application_id: string;
   fineos_absence_id: string;
-  timestamp_from: Date;
+  timestamp_from: number;
 };

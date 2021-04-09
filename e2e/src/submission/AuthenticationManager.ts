@@ -9,8 +9,8 @@ import {
 import { OAuthCreds } from "types";
 import TestMailVerificationFetcher from "../../cypress/plugins/TestMailVerificationFetcher";
 import {
-  ApiResponse,
   getUsersCurrent,
+  HttpError,
   patchUsersByUser_id,
   postEmployersVerifications,
   UserResponse,
@@ -203,7 +203,7 @@ export default class AuthenticationManager {
     password: string,
     withholding_amount: number,
     withholding_quarter: string
-  ): Promise<ApiResponse<UserResponse>> {
+  ): Promise<void> {
     const session = await this.authenticate(username, password);
     if (!this.apiBaseUrl) {
       throw new Error(
@@ -227,14 +227,23 @@ export default class AuthenticationManager {
     if (!employer_id) {
       throw new Error("No employer ID found");
     }
-    return await postEmployersVerifications(
-      {
-        employer_id: employer_id,
-        withholding_amount,
-        withholding_quarter,
-      },
-      apiOptions
-    );
+    try {
+      await postEmployersVerifications(
+        {
+          employer_id: employer_id,
+          withholding_amount,
+          withholding_quarter,
+        },
+        apiOptions
+      );
+    } catch (e) {
+      // Ignore "Already verified" errors. We consider that not a problem
+      // for the authenticator. The goal was to verify them, and they already are.
+      if (e instanceof HttpError && e.status === 409) {
+        return;
+      }
+      throw e;
+    }
   }
 
   private async consentToDataSharing(session: CognitoUserSession) {

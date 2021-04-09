@@ -46,9 +46,34 @@ jobs:
         run: make lint-security
 
   # Check for test failures.
+  get-test-dirs:
+    runs-on: ubuntu-latest
+  
+    outputs:
+      matrix: ${{ steps.get-dirs.outputs.matrix }}
+    
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: get test directories
+        id: get-dirs
+        run: |
+          sudo apt-get install jq
+          cd tests/
+          TEST_DIRS=$(ls -d */ | cut -f1 -d'/' | grep -v pycache | grep -v helpers | jq -R . | jq -s -c .)
+          echo "::set-output name=matrix::$TEST_DIRS"
+          
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    if: always()
+
+    needs: get-test-dirs
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        test_dirs: ${{ fromJSON(needs.get-test-dirs.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v2
@@ -69,7 +94,8 @@ jobs:
         run: make db-create-users
 
       - name: test with coverage
-        run: make test-coverage
+        run: make test-coverage args=tests/${{ matrix.test_dirs }}
+
 
   # Check we can build a release
   build-release:

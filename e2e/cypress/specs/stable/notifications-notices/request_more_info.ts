@@ -2,6 +2,7 @@ import { fineos, portal, email } from "../../../tests/common/actions";
 import { beforeFineos } from "../../../tests/common/before";
 import { beforePortal } from "../../../tests/common/before";
 import { getFineosBaseUrl } from "../../../config";
+import { getEmails } from "../../../tests/common/actions/email";
 
 describe("Request for More Information (notifications/notices)", () => {
   const submit = it(
@@ -93,8 +94,7 @@ describe("Request for More Information (notifications/notices)", () => {
           cy.log(subjectClaimant);
 
           // Check email notification for claimant
-          cy.task<Email[]>(
-            "getEmails",
+          getEmails(
             {
               address: "gqzap.notifications@inbox.testmail.app",
               subject: subjectClaimant,
@@ -102,7 +102,7 @@ describe("Request for More Information (notifications/notices)", () => {
               timestamp_from,
               debugInfo: { "Fineos Claim ID": caseNumber },
             },
-            { timeout: 180000 }
+            180000
           ).should("not.be.empty");
         });
       });

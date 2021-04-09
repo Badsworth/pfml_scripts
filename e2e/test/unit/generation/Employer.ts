@@ -41,7 +41,7 @@ describe("Employer Generation", () => {
   });
 
   it("Should generate employers according to a size distribution if not given an explicit size", () => {
-    const sizes = [...EmployerPool.generate(300)].reduce(
+    const sizes = [...EmployerPool.generate(1000)].reduce(
       (counts, { size = "small" }) => {
         counts[size] += 1;
         return counts;

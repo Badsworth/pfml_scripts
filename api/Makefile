@@ -390,11 +390,17 @@ define run_tests
 	$(PY_RUN_CMD) pytest $(1)
 endef
 
+ifdef CI
+ XDIST := -n auto --dist=loadfile --max-worker-restart=0 -x
+else
+ XDIST := 
+endif
+
 test: ## Run tests, set $args to pass flags to `pytest`
 	$(call run_tests, $(args))
 
 test-coverage: ## Run tests run 
-	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest $(args)
+	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest $(XDIST) $(args)
 	$(PY_RUN_CMD) coverage report
 
 test-changed: ## Run only tests that have changed

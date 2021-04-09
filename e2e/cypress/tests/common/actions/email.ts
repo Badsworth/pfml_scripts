@@ -1,3 +1,26 @@
+import { GetEmailsOpts } from "../../../plugins/TestMailClient";
+
+/**
+ * This function wraps the getEmails() task to provide better timeout handling.
+ *
+ * The API timeout needs to be slightly shorter than the timeout of the task command in order
+ * to provide useful error messages on failure. Otherwise, you end up with a generic "task timed out"
+ * error.
+ */
+export function getEmails(
+  opts: GetEmailsOpts,
+  timeout = 30000
+): Cypress.Chainable<Email[]> {
+  return cy.task(
+    "getEmails",
+    {
+      ...opts,
+      timeout,
+    },
+    { timeout: timeout + 1000 }
+  );
+}
+
 export const getNotificationSubject = function (
   employeeName: string,
   notificationType: string,
