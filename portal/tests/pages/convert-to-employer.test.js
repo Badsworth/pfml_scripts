@@ -6,9 +6,7 @@ import { mockRouter } from "next/router";
 import routes from "../../src/routes";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
-// jest.mock("@aws-amplify/auth");
-// jest.mock("../../src/services/tracker");
-// jest.mock("../../src/hooks/useAppLogic");
+jest.mock("../../src/hooks/useAppLogic");
 
 describe("ConvertToEmployer", () => {
   function render(customProps = {}, options = { claims: [] }) {
