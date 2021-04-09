@@ -843,6 +843,24 @@ class PreviousLeaveQualifyingReason(LookupTable):
     MILITARY_EXIGENCY_FAMILY = LkPreviousLeaveQualifyingReason(6, "Military exigency family")
 
 
+class CaringLeaveMetadata(Base):
+    __tablename__ = "caring_leave_metadata"
+    caring_leave_metadata_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    family_member_first_name = Column(Text)
+    family_member_last_name = Column(Text)
+    family_member_middle_name = Column(Text, nullable=True)
+    family_member_date_of_birth = Column(Date)
+    application_id = Column(
+        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True, unique=True
+    )
+    relationship_to_caregiver_id = Column(
+        Integer, ForeignKey("lk_relationship_to_caregiver.relationship_to_caregiver_id")
+    )
+
+    application = relationship(Application, backref=backref("caring_leave_metadata", uselist=False))
+    relationship_to_caregiver = relationship(LkRelationshipToCaregiver)
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     LeaveReason.sync_to_database(db_session)
