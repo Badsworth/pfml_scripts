@@ -276,10 +276,7 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     payment_state_log = state_log_util.get_latest_state_log_in_flow(
         not_sampled, Flow.DELEGATED_PAYMENT, test_db_session
     )
-    assert (
-        payment_state_log.end_state_id
-        == State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK.state_id
-    )
+    assert payment_state_log.end_state_id == State.DELEGATED_PAYMENT_VALIDATED.state_id
 
     # check rejects file was moved to proccessed folder
     expected_processed_folder_path = os.path.join(

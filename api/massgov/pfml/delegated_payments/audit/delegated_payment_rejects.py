@@ -71,7 +71,7 @@ NOT_SAMPLED_STATE_TRANSITIONS.append(
 NOT_SAMPLED_STATE_TRANSITIONS.append(
     NonSampledStateTransitionDescriptor(
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED,
-        State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK,
+        State.DELEGATED_PAYMENT_VALIDATED,
         state_log_util.build_outcome(
             "Accepted payment to be added to FINEOS Writeback - not sampled"
         ),
@@ -90,7 +90,7 @@ NOT_SAMPLED_PENDING_STATES: List[LkState] = [st.from_state for st in NOT_SAMPLED
 NOT_SAMPLED_PENDING_STATE_IDS: List[int] = [st.state_id for st in NOT_SAMPLED_PENDING_STATES]
 
 # Sampled payment next states
-ACCEPTED_STATE = State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK
+ACCEPTED_STATE = State.DELEGATED_PAYMENT_VALIDATED
 ACCEPTED_OUTCOME = state_log_util.build_outcome(
     "Accepted payment to be added to FINEOS Writeback - sampled"
 )

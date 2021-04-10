@@ -1,5 +1,6 @@
 import csv
 import dataclasses
+import datetime
 import os
 import uuid
 from dataclasses import dataclass
@@ -14,6 +15,7 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     LkState,
     Payment,
+    PaymentMethod,
     PaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,
@@ -129,19 +131,33 @@ class FineosPeiWritebackStep(Step):
         )
         self.set_metrics(overpayment_count=overpayment_count)
 
-        accepted_payment_writeback_items = self._get_writeback_items_for_state(
-            prior_state=State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK,
-            end_state=State.DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT,
+        check_payment_writeback_items = self._get_writeback_items_for_state(
+            prior_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT,
             writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
             transaction_status=PAID_WRITEBACK_RECORD_TRANSACTION_STATUS,
         )
-        accepted_payment_count = len(accepted_payment_writeback_items)
+        check_payment_count = len(check_payment_writeback_items)
         logger.info(
             "Found %i extracted writeback items in state: %s",
-            accepted_payment_count,
-            State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
+            check_payment_count,
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_description,
         )
-        self.set_metrics(accepted_payment_count=accepted_payment_count)
+        self.set_metrics(check_payment_count=check_payment_count)
+
+        eft_payment_writeback_items = self._get_writeback_items_for_state(
+            prior_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+            end_state=State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+            writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
+            transaction_status=PAID_WRITEBACK_RECORD_TRANSACTION_STATUS,
+        )
+        eft_payment_count = len(eft_payment_writeback_items)
+        logger.info(
+            "Found %i extracted writeback items in state: %s",
+            check_payment_count,
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_description,
+        )
+        self.set_metrics(eft_payment_count=eft_payment_count)
 
         cancelled_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK,
@@ -156,6 +172,20 @@ class FineosPeiWritebackStep(Step):
             State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
         )
         self.set_metrics(cancelled_payment_count=cancelled_payment_count)
+
+        employer_reimbursement_payment_writeback_items = self._get_writeback_items_for_state(
+            prior_state=State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK,
+            end_state=State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_PAYMENT_FINEOS_WRITEBACK_SENT,
+            writeback_record_converter=self._extracted_payment_to_pei_writeback_record,
+            transaction_status=PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
+        )
+        employer_reimbursement_payment_count = len(employer_reimbursement_payment_writeback_items)
+        logger.info(
+            "Found %i extracted writeback items in state: %s",
+            employer_reimbursement_payment_count,
+            State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK.state_description,
+        )
+        self.set_metrics(employer_reimbursement_payment_count=employer_reimbursement_payment_count)
 
         errored_payment_writeback_items = self._get_writeback_items_for_state(
             prior_state=State.ADD_TO_ERRORED_PEI_WRITEBACK,
@@ -180,7 +210,8 @@ class FineosPeiWritebackStep(Step):
         return (
             zero_dollar_payment_writeback_items
             + overpayment_writeback_items
-            + accepted_payment_writeback_items
+            + check_payment_writeback_items
+            + eft_payment_writeback_items
             + cancelled_payment_writeback_items
             + errored_payment_writeback_items
         )
@@ -203,7 +234,10 @@ class FineosPeiWritebackStep(Step):
         for log in state_logs:
             try:
                 payment = log.payment
-                writeback_record = writeback_record_converter(payment, transaction_status)
+                valid_pub_payment = transaction_status == PAID_WRITEBACK_RECORD_TRANSACTION_STATUS
+                writeback_record = writeback_record_converter(
+                    payment, transaction_status, valid_pub_payment
+                )
 
                 pei_writeback_items.append(
                     PeiWritebackItem(
@@ -414,7 +448,7 @@ class FineosPeiWritebackStep(Step):
             raise e
 
     def _extracted_payment_to_pei_writeback_record(
-        self, payment: Payment, transaction_status: str
+        self, payment: Payment, transaction_status: str, valid_pub_payment: bool
     ) -> PeiWritebackRecord:
         missing_fields = []
 
@@ -428,13 +462,29 @@ class FineosPeiWritebackStep(Step):
             logger.error(error_msg, extra={"missing_fields": missing_fields})
             raise Exception(error_msg)
 
+        transaction_status_date = None
+
+        if payment.fineos_extraction_date is not None:
+            if valid_pub_payment:
+                if payment.disb_method_id == PaymentMethod.CHECK.payment_method_id:
+                    transaction_status_date = payment.fineos_extraction_date + datetime.timedelta(
+                        days=1
+                    )
+                else:
+                    transaction_status_date = payment.fineos_extraction_date + datetime.timedelta(
+                        days=2
+                    )
+            else:
+                transaction_status_date = payment.fineos_extraction_date
+
         return PeiWritebackRecord(
             pei_C_value=payment.fineos_pei_c_value,
             pei_I_value=payment.fineos_pei_i_value,
             status=ACTIVE_WRITEBACK_RECORD_STATUS,
             extractionDate=payment.fineos_extraction_date,
             transactionStatus=transaction_status,
-            transStatusDate=get_now(),
+            transactionNo=str(payment.check_number) if payment.check_number else None,
+            transStatusDate=transaction_status_date,
         )
 
     def _disbursed_payment_to_pei_writeback_record(self, payment: Payment) -> PeiWritebackRecord:

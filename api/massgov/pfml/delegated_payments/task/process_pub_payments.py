@@ -95,11 +95,6 @@ def _process_pub_payments(
     if config.process_audit_reject:
         PaymentRejectsStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
-    if config.create_pei_writeback:
-        FineosPeiWritebackStep(
-            db_session=db_session, log_entry_db_session=log_entry_db_session
-        ).run()
-
     if config.split_payment_methods:
         PaymentMethodsSplitStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
@@ -107,6 +102,11 @@ def _process_pub_payments(
 
     if config.pub_transaction:
         TransactionFileCreatorStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
+
+    if config.create_pei_writeback:
+        FineosPeiWritebackStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
 
