@@ -1,28 +1,32 @@
-# This job periodically updates the RDS IAM access role that the API uses to connect to the database.
-# This is needed because RDS IAM can only reference the database by ID, which changes every time the
-# database is restored/replaced.
+# This job runs periodically on Fridays, which is when the training environment is usually
+# restored from an RDS backup. This does two things to ensure the environment is up to date:
 #
-# This happens periodically for the training environment, so we automate the step.
-# Note that this also forces an apply of the RDS database, which depends on this IAM role.
+# 1. Updates the RDS IAM access role that the API uses to connect to the database.
+#
+#    This is needed because RDS IAM can only reference the database by ID, which changes
+#    every time the database is restored/replaced.
+#
+# 2. Runs database migrations to ensure any rolled-back database schema changes are re-applied.
 #
 name: API RDS IAM Sync
 
 on:
   workflow_dispatch:
-    environment:
-      inputs:
+    inputs:
+      environment:
         description: "Name of the environment"
         required: true
         default: 'training'
   # scheduled to run every 30 minutes on Fridays
-  # Start: 7AM EST (8AM EDT) (12 UTC)
+  # Start: 4PM EST (5PM EDT) (21 UTC)
   # End: 12AM EST (1AM EDT Saturday) (5 UTC Saturday)
   schedule:
-    - cron: '0,30 12-23 * * FRI'
+    - cron: '0,30 21-23 * * FRI'
     - cron: '0,30 0-5 * * SAT'
 
 env:
   working-directory: ./infra/api/environments/
+  tasks-working-directory: ./infra/ecs-tasks/environments/
   terraform-version: 0.14.7
   default-environment: training
 
@@ -53,16 +57,62 @@ jobs:
           terraform_wrapper: false
 
       - name: Terraform Init
-        id: terraform_init
         run: terraform init
         working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}
 
       - name: Terraform Plan with RDS IAM target
-        id: terraform_plan
-        run: terraform plan --target module.api.aws_iam_policy.db_user_pfml_api
+        run: terraform plan --target module.api.aws_iam_policy.db_user_pfml_api --out plan.tfplan
         working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}
 
-      - name: Terraform Apply from execution plan
-        id: terraform_apply
-        run: terraform apply --target module.api.aws_iam_policy.db_user_pfml_api -auto-approve
+      # This step ensures that the database is stable before attempting to sync the RDS IAM state.
+      # Notably, during the restore process, the old database is renamed and there may not yet be
+      # a replacement, so terraform may attempt to delete and recreate it:
+      #
+      # https://github.com/hashicorp/terraform-provider-aws/issues/507
+      #
+      # or it may just (somehow!) not have it in the tfstate anymore and try to create a new db.
+      #
+      # If it knows about the renamed database and wants to delete it, stop it.
+      #
+      # If it doesn't know about the renamed database, try to import the new massgov-pfml-{env} DB.
+      # If the new DB doesn't exist yet, this will blow up and we should try again later when the
+      # new DB has been created.
+      #
+      - name: Ensure database is stable
         working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}
+        env:
+          TF_CLI_ARGS: ''
+        run: |
+          db_deletion=$(terraform show plan.tfplan | { grep -E 'module\.api\.aws_db_instance\.default.*(recreate|delete)' || true; })
+          if ! [[ -z "$db_deletion" ]]; then
+            echo "Database is planned for deletion or recreation; restoration is likely happening. Please try again later."
+            exit 1
+          fi
+
+          db_missing=$(terraform show plan.tfplan | { grep 'module\.api\.aws_db_instance\.default.*create' || true; })
+          if ! [[ -z "$db_missing" ]]; then
+            echo "Database not found in state; attempting to import."
+            echo "If this does not work, restoration is likely happening. Please try again later."
+            terraform import -lock-timeout=120s module.api.aws_db_instance.default massgov-pfml-${{ github.event.inputs.environment || env.default-environment }}
+
+            # recreate the plan
+            terraform plan -lock-timeout=120s --target module.api.aws_iam_policy.db_user_pfml_api --out plan.tfplan
+          fi
+
+      # At this point we know we have an RDS instance in the tfstate named massgov-pfml-{env}
+      # so it's probably safe to run terraform apply. The plan might be outdated
+      # (race condition with operational folks!) but it's nearly guaranteed at
+      # this point that the planned changes do not delete or create any databases.
+      - name: Terraform Apply from execution plan
+        run: terraform apply plan.tfplan
+        working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}
+
+      - name: Terraform Init (ECS Tasks)
+        run: terraform init
+        working-directory: ${{ env.tasks-working-directory }}${{ github.event.inputs.environment || env.default-environment }}
+
+      - name: Start migration ECS task
+        run: make ecr-login && ../bin/run-ecs-task/run-task.sh ${{ github.event.inputs.environment || env.default-environment }} db-migrate-up
+        working-directory: ./api
+        env:
+          TF_CLI_ARGS: ''
