@@ -510,57 +510,69 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: ${{ env.terraform-version }}
+          terraform_wrapper: false
+
       - name: Terraform Init
         id: terraform_init
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: init
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
+        run: terraform init
+        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
+
+      # Temporary step to ensure the existing RDS log group gets imported into the state.
+      # This is necessary to prevent terraform from running into a duplicate-log-group error.
+      #
+      # (TODO: Remove in INFRA-386 after rollout)
+      - name: (temp) Fix RDS log group state
+        # Clear out global lock timeout for "terraform state show""
+        env:
+          TF_CLI_ARGS: ''
+        run: |
+          needs_new=$(git grep aws/rds/instance/massgov-pfml-.*/postgresql ../../template/rds.tf || true)
+          is_new=$(terraform state show module.api.aws_cloudwatch_log_group.postgresql | { grep massgov-pfml- || true; })
+
+          if [[ -z "$needs_new" ]] && ! [[ -z "$is_new" ]]; then
+            echo "Importing old format massgov_pfml_"
+            prefix=massgov_pfml_
+          elif ! [[ -z "$needs_new" ]] && [[ -z "$is_new" ]]; then
+            echo "Importing old format massgov-pfml-"
+            prefix=massgov-pfml-
+          else
+            echo "No imports needed."
+          fi
+
+          if ! [ -z $prefix ]; then
+            terraform state rm -lock-timeout=120s module.api.aws_cloudwatch_log_group.postgresql
+            terraform state import -lock-timeout=120s \
+              module.api.aws_cloudwatch_log_group.postgresql \
+              /aws/rds/instance/$prefix${{ needs.deploy-info.outputs.api-env }}/postgresql
+          fi
+        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
       - name: Terraform Plan with new docker image
         id: terraform_plan
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: plan
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
-          args: "-out=plan.tfplan"
+        run: terraform plan -out=plan.tfplan
+        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
       - name: Terraform Apply from execution plan
         id: terraform_apply
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: apply
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
-          args: "plan.tfplan"
-
-      - name: Terraform Output
-        id: terraform_output
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: output
-          tf_actions_working_dir: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
-        env:
-        # Clear out the CLI args for terraform output
-          TF_CLI_ARGS: ''
+        run: terraform apply plan.tfplan
+        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
       - name: Wait for stable ECS service
         env:
-          TF_OUTPUT: ${{ steps.terraform_output.outputs.tf_actions_output }}
-        # Wait for ECS service to be stable, and run it twice to allow for
-        # abnormally long deploys (up to 20 minutes.)
+          # Clear out the invalid timeout args for terraform output
+          TF_CLI_ARGS: ''
         run: |
-          sudo apt-get install jq
-          CLUSTER_ID=$(echo $TF_OUTPUT | jq -r '.ecs_cluster_arn.value')
-          SVC_ID=$(echo $TF_OUTPUT | jq -r '.ecs_service_id.value')
+          CLUSTER_ID=$(terraform output ecs_cluster_arn)
+          SVC_ID=$(terraform output ecs_service_id)
+
+          # Wait for ECS service to be stable, and run it twice to allow for
+          # abnormally long deploys (up to 20 minutes.)
           (aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID ||
            aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
+        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
   update-newrelic:
     name: Update New Relic
