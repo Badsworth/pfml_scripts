@@ -92,7 +92,7 @@ resource "aws_db_instance" "default" {
     aws_cloudwatch_log_group.postgresql
   ]
 
-  name     = "massgov_pfml_${var.environment_name}"
+  name     = replace("massgov_pfml_${var.environment_name}", "-", "_")
   username = "pfml"
   password = aws_ssm_parameter.db_password.value
   port     = "5432"
