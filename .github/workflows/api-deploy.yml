@@ -565,8 +565,8 @@ jobs:
           # Clear out the invalid timeout args for terraform output
           TF_CLI_ARGS: ''
         run: |
-          CLUSTER_ID=$(terraform output ecs_cluster_arn)
-          SVC_ID=$(terraform output ecs_service_id)
+          CLUSTER_ID=$(terraform output ecs_cluster_arn | sed s/\"//g | cut -d/ -f2)
+          SVC_ID=$(terraform output ecs_service_id | sed s/\"//g | cut -d/ -f2)
 
           # Wait for ECS service to be stable, and run it twice to allow for
           # abnormally long deploys (up to 20 minutes.)
