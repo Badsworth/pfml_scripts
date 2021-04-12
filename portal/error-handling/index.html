@@ -767,7 +767,7 @@
 <h2 id="baseapi">BaseAPI</h2>
 <p>The normal API error response includes an <code>errors</code> property in its body representing the request's issues. When <code>errors</code> are present, the <code>BaseAPI</code> throws a <code>ValidationError</code> that holds all API errors that were in the response body. The <code>BaseAPI</code> may also throw other error types, such as <code>NotFoundError</code> or <code>ForbiddenError</code>, depending on the response's status code.</p>
 <h2 id="logic-hook">Logic hook</h2>
-<p>The logic hooks, like <code>useClaimsLogic</code>, are responsible for catching any errors thrown by the API module and sending the error into <code>appErrorsLogic</code>. A typical pattern for this looks like:</p>
+<p>The logic hooks, like <code>useBenefitsApplicationsLogic</code>, are responsible for catching any errors thrown by the API module and sending the error into <code>appErrorsLogic</code>. A typical pattern for this looks like:</p>
 <div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="nx">updateClaim</span><span class="p">(</span><span class="nx">patchData</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">try</span> <span class="p">{</span>
     <span class="c1">// Send the API request</span>
