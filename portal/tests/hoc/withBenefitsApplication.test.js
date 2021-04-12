@@ -28,7 +28,9 @@ describe("withBenefitsApplication", () => {
   });
 
   it("Shows spinner when claim is not loaded", () => {
-    appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(false);
+    appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings.mockReturnValue(
+      false
+    );
 
     render();
 
@@ -38,8 +40,12 @@ describe("withBenefitsApplication", () => {
 
   it("Shows spinner when claim's warnings aren't loaded", () => {
     const claim = new BenefitsApplication({ application_id: claim_id });
-    appLogic.claims.claims = new BenefitsApplicationCollection([claim]);
-    appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(false);
+    appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+      [claim]
+    );
+    appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings.mockReturnValue(
+      false
+    );
 
     render();
 
@@ -48,18 +54,20 @@ describe("withBenefitsApplication", () => {
   });
 
   it("loads the claim", () => {
-    appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(false);
+    appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings.mockReturnValue(
+      false
+    );
 
     render();
 
-    expect(appLogic.claims.load).toHaveBeenCalledTimes(1);
+    expect(appLogic.benefitsApplications.load).toHaveBeenCalledTimes(1);
   });
 
   it("does not load claim if user has not yet loaded", () => {
     appLogic.user = appLogic.users.user = null;
     render();
     wrapper.update();
-    expect(appLogic.claims.load).not.toHaveBeenCalled();
+    expect(appLogic.benefitsApplications.load).not.toHaveBeenCalled();
   });
 
   describe("when claim is loaded", () => {
@@ -67,8 +75,12 @@ describe("withBenefitsApplication", () => {
 
     beforeEach(() => {
       claim = new BenefitsApplication({ application_id: claim_id });
-      appLogic.claims.claims = new BenefitsApplicationCollection([claim]);
-      appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(true);
+      appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+        [claim]
+      );
+      appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings.mockReturnValue(
+        true
+      );
     });
 
     it("passes through the 'user' prop from the withUser higher order component", () => {

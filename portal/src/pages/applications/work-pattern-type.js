@@ -31,7 +31,7 @@ export const WorkPatternType = (props) => {
       set(patchData, "work_pattern.work_pattern_days", []);
     }
 
-    await appLogic.claims.update(claim.application_id, patchData);
+    await appLogic.benefitsApplications.update(claim.application_id, patchData);
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

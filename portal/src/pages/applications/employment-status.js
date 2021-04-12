@@ -39,7 +39,7 @@ export const EmploymentStatus = (props) => {
   const employment_status = get(formState, "employment_status");
 
   const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,

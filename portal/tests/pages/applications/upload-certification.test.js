@@ -80,7 +80,9 @@ describe("UploadCertification", () => {
     describe("when the claim has been completed", () => {
       it("redirects to the Applications page when the claim has been completed", async () => {
         claim = new MockClaimBuilder().completed().create();
-        appLogic.claims.claims = new BenefitsApplicationCollection([claim]);
+        appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+          [claim]
+        );
         render();
 
         // Add files to the page state
@@ -106,7 +108,9 @@ describe("UploadCertification", () => {
     describe("when leave reason is Medical leave", () => {
       beforeEach(() => {
         claim = new MockClaimBuilder().medicalLeaveReason().create();
-        appLogic.claims.claims = new BenefitsApplicationCollection([claim]);
+        appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+          [claim]
+        );
       });
 
       it("renders a FileCardList", () => {
@@ -409,7 +413,9 @@ describe("UploadCertification", () => {
     describe("when leave reason is Bonding leave", () => {
       it("renders page with bonding leave content", () => {
         claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
-        appLogic.claims.claims = new BenefitsApplicationCollection([claim]);
+        appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+          [claim]
+        );
         render();
         // Only take snapshots of the i18n content
         expect(wrapper.find("Heading")).toMatchSnapshot();

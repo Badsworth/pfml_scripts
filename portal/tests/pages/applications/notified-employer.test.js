@@ -72,12 +72,15 @@ describe("NotifiedEmployer", () => {
 
     submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      leave_details: {
-        employer_notified: true,
-        employer_notification_date: "2020-06-25",
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        leave_details: {
+          employer_notified: true,
+          employer_notification_date: "2020-06-25",
+        },
+      }
+    );
   });
 
   it("calls claims.update when user submits form with previously entered data", () => {
@@ -90,12 +93,15 @@ describe("NotifiedEmployer", () => {
 
     submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      leave_details: {
-        employer_notified: true,
-        employer_notification_date: "2020-06-25",
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        leave_details: {
+          employer_notified: true,
+          employer_notification_date: "2020-06-25",
+        },
+      }
+    );
   });
 
   describe("when user selects no to having notified employer", () => {

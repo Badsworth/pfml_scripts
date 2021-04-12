@@ -8,8 +8,8 @@ describe("useAppLogic", () => {
   it("returns app state and getter and setter methods", () => {
     let appErrors,
       auth,
+      benefitsApplications,
       catchError,
-      claims,
       clearErrors,
       documents,
       employers,
@@ -24,7 +24,7 @@ describe("useAppLogic", () => {
         appErrors,
         auth,
         catchError,
-        claims,
+        benefitsApplications,
         documents,
         employers,
         clearErrors,
@@ -40,17 +40,19 @@ describe("useAppLogic", () => {
     expect(appErrors.items).toHaveLength(0);
     expect(auth).toEqual(expect.anything());
     expect(catchError).toBeInstanceOf(Function);
-    expect(claims.claims).toBeInstanceOf(BenefitsApplicationCollection);
+    expect(benefitsApplications.benefitsApplications).toBeInstanceOf(
+      BenefitsApplicationCollection
+    );
     expect(clearErrors).toBeInstanceOf(Function);
     expect(portalFlow).toEqual(expect.anything());
-    expect(claims.hasLoadedAll).toEqual(expect.any(Boolean));
-    expect(claims.load).toBeInstanceOf(Function);
-    expect(claims.loadAll).toBeInstanceOf(Function);
-    expect(claims.create).toBeInstanceOf(Function);
-    expect(claims.update).toBeInstanceOf(Function);
+    expect(benefitsApplications.hasLoadedAll).toEqual(expect.any(Boolean));
+    expect(benefitsApplications.load).toBeInstanceOf(Function);
+    expect(benefitsApplications.loadAll).toBeInstanceOf(Function);
+    expect(benefitsApplications.create).toBeInstanceOf(Function);
+    expect(benefitsApplications.update).toBeInstanceOf(Function);
     expect(users.updateUser).toBeInstanceOf(Function);
     expect(setAppErrors).toBeInstanceOf(Function);
-    expect(claims.submit).toBeInstanceOf(Function);
+    expect(benefitsApplications.submit).toBeInstanceOf(Function);
     expect(documents.documents).toBeInstanceOf(DocumentCollection);
     expect(documents.loadAll).toBeInstanceOf(Function);
     expect(documents.attach).toBeInstanceOf(Function);

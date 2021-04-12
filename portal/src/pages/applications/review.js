@@ -126,11 +126,11 @@ export const Review = (props) => {
 
   const handleSubmit = useThrottledHandler(async () => {
     if (usePartOneReview) {
-      await appLogic.claims.submit(claim.application_id);
+      await appLogic.benefitsApplications.submit(claim.application_id);
       return;
     }
 
-    await appLogic.claims.complete(claim.application_id);
+    await appLogic.benefitsApplications.complete(claim.application_id);
   });
 
   const contentContext = usePartOneReview ? "part1" : "final";
@@ -698,7 +698,7 @@ export const Review = (props) => {
 Review.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
-    claims: PropTypes.object.isRequired,
+    benefitsApplications: PropTypes.object.isRequired,
     portalFlow: PropTypes.shape({
       getNextPageRoute: PropTypes.func.isRequired,
     }).isRequired,

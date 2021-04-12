@@ -70,7 +70,9 @@ describe("UploadId", () => {
       it("renders the page with 'Other' ID content", () => {
         claim = new MockClaimBuilder().medicalLeaveReason().create();
         claim.has_state_id = false;
-        appLogic.claims.claims = new BenefitsApplicationCollection([claim]);
+        appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+          [claim]
+        );
         render();
         expect(wrapper).toMatchSnapshot();
       });
@@ -88,7 +90,9 @@ describe("UploadId", () => {
       beforeEach(() => {
         claim = new MockClaimBuilder().medicalLeaveReason().create();
         claim.has_state_id = true;
-        appLogic.claims.claims = new BenefitsApplicationCollection([claim]);
+        appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+          [claim]
+        );
       });
 
       it("renders a FileCardList", () => {
@@ -390,7 +394,9 @@ describe("UploadId", () => {
 
       it("redirects to the Applications page when the claim has been completed", async () => {
         claim = new MockClaimBuilder().completed().create();
-        appLogic.claims.claims = new BenefitsApplicationCollection([claim]);
+        appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+          [claim]
+        );
         render();
         // Add files to the page state
         const tempFiles = [makeFile(), makeFile()];

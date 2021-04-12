@@ -245,20 +245,23 @@ describe("IntermittentFrequency", () => {
 
     wrapper.find("QuestionPage").simulate("save");
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      leave_details: {
-        intermittent_leave_periods: [
-          {
-            duration,
-            duration_basis,
-            frequency,
-            frequency_interval,
-            frequency_interval_basis,
-            leave_period_id,
-          },
-        ],
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        leave_details: {
+          intermittent_leave_periods: [
+            {
+              duration,
+              duration_basis,
+              frequency,
+              frequency_interval,
+              frequency_interval_basis,
+              leave_period_id,
+            },
+          ],
+        },
+      }
+    );
   });
 
   it("sends the page's fields and the leave period ID to the API when the data is newly entered", async () => {
@@ -298,19 +301,22 @@ describe("IntermittentFrequency", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      leave_details: {
-        intermittent_leave_periods: [
-          {
-            duration,
-            duration_basis,
-            frequency,
-            frequency_interval,
-            frequency_interval_basis,
-            leave_period_id: "mock-leave-period-id",
-          },
-        ],
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        leave_details: {
+          intermittent_leave_periods: [
+            {
+              duration,
+              duration_basis,
+              frequency,
+              frequency_interval,
+              frequency_interval_basis,
+              leave_period_id: "mock-leave-period-id",
+            },
+          ],
+        },
+      }
+    );
   });
 });

@@ -38,11 +38,14 @@ describe("ReasonPregnancy", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      leave_details: {
-        pregnant_or_recent_birth,
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        leave_details: {
+          pregnant_or_recent_birth,
+        },
+      }
+    );
   });
 
   it("calls claims.update when the user selects a response and clicks save and continue", async () => {
@@ -54,10 +57,13 @@ describe("ReasonPregnancy", () => {
     );
 
     await submitForm();
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      leave_details: {
-        pregnant_or_recent_birth,
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        leave_details: {
+          pregnant_or_recent_birth,
+        },
+      }
+    );
   });
 });

@@ -6,16 +6,16 @@ import getRelevantIssues from "../utils/getRelevantIssues";
 import routes from "../routes";
 import useCollectionState from "./useCollectionState";
 
-const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
-  // State representing the collection of claims for the current user.
-  // Initialize to empty collection, but will eventually store the claims
-  // state as API calls are made to fetch the user's claims and/or create
-  // new claims
+const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
+  // State representing the collection of applications for the current user.
+  // Initialize to empty collection, but will eventually store the applications
+  // state as API calls are made to fetch the user's applications and/or create
+  // new applications
   const {
-    collection: claims,
-    addItem: addClaim,
-    updateItem: setClaim,
-    setCollection: setClaims,
+    collection: benefitsApplications,
+    addItem: addBenefitsApplication,
+    updateItem: setBenefitsApplication,
+    setCollection: setBenefitsApplications,
   } = useCollectionState(new BenefitsApplicationCollection());
 
   // Track whether the loadAll method has been called. Checking that claims
@@ -53,11 +53,11 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
    * @param {string} application_id
    * @returns {boolean}
    */
-  const hasLoadedClaimAndWarnings = (application_id) => {
+  const hasLoadedBenefitsApplicationAndWarnings = (application_id) => {
     // !! so we always return a Boolean
     return !!(
       warningsLists.hasOwnProperty(application_id) &&
-      claims.getItem(application_id)
+      benefitsApplications.getItem(application_id)
     );
   };
 
@@ -72,17 +72,21 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     // It's important we load the claim if warnings haven't been fetched yet,
     // since the Checklist needs those to be present in order to accurately
     // determine what steps are completed.
-    if (claims && hasLoadedClaimAndWarnings(application_id)) return;
+    if (
+      benefitsApplications &&
+      hasLoadedBenefitsApplicationAndWarnings(application_id)
+    )
+      return;
 
     appErrorsLogic.clearErrors();
 
     try {
       const { claim, warnings } = await claimsApi.getClaim(application_id);
 
-      if (claims.getItem(application_id)) {
-        setClaim(claim);
+      if (benefitsApplications.getItem(application_id)) {
+        setBenefitsApplication(claim);
       } else {
-        addClaim(claim);
+        addBenefitsApplication(claim);
       }
 
       setClaimWarnings(application_id, warnings);
@@ -108,7 +112,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     try {
       const { claims } = await claimsApi.getClaims();
 
-      setClaims(claims);
+      setBenefitsApplications(claims);
       setHasLoadedAll(true);
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -140,7 +144,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
         throw new ValidationError(issues, "claims");
       }
 
-      setClaim(claim);
+      setBenefitsApplication(claim);
       setClaimWarnings(application_id, warnings);
 
       // If there were only validation warnings, then throw *after*
@@ -171,7 +175,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     try {
       const { claim } = await claimsApi.completeClaim(application_id);
 
-      setClaim(claim);
+      setBenefitsApplication(claim);
       const context = { claim, user };
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage(context, params);
@@ -191,7 +195,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     try {
       const { claim } = await claimsApi.createClaim();
 
-      addClaim(claim);
+      addBenefitsApplication(claim);
 
       const context = { claim, user };
       const params = { claim_id: claim.application_id };
@@ -212,7 +216,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     try {
       const { claim } = await claimsApi.submitClaim(application_id);
 
-      setClaim(claim);
+      setBenefitsApplication(claim);
 
       const context = { claim, user };
       const params = {
@@ -249,7 +253,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
         throw new ValidationError(issues, "claims");
       }
 
-      setClaim(claim);
+      setBenefitsApplication(claim);
       setClaimWarnings(application_id, warnings);
 
       if (issues && issues.length) {
@@ -268,11 +272,11 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   };
 
   return {
-    claims,
+    benefitsApplications,
     complete,
     create,
     hasLoadedAll,
-    hasLoadedClaimAndWarnings,
+    hasLoadedBenefitsApplicationAndWarnings,
     load,
     loadAll,
     update,
@@ -282,4 +286,4 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   };
 };
 
-export default useClaimsLogic;
+export default useBenefitsApplicationsLogic;

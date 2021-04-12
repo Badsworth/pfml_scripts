@@ -17,8 +17,10 @@ function render(customProps = {}, options = { claims: [] }) {
   testHook(() => {
     appLogic = useAppLogic();
     appLogic.users.user = new User({ consented_to_data_sharing: true });
-    appLogic.claims.claims = new BenefitsApplicationCollection(options.claims);
-    appLogic.claims.hasLoadedAll = true;
+    appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+      options.claims
+    );
+    appLogic.benefitsApplications.hasLoadedAll = true;
   });
 
   const { wrapper } = renderWithAppLogic(GetReady, {

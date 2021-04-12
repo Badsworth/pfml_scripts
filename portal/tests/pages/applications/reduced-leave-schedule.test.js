@@ -104,7 +104,7 @@ describe("ReducedLeaveSchedule", () => {
 
       submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           leave_details: {
@@ -134,7 +134,7 @@ describe("ReducedLeaveSchedule", () => {
 
       submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           leave_details: {
@@ -193,7 +193,7 @@ describe("ReducedLeaveSchedule", () => {
 
       wrapper.find("QuestionPage").simulate("save");
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           leave_details: {
@@ -239,7 +239,7 @@ describe("ReducedLeaveSchedule", () => {
 
       wrapper.find("QuestionPage").simulate("save");
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           leave_details,

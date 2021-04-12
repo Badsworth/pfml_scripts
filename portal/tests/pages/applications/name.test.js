@@ -37,7 +37,7 @@ describe("Name", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
       expect.any(String),
       pick(defaultName, ["first_name", "last_name", "middle_name"])
     );
@@ -52,7 +52,7 @@ describe("Name", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
       expect.any(String),
       pick(defaultName, ["first_name", "last_name", "middle_name"])
     );

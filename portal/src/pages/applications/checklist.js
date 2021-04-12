@@ -47,7 +47,8 @@ export const Checklist = (props) => {
 
   const partOneSubmitted = query["part-one-submitted"];
   const paymentPrefSubmitted = query["payment-pref-submitted"];
-  const warnings = appLogic.claims.warningsLists[claim.application_id];
+  const warnings =
+    appLogic.benefitsApplications.warningsLists[claim.application_id];
 
   /**
    * @type {StepModel[]}
@@ -332,7 +333,7 @@ export const Checklist = (props) => {
 Checklist.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
-    claims: PropTypes.shape({
+    benefitsApplications: PropTypes.shape({
       warningsLists: PropTypes.object.isRequired,
     }).isRequired,
     portalFlow: PropTypes.shape({

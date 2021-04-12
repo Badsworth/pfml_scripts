@@ -150,7 +150,7 @@ describe("EmployerBenefitsDetails", () => {
 
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           employer_benefits: [benefitData],
@@ -212,7 +212,7 @@ describe("EmployerBenefitsDetails", () => {
 
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           employer_benefits: [
@@ -228,7 +228,7 @@ describe("EmployerBenefitsDetails", () => {
       const { appLogic, claim, submitForm } = setup(claimWithBenefits);
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           employer_benefits: claimWithBenefits.employer_benefits,
@@ -240,7 +240,7 @@ describe("EmployerBenefitsDetails", () => {
       it("removes the benefit when the benefit isn't saved to the API", async () => {
         const claimWithBenefits = createClaimWithBenefits();
         const { appLogic, submitForm, wrapper } = setup(claimWithBenefits);
-        appLogic.claims.update.mockImplementationOnce(
+        appLogic.benefitsApplications.update.mockImplementationOnce(
           (applicationId, patchData) => {
             expect(applicationId).toBe(claimWithBenefits.application_id);
             expect(patchData.employer_benefits).toHaveLength(1);
@@ -254,7 +254,7 @@ describe("EmployerBenefitsDetails", () => {
           appLogic.otherLeaves.removeEmployerBenefit
         ).not.toHaveBeenCalled();
 
-        expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
       });
 
       it("removes the benefit when the benefit is saved to the API and the DELETE request succeeds", async () => {
@@ -264,7 +264,7 @@ describe("EmployerBenefitsDetails", () => {
 
         const { appLogic, submitForm, wrapper } = setup(claimWithBenefits);
 
-        appLogic.claims.update.mockImplementationOnce(
+        appLogic.benefitsApplications.update.mockImplementationOnce(
           (applicationId, patchData) => {
             expect(applicationId).toBe(claimWithBenefits.application_id);
             expect(patchData.employer_benefits).toHaveLength(1);
@@ -277,7 +277,7 @@ describe("EmployerBenefitsDetails", () => {
         const entries = wrapper.find(RepeatableFieldset).prop("entries");
 
         expect(appLogic.otherLeaves.removeEmployerBenefit).toHaveBeenCalled();
-        expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
         expect(entries).toHaveLength(1);
         expect(
           wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
@@ -295,7 +295,7 @@ describe("EmployerBenefitsDetails", () => {
           () => false
         );
 
-        appLogic.claims.update.mockImplementationOnce(
+        appLogic.benefitsApplications.update.mockImplementationOnce(
           (applicationId, patchData) => {
             expect(applicationId).toBe(claimWithBenefits.application_id);
             expect(patchData.employer_benefits).toHaveLength(2);
@@ -306,7 +306,7 @@ describe("EmployerBenefitsDetails", () => {
         expect(appLogic.otherLeaves.removeEmployerBenefit).toHaveBeenCalled();
 
         await submitForm();
-        expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
 
         const entries = wrapper.find(RepeatableFieldset).prop("entries");
         expect(entries).toHaveLength(2);

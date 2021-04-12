@@ -57,7 +57,7 @@ export const EmployerBenefitsDetails = (props) => {
   }, [claim.employer_benefits, updateFields]);
 
   const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const handleAddClick = () => {
     // Add a new blank entry

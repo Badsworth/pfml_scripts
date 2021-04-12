@@ -44,9 +44,12 @@ describe("PreviousLeaves", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      has_previous_leaves: claim.has_previous_leaves,
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        has_previous_leaves: claim.has_previous_leaves,
+      }
+    );
   });
 
   it("sends previous_leaves as null to the API if has_previous_leaves changes to no", async () => {
@@ -60,9 +63,12 @@ describe("PreviousLeaves", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      has_previous_leaves: false,
-      previous_leaves: null,
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        has_previous_leaves: false,
+        previous_leaves: null,
+      }
+    );
   });
 });

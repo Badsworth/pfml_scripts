@@ -21,20 +21,24 @@ import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
-import useClaimsLogic from "../../src/hooks/useClaimsLogic";
+import useBenefitsApplicationsLogic from "../../src/hooks/useBenefitsApplicationsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/api/BenefitsApplicationsApi");
 jest.mock("../../src/services/tracker");
 
-describe("useClaimsLogic", () => {
+describe("useBenefitsApplicationsLogic", () => {
   let appErrorsLogic, applicationId, claimsLogic, portalFlow, user;
 
   function renderHook() {
     testHook(() => {
       portalFlow = usePortalFlow();
       appErrorsLogic = useAppErrorsLogic({ portalFlow });
-      claimsLogic = useClaimsLogic({ appErrorsLogic, user, portalFlow });
+      claimsLogic = useBenefitsApplicationsLogic({
+        appErrorsLogic,
+        user,
+        portalFlow,
+      });
     });
   }
 
@@ -53,11 +57,13 @@ describe("useClaimsLogic", () => {
   it("sets initial claims data to empty collection", () => {
     renderHook();
 
-    expect(claimsLogic.claims).toBeInstanceOf(BenefitsApplicationCollection);
-    expect(claimsLogic.claims.items).toHaveLength(0);
+    expect(claimsLogic.benefitsApplications).toBeInstanceOf(
+      BenefitsApplicationCollection
+    );
+    expect(claimsLogic.benefitsApplications.items).toHaveLength(0);
   });
 
-  describe("hasLoadedClaimAndWarnings", () => {
+  describe("hasLoadedBenefitsApplicationAndWarnings", () => {
     beforeEach(() => {
       // Make sure the ID we're loading matches what the API will return to us so caching works as
       applicationId = getClaimMockApplicationId;
@@ -66,13 +72,17 @@ describe("useClaimsLogic", () => {
     });
 
     it("returns true when a claim and its warnings are loaded", async () => {
-      expect(claimsLogic.hasLoadedClaimAndWarnings(applicationId)).toBe(false);
+      expect(
+        claimsLogic.hasLoadedBenefitsApplicationAndWarnings(applicationId)
+      ).toBe(false);
 
       await act(async () => {
         await claimsLogic.load(applicationId);
       });
 
-      expect(claimsLogic.hasLoadedClaimAndWarnings(applicationId)).toBe(true);
+      expect(
+        claimsLogic.hasLoadedBenefitsApplicationAndWarnings(applicationId)
+      ).toBe(true);
     });
   });
 
@@ -89,7 +99,7 @@ describe("useClaimsLogic", () => {
         await claimsLogic.load(applicationId);
       });
 
-      const claims = claimsLogic.claims.items;
+      const claims = claimsLogic.benefitsApplications.items;
 
       expect(claims).toHaveLength(1);
       expect(claims[0]).toBeInstanceOf(BenefitsApplication);
@@ -187,7 +197,9 @@ describe("useClaimsLogic", () => {
         await claimsLogic.loadAll();
       });
 
-      expect(claimsLogic.claims.items[0]).toBeInstanceOf(BenefitsApplication);
+      expect(claimsLogic.benefitsApplications.items[0]).toBeInstanceOf(
+        BenefitsApplication
+      );
       expect(getClaimsMock).toHaveBeenCalled();
     });
 
@@ -312,7 +324,7 @@ describe("useClaimsLogic", () => {
         await claimsLogic.create();
       });
 
-      expect(claimsLogic.claims.items).toContain(claim);
+      expect(claimsLogic.benefitsApplications.items).toContain(claim);
     });
 
     describe("when claims have previously been loaded", () => {
@@ -345,13 +357,15 @@ describe("useClaimsLogic", () => {
       });
 
       it("stores the new claim", () => {
-        expect(claimsLogic.claims.items).toContain(claim);
+        expect(claimsLogic.benefitsApplications.items).toContain(claim);
       });
 
       it("doesn't affect existing claims", () => {
         expect.assertions(existingClaims.items.length);
         existingClaims.items.forEach((existingClaim) => {
-          expect(claimsLogic.claims.items).toContain(existingClaim);
+          expect(claimsLogic.benefitsApplications.items).toContain(
+            existingClaim
+          );
         });
       });
     });
@@ -382,7 +396,7 @@ describe("useClaimsLogic", () => {
           await claimsLogic.complete(applicationId);
         });
 
-        const claim = claimsLogic.claims.getItem(applicationId);
+        const claim = claimsLogic.benefitsApplications.getItem(applicationId);
 
         expect(completeClaimMock).toHaveBeenCalledWith(applicationId);
         expect(claim.status).toBe(ClaimStatus.completed);
@@ -461,7 +475,7 @@ describe("useClaimsLogic", () => {
           await claimsLogic.update(applicationId, patchData);
         });
 
-        const claim = claimsLogic.claims.getItem(applicationId);
+        const claim = claimsLogic.benefitsApplications.getItem(applicationId);
 
         expect(claim).toBeInstanceOf(BenefitsApplication);
         expect(claim).toEqual(expect.objectContaining(patchData));
@@ -523,7 +537,7 @@ describe("useClaimsLogic", () => {
             await claimsLogic.update(applicationId, patchData);
           });
 
-          const claim = claimsLogic.claims.getItem(applicationId);
+          const claim = claimsLogic.benefitsApplications.getItem(applicationId);
 
           expect(claim.last_name).toBe(last_name);
           expect(claimsLogic.warningsLists[applicationId]).toEqual([
@@ -556,7 +570,7 @@ describe("useClaimsLogic", () => {
             await claimsLogic.update(applicationId, patchData);
           });
 
-          const claim = claimsLogic.claims.getItem(applicationId);
+          const claim = claimsLogic.benefitsApplications.getItem(applicationId);
 
           expect(claim.last_name).toBeNull();
         });
@@ -673,7 +687,7 @@ describe("useClaimsLogic", () => {
           await claimsLogic.submit(applicationId);
         });
 
-        const claim = claimsLogic.claims.getItem(applicationId);
+        const claim = claimsLogic.benefitsApplications.getItem(applicationId);
 
         expect(submitClaimMock).toHaveBeenCalledWith(applicationId);
         expect(claim.status).toBe(ClaimStatus.submitted);
@@ -762,7 +776,7 @@ describe("useClaimsLogic", () => {
           await claimsLogic.submitPaymentPreference(applicationId, paymentData);
         });
 
-        const claim = claimsLogic.claims.getItem(applicationId);
+        const claim = claimsLogic.benefitsApplications.getItem(applicationId);
 
         expect(submitPaymentPreferenceMock).toHaveBeenCalledWith(
           applicationId,

@@ -107,7 +107,7 @@ export const DefaultStory = (args) => {
 
   const appLogic = {
     appErrors: new AppErrorInfoCollection(),
-    claims: {
+    benefitsApplications: {
       update: () => {},
       warningsLists: {
         [claim.application_id]: warnings || [],

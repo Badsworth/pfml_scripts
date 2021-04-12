@@ -31,7 +31,10 @@ export const PhoneNumber = (props) => {
     // TODO (CP-1455): Add support for international phone numbers
     set(requestData, "phone.int_code", "1");
 
-    await appLogic.claims.update(claim.application_id, requestData);
+    await appLogic.benefitsApplications.update(
+      claim.application_id,
+      requestData
+    );
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

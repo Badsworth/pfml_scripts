@@ -27,7 +27,7 @@ export const DefaultStory = (args) => {
 
   const appLogic = {
     appErrors: new AppErrorInfoCollection(),
-    claims: {},
+    benefitsApplications: {},
     documents: {
       documents: new DocumentCollection([
         new Document({

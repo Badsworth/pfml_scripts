@@ -32,15 +32,17 @@ describe("Applications", () => {
     testHook(() => {
       appLogic = useAppLogic();
       appLogic.users.user = new User({ consented_to_data_sharing: true });
-      appLogic.claims.hasLoadedAll = true;
+      appLogic.benefitsApplications.hasLoadedAll = true;
     });
 
-    jest.spyOn(appLogic.claims, "loadAll").mockResolvedValue();
+    jest.spyOn(appLogic.benefitsApplications, "loadAll").mockResolvedValue();
   });
 
   describe("when no claims exist", () => {
     it("redirects to getReady", () => {
-      appLogic.claims.claims = new BenefitsApplicationCollection([]);
+      appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+        []
+      );
       const goToSpy = jest.spyOn(appLogic.portalFlow, "goTo");
       render();
 
@@ -50,10 +52,12 @@ describe("Applications", () => {
 
   describe("when applications have been started or submitted", () => {
     beforeEach(() => {
-      appLogic.claims.claims = new BenefitsApplicationCollection([
-        new MockClaimBuilder().create(),
-        new MockClaimBuilder().submitted().create(),
-      ]);
+      appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+        [
+          new MockClaimBuilder().create(),
+          new MockClaimBuilder().submitted().create(),
+        ]
+      );
       jest
         .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
         .mockImplementation(() => true);
@@ -77,9 +81,9 @@ describe("Applications", () => {
 
   describe("when applications have been completed", () => {
     beforeEach(() => {
-      appLogic.claims.claims = new BenefitsApplicationCollection([
-        new MockClaimBuilder().completed().create(),
-      ]);
+      appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+        [new MockClaimBuilder().completed().create()]
+      );
       render();
     });
 
@@ -105,11 +109,9 @@ describe("Applications", () => {
       startedClaim = new MockClaimBuilder().create();
       submittedClaim = new MockClaimBuilder().submitted().create();
       completedClaim = new MockClaimBuilder().completed().create();
-      appLogic.claims.claims = new BenefitsApplicationCollection([
-        startedClaim,
-        submittedClaim,
-        completedClaim,
-      ]);
+      appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+        [startedClaim, submittedClaim, completedClaim]
+      );
       render();
     });
 
@@ -143,7 +145,9 @@ describe("Applications", () => {
           new BenefitsApplication(claim2),
         ];
 
-        appLogic.claims.claims = new BenefitsApplicationCollection(newClaims);
+        appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+          newClaims
+        );
       });
     });
 

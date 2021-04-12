@@ -54,7 +54,7 @@ export const PaymentMethod = (props) => {
       set(requestData, bankAccountTypeField, null);
       set(requestData, accountNumberField, null);
     }
-    await appLogic.claims.submitPaymentPreference(
+    await appLogic.benefitsApplications.submitPaymentPreference(
       claim.application_id,
       requestData
     );

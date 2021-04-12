@@ -47,7 +47,7 @@ export const ScheduleFixed = (props) => {
     const minutes = workPattern.minutesWorkedPerWeek;
     const hours_worked_per_week = round(minutes / 60, 2);
 
-    await appLogic.claims.update(claim.application_id, {
+    await appLogic.benefitsApplications.update(claim.application_id, {
       hours_worked_per_week,
       work_pattern: { work_pattern_days },
     });

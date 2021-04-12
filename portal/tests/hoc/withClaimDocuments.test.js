@@ -43,7 +43,7 @@ describe("withClaimDocuments", () => {
   it("does not load documents if user has not yet loaded", () => {
     appLogic.user = appLogic.users.user = null;
     render();
-    expect(appLogic.claims.loadAll).not.toHaveBeenCalled();
+    expect(appLogic.benefitsApplications.loadAll).not.toHaveBeenCalled();
   });
 
   it("does not load documents when documents are already loaded", () => {

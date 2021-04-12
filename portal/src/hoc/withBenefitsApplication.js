@@ -18,20 +18,21 @@ const withBenefitsApplication = (Component) => {
     const { appLogic, query } = props;
     const { t } = useTranslation();
 
-    assert(appLogic.claims);
+    assert(appLogic.benefitsApplications);
     // Since we are within a withUser higher order component, user should always be set
     assert(appLogic.users.user);
 
     const application_id = query.claim_id;
-    const claims = appLogic.claims.claims;
-    const claim = claims.getItem(application_id);
-    const shouldLoad = !appLogic.claims.hasLoadedClaimAndWarnings(
+    const benefitsApplications =
+      appLogic.benefitsApplications.benefitsApplications;
+    const claim = benefitsApplications.getItem(application_id);
+    const shouldLoad = !appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings(
       application_id
     );
 
     useEffect(() => {
       if (shouldLoad) {
-        appLogic.claims.load(application_id);
+        appLogic.benefitsApplications.load(application_id);
       }
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -57,10 +58,12 @@ const withBenefitsApplication = (Component) => {
       users: PropTypes.shape({
         user: PropTypes.instanceOf(User).isRequired,
       }).isRequired,
-      claims: PropTypes.shape({
-        claims: PropTypes.instanceOf(BenefitsApplicationCollection),
+      benefitsApplications: PropTypes.shape({
+        benefitsApplications: PropTypes.instanceOf(
+          BenefitsApplicationCollection
+        ),
         load: PropTypes.func.isRequired,
-        hasLoadedClaimAndWarnings: PropTypes.func.isRequired,
+        hasLoadedBenefitsApplicationAndWarnings: PropTypes.func.isRequired,
       }).isRequired,
       appErrors: PropTypes.object.isRequired,
     }).isRequired,

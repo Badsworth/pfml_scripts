@@ -50,7 +50,7 @@ export const PreviousLeavesDetails = (props) => {
   }, [claim.previous_leaves, updateFields]);
 
   const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const handleAddClick = () => {
     const updatedEntries = previous_leaves.concat([new PreviousLeave()]);

@@ -100,12 +100,15 @@ describe("LeaveReasonPage", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      leave_details: {
-        reason: LeaveReason.bonding,
-        reason_qualifier: ReasonQualifier.newBorn,
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        leave_details: {
+          reason: LeaveReason.bonding,
+          reason_qualifier: ReasonQualifier.newBorn,
+        },
+      }
+    );
   });
 
   it("calls claims.update with with only leave reason for medical leave and set child birth/placement date to null", async () => {
@@ -113,7 +116,7 @@ describe("LeaveReasonPage", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
       medicalLeaveClaim.application_id,
       {
         leave_details: {
@@ -154,11 +157,14 @@ describe("LeaveReasonPage", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      leave_details: {
-        reason: LeaveReason.bonding,
-        reason_qualifier: ReasonQualifier.fosterCare,
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        leave_details: {
+          reason: LeaveReason.bonding,
+          reason_qualifier: ReasonQualifier.fosterCare,
+        },
+      }
+    );
   });
 });

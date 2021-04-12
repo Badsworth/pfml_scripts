@@ -24,14 +24,14 @@ export default jest.fn(() => ({
     verifyEmployerAccount: jest.fn(),
   },
   catchError: jest.fn(),
-  claims: {
-    claims: new BenefitsApplicationCollection(),
+  benefitsApplications: {
+    benefitsApplications: new BenefitsApplicationCollection(),
     complete: jest.fn(),
     create: jest.fn(
       () => new BenefitsApplication({ application_id: uniqueId() })
     ),
     get: jest.fn(),
-    hasLoadedClaimAndWarnings: jest.fn().mockReturnValue(true),
+    hasLoadedBenefitsApplicationAndWarnings: jest.fn().mockReturnValue(true),
     hasLoadedAll: false,
     load: jest.fn(),
     loadAll: jest.fn(),

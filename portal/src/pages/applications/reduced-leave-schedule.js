@@ -85,7 +85,10 @@ export const ReducedLeaveSchedule = (props) => {
       });
     }
 
-    return appLogic.claims.update(claim.application_id, requestData);
+    return appLogic.benefitsApplications.update(
+      claim.application_id,
+      requestData
+    );
   };
 
   const contentReasonContext = {

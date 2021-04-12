@@ -25,7 +25,7 @@ describe("withBenefitsApplications", () => {
   });
 
   it("Shows spinner when claims are not loaded", () => {
-    appLogic.claims.claims = new BenefitsApplicationCollection();
+    appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection();
     act(() => {
       wrapper = shallow(<WrappedComponent appLogic={appLogic} />);
     });
@@ -41,24 +41,26 @@ describe("withBenefitsApplications", () => {
   });
 
   it("loads claims", () => {
-    appLogic.claims.claims = new BenefitsApplicationCollection();
+    appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection();
     render();
-    expect(appLogic.claims.loadAll).toHaveBeenCalledTimes(1);
+    expect(appLogic.benefitsApplications.loadAll).toHaveBeenCalledTimes(1);
   });
 
   it("does not load claims if user has not yet loaded", () => {
     appLogic.user = appLogic.users.user = null;
     render();
     wrapper.update();
-    expect(appLogic.claims.loadAll).not.toHaveBeenCalled();
+    expect(appLogic.benefitsApplications.loadAll).not.toHaveBeenCalled();
   });
 
   it("does not load claims if claims have already been loaded", () => {
-    appLogic.claims.claims = new BenefitsApplicationCollection([]);
-    appLogic.claims.hasLoadedAll = true;
+    appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+      []
+    );
+    appLogic.benefitsApplications.hasLoadedAll = true;
 
     render();
-    expect(appLogic.claims.loadAll).not.toHaveBeenCalled();
+    expect(appLogic.benefitsApplications.loadAll).not.toHaveBeenCalled();
   });
 
   describe("when claims are loaded", () => {
@@ -69,8 +71,8 @@ describe("withBenefitsApplications", () => {
         application_id: "mock-application-id",
       });
       const claims = new BenefitsApplicationCollection([claim]);
-      appLogic.claims.claims = claims;
-      appLogic.claims.hasLoadedAll = true;
+      appLogic.benefitsApplications.benefitsApplications = claims;
+      appLogic.benefitsApplications.hasLoadedAll = true;
       render();
     });
 
@@ -86,7 +88,7 @@ describe("withBenefitsApplications", () => {
         BenefitsApplicationCollection
       );
       expect(wrapper.find(PageComponent).prop("claims")).toEqual(
-        appLogic.claims.claims
+        appLogic.benefitsApplications.benefitsApplications
       );
     });
 

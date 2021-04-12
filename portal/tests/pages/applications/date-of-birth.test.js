@@ -26,16 +26,19 @@ describe("DateOfBirth", () => {
     changeField("date_of_birth", DATE_OF_BIRTH);
     wrapper.find("QuestionPage").simulate("save");
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
-      date_of_birth: DATE_OF_BIRTH,
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      expect.any(String),
+      {
+        date_of_birth: DATE_OF_BIRTH,
+      }
+    );
   });
 
   it("calls claims.update when the form is successfully submitted with pre-filled data", () => {
     render({ date_of_birth: DATE_OF_BIRTH });
     wrapper.find("QuestionPage").simulate("save");
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
       expect.any(String),
       pick(claim, ["date_of_birth"])
     );

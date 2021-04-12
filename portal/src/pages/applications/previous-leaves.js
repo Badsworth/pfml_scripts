@@ -27,7 +27,7 @@ export const PreviousLeaves = (props) => {
     ) {
       formState.previous_leaves = null;
     }
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

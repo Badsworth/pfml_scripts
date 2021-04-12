@@ -68,7 +68,10 @@ export const LeavePeriodContinuous = (props) => {
       set(requestData, `${leavePeriodPath}.leave_period_id`, leave_period_id);
     }
 
-    await appLogic.claims.update(claim.application_id, requestData);
+    await appLogic.benefitsApplications.update(
+      claim.application_id,
+      requestData
+    );
   };
 
   const contentContext = {

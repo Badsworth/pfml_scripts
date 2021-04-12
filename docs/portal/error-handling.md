@@ -12,7 +12,7 @@ The normal API error response includes an `errors` property in its body represen
 
 ## Logic hook
 
-The logic hooks, like `useClaimsLogic`, are responsible for catching any errors thrown by the API module and sending the error into `appErrorsLogic`. A typical pattern for this looks like:
+The logic hooks, like `useBenefitsApplicationsLogic`, are responsible for catching any errors thrown by the API module and sending the error into `appErrorsLogic`. A typical pattern for this looks like:
 
 ```js
 async updateClaim(patchData) {

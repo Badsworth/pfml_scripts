@@ -39,7 +39,7 @@ export const LeaveReason = (props) => {
       set(formState, "leave_details.has_future_child_date", null);
     }
 
-    await appLogic.claims.update(claim.application_id, formState);
+    await appLogic.benefitsApplications.update(claim.application_id, formState);
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

@@ -57,19 +57,25 @@ describe("StateId", () => {
     // Existing data
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      has_state_id: false,
-      mass_id: null,
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        has_state_id: false,
+        mass_id: null,
+      }
+    );
 
     // Changed answer to Yes
     changeRadioGroup("has_state_id", "true");
     changeField("mass_id", mass_id.toLowerCase());
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      has_state_id: true,
-      mass_id: mass_id.toUpperCase(),
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        has_state_id: true,
+        mass_id: mass_id.toUpperCase(),
+      }
+    );
   });
 });

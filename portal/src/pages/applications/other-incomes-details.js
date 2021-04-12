@@ -58,7 +58,7 @@ export const OtherIncomesDetails = (props) => {
   }, [claim.other_incomes, updateFields]);
 
   const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const handleAddClick = () => {
     // Add a new blank entry

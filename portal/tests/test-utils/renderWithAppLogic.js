@@ -29,7 +29,7 @@ import useAppLogic from "../../src/hooks/useAppLogic";
  * @param {boolean} [options.hasUploadedIdDocuments] - Additional attributes to set id documents
  * @param {boolean} [options.hasLoadingDocumentsError] - Additional attributs to set errors for loading documents
  * @param {boolean} [options.hasLegalNotices] - Create legal notices for claim
- * @param {object} [options.warningsLists] - Mock appLogic.claims.warningsLists
+ * @param {object} [options.warningsLists] - Mock appLogic.benefitsApplications.warningsLists
  * @returns {{ appLogic: object, claim: Claim, wrapper: object }}
  */
 const renderWithAppLogic = (PageComponent, options = {}) => {
@@ -56,11 +56,13 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
     application_id: "mock_application_id",
     ...options.claimAttrs,
   });
-  appLogic.claims.claims = new BenefitsApplicationCollection([claim]);
-  appLogic.claims.hasLoadedClaimAndWarnings = jest
+  appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+    [claim]
+  );
+  appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings = jest
     .fn()
-    .mockReturnValue(options.hasLoadedClaimAndWarnings || true);
-  appLogic.claims.warningsLists = options.warningsLists;
+    .mockReturnValue(options.hasLoadedBenefitsApplicationAndWarnings || true);
+  appLogic.benefitsApplications.warningsLists = options.warningsLists;
   appLogic.employers.claim = new EmployerClaim(options.employerClaimAttrs);
   appLogic.auth.isLoggedIn = true;
   appLogic.users.requireUserConsentToDataAgreement = jest.fn();

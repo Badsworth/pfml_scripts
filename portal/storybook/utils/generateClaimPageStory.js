@@ -99,7 +99,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
       })
     );
     const appLogic = {
-      claims: {
+      benefitsApplications: {
         update: () => {},
       },
       documents: {

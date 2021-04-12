@@ -43,11 +43,14 @@ describe("Address", () => {
 
     it("submits residential address", () => {
       wrapper.find("QuestionPage").simulate("save");
-      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
-        residential_address: testAddress,
-        has_mailing_address: false,
-        mailing_address: null,
-      });
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+        expect.any(String),
+        {
+          residential_address: testAddress,
+          has_mailing_address: false,
+          mailing_address: null,
+        }
+      );
     });
 
     describe("When user has a different mailing address", () => {
@@ -64,7 +67,7 @@ describe("Address", () => {
         changeField("mailing_address", testAddress);
         wrapper.find("QuestionPage").simulate("save");
 
-        expect(appLogic.claims.update).toHaveBeenCalledWith(
+        expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
           expect.any(String),
           {
             residential_address: testAddress,
@@ -93,7 +96,7 @@ describe("Address", () => {
             await wrapper.find("form").simulate("submit");
           });
 
-          expect(appLogic.claims.update).toHaveBeenCalledWith(
+          expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
             expect.any(String),
             {
               mailing_address: {},
@@ -109,7 +112,7 @@ describe("Address", () => {
             await wrapper.find("form").simulate("submit");
           });
 
-          expect(appLogic.claims.update).toHaveBeenCalledWith(
+          expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
             expect.any(String),
             {
               mailing_address: null,
