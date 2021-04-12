@@ -2,6 +2,7 @@ import { IconMail, IconPdf } from "@massds/mayflower-react/dist/Icon";
 import Alert from "../../components/Alert";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
 import Heading from "../../components/Heading";
+import Icon from "../../components/Icon";
 import { NewsBanner } from "../../components/employers/NewsBanner";
 import PropTypes from "prop-types";
 import React from "react";
@@ -24,8 +25,8 @@ export const Welcome = ({ appLogic, user }) => {
   const { t } = useTranslation();
   const iconProps = {
     className: "margin-right-2 text-secondary text-middle",
-    height: 30,
-    width: 30,
+    height: 32,
+    width: 32,
     fill: "currentColor",
   };
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
@@ -62,6 +63,27 @@ export const Welcome = ({ appLogic, user }) => {
             </Alert>
           )}
           <p>{t("pages.employersWelcome.welcomeBody")}</p>
+
+          {shouldShowDashboard && (
+            <React.Fragment>
+              <Heading level="2">
+                <Icon name="list" size={4} {...iconProps} />
+                {t("pages.employersWelcome.viewApplicationsTitle")}
+                {t("chars.nbsp")}
+                <span className="usa-tag radius-md margin-left-05">
+                  {t("pages.employersWelcome.newTag")}
+                </span>
+              </Heading>
+              <p>
+                <Trans
+                  i18nKey="pages.employersWelcome.viewApplicationsBody"
+                  components={{
+                    "dashboard-link": <a href={routes.employers.dashboard} />,
+                  }}
+                />
+              </p>
+            </React.Fragment>
+          )}
 
           <Heading level="2">
             <IconMail {...iconProps} />

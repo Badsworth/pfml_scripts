@@ -86,8 +86,8 @@ exports[`Employer welcome renders page 1`] = `
         <SvgIconMail
           className="margin-right-2 text-secondary text-middle"
           fill="currentColor"
-          height={30}
-          width={30}
+          height={32}
+          width={32}
         />
         Check your email regularly
       </Heading>
@@ -100,8 +100,8 @@ exports[`Employer welcome renders page 1`] = `
         <IconWait
           className="margin-right-2 text-secondary text-middle"
           fill="currentColor"
-          height={30}
-          width={30}
+          height={32}
+          width={32}
         />
         Respond to applications within 10 business days
       </Heading>
@@ -114,8 +114,8 @@ exports[`Employer welcome renders page 1`] = `
         <SvgIconPdf
           className="margin-right-2 text-secondary text-middle"
           fill="currentColor"
-          height={30}
-          width={30}
+          height={32}
+          width={32}
         />
         View forms and notices online
       </Heading>
