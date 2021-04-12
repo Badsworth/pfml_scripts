@@ -1,5 +1,7 @@
 import { BadRequestError, NotFoundError } from "../../src/errors";
-import Claim, { ClaimStatus } from "../../src/models/Claim";
+import BenefitsApplication, {
+  ClaimStatus,
+} from "../../src/models/BenefitsApplication";
 import { MockClaimBuilder, testHook } from "../test-utils";
 import {
   completeClaimMock,
@@ -10,10 +12,10 @@ import {
   submitClaimMock,
   submitPaymentPreferenceMock,
   updateClaimMock,
-} from "../../src/api/ClaimsApi";
+} from "../../src/api/BenefitsApplicationsApi";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import ClaimCollection from "../../src/models/ClaimCollection";
+import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import User from "../../src/models/User";
 import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
@@ -22,7 +24,7 @@ import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useClaimsLogic from "../../src/hooks/useClaimsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
-jest.mock("../../src/api/ClaimsApi");
+jest.mock("../../src/api/BenefitsApplicationsApi");
 jest.mock("../../src/services/tracker");
 
 describe("useClaimsLogic", () => {
@@ -51,7 +53,7 @@ describe("useClaimsLogic", () => {
   it("sets initial claims data to empty collection", () => {
     renderHook();
 
-    expect(claimsLogic.claims).toBeInstanceOf(ClaimCollection);
+    expect(claimsLogic.claims).toBeInstanceOf(BenefitsApplicationCollection);
     expect(claimsLogic.claims.items).toHaveLength(0);
   });
 
@@ -90,7 +92,7 @@ describe("useClaimsLogic", () => {
       const claims = claimsLogic.claims.items;
 
       expect(claims).toHaveLength(1);
-      expect(claims[0]).toBeInstanceOf(Claim);
+      expect(claims[0]).toBeInstanceOf(BenefitsApplication);
       expect(getClaimMock).toHaveBeenCalledTimes(1);
     });
 
@@ -185,7 +187,7 @@ describe("useClaimsLogic", () => {
         await claimsLogic.loadAll();
       });
 
-      expect(claimsLogic.claims.items[0]).toBeInstanceOf(Claim);
+      expect(claimsLogic.claims.items[0]).toBeInstanceOf(BenefitsApplication);
       expect(getClaimsMock).toHaveBeenCalled();
     });
 
@@ -300,7 +302,7 @@ describe("useClaimsLogic", () => {
     });
 
     it("adds the claim to a new collection when claims weren't loaded yet", async () => {
-      const claim = new Claim({ application_id: "12345" });
+      const claim = new BenefitsApplication({ application_id: "12345" });
       createClaimMock.mockResolvedValueOnce({
         claim,
         success: true,
@@ -317,9 +319,9 @@ describe("useClaimsLogic", () => {
       let claim, existingClaims;
 
       beforeEach(async () => {
-        existingClaims = new ClaimCollection([
-          new Claim({ application_id: "1" }),
-          new Claim({ application_id: "2" }),
+        existingClaims = new BenefitsApplicationCollection([
+          new BenefitsApplication({ application_id: "1" }),
+          new BenefitsApplication({ application_id: "2" }),
         ]);
 
         getClaimsMock.mockImplementationOnce(() => {
@@ -329,7 +331,7 @@ describe("useClaimsLogic", () => {
           };
         });
 
-        claim = new Claim({ application_id: "12345" });
+        claim = new BenefitsApplication({ application_id: "12345" });
 
         createClaimMock.mockResolvedValueOnce({
           claim,
@@ -360,7 +362,9 @@ describe("useClaimsLogic", () => {
       beforeEach(async () => {
         mockRouter.pathname = routes.applications.review;
         renderHook();
-        const claim = new Claim({ application_id: applicationId });
+        const claim = new BenefitsApplication({
+          application_id: applicationId,
+        });
         createClaimMock.mockResolvedValueOnce({
           claim,
           success: true,
@@ -435,7 +439,9 @@ describe("useClaimsLogic", () => {
       };
 
       beforeEach(() => {
-        const claim = new Claim({ application_id: applicationId });
+        const claim = new BenefitsApplication({
+          application_id: applicationId,
+        });
         createClaimMock.mockResolvedValueOnce({
           claim,
           success: true,
@@ -457,7 +463,7 @@ describe("useClaimsLogic", () => {
 
         const claim = claimsLogic.claims.getItem(applicationId);
 
-        expect(claim).toBeInstanceOf(Claim);
+        expect(claim).toBeInstanceOf(BenefitsApplication);
         expect(claim).toEqual(expect.objectContaining(patchData));
         expect(updateClaimMock).toHaveBeenCalled();
         expect(mockRouter.push).toHaveBeenCalledWith(
@@ -647,7 +653,9 @@ describe("useClaimsLogic", () => {
         mockRouter.pathname = routes.applications.review;
         renderHook(routes.applications);
 
-        const claim = new Claim({ application_id: applicationId });
+        const claim = new BenefitsApplication({
+          application_id: applicationId,
+        });
         createClaimMock.mockResolvedValueOnce({
           claim,
           success: true,
@@ -734,7 +742,9 @@ describe("useClaimsLogic", () => {
         mockRouter.pathname = routes.applications.paymentMethod;
         renderHook(routes.applications);
 
-        const claim = new Claim({ application_id: applicationId });
+        const claim = new BenefitsApplication({
+          application_id: applicationId,
+        });
         createClaimMock.mockResolvedValueOnce({
           claim,
           success: true,

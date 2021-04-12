@@ -1,4 +1,6 @@
-import Claim, { WorkPattern } from "../../models/Claim";
+import BenefitsApplication, {
+  WorkPattern,
+} from "../../models/BenefitsApplication";
 import React, { useState } from "react";
 import { pick, round } from "lodash";
 import Heading from "../../components/Heading";
@@ -103,7 +105,7 @@ export const ScheduleVariable = (props) => {
 };
 
 ScheduleVariable.propTypes = {
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   appLogic: PropTypes.object.isRequired,
 };
 

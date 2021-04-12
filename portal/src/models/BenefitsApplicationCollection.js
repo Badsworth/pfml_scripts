@@ -1,22 +1,22 @@
 import BaseCollection from "./BaseCollection";
-import { ClaimStatus } from "./Claim";
+import { ClaimStatus } from "./BenefitsApplication";
 
-/** @typedef {import('./Claim').default} Claim */
+/** @typedef {import('./BenefitsApplication').default} BenefitsApplication */
 
-export default class ClaimCollection extends BaseCollection {
+export default class BenefitsApplicationCollection extends BaseCollection {
   get idProperty() {
     return "application_id";
   }
 
   /**
-   * @returns {Claim[]} Returns all claims with an "Started" or "Submitted" status
+   * @returns {BenefitsApplication[]} Returns all claims with an "Started" or "Submitted" status
    */
   get inProgress() {
     return this.items.filter((item) => item.status !== ClaimStatus.completed);
   }
 
   /**
-   * @returns {Claim[]} Returns all claims submitted to the API, including
+   * @returns {BenefitsApplication[]} Returns all claims submitted to the API, including
    * those that made it to the Claims Processing System
    */
   get submitted() {
@@ -24,7 +24,7 @@ export default class ClaimCollection extends BaseCollection {
   }
 
   /**
-   * @returns {Claim[]} Returns all claims that have completed all parts of
+   * @returns {BenefitsApplication[]} Returns all claims that have completed all parts of
    the progressive application
    */
   get completed() {

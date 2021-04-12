@@ -1,14 +1,16 @@
 /* eslint sort-keys: ["error", "asc"] */
-/**
- * @file Benefits application model and enum values
- */
 import { compact, get, map } from "lodash";
 import Address from "./Address";
 import BaseModel from "./BaseModel";
 import LeaveReason from "./LeaveReason";
 import formatDateRange from "../utils/formatDateRange";
 
-class BaseClaim extends BaseModel {
+/**
+ * The API's Applications table and the data we return for the Leave Admin
+ * info request flow share a common set of fields, which this model represents.
+ * Separate models then extend this.
+ */
+class BaseBenefitsApplication extends BaseModel {
   get defaults() {
     return {
       application_id: null,
@@ -155,4 +157,4 @@ class BaseClaim extends BaseModel {
   }
 }
 
-export default BaseClaim;
+export default BaseBenefitsApplication;

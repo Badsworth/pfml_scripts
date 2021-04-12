@@ -1,5 +1,5 @@
-import Claim from "../../src/models/Claim";
-import ClaimCollection from "../../src/models/ClaimCollection";
+import BenefitsApplication from "../../src/models/BenefitsApplication";
+import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import React from "react";
 import { act } from "react-dom/test-utils";
 import { mount } from "enzyme";
@@ -37,8 +37,8 @@ describe("withClaim", () => {
   });
 
   it("Shows spinner when claim's warnings aren't loaded", () => {
-    const claim = new Claim({ application_id: claim_id });
-    appLogic.claims.claims = new ClaimCollection([claim]);
+    const claim = new BenefitsApplication({ application_id: claim_id });
+    appLogic.claims.claims = new BenefitsApplicationCollection([claim]);
     appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(false);
 
     render();
@@ -66,8 +66,8 @@ describe("withClaim", () => {
     let claim;
 
     beforeEach(() => {
-      claim = new Claim({ application_id: claim_id });
-      appLogic.claims.claims = new ClaimCollection([claim]);
+      claim = new BenefitsApplication({ application_id: claim_id });
+      appLogic.claims.claims = new BenefitsApplicationCollection([claim]);
       appLogic.claims.hasLoadedClaimAndWarnings.mockReturnValue(true);
     });
 
@@ -82,7 +82,9 @@ describe("withClaim", () => {
     it("sets the 'claim' prop on the passed component", () => {
       render();
 
-      expect(wrapper.find("PageComponent").prop("claim")).toBeInstanceOf(Claim);
+      expect(wrapper.find("PageComponent").prop("claim")).toBeInstanceOf(
+        BenefitsApplication
+      );
       expect(wrapper.find("PageComponent").prop("claim")).toEqual(claim);
     });
 

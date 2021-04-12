@@ -1,4 +1,4 @@
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
@@ -78,7 +78,7 @@ export const EmployerBenefits = (props) => {
 };
 
 EmployerBenefits.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

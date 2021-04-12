@@ -3,7 +3,7 @@ import {
   WorkPattern,
   WorkPatternDay,
   WorkPatternType,
-} from "../../../src/models/Claim";
+} from "../../../src/models/BenefitsApplication";
 import {
   MockClaimBuilder,
   renderWithAppLogic,

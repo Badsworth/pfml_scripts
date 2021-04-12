@@ -1,4 +1,4 @@
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
@@ -60,7 +60,7 @@ export const Name = (props) => {
 
 Name.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withClaim(Name);

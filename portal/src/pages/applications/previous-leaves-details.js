@@ -1,7 +1,7 @@
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useEffect, useRef } from "react";
 import { get, pick } from "lodash";
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
@@ -118,7 +118,7 @@ export const PreviousLeavesDetails = (props) => {
 };
 
 PreviousLeavesDetails.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,

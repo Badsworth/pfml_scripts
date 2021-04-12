@@ -1,6 +1,6 @@
-import Claim, {
+import BenefitsApplication, {
   ReasonQualifier as ReasonQualifierEnum,
-} from "../../models/Claim";
+} from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -187,7 +187,7 @@ export const LeaveReason = (props) => {
 };
 
 LeaveReason.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
 };
 

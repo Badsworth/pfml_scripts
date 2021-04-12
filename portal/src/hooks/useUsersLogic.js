@@ -24,7 +24,7 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
    * Update user through a PATCH request to /users
    * @param {string} user_id - ID of user being updated
    * @param {object} patchData - User fields to update
-   * @param {Claim} [claim] - Update user in the context of a claim to determine the next page route.
+   * @param {BenefitsApplication} [claim] - Update user in the context of a claim to determine the next page route.
    */
   const updateUser = async (user_id, patchData, claim) => {
     appErrorsLogic.clearErrors();

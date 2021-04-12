@@ -1,8 +1,8 @@
-import Claim, {
+import BenefitsApplication, {
   DurationBasis,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
-} from "../../models/Claim";
+} from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -224,7 +224,7 @@ export const IntermittentFrequency = (props) => {
 };
 
 IntermittentFrequency.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,

@@ -1,9 +1,9 @@
-import Claim, {
+import BenefitsApplication, {
   OrderedDaysOfWeek,
   ReducedScheduleLeavePeriod,
   WorkPattern,
   WorkPatternType,
-} from "../../models/Claim";
+} from "../../models/BenefitsApplication";
 import { get, pick, set, zip } from "lodash";
 import Alert from "../../components/Alert";
 import Details from "../../components/Details";
@@ -182,7 +182,7 @@ export const ReducedLeaveSchedule = (props) => {
 };
 
 ReducedLeaveSchedule.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,

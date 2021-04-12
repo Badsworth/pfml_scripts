@@ -1,4 +1,7 @@
-import Claim, { ClaimStatus, ReasonQualifier } from "../../models/Claim";
+import BenefitsApplication, {
+  ClaimStatus,
+  ReasonQualifier,
+} from "../../models/BenefitsApplication";
 import Document, { DocumentType } from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { camelCase, filter, findIndex, get } from "lodash";
@@ -160,7 +163,7 @@ export const Checklist = (props) => {
    * Helper method for generating a context string used to differentiate i18n keys
    * for the various Step content strings.
    * @param {string} stepName
-   * @param {Claim} claim
+   * @param {BenefitsApplication} claim
    * @returns {string|undefined}
    */
   function getStepDescription(stepName, claim) {
@@ -336,7 +339,7 @@ Checklist.propTypes = {
       getNextPageRoute: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({

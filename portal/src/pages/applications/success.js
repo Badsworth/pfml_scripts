@@ -1,4 +1,6 @@
-import Claim, { ReasonQualifier } from "../../models/Claim";
+import BenefitsApplication, {
+  ReasonQualifier,
+} from "../../models/BenefitsApplication";
 import {
   IconCalendar,
   IconCopy,
@@ -199,7 +201,7 @@ export const Success = (props) => {
 };
 
 Success.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

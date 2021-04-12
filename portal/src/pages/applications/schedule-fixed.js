@@ -1,4 +1,7 @@
-import Claim, { OrderedDaysOfWeek, WorkPattern } from "../../models/Claim";
+import BenefitsApplication, {
+  OrderedDaysOfWeek,
+  WorkPattern,
+} from "../../models/BenefitsApplication";
 import { get, pick, round } from "lodash";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
@@ -81,7 +84,7 @@ export const ScheduleFixed = (props) => {
 };
 
 ScheduleFixed.propTypes = {
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   appLogic: PropTypes.object.isRequired,
 };
 

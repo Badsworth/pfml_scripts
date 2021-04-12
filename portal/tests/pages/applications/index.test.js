@@ -5,8 +5,8 @@ import {
 } from "../../test-utils";
 import ApplicationCard from "../../../src/components/ApplicationCard";
 import Applications from "../../../src/pages/applications/index";
-import Claim from "../../../src/models/Claim";
-import ClaimCollection from "../../../src/models/ClaimCollection";
+import BenefitsApplication from "../../../src/models/BenefitsApplication";
+import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
 import React from "react";
 import User from "../../../src/models/User";
 import { act } from "react-dom/test-utils";
@@ -40,7 +40,7 @@ describe("Applications", () => {
 
   describe("when no claims exist", () => {
     it("redirects to getReady", () => {
-      appLogic.claims.claims = new ClaimCollection([]);
+      appLogic.claims.claims = new BenefitsApplicationCollection([]);
       const goToSpy = jest.spyOn(appLogic.portalFlow, "goTo");
       render();
 
@@ -50,7 +50,7 @@ describe("Applications", () => {
 
   describe("when applications have been started or submitted", () => {
     beforeEach(() => {
-      appLogic.claims.claims = new ClaimCollection([
+      appLogic.claims.claims = new BenefitsApplicationCollection([
         new MockClaimBuilder().create(),
         new MockClaimBuilder().submitted().create(),
       ]);
@@ -77,7 +77,7 @@ describe("Applications", () => {
 
   describe("when applications have been completed", () => {
     beforeEach(() => {
-      appLogic.claims.claims = new ClaimCollection([
+      appLogic.claims.claims = new BenefitsApplicationCollection([
         new MockClaimBuilder().completed().create(),
       ]);
       render();
@@ -105,7 +105,7 @@ describe("Applications", () => {
       startedClaim = new MockClaimBuilder().create();
       submittedClaim = new MockClaimBuilder().submitted().create();
       completedClaim = new MockClaimBuilder().completed().create();
-      appLogic.claims.claims = new ClaimCollection([
+      appLogic.claims.claims = new BenefitsApplicationCollection([
         startedClaim,
         submittedClaim,
         completedClaim,
@@ -138,9 +138,12 @@ describe("Applications", () => {
 
     beforeEach(() => {
       act(() => {
-        const newClaims = [new Claim(claim1), new Claim(claim2)];
+        const newClaims = [
+          new BenefitsApplication(claim1),
+          new BenefitsApplication(claim2),
+        ];
 
-        appLogic.claims.claims = new ClaimCollection(newClaims);
+        appLogic.claims.claims = new BenefitsApplicationCollection(newClaims);
       });
     });
 

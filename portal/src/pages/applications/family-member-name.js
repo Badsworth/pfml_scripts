@@ -1,4 +1,4 @@
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import Heading from "../../components/Heading";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -35,7 +35,7 @@ export const FamilyMemberName = (props) => {
 
 FamilyMemberName.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   query: PropTypes.object.isRequired,
 };
 

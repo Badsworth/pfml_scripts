@@ -1,6 +1,6 @@
-import Claim, {
+import BenefitsApplication, {
   EmploymentStatus as EmploymentStatusEnum,
-} from "../../models/Claim";
+} from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -107,7 +107,7 @@ export const EmploymentStatus = (props) => {
 
 EmploymentStatus.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withClaim(EmploymentStatus);

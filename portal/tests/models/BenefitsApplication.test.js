@@ -1,7 +1,7 @@
 import {
   ReducedScheduleLeavePeriod,
   WorkPattern,
-} from "../../src/models/Claim";
+} from "../../src/models/BenefitsApplication";
 import { DateTime } from "luxon";
 import { MockClaimBuilder } from "../test-utils";
 import { map } from "lodash";

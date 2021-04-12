@@ -4,7 +4,7 @@ import EmployerBenefit, {
 } from "../../models/EmployerBenefit";
 import React, { useEffect, useRef } from "react";
 import { get, pick } from "lodash";
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import Dropdown from "../../components/Dropdown";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
@@ -135,7 +135,7 @@ export const EmployerBenefitsDetails = (props) => {
 };
 
 EmployerBenefitsDetails.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,

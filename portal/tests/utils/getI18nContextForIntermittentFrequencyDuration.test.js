@@ -2,7 +2,7 @@ import {
   DurationBasis,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
-} from "../../src/models/Claim";
+} from "../../src/models/BenefitsApplication";
 import getI18nContextForIntermittentFrequencyDuration from "../../src/utils/getI18nContextForIntermittentFrequencyDuration";
 
 describe("getI18nContextForIntermittentFrequencyDuration", () => {

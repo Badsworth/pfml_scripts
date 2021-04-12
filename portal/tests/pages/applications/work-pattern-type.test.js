@@ -4,7 +4,7 @@ import {
   simulateEvents,
 } from "../../test-utils";
 import WorkPatternType from "../../../src/pages/applications/work-pattern-type";
-import { WorkPatternType as WorkPatternTypeEnum } from "../../../src/models/Claim";
+import { WorkPatternType as WorkPatternTypeEnum } from "../../../src/models/BenefitsApplication";
 
 jest.mock("../../../src/hooks/useAppLogic");
 

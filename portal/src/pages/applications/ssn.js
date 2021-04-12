@@ -1,4 +1,4 @@
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import InputText from "../../components/InputText";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -43,7 +43,7 @@ export const Ssn = (props) => {
 };
 
 Ssn.propTypes = {
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   appLogic: PropTypes.object.isRequired,
 };
 

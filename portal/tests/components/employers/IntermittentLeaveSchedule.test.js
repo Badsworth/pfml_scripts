@@ -2,7 +2,7 @@ import {
   DurationBasis,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
-} from "../../../src/models/Claim";
+} from "../../../src/models/BenefitsApplication";
 import IntermittentLeaveSchedule from "../../../src/components/employers/IntermittentLeaveSchedule";
 import React from "react";
 import { shallow } from "enzyme";

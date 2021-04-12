@@ -1,6 +1,6 @@
 import { mount, shallow } from "enzyme";
-import Claim from "../../src/models/Claim";
-import ClaimCollection from "../../src/models/ClaimCollection";
+import BenefitsApplication from "../../src/models/BenefitsApplication";
+import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import React from "react";
 import { act } from "react-dom/test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
@@ -25,7 +25,7 @@ describe("withClaims", () => {
   });
 
   it("Shows spinner when claims are not loaded", () => {
-    appLogic.claims.claims = new ClaimCollection();
+    appLogic.claims.claims = new BenefitsApplicationCollection();
     act(() => {
       wrapper = shallow(<WrappedComponent appLogic={appLogic} />);
     });
@@ -41,7 +41,7 @@ describe("withClaims", () => {
   });
 
   it("loads claims", () => {
-    appLogic.claims.claims = new ClaimCollection();
+    appLogic.claims.claims = new BenefitsApplicationCollection();
     render();
     expect(appLogic.claims.loadAll).toHaveBeenCalledTimes(1);
   });
@@ -54,7 +54,7 @@ describe("withClaims", () => {
   });
 
   it("does not load claims if claims have already been loaded", () => {
-    appLogic.claims.claims = new ClaimCollection([]);
+    appLogic.claims.claims = new BenefitsApplicationCollection([]);
     appLogic.claims.hasLoadedAll = true;
 
     render();
@@ -65,8 +65,10 @@ describe("withClaims", () => {
     beforeEach(() => {
       // Mock initial state of the app
       // these values would be passed from _app.js
-      const claim = new Claim({ application_id: "mock-application-id" });
-      const claims = new ClaimCollection([claim]);
+      const claim = new BenefitsApplication({
+        application_id: "mock-application-id",
+      });
+      const claims = new BenefitsApplicationCollection([claim]);
       appLogic.claims.claims = claims;
       appLogic.claims.hasLoadedAll = true;
       render();
@@ -81,7 +83,7 @@ describe("withClaims", () => {
     it("sets the 'claims' prop on the passed component to the loaded claims", () => {
       // Since withClaims is wrapped by withUser, to get the wrapped page component we need to get the child twice
       expect(wrapper.find(PageComponent).prop("claims")).toBeInstanceOf(
-        ClaimCollection
+        BenefitsApplicationCollection
       );
       expect(wrapper.find(PageComponent).prop("claims")).toEqual(
         appLogic.claims.claims

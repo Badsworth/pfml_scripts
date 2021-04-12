@@ -1,9 +1,9 @@
 import Address from "../../src/models/Address";
-import BaseClaim from "../../src/models/BaseClaim";
+import BaseBenefitsApplication from "../../src/models/BaseBenefitsApplication";
 import { BaseMockClaimBuilder } from "../test-utils";
 
-describe("BaseClaim", () => {
-  class TestClaim extends BaseClaim {}
+describe("BaseBenefitsApplication", () => {
+  class TestClaim extends BaseBenefitsApplication {}
   class MockTestClaimBuilder extends BaseMockClaimBuilder {
     constructor(middleName) {
       super();
@@ -90,7 +90,7 @@ describe("BaseClaim", () => {
   });
 
   it("#isBondingLeave returns true when the Claim reason is bonding", () => {
-    const emptyClaim = new BaseClaim();
+    const emptyClaim = new BaseBenefitsApplication();
     const claimWithReason = new MockTestClaimBuilder()
       .bondingLeaveReason()
       .create();

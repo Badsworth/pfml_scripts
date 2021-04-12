@@ -5,7 +5,7 @@ import {
 } from "../../test-utils";
 import LeaveReason from "../../../src/models/LeaveReason";
 import LeaveReasonPage from "../../../src/pages/applications/leave-reason";
-import { ReasonQualifier } from "../../../src/models/Claim";
+import { ReasonQualifier } from "../../../src/models/BenefitsApplication";
 
 jest.mock("../../../src/hooks/useAppLogic");
 

@@ -2,7 +2,7 @@ import { NetworkError, UnauthorizedError } from "../../src/errors";
 import User, { RoleDescription, UserRole } from "../../src/models/User";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import Claim from "../../src/models/Claim";
+import BenefitsApplication from "../../src/models/BenefitsApplication";
 import UsersApi from "../../src/api/UsersApi";
 import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
@@ -89,7 +89,9 @@ describe("useUsersLogic", () => {
     });
 
     describe("when a claim is passed", () => {
-      const claim = new Claim({ application_id: "mock-claim-id" });
+      const claim = new BenefitsApplication({
+        application_id: "mock-claim-id",
+      });
 
       it("adds claim to context and a claim_id parameter", async () => {
         const nextPageSpy = jest.spyOn(portalFlow, "goToNextPage");

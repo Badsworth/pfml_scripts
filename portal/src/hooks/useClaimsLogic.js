@@ -1,7 +1,7 @@
 import { NotFoundError, ValidationError } from "../errors";
 import { useMemo, useState } from "react";
-import ClaimCollection from "../models/ClaimCollection";
-import ClaimsApi from "../api/ClaimsApi";
+import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
+import BenefitsApplicationsApi from "../api/BenefitsApplicationsApi";
 import getRelevantIssues from "../utils/getRelevantIssues";
 import routes from "../routes";
 import useCollectionState from "./useCollectionState";
@@ -16,14 +16,16 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     addItem: addClaim,
     updateItem: setClaim,
     setCollection: setClaims,
-  } = useCollectionState(new ClaimCollection());
+  } = useCollectionState(new BenefitsApplicationCollection());
 
   // Track whether the loadAll method has been called. Checking that claims
   // is set isn't sufficient, since it may only include a subset of applications
   // if loadAll hasn't been called yet
   const [hasLoadedAll, setHasLoadedAll] = useState(false);
 
-  const claimsApi = useMemo(() => new ClaimsApi({ user }), [user]);
+  const claimsApi = useMemo(() => new BenefitsApplicationsApi({ user }), [
+    user,
+  ]);
 
   // Cache the validation warnings associated with each claim. Primarily
   // used for controlling the status of Checklist steps.

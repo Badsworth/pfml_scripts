@@ -1,4 +1,6 @@
-import Claim, { PhoneType } from "../../models/Claim";
+import BenefitsApplication, {
+  PhoneType,
+} from "../../models/BenefitsApplication";
 import { cloneDeep, get, pick, set } from "lodash";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -84,7 +86,7 @@ export const PhoneNumber = (props) => {
 
 PhoneNumber.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withClaim(PhoneNumber);

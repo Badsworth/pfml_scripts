@@ -1,4 +1,6 @@
-import Claim, { ReasonQualifier } from "../../models/Claim";
+import BenefitsApplication, {
+  ReasonQualifier,
+} from "../../models/BenefitsApplication";
 import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -115,7 +117,7 @@ export const UploadDocsOptions = (props) => {
 };
 
 UploadDocsOptions.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
 };
 

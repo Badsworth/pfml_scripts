@@ -1,5 +1,5 @@
 import { MockClaimBuilder } from "tests/test-utils";
-import { WorkPatternType } from "src/models/Claim";
+import { WorkPatternType } from "src/models/BenefitsApplication";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const mockClaims = {

@@ -2,7 +2,7 @@ import Document, { DocumentType } from "src/models/Document";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { ApplicationCard } from "src/components/ApplicationCard";
-import Claim from "src/models/Claim";
+import BenefitsApplication from "src/models/BenefitsApplication";
 import { MockClaimBuilder } from "tests/test-utils";
 import React from "react";
 
@@ -141,7 +141,7 @@ export const Story = ({ claim, documents, ...args }) => {
   return (
     <ApplicationCard
       appLogic={appLogic}
-      claim={new Claim(claimAttrs)}
+      claim={new BenefitsApplication(claimAttrs)}
       {...args}
       documents={attachedDocuments}
     />

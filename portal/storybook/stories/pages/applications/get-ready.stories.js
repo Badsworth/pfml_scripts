@@ -1,4 +1,4 @@
-import ClaimCollection from "src/models/ClaimCollection";
+import BenefitsApplicationCollection from "src/models/BenefitsApplicationCollection";
 import { GetReady } from "src/pages/applications/get-ready";
 import React from "react";
 import routes from "src/routes";
@@ -10,7 +10,7 @@ export default {
 
 export const Page = () => (
   <GetReady
-    claims={new ClaimCollection()}
+    claims={new BenefitsApplicationCollection()}
     appLogic={{
       portalFlow: {
         getNextPageRoute: () => "#storybook-example",

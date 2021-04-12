@@ -5,7 +5,7 @@ import {
 } from "../../test-utils";
 import DateOfChild from "../../../src/pages/applications/date-of-child";
 import { DateTime } from "luxon";
-import { ReasonQualifier } from "../../../src/models/Claim";
+import { ReasonQualifier } from "../../../src/models/BenefitsApplication";
 
 jest.mock("../../../src/hooks/useAppLogic");
 

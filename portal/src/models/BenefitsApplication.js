@@ -3,14 +3,14 @@
  * @file Benefits application model and enum values
  */
 import { compact, get, isNil, merge, sum, sumBy, zip, zipObject } from "lodash";
-import BaseClaim from "./BaseClaim";
+import BaseBenefitsApplication from "./BaseBenefitsApplication";
 import BaseModel from "./BaseModel";
 import { DateTime } from "luxon";
 import LeaveReason from "./LeaveReason";
 import assert from "assert";
 import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
 
-class Claim extends BaseClaim {
+class BenefitsApplication extends BaseBenefitsApplication {
   get defaults() {
     return merge({
       ...super.defaults,
@@ -386,4 +386,4 @@ export const DayOfWeek = zipObject(
   OrderedDaysOfWeek
 );
 
-export default Claim;
+export default BenefitsApplication;

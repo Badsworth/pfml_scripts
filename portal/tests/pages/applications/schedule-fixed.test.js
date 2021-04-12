@@ -3,7 +3,10 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
-import { WorkPattern, WorkPatternType } from "../../../src/models/Claim";
+import {
+  WorkPattern,
+  WorkPatternType,
+} from "../../../src/models/BenefitsApplication";
 import { map, sum } from "lodash";
 
 import ScheduleFixed from "../../../src/pages/applications/schedule-fixed";

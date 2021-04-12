@@ -1,8 +1,8 @@
-import Claim, {
+import BenefitsApplication, {
   ClaimStatus,
   EmploymentStatus,
   WorkPatternType,
-} from "../../src/models/Claim";
+} from "../../src/models/BenefitsApplication";
 import { Machine, assign } from "xstate";
 import claimFlowStates, { guards } from "../../src/flows/claimant";
 import { get, merge } from "lodash";
@@ -276,7 +276,7 @@ const machineConfigsWithTests = {
 
 describe("claimFlowConfigs", () => {
   const context = {
-    claim: new Claim({ application_id: "mock-application-id" }),
+    claim: new BenefitsApplication({ application_id: "mock-application-id" }),
     user: new User({ user_id: "mock-user-id" }),
   };
 
@@ -324,7 +324,8 @@ describe("claimFlowConfigs", () => {
   // Action that's fired when exiting getReady state and creating a claim and
   // adds test data to the current machine context
   const assignTestDataToMachineContext = assign({
-    claim: (ctx, event) => new Claim({ ...ctx.claim, ...event.claimData }),
+    claim: (ctx, event) =>
+      new BenefitsApplication({ ...ctx.claim, ...event.claimData }),
     user: (ctx, event) => new User({ ...ctx.user, ...event.userData }),
   });
 

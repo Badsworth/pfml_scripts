@@ -1,4 +1,6 @@
-import Claim, { ReasonQualifier } from "../../models/Claim";
+import BenefitsApplication, {
+  ReasonQualifier,
+} from "../../models/BenefitsApplication";
 import Document, { DocumentType } from "../../models/Document";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -185,7 +187,7 @@ UploadCertification.propTypes = {
     portalFlow: PropTypes.object.isRequired,
     clearErrors: PropTypes.func.isRequired,
   }).isRequired,
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({

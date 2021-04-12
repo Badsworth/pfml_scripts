@@ -4,7 +4,7 @@ import InputDate from "../../components/InputDate";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { ReasonQualifier } from "../../models/Claim";
+import { ReasonQualifier } from "../../models/BenefitsApplication";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";

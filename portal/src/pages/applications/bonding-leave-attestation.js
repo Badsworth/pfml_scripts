@@ -1,7 +1,7 @@
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import Button from "../../components/Button";
-import Claim from "../../models/Claim";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
@@ -39,7 +39,7 @@ export const BondingLeaveAttestation = (props) => {
 
 BondingLeaveAttestation.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   query: PropTypes.object.isRequired,
 };
 

@@ -2,14 +2,14 @@ import {
   BankAccountType,
   PaymentPreferenceMethod,
 } from "../../models/PaymentPreference";
-import Claim, {
+import BenefitsApplication, {
   EmploymentStatus,
   PhoneType,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
   WorkPattern,
   WorkPatternType,
-} from "../../models/Claim";
+} from "../../models/BenefitsApplication";
 import Document, { DocumentType } from "../../models/Document";
 import EmployerBenefit, {
   EmployerBenefitFrequency,
@@ -703,7 +703,7 @@ Review.propTypes = {
       getNextPageRoute: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({

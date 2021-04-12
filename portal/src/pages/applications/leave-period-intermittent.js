@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { cloneDeep, get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import Heading from "../../components/Heading";
@@ -207,7 +207,7 @@ export const LeavePeriodIntermittent = (props) => {
 
 LeavePeriodIntermittent.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

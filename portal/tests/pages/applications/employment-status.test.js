@@ -3,7 +3,7 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
-import { EmploymentStatus } from "../../../src/models/Claim";
+import { EmploymentStatus } from "../../../src/models/BenefitsApplication";
 import EmploymentStatusPage from "../../../src/pages/applications/employment-status";
 
 jest.mock("../../../src/hooks/useAppLogic");

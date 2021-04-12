@@ -2,9 +2,9 @@ import PaymentPreference, {
   PaymentPreferenceMethod,
 } from "../../src/models/PaymentPreference";
 import { Auth } from "@aws-amplify/auth";
-import Claim from "../../src/models/Claim";
-import ClaimCollection from "../../src/models/ClaimCollection";
-import ClaimsApi from "../../src/api/ClaimsApi";
+import BenefitsApplication from "../../src/models/BenefitsApplication";
+import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
+import BenefitsApplicationsApi from "../../src/api/BenefitsApplicationsApi";
 
 jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
@@ -21,8 +21,8 @@ const mockFetch = ({
   });
 };
 
-describe("ClaimsApi", () => {
-  /** @type {ClaimsApi} */
+describe("BenefitsApplicationsApi", () => {
+  /** @type {BenefitsApplicationsApi} */
   let claimsApi;
   const accessTokenJwt =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
@@ -40,14 +40,16 @@ describe("ClaimsApi", () => {
       })
     );
 
-    claimsApi = new ClaimsApi();
+    claimsApi = new BenefitsApplicationsApi();
   });
 
   describe("getClaim", () => {
     let claim;
 
     beforeEach(() => {
-      claim = new Claim({ application_id: "mock-application_id" });
+      claim = new BenefitsApplication({
+        application_id: "mock-application_id",
+      });
       global.fetch = mockFetch({
         response: {
           data: claim,
@@ -95,7 +97,7 @@ describe("ClaimsApi", () => {
         claim.application_id
       );
 
-      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
         Object {
@@ -116,7 +118,9 @@ describe("ClaimsApi", () => {
       let claim;
 
       beforeEach(() => {
-        claim = new Claim({ application_id: "mock-application_id" });
+        claim = new BenefitsApplication({
+          application_id: "mock-application_id",
+        });
         global.fetch = mockFetch({
           response: {
             data: [
@@ -143,7 +147,7 @@ describe("ClaimsApi", () => {
       it("resolves with claims properties", async () => {
         const { claims: claimsResponse } = await claimsApi.getClaims();
 
-        expect(claimsResponse).toBeInstanceOf(ClaimCollection);
+        expect(claimsResponse).toBeInstanceOf(BenefitsApplicationCollection);
         expect(claimsResponse.items).toEqual([claim]);
       });
     });
@@ -154,7 +158,9 @@ describe("ClaimsApi", () => {
       let claim;
 
       beforeEach(() => {
-        claim = new Claim({ application_id: "mock-application_id" });
+        claim = new BenefitsApplication({
+          application_id: "mock-application_id",
+        });
 
         global.fetch = mockFetch({
           response: {
@@ -181,7 +187,7 @@ describe("ClaimsApi", () => {
       it("resolves with claim properties", async () => {
         const { claim: claimResponse } = await claimsApi.createClaim();
 
-        expect(claimResponse).toBeInstanceOf(Claim);
+        expect(claimResponse).toBeInstanceOf(BenefitsApplication);
         expect(claimResponse).toEqual(claim);
       });
     });
@@ -205,7 +211,7 @@ describe("ClaimsApi", () => {
     let claim;
 
     beforeEach(() => {
-      claim = new Claim({
+      claim = new BenefitsApplication({
         application_id: "mock-application_id",
       });
 
@@ -247,7 +253,7 @@ describe("ClaimsApi", () => {
         claim.application_id
       );
 
-      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
     });
   });
@@ -256,7 +262,7 @@ describe("ClaimsApi", () => {
     let claim;
 
     beforeEach(() => {
-      claim = new Claim({
+      claim = new BenefitsApplication({
         application_id: "mock-application_id",
       });
 
@@ -300,7 +306,7 @@ describe("ClaimsApi", () => {
         claim
       );
 
-      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
         Object {
@@ -315,7 +321,7 @@ describe("ClaimsApi", () => {
     let claim;
 
     beforeEach(() => {
-      claim = new Claim({
+      claim = new BenefitsApplication({
         application_id: "mock-application_id",
       });
 
@@ -358,7 +364,7 @@ describe("ClaimsApi", () => {
         claim.application_id
       );
 
-      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
     });
   });
@@ -371,7 +377,7 @@ describe("ClaimsApi", () => {
         payment_method: PaymentPreferenceMethod.check,
       });
 
-      claim = new Claim({ payment_preference });
+      claim = new BenefitsApplication({ payment_preference });
 
       global.fetch = mockFetch({
         response: { data: { ...claim } },
@@ -422,7 +428,7 @@ describe("ClaimsApi", () => {
         payment_preference
       );
 
-      expect(claimResponse).toBeInstanceOf(Claim);
+      expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
         Object {

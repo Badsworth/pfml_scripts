@@ -1,6 +1,6 @@
 import { renderWithAppLogic, simulateEvents } from "../../test-utils";
 import PhoneNumber from "../../../src/pages/applications/phone-number";
-import { PhoneType } from "../../../src/models/Claim";
+import { PhoneType } from "../../../src/models/BenefitsApplication";
 
 jest.mock("../../../src/hooks/useAppLogic");
 

@@ -1,6 +1,6 @@
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -116,7 +116,7 @@ export const NotifiedEmployer = (props) => {
 };
 
 NotifiedEmployer.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,

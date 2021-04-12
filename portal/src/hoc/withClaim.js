@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import ClaimCollection from "../models/ClaimCollection";
+import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
@@ -54,7 +54,7 @@ const withClaim = (Component) => {
         user: PropTypes.instanceOf(User).isRequired,
       }).isRequired,
       claims: PropTypes.shape({
-        claims: PropTypes.instanceOf(ClaimCollection),
+        claims: PropTypes.instanceOf(BenefitsApplicationCollection),
         load: PropTypes.func.isRequired,
         hasLoadedClaimAndWarnings: PropTypes.func.isRequired,
       }).isRequired,

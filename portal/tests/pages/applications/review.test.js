@@ -2,7 +2,7 @@ import {
   DurationBasis,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
-} from "../../../src/models/Claim";
+} from "../../../src/models/BenefitsApplication";
 import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,

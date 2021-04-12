@@ -4,8 +4,8 @@ import {
 } from "../../models/PaymentPreference";
 import { cloneDeep, get, pick, set } from "lodash";
 import BackButton from "../../components/BackButton";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import Button from "../../components/Button";
-import Claim from "../../models/Claim";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import Fieldset from "../../components/Fieldset";
@@ -184,7 +184,7 @@ export const PaymentMethod = (props) => {
 };
 
 PaymentMethod.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),

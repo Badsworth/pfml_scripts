@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import AddressModel from "../../models/Address";
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import FieldsetAddress from "../../components/FieldsetAddress";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -116,7 +116,7 @@ export const Address = (props) => {
 };
 
 Address.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,

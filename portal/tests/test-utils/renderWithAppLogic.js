@@ -3,8 +3,8 @@ import { merge, times } from "lodash";
 import { mount, shallow } from "enzyme";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import Claim from "../../src/models/Claim";
-import ClaimCollection from "../../src/models/ClaimCollection";
+import BenefitsApplication from "../../src/models/BenefitsApplication";
+import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import React from "react";
 import User from "../../src/models/User";
@@ -52,11 +52,11 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
   testHook(() => {
     appLogic = useAppLogic();
   });
-  const claim = new Claim({
+  const claim = new BenefitsApplication({
     application_id: "mock_application_id",
     ...options.claimAttrs,
   });
-  appLogic.claims.claims = new ClaimCollection([claim]);
+  appLogic.claims.claims = new BenefitsApplicationCollection([claim]);
   appLogic.claims.hasLoadedClaimAndWarnings = jest
     .fn()
     .mockReturnValue(options.hasLoadedClaimAndWarnings || true);
