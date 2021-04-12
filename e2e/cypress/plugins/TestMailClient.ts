@@ -108,7 +108,10 @@ export default class TestMailClient {
       timestamp_from: opts.timestamp_from,
     };
     try {
-      const response = await client.request(unifiedQuery, variables);
+      const response = await client.request(unifiedQuery, {
+        ...variables,
+        livequery: true,
+      });
       return response.inbox.emails;
     } catch (e) {
       if (e.name === "AbortError") {
@@ -118,10 +121,14 @@ export default class TestMailClient {
         });
         const debugInfo = {
           "GraphQL URL": `https://api.testmail.app/api/graphql?${searchParams}`,
-          "GraphQL Variables": JSON.stringify(variables, undefined, 4),
+          "GraphQL Variables": JSON.stringify(
+            // For debugging, add timestamp_to to variables, so the window is accurate.
+            { ...variables, timestamp_to: Date.now() },
+            undefined,
+            4
+          ),
           "GraphQL Headers": JSON.stringify(this.headers, undefined, 4),
           ...opts.debugInfo,
-          timestamp_to: Date.now(),
         };
         throw new Error(
           `Timed out while looking for e-mail. This can happen when an e-mail is taking a long time to arrive, the e-mail was never sent, or you're looking for the wrong message.
@@ -159,13 +166,17 @@ const unifiedQuery = gql`
     $tag: String!
     $advanced_filters: [AdvancedFilter]
     $timestamp_from: Float
+    $timestamp_to: Float
+    $livequery: Boolean
   ) {
     inbox(
       namespace: $namespace
       tag: $tag
       advanced_filters: $advanced_filters
       timestamp_from: $timestamp_from
-      livequery: true
+      timestamp_to: $timestamp_to
+      limit: 100
+      livequery: $livequery
     ) {
       result
       message

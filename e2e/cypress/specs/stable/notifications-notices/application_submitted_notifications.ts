@@ -54,13 +54,16 @@ describe("Email notifications should be sent to employee & employer after initia
             "application started",
             submission.fineos_absence_id
           );
-          getEmails({
-            address: "gqzap.notifications@inbox.testmail.app",
-            subject: subject,
-            timestamp_from: submission.timestamp_from,
-            messageWildcard: submission.fineos_absence_id,
-            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-          }).then(async (emails) => {
+          getEmails(
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: subject,
+              timestamp_from: submission.timestamp_from,
+              messageWildcard: submission.fineos_absence_id,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+            },
+            120000
+          ).then(async (emails) => {
             const data = email.getNotificationData(emails[0].html);
             const dob =
               claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
