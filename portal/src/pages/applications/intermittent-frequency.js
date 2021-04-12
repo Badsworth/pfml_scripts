@@ -1,8 +1,8 @@
-import Claim, {
+import BenefitsApplication, {
   DurationBasis,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
-} from "../../models/Claim";
+} from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -17,7 +17,7 @@ import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "react-i18next";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 /**
  * Convenience constant for referencing the leave period object
@@ -73,7 +73,7 @@ export const IntermittentFrequency = (props) => {
   };
 
   const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -224,11 +224,11 @@ export const IntermittentFrequency = (props) => {
 };
 
 IntermittentFrequency.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
 };
 
-export default withClaim(IntermittentFrequency);
+export default withBenefitsApplication(IntermittentFrequency);

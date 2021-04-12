@@ -1,4 +1,4 @@
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
@@ -10,7 +10,7 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_previous_leaves"];
 
@@ -27,7 +27,7 @@ export const PreviousLeaves = (props) => {
     ) {
       formState.previous_leaves = null;
     }
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -88,10 +88,10 @@ export const PreviousLeaves = (props) => {
 };
 
 PreviousLeaves.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
   appLogic: PropTypes.object.isRequired,
 };
-export default withClaim(PreviousLeaves);
+export default withBenefitsApplication(PreviousLeaves);

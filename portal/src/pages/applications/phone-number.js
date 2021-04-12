@@ -1,4 +1,6 @@
-import Claim, { PhoneType } from "../../models/Claim";
+import BenefitsApplication, {
+  PhoneType,
+} from "../../models/BenefitsApplication";
 import { cloneDeep, get, pick, set } from "lodash";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -10,7 +12,7 @@ import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.phone.phone_number", "claim.phone.phone_type"];
 
@@ -29,7 +31,10 @@ export const PhoneNumber = (props) => {
     // TODO (CP-1455): Add support for international phone numbers
     set(requestData, "phone.int_code", "1");
 
-    await appLogic.claims.update(claim.application_id, requestData);
+    await appLogic.benefitsApplications.update(
+      claim.application_id,
+      requestData
+    );
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -84,7 +89,7 @@ export const PhoneNumber = (props) => {
 
 PhoneNumber.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
-export default withClaim(PhoneNumber);
+export default withBenefitsApplication(PhoneNumber);

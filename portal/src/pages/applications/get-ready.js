@@ -1,7 +1,7 @@
 import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
 import Alert from "../../components/Alert";
+import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import ButtonLink from "../../components/ButtonLink";
-import ClaimCollection from "../../models/ClaimCollection";
 import Heading from "../../components/Heading";
 import Icon from "../../components/Icon";
 import Link from "next/link";
@@ -11,7 +11,7 @@ import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withClaims from "../../hoc/withClaims";
+import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 
 export const GetReady = (props) => {
   const { appLogic, claims } = props;
@@ -140,7 +140,7 @@ GetReady.propTypes = {
       pathname: PropTypes.string.isRequired,
     }),
   }).isRequired,
-  claims: PropTypes.instanceOf(ClaimCollection).isRequired,
+  claims: PropTypes.instanceOf(BenefitsApplicationCollection).isRequired,
 };
 
-export default withClaims(GetReady);
+export default withBenefitsApplications(GetReady);

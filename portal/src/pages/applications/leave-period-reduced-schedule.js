@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { cloneDeep, get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import Heading from "../../components/Heading";
@@ -16,7 +16,7 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 /**
  * Convenience constant for referencing the leave period object
@@ -68,7 +68,10 @@ export const LeavePeriodReducedSchedule = (props) => {
       set(requestData, `${leavePeriodPath}.leave_period_id`, leave_period_id);
     }
 
-    await appLogic.claims.update(claim.application_id, requestData);
+    await appLogic.benefitsApplications.update(
+      claim.application_id,
+      requestData
+    );
   };
 
   const contentContext = {
@@ -186,10 +189,10 @@ export const LeavePeriodReducedSchedule = (props) => {
 
 LeavePeriodReducedSchedule.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
 };
 
-export default withClaim(LeavePeriodReducedSchedule);
+export default withBenefitsApplication(LeavePeriodReducedSchedule);

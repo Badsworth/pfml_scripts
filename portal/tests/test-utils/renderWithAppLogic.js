@@ -3,8 +3,8 @@ import { merge, times } from "lodash";
 import { mount, shallow } from "enzyme";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import Claim from "../../src/models/Claim";
-import ClaimCollection from "../../src/models/ClaimCollection";
+import BenefitsApplication from "../../src/models/BenefitsApplication";
+import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import React from "react";
 import User from "../../src/models/User";
@@ -20,7 +20,7 @@ import useAppLogic from "../../src/hooks/useAppLogic";
  * @param {object} [options.claimAttrs] - Additional attributes to set on the Claim
  * @param {number} [options.diveLevels] - number of levels to dive before returning the enzyme wrapper.
  *    This is needed to return the desired component when the component is wrapped in higher-order components.
- *    Defaults to 2 since most claim pages are wrapped by `withUser(withClaim(Page))`.
+ *    Defaults to 2 since most claim pages are wrapped by `withUser(withBenefitsApplication(Page))`.
  * @param {object} [options.props] - Additional props to set on the PageComponent
  * @param {"mount"|"shallow"} [options.render] - Enzyme render method. Shallow renders by default.
  * @param {object} [options.userAttrs] - Additional attributes to set on the User
@@ -29,7 +29,7 @@ import useAppLogic from "../../src/hooks/useAppLogic";
  * @param {boolean} [options.hasUploadedIdDocuments] - Additional attributes to set id documents
  * @param {boolean} [options.hasLoadingDocumentsError] - Additional attributs to set errors for loading documents
  * @param {boolean} [options.hasLegalNotices] - Create legal notices for claim
- * @param {object} [options.warningsLists] - Mock appLogic.claims.warningsLists
+ * @param {object} [options.warningsLists] - Mock appLogic.benefitsApplications.warningsLists
  * @returns {{ appLogic: object, claim: Claim, wrapper: object }}
  */
 const renderWithAppLogic = (PageComponent, options = {}) => {
@@ -52,15 +52,17 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
   testHook(() => {
     appLogic = useAppLogic();
   });
-  const claim = new Claim({
+  const claim = new BenefitsApplication({
     application_id: "mock_application_id",
     ...options.claimAttrs,
   });
-  appLogic.claims.claims = new ClaimCollection([claim]);
-  appLogic.claims.hasLoadedClaimAndWarnings = jest
+  appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+    [claim]
+  );
+  appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings = jest
     .fn()
-    .mockReturnValue(options.hasLoadedClaimAndWarnings || true);
-  appLogic.claims.warningsLists = options.warningsLists;
+    .mockReturnValue(options.hasLoadedBenefitsApplicationAndWarnings || true);
+  appLogic.benefitsApplications.warningsLists = options.warningsLists;
   appLogic.employers.claim = new EmployerClaim(options.employerClaimAttrs);
   appLogic.auth.isLoggedIn = true;
   appLogic.users.requireUserConsentToDataAgreement = jest.fn();
@@ -116,7 +118,7 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
     );
   }
 
-  // Render the withClaim-wrapped page
+  // Render the withBenefitsApplication-wrapped page
   const component = (
     <PageComponent
       appLogic={appLogic}
@@ -126,7 +128,7 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
   );
 
   act(() => {
-    // Go two levels deep to get the component that was wrapped by withUser and withClaim
+    // Go two levels deep to get the component that was wrapped by withUser and withBenefitsApplication
     if (options.render === "shallow") {
       wrapper = shallow(component);
       times(options.diveLevels, () => {

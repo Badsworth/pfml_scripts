@@ -643,6 +643,7 @@ const shared = {
     "You will need a completed Certification of a Serious Health Condition form for this section.",
   leaveReasonActiveDutyFamily: "Active duty",
   leaveReasonBonding: "Family leave",
+  leaveReasonCare: "Caring leave",
   leaveReasonMedical: "Medical leave",
   leaveReasonServiceMemberFamily: "Military family",
   maximumReducedLeaveMinutes:
@@ -1755,6 +1756,7 @@ const pages = {
     learnMoreLinks:
       "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
     learnMoreTitle: "Learn more",
+    newTag: "New",
     respondBody:
       "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
     respondTitle: "Respond to applications within 10 business days",
@@ -1764,6 +1766,9 @@ const pages = {
     verificationBody:
       "We require every employer to verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team.",
     verificationTitle: "Verify your account to continue",
+    viewApplicationsBody:
+      "When you log into your account you can now use the <dashboard-link>dashboard</dashboard-link> to see all the applications submitted by employees from your organization.",
+    viewApplicationsTitle: "View all applications",
     viewFormsBody:
       "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>Certification of a Serious Health Condition form</healthcare-provider-form-link> during the review process.",
     viewFormsTitle: "View forms and notices online",
@@ -2035,7 +2040,7 @@ const components = {
     leaveDurationLabel: "Leave duration",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
     leaveReasonValue_serviceMemberFamily:
@@ -2232,7 +2237,7 @@ const components = {
     hoursHeader: "Hours",
     time: "{{minutes, hoursMinutesDuration}}",
   },
-  withClaims: {
+  withBenefitsApplications: {
     loadingLabel: "Loading claims",
   },
   withEmployerClaim: {

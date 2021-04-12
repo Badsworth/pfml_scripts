@@ -1,4 +1,5 @@
 import { email } from "../../../tests/common/actions";
+import { getEmails } from "../../../tests/common/actions/email";
 import { ApplicationResponse } from "../../../../src/api";
 import { Submission } from "../../../../src/types";
 
@@ -25,8 +26,7 @@ describe("Email notifications should be sent to employee & employer after initia
     () => {
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
-        cy.task<Email[]>(
-          "getEmails",
+        getEmails(
           {
             address: "gqzap.notifications@inbox.testmail.app",
             subject:
@@ -35,7 +35,7 @@ describe("Email notifications should be sent to employee & employer after initia
             messageWildcard: submission.fineos_absence_id,
             debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
           },
-          { timeout: 180000 }
+          180000
         ).should("not.be.empty");
       });
     }
@@ -54,13 +54,16 @@ describe("Email notifications should be sent to employee & employer after initia
             "application started",
             submission.fineos_absence_id
           );
-          cy.task<Email[]>("getEmails", {
-            address: "gqzap.notifications@inbox.testmail.app",
-            subject: subject,
-            timestamp_from: submission.timestamp_from,
-            messageWildcard: submission.fineos_absence_id,
-            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-          }).then(async (emails) => {
+          getEmails(
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: subject,
+              timestamp_from: submission.timestamp_from,
+              messageWildcard: submission.fineos_absence_id,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+            },
+            120000
+          ).then(async (emails) => {
             const data = email.getNotificationData(emails[0].html);
             const dob =
               claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";

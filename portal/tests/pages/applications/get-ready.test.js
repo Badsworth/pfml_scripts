@@ -3,7 +3,7 @@ import {
   renderWithAppLogic,
   testHook,
 } from "../../test-utils";
-import ClaimCollection from "../../../src/models/ClaimCollection";
+import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
 import GetReady from "../../../src/pages/applications/get-ready";
 import User from "../../../src/models/User";
 import { mockRouter } from "next/router";
@@ -17,8 +17,10 @@ function render(customProps = {}, options = { claims: [] }) {
   testHook(() => {
     appLogic = useAppLogic();
     appLogic.users.user = new User({ consented_to_data_sharing: true });
-    appLogic.claims.claims = new ClaimCollection(options.claims);
-    appLogic.claims.hasLoadedAll = true;
+    appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+      options.claims
+    );
+    appLogic.benefitsApplications.hasLoadedAll = true;
   });
 
   const { wrapper } = renderWithAppLogic(GetReady, {

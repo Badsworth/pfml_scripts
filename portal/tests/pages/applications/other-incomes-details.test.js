@@ -144,7 +144,7 @@ describe("OtherIncomesDetails", () => {
 
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           other_incomes: [incomeData],
@@ -206,7 +206,7 @@ describe("OtherIncomesDetails", () => {
 
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           other_incomes: [...claimWithIncomes.other_incomes, new OtherIncome()],
@@ -219,7 +219,7 @@ describe("OtherIncomesDetails", () => {
       const { appLogic, claim, submitForm } = setup(claimWithIncomes);
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           other_incomes: claimWithIncomes.other_incomes,
@@ -231,7 +231,7 @@ describe("OtherIncomesDetails", () => {
       it("removes the income when the income isn't saved to the API", async () => {
         const claimWithIncomes = createClaimWithIncomes();
         const { appLogic, submitForm, wrapper } = setup(claimWithIncomes);
-        appLogic.claims.update.mockImplementationOnce(
+        appLogic.benefitsApplications.update.mockImplementationOnce(
           (applicationId, patchData) => {
             expect(applicationId).toBe(claimWithIncomes.application_id);
             expect(patchData.other_incomes).toHaveLength(1);
@@ -243,7 +243,7 @@ describe("OtherIncomesDetails", () => {
 
         expect(appLogic.otherLeaves.removeOtherIncome).not.toHaveBeenCalled();
 
-        expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
       });
 
       it("removes the income when the income is saved to the API and the DELETE request succeeds", async () => {
@@ -253,7 +253,7 @@ describe("OtherIncomesDetails", () => {
 
         const { appLogic, submitForm, wrapper } = setup(claimWithIncomes);
 
-        appLogic.claims.update.mockImplementationOnce(
+        appLogic.benefitsApplications.update.mockImplementationOnce(
           (applicationId, patchData) => {
             expect(applicationId).toBe(claimWithIncomes.application_id);
             expect(patchData.other_incomes).toHaveLength(1);
@@ -266,7 +266,7 @@ describe("OtherIncomesDetails", () => {
         const entries = wrapper.find(RepeatableFieldset).prop("entries");
 
         expect(appLogic.otherLeaves.removeOtherIncome).toHaveBeenCalled();
-        expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
         expect(entries).toHaveLength(1);
         expect(
           wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
@@ -284,7 +284,7 @@ describe("OtherIncomesDetails", () => {
           () => false
         );
 
-        appLogic.claims.update.mockImplementationOnce(
+        appLogic.benefitsApplications.update.mockImplementationOnce(
           (applicationId, patchData) => {
             expect(applicationId).toBe(claimWithIncomes.application_id);
             expect(patchData.other_incomes).toHaveLength(2);
@@ -295,7 +295,7 @@ describe("OtherIncomesDetails", () => {
         expect(appLogic.otherLeaves.removeOtherIncome).toHaveBeenCalled();
 
         await submitForm();
-        expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
 
         const entries = wrapper.find(RepeatableFieldset).prop("entries");
         expect(entries).toHaveLength(2);

@@ -91,7 +91,7 @@ describe("PreviousLeavesDetails", () => {
       const { appLogic, claim, submitForm } = setup({ hasPreviousLeave: true });
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           previous_leaves: claim.previous_leaves,
@@ -108,7 +108,7 @@ describe("PreviousLeavesDetails", () => {
 
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           previous_leaves: [...claim.previous_leaves, new PreviousLeave()],
@@ -123,7 +123,7 @@ describe("PreviousLeavesDetails", () => {
         clickRemoveFirstPreviousLeave,
         submitForm,
       } = setup({ hasPreviousLeave: true });
-      appLogic.claims.update.mockImplementationOnce(
+      appLogic.benefitsApplications.update.mockImplementationOnce(
         (applicationId, patchData) => {
           expect(applicationId).toBe(claim.application_id);
           expect(patchData.previous_leaves).toHaveLength(1);
@@ -135,7 +135,7 @@ describe("PreviousLeavesDetails", () => {
       await submitForm();
 
       expect(appLogic.otherLeaves.removePreviousLeave).not.toHaveBeenCalled();
-      expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
     });
 
     it("removes the leave when the user clicks 'Remove' and the leave is saved to the API when the DELETE request succeeds", async () => {
@@ -148,7 +148,7 @@ describe("PreviousLeavesDetails", () => {
 
       claim.previous_leaves[0].previous_leave_id = "mock-employer-leave-id-1";
 
-      appLogic.claims.update.mockImplementationOnce(
+      appLogic.benefitsApplications.update.mockImplementationOnce(
         (applicationId, patchData) => {
           expect(applicationId).toBe(claim.application_id);
           expect(patchData.previous_leaves).toHaveLength(1);
@@ -159,7 +159,7 @@ describe("PreviousLeavesDetails", () => {
       await submitForm();
 
       expect(appLogic.otherLeaves.removePreviousLeave).toHaveBeenCalled();
-      expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
     });
 
     it("does not remove the leave when the user clicks `Remove` and the DELETE request fails", async () => {
@@ -176,7 +176,7 @@ describe("PreviousLeavesDetails", () => {
         () => false
       );
 
-      appLogic.claims.update.mockImplementationOnce(
+      appLogic.benefitsApplications.update.mockImplementationOnce(
         (applicationId, patchData) => {
           expect(applicationId).toBe(claim.application_id);
           expect(patchData.previous_leaves).toHaveLength(2);
@@ -187,7 +187,7 @@ describe("PreviousLeavesDetails", () => {
       await submitForm();
 
       expect(appLogic.otherLeaves.removePreviousLeave).toHaveBeenCalled();
-      expect(appLogic.claims.update).toHaveBeenCalledTimes(1);
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
     });
 
     describe("when the user's claim does not have previous leaves", () => {
@@ -234,7 +234,7 @@ describe("PreviousLeavesDetails", () => {
 
         await submitForm();
 
-        expect(appLogic.claims.update).toHaveBeenCalledWith(
+        expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             previous_leaves: [previousLeave],

@@ -1,6 +1,6 @@
 import { renderWithAppLogic, simulateEvents } from "../../test-utils";
 import PhoneNumber from "../../../src/pages/applications/phone-number";
-import { PhoneType } from "../../../src/models/Claim";
+import { PhoneType } from "../../../src/models/BenefitsApplication";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -37,13 +37,16 @@ describe("PhoneNumber", () => {
 
     submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      phone: {
-        int_code: "1",
-        phone_number,
-        phone_type,
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        phone: {
+          int_code: "1",
+          phone_number,
+          phone_type,
+        },
+      }
+    );
   });
 
   it("calls claims.update when the form is successfully submitted with newly entered data", () => {
@@ -60,12 +63,15 @@ describe("PhoneNumber", () => {
 
     submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      phone: {
-        int_code: "1",
-        phone_number,
-        phone_type,
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        phone: {
+          int_code: "1",
+          phone_number,
+          phone_type,
+        },
+      }
+    );
   });
 });

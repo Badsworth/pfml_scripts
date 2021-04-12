@@ -1,7 +1,7 @@
 import Alert from "../../components/Alert";
 import ApplicationCard from "../../components/ApplicationCard";
+import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import ButtonLink from "../../components/ButtonLink";
-import ClaimCollection from "../../models/ClaimCollection";
 import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
@@ -9,7 +9,7 @@ import React from "react";
 import Title from "../../components/Title";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withClaims from "../../hoc/withClaims";
+import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 
 /**
  * List of all applications associated with the authenticated user
@@ -109,10 +109,10 @@ Index.propTypes = {
       pathname: PropTypes.string.isRequired,
     }).isRequired,
   }).isRequired,
-  claims: PropTypes.instanceOf(ClaimCollection).isRequired,
+  claims: PropTypes.instanceOf(BenefitsApplicationCollection).isRequired,
   query: PropTypes.shape({
     uploadedAbsenceId: PropTypes.string,
   }),
 };
 
-export default withClaims(Index);
+export default withBenefitsApplications(Index);

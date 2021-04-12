@@ -3,7 +3,7 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
-import { EmploymentStatus } from "../../../src/models/Claim";
+import { EmploymentStatus } from "../../../src/models/BenefitsApplication";
 import EmploymentStatusPage from "../../../src/pages/applications/employment-status";
 
 jest.mock("../../../src/hooks/useAppLogic");
@@ -51,7 +51,7 @@ describe("EmploymentStatusPage", () => {
 
       submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           employment_status: EmploymentStatus.employed,
@@ -98,7 +98,7 @@ describe("EmploymentStatusPage", () => {
         changeField("employer_fein", testFein);
         submitForm();
 
-        expect(appLogic.claims.update).toHaveBeenCalledWith(
+        expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             employment_status: EmploymentStatus.employed,
@@ -124,7 +124,7 @@ describe("EmploymentStatusPage", () => {
         changeRadioGroup("employment_status", EmploymentStatus.selfEmployed);
         submitForm();
 
-        expect(appLogic.claims.update).toHaveBeenCalledWith(
+        expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             employment_status: EmploymentStatus.selfEmployed,
@@ -153,7 +153,7 @@ describe("EmploymentStatusPage", () => {
 
         submitForm();
 
-        expect(appLogic.claims.update).toHaveBeenCalledWith(
+        expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
           claim.application_id,
           {
             employment_status: EmploymentStatus.employed,

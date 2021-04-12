@@ -3,7 +3,10 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
-import { WorkPattern, WorkPatternType } from "../../../src/models/Claim";
+import {
+  WorkPattern,
+  WorkPatternType,
+} from "../../../src/models/BenefitsApplication";
 import { map, sum } from "lodash";
 
 import ScheduleFixed from "../../../src/pages/applications/schedule-fixed";
@@ -67,7 +70,7 @@ describe("ScheduleFixed", () => {
     const {
       hours_worked_per_week,
       work_pattern,
-    } = appLogic.claims.update.mock.calls[0][1];
+    } = appLogic.benefitsApplications.update.mock.calls[0][1];
 
     expect(hours_worked_per_week).toEqual(MINUTES_WORKED_PER_WEEK / 60);
     expect(work_pattern.work_pattern_days.length).toEqual(7);

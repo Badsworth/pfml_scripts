@@ -2,7 +2,7 @@ import {
   DurationBasis,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
-} from "../../../src/models/Claim";
+} from "../../../src/models/BenefitsApplication";
 import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
@@ -64,8 +64,8 @@ describe("Part 1 Review Page", () => {
       claimAttrs: new MockClaimBuilder().part1Complete().create(),
       diveLevels,
     });
-    const submitSpy = jest.spyOn(appLogic.claims, "submit");
-    const completeSpy = jest.spyOn(appLogic.claims, "complete");
+    const submitSpy = jest.spyOn(appLogic.benefitsApplications, "submit");
+    const completeSpy = jest.spyOn(appLogic.benefitsApplications, "complete");
     wrapper.find("Button").simulate("click");
 
     expect(submitSpy).toHaveBeenCalledWith(claim.application_id);
@@ -94,8 +94,8 @@ describe("Final Review Page", () => {
     });
 
     it("completes the application when the user clicks Submit", () => {
-      const submitSpy = jest.spyOn(appLogic.claims, "submit");
-      const completeSpy = jest.spyOn(appLogic.claims, "complete");
+      const submitSpy = jest.spyOn(appLogic.benefitsApplications, "submit");
+      const completeSpy = jest.spyOn(appLogic.benefitsApplications, "complete");
       wrapper.find("Button").simulate("click");
 
       expect(submitSpy).not.toHaveBeenCalled();

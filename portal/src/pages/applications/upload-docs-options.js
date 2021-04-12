@@ -1,4 +1,6 @@
-import Claim, { ReasonQualifier } from "../../models/Claim";
+import BenefitsApplication, {
+  ReasonQualifier,
+} from "../../models/BenefitsApplication";
 import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -11,7 +13,7 @@ import tracker from "../../services/tracker";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const UploadType = {
   mass_id: "UPLOAD_MASS_ID",
@@ -115,8 +117,8 @@ export const UploadDocsOptions = (props) => {
 };
 
 UploadDocsOptions.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
 };
 
-export default withClaim(UploadDocsOptions);
+export default withBenefitsApplication(UploadDocsOptions);

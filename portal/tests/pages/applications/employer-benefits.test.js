@@ -39,7 +39,7 @@ describe("EmployerBenefits", () => {
 
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           has_employer_benefits: claim.has_employer_benefits,
@@ -54,7 +54,7 @@ describe("EmployerBenefits", () => {
 
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           has_employer_benefits: false,
@@ -82,7 +82,7 @@ describe("EmployerBenefits", () => {
 
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           has_employer_benefits: false,
@@ -94,7 +94,7 @@ describe("EmployerBenefits", () => {
 
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
         claim.application_id,
         {
           has_employer_benefits: true,

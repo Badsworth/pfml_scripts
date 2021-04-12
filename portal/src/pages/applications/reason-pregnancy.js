@@ -1,5 +1,5 @@
 import { get, pick } from "lodash";
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -7,7 +7,7 @@ import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.leave_details.pregnant_or_recent_birth"];
 
@@ -18,7 +18,7 @@ export const ReasonPregnancy = (props) => {
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
   const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -58,11 +58,11 @@ export const ReasonPregnancy = (props) => {
 };
 
 ReasonPregnancy.propTypes = {
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
 };
 
-export default withClaim(ReasonPregnancy);
+export default withBenefitsApplication(ReasonPregnancy);

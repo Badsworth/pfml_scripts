@@ -4,8 +4,8 @@ import {
 } from "../../models/PaymentPreference";
 import { cloneDeep, get, pick, set } from "lodash";
 import BackButton from "../../components/BackButton";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import Button from "../../components/Button";
-import Claim from "../../models/Claim";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import Fieldset from "../../components/Fieldset";
@@ -21,7 +21,7 @@ import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 const bankAccountTypeField = "payment_preference.bank_account_type";
 const routingNumberField = "payment_preference.routing_number";
@@ -54,7 +54,7 @@ export const PaymentMethod = (props) => {
       set(requestData, bankAccountTypeField, null);
       set(requestData, accountNumberField, null);
     }
-    await appLogic.claims.submitPaymentPreference(
+    await appLogic.benefitsApplications.submitPaymentPreference(
       claim.application_id,
       requestData
     );
@@ -184,11 +184,11 @@ export const PaymentMethod = (props) => {
 };
 
 PaymentMethod.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
   appLogic: PropTypes.object.isRequired,
 };
 
-export default withClaim(PaymentMethod);
+export default withBenefitsApplication(PaymentMethod);

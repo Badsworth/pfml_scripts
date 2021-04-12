@@ -5,7 +5,7 @@ import {
 } from "../../test-utils";
 import DateOfChild from "../../../src/pages/applications/date-of-child";
 import { DateTime } from "luxon";
-import { ReasonQualifier } from "../../../src/models/Claim";
+import { ReasonQualifier } from "../../../src/models/BenefitsApplication";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -80,13 +80,16 @@ describe("DateOfChild", () => {
 
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
-        leave_details: {
-          child_birth_date: future,
-          child_placement_date: null,
-          has_future_child_date: true,
-        },
-      });
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+        expect.any(String),
+        {
+          leave_details: {
+            child_birth_date: future,
+            child_placement_date: null,
+            has_future_child_date: true,
+          },
+        }
+      );
     });
 
     it("sets has_future_child_date as true for future birth bonding leave when data is manually populated", async () => {
@@ -99,13 +102,16 @@ describe("DateOfChild", () => {
 
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
-        leave_details: {
-          child_birth_date: future,
-          child_placement_date: null,
-          has_future_child_date: true,
-        },
-      });
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+        expect.any(String),
+        {
+          leave_details: {
+            child_birth_date: future,
+            child_placement_date: null,
+            has_future_child_date: true,
+          },
+        }
+      );
     });
 
     it("sets has_future_child_date as true for future placement bonding leave when claim is already populated", async () => {
@@ -116,13 +122,16 @@ describe("DateOfChild", () => {
 
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
-        leave_details: {
-          child_birth_date: null,
-          child_placement_date: future,
-          has_future_child_date: true,
-        },
-      });
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+        expect.any(String),
+        {
+          leave_details: {
+            child_birth_date: null,
+            child_placement_date: future,
+            has_future_child_date: true,
+          },
+        }
+      );
     });
 
     it("sets has_future_child_date as true for future placement bonding leave when data is manually populated", async () => {
@@ -133,13 +142,16 @@ describe("DateOfChild", () => {
       changeField("leave_details.child_placement_date", future);
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
-        leave_details: {
-          child_birth_date: null,
-          child_placement_date: future,
-          has_future_child_date: true,
-        },
-      });
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+        expect.any(String),
+        {
+          leave_details: {
+            child_birth_date: null,
+            child_placement_date: future,
+            has_future_child_date: true,
+          },
+        }
+      );
     });
   });
 
@@ -166,13 +178,16 @@ describe("DateOfChild", () => {
 
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
-        leave_details: {
-          child_birth_date: past,
-          child_placement_date: null,
-          has_future_child_date: false,
-        },
-      });
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+        expect.any(String),
+        {
+          leave_details: {
+            child_birth_date: past,
+            child_placement_date: null,
+            has_future_child_date: false,
+          },
+        }
+      );
     });
 
     it("sets has_future_child_date as false for past birth bonding leave when data is manually populated", async () => {
@@ -183,13 +198,16 @@ describe("DateOfChild", () => {
       changeField("leave_details.child_birth_date", past);
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
-        leave_details: {
-          child_birth_date: past,
-          child_placement_date: null,
-          has_future_child_date: false,
-        },
-      });
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+        expect.any(String),
+        {
+          leave_details: {
+            child_birth_date: past,
+            child_placement_date: null,
+            has_future_child_date: false,
+          },
+        }
+      );
     });
 
     it("sets has_future_child_date as false for past placement bonding leave when claim is pre-populated", async () => {
@@ -199,13 +217,16 @@ describe("DateOfChild", () => {
       const { appLogic, submitForm } = setup(claim);
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
-        leave_details: {
-          child_birth_date: null,
-          child_placement_date: past,
-          has_future_child_date: false,
-        },
-      });
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+        expect.any(String),
+        {
+          leave_details: {
+            child_birth_date: null,
+            child_placement_date: past,
+            has_future_child_date: false,
+          },
+        }
+      );
     });
 
     it("sets has_future_child_date as false for past placement bonding leave when data is manually populated", async () => {
@@ -216,13 +237,16 @@ describe("DateOfChild", () => {
       changeField("leave_details.child_placement_date", past);
       await submitForm();
 
-      expect(appLogic.claims.update).toHaveBeenCalledWith(expect.any(String), {
-        leave_details: {
-          child_birth_date: null,
-          child_placement_date: past,
-          has_future_child_date: false,
-        },
-      });
+      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+        expect.any(String),
+        {
+          leave_details: {
+            child_birth_date: null,
+            child_placement_date: past,
+            has_future_child_date: false,
+          },
+        }
+      );
     });
   });
 });

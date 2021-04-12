@@ -29,7 +29,7 @@ describe("Start", () => {
     it("calls submitApplication", async () => {
       const { submitForm } = simulateEvents(wrapper);
       await submitForm();
-      expect(appLogic.claims.create).toHaveBeenCalled();
+      expect(appLogic.benefitsApplications.create).toHaveBeenCalled();
     });
   });
 });

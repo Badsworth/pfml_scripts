@@ -68,17 +68,16 @@ describe("PaymentMethod", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.submitPaymentPreference).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        payment_preference: {
-          account_number: "091000022",
-          bank_account_type: "Checking",
-          routing_number: "1234567890",
-          payment_method: PaymentPreferenceMethod.ach,
-        },
-      }
-    );
+    expect(
+      appLogic.benefitsApplications.submitPaymentPreference
+    ).toHaveBeenCalledWith(claim.application_id, {
+      payment_preference: {
+        account_number: "091000022",
+        bank_account_type: "Checking",
+        routing_number: "1234567890",
+        payment_method: PaymentPreferenceMethod.ach,
+      },
+    });
   });
 
   it("submits payment preference fields for check when the data is already on the claim", async () => {
@@ -88,17 +87,16 @@ describe("PaymentMethod", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.submitPaymentPreference).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        payment_preference: {
-          account_number: null,
-          bank_account_type: null,
-          routing_number: null,
-          payment_method: PaymentPreferenceMethod.check,
-        },
-      }
-    );
+    expect(
+      appLogic.benefitsApplications.submitPaymentPreference
+    ).toHaveBeenCalledWith(claim.application_id, {
+      payment_preference: {
+        account_number: null,
+        bank_account_type: null,
+        routing_number: null,
+        payment_method: PaymentPreferenceMethod.check,
+      },
+    });
   });
 
   it("submits payment preference fields for direct deposit when the data is newly entered", async () => {
@@ -121,16 +119,15 @@ describe("PaymentMethod", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.submitPaymentPreference).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        payment_preference: {
-          account_number,
-          bank_account_type,
-          routing_number,
-          payment_method,
-        },
-      }
-    );
+    expect(
+      appLogic.benefitsApplications.submitPaymentPreference
+    ).toHaveBeenCalledWith(claim.application_id, {
+      payment_preference: {
+        account_number,
+        bank_account_type,
+        routing_number,
+        payment_method,
+      },
+    });
   });
 });

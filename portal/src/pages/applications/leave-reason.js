@@ -1,6 +1,6 @@
-import Claim, {
+import BenefitsApplication, {
   ReasonQualifier as ReasonQualifierEnum,
-} from "../../models/Claim";
+} from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -16,7 +16,7 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.leave_details.reason",
@@ -39,7 +39,7 @@ export const LeaveReason = (props) => {
       set(formState, "leave_details.has_future_child_date", null);
     }
 
-    await appLogic.claims.update(claim.application_id, formState);
+    await appLogic.benefitsApplications.update(claim.application_id, formState);
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -187,8 +187,8 @@ export const LeaveReason = (props) => {
 };
 
 LeaveReason.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
 };
 
-export default withClaim(LeaveReason);
+export default withBenefitsApplication(LeaveReason);

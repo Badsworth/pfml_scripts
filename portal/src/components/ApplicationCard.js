@@ -1,4 +1,6 @@
-import Claim, { ReasonQualifier } from "../models/Claim";
+import BenefitsApplication, {
+  ReasonQualifier,
+} from "../models/BenefitsApplication";
 import Document, { DocumentType } from "../models/Document";
 import Alert from "../components/Alert";
 import ButtonLink from "../components/ButtonLink";
@@ -68,7 +70,7 @@ ApplicationCard.propTypes = {
       download: PropTypes.func.isRequired,
     }),
   }).isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   /**
    * Cards are displayed in a list. What position is this card?
@@ -168,7 +170,7 @@ function ApplicationDetails(props) {
 }
 
 ApplicationDetails.propTypes = {
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 /**
@@ -239,7 +241,7 @@ LegalNotices.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
   }).isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
 };
 
@@ -389,7 +391,7 @@ function ApplicationActions(props) {
 }
 
 ApplicationActions.propTypes = {
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
 };
 

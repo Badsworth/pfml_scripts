@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import AddressModel from "../../models/Address";
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import FieldsetAddress from "../../components/FieldsetAddress";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -10,7 +10,7 @@ import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.has_mailing_address",
@@ -50,7 +50,7 @@ export const Address = (props) => {
   }, [formState, updateFields]);
 
   const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -116,11 +116,11 @@ export const Address = (props) => {
 };
 
 Address.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
 };
 
-export default withClaim(Address);
+export default withBenefitsApplication(Address);

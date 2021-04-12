@@ -1,6 +1,6 @@
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -13,7 +13,7 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.leave_details.employer_notified",
@@ -33,7 +33,7 @@ export const NotifiedEmployer = (props) => {
   const employer_notified = get(formState.leave_details, "employer_notified");
 
   const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -116,11 +116,11 @@ export const NotifiedEmployer = (props) => {
 };
 
 NotifiedEmployer.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
 };
 
-export default withClaim(NotifiedEmployer);
+export default withBenefitsApplication(NotifiedEmployer);

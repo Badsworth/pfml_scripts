@@ -1,7 +1,7 @@
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useEffect, useRef } from "react";
 import { get, pick } from "lodash";
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
@@ -11,7 +11,7 @@ import RepeatableFieldset from "../../components/RepeatableFieldset";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.previous_leaves",
@@ -50,7 +50,7 @@ export const PreviousLeavesDetails = (props) => {
   }, [claim.previous_leaves, updateFields]);
 
   const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const handleAddClick = () => {
     const updatedEntries = previous_leaves.concat([new PreviousLeave()]);
@@ -118,7 +118,7 @@ export const PreviousLeavesDetails = (props) => {
 };
 
 PreviousLeavesDetails.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
@@ -217,4 +217,4 @@ PreviousLeaveCard.propTypes = {
   getFunctionalInputProps: PropTypes.func.isRequired,
 };
 
-export default withClaim(PreviousLeavesDetails);
+export default withBenefitsApplication(PreviousLeavesDetails);

@@ -1,4 +1,4 @@
-import Claim from "../../src/models/Claim";
+import BenefitsApplication from "../../src/models/BenefitsApplication";
 import Document from "../../src/models/Document";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import React from "react";
@@ -12,7 +12,7 @@ jest.mock("../../src/hooks/useAppLogic");
 describe("withClaimDocuments", () => {
   let appLogic, wrapper;
   const application_id = "12345";
-  const claim = new Claim({ application_id });
+  const claim = new BenefitsApplication({ application_id });
 
   const PageComponent = () => <div />;
   const WrappedComponent = withClaimDocuments(PageComponent);
@@ -43,7 +43,7 @@ describe("withClaimDocuments", () => {
   it("does not load documents if user has not yet loaded", () => {
     appLogic.user = appLogic.users.user = null;
     render();
-    expect(appLogic.claims.loadAll).not.toHaveBeenCalled();
+    expect(appLogic.benefitsApplications.loadAll).not.toHaveBeenCalled();
   });
 
   it("does not load documents when documents are already loaded", () => {

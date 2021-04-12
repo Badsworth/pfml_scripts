@@ -15,7 +15,7 @@ export const Start = (props) => {
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await props.appLogic.claims.create();
+    await props.appLogic.benefitsApplications.create();
   });
 
   return (

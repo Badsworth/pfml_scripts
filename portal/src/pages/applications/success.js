@@ -1,4 +1,6 @@
-import Claim, { ReasonQualifier } from "../../models/Claim";
+import BenefitsApplication, {
+  ReasonQualifier,
+} from "../../models/BenefitsApplication";
 import {
   IconCalendar,
   IconCopy,
@@ -17,7 +19,7 @@ import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 /**
  * Success page, shown when an application is successfully submitted.
@@ -199,10 +201,10 @@ export const Success = (props) => {
 };
 
 Success.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
 };
 
-export default withClaim(Success);
+export default withBenefitsApplication(Success);

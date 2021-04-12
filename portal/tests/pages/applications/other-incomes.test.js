@@ -47,10 +47,13 @@ describe("OtherIncomes", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      other_incomes_awaiting_approval: false,
-      has_other_incomes: true,
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        other_incomes_awaiting_approval: false,
+        has_other_incomes: true,
+      }
+    );
   });
 
   it("calls claims.update with expected API fields when user selects No", async () => {
@@ -60,10 +63,13 @@ describe("OtherIncomes", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      other_incomes_awaiting_approval: false,
-      has_other_incomes: false,
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        other_incomes_awaiting_approval: false,
+        has_other_incomes: false,
+      }
+    );
   });
 
   it("calls claims.update with expected API fields when user selects Not Yet", async () => {
@@ -73,10 +79,13 @@ describe("OtherIncomes", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      other_incomes_awaiting_approval: true,
-      has_other_incomes: false,
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        other_incomes_awaiting_approval: true,
+        has_other_incomes: false,
+      }
+    );
   });
 
   it("calls claims.update with expected API fields when claim already has data", () => {
@@ -84,10 +93,13 @@ describe("OtherIncomes", () => {
 
     submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      other_incomes_awaiting_approval: false,
-      has_other_incomes: true,
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        other_incomes_awaiting_approval: false,
+        has_other_incomes: true,
+      }
+    );
   });
 
   it("sets other_leaves to null when the user selects No", () => {
@@ -101,10 +113,13 @@ describe("OtherIncomes", () => {
 
     submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      other_incomes_awaiting_approval: false,
-      other_incomes: null,
-      has_other_incomes: false,
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        other_incomes_awaiting_approval: false,
+        other_incomes: null,
+        has_other_incomes: false,
+      }
+    );
   });
 });

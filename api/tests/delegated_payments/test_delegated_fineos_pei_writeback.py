@@ -1,6 +1,6 @@
 import dataclasses
 import re
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import faker
 import pytest
@@ -11,7 +11,9 @@ import massgov.pfml.delegated_payments.delegated_fineos_pei_writeback as writeba
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     Flow,
+    LkPaymentMethod,
     Payment,
+    PaymentMethod,
     PaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,
@@ -25,6 +27,8 @@ pytestmark = pytest.mark.integration
 
 fake = faker.Faker()
 
+check_number_provider = {"check_number": 1}
+
 
 @pytest.fixture
 def fineos_pei_writeback_step(initialize_factories_session, test_db_session, test_db_other_session):
@@ -33,16 +37,27 @@ def fineos_pei_writeback_step(initialize_factories_session, test_db_session, tes
     )
 
 
-def _generate_payment(test_db_session: db.Session) -> Payment:
+def _generate_payment(
+    test_db_session: db.Session, payment_method: LkPaymentMethod = PaymentMethod.ACH
+) -> Payment:
+    check_number = None
+    if payment_method == PaymentMethod.CHECK:
+        check_number = check_number_provider["check_number"]
+        check_number_provider["check_number"] += 1
+
     return PaymentFactory.create(
         fineos_pei_c_value=str(fake.random_int(min=1000, max=9999)),
         fineos_pei_i_value=str(fake.random_int(min=1000, max=9999)),
         fineos_extraction_date=date.today() - timedelta(days=fake.random_int()),
+        disb_method_id=payment_method.payment_method_id,
+        check_number=check_number,
     )
 
 
-def _generate_payment_and_state(test_db_session: db.Session, state: State) -> Payment:
-    payment = _generate_payment(test_db_session)
+def _generate_payment_and_state(
+    test_db_session: db.Session, state: State, payment_method: LkPaymentMethod = PaymentMethod.ACH
+) -> Payment:
+    payment = _generate_payment(test_db_session, payment_method)
     state_log_util.create_finished_state_log(
         associated_model=payment,
         end_state=state,
@@ -64,10 +79,14 @@ def _generate_overpayment(test_db_session: db.Session) -> Payment:
     )
 
 
-def _generate_accepted_payment(test_db_session: db.Session) -> Payment:
-    return _generate_payment_and_state(
-        test_db_session, State.DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK
-    )
+def _generate_accepted_payment(
+    test_db_session: db.Session, payment_method: LkPaymentMethod
+) -> Payment:
+    state = State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT
+    if payment_method == PaymentMethod.CHECK:
+        state = State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT
+
+    return _generate_payment_and_state(test_db_session, state, payment_method)
 
 
 def _generate_cancelled_payment(test_db_session: db.Session) -> Payment:
@@ -92,6 +111,7 @@ def _generate_errored_payment(test_db_session: db.Session) -> Payment:
             fake.random_int(min=1, max=3),
         ),
     ),
+    ids=["state_payments"],
 )
 def test_process_payments_for_writeback(
     fineos_pei_writeback_step,
@@ -128,9 +148,15 @@ def test_process_payments_for_writeback(
     for _i in range(overpayment_count):
         overpayments.append(_generate_overpayment(test_db_session))
 
-    accepted_payments = []
+    accepted_check_payments = []
     for _i in range(accepted_payment_count):
-        accepted_payments.append(_generate_accepted_payment(test_db_session))
+        accepted_check_payments.append(
+            _generate_accepted_payment(test_db_session, PaymentMethod.CHECK)
+        )
+
+    accepted_eft_payments = []
+    for _i in range(accepted_payment_count):
+        accepted_eft_payments.append(_generate_accepted_payment(test_db_session, PaymentMethod.ACH))
 
     cancelled_payments = []
     for _i in range(cancelled_payment_count):
@@ -143,7 +169,8 @@ def test_process_payments_for_writeback(
     all_payments = (
         zero_dollar_payments
         + overpayments
-        + accepted_payments
+        + accepted_check_payments
+        + accepted_eft_payments
         + cancelled_payments
         + errored_payments
     )
@@ -201,16 +228,23 @@ def test_process_payments_for_writeback(
             == State.DELEGATED_PAYMENT_OVERPAYMENT_FINEOS_WRITEBACK_SENT.state_id
         )
 
-    accepted_payments_i_values = []
-    for payment in accepted_payments:
-        accepted_payments_i_values.append(payment.fineos_pei_i_value)
+    accepted_check_payments_i_values = []
+    for payment in accepted_check_payments:
+        accepted_check_payments_i_values.append(payment.fineos_pei_i_value)
         state_log = state_log_util.get_latest_state_log_in_flow(
             payment, Flow.DELEGATED_PAYMENT, test_db_other_session
         )
         assert (
-            state_log.end_state_id
-            == State.DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT.state_id
+            state_log.end_state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT.state_id
         )
+
+    accepted_eft_payments_i_values = []
+    for payment in accepted_eft_payments:
+        accepted_eft_payments_i_values.append(payment.fineos_pei_i_value)
+        state_log = state_log_util.get_latest_state_log_in_flow(
+            payment, Flow.DELEGATED_PAYMENT, test_db_other_session
+        )
+        assert state_log.end_state_id == State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_id
 
     for payment in cancelled_payments:
         state_log = state_log_util.get_latest_state_log_in_flow(
@@ -236,11 +270,12 @@ def test_process_payments_for_writeback(
         [f.name for f in dataclasses.fields(writeback.PeiWritebackRecord)]
     )
 
-    expected_line_pattern = "{},({}),{},,,,{},,({}|{}|{}),{}".format(
+    expected_line_pattern = "{},({}),{},,,,({}),({}),({}|{}|{}),({})".format(
         r"\d\d\d\d",  # C value
         r"\d\d\d\d",  # I value
         writeback.ACTIVE_WRITEBACK_RECORD_STATUS,
         r"\d\d/\d\d/\d\d\d\d",  # Extraction date
+        r"\d*",  # Check number
         # Expect both transaction statuses in the writeback file.
         writeback.PAID_WRITEBACK_RECORD_TRANSACTION_STATUS,
         writeback.PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
@@ -257,13 +292,24 @@ def test_process_payments_for_writeback(
 
         # Expect that payment types will set the appropriate transaction status.
         i_value = result.group(1)
-        transaction_status = result.group(2)
-        if i_value in accepted_payments_i_values:
+        extraction_date = datetime.strptime(result.group(2), "%m/%d/%Y")
+        transaction_number = result.group(3)
+        transaction_status = result.group(4)
+        transaction_date = datetime.strptime(result.group(5), "%m/%d/%Y")
+
+        if i_value in accepted_check_payments_i_values:
             assert transaction_status == writeback.PAID_WRITEBACK_RECORD_TRANSACTION_STATUS
+            assert transaction_number != ""
+            assert transaction_date == (extraction_date + timedelta(days=1))
+        elif i_value in accepted_eft_payments_i_values:
+            assert transaction_status == writeback.PAID_WRITEBACK_RECORD_TRANSACTION_STATUS
+            assert transaction_date == (extraction_date + timedelta(days=2))
         elif i_value in errored_payments_i_values:
             assert transaction_status == writeback.ERROR_WRITEBACK_RECORD_TRANSACTION_STATUS
+            assert transaction_date == extraction_date
         else:
             assert transaction_status == writeback.PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS
+            assert transaction_date == extraction_date
 
 
 def test_process_payments_for_writeback_no_payments_ready_for_writeback(
@@ -305,6 +351,7 @@ def test_process_payments_for_writeback_no_payments_ready_for_writeback(
             fake.random_int(min=2, max=6),
         ),
     ),
+    ids=["writeback", "payments"],
 )
 def test_get_writeback_items_for_state(
     fineos_pei_writeback_step,
@@ -314,6 +361,7 @@ def test_get_writeback_items_for_state(
     accepted_payment_count,
     cancelled_payment_count,
     errored_payment_count,
+    caplog,
 ):
     # Create some small amount of Payments that are in a state other than the one we pick up
     # for the writeback.
@@ -329,7 +377,10 @@ def test_get_writeback_items_for_state(
         _generate_overpayment(test_db_session)
 
     for _i in range(accepted_payment_count):
-        _generate_accepted_payment(test_db_session)
+        _generate_accepted_payment(test_db_session, PaymentMethod.ACH)
+
+    for _i in range(accepted_payment_count):
+        _generate_accepted_payment(test_db_session, PaymentMethod.CHECK)
 
     for _i in range(cancelled_payment_count):
         _generate_cancelled_payment(test_db_session)
@@ -340,7 +391,7 @@ def test_get_writeback_items_for_state(
     payments_ready_for_writeback_count = (
         zero_dollar_payment_count
         + overpayment_count
-        + accepted_payment_count
+        + (accepted_payment_count * 2)
         + cancelled_payment_count
         + errored_payment_count
     )
@@ -353,7 +404,7 @@ def test_extracted_payment_to_pei_writeback_record(fineos_pei_writeback_step, te
     status = writeback.PAID_WRITEBACK_RECORD_TRANSACTION_STATUS
 
     writeback_record = fineos_pei_writeback_step._extracted_payment_to_pei_writeback_record(
-        payment, status
+        payment, status, valid_pub_payment=True
     )
 
     assert writeback_record.status == writeback.ACTIVE_WRITEBACK_RECORD_STATUS

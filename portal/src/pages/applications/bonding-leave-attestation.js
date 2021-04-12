@@ -1,13 +1,13 @@
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import Button from "../../components/Button";
-import Claim from "../../models/Claim";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const BondingLeaveAttestation = (props) => {
   const { t } = useTranslation();
@@ -39,8 +39,8 @@ export const BondingLeaveAttestation = (props) => {
 
 BondingLeaveAttestation.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   query: PropTypes.object.isRequired,
 };
 
-export default withClaim(BondingLeaveAttestation);
+export default withBenefitsApplication(BondingLeaveAttestation);

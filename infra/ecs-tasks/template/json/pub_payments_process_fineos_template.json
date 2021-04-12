@@ -47,7 +47,8 @@
 
     ],
     "secrets": [
-      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" }
+      { "name": "DB_PASSWORD", "valueFrom": "/service/${app_name}/${environment_name}/db-password" },
+      { "name": "EXPERIAN_AUTH_TOKEN", "valueFrom": "/service/${app_name}/common/experian-auth-token" }
     ]
   }
 ]

@@ -2,10 +2,10 @@
 /**
  * @file Employer Claim model
  */
-import BaseClaim from "./BaseClaim";
+import BaseBenefitsApplication from "./BaseBenefitsApplication";
 import { merge } from "lodash";
 
-class EmployerClaim extends BaseClaim {
+class EmployerClaim extends BaseBenefitsApplication {
   get defaults() {
     return merge({
       ...super.defaults,

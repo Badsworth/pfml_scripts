@@ -120,7 +120,9 @@ def _get_loaded_reference_file_in_s3(mock_s3_bucket, filename, source_directory_
 
 
 @pytest.mark.parametrize(
-    "pending_ref_file_count", ((0), (1), (random.randint(2, 10)),),
+    "pending_ref_file_count",
+    ((0), (1), (random.randint(2, 10)),),
+    ids=["no_file", "one_file", "many_files"],
 )
 @pytest.mark.integration
 def test_get_pending_dua_payment_reference_files(
@@ -200,6 +202,14 @@ def test_get_pending_dua_payment_reference_files(
             ],
         ),
     ),
+    ids=[
+        "some_existing-no_new-no_dupes",
+        "some_existing-some_new-some_dupes",
+        "no_existing-some_new-some_dupes",
+        "some_existing-no_new-some_dupes",
+        "some_existing-one_new-no_dupes",
+        "some_existing-one_new-one_dupe",
+    ],
 )
 @pytest.mark.integration
 def test_load_new_rows_from_file_success(
@@ -745,6 +755,13 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
         # Most common scenario. Single ReferenceFile with DUA_PAYMENT_LIST type created today.
         (random.randint(1, 4), random.randint(3, 6), 1, True),
     ),
+    ids=[
+        "none_other-none_old-none_today",
+        "some_other-none_old-none_today",
+        "some_other-some_old-none_today",
+        "some_other-some_old-some_today",
+        "some_other-some_old-one_today",
+    ],
 )
 @pytest.mark.integration
 def test_payment_list_has_been_downloaded_today(
@@ -786,6 +803,7 @@ def test_payment_list_has_been_downloaded_today(
         # cases when there is more than 1 file.
         (random.randint(2, 5)),
     ),
+    ids=["no_files", "one_waiting", "multiple_files"],
 )
 @pytest.mark.integration
 def test_download_payment_list_if_none_today(

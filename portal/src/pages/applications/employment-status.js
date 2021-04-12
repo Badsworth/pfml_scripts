@@ -1,6 +1,6 @@
-import Claim, {
+import BenefitsApplication, {
   EmploymentStatus as EmploymentStatusEnum,
-} from "../../models/Claim";
+} from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -15,7 +15,7 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.employment_status", "claim.employer_fein"];
 
@@ -39,7 +39,7 @@ export const EmploymentStatus = (props) => {
   const employment_status = get(formState, "employment_status");
 
   const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -107,7 +107,7 @@ export const EmploymentStatus = (props) => {
 
 EmploymentStatus.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
-export default withClaim(EmploymentStatus);
+export default withBenefitsApplication(EmploymentStatus);

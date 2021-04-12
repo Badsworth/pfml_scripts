@@ -705,6 +705,7 @@ def test_address_line_two(initialize_factories_session):
             BankAccountType.CHECKING.bank_account_type_id,
         ),
     ),
+    ids=["savings", "checking"],
 )
 def test_is_same_eft(routing_nbr, account_nbr, bank_account_type_id, initialize_factories_session):
     # Verify that the EFT data is the same even in the very contrived and

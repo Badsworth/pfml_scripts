@@ -1,4 +1,7 @@
-import Claim, { ClaimStatus, ReasonQualifier } from "../../models/Claim";
+import BenefitsApplication, {
+  ClaimStatus,
+  ReasonQualifier,
+} from "../../models/BenefitsApplication";
 import Document, { DocumentType } from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { camelCase, filter, findIndex, get } from "lodash";
@@ -22,7 +25,7 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 export const Checklist = (props) => {
@@ -44,7 +47,8 @@ export const Checklist = (props) => {
 
   const partOneSubmitted = query["part-one-submitted"];
   const paymentPrefSubmitted = query["payment-pref-submitted"];
-  const warnings = appLogic.claims.warningsLists[claim.application_id];
+  const warnings =
+    appLogic.benefitsApplications.warningsLists[claim.application_id];
 
   /**
    * @type {StepModel[]}
@@ -160,7 +164,7 @@ export const Checklist = (props) => {
    * Helper method for generating a context string used to differentiate i18n keys
    * for the various Step content strings.
    * @param {string} stepName
-   * @param {Claim} claim
+   * @param {BenefitsApplication} claim
    * @returns {string|undefined}
    */
   function getStepDescription(stepName, claim) {
@@ -329,14 +333,14 @@ export const Checklist = (props) => {
 Checklist.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
-    claims: PropTypes.shape({
+    benefitsApplications: PropTypes.shape({
       warningsLists: PropTypes.object.isRequired,
     }).isRequired,
     portalFlow: PropTypes.shape({
       getNextPageRoute: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({
@@ -345,4 +349,4 @@ Checklist.propTypes = {
   }),
 };
 
-export default withClaim(withClaimDocuments(Checklist));
+export default withBenefitsApplication(withClaimDocuments(Checklist));

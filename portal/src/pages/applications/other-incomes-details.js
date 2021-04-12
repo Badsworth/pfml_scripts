@@ -4,7 +4,7 @@ import OtherIncome, {
 } from "../../models/OtherIncome";
 import React, { useEffect, useRef } from "react";
 import { get, pick } from "lodash";
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import Dropdown from "../../components/Dropdown";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
@@ -19,7 +19,7 @@ import RepeatableFieldset from "../../components/RepeatableFieldset";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.other_incomes",
@@ -58,7 +58,7 @@ export const OtherIncomesDetails = (props) => {
   }, [claim.other_incomes, updateFields]);
 
   const handleSave = () =>
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const handleAddClick = () => {
     // Add a new blank entry
@@ -132,7 +132,7 @@ export const OtherIncomesDetails = (props) => {
 };
 
 OtherIncomesDetails.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
@@ -242,4 +242,4 @@ OtherIncomeCard.propTypes = {
   getFunctionalInputProps: PropTypes.func.isRequired,
 };
 
-export default withClaim(OtherIncomesDetails);
+export default withBenefitsApplication(OtherIncomesDetails);

@@ -1,10 +1,10 @@
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import Heading from "../../components/Heading";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 // TODO (CP-1956): Confirm these field names
 export const fields = [
@@ -35,8 +35,8 @@ export const FamilyMemberName = (props) => {
 
 FamilyMemberName.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   query: PropTypes.object.isRequired,
 };
 
-export default withClaim(FamilyMemberName);
+export default withBenefitsApplication(FamilyMemberName);

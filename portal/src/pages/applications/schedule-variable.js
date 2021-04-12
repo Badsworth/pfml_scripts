@@ -1,4 +1,6 @@
-import Claim, { WorkPattern } from "../../models/Claim";
+import BenefitsApplication, {
+  WorkPattern,
+} from "../../models/BenefitsApplication";
 import React, { useState } from "react";
 import { pick, round } from "lodash";
 import Heading from "../../components/Heading";
@@ -11,7 +13,7 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.work_pattern.work_pattern_days",
@@ -57,7 +59,7 @@ export const ScheduleVariable = (props) => {
       hours_worked_per_week = round(minutesWorkedPerWeek / 60, 2);
     }
 
-    await appLogic.claims.update(claim.application_id, {
+    await appLogic.benefitsApplications.update(claim.application_id, {
       hours_worked_per_week,
       work_pattern: { work_pattern_days },
     });
@@ -103,8 +105,8 @@ export const ScheduleVariable = (props) => {
 };
 
 ScheduleVariable.propTypes = {
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   appLogic: PropTypes.object.isRequired,
 };
 
-export default withClaim(ScheduleVariable);
+export default withBenefitsApplication(ScheduleVariable);

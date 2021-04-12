@@ -2,14 +2,14 @@ import {
   BankAccountType,
   PaymentPreferenceMethod,
 } from "../../models/PaymentPreference";
-import Claim, {
+import BenefitsApplication, {
   EmploymentStatus,
   PhoneType,
   ReasonQualifier,
   ReducedScheduleLeavePeriod,
   WorkPattern,
   WorkPatternType,
-} from "../../models/Claim";
+} from "../../models/BenefitsApplication";
 import Document, { DocumentType } from "../../models/Document";
 import EmployerBenefit, {
   EmployerBenefitFrequency,
@@ -48,7 +48,7 @@ import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 /**
@@ -126,11 +126,11 @@ export const Review = (props) => {
 
   const handleSubmit = useThrottledHandler(async () => {
     if (usePartOneReview) {
-      await appLogic.claims.submit(claim.application_id);
+      await appLogic.benefitsApplications.submit(claim.application_id);
       return;
     }
 
-    await appLogic.claims.complete(claim.application_id);
+    await appLogic.benefitsApplications.complete(claim.application_id);
   });
 
   const contentContext = usePartOneReview ? "part1" : "final";
@@ -698,12 +698,12 @@ export const Review = (props) => {
 Review.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
-    claims: PropTypes.object.isRequired,
+    benefitsApplications: PropTypes.object.isRequired,
     portalFlow: PropTypes.shape({
       getNextPageRoute: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({
@@ -889,4 +889,4 @@ OtherLeaveEntry.propTypes = {
   type: PropTypes.string,
 };
 
-export default withClaim(withClaimDocuments(Review));
+export default withBenefitsApplication(withClaimDocuments(Review));

@@ -37,12 +37,10 @@ def create_payment_in_state(state, db_session, payment_method_id: Optional[int] 
 def test_split_payment_methods(payment_split_step, test_db_session):
     for _ in range(5):
         create_payment_in_state(
-            State.DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT,
-            test_db_session,
-            PaymentMethod.ACH.payment_method_id,
+            State.DELEGATED_PAYMENT_VALIDATED, test_db_session, PaymentMethod.ACH.payment_method_id,
         )
         create_payment_in_state(
-            State.DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT,
+            State.DELEGATED_PAYMENT_VALIDATED,
             test_db_session,
             PaymentMethod.CHECK.payment_method_id,
         )
@@ -54,12 +52,7 @@ def test_split_payment_methods(payment_split_step, test_db_session):
 
     # Get the counts before running
     state_log_counts = state_log_util.get_state_counts(test_db_session)
-    assert (
-        state_log_counts[
-            State.DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT.state_description
-        ]
-        == 10
-    )
+    assert state_log_counts[State.DELEGATED_PAYMENT_VALIDATED.state_description] == 10
 
     for misc_state in misc_states:
         assert state_log_counts[misc_state.state_description] == 5
@@ -84,17 +77,15 @@ def test_split_payment_methods(payment_split_step, test_db_session):
 def test_cleanup_states_rollback(payment_split_step, test_db_session):
     for _ in range(5):
         create_payment_in_state(
-            State.DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT,
-            test_db_session,
-            PaymentMethod.ACH.payment_method_id,
+            State.DELEGATED_PAYMENT_VALIDATED, test_db_session, PaymentMethod.ACH.payment_method_id,
         )
         create_payment_in_state(
-            State.DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT,
+            State.DELEGATED_PAYMENT_VALIDATED,
             test_db_session,
             PaymentMethod.CHECK.payment_method_id,
         )
         create_payment_in_state(
-            State.DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT,
+            State.DELEGATED_PAYMENT_VALIDATED,
             test_db_session,
             PaymentMethod.DEBIT.payment_method_id,
         )
@@ -106,12 +97,7 @@ def test_cleanup_states_rollback(payment_split_step, test_db_session):
 
     # Get the counts before running
     state_log_counts = state_log_util.get_state_counts(test_db_session)
-    assert (
-        state_log_counts[
-            State.DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT.state_description
-        ]
-        == 15
-    )
+    assert state_log_counts[State.DELEGATED_PAYMENT_VALIDATED.state_description] == 15
 
     for misc_state in misc_states:
         assert state_log_counts[misc_state.state_description] == 5
@@ -122,13 +108,8 @@ def test_cleanup_states_rollback(payment_split_step, test_db_session):
     # Get the counts after running
     state_log_counts = state_log_util.get_state_counts(test_db_session)
 
-    # no change in count for misc and DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT
-    assert (
-        state_log_counts[
-            State.DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT.state_description
-        ]
-        == 15
-    )
+    # no change in count for misc and DELEGATED_PAYMENT_VALIDATED
+    assert state_log_counts[State.DELEGATED_PAYMENT_VALIDATED.state_description] == 15
 
     for misc_state in misc_states:
         assert state_log_counts[misc_state.state_description] == 5

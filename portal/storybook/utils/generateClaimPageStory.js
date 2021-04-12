@@ -1,7 +1,7 @@
 import { chain, find, first, get, map, upperFirst } from "lodash";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
-import Claim from "src/models/Claim";
+import BenefitsApplication from "src/models/BenefitsApplication";
 import DocumentCollection from "src/models/DocumentCollection";
 import { MockClaimBuilder } from "tests/test-utils";
 import React from "react";
@@ -18,8 +18,8 @@ import { useTranslation } from "src/locales/i18n";
  *
  * @example
  * generateClaimPageStory("name", {
- *   empty: new Claim(),
- *   "with name": new Claim({
+ *   empty: new BenefitsApplication(),
+ *   "with name": new BenefitsApplication({
  *     first_name: "Jane",
  *     middle_name: "N", last_name:
  *     "Doe"
@@ -67,14 +67,14 @@ function generateConfig(claimsPageSubpath, Component) {
  * Generate storybook story for the claim page component.
  * Configurable with mock claims and possible validation errors.
  * @param {React.Component} Component
- * @param {Claim[]} mockClaims
+ * @param {BenefitsApplication[]} mockClaims
  * @param {ErrorInfo[]} possibleErrors
  * @returns {React.Component} Storybook story component
  */
 function generateDefaultStory(Component, mockClaims, possibleErrors) {
   if (!mockClaims) {
     mockClaims = {
-      empty: new Claim(),
+      empty: new BenefitsApplication(),
       "continuous leave": new MockClaimBuilder().continuous().create(),
     };
   }
@@ -99,7 +99,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
       })
     );
     const appLogic = {
-      claims: {
+      benefitsApplications: {
         update: () => {},
       },
       documents: {

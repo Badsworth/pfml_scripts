@@ -147,14 +147,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
 
       return pdf(PDFdataBuffer) as Promise<Result>;
     },
-    deleteNoticePDF(): string {
-      try {
-        fs.unlinkSync("./cypress/downloads-notices/Denial Notice.pdf");
-      } catch (err) {
-        console.error(err);
-      }
-      return "Deleted Succesfully";
-    },
   });
 
   const options = {

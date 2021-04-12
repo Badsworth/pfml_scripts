@@ -4,11 +4,11 @@ import InputDate from "../../components/InputDate";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { ReasonQualifier } from "../../models/Claim";
+import { ReasonQualifier } from "../../models/BenefitsApplication";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 const reasonQualifierField = "leave_details.reason_qualifier";
 const childBirthDateField = "leave_details.child_birth_date";
@@ -46,7 +46,7 @@ export const DateOfChild = (props) => {
     const isFutureChildDate = getField(dateFieldName) > now;
     set(formState, hasFutureChildDateField, isFutureChildDate);
 
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -87,4 +87,4 @@ DateOfChild.propTypes = {
   }),
 };
 
-export default withClaim(DateOfChild);
+export default withBenefitsApplication(DateOfChild);

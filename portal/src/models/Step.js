@@ -152,7 +152,7 @@ export default class Step extends BaseModel {
    * @see ../flows/index.js
    * @param {object} machineConfigs - configuration object for routing machine
    * @param {object} context - used for evaluating a step's status
-   * @param {Claim} [context.claim]
+   * @param {BenefitsApplication} [context.claim]
    * @param {Document[]} [context.certificationDocuments]
    * @param {Document[]} [context.idDocuments]
    * @param {object[]} [warnings] - array of validation warnings returned from API

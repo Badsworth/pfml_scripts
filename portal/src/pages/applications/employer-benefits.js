@@ -1,4 +1,4 @@
-import Claim from "../../models/Claim";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
@@ -8,7 +8,7 @@ import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_employer_benefits"];
 
@@ -25,7 +25,7 @@ export const EmployerBenefits = (props) => {
     ) {
       formState.employer_benefits = null;
     }
-    appLogic.claims.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, formState);
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -78,11 +78,11 @@ export const EmployerBenefits = (props) => {
 };
 
 EmployerBenefits.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
   appLogic: PropTypes.object.isRequired,
 };
 
-export default withClaim(EmployerBenefits);
+export default withBenefitsApplication(EmployerBenefits);

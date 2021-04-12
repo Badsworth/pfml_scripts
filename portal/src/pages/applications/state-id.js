@@ -8,7 +8,7 @@ import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_state_id", "claim.mass_id"];
 
@@ -26,7 +26,7 @@ export const StateId = (props) => {
     // API requires any letters in the ID to be uppercase:
     requestData.mass_id = mass_id ? mass_id.toUpperCase() : mass_id;
 
-    appLogic.claims.update(claim.application_id, requestData);
+    appLogic.benefitsApplications.update(claim.application_id, requestData);
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -81,4 +81,4 @@ StateId.propTypes = {
   }),
 };
 
-export default withClaim(StateId);
+export default withBenefitsApplication(StateId);

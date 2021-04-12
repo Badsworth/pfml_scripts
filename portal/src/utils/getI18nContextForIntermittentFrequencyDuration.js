@@ -1,7 +1,10 @@
-import { DurationBasis, FrequencyIntervalBasis } from "../models/Claim";
+import {
+  DurationBasis,
+  FrequencyIntervalBasis,
+} from "../models/BenefitsApplication";
 import findKeyByValue from "./findKeyByValue";
 
-/** @typedef {import('../models/Claim').IntermittentLeavePeriod} IntermittentLeavePeriod */
+/** @typedef {import('../models/BenefitsApplication').IntermittentLeavePeriod} IntermittentLeavePeriod */
 
 /**
  * Get an i18n `context` string for outputting a plain language description

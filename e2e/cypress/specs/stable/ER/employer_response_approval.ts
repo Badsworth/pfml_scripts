@@ -1,6 +1,7 @@
 import { beforePortal, beforeFineos } from "../../../tests/common/before";
 import { fineos, portal, email } from "../../../tests/common/actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
+import { getEmails } from "../../../tests/common/actions/email";
 
 describe("Employer Responses", () => {
   const submit = it("As an employer, I should recieve an email asking for my response to a claim and also fill out the ER form", () => {
@@ -18,8 +19,7 @@ describe("Employer Responses", () => {
           throw new Error("Response does not have a fineos_absence_id");
         }
         // As an employer, I should receive a notification about my response being required
-        cy.task<Email[]>(
-          "getEmails",
+        getEmails(
           {
             address: "gqzap.notifications@inbox.testmail.app",
             subject: `Action required: Respond to ${claim.claim.first_name} ${claim.claim.last_name}'s paid leave application`,
@@ -27,7 +27,7 @@ describe("Employer Responses", () => {
             timestamp_from,
             debugInfo: { "Fineos Claim ID": response.fineos_absence_id },
           },
-          { timeout: 180000 }
+          180000
         ).then((emails) => {
           const data = email.getNotificationData(emails[0].html);
           expect(data.applicationId).to.equal(response.fineos_absence_id);

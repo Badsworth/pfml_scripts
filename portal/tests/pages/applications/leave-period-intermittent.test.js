@@ -78,12 +78,15 @@ describe("LeavePeriodIntermittent", () => {
     // Submit the form and assert against what's submitted
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      has_intermittent_leave_periods: true,
-      leave_details: {
-        intermittent_leave_periods: [{}],
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        has_intermittent_leave_periods: true,
+        leave_details: {
+          intermittent_leave_periods: [{}],
+        },
+      }
+    );
   });
 
   it("adds empty leave period when user first indicates they have this leave period but also already have a continuous leave period", async () => {
@@ -107,12 +110,15 @@ describe("LeavePeriodIntermittent", () => {
       await wrapper.find("form").simulate("submit");
     });
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      has_intermittent_leave_periods: true,
-      leave_details: {
-        intermittent_leave_periods: [{}],
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        has_intermittent_leave_periods: true,
+        leave_details: {
+          intermittent_leave_periods: [{}],
+        },
+      }
+    );
   });
 
   it("displays warning when user indicates they have this leave period and already have another leave period type", () => {
@@ -161,12 +167,17 @@ describe("LeavePeriodIntermittent", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      has_intermittent_leave_periods: true,
-      leave_details: {
-        intermittent_leave_periods: [{ end_date, start_date, leave_period_id }],
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        has_intermittent_leave_periods: true,
+        leave_details: {
+          intermittent_leave_periods: [
+            { end_date, start_date, leave_period_id },
+          ],
+        },
+      }
+    );
   });
 
   it("sends intermittent leave dates and ID to the api when the user enters new data", async () => {
@@ -194,13 +205,16 @@ describe("LeavePeriodIntermittent", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      has_intermittent_leave_periods: true,
-      leave_details: {
-        intermittent_leave_periods: [
-          { end_date: endDate, start_date: startDate },
-        ],
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        has_intermittent_leave_periods: true,
+        leave_details: {
+          intermittent_leave_periods: [
+            { end_date: endDate, start_date: startDate },
+          ],
+        },
+      }
+    );
   });
 });

@@ -1,7 +1,7 @@
 import User, { UserLeaveAdministrator } from "../../models/User";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
-import Claim from "../../models/Claim";
-import ClaimCollection from "../../models/ClaimCollection";
+import BenefitsApplication from "../../models/BenefitsApplication";
+import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
 import { uniqueId } from "lodash";
@@ -24,12 +24,14 @@ export default jest.fn(() => ({
     verifyEmployerAccount: jest.fn(),
   },
   catchError: jest.fn(),
-  claims: {
-    claims: new ClaimCollection(),
+  benefitsApplications: {
+    benefitsApplications: new BenefitsApplicationCollection(),
     complete: jest.fn(),
-    create: jest.fn(() => new Claim({ application_id: uniqueId() })),
+    create: jest.fn(
+      () => new BenefitsApplication({ application_id: uniqueId() })
+    ),
     get: jest.fn(),
-    hasLoadedClaimAndWarnings: jest.fn().mockReturnValue(true),
+    hasLoadedBenefitsApplicationAndWarnings: jest.fn().mockReturnValue(true),
     hasLoadedAll: false,
     load: jest.fn(),
     loadAll: jest.fn(),

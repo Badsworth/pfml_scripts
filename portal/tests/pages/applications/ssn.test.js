@@ -35,16 +35,22 @@ describe("Ssn", () => {
 
     // Existing data
     await submitForm();
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      tax_identifier: claim.tax_identifier,
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        tax_identifier: claim.tax_identifier,
+      }
+    );
 
     // New changes
     changeField("tax_identifier", "123-12-3123");
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      tax_identifier: "123-12-3123",
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        tax_identifier: "123-12-3123",
+      }
+    );
   });
 });

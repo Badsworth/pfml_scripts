@@ -2,7 +2,7 @@ import {
   BankAccountType,
   PaymentPreferenceMethod,
 } from "../../src/models/PaymentPreference";
-import Claim, {
+import BenefitsApplication, {
   ClaimStatus,
   ContinuousLeavePeriod,
   DurationBasis,
@@ -15,7 +15,7 @@ import Claim, {
   WorkPattern,
   WorkPatternDay,
   WorkPatternType,
-} from "../../src/models/Claim";
+} from "../../src/models/BenefitsApplication";
 import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
@@ -746,9 +746,9 @@ export class MockClaimBuilder extends BaseMockClaimBuilder {
   }
 
   /**
-   * @returns {Claim}
+   * @returns {BenefitsApplication}
    */
   create() {
-    return new Claim(this.claimAttrs);
+    return new BenefitsApplication(this.claimAttrs);
   }
 }

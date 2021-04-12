@@ -4,7 +4,7 @@ import {
   simulateEvents,
 } from "../../test-utils";
 import WorkPatternType from "../../../src/pages/applications/work-pattern-type";
-import { WorkPatternType as WorkPatternTypeEnum } from "../../../src/models/Claim";
+import { WorkPatternType as WorkPatternTypeEnum } from "../../../src/models/BenefitsApplication";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
@@ -42,13 +42,16 @@ describe("WorkPatternType", () => {
     );
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      hours_worked_per_week: null,
-      work_pattern: {
-        work_pattern_days: [],
-        work_pattern_type: WorkPatternTypeEnum.variable,
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        hours_worked_per_week: null,
+        work_pattern: {
+          work_pattern_days: [],
+          work_pattern_type: WorkPatternTypeEnum.variable,
+        },
+      }
+    );
   });
 
   it("does not reset hours_worked_per_week to null and work_pattern_days to empty array when type does NOT change", async () => {
@@ -58,10 +61,13 @@ describe("WorkPatternType", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      work_pattern: {
-        work_pattern_type: WorkPatternTypeEnum.fixed,
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        work_pattern: {
+          work_pattern_type: WorkPatternTypeEnum.fixed,
+        },
+      }
+    );
   });
 });

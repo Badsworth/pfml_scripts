@@ -9,7 +9,7 @@ import time
 import xml.etree.ElementTree
 from unittest import mock
 
-import defusedxml
+import defusedxml.ElementTree
 import pytest
 import requests
 

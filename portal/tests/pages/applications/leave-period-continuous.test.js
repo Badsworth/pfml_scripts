@@ -63,12 +63,15 @@ describe("LeavePeriodContinuous", () => {
     // Submit the form and assert against what's submitted
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      has_continuous_leave_periods: true,
-      leave_details: {
-        continuous_leave_periods: [{}],
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        has_continuous_leave_periods: true,
+        leave_details: {
+          continuous_leave_periods: [{}],
+        },
+      }
+    );
   });
 
   it("sends continuous leave dates and ID to the api when the claim has leave data", async () => {
@@ -86,12 +89,15 @@ describe("LeavePeriodContinuous", () => {
     const { submitForm } = simulateEvents(wrapper);
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      has_continuous_leave_periods: true,
-      leave_details: {
-        continuous_leave_periods: [{ end_date, start_date, leave_period_id }],
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        has_continuous_leave_periods: true,
+        leave_details: {
+          continuous_leave_periods: [{ end_date, start_date, leave_period_id }],
+        },
+      }
+    );
   });
 
   it("sends continuous leave dates and ID to the api when the user enters leave data", async () => {
@@ -116,13 +122,16 @@ describe("LeavePeriodContinuous", () => {
 
     await submitForm();
 
-    expect(appLogic.claims.update).toHaveBeenCalledWith(claim.application_id, {
-      has_continuous_leave_periods: true,
-      leave_details: {
-        continuous_leave_periods: [
-          { end_date: endDate, start_date: startDate },
-        ],
-      },
-    });
+    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
+      claim.application_id,
+      {
+        has_continuous_leave_periods: true,
+        leave_details: {
+          continuous_leave_periods: [
+            { end_date: endDate, start_date: startDate },
+          ],
+        },
+      }
+    );
   });
 });

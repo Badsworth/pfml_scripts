@@ -1802,12 +1802,14 @@ class State(LookupTable):
         132, "Add to Payment Reject Report", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
+    DEPRECATED_DELEGATED_PAYMENT_ADD_ACCEPTED_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
         134, "Add accepted payment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
     )
-    DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
+    DEPRECATED_DELEGATED_PAYMENT_ACCEPTED_PAYMENT_FINEOS_WRITEBACK_SENT = LkState(
         135, "Accepted payment FINEOS Writeback sent", Flow.DELEGATED_PAYMENT.flow_id
     )
+
+    DELEGATED_PAYMENT_VALIDATED = LkState(157, "Payment Validated", Flow.DELEGATED_PAYMENT.flow_id)
 
     DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_CHECK = LkState(
         136, "Add to PUB Transaction - Check", Flow.DELEGATED_PAYMENT.flow_id
@@ -1821,6 +1823,14 @@ class State(LookupTable):
     )
     DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT = LkState(
         139, "PUB Transaction sent - EFT", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DELEGATED_PAYMENT_FINEOS_WRITEBACK_CHECK_SENT = LkState(
+        158, "FINEOS Writeback sent - Check", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT = LkState(
+        159, "FINEOS Writeback sent - EFT", Flow.DELEGATED_PAYMENT.flow_id
     )
 
     # PUB Status Return stage

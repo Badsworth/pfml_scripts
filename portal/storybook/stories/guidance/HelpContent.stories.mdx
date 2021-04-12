@@ -1,0 +1,123 @@
+import {
+  Description,
+  Meta,
+  Story,
+  Preview,
+  Props,
+  Title as StoryTitle,
+} from "@storybook/addon-docs/blocks";
+import Details from "src/components/Details";
+import FormLabel from "src/components/FormLabel";
+import InputChoice from "src/components/InputChoice";
+import DocumentRequirements from "src/components/DocumentRequirements";
+import Title from "src/components/Title";
+
+<Meta title="Guidance/Help Content" />
+
+<StoryTitle />
+<Description>Guidance on Help Content design patterns.</Description>
+
+## Details Component
+
+**When to use the details component:**
+
+- Content that applies to a specific subset of users _and_ is not critical to correctly answering the question
+- When there is a _single_ section of content
+
+**When to not use the details component:**
+
+- Defining terminology that is critical to answering the question
+- When there are _multiple_ sections of content - this content should be either:
+  - Included in the hint text
+  - In an accordion or tab component
+- Avoid hiding content using the details component except when absolutely necessary for content on the page that applies to a specific subset of users
+
+<Preview>
+  <Story name="Details">
+    <Details label="When will I get paid?">
+      Once your application is approved, you can expect your first payment to
+      arrive at the beginning of your fourth week of leave, if your leave has
+      already started. If your leave starts in the future, you can expect your
+      first payment 2-4 weeks after your leave starts. After that, you will
+      receive your payments every week.
+    </Details>
+  </Story>
+</Preview>
+
+## Supporting Information
+
+Supporting information provides additional context after the main question. This form of help content maps to the body/lead style in our design system. It's used to provide the user supporting information that is necessary for taking action.
+
+**When to use supporting information**
+
+- If there are constraints based on the selected answer option.
+  - For example:
+    - On the Leave Reason page explaining that only one leave type can be requested at a time
+- Defining program terminology which is critical for the user to understand in order to take action.
+  - For example:
+    - Defining a qualifying leave reason for past leave in both the claimant portal application and leave admin review process
+    - Defining potential fraud in the leave admin review process
+
+**When to not use supporting information**
+
+- If the primary content is straightforward and contains all the information someone needs to take action.
+  - For example:
+    - yes/no questions, like on the State ID page.
+- Explaining technical or program limitations. This information should be called out in a summary or info alert.
+  - For example: - Currently unavailable leave types or file upload limitations
+
+<Preview>
+  <Story name="LeaveReason">
+    <FormLabel hint="You can only request one leave at a time.">
+      Why do you need to take leave?
+    </FormLabel>
+  </Story>
+</Preview>
+
+## Hint Text
+
+Hint text is help content that expands on specific answer options. This form of help content uses the default body/regular type size and grey styling.
+
+Use hint text when adding additional context for answer options.
+
+- For example: Identifying which radio option is medical or family leave when selecting a leave reason
+
+<Preview>
+  <Story name="Hint">
+    <form className="usa-form">
+      <h2>Why do you need to take leave?</h2>
+      <InputChoice
+        hint="Medical Leave"
+        label="I can’t work due to an illness, injury, or pregnancy."
+        name="radioFieldName"
+        type="radio"
+        value="medical"
+      />
+      <InputChoice
+        hint="Family Leave"
+        label="I need to bond with my child after birth, adoption, or foster placement."
+        name="radioFieldName"
+        type="radio"
+        value="family"
+      >
+        Radio
+      </InputChoice>
+    </form>
+  </Story>
+</Preview>
+
+## Summary Box
+
+A summary box can be used to highlight 3-5 points from more dense content, or outline specific steps or a checklist. This help component calls visual attention to information on the page without using an alert or hiding content in a details component.
+
+**When to use a summary box.**
+
+Use a summary box for content that is meant to guide the user through technical limitations.
+
+- For example: Calling out document requirements.
+
+<Preview>
+  <Story name="SummaryBox">
+    <DocumentRequirements type="id" />
+  </Story>
+</Preview>

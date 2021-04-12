@@ -1,9 +1,9 @@
-import Claim, {
+import BenefitsApplication, {
   OrderedDaysOfWeek,
   ReducedScheduleLeavePeriod,
   WorkPattern,
   WorkPatternType,
-} from "../../models/Claim";
+} from "../../models/BenefitsApplication";
 import { get, pick, set, zip } from "lodash";
 import Alert from "../../components/Alert";
 import Details from "../../components/Details";
@@ -22,7 +22,7 @@ import spreadMinutesOverWeek from "../../utils/spreadMinutesOverWeek";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 /**
  * Convenience constant for referencing the leave period object
@@ -85,7 +85,10 @@ export const ReducedLeaveSchedule = (props) => {
       });
     }
 
-    return appLogic.claims.update(claim.application_id, requestData);
+    return appLogic.benefitsApplications.update(
+      claim.application_id,
+      requestData
+    );
   };
 
   const contentReasonContext = {
@@ -182,11 +185,11 @@ export const ReducedLeaveSchedule = (props) => {
 };
 
 ReducedLeaveSchedule.propTypes = {
-  claim: PropTypes.instanceOf(Claim),
+  claim: PropTypes.instanceOf(BenefitsApplication),
   appLogic: PropTypes.object.isRequired,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
   }),
 };
 
-export default withClaim(ReducedLeaveSchedule);
+export default withBenefitsApplication(ReducedLeaveSchedule);

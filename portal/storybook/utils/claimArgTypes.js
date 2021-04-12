@@ -81,7 +81,7 @@ export const claimArgTypes = {
  * Create a claim using the args passed into a Story. The args
  * are based on the claimArgTypes.
  * @param {object} args
- * @returns {Claim}
+ * @returns {BenefitsApplication}
  */
 export function createClaimFromArgs(args) {
   let claim = new MockClaimBuilder();

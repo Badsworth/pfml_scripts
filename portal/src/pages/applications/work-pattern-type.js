@@ -1,6 +1,6 @@
-import Claim, {
+import BenefitsApplication, {
   WorkPatternType as WorkPatternTypeEnum,
-} from "../../models/Claim";
+} from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
@@ -9,7 +9,7 @@ import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.work_pattern.work_pattern_type"];
 
@@ -31,7 +31,7 @@ export const WorkPatternType = (props) => {
       set(patchData, "work_pattern.work_pattern_days", []);
     }
 
-    await appLogic.claims.update(claim.application_id, patchData);
+    await appLogic.benefitsApplications.update(claim.application_id, patchData);
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -66,7 +66,7 @@ export const WorkPatternType = (props) => {
 
 WorkPatternType.propTypes = {
   appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(Claim).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
-export default withClaim(WorkPatternType);
+export default withBenefitsApplication(WorkPatternType);

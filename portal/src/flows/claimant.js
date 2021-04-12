@@ -11,7 +11,10 @@
  * is complete, in progress, or not started
  * @see ../models/Step
  */
-import { EmploymentStatus, WorkPatternType } from "../models/Claim";
+import {
+  EmploymentStatus,
+  WorkPatternType,
+} from "../models/BenefitsApplication";
 import { ClaimSteps } from "../models/Step";
 import { fields as addressFields } from "../pages/applications/address";
 import { fields as dateOfBirthFields } from "../pages/applications/date-of-birth";
