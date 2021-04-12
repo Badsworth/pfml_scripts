@@ -17,17 +17,18 @@ provider "aws" {
 terraform {
   required_version = "0.14.7"
 
-required_providers {
-  aws = {
-    source = "hashicorp/aws"
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+    newrelic = {
+      source = "newrelic/newrelic"
+    }
+    pagerduty = {
+      source = "pagerduty/pagerduty"
+    }
   }
-  newrelic = {
-    source = "newrelic/newrelic"
-  }
-  pagerduty = {
-    source = "pagerduty/pagerduty"
-  }
-
+    
   backend "s3" {
     bucket         = "massgov-pfml-$ENV_NAME-env-mgmt"
     key            = "terraform/api.tfstate"
@@ -45,7 +46,7 @@ module "api" {
 
   environment_name                      = local.environment_name
   service_app_count                     = 2
-  service_app_count                     = 10
+  service_max_app_count                 = 10
   service_docker_tag                    = local.service_docker_tag
   service_ecs_cluster_arn               = data.aws_ecs_cluster.$ENV_NAME.arn
   vpc_id                                = data.aws_vpc.vpc.id
@@ -72,11 +73,11 @@ module "api" {
 
   # TODO: Connect to an RMV endpoint if desired. All nonprod environments are connected to the staging API
   #       in either a fully-mocked or partially-mocked setting.
-  rmv_client_base_url                              = null
-  rmv_client_certificate_binary_arn                = null
-  rmv_check_behavior                               = "fully_mocked"
-  rmv_check_mock_success                           = "1"
-  
+  rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
+  rmv_client_certificate_binary_arn = ARN_FROM_SECRETS_MANAGER_OUTPUT
+  rmv_check_behavior                = "fully_mocked"
+  rmv_check_mock_success            = "1"
+
   # TODO: These values are provided by FINEOS.
   fineos_client_integration_services_api_url       = ""
   fineos_client_customer_api_url                   = ""
@@ -91,8 +92,8 @@ module "api" {
   # TODO: This value is provided by FINEOS over Interchange.
   fineos_client_oauth2_client_id                   = ""
 
-  # TODO: Connect to ServiceNow.
-  service_now_base_url                                = ""  
+  # TODO: Connect to ServiceNow. Usually in nonprod you'll connect to stage.
+  service_now_base_url = "https://savilinxstage.servicenowservices.com"
 
   dor_fineos_etl_definition                        = local.dor_fineos_etl_definition
   dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour

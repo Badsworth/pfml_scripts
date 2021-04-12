@@ -11,22 +11,22 @@
       "Parameters": {
         "LaunchType": "FARGATE",
         "PlatformVersion": "1.4.0",
-        "Cluster": "\${cluster_arn}",
-        "TaskDefinition": "pfml-api-\${environment_name}-fineos-import-employee-updates",
+        "Cluster": "${cluster_arn}",
+        "TaskDefinition": "pfml-api-${environment_name}-fineos-import-employee-updates",
         "Overrides": {
           "ContainerOverrides": [
             {
               "Name": "fineos-import-employee-updates",
               "Environment": [
-                { "Name": "SFN_EXECUTION_ID", "Value.$": "\$\$.Execution.Id" }
+                { "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id" }
               ]
             }
           ]
         },
         "NetworkConfiguration": {
           "AwsvpcConfiguration": {
-            "SecurityGroups": ["\${security_group}"],
-            "Subnets": ["\${subnet_1}", "\${subnet_2}"],
+            "SecurityGroups": ["${security_group}"],
+            "Subnets": ["${subnet_1}", "${subnet_2}"],
             "AssignPublicIp": "DISABLED"
           }
         }
@@ -47,9 +47,9 @@
       "Type": "Pass",
       "Result": {
         "task_name": "fineos-import-employee-updates",
-        "subject": "Task 'fineos-import-employee-updates' failed in \${environment_name}"
+        "subject": "Task 'fineos-import-employee-updates' failed in ${environment_name}"
       },
-      "ResultPath": "\$.task_failure_details",
+      "ResultPath": "$.task_failure_details",
       "Next": "failure_notification"
     },
 
@@ -61,23 +61,23 @@
       "Parameters": {
         "LaunchType": "FARGATE",
         "PlatformVersion": "1.4.0",
-        "Cluster": "\${cluster_arn}",
-        "TaskDefinition": "pfml-api-\${environment_name}-dor-import",
+        "Cluster": "${cluster_arn}",
+        "TaskDefinition": "pfml-api-${environment_name}-dor-import",
         "Overrides": {
           "ContainerOverrides": [
             {
               "Name": "dor-import",
               "Environment": [
                 { "Name": "DECRYPT", "Value": "false" },
-                { "Name": "SFN_EXECUTION_ID", "Value.$": "\$\$.Execution.Id" }
+                { "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id" }
               ]
             }
           ]
         },
         "NetworkConfiguration": {
           "AwsvpcConfiguration": {
-            "SecurityGroups": ["\${security_group}"],
-            "Subnets": ["\${subnet_1}", "\${subnet_2}"],
+            "SecurityGroups": ["${security_group}"],
+            "Subnets": ["${subnet_1}", "${subnet_2}"],
             "AssignPublicIp": "DISABLED"
           }
         }
@@ -98,9 +98,9 @@
       "Type": "Pass",
       "Result": {
         "task_name": "dor-import",
-        "subject": "Task 'dor-import' failed in \${environment_name}"
+        "subject": "Task 'dor-import' failed in ${environment_name}"
       },
-      "ResultPath": "\$.task_failure_details",
+      "ResultPath": "$.task_failure_details",
       "Next": "failure_notification"
     },
 
@@ -114,15 +114,15 @@
           ["load-employers-to-fineos", "--process-id=3"]
         ]
       },
-      "ResultPath": "\$.map",
-      "OutputPath": "\$.map",
+      "ResultPath": "$.map",
+      "OutputPath": "$.map",
       "Next": "load_employers_to_fineos_map"
     },
 
     "load_employers_to_fineos_map": {
       "Comment": "Create employers in FINEOS using API calls",
       "Type": "Map",
-      "ItemsPath": "\$.parallel",
+      "ItemsPath": "$.parallel",
 
       "Iterator": {
         "StartAt": "load_employers_to_fineos",
@@ -134,24 +134,24 @@
             "Parameters": {
               "LaunchType": "FARGATE",
               "PlatformVersion": "1.4.0",
-              "Cluster": "\${cluster_arn}",
-              "TaskDefinition": "pfml-api-\${environment_name}-load-employers-to-fineos",
+              "Cluster": "${cluster_arn}",
+              "TaskDefinition": "pfml-api-${environment_name}-load-employers-to-fineos",
               "Overrides": {
                 "ContainerOverrides": [
                   {
                     "Name": "load-employers-to-fineos",
                     "Environment": [
                       { "Name": "EMPLOYER_LOAD_MODE", "Value": "updates" },
-                      { "Name": "SFN_EXECUTION_ID", "Value.$": "\$\$.Execution.Id" }
+                      { "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id" }
                     ],
-                    "Command.\$": "\$"
+                    "Command.$": "$"
                   }
                 ]
               },
               "NetworkConfiguration": {
                 "AwsvpcConfiguration": {
-                  "SecurityGroups": ["\${security_group}"],
-                  "Subnets": ["\${subnet_1}", "\${subnet_2}"],
+                  "SecurityGroups": ["${security_group}"],
+                  "Subnets": ["${subnet_1}", "${subnet_2}"],
                   "AssignPublicIp": "DISABLED"
                 }
               }
@@ -176,9 +176,9 @@
       "Type": "Pass",
       "Result": {
         "task_name": "load-employers-to-fineos",
-        "subject": "Task 'load-employers-to-fineos' failed in \${environment_name}"
+        "subject": "Task 'load-employers-to-fineos' failed in ${environment_name}"
       },
-      "ResultPath": "\$.task_failure_details",
+      "ResultPath": "$.task_failure_details",
       "Next": "failure_notification"
     },
 
@@ -190,8 +190,8 @@
       "Parameters": {
         "LaunchType": "FARGATE",
         "PlatformVersion": "1.4.0",
-        "Cluster": "\${cluster_arn}",
-        "TaskDefinition": "pfml-api-\${environment_name}-fineos-eligibility-feed-export",
+        "Cluster": "${cluster_arn}",
+        "TaskDefinition": "pfml-api-${environment_name}-fineos-eligibility-feed-export",
         "Overrides": {
           "ContainerOverrides": [
             {
@@ -200,15 +200,15 @@
                 { "Name": "ELIGIBILITY_FEED_MODE", "Value": "updates" },
                 { "Name": "ELIGIBILITY_FEED_UPDATE_BATCH_SIZE", "Value": "50000" },
                 { "Name": "ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT", "Value": "20000" },
-                { "Name": "SFN_EXECUTION_ID", "Value.$": "\$\$.Execution.Id" }
+                { "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id" }
               ]
             }
           ]
         },
         "NetworkConfiguration": {
           "AwsvpcConfiguration": {
-            "SecurityGroups": ["\${security_group}"],
-            "Subnets": ["\${subnet_1}", "\${subnet_2}"],
+            "SecurityGroups": ["${security_group}"],
+            "Subnets": ["${subnet_1}", "${subnet_2}"],
             "AssignPublicIp": "DISABLED"
           }
         }
@@ -229,9 +229,9 @@
       "Type": "Pass",
       "Result": {
         "task_name": "fineos-eligibility-feed-export",
-        "subject": "Task 'fineos-eligibility-feed-export' failed in \${environment_name}"
+        "subject": "Task 'fineos-eligibility-feed-export' failed in ${environment_name}"
       },
-      "ResultPath": "\$.task_failure_details",
+      "ResultPath": "$.task_failure_details",
       "Next": "failure_notification"
     },
 
@@ -245,13 +245,13 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
-        "TopicArn": "\${sns_failure_topic_arn}",
-        "Subject.\$": "\$.task_failure_details.subject",
+        "TopicArn": "${sns_failure_topic_arn}",
+        "Subject.$": "$.task_failure_details.subject",
         "Message": {
-          "task_name.\$": "\$.task_failure_details.task_name",
-          "environment": "\${environment_name}",
-          "error.\$": "\$.Error",
-          "cause.\$": "\$.Cause"
+          "task_name.$": "$.task_failure_details.task_name",
+          "environment": "${environment_name}",
+          "error.$": "$.Error",
+          "cause.$": "$.Cause"
         }
       },
     %{else}
