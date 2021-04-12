@@ -21,7 +21,7 @@ resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
   count = var.enable_regional_rate_based_acl ? 1 : 0
 
   tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
+    environment = module.constants.environment_tags[local.constants_env]
   })
 
   default_action {
@@ -92,7 +92,7 @@ resource "aws_wafregional_web_acl" "fortinet_managed_rules" {
   count = var.enable_fortinet_managed_rules ? 1 : 0
 
   tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
+    environment = module.constants.environment_tags[local.constants_env]
   })
 
   default_action {

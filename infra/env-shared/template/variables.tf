@@ -46,3 +46,9 @@ variable "runtime_py" {
   type        = string
   default     = "python3.8"
 }
+
+variable "is_adhoc_workspace" {
+  description = "Whether this is running as a personal, adhoc workspace"
+  type        = bool
+  default     = false
+}

@@ -22,7 +22,7 @@ locals {
 //
 data "aws_acm_certificate" "domain" {
   count       = var.enable_pretty_domain ? 1 : 0
-  domain      = module.constants.cert_domains[var.environment_name]
+  domain      = module.constants.cert_domains[local.constants_env]
   statuses    = ["ISSUED"]
   most_recent = true
 }

@@ -54,7 +54,7 @@ resource "aws_lambda_function" "scrub_ip_addresses_lambda" {
   }
 
   tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
+    environment = module.constants.environment_tags[local.constants_env]
   })
 }
 # Transforms the `scrub_ip_addresses.py` file in to something the lambda can use

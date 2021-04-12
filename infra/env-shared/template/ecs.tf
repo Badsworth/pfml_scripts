@@ -12,7 +12,7 @@ resource "aws_ecs_cluster" "cluster" {
   }
 
   tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
+    environment = module.constants.environment_tags[local.constants_env]
     "SMX:Asset" = "v1:${var.environment_name}:${module.constants.smartronix_environment_tags[var.environment_name]}:ECS:PFML:Advanced:None"
   })
 }

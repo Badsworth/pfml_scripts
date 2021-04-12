@@ -28,6 +28,7 @@ output "environment_tags" {
     "uat"         = "uat"
     "breakfix"    = "qa"
     "cps-preview" = "qa"
+    "adhoc"       = "test"
   }
 }
 
@@ -54,6 +55,7 @@ output "smartronix_environment_tags" {
     "uat"         = "UAT"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
+    "adhoc"       = "Adhoc"
   }
 }
 
