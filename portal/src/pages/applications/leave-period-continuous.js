@@ -16,7 +16,7 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 /**
  * Convenience constant for referencing the leave period object
@@ -190,4 +190,4 @@ LeavePeriodContinuous.propTypes = {
   }),
 };
 
-export default withClaim(LeavePeriodContinuous);
+export default withBenefitsApplication(LeavePeriodContinuous);

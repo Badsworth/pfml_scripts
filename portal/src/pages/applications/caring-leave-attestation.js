@@ -6,7 +6,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const CaringLeaveAttestation = (props) => {
   const { t } = useTranslation();
@@ -36,4 +36,4 @@ CaringLeaveAttestation.propTypes = {
   query: PropTypes.object.isRequired,
 };
 
-export default withClaim(CaringLeaveAttestation);
+export default withBenefitsApplication(CaringLeaveAttestation);

@@ -7,7 +7,7 @@ import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.leave_details.pregnant_or_recent_birth"];
 
@@ -65,4 +65,4 @@ ReasonPregnancy.propTypes = {
   }),
 };
 
-export default withClaim(ReasonPregnancy);
+export default withBenefitsApplication(ReasonPregnancy);

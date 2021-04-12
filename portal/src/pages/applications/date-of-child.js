@@ -8,7 +8,7 @@ import { ReasonQualifier } from "../../models/BenefitsApplication";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 const reasonQualifierField = "leave_details.reason_qualifier";
 const childBirthDateField = "leave_details.child_birth_date";
@@ -87,4 +87,4 @@ DateOfChild.propTypes = {
   }),
 };
 
-export default withClaim(DateOfChild);
+export default withBenefitsApplication(DateOfChild);

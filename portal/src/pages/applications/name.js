@@ -9,7 +9,7 @@ import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.first_name",
@@ -63,4 +63,4 @@ Name.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
-export default withClaim(Name);
+export default withBenefitsApplication(Name);

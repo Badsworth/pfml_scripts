@@ -13,7 +13,7 @@ import tracker from "../../services/tracker";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const UploadType = {
   mass_id: "UPLOAD_MASS_ID",
@@ -121,4 +121,4 @@ UploadDocsOptions.propTypes = {
   appLogic: PropTypes.object.isRequired,
 };
 
-export default withClaim(UploadDocsOptions);
+export default withBenefitsApplication(UploadDocsOptions);

@@ -13,7 +13,7 @@ import withUser from "./withUser";
  * @param {React.Component} Component - Component to receive claims prop
  * @returns {React.Component} - Component with claims prop
  */
-const withClaims = (Component) => {
+const withBenefitsApplications = (Component) => {
   const ComponentWithClaims = (props) => {
     const { appLogic } = props;
     const { users } = appLogic;
@@ -37,7 +37,11 @@ const withClaims = (Component) => {
     if (shouldLoad) {
       return (
         <div className="margin-top-8 text-center">
-          <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
+          <Spinner
+            aria-valuetext={t(
+              "components.withBenefitsApplications.loadingLabel"
+            )}
+          />
         </div>
       );
     }
@@ -62,4 +66,4 @@ const withClaims = (Component) => {
   return withUser(ComponentWithClaims);
 };
 
-export default withClaims;
+export default withBenefitsApplications;

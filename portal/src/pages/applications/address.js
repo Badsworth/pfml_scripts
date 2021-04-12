@@ -10,7 +10,7 @@ import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.has_mailing_address",
@@ -123,4 +123,4 @@ Address.propTypes = {
   }),
 };
 
-export default withClaim(Address);
+export default withBenefitsApplication(Address);

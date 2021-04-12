@@ -9,7 +9,7 @@ import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.work_pattern.work_pattern_type"];
 
@@ -69,4 +69,4 @@ WorkPatternType.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
-export default withClaim(WorkPatternType);
+export default withBenefitsApplication(WorkPatternType);

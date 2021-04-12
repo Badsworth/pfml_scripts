@@ -4,15 +4,15 @@ import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationC
 import React from "react";
 import { act } from "react-dom/test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
-import withClaims from "../../src/hoc/withClaims";
+import withBenefitsApplications from "../../src/hoc/withBenefitsApplications";
 
 jest.mock("../../src/hooks/useAppLogic");
 
-describe("withClaims", () => {
+describe("withBenefitsApplications", () => {
   let appLogic, wrapper;
 
   const PageComponent = (props) => <div />;
-  const WrappedComponent = withClaims(PageComponent);
+  const WrappedComponent = withBenefitsApplications(PageComponent);
 
   function render() {
     act(() => {
@@ -81,7 +81,7 @@ describe("withClaims", () => {
     });
 
     it("sets the 'claims' prop on the passed component to the loaded claims", () => {
-      // Since withClaims is wrapped by withUser, to get the wrapped page component we need to get the child twice
+      // Since withBenefitsApplications is wrapped by withUser, to get the wrapped page component we need to get the child twice
       expect(wrapper.find(PageComponent).prop("claims")).toBeInstanceOf(
         BenefitsApplicationCollection
       );
@@ -91,7 +91,7 @@ describe("withClaims", () => {
     });
 
     it("renders the wrapped component", () => {
-      // Since withClaims is wrapped by withUser, to get the wrapped page component we need to get the child twice
+      // Since withBenefitsApplications is wrapped by withUser, to get the wrapped page component we need to get the child twice
       expect(wrapper.find(PageComponent).name()).toBe("PageComponent");
     });
   });

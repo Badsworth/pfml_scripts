@@ -25,7 +25,7 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 export const Checklist = (props) => {
@@ -348,4 +348,4 @@ Checklist.propTypes = {
   }),
 };
 
-export default withClaim(withClaimDocuments(Checklist));
+export default withBenefitsApplication(withClaimDocuments(Checklist));

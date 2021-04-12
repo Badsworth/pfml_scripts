@@ -17,7 +17,7 @@ import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
 import { useTranslation } from "react-i18next";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 /**
  * Convenience constant for referencing the leave period object
@@ -231,4 +231,4 @@ IntermittentFrequency.propTypes = {
   }),
 };
 
-export default withClaim(IntermittentFrequency);
+export default withBenefitsApplication(IntermittentFrequency);

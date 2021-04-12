@@ -7,7 +7,7 @@ import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const BondingLeaveAttestation = (props) => {
   const { t } = useTranslation();
@@ -43,4 +43,4 @@ BondingLeaveAttestation.propTypes = {
   query: PropTypes.object.isRequired,
 };
 
-export default withClaim(BondingLeaveAttestation);
+export default withBenefitsApplication(BondingLeaveAttestation);

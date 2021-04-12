@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 // TODO (CP-1958): Confirm these field names
 export const fields = ["claim.family_member.date_of_birth"];
@@ -35,4 +35,4 @@ FamilyMemberDateOfBirth.propTypes = {
   query: PropTypes.object.isRequired,
 };
 
-export default withClaim(FamilyMemberDateOfBirth);
+export default withBenefitsApplication(FamilyMemberDateOfBirth);

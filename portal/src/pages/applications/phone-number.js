@@ -12,7 +12,7 @@ import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.phone.phone_number", "claim.phone.phone_type"];
 
@@ -89,4 +89,4 @@ PhoneNumber.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
-export default withClaim(PhoneNumber);
+export default withBenefitsApplication(PhoneNumber);

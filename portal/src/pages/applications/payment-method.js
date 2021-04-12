@@ -21,7 +21,7 @@ import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 const bankAccountTypeField = "payment_preference.bank_account_type";
 const routingNumberField = "payment_preference.routing_number";
@@ -191,4 +191,4 @@ PaymentMethod.propTypes = {
   appLogic: PropTypes.object.isRequired,
 };
 
-export default withClaim(PaymentMethod);
+export default withBenefitsApplication(PaymentMethod);

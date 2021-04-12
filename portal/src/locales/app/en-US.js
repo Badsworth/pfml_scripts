@@ -2233,7 +2233,7 @@ const components = {
     hoursHeader: "Hours",
     time: "{{minutes, hoursMinutesDuration}}",
   },
-  withClaims: {
+  withBenefitsApplications: {
     loadingLabel: "Loading claims",
   },
   withEmployerClaim: {

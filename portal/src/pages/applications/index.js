@@ -9,7 +9,7 @@ import React from "react";
 import Title from "../../components/Title";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withClaims from "../../hoc/withClaims";
+import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 
 /**
  * List of all applications associated with the authenticated user
@@ -115,4 +115,4 @@ Index.propTypes = {
   }),
 };
 
-export default withClaims(Index);
+export default withBenefitsApplications(Index);

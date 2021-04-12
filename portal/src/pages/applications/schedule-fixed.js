@@ -12,7 +12,7 @@ import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.work_pattern.work_pattern_days",
@@ -88,4 +88,4 @@ ScheduleFixed.propTypes = {
   appLogic: PropTypes.object.isRequired,
 };
 
-export default withClaim(ScheduleFixed);
+export default withBenefitsApplication(ScheduleFixed);

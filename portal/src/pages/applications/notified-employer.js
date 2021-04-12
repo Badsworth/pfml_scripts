@@ -13,7 +13,7 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.leave_details.employer_notified",
@@ -123,4 +123,4 @@ NotifiedEmployer.propTypes = {
   }),
 };
 
-export default withClaim(NotifiedEmployer);
+export default withBenefitsApplication(NotifiedEmployer);

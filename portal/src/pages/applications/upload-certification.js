@@ -23,7 +23,7 @@ import routes from "../../routes";
 import uploadDocumentsHelper from "../../utils/uploadDocumentsHelper";
 import useFilesLogic from "../../hooks/useFilesLogic";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 export const UploadCertification = (props) => {
@@ -154,7 +154,11 @@ export const UploadCertification = (props) => {
       )}
       {isLoadingDocuments && !hasLoadingDocumentsError && (
         <div className="margin-top-8 text-center">
-          <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
+          <Spinner
+            aria-valuetext={t(
+              "components.withBenefitsApplications.loadingLabel"
+            )}
+          />
         </div>
       )}
       {!isLoadingDocuments && (
@@ -196,4 +200,4 @@ UploadCertification.propTypes = {
   }),
 };
 
-export default withClaim(withClaimDocuments(UploadCertification));
+export default withBenefitsApplication(withClaimDocuments(UploadCertification));

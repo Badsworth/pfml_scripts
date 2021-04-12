@@ -19,7 +19,7 @@ import RepeatableFieldset from "../../components/RepeatableFieldset";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.other_incomes",
@@ -242,4 +242,4 @@ OtherIncomeCard.propTypes = {
   getFunctionalInputProps: PropTypes.func.isRequired,
 };
 
-export default withClaim(OtherIncomesDetails);
+export default withBenefitsApplication(OtherIncomesDetails);

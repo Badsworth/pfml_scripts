@@ -4,15 +4,15 @@ import React from "react";
 import { act } from "react-dom/test-utils";
 import { mount } from "enzyme";
 import useAppLogic from "../../src/hooks/useAppLogic";
-import withClaim from "../../src/hoc/withClaim";
+import withBenefitsApplication from "../../src/hoc/withBenefitsApplication";
 
 jest.mock("../../src/hooks/useAppLogic");
 
-describe("withClaim", () => {
+describe("withBenefitsApplication", () => {
   let appLogic, claim_id, wrapper;
 
   const PageComponent = () => <div />;
-  const WrappedComponent = withClaim(PageComponent);
+  const WrappedComponent = withBenefitsApplication(PageComponent);
 
   function render() {
     act(() => {

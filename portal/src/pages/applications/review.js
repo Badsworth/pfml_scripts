@@ -48,7 +48,7 @@ import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 /**
@@ -889,4 +889,4 @@ OtherLeaveEntry.propTypes = {
   type: PropTypes.string,
 };
 
-export default withClaim(withClaimDocuments(Review));
+export default withBenefitsApplication(withClaimDocuments(Review));

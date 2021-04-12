@@ -20,7 +20,7 @@ import useAppLogic from "../../src/hooks/useAppLogic";
  * @param {object} [options.claimAttrs] - Additional attributes to set on the Claim
  * @param {number} [options.diveLevels] - number of levels to dive before returning the enzyme wrapper.
  *    This is needed to return the desired component when the component is wrapped in higher-order components.
- *    Defaults to 2 since most claim pages are wrapped by `withUser(withClaim(Page))`.
+ *    Defaults to 2 since most claim pages are wrapped by `withUser(withBenefitsApplication(Page))`.
  * @param {object} [options.props] - Additional props to set on the PageComponent
  * @param {"mount"|"shallow"} [options.render] - Enzyme render method. Shallow renders by default.
  * @param {object} [options.userAttrs] - Additional attributes to set on the User
@@ -116,7 +116,7 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
     );
   }
 
-  // Render the withClaim-wrapped page
+  // Render the withBenefitsApplication-wrapped page
   const component = (
     <PageComponent
       appLogic={appLogic}
@@ -126,7 +126,7 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
   );
 
   act(() => {
-    // Go two levels deep to get the component that was wrapped by withUser and withClaim
+    // Go two levels deep to get the component that was wrapped by withUser and withBenefitsApplication
     if (options.render === "shallow") {
       wrapper = shallow(component);
       times(options.diveLevels, () => {

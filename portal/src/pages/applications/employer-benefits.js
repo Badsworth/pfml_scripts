@@ -8,7 +8,7 @@ import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_employer_benefits"];
 
@@ -85,4 +85,4 @@ EmployerBenefits.propTypes = {
   appLogic: PropTypes.object.isRequired,
 };
 
-export default withClaim(EmployerBenefits);
+export default withBenefitsApplication(EmployerBenefits);

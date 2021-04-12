@@ -19,7 +19,7 @@ import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 /**
  * Success page, shown when an application is successfully submitted.
@@ -207,4 +207,4 @@ Success.propTypes = {
   }),
 };
 
-export default withClaim(Success);
+export default withBenefitsApplication(Success);

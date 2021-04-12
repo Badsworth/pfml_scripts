@@ -48,7 +48,7 @@ const useClaimsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
   /**
    * Check if a claim and its warnings have been loaded. This helps
-   * our withClaim higher-order component accurately display a loading state.
+   * our withBenefitsApplication higher-order component accurately display a loading state.
    *
    * @param {string} application_id
    * @returns {boolean}

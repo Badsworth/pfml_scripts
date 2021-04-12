@@ -8,7 +8,7 @@ import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaim from "../../hoc/withClaim";
+import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_state_id", "claim.mass_id"];
 
@@ -81,4 +81,4 @@ StateId.propTypes = {
   }),
 };
 
-export default withClaim(StateId);
+export default withBenefitsApplication(StateId);
