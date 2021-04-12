@@ -15,6 +15,7 @@ from massgov.pfml.db.models.factories import (
     VerificationFactory,
 )
 from massgov.pfml.util import feature_gate
+from massgov.pfml.util.pydantic.types import FEINFormattedStr
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -1060,7 +1061,9 @@ def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> b
     assert claim_response["fineos_absence_id"] == claim_query.fineos_absence_id
     assert claim_response["fineos_notification_id"] == claim_query.fineos_notification_id
     assert claim_response["employer"]["employer_dba"] == claim_query.employer.employer_dba
-    assert claim_response["employer"]["employer_fein"] == claim_query.employer.employer_fein
+    assert claim_response["employer"]["employer_fein"] == FEINFormattedStr.validate_type(
+        claim_query.employer.employer_fein
+    )
     assert claim_response["employee"]["first_name"] == claim_query.employee.first_name
     assert claim_response["employee"]["middle_name"] == claim_query.employee.middle_name
     assert claim_response["employee"]["last_name"] == claim_query.employee.last_name

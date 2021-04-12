@@ -28,7 +28,7 @@ class ClaimTypeResponse(PydanticBaseModel):
 
 class EmployerResponse(PydanticBaseModel):
     employer_dba: str
-    employer_fein: str
+    employer_fein: FEINFormattedStr
 
 
 class EmployeeResponse(PydanticBaseModel):
