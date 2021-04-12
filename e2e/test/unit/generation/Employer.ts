@@ -65,7 +65,7 @@ describe("Employer Generation", () => {
 
   it("pick() should throw an error if the pool is empty", () => {
     expect(() => EmployerPool.generate(0).pick()).toThrowError(
-      "Cannot pick from an employer pool with no employers"
+      "No employers match the specification"
     );
   });
 
@@ -87,6 +87,28 @@ describe("Employer Generation", () => {
     );
     expect(counts.small).toBeLessThan(counts.medium);
     expect(counts.medium).toBeLessThan(counts.large);
+  });
+
+  it("pick() should accept a specification that allows it to match withholdings", () => {
+    const employers = [
+      { withholdings: [0, 0, 0, 0] },
+      { withholdings: [1, 1, 1, 1] },
+      { withholdings: [1, 2, 3, 4] },
+    ] as Employer[];
+    const pool = new EmployerPool(employers);
+    expect(pool.pick({ withholdings: "exempt" })).toEqual(employers[0]);
+    expect([employers[1], employers[2]]).toContain(
+      pool.pick({ withholdings: "non-exempt" })
+    );
+    expect(pool.pick({ withholdings: [1, 2, 3, 4] })).toEqual(employers[2]);
+  });
+
+  it("pick() should accept a specification that allows it to exclude FEINs", () => {
+    const employers = [{ fein: "123" }] as Employer[];
+    const pool = new EmployerPool(employers);
+    expect(() => pool.pick({ notFEIN: "123" })).toThrow(
+      "No employers match the specification"
+    );
   });
 
   it("generate() should return an employer with quarterly withholding amounts that reflect the employers FEIN", () => {

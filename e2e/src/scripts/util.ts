@@ -18,6 +18,7 @@ import {
   submitAll,
   watchFailures,
 } from "../submission/iterable";
+import EmployerPool from "../generation/Employer";
 
 export interface DataDirectory {
   dir: string;
@@ -85,6 +86,10 @@ export function getLeaveAdminCredentials(fein: string): Credentials {
 
 export function getPortalSubmitter(): PortalSubmitter {
   return new PortalSubmitter(getAuthManager(), config("API_BASEURL"));
+}
+
+export function getEmployerPool(): Promise<EmployerPool> {
+  return EmployerPool.load(config("EMPLOYERS_FILE"));
 }
 
 export function getEmployeePool(): Promise<EmployeePool> {

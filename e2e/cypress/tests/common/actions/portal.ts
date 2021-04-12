@@ -115,16 +115,14 @@ export function registerAsClaimant(credentials: Credentials): void {
   });
 }
 
-export function registerAsLeaveAdmin(credentials: Credentials): void {
-  if (!credentials.fein) {
-    throw new Error("Invalid Leave Admin credentials given - no FEIN");
-  }
+export function registerAsLeaveAdmin(
+  credentials: Credentials,
+  fein: string
+): void {
   cy.visit("/employers/create-account");
   cy.labelled("Email address").type(credentials.username);
   cy.labelled("Password").type(credentials.password);
-  cy.labelled("Employer ID number").type(credentials.fein);
-  cy.stashLog("leaveAdminEmail", credentials.username);
-  cy.stashLog("employerFEIN", credentials.fein);
+  cy.labelled("Employer ID number").type(fein);
   cy.contains("button", "Create account").click();
   cy.task("getAuthVerification", credentials.username as string).then(
     (code: string) => {
@@ -927,12 +925,32 @@ export function submitClaimPartsTwoThree(
   cy.wait(3000);
 }
 
-export function verifyLeaveAdmin(withholding: string): void {
+export function verifyLeaveAdmin(withholding: number): void {
   cy.get('a[href="/employers/organizations"]').first().click();
   cy.get('a[href^="/employers/organizations/verify-contributions"]')
     .last()
     .click();
-  cy.get('input[id="InputText1"]').type(withholding);
+  cy.get('input[id="InputText1"]').type(withholding.toString());
+  cy.get('button[type="submit"').click();
+  cy.contains("h1", "Thanks for verifying your paid leave contributions");
+  cy.contains(
+    "p",
+    "Your account has been verified. In 15 minutes you will be able to log in and review applications"
+  );
+  cy.contains("button", "Continue").click();
+  cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
+    "not.exist"
+  );
+}
+
+/**
+ * Register a leave admin for an additional organization.
+ */
+export function addOrganization(fein: string, withholding: number): void {
+  cy.get('a[href="/employers/organizations/add-organization/"').click();
+  cy.get('input[name="ein"]').type(fein);
+  cy.get('button[type="submit"').click();
+  cy.get('input[name="withholdingAmount"]').type(withholding.toString());
   cy.get('button[type="submit"').click();
   cy.contains("h1", "Thanks for verifying your paid leave contributions");
   cy.contains(
