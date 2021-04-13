@@ -34,12 +34,9 @@ class PeiWritebackRecord:
     All of these fields are Optional because if they are not, the type checking in lint throws an error even though we check for existence when we convert a Payment to a PeiWritebackRecord
     """
 
-    pei_C_value: Optional[str] = None
-    pei_I_value: Optional[str] = None
+    pei_C_Value: Optional[str] = None
+    pei_I_Value: Optional[str] = None
     status: Optional[str] = None
-    statusEffectiveDate: Optional[date] = None
-    statusReason: Optional[str] = None
-    stockNo: Optional[str] = None
     extractionDate: Optional[date] = None
     transactionNo: Optional[str] = None
     transactionStatus: Optional[str] = None
@@ -62,7 +59,7 @@ ERROR_WRITEBACK_RECORD_TRANSACTION_STATUS = "Error"
 WRITEBACK_FILE_SUFFIX = "-pei_writeback.csv"
 
 PEI_WRITEBACK_CSV_ENCODERS: csv_util.Encoders = {
-    date: lambda d: d.strftime("%m/%d/%Y"),
+    date: lambda d: d.strftime("%Y-%m-%d %H:%M:%S"),
 }
 
 REQUIRED_FIELDS_FOR_EXTRACTED_PAYMENT = [
@@ -478,8 +475,8 @@ class FineosPeiWritebackStep(Step):
                 transaction_status_date = payment.fineos_extraction_date
 
         return PeiWritebackRecord(
-            pei_C_value=payment.fineos_pei_c_value,
-            pei_I_value=payment.fineos_pei_i_value,
+            pei_C_Value=payment.fineos_pei_c_value,
+            pei_I_Value=payment.fineos_pei_i_value,
             status=ACTIVE_WRITEBACK_RECORD_STATUS,
             extractionDate=payment.fineos_extraction_date,
             transactionStatus=transaction_status,
@@ -501,11 +498,11 @@ class FineosPeiWritebackStep(Step):
             raise Exception(error_msg)
 
         return PeiWritebackRecord(
-            pei_C_value=payment.fineos_pei_c_value,
-            pei_I_value=payment.fineos_pei_i_value,
+            pei_C_Value=payment.fineos_pei_c_value,
+            pei_I_Value=payment.fineos_pei_i_value,
             status=ACTIVE_WRITEBACK_RECORD_STATUS,
             extractionDate=payment.fineos_extraction_date,
-            stockNo=payment.disb_check_eft_number,
+            transactionNo=payment.disb_check_eft_number,
             transStatusDate=payment.disb_check_eft_issue_date,
             transactionStatus=f"Distributed {payment.disb_method.payment_method_description}",
         )

@@ -92,7 +92,7 @@ resource "aws_db_instance" "default" {
     aws_cloudwatch_log_group.postgresql
   ]
 
-  name     = "massgov_pfml_${var.environment_name}"
+  name     = replace("massgov_pfml_${var.environment_name}", "-", "_")
   username = "pfml"
   password = aws_ssm_parameter.db_password.value
   port     = "5432"
@@ -175,7 +175,7 @@ resource "aws_db_instance" "default" {
 # ------------------------------------
 # Cloudwatch log group for RDS
 resource "aws_cloudwatch_log_group" "postgresql" {
-  name = "/aws/rds/instance/massgov_pfml_${var.environment_name}/postgresql"
+  name = "/aws/rds/instance/massgov-pfml-${var.environment_name}/postgresql"
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
   })

@@ -18,7 +18,7 @@ resource "aws_api_gateway_rest_api" "pfml" {
   ]
 
   tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
+    environment = module.constants.environment_tags[local.constants_env]
   })
 }
 

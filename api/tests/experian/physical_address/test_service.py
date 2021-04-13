@@ -104,18 +104,8 @@ def test_experian_format_response_to_address_full_info(mocker):
         )
     )
 
-    geo_state_id_mock = mocker.patch.object(
-        GeoState, "get_id", return_value=GeoState.MA.geo_state_id
-    )
-    country_id_mock = mocker.patch.object(Country, "get_id", return_value=Country.USA.country_id)
-
     address = experian_address_service.experian_format_response_to_address(
         experian_address_format_response
-    )
-
-    geo_state_id_mock.assert_called_with(experian_address_format_response.result.address.region)
-    country_id_mock.assert_called_with(
-        experian_address_format_response.result.components.country_iso_3
     )
 
     assert address.address_id is None
@@ -146,17 +136,9 @@ def test_experian_format_response_to_address_partial_info(mocker):
         )
     )
 
-    geo_state_id_mock = mocker.patch.object(
-        GeoState, "get_id", return_value=GeoState.MA.geo_state_id
-    )
-    country_id_mock = mocker.patch.object(Country, "get_id", return_value=Country.USA.country_id)
-
     address = experian_address_service.experian_format_response_to_address(
         experian_address_format_response
     )
-
-    geo_state_id_mock.assert_not_called()
-    country_id_mock.assert_not_called()
 
     assert address.address_id is None
     assert address.address_type_id is None
@@ -179,17 +161,9 @@ def test_experian_format_response_to_address_partial_empty_info(mocker):
         )
     )
 
-    geo_state_id_mock = mocker.patch.object(
-        GeoState, "get_id", return_value=GeoState.MA.geo_state_id
-    )
-    country_id_mock = mocker.patch.object(Country, "get_id", return_value=Country.USA.country_id)
-
     address = experian_address_service.experian_format_response_to_address(
         experian_address_format_response
     )
-
-    geo_state_id_mock.assert_not_called()
-    country_id_mock.assert_not_called()
 
     assert address.address_id is None
     assert address.address_type_id is None

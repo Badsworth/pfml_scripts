@@ -19,6 +19,9 @@ const generateDocumentsMock = mocked(generateDocuments);
 
 jest.mock("../../../src/generation/Employee");
 
+const START_LEAVE = "2021-03-05";
+const END_LEAVE = "2021-04-05";
+
 const medical: ClaimSpecification = {
   label: "Medical",
   reason: "Serious Health Condition - Employee",
@@ -51,6 +54,20 @@ const reduced: ClaimSpecification = {
   work_pattern_spec: "standard",
   reduced_leave_spec: "0,240,240,240,240,240,0",
 };
+
+const reduced_explicit_dates: ClaimSpecification = {
+  label: "Reduced",
+  reason: "Child Bonding",
+  reason_qualifier: "Newborn",
+  bondingDate: "past",
+  leave_dates: [parseISO(START_LEAVE), parseISO(END_LEAVE)],
+  docs: {
+    HCP: {},
+    MASSID: {},
+  },
+  work_pattern_spec: "standard",
+  reduced_leave_spec: "0,240,240,240,240,240,0",
+};
 const intermittent: ClaimSpecification = {
   label: "Intermittent",
   reason: "Child Bonding",
@@ -61,6 +78,18 @@ const intermittent: ClaimSpecification = {
     MASSID: {},
   },
   has_intermittent_leave_periods: true,
+};
+const intermittent_explicit_dates: ClaimSpecification = {
+  label: "Intermittent",
+  reason: "Child Bonding",
+  reason_qualifier: "Newborn",
+  bondingDate: "past",
+  docs: {
+    HCP: {},
+    MASSID: {},
+  },
+  has_intermittent_leave_periods: true,
+  leave_dates: [parseISO(START_LEAVE), parseISO(END_LEAVE)],
 };
 const payments: ClaimSpecification = {
   label: "Payments",
@@ -451,6 +480,37 @@ describe("Claim Generator", () => {
       routing_number: "",
       bank_account_type: "Checking",
     });
+  });
+
+  it("should use exlicit leave dates when generating a reduced leave claim", async () => {
+    const claim = ClaimGenerator.generate(
+      employeePool,
+      {},
+      reduced_explicit_dates
+    );
+    const start =
+      claim.claim.leave_details?.reduced_schedule_leave_periods?.[0]
+        ?.start_date;
+    const end =
+      claim.claim.leave_details?.reduced_schedule_leave_periods?.[0]?.end_date;
+
+    expect(start).toEqual(START_LEAVE);
+    expect(end).toEqual(END_LEAVE);
+  });
+
+  it("should use exlicit leave dates when generating an intermittent leave claim", async () => {
+    const claim = ClaimGenerator.generate(
+      employeePool,
+      {},
+      intermittent_explicit_dates
+    );
+    const start =
+      claim.claim.leave_details?.intermittent_leave_periods?.[0]?.start_date;
+    const end =
+      claim.claim.leave_details?.intermittent_leave_periods?.[0]?.end_date;
+
+    expect(start).toEqual(START_LEAVE);
+    expect(end).toEqual(END_LEAVE);
   });
 });
 

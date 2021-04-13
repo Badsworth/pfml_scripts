@@ -141,14 +141,19 @@ data "aws_iam_policy_document" "api_service" {
     ]
   }
 
-  statement {
-    effect = "Allow"
-    actions = [
-      "cognito-idp:AdminGetUser",
-    ]
-    resources = [
-      var.cognito_user_pool_arn
-    ]
+  # Conditionally add permissions to talk to Cognito if its been
+  # configured. We may not have one yet if we're starting up a new environment.
+  dynamic "statement" {
+    for_each = var.cognito_user_pool_arn == null ? [] : [1]
+    content {
+      effect = "Allow"
+      actions = [
+        "cognito-idp:AdminGetUser",
+      ]
+      resources = [
+        var.cognito_user_pool_arn
+      ]
+    }
   }
 }
 

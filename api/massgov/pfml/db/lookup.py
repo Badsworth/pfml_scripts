@@ -61,9 +61,35 @@ class LookupTable:
     # Map from description (2nd column) to persistent or detached model instance.
     description_to_db_instance: Dict[str, type]
 
+    # Caches for looking up template instances in different ways
+    attr_name_to_template_instance: Dict[str, type]
+    id_to_template_instance: Dict[int, type]
+    description_to_template_instance: Dict[str, type]
+
     @classmethod
     def repr(cls):
         return "LookupTable(%s, %s)" % (cls.model.__qualname__, cls.model.__table__.name)
+
+    @classmethod
+    def populate_lookup_cache(cls):
+        cls.attr_name_to_template_instance = dict()
+        cls.id_to_template_instance = dict()
+        cls.description_to_template_instance = dict()
+
+        for key, value in vars(cls).items():
+            if not isinstance(value, cls.model):
+                continue
+
+            cls.insert_template_lookup_cache(key, value)
+
+    @classmethod
+    def insert_template_lookup_cache(cls, key, template_instance):
+        row = tuple(map(template_instance.__getattribute__, cls.column_names))
+        row_id, description = row[0], row[1]
+
+        cls.attr_name_to_template_instance[key] = template_instance
+        cls.id_to_template_instance[row_id] = template_instance
+        cls.description_to_template_instance[description] = template_instance
 
     @classmethod
     def sync_to_database(cls, db_session):
@@ -73,6 +99,9 @@ class LookupTable:
 
         In test cases, called once per temporary database schema."""
 
+        if not hasattr(cls, "attr_name_to_template_instance"):
+            cls.populate_lookup_cache()
+
         cls.template_instance_to_db_instance = {}
         cls.description_to_db_instance = {}
 
@@ -81,13 +110,13 @@ class LookupTable:
         _cache = db_session.query(cls.model).all()  # noqa: F841
 
         row_update_count = 0
-        for key, value in vars(cls).items():
-            if not isinstance(value, cls.model):
-                continue
-            if cls.sync_row_to_database(db_session, key, value):
+        for key, template_instance in cls.attr_name_to_template_instance.items():
+            if cls.sync_row_to_database(db_session, key, template_instance):
                 row_update_count += 1
+
         if row_update_count:
             logger.info("%s: row update count %i", cls.repr(), row_update_count)
+
         return row_update_count
 
     @classmethod
@@ -131,4 +160,15 @@ class LookupTable:
     @classmethod
     def get_id(cls, description):
         """Get the id for the row by description."""
-        return getattr(cls.description_to_db_instance[description], cls.column_names[0])
+        if not hasattr(cls, "description_to_template_instance"):
+            cls.populate_lookup_cache()
+
+        return getattr(cls.description_to_template_instance[description], cls.column_names[0])
+
+    @classmethod
+    def get_description(cls, row_id):
+        """Get the description for the row by id."""
+        if not hasattr(cls, "id_to_template_instance"):
+            cls.populate_lookup_cache()
+
+        return getattr(cls.id_to_template_instance[row_id], cls.column_names[1])

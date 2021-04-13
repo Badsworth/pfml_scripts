@@ -8,12 +8,7 @@ from massgov.pfml.db.models.factories import CtrAddressPairFactory, EftFactory
 def create_complete_valid_matching_vendor_info_for_employee(
     employee: Employee,
 ) -> data_mart.VendorInfoResult:
-    # Hardcodes the address to Massachusetts and USA to simplify interactions
-    # with the GeoState and Country lookup tables when running tests without a
-    # DB connection
     addr = employee.ctr_address_pair.fineos_address
-    addr.geo_state_id = GeoState.MA.geo_state_id
-    addr.country_id = Country.USA.country_id
 
     return data_mart.VendorInfoResult(
         vendor_customer_code=employee.ctr_vendor_customer_code,
@@ -26,8 +21,8 @@ def create_complete_valid_matching_vendor_info_for_employee(
         street_2=addr.address_line_two,
         city=addr.city,
         zip_code=addr.zip_code,
-        state=GeoState.MA.geo_state_description,
-        country_code=Country.USA.country_description,
+        state=GeoState.get_description(addr.geo_state_id) if addr.geo_state_id else None,
+        country_code=Country.get_description(addr.country_id) if addr.country_id else None,
     )
 
 

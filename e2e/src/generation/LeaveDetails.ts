@@ -55,11 +55,16 @@ export default function generateLeaveDetails(
       ? generateReducedLeavePeriods(
           !!config.shortClaim,
           work_pattern,
-          config.reduced_leave_spec
+          config.reduced_leave_spec,
+          config.leave_dates
         )
       : [],
     intermittent_leave_periods: config.has_intermittent_leave_periods
-      ? generateIntermittentLeavePeriods(!!config.shortClaim, work_pattern)
+      ? generateIntermittentLeavePeriods(
+          !!config.shortClaim,
+          work_pattern,
+          config.leave_dates
+        )
       : [],
     pregnant_or_recent_birth: !!config.pregnant_or_recent_birth,
     employer_notified: true,
@@ -169,12 +174,12 @@ function generateContinuousLeavePeriods(
 
 function generateIntermittentLeavePeriods(
   shortLeave: boolean,
-  work_pattern: WorkPattern
+  work_pattern: WorkPattern,
+  leave_dates?: [Date, Date]
 ): IntermittentLeavePeriods[] {
-  const [startDate, endDate] = generateLeaveDates(
-    work_pattern,
-    shortLeave ? { days: 7 } : undefined
-  );
+  const [startDate, endDate] =
+    leave_dates ??
+    generateLeaveDates(work_pattern, shortLeave ? { days: 7 } : undefined);
   const diffInDays = differenceInDays(endDate, startDate);
 
   return [
@@ -193,12 +198,13 @@ function generateIntermittentLeavePeriods(
 function generateReducedLeavePeriods(
   shortLeave: boolean,
   work_pattern: WorkPattern,
-  spec: string
+  spec: string,
+  leave_dates?: [Date, Date]
 ): ReducedScheduleLeavePeriods[] {
-  const [startDate, endDate] = generateLeaveDates(
-    work_pattern,
-    shortLeave ? { days: 1 } : undefined
-  );
+  const [startDate, endDate] =
+    leave_dates ??
+    generateLeaveDates(work_pattern, shortLeave ? { days: 1 } : undefined);
+
   const minsByDay = spec
     // Split the spec into weeks (even though we only care about 1 week at a time here).
     .split(";")

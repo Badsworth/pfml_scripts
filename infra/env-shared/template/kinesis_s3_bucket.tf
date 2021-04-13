@@ -2,7 +2,7 @@ resource "aws_s3_bucket" "smx_kinesis_firewall_ingest" {
   bucket = "massgov-pfml-${var.environment_name}-smx-kinesis-firewall-ingest"
 
   tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
+    environment = module.constants.environment_tags[local.constants_env]
     public      = "no"
     Name        = "pfml-${var.environment_name}-smx-kinesis-firewall-ingest"
   })

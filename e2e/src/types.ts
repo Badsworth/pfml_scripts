@@ -3,7 +3,6 @@ import { ApplicationLeaveDetails } from "./api";
 export type Credentials = {
   username: string;
   password: string;
-  fein?: string;
 };
 
 export type OAuthCreds = {

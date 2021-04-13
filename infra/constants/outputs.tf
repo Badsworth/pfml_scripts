@@ -28,9 +28,15 @@ output "environment_tags" {
     "uat"         = "uat"
     "breakfix"    = "qa"
     "cps-preview" = "qa"
+    "adhoc"       = "test"
   }
 }
 
+# Mapping of environments to shorthand names for resources with a small max length,
+# such as IAM role names.
+#
+# The maximum length here is five characters.
+#
 output "environment_shorthand" {
   value = {
     "test"        = "test"
@@ -40,7 +46,7 @@ output "environment_shorthand" {
     "training"    = "train"
     "uat"         = "uat"
     "breakfix"    = "bfx"
-    "cps-preview" = "cpspre"
+    "cps-preview" = "cpspr"
   }
 }
 
@@ -54,6 +60,7 @@ output "smartronix_environment_tags" {
     "uat"         = "UAT"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
+    "adhoc"       = "Adhoc"
   }
 }
 

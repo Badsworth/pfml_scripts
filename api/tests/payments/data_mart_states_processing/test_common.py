@@ -407,13 +407,6 @@ def test_query_data_mart_for_issues_and_updates_core_no_issues_all_updates_saved
     vendor_info.vendor_customer_code = "FOO"
 
     mock_data_mart_client.get_vendor_info.return_value = vendor_info
-    mocker.patch.object(
-        GeoState, "get_id", return_value=employee.ctr_address_pair.fineos_address.geo_state_id,
-    )
-
-    mocker.patch.object(
-        Country, "get_id", return_value=employee.ctr_address_pair.fineos_address.country_id,
-    )
 
     issues_and_updates = common.query_data_mart_for_issues_and_updates_core(
         mock_data_mart_client, employee, employee.tax_identifier
@@ -443,13 +436,6 @@ def test_query_data_mart_for_issues_and_updates_core_no_issues_no_updates(
 
     mock_data_mart_client.get_vendor_info.return_value = create_complete_valid_matching_vendor_info_for_employee(
         employee
-    )
-    mocker.patch.object(
-        GeoState, "get_id", return_value=employee.ctr_address_pair.fineos_address.geo_state_id,
-    )
-
-    mocker.patch.object(
-        Country, "get_id", return_value=employee.ctr_address_pair.fineos_address.country_id,
     )
 
     issues_and_updates = common.query_data_mart_for_issues_and_updates_core(

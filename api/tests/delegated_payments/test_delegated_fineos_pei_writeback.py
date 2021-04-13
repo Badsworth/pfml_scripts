@@ -270,17 +270,17 @@ def test_process_payments_for_writeback(
         [f.name for f in dataclasses.fields(writeback.PeiWritebackRecord)]
     )
 
-    expected_line_pattern = "{},({}),{},,,,({}),({}),({}|{}|{}),({})".format(
+    expected_line_pattern = "{},({}),{},({}),({}),({}|{}|{}),({})".format(
         r"\d\d\d\d",  # C value
         r"\d\d\d\d",  # I value
         writeback.ACTIVE_WRITEBACK_RECORD_STATUS,
-        r"\d\d/\d\d/\d\d\d\d",  # Extraction date
+        r"\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d",  # Extraction date
         r"\d*",  # Check number
         # Expect both transaction statuses in the writeback file.
         writeback.PAID_WRITEBACK_RECORD_TRANSACTION_STATUS,
         writeback.PROCESSED_WRITEBACK_RECORD_TRANSACTION_STATUS,
         writeback.ERROR_WRITEBACK_RECORD_TRANSACTION_STATUS,
-        r"\d\d/\d\d/\d\d\d\d",  # Transaction date
+        r"\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d",  # Transaction date
     )
     prog = re.compile(expected_line_pattern)
     assert len(all_payments) == len(writeback_file_lines)
@@ -292,10 +292,10 @@ def test_process_payments_for_writeback(
 
         # Expect that payment types will set the appropriate transaction status.
         i_value = result.group(1)
-        extraction_date = datetime.strptime(result.group(2), "%m/%d/%Y")
+        extraction_date = datetime.strptime(result.group(2), "%Y-%m-%d %H:%M:%S")
         transaction_number = result.group(3)
         transaction_status = result.group(4)
-        transaction_date = datetime.strptime(result.group(5), "%m/%d/%Y")
+        transaction_date = datetime.strptime(result.group(5), "%Y-%m-%d %H:%M:%S")
 
         if i_value in accepted_check_payments_i_values:
             assert transaction_status == writeback.PAID_WRITEBACK_RECORD_TRANSACTION_STATUS

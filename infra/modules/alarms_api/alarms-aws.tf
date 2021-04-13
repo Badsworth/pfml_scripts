@@ -1,3 +1,16 @@
+
+locals {
+  alarm_names = [
+    "export-leave-admins-created",
+    "fineos-error-extract-tool",
+    "fineos-data-export-tool",
+    "reductions-retrieve-payment-lists",
+    "reductions-send-wage-replacement",
+    "reductions-send-claimant-lists"
+  ]
+}
+
+
 # Terraform configuration for infrastructure-layer alarms. (host-specific metrics, e.g. CPU and RAM usage)
 
 resource "aws_cloudwatch_metric_alarm" "api_cpu_warn" {
@@ -104,3 +117,28 @@ resource "aws_cloudwatch_metric_alarm" "api_ram_crit" {
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+resource "aws_cloudwatch_metric_alarm" "failed_invocations" {
+
+  for_each = toset(local.alarm_names)
+
+  alarm_name        = "failed ${each.key}_${var.environment_name}_schedule_alert"
+  alarm_description = "(${upper(var.environment_name)} API CRIT) ${each.key} failed to start"
+  namespace         = "AWS/Events"
+  dimensions = {
+    rule_name = "${each.key}_${var.environment_name}_schedule"
+  }
+
+  comparison_operator = "GreaterThanThreshold"
+  threshold           = 0
+  metric_name         = "FailedInvocations"
+  statistic           = "Sum"
+  evaluation_periods  = "5" # look back at the last five minutes
+  datapoints_to_alarm = "1" # any three one-minute periods
+  period              = "60"
+  actions_enabled     = true
+  alarm_actions       = [var.warning_alert_sns_topic_arn]
+
+  tags = merge(module.constants.common_tags, {
+    environment = module.constants.environment_tags[var.environment_name]
+  })
+}

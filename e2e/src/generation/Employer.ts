@@ -5,8 +5,11 @@ import unique from "./unique";
 import { pipeline, Readable } from "stream";
 import JSONStream from "JSONStream";
 import { promisify } from "util";
+import shuffle from "./shuffle";
 
 const pipelineP = promisify(pipeline);
+
+type EmployerSize = "small" | "medium" | "large";
 
 export type Employer = {
   accountKey: string;
@@ -22,7 +25,7 @@ export type Employer = {
   exemption_commence_date?: Date | string;
   exemption_cease_date?: Date | string;
   updated_date?: Date | string;
-  size?: "small" | "medium" | "large";
+  size?: EmployerSize;
   withholdings: number[];
 };
 
@@ -37,7 +40,7 @@ const employerSizeWheel = [
 type EmployerGenerationSpec = {
   size?: Employer["size"];
   withholdings?: (number | null)[]; // quarters with 0 or null withholding amounts
-  family_expemtion?: boolean;
+  family_expemption?: boolean;
   medical_exemption?: boolean;
   exemption_commence_date?: Date;
   exemption_cease_date?: Date;
@@ -89,7 +92,7 @@ export class EmployerGenerator {
       state: "MA",
       zip: faker.address.zipCode("#####-####"),
       dba: name,
-      family_exemption: spec.family_expemtion || false,
+      family_exemption: spec.family_expemption || false,
       medical_exemption: spec.medical_exemption || false,
       exemption_commence_date: spec.exemption_commence_date,
       exemption_cease_date: spec.exemption_cease_date,
@@ -100,8 +103,14 @@ export class EmployerGenerator {
   }
 }
 
+export type EmployerPickSpec = {
+  size?: EmployerSize;
+  withholdings?: number[] | "exempt" | "non-exempt";
+  notFEIN?: string;
+};
+
 export default class EmployerPool implements Iterable<Employer> {
-  private wheel?: number[];
+  private wheel?: EmployerSize[];
 
   /**
    * Load a pool from a JSON file.
@@ -155,33 +164,87 @@ export default class EmployerPool implements Iterable<Employer> {
    *
    * Favors larger employers, returning them more often.
    */
-  pick(): Employer {
-    if (this.employers.length === 0) {
-      throw new Error("Cannot pick from an employer pool with no employers");
+  pick(spec: EmployerPickSpec = {}): Employer {
+    // Filter the pool down based on spec. If an explicit size hasn't been given,
+    // pick a size according to the chance defined by weightedSize().
+    const filter = buildPickFilter({ size: this.weightedSize(), ...spec });
+    const applicable = this.employers.filter(filter);
+    const employer = shuffle(applicable).pop();
+    if (!employer) {
+      throw new Error(
+        `No employers match the specification: ${JSON.stringify(spec)}`
+      );
     }
-    // Weighted picking logic - returns larger employers more often than smaller ones
-    // using a roulette wheel algorithm.
-    const wheel = this.getPickWheel();
-    const i = wheel[Math.floor(Math.random() * wheel.length)];
-    return this.employers[i];
+    return employer;
   }
 
-  private getPickWheel() {
-    if (this.wheel) {
-      return this.wheel;
+  /**
+   * Use the roulette wheel algorithm to pick a particular size of employer to select from the pool.
+   *
+   * This function considers the sizes of the employers in the pool (it will not return "large" if there are no "large"
+   * employers in the pool. Beyond that, it returns larger sizes more often.
+   */
+  private weightedSize(): EmployerSize {
+    if (this.wheel === undefined) {
+      // Pick out the distinct sizes of employers in the pool.
+      const activeSizes = this.employers.reduce(
+        (sizes, employer) => sizes.add(employer.size),
+        new Set()
+      );
+      // Build a roulette wheel containing the sizes.
+      const wheel: EmployerSize[] = [];
+      activeSizes.forEach((size) => {
+        switch (size) {
+          case "small":
+            // 1x chance of small.
+            wheel.push(...new Array(1).fill("small"));
+            break;
+          case "medium":
+            // 3x chance of medium.
+            wheel.push(...new Array(3).fill("medium"));
+            break;
+          case "large":
+            // 10x chance of large.
+            wheel.push(...new Array(10).fill("large"));
+            break;
+        }
+      });
+      this.wheel = wheel;
     }
-    return (this.wheel = this.employers.reduce((slots, employer, i) => {
-      switch (employer.size) {
-        case "large":
-          // Large employers = 10x more employees than a small employer.
-          return slots.concat(new Array(10).fill(i));
-        case "medium":
-          // Medium employers = 3x more employees than a small employer.
-          return slots.concat(new Array(3).fill(i));
-        default:
-          // Also applies to "small" employers.
-          return slots.concat([i]);
-      }
-    }, [] as number[]));
+    return this.wheel[Math.floor(Math.random() * this.wheel.length)];
   }
+}
+
+function buildPickFilter(
+  spec: EmployerPickSpec
+): (employer: Employer) => boolean {
+  return (employer: Employer) => {
+    if (spec.notFEIN && spec.notFEIN === employer.fein) {
+      return false;
+    }
+    if (spec.size && spec.size !== employer.size) {
+      return false;
+    }
+    if (
+      spec.withholdings === "exempt" &&
+      employer.withholdings.some((amt) => amt > 0)
+    ) {
+      return false;
+    }
+    if (
+      spec.withholdings === "non-exempt" &&
+      employer.withholdings.some((amt) => amt === 0)
+    ) {
+      return false;
+    }
+    // Cheap test for shallow array equality.
+    if (
+      Array.isArray(spec.withholdings) &&
+      JSON.stringify(employer.withholdings) !==
+        JSON.stringify(spec.withholdings)
+    ) {
+      return false;
+    }
+    return true;
+  };
 }

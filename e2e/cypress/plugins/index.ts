@@ -18,6 +18,7 @@ import {
   getAuthManager,
   getClaimantCredentials,
   getEmployeePool,
+  getEmployerPool,
   getPortalSubmitter,
   getVerificationFetcher,
 } from "../../src/scripts/util";
@@ -31,7 +32,7 @@ import TestMailClient, { Email, GetEmailsOpts } from "./TestMailClient";
 import DocumentWaiter from "./DocumentWaiter";
 import { ClaimGenerator, DehydratedClaim } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
-import EmployerPool from "../../src/generation/Employer";
+import { Employer, EmployerPickSpec } from "../../src/generation/Employer";
 import * as postSubmit from "../../src/submission/PostSubmit";
 import * as actions from "../../src/utils";
 
@@ -62,11 +63,8 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return client.getEmails(opts);
     },
     generateCredentials,
-    async generateLeaveAdminCredentials(): Promise<Credentials> {
-      const credentials = generateCredentials();
-      const employerPool = await EmployerPool.load(config("EMPLOYERS_FILE"));
-      const employer = employerPool.pick();
-      return { ...credentials, fein: employer.fein };
+    async pickEmployer(spec: EmployerPickSpec): Promise<Employer> {
+      return (await getEmployerPool()).pick(spec);
     },
     async registerClaimant(options: Credentials): Promise<true> {
       await authenticator.registerClaimant(options.username, options.password);
@@ -83,7 +81,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       );
       return true;
     },
-
     async submitClaimToAPI(
       application: DehydratedClaim & {
         credentials?: Credentials;

@@ -17,6 +17,8 @@ type Email = import("./cypress/plugins/TestMailClient").Email;
 type GetEmailsOpts = import("./cypress/plugins/TestMailClient").GetEmailsOpts;
 type Result = import("pdf-parse").Result;
 type DehydratedClaim = import("./src/generation/Claim").DehydratedClaim;
+type Employer = import("./src/generation/Employer").Employer;
+type EmployerPickSpec = import("./src/generation/Employer").EmployerPickSpec;
 
 declare namespace Cypress {
   interface Cypress {
@@ -41,23 +43,27 @@ declare namespace Cypress {
     // Declare our custom tasks.
     stashLog(key: string, value: string | null | undefined): null;
     dependsOnPreviousPass(dependencies?: Mocha.Test[]): null;
-    task(
-      event: "generateClaim",
-      scenario: string
-    ): Chainable<DehydratedClaim>;
+    task(event: "generateClaim", scenario: string): Chainable<DehydratedClaim>;
 
     task(event: "getAuthVerification", mail: string): Chainable<string>;
     task(event: "completeSSOLoginFineos"): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;
-    task(event: "generateLeaveAdminCredentials"): Chainable<Credentials>;
     task(event: "noticeReader", noticeType: string): Chainable<Result>;
 
     // Supplying multiple forms of submitClaimToAPI seems to be necessary to provide typing for
     // both forms.
-    task(event: "submitClaimToAPI", arg: DehydratedClaim): Chainable<ApplicationResponse>;
-    task(event: "submitClaimToAPI", arg: DehydratedClaim & {credentials?: Credentials, employerCredentials?: Credentials}): Chainable<ApplicationResponse>;
-
-
+    task(
+      event: "submitClaimToAPI",
+      arg: DehydratedClaim
+    ): Chainable<ApplicationResponse>;
+    task(
+      event: "submitClaimToAPI",
+      arg: DehydratedClaim & {
+        credentials?: Credentials;
+        employerCredentials?: Credentials;
+      }
+    ): Chainable<ApplicationResponse>;
+    task(event: "pickEmployer", spec: EmployerPickSpec): Chainable<Employer>;
     task(event: "getEmails", opts: GetEmailsOpts): Chainable<Email[]>;
     task(event: "registerClaimant", options: Credentials): Chainable<true>;
     task(
