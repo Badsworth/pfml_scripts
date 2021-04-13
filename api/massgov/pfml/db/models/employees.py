@@ -1910,6 +1910,7 @@ class PaymentTransactionType(LookupTable):
     OVERPAYMENT = LkPaymentTransactionType(3, "Overpayment")
     CANCELLATION = LkPaymentTransactionType(4, "Cancellation")
     UNKNOWN = LkPaymentTransactionType(5, "Unknown")
+    EMPLOYER_REIMBURSEMENT = LkPaymentTransactionType(6, "Employer Reimbursement")
 
 
 class ReferenceFileType(LookupTable):

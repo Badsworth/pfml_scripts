@@ -162,6 +162,7 @@ class ValidationReason(str, Enum):
     UNEXPECTED_PAYMENT_TRANSACTION_TYPE = "UnexpectedPaymentTransactionType"
     EFT_PRENOTE_PENDING = "EFTPending"
     EFT_PRENOTE_REJECTED = "EFTRejected"
+    CLAIMANT_MISMATCH = "ClaimantMismatch"
 
 
 @dataclass(frozen=True, eq=True)
@@ -232,29 +233,34 @@ def validate_csv_input(
 ) -> Optional[str]:
     # Don't write out the actual value in the messages, these can be SSNs, routing #s, and other PII
     value = data.get(key)
-    if required and not value or value == "Unknown":
-        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
-        return None  # Effectively treating "" and "Unknown" the same
+    if value == "Unknown":
+        value = None  # Effectively treating "" and "Unknown" the same
 
-    validation_errors = False
+    if required and not value:
+        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
+        return None
+
+    validation_issues = []
     # Check the length only if it is defined/not empty
     if value:
         if min_length and len(value) < min_length:
-            errors.add_validation_issue(ValidationReason.FIELD_TOO_SHORT, key)
-            validation_errors = True
+            validation_issues.append(ValidationReason.FIELD_TOO_SHORT)
         if max_length and len(value) > max_length:
-            errors.add_validation_issue(ValidationReason.FIELD_TOO_LONG, key)
-            validation_errors = True
+            validation_issues.append(ValidationReason.FIELD_TOO_LONG)
 
         # Also only bother with custom validation if the value exists
         if custom_validator_func:
             reason = custom_validator_func(value)
             if reason:
-                errors.add_validation_issue(reason, key)
-                validation_errors = True
+                validation_issues.append(reason)
+
+    if required:
+        for validation_issue in validation_issues:
+            errors.add_validation_issue(validation_issue, key)
 
     # If any of the specific validations hit an error, don't return the value
-    if validation_errors:
+    # This is true even if the field is not required as we may still use the field.
+    if len(validation_issues) > 0:
         return None
 
     return value
@@ -817,8 +823,8 @@ def compare_address_fields(first: Address, second: Address, field: str) -> bool:
     value2 = getattr(second, field)
 
     if field == "zip_code":
-        value1 = value1.strip()[:5]
-        value2 = value2.strip()[:5]
+        value1 = value1.strip()[:5] if value1 else None
+        value2 = value2.strip()[:5] if value2 else None
 
     if type(value1) is str:
         value1 = value1.strip().lower()

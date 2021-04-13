@@ -1,5 +1,4 @@
 import csv
-import decimal
 import os
 import pathlib
 import tempfile
@@ -29,6 +28,7 @@ from massgov.pfml.db.models.employees import (
     ExperianAddressPair,
     GeoState,
     LatestStateLog,
+    LkPaymentTransactionType,
     LkState,
     Payment,
     PaymentMethod,
@@ -76,10 +76,12 @@ expected_file_names = [
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
 OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = set(
-    ["Overpayment"]
+    ["Overpayment", "Overpayment Actual Recovery"]
 )  # There may be multiple types needed here, need to test further to know
+PAYMENT_OUT_TRANSACTION_TYPE = "PaymentOut"
+AUTO_ALT_EVENT_REASON = "Automatic Alternate Payment"
 
-SOCIAL_SECURITY_NUMBER = "Social Security Number"
+TAX_IDENTIFICATION_NUMBER = "Tax Identification Number"
 
 
 @dataclass(frozen=True, eq=True)
@@ -155,7 +157,6 @@ class PaymentData:
     absence_case_number: Optional[str] = None
 
     leave_request_decision: Optional[str] = None
-    claim_type_raw: Optional[str] = None
 
     full_name: Optional[str] = None
     payee_identifier: Optional[str] = None
@@ -167,15 +168,19 @@ class PaymentData:
     zip_code: Optional[str] = None
 
     raw_payment_method: Optional[str] = None
-    raw_payment_transaction_type: Optional[str] = None
+    event_type: Optional[str] = None
+    event_reason: Optional[str] = None
     payment_start_period: Optional[str] = None
     payment_end_period: Optional[str] = None
     payment_date: Optional[str] = None
-    payment_amount: Optional[str] = None
+    payment_amount: Optional[Decimal] = None
 
     routing_nbr: Optional[str] = None
     account_nbr: Optional[str] = None
     raw_account_type: Optional[str] = None
+
+    payment_transaction_type: LkPaymentTransactionType
+    is_standard_payment: bool
 
     def __init__(
         self,
@@ -187,6 +192,10 @@ class PaymentData:
         self.validation_container = payments_util.ValidationContainer(str(index))
         self.c_value = index.c
         self.i_value = index.i
+
+        #######################################
+        # BEGIN - VALIDATION OF PARAMETERS ALWAYS REQUIRED
+        #######################################
 
         # Find the record in the other datasets.
         payment_details = extract_data.payment_details.indexed_data.get(index)
@@ -205,53 +214,7 @@ class PaymentData:
             "PAYEESOCNUMBE", pei_record, self.validation_container, True
         )
         if claim_details:
-            self.absence_case_number = payments_util.validate_csv_input(
-                "ABSENCECASENU", claim_details, self.validation_container, True
-            )
-            requested_absence = None
-            if self.absence_case_number:
-                requested_absence = extract_data.requested_absence.indexed_data.get(
-                    CiIndex(c=self.absence_case_number, i="")
-                )
-            if requested_absence:
-
-                def leave_request_decision_validator(
-                    leave_request_decision: str,
-                ) -> Optional[payments_util.ValidationReason]:
-                    if leave_request_decision != "Approved":
-                        if count_incrementer is not None:
-                            count_incrementer("unapproved_leave_request_count")
-                        return payments_util.ValidationReason.INVALID_VALUE
-                    return None
-
-                self.leave_request_decision = payments_util.validate_csv_input(
-                    "LEAVEREQUEST_DECISION",
-                    requested_absence,
-                    self.validation_container,
-                    True,
-                    custom_validator_func=leave_request_decision_validator,
-                )
-
-                def claim_type_validator(
-                    claim_type_str: str,
-                ) -> Optional[payments_util.ValidationReason]:
-                    if claim_type_str == "Family" or claim_type_str == "Employee":
-                        return None
-                    return payments_util.ValidationReason.INVALID_VALUE
-
-                self.claim_type_raw = payments_util.validate_csv_input(
-                    "ABSENCEREASON_COVERAGE",
-                    requested_absence,
-                    self.validation_container,
-                    True,
-                    custom_validator_func=claim_type_validator,
-                )
-
-            else:
-                self.validation_container.add_validation_issue(
-                    payments_util.ValidationReason.MISMATCHED_DATA,
-                    f"Payment absence case number not found in requested absence file: {self.absence_case_number}",
-                )
+            self.process_claim_details(claim_details, extract_data, count_incrementer)
         else:
             # We require the absence case number, if claim details doesn't exist
             # we want to set the validation issue manually here
@@ -259,15 +222,46 @@ class PaymentData:
                 payments_util.ValidationReason.MISSING_FIELD, "ABSENCECASENU"
             )
 
+        self.payment_amount = self.get_payment_amount(pei_record)
+
         self.payee_identifier = payments_util.validate_csv_input(
             "PAYEEIDENTIFI", pei_record, self.validation_container, True
+        )
+
+        self.event_type = payments_util.validate_csv_input(
+            "EVENTTYPE", pei_record, self.validation_container, True
+        )
+
+        # Not required as some valid scenarios won't set this (Overpayments)
+        self.event_reason = payments_util.validate_csv_input(
+            "EVENTREASON", pei_record, self.validation_container, False
+        )
+
+        self.payment_date = payments_util.validate_csv_input(
+            "PAYMENTDATE",
+            pei_record,
+            self.validation_container,
+            True,
+            custom_validator_func=self.payment_period_date_validator,
+        )
+
+        if payment_details:
+            self.aggregate_payment_details(payment_details)
+
+        self.payment_transaction_type = self.get_payment_transaction_type()
+        # We only want to do specific checks if it is a standard payment
+        # There is no need to error a cancellation/overpayment/etc. if the payment
+        # is missing EFT or address info that we are never going to use.
+        self.is_standard_payment = (
+            self.payment_transaction_type.payment_transaction_type_id
+            == PaymentTransactionType.STANDARD.payment_transaction_type_id
         )
 
         self.raw_payment_method = payments_util.validate_csv_input(
             "PAYMENTMETHOD",
             pei_record,
             self.validation_container,
-            True,
+            self.is_standard_payment,
             custom_validator_func=payments_util.lookup_validator(
                 PaymentMethod,
                 disallowed_lookup_values=[
@@ -276,8 +270,15 @@ class PaymentData:
             ),
         )
 
+        #######################################
+        # BEGIN - VALIDATION OF PARAMETERS REQUIRED FOR CHECKS + standard payment
+        #######################################
+
         # Address values are only required if we are paying by check
-        address_required = self.raw_payment_method == PaymentMethod.CHECK.payment_method_description
+        address_required = (
+            self.raw_payment_method == PaymentMethod.CHECK.payment_method_description
+            and self.is_standard_payment
+        )
         self.address_line_one = payments_util.validate_csv_input(
             "PAYMENTADD1", pei_record, self.validation_container, address_required
         )
@@ -308,38 +309,15 @@ class PaymentData:
             custom_validator_func=payments_util.zip_code_validator,
         )
 
-        self.raw_payment_transaction_type = payments_util.validate_csv_input(
-            "EVENTTYPE", pei_record, self.validation_container, True
-        )
-
-        self.payment_date = payments_util.validate_csv_input(
-            "PAYMENTDATE",
-            pei_record,
-            self.validation_container,
-            True,
-            custom_validator_func=self.payment_period_date_validator,
-        )
-
-        if payment_details:
-            self.aggregate_payment_details(payment_details)
-
-        def amount_validator(amount_str: str) -> Optional[payments_util.ValidationReason]:
-            try:
-                Decimal(amount_str)
-            except (InvalidOperation, TypeError):  # Amount is not numeric
-                return payments_util.ValidationReason.INVALID_VALUE
-            return None
-
-        self.payment_amount = payments_util.validate_csv_input(
-            "AMOUNT_MONAMT",
-            pei_record,
-            self.validation_container,
-            True,
-            custom_validator_func=amount_validator,
-        )
+        #######################################
+        # BEGIN - VALIDATION OF PARAMETERS REQUIRED FOR EFT + standard payment
+        #######################################
 
         # These are only required if payment_method is for EFT
-        eft_required = self.raw_payment_method == PaymentMethod.ACH.payment_method_description
+        eft_required = (
+            self.raw_payment_method == PaymentMethod.ACH.payment_method_description
+            and self.is_standard_payment
+        )
         self.routing_nbr = payments_util.validate_csv_input(
             "PAYEEBANKSORT",
             pei_record,
@@ -358,6 +336,109 @@ class PaymentData:
             eft_required,
             custom_validator_func=payments_util.lookup_validator(BankAccountType),
         )
+
+    def get_payment_amount(self, pei_record: Dict[str, str]) -> Optional[Decimal]:
+        def amount_validator(amount_str: str) -> Optional[payments_util.ValidationReason]:
+            try:
+                Decimal(amount_str)
+            except (InvalidOperation, TypeError):  # Amount is not numeric
+                return payments_util.ValidationReason.INVALID_VALUE
+            return None
+
+        raw_payment_amount = payments_util.validate_csv_input(
+            "AMOUNT_MONAMT",
+            pei_record,
+            self.validation_container,
+            True,
+            custom_validator_func=amount_validator,
+        )
+        if raw_payment_amount:
+            return Decimal(raw_payment_amount)
+        return None
+
+    def get_payment_transaction_type(self) -> LkPaymentTransactionType:
+        """
+        Determine the payment transaction type of the data we have processed.
+        This document details the order of precedence in how we handle payments that
+        could potentially fall into multiple payment types.
+        https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
+        """
+
+        # Zero dollar payments overrule all other payment types
+        if self.payment_amount == Decimal("0"):
+            return PaymentTransactionType.ZERO_DOLLAR
+
+        # Employer reimbursements reimbursements are a very specific set of records
+        if (
+            self.event_reason == AUTO_ALT_EVENT_REASON
+            and self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
+            and self.payee_identifier == TAX_IDENTIFICATION_NUMBER
+        ):
+            return PaymentTransactionType.EMPLOYER_REIMBURSEMENT
+
+        # Note that Overpayments can be positive or negative
+        if self.event_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
+            return PaymentTransactionType.OVERPAYMENT
+
+        # Cancellations
+        if self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
+            return PaymentTransactionType.CANCELLATION
+
+        # The bulk of the payments we process will be standard payments
+        if (
+            self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
+            and self.payment_amount
+            and self.payment_amount > Decimal("0")
+        ):
+            return PaymentTransactionType.STANDARD
+
+        # We should always have been able to figure out the payment type
+        # from the above checks, this shouldn't happen and should go
+        # to the error report as it's not clear what we should do with it
+        self.validation_container.add_validation_issue(
+            payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
+            f"Unknown payment scenario encountered. Payment Amount: {self.payment_amount}, Event Type: {self.event_type}, Event Reason: {self.event_reason}",
+        )
+        return PaymentTransactionType.UNKNOWN
+
+    def process_claim_details(
+        self,
+        claim_details: Dict[str, str],
+        extract_data: ExtractData,
+        count_incrementer: Optional[Callable[[str], None]] = None,
+    ) -> None:
+        self.absence_case_number = payments_util.validate_csv_input(
+            "ABSENCECASENU", claim_details, self.validation_container, True
+        )
+        requested_absence = None
+        if self.absence_case_number:
+            requested_absence = extract_data.requested_absence.indexed_data.get(
+                CiIndex(c=self.absence_case_number, i="")
+            )
+        if requested_absence:
+
+            def leave_request_decision_validator(
+                leave_request_decision: str,
+            ) -> Optional[payments_util.ValidationReason]:
+                if leave_request_decision != "Approved":
+                    if count_incrementer is not None:
+                        count_incrementer("unapproved_leave_request_count")
+                    return payments_util.ValidationReason.INVALID_VALUE
+                return None
+
+            self.leave_request_decision = payments_util.validate_csv_input(
+                "LEAVEREQUEST_DECISION",
+                requested_absence,
+                self.validation_container,
+                True,
+                custom_validator_func=leave_request_decision_validator,
+            )
+
+        else:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISMATCHED_DATA,
+                f"Payment absence case number not found in requested absence file: {self.absence_case_number}",
+            )
 
     def aggregate_payment_details(self, payment_details):
         """Aggregate payment period dates across all the payment details for this payment.
@@ -569,36 +650,36 @@ class PaymentExtractStep(Step):
     def get_employee_and_claim(
         self, payment_data: PaymentData
     ) -> Tuple[Optional[Employee], Optional[Claim]]:
-        # If the payee_identifier isn't SSN (ie. is an ID or TIN), we want
-        # to skip fetching the employee and claim entirely as we're assuming
-        # that it is the employer. Note that this isn't 100% correct, and a
-        # more sophisticated approach will be added in the future.
-        if payment_data.payee_identifier != SOCIAL_SECURITY_NUMBER:
-            return None, None
 
         # Get the TIN, employee and claim associated with the payment to be made
         employee, claim = None, None
         try:
-            tax_identifier = (
-                self.db_session.query(TaxIdentifier)
-                .filter_by(tax_identifier=payment_data.tin)
-                .one_or_none()
-            )
-            if not tax_identifier:
-                payment_data.validation_container.add_validation_issue(
-                    payments_util.ValidationReason.MISSING_IN_DB, "tax_identifier"
-                )
-            else:
-                employee = (
-                    self.db_session.query(Employee)
-                    .filter_by(tax_identifier=tax_identifier)
+            # If the payment transaction type is for the employer
+            # We know we aren't going to find an employee, so don't look
+            if (
+                payment_data.payment_transaction_type.payment_transaction_type_id
+                != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            ):
+                tax_identifier = (
+                    self.db_session.query(TaxIdentifier)
+                    .filter_by(tax_identifier=payment_data.tin)
                     .one_or_none()
                 )
-
-                if not employee:
+                if not tax_identifier:
                     payment_data.validation_container.add_validation_issue(
-                        payments_util.ValidationReason.MISSING_IN_DB, "employee"
+                        payments_util.ValidationReason.MISSING_IN_DB, "tax_identifier"
                     )
+                else:
+                    employee = (
+                        self.db_session.query(Employee)
+                        .filter_by(tax_identifier=tax_identifier)
+                        .one_or_none()
+                    )
+
+                    if not employee:
+                        payment_data.validation_container.add_validation_issue(
+                            payments_util.ValidationReason.MISSING_IN_DB, "employee"
+                        )
 
             claim = (
                 self.db_session.query(Claim)
@@ -613,38 +694,25 @@ class PaymentExtractStep(Step):
             )
             raise
 
-        # Claim might not exist because the employee used the call center, or the claimant extract
-        # errored for the claimant.
-        # We do not want to create a claim if we do not have an absence case number
-        # as it's a unique field and we would rather have orphaned payments instead of
-        # errored payments grouped together in null claim object.
-        if not claim and payment_data.absence_case_number:
-            claim = Claim(
-                claim_id=uuid.uuid4(), fineos_absence_id=payment_data.absence_case_number,
+        # If we cannot find the claim, we want to error only for standard
+        # payments. While we'd like to attach the claim to other payment types
+        # it's less of a concern to us.
+        if not claim and payment_data.is_standard_payment:
+            payment_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_IN_DB, "claim"
             )
-            self.db_session.add(claim)
-            self.increment("claim_created_count")
+            self.increment("claim_not_found_count")
+            return None, None
 
-        # Attach the employee+claim type to the claim
-        if claim:
-            if employee:
-                claim.employee = employee
-            if payment_data.claim_type_raw:
-                claim.claim_type_id = payments_util.get_mapped_claim_type(
-                    payment_data.claim_type_raw
-                ).claim_type_id
-
-        # Somehow we have ended up in a state where we could not find an employee
-        # but did find a claim with some other employee ID. This shouldn't happen
-        # but if it does we need to halt to investigate.
-        if claim and not employee and claim.employee:
-            logger.error(
-                "Could not find employee for payment, but found claim %s with an attached employee %s",
-                claim.claim_id,
-                claim.employee.employee_id,
-                extra=payment_data.get_traceable_details(),
+        if claim and employee and claim.employee_id != employee.employee_id:
+            # If the employee we found does not match what is already attached
+            # to the claim, we can't accept the payment.
+            payment_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.CLAIMANT_MISMATCH,
+                f"Claimant {claim.employee_id} is attached to claim {claim.fineos_absence_id}, but claimant {employee.employee_id} was found.",
             )
-            raise Exception("Could not find employee for payment, but found a claim")
+            self.increment("claimant_mismatch_count")
+            return None, None
 
         return employee, claim
 
@@ -696,26 +764,6 @@ class PaymentExtractStep(Step):
         self.db_session.add(employee_address)
         return new_experian_address_pair, True
 
-    def get_payment_transaction_type_id(self, payment_data: PaymentData, amount: Decimal) -> int:
-        if payment_data.raw_payment_transaction_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
-            return PaymentTransactionType.CANCELLATION.payment_transaction_type_id
-        elif payment_data.raw_payment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
-            return PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id
-        elif amount == Decimal("0"):
-            return PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
-        elif amount > Decimal("0"):
-            return PaymentTransactionType.STANDARD.payment_transaction_type_id
-
-        # We should always have been able to figure out the payment type
-        # from the above checks, this shouldn't happen and should go
-        # to the error report as it's not clear what we should do with it
-        # It might be a negative payment with a field set incorrectly in FINEOS
-        payment_data.validation_container.add_validation_issue(
-            payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
-            f"Payment type [{payment_data.raw_payment_transaction_type}] had a negative payment amount",
-        )
-        return PaymentTransactionType.UNKNOWN.payment_transaction_type_id
-
     def create_payment(
         self,
         payment_data: PaymentData,
@@ -734,7 +782,7 @@ class PaymentExtractStep(Step):
         payment = Payment(payment_id=uuid.uuid4())
 
         # set the payment method
-        if payment_data.raw_payment_method is not None:
+        if payment_data.raw_payment_method:
             payment.disb_method_id = PaymentMethod.get_id(payment_data.raw_payment_method)
 
         # Note that these values may have validation issues
@@ -748,25 +796,17 @@ class PaymentExtractStep(Step):
             payment_data.payment_end_period
         )
         payment.payment_date = payments_util.datetime_str_to_date(payment_data.payment_date)
-        try:
-            payment.amount = decimal.Decimal(cast(str, payment_data.payment_amount))
-            payment.payment_transaction_type_id = self.get_payment_transaction_type_id(
-                payment_data, payment.amount
-            )
-        except (InvalidOperation, TypeError):
-            logger.exception(
-                "Unable to convert payment amount %s to a decimal",
-                payment_data.payment_amount,
-                extra=payment_data.get_traceable_details(),
-            )
+
+        payment.payment_transaction_type_id = (
+            payment_data.payment_transaction_type.payment_transaction_type_id
+        )
+
+        if payment_data.payment_amount is not None:
+            payment.amount = payment_data.payment_amount
+        else:
             # In the unlikely scenario where payment amount isn't set
             # we need to set something as the DB requires this to be set
-            payment.amount = Decimal(0)
-            # Can't determine the payment type without an amount, and this
-            # is an error scenario anyways.
-            payment.payment_transaction_type_id = (
-                PaymentTransactionType.UNKNOWN.payment_transaction_type_id
-            )
+            payment.amount = Decimal("0")
 
             # As a sanity check, make certain that missing amount was caught
             # by the earlier validation logic, this if statement shouldn't
@@ -814,6 +854,12 @@ class PaymentExtractStep(Step):
         if payment_data.validation_container.has_validation_issues():
             # We will only update EFT information if the payment has no issues up to
             # this point in the processing, meaning that required fields are present.
+            return None, False
+
+        if not payment_data.is_standard_payment:
+            # If it's any non-standard payment (cancellation, overpayment, employer, etc.)
+            # There isn't a need to prenote, as it's not going to be paid directly anyways
+            # and we don't want to error the payment because it needs to be prenoted.
             return None, False
 
         # Need to cast these values as str rather than Optional[str] as we've
@@ -975,7 +1021,11 @@ class PaymentExtractStep(Step):
             message = "Error processing payment record"
             self.increment("errored_payment_count")
 
-        elif payment_data.payee_identifier != SOCIAL_SECURITY_NUMBER:
+        # Employer reimbursements are added to the FINEOS writeback + a report
+        elif (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+        ):
             end_state = (
                 State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT
             )
