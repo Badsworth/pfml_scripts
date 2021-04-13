@@ -1,0 +1,36 @@
+name: E2E Test Suite (All Environments)
+#
+# This workflow is to trigger scheduled runs every morning
+#
+# Scheduled runs will trigger a workflow_dispatch for all
+# enviornments via the End-to-End Test Suite workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      cypress_tags:
+        description: "Cypress Run Tags"
+        required: false
+        default: "Manual"
+  schedule:
+    - cron:  '0 11 * * 1-5'
+
+jobs:
+  trigger_e2e:
+    name: Run Cypress Test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [ "test", "stage", "performance", "training", "uat" ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/trigger-cypress
+        name: "Trigger Cypress Run in ${{ matrix.environment }}"
+        with:
+          target_environment: "${{ matrix.environment }}"
+          cypress_tags: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.cypress_tags || format('Morning Run ({0})', matrix.environment) }}
+          github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          github_branch: ${{ matrix.environment == 'test' && 'main' || format('deploy/portal/{0}', matrix.environment) }}
+          wait_for_results: "false"
+          only_stable: 'true'
