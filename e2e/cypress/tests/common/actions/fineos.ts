@@ -120,7 +120,7 @@ export function assertClaimApprovable(): void {
   cy.contains(".menulink a", "Approve").should("be.visible");
 }
 
-export function assertClaimApprovableInter(): void {
+export function assertClaimApprovableIntermittent(): void {
   // Assert that we have all green checkboxes.
   cy.get(
     "[id*='leavePlanAdjudicationListviewWidgetApplicabilityStatus']"
@@ -649,7 +649,7 @@ export function claimAdjudicationFlow(
   cy.wait(2000);
 }
 
-export function claimInterAdjudicationFlow(
+export function claimIntermittentAdjudicationFlow(
   claimNumber: string,
   ERresponse = false
 ): void {
@@ -673,7 +673,7 @@ export function claimInterAdjudicationFlow(
   assertAdjudicatingClaim(claimNumber);
   clickBottomWidgetButton("OK");
   // assertClaimApprovable();
-  assertClaimApprovableInter()
+  assertClaimApprovableIntermittent();
   // Approve Claim
   if (ERresponse) {
     approveClaim();

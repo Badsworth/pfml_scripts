@@ -157,6 +157,7 @@ export const Sally: ScenarioSpecification = {
     label: "Sally",
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
+    work_pattern_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
       FOSTERPLACEMENT: {},
