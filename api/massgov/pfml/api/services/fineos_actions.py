@@ -85,7 +85,7 @@ def register_employee(
     employee_ssn: str,
     employer_fein: str,
     db_session: massgov.pfml.db.Session,
-) -> str:
+) -> Optional[str]:
     # If a FINEOS Id exists for SSN/FEIN return it.
     fineos_web_id_ext = (
         db_session.query(FINEOSWebIdExt)
@@ -106,8 +106,7 @@ def register_employee(
             raise ValueError("fineos_web_id_ext is missing a fineos_web_id")
 
         return fineos_web_id_ext.fineos_web_id
-
-    try:
+    else:
         # Find FINEOS employer id using employer FEIN
         employer_id = fineos.find_employer(employer_fein)
         logger.info("found employer_id %s", employer_id)
@@ -126,22 +125,25 @@ def register_employee(
             national_insurance_no=employee_ssn,
         )
 
-        fineos.register_api_user(employee_registration)
         logger.info("registered as %s", employee_external_id)
-    except massgov.pfml.fineos.FINEOSClientError:
-        logger.exception("FINEOS API error while attempting to register employee/fineos api user.")
-        return None
 
-    # If successful save ExternalIdentifier in the database
-    fineos_web_id_ext = FINEOSWebIdExt()
-    fineos_web_id_ext.employee_tax_identifier = employee_ssn
-    fineos_web_id_ext.employer_fein = employer_fein
-    fineos_web_id_ext.fineos_web_id = employee_external_id
-    db_session.add(fineos_web_id_ext)
+        # If successful save ExternalIdentifier in the database
+        fineos_web_id_ext = FINEOSWebIdExt()
+        fineos_web_id_ext.employee_tax_identifier = employee_ssn
+        fineos_web_id_ext.employer_fein = employer_fein
+        fineos_web_id_ext.fineos_web_id = employee_external_id
+        db_session.add(fineos_web_id_ext)
 
-    db_session.commit()
+        db_session.commit()
 
-    return employee_external_id
+        try:
+            fineos.register_api_user(employee_registration)
+        except massgov.pfml.fineos.FINEOSClientError:
+            logger.exception("FINEOS API error while attempting to register employee/fineos api user.")
+            # NOTE: Should we remove `fineos_web_id_ext`? It wasn't saved.
+            return None
+
+        return employee_external_id
 
 
 def send_to_fineos(
