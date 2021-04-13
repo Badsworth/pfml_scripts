@@ -29,7 +29,8 @@ describe("Payment amounts", () => {
                 throw new Error("Response must include FINEOS absence ID");
               }
               fineos.checkPaymentPreference(claim);
-              fineos.claimAdjudicationFlow(response.fineos_absence_id, true);
+              // fineos.claimAdjudicationFlow(response.fineos_absence_id, true);
+              fineos.claimInterAdjudicationFlow(response.fineos_absence_id, true);
               fineos.getPaymentAmount().then((amount) => {
                 expect(amount).to.eq("800.09");
               });

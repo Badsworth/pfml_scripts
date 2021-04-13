@@ -120,6 +120,39 @@ export function assertClaimApprovable(): void {
   cy.contains(".menulink a", "Approve").should("be.visible");
 }
 
+export function assertClaimApprovableInter(): void {
+  // Assert that we have all green checkboxes.
+  cy.get(
+    "[id*='leavePlanAdjudicationListviewWidgetApplicabilityStatus']"
+  ).should("have.text", "Applicable");
+  cy.get("[id*='leavePlanAdjudicationListviewWidgetEligibilityStatus']").should(
+    "have.text",
+    "Met"
+  );
+  cy.get("[id*='leavePlanAdjudicationListviewWidgetEvidenceStatus']").should(
+    "have.text",
+    "Satisfied"
+  );
+
+  cy.get(
+    "[id*='leavePlanAdjudicationListviewWidgetAvailabilityStatus']"
+  ).should("have.text", "As Certified");
+  cy.get("[id*='leavePlanAdjudicationListviewWidgetRestrictionStatus']").should(
+    "have.text",
+    "Passed"
+  );
+  cy.get("[id*='leavePlanAdjudicationListviewWidgetProtocolsStatus']").should(
+    "have.text",
+    "Passed"
+  );
+  cy.get("[id*='leavePlanAdjudicationListviewWidgetPlanDecision0']").should(
+    "have.text",
+    "Accepted"
+  );
+  // Assert that we can see the approve button.
+  cy.contains(".menulink a", "Approve").should("be.visible");
+}
+
 export function searchScenario(claimNumber: string): void {
   cy.get('a[aria-label="Cases"]').click();
   cy.get('td[keytipnumber="4"]').contains("Case").click();
@@ -571,6 +604,12 @@ export function markEvidence(
   });
 }
 
+export function markPlanAccepted(claimNumber: string): void {
+  assertAdjudicatingClaim(claimNumber);
+  onTab("Manage Request");
+  cy.get("input[type='submit'][value='Accept']").click({ force: true });
+}
+
 export function fillAbsencePeriod(claimNumber: string): void {
   assertAdjudicatingClaim(claimNumber);
   onTab("Evidence");
@@ -603,6 +642,38 @@ export function claimAdjudicationFlow(
   assertAdjudicatingClaim(claimNumber);
   clickBottomWidgetButton("OK");
   assertClaimApprovable();
+  // Approve Claim
+  if (ERresponse) {
+    approveClaim();
+  }
+  cy.wait(2000);
+}
+
+export function claimInterAdjudicationFlow(
+  claimNumber: string,
+  ERresponse = false
+): void {
+  visitClaim(claimNumber);
+  if (ERresponse) {
+    assertClaimHasLeaveAdminResponse(true);
+    clickBottomWidgetButton("Close");
+  }
+  assertOnClaimPage(claimNumber);
+  checkTask();
+  cy.get("input[type='submit'][value='Adjudicate']").click();
+  checkStatus(claimNumber, "Eligibility", "Met");
+  markEvidence(claimNumber, "MHAP1", "State managed Paid Leave Confirmation");
+  markEvidence(claimNumber, "MHAP1", "Identification Proof");
+  checkStatus(claimNumber, "Evidence", "Satisfied");
+  fillAbsencePeriod(claimNumber);
+  // checkStatus(claimNumber, "Availability", "Time Available");
+  checkStatus(claimNumber, "Availability", "As Certified");
+  // Complete Adjudication
+  markPlanAccepted(claimNumber);
+  assertAdjudicatingClaim(claimNumber);
+  clickBottomWidgetButton("OK");
+  // assertClaimApprovable();
+  assertClaimApprovableInter()
   // Approve Claim
   if (ERresponse) {
     approveClaim();

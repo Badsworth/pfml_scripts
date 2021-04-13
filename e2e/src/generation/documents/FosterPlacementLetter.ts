@@ -24,26 +24,44 @@ export default class FosterPlacementLetter extends AbstractDocumentGenerator<{
     claim: ApplicationRequestBody,
     config: { invalid?: boolean }
   ): PDFFormData {
-    if (
-      !claim.leave_details?.continuous_leave_periods?.[0].start_date ||
-      !claim.leave_details?.continuous_leave_periods?.[0].end_date
-    ) {
-      throw new Error(
-        "Invalid leave period to generate foster placement letter"
-      );
+    let start_date = new Date();
+    let end_date = new Date();
+
+    const leave_types = ["continuous", "reduced_schedule", "intermittent"];
+    for (const leave_type of leave_types) {
+      const flagKey = `has_${leave_type}_leave_periods` as keyof typeof claim;
+      const leaveKey = `${leave_type}_leave_periods` as
+        | "continuous_leave_periods"
+        | "reduced_schedule_leave_periods"
+        | "intermittent_leave_periods";
+      if (claim[flagKey]) {
+        const period = (claim.leave_details?.[leaveKey] ?? [])[0];
+        if (!period) {
+          throw new Error(`No ${leave_type} periods found on this claim`);
+        }
+        if (!period.start_date || !period.end_date) {
+          throw new Error(`Leave period does not have a start or end date`);
+        }
+        start_date = parseISO(period.start_date);
+        end_date = parseISO(period.end_date);
+      }
     }
-    if (!claim.leave_details?.child_placement_date) {
-      throw new Error(
-        `Unable to generate foster placement letter without child placement date`
-      );
-    }
+      if (!claim.leave_details?.child_placement_date) {
+        throw new Error(
+          `Unable to generate foster placement letter without child placement date`
+        );
+      }
     return {
-      "Date Leave to Begin": reformat(
-        claim.leave_details?.continuous_leave_periods[0].start_date
-      ),
-      "Date Leave to End": reformat(
-        claim.leave_details?.continuous_leave_periods[0].end_date
-      ),
+      // "Date Leave to Begin": reformat(
+      //   // claim.leave_details?.continuous_leave_periods[0].start_date
+      //   "2021-04-7"
+      // ),
+      "Date Leave to Begin": format(start_date, "MM/dd/yyyy"),
+      "Date Leave to End": format(end_date, "MM/dd/yyyy"),
+        // reformat(
+        // claim.leave_details?.continuous_leave_periods[0].end_date
+        // "2021-04-11"
+      // ),
       "Actual or Anticipated Date of Adoption / Placement": reformat(
         claim.leave_details?.child_placement_date
       ),
