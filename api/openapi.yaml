@@ -2235,6 +2235,7 @@ components:
             - Pregnancy/Maternity
             - Child Bonding
             - Serious Health Condition - Employee
+            - Care For A Family Member
           example: "Child Bonding"
         reason_qualifier:
           type: string
@@ -2259,32 +2260,8 @@ components:
           nullable: true
           items:
             $ref: "#/components/schemas/IntermittentLeavePeriods"
-        relationship_to_caregiver:
-          type: string
-          nullable: true
-          enum:
-            - Parent
-            - Child
-            - Grandparent
-            - Grandchild
-            - Other Family Member
-            - Service Member
-            - Inlaw
-            - Sibling
-            - Other
-            - Employee
-          example: "Parent"
-        relationship_qualifier:
-          type: string
-          nullable: true
-          enum:
-            - Adoptive
-            - Biological
-            - Foster
-            - Custodial Parent
-            - Legal Guardian
-            - Step Parent
-          example: "Biological"
+        caring_leave_metadata:
+          $ref: "#/components/schemas/CaringLeaveMetadata"
         pregnant_or_recent_birth:
           type: boolean
           nullable: true
@@ -2907,3 +2884,35 @@ components:
             - Cell
             - Fax
             - Phone
+    CaringLeaveMetadata:
+      type: object
+      properties:
+        family_member_first_name:
+          type: string
+          example: "Jane"
+          nullable: false
+        family_member_middle_name:
+          type: string
+          example: "Alice"
+          nullable: false
+        family_member_last_name:
+          type: string
+          example: "Doe"
+          nullable: false
+        family_member_date_of_birth:
+          $ref: "#/components/schemas/DateOrMaskedDate"
+          nullable: true
+        relationship_to_caregiver:
+          type: string
+          nullable: true
+          enum:
+            - Parent
+            - Child
+            - Grandparent
+            - Grandchild
+            - Other Family Member
+            - Service Member
+            - Inlaw
+            - Sibling
+            - Other
+            - Spouse

@@ -8,6 +8,7 @@ from massgov.pfml.db.models.applications import (
     EmployerBenefit,
     EmployerBenefitType,
     IntermittentLeavePeriod,
+    LeaveReason,
     OtherIncome,
     OtherIncomeType,
     PreviousLeave,
@@ -112,6 +113,18 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
         if application.leave_reason_qualifier
         else None
     )
+
+    # for caring leave, log relationship type
+    if (
+        application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+        and application.caring_leave_metadata  # type: ignore
+        and application.caring_leave_metadata.relationship_to_caregiver  # type: ignore
+    ):
+        result[
+            "application.leave_details.caring_leave_metadata.relationship_to_caregiver"
+        ] = (
+            application.caring_leave_metadata.relationship_to_caregiver.relationship_to_caregiver_description  # type: ignore
+        )
 
     result["work_pattern.work_pattern_type"] = (
         application.work_pattern.work_pattern_type.work_pattern_type_description

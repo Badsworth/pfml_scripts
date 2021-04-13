@@ -606,14 +606,12 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     employee = EmployeeFactory()
     assert len(employee.pub_efts.all()) == 0
 
-    none_payment_method_id = None
-
     # Routing number incorrect length.
     eft_entry = {"SORTCODE": "12345678", "ACCOUNTNO": "123456789", "ACCOUNTTYPE": "Checking"}
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
     claimant_extract_step.update_eft_info(
-        eft_entry, employee, none_payment_method_id, validation_container
+        eft_entry, employee, PaymentMethod.ACH.payment_method_id, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -632,7 +630,7 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
     claimant_extract_step.update_eft_info(
-        eft_entry, employee, none_payment_method_id, validation_container
+        eft_entry, employee, PaymentMethod.ACH.payment_method_id, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -651,7 +649,7 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
     claimant_extract_step.update_eft_info(
-        eft_entry, employee, none_payment_method_id, validation_container
+        eft_entry, employee, PaymentMethod.ACH.payment_method_id, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
@@ -670,7 +668,7 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     validation_container = payments_util.ValidationContainer(record_key=employee.employee_id)
 
     claimant_extract_step.update_eft_info(
-        eft_entry, employee, none_payment_method_id, validation_container
+        eft_entry, employee, PaymentMethod.ACH.payment_method_id, validation_container
     )
 
     updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(

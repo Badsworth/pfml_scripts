@@ -31,9 +31,6 @@ on:
       - e2e/cypress.json
       - e2e/package.json
       - e2e/employee.json
-  # Nightly runs (Midnight UTC)
-  schedule:
-    - cron: '0 0 * * *'
 
 env:
   # Setup any secret overrides that are necessary here.

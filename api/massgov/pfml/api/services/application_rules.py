@@ -357,6 +357,9 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
     if application.leave_reason_id == LeaveReason.CHILD_BONDING.leave_reason_id:
         issues += get_bonding_leave_issues(application)
 
+    if application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id:
+        issues += get_caring_leave_issues(application)
+
     if application.employer_notified:
         if not application.employer_notification_date:
             issues.append(
@@ -516,6 +519,22 @@ def get_bonding_leave_issues(application: Application) -> List[Issue]:
                 field="leave_details.child_placement_date",
             )
         )
+    return issues
+
+
+def get_caring_leave_issues(application: Application) -> List[Issue]:
+    issues = []
+
+    required_fields = [
+        "family_member_first_name",
+        "family_member_last_name",
+        "family_member_date_of_birth",
+        "relationship_to_caregiver",
+    ]
+    issues += check_required_fields(
+        "leave_details.caring_leave_metadata", application.caring_leave_metadata, required_fields  # type: ignore
+    )
+
     return issues
 
 

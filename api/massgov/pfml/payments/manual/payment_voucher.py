@@ -452,18 +452,17 @@ def write_row_to_output(
     leave_request_id: Optional[str] = ""
     leave_request_decision: Optional[str] = ""
     if (
-        payment_data.absence_case_number is not None
-        and payment_data.absence_case_number
-        in voucher_extract_data.vbi_requested_absence.indexed_data
+        payment_data.leave_request_id is not None
+        and payment_data.leave_request_id in voucher_extract_data.vbi_requested_absence.indexed_data
     ):
         vbi_requested_absence = voucher_extract_data.vbi_requested_absence.indexed_data[
-            payment_data.absence_case_number
+            payment_data.leave_request_id
         ]
-        leave_request_id = vbi_requested_absence.get("LEAVEREQUEST_ID")
+        leave_request_id = payment_data.leave_request_id
         leave_request_decision = vbi_requested_absence.get("LEAVEREQUEST_DECISION")
     else:
         logger.warning(
-            "Absence case missing and/or absence case not found in VBI_REQUESTEDABSENCE.csv; cannot set leave_request_id, leave_request_decision",
+            "Leave request id missing from vpeiclaimdetails.csv and/or leave request id not found in VBI_REQUESTEDABSENCE.csv; cannot set leave_request_id, leave_request_decision",
             extra=extra,
         )
         has_errors = True
@@ -582,10 +581,10 @@ def download_and_index_voucher_data(
 
     vbi_requested_absence_indexed_data: Dict[str, Dict[str, str]] = {}
     for row in vbi_requested_absence_rows:
-        absence_case_number = str(row.get("ABSENCE_CASENUMBER"))
-        vbi_requested_absence_indexed_data[absence_case_number] = row
+        leave_request_id = str(row.get("LEAVEREQUEST_ID"))
+        vbi_requested_absence_indexed_data[leave_request_id] = row
         logger.debug(
-            "indexed vbi_REQUESTEDABSENCE file row with Absence case no: %s", absence_case_number
+            "indexed vbi_REQUESTEDABSENCE file row with leave request id: %s", leave_request_id
         )
 
     extract_data.vbi_requested_absence.indexed_data = vbi_requested_absence_indexed_data

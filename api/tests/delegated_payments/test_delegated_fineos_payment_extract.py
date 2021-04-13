@@ -23,6 +23,7 @@ from massgov.pfml.db.models.employees import (
     Payment,
     PaymentMethod,
     PrenoteState,
+    PubEft,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -75,18 +76,115 @@ PEI_FIELD_NAMES = [
     "PAYEEACCOUNTT",
     "EVENTTYPE",
     "PAYEEIDENTIFI",
+    "EVENTREASON",
 ]
 PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "PAYMENTENDPER"]
 PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU"]
-REQUESTED_ABSENCE_FIELD_NAMES = [
-    "ABSENCE_CASENUMBER",
-    "LEAVEREQUEST_DECISION",
-    "ABSENCEREASON_COVERAGE",
-]
+REQUESTED_ABSENCE_FIELD_NAMES = ["ABSENCE_CASENUMBER", "LEAVEREQUEST_DECISION"]
 
 
 fake = faker.Faker()
 fake.seed_instance(1212)
+
+
+class FineosData:
+    """
+    FINEOS Data contains all data we care about for processing a FINEOS extract
+    With no parameters,, will generate a valid, mostly-random valid standard payment
+    Parameters can be overriden by specifying them as kwargs. If you do not want
+    random generated values, set generate_defaults to False in the constructor.
+    """
+
+    def __init__(self, generate_defaults=True, **kwargs):
+        self.generate_defaults = generate_defaults
+        self.kwargs = kwargs
+
+        self.c_value = self.get_value("c_value", "7326")
+        self.i_value = self.get_value("i_value", str(fake.unique.random_int()))
+        self.absence_case_number = self.get_value(
+            "absence_case_number", f"ABS-{fake.unique.random_int()}"
+        )
+
+        ssn = fake.ssn().replace("-", "")
+        self.tin = self.get_value("tin", ssn)
+
+        self.payment_address_1 = self.get_value(
+            "address1", f"{fake.building_number()} {fake.street_name()} {fake.street_suffix()}"
+        )
+        self.payment_address_2 = self.get_value("address2", "")
+        self.city = self.get_value("city", fake.city())
+        self.state = self.get_value("state", fake.state_abbr().upper())
+        self.zip_code = self.get_value("zip_code", fake.zipcode_plus4())
+        self.payment_method = self.get_value("payment_method", "Elec Funds Transfer")
+        self.payment_date = self.get_value("payment_date", "2021-01-01 12:00:00")
+        self.payment_amount = self.get_value("payment_amount", "100.00")
+        self.routing_nbr = self.get_value("routing_nbr", ssn)
+        self.account_nbr = self.get_value("account_nbr", ssn)
+        self.account_type = self.get_value("account_type", "Checking")
+        self.event_type = self.get_value("payment_type", "PaymentOut")
+        self.payee_identifier = self.get_value("payee_identifier", "Social Security Number")
+        self.event_reason = self.get_value("event_reason", "Automatic Main Payment")
+
+        self.payment_start_period = self.get_value("payment_start", "2021-01-01 12:00:00")
+        self.payment_end_period = self.get_value("payment_end", "2021-01-08 12:00:00")
+
+        self.leave_request_decision = self.get_value("leave_request_decision", "Approved")
+
+    def get_vpei_record(self):
+        vpei_record = OrderedDict()
+        vpei_record["C"] = self.c_value
+        vpei_record["I"] = self.i_value
+        vpei_record["PAYEESOCNUMBE"] = self.tin
+        vpei_record["PAYMENTADD1"] = self.payment_address_1
+        vpei_record["PAYMENTADD2"] = self.payment_address_2
+        vpei_record["PAYMENTADD4"] = self.city
+        vpei_record["PAYMENTADD6"] = self.state
+        vpei_record["PAYMENTPOSTCO"] = self.zip_code
+        vpei_record["PAYMENTMETHOD"] = self.payment_method
+        vpei_record["PAYMENTDATE"] = self.payment_date
+        vpei_record["AMOUNT_MONAMT"] = self.payment_amount
+        vpei_record["PAYEEBANKSORT"] = self.routing_nbr
+        vpei_record["PAYEEACCOUNTN"] = self.account_nbr
+        vpei_record["PAYEEACCOUNTT"] = self.account_type
+        vpei_record["EVENTTYPE"] = self.event_type
+        vpei_record["PAYEEIDENTIFI"] = self.payee_identifier
+        vpei_record["EVENTREASON"] = self.event_reason
+        return vpei_record
+
+    def get_claim_details_record(self):
+        claim_detail_record = OrderedDict()
+        claim_detail_record["PECLASSID"] = self.c_value
+        claim_detail_record["PEINDEXID"] = self.i_value
+        claim_detail_record["ABSENCECASENU"] = self.absence_case_number
+        return claim_detail_record
+
+    def get_payment_details_record(self):
+        payment_detail_record = OrderedDict()
+        payment_detail_record["PECLASSID"] = self.c_value
+        payment_detail_record["PEINDEXID"] = self.i_value
+
+        payment_detail_record["PAYMENTSTARTP"] = self.payment_start_period
+        payment_detail_record["PAYMENTENDPER"] = self.payment_end_period
+
+        return payment_detail_record
+
+    def get_requested_absence_record(self):
+        requested_absence_record = OrderedDict()
+        requested_absence_record["ABSENCE_CASENUMBER"] = self.absence_case_number
+        requested_absence_record["LEAVEREQUEST_DECISION"] = self.leave_request_decision
+        return requested_absence_record
+
+    def get_value(self, key, default):
+        # We want to support setting values as None
+        contains_value = key in self.kwargs
+
+        if not contains_value:
+            if self.generate_defaults:
+                return default
+            return ""
+
+        return self.kwargs.get(key)
+
 
 ### UTILITY METHODS
 
@@ -124,96 +222,45 @@ def make_and_upload_extract_file(tmp_path, mock_s3_bucket, file_name, fieldnames
     )
 
 
-def get_value(value, default, generate_defaults):
-    if not value:
-        if generate_defaults:
-            return default
-        return ""
+def upload_fineos_data(tmp_path, mock_s3_bucket, fineos_dataset):
+    vpei_records = [fineos_data.get_vpei_record() for fineos_data in fineos_dataset]
+    claim_details_records = [
+        fineos_data.get_claim_details_record() for fineos_data in fineos_dataset
+    ]
+    payment_details_records = [
+        fineos_data.get_payment_details_record() for fineos_data in fineos_dataset
+    ]
+    requested_absence_records = [
+        fineos_data.get_requested_absence_record() for fineos_data in fineos_dataset
+    ]
 
-    return value
-
-
-def make_vpei_record(
-    c_value,
-    i_value,
-    generate_defaults=True,
-    tin=None,
-    address1=None,
-    address2=None,
-    city=None,
-    state=None,
-    zip_code=None,
-    payment_method=None,
-    payment_date=None,
-    payment_amount=None,
-    routing_nbr=None,
-    account_nbr=None,
-    account_type=None,
-    payment_type=None,
-    payee_identifier=None,
-):
-    vpei_record = OrderedDict()
-    vpei_record["C"] = c_value
-    vpei_record["I"] = i_value
-
-    ssn = fake.ssn().replace("-", "")
-
-    vpei_record["PAYEESOCNUMBE"] = get_value(tin, ssn, generate_defaults)
-    vpei_record["PAYMENTADD1"] = get_value(
-        address1,
-        f"{fake.building_number()} {fake.street_name()} {fake.street_suffix()}",
-        generate_defaults,
-    )
-    vpei_record["PAYMENTADD2"] = get_value(address2, "", generate_defaults)
-    vpei_record["PAYMENTADD4"] = get_value(city, fake.city(), generate_defaults)
-    vpei_record["PAYMENTADD6"] = get_value(state, fake.state_abbr().upper(), generate_defaults)
-    vpei_record["PAYMENTPOSTCO"] = get_value(zip_code, fake.zipcode_plus4(), generate_defaults)
-    vpei_record["PAYMENTMETHOD"] = get_value(
-        payment_method, "Elec Funds Transfer", generate_defaults
-    )
-    vpei_record["PAYMENTDATE"] = get_value(payment_date, "2021-01-01 12:00:00", generate_defaults)
-    vpei_record["AMOUNT_MONAMT"] = get_value(payment_amount, "100.00", generate_defaults)
-    vpei_record["PAYEEBANKSORT"] = get_value(routing_nbr, ssn, generate_defaults)
-    vpei_record["PAYEEACCOUNTN"] = get_value(account_nbr, ssn, generate_defaults)
-    vpei_record["PAYEEACCOUNTT"] = get_value(account_type, "Checking", generate_defaults)
-    vpei_record["EVENTTYPE"] = get_value(payment_type, "PaymentOut", generate_defaults)
-    vpei_record["PAYEEIDENTIFI"] = get_value(
-        payee_identifier, "Social Security Number", generate_defaults
+    make_and_upload_extract_file(
+        tmp_path, mock_s3_bucket, "vpei.csv", PEI_FIELD_NAMES, vpei_records
     )
 
-    return vpei_record
-
-
-def make_claim_detail_record(pe_class_id, pe_index_id, absence_case_number=None):
-    claim_detail_record = OrderedDict()
-    claim_detail_record["PECLASSID"] = pe_class_id
-    claim_detail_record["PEINDEXID"] = pe_index_id
-    claim_detail_record["ABSENCECASENU"] = absence_case_number
-    return claim_detail_record
-
-
-def make_payment_details_record(
-    pe_class_id, pe_index_id, generate_defaults=True, payment_start=None, payment_end=None
-):
-    payment_detail_record = OrderedDict()
-    payment_detail_record["PECLASSID"] = pe_class_id
-    payment_detail_record["PEINDEXID"] = pe_index_id
-
-    payment_detail_record["PAYMENTSTARTP"] = get_value(
-        payment_start, "2021-01-01 12:00:00", generate_defaults
+    make_and_upload_extract_file(
+        tmp_path,
+        mock_s3_bucket,
+        "vpeiclaimdetails.csv",
+        PEI_CLAIM_DETAILS_FIELD_NAMES,
+        claim_details_records,
     )
-    payment_detail_record["PAYMENTENDPER"] = get_value(
-        payment_end, "2021-01-08 12:00:00", generate_defaults
+
+    make_and_upload_extract_file(
+        tmp_path,
+        mock_s3_bucket,
+        "vpeipaymentdetails.csv",
+        PEI_PAYMENT_DETAILS_FIELD_NAMES,
+        payment_details_records,
     )
-    return payment_detail_record
 
-
-def make_requested_absence_record(absence_case_number, leave_request_decision, claim_type):
-    requested_absence_record = OrderedDict()
-    requested_absence_record["ABSENCE_CASENUMBER"] = absence_case_number
-    requested_absence_record["LEAVEREQUEST_DECISION"] = leave_request_decision
-    requested_absence_record["ABSENCEREASON_COVERAGE"] = claim_type
-    return requested_absence_record
+    make_and_upload_extract_file(
+        tmp_path,
+        mock_s3_bucket,
+        "VBI_REQUESTEDABSENCE.csv",
+        REQUESTED_ABSENCE_FIELD_NAMES,
+        requested_absence_records,
+    )
 
 
 def add_db_records(
@@ -245,29 +292,28 @@ def add_db_records(
             )
             EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft)
 
-    if add_address:
-        employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
+        if add_address:
+            employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
 
-    if add_claim:
-        claim = ClaimFactory.create(fineos_absence_id=absence_case_id, employee=employee)
+        if add_claim:
+            claim = ClaimFactory.create(fineos_absence_id=absence_case_id, employee=employee)
 
-        # Payment needs to be attached to a claim
-        if add_payment:
-            payment = PaymentFactory.create(
-                claim=claim,
-                fineos_pei_c_value=c_value,
-                fineos_pei_i_value=i_value,
-                experian_address_pair=experian_address_pair,
-            )
-            state_log_util.create_finished_state_log(
-                payment, additional_payment_state, EXPECTED_OUTCOME, db_session
-            )
+            # Payment needs to be attached to a claim
+            if add_payment:
+                payment = PaymentFactory.create(
+                    claim=claim,
+                    fineos_pei_c_value=c_value,
+                    fineos_pei_i_value=i_value,
+                    experian_address_pair=experian_address_pair,
+                )
+                state_log_util.create_finished_state_log(
+                    payment, additional_payment_state, EXPECTED_OUTCOME, db_session
+                )
 
 
-def add_db_records_from_row(
+def add_db_records_from_fineos_data(
     db_session,
-    vpei_record,
-    claimant_record,
+    fineos_data,
     add_claim=True,
     add_address=True,
     add_eft=True,
@@ -277,10 +323,10 @@ def add_db_records_from_row(
 ):
     add_db_records(
         db_session,
-        tin=vpei_record["PAYEESOCNUMBE"],
-        absence_case_id=claimant_record["ABSENCECASENU"],
-        c_value=vpei_record["C"],
-        i_value=vpei_record["I"],
+        tin=fineos_data.tin,
+        absence_case_id=fineos_data.absence_case_number,
+        c_value=fineos_data.c_value,
+        i_value=fineos_data.i_value,
         add_claim=add_claim,
         add_address=add_address,
         add_eft=add_eft,
@@ -315,7 +361,7 @@ def setup_process_tests(
     add_db_records(
         db_session,
         "111111111",
-        "NTN-01-ABS-02",
+        "NTN-01-ABS-01",
         add_claim=add_claim,
         add_address=add_address,
         add_eft=add_eft,
@@ -327,7 +373,7 @@ def setup_process_tests(
     add_db_records(
         db_session,
         "222222222",
-        "NTN-02-ABS-03",
+        "NTN-02-ABS-02",
         add_claim=add_claim,
         add_address=add_address,
         add_eft=add_eft,
@@ -340,7 +386,7 @@ def setup_process_tests(
     add_db_records(
         db_session,
         "333333333",
-        "NTN-03-ABS-04",
+        "NTN-03-ABS-03",
         add_claim=add_claim,
         add_address=add_address,
         add_eft=add_eft,
@@ -517,7 +563,6 @@ def test_process_extract_data(
     # Verify a few of the metrics were added to the import log table
     import_log_report = json.loads(payment.fineos_extract_import_log.report)
     assert import_log_report["standard_valid_payment_count"] == 3
-    assert import_log_report["claim_created_count"] == 3
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -594,14 +639,9 @@ def test_process_extract_data_one_bad_record(
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
     # This test will properly process record 1 & 3, but record 2 will
-    # end up in an error state because we don't have an TIN/employee associated with them
+    # end up in an error state because we don't have an TIN/employee/claim associated with them
     setup_process_tests(
-        mock_s3_bucket,
-        test_db_session,
-        add_claim=False,
-        add_address=False,
-        add_eft=True,
-        add_second_employee=False,
+        mock_s3_bucket, test_db_session, add_address=False, add_eft=True, add_second_employee=False,
     )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
@@ -618,12 +658,13 @@ def test_process_extract_data_one_bad_record(
             )
             .one_or_none()
         )
-        # Payment+claim is created even when employee cannot be found
+        # Payment is created even when employee cannot be found
         assert payment
-        assert payment.claim
+
         assert len(payment.state_logs) == 1
         state_log = payment.state_logs[0]
         if index == "2":
+            assert payment.claim_id is None
             assert (
                 state_log.end_state_id
                 == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
@@ -632,12 +673,16 @@ def test_process_extract_data_one_bad_record(
                 "message": "Error processing payment record",
                 "validation_container": {
                     "record_key": "CiIndex(c='7326', i='302')",
-                    "validation_issues": [{"reason": "MissingInDB", "details": "tax_identifier"}],
+                    "validation_issues": [
+                        {"reason": "MissingInDB", "details": "tax_identifier"},
+                        {"reason": "MissingInDB", "details": "claim"},
+                    ],
                 },
             }
         else:
             assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
             assert state_log.outcome == EXPECTED_OUTCOME
+            assert payment.claim_id
 
     employee_log_count_after = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
@@ -767,7 +812,7 @@ def test_process_extract_unprocessed_folder_files(
     assert employee_log_count_after == 0
 
 
-def test_process_extract_data_no_existing_claim_address_eft(
+def test_process_extract_data_no_existing_address_eft(
     mock_s3_bucket,
     set_exporter_env_vars,
     payment_extract_step,
@@ -777,7 +822,7 @@ def test_process_extract_data_no_existing_claim_address_eft(
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(
-        mock_s3_bucket, test_db_session, add_claim=False, add_address=False, add_eft=False,
+        mock_s3_bucket, test_db_session, add_address=False, add_eft=False,
     )
 
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
@@ -794,12 +839,7 @@ def test_process_extract_data_no_existing_claim_address_eft(
             .first()
         )
 
-        # Check the claim was created properly
-        claim = payment.claim
-        assert claim
-        assert claim.fineos_absence_id == f"NTN-0{index}-ABS-0{index}"
-
-        employee = claim.employee
+        employee = payment.claim.employee
         assert employee
 
         mailing_address = payment.experian_address_pair.fineos_address
@@ -949,37 +989,9 @@ def test_process_extract_data_minimal_viable_payment(
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 0
 
-    vpei_record = make_vpei_record("1000", "1", generate_defaults=False)
-    make_and_upload_extract_file(
-        tmp_path, mock_s3_bucket, "vpei.csv", PEI_FIELD_NAMES, [vpei_record]
-    )
-
-    claim_record = make_claim_detail_record("1000", "1")
-    make_and_upload_extract_file(
-        tmp_path,
-        mock_s3_bucket,
-        "vpeiclaimdetails.csv",
-        PEI_CLAIM_DETAILS_FIELD_NAMES,
-        [claim_record],
-    )
-
-    payment_details_record = make_payment_details_record("1000", "1", generate_defaults=False)
-    make_and_upload_extract_file(
-        tmp_path,
-        mock_s3_bucket,
-        "vpeipaymentdetails.csv",
-        PEI_PAYMENT_DETAILS_FIELD_NAMES,
-        [payment_details_record],
-    )
-
-    requested_absence_record = make_requested_absence_record("NTN-01-ABS-01", "Approved", "Family")
-    make_and_upload_extract_file(
-        tmp_path,
-        mock_s3_bucket,
-        "VBI_REQUESTEDABSENCE.csv",
-        REQUESTED_ABSENCE_FIELD_NAMES,
-        [requested_absence_record],
-    )
+    # C & I value are the bare minimum to have a payment
+    fineos_data = FineosData(False, c_value="1000", i_value="1")
+    upload_fineos_data(tmp_path, mock_s3_bucket, [fineos_data])
     # We deliberately do no DB setup, there will not be any prior employee or claim
     payment_extract_step.run()
 
@@ -1016,69 +1028,24 @@ def test_process_extract_data_leave_request_decision_validation(
     employee_log_count_before = test_db_session.query(EmployeeLog).count()
     assert employee_log_count_before == 0
 
-    vpei_record = make_vpei_record(
-        "1000",
-        "1",
-        tin="111111111",
-        routing_nbr="111111111",
-        account_nbr="111111111",
-        account_type="Checking",
-        generate_defaults=True,
-    )
-    vpei_record_2 = make_vpei_record(
-        "2000",
-        "1",
-        tin="2222222222",
-        routing_nbr="2222222222",
-        account_nbr="2222222222",
-        account_type="Checking",
-        generate_defaults=True,
-    )
-    make_and_upload_extract_file(
-        tmp_path, mock_s3_bucket, "vpei.csv", PEI_FIELD_NAMES, [vpei_record, vpei_record_2]
-    )
+    approved_record = FineosData(leave_request_decision="Approved")
+    pending_record = FineosData(leave_request_decision="Pending")
 
-    claim_record = make_claim_detail_record("1000", "1", absence_case_number="NTN-01-ABS-01")
-    claim_record_2 = make_claim_detail_record("2000", "1", absence_case_number="NTN-02-ABS-02")
-    make_and_upload_extract_file(
-        tmp_path,
-        mock_s3_bucket,
-        "vpeiclaimdetails.csv",
-        PEI_CLAIM_DETAILS_FIELD_NAMES,
-        [claim_record, claim_record_2],
-    )
+    # setup both payments in DB
+    add_db_records_from_fineos_data(test_db_session, approved_record)
+    add_db_records_from_fineos_data(test_db_session, pending_record)
 
-    payment_details_record = make_payment_details_record("1000", "1", generate_defaults=True)
-    payment_details_record_2 = make_payment_details_record("2000", "1", generate_defaults=True)
-    make_and_upload_extract_file(
-        tmp_path,
-        mock_s3_bucket,
-        "vpeipaymentdetails.csv",
-        PEI_PAYMENT_DETAILS_FIELD_NAMES,
-        [payment_details_record, payment_details_record_2],
-    )
-
-    requested_absence_record = make_requested_absence_record("NTN-01-ABS-01", "Approved", "Family")
-    requested_absence_record_2 = make_requested_absence_record(
-        "NTN-02-ABS-02", "Pending", "Employee"
-    )
-    make_and_upload_extract_file(
-        tmp_path,
-        mock_s3_bucket,
-        "VBI_REQUESTEDABSENCE.csv",
-        REQUESTED_ABSENCE_FIELD_NAMES,
-        [requested_absence_record, requested_absence_record_2],
-    )
-
-    # setup payment 1 for success
-    add_db_records(test_db_session, "111111111", "NTN-01-ABS-01")
+    upload_fineos_data(tmp_path, mock_s3_bucket, [approved_record, pending_record])
 
     # We deliberately do no DB setup, there will not be any prior employee or claim
     payment_extract_step.run()
 
     valid_payment = (
         test_db_session.query(Payment)
-        .filter(Payment.fineos_pei_c_value == "1000", Payment.fineos_pei_i_value == "1")
+        .filter(
+            Payment.fineos_pei_c_value == approved_record.c_value,
+            Payment.fineos_pei_i_value == approved_record.i_value,
+        )
         .one_or_none()
     )
     assert valid_payment
@@ -1090,7 +1057,10 @@ def test_process_extract_data_leave_request_decision_validation(
 
     unapproved_payment = (
         test_db_session.query(Payment)
-        .filter(Payment.fineos_pei_c_value == "2000", Payment.fineos_pei_i_value == "1")
+        .filter(
+            Payment.fineos_pei_c_value == pending_record.c_value,
+            Payment.fineos_pei_i_value == pending_record.i_value,
+        )
         .one_or_none()
     )
     assert unapproved_payment
@@ -1117,121 +1087,75 @@ def test_process_extract_additional_payment_types(
     create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_MAX_HISTORY_DATE", "2019-12-31")
+    datasets = []
+    # This tests that the behavior of non-standard payment types are handled properly
+    # All of these are setup as EFT payments, but we won't create EFT information for them
+    # or reject them for not being prenoted yet.
+
     # Create a zero dollar payment
-    vpei_record_zero_dollar = make_vpei_record("1000", "1", payment_amount="0.00")
-    claim_record_zero_dollar = make_claim_detail_record("1000", "1", "NTN-01-ABS-01")
-    payment_details_record_zero_dollar = make_payment_details_record("1000", "1")
-    requested_absence_record_zero_dollar = make_requested_absence_record(
-        "NTN-01-ABS-01", "Approved", "Family"
-    )
-    add_db_records_from_row(test_db_session, vpei_record_zero_dollar, claim_record_zero_dollar)
+    zero_dollar_data = FineosData(payment_amount="0.00", payment_method="Elec Funds Transfer")
+    add_db_records_from_fineos_data(test_db_session, zero_dollar_data)
+    datasets.append(zero_dollar_data)
 
     # Create an overpayment
-    vpei_record_overpayment = make_vpei_record("2000", "2", payment_type="Overpayment")
-    claim_record_overpayment = make_claim_detail_record("2000", "2", "NTN-02-ABS-02")
-    payment_details_record_overpayment = make_payment_details_record("2000", "2")
-    requested_absence_record_overpayment = make_requested_absence_record(
-        "NTN-02-ABS-02", "Approved", "Employee"
+    # note that the event reason for an overpayment is Unknown which is treated as
+    # None in our approach, setting it here to make sure that doesn't cause a validation issue.
+    overpayment_data = FineosData(
+        payment_type="Overpayment", event_reason="Unknown", payment_method="Elec Funds Transfer"
     )
-    add_db_records_from_row(test_db_session, vpei_record_overpayment, claim_record_overpayment)
+    add_db_records_from_fineos_data(test_db_session, overpayment_data)
+    datasets.append(overpayment_data)
 
-    # Create an ACH cancellation
-    vpei_record_ach_cancellation = make_vpei_record(
-        "3000", "3", payment_method="Elec Funds Transfer", payment_type="PaymentOut Cancellation"
+    # Create a cancellation
+    cancellation_data = FineosData(
+        payment_type="PaymentOut Cancellation",
+        payment_amount="-123.45",
+        payment_method="Elec Funds Transfer",
     )
-    claim_record_ach_cancellation = make_claim_detail_record("3000", "3", "NTN-03-ABS-03")
-    payment_details_record_ach_cancellation = make_payment_details_record("3000", "3")
-    requested_absence_record_ach_cancellation = make_requested_absence_record(
-        "NTN-03-ABS-03", "Approved", "Employee"
-    )
-    add_db_records_from_row(
-        test_db_session, vpei_record_ach_cancellation, claim_record_ach_cancellation
-    )
+    add_db_records_from_fineos_data(test_db_session, cancellation_data)
+    datasets.append(cancellation_data)
 
-    # Create a check cancellation
-    vpei_record_check_cancellation = make_vpei_record(
-        "4000", "4", payment_method="Check", payment_type="PaymentOut Cancellation"
+    # Unknown - negative payment amount, but PaymentOut
+    negative_payment_out_data = FineosData(
+        payment_type="PaymentOut", payment_amount="-100.00", payment_method="Elec Funds Transfer"
     )
-    claim_record_check_cancellation = make_claim_detail_record("4000", "4", "NTN-04-ABS-04")
-    payment_details_record_check_cancellation = make_payment_details_record("4000", "4")
-    requested_absence_record_check_cancellation = make_requested_absence_record(
-        "NTN-04-ABS-04", "Approved", "Employee"
-    )
-    add_db_records_from_row(
-        test_db_session, vpei_record_check_cancellation, claim_record_check_cancellation
-    )
+    add_db_records_from_fineos_data(test_db_session, negative_payment_out_data)
+    datasets.append(negative_payment_out_data)
 
-    # Unknown - negative payment but not a cancellation/overpayment
-    vpei_record_unknown = make_vpei_record(
-        "5000", "5", payment_type="Mystery", payment_amount="-50.00"
-    )
-    claim_record_unknown = make_claim_detail_record("5000", "5", "NTN-05-ABS-05")
-    payment_details_record_unknown = make_payment_details_record("5000", "5")
-    requested_absence_record_unknown = make_requested_absence_record(
-        "NTN-05-ABS-05", "Approved", "Employee"
-    )
-    add_db_records_from_row(test_db_session, vpei_record_unknown, claim_record_unknown)
+    # Unknown - missing payment amount
+    no_payment_out_data = FineosData(payment_amount=None, payment_method="Elec Funds Transfer")
+    add_db_records_from_fineos_data(test_db_session, no_payment_out_data)
+    datasets.append(no_payment_out_data)
 
-    make_and_upload_extract_file(
-        tmp_path,
-        mock_s3_bucket,
-        "vpei.csv",
-        PEI_FIELD_NAMES,
-        [
-            vpei_record_zero_dollar,
-            vpei_record_overpayment,
-            vpei_record_ach_cancellation,
-            vpei_record_check_cancellation,
-            vpei_record_unknown,
-        ],
+    # Unknown - missing event type
+    missing_event_payment_out_data = FineosData(
+        event_type=None, payment_method="Elec Funds Transfer"
     )
-    make_and_upload_extract_file(
-        tmp_path,
-        mock_s3_bucket,
-        "vpeiclaimdetails.csv",
-        PEI_CLAIM_DETAILS_FIELD_NAMES,
-        [
-            claim_record_zero_dollar,
-            claim_record_overpayment,
-            claim_record_ach_cancellation,
-            claim_record_check_cancellation,
-            claim_record_unknown,
-        ],
+    add_db_records_from_fineos_data(test_db_session, missing_event_payment_out_data)
+    datasets.append(missing_event_payment_out_data)
+
+    # Create a record for an employer reimbursement
+    employer_reimbursement_data = FineosData(
+        event_reason=extractor.AUTO_ALT_EVENT_REASON,
+        payment_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+        payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+        payment_method="Elec Funds Transfer",
     )
-    make_and_upload_extract_file(
-        tmp_path,
-        mock_s3_bucket,
-        "vpeipaymentdetails.csv",
-        PEI_PAYMENT_DETAILS_FIELD_NAMES,
-        [
-            payment_details_record_zero_dollar,
-            payment_details_record_overpayment,
-            payment_details_record_ach_cancellation,
-            payment_details_record_check_cancellation,
-            payment_details_record_unknown,
-        ],
-    )
-    make_and_upload_extract_file(
-        tmp_path,
-        mock_s3_bucket,
-        "VBI_REQUESTEDABSENCE.csv",
-        REQUESTED_ABSENCE_FIELD_NAMES,
-        [
-            requested_absence_record_zero_dollar,
-            requested_absence_record_overpayment,
-            requested_absence_record_ach_cancellation,
-            requested_absence_record_check_cancellation,
-            requested_absence_record_unknown,
-        ],
-    )
+    add_db_records_from_fineos_data(test_db_session, employer_reimbursement_data)
+    datasets.append(employer_reimbursement_data)
+
+    upload_fineos_data(tmp_path, mock_s3_bucket, datasets)
 
     # Run the extract process
     payment_extract_step.run()
 
+    # No PUB EFT records should exist
+    len(test_db_session.query(PubEft).all()) == 0
+
     # Zero dollar payment should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT
     zero_dollar_payment = (
         test_db_session.query(Payment)
-        .filter(Payment.fineos_pei_c_value == "1000", Payment.fineos_pei_i_value == "1")
+        .filter(Payment.fineos_pei_i_value == zero_dollar_data.i_value)
         .one_or_none()
     )
     assert len(zero_dollar_payment.state_logs) == 1
@@ -1243,7 +1167,7 @@ def test_process_extract_additional_payment_types(
     # Overpayment should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT
     overpayment_payment = (
         test_db_session.query(Payment)
-        .filter(Payment.fineos_pei_c_value == "2000", Payment.fineos_pei_i_value == "2")
+        .filter(Payment.fineos_pei_i_value == overpayment_data.i_value)
         .one_or_none()
     )
     assert len(overpayment_payment.state_logs) == 1
@@ -1253,259 +1177,268 @@ def test_process_extract_additional_payment_types(
     )
 
     # ACH Cancellation should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION
-    ach_cancellation_payment = (
+    cancellation_payment = (
         test_db_session.query(Payment)
-        .filter(Payment.fineos_pei_c_value == "3000", Payment.fineos_pei_i_value == "3")
+        .filter(Payment.fineos_pei_i_value == cancellation_data.i_value)
         .one_or_none()
     )
-    assert len(ach_cancellation_payment.state_logs) == 1
+    assert len(cancellation_payment.state_logs) == 1
     assert (
-        ach_cancellation_payment.state_logs[0].end_state_id
+        cancellation_payment.state_logs[0].end_state_id
         == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION.state_id
     )
 
-    # Check Cancellation should be in the normal path end state of PAYMENT_READY_FOR_ADDRESS_VALIDATION
-    check_cancellation_payment = (
+    for unknown_data in [negative_payment_out_data, no_payment_out_data, negative_payment_out_data]:
+        # Unknown should be in the error report state DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+        unknown_payment = (
+            test_db_session.query(Payment)
+            .filter(Payment.fineos_pei_i_value == unknown_data.i_value)
+            .one_or_none()
+        )
+
+        assert len(unknown_payment.state_logs) == 1
+        assert (
+            unknown_payment.state_logs[0].end_state_id
+            == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+        )
+
+    # Employer reimbursement should be in DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT
+    employer_payment = (
         test_db_session.query(Payment)
-        .filter(Payment.fineos_pei_c_value == "4000", Payment.fineos_pei_i_value == "4")
+        .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
         .one_or_none()
-    )
-    assert len(check_cancellation_payment.state_logs) == 1
-    assert (
-        check_cancellation_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION.state_id
     )
 
-    # Unknown should be in the error report state DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
-    unknown_payment = (
-        test_db_session.query(Payment)
-        .filter(Payment.fineos_pei_c_value == "5000", Payment.fineos_pei_i_value == "5")
-        .one_or_none()
-    )
-    assert len(unknown_payment.state_logs) == 1
+    assert len(employer_payment.state_logs) == 1
     assert (
-        unknown_payment.state_logs[0].end_state_id
-        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+        employer_payment.state_logs[0].end_state_id
+        == State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT.state_id
+    )
+
+
+def make_payment_data_from_fineos_data(fineos_data):
+    extract_data = extractor.ExtractData(extractor.expected_file_names, "2020-01-01-11-30-00")
+    ci_index = extractor.CiIndex(fineos_data.c_value, fineos_data.i_value)
+
+    extract_data.pei.indexed_data = {ci_index: fineos_data.get_vpei_record()}
+    extract_data.payment_details.indexed_data = {
+        ci_index: [fineos_data.get_payment_details_record()]
+    }
+    extract_data.claim_details.indexed_data = {ci_index: fineos_data.get_claim_details_record()}
+    extract_data.requested_absence.indexed_data = {
+        extractor.CiIndex(
+            fineos_data.absence_case_number, ""
+        ): fineos_data.get_requested_absence_record()
+    }
+
+    return (
+        ci_index,
+        extractor.PaymentData(extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)),
     )
 
 
 def test_validation_missing_fields(initialize_factories_session, set_exporter_env_vars):
     # This test is specifically aimed at verifying we check for required parameters
 
-    # We set it up so the datasets can be joined on ci_index, but don't set any
-    # values that aren't specifically used for joining, so all required params
-    # should subsequently be in the validation object
-    # Note the isdata fields are just to avoid the dictionaries being empty
-    ci_index = extractor.CiIndex("1", "1")
-    extract_data = extractor.ExtractData(extractor.expected_file_names, "2020-01-01-11-30-00")
-    extract_data.pei.indexed_data = {ci_index: {"PAYEECUSTOMER": "1234"}}
-    extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
-    extract_data.claim_details.indexed_data = {ci_index: {"ABSENCECASENU": "NTN-01-ABS-01"}}
-    extract_data.requested_absence.indexed_data = {
-        extractor.CiIndex("NTN-01-ABS-01", ""): {"ABSENCE_CASENUMBER": "NTN-01-ABS-01",}
-    }
-
-    payment_data = extractor.PaymentData(
-        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
+    # Create a fineos dataset that only contains C/I values with all other values empty
+    # We want to make sure "" and Unknown are treated the same, so set a few to Unknown
+    fineos_data = FineosData(
+        False,
+        c_value="1000",
+        i_value="1",
+        absence_case_number="ABS-01",
+        leave_request_decision="Unknown",
+        payment_amount="Unknown",
     )
+    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+
     validation_container = payment_data.validation_container
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "AMOUNT_MONAMT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "EVENTTYPE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
+            ValidationIssue(
+                ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
+                "Unknown payment scenario encountered. Payment Amount: None, Event Type: None, Event Reason: ",
+            ),
         ]
     )
-    assert set(validation_container.validation_issues) == expected_missing_values
+    assert expected_missing_values == set(validation_container.validation_issues)
 
-    # We want to make sure missing, "" and Unknown are all treated the same
-    # So update a few values, and expect the same result
-    extract_data.pei.indexed_data[ci_index]["PAYEESOCNUMBE"] = ""
-    extract_data.pei.indexed_data[ci_index]["EVENTTYPE"] = ""
-    extract_data.pei.indexed_data[ci_index]["PAYMENTDATE"] = "Unknown"
-    extract_data.pei.indexed_data[ci_index]["AMOUNT_MONAMT"] = "Unknown"
+    # Set the event type to PaymentOut and give it a valid amount so that
+    # it expects it to be a valid payment that requires payment method
+    fineos_data.event_type = "PaymentOut"
+    fineos_data.payment_amount = "100.00"
+    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
 
-    payment_data = extractor.PaymentData(
-        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
-    )
-    assert set(payment_data.validation_container.validation_issues) == expected_missing_values
-
-    # Some fields are conditional for EFT, make sure they're also checked
-    extract_data.pei.indexed_data[ci_index][
-        "PAYMENTMETHOD"
-    ] = PaymentMethod.ACH.payment_method_description
-
-    eft_expected_missing_values = set(expected_missing_values)
-    eft_expected_missing_values.remove(
-        ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD")
-    )  # No longer missing now
-    eft_expected_missing_values.update(
+    validation_container = payment_data.validation_container
+    assert validation_container.record_key == str(ci_index)
+    expected_missing_values = set(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEBANKSORT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTN"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
         ]
     )
+    assert expected_missing_values == set(validation_container.validation_issues)
 
-    payment_data = extractor.PaymentData(
-        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
-    )
-    assert set(payment_data.validation_container.validation_issues) == eft_expected_missing_values
+    # Set the payment method to Check and verify it additionally adds errors for those missing
+    fineos_data.payment_method = "Check"
+    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
 
-    # Address fields are only required if the payment method is check
-    extract_data.pei.indexed_data[ci_index][
-        "PAYMENTMETHOD"
-    ] = PaymentMethod.CHECK.payment_method_description
-
-    check_expected_missing_values = set(expected_missing_values)
-    check_expected_missing_values.remove(
-        ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD")
-    )  # No longer missing now
-    check_expected_missing_values.update(
+    validation_container = payment_data.validation_container
+    assert validation_container.record_key == str(ci_index)
+    expected_missing_values = set(
         [
+            ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD1"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD4"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD6"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTPOSTCO"),
         ]
     )
+    assert expected_missing_values == set(validation_container.validation_issues)
 
-    payment_data = extractor.PaymentData(
-        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
+    # Set the payment method to EFT and verify it additionally adds errors for those missing
+    fineos_data.payment_method = "Elec Funds Transfer"
+    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+
+    validation_container = payment_data.validation_container
+    assert validation_container.record_key == str(ci_index)
+    expected_missing_values = set(
+        [
+            ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEBANKSORT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTN"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT"),
+        ]
     )
-    assert set(payment_data.validation_container.validation_issues) == check_expected_missing_values
+
+    assert expected_missing_values == set(validation_container.validation_issues)
 
 
 def test_validation_param_length(initialize_factories_session, set_exporter_env_vars):
-    # We set it up so the datasets can be joined on ci_index, but don't set any
-    # values that aren't specifically used for joining, We are only setting values
-    # we are explicitly testing against here, the validation will have missing
-    # errors as well, but we're not going to look at them.
-    ci_index = extractor.CiIndex("1", "1")
-    extract_data = extractor.ExtractData(extractor.expected_file_names, "2020-01-01-11-30-00")
-    # First let's check if a field is too short
-    extract_data.pei.indexed_data = {ci_index: {"PAYEEBANKSORT": "123", "PAYMENTPOSTCO": "123"}}
-    extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
-    extract_data.claim_details.indexed_data = {ci_index: {"ABSENCECASENU": "NTN-01-ABS-01"}}
-    extract_data.requested_absence.indexed_data = {
-        "NTN-01-ABS-01": {"ABSENCE_CASENUMBER": "NTN-01-ABS-01"}
-    }
+    # Create a fineos dataset that is generated with happy values, but override
+    # ones we want to test the length.
 
-    payment_data = extractor.PaymentData(
-        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
+    # Routing number too short
+    fineos_data = FineosData(payment_method="Elec Funds Transfer", routing_nbr="123")
+    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+    assert set([ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYEEBANKSORT")]) == set(
+        payment_data.validation_container.validation_issues
     )
 
-    assert set(
-        [
-            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYEEBANKSORT"),
-            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYMENTPOSTCO"),
-        ]
-    ).issubset(set(payment_data.validation_container.validation_issues))
-
-    # Now let's check if a field is too long
-    extract_data.pei.indexed_data[ci_index]["PAYMENTPOSTCO"] = "012345-67890"
-    extract_data.pei.indexed_data[ci_index]["PAYEEBANKSORT"] = "012345678910"
-    extract_data.pei.indexed_data[ci_index]["PAYEEACCOUNTN"] = "0" * 50
-
-    payment_data = extractor.PaymentData(
-        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
+    # Routing/account number too long
+    long_num = "1" * 50
+    fineos_data = FineosData(
+        payment_method="Elec Funds Transfer", routing_nbr=long_num, account_nbr=long_num
     )
-
+    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
         [
-            ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYEEACCOUNTN"),
             ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYEEBANKSORT"),
-            ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYMENTPOSTCO"),
+            ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYEEACCOUNTN"),
         ]
-    ).issubset(set(payment_data.validation_container.validation_issues))
+    ) == set(payment_data.validation_container.validation_issues)
+
+    # ZIP too short + formatted incorrectly
+    fineos_data = FineosData(payment_method="Check", zip_code="123")
+    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+    assert set(
+        [
+            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYMENTPOSTCO"),
+            ValidationIssue(ValidationReason.INVALID_VALUE, "PAYMENTPOSTCO"),
+        ]
+    ) == set(payment_data.validation_container.validation_issues)
+
+    # ZIP too long + formatted incorrectly
+    fineos_data = FineosData(payment_method="Check", zip_code="1234567890123456")
+    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+    assert set(
+        [
+            ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYMENTPOSTCO"),
+            ValidationIssue(ValidationReason.INVALID_VALUE, "PAYMENTPOSTCO"),
+        ]
+    ) == set(payment_data.validation_container.validation_issues)
 
 
 def test_validation_lookup_validators(initialize_factories_session, set_exporter_env_vars):
-    # When doing the validation, we verify that the lookup values are
-    # valid and will be convertable to their corresponding lookup values in the DB.
-    ci_index = extractor.CiIndex("1", "1")
-    extract_data = extractor.ExtractData(extractor.expected_file_names, "2020-01-01-11-30-00")
-    extract_data.pei.indexed_data = {
-        ci_index: {
-            "PAYEECUSTOMER": "1234",
-            "PAYEEACCOUNTT": "BadData",
-            "PAYMENTMETHOD": "BadData",
-            "PAYMENTADD6": "BadData",
-        }
-    }
-    extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
-    extract_data.claim_details.indexed_data = {ci_index: {"ABSENCECASENU": "NTN-01-ABS-01"}}
-    extract_data.requested_absence.indexed_data = {
-        "NTN-01-ABS-01": {"ABSENCE_CASENUMBER": "NTN-01-ABS-01"}
-    }
+    # Create a fineos dataset that is generated with happy values, but override
+    # ones we want to test the lookup validators.
 
-    payment_data = extractor.PaymentData(
-        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
+    # Verify payment method lookup validator
+    fineos_data = FineosData(payment_method="Gold")
+    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+    assert set([ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYMENTMETHOD")]) == set(
+        payment_data.validation_container.validation_issues
     )
 
-    assert set(
-        [
-            ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYEEACCOUNTT"),
-            ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYMENTMETHOD"),
-            ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYMENTADD6"),
-        ]
-    ).issubset(set(payment_data.validation_container.validation_issues))
+    # Verify account type lookup validator
+    fineos_data = FineosData(payment_method="Elec Funds Transfer", account_type="Vault")
+    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+    assert set([ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYEEACCOUNTT")]) == set(
+        payment_data.validation_container.validation_issues
+    )
 
-    assert payment_data.raw_payment_method is None
-    assert payment_data.state is None
-    assert payment_data.raw_account_type is None
+    # Verify state lookup validator
+    fineos_data = FineosData(payment_method="Check", state="NotAState")
+    ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+    assert set([ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYMENTADD6")]) == set(
+        payment_data.validation_container.validation_issues
+    )
 
 
 def test_validation_payment_amount(initialize_factories_session, set_exporter_env_vars):
     # When doing validation, we verify that payment amount
     # must be a numeric value
+    invalid_payment_amounts = ["words", "300-00", "400.xx", "-----5"]
 
-    ci_index = extractor.CiIndex("1", "1")
-    extract_data = extractor.ExtractData(extractor.expected_file_names, "2020-01-01-11-30-00")
-    extract_data.pei.indexed_data = {ci_index: {"AMOUNT_MONAMT": "MONEY"}}
-    extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
-    extract_data.claim_details.indexed_data = {ci_index: {"ABSENCECASENU": "NTN-01-ABS-01"}}
-    extract_data.requested_absence.indexed_data = {
-        "NTN-01-ABS-01": {"ABSENCE_CASENUMBER": "NTN-01-ABS-01"}
-    }
-
-    payment_data = extractor.PaymentData(
-        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
-    )
-
-    assert set([ValidationIssue(ValidationReason.INVALID_VALUE, "AMOUNT_MONAMT")]).issubset(
-        set(payment_data.validation_container.validation_issues)
-    )
+    for invalid_payment_amount in invalid_payment_amounts:
+        fineos_data = FineosData(payment_amount=invalid_payment_amount)
+        ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+        assert set(
+            [
+                ValidationIssue(ValidationReason.INVALID_VALUE, "AMOUNT_MONAMT"),
+                ValidationIssue(
+                    ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
+                    "Unknown payment scenario encountered. Payment Amount: None, Event Type: PaymentOut, Event Reason: Automatic Main Payment",
+                ),
+            ]
+        ) == set(payment_data.validation_container.validation_issues)
 
 
 def test_validation_zip_code(initialize_factories_session, set_exporter_env_vars):
     # When doing validation, we verify that payment amount
     # must be a numeric value
+    invalid_zips = ["abcde", "1234567", "-12345", "12345-000"]
 
-    ci_index = extractor.CiIndex("1", "1")
-    extract_data = extractor.ExtractData(extractor.expected_file_names, "2020-01-01-11-30-00")
-    extract_data.pei.indexed_data = {ci_index: {"PAYMENTPOSTCO": "ZIP12345"}}
-    extract_data.payment_details.indexed_data = {ci_index: [{"isdata": "1"}]}
-    extract_data.claim_details.indexed_data = {ci_index: {"ABSENCECASENU": "NTN-01-ABS-01"}}
-    extract_data.requested_absence.indexed_data = {
-        "NTN-01-ABS-01": {"ABSENCE_CASENUMBER": "NTN-01-ABS-01"}
-    }
-
-    payment_data = extractor.PaymentData(
-        extract_data, ci_index, extract_data.pei.indexed_data.get(ci_index)
-    )
-
-    assert set([ValidationIssue(ValidationReason.INVALID_VALUE, "PAYMENTPOSTCO")]).issubset(
-        set(payment_data.validation_container.validation_issues)
-    )
+    for invalid_zip in invalid_zips:
+        fineos_data = FineosData(payment_method="Check", zip_code=invalid_zip)
+        ci_index, payment_data = make_payment_data_from_fineos_data(fineos_data)
+        assert set([ValidationIssue(ValidationReason.INVALID_VALUE, "PAYMENTPOSTCO")]) == set(
+            payment_data.validation_container.validation_issues
+        )
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time

@@ -177,8 +177,8 @@ jobs:
     name: Start deploy comms (Slack)
     needs: [update-the-deploy-branch, deploy-info]
     outputs:
-      subtitle: ${{ steps.choose_start_message.outputs.message }}
-    if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test # Mutes notifications for auto-deploys to test
+      version_link: ${{ steps.create_version_link.outputs.version_link }}
+    if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -205,16 +205,16 @@ jobs:
           ssm_parameter: "/admin/common/nava-slackbot-api-key"
           env_variable_name: "slackbot_token"
 
-      - name: Choose deployment start message
-        id: choose_start_message
+      - name: Create version link
+        id: create_version_link
         env:
-          just_the_deploy: "<${{ env.workflow_self_link }}|build logs> | <https://github.com/EOLWD/pfml/commits/${{ env.version }}|commit history>"
-          with_release_notes: "<${{ env.workflow_self_link }}|build logs> | <https://github.com/EOLWD/pfml/releases/tag/${{ env.version }}|release notes>"
+          feature_branch_link: "<https://github.com/EOLWD/pfml/commits/${{ env.version }}|${{env.version}}>"
+          release_tag_link: "<https://github.com/EOLWD/pfml/releases/tag/${{ env.version }}|${{env.version}}>"
         run: |
           if [[ ${{ env.version }} == portal/* ]]; then
-            echo "::set-output name=message::${{ env.with_release_notes }}"
+            echo "::set-output name=version_link::${{ env.release_tag_link }}"
           else
-            echo "::set-output name=message::${{ env.just_the_deploy }}"
+            echo "::set-output name=version_link::${{ env.feature_branch_link }}"
           fi
 
       - name: Post to Slack
@@ -223,15 +223,24 @@ jobs:
           -H 'Content-Type: application/json;charset=utf-8' \
           --data '{
             "channel": "${{ env.deploys_channel }}",
-            "attachments": [{
-              "title": "Portal ${{ needs.deploy-info.outputs.portal-env }} deployment #${{ github.run_number }} was started\n${{ steps.choose_start_message.outputs.message }}",
-              "color": "warning",
-              "fields": [
-                { "title": "started by", "value": "`${{ github.actor }}`", "short": true },
-                { "title": "releasing", "value": "`${{ env.version }}`", "short": true },
-                { "title": "commit details", "value": "`${{ env.commit_details }}`" }
-              ]
-            }]
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": ":ship: Starting *<${{ env.workflow_self_link }}|Portal deploy #${{ github.run_number }}>* of *${{ steps.create_version_link.outputs.version_link }}* to *${{ needs.deploy-info.outputs.portal-env }}*"
+                }
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "started by: *${{ github.actor }}*"
+                  }
+                ]
+              }
+            ]
           }' https://slack.com/api/chat.postMessage)
 
 
@@ -480,9 +489,9 @@ jobs:
       - name: Choose Slackbot message
         id: choose_finish_message
         env:
-          deployment_success: "Portal ${{ needs.deploy-info.outputs.portal-env }} deployment #${{ github.run_number }} succeeded"
-          deployment_failure: "Portal ${{ needs.deploy-info.outputs.portal-env }} deployment #${{ github.run_number }} failed"
-          deployment_cancelled: "Portal ${{ needs.deploy-info.outputs.portal-env }} deployment #${{ github.run_number }} was cancelled"
+          deployment_success: ":success: Completed"
+          deployment_failure: ":fail: Failed"
+          deployment_cancelled: ":heavy_multiplication_x: Cancelled"
         run: |
           if [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'success' ]]; then
             echo "::set-output name=message::${{ env.deployment_success }}"
@@ -513,14 +522,24 @@ jobs:
           -H 'Content-Type: application/json;charset=utf-8' \
           --data '{
             "channel": "${{ env.deploys_channel }}",
-            "attachments": [{
-              "title": "${{ steps.choose_finish_message.outputs.message }}\n${{ needs.start-comms-slack.outputs.subtitle }}",
-              "color": "${{ steps.choose_finish_message.outputs.color }}",
-              "fields": [
-                { "title": "started by", "value": "`${{ github.actor }}`", "short": true },
-                { "title": "released", "value": "`${{ env.version }}`", "short": true },
-              ]
-            }]
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{ steps.choose_finish_message.outputs.message }} *<${{ env.workflow_self_link }}|Portal deploy #${{ github.run_number }}>* of *${{ needs.start-comms-slack.outputs.version_link }}* to *${{ needs.deploy-info.outputs.portal-env }}*"
+                }
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "started by: *${{ github.actor }}*"
+                  }
+                ]
+              }
+            ]
           }' https://slack.com/api/chat.postMessage)
 
   end-to-end:

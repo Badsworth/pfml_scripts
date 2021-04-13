@@ -65,6 +65,7 @@ locals {
         fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
         fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
         cognito_user_pool_id                       = var.cognito_user_pool_id
+        process_csv_data_bucket_name               = aws_s3_bucket.bulk_user_import.bucket # massgov-pfml-${environment_name}-bulk-user-import
       }
     },
 
