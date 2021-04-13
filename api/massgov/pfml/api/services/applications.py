@@ -25,6 +25,7 @@ from massgov.pfml.db.models.applications import (
     AmountFrequency,
     Application,
     ApplicationPaymentPreference,
+    CaringLeaveMetadata,
     ContinuousLeavePeriod,
     DayOfWeek,
     Document,
@@ -257,6 +258,19 @@ def remove_masked_fields_from_request(
             path="leave_details.child_placement_date",
         )
 
+        # family member date of birth - partially masked
+        if existing_application.caring_leave_metadata:  # type: ignore
+            masked_existing_family_member_dob = mask.mask_date(
+                existing_application.caring_leave_metadata.family_member_date_of_birth  # type: ignore
+            )
+            errors += process_partially_masked_field(
+                field_key="family_member_date_of_birth",
+                body=leave_details.get("caring_leave_metadata"),
+                existing_masked_field=masked_existing_family_member_dob,
+                masked_regex=Regexes.DATE_OF_BIRTH,
+                path="leave_details.caring_leave_metadata.family_member_date_of_birth",
+            )
+
     # mailing address + residential address
     errors += process_masked_address("mailing_address", body, existing_application.mailing_address)
     errors += process_masked_address(
@@ -382,6 +396,33 @@ leave_period_class_for_label: Dict[str, Type[LeaveScheduleDB]] = {
 }
 
 
+def add_or_update_caring_leave_metadata(
+    db_session: db.Session,
+    api_caring_leave_metadata: Optional[apps_common_io.CaringLeaveMetadata],
+    application: Application,
+) -> None:
+    if not api_caring_leave_metadata:
+        return None
+
+    caring_leave_metadata = (
+        getattr(application, "caring_leave_metadata", None) or CaringLeaveMetadata()
+    )
+
+    for key in api_caring_leave_metadata.__fields_set__:
+        value = getattr(api_caring_leave_metadata, key)
+
+        if key == "relationship_to_caregiver":
+            relationship_to_caregiver_model = db_lookups.by_value(
+                db_session, value.get_lookup_model(), value,
+            )
+            if relationship_to_caregiver_model:
+                value = relationship_to_caregiver_model
+        setattr(caring_leave_metadata, key, value)
+
+    application.caring_leave_metadata = caring_leave_metadata  # type: ignore
+    db_session.add(application.caring_leave_metadata)  # type: ignore
+
+
 def update_leave_details(
     db_session: db.Session, body: ApplicationRequestBody, application: Application
 ) -> List[LeaveScheduleDB]:
@@ -401,6 +442,10 @@ def update_leave_details(
             )
             if leave_schedule:
                 leave_schedules.append(leave_schedule)
+            continue
+
+        if key == "caring_leave_metadata":
+            add_or_update_caring_leave_metadata(db_session, value, application)
             continue
 
         if isinstance(value, LookupEnum):
