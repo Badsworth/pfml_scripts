@@ -143,7 +143,8 @@ data "aws_iam_policy_document" "task_import_cognito_doc" {
     actions = [
       "cognito-idp:ListUsers",
       "cognito-idp:AdminCreateUser",
-      "cognito-idp:AdminSetUserPassword"
+      "cognito-idp:AdminSetUserPassword",
+      "cognito-idp:AdminGetUser"
     ]
 
     resources = [
