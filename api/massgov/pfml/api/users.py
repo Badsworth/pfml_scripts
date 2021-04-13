@@ -10,14 +10,15 @@ from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
 from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
 from massgov.pfml.api.services.user_rules import (
+    get_users_patch_employer_issues,
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
 )
 from massgov.pfml.api.util.deepgetattr import deepgetattr
-from massgov.pfml.db.models.employees import Employer, Role, User
+from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
 from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
-from massgov.pfml.util.strings import mask_fein
+from massgov.pfml.util.strings import mask_fein, sanitize_fein
 from massgov.pfml.util.users import register_user
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -120,9 +121,40 @@ def users_current_get():
 def users_patch(user_id):
     """This endpoint modifies the user specified by the user_id"""
     body = UserUpdateRequest.parse_obj(connexion.request.json)
+    wants_to_be_employer = (
+        deepgetattr(body, "role.role_description") == Role.EMPLOYER.role_description
+    )
 
     with app.db_session() as db_session:
         updated_user = get_or_404(db_session, User, user_id)
+
+        if wants_to_be_employer:
+            employer_fein = sanitize_fein(
+                deepgetattr(body, "user_leave_administrator.employer_fein") or ""
+            )
+            employer = (
+                db_session.query(Employer)
+                .filter(Employer.employer_fein == employer_fein)
+                .one_or_none()
+            )
+            employer_issues = get_users_patch_employer_issues(updated_user, employer)
+            if employer_issues:
+                logger.info("users_patch failure - Couldn't convert user to employer account")
+                return response_util.error_response(
+                    status_code=BadRequest,
+                    message="Couldn't convert user to employer account!",
+                    errors=employer_issues,
+                    data={},
+                ).to_api_response()
+            elif employer is not None:
+                user_role = UserRole(user=updated_user, role_id=Role.EMPLOYER.role_id)
+                user_leave_admin = UserLeaveAdministrator(
+                    user=updated_user, employer=employer, fineos_web_id=None,
+                )
+                db_session.add(user_role)
+                db_session.add(user_leave_admin)
+                db_session.commit()
+                db_session.refresh(updated_user)
 
         ensure(EDIT, updated_user)
         for key in body.__fields_set__:

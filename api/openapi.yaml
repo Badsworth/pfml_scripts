@@ -52,7 +52,6 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/UserCreateRequest"
-  
   /users/{user_id}:
     get:
       tags:
@@ -1399,7 +1398,23 @@ components:
         consented_to_data_sharing:
           type: boolean
           example: true
-      required: ["consented_to_data_sharing"]
+        role:
+          type: object
+          properties:
+            role_description:
+              description: Type of user account to be created
+              type: string
+              enum:
+                - Claimant
+                - Employer
+              example: Employer
+        user_leave_administrator:
+          type: object
+          nullable: true
+          properties:
+            employer_fein:
+              $ref: "#/components/schemas/Fein"
+              nullable: true
 
     EmployeeUpdateRequest:
       type: object

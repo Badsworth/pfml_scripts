@@ -1,9 +1,60 @@
 from typing import List, Optional
 
+import massgov.pfml.api.app as app
 from massgov.pfml.api.models.users.requests import UserCreateRequest
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
-from massgov.pfml.db.models.employees import Employer, Role
+from massgov.pfml.db.models.applications import Application
+from massgov.pfml.db.models.employees import Employer, Role, User
+
+
+def get_users_patch_employer_issues(user: User, employer: Optional[Employer]) -> List[Issue]:
+    """Validate that the Employer a user is signing up to administer is valid"""
+    issues = []
+
+    if employer is None:
+        issues.append(
+            Issue(
+                field="user_leave_administrator.employer_fein",
+                message="Invalid EIN",
+                type=IssueType.require_employer,
+            )
+        )
+    else:
+        employer_feins = [ula.employer.employer_fein for ula in user.user_leave_administrators]
+        if employer.employer_fein in employer_feins:
+            issues.append(
+                Issue(
+                    field="user_leave_administrator.employer_fein",
+                    message="You're already an employer!",
+                    type=IssueType.conflicting,
+                )
+            )
+
+    existing_roles = [role.role_description for role in user.roles]
+    if Role.EMPLOYER.role_description in existing_roles:
+        issues.append(
+            Issue(
+                field="user_leave_administrator.employer_fein",
+                message="You're already an employer!",
+                type=IssueType.conflicting,
+            )
+        )
+
+    with app.db_session() as db_session:
+        application = (
+            db_session.query(Application).filter(Application.user_id == user.user_id).first()
+        )
+        if application is not None:
+            issues.append(
+                Issue(
+                    field="applications",
+                    message="Your account has submitted applications!",
+                    type=IssueType.conflicting,
+                )
+            )
+
+    return issues
 
 
 def get_users_post_required_fields_issues(user_create_request: UserCreateRequest) -> List[Issue]:
