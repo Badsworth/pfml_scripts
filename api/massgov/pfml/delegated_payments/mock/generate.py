@@ -9,6 +9,7 @@
 
 import argparse
 import datetime
+import decimal
 
 import massgov.pfml.api.util.state_log_util
 import massgov.pfml.db
@@ -118,9 +119,9 @@ class PaymentScenariosGenerator:
             period_start_date=datetime.date(2021, 3, 17),
             period_end_date=datetime.date(2021, 3, 24),
             payment_date=datetime.date(2021, 3, 25),
-            amount=100.75 + index,
-            fineos_pei_c_value=42424,
-            fineos_pei_i_value=10000 + index,
+            amount=decimal.Decimal(100.75 + index),
+            fineos_pei_c_value=str(42424),
+            fineos_pei_i_value=str(10000 + index),
             fineos_extraction_date=datetime.date(2021, 3, 24),
             disb_method_id=PaymentMethod.ACH.payment_method_id,
             pub_eft=pub_eft,
