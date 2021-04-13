@@ -107,26 +107,30 @@ def register_employee(
 
         return fineos_web_id_ext.fineos_web_id
 
-    # Find FINEOS employer id using employer FEIN
-    employer_id = fineos.find_employer(employer_fein)
-    logger.info("found employer_id %s", employer_id)
+    try:
+        # Find FINEOS employer id using employer FEIN
+        employer_id = fineos.find_employer(employer_fein)
+        logger.info("found employer_id %s", employer_id)
 
-    # Generate external id
-    employee_external_id = "pfml_api_{}".format(str(uuid.uuid4()))
+        # Generate external id
+        employee_external_id = "pfml_api_{}".format(str(uuid.uuid4()))
 
-    employee_registration = massgov.pfml.fineos.models.EmployeeRegistration(
-        user_id=employee_external_id,
-        customer_number=None,
-        date_of_birth=datetime.date(1753, 1, 1),
-        email=None,
-        employer_id=employer_id,
-        first_name=None,
-        last_name=None,
-        national_insurance_no=employee_ssn,
-    )
+        employee_registration = massgov.pfml.fineos.models.EmployeeRegistration(
+            user_id=employee_external_id,
+            customer_number=None,
+            date_of_birth=datetime.date(1753, 1, 1),
+            email=None,
+            employer_id=employer_id,
+            first_name=None,
+            last_name=None,
+            national_insurance_no=employee_ssn,
+        )
 
-    fineos.register_api_user(employee_registration)
-    logger.info("registered as %s", employee_external_id)
+        fineos.register_api_user(employee_registration)
+        logger.info("registered as %s", employee_external_id)
+    except massgov.pfml.fineos.FINEOSClientError:
+        logger.exception("FINEOS API error while attempting to register employee/fineos api user.")
+        return None
 
     # If successful save ExternalIdentifier in the database
     fineos_web_id_ext = FINEOSWebIdExt()
@@ -134,6 +138,8 @@ def register_employee(
     fineos_web_id_ext.employer_fein = employer_fein
     fineos_web_id_ext.fineos_web_id = employee_external_id
     db_session.add(fineos_web_id_ext)
+
+    db_session.commit()
 
     return employee_external_id
 

@@ -1386,6 +1386,14 @@ pytest = ">=5.0"
 dev = ["pre-commit", "tox", "pytest-asyncio"]
 
 [[package]]
+name = "pytest-reraise"
+version = "1.0.3"
+description = "Make multi-threaded pytest test cases fail when they should"
+category = "dev"
+optional = false
+python-versions = ">=3.5,<4.0"
+
+[[package]]
 name = "pytest-testmon"
 version = "1.0.3"
 description = "selects tests affected by changed files and methods"
@@ -2676,6 +2684,10 @@ pytest-httpserver = [
 pytest-mock = [
     {file = "pytest-mock-3.3.1.tar.gz", hash = "sha256:a4d6d37329e4a893e77d9ffa89e838dd2b45d5dc099984cf03c703ac8411bb82"},
     {file = "pytest_mock-3.3.1-py3-none-any.whl", hash = "sha256:024e405ad382646318c4281948aadf6fe1135632bea9cc67366ea0c4098ef5f2"},
+]
+pytest-reraise = [
+    {file = "pytest-reraise-1.0.3.tar.gz", hash = "sha256:f3a13088aa22e549dc43ff85864a7631ed2526245a34f278f77f07f7cbb622c6"},
+    {file = "pytest_reraise-1.0.3-py3-none-any.whl", hash = "sha256:b23fa04cbac2efa4e45a8d2a10aa294b368955bc5171e5fea41e9cea44a33377"},
 ]
 pytest-testmon = [
     {file = "pytest-testmon-1.0.3.tar.gz", hash = "sha256:927a73dd510b90a2e4a48ea4d37e82c4490b56caa745663262024ea0cd278169"},
