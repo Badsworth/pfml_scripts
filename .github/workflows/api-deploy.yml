@@ -536,7 +536,7 @@ jobs:
             echo "Importing old format massgov_pfml_"
             prefix=massgov_pfml_
           elif ! [[ -z "$needs_new" ]] && [[ -z "$is_new" ]]; then
-            echo "Importing old format massgov-pfml-"
+            echo "Importing new format massgov-pfml-"
             prefix=massgov-pfml-
           else
             echo "No imports needed."
@@ -546,7 +546,7 @@ jobs:
             terraform state rm -lock-timeout=120s module.api.aws_cloudwatch_log_group.postgresql
             terraform import -lock-timeout=120s \
               module.api.aws_cloudwatch_log_group.postgresql \
-              /aws/rds/instance/$prefix${{ needs.deploy-info.outputs.api-env }}/postgresql
+              /aws/rds/instance/${prefix}${{ needs.deploy-info.outputs.api-env }}/postgresql
           fi
         working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
