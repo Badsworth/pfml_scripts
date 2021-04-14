@@ -79,8 +79,8 @@ PEI_FIELD_NAMES = [
     "EVENTREASON",
 ]
 PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "PAYMENTENDPER"]
-PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU"]
-REQUESTED_ABSENCE_FIELD_NAMES = ["ABSENCE_CASENUMBER", "LEAVEREQUEST_DECISION"]
+PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"]
+REQUESTED_ABSENCE_FIELD_NAMES = ["LEAVEREQUEST_DECISION", "LEAVEREQUEST_ID"]
 
 
 fake = faker.Faker()
@@ -128,6 +128,7 @@ class FineosData:
         self.payment_start_period = self.get_value("payment_start", "2021-01-01 12:00:00")
         self.payment_end_period = self.get_value("payment_end", "2021-01-08 12:00:00")
 
+        self.leave_request_id = self.get_value("leave_request_id", str(fake.unique.random_int()))
         self.leave_request_decision = self.get_value("leave_request_decision", "Approved")
 
     def get_vpei_record(self):
@@ -135,17 +136,21 @@ class FineosData:
         vpei_record["C"] = self.c_value
         vpei_record["I"] = self.i_value
         vpei_record["PAYEESOCNUMBE"] = self.tin
+
         vpei_record["PAYMENTADD1"] = self.payment_address_1
         vpei_record["PAYMENTADD2"] = self.payment_address_2
         vpei_record["PAYMENTADD4"] = self.city
         vpei_record["PAYMENTADD6"] = self.state
         vpei_record["PAYMENTPOSTCO"] = self.zip_code
+
         vpei_record["PAYMENTMETHOD"] = self.payment_method
         vpei_record["PAYMENTDATE"] = self.payment_date
         vpei_record["AMOUNT_MONAMT"] = self.payment_amount
+
         vpei_record["PAYEEBANKSORT"] = self.routing_nbr
         vpei_record["PAYEEACCOUNTN"] = self.account_nbr
         vpei_record["PAYEEACCOUNTT"] = self.account_type
+
         vpei_record["EVENTTYPE"] = self.event_type
         vpei_record["PAYEEIDENTIFI"] = self.payee_identifier
         vpei_record["EVENTREASON"] = self.event_reason
@@ -156,6 +161,7 @@ class FineosData:
         claim_detail_record["PECLASSID"] = self.c_value
         claim_detail_record["PEINDEXID"] = self.i_value
         claim_detail_record["ABSENCECASENU"] = self.absence_case_number
+        claim_detail_record["LEAVEREQUESTI"] = self.leave_request_id
         return claim_detail_record
 
     def get_payment_details_record(self):
@@ -170,8 +176,8 @@ class FineosData:
 
     def get_requested_absence_record(self):
         requested_absence_record = OrderedDict()
-        requested_absence_record["ABSENCE_CASENUMBER"] = self.absence_case_number
         requested_absence_record["LEAVEREQUEST_DECISION"] = self.leave_request_decision
+        requested_absence_record["LEAVEREQUEST_ID"] = self.leave_request_id
         return requested_absence_record
 
     def get_value(self, key, default):
@@ -1227,7 +1233,7 @@ def make_payment_data_from_fineos_data(fineos_data):
     extract_data.claim_details.indexed_data = {ci_index: fineos_data.get_claim_details_record()}
     extract_data.requested_absence.indexed_data = {
         extractor.CiIndex(
-            fineos_data.absence_case_number, ""
+            fineos_data.leave_request_id, ""
         ): fineos_data.get_requested_absence_record()
     }
 
@@ -1246,7 +1252,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
         False,
         c_value="1000",
         i_value="1",
-        absence_case_number="ABS-01",
+        leave_request_id="1001",
         leave_request_decision="Unknown",
         payment_amount="Unknown",
     )
@@ -1256,6 +1262,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
@@ -1282,6 +1289,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
@@ -1301,6 +1309,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
@@ -1323,6 +1332,7 @@ def test_validation_missing_fields(initialize_factories_session, set_exporter_en
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),

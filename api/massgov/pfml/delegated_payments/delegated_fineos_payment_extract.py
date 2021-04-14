@@ -156,6 +156,7 @@ class PaymentData:
     tin: Optional[str] = None
     absence_case_number: Optional[str] = None
 
+    leave_request_id: Optional[str] = None
     leave_request_decision: Optional[str] = None
 
     full_name: Optional[str] = None
@@ -410,10 +411,14 @@ class PaymentData:
         self.absence_case_number = payments_util.validate_csv_input(
             "ABSENCECASENU", claim_details, self.validation_container, True
         )
+        self.leave_request_id = payments_util.validate_csv_input(
+            "LEAVEREQUESTI", claim_details, self.validation_container, True
+        )
+
         requested_absence = None
-        if self.absence_case_number:
+        if self.leave_request_id:
             requested_absence = extract_data.requested_absence.indexed_data.get(
-                CiIndex(c=self.absence_case_number, i="")
+                CiIndex(c=self.leave_request_id, i="")
             )
         if requested_absence:
 
@@ -437,7 +442,7 @@ class PaymentData:
         else:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISMATCHED_DATA,
-                f"Payment absence case number not found in requested absence file: {self.absence_case_number}",
+                f"Payment leave request ID not found in requested absence file: {self.leave_request_id}",
             )
 
     def aggregate_payment_details(self, payment_details):
@@ -597,10 +602,8 @@ class PaymentExtractStep(Step):
             extract_data.requested_absence.file_location, download_directory
         )
         for record in requested_absences:
-            absence_case_number = str(record.get("ABSENCE_CASENUMBER"))
-            extract_data.requested_absence.indexed_data[
-                CiIndex(c=absence_case_number, i="")
-            ] = record
+            leave_request_id = str(record.get("LEAVEREQUEST_ID"))
+            extract_data.requested_absence.indexed_data[CiIndex(c=leave_request_id, i="")] = record
 
         logger.info("Successfully downloaded and indexed payment extract data files.")
 
