@@ -60,7 +60,7 @@ export function waitForClaimSubmission(): Cypress.Chainable<{
         .map(([key, value]) => `${key}: ${value}`)
         .join("\n");
       throw new Error(
-        `Application submission failed: ${xhr.response.url} - ${xhr.response.statusMessage} (${xhr.response.statusCode}\n\nDebug Information\n------------------\n${debugInfoString}`
+        `Application submission failed: ${xhr.request.url} - ${xhr.response.statusMessage} (${xhr.response.statusCode}\n\nDebug Information\n------------------\n${debugInfoString}`
       );
     }
 

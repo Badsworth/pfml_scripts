@@ -42,8 +42,8 @@ env:
   E2E_SSO_PASSWORD: ${{ secrets.E2E_SSO_PASSWORD }}
   E2E_SSO_USERNAME: ${{ secrets.E2E_SSO_USERNAME }}
   CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
-  
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   cypress:
     name: Run Cypress Tests
@@ -131,7 +131,7 @@ jobs:
           echo "cypress_tags=${{ github.event.inputs.cypress_tags }}" >> $GITHUB_ENV
           echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
           echo "only_stable=${{github.event.inputs.only_stable }}" >> $GITHUB_ENV
-      
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -140,7 +140,7 @@ jobs:
           aws-region: us-east-1
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
-      
+
       # Pull the Server to Server API Oauth creds from parameter store
       - name: Pull Client_ID from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
@@ -155,7 +155,7 @@ jobs:
 
       - name: Setup Node
         uses: actions/setup-node@v1
-        with: { node-version: 12.x }
+        with: { node-version: 14.x }
       - name: "Install Dependencies"
         working-directory: e2e
         run: npm ci
