@@ -11,100 +11,54 @@ exports[`Employer dashboard renders a 'no results' message in the table if no cl
 `;
 
 exports[`Employer dashboard renders a table of claims 1`] = `
-Array [
-  <tr
-    key="NTN-111-ABS-01"
+<tr
+  key="NTN-111-ABS-01"
+>
+  <th
+    data-label="Employee name"
+    scope="row"
   >
-    <th
-      data-label="Employee name"
-      scope="row"
+    <a
+      href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
     >
-      <a
-        href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
-      >
-        Jane Doe
-      </a>
-    </th>
-    <td
-      data-label="Application ID"
-      key="fineos_absence_id"
-    >
-      <a
-        href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
-      >
-        NTN-111-ABS-01
-      </a>
-    </td>
-    <td
-      data-label="Organization"
-      key="employer_dba"
-    >
-      Work Inc.
-    </td>
-    <td
-      data-label="Employer ID number"
-      key="employer_fein"
-    >
-      12-3456789
-    </td>
-    <td
-      data-label="Date filed"
-      key="created_at"
-    />
-    <td
-      data-label="Status"
-      key="status"
-    >
-      --
-    </td>
-  </tr>,
-  <tr
-    key="NTN-111-ABS-01"
+      Jane Doe
+    </a>
+  </th>
+  <td
+    data-label="Application ID"
+    key="fineos_absence_id"
   >
-    <th
-      data-label="Employee name"
-      scope="row"
+    <a
+      href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
     >
-      <a
-        href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
-      >
-        Jane Doe
-      </a>
-    </th>
-    <td
-      data-label="Application ID"
-      key="fineos_absence_id"
-    >
-      <a
-        href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
-      >
-        NTN-111-ABS-01
-      </a>
-    </td>
-    <td
-      data-label="Organization"
-      key="employer_dba"
-    >
-      Work Inc.
-    </td>
-    <td
-      data-label="Employer ID number"
-      key="employer_fein"
-    >
-      12-3456789
-    </td>
-    <td
-      data-label="Date filed"
-      key="created_at"
-    />
-    <td
-      data-label="Status"
-      key="status"
-    >
-      --
-    </td>
-  </tr>,
-]
+      NTN-111-ABS-01
+    </a>
+  </td>
+  <td
+    data-label="Organization"
+    key="employer_dba"
+  >
+    Work Inc
+  </td>
+  <td
+    data-label="Employer ID number"
+    key="employer_fein"
+  >
+    12-3456789
+  </td>
+  <td
+    data-label="Date filed"
+    key="created_at"
+  >
+    1/15/2021
+  </td>
+  <td
+    data-label="Status"
+    key="status"
+  >
+    --
+  </td>
+</tr>
 `;
 
 exports[`Employer dashboard renders the page 1`] = `

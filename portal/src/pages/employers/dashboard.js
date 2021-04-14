@@ -1,4 +1,5 @@
 import Alert from "../../components/Alert";
+import ClaimCollection from "../../models/ClaimCollection";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
 import PropTypes from "prop-types";
 import React from "react";
@@ -12,7 +13,7 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withUser from "../../hoc/withUser";
+import withClaims from "../../hoc/withClaims";
 
 export const Dashboard = (props) => {
   const { appLogic, user } = props;
@@ -119,9 +120,7 @@ Dashboard.propTypes = {
       pathname: PropTypes.string.isRequired,
     }).isRequired,
   }).isRequired,
-  // TODO (EMPLOYER-858): Change to more specific PropTypes.instanceOf once we
-  // know what the API response looks like, which informs the model we use
-  claims: PropTypes.arrayOf(PropTypes.object),
+  claims: PropTypes.instanceOf(ClaimCollection),
   user: PropTypes.instanceOf(User).isRequired,
 };
 
@@ -133,7 +132,7 @@ const ClaimTableRows = (props) => {
   const { claims, tableColumnKeys } = props;
   const { t } = useTranslation();
 
-  if (!claims.length) {
+  if (claims.isEmpty) {
     return (
       <tr>
         <td colSpan={tableColumnKeys.length}>
@@ -162,21 +161,20 @@ const ClaimTableRows = (props) => {
       case "fineos_absence_id":
         return <a href={infoRequestRoute}>{get(claim, columnKey)}</a>;
       case "employee_name":
-        // TODO (EMPLOYER-858): Use a fullName getter on the claim instance
-        return (
-          <a href={infoRequestRoute}>
-            {[get(claim, "first_name"), get(claim, "last_name")].join(" ")}
-          </a>
-        );
+        return <a href={infoRequestRoute}>{get(claim, "employee.fullName")}</a>;
+      case "employer_dba":
+        return get(claim, "employer.employer_dba");
+      case "employer_fein":
+        return get(claim, "employer.employer_fein");
       case "status":
-        // TODO (EMPLOYER-858): Render a <Tag> for the status
+        // TODO (EMPLOYER-1125): Render a <Tag> for the status
         return "--";
       default:
-        return get(claim, columnKey);
+        return "";
     }
   };
 
-  return claims.map((claim) => (
+  return claims.items.map((claim) => (
     <tr key={claim.fineos_absence_id}>
       <th
         scope="row"
@@ -205,4 +203,4 @@ ClaimTableRows.propTypes = {
   tableColumnKeys: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
-export default withUser(Dashboard);
+export default withClaims(Dashboard);

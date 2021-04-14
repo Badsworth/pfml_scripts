@@ -2238,6 +2238,9 @@ const components = {
     time: "{{minutes, hoursMinutesDuration}}",
   },
   withBenefitsApplications: {
+    loadingLabel: "Loading applications",
+  },
+  withClaims: {
     loadingLabel: "Loading claims",
   },
   withEmployerClaim: {

@@ -198,6 +198,6 @@ exports[`UploadId after documents have been loaded when the user has a Mass ID w
 
 exports[`UploadId before any documents have been loaded renders a spinner 1`] = `
 <Spinner
-  aria-valuetext="Loading claims"
+  aria-valuetext="Loading applications"
 />
 `;

@@ -29,6 +29,7 @@ import useAppLogic from "../../src/hooks/useAppLogic";
  * @param {boolean} [options.hasUploadedIdDocuments] - Additional attributes to set id documents
  * @param {boolean} [options.hasLoadingDocumentsError] - Additional attributs to set errors for loading documents
  * @param {boolean} [options.hasLegalNotices] - Create legal notices for claim
+ * @param {Function} [options.mockAppLogic] - Passed appLogic as the first arg, to be used for custom mocking, instead of adding yet another options param
  * @param {object} [options.warningsLists] - Mock appLogic.benefitsApplications.warningsLists
  * @returns {{ appLogic: object, claim: Claim, wrapper: object }}
  */
@@ -36,6 +37,7 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
   let appLogic, wrapper;
   options = merge(
     {
+      mockAppLogic: (appLogic) => {},
       claimAttrs: {},
       diveLevels: 2,
       employerClaimAttrs: {},
@@ -117,6 +119,8 @@ const renderWithAppLogic = (PageComponent, options = {}) => {
       })
     );
   }
+
+  options.mockAppLogic(appLogic);
 
   // Render the withBenefitsApplication-wrapped page
   const component = (
