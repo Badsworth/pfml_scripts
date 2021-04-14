@@ -1691,7 +1691,6 @@ def test_extract_to_staging_tables(payment_extract_step, test_db_session, tmp_pa
 
     extract_data = extractor.ExtractData(test_file_names, date_str)
     payment_extract_step.download_and_extract_data(extract_data, tmp_path)
-    payment_extract_step.extract_to_staging_tables(extract_data)
 
     test_db_session.commit()
 
