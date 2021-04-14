@@ -115,7 +115,7 @@ def test_process_vendor_extract_data_happy_path(
     vendor_export.process_vendor_extract_data(test_db_session)
 
     # Requested absences file artifact above has three records but only one with the
-    # LEAVEREQUEST_EVIDENCERESULTTYPE != Satisfied
+    # LEAVEREQUEST_EVIDENCERESULTTYPE == Satisfied
     claims: List[Claim] = (
         test_db_session.query(Claim).filter(Claim.fineos_absence_id == "NTN-1308-ABS-01").all()
     )
@@ -431,6 +431,36 @@ def test_update_employee_info_dob_not_required(
     assert len(validation_container.validation_issues) == 0
     # Assert date of birth was not wiped out
     assert employee.date_of_birth == datetime.date(1970, 4, 27)
+
+
+def test_update_employee_info_payment_method_check_eft_issues(
+    test_db_session, initialize_factories_session, formatted_claim
+):
+    """Test that EFT validation is skipped when payment method is not EFT."""
+    extract_data, requested_absence = format_absence_data()
+    add_employee_feed(extract_data)
+    fineos_customer_number = "12345"
+    # Set payment method to check.
+    extract_data.employee_feed.indexed_data[fineos_customer_number]["PAYMENTMETHOD"] = "Check"
+    # Routing number is too short.
+    extract_data.employee_feed.indexed_data[fineos_customer_number]["SORTCODE"] = "1"
+
+    tax_identifier = TaxIdentifierFactory(tax_identifier="123456789")
+    EmployeeFactory(tax_identifier=tax_identifier)
+
+    absence_case_id = str(requested_absence.get("ABSENCE_CASENUMBER"))
+    validation_container = payments_util.ValidationContainer(record_key=absence_case_id)
+
+    employee, has_vendor_update = vendor_export.update_employee_info(
+        test_db_session, extract_data, requested_absence, formatted_claim, validation_container
+    )
+
+    # Assert no validation issues even though eft fields had validation issues.
+    assert len(validation_container.validation_issues) == 0
+    # Assert payment method is check.
+    assert employee.payment_method_id == PaymentMethod.CHECK.payment_method_id
+    # Assert employee has no associated eft data.
+    assert employee.eft is None
 
 
 def test_update_employee_info_not_in_db(
