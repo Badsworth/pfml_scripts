@@ -16,7 +16,8 @@ def address_to_experian_search_request(address: Address) -> AddressSearchV1Reque
             address.address_line_one,
             address.address_line_two,
             address.city,
-            address.geo_state.geo_state_description if address.geo_state else None,
+            address.geo_state_text,
+            # address.geo_state.geo_state_description if address.geo_state else None,
             address.zip_code,
         ]
         if p
@@ -43,7 +44,8 @@ def address_to_experian_suggestion_text_format(address: Address) -> str:
         str(p)
         for p in [
             address.city,
-            address.geo_state.geo_state_description if address.geo_state else None,
+            address.geo_state_text,
+            # address.geo_state.geo_state_description if address.geo_state else None,
             address.zip_code,
         ]
         if p
