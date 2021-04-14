@@ -38,6 +38,9 @@ class PaymentAuditReportStep(Step):
             State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
             self.db_session,
         )
+        state_log_count = len(state_logs)
+
+        self.set_metrics(sampled_payment_count=state_log_count)
 
         payments: List[Payment] = []
         for state_log in state_logs:

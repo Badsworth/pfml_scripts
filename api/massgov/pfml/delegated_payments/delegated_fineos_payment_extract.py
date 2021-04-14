@@ -582,6 +582,8 @@ class PaymentExtractStep(Step):
         # claim details needs to be indexed on PECLASSID and PEINDEXID
         # which point to the vpei.C and vpei.I columns
         for record in payment_details:
+            self.increment("payment_details_record_count")
+
             index = CiIndex(record["PECLASSID"], record["PEINDEXID"])
             if index not in extract_data.payment_details.indexed_data:
                 extract_data.payment_details.indexed_data[index] = []
@@ -606,6 +608,8 @@ class PaymentExtractStep(Step):
         # claim details needs to be indexed on PECLASSID and PEINDEXID
         # which point to the vpei.C and vpei.I columns
         for record in claim_details:
+            self.increment("claim_detail_record_count")
+
             extract_data.claim_details.indexed_data[
                 CiIndex(record["PECLASSID"], record["PEINDEXID"])
             ] = record
@@ -707,6 +711,7 @@ class PaymentExtractStep(Step):
                     .one_or_none()
                 )
                 if not tax_identifier:
+                    self.increment("tax_identifier_missing_in_db_count")
                     payment_data.validation_container.add_validation_issue(
                         payments_util.ValidationReason.MISSING_IN_DB, "tax_identifier"
                     )
@@ -718,6 +723,7 @@ class PaymentExtractStep(Step):
                     )
 
                     if not employee:
+                        self.increment("employee_missing_in_db_count")
                         payment_data.validation_container.add_validation_issue(
                             payments_util.ValidationReason.MISSING_IN_DB, "employee"
                         )
@@ -869,6 +875,7 @@ class PaymentExtractStep(Step):
         # need to error the payment.
         active_state = self.get_active_payment_state(payment)
         if active_state:
+            self.increment("active_payment_error_count")
             validation_container.add_validation_issue(
                 payments_util.ValidationReason.RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED,
                 f"We received a payment that is already being processed. It is currently in state {active_state.state_description}.",
@@ -925,6 +932,7 @@ class PaymentExtractStep(Step):
         extra["employee_id"] = employee.employee_id
         if existing_eft:
             extra["pub_eft_id"] = existing_eft.pub_eft_id
+            self.increment("eft_previously_prenoted_count")
             logger.info(
                 "Found existing EFT info for claimant in prenote state %s",
                 existing_eft.prenote_state.prenote_state_description,
@@ -975,6 +983,7 @@ class PaymentExtractStep(Step):
                 payments_util.ValidationReason.EFT_PRENOTE_PENDING,
                 "New EFT info found, prenote required",
             )
+            self.increment("new_eft_count")
 
             state_log_util.create_finished_state_log(
                 end_state=State.DELEGATED_EFT_SEND_PRENOTE,
